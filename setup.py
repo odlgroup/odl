@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Feb 10 21:50:15 2015
+
+@author: hkohr
+"""
+
 """
 Copyright 2014, 2015 Holger Kohr
 
@@ -17,4 +24,16 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# __all__ = ['xray']
+
+from distutils.core import setup
+
+# from RL import __version__
+
+setup(name='RL',
+      # version=__version__,
+      version='0.1.0',
+      author='Holger Kohr',
+      author_email='kohr@kth.se',
+      url='https://gits-14.sys.kth.se/LCR/RL',
+      description='What did RL again stand for?',
+      packages=['RL'])
