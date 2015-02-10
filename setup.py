@@ -36,4 +36,5 @@ setup(name='RL',
       author_email='kohr@kth.se',
       url='https://gits-14.sys.kth.se/LCR/RL',
       description='What did RL again stand for?',
-      packages=['RL'])
+      packages=['RL'],
+      package_dir={'RL': 'src/RL'})
