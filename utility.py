@@ -179,6 +179,9 @@ def axis_rotation_matrix(axis, angle):
 def is_rotation_matrix(mat, show_diff=False):
 
     dim = mat.shape[0]
+    if dim != mat.shape[1]:
+        return False
+
     determ = det(mat)
     right_handed = (np.abs(determ - 1.) < 1E-10)
     orthonorm_diff = mat * mat.T - np.eye(dim)
