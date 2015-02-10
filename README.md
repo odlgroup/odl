@@ -3,6 +3,9 @@ tomok
 
 Tomography tools - WIP
 
+There is no installation procedure right now. You need to add the directory
+containing the modules to your PYTHONPATH and import them.
+
 Requirements
 ------------
 
