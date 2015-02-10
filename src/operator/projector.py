@@ -30,11 +30,12 @@ standard_library.install_aliases()
 
 import numpy as np
 from functools import partial
-import gfunc as gf
-import fourier as ft
-from fourier import FourierProjector, FreqGeomGraphWarp
-from func_operator import Operator, LinearOperator
-from utility import euler_matrix, errfmt
+
+# import RL.datamodel.gfunc as gf
+# import RL.utility.fourier as ft
+from RL.utility.fourier import FourierProjector, FreqGeomGraphWarp
+from RL.operator.operator import Operator, LinearOperator
+from RL.utility.utility import euler_matrix, errfmt
 
 
 class Projector(Operator):

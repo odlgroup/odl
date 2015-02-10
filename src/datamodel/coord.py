@@ -30,7 +30,7 @@ from builtins import range
 from builtins import object
 
 import numpy as np
-from utility import flat_tuple, vec_list_from_arg
+from RL.utility.utility import flat_tuple, vec_list_from_arg
 
 
 class Coord(object):

@@ -30,8 +30,8 @@ from builtins import object
 
 import numpy as np
 
-import curve as crv
-from utility import errfmt
+import RL.geometry.curve as crv
+from RL.utility.utility import errfmt
 
 
 class LabComponent(object):

@@ -37,9 +37,10 @@ try:
 except ImportError:
     ne = None
 from functools import partial
-import ugrid as ug
-import gfunc as gf
-from utility import errfmt, InputValidationError, SQRT_2PI
+
+from RL.datamodel import ugrid as ug
+from RL.datamodel import gfunc as gf
+from RL.utility.utility import errfmt, InputValidationError, SQRT_2PI
 
 
 class FourierTransform(object):

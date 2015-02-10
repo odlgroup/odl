@@ -31,8 +31,9 @@ from builtins import object
 
 import numpy as np
 from copy import deepcopy
-from utility import InputValidationError
-from coord import Coord
+
+from RL.utility.utility import InputValidationError
+from RL.datamodel.coord import Coord
 
 
 def asugrid(obj):

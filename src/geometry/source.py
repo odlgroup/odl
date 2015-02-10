@@ -29,10 +29,10 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from labcomp import LabComponent
 from math import pi
 
-import utility as util
+from RL.geometry.labcomp import LabComponent
+import RL.utility.utility as util
 # from utility import errfmt
 
 

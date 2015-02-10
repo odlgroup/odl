@@ -30,7 +30,7 @@ standard_library.install_aliases()
 
 import numpy as np
 
-from labcomp import LabComponent
+from RL.geometry.labcomp import LabComponent
 
 
 class Detector(LabComponent):

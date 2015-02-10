@@ -30,15 +30,14 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 
-
 from math import sin, cos
 import numpy as np
 from scipy.linalg import norm
 from functools import partial
 from copy import deepcopy
 
-import utility as util
-from utility import errfmt, is_rotation_matrix
+import RL.utility.utility as util
+from util import errfmt, is_rotation_matrix
 
 
 class Curve(object):

@@ -35,9 +35,10 @@ standard_library.install_aliases()
 import numpy as np
 from scipy.interpolate import interpn
 from copy import deepcopy
-from ugrid import Ugrid
-from utility import flat_tuple, errfmt, InputValidationError
-from coord import Coord
+
+from RL.datamodel.ugrid import Ugrid
+from RL.datamodel.coord import Coord
+from RL.utility.utility import flat_tuple, errfmt, InputValidationError
 
 
 def asgfunc(obj):

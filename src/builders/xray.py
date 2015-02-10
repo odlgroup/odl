@@ -30,13 +30,13 @@ standard_library.install_aliases()
 import numpy as np
 from math import pi
 
-import ugrid as ug
-import curve as crv
-import source as src
-import sample as spl
-import detector as det
-import tomo_geom as tgeo
-from utility import InputValidationError
+from RL.datamodel import ugrid as ug
+from RL.datamodel import curve as crv
+from RL.geometry import source as src
+from RL.geometry import sample as spl
+from RL.geometry import detector as det
+from RL.geometry import geometry as geo
+from RL.utility.utility import InputValidationError
 
 
 def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
@@ -65,7 +65,7 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
 
     Returns
     -------
-    out: tomo_geom.Geometry
+    out: geometry.Geometry
         the new parallel beam geometry
     """
 
@@ -99,7 +99,7 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
         det_circle = crv.Circle3D(1., axis, angle_shift=pi, angles=angles,
                                   axes_map='tripod')
         detector = det.FlatDetectorArray(det_grid, det_circle)
-    return tgeo.Geometry(source, sample, detector)
+    return geo.Geometry(source, sample, detector)
 
 
 def xray_projection_map(grid_func, geometry, backend='astra'):

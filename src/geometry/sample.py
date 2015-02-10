@@ -34,10 +34,10 @@ from functools import partial
 import numpy as np
 from scipy.linalg import norm
 
-from labcomp import LabComponent
-import curve as crv
-from utility import errfmt, InputValidationError, is_rotation_matrix
-import utility as util
+from RL.geometry.labcomp import LabComponent
+import RL.geometry.curve as crv
+import RL.utility.utility as util
+from util import errfmt, InputValidationError, is_rotation_matrix
 
 
 class Sample(LabComponent):
