@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 10 21:50:15 2015
-
-@author: hkohr
-"""
-
-"""
 Copyright 2014, 2015 Holger Kohr
 
 This file is part of RL.
@@ -24,6 +18,13 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+
 
 from distutils.core import setup
 
@@ -36,5 +37,6 @@ setup(name='RL',
       author_email='kohr@kth.se',
       url='https://gits-14.sys.kth.se/LCR/RL',
       description='What did RL again stand for?',
-      packages=['RL'],
-      package_dir={'RL': 'src/RL'})
+      packages=['RL', 'RL.builders', 'RL.datamodel', 'RL.geometry',
+                'RL.operator', 'RL.utility'],
+      package_dir={'RL': 'src'})
