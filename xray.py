@@ -103,7 +103,11 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
 
 
 def xray_projection_map(grid_func, geometry, backend='astra'):
-    
-    if backend == 'astra':
 
-def _xray_proj_map_parbeam_astra(gf, geom):        
+    if backend == 'astra':
+        pass
+
+
+def _xray_proj_map_parbeam_astra(gf, geom):
+
+    pass
