@@ -133,7 +133,7 @@ class RotatingSample(Sample):
                                start_rot=start_rot)
 
         else:
-            raise InputValidationError('dim', '2 or 3')
+            raise InputValidationError(dim, '2 or 3', 'dim')
 
         if angles is not None:
             angles = np.array(angles)

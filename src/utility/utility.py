@@ -96,14 +96,18 @@ def flat_tuple(seq):
 
 class InputValidationError(ValueError):
     """A simple exception class for input validation."""
-    def __init__(self, input_name, expected):
-        self.input_name = input_name
-        self.got = eval(input_name)
+    def __init__(self, input_, expected, input_name=None):
+        self.got = input_
         self.expected = expected
+        self.input_name = input_name
 
     def __str__(self):
-        return errfmt("{}: got {}, expected {}".format(self.input_name,
-                      self.got, self.expected))
+        if self.input_name is not None:
+            return errfmt("{}: got {}, expected {}".format(self.input_name,
+                          self.got, self.expected))
+        else:
+            return errfmt("got {}, expected {}".format(self.got,
+                          self.expected))
 
 
 def euler_matrix(*angles):
@@ -226,7 +230,8 @@ def angles_from_matrix(rot_matrix):
         return (phi, theta, psi)
 
     else:
-        raise InputValidationError('rot_matrix.shape', '(2,2) or (3,3)')
+        raise InputValidationError(rot_matrix.shape, '(2,2) or (3,3)',
+                                   'rot_matrix.shape')
 
 
 def to_lab_sys(vec_in_local_coords, local_sys):

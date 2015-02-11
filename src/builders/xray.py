@@ -72,9 +72,9 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
     spl_grid = ug.ugrid(spl_grid)
     det_grid = ug.ugrid(det_grid)
     if not spl_grid.dim == 3:
-        raise InputValidationError('spl_grid.dim', 3)
+        raise InputValidationError(spl_grid.dim, 3, 'spl_grid.dim')
     if not det_grid.dim == 2:
-        raise InputValidationError('det_grid.dim', 2)
+        raise InputValidationError(det_grid.dim, 2, 'det_grid.dim')
 
     if angles is not None:
         angles = np.array(angles)

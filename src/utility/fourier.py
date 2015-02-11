@@ -260,7 +260,8 @@ class FourierTransformUniNonuni(FourierTransform):
         # TODO: use self.input_padding parameter
 
         if not freqs_in.shape[1] == gfun_in.dim:
-            raise InputValidationError('freqs_in.shape[1]', gfun_in.dim)
+            raise InputValidationError(freqs_in.shape[1], gfun_in.dim,
+                                       'freqs_in.shape[1]')
 
         self.samples = gfun_in
         self.freqs = freqs_in
@@ -268,8 +269,8 @@ class FourierTransformUniNonuni(FourierTransform):
         if arr_out is None:
             self.out = np.empty(self.freqs.shape[0])
         elif arr_out.shape[0] != self.freqs.shape[0]:
-            raise InputValidationError('arr_out.shape[0]',
-                                       self.freqs.shape[0])
+            raise InputValidationError(arr_out.shape[0], self.freqs.shape[0],
+                                       'arr_out.shape[0]')
         else:
             self.out = arr_out
 
