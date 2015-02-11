@@ -41,7 +41,7 @@ from coord import Coord
 
 
 def asgfunc(obj):
-    """Convert `obj` to a ´Gfunc` obj. If type(obj)==ugrid.Ugrid, use
+    """Convert `obj` to a `Gfunc` obj. If type(obj)==ugrid.Ugrid, use
     empty fvals. If type(obj)==numpy.ndarray, assume standard grid.
     """
 
