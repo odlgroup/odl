@@ -81,18 +81,19 @@ class Gfunc(Ugrid):
 
         if shape is None:
             super().__init__(fvals.shape, center, spacing)
-            self._fvals[...] = np.asarray(fvals)
+            self._fvals = np.asarray(fvals)  # copy only if necessary
         else:
             super().__init__(shape, center, spacing)
             self._fvals = np.empty(shape)
 
             # Reshape or broadcast fvals
-            # TODO: deal with datatype mismatch
+            # TODO: deal with datatype mismatch -> do not use this for
+            # re-assignment
             if fvals is not None:
-                try:
-                    self._fvals = np.asarray(fvals).reshape(shape)
-                except ValueError:
-                    self._fvals[...] = np.asarray(fvals)
+                try:  # broadcast if single value is given
+                    self._fvals[...] = float(fvals)
+                except TypeError:  # fvals is array-like
+                    self._fvals[...] = np.asarray(fvals).reshape(shape)
 
     # Essential properties
 
@@ -121,7 +122,7 @@ class Gfunc(Ugrid):
         # TODO: Cythonize
         vec = np.asarray(vec)
         if vec.shape != (self.dim,):
-            raise InputValidationError('vec.shape', (self.dim,))
+            raise InputValidationError(vec.shape, (self.dim,), 'vec.shape')
         if np.any(vec < self.xmin) or np.any(vec > self.xmax):
             raise LookupError("Vector outside grid.")
 

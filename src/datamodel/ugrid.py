@@ -73,20 +73,29 @@ class Ugrid(object):
 
         shape = np.array(shape)
         if not shape.ndim == 1:
-            raise InputValidationError('shape.ndim', 1)
+            raise InputValidationError(shape.ndim, 1, 'shape.ndim')
         self._shape = shape
         dim = len(shape)
 
         # `None` implies all zeros
         center = np.zeros(dim) if center is None else np.array(center)
         if not center.shape == (dim,):
-            raise InputValidationError('center.shape', dim)
+            raise InputValidationError(center.shape, (dim,), 'center.shape')
         self._center = center
 
-        # None implies all ones
-        spacing = np.ones(dim) if spacing is None else np.array(spacing)
-        if not spacing.shape == (dim,):
-            raise InputValidationError('spacing.shape', dim)
+        # `None` implies all ones
+        if spacing is None:
+            spacing = np.ones(dim)
+        else:
+            try:  # single value is broadcast
+                spacing = float(spacing)
+                spacing = spacing * np.ones(dim)
+            except TypeError:  # spacing is an array - test for correct shape
+                spacing = np.array(spacing)
+                if not spacing.shape == (dim,):
+                    raise InputValidationError(spacing.shape, dim,
+                                               'spacing.shape')
+
         if not np.all(spacing > 0):
             raise ValueError('`spacing` must be all positive.')
         self._spacing = spacing
@@ -114,7 +123,8 @@ class Ugrid(object):
         else:
             new_center = np.array(new_center)
         if not new_center.shape == (self.dim,):
-            raise InputValidationError('new_center.shape', (self.dim,))
+            raise InputValidationError(new_center.shape, (self.dim,),
+                                       'new_center.shape')
         self._center = new_center
         self._update_coord()
         # Add code here to update depending cached properties
@@ -136,7 +146,8 @@ class Ugrid(object):
         else:
             new_spacing = np.array(new_spacing)
         if not new_spacing.shape == (self.dim,):
-            raise InputValidationError('new_spacing.shape', (self.dim,))
+            raise InputValidationError(new_spacing.shape, (self.dim,),
+                                       new_spacing.shape)
         self._spacing = new_spacing
         self._update_coord()
         # Add code here to update depending cached properties
