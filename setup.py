@@ -37,6 +37,7 @@ setup(name='RL',
       author_email='kohr@kth.se',
       url='https://gits-14.sys.kth.se/LCR/RL',
       description='What did RL again stand for?',
+      license='GPLv3',
       packages=['RL', 'RL.builders', 'RL.datamodel', 'RL.geometry',
                 'RL.operator', 'RL.utility'],
       package_dir={'RL': 'src'})
