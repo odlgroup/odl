@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 10 13:04:25 2015
-
-@author: hkohr
-"""
-
-"""
 simple_test.py -- a simple test script
 
 Copyright 2014, 2015 Holger Kohr
@@ -30,10 +24,19 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 
 import RL.datamodel.gfunc as gf
+import RL.builders.xray as xray
+# from RL.utility.utility import InputValidationError
 
+# Initialize a simple volume (cuboid with value 1 in a larger cube)
 vol = np.zeros([100, 100, 100])
-vol[25:75, 25:72, 25:75] = 1.0
+vol[25:75, 35:65, 45:55] = 1.0
 voxel_size = 0.5
 vol_func = gf.Gfunc(fvals=vol, spacing=voxel_size)
 
 vol_func[:, :, 50].display()
+
+# TODO:
+# - wrap ASTRA forward and backward projections into a Projector class
+#   + use parallel beam 3D CUDA forward projection
+#   + create the simplest possible geometry (rotating sample)
+# - define the Landweber algorithm in terms of operators
