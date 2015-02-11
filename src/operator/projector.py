@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-tomo_proj.py -- (back-)projections in tomography
+projector.py -- (back-)projections in tomography
 
-Copyright 2014 Holger Kohr
+Copyright 2014, 2015 Holger Kohr
 
-This file is part of tomok.
+This file is part of RL.
 
-tomok is free software: you can redistribute it and/or modify
+RL is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-tomok is distributed in the hope that it will be useful,
+RL is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with tomok.  If not, see <http://www.gnu.org/licenses/>.
+along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import division
@@ -30,11 +30,12 @@ standard_library.install_aliases()
 
 import numpy as np
 from functools import partial
-import gfunc as gf
-import fourier as ft
-from fourier import FourierProjector, FreqGeomGraphWarp
-from func_operator import Operator, LinearOperator
-from utility import euler_matrix, errfmt
+
+# import RL.datamodel.gfunc as gf
+# import RL.utility.fourier as ft
+from RL.utility.fourier import FourierProjector, FreqGeomGraphWarp
+from RL.operator.operator import Operator, LinearOperator
+from RL.utility.utility import euler_matrix, errfmt
 
 
 class Projector(Operator):

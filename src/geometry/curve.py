@@ -2,22 +2,22 @@
 """
 curve.py -- curves in n-dimensional space
 
-Copyright 2014 Holger Kohr
+Copyright 2014, 2015 Holger Kohr
 
-This file is part of tomok.
+This file is part of RL.
 
-tomok is free software: you can redistribute it and/or modify
+RL is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-tomok is distributed in the hope that it will be useful,
+RL is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with tomok.  If not, see <http://www.gnu.org/licenses/>.
+along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import unicode_literals
@@ -30,15 +30,14 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 
-
 from math import sin, cos
 import numpy as np
 from scipy.linalg import norm
 from functools import partial
 from copy import deepcopy
 
-import utility as util
-from utility import errfmt, is_rotation_matrix
+import RL.utility.utility as util
+from util import errfmt, is_rotation_matrix
 
 
 class Curve(object):

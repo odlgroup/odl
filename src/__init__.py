@@ -1,13 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue Feb 10 13:04:25 2015
-
-@author: hkohr
-"""
-
-"""
-simple_test.py -- a simple test script
-
 Copyright 2014, 2015 Holger Kohr
 
 This file is part of RL.
@@ -26,14 +17,5 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
-import numpy as np
-
-import RL.datamodel.gfunc as gf
-
-vol = np.zeros([100, 100, 100])
-vol[25:75, 25:72, 25:75] = 1.0
-voxel_size = 0.5
-vol_func = gf.Gfunc(fvals=vol, spacing=voxel_size)
-
-vol_func[:, :, 50].display()
+__version__ = '0.01a'
+# __all__ = ['builders', 'datamodel', 'geometry', 'utility']

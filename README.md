@@ -1,10 +1,16 @@
-tomok
+RL
 =====
 
-Tomography tools - WIP
+Tomography library - WIP
 
-There is no installation procedure right now. You need to add the directory
-containing the modules to your PYTHONPATH and import them.
+Installation
+------------
+
+Run (as root)
+```
+python setup.py install
+```
+in the root folder of the package.
 
 Requirements
 ------------
