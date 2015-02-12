@@ -135,13 +135,11 @@ class RotatingSample(Sample):
         else:
             raise InputValidationError(dim, '2 or 3', 'dim')
 
-        if angles is not None:
-            angles = np.array(angles)
-        kwargs.update({'stops': angles})
         location = crv.FixedPoint(support.ref_point, axes_map)
         super().__init__(support, location, **kwargs)
         self._rot_axis = rot_axis
         self._init_rotation = start_rot
+        self._angles = np.array(angles) if angles is not None else None
 
     @property
     def rot_axis(self):
@@ -153,7 +151,7 @@ class RotatingSample(Sample):
 
     @property
     def angles(self):
-        return self.curve.stops
+        return self._angles
 
 
 class RotatingGridSample(RotatingSample):
