@@ -36,8 +36,7 @@ from scipy.linalg import norm
 from functools import partial
 from copy import deepcopy
 
-import RL.utility.utility as util
-from util import errfmt, is_rotation_matrix
+from RL.utility.utility import errfmt, is_rotation_matrix
 
 
 class Curve(object):

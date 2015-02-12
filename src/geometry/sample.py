@@ -37,7 +37,7 @@ from scipy.linalg import norm
 from RL.geometry.labcomp import LabComponent
 import RL.geometry.curve as crv
 import RL.utility.utility as util
-from util import errfmt, InputValidationError, is_rotation_matrix
+from RL.utility.utility import errfmt, InputValidationError, is_rotation_matrix
 
 
 class Sample(LabComponent):
