@@ -47,6 +47,7 @@ class Sample(LabComponent):
         if location is None:
             location = support.ref_point
         super().__init__(location, **kwargs)
+        self._support = support
 
     @property
     def support(self):
