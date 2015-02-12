@@ -159,6 +159,8 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     astra_pixel_spacing = det_grid.spacing / vol.spacing[1:]
 
     # FIXME: treat case when no discretization is given
+
+    # FIXME: adjust angles if the scaling is not uniform
     astra_angles = geom.sample.angles
 
     astra_proj_geom = at.create_proj_geom('parallel3d',
