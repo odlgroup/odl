@@ -50,6 +50,14 @@ def xray_ct_parallel_3d_projector(geometry, backend='astra_cuda'):
                      backend=backend)
 
 
+def xray_ct_parallel_3d_backprojector(geometry, backend='astra_cuda'):
+
+    # FIXME: this construction is probably only temporary. Think properly
+    # about how users would construct projectors
+    return Projector(xray_ct_parallel_backprojection_3d, geometry,
+                     backend=backend)
+
+
 def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
                              rotating_sample=True, **kwargs):
     """
@@ -116,11 +124,11 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
 def xray_ct_parallel_projection_3d(geometry, vol_func, backend='astra_cuda'):
 
     if backend == 'astra':
-        proj_func = _xray_ct_parallel_projection_3d_astra(geometry, vol_func,
-                                                          use_cuda=False)
+        proj_func = _xray_ct_par_fp_3d_astra(geometry, vol_func,
+                                             use_cuda=False)
     elif backend == 'astra_cuda':
-        proj_func = _xray_ct_parallel_projection_3d_astra(geometry, vol_func,
-                                                          use_cuda=True)
+        proj_func = _xray_ct_par_fp_3d_astra(geometry, vol_func,
+                                             use_cuda=True)
     else:
         raise NotImplementedError(errfmt('''\
         Only `astra` and `astra_cuda` backends supported'''))
@@ -128,16 +136,21 @@ def xray_ct_parallel_projection_3d(geometry, vol_func, backend='astra_cuda'):
     return proj_func
 
 
-def _xray_ct_parallel_projection_3d_astra(geom, vol, use_cuda=True):
+def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
 
     import astra as at
 
     # FIXME: we assume fixed sample rotating around z axis for now
     # TODO: include shifts (volume and detector)
+    # TODO: allow custom detector grid (e.g. only partial projection)
+
+    # Initialize volume geometry and data
 
     # ASTRA uses a different axis labeling. We need to permute x->y->z->x
     astra_vol = vol.fvals.swapaxes(0, 1).swapaxes(0, 2)
     astra_vol_geom = at.create_vol_geom(vol.shape)
+
+    # Initialize detector geometry
 
     # Detector pixel spacing must be scaled with volume (y,z) spacing
     # since ASTRA assumes voxel size 1
@@ -174,10 +187,10 @@ def _xray_ct_parallel_projection_3d_astra(geom, vol, use_cuda=True):
     at.algorithm.run(astra_algo_id)
     at.algorithm.delete(astra_algo_id)
 
-    # Get the projection data and change projection index from y to z
+    # Get the projection data and swap axes 1 and 2 such that the last index
+    # is the projection number
     proj_fvals = at.data3d.get(astra_proj_id)
-    proj_fvals = proj_fvals.swapaxes(0, 1)
-    proj_fvals = proj_fvals.swapaxes(0, 2)
+    proj_fvals = proj_fvals.swapaxes(1, 2)
 
     # Create the projection grid function and return it
     proj_spacing = np.ones(3)
@@ -185,3 +198,81 @@ def _xray_ct_parallel_projection_3d_astra(geom, vol, use_cuda=True):
     proj_func = gf.Gfunc(proj_fvals, spacing=proj_spacing)
 
     return proj_func
+
+
+def xray_ct_parallel_backprojection_3d(geometry, proj_func,
+                                       backend='astra_cuda'):
+
+    if backend == 'astra':
+        vol_func = _xray_ct_par_bp_3d_astra(geometry, proj_func,
+                                            use_cuda=False)
+    elif backend == 'astra_cuda':
+        vol_func = _xray_ct_par_bp_3d_astra(geometry, proj_func,
+                                            use_cuda=True)
+    else:
+        raise NotImplementedError(errfmt('''\
+        Only `astra` and `astra_cuda` backends supported'''))
+
+    return vol_func
+
+
+def _xray_ct_par_bp_3d_astra(geom, proj_, use_cuda=True):
+
+    import astra as at
+
+    # FIXME: we assume fixed sample rotating around z axis for now
+    # TODO: include shifts (volume and detector)
+    # TODO: allow custom volume grid (e.g. partial backprojection)
+
+    # Initialize projection geometry and data
+
+    # Detector pixel spacing must be scaled with volume (y,z) spacing
+    # since ASTRA assumes voxel size 1
+    # FIXME: assuming z axis tilt
+    vol_grid = geom.sample.grid
+    astra_pixel_spacing = proj_.spacing[:-1] / vol_grid.spacing[1:]
+
+    # FIXME: treat case when no discretization is given
+    astra_angles = geom.sample.angles
+
+    # ASTRA uses a different axis labeling. We need swap axes 1 and 2
+    astra_proj = proj_.fvals.swapaxes(1, 2)
+    astra_proj_geom = at.create_proj_geom('parallel3d',
+                                          astra_pixel_spacing[0],
+                                          astra_pixel_spacing[1],
+                                          proj_.shape[0],
+                                          proj_.shape[1],
+                                          astra_angles)
+
+    # Initialize volume geometry
+    astra_vol_geom = at.create_vol_geom(vol_grid.shape)
+
+    # Some wrapping code
+    astra_vol_id = at.data3d.create('-vol', astra_vol_geom)
+    astra_proj_id = at.data3d.create('-sino', astra_proj_geom, astra_proj)
+
+    # Create the ASTRA algorithm
+    if use_cuda:
+        astra_algo_conf = at.astra_dict('BP3D_CUDA')
+    else:
+        # TODO: slice into 2D forward projections
+        raise NotImplementedError('No CPU 3D backprojection available.')
+
+    astra_algo_conf['ReconstructionDataId'] = astra_vol_id
+    astra_algo_conf['ProjectionDataId'] = astra_proj_id
+    astra_algo_id = at.algorithm.create(astra_algo_conf)
+
+    # Run it and remove afterwards
+    at.algorithm.run(astra_algo_id)
+    at.algorithm.delete(astra_algo_id)
+
+    # Get the volume data and cycle back axes to translate from ASTRA axes
+    # convention
+    vol_fvals = at.data3d.get(astra_vol_id)
+    vol_fvals = vol_fvals.swapaxes(0, 2)
+    vol_fvals = vol_fvals.swapaxes(0, 1)
+
+    # Create the volume grid function and return it
+    vol_func = gf.Gfunc(vol_fvals, spacing=vol_grid.spacing)
+
+    return vol_func
