@@ -47,9 +47,9 @@ xray_geometry = xray.xray_ct_parallel_geom_3d(sample_grid, detector_grid,
                                               axis=2, angles=tilt_angles,
                                               rotating_sample=True)
 
-print('initial sample system', xray_geometry.sample.coord_sys(0))
-print('sample system at -90 deg', xray_geometry.sample.coord_sys(-pi / 2))
-print('sample system at 90 deg', xray_geometry.sample.coord_sys(pi / 2))
+#print('initial sample system', xray_geometry.sample.coord_sys(0))
+#print('sample system at -90 deg', xray_geometry.sample.coord_sys(-pi / 2))
+#print('sample system at 90 deg', xray_geometry.sample.coord_sys(pi / 2))
 
 # Initialize the volume values (cuboid of value 1.0)
 sample_fvals = np.zeros(sample_shape)
@@ -57,10 +57,19 @@ sample_fvals[25:75, 17:57, 20:30] = 1.0  # thicknesses 50, 40, 10
 sample_func = gf.Gfunc(fvals=sample_fvals, spacing=sample_voxel_size)
 
 # Show central slices
-sample_func[50, :, :].display()
-sample_func[:, 37, :].display()
-sample_func[:, :, 25].display()
+#sample_func[50, :, :].display()
+#sample_func[:, 37, :].display()
+#sample_func[:, :, 25].display()
 
+forward_projector = xray.xray_ct_parallel_3d_projector(xray_geometry)
+
+proj_func = forward_projector(sample_func)
+
+proj_func[:, :, 0].display()
+proj_func[:, :, 45].display()
+proj_func[:, :, 90].display()
+proj_func[:, :, 135].display()
+proj_func[:, :, 180].display()
 
 # TODO:
 # - wrap ASTRA forward and backward projections into a Projector class
