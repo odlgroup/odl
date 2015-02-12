@@ -24,13 +24,13 @@ from math import pi
 import numpy as np
 
 from RL.datamodel import ugrid as ug
-#from RL.datamodel import gfunc as gf
+from RL.datamodel import gfunc as gf
 from RL.builders import xray
 
 # from RL.utility.utility import InputValidationError
 
 # Initialize a sample grid
-sample_shape = [100, 100, 100]
+sample_shape = [100, 75, 50]
 sample_voxel_size = 0.5
 sample_grid = ug.Ugrid(sample_shape, spacing=sample_voxel_size)
 
@@ -51,14 +51,16 @@ print('initial sample system', xray_geometry.sample.coord_sys(0))
 print('sample system at -90 deg', xray_geometry.sample.coord_sys(-pi / 2))
 print('sample system at 90 deg', xray_geometry.sample.coord_sys(pi / 2))
 
+# Initialize the volume values (cuboid of value 1.0)
+sample_fvals = np.zeros(sample_shape)
+sample_fvals[25:75, 17:57, 20:30] = 1.0  # thicknesses 50, 40, 10
+sample_func = gf.Gfunc(fvals=sample_fvals, spacing=sample_voxel_size)
 
+# Show central slices
+sample_func[50, :, :].display()
+sample_func[:, 37, :].display()
+sample_func[:, :, 25].display()
 
-#vol = np.zeros([100, 100, 100])
-#vol[25:75, 35:65, 45:55] = 1.0
-#voxel_size = 0.5
-#vol_func = gf.Gfunc(fvals=vol, spacing=voxel_size)
-#
-#vol_func[:, :, 50].display()
 
 # TODO:
 # - wrap ASTRA forward and backward projections into a Projector class
