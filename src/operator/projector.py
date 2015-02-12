@@ -43,9 +43,9 @@ class Projector(Operator):
     TODO: write some more.
     """
 
-    def __init__(self, projection, geometry):
+    def __init__(self, projection, geometry, **kwargs):
 
-        proj_map = partial(projection, geometry)
+        proj_map = partial(projection, geometry, **kwargs)
         super().__init__(proj_map)
 
         self._projection = projection
@@ -65,9 +65,9 @@ class BackProjector(Operator):
     TODO: write some more.
     """
 
-    def __init__(self, backprojection, geometry):
+    def __init__(self, backprojection, geometry, **kwargs):
 
-        backproj_map = partial(backprojection, geometry)
+        backproj_map = partial(backprojection, geometry, **kwargs)
         super().__init__(backproj_map)
 
         self._backprojection = backprojection
