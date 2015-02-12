@@ -31,12 +31,13 @@ import numpy as np
 from math import pi
 
 from RL.datamodel import ugrid as ug
+from RL.datamodel import gfunc as gf
 from RL.geometry import curve as crv
 from RL.geometry import source as src
 from RL.geometry import sample as spl
 from RL.geometry import detector as det
 from RL.geometry import geometry as geo
-from RL.utility.utility import InputValidationError
+from RL.utility.utility import InputValidationError, errfmt
 
 
 def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
@@ -102,12 +103,72 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
     return geo.Geometry(source, sample, detector)
 
 
-def xray_projection_map(grid_func, geometry, backend='astra'):
+def xray_ct_parallel_projection_3d(vol_func, geometry, backend='astra'):
 
     if backend == 'astra':
-        pass
+        proj_func = _xray_ct_parallel_projection_3d_astra(vol_func, geometry,
+                                                          use_cuda=False)
+    elif backend == 'astra_cuda':
+        proj_func = _xray_ct_parallel_projection_3d_astra(vol_func, geometry,
+                                                          use_cuda=True)
+    else:
+        raise NotImplementedError(errfmt('''\
+        Only `astra` and `astra_cuda` backends supported''')
+    
+    return proj_func
 
 
-def _xray_proj_map_parbeam_astra(gf, geom):
+def _xray_ct_parallel_projection_3d_astra(vol, geom, use_cuda=True):
 
-    pass
+    import astra as at
+
+    # FIXME: we assume fixed sample rotating around z axis for now
+    # TODO: include shifts (volume and detector)
+
+    # ASTRA uses a different axis labeling. We need to permute x->y->z->x
+    astra_vol = vol.fvals.swapaxes(0, 1).swapaxes(0, 2)
+    astra_vol_geom = at.create_vol_geom(vol.shape)
+
+    # Detector pixel spacing must be scaled with volume (y,z) spacing
+    # since ASTRA assumes voxel size 1
+    # FIXME: assuming z axis tilt
+    det_grid = geom.detector.grid
+    astra_pixel_spacing = det_grid.spacing / vol.spacing[1:]
+
+    # FIXME: treat case when no discretization is given
+    astra_angles = geom.sample.curve.stops
+
+    astra_proj_geom = at.create_proj_geom('parallel3d',
+                                          astra_pixel_spacing[0],
+                                          astra_pixel_spacing[1],
+                                          det_grid.shape[0],
+                                          det_grid.shape[1],
+                                          astra_angles)
+
+    # Some wrapping code
+    astra_vol_id = at.data3d.create('-vol', astra_vol_geom, astra_vol)
+    astra_proj_id = at.data3d.create('-sino', astra_proj_geom)
+
+    # Create the ASTRA algorithm
+    if use_cuda:
+        astra_algo_conf = at.astra_dict('FP3D_CUDA')
+    else:
+        # TODO: slice into 2D forward projections
+        raise NotImplementedError('No CPU 3D forward projection available.')
+
+    astra_algo_conf['VolumeDataId'] = astra_vol_id
+    astra_algo_conf['ProjectionDataId'] = astra_proj_id
+    astra_algo_id = at.algorithm.create(astra_algo_conf)
+
+    # Run it and remove afterwards
+    at.algorithm.run(astra_algo_id)
+    at.algorithm.delete(astra_algo_id)
+
+    # Get the projection data and change projection index from y to z
+    proj_fvals = at.data3d.get(astra_proj_id)
+    proj_fvals = proj_fvals.swapaxes(1, 2)
+
+    # Create the projection grid function and return it
+    proj_func = gf.Gfunc(proj_fvals, spacing=det_grid.spacing)
+
+    return proj_func
