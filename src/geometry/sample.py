@@ -127,7 +127,7 @@ class RotatingSample(Sample):
             def axes_map_(ang, rot_axis, start_rot):
                 rot_mat = util.axis_rotation_matrix(rot_axis, ang) * start_rot
                 return tuple([np.asarray(rot_mat[:, i]).flatten()
-                             for i in (1, 2, 3)])
+                             for i in (0, 1, 2)])
 
             axes_map = partial(axes_map_, rot_axis=rot_axis,
                                start_rot=start_rot)
