@@ -37,7 +37,17 @@ from RL.geometry import source as src
 from RL.geometry import sample as spl
 from RL.geometry import detector as det
 from RL.geometry import geometry as geo
+from RL.operator import projector as proj
+from RL.operator.projector import Projector, BackProjector
 from RL.utility.utility import InputValidationError, errfmt
+
+
+def xray_ct_parallel_3d_projector(geometry, backend='astra_cuda'):
+
+    # FIXME: this construction is probably only temporary. Think properly
+    # about how users would construct projectors
+    return Projector(xray_ct_parallel_projection_3d, geometry,
+                     backend=backend)
 
 
 def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
@@ -103,22 +113,22 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
     return geo.Geometry(source, sample, detector)
 
 
-def xray_ct_parallel_projection_3d(vol_func, geometry, backend='astra'):
+def xray_ct_parallel_projection_3d(geometry, vol_func, backend='astra_cuda'):
 
     if backend == 'astra':
-        proj_func = _xray_ct_parallel_projection_3d_astra(vol_func, geometry,
+        proj_func = _xray_ct_parallel_projection_3d_astra(geometry, vol_func,
                                                           use_cuda=False)
     elif backend == 'astra_cuda':
-        proj_func = _xray_ct_parallel_projection_3d_astra(vol_func, geometry,
+        proj_func = _xray_ct_parallel_projection_3d_astra(geometry, vol_func,
                                                           use_cuda=True)
     else:
         raise NotImplementedError(errfmt('''\
-        Only `astra` and `astra_cuda` backends supported''')
-    
+        Only `astra` and `astra_cuda` backends supported'''))
+
     return proj_func
 
 
-def _xray_ct_parallel_projection_3d_astra(vol, geom, use_cuda=True):
+def _xray_ct_parallel_projection_3d_astra(geom, vol, use_cuda=True):
 
     import astra as at
 
@@ -136,7 +146,7 @@ def _xray_ct_parallel_projection_3d_astra(vol, geom, use_cuda=True):
     astra_pixel_spacing = det_grid.spacing / vol.spacing[1:]
 
     # FIXME: treat case when no discretization is given
-    astra_angles = geom.sample.curve.stops
+    astra_angles = geom.sample.angles
 
     astra_proj_geom = at.create_proj_geom('parallel3d',
                                           astra_pixel_spacing[0],
@@ -166,9 +176,12 @@ def _xray_ct_parallel_projection_3d_astra(vol, geom, use_cuda=True):
 
     # Get the projection data and change projection index from y to z
     proj_fvals = at.data3d.get(astra_proj_id)
-    proj_fvals = proj_fvals.swapaxes(1, 2)
+    proj_fvals = proj_fvals.swapaxes(0, 1)
+    proj_fvals = proj_fvals.swapaxes(0, 2)
 
     # Create the projection grid function and return it
-    proj_func = gf.Gfunc(proj_fvals, spacing=det_grid.spacing)
+    proj_spacing = np.ones(3)
+    proj_spacing[:-1] = det_grid.spacing
+    proj_func = gf.Gfunc(proj_fvals, spacing=proj_spacing)
 
     return proj_func
