@@ -83,12 +83,12 @@ def xray_ct_parallel_geom_3d(spl_grid, det_grid, axis, angles=None,
 
     if rotating_sample:
         # TODO: make axis between source and detector flexible; now: -x axis
-        direction = (1, 0, 0)
-        src_loc = (-1, 0, 0)
+        direction = (1., 0., 0.)
+        src_loc = (-1., 0., 0.)
         source = src.ParallelRaySource(direction, src_loc)
         sample = spl.RotatingGridSample(spl_grid, axis, init_rotation,
                                         angles=angles, **kwargs)
-        det_loc = (1, 0, 0)
+        det_loc = (1., 0., 0.)
         detector = det.FlatDetectorArray(det_grid, det_loc)
     else:
         src_circle = crv.Circle3D(1., axis, angles=angles, axes_map='tripod')
