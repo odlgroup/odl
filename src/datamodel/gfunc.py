@@ -65,6 +65,21 @@ def frommapping(grid, mapping):
     return gfun
 
 
+def empty_like(gfunc):
+    return Gfunc(None, shape=gfunc.shape, center=gfunc.center,
+                 spacing=gfunc.spacing)
+
+
+def zero_like(gfunc):
+    return Gfunc(0., shape=gfunc.shape, center=gfunc.center,
+                 spacing=gfunc.spacing)
+
+
+def ones_like(gfunc):
+    return Gfunc(1., shape=gfunc.shape, center=gfunc.center,
+                 spacing=gfunc.spacing)
+
+
 class Gfunc(Ugrid):
     """Grid function class. For initialization, `fvals` or `shape` are
     required. If `shape` is None, the shape will be determined from
@@ -172,23 +187,122 @@ class Gfunc(Ugrid):
         raise NotImplementedError  # TODO: do
 
     def __eq__(self, other):
-        # FIXME: this compares Ugrid with Gfunc - avoid!
-        return super().__eq__(other) and np.all(self.fvals == other.fvals)
+        if isinstance(other, Gfunc):
+            return super().__eq__(other) and np.all(self.fvals == other.fvals)
+        elif isinstance(other, np.ndarray):
+            if np.any(self.center != 0.) or np.any(self.spacing != 1.):
+                return False
+            return np.all(self.fvals == other)
+        else:
+            return False
 
-    # TODO: implement this properly; right now it works for
-    # type(other)==numpy.ndarray
+    # Arithmetic magic methods. Work with other Gfunc's or anything which
+    # numpy.ndarray understands as operand in its magic methods
+
+    # TODO: check grid compatibility if type(other) == Gfunc
+
+    def __add__(self, other):
+        self_add = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_add.fvals = self.fvals.__add__(other.fvals)
+        else:
+            self_add.fvals = self.fvals.__add__(other)
+
+        return self_add
+
+    def __radd__(self, other):
+        self_radd = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_radd.fvals = self.fvals.__radd__(other.fvals)
+        else:
+            self_radd.fvals = self.fvals.__radd__(other)
+
+        return self_radd
+
+    def __iadd__(self, other):
+        if isinstance(other, Gfunc):
+            self.fvals = self.fvals.__iadd__(other.fvals)
+        else:
+            self.fvals = self.fvals.__iadd__(other)
+
+        return self
+
+    def __sub__(self, other):
+        self_sub = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_sub.fvals = self.fvals.__sub__(other.fvals)
+        else:
+            self_sub.fvals = self.fvals.__sub__(other)
+
+        return self_sub
+
+    def __rsub__(self, other):
+        self_rsub = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_rsub.fvals = self.fvals.__rsub__(other.fvals)
+        else:
+            self_rsub.fvals = self.fvals.__rsub__(other)
+
+        return self_rsub
+
+    def __isub__(self, other):
+        if isinstance(other, Gfunc):
+            self.fvals = self.fvals.__isub__(other.fvals)
+        else:
+            self.fvals = self.fvals.__isub__(other)
+
+        return self
+
     def __mul__(self, other):
-        self_copy = self.copy()
-        self_copy.fvals = self.fvals.__mul__(other)  # TODO: reduce overhead
-        return self_copy
+        self_mul = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_mul.fvals = self.fvals.__mul__(other.fvals)
+        else:
+            self_mul.fvals = self.fvals.__mul__(other)
+
+        return self_mul
 
     def __rmul__(self, other):
-        self_copy = self.copy()
-        self_copy.fvals = self.fvals.__rmul__(other)  # TODO: reduce overhead
-        return self_copy
+        self_rmul = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_rmul.fvals = self.fvals.__rmul__(other.fvals)
+        else:
+            self_rmul.fvals = self.fvals.__rmul__(other)
+
+        return self_rmul
 
     def __imul__(self, other):
-        self.fvals = self.fvals.__imul__(other)
+        if isinstance(other, Gfunc):
+            self.fvals = self.fvals.__imul__(other.fvals)
+        else:
+            self.fvals = self.fvals.__imul__(other)
+
+        return self
+
+    def __div__(self, other):
+        self_div = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_div.fvals = self.fvals.__div__(other.fvals)
+        else:
+            self_div.fvals = self.fvals.__div__(other)
+
+        return self_div
+
+    def __rdiv__(self, other):
+        self_rdiv = empty_like(self)
+        if isinstance(other, Gfunc):
+            self_rdiv.fvals = self.fvals.__rdiv__(other.fvals)
+        else:
+            self_rdiv.fvals = self.fvals.__rdiv__(other)
+
+        return self_rdiv
+
+    def __idiv__(self, other):
+        if isinstance(other, Gfunc):
+            self.fvals = self.fvals.__idiv__(other.fvals)
+        else:
+            self.fvals = self.fvals.__idiv__(other)
+
         return self
 
     # Public methods
@@ -210,7 +324,8 @@ class Gfunc(Ugrid):
         args_im = []
         dsp_kwargs = {}
         sub_kwargs = {}
-        arrange_subplots = (121, 122)  # horzontal arrangement
+        arrange_subplots = (121, 122)  # horizontal arrangement
+        block = kwargs.get('block', False)
 
         if self.dim == 1:  # TODO: maybe a plotter class would be better
             if not method:
@@ -309,7 +424,7 @@ class Gfunc(Ugrid):
                 ticks = [minval, (maxval + minval) / 2., maxval]
                 cbar = plt.colorbar(csub, ticks=ticks, format='%.4g')
 
-        plt.show()
+        plt.show(block=block)
         if saveto:
             fig.savefig(saveto)
 
@@ -346,7 +461,7 @@ class Gfunc(Ugrid):
         # This is actually a problem of basis change. Think properly in this
         # way!
         raise NotImplementedError
-        # TODO: this function needs some decent testing
+
         fac_cp = factor
         try:
             factor[0]
