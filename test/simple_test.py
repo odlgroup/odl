@@ -42,7 +42,7 @@ detector_grid = ug.Ugrid(detector_shape, spacing=detector_pixel_size)
 # Set tilt angles
 tilt_angles = np.linspace(-pi / 2, pi / 2, 181, endpoint=True)
 
-# Init the geometry
+# Initialize the geometry
 xray_geometry = xray.xray_ct_parallel_geom_3d(sample_grid, detector_grid,
                                               axis=2, angles=tilt_angles,
                                               rotating_sample=True)
@@ -61,15 +61,27 @@ sample_func = gf.Gfunc(fvals=sample_fvals, spacing=sample_voxel_size)
 #sample_func[:, 37, :].display()
 #sample_func[:, :, 25].display()
 
+# Create forward and backward projectors
 forward_projector = xray.xray_ct_parallel_3d_projector(xray_geometry)
+backprojector = xray.xray_ct_parallel_3d_backprojector(xray_geometry)
 
+# Compute projection
 proj_func = forward_projector(sample_func)
 
-proj_func[:, :, 0].display()
-proj_func[:, :, 45].display()
-proj_func[:, :, 90].display()
-proj_func[:, :, 135].display()
-proj_func[:, :, 180].display()
+#proj_func[:, :, 0].display()
+#proj_func[:, :, 45].display()
+#proj_func[:, :, 90].display()
+#proj_func[:, :, 135].display()
+#proj_func[:, :, 180].display()
+
+# Compute backprojection
+bp_func = backprojector(proj_func)
+
+print(bp_func.shape)
+
+bp_func[50, :, :].display()
+bp_func[:, 37, :].display()
+bp_func[:, :, 25].display()
 
 # TODO:
 # - wrap ASTRA forward and backward projections into a Projector class
