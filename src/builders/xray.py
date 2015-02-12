@@ -31,7 +31,7 @@ import numpy as np
 from math import pi
 
 from RL.datamodel import ugrid as ug
-from RL.datamodel import curve as crv
+from RL.geometry import curve as crv
 from RL.geometry import source as src
 from RL.geometry import sample as spl
 from RL.geometry import detector as det
