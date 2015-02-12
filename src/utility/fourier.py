@@ -541,21 +541,27 @@ def toreciprocal(grid):
 
 
 def _mul_isum_parity(gfun):
-    negate = lambda val: -val
+
     oddind_slc = np.s_[1::2]
     for i in range(gfun.dim):
-        gfun.apply_0dmapping_with_1dslice(negate, axis=i, ax_slc=oddind_slc)
+        gfun.apply_0dmapping_with_1dslice(lambda x: -x, axis=i,
+                                          ax_slc=oddind_slc)
 
 
 def _mul_shift_factor(gfun, center):
+
     from cmath import exp
-    expmap = lambda xi, val, org: val * exp(-1j * xi * org)
+
+    def expmap(xi, val, org):
+        return val * exp(-1j * xi * org)
+
     for i in range(gfun.dim):
         expmapi = partial(expmap, org=center[i])
         gfun.apply_1dmapping(expmapi, axis=i)
 
 
 def _mul_interp_kerft(gfun, spacing):
+
     from math import cos
 
     def kerft_map(freq, val, spc):
@@ -572,6 +578,7 @@ def _mul_interp_kerft(gfun, spacing):
 
 
 def _div_interp_kerft(gfun, spacing):
+
     from math import cos
 
     def kerft_map(freq, val, spc):
