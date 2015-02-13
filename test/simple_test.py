@@ -95,7 +95,7 @@ def landweber(fwd_proj, backproj, data, init_guess, niter, relax=0.5):
 init_guess = gf.Gfunc(fvals=0., shape=sample_shape, spacing=sample_voxel_size)
 
 landw_sol = landweber(forward_projector, backprojector, proj_func,
-                      init_guess, niter=1, relax=0.5)
+                      init_guess, niter=10, relax=0.01)
 
 landw_sol[50, :, :].display(saveto='test/temp/landw_3_x.png')
 landw_sol[:, 37, :].display(saveto='test/temp/landw_3_y.png')
