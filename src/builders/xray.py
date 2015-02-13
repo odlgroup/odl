@@ -146,7 +146,7 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
 
     # Initialize volume geometry and data
 
-    # ASTRA uses a different axis labeling. We need to permute x->y->z->x
+    # ASTRA uses a different axis labeling. We need to cycle x->y->z->x
     astra_vol = vol.fvals.swapaxes(0, 1).swapaxes(0, 2)
     astra_vol_geom = at.create_vol_geom(vol.shape)
 
@@ -163,11 +163,13 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     # FIXME: adjust angles if the scaling is not uniform
     astra_angles = geom.sample.angles
 
+    # ASTRA lables detector axes as 'rows, columns', so we need to swap
+    # axes 0 and 1
     astra_proj_geom = at.create_proj_geom('parallel3d',
                                           astra_pixel_spacing[0],
                                           astra_pixel_spacing[1],
-                                          det_grid.shape[0],
                                           det_grid.shape[1],
+                                          det_grid.shape[0],
                                           astra_angles)
 
     # Some wrapping code
@@ -189,10 +191,10 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     at.algorithm.run(astra_algo_id)
     at.algorithm.delete(astra_algo_id)
 
-    # Get the projection data and swap axes 1 and 2 such that the last index
-    # is the projection number
+    # Get the projection data. ASTRA creates an (nrows, ntilts, ncols) array,
+    # so we need to cycle to the right to get (nx, ny, ntilts)
     proj_fvals = at.data3d.get(astra_proj_id)
-    proj_fvals = proj_fvals.swapaxes(1, 2)
+    proj_fvals = proj_fvals.swapaxes(1, 2).swapaxes(0, 1)
 
     # Create the projection grid function and return it
     proj_spacing = np.ones(3)
@@ -237,13 +239,14 @@ def _xray_ct_par_bp_3d_astra(geom, proj_, use_cuda=True):
     # FIXME: treat case when no discretization is given
     astra_angles = geom.sample.angles
 
-    # ASTRA uses a different axis labeling. We need swap axes 1 and 2
-    astra_proj = proj_.fvals.swapaxes(1, 2)
+    # ASTRA assumes a (nrows, ntilts, ncols) array. We must cycle axes to
+    # the left and swap detector axes in the geometry.
+    astra_proj = proj_.fvals.swapaxes(0, 2).swapaxes(0, 1)
     astra_proj_geom = at.create_proj_geom('parallel3d',
                                           astra_pixel_spacing[0],
                                           astra_pixel_spacing[1],
-                                          proj_.shape[0],
                                           proj_.shape[1],
+                                          proj_.shape[0],
                                           astra_angles)
 
     # Initialize volume geometry
@@ -271,8 +274,7 @@ def _xray_ct_par_bp_3d_astra(geom, proj_, use_cuda=True):
     # Get the volume data and cycle back axes to translate from ASTRA axes
     # convention
     vol_fvals = at.data3d.get(astra_vol_id)
-    vol_fvals = vol_fvals.swapaxes(0, 2)
-    vol_fvals = vol_fvals.swapaxes(0, 1)
+    vol_fvals = vol_fvals.swapaxes(0, 2).swapaxes(0, 1)
 
     # Create the volume grid function and return it
     vol_func = gf.Gfunc(vol_fvals, spacing=vol_grid.spacing)
