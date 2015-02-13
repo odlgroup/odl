@@ -350,7 +350,8 @@ class Gfunc(Ugrid):
                           self.xmin[1], self.xmax[1]]
                 aspect = self.tsize[1] / self.tsize[0]
                 dsp_kwargs.update({'interpolation': 'none', 'cmap': gray,
-                                   'extent': extent, 'aspect': aspect})
+                                   'extent': extent, 'aspect': aspect,
+                                   'origin': 'lower'})
             elif method == 'scatter':
                 coo_arr = self.coord.asarr()
                 args_re = [coo_arr[:, 0], coo_arr[:, 1], self.fvals.real]
