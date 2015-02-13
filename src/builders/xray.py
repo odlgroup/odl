@@ -139,6 +139,7 @@ def xray_ct_parallel_projection_3d(geometry, vol_func, backend='astra_cuda'):
 def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
 
     import astra as at
+    from math import pi, sin, asin, cos, acos, sqrt
 
     # FIXME: we assume fixed sample rotating around z axis for now
     # TODO: include shifts (volume and detector)
@@ -153,15 +154,34 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     # Initialize detector geometry
 
     # Detector pixel spacing must be scaled with volume (y,z) spacing
-    # since ASTRA assumes voxel size 1
+    # since ASTRA assumes voxel size (1., 1., 1.)
     # FIXME: assuming z axis tilt
     det_grid = geom.detector.grid
     astra_pixel_spacing = det_grid.spacing / vol.spacing[1:]
 
     # FIXME: treat case when no discretization is given
-
-    # FIXME: adjust angles if the scaling is not uniform
+    # Adjust angles if the scaling is not uniform
     astra_angles = geom.sample.angles
+    print('old angles: ', astra_angles)
+    scaling_factors = np.ones_like(astra_angles)
+    a, b = 1. / vol.spacing[1:]
+    if a != b:
+        for i, ang in enumerate(astra_angles):
+            norm = sqrt(a**2 * cos(ang)**2 + b**2 * sin(ang)**2)
+            if abs(ang) < pi / 4 or abs(ang - pi / 2) < pi / 4:
+                astra_angles[i] = asin(b * sin(ang) / norm)
+            else:
+                if ang < 0:  # arc cosine seems to map to [0, pi]
+                    astra_angles[i] = -acos(a * cos(ang) / norm)
+                else:
+                    astra_angles[i] = acos(a * cos(ang) / norm)
+
+            scaling_factors[i] = 1 / norm
+    else:
+        scaling_factors = 1 / a
+
+    print('new angles: ', astra_angles)
+    print('scaling factors: ', scaling_factors)
 
     # ASTRA lables detector axes as 'rows, columns', so we need to swap
     # axes 0 and 1
@@ -195,6 +215,8 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     # so we need to cycle to the right to get (nx, ny, ntilts)
     proj_fvals = at.data3d.get(astra_proj_id)
     proj_fvals = proj_fvals.swapaxes(1, 2).swapaxes(0, 1)
+
+    # TODO: apply scaling factors!
 
     # Create the projection grid function and return it
     proj_spacing = np.ones(3)
