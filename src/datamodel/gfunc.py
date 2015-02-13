@@ -20,11 +20,11 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from __future__ import unicode_literals, print_function, division,
+from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from builtins import zip, range, object
 from future import standard_library
 standard_library.install_aliases()
+from builtins import int, zip, range, object, super
 
 import numpy as np
 from scipy.interpolate import interpn
@@ -342,10 +342,8 @@ class Gfunc(Ugrid):
                 args_im = [self.fvals.imag.T]
                 extent = [self.xmin[0], self.xmax[0],
                           self.xmin[1], self.xmax[1]]
-                aspect = self.tsize[1] / self.tsize[0]
                 dsp_kwargs.update({'interpolation': 'none', 'cmap': gray,
-                                   'extent': extent, 'aspect': aspect,
-                                   'origin': 'lower'})
+                                   'extent': extent, 'origin': 'lower'})
             elif method == 'scatter':
                 coo_arr = self.coord.asarr()
                 args_re = [coo_arr[:, 0], coo_arr[:, 1], self.fvals.real]
