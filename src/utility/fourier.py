@@ -20,15 +20,11 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
+from __future__ import division, unicode_literals, print_function
 from __future__ import absolute_import
-from builtins import object
-from builtins import super
+from builtins import object, super, range
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range
 
 import numpy as np
 from numpy import pi

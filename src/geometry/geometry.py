@@ -20,10 +20,11 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from __future__ import print_function, unicode_literals, division, absolute_import
+from __future__ import print_function, unicode_literals, division
+from __future__ import absolute_import
+from builtins import object
 from future import standard_library
 standard_library.install_aliases()
-from future.builtins import object
 
 from scipy.linalg import norm
 

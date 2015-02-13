@@ -20,8 +20,9 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from __future__ import unicode_literals, print_function, division, absolute_import
-from future.builtins import super
+from __future__ import unicode_literals, print_function, division
+from __future__ import absolute_import
+from builtins import super
 from future import standard_library
 standard_library.install_aliases()
 

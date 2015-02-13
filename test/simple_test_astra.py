@@ -19,6 +19,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
 
 import os
 from math import pi
@@ -48,7 +55,7 @@ detector_pixel_size = 0.4
 detector_grid = ug.Ugrid(detector_shape, spacing=detector_pixel_size)
 
 # Set tilt angles
-tilt_angles = np.linspace(-pi / 2, pi / 2, 181, endpoint=True)
+tilt_angles = np.linspace(-pi / 2., pi / 2., 181, endpoint=True)
 
 # Initialize the geometry
 xray_geometry = xray.xray_ct_parallel_geom_3d(sample_grid, detector_grid,
