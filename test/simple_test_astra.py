@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-simple_test.py -- a simple test script
+simple_test_astra.py -- a simple test script
 
 Copyright 2014, 2015 Holger Kohr
 
@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
 from math import pi
 import numpy as np
 from matplotlib import pyplot as plt
@@ -29,6 +30,12 @@ from RL.datamodel import gfunc as gf
 from RL.builders import xray
 
 # from RL.utility.utility import InputValidationError
+
+try:
+    os.mkdir('test/temp')
+except OSError as e:
+    if not e.errno == 17:  # folder exists
+        raise e
 
 # Initialize a sample grid
 sample_shape = [100, 75, 50]
@@ -61,6 +68,7 @@ sample_func[:, :, 24].display(saveto='test/temp/orig_z.png')
 # Create forward and backward projectors
 forward_projector = xray.xray_ct_parallel_3d_projector(xray_geometry)
 backprojector = xray.xray_ct_parallel_3d_backprojector(xray_geometry)
+normal_op = forward_projector * backprojector
 
 # Compute projection
 proj_func = forward_projector(sample_func)
@@ -70,6 +78,10 @@ proj_func[:, :, 0].display()
 proj_func[:, :, 90].display()
 #proj_func[:, :, 135].display()
 #proj_func[:, :, 180].display()
+
+# Compute fwd and bwd combination (for testing only)
+bf_func = normal_op(proj_func)
+bf_func[:, :, 90].display()
 
 # Compute backprojection
 bp_func = backprojector(proj_func)
