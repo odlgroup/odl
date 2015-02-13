@@ -26,8 +26,8 @@ from __future__ import division
 from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range
-from builtins import object
+from future.builtins import range
+from future.builtins import object
 
 import numpy as np
 from RL.utility.utility import flat_tuple, vec_list_from_arg

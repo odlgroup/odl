@@ -26,8 +26,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range
-from builtins import object
+from future.builtins import range
+from future.builtins import object
 
 import numpy as np
 from copy import deepcopy
