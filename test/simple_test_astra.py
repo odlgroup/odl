@@ -82,7 +82,6 @@ bp_func[:, :, 24].display()
 
 
 def landweber(fwd_proj, backproj, data, init_guess, niter, relax=0.5):
-
     cur_guess = init_guess.copy()
     for i in range(niter):
         residual = fwd_proj(cur_guess) - data
