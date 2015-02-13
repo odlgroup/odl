@@ -32,7 +32,7 @@ from RL.builders import xray
 
 # Initialize a sample grid
 sample_shape = [100, 75, 50]
-sample_voxel_size = 0.5
+sample_voxel_size = (0.5, 0.2, 0.4)
 sample_grid = ug.Ugrid(sample_shape, spacing=sample_voxel_size)
 
 # Initialize detector grid
@@ -50,13 +50,13 @@ xray_geometry = xray.xray_ct_parallel_geom_3d(sample_grid, detector_grid,
 
 # Initialize the volume values (cuboid of value 1.0)
 sample_fvals = np.zeros(sample_shape)
-sample_fvals[25:75, 17:57, 20:30] = 1.0  # thicknesses 50, 40, 10
+sample_fvals[20:70, 12:52, 15:25] = 1.0  # thicknesses 50, 40, 10, shift -5
 sample_func = gf.Gfunc(fvals=sample_fvals, spacing=sample_voxel_size)
 
 # Show central slices
 sample_func[50, :, :].display(saveto='test/temp/orig_x.png')
 sample_func[:, 37, :].display(saveto='test/temp/orig_y.png')
-sample_func[:, :, 25].display(saveto='test/temp/orig_z.png')
+sample_func[:, :, 24].display(saveto='test/temp/orig_z.png')
 
 # Create forward and backward projectors
 forward_projector = xray.xray_ct_parallel_3d_projector(xray_geometry)
@@ -65,9 +65,9 @@ backprojector = xray.xray_ct_parallel_3d_backprojector(xray_geometry)
 # Compute projection
 proj_func = forward_projector(sample_func)
 
-#proj_func[:, :, 0].display()
+proj_func[:, :, 0].display()
 #proj_func[:, :, 45].display()
-#proj_func[:, :, 90].display()
+proj_func[:, :, 90].display()
 #proj_func[:, :, 135].display()
 #proj_func[:, :, 180].display()
 
@@ -78,7 +78,7 @@ print(bp_func.shape)
 
 #bp_func[50, :, :].display()
 #bp_func[:, 37, :].display()
-#bp_func[:, :, 25].display()
+bp_func[:, :, 24].display()
 
 
 def landweber(fwd_proj, backproj, data, init_guess, niter, relax=0.5):
@@ -94,11 +94,11 @@ def landweber(fwd_proj, backproj, data, init_guess, niter, relax=0.5):
 # Start Landweber method with start value 0
 init_guess = gf.Gfunc(fvals=0., shape=sample_shape, spacing=sample_voxel_size)
 
-landw_sol = landweber(forward_projector, backprojector, proj_func,
-                      init_guess, niter=10, relax=0.01)
+#landw_sol = landweber(forward_projector, backprojector, proj_func,
+#                      init_guess, niter=10, relax=0.01)
 
-landw_sol[50, :, :].display(saveto='test/temp/landw_3_x.png')
-landw_sol[:, 37, :].display(saveto='test/temp/landw_3_y.png')
-landw_sol[:, :, 25].display(saveto='test/temp/landw_3_z.png')
+#landw_sol[50, :, :].display(saveto='test/temp/landw_3_x.png')
+#landw_sol[:, 37, :].display(saveto='test/temp/landw_3_y.png')
+#landw_sol[:, :, 25].display(saveto='test/temp/landw_3_z.png')
 
 plt.show(block=True)
