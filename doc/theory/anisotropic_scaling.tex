@@ -1,0 +1,348 @@
+\documentclass{amsart}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{graphicx}
+\usepackage{caption}
+%\usepackage{epstopdf}
+\usepackage{enumerate}
+\usepackage{amsmath,amsfonts,amsthm,amssymb}
+\usepackage{mathrsfs}
+\usepackage{url}
+\usepackage{acronym}
+\usepackage{thmtools}
+\usepackage{nicefrac}
+\usepackage{pseudocode}
+% \usepackage[authoryear]{natbib}
+\usepackage{wrapfig}
+
+% Clever references
+% \usepackage{cleveref}
+% 
+% \crefname{equation}{}{}
+% \Crefname{equation}{}{}
+% \crefname{figure}{figure}{figures}
+% \Crefname{figure}{Figure}{Figures}
+% \crefname{appendix}{Appendix}{Appendices}
+% \Crefname{appendix}{Appendix}{Appendices}
+% \crefname{section}{Section}{Sections}
+% \Crefname{section}{Section}{Sections}
+
+% Own stuff
+\usepackage{mathdefs}
+\usepackage{notecommand}
+\usepackage{mytheorems}
+\usepackage{other}
+
+\usepackage[pdftex,unicode,colorlinks=true,linkcolor=black,citecolor=black,hypertexnames=true]{hyperref}
+\hypersetup{pdfauthor={},pdftitle={Anisotropic scaling of the X-ray transform}}
+
+% Figure are placed in figures directory.
+\graphicspath{{Pictures/}}
+
+% Acronyms (depends on the acronym package)
+\acrodef{em}[EM]{electron microscopy}
+\acrodef{EM}[EM]{Electron Microscopy}
+\acrodef{et}[ET]{electron tomography}
+\acrodef{ET}[ET]{Electron Tomography}
+\acrodef{stem}[STEM]{scanning transmission electron microscopy}
+\acrodef{psf}[PSF]{point spread function}
+\acrodef{PSF}[PSF]{Point Spread Function}
+\acrodef{ctf}[CTF]{contrast transfer function}
+\acrodef{CTF}[CTF]{Contrast Transfer Function}
+\acrodef{nufFt}[FT]{non-uniform fast Fourier transform}
+\acrodef{NufFt}[FT]{Non-uniform fast Fourier transform}
+\acrodef{NUFFT}[FT]{Non-Uniform Fast Fourier Transform}
+\acrodef{Ft}[FT]{Fourier transform}
+\acrodef{FT}[FT]{Fourier Transform}
+\acrodef{snr}[SNR]{signal-to-noise ratio}
+\acrodef{SNR}[SNR]{Signal-to-Noise Ratio}
+
+
+\title{Anisotropic scaling of the X-ray transform}
+
+% \usepackage{other}
+
+\newcommand*{\Dinv}{{\ensuremath{D^{-1}}}}
+\renewcommand*{\phi}{\varphi}
+
+% \setlength{\parindent}{0pt}
+
+\begin{document}
+
+In ASTRA, the voxel size is assumed to be 1 in each direction. If in practice, a voxel has dimensions $\Delta \Bx = (a, b, c) > 0$, i.e. 
+the volume grid has the nodes $\Bx_\Bj = \Bx_\BNULL + \Bj \Delta \Bx$, we rescale $\tilde \Bx_\Bj = \Bx_\Bj / \Delta \Bx$ to get a grid 
+with isotropic spacing equal to 1. By restricting our considerations to single axis tilting, we can reduce the scaling to the following 
+two-dimensional case. Let thus
+%
+\begin{equation*}
+ \Pop f(\Btheta, \Bv) = \int_\RR f(t\Bomega + \Bv)\, \diff t,\quad \Btheta \in \Sphere^1,\ \Bv \in \Btheta^\perp,
+\end{equation*}
+%
+be the 2D X-ray transform and
+%
+\begin{equation*}
+ \Pop^* g(\Bx) = \int_{\Sphere^1} g(\Btheta, \Pi_\Btheta \Bx)\, \diff \Btheta
+\end{equation*}
+%
+the corresponding backprojection with $\Pi_\Btheta \Bx = \Bx - \spr{\Bx}{\Btheta}\Btheta$. Note that the following arguments can also be 
+applied if only a part of the sphere is covered.
+
+Let $D = \DIAG(a,b)$ be the anisotropic scaling and
+%
+\begin{equation}
+ \label{eq:vol_scaling}
+ \Sop_D f(\Bx) = f(D\Bx) = f_D(\Bx)
+\end{equation}
+%
+be the corresponding scaling operator. If the old samples were $f_\Bj = f(\Bx_\Bj)$ with $f_{\Bj+\BONE} = f(\Bx_\Bj + \Delta\Bx)$, the new 
+samples are $\tilde f_{\Bj} = f_D(\tilde\Bx_\Bj)$ with 
+%
+\begin{equation*}
+ \tilde f_{\Bj+\BONE} = f_D(\tilde\Bx_\Bj + \BONE) = f(\Bx_\Bj + D\BONE) = f_{\Bj+\BONE},
+\end{equation*}
+%
+i.e. the transformed function lives on a grid with spacing $\BONE = (1,1,1)$. Now we can write
+%
+\begin{align*}
+ \Pop f(\Btheta, \Bv) 
+ &= \int_\RR f_D(t \Dinv\Btheta + \Dinv\Bv)\, \diff t \\
+ &= \abs{\Dinv\Btheta}^{-1} \int_\RR f_D\left(t \frac{\Dinv\Btheta}{\abs{\Dinv\Btheta}} + \Dinv\Bv\right)\, \diff t \\
+ &= \abs{\Dinv\Btheta}^{-1} \int_\RR f_D(t \tilde\Btheta + \Pi_{\tilde\Btheta} \Dinv\Bv)\, \diff t \\
+ &= \abs{\Dinv\Btheta}^{-1} \Pop f_D (\tilde\Btheta, \Pi_{\tilde\Btheta} \Dinv\Bv) \\
+ &= \Top_D \Pop \Sop_D f(\Btheta, \Bv),
+\end{align*}
+%
+and thus
+%
+\begin{equation}
+ \label{eq:xray_fwd_scaling}
+ \Pop = \Top_D \Pop \Sop_D
+\end{equation}
+%
+with 
+%
+\begin{equation}
+ \label{eq:proj_scaling}
+ \Top_D g(\Btheta, \Bv) = \abs{\Dinv\Btheta}^{-1} g(\tilde\Btheta, \Pi_{\tilde\Btheta} \Dinv\Bv),\quad 
+ \tilde\Btheta = \frac{\Dinv\Btheta}{\abs{\Dinv\Btheta}}.
+\end{equation}
+%
+This implicates that in the rescaled setting, the projection directions are changed from $\Btheta = (\cos\phi, \sin\phi)$ to 
+$\tilde\Btheta = (\cos\tilde\phi, \sin\tilde\phi)$ with 
+%
+\begin{equation}
+ \label{eq:fwd_new_angles}
+ (\cos\tilde\phi, \sin\tilde\phi) = \frac{(\cos\phi, \tau \sin\phi)}{\sqrt{\cos^2\phi + \tau^2\sin^2\phi}},\quad \tau = \frac{a}{b},
+\end{equation}
+%
+i.e. the new angles $\tilde\phi$ depend on the ratio $\tau$ between the $x$ and $y$ scalings.
+
+Moreover, to acquire the projections at a detector grid with nodes 
+$\Bv_k = \Bv_0 + k\Delta\Bv$, $\Delta \Bv = \Delta v (-\sin\phi, \cos\phi)$, we not only need to rescale $\tilde \Bv_k = \Dinv\Bv_k$ but 
+also project onto the new perpendicular component. This induces the new stepping 
+%
+\begin{align*}
+ \Delta\Bu 
+ &= \Delta\tilde\Bv - \spr{\Delta\tilde\Bv}{\tilde\Btheta}\tilde\Btheta \\
+ &= \Delta v (-a^{-1}\sin\phi, b^{-1}\cos\phi) - \Delta v \left(-a^{-1}\sin\phi \cos\tilde\phi + b^{-1}\cos\phi \sin\tilde\phi\right) 
+ \left(\cos\tilde\phi,  \sin\tilde\phi\right) \\
+ &= \Delta v \left(a^{-1} \sin\phi \sin\tilde\phi + b^{-1} \cos\phi \cos\tilde\phi \right) \left(-\sin\tilde\phi, \cos\tilde\phi\right) \\
+ &= \Delta u \left(-\sin\tilde\phi, \cos\tilde\phi\right)
+\end{align*}
+%
+with $\Delta u = \left(a^{-1} \sin\phi \sin\tilde\phi + b^{-1} \cos\phi \cos\tilde\phi \right)$ depending on the current direction.
+
+The backprojection can also be computed with the isotropic operator by taking the adjoint of \eqref{eq:xray_fwd_scaling}:
+%
+\begin{equation}
+ \label{eq:xray_backproj_scaling}
+ \Pop^* = \Sop_D^* \Pop^* \Top_D^*.
+\end{equation} 
+%
+We calculate these adjoints in the following. As for $\Sop_D$, it is easy to see that
+%
+\begin{equation*}
+ \spr{\Sop_D f}{h} = \int_{\RR^2} f(D\Bx)\, h(\Bx)\, \diff\Bx = (\det D)^{-1} \int_{\RR^2} f(\By)\, h(\Dinv\By)\, \diff\By, 
+\end{equation*}
+%
+which implies
+%
+\begin{equation}
+ \label{eq:vol_scaling_adjoint}
+ \Sop_D^* f(\Bx) = (\det D)^{-1} f(\Dinv\Bx).
+\end{equation}
+%
+Regarding $\Top_D$, we start with
+%
+\begin{align}
+ \spr{\Top_D g}{k} 
+ &= \int_{\Sphere^1} \int_{\Btheta^\perp} \Top_D g(\Btheta, \Bv)\, k(\Btheta, \Bv)\, \diff\Bv\, \diff\Btheta \notag \\
+ \label{eq:proj_scaling_adjoint_step1}
+ &= \int_{\Sphere^1} \int_{\Btheta^\perp} \abs{\Dinv \Btheta}^{-1}\, g(\tilde\Btheta, \Pi_{\tilde\Btheta} \Dinv\Bv)\, 
+ k(\Btheta, \Bv)\, \diff\Bv\, \diff\Btheta.
+\end{align}
+%
+In the first step, we reparametrize the $\Btheta$ integral and observe that
+%
+\begin{equation}
+ \label{eq:spherint_reparam_step1}
+ \int_{\Sphere^1} \abs{\Dinv \Btheta}^{-1}\, u\left(\frac{\Dinv\Btheta}{\abs{\Dinv\Btheta}}\right)\, \diff \Btheta = 
+ \int_0^{2\pi} \abs{\Dinv \Btheta(\phi)}^{-1}\, u\left(\frac{\Dinv\Btheta(\phi)}{\abs{\Dinv\Btheta(\phi)}}\right)\, \abs{\Btheta'(\phi)} 
+ \diff\phi. 
+\end{equation}
+%
+To rephrase this integral in terms of $\Bomega = \frac{\Dinv\Btheta}{\abs{\Dinv\Btheta}}$, we need to calculate $\abs{\Bomega'(\phi)}$. 
+Using the abbreviation $\Br(\phi) = \Dinv\Btheta(\phi) = (a^{-1}\cos\phi, b^{-1}\sin\phi)$, it can be immediately seen that
+%
+\begin{equation*}
+ \omega_1' = - \frac{r_2 (r_1 r_2' - r_2 r_1')}{\abs{\Br}^3} = -(ab)^{-1} \frac{r_2}{\abs{\Br}^3}
+\end{equation*}
+%
+and likewise
+%
+\begin{equation*}
+ \omega_2' = (ab)^{-1} \frac{r_1}{\abs{\Br}^3}.
+\end{equation*}
+%
+Thereby it follows that 
+%
+\begin{equation*}
+ \abs{\Bomega'(\phi)} = (\det D)^{-1} \abs{\Br}^{-2} = (\det D)^{-1} \abs{\Dinv \Btheta}^{-2},
+\end{equation*}
+%
+and from the definition of $\Bomega$ we conclude that $\abs{D \Bomega} = \abs{\Dinv \Btheta}^{-1}$. Hence, we can rewrite 
+\eqref{eq:spherint_reparam_step1} as
+%
+\begin{equation}
+ \label{eq:spherint_reparam}
+ \int_{\Sphere^1} \abs{\Dinv \Btheta}^{-1}\, u\left(\frac{\Dinv\Btheta}{\abs{\Dinv\Btheta}}\right)\, \diff \Btheta = 
+ \det D \int_{\Sphere^1} \abs{D \Bomega}^{-1}\, u(\Bomega)\, \diff\Bomega.
+\end{equation} 
+%
+Inserting this into \eqref{eq:proj_scaling_adjoint_step1} yields
+%
+\begin{equation}
+ \label{eq:proj_scaling_adjoint_step2}
+ \spr{\Top_D g}{k} = \det D \int_{\Sphere^1} \int_{(D\Bomega)^\perp} \abs{D \Bomega}^{-1}\, g(\Bomega, \Pi_\Bomega \Dinv\Bv)\, 
+ k\left(\frac{D \Bomega}{\abs{D \Bomega}}, \Bv\right)\, \diff\Bv\, \diff\Bomega
+\end{equation} 
+%
+For the substitution of the inner integral, we observe that
+%
+\begin{equation*}
+ (D\Bomega)^\perp = \SPAN\left\lbrace \left(-a^{-1}\omega_2, b^{-1}\omega_1\right) \right\rbrace = \SPAN\lbrace \Bp \rbrace
+\end{equation*}
+%
+and observe
+%
+\begin{align*}
+ \int_{(D\Bomega)^\perp} h(\Bv)\, \diff \Bv 
+ &= \int_\RR h(\lambda \Bp)\, \abs{\Bp}\, \diff\lambda,\\[1ex]
+ %
+ \int_{\Bomega^\perp} H(\By)\, \diff \By
+ &= \int_\RR H(\lambda \Bq)\, \diff\lambda,
+\end{align*}
+%
+where $\Bq = D\Bp = (-\omega_2, \omega_1)$. Both right hand sides coincide if we choose 
+%
+\begin{equation*}
+ H(\By) = h(\Dinv \By)\, \abs{\Dinv \Bq} = h(\Dinv \By)\, \abs{\tilde D^{-1} \Bomega},\quad \tilde D = \DIAG(b,a).
+\end{equation*}
+%
+Applying this result to \eqref{eq:proj_scaling_adjoint_step2} finally gives the form
+%
+\begin{equation}
+ \label{eq:proj_scaling_adjoint_final}
+ \spr{\Top_D g}{k} = \det D \int_{\Sphere^1} \int_{\Bomega^\perp} \abs{\tilde D^{-1} \Bomega}^{-1}\, \abs{D \Bomega}^{-1}\, 
+ g(\Bomega, \By)\, k\left(\frac{D \Bomega}{\abs{D \Bomega}}, D \By\right)\, \diff\By\, \diff\Bomega
+\end{equation} 
+%
+which allows us to read off the adjoint operator
+%
+\begin{equation}
+ \label{eq:proj_scaling_adjoint}
+ \Top_D^* k(\Bomega, \By) = \det D\, \abs{\tilde D^{-1} \Bomega}^{-1}\, \abs{D \Bomega}^{-1}\, 
+ k\left(\frac{D \Bomega}{\abs{D \Bomega}}, D \By\right).
+\end{equation}
+%
+Apart from the adaption of the direction vectors, the backprojection must be weighted with the dirction-dependent factor
+%
+\begin{align*}
+ \mu(\Bomega) 
+ &= \abs{\tilde D^{-1} \Bomega}^{-1}\, \abs{D \Bomega}^{-1} \\
+ &= \left[\cos^2\psi \left(\sin^2\psi + a^2/b^2 \cos^2\psi\right) + \sin^2\psi \left(\cos^2\psi + b^2/a^2 
+ \sin^2\psi\right)\right]^{-\nfhalf}
+\end{align*}
+%
+for $\Bomega = (\cos\psi, \sin\psi)$ while the detector grid scaling is independent of the direction. The $(\det D)$ factor cancels with 
+the factor of $\Sop_D^*$ and can be ignored.
+
+In summary, we have the following recipes for forward and backward projections, respectively.
+
+\begin{algorithm}[Forward projection with anisotropic scaling]~\\[2ex]
+ %
+ \textbf{Given:}
+ %
+ \begin{itemize}
+  \item Data on 2D grid with spacing $\Delta\Bx = (a, b) > 0$
+  \item 1D detector grid with spacing $\eta > 0$
+  \item Projection angles $\phi_k$, $k = 1, \ldots, p$
+ \end{itemize}
+ %
+ \vspace*{2ex}
+ \textbf{Computation:}
+ %
+ \begin{itemize}
+  \item Calculate auxiliary quantities $\alpha = 1 / a,\ \beta = 1 / b$.
+  \item For $1 \leq k \leq p$:
+  \begin{itemize}
+   \item[$\ast$] Set $l_k = (\alpha^2 \cos^2\phi_k + \beta^2 \sin^2\phi_k)^{\nfhalf}$.
+   \item[$\ast$] Set $\Bp_k = (\alpha \cos\phi_k, \beta \sin\phi_k) / l_k$.
+   \item[$\ast$] Determine $\tilde\phi_k$ with $(\cos\tilde\phi_k, \sin\tilde\phi_k) = \Bp_k$.
+   \item[$\ast$] Scale detector spacing to $\eta_k = (\alpha \sin\phi_k \sin\tilde\phi_k + \beta \cos\phi_k \cos\tilde\phi_k)\, \eta$.
+   \item[$\ast$] Perform projection with one angle $\tilde\phi_k$ and detector spacing $\eta_k$.
+   \item[$\ast$] Multiply the result with $l_k^{-1}$.
+  \end{itemize}
+ \end{itemize}
+ %
+ \vspace*{2ex}
+ \textbf{Result:} Projections for angles $\phi_k$ and detector grid spacing $\eta$ for scaled 2D grid input.
+\end{algorithm}
+
+
+\begin{algorithm}[Backprojection with anisotropic scaling]~\\[2ex]
+ %
+ \textbf{Given:}
+ %
+ \begin{itemize}
+  \item Projection data on 1D grid with spacing $\eta > 0$
+  \item 2D volume grid with spacing $\Delta\Bx = (a, b) > 0$
+  \item Projection angles $\phi_k$, $k = 1, \ldots, p$
+ \end{itemize}
+ %
+ \vspace*{2ex}
+ \textbf{Computation:}
+ %
+ \begin{itemize}
+  \item Calculate auxiliary quantities $\alpha = 1 / a,\ \beta = 1 / b,\ \tau = a / b$.
+  \item For $1 \leq k \leq p$:
+  \begin{itemize}
+   \item[$\ast$] Set $L_k = (a^2 \cos^2\phi_k + b^2 \sin^2\phi_k)^{\nfhalf}$.
+   \item[$\ast$] Set $\Bq_k = (a \cos\phi_k, b \sin\phi_k) / L_k$.
+   \item[$\ast$] Determine $\tilde\psi_k$ with $(\cos\tilde\psi_k, \sin\tilde\psi_k) = \Bq_k$.
+   \item[$\ast$] Scale detector spacing to $\eta_k = (\alpha \sin\phi_k \sin\tilde\psi_k + \beta \cos\phi_k \cos\tilde\psi_k)\, \eta$.
+   \item[$\ast$] Calculate weight $\mu_k = \left[\cos^2\phi_k \left(\sin^2\phi_k + \tau^2 \cos^2\phi_k\right) +
+   \sin^2\phi_k \left(\cos^2\phi_k + \tau^{-2} \sin^2\phi_k\right)\right]^{-\nfhalf}$.
+   \item[$\ast$] Multiply $k$-th projection data with $\mu_k$.
+   \item[$\ast$] Perform backprojection with one angle $\tilde\psi_k$ and detector spacing $\eta_k$.
+   \item[$\ast$] Add the result to backprojection from previous step, weighted according to a numerical integration formula, e.g. 
+   $(\tilde\psi_{k+1} - \tilde\psi_{k-1}) / 2$ for trapezoidal rule.
+  \end{itemize}
+ \end{itemize}
+ %
+ \vspace*{2ex}
+ \textbf{Result:} Backprojection for angles $\phi_k$ and detector grid spacing $\eta$ for scaled 2D grid volume.
+\end{algorithm}
+
+
+\end{document}
