@@ -157,31 +157,17 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     # since ASTRA assumes voxel size (1., 1., 1.)
     # FIXME: assuming z axis tilt
     det_grid = geom.detector.grid
-    astra_pixel_spacing = det_grid.spacing / vol.spacing[1:]
+    astra_pixel_spacing = det_grid.spacing.copy()
 
     # FIXME: treat case when no discretization is given
-    # Adjust angles if the scaling is not uniform
+    # FIXME: Adjust angles if the scaling is not uniform
     astra_angles = geom.sample.angles
-    print('old angles: ', astra_angles)
-    scaling_factors = np.ones_like(astra_angles)
-    a, b = 1. / vol.spacing[1:]
+
+    a, b, c = vol.spacing
     if a != b:
-        for i, ang in enumerate(astra_angles):
-            norm = sqrt(a**2 * cos(ang)**2 + b**2 * sin(ang)**2)
-            if abs(ang) < pi / 4 or abs(ang - pi / 2) < pi / 4:
-                astra_angles[i] = asin(b * sin(ang) / norm)
-            else:
-                if ang < 0:  # arc cosine seems to map to [0, pi]
-                    astra_angles[i] = -acos(a * cos(ang) / norm)
-                else:
-                    astra_angles[i] = acos(a * cos(ang) / norm)
+        raise NotImplementedError('Anisotropic scaling in tilt plane')
 
-            scaling_factors[i] = 1 / norm
-    else:
-        scaling_factors = 1 / a
-
-    print('new angles: ', astra_angles)
-    print('scaling factors: ', scaling_factors)
+    astra_pixel_spacing *= (1. / a, 1. / c)
 
     # ASTRA lables detector axes as 'rows, columns', so we need to swap
     # axes 0 and 1
