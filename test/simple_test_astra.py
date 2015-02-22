@@ -68,9 +68,9 @@ sample_fvals[20:70, 12:52, 15:25] = 1.0  # thicknesses 50, 40, 10, shift -5
 sample_func = gf.Gfunc(fvals=sample_fvals, spacing=sample_voxel_size)
 
 # Show central slices
-sample_func[50, :, :].display(saveto='test/temp/orig_x.png')
-sample_func[:, 37, :].display(saveto='test/temp/orig_y.png')
-sample_func[:, :, 24].display(saveto='test/temp/orig_z.png')
+sample_func[50, :, :].display()
+sample_func[:, 37, :].display()
+sample_func[:, :, 24].display()
 
 # Create forward and backward projectors
 forward_projector = xray.xray_ct_parallel_3d_projector(xray_geometry)
@@ -80,23 +80,33 @@ normal_op = forward_projector * backprojector
 # Compute projection
 proj_func = forward_projector(sample_func)
 
+#for i in range(181):
+#    savfile = 'test/temp/proj_{:3}.png'.format(i)
+#    proj_func[:, :, i].display(show=False, saveto=savfile)
+
 proj_func[:, :, 0].display()
-#proj_func[:, :, 45].display()
+proj_func[:, :, 45].display()
 proj_func[:, :, 90].display()
 #proj_func[:, :, 135].display()
 #proj_func[:, :, 180].display()
 
 # Compute fwd and bwd combination (for testing only)
+print('now normal op')
 bf_func = normal_op(proj_func)
+
+bf_func[:, :, 0].display()
+bf_func[:, :, 45].display()
 bf_func[:, :, 90].display()
+
+#for i in range(181):
+#    savfile = 'test/temp/proj_back_fwd_{:3}.png'.format(i)
+#    proj_func[:, :, i].display(show=False, saveto=savfile)
 
 # Compute backprojection
 bp_func = backprojector(proj_func)
 
-print(bp_func.shape)
-
-#bp_func[50, :, :].display()
-#bp_func[:, 37, :].display()
+bp_func[50, :, :].display()
+bp_func[:, 37, :].display()
 bp_func[:, :, 24].display()
 
 
@@ -110,7 +120,7 @@ def landweber(fwd_proj, backproj, data, init_guess, niter, relax=0.5):
     return cur_guess
 
 # Start Landweber method with start value 0
-init_guess = gf.Gfunc(fvals=0., shape=sample_shape, spacing=sample_voxel_size)
+#init_guess = gf.Gfunc(fvals=0., shape=sample_shape, spacing=sample_voxel_size)
 
 #landw_sol = landweber(forward_projector, backprojector, proj_func,
 #                      init_guess, niter=10, relax=0.01)
