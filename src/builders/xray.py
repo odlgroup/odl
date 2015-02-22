@@ -164,7 +164,6 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     # Since ASTRA assumes voxel size (1., 1., 1.), some scaling and adaption
     # of tilt angles is necessary
 
-    # FIXME: assuming z axis tilt
     det_grid = geom.detector.grid
     # FIXME: treat case when no discretization is given
     angles = geom.sample.angles
@@ -173,65 +172,21 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
     # FIXME: lots of repetition in the following lines
     # TODO: this should be written without angles, just using direction
     # vectors
-    a, b, c = 1. / vol.spacing
-#    print('a, b, c = ', a, b, c)
+    a, b, c = vol.spacing
+    print('a, b, c = ', a, b, c)
+
+    # FIXME: assuming z axis tilt
     if a != b:
+        astra_angles, px_scaling, factors = _astra_scaling(a, b, angles, 'fp')
         proj_fvals = np.empty((det_grid.shape[0], det_grid.shape[1],
                                len(astra_angles)))
-        scaling_factors, px_scaling, astra_angles = _astra_scaling(a, b,
-                                                                   angles,
-                                                                   'fp')
-        for i, ang in enumerate(astra_angles):
-            print('[{}] ang: '.format(i), ang)
-            old_dir = np.array((cos(ang), sin(ang), 0))
-            print('[{}] old dir: '.format(i), old_dir)
-            if old_dir[0] >= 0:
-                if old_dir[1] >= 0:
-                    quadrant = 1
-                else:
-                    quadrant = 4
-            else:
-                if old_dir[1] >= 0:
-                    quadrant = 2
-                else:
-                    quadrant = 3
 
-            print('[{}] quadrant: '.format(i), quadrant)
-            scaled_dir = np.diag((a, b, c)).dot(old_dir)
-            print('[{}] scaled dir: '.format(i), scaled_dir)
-            norm_dir = norm(scaled_dir)
-            new_dir = scaled_dir / norm_dir
-            print('[{}] norm_dir: '.format(i), norm_dir)
-            print('[{}] new dir: '.format(i), new_dir)
+        for i, angle, px_scal, scal_fac in enumerate(zip(astra_angles,
+                                                         px_scaling, factors)):
 
-            # Use the smaller of the two values for stability
-            # acos maps to [0,pi] -> subtract pi for quadrants 3 and 4
-            # asin maps to [-pi/2,pi/2] -> subtract from +-pi in quadrants 2/3
-            if abs(new_dir[0]) > abs(new_dir[1]):
-                astra_angles[i] = asin(new_dir[1])
-                if quadrant == 2:
-                    astra_angles[i] = pi - astra_angles[i]
-                elif quadrant == 3:
-                    astra_angles[i] = -pi - astra_angles[i]
-            else:
-                astra_angles[i] = acos(new_dir[0])
-                if quadrant in (3, 4):
-                    astra_angles[i] -= pi
-
-            print('[{}] new ang: '.format(i), astra_angles[i])
-
-            scaling_factor = 1. / norm_dir
-            print('[{}] scaling: '.format(i), scaling_factor)
-
-            old_perp = np.cross((0, 0, 1), old_dir)
-            print('[{}] old perp: '.format(i), old_perp)
-            scaled_perp = np.diag((a, b, c)).dot(old_perp)
-            print('[{}] scaled perp: '.format(i), scaled_perp)
-            norm_perp = norm(scaled_perp)
-            print('[{}] norm_perp: '.format(i), norm_perp)
             astra_pixel_spacing = det_grid.spacing.copy()
             print('[{}] orig det px size: '.format(i), astra_pixel_spacing)
-            astra_pixel_spacing *= (norm_perp, c)
+            astra_pixel_spacing *= (px_scal, c)
             print('[{}] scaled det px size: '.format(i), astra_pixel_spacing)
 
             # ASTRA lables detector axes as 'rows, columns', so we need to swap
@@ -242,7 +197,7 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
                                                   astra_pixel_spacing[1],
                                                   det_grid.shape[1],
                                                   det_grid.shape[0],
-                                                  astra_angles[i])
+                                                  angle)
             # Some wrapping code
             astra_proj_id = at.data3d.create('-sino', astra_proj_geom)
 
@@ -259,8 +214,10 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
             # array, so we need to squeeze and swap to get (nx, ny)
             proj_fvals[:, :, i] = at.data3d.get(
                 astra_proj_id).squeeze().swapaxes(0, 1)
-            proj_fvals[:, :, i] *= scaling_factor
+            proj_fvals[:, :, i] *= scal_fac
     else:
+        astra_pixel_spacing = det_grid.spacing * (a, c)
+
         # ASTRA lables detector axes as 'rows, columns', so we need to swap
         # axes 0 and 1
         astra_proj_geom = at.create_proj_geom('parallel3d',
@@ -268,7 +225,7 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
                                               astra_pixel_spacing[1],
                                               det_grid.shape[1],
                                               det_grid.shape[0],
-                                              astra_angles)
+                                              angles)
 
         # Some wrapping code
         astra_proj_id = at.data3d.create('-sino', astra_proj_geom)
@@ -287,10 +244,7 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
         proj_fvals = at.data3d.get(astra_proj_id)
         proj_fvals = proj_fvals.swapaxes(1, 2).swapaxes(0, 1)
 
-        scaling_factor = 1. / a
-        astra_pixel_spacing = det_grid.spacing * (a, c)
-
-        proj_fvals *= scaling_factor
+        proj_fvals *= 1. / a
 
     # Create the projection grid function and return it
     proj_spacing = np.ones(3)
@@ -302,86 +256,52 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
 
 def _astra_scaling(a, b, angles, op):
 
-    from math import pi, sin, asin, cos, acos
+    from math import sin, cos, atan2
     from scipy.linalg import norm
 
-    # Forward projection:
-    # - The diagonal matrix D^(-1) = diag(a, b) with D = diag(voxel_sizes)
-    #   scales voxel sizes to 1 in the plane of rotation
-    # - For tilt angle t, the projection direction w = (cos(t), sin(t))
-    #   is changed to W = (a * cos(t), b * sin(t)) / norm with
-    #   norm = sqrt(a^2 * cos(t)^2 + b^2 * sin(t)^2)
-    # - A vector in w^perp can be written as v = s * w0^perp with
-    #   w0 = (-sin(t), cos(t))
-    # - This vector is scaled to V = s * Norm * W0 with
-    #   W0 = (-a * sin(t), b * cos(t)) / Norm,
-    #   Norm = sqrt(a^2 * sin(t)^2 + b^2 * cos(t)^2)
-    # - Thus, the detector grid must be scaled with Norm
-    # - Finally, the reparametrization produces a factor of norm^(-1)
-    #
-    #   The factors, scalings and angles are returned
-    #
-    # Backprojection:
-    # - The angles are calculated as above, but with D instead of D^(-1)
-    # - An integration weight on the sphere is calculated as
+    # See the documentation on this issue for details
 
-    scaling_factors = np.empty_like(angles)
-    px_scaling = np.empty_like(angles)
-    new_angles = np.empty_like(angles)
+    fwd_angles = np.empty_like(angles)
+    fwd_px_scaling = np.empty_like(angles)
+    fwd_scaling_factors = np.empty_like(angles)
+
+    bwd_angles = np.empty_like(angles)
+    bwd_px_scaling = np.empty_like(angles)
+    bwd_weights = np.empty_like(angles)
 
     for i, ang in enumerate(angles):
         print('[{}] ang: '.format(i), ang)
         old_dir = np.array((cos(ang), sin(ang)))
         print('[{}] old dir: '.format(i), old_dir)
-        if old_dir[0] >= 0:
-            if old_dir[1] >= 0:
-                quadrant = 1
-            else:
-                quadrant = 4
-        else:
-            if old_dir[1] >= 0:
-                quadrant = 2
-            else:
-                quadrant = 3
+        scaled_fwd_dir = (1 / a, 1 / b) * old_dir
+        print('[{}] scaled fwd dir: '.format(i), scaled_fwd_dir)
+        scaled_bwd_dir = (a, b) * old_dir
+        print('[{}] scaled bwd dir: '.format(i), scaled_bwd_dir)
+        norm_scaled_fwd_dir = norm(scaled_fwd_dir)
+        print('[{}] norm fwd: '.format(i), norm_scaled_fwd_dir)
+        norm_scaled_bwd_dir = norm(scaled_bwd_dir)
+        print('[{}] norm_bwd: '.format(i), norm_scaled_bwd_dir)
+        fwd_dir = scaled_fwd_dir / norm_scaled_fwd_dir
+        print('[{}] fwd dir: '.format(i), fwd_dir)
+        bwd_dir = scaled_bwd_dir / norm_scaled_bwd_dir
+        print('[{}] bwd dir: '.format(i), bwd_dir)
+        fwd_angles[i] = atan2(fwd_dir[1], fwd_dir[0])
+        print('[{}] new fwd ang: '.format(i), fwd_angles[i])
+        bwd_angles[i] = atan2(bwd_dir[1], bwd_dir[0])
+        print('[{}] new bwd ang: '.format(i), bwd_angles[i])
+        fwd_px_scaling[i] = np.dot((1 / b, 1 / a) * old_dir, fwd_dir)
+        print('[{}] fwd px scaling: '.format(i), fwd_px_scaling[i])
+        bwd_px_scaling[i] = np.dot((b, a) * old_dir, bwd_dir)
+        print('[{}] bwd px scaling: '.format(i), bwd_px_scaling[i])
+        bwd_weights[i] = 1. / (norm((1. / b, 1. / a) * old_dir) *
+                               norm_scaled_bwd_dir)
+        print('[{}] bwd weight: '.format(i), bwd_weights[i])
 
-        print('[{}] quadrant: '.format(i), quadrant)
-        scaled_dir = np.diag((a, b)).dot(old_dir)
-        print('[{}] scaled dir: '.format(i), scaled_dir)
-        norm_dir = norm(scaled_dir)
-        new_dir = scaled_dir / norm_dir
-        print('[{}] norm_dir: '.format(i), norm_dir)
-        print('[{}] new dir: '.format(i), new_dir)
+    if op.lower() == 'fp':
+        return fwd_angles, fwd_px_scaling, fwd_scaling_factors
+    elif op.lower() == 'bp':
+        return bwd_angles, bwd_px_scaling, bwd_weights
 
-        # Use the smaller of the two values for stability
-        # acos maps to [0,pi] -> subtract pi for quadrants 3 and 4
-        # asin maps to [-pi/2,pi/2] -> subtract from +-pi in quadrants 2/3
-        if abs(new_dir[0]) > abs(new_dir[1]):
-            new_angles[i] = asin(new_dir[1])
-            if quadrant == 2:
-                new_angles[i] = pi - new_angles[i]
-            elif quadrant == 3:
-                new_angles[i] = -pi - new_angles[i]
-        else:
-            new_angles[i] = acos(new_dir[0])
-            if quadrant in (3, 4):
-                new_angles[i] -= pi
-
-        print('[{}] new ang: '.format(i), new_angles[i])
-
-        scaling_factors[i] = 1. / norm_dir
-        print('[{}] scaling: '.format(i), scaling_factors[i])
-
-        old_perp = np.array([-old_dir[1], old_dir[0]])
-        print('[{}] old perp: '.format(i), old_perp)
-        scaled_perp = np.diag((a, b)).dot(old_perp)
-        print('[{}] scaled perp: '.format(i), scaled_perp)
-        norm_perp = norm(scaled_perp)
-        print('[{}] norm_perp: '.format(i), norm_perp)
-        px_scaling[i] = norm_perp
-
-    return scaling_factors, px_scaling, new_angles
-
-        
 
 def xray_ct_parallel_backprojection_3d(geometry, proj_func,
                                        backend='astra_cuda'):
