@@ -28,16 +28,16 @@
 % \Crefname{section}{Section}{Sections}
 
 % Own stuff
-\usepackage{mathdefs}
-\usepackage{notecommand}
-\usepackage{mytheorems}
-\usepackage{other}
+\usepackage{../mathdefs}
+\usepackage{../notecommand}
+\usepackage{../mytheorems}
+\usepackage{../other}
 
 \usepackage[pdftex,unicode,colorlinks=true,linkcolor=black,citecolor=black,hypertexnames=true]{hyperref}
 \hypersetup{pdfauthor={},pdftitle={Anisotropic scaling of the X-ray transform}}
 
 % Figure are placed in figures directory.
-\graphicspath{{Pictures/}}
+\graphicspath{{figs/}}
 
 % Acronyms (depends on the acronym package)
 \acrodef{em}[EM]{electron microscopy}
@@ -68,6 +68,8 @@
 % \setlength{\parindent}{0pt}
 
 \begin{document}
+
+\maketitle
 
 In ASTRA, the voxel size is assumed to be 1 in each direction. If in practice, a voxel has dimensions $\Delta \Bx = (a, b, c) > 0$, i.e. 
 the volume grid has the nodes $\Bx_\Bj = \Bx_\BNULL + \Bj \Delta \Bx$, we rescale $\tilde \Bx_\Bj = \Bx_\Bj / \Delta \Bx$ to get a grid 
@@ -254,15 +256,15 @@ Applying this result to \eqref{eq:proj_scaling_adjoint_step2} finally gives the 
 \begin{equation}
  \label{eq:proj_scaling_adjoint_final}
  \spr{\Top_D g}{k} = \det D \int_{\Sphere^1} \int_{\Bomega^\perp} \abs{\tilde D^{-1} \Bomega}^{-1}\, \abs{D \Bomega}^{-1}\, 
- g(\Bomega, \By)\, k\left(\frac{D \Bomega}{\abs{D \Bomega}}, D \By\right)\, \diff\By\, \diff\Bomega
+ g(\Bomega, \By)\, k\left(\tilde\Bomega, \Pi_{\tilde\Bomega} D \By\right)\, \diff\By\, \diff\Bomega
 \end{equation} 
 %
-which allows us to read off the adjoint operator
+with $\tilde\Bomega = {D \Bomega}/{\abs{D \Bomega}}$, which allows us to read off the adjoint operator
 %
 \begin{equation}
  \label{eq:proj_scaling_adjoint}
  \Top_D^* k(\Bomega, \By) = \det D\, \abs{\tilde D^{-1} \Bomega}^{-1}\, \abs{D \Bomega}^{-1}\, 
- k\left(\frac{D \Bomega}{\abs{D \Bomega}}, D \By\right).
+ k\left(\tilde\Bomega, \Pi_{\tilde\Bomega} D \By\right).
 \end{equation}
 %
 Apart from the adaption of the direction vectors, the backprojection must be weighted with the dirction-dependent factor
@@ -306,7 +308,7 @@ In summary, we have the following recipes for forward and backward projections, 
  \end{itemize}
  %
  \vspace*{2ex}
- \textbf{Result:} Projections for angles $\phi_k$ and detector grid spacing $\eta$ for scaled 2D grid input.
+ \textbf{Result:} Projections for angles $\phi_k$ and detector grid spacing $\eta$ using scaled 2D grid input.
 \end{algorithm}
 
 
@@ -330,7 +332,7 @@ In summary, we have the following recipes for forward and backward projections, 
    \item[$\ast$] Set $L_k = (a^2 \cos^2\phi_k + b^2 \sin^2\phi_k)^{\nfhalf}$.
    \item[$\ast$] Set $\Bq_k = (a \cos\phi_k, b \sin\phi_k) / L_k$.
    \item[$\ast$] Determine $\tilde\psi_k$ with $(\cos\tilde\psi_k, \sin\tilde\psi_k) = \Bq_k$.
-   \item[$\ast$] Scale detector spacing to $\eta_k = (\alpha \sin\phi_k \sin\tilde\psi_k + \beta \cos\phi_k \cos\tilde\psi_k)\, \eta$.
+   \item[$\ast$] Scale detector spacing to $\eta_k = (a \sin\phi_k \sin\tilde\psi_k + b \cos\phi_k \cos\tilde\psi_k)\, \eta$.
    \item[$\ast$] Calculate weight $\mu_k = \left[\cos^2\phi_k \left(\sin^2\phi_k + \tau^2 \cos^2\phi_k\right) +
    \sin^2\phi_k \left(\cos^2\phi_k + \tau^{-2} \sin^2\phi_k\right)\right]^{-\nfhalf}$.
    \item[$\ast$] Multiply $k$-th projection data with $\mu_k$.
@@ -341,7 +343,7 @@ In summary, we have the following recipes for forward and backward projections, 
  \end{itemize}
  %
  \vspace*{2ex}
- \textbf{Result:} Backprojection for angles $\phi_k$ and detector grid spacing $\eta$ for scaled 2D grid volume.
+ \textbf{Result:} Backprojection for angles $\phi_k$ and detector grid spacing $\eta$ using a scaled 2D grid volume.
 \end{algorithm}
 
 
