@@ -184,17 +184,17 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
         for i, angle, px_scal, scal_fac in enumerate(zip(astra_angles,
                                                          px_scaling, factors)):
 
-            astra_pixel_spacing = det_grid.spacing.copy()
-            print('[{}] orig det px size: '.format(i), astra_pixel_spacing)
-            astra_pixel_spacing *= (px_scal, c)
-            print('[{}] scaled det px size: '.format(i), astra_pixel_spacing)
+            astra_px_spacing = det_grid.spacing.copy()
+            print('[{}] orig det px size: '.format(i), astra_px_spacing)
+            astra_px_spacing *= (px_scal, c)
+            print('[{}] scaled det px size: '.format(i), astra_px_spacing)
 
             # ASTRA lables detector axes as 'rows, columns', so we need to swap
             # axes 0 and 1
             # We must project one by one since pixel sizes vary
             astra_proj_geom = at.create_proj_geom('parallel3d',
-                                                  astra_pixel_spacing[0],
-                                                  astra_pixel_spacing[1],
+                                                  astra_px_spacing[0],
+                                                  astra_px_spacing[1],
                                                   det_grid.shape[1],
                                                   det_grid.shape[0],
                                                   angle)
@@ -216,13 +216,13 @@ def _xray_ct_par_fp_3d_astra(geom, vol, use_cuda=True):
                 astra_proj_id).squeeze().swapaxes(0, 1)
             proj_fvals[:, :, i] *= scal_fac
     else:
-        astra_pixel_spacing = det_grid.spacing * (a, c)
+        astra_px_spacing = det_grid.spacing * (a, c)
 
         # ASTRA lables detector axes as 'rows, columns', so we need to swap
         # axes 0 and 1
         astra_proj_geom = at.create_proj_geom('parallel3d',
-                                              astra_pixel_spacing[0],
-                                              astra_pixel_spacing[1],
+                                              astra_px_spacing[0],
+                                              astra_px_spacing[1],
                                               det_grid.shape[1],
                                               det_grid.shape[0],
                                               angles)
@@ -328,33 +328,40 @@ def _xray_ct_par_bp_3d_astra(geom, proj_, use_cuda=True):
     # TODO: include shifts (volume and detector)
     # TODO: allow custom volume grid (e.g. partial backprojection)
 
+    # Initialize volume geometry
+    vol_grid = geom.sample.grid
+    astra_vol_geom = at.create_vol_geom(vol_grid.shape)
+    astra_vol_id = at.data3d.create('-vol', astra_vol_geom)
+
     # Initialize projection geometry and data
 
-    # Detector pixel spacing must be scaled with volume (y,z) spacing
-    # since ASTRA assumes voxel size 1
-    # FIXME: assuming z axis tilt
-    vol_grid = geom.sample.grid
-    astra_pixel_spacing = proj_.spacing[:-1] / vol_grid.spacing[1:]
+    # ASTRA assumes a (nrows, ntilts, ncols) array, we have (nx, ny, ntilts).
+    # We must cycle axes to the left
+    astra_proj = proj_.fvals.swapaxes(0, 2).swapaxes(0, 1)
+    astra_px_spacing = proj_.spacing.copy()
 
     # FIXME: treat case when no discretization is given
-    astra_angles = geom.sample.angles
+    angles = geom.sample.angles
+    # FIXME: handle case when only one angle is given. This code should go
+    # someplace else anyway
+    integr_weights = np.empty_like(angles)
+    if angles[0] == angles[-1]:
+        range_fraction = 1.
+    else:
+        max_ang = angles[-1] + (angles[-1] - angles[-2])
+        print('max angle: ', max_ang)
+        min_ang = angles[1] + (angles[1] - angles[0])
+        print('min angle: ', min_ang)
+        range_fraction = abs(max_ang - min_ang) / pi
 
-    # ASTRA assumes a (nrows, ntilts, ncols) array. We must cycle axes to
-    # the left and swap detector axes in the geometry.
-    astra_proj = proj_.fvals.swapaxes(0, 2).swapaxes(0, 1)
-    astra_proj_geom = at.create_proj_geom('parallel3d',
-                                          astra_pixel_spacing[0],
-                                          astra_pixel_spacing[1],
-                                          proj_.shape[1],
-                                          proj_.shape[0],
-                                          astra_angles)
+    print('range fraction: ', range_fraction)
 
-    # Initialize volume geometry
-    astra_vol_geom = at.create_vol_geom(vol_grid.shape)
+    integr_weights[1:-1] = (angles[2:] - angles[:-2]) / 2.
+    integr_weights[0] = (angles[1] - angles[0]) / 2.
+    integr_weights[-1] = (angles[-1] - angles[-2]) / 2.
+    integr_weights /= range_fraction
 
-    # Some wrapping code
-    astra_vol_id = at.data3d.create('-vol', astra_vol_geom)
-    astra_proj_id = at.data3d.create('-sino', astra_proj_geom, astra_proj)
+    print('integration weights: ', integr_weights)
 
     # Create the ASTRA algorithm
     if use_cuda:
@@ -364,19 +371,63 @@ def _xray_ct_par_bp_3d_astra(geom, proj_, use_cuda=True):
         raise NotImplementedError('No CPU 3D backprojection available.')
 
     astra_algo_conf['ReconstructionDataId'] = astra_vol_id
-    astra_algo_conf['ProjectionDataId'] = astra_proj_id
-    astra_algo_id = at.algorithm.create(astra_algo_conf)
 
-    # Run it and remove afterwards
-    at.algorithm.run(astra_algo_id)
-    at.algorithm.delete(astra_algo_id)
+    a, b, c = vol_grid.spacing
 
-    # Get the volume data and cycle back axes to translate from ASTRA axes
-    # convention
-    vol_fvals = at.data3d.get(astra_vol_id)
-    vol_fvals = vol_fvals.swapaxes(0, 2).swapaxes(0, 1)
+    # FIXME: assuming z axis tilt
+    if a != b:
+        astra_angles, px_scaling, weights = _astra_scaling(a, b, angles, 'bp')
+        bp_fvals = np.zeros(vol_grid.shape)
+
+        for i, ang, px_scal, scal_w in enumerate(zip(astra_angles, px_scaling,
+                                                     weights)):
+            astra_px_spacing *= (px_scal, c)
+
+            # ASTRA assumes (nrows, ncols) on the detector, so we provide
+            # (ny, nx)
+            astra_proj_geom = at.create_proj_geom('parallel3d',
+                                                  astra_px_spacing[0],
+                                                  astra_px_spacing[1],
+                                                  proj_.shape[1],
+                                                  proj_.shape[0],
+                                                  ang)
+            astra_proj_id = at.data3d.create('-sino', astra_proj_geom,
+                                             astra_proj[:, :, i])
+            astra_algo_conf['ProjectionDataId'] = astra_proj_id
+            astra_algo_id = at.algorithm.create(astra_algo_conf)
+            at.algorithm.run(astra_algo_id)
+            at.algorithm.delete(astra_algo_id)
+
+            # Get the volume data and cycle back axes to translate from ASTRA
+            # axes convention
+            astra_bp_fvals = at.data3d.get(astra_vol_id)
+            astra_bp_fvals = astra_bp_fvals.swapaxes(0, 2).swapaxes(0, 1)
+
+            bp_fvals += astra_bp_fvals * scal_w * integr_weights[i]
+    else:
+        astra_px_spacing *= (a, c)
+
+        # ASTRA assumes (nrows, ncols) on the detector, so we provide (ny, nx)
+        astra_proj_geom = at.create_proj_geom('parallel3d',
+                                              astra_px_spacing[0],
+                                              astra_px_spacing[1],
+                                              proj_.shape[1],
+                                              proj_.shape[0],
+                                              angles)
+        astra_proj_id = at.data3d.create('-sino', astra_proj_geom, astra_proj)
+        astra_algo_conf['ProjectionDataId'] = astra_proj_id
+        astra_algo_id = at.algorithm.create(astra_algo_conf)
+        at.algorithm.run(astra_algo_id)
+        at.algorithm.delete(astra_algo_id)
+
+        # Get the volume data and cycle back axes to translate from ASTRA axes
+        # convention
+        bp_fvals = at.data3d.get(astra_vol_id)
+        bp_fvals = bp_fvals.swapaxes(0, 2).swapaxes(0, 1)
+
+        # FIXME: find out how ASTRA weights in the backprojection
 
     # Create the volume grid function and return it
-    vol_func = gf.Gfunc(vol_fvals, spacing=vol_grid.spacing)
+    vol_func = gf.Gfunc(bp_fvals, spacing=vol_grid.spacing)
 
     return vol_func
