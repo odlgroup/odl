@@ -149,10 +149,17 @@ also project onto the new perpendicular component. This induces the new stepping
  &= \Delta v (-a^{-1}\sin\phi, b^{-1}\cos\phi) - \Delta v \left(-a^{-1}\sin\phi \cos\tilde\phi + b^{-1}\cos\phi \sin\tilde\phi\right) 
  \left(\cos\tilde\phi,  \sin\tilde\phi\right) \\
  &= \Delta v \left(a^{-1} \sin\phi \sin\tilde\phi + b^{-1} \cos\phi \cos\tilde\phi \right) \left(-\sin\tilde\phi, \cos\tilde\phi\right) \\
- &= \Delta u \left(-\sin\tilde\phi, \cos\tilde\phi\right)
+ &= \Delta u \left(-\sin\tilde\phi, \cos\tilde\phi\right),
 \end{align*}
 %
-with $\Delta u = \left(a^{-1} \sin\phi \sin\tilde\phi + b^{-1} \cos\phi \cos\tilde\phi \right)$ depending on the current direction.
+i.e. the grid spacing is scaled by the factor
+%
+\begin{equation*}
+ \left(a^{-1} \sin\phi \sin\tilde\phi + b^{-1} \cos\phi \cos\tilde\phi \right) = \spr{\tilde D^{-1} \Btheta}{\tilde\Btheta}, \quad 
+ \tilde D = \DIAG(b, a)
+\end{equation*}
+%
+which depends on the current direction.
 
 The backprojection can also be computed with the isotropic operator by taking the adjoint of \eqref{eq:xray_fwd_scaling}:
 %
