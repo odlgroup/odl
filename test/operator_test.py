@@ -24,41 +24,58 @@ from future import standard_library
 standard_library.install_aliases()
 import unittest
 
+import numpy as np
 from RL.operator.operatorAlternative import *
 
 class BasicOperator(unittest.TestCase):
     def testMultiply(self):
-        A = MultiplyOp(3)
+        A = Reals.MultiplyOp(3)
         x = 2
         self.failUnless(A(x) == 3*x)
 
-    def testMultiplication(self):
-        A = AddOp(3)
+    def testAddition(self):
+        A = Reals.AddOp(3)
         x = 2
         self.failUnless(A(x) == 3+x)
 
 class OperatorArithmetic(unittest.TestCase):
     def testAddition(self):
-        A = MultiplyOp(3)
-        B = MultiplyOp(5)
+        A = Reals.MultiplyOp(3)
+        B = Reals.MultiplyOp(5)
         x = 2
         self.failUnless((A+B)(2) == 3*x+5*x)
 
-    def testMultiplication(self):
-        A = MultiplyOp(3)
-        B = MultiplyOp(5)
+    def testComposition(self):
+        A = Reals.MultiplyOp(3)
+        B = Reals.MultiplyOp(5)
         x = 2
         self.failUnless((A*B)(2) == 5*3*x)
 
     def testComplex(self):
-        A = MultiplyOp(3)
-        B = MultiplyOp(5)
-        C = AddOp(5)
+        A = Reals.MultiplyOp(3)
+        B = Reals.MultiplyOp(5)
+        C = Reals.AddOp(5)
         x = 2
         self.failUnless((A*(B+C))(2) == 3*(5*x+5+x))
 
+class R3Test(unittest.TestCase):
+    def testMultiply(self):
+        A = np.random.rand(3,3)
+        Aop = R3.MultiplyOp(A)
+        x = np.random.rand(3)
+
+        self.failUnless((Aop(x) == np.dot(A,x)).all())
+
+    def testAdjoint(self):
+        A = np.random.rand(3,3)
+        Aop = R3.MultiplyOp(A)
+        x = np.random.rand(3)
+        y = np.random.rand(3)
+
+        self.failUnless(R3.inner(Aop(x),y) == R3.inner(x,Aop.T(y)))
+
 def main():
-    unittest.main()
+    unittest.main(exit = False)
 
 if __name__ == '__main__':
     main()

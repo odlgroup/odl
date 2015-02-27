@@ -26,37 +26,93 @@ from future.builtins import object
 from future import standard_library
 standard_library.install_aliases()
 
+
 from abc import ABCMeta, abstractmethod
 
-"""Abstract operator
-"""
-class Operator(object):
-    __metaclass__ = ABCMeta
+#TODO move this
+class abstractstatic(staticmethod):
+    """Decorator to enforce abstract static methods
+    """
+    __slots__ = ()
+    def __init__(self, function):
+        super(abstractstatic, self).__init__(function)
+        function.__isabstractmethod__ = True
+    __isabstractmethod__ = True
 
-    #Apply the method, abstract
+import numpy as np
+
+class Operator(object):
+    """Abstract operator
+    """
+    __metaclass__ = ABCMeta #Set as abstract
+
     @abstractmethod
     def apply(self, rhs):
+        """Apply the method, abstract
+        """
         pass
 
-    #Shorthand for self.apply(rhs)
+    @abstractmethod
+    def applyAdjoint(self, rhs):
+        """Apply the method, abstract
+        """
+        pass
+
+    @property
+    def T(self):
+        return OperatorAdjoint(self)
+
     def __call__(self, rhs):
+        """Shorthand for self.apply(rhs)
+        """
         return self.apply(rhs)
 
-    #Operator addition (pointwise)
     def __add__(self, other):
+        """Operator addition (pointwise)
+        """
+
         if isinstance(other, Operator):  # Calculate sum
             return OperatorSum(self,other)
         else:
-            raise NameError('HiThere') #TODO
+            raise TypeError('Expected an operator')
 
-    #Composition of operators ((A*B)(x) == A(B(x)))
     def __mul__(self, other):
+        """Composition of operators ((A*B)(x) == A(B(x)))
+        or scalar multiplication
+        """
+
+        from numbers import Number
+
         if isinstance(other, Operator):  # Calculate sum
             return OperatorComposition(self,other)
+        elif isinstance(other, Number):
+            return OperatorScalarMultiplication(self,other)
         else:
-            raise NameError('HiThere') #TODO
+            raise TypeError('Expected an operator or a scalar')
+
+    def __rmul__(self,other):
+        """Composition of operators ((A*B)(x) == A(B(x)))
+        or scalar multiplication
+        """
+
+        from numbers import Number
+
+        if isinstance(other, Operator):  # Calculate sum
+            return OperatorComposition(other,self)
+        elif isinstance(other, Number):
+            return OperatorScalarMultiplication(self,other)
+        else:
+            raise TypeError('Expected an operator or a scalar')
+
+class SelfAdjointOperator(Operator):
+    """ Special case of self adjoint operators where A(x) = A.T(x)
+    """
+    def applyAdjoint(self, rhs):
+        return self.apply(rhs)
 
 class OperatorSum(Operator):
+    """Expression type for the sum of operators
+    """
     def __init__(self,left,right):
         self.left = left
         self.right = right
@@ -64,26 +120,148 @@ class OperatorSum(Operator):
     def apply(self, rhs):
         return self.left(rhs)+self.right(rhs)
 
+    def applyAdjoint(self, rhs):
+        return self.left.applyAdjoint(rhs)+self.right.applyAdjoint(rhs)
+
 class OperatorComposition(Operator):
+    """Expression type for the composition of operators
+    """
+
     def __init__(self,left,right):
         self.left = left
         self.right = right
 
     def apply(self, rhs):
-        return self.left(self.right(rhs))
+        return self.left.apply(self.right.apply(rhs))
+    
+    def applyAdjoint(self, rhs):
+        return self.right.applyAdjoint(self.left.applyAdjoint(rhs))
 
-#Multiply with scalar
-class MultiplyOp(Operator):
-    def __init__(self,a):
-        self.a = a
+class OperatorScalarMultiplication(Operator):
+    """Expression type for the multiplication of opeartors with scalars
+    """
 
-    def apply(self,rhs):
-        return self.a * rhs
+    def __init__(self,op,scalar):
+        self.op = op
+        self.scalar = scalar
 
-#Add a scalar
-class AddOp(Operator):
-    def __init__(self,a):
-        self.a = a
+    def apply(self, rhs):
+        return scalar * self.op.apply(rhs)
+    
+    def applyAdjoint(self, rhs):
+        return scalar * self.op.applyAdjoint(rhs)
 
-    def apply(self,rhs):
-        return self.a + rhs
+class OperatorAdjoint(Operator):
+    """Expression type for the adjoint of an operator
+    """
+
+    def __init__(self,op):
+        self.op = op
+
+    def apply(self, rhs):
+        return self.op.applyAdjoint(rhs)
+    
+    def applyAdjoint(self, rhs):
+        return self.op.apply(rhs)
+
+class Space(object):
+    """Abstract space
+    """
+
+    __metaclass__ = ABCMeta #Set as abstract
+
+    class Vector(object):
+        def __add__(self, other):
+            """Vector addition
+            """
+            return Space.linearComb(1,1,self,other)
+
+        def __mul__(self, other):
+            """Scalar multiplication
+            """
+            return Space.linearComb(other,0,self,Space.zero())
+
+    @abstractstatic
+    def zero():
+        """The zero element of the space
+        """
+        pass
+    
+    @abstractstatic
+    def inner(A,B):
+        """Inner product
+        """
+        pass
+
+    @abstractstatic
+    def linearComb(a,b,A,B):
+        """Calculate a*A+b*B
+        """
+        pass
+
+#Example of a space:
+class Reals(Space):
+    """The real numbers
+    """
+
+    @staticmethod
+    def inner(A,B):
+        return A*B
+
+    @staticmethod
+    def linearComb(a,b,A,B):
+        return a*A+b*B
+
+    @staticmethod
+    def zero():
+        return 0.0
+
+    class MultiplyOp(SelfAdjointOperator):    
+        """Multiply with scalar
+        """
+
+        def __init__(self,a):
+            self.a = a
+
+        def apply(self,rhs):
+            return self.a * rhs
+
+    class AddOp(SelfAdjointOperator):
+        """Add scalar
+        """
+
+        def __init__(self,a):
+            self.a = a
+
+        def apply(self,rhs):
+            return self.a + rhs
+
+#Example of a space:
+class R3(Space):
+    """The real numbers
+    """
+
+    @staticmethod
+    def inner(A,B):
+        return np.vdot(A,B)
+    
+    @staticmethod
+    def linearComb(a,b,A,B):
+        return a*A+b*B
+
+    @staticmethod
+    def zero():
+        return np.zeros(3)
+
+    class MultiplyOp(Operator):    
+        """Multiply with scalar
+        """
+
+        def __init__(self,A):
+            self.A = A
+
+        def apply(self,rhs):
+            return np.dot(self.A,rhs)
+
+        def applyAdjoint(self,rhs):
+            return np.dot(self.A.T,rhs)
