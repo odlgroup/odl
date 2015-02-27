@@ -48,19 +48,14 @@ class Operator(object):
 
     @abstractmethod
     def apply(self, rhs):
-        """Apply the method, abstract
+        """Apply the operator, abstract
         """
         pass
 
-    @abstractmethod
-    def applyAdjoint(self, rhs):
-        """Apply the method, abstract
+    def derivative(self, pos):
+        """Calculate the derivative operator at some position
         """
-        pass
-
-    @property
-    def T(self):
-        return OperatorAdjoint(self)
+        raise NotImplementedError("Derivative not implemented for this operator")
 
     def __call__(self, rhs):
         """Shorthand for self.apply(rhs)
@@ -104,7 +99,28 @@ class Operator(object):
         else:
             raise TypeError('Expected an operator or a scalar')
 
-class SelfAdjointOperator(Operator):
+class LinearOperator(Operator):
+    """ Linear operator, satisfies A(ax+by)=aA(x)+bA(y)
+    """
+    
+    @abstractmethod
+    def applyAdjoint(self, rhs):
+        """Apply the adjoint of the operator, abstract
+        """
+        pass
+
+    @property
+    def T(self):
+        """Get the adjoint operator
+        """
+        return OperatorAdjoint(self)
+
+    def derivative(self):
+        """Calculate the derivative operator at some position
+        """
+        return self
+
+class SelfAdjointOperator(LinearOperator):
     """ Special case of self adjoint operators where A(x) = A.T(x)
     """
     def applyAdjoint(self, rhs):
@@ -118,10 +134,13 @@ class OperatorSum(Operator):
         self.right = right
 
     def apply(self, rhs):
-        return self.left(rhs)+self.right(rhs)
+        return self.left(rhs) + self.right(rhs)
 
     def applyAdjoint(self, rhs):
-        return self.left.applyAdjoint(rhs)+self.right.applyAdjoint(rhs)
+        return self.left.applyAdjoint(rhs) + self.right.applyAdjoint(rhs)
+
+    def derivative(self, pos):
+        return self.left.derivative(pos) + self.right.derivative(pos)
 
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
@@ -137,6 +156,10 @@ class OperatorComposition(Operator):
     def applyAdjoint(self, rhs):
         return self.right.applyAdjoint(self.left.applyAdjoint(rhs))
 
+    def derivative(self, pos):
+        #Use the chain rule
+        return self.left.derivative(self.right.apply(pos)) * self.right.derivative(pos)
+
 class OperatorScalarMultiplication(Operator):
     """Expression type for the multiplication of opeartors with scalars
     """
@@ -151,7 +174,10 @@ class OperatorScalarMultiplication(Operator):
     def applyAdjoint(self, rhs):
         return scalar * self.op.applyAdjoint(rhs)
 
-class OperatorAdjoint(Operator):
+    def derivative(self, pos):
+        return scalar * self.op.derivative(pos)
+
+class OperatorAdjoint(LinearOperator):
     """Expression type for the adjoint of an operator
     """
 
@@ -163,6 +189,9 @@ class OperatorAdjoint(Operator):
     
     def applyAdjoint(self, rhs):
         return self.op.apply(rhs)
+
+    def derivative(self, pos):
+        return self.op.derivative(pos)
 
 class Space(object):
     """Abstract space
