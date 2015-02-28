@@ -26,37 +26,38 @@ import unittest
 
 import numpy as np
 from RL.operator.operatorAlternative import *
+import SimRec2DPy as SR
 
 class BasicOperator(unittest.TestCase):
     def testMultiply(self):
         A = Reals.MultiplyOp(3)
         x = 2
-        self.failUnless(A(x) == 3*x)
+        self.assertAlmostEqual(A(x),3*x)
 
     def testAddition(self):
         A = Reals.AddOp(3)
         x = 2
-        self.failUnless(A(x) == 3+x)
+        self.assertAlmostEqual(A(x),3+x)
 
 class OperatorArithmetic(unittest.TestCase):
     def testAddition(self):
         A = Reals.MultiplyOp(3)
         B = Reals.MultiplyOp(5)
         x = 2
-        self.failUnless((A+B)(2) == 3*x+5*x)
+        self.assertAlmostEqual((A+B)(2),3*x+5*x)
 
     def testComposition(self):
         A = Reals.MultiplyOp(3)
         B = Reals.MultiplyOp(5)
         x = 2
-        self.failUnless((A*B)(2) == 5*3*x)
+        self.assertAlmostEqual((A*B)(2),5*3*x)
 
     def testComplex(self):
         A = Reals.MultiplyOp(3)
         B = Reals.MultiplyOp(5)
         C = Reals.AddOp(5)
         x = 2
-        self.failUnless((A*(B+C))(2) == 3*(5*x+5+x))
+        self.assertAlmostEqual((A*(B+C))(2),3*(5*x+5+x))
 
 class R3Test(unittest.TestCase):
     def testMultiply(self):
@@ -64,7 +65,9 @@ class R3Test(unittest.TestCase):
         Aop = R3.MultiplyOp(A)
         x = np.random.rand(3)
 
-        self.failUnless((Aop(x) == np.dot(A,x)).all())
+        print (Aop(x) == np.dot(A,x))
+
+        self.assertTrue(np.allclose(Aop(x),np.dot(A,x)))
 
     def testAdjoint(self):
         A = np.random.rand(3,3)
@@ -72,7 +75,7 @@ class R3Test(unittest.TestCase):
         x = np.random.rand(3)
         y = np.random.rand(3)
 
-        self.failUnless(R3.inner(Aop(x),y) == R3.inner(x,Aop.T(y)))
+        self.assertAlmostEqual(R3.inner(Aop(x),y),R3.inner(x,Aop.applyAdjoint(y)))
 
 def main():
     unittest.main(exit = False)

@@ -109,12 +109,6 @@ class LinearOperator(Operator):
         """
         pass
 
-    @property
-    def T(self):
-        """Get the adjoint operator
-        """
-        return OperatorAdjoint(self)
-
     def derivative(self):
         """Calculate the derivative operator at some position
         """
