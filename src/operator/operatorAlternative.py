@@ -204,19 +204,19 @@ class Space(object):
             """
             return Space.linearComb(other,0,self,Space.zero())
 
-    @abstractstatic
+    @abstractmethod
     def zero():
         """The zero element of the space
         """
         pass
     
-    @abstractstatic
+    @abstractmethod
     def inner(A,B):
         """Inner product
         """
         pass
 
-    @abstractstatic
+    @abstractmethod
     def linearComb(a,b,A,B):
         """Calculate a*A+b*B
         """
@@ -288,3 +288,56 @@ class R3(Space):
 
         def applyAdjoint(self,rhs):
             return np.dot(self.A.T,rhs)
+
+#Example of a space:
+class RN(Space):
+    """The real numbers
+    """
+
+    def __init__(n):
+        self.n = n
+
+    def inner(A,B):
+        return np.vdot(A,B)
+    
+    @staticmethod
+    def linearComb(a,b,A,B):
+        return a*A+b*B
+
+    @staticmethod
+    def zero():
+        return np.zeros(n)
+
+    class MultiplyOp(Operator):    
+        """Multiply with scalar
+        """
+
+        def __init__(self,A):
+            self.A = A
+
+        def apply(self,rhs):
+            return np.dot(self.A,rhs)
+
+        def applyAdjoint(self,rhs):
+            return np.dot(self.A.T,rhs)
+
+
+#Example of a space:
+class RNM(Space):
+    """The real numbers
+    """
+
+    def __init__(n,m):
+        self.n = n
+        self.m = m
+
+    def inner(A,B):
+        return np.vdot(A,B)
+    
+    @staticmethod
+    def linearComb(a,b,A,B):
+        return a*A+b*B
+
+    @staticmethod
+    def zero():
+        return np.zeros(n,m)

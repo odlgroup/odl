@@ -31,9 +31,10 @@ import SimRec2DPy as SR
 import RL.operator.operatorAlternative as OP
 
 class Projection(OP.LinearOperator):
-    def __init__(self,volumeOrigin,voxelSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection):
+    def __init__(self,volumeOrigin,voxelSize,volumeSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection):
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
+        self.volumeSize = volumeSize
         self.detectorSize = detectorSize
         self.stepSize = stepSize
         self.sourcePosition = sourcePosition
@@ -42,16 +43,20 @@ class Projection(OP.LinearOperator):
 
     def apply(self,data):
         forward = SR.SimpleForwardProjector(data,self.volumeOrigin,self.voxelSize,self.detectorSize,self.stepSize)
+
         return forward.project(self.sourcePosition,self.detectorOrigin,self.pixelDirection)
 
-    def applyAdjoint(self,rhs):
-        raise NotImplementedError("")
+    def applyAdjoint(self,projection):
+        back = SR.FilteredBackProjection(self.volumeSize,self.volumeOrigin,self.voxelSize,self.detectorSize)
+        back.append(self.sourcePosition,self.detectorOrigin,self.pixelDirection,projection)
+
+        return back.finalize()
 
 class ProjectionTest(unittest.TestCase):
-    def testMultiply(self):
+    def testForward(self):
         side = 100
-        size = np.array([side,side])
-        data = SR.phantom(size)
+        volumeSize = np.array([side,side])
+        data = SR.phantom(volumeSize)
         volumeOrigin = np.array([-10.0,-10.0])
         voxelSize = np.array([20.0/side,20.0/side])
         detectorSize = 200
@@ -65,11 +70,71 @@ class ProjectionTest(unittest.TestCase):
         detectorOrigin = 20 * x0 + -30 * y0
         pixelDirection = y0 * 60.0 / detectorSize
 
-        projector = Projection(volumeOrigin,voxelSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection)
+        projector = Projection(volumeOrigin,voxelSize,volumeSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection)
     
         ret = projector.apply(data)
 
         print (SR.printArray(ret.transpose()))
+
+    def testBackward(self):
+        side = 100
+        volumeSize = np.array([side,side])
+        data = SR.phantom(volumeSize)
+        volumeOrigin = np.array([-10.0,-10.0])
+        voxelSize = np.array([20.0/side,20.0/side])
+        detectorSize = 200
+        stepSize = 0.01
+
+        theta = 0.1235
+        x0 = np.array([cos(theta), sin(theta)])
+        y0 = np.array([-sin(theta), cos(theta)])
+
+        sourcePosition = -20 * x0
+        detectorOrigin = 20 * x0 + -30 * y0
+        pixelDirection = y0 * 60.0 / detectorSize
+
+        projector = Projection(volumeOrigin,voxelSize,volumeSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection)
+
+        proj = projector.apply(data)
+        ret = projector.applyAdjoint(proj)
+
+        print (SR.printArray(ret,True,30,30))
+
+    def testAdjoint(self):
+        side = 100
+        volumeSize = np.array([side,side])
+        data = SR.phantom(volumeSize)
+        volumeOrigin = np.array([-10.0,-10.0])
+        voxelSize = np.array([20.0/side,20.0/side])
+        detectorSize = 200
+        stepSize = 0.01
+
+        theta = 0.1235
+        x0 = np.array([cos(theta), sin(theta)])
+        y0 = np.array([-sin(theta), cos(theta)])
+
+        sourcePosition = -20 * x0
+        detectorOrigin = 20 * x0 + -30 * y0
+        pixelDirection = y0 * 60.0 / detectorSize
+
+        projector = Projection(volumeOrigin,voxelSize,volumeSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection)
+
+        proj = projector.apply(data)
+        ret = projector.applyAdjoint(proj)
+
+        x = SR.phantom(volumeSize)
+        y = np.random.rand(detectorSize)
+
+        rn = OP.RN(detectorSize)
+        rnm = OP.RNM(side,side)
+
+        print (rn.inner(projector.apply(x),y))
+        print (rnm.inner(x,projector.applyAdjoint(y)))
+
+        print (SR.printArray(x,True,30,30))
+        print (SR.printArray(y,True))
+
+        print (SR.printArray(ret,True,30,30))
 
 if __name__ == '__main__':
     unittest.main(exit = False)
