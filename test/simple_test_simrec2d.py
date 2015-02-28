@@ -19,104 +19,57 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range
+from math import sin,cos
+import unittest
 
 import os
-from math import pi
 import numpy as np
-from matplotlib import pyplot as plt
+import SimRec2DPy as SR
+import RL.operator.operatorAlternative as OP
 
-from RL.datamodel import ugrid as ug
-from RL.datamodel import gfunc as gf
-from RL.builders import xray
+class Projection(OP.LinearOperator):
+    def __init__(self,volumeOrigin,voxelSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection):
+        self.volumeOrigin = volumeOrigin
+        self.voxelSize = voxelSize
+        self.detectorSize = detectorSize
+        self.stepSize = stepSize
+        self.sourcePosition = sourcePosition
+        self.detectorOrigin = detectorOrigin
+        self.pixelDirection = pixelDirection
 
-# from RL.utility.utility import InputValidationError
+    def apply(self,data):
+        forward = SR.SimpleForwardProjector(data,self.volumeOrigin,self.voxelSize,self.detectorSize,self.stepSize)
+        return forward.project(self.sourcePosition,self.detectorOrigin,self.pixelDirection)
 
-try:
-    os.mkdir('test/temp')
-except OSError as e:
-    if not e.errno == 17:  # folder exists
-        raise e
+    def applyAdjoint(self,rhs):
+        raise NotImplementedError("")
 
-# Initialize a sample grid
-sample_shape = [100, 75, 50]
-sample_voxel_size = (0.5, 0.2, 0.4)
-sample_grid = ug.Ugrid(sample_shape, spacing=sample_voxel_size)
+class ProjectionTest(unittest.TestCase):
+    def testMultiply(self):
+        side = 100
+        size = np.array([side,side])
+        data = SR.phantom(size)
+        volumeOrigin = np.array([-10.0,-10.0])
+        voxelSize = np.array([20.0/side,20.0/side])
+        detectorSize = 200
+        stepSize = 0.01
 
-# Initialize detector grid
-detector_shape = [200, 150]
-detector_pixel_size = 0.4
-detector_grid = ug.Ugrid(detector_shape, spacing=detector_pixel_size)
+        theta = 0.1235
+        x0 = np.array([cos(theta), sin(theta)])
+        y0 = np.array([-sin(theta), cos(theta)])
 
-# Set tilt angles
-tilt_angles = np.linspace(-pi / 2., pi / 2., 181, endpoint=True)
+        sourcePosition = -20 * x0
+        detectorOrigin = 20 * x0 + -30 * y0
+        pixelDirection = y0 * 60.0 / detectorSize
 
-# Initialize the geometry
-xray_geometry = xray.xray_ct_parallel_geom_3d(sample_grid, detector_grid,
-                                              axis=2, angles=tilt_angles,
-                                              rotating_sample=True)
+        projector = Projection(volumeOrigin,voxelSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection)
+    
+        ret = projector.apply(data)
 
-# Initialize the volume values (cuboid of value 1.0)
-sample_fvals = np.zeros(sample_shape)
-sample_fvals[20:70, 12:52, 15:25] = 1.0  # thicknesses 50, 40, 10, shift -5
-sample_func = gf.Gfunc(fvals=sample_fvals, spacing=sample_voxel_size)
+        print (SR.printArray(ret.transpose()))
 
-# Show central slices
-sample_func[50, :, :].display(saveto='test/temp/orig_x.png')
-sample_func[:, 37, :].display(saveto='test/temp/orig_y.png')
-sample_func[:, :, 24].display(saveto='test/temp/orig_z.png')
-
-# Create forward and backward projectors
-forward_projector = xray.xray_ct_parallel_3d_projector(xray_geometry)
-backprojector = xray.xray_ct_parallel_3d_backprojector(xray_geometry)
-normal_op = forward_projector * backprojector
-
-# Compute projection
-proj_func = forward_projector(sample_func)
-
-proj_func[:, :, 0].display()
-#proj_func[:, :, 45].display()
-proj_func[:, :, 90].display()
-#proj_func[:, :, 135].display()
-#proj_func[:, :, 180].display()
-
-# Compute fwd and bwd combination (for testing only)
-bf_func = normal_op(proj_func)
-bf_func[:, :, 90].display()
-
-# Compute backprojection
-bp_func = backprojector(proj_func)
-
-print(bp_func.shape)
-
-#bp_func[50, :, :].display()
-#bp_func[:, 37, :].display()
-bp_func[:, :, 24].display()
-
-
-def landweber(fwd_proj, backproj, data, init_guess, niter, relax=0.5):
-    cur_guess = init_guess.copy()
-    for i in range(niter):
-        residual = fwd_proj(cur_guess) - data
-        residual_bp = backproj(residual)
-        cur_guess = cur_guess - relax * residual_bp
-
-    return cur_guess
-
-# Start Landweber method with start value 0
-init_guess = gf.Gfunc(fvals=0., shape=sample_shape, spacing=sample_voxel_size)
-
-#landw_sol = landweber(forward_projector, backprojector, proj_func,
-#                      init_guess, niter=10, relax=0.01)
-
-#landw_sol[50, :, :].display(saveto='test/temp/landw_3_x.png')
-#landw_sol[:, 37, :].display(saveto='test/temp/landw_3_y.png')
-#landw_sol[:, :, 25].display(saveto='test/temp/landw_3_z.png')
-
-plt.show(block=True)
+if __name__ == '__main__':
+    unittest.main(exit = False)

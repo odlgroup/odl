@@ -65,8 +65,6 @@ class R3Test(unittest.TestCase):
         Aop = R3.MultiplyOp(A)
         x = np.random.rand(3)
 
-        print (Aop(x) == np.dot(A,x))
-
         self.assertTrue(np.allclose(Aop(x),np.dot(A,x)))
 
     def testAdjoint(self):
@@ -77,8 +75,5 @@ class R3Test(unittest.TestCase):
 
         self.assertAlmostEqual(R3.inner(Aop(x),y),R3.inner(x,Aop.applyAdjoint(y)))
 
-def main():
-    unittest.main(exit = False)
-
 if __name__ == '__main__':
-    main()
+    unittest.main(exit = False)
