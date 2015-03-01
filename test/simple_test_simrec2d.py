@@ -47,7 +47,7 @@ class Projection(OP.LinearOperator):
         return forward.project(self.sourcePosition,self.detectorOrigin,self.pixelDirection)
 
     def applyAdjoint(self,projection):
-        back = SR.FilteredBackProjection(self.volumeSize,self.volumeOrigin,self.voxelSize,self.detectorSize)
+        back = SR.FilteredBackProjection(self.volumeSize,self.volumeOrigin,self.voxelSize)
         back.append(self.sourcePosition,self.detectorOrigin,self.pixelDirection,projection)
 
         return back.finalize()
@@ -74,7 +74,7 @@ class ProjectionTest(unittest.TestCase):
     
         ret = projector.apply(data)
 
-        print (SR.printArray(ret.transpose()))
+        #print (SR.printArray(ret.transpose()))
 
     def testBackward(self):
         side = 100
@@ -98,7 +98,7 @@ class ProjectionTest(unittest.TestCase):
         proj = projector.apply(data)
         ret = projector.applyAdjoint(proj)
 
-        print (SR.printArray(ret,True,30,30))
+        #print (SR.printArray(ret,True,30,30))
 
     def testAdjoint(self):
         side = 100
@@ -109,32 +109,27 @@ class ProjectionTest(unittest.TestCase):
         detectorSize = 200
         stepSize = 0.01
 
-        theta = 0.1235
+        theta = 0.0
         x0 = np.array([cos(theta), sin(theta)])
         y0 = np.array([-sin(theta), cos(theta)])
 
-        sourcePosition = -20 * x0
-        detectorOrigin = 20 * x0 + -30 * y0
-        pixelDirection = y0 * 60.0 / detectorSize
+        sourcePosition = -20000 * x0
+        detectorOrigin = 20 * x0 + -10 * y0
+        pixelDirection = y0 * 20.0 / detectorSize
 
         projector = Projection(volumeOrigin,voxelSize,volumeSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection)
 
         proj = projector.apply(data)
         ret = projector.applyAdjoint(proj)
-
-        x = SR.phantom(volumeSize)
-        y = np.random.rand(detectorSize)
+        proj2 = projector.apply(ret.T)
+        
+        print (SR.printArray(data,True,30,30))
+        print (SR.printArray(proj,True,30,30))
+        print (SR.printArray(proj2,True,30,30))
 
         rn = OP.RN(detectorSize)
         rnm = OP.RNM(side,side)
 
-        print (rn.inner(projector.apply(x),y))
-        print (rnm.inner(x,projector.applyAdjoint(y)))
-
-        print (SR.printArray(x,True,30,30))
-        print (SR.printArray(y,True))
-
-        print (SR.printArray(ret,True,30,30))
 
 if __name__ == '__main__':
     unittest.main(exit = False)
