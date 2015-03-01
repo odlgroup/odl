@@ -120,10 +120,12 @@ class ProjectionTest(unittest.TestCase):
         projector = Projection(volumeOrigin,voxelSize,volumeSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection)
 
         proj = projector.apply(data)
-        ret = projector.applyAdjoint(proj)
-        proj2 = projector.apply(ret.T)
+        data2 = projector.applyAdjoint(proj)
+        data2 = data2.T #bug in c++ code
+        proj2 = projector.apply(data2)
         
         print (SR.printArray(data,True,30,30))
+        print (SR.printArray(data2,True,30,30))
         print (SR.printArray(proj,True,30,30))
         print (SR.printArray(proj2,True,30,30))
 
