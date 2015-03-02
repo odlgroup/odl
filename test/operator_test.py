@@ -23,9 +23,11 @@ from __future__ import division,print_function, unicode_literals,absolute_import
 from future import standard_library
 standard_library.install_aliases()
 import unittest
+from math import pi
 
 import numpy as np
 from RL.operator.operatorAlternative import *
+from RL.operator.space import *
 import SimRec2DPy as SR
 
 class BasicOperator(unittest.TestCase):
@@ -59,9 +61,9 @@ class OperatorArithmetic(unittest.TestCase):
         x = 2
         self.assertAlmostEqual((A*(B+C))(2),3*(5*x+5+x))
 
-class R3Test(unittest.TestCase):
+class RNTest(unittest.TestCase):
     def testMultiply(self):
-        r3 = R3()
+        r3 = RN(3)
 
         A = np.random.rand(3,3)
         Aop = r3.MultiplyOp(A)
@@ -70,7 +72,7 @@ class R3Test(unittest.TestCase):
         self.assertTrue(np.allclose(Aop(x),np.dot(A,x)))
 
     def testAdjoint(self):
-        r3 = R3()
+        r3 = RN(3)
 
         A = np.random.rand(3,3)
         Aop = r3.MultiplyOp(A)
@@ -90,15 +92,12 @@ class ProductTest(unittest.TestCase):
 
 class L2Test(unittest.TestCase):
     def testInit(self):
-        d = voxelDiscretization(0,1,10)
+        d = linspaceDiscretization(0,pi,1000)
         space = L2(d)
 
         s = space.Sin()
-        c = space.Cos()
-
-        spc = s + c
-
-        print(space.squaredNorm(spc))
+        
+        self.assertAlmostEqual(space.squaredNorm(s),pi/2,2)
 
 if __name__ == '__main__':
     unittest.main(exit = False)

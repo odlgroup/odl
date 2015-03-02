@@ -27,166 +27,11 @@ from future import standard_library
 standard_library.install_aliases()
 
 from math import sin,cos,sqrt
-
-from abc import ABCMeta, abstractmethod
-
-#TODO move this
-class abstractstatic(staticmethod):
-    """Decorator to enforce abstract static methods
-    """
-    __slots__ = ()
-    def __init__(self, function):
-        super(abstractstatic, self).__init__(function)
-        function.__isabstractmethod__ = True
-    __isabstractmethod__ = True
-
 import numpy as np
 
-class Operator(object):
-    """Abstract operator
-    """
-    __metaclass__ = ABCMeta #Set as abstract
+import RL.operator.operatorAlternative as OP
 
-    @abstractmethod
-    def apply(self, rhs):
-        """Apply the operator, abstract
-        """
-        pass
-
-    def derivative(self, pos):
-        """Calculate the derivative operator at some position
-        """
-        raise NotImplementedError("Derivative not implemented for this operator")
-
-    def __call__(self, rhs):
-        """Shorthand for self.apply(rhs)
-        """
-        return self.apply(rhs)
-
-    def __add__(self, other):
-        """Operator addition (pointwise)
-        """
-
-        if isinstance(other, Operator):  # Calculate sum
-            return OperatorSum(self,other)
-        else:
-            raise TypeError('Expected an operator')
-
-    def __mul__(self, other):
-        """Composition of operators ((A*B)(x) == A(B(x)))
-        or scalar multiplication
-        """
-
-        from numbers import Number
-
-        if isinstance(other, Operator):  # Calculate sum
-            return OperatorComposition(self,other)
-        elif isinstance(other, Number):
-            return OperatorScalarMultiplication(self,other)
-        else:
-            raise TypeError('Expected an operator or a scalar')
-
-    def __rmul__(self,other):
-        """Composition of operators ((A*B)(x) == A(B(x)))
-        or scalar multiplication
-        """
-
-        from numbers import Number
-
-        if isinstance(other, Operator):  # Calculate sum
-            return OperatorComposition(other,self)
-        elif isinstance(other, Number):
-            return OperatorScalarMultiplication(self,other)
-        else:
-            raise TypeError('Expected an operator or a scalar')
-
-class LinearOperator(Operator):
-    """ Linear operator, satisfies A(ax+by)=aA(x)+bA(y)
-    """
-    
-    @abstractmethod
-    def applyAdjoint(self, rhs):
-        """Apply the adjoint of the operator, abstract
-        """
-        pass
-
-    def derivative(self):
-        """Calculate the derivative operator at some position
-        """
-        return self
-
-class SelfAdjointOperator(LinearOperator):
-    """ Special case of self adjoint operators where A(x) = A.T(x)
-    """
-    def applyAdjoint(self, rhs):
-        return self.apply(rhs)
-
-class OperatorSum(Operator):
-    """Expression type for the sum of operators
-    """
-    def __init__(self,left,right):
-        self.left = left
-        self.right = right
-
-    def apply(self, rhs):
-        return self.left(rhs) + self.right(rhs)
-
-    def applyAdjoint(self, rhs):
-        return self.left.applyAdjoint(rhs) + self.right.applyAdjoint(rhs)
-
-    def derivative(self, pos):
-        return self.left.derivative(pos) + self.right.derivative(pos)
-
-class OperatorComposition(Operator):
-    """Expression type for the composition of operators
-    """
-
-    def __init__(self,left,right):
-        self.left = left
-        self.right = right
-
-    def apply(self, rhs):
-        return self.left.apply(self.right.apply(rhs))
-    
-    def applyAdjoint(self, rhs):
-        return self.right.applyAdjoint(self.left.applyAdjoint(rhs))
-
-    def derivative(self, pos):
-        #Use the chain rule
-        return self.left.derivative(self.right.apply(pos)) * self.right.derivative(pos)
-
-class OperatorScalarMultiplication(Operator):
-    """Expression type for the multiplication of opeartors with scalars
-    """
-
-    def __init__(self,op,scalar):
-        self.op = op
-        self.scalar = scalar
-
-    def apply(self, rhs):
-        return scalar * self.op.apply(rhs)
-    
-    def applyAdjoint(self, rhs):
-        return scalar * self.op.applyAdjoint(rhs)
-
-    def derivative(self, pos):
-        return scalar * self.op.derivative(pos)
-
-class OperatorAdjoint(LinearOperator):
-    """Expression type for the adjoint of an operator
-    """
-
-    def __init__(self,op):
-        self.op = op
-
-    def apply(self, rhs):
-        return self.op.applyAdjoint(rhs)
-    
-    def applyAdjoint(self, rhs):
-        return self.op.apply(rhs)
-
-    def derivative(self, pos):
-        return self.op.derivative(pos)
+from abc import ABCMeta, abstractmethod
 
 class Field:
     Real, Complex = range(2)
@@ -257,18 +102,25 @@ class ProductSpace(Space):
         self.B = B
 
     class Vector(Space.Vector):
-        def __init__(self,A,B):
+        def __init__(self,parent,A,B):
+            self.parent = parent
             self.vA = vA
             self.vB = vB
 
+        def __getitem__(self,index): #TODO should we have this?
+            if (index < self.parent.A.dimension()):
+                return self.vA[index]
+            else:
+                return self.vB[index-self.parent.A.dimension()]
+
     def zero(self):
-        return ProductSpace.Vector(self.A.zero(),self.B.zero())
+        return ProductSpace.Vector(self,self.A.zero(),self.B.zero())
     
     def inner(self,v1,v2):
         return self.A.inner(v1.vA,v2.vA) + self.B.inner(v1.vB,v2.vB)
 
     def linearComb(self,a,b,v1,v2):
-        return ProductSpace.Vector(self.A.linearComb(a,b,v1.vA,v2.vA),self.B.linearComb(a,b,v1.vB,v2.vB))
+        return ProductSpace.Vector(self,self.A.linearComb(a,b,v1.vA,v2.vA),self.B.linearComb(a,b,v1.vB,v2.vB))
 
     def field(self):
         return self.A.field() #A and B has same field
@@ -296,7 +148,7 @@ class Reals(Space):
     def dimension(self):
         return 1
 
-    class MultiplyOp(SelfAdjointOperator):    
+    class MultiplyOp(OP.SelfAdjointOperator):    
         """Multiply with scalar
         """
 
@@ -306,7 +158,7 @@ class Reals(Space):
         def apply(self,rhs):
             return self.a * rhs
 
-    class AddOp(SelfAdjointOperator):
+    class AddOp(OP.SelfAdjointOperator):
         """Add scalar
         """
 
@@ -324,7 +176,7 @@ class RN(Space):
     def __init__(self,n):
         self.n = n
 
-    def inner(selfA,B):
+    def inner(self,A,B):
         return np.vdot(A,B)
     
     def linearComb(self,a,b,A,B):
@@ -339,7 +191,7 @@ class RN(Space):
     def dimension(self):
         return n
 
-    class MultiplyOp(Operator):    
+    class MultiplyOp(OP.Operator):    
         """Multiply with scalar
         """
 
@@ -410,7 +262,7 @@ class L2(Space):
         return a*A+b*B
 
     def zero(self):
-        class zeroFunction(SelfAdjointOperator):
+        class zeroFunction(OP.SelfAdjointOperator):
             def apply(self,rhs):
                 return 0.0
 
@@ -422,15 +274,15 @@ class L2(Space):
     def dimension(self):
         return 1.0/0.0
 
-    class Sin(Operator):
+    class Sin(OP.Operator):
         def apply(self,rhs):
             return sin(rhs)
 
-    class Cos(Operator):
+    class Cos(OP.Operator):
         def apply(self,rhs):
             return cos(rhs)
 
-    class PointwiseProduct(Operator):    
+    class PointwiseProduct(OP.Operator):    
         """Multiply with scalar
         """
 
