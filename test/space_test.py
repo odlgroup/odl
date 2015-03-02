@@ -43,10 +43,10 @@ class RNTest(unittest.TestCase):
     def testAdjoint(self):
         r3 = RN(3)
 
-        A = np.random.rand(3,3)
+        A = r3.makeVector(np.random.rand(3,3))
         Aop = r3.MultiplyOp(A)
-        x = np.random.rand(3)
-        y = np.random.rand(3)
+        x = r3.makeVector(np.random.rand(3))
+        y = r3.makeVector(np.random.rand(3))
 
         self.assertAlmostEqual(r3.inner(Aop(x),y),r3.inner(x,Aop.applyAdjoint(y)))
 
@@ -57,7 +57,41 @@ class ProductTest(unittest.TestCase):
         B = Reals()
         C = ProductSpace(A,B)
 
+        v1 = A.makeVector(1.0)
+        v2 = B.makeVector(2.0)
+        v3 = C.makeVector(v1,v2)
+
+        self.assertAlmostEquals(v1,v3[0])
+        self.assertAlmostEquals(v2,v3[1])
         self.assertTrue(C.dimension() == 2)
+
+    def testAccess(self):
+        r1 = RN(1)
+        r2 = RN(2)
+        r3 = ProductSpace(r1,r2)
+
+        v1 = r1.makeVector([1.0])
+        v2 = r2.makeVector([1.0,2.0])
+        v3 = r3.makeVector(v1,v2)
+
+        self.assertAlmostEquals(v1[0],v3[0])
+        self.assertAlmostEquals(v2[0],v3[1])
+        self.assertAlmostEquals(v2[1],v3[2])
+        self.assertTrue(r3.dimension() == 3)
+
+    def testConstruct(self):
+        r1 = RN(1)
+        r2 = RN(2)
+        r3 = ProductSpace(r1,r2)
+
+        v1 = r1.makeVector([1.0])
+        v2 = r2.makeVector([1.0,2.0])
+        v3 = r3.makeVector(1.0,2.0,3.0)
+
+        self.assertAlmostEquals(v1[0],v3[0])
+        self.assertAlmostEquals(v2[0],v3[1])
+        self.assertAlmostEquals(v2[1],v3[2])
+        self.assertTrue(r3.dimension() == 3)
 
 class L2Test(unittest.TestCase):
     def testInit(self):

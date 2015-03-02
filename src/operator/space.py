@@ -43,6 +43,9 @@ class Space(object):
     __metaclass__ = ABCMeta #Set as abstract
 
     class Vector(object):
+        def __init__(self, parent):
+            self.parent = parent
+
         def __add__(self, other):
             """Vector addition
             """
@@ -101,8 +104,32 @@ class ProductSpace(Space):
         self.A = A
         self.B = B
 
+    def zero(self):
+        return self.makeVector(self.A.zero(),self.B.zero())
+    
+    def inner(self,v1,v2):
+        return self.A.inner(v1.vA,v2.vA) + self.B.inner(v1.vB,v2.vB)
+
+    def linearComb(self,a,b,v1,v2):
+        return self.makeVector(self.A.linearComb(a,b,v1.vA,v2.vA),self.B.linearComb(a,b,v1.vB,v2.vB))
+
+    def field(self):
+        return self.A.field() #A and B has same field
+
+    def dimension(self):
+        return self.A.dimension()+self.B.dimension()
+    
+    def makeVector(self,*args):
+        if (len(args) is 2 and isinstance(args[0],self.A.Vector) and isinstance(args[1],self.B.Vector)):
+            return ProductSpace.Vector(self,args[0],args[1])
+        elif (len(args) is self.dimension()):
+            return ProductSpace.Vector(self,self.A.makeVector(args[0:self.A.dimension()-1]),self.B.makeVector(args[self.A.dimension()-1:]))
+        else:
+            print (type(args[0]))
+            raise Exception("Expected two vectors or elementwise assignment")
+
     class Vector(Space.Vector):
-        def __init__(self,parent,A,B):
+        def __init__(self,parent,vA,vB):
             self.parent = parent
             self.vA = vA
             self.vB = vB
@@ -112,23 +139,9 @@ class ProductSpace(Space):
                 return self.vA[index]
             else:
                 return self.vB[index-self.parent.A.dimension()]
+            #Todo out of range
 
-    def zero(self):
-        return ProductSpace.Vector(self,self.A.zero(),self.B.zero())
-    
-    def inner(self,v1,v2):
-        return self.A.inner(v1.vA,v2.vA) + self.B.inner(v1.vB,v2.vB)
 
-    def linearComb(self,a,b,v1,v2):
-        return ProductSpace.Vector(self,self.A.linearComb(a,b,v1.vA,v2.vA),self.B.linearComb(a,b,v1.vB,v2.vB))
-
-    def field(self):
-        return self.A.field() #A and B has same field
-
-    def dimension(self):
-        return self.A.dimension()+self.B.dimension()
-
-#Example of a space:
 class Reals(Space):
     """The real numbers
     """
@@ -147,6 +160,21 @@ class Reals(Space):
 
     def dimension(self):
         return 1
+
+    def makeVector(self,value):
+        return Reals.Vector(self,value)
+
+    class Vector(float,Space.Vector):
+        def __new__(cls, parent, value):
+            return super(Reals.Vector, cls).__new__(cls, value)
+
+        def __init__(self, parent, value):
+            self.parent = parent
+
+        def __getitem__(self,index): #TODO should we have this?
+            if (index > 0):
+                raise IndexError("Out of range")
+            return self
 
     class MultiplyOp(OP.SelfAdjointOperator):    
         """Multiply with scalar
@@ -168,9 +196,9 @@ class Reals(Space):
         def apply(self,rhs):
             return self.a + rhs
 
-#Example of a space:
+
 class RN(Space):
-    """The real numbers
+    """The real space R^n
     """
 
     def __init__(self,n):
@@ -189,10 +217,21 @@ class RN(Space):
         return Field.Real
 
     def dimension(self):
-        return n
+        return self.n
+
+    def makeVector(self, *args, **kwargs):
+        return RN.Vector(self,*args, **kwargs)
+
+    class Vector(np.ndarray,Space.Vector): #TODO!
+        def __new__(cls, parent, *args, **kwargs):
+            data = np.array(*args,**kwargs)
+            return data.view(RN.Vector)
+
+        def __init__(self,parent,*args, **kwargs):
+            self.parent = parent
 
     class MultiplyOp(OP.Operator):    
-        """Multiply with scalar
+        """Multiply with matrix
         """
 
         def __init__(self,A):
@@ -205,9 +244,8 @@ class RN(Space):
             return np.dot(self.A.T,rhs)
 
 
-#Example of a space:
 class RNM(Space):
-    """The real numbers
+    """The space of real nxm matrices
     """
 
     def __init__(self,n,m):
@@ -224,49 +262,50 @@ class RNM(Space):
         return np.zeros(n,m)
 
 class measureSpace(object):
+    """A space where integration is defined
+    """
+
+    __metaclass__ = ABCMeta #Set as abstract
+
     @abstractmethod
     def integrate(self,f):
         """Calculate the integral of f
         """
         pass
 
-class unitInterval(measureSpace):
+class Interval(measureSpace):
     def __init__(self,begin,end):
         self.begin = begin
         self.end = end
 
-class linspaceDiscretization(unitInterval):
-    def __init__(self,begin,end,n):
-        unitInterval.__init__(self,begin,end)
+    def integrate(self,f):
+        raise NotImplementedError("Cannot integrate without discretization") #TODO add abstract measure space?
+
+class LinspaceDiscretization(measureSpace):
+    def __init__(self,interval,n):
+        self.interval = interval
         self.n = n
 
     def integrate(self,f):
         s = 0.0
-        for x in np.linspace(self.begin,self.end,self.n):
+        for x in np.linspace(self.interval.begin,self.interval.end,self.n):
             s += f(x)
 
-        return s * (self.end - self.begin) / self.n
+        return s * (self.interval.end - self.interval.begin) / self.n
 
 #Example of a space:
 class L2(Space):
-    """The real numbers
+    """The space of square integrable functions on some domain
     """
 
     def __init__(self,domain):
         self.domain = domain
 
     def inner(self,v1,v2):
-        return self.domain.integrate(L2.PointwiseProduct(v1,v2))
+        return self.domain.integrate(OP.PointwiseProduct(v1,v2))
 
     def linearComb(self,a,b,A,B):
         return a*A+b*B
-
-    def zero(self):
-        class zeroFunction(OP.SelfAdjointOperator):
-            def apply(self,rhs):
-                return 0.0
-
-        return zeroFunction()
 
     def field(self):
         return Field.Real
@@ -274,21 +313,25 @@ class L2(Space):
     def dimension(self):
         return 1.0/0.0
 
-    class Sin(OP.Operator):
-        def apply(self,rhs):
-            return sin(rhs)
+    def zero(self):
+        class ZeroFunction(L2.Vector):
+            def apply(self,rhs):
+                return 0.0
+        return ZeroFunction(self)
 
-    class Cos(OP.Operator):
-        def apply(self,rhs):
-            return cos(rhs)
+    def sin(self):
+        class SinFunction(L2.Vector):
+            def apply(self,rhs):
+                return sin(rhs)
+        return SinFunction(self)
 
-    class PointwiseProduct(OP.Operator):    
-        """Multiply with scalar
+    def sin(self):
+        class CosFunction(L2.Vector):
+            def apply(self,rhs):
+                return cos(rhs)
+        return CosFunction(self)
+
+    class Vector(OP.Operator,Space.Vector):
+        """ L2 Vectors are operators from the domain onto R(C)
         """
-
-        def __init__(self,a,b):
-            self.a = a
-            self.b = b
-
-        def apply(self,rhs):
-            return self.a(rhs) * self.b(rhs)
+        pass
