@@ -56,3 +56,7 @@ target/
 
 # Backups from futurize/pasteurize
 *.py.bak
+
+# Visual studio
+*.sln
+*.suo

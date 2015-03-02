@@ -61,19 +61,44 @@ class OperatorArithmetic(unittest.TestCase):
 
 class R3Test(unittest.TestCase):
     def testMultiply(self):
+        r3 = R3()
+
         A = np.random.rand(3,3)
-        Aop = R3.MultiplyOp(A)
+        Aop = r3.MultiplyOp(A)
         x = np.random.rand(3)
 
         self.assertTrue(np.allclose(Aop(x),np.dot(A,x)))
 
     def testAdjoint(self):
+        r3 = R3()
+
         A = np.random.rand(3,3)
-        Aop = R3.MultiplyOp(A)
+        Aop = r3.MultiplyOp(A)
         x = np.random.rand(3)
         y = np.random.rand(3)
 
-        self.assertAlmostEqual(R3.inner(Aop(x),y),R3.inner(x,Aop.applyAdjoint(y)))
+        self.assertAlmostEqual(r3.inner(Aop(x),y),r3.inner(x,Aop.applyAdjoint(y)))
+
+
+class ProductTest(unittest.TestCase):
+    def testInit(self):
+        A = Reals()
+        B = Reals()
+        C = ProductSpace(A,B)
+
+        self.assertTrue(C.dimension() == 2)
+
+class L2Test(unittest.TestCase):
+    def testInit(self):
+        d = voxelDiscretization(0,1,10)
+        space = L2(d)
+
+        s = space.Sin()
+        c = space.Cos()
+
+        spc = s + c
+
+        print(space.squaredNorm(spc))
 
 if __name__ == '__main__':
     unittest.main(exit = False)

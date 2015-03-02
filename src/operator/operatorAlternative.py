@@ -187,6 +187,9 @@ class OperatorAdjoint(LinearOperator):
     def derivative(self, pos):
         return self.op.derivative(pos)
 
+class Field:
+    Real, Complex = range(2)
+
 class Space(object):
     """Abstract space
     """
@@ -205,39 +208,89 @@ class Space(object):
             return Space.linearComb(other,0,self,Space.zero())
 
     @abstractmethod
-    def zero():
+    def zero(self):
         """The zero element of the space
         """
         pass
     
     @abstractmethod
-    def inner(A,B):
+    def inner(self,A,B):
         """Inner product
         """
         pass
 
     @abstractmethod
-    def linearComb(a,b,A,B):
+    def linearComb(self,a,b,A,B):
         """Calculate a*A+b*B
         """
         pass
+
+    @abstractmethod
+    def field(self):
+        """ Get the underlying field
+        """
+        pass
+
+    @abstractmethod
+    def dimension(self):
+        """ Get the dimension of the space
+        """
+        pass
+
+    def squaredNorm(self,x):
+        return self.inner(x,x)
+    
+
+class ProductSpace(Space):
+    """Product space (A x B)
+    """
+
+    def __init__(self,A,B):
+        if (A.field() is not B.field()):
+            raise AttributeError("A and B have to be spaces over the same field")
+
+        self.A = A
+        self.B = B
+
+    class Vector(Space.Vector):
+        def __init__(self,Apart,Bpart):
+            self.Apart = Apart
+            self.Bpart = Bpart
+
+    def zero(self):
+        return ProductSpace.Vector(self.A.zero(),self.B.zero())
+    
+    def inner(self,v1,v2):
+        return self.A.inner(v1.Apart,v2.Apart) + self.B.inner(v1.Bpart,v2.Bpart)
+
+    def linearComb(self,a,b,v1,v2):
+        return ProductSpace.Vector(self.A.linearComb(a,b,v1.Apart,v2.Apart),self.B.linearComb(a,b,v1.Bpart,v2.Bpart))
+
+    def field(self):
+        return self.A.field()
+
+    def dimension(self):
+        return self.A.dimension()+self.B.dimension()
 
 #Example of a space:
 class Reals(Space):
     """The real numbers
     """
 
-    @staticmethod
-    def inner(A,B):
+    def inner(self,A,B):
         return A*B
 
-    @staticmethod
-    def linearComb(a,b,A,B):
+    def linearComb(self,a,b,A,B):
         return a*A+b*B
 
-    @staticmethod
-    def zero():
+    def zero(self):
         return 0.0
+
+    def field(self):
+        return Field.Real
+
+    def dimension(self):
+        return 1
 
     class MultiplyOp(SelfAdjointOperator):    
         """Multiply with scalar
@@ -264,17 +317,20 @@ class R3(Space):
     """The real numbers
     """
 
-    @staticmethod
-    def inner(A,B):
+    def inner(self,A,B):
         return np.vdot(A,B)
     
-    @staticmethod
-    def linearComb(a,b,A,B):
+    def linearComb(self,a,b,A,B):
         return a*A+b*B
 
-    @staticmethod
-    def zero():
+    def zero(self):
         return np.zeros(3)
+
+    def field(self):
+        return Field.Real
+
+    def dimension(self):
+        return 3
 
     class MultiplyOp(Operator):    
         """Multiply with scalar
@@ -294,19 +350,23 @@ class RN(Space):
     """The real numbers
     """
 
-    def __init__(n):
+    def __init__(self,n):
         self.n = n
 
-    def inner(A,B):
+    def inner(selfA,B):
         return np.vdot(A,B)
     
-    @staticmethod
-    def linearComb(a,b,A,B):
+    def linearComb(self,a,b,A,B):
         return a*A+b*B
 
-    @staticmethod
-    def zero():
+    def zero(self):
         return np.zeros(n)
+
+    def field(self):
+        return Field.Real
+
+    def dimension(self):
+        return n
 
     class MultiplyOp(Operator):    
         """Multiply with scalar
@@ -327,17 +387,71 @@ class RNM(Space):
     """The real numbers
     """
 
-    def __init__(n,m):
+    def __init__(self,n,m):
         self.n = n
         self.m = m
 
-    def inner(A,B):
-        return np.vdot(A,B)
+    def inner(self,A,B):
+        return np.vdot(self,A,B)
     
-    @staticmethod
-    def linearComb(a,b,A,B):
+    def linearComb(self,a,b,A,B):
         return a*A+b*B
 
-    @staticmethod
-    def zero():
+    def zero(self):
         return np.zeros(n,m)
+
+class discretization(object):
+    pass
+
+class voxelDiscretization(discretization):
+    def __init__(self,begin,end,n):
+        self.begin = begin
+        self.end = end
+        self.n = n
+
+    def integrate(self,f):
+        s = 0.0
+        for x in np.linspace(self.begin,self.end,self.n):
+            s += f(x)
+
+#Example of a space:
+class L2(Space):
+    """The real numbers
+    """
+
+    def __init__(self,discretization):
+        self.discretization = discretization
+
+    def inner(self,v1,v2):
+        return self.discretization.integrate(L2.PointwiseProduct(v1,v2))
+
+    def linearComb(self,a,b,A,B):
+        return a*A+b*B
+
+    def zero(self):
+        return 0.0
+
+    def field(self):
+        return Field.Real
+
+    def dimension(self):
+        return 1.0/0.0
+
+    class Sin(Operator):
+        def apply(self,rhs):
+            return sin(rhs)
+
+    class Cos(Operator):
+        def apply(self,rhs):
+            return sin(rhs)
+
+    class PointwiseProduct(Operator):    
+        """Multiply with scalar
+        """
+
+        def __init__(self,a,b):
+            self.a = a
+            self.b = b
+
+        def apply(self,rhs):
+            return self.a(rhs) * self.b(rhs)
