@@ -51,12 +51,12 @@ class Space(object):
         def __add__(self, other):
             """Vector addition
             """
-            return Space.linearComb(1,1,self,other)
+            return self.parent.linearComb(1,1,self,other)
 
         def __mul__(self, other):
             """Scalar multiplication
             """
-            return Space.linearComb(other,0,self,Space.zero())
+            return self.parent.linearComb(other,0,self,Space.zero())
 
     @abstractmethod
     def zero(self):
@@ -105,22 +105,22 @@ class ProductSpace(Space):
         self.spaces = spaces
 
     def zero(self):
-        return self.makeVector([A.zero() for A in self.spaces])
+        return self.makeVector(*[A.zero() for A in self.spaces])
     
     def inner(self,v1,v2):
         return sum(space.inner(v1p,v2p) for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts))
 
     def linearComb(self,a,b,v1,v2):
-        return self.makeVector(*[space.linearComb(a,b,v1p,v2p) for [space,v1p,v2p] in [self.spaces,v1,v2]])
+        return self.makeVector(*[space.linearComb(a,b,v1p,v2p) for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts)])
 
     def field(self):
-        return self.A.field() #X_n has same field
+        return self.spaces[0].field() #X_n has same field
 
     def dimension(self):
         return sum(space.dimension() for space in self.spaces)
     
     def makeVector(self,*args):
-        return ProductSpace.Vector(self,*[v for v in args])
+        return ProductSpace.Vector(self,*args)
 
     class Vector(Space.Vector):
         def __init__(self,parent,*parts):

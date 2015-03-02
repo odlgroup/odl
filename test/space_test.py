@@ -90,6 +90,8 @@ class ProductTest(unittest.TestCase):
         v2 = s2.makeVector(2.0)
         v3 = s3.makeVector(3.0)
         v = S.makeVector(v1,v2,v3)
+        u = v
+        print(u+v)
         
         self.assertTrue(S.dimension() == 3)
         self.assertAlmostEquals(v1,v[0])
