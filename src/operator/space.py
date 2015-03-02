@@ -25,13 +25,15 @@ from __future__ import absolute_import
 from future.builtins import object
 from future import standard_library
 standard_library.install_aliases()
+from abc import ABCMeta, abstractmethod
+from itertools import izip
 
 from math import sin,cos,sqrt
 import numpy as np
 
 import RL.operator.operatorAlternative as OP
+from RL.utility.utility import allEqual
 
-from abc import ABCMeta, abstractmethod
 
 class Field:
     Real, Complex = range(2)
@@ -43,7 +45,7 @@ class Space(object):
     __metaclass__ = ABCMeta #Set as abstract
 
     class Vector(object):
-        def __init__(self, parent):
+        def __init__(self,parent,*args, **kwargs):
             self.parent = parent
 
         def __add__(self, other):
@@ -86,60 +88,57 @@ class Space(object):
         """
         pass
 
-    def squaredNorm(self,x):
+    def normSquared(self,x):
         return self.inner(x,x)
 
     def norm(self,x):
-        return sqrt(self.squaredNorm(x,x))
+        return sqrt(self.normSquared(x,x))
     
-
 class ProductSpace(Space):
-    """Product space (A x B)
+    """Product space (X1 x X2 x ... x Xn)
     """
 
-    def __init__(self,A,B):
-        if (A.field() is not B.field()):
-            raise AttributeError("A and B have to be spaces over the same field")
+    def __init__(self,*spaces):
+        if (not allEqual(spaces, lambda x,y: x.field() == y.field())):
+            raise AttributeError("All spaces must have the same field")
 
-        self.A = A
-        self.B = B
+        self.spaces = spaces
 
     def zero(self):
-        return self.makeVector(self.A.zero(),self.B.zero())
+        return self.makeVector([A.zero() for A in self.spaces])
     
     def inner(self,v1,v2):
-        return self.A.inner(v1.vA,v2.vA) + self.B.inner(v1.vB,v2.vB)
+        return sum(space.inner(v1p,v2p) for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts))
 
     def linearComb(self,a,b,v1,v2):
-        return self.makeVector(self.A.linearComb(a,b,v1.vA,v2.vA),self.B.linearComb(a,b,v1.vB,v2.vB))
+        return self.makeVector(*[space.linearComb(a,b,v1p,v2p) for [space,v1p,v2p] in [self.spaces,v1,v2]])
 
     def field(self):
-        return self.A.field() #A and B has same field
+        return self.A.field() #X_n has same field
 
     def dimension(self):
-        return self.A.dimension()+self.B.dimension()
+        return sum(space.dimension() for space in self.spaces)
     
     def makeVector(self,*args):
-        if (len(args) is 2 and isinstance(args[0],self.A.Vector) and isinstance(args[1],self.B.Vector)):
-            return ProductSpace.Vector(self,args[0],args[1])
-        elif (len(args) is self.dimension()):
-            return ProductSpace.Vector(self,self.A.makeVector(args[0:self.A.dimension()]),self.B.makeVector(args[self.A.dimension()-1:]))
-        else:
-            print (type(args[0]))
-            raise Exception("Expected two vectors or elementwise assignment")
+        return ProductSpace.Vector(self,*[v for v in args])
 
     class Vector(Space.Vector):
-        def __init__(self,parent,vA,vB):
+        def __init__(self,parent,*parts):
             self.parent = parent
-            self.vA = vA
-            self.vB = vB
+            self.parts = parts
 
         def __getitem__(self,index): #TODO should we have this?
-            if (index < self.parent.A.dimension()):
-                return self.vA[index]
-            else:
-                return self.vB[index-self.parent.A.dimension()]
+            ind = 0
+            for part in self.parts:
+                if ind+part.parent.dimension()>index:
+                    return part[index-ind]
+                else:
+                    ind += part.parent.dimension()
+            #Todo complexity?
             #Todo out of range
+
+        def __str__(self):
+            return "[" + ",".join(str(part) for part in self.parts) + "]"   
 
 
 class Reals(Space):
@@ -167,9 +166,6 @@ class Reals(Space):
     class Vector(float,Space.Vector):
         def __new__(cls, parent, value):
             return super(Reals.Vector, cls).__new__(cls, value)
-
-        def __init__(self, parent, value):
-            self.parent = parent
 
         def __getitem__(self,index): #TODO should we have this?
             if (index > 0):
@@ -222,15 +218,12 @@ class RN(Space):
     def makeVector(self, *args, **kwargs):
         return RN.Vector(self,*args, **kwargs)
 
-    class Vector(np.ndarray,Space.Vector): #TODO!
+    class Vector(np.ndarray,Space.Vector):
         def __new__(cls, parent, *args, **kwargs):
             data = np.array(*args,**kwargs)
             return data.view(RN.Vector)
 
-        def __init__(self,parent,*args, **kwargs):
-            self.parent = parent
-
-    class MultiplyOp(OP.Operator):    
+    class MultiplyOp(OP.Operator):
         """Multiply with matrix
         """
 

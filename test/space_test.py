@@ -65,33 +65,37 @@ class ProductTest(unittest.TestCase):
         self.assertAlmostEquals(v2,v3[1])
         self.assertTrue(C.dimension() == 2)
 
-    def testAccess(self):
+    def testConstruct1(self):
         r1 = RN(1)
         r2 = RN(2)
-        r3 = ProductSpace(r1,r2)
+        S = ProductSpace(r1,r2)
 
         v1 = r1.makeVector([1.0])
-        v2 = r2.makeVector([1.0,2.0])
-        v3 = r3.makeVector(v1,v2)
+        v2 = r2.makeVector([2.0,3.0])
+        v = S.makeVector(v1,v2)
+        
+        self.assertTrue(S.dimension() == 3)
+        self.assertAlmostEquals(v1[0],v[0])
+        self.assertAlmostEquals(v2[0],v[1])
+        self.assertAlmostEquals(v2[1],v[2])
+        self.assertAlmostEquals(S.normSquared(v),r1.normSquared(v1)+r2.normSquared(v2))
 
-        self.assertAlmostEquals(v1[0],v3[0])
-        self.assertAlmostEquals(v2[0],v3[1])
-        self.assertAlmostEquals(v2[1],v3[2])
-        self.assertTrue(r3.dimension() == 3)
+    def testArbitraryProduct(self):
+        s1 = Reals()
+        s2 = Reals()
+        s3 = Reals()
+        S = ProductSpace(s1,s2,s3)
 
-    def testConstruct(self):
-        r1 = RN(1)
-        r2 = RN(2)
-        r3 = ProductSpace(r1,r2)
-
-        v1 = r1.makeVector([1.0])
-        v2 = r2.makeVector([1.0,2.0])
-        v3 = r3.makeVector(1.0,2.0,3.0)
-
-        self.assertAlmostEquals(v1[0],v3[0])
-        self.assertAlmostEquals(v2[0],v3[1])
-        self.assertAlmostEquals(v2[1],v3[2])
-        self.assertTrue(r3.dimension() == 3)
+        v1 = s1.makeVector(1.0)
+        v2 = s2.makeVector(2.0)
+        v3 = s3.makeVector(3.0)
+        v = S.makeVector(v1,v2,v3)
+        
+        self.assertTrue(S.dimension() == 3)
+        self.assertAlmostEquals(v1,v[0])
+        self.assertAlmostEquals(v2,v[1])
+        self.assertAlmostEquals(v3,v[2])
+        self.assertAlmostEquals(S.normSquared(v),s1.normSquared(v1)+s2.normSquared(v2)+s3.normSquared(v3))
 
 class L2Test(unittest.TestCase):
     def testInit(self):
@@ -101,7 +105,7 @@ class L2Test(unittest.TestCase):
 
         s = space.sin()
         
-        self.assertAlmostEqual(space.squaredNorm(s),pi/2,2)
+        self.assertAlmostEqual(space.normSquared(s),pi/2,2)
 
 if __name__ == '__main__':
     unittest.main(exit = False)
