@@ -400,10 +400,14 @@ class RNM(Space):
     def zero(self):
         return np.zeros(n,m)
 
-class discretization(object):
-    pass
+class measureSpace(object):
+    @abstractmethod
+    def integrate(self,f):
+        """Calculate the integral of f
+        """
+        pass
 
-class voxelDiscretization(discretization):
+class voxelDiscretization(measureSpace):
     def __init__(self,begin,end,n):
         self.begin = begin
         self.end = end
