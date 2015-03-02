@@ -123,7 +123,7 @@ class ProductSpace(Space):
         if (len(args) is 2 and isinstance(args[0],self.A.Vector) and isinstance(args[1],self.B.Vector)):
             return ProductSpace.Vector(self,args[0],args[1])
         elif (len(args) is self.dimension()):
-            return ProductSpace.Vector(self,self.A.makeVector(args[0:self.A.dimension()-1]),self.B.makeVector(args[self.A.dimension()-1:]))
+            return ProductSpace.Vector(self,self.A.makeVector(args[0:self.A.dimension()]),self.B.makeVector(args[self.A.dimension()-1:]))
         else:
             print (type(args[0]))
             raise Exception("Expected two vectors or elementwise assignment")
