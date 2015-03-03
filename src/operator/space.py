@@ -65,6 +65,13 @@ class Space(object):
             self.parent.linComb(1,other,1,tmp)
             return tmp
 
+        def __sub__(self, other):
+            """Vector subtraction
+            """
+            tmp = self.clone()
+            self.parent.linComb(-1,other,1,tmp)
+            return tmp
+
         def __mul__(self, other):
             """Scalar multiplication
             """
@@ -178,8 +185,8 @@ class ProductSpace(Space):
         def __getitem__(self,index): #TODO should we have this?
             return self.parts[index]
 
-        def __str__(self):
-            return "[" + ",".join(str(part) for part in self.parts) + "]"
+        def __str__(self):          return "[" + ",".join(str(part) for part in self.parts) + "]"
+        def __repr__(self):         return "%s(%s)" % (self.__class__.__name__, str(self))
 
 
 class Reals(Space):
@@ -221,6 +228,11 @@ class Reals(Space):
         def clone(self):
             return self.parent.makeVector(self.__val__)
 
+        def __getitem__(self,index):
+            if (index > 0):
+                raise IndexError("Out of range")
+            return self.__val__
+
         #Need to duplicate methods since vectors are mutable but python floats are not
         #Source: https://gist.github.com/jheiv/6656349
 
@@ -253,13 +265,12 @@ class Reals(Space):
         def __float__(self):        return self.__val__.__float__()              # XXX
         # Conversions
         def __str__(self):          return self.__val__.__str__()               # XXX
-        # Representation
+        # Represenation
         def __repr__(self):         return "%s(%d)" % (self.__class__.__name__, self.__val__)
 
         # Define set, a function that you can use to set the value of the instance
         def set(self, x):
             self.__val__ = x.__val__
-
         # Pass anything else along to self.__val__
         def __getattr__(self, attr):
             return getattr(self.__val__, attr)
@@ -322,6 +333,9 @@ class RN(Space):
 
         def clone(self):
             return self.parent.makeVector(self, copy = True)
+
+        def __iter__(self):
+            return np.nditer(self)
 
     class MultiplyOp(OP.Operator):
         """Multiply with matrix
