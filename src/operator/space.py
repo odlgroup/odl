@@ -72,6 +72,8 @@ class Space(object):
             self.parent.linComb(other,self,0,tmp)
             return tmp
 
+        __rmul__ = __mul__
+
     @abstractmethod
     def zero(self):
         """The zero element of the space
