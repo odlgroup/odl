@@ -34,41 +34,28 @@ class RealsTest(unittest.TestCase):
     def testAddition(self):
         R = Reals()
         x = R.makeVector(1.0)
-        y = R.makeVector(2.0)
-        R.linearComb(2,x,3,y)
+        y = R.makeVector(4.0)
+        z = R.makeVector(5.0)
 
-        z = R.makeVector(8.0)
-
-        self.assertAlmostEqual(y,z)
+        self.assertAlmostEqual(x+y,z)
 
 class RNTest(unittest.TestCase):
+    def testLinComb(self):
+        r3 = RN(3)
+        x = r3.makeVector([1.,2.,3.])
+        y = r3.makeVector([3.,5.,7.])
+        z = r3.makeVector([4.,7.,10.])
+        r3.linComb(1,x,1,y)
+
+        self.assertTrue(np.allclose(y,z))
+
     def testAddition(self):
         r3 = RN(3)
         x = r3.makeVector([1.,2.,3.])
         y = r3.makeVector([3.,5.,7.])
         z = r3.makeVector([4.,7.,10.])
-        r3.linearComb(1,x,1,y)
-        self.assertTrue(np.allclose(y,z))
 
-    def testMultiply(self):
-        r3 = RN(3)
-
-        A = np.random.rand(3,3)
-        Aop = r3.MultiplyOp(A)
-        x = np.random.rand(3)
-
-        self.assertTrue(np.allclose(Aop(x),np.dot(A,x)))
-
-    def testAdjoint(self):
-        r3 = RN(3)
-
-        A = r3.makeVector(np.random.rand(3,3))
-        Aop = r3.MultiplyOp(A)
-        x = r3.makeVector(np.random.rand(3))
-        y = r3.makeVector(np.random.rand(3))
-
-        self.assertAlmostEqual(r3.inner(Aop(x),y),r3.inner(x,Aop.applyAdjoint(y)))
-
+        self.assertTrue(np.allclose(x+y,z))
 
 class ProductTest(unittest.TestCase):
     def testRxR(self):
@@ -83,6 +70,29 @@ class ProductTest(unittest.TestCase):
         self.assertAlmostEquals(v1,v3[0])
         self.assertAlmostEquals(v2,v3[1])
         self.assertTrue(C.dimension == 2)
+
+    def testAdd(self):
+        R = Reals()
+        R2 = ProductSpace(R,R)
+
+        u = R2.makeVector(1.0,4.0)
+        v = R2.makeVector(3.0,7.0)
+        s = R2.makeVector(4.0,11.0)
+
+        self.assertAlmostEquals((u+v)[0],s[0])
+        self.assertAlmostEquals((u+v)[1],s[1])
+
+    def testLinComb(self):
+        R = Reals()
+        R2 = ProductSpace(R,R)
+
+        u = R2.makeVector(1.0,4.0)
+        v = R2.makeVector(3.0,7.0)
+        s = R2.makeVector(4.0,11.0)
+        R2.linComb(1,u,1,v)
+
+        self.assertAlmostEquals(v[0],s[0])
+        self.assertAlmostEquals(v[1],s[1])
 
     def testConstructR1xR2(self):
         r1 = RN(1)
@@ -100,28 +110,26 @@ class ProductTest(unittest.TestCase):
         self.assertAlmostEquals(S.normSquared(v),r1.normSquared(v1)+r2.normSquared(v2))
 
     def testArbitraryProduct(self):
-        s1 = Reals()
-        s2 = Reals()
-        s3 = Reals()
-        S = ProductSpace(s1,s2,s3)
+        R = Reals()
+        R3 = ProductSpace(R,R,R)
 
-        v1 = s1.makeVector(1.0)
-        v2 = s2.makeVector(2.0)
-        v3 = s3.makeVector(3.0)
-        v = S.makeVector(v1,v2,v3)
+        v1 = R.makeVector(1.0)
+        v2 = R.makeVector(2.0)
+        v3 = R.makeVector(3.0)
+        v = R3.makeVector(v1,v2,v3)
         
-        self.assertTrue(S.dimension == 3)
+        self.assertTrue(R3.dimension == 3)
         self.assertAlmostEquals(v1,v[0])
         self.assertAlmostEquals(v2,v[1])
         self.assertAlmostEquals(v3,v[2])
-        self.assertAlmostEquals(S.normSquared(v),s1.normSquared(v1)+s2.normSquared(v2)+s3.normSquared(v3))
+        self.assertAlmostEquals(R3.normSquared(v),R.normSquared(v1)+R.normSquared(v2)+R.normSquared(v3))
 
 class L2Test(unittest.TestCase):
-    def testInit(self):
+    def testR(self):
         I = Interval(0,pi)
-        d = LinspaceDiscretization(I,1000)
-        m = borelMeasure()
-        measureSpace = discreteMeaureSpace(d,m)
+        d = UniformDiscretization(I,1000)
+        m = BorelMeasure()
+        measureSpace = DiscreteMeaureSpace(d,m)
         space = L2(measureSpace)
 
         class SinFunction(L2.Vector):

@@ -41,11 +41,6 @@ class Operator(object):
         """
         pass
 
-    def derivative(self, pos):
-        """Calculate the derivative operator at some position
-        """
-        raise NotImplementedError("Derivative not implemented for this operator")
-
     def __call__(self, rhs):
         """Shorthand for self.apply(rhs)
         """
@@ -65,7 +60,7 @@ class Operator(object):
         or scalar multiplication
         """
 
-        if isinstance(other, Operator):  # Calculate sum
+        if isinstance(other, Operator):
             return OperatorComposition(self,other)
         elif isinstance(other, Number):
             return OperatorScalarMultiplication(self,other)
@@ -77,7 +72,7 @@ class Operator(object):
         or scalar multiplication
         """
 
-        if isinstance(other, Operator):  # Calculate sum
+        if isinstance(other, Operator):
             return OperatorComposition(other,self)
         elif isinstance(other, Number):
             return OperatorScalarMultiplication(self,other)
@@ -93,11 +88,6 @@ class LinearOperator(Operator):
         """Apply the adjoint of the operator, abstract
         """
         pass
-
-    def derivative(self):
-        """Calculate the derivative operator at some position
-        """
-        return self
 
 class SelfAdjointOperator(LinearOperator):
     """ Special case of self adjoint operators where A(x) = A.T(x)
@@ -118,9 +108,6 @@ class OperatorSum(Operator):
     def applyAdjoint(self, rhs):
         return self.left.applyAdjoint(rhs) + self.right.applyAdjoint(rhs)
 
-    def derivative(self, pos):
-        return self.left.derivative(pos) + self.right.derivative(pos)
-
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
     """
@@ -134,10 +121,6 @@ class OperatorComposition(Operator):
     
     def applyAdjoint(self, rhs):
         return self.right.applyAdjoint(self.left.applyAdjoint(rhs))
-
-    def derivative(self, pos):
-        #Use the chain rule
-        return self.left.derivative(self.right.apply(pos)) * self.right.derivative(pos)
 
 class PointwiseProduct(Operator):    
     """Pointwise multiplication of operators
@@ -164,9 +147,6 @@ class OperatorScalarMultiplication(Operator):
     def applyAdjoint(self, rhs):
         return scalar * self.op.applyAdjoint(rhs)
 
-    def derivative(self, pos):
-        return scalar * self.op.derivative(pos)
-
 class OperatorAdjoint(LinearOperator):
     """Expression type for the adjoint of an operator
     """
@@ -179,6 +159,3 @@ class OperatorAdjoint(LinearOperator):
     
     def applyAdjoint(self, rhs):
         return self.op.apply(rhs)
-
-    def derivative(self, pos):
-        return self.op.derivative(pos)

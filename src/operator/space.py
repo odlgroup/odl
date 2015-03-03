@@ -26,13 +26,13 @@ from future.builtins import object
 from future import standard_library
 standard_library.install_aliases()
 from abc import ABCMeta, abstractmethod, abstractproperty
-from itertools import izip
 
-from math import sin,cos,sqrt
+from math import sqrt
 import numpy as np
 
 import RL.operator.operatorAlternative as OP
 from RL.utility.utility import allEqual
+from RL.operator.measure import *
 
 
 class Field:
@@ -53,36 +53,44 @@ class Space(object):
         def __init__(self,parent,*args, **kwargs):
             self.parent = parent
 
+        @abstractmethod
+        def clone(self):
+            """Create a clone of this vector
+            """
+
         def __add__(self, other):
             """Vector addition
             """
-            from copy import copy
-            tmp = copy(self)
-            self.parent.linearComb(1,1,self,tmp)
+            tmp = self.clone()
+            self.parent.linComb(1,other,1,tmp)
             return tmp
 
         def __mul__(self, other):
             """Scalar multiplication
             """
-            return self.parent.linearComb(other,0,self,self.parent.zero())
+            tmp = self.clone()
+            self.parent.linComb(other,self,0,tmp)
+            return tmp
 
     @abstractmethod
     def zero(self):
         """The zero element of the space
         """
-        pass
     
     @abstractmethod
     def inner(self,A,B):
         """Inner product
         """
-        pass
 
     @abstractmethod
-    def linearComb(self,a,x,b,y):
+    def linComb(self,a,x,b,y):
         """Calculate y=ax+by
         """
-        pass
+
+    @abstractmethod
+    def equals(self, x):
+        """check spaces for equality
+        """ 
 
     @abstractproperty
     def field(self):
@@ -96,11 +104,19 @@ class Space(object):
         """
         pass
 
+    #Implicitly defined operators
+
     def normSquared(self,x):
         return self.inner(x,x)
 
     def norm(self,x):
         return sqrt(self.normSquared(x,x))
+
+    def __eq__(self,other):
+        return self.equals(other)
+
+    def __ne__(self,other):
+        return not self.equals(other)
     
 class ProductSpace(Space):
     """Product space (X1 x X2 x ... x Xn)
@@ -122,9 +138,9 @@ class ProductSpace(Space):
     def inner(self,v1,v2):
         return sum(space.inner(v1p,v2p) for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts))
 
-    def linearComb(self,a,b,v1,v2):
-        for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts):
-            space.linearComb(a,b,v1p,v2p)
+    def linComb(self,a,x,b,y):
+        for [space,xp,yp] in zip(self.spaces,x.parts,y.parts):
+            space.linComb(a,xp,b,yp)
 
     @property
     def field(self):
@@ -133,20 +149,35 @@ class ProductSpace(Space):
     @property
     def dimension(self):
         return self._dimension
+
+    def equals(self, other):
+        return all(x.equals(y) for [x,y] in zip(self.spaces,other.spaces))
     
     def makeVector(self,*args):
         return ProductSpace.Vector(self,*args)
 
+    def __getitem__(self,index):
+        return self.spaces[index]
+
     class Vector(Space.Vector):
-        def __init__(self,parent,*parts):
+        def __init__(self,parent,*args):
             self.parent = parent
-            self.parts = parts
+            if (not isinstance(args[0],Space.Vector)): #Delegate constructors
+                self.parts = [space.makeVector(arg) for [arg,space] in zip(args,parent.spaces)]
+            else: #Construct from existing tuple
+                if any(part.parent != space for [part,space] in zip(args,parent.spaces)):
+                    raise TypeError("The spaces of all parts must correspond to this space's parts")
+
+                self.parts = args
+
+        def clone(self):
+            return self.parent.makeVector(*[part.clone() for part in self.parts])
 
         def __getitem__(self,index): #TODO should we have this?
             return self.parts[index]
 
         def __str__(self):
-            return "[" + ",".join(str(part) for part in self.parts) + "]"   
+            return "[" + ",".join(str(part) for part in self.parts) + "]"
 
 
 class Reals(Space):
@@ -156,7 +187,7 @@ class Reals(Space):
     def inner(self,x,y):
         return x.__val__ * y.__val__
 
-    def linearComb(self,a,x,b,y):
+    def linComb(self,a,x,b,y):
         y.__val__ = a * x.__val__ + b * y.__val__
 
     def zero(self):
@@ -169,6 +200,9 @@ class Reals(Space):
     @property
     def dimension(self):
         return 1
+    
+    def equals(self, other):
+        return isinstance(other,Reals)
 
     def makeVector(self,value):
         return Reals.Vector(self,value)
@@ -181,6 +215,9 @@ class Reals(Space):
         def __init__(self, parent, v):
             Space.Vector.__init__(self,parent)
             self.__val__ = v
+
+        def clone(self):
+            return self.parent.makeVector(self.__val__)
 
         #Need to duplicate methods since vectors are mutable but python floats are not
         #Source: https://gist.github.com/jheiv/6656349
@@ -203,12 +240,6 @@ class Reals(Space):
         def __mul__(self, x):       return self.__class__(self.parent,self.__val__.__mul__(x.__val__))
         def __div__(self, x):       return self.__class__(self.parent,self.__val__.__div__(x.__val__))
         def __pow__(self, x):       return self.__class__(self.parent,self.__val__.__pow__(x.__val__))
-        # Reflected Arithmetic Binary Ops
-        def __radd__(self, x):      return self.__class__(self.parent,self.__val__.__radd__(x.__val__))
-        def __rsub__(self, x):      return self.__class__(self.parent,self.__val__.__rsub__(x.__val__))
-        def __rmul__(self, x):      return self.__class__(self.parent,self.__val__.__rmul__(x.__val__))
-        def __rdiv__(self, x):      return self.__class__(self.parent,self.__val__.__rdiv__(x.__val__))
-        def __rpow__(self, x):      return self.__class__(self.parent,self.__val__.__rpow__(x.__val__))
         # Compound Assignment
         def __iadd__(self, x):      self.__val__.__iadd__(x.__val__); return self
         def __isub__(self, x):      self.__val__.__isub__(x.__val__); return self
@@ -219,26 +250,17 @@ class Reals(Space):
         def __nonzero__(self):      return self.__val__.__nonzero__()
         def __float__(self):        return self.__val__.__float__()              # XXX
         # Conversions
-        def __oct__(self):          return self.__val__.__oct__()               # XXX
-        def __hex__(self):          return self.__val__.__hex__()               # XXX
         def __str__(self):          return self.__val__.__str__()               # XXX
-        # Represenation
+        # Representation
         def __repr__(self):         return "%s(%d)" % (self.__class__.__name__, self.__val__)
 
         # Define set, a function that you can use to set the value of the instance
         def set(self, x):
-            if   isinstance(x, float): self.__val__ = x
-            elif isinstance(x, self.__class__): self.__val__ = x.__val__
-            else: raise TypeError("expected a numeric type")
+            self.__val__ = x.__val__
+
         # Pass anything else along to self.__val__
         def __getattr__(self, attr):
-            print("getattr: " + attr)
             return getattr(self.__val__, attr)
-
-        def __getitem__(self,index): #TODO should we have this?
-            if (index > 0):
-                raise IndexError("Out of range")
-            return self
 
     class MultiplyOp(OP.SelfAdjointOperator):    
         """Multiply with scalar
@@ -271,7 +293,7 @@ class RN(Space):
     def inner(self,x,y):
         return np.vdot(x,y)
     
-    def linearComb(self,a,x,b,y):
+    def linComb(self,a,x,b,y):
         y[:]=a*x+b*y
 
     def zero(self):
@@ -285,6 +307,9 @@ class RN(Space):
     def dimension(self):
         return self.n
 
+    def equals(self, other):
+        return isinstance(other,RN) and self.n == other.n
+
     def makeVector(self, *args, **kwargs):
         return RN.Vector(self,*args, **kwargs)
 
@@ -292,6 +317,9 @@ class RN(Space):
         def __new__(cls, parent, *args, **kwargs):
             data = np.array(*args,**kwargs)
             return data.view(RN.Vector)
+
+        def clone(self):
+            return self.parent.makeVector(self, copy = True)
 
     class MultiplyOp(OP.Operator):
         """Multiply with matrix
@@ -306,95 +334,6 @@ class RN(Space):
         def applyAdjoint(self,rhs):
             return np.dot(self.A.T,rhs)
 
-class set(object):
-    """ An arbitrary set
-    """
-
-    __metaclass__ = ABCMeta #Set as abstract
-
-class measure(object):
-    """ A measure on some set
-    """
-
-    __metaclass__ = ABCMeta #Set as abstract
-
-    def __call__(self,set):
-        return self.measure(set)
-
-    @abstractmethod
-    def measure(self,set):
-        """Calculate the measure of set
-        """
-
-class measurableSets(object):
-    """ Some measurable sets, subsets of some set
-    """
-
-    __metaclass__ = ABCMeta #Set as abstract
-
-
-class measureSpace(object):
-    """A space where integration is defined
-    """
-
-    __metaclass__ = ABCMeta #Set as abstract
-
-    @abstractmethod
-    def integrate(self,f):
-        """Calculate the integral of f
-        """
-
-class Interval(set):
-    def __init__(self,begin,end):
-        self.begin = begin
-        self.end = end
-
-    def midpoint(self):
-        return (self.end+self.begin)/2.0
-
-class borelMeasure(measure):
-    def measure(self, interval):
-        return interval.end-interval.begin
-
-class discretization(measurableSets):
-    @abstractmethod
-    def __iter__(self):
-        """Discrete spaces can be iterated over
-        """
-
-class LinspaceDiscretization(discretization):
-    def __init__(self,interval,n):
-        self.interval = interval
-        self.n = n
-
-    def __iter__(self):
-        class intervalIter():
-            def __init__(self,begin,step,n):
-                self.cur = begin
-                self.step = step
-                self.n = n
-
-            def next(self):
-                if self.n>0:
-                    i = Interval(self.cur,self.cur+self.step)
-                    self.cur += self.step
-                    self.n -= 1
-                    return i
-                else:
-                    raise StopIteration()
-
-        begin = self.interval.begin
-        step = (self.interval.end - self.interval.begin)/self.n
-        return intervalIter(begin,step,self.n)
-
-class discreteMeaureSpace(measureSpace):
-    def __init__(self,discretization,measure):
-        self.discretization = discretization
-        self.measure = measure
-
-    def integrate(self,f):
-        return sum(f.apply(inter.midpoint()) * self.measure(inter) for inter in self.discretization)
-
 #Example of a space:
 class L2(Space):
     """The space of square integrable functions on some domain
@@ -406,14 +345,17 @@ class L2(Space):
     def inner(self,v1,v2):
         return self.domain.integrate(OP.PointwiseProduct(v1,v2))
 
-    def linearComb(self,a,b,A,B):
-        return a*A+b*B
+    def linComb(self,a,b,A,B):
+        return a*A+b*B #Use operator overloading
 
     def field(self):
         return Field.Real
 
     def dimension(self):
         return 1.0/0.0
+    
+    def equals(self, other):
+        raise NotImplementedError("Todo")
 
     def zero(self):
         class ZeroFunction(L2.Vector):
@@ -424,3 +366,6 @@ class L2(Space):
     class Vector(OP.Operator,Space.Vector):
         """ L2 Vectors are operators from the domain onto R(C)
         """
+
+        def clone(self):
+            raise NotImplementedError("Todo")
