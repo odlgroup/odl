@@ -45,18 +45,26 @@ class Space(object):
     __metaclass__ = ABCMeta #Set as abstract
 
     class Vector(object):
+        """Abstract vector
+        """
+
+        __metaclass__ = ABCMeta #Set as abstract
+
         def __init__(self,parent,*args, **kwargs):
             self.parent = parent
 
         def __add__(self, other):
             """Vector addition
             """
-            return self.parent.linearComb(1,1,self,other)
+            from copy import copy
+            tmp = copy(self)
+            self.parent.linearComb(1,1,self,tmp)
+            return tmp
 
         def __mul__(self, other):
             """Scalar multiplication
             """
-            return self.parent.linearComb(other,0,self,Space.zero())
+            return self.parent.linearComb(other,0,self,self.parent.zero())
 
     @abstractmethod
     def zero(self):
@@ -71,8 +79,8 @@ class Space(object):
         pass
 
     @abstractmethod
-    def linearComb(self,a,b,A,B):
-        """Calculate a*A+b*B
+    def linearComb(self,a,x,b,y):
+        """Calculate y=ax+by
         """
         pass
 
@@ -111,7 +119,8 @@ class ProductSpace(Space):
         return sum(space.inner(v1p,v2p) for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts))
 
     def linearComb(self,a,b,v1,v2):
-        return self.makeVector(*[space.linearComb(a,b,v1p,v2p) for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts)])
+        for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts):
+            space.linearComb(a,b,v1p,v2p)
 
     def field(self):
         return self.spaces[0].field() #X_n has same field
@@ -145,14 +154,15 @@ class Reals(Space):
     """The real numbers
     """
 
-    def inner(self,A,B):
-        return A*B
+    def inner(self,x,y):
+        return x.__val__ * y.__val__
 
-    def linearComb(self,a,b,A,B):
-        return a*A+b*B
+    def linearComb(self,a,x,b,y):
+        y *= b
+        y += a*x
 
     def zero(self):
-        return 0.0
+        return self.makeVector(0.0)
 
     def field(self):
         return Field.Real
@@ -163,9 +173,96 @@ class Reals(Space):
     def makeVector(self,value):
         return Reals.Vector(self,value)
 
-    class Vector(float,Space.Vector):
-        def __new__(cls, parent, value):
-            return super(Reals.Vector, cls).__new__(cls, value)
+    class Vector(Space.Vector):
+        """Real vectors are floats
+        """
+
+        __val__ = None
+        def __init__(self, parent, v):
+            Space.Vector.__init__(self,parent)
+            self.__val__ = v
+
+        #Need to duplicate methods since vectors are mutable but floats are not
+        #Source: https://gist.github.com/jheiv/6656349
+
+        # Comparison Methods
+        def __eq__(self, x):        return self.__val__ == x
+        def __ne__(self, x):        return self.__val__ != x
+        def __lt__(self, x):        return self.__val__ <  x
+        def __gt__(self, x):        return self.__val__ >  x
+        def __le__(self, x):        return self.__val__ <= x
+        def __ge__(self, x):        return self.__val__ >= x
+        def __cmp__(self, x):       return 0 if self.__val__ == x else 1 if self.__val__ > 0 else -1
+        # Unary Ops
+        def __pos__(self):          return self.__class__(self.parent,+self.__val__)
+        def __neg__(self):          return self.__class__(self.parent,-self.__val__)
+        def __abs__(self):          return self.__class__(self.parent,abs(self.__val__))
+        # Bitwise Unary Ops
+        def __invert__(self):       return self.__class__(self.parent,~self.__val__)
+        # Arithmetic Binary Ops
+        def __add__(self, x):       return self.__class__(self.parent,self.__val__ + x)
+        def __sub__(self, x):       return self.__class__(self.parent,self.__val__ - x)
+        def __mul__(self, x):       return self.__class__(self.parent,self.__val__ * x)
+        def __div__(self, x):       return self.__class__(self.parent,self.__val__ / x)
+        def __mod__(self, x):       return self.__class__(self.parent,self.__val__ % x)
+        def __pow__(self, x):       return self.__class__(self.parent,self.__val__ ** x)
+        def __floordiv__(self, x):  return self.__class__(self.parent,self.__val__ // x)
+        def __divmod__(self, x):    return self.__class__(self.parent,divmod(self.__val__, x))
+        def __truediv__(self, x):   return self.__class__(self.parent,self.__val__.__truediv__(x))
+        # Reflected Arithmetic Binary Ops
+        def __radd__(self, x):      return self.__class__(self.parent,x + self.__val__)
+        def __rsub__(self, x):      return self.__class__(self.parent,x - self.__val__)
+        def __rmul__(self, x):      return self.__class__(self.parent,x * self.__val__)
+        def __rdiv__(self, x):      return self.__class__(self.parent,x / self.__val__)
+        def __rmod__(self, x):      return self.__class__(self.parent,x % self.__val__)
+        def __rpow__(self, x):      return self.__class__(self.parent,x ** self.__val__)
+        def __rfloordiv__(self, x): return self.__class__(self.parent,x // self.__val__)
+        def __rdivmod__(self, x):   return self.__class__(self.parent,divmod(x, self.__val__))
+        def __rtruediv__(self, x):  return self.__class__(self.parent,x.__truediv__(self.__val__))
+        # Bitwise Binary Ops
+        def __and__(self, x):       return self.__class__(self.parent,self.__val__ & x)
+        def __or__(self, x):        return self.__class__(self.parent,self.__val__ | x)
+        def __xor__(self, x):       return self.__class__(self.parent,self.__val__ ^ x)
+        def __lshift__(self, x):    return self.__class__(self.parent,self.__val__ << x)
+        def __rshift__(self, x):    return self.__class__(self.parent,self.__val__ >> x)
+        # Reflected Bitwise Binary Ops
+        def __rand__(self, x):      return self.__class__(self.parent,x & self.__val__)
+        def __ror__(self, x):       return self.__class__(self.parent,x | self.__val__)
+        def __rxor__(self, x):      return self.__class__(self.parent,x ^ self.__val__)
+        def __rlshift__(self, x):   return self.__class__(self.parent,x << self.__val__)
+        def __rrshift__(self, x):   return self.__class__(self.parent,x >> self.__val__)
+        # Compound Assignment
+        def __iadd__(self, x):      self.__val__ += x; return self
+        def __isub__(self, x):      self.__val__ -= x; return self
+        def __imul__(self, x):      self.__val__ *= x; return self
+        def __idiv__(self, x):      self.__val__ /= x; return self
+        def __imod__(self, x):      self.__val__ %= x; return self
+        def __ipow__(self, x):      self.__val__ **= x; return self
+        # Casts
+        def __nonzero__(self):      return self.__val__ != 0
+        def __int__(self):          return self.__val__.__int__()               # XXX
+        def __float__(self):        return self.__val__.__float__()             # XXX
+        def __long__(self):         return self.__val__.__long__()              # XXX
+        # Conversions
+        def __oct__(self):          return self.__val__.__oct__()               # XXX
+        def __hex__(self):          return self.__val__.__hex__()               # XXX
+        def __str__(self):          return self.__val__.__str__()               # XXX
+        # Random Ops
+        def __index__(self):        return self.__val__.__index__()             # XXX
+        def __trunc__(self):        return self.__val__.__trunc__()             # XXX
+        def __coerce__(self, x):    return self.__val__.__coerce__(x)
+        # Represenation
+        def __repr__(self):         return "%s(%d)" % (self.__class__.__name__, self.__val__)
+
+        # Define set, a function that you can use to set the value of the instance
+        def set(self, x):
+            if   isinstance(x, float): self.__val__ = x
+            elif isinstance(x, self.__class__): self.__val__ = x.__val__
+            else: raise TypeError("expected a numeric type")
+        # Pass anything else along to self.__val__
+        def __getattr__(self, attr):
+            print("getattr: " + attr)
+            return getattr(self.__val__, attr)
 
         def __getitem__(self,index): #TODO should we have this?
             if (index > 0):
@@ -200,11 +297,11 @@ class RN(Space):
     def __init__(self,n):
         self.n = n
 
-    def inner(self,A,B):
-        return np.vdot(A,B)
+    def inner(self,x,y):
+        return np.vdot(x,y)
     
-    def linearComb(self,a,b,A,B):
-        return a*A+b*B
+    def linearComb(self,a,x,b,y):
+        y[:]=a*x+b*y
 
     def zero(self):
         return np.zeros(n)

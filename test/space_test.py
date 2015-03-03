@@ -30,7 +30,28 @@ from RL.operator.operatorAlternative import *
 from RL.operator.space import *
 import SimRec2DPy as SR
 
+class RealsTest(unittest.TestCase):
+    def testAddition(self):
+        R = Reals()
+        x = R.makeVector(1.0)
+        y = R.makeVector(2.0)
+        R.linearComb(2,x,3,y)
+
+        z = R.makeVector(8.0)
+
+        self.assertAlmostEqual(y,z)
+
 class RNTest(unittest.TestCase):
+    def testAddition(self):
+        r3 = RN(3)
+        x = r3.makeVector([1.,2.,3.])
+        y = r3.makeVector([3.,5.,7.])
+        z = r3.makeVector([4.,7.,10.])
+
+        ycpy = y
+        r3.linearComb(1,x,1,y)
+        self.assertTrue(np.allclose(y,z))
+
     def testMultiply(self):
         r3 = RN(3)
 
@@ -90,8 +111,6 @@ class ProductTest(unittest.TestCase):
         v2 = s2.makeVector(2.0)
         v3 = s3.makeVector(3.0)
         v = S.makeVector(v1,v2,v3)
-        u = v
-        print(u+v)
         
         self.assertTrue(S.dimension() == 3)
         self.assertAlmostEquals(v1,v[0])
