@@ -25,7 +25,7 @@ from __future__ import absolute_import
 from future.builtins import object
 from future import standard_library
 standard_library.install_aliases()
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 from itertools import izip
 
 from math import sin,cos,sqrt
@@ -84,13 +84,13 @@ class Space(object):
         """
         pass
 
-    @abstractmethod
+    @abstractproperty
     def field(self):
         """ Get the underlying field
         """
         pass
 
-    @abstractmethod
+    @abstractproperty
     def dimension(self):
         """ Get the dimension of the space
         """
@@ -107,10 +107,14 @@ class ProductSpace(Space):
     """
 
     def __init__(self,*spaces):
-        if (not allEqual(spaces, lambda x,y: x.field() == y.field())):
-            raise AttributeError("All spaces must have the same field")
+        if (len(spaces)==0):
+            raise TypeError("Empty product not allowed")
+        if (not allEqual(spaces, lambda x,y: x.field == y.field)):
+            raise TypeError("All spaces must have the same field")
 
         self.spaces = spaces
+        self._dimension = sum(space.dimension for space in self.spaces)
+        self._field = spaces[0].field  #X_n has same field
 
     def zero(self):
         return self.makeVector(*[A.zero() for A in self.spaces])
@@ -122,11 +126,13 @@ class ProductSpace(Space):
         for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts):
             space.linearComb(a,b,v1p,v2p)
 
+    @property
     def field(self):
-        return self.spaces[0].field() #X_n has same field
+        return self._field
 
+    @property
     def dimension(self):
-        return sum(space.dimension() for space in self.spaces)
+        return self._dimension
     
     def makeVector(self,*args):
         return ProductSpace.Vector(self,*args)
@@ -137,14 +143,7 @@ class ProductSpace(Space):
             self.parts = parts
 
         def __getitem__(self,index): #TODO should we have this?
-            ind = 0
-            for part in self.parts:
-                if ind+part.parent.dimension()>index:
-                    return part[index-ind]
-                else:
-                    ind += part.parent.dimension()
-            #Todo complexity?
-            #Todo out of range
+            return self.parts[index]
 
         def __str__(self):
             return "[" + ",".join(str(part) for part in self.parts) + "]"   
@@ -164,9 +163,11 @@ class Reals(Space):
     def zero(self):
         return self.makeVector(0.0)
 
+    @property
     def field(self):
         return Field.Real
 
+    @property
     def dimension(self):
         return 1
 
@@ -306,9 +307,11 @@ class RN(Space):
     def zero(self):
         return np.zeros(n)
 
+    @property
     def field(self):
         return Field.Real
 
+    @property
     def dimension(self):
         return self.n
 
@@ -332,24 +335,6 @@ class RN(Space):
 
         def applyAdjoint(self,rhs):
             return np.dot(self.A.T,rhs)
-
-
-class RNM(Space):
-    """The space of real nxm matrices
-    """
-
-    def __init__(self,n,m):
-        self.n = n
-        self.m = m
-
-    def inner(self,A,B):
-        return np.vdot(self,A,B)
-    
-    def linearComb(self,a,b,A,B):
-        return a*A+b*B
-
-    def zero(self):
-        return np.zeros(n,m)
 
 class measureSpace(object):
     """A space where integration is defined
