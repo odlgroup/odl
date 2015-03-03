@@ -157,8 +157,7 @@ class Reals(Space):
         return x.__val__ * y.__val__
 
     def linearComb(self,a,x,b,y):
-        y *= b
-        y += a*x
+        y.__val__ = a * x.__val__ + b * y.__val__
 
     def zero(self):
         return self.makeVector(0.0)
@@ -183,75 +182,46 @@ class Reals(Space):
             Space.Vector.__init__(self,parent)
             self.__val__ = v
 
-        #Need to duplicate methods since vectors are mutable but floats are not
+        #Need to duplicate methods since vectors are mutable but python floats are not
         #Source: https://gist.github.com/jheiv/6656349
 
         # Comparison Methods
-        def __eq__(self, x):        return self.__val__ == x
-        def __ne__(self, x):        return self.__val__ != x
-        def __lt__(self, x):        return self.__val__ <  x
-        def __gt__(self, x):        return self.__val__ >  x
-        def __le__(self, x):        return self.__val__ <= x
-        def __ge__(self, x):        return self.__val__ >= x
-        def __cmp__(self, x):       return 0 if self.__val__ == x else 1 if self.__val__ > 0 else -1
+        def __eq__(self, x):        return self.__val__.__eq__(x.__val__)
+        def __ne__(self, x):        return self.__val__.__ne__(x.__val__)
+        def __lt__(self, x):        return self.__val__.__lt__(x.__val__)
+        def __gt__(self, x):        return self.__val__.__gt__(x.__val__)
+        def __le__(self, x):        return self.__val__.__le__(x.__val__)
+        def __ge__(self, x):        return self.__val__.__ge__(x.__val__)
+        def __cmp__(self, x):       return 0 if self.__val__ == x.__val__ else 1 if self.__val__ > 0 else -1
         # Unary Ops
-        def __pos__(self):          return self.__class__(self.parent,+self.__val__)
-        def __neg__(self):          return self.__class__(self.parent,-self.__val__)
-        def __abs__(self):          return self.__class__(self.parent,abs(self.__val__))
-        # Bitwise Unary Ops
-        def __invert__(self):       return self.__class__(self.parent,~self.__val__)
+        def __pos__(self):          return self.__class__(self.parent,self.__val__.__pos__())
+        def __neg__(self):          return self.__class__(self.parent,self.__val__.__neg__())
+        def __abs__(self):          return self.__class__(self.parent,self.__val__.__abs__())
         # Arithmetic Binary Ops
-        def __add__(self, x):       return self.__class__(self.parent,self.__val__ + x)
-        def __sub__(self, x):       return self.__class__(self.parent,self.__val__ - x)
-        def __mul__(self, x):       return self.__class__(self.parent,self.__val__ * x)
-        def __div__(self, x):       return self.__class__(self.parent,self.__val__ / x)
-        def __mod__(self, x):       return self.__class__(self.parent,self.__val__ % x)
-        def __pow__(self, x):       return self.__class__(self.parent,self.__val__ ** x)
-        def __floordiv__(self, x):  return self.__class__(self.parent,self.__val__ // x)
-        def __divmod__(self, x):    return self.__class__(self.parent,divmod(self.__val__, x))
-        def __truediv__(self, x):   return self.__class__(self.parent,self.__val__.__truediv__(x))
+        def __add__(self, x):       return self.__class__(self.parent,self.__val__.__add__(x.__val__))
+        def __sub__(self, x):       return self.__class__(self.parent,self.__val__.__sub__(x.__val__))
+        def __mul__(self, x):       return self.__class__(self.parent,self.__val__.__mul__(x.__val__))
+        def __div__(self, x):       return self.__class__(self.parent,self.__val__.__div__(x.__val__))
+        def __pow__(self, x):       return self.__class__(self.parent,self.__val__.__pow__(x.__val__))
         # Reflected Arithmetic Binary Ops
-        def __radd__(self, x):      return self.__class__(self.parent,x + self.__val__)
-        def __rsub__(self, x):      return self.__class__(self.parent,x - self.__val__)
-        def __rmul__(self, x):      return self.__class__(self.parent,x * self.__val__)
-        def __rdiv__(self, x):      return self.__class__(self.parent,x / self.__val__)
-        def __rmod__(self, x):      return self.__class__(self.parent,x % self.__val__)
-        def __rpow__(self, x):      return self.__class__(self.parent,x ** self.__val__)
-        def __rfloordiv__(self, x): return self.__class__(self.parent,x // self.__val__)
-        def __rdivmod__(self, x):   return self.__class__(self.parent,divmod(x, self.__val__))
-        def __rtruediv__(self, x):  return self.__class__(self.parent,x.__truediv__(self.__val__))
-        # Bitwise Binary Ops
-        def __and__(self, x):       return self.__class__(self.parent,self.__val__ & x)
-        def __or__(self, x):        return self.__class__(self.parent,self.__val__ | x)
-        def __xor__(self, x):       return self.__class__(self.parent,self.__val__ ^ x)
-        def __lshift__(self, x):    return self.__class__(self.parent,self.__val__ << x)
-        def __rshift__(self, x):    return self.__class__(self.parent,self.__val__ >> x)
-        # Reflected Bitwise Binary Ops
-        def __rand__(self, x):      return self.__class__(self.parent,x & self.__val__)
-        def __ror__(self, x):       return self.__class__(self.parent,x | self.__val__)
-        def __rxor__(self, x):      return self.__class__(self.parent,x ^ self.__val__)
-        def __rlshift__(self, x):   return self.__class__(self.parent,x << self.__val__)
-        def __rrshift__(self, x):   return self.__class__(self.parent,x >> self.__val__)
+        def __radd__(self, x):      return self.__class__(self.parent,self.__val__.__radd__(x.__val__))
+        def __rsub__(self, x):      return self.__class__(self.parent,self.__val__.__rsub__(x.__val__))
+        def __rmul__(self, x):      return self.__class__(self.parent,self.__val__.__rmul__(x.__val__))
+        def __rdiv__(self, x):      return self.__class__(self.parent,self.__val__.__rdiv__(x.__val__))
+        def __rpow__(self, x):      return self.__class__(self.parent,self.__val__.__rpow__(x.__val__))
         # Compound Assignment
-        def __iadd__(self, x):      self.__val__ += x; return self
-        def __isub__(self, x):      self.__val__ -= x; return self
-        def __imul__(self, x):      self.__val__ *= x; return self
-        def __idiv__(self, x):      self.__val__ /= x; return self
-        def __imod__(self, x):      self.__val__ %= x; return self
-        def __ipow__(self, x):      self.__val__ **= x; return self
+        def __iadd__(self, x):      self.__val__.__iadd__(x.__val__); return self
+        def __isub__(self, x):      self.__val__.__isub__(x.__val__); return self
+        def __imul__(self, x):      self.__val__.__imul__(x.__val__); return self
+        def __idiv__(self, x):      self.__val__.__idiv__(x.__val__); return self
+        def __ipow__(self, x):      self.__val__.__ipow__(x.__val__); return self
         # Casts
-        def __nonzero__(self):      return self.__val__ != 0
-        def __int__(self):          return self.__val__.__int__()               # XXX
-        def __float__(self):        return self.__val__.__float__()             # XXX
-        def __long__(self):         return self.__val__.__long__()              # XXX
+        def __nonzero__(self):      return self.__val__.__nonzero__()
+        def __float__(self):        return self.__val__.__float__()              # XXX
         # Conversions
         def __oct__(self):          return self.__val__.__oct__()               # XXX
         def __hex__(self):          return self.__val__.__hex__()               # XXX
         def __str__(self):          return self.__val__.__str__()               # XXX
-        # Random Ops
-        def __index__(self):        return self.__val__.__index__()             # XXX
-        def __trunc__(self):        return self.__val__.__trunc__()             # XXX
-        def __coerce__(self, x):    return self.__val__.__coerce__(x)
         # Represenation
         def __repr__(self):         return "%s(%d)" % (self.__class__.__name__, self.__val__)
 
@@ -336,6 +306,33 @@ class RN(Space):
         def applyAdjoint(self,rhs):
             return np.dot(self.A.T,rhs)
 
+class set(object):
+    """ An arbitrary set
+    """
+
+    __metaclass__ = ABCMeta #Set as abstract
+
+class measure(object):
+    """ A measure on some set
+    """
+
+    __metaclass__ = ABCMeta #Set as abstract
+
+    def __call__(self,set):
+        return self.measure(set)
+
+    @abstractmethod
+    def measure(self,set):
+        """Calculate the measure of set
+        """
+
+class measurableSets(object):
+    """ Some measurable sets, subsets of some set
+    """
+
+    __metaclass__ = ABCMeta #Set as abstract
+
+
 class measureSpace(object):
     """A space where integration is defined
     """
@@ -346,27 +343,57 @@ class measureSpace(object):
     def integrate(self,f):
         """Calculate the integral of f
         """
-        pass
 
-class Interval(measureSpace):
+class Interval(set):
     def __init__(self,begin,end):
         self.begin = begin
         self.end = end
 
-    def integrate(self,f):
-        raise NotImplementedError("Cannot integrate without discretization") #TODO add abstract measure space?
+    def midpoint(self):
+        return (self.end+self.begin)/2.0
 
-class LinspaceDiscretization(measureSpace):
+class borelMeasure(measure):
+    def measure(self, interval):
+        return interval.end-interval.begin
+
+class discretization(measurableSets):
+    @abstractmethod
+    def __iter__(self):
+        """Discrete spaces can be iterated over
+        """
+
+class LinspaceDiscretization(discretization):
     def __init__(self,interval,n):
         self.interval = interval
         self.n = n
 
-    def integrate(self,f):
-        s = 0.0
-        for x in np.linspace(self.interval.begin,self.interval.end,self.n):
-            s += f(x)
+    def __iter__(self):
+        class intervalIter():
+            def __init__(self,begin,step,n):
+                self.cur = begin
+                self.step = step
+                self.n = n
 
-        return s * (self.interval.end - self.interval.begin) / self.n
+            def next(self):
+                if self.n>0:
+                    i = Interval(self.cur,self.cur+self.step)
+                    self.cur += self.step
+                    self.n -= 1
+                    return i
+                else:
+                    raise StopIteration()
+
+        begin = self.interval.begin
+        step = (self.interval.end - self.interval.begin)/self.n
+        return intervalIter(begin,step,self.n)
+
+class discreteMeaureSpace(measureSpace):
+    def __init__(self,discretization,measure):
+        self.discretization = discretization
+        self.measure = measure
+
+    def integrate(self,f):
+        return sum(f.apply(inter.midpoint()) * self.measure(inter) for inter in self.discretization)
 
 #Example of a space:
 class L2(Space):
@@ -394,19 +421,6 @@ class L2(Space):
                 return 0.0
         return ZeroFunction(self)
 
-    def sin(self):
-        class SinFunction(L2.Vector):
-            def apply(self,rhs):
-                return sin(rhs)
-        return SinFunction(self)
-
-    def sin(self):
-        class CosFunction(L2.Vector):
-            def apply(self,rhs):
-                return cos(rhs)
-        return CosFunction(self)
-
     class Vector(OP.Operator,Space.Vector):
         """ L2 Vectors are operators from the domain onto R(C)
         """
-        pass

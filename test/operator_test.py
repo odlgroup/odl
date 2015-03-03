@@ -50,24 +50,5 @@ class RNTest(unittest.TestCase):
 
         self.assertAlmostEqual(r3.inner(Aop(x),y),r3.inner(x,Aop.applyAdjoint(y)))
 
-
-class ProductTest(unittest.TestCase):
-    def testInit(self):
-        A = Reals()
-        B = Reals()
-        C = ProductSpace(A,B)
-
-        self.assertTrue(C.dimension() == 2)
-
-class L2Test(unittest.TestCase):
-    def testInit(self):
-        I = Interval(0,pi)
-        d = LinspaceDiscretization(I,1000)
-        space = L2(d)
-
-        s = space.sin()
-        
-        self.assertAlmostEqual(space.squaredNorm(s),pi/2,2)
-
 if __name__ == '__main__':
     unittest.main(exit = False)

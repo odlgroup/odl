@@ -120,9 +120,15 @@ class L2Test(unittest.TestCase):
     def testInit(self):
         I = Interval(0,pi)
         d = LinspaceDiscretization(I,1000)
-        space = L2(d)
+        m = borelMeasure()
+        measureSpace = discreteMeaureSpace(d,m)
+        space = L2(measureSpace)
 
-        s = space.sin()
+        class SinFunction(L2.Vector):
+            def apply(self,rhs):
+                return sin(rhs)
+
+        s = SinFunction(space)
         
         self.assertAlmostEqual(space.normSquared(s),pi/2,2)
 
