@@ -78,24 +78,12 @@ class UniformDiscretization(Discretization):
         self.n = n
 
     def __iter__(self):
-        class intervalIter():
-            def __init__(self,begin,step,n):
-                self.cur = begin
-                self.step = step
-                self.n = n
-
-            def next(self):
-                if self.n>0:
-                    i = Interval(self.cur,self.cur+self.step)
-                    self.cur += self.step
-                    self.n -= 1
-                    return i
-                else:
-                    raise StopIteration()
-
-        begin = self.interval.begin
         step = (self.interval.end - self.interval.begin)/self.n
-        return intervalIter(begin,step,self.n)
+        currrent = self.interval.begin
+        for i in range(self.n):
+            interval = Interval(currrent, currrent+step)
+            currrent += step
+            yield interval
 
 
 class DiscreteMeaureSpace(MeasureSpace):
@@ -104,4 +92,4 @@ class DiscreteMeaureSpace(MeasureSpace):
         self.measure = measure
 
     def integrate(self,f):
-        return sum(f.apply(inter.midpoint()) * self.measure(inter) for inter in self.discretization)
+        return sum(f(subset.midpoint()) * self.measure(subset) for subset in self.discretization)

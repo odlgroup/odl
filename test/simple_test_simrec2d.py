@@ -29,6 +29,7 @@ import os
 import numpy as np
 import SimRec2DPy as SR
 import RL.operator.operatorAlternative as OP
+import RL.operator.space as SP
 
 class Projection(OP.LinearOperator):
     def __init__(self,volumeOrigin,voxelSize,volumeSize,detectorSize,stepSize,sourcePosition,detectorOrigin,pixelDirection):
@@ -129,8 +130,8 @@ class ProjectionTest(unittest.TestCase):
         print (SR.printArray(proj,True,30,30))
         print (SR.printArray(proj2,True,30,30))
 
-        rn = OP.RN(detectorSize)
-        rnm = OP.RNM(side,side)
+        rn = SP.RN(detectorSize)
+        #rnm = SP.RNM(side,side)
 
 
 if __name__ == '__main__':

@@ -50,8 +50,8 @@ class Space(object):
 
         __metaclass__ = ABCMeta #Set as abstract
 
-        def __init__(self,parent,*args, **kwargs):
-            self.parent = parent
+        def __init__(self,space,*args, **kwargs):
+            self.space = space
 
         @abstractmethod
         def clone(self):
@@ -62,22 +62,26 @@ class Space(object):
             """Vector addition
             """
             tmp = self.clone()
-            self.parent.linComb(1,other,1,tmp)
+            self.space.linComb(1,other,1,tmp)
             return tmp
 
         def __sub__(self, other):
             """Vector subtraction
             """
             tmp = self.clone()
-            self.parent.linComb(-1,other,1,tmp)
+            self.space.linComb(-1,other,1,tmp)
             return tmp
 
         def __mul__(self, other):
             """Scalar multiplication
             """
             tmp = self.clone()
-            self.parent.linComb(other,self,0,tmp)
+            self.space.linComb(other,self,0,tmp)
             return tmp
+        
+        def inner(self,a,x):       return self.space.inner(a,x,1,self)
+        def normSquared(self):     return self.space.normSquared(self)
+        def norm(self):            return self.space.norm(self)
 
         __rmul__ = __mul__
 
@@ -169,20 +173,20 @@ class ProductSpace(Space):
         return self.spaces[index]
 
     class Vector(Space.Vector):
-        def __init__(self,parent,*args):
-            self.parent = parent
+        def __init__(self,space,*args):
+            self.space = space
             if (not isinstance(args[0],Space.Vector)): #Delegate constructors
-                self.parts = [space.makeVector(arg) for [arg,space] in zip(args,parent.spaces)]
+                self.parts = [space.makeVector(arg) for [arg,space] in zip(args,space.spaces)]
             else: #Construct from existing tuple
-                if any(part.parent != space for [part,space] in zip(args,parent.spaces)):
+                if any(part.space != space for [part,space] in zip(args,space.spaces)):
                     raise TypeError("The spaces of all parts must correspond to this space's parts")
 
                 self.parts = args
 
         def clone(self):
-            return self.parent.makeVector(*[part.clone() for part in self.parts])
+            return self.space.makeVector(*[part.clone() for part in self.parts])
 
-        def __getitem__(self,index): #TODO should we have this?
+        def __getitem__(self,index):
             return self.parts[index]
 
         def __str__(self):          return "[" + ",".join(str(part) for part in self.parts) + "]"
@@ -221,59 +225,18 @@ class Reals(Space):
         """
 
         __val__ = None
-        def __init__(self, parent, v):
-            Space.Vector.__init__(self,parent)
+        def __init__(self, space, v):
+            Space.Vector.__init__(self,space)
             self.__val__ = v
 
         def clone(self):
-            return self.parent.makeVector(self.__val__)
+            return self.space.makeVector(self.__val__)
 
-        def __getitem__(self,index):
-            if (index > 0):
-                raise IndexError("Out of range")
-            return self.__val__
-
-        #Need to duplicate methods since vectors are mutable but python floats are not
-        #Source: https://gist.github.com/jheiv/6656349
-
-        # Comparison Methods
-        def __eq__(self, x):        return self.__val__.__eq__(x.__val__)
-        def __ne__(self, x):        return self.__val__.__ne__(x.__val__)
-        def __lt__(self, x):        return self.__val__.__lt__(x.__val__)
-        def __gt__(self, x):        return self.__val__.__gt__(x.__val__)
-        def __le__(self, x):        return self.__val__.__le__(x.__val__)
-        def __ge__(self, x):        return self.__val__.__ge__(x.__val__)
-        def __cmp__(self, x):       return 0 if self.__val__ == x.__val__ else 1 if self.__val__ > 0 else -1
-        # Unary Ops
-        def __pos__(self):          return self.__class__(self.parent,self.__val__.__pos__())
-        def __neg__(self):          return self.__class__(self.parent,self.__val__.__neg__())
-        def __abs__(self):          return self.__class__(self.parent,self.__val__.__abs__())
-        # Arithmetic Binary Ops
-        def __add__(self, x):       return self.__class__(self.parent,self.__val__.__add__(x.__val__))
-        def __sub__(self, x):       return self.__class__(self.parent,self.__val__.__sub__(x.__val__))
-        def __mul__(self, x):       return self.__class__(self.parent,self.__val__.__mul__(x.__val__))
-        def __div__(self, x):       return self.__class__(self.parent,self.__val__.__div__(x.__val__))
-        def __pow__(self, x):       return self.__class__(self.parent,self.__val__.__pow__(x.__val__))
-        # Compound Assignment
-        def __iadd__(self, x):      self.__val__.__iadd__(x.__val__); return self
-        def __isub__(self, x):      self.__val__.__isub__(x.__val__); return self
-        def __imul__(self, x):      self.__val__.__imul__(x.__val__); return self
-        def __idiv__(self, x):      self.__val__.__idiv__(x.__val__); return self
-        def __ipow__(self, x):      self.__val__.__ipow__(x.__val__); return self
-        # Casts
-        def __nonzero__(self):      return self.__val__.__nonzero__()
         def __float__(self):        return self.__val__.__float__()              # XXX
         # Conversions
-        def __str__(self):          return self.__val__.__str__()               # XXX
+        def __str__(self):          return "" + self.__val__.__str__()
         # Represenation
-        def __repr__(self):         return "%s(%d)" % (self.__class__.__name__, self.__val__)
-
-        # Define set, a function that you can use to set the value of the instance
-        def set(self, x):
-            self.__val__ = x.__val__
-        # Pass anything else along to self.__val__
-        def __getattr__(self, attr):
-            return getattr(self.__val__, attr)
+        def __repr__(self):         return "%Real(%d)" % (self.__val__)
 
     class MultiplyOp(OP.SelfAdjointOperator):    
         """Multiply with scalar
@@ -327,15 +290,12 @@ class RN(Space):
         return RN.Vector(self,*args, **kwargs)
 
     class Vector(np.ndarray,Space.Vector):
-        def __new__(cls, parent, *args, **kwargs):
+        def __new__(cls, space, *args, **kwargs):
             data = np.array(*args,**kwargs)
             return data.view(RN.Vector)
 
         def clone(self):
-            return self.parent.makeVector(self, copy = True)
-
-        def __iter__(self):
-            return np.nditer(self)
+            return self.space.makeVector(self, copy = True)
 
     class MultiplyOp(OP.Operator):
         """Multiply with matrix
