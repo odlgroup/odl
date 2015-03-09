@@ -27,8 +27,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from scipy.linalg import det, norm
-from math import sin, cos, atan2, acos, pi
 from textwrap import dedent, fill
 
 
@@ -116,6 +114,8 @@ def euler_matrix(*angles):
     TODO: write properly
     """
 
+    from math import sin, cos
+
     if len(angles) == 1:
         theta = angles[0]
         phi = psi = 0.
@@ -147,6 +147,8 @@ def euler_matrix(*angles):
 
 def axis_rotation(vec, axis, angle):
 
+    from math import cos, sin, pi
+
     vec = np.array(vec)
     axis = np.array(axis)
     angle = float(angle)
@@ -164,6 +166,8 @@ def axis_rotation(vec, axis, angle):
 
 def axis_rotation_matrix(axis, angle):
 
+    from math import cos, sin
+
     axis = np.array(axis)
     angle = float(angle)
     cos_ang = cos(angle)
@@ -179,6 +183,8 @@ def axis_rotation_matrix(axis, angle):
 
 
 def is_rotation_matrix(mat, show_diff=False):
+
+    from scipy.linalg import det, norm
 
     dim = mat.shape[0]
     if dim != mat.shape[1]:
@@ -201,11 +207,11 @@ def is_rotation_matrix(mat, show_diff=False):
 
 def angles_from_matrix(rot_matrix):
 
+    from math import atan2, acos, pi
+
     if rot_matrix.shape == (2, 2):
-        phi = atan2(rot_matrix[1, 0], rot_matrix[0, 0])
-        if phi < 0:
-            phi += 2 * pi  # in [0, 2pi)
-        return (phi,)
+        theta = atan2(rot_matrix[1, 0], rot_matrix[0, 0])
+        return (theta,)
     elif rot_matrix.shape == (3, 3):
         if rot_matrix[2, 2] == 1.:  # cannot use last row and column
             theta = 0.

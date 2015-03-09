@@ -1,0 +1,394 @@
+\documentclass{amsart}
+
+\usepackage[utf8x]{inputenc}
+\usepackage{graphicx}
+\usepackage{caption}
+%\usepackage{epstopdf}
+\usepackage{enumerate}
+\usepackage{amsmath,amsfonts,amsthm,amssymb}
+\usepackage{mathrsfs}
+\usepackage{url}
+\usepackage{acronym}
+\usepackage{thmtools}
+\usepackage{nicefrac}
+\usepackage{pseudocode}
+% \usepackage[authoryear]{natbib}
+\usepackage{wrapfig}
+
+% Clever references
+% \usepackage{cleveref}
+% 
+% \crefname{equation}{}{}
+% \Crefname{equation}{}{}
+% \crefname{figure}{figure}{figures}
+% \Crefname{figure}{Figure}{Figures}
+% \crefname{appendix}{Appendix}{Appendices}
+% \Crefname{appendix}{Appendix}{Appendices}
+% \crefname{section}{Section}{Sections}
+% \Crefname{section}{Section}{Sections}
+
+% Own stuff
+\usepackage{../mathdefs}
+\usepackage{../notecommand}
+\usepackage{../mytheorems}
+\usepackage{../other}
+
+\usepackage[pdftex,unicode,colorlinks=true,linkcolor=black,citecolor=black,hypertexnames=true]{hyperref}
+\hypersetup{pdfauthor={},pdftitle={Common representation of acquisition geometries in tomography}}
+
+% Figure are placed in figures directory.
+\graphicspath{{Pictures/}}
+
+% Acronyms (depends on the acronym package)
+\acrodef{em}[EM]{electron microscopy}
+\acrodef{EM}[EM]{Electron Microscopy}
+\acrodef{et}[ET]{electron tomography}
+\acrodef{ET}[ET]{Electron Tomography}
+\acrodef{stem}[STEM]{scanning transmission electron microscopy}
+\acrodef{psf}[PSF]{point spread function}
+\acrodef{PSF}[PSF]{Point Spread Function}
+\acrodef{ctf}[CTF]{contrast transfer function}
+\acrodef{CTF}[CTF]{Contrast Transfer Function}
+\acrodef{nufFt}[FT]{non-uniform fast Fourier transform}
+\acrodef{NufFt}[FT]{Non-uniform fast Fourier transform}
+\acrodef{NUFFT}[FT]{Non-Uniform Fast Fourier Transform}
+\acrodef{Ft}[FT]{Fourier transform}
+\acrodef{FT}[FT]{Fourier Transform}
+\acrodef{snr}[SNR]{signal-to-noise ratio}
+\acrodef{SNR}[SNR]{Signal-to-Noise Ratio}
+
+
+\title{Common representation of acquisition geometries in tomography}
+\author{}
+\date{\today}
+
+% \usepackage{other}
+
+\newcommand*{\Dinv}{{\ensuremath{D^{-1}}}}
+\renewcommand*{\phi}{\varphi}
+
+% \setlength{\parindent}{0pt}
+
+\begin{document}
+
+\maketitle
+
+During data acquisition, detector and sample move relative to each other. Thus, the position of a specific point on the detector varies 
+with time or some other parameter, like a rotation angle. Furthermore, we consider detectors which are surface-, curve- or point-like and 
+can be regarded as manifolds in $\RR^D$ parameterized over an open set in $\RR^d$ with typically $d < D$. Hence, we use the following 
+representation:\\
+Let $T \subset \RR^p$ be a set of (time, angle, \ldots) parameters and $U \subset \RR^d$ a set of detector parameters, e.g. $x$ and $y$ 
+coordinates on a flat 2D detector. We call a mapping
+%
+\begin{equation}
+ X: T \times U \longrightarrow \RR^D
+\end{equation}
+%
+the \emph{detector trace parametrization} and $X(T \times U) \subset \RR^D$ the \emph{detector trace}. For fixed $t \in T$, we define the 
+\emph{detector parametrization}
+%
+\begin{equation}
+ X_t = X(t, \cdot) : U \Lto \RR^D
+\end{equation} 
+%
+and call $X_t(U) \subset \RR^D$ the detector surface (at time $t$).\\[1ex]
+%
+%
+To model the very general situation of directional input (like rays) to the detector, we further define the \emph{directional field}
+%
+\begin{equation}
+ N: T \times U \Lto \SPHERE^{D-1}.
+\end{equation}
+%
+For $t \in T$ and $u \in U$, the value $N(t, u) \in \SPHERE^{D-1}$ stands for the orientation of the detector at the point $X(t,u)$ caused 
+by e.g. collimators. Often, $N(t, u)$ is the unit normal to the detector surface at $X(t, u)$. \\[1ex]
+%
+%
+In the case that one detector point ``sees'' more than one incoming direction, we additionally define the 
+\emph{detector pupil}
+%
+\begin{equation}
+ P: T \times U \Lto \mathrm{P}(\SPHERE^{D-1})
+\end{equation} 
+%
+which maps $t, u$ to the subset $P(t, u) \subset \SPHERE^{D-1}$ of directions seen by the detector point at $X(t, u)$. This covers, for 
+example, the case of PET where the detector pixels register not only perpendicular photons but also photons coming in at an angle.\\[1ex]
+%
+%
+Finally, if the incoming ``radiation'' is not travelling along straight lines, we need to provide this information, too. However, we will 
+restrict ourselves to the case where we can uniquely trace such a geodesic back from a detector point through the sample. We thus define a 
+mapping
+%
+\begin{equation}
+ G: T \times U \times \SPHERE^{D-1} \Lto C_{\mathrm{pw}}^1\big([0,\infty), \RR^d\big)
+\end{equation} 
+%
+where for $t \in T$, $u \in u$ and $\theta \in \SPHERE^{D-1}$, the function $G(t, u, \theta)$ represents the geodesic arriving at the 
+detector point $X(t, u)$ from the direction $\theta$. The subscript ``pw'' stands for ``piecewise'' with the restriction that the lengths 
+of such pieces must be bounded from below by a positive constant.  If $P(t,u) = \lbrace N(t,u)\rbrace$, we write 
+%
+\begin{equation}
+ \tilde G: T \times U \Lto C_{\mathrm{pw}}^1\big([0,\infty), \RR^d\big),\quad \tilde G(t,u) = G\big(t, u, N(t,u)\big).
+\end{equation}
+%
+%
+Let now $\Omega \subset \RR^D$ be a suitable set and $\big(\SPCH_j, \INNER{\cdot}{\cdot}_j\big)$, $j=1,2$ be Hilbert spaces. In this 
+setting, we can study forward operators of the form
+%
+\begin{align}
+ & \OPA: \SPCH_1(\Omega) \Lto \SPCH_2(T \times U) \\
+ & \OPA f(t, u) = \int_{P(t, u)} \int_{G(t, u, \theta) \cap \Omega} f \, \D G\, \D \theta.
+\end{align}
+%
+which maps a pair of parameters $(t, u)$ to the integral of $f$ along all geodesics arriving at $X(t, u)$. For $L^2$ spaces, we want to 
+calculate the adjoint operator:
+%
+\begin{align}
+ \INNER{\OPA f}{g}_2 
+ &= \int_T \int_U \OPA f(t, u)\, g(t, u)\, \D u\, \D t \notag \\
+ &= \int_T \int_U \int_{P(t, u)} \int_{G(t, u, \theta) \cap \Omega} f \, \D G\, \D \theta\, g(t, u)\, \D u\, \D t \notag \\
+ \label{eq:adj_calculation_step1}
+ &= \int_T \int_U \int_{P(t, u)} \int_0^\infty  [f \circ G(t, u, \theta)](s)\, \ABS{G(t, u, \theta)'(s)}\, g(t, u)\, \D s\, 
+ \D \theta\, \D u\, \D t.
+\end{align}
+%
+We first consider the case where $P(t,u) = \lbrace N(t,u)\rbrace$, i.e. there is exactly one geodesic arriving at each detector point 
+$X_t(u)$ with incoming direction $N_t(u)$. For fixed $t \in T$, we assume that for each $x \in \Omega$, there is a unique geodesic 
+$\tilde G_t(u) = \tilde G_t(u; x)$ containing the point $x$ exactly once, i.e. $\tilde G_t(u; x)(s(x)) = x$. Thus, we can define a 
+mapping
+%
+\begin{equation*}
+ \Gamma_t: \Omega \to [0, \infty) \times U,\quad x \mapsto (s, u) \text{ with } \tilde G_t(u)(s) = x,
+\end{equation*}
+%
+which is the inverse of the mapping $(s,u) \mapsto \tilde G_t(u)(s)$. The point $X_t\big(u(x)\big)$ can be interpreted as the projection of 
+$x$ to the detector surface along the corresponding geodesic, and $s(x)$ is the arc length along the geodesic from $x$ to its projection. 
+Now we can rewrite the integral \eqref{eq:adj_calculation_step1} as
+%
+\begin{align*}
+ \INNER{\OPA f}{g}_2
+ &= \int_T \int_{\Gamma_t(\Omega)} f\big(\Gamma_t^{-1}(s,u)\big) \ABSLR{\partial_s \Gamma_t^{-1}(s,u)}\, g(t, u)\, \D s\, \D u\, 
+ \D t  \\
+ &= \int_T \int_{\Gamma_t(\Omega)} f\big(\Gamma_t^{-1}(s,u)\big) \ABSLR{\big[\partial \Gamma_t\big(\Gamma_t^{-1}(s,u)\big)\big]_1}^{-1}\, 
+ g(t, u)\, \D  s\, \D u\, \D t \\
+ &= \int_T \int_\Omega f(x) \ABSLR{\big[\partial \Gamma_t(x)\big]_1}^{-1}\, \ABS{\DET{\partial \Gamma_t(x)}}\, 
+ g\big(t, \Pi_{G_t}(x)\big)
+ \, \D x\, \D t,
+\end{align*}
+%
+where $[\partial \Gamma_t]_1$ stands for the first column of the Jacobian of $\Gamma_t$ and $\Pi_{G_t}(x) = [\Gamma_t(x)]_2$ is the $u$ 
+component of $(s, u) = \Gamma_t(x)$. Hence, the adjoint operator can be written as
+%
+\begin{equation}
+ \label{eq:adj_op_onedir}
+ \DUALOPA g(x) = \int_T \ABSLR{\big[\partial \Gamma_t(x)\big]_1}^{-1}\, \ABS{\DET{\partial \Gamma_t(x)}}\, g\big(t, \Pi_{G_t}(x)\big)\, 
+ \D t
+\end{equation}
+%
+which is equal to
+%
+\begin{equation}
+ \label{eq:adj_op_onedir_alt}
+ \DUALOPA g(x) = \int_T \ABSLR{\partial_s \Gamma_t^{-1}\big(\Gamma_t(x)\big)}\, 
+ \ABS{\DET{\partial \Gamma_t^{-1}\big(\Gamma_t(x)\big)}}^{-1}\, g\big(t, \Pi_{G_t}(x)\big)\, \D t
+\end{equation}
+%
+%
+\begin{example}[Parallel geometry]
+ We consider a flat 2D detector moving on the unit circle in the $x$-$y$ plane, oriented to the center of the circle:
+ %
+ \begin{align*}
+  & T = [0, \pi),\quad U = [-l_y/2, l_y/2] \times [-l_z/2, l_z/2] \\
+  & X(\phi, u) = \theta(\phi) + R(\phi) \cdot \TRANSP{(u_1, 0, u_2)}
+ \end{align*}
+ %
+ with
+ %
+ \begin{equation}
+  \theta(\phi) = \TRANSP{(-\sin\phi, \cos\phi, 0)},\quad R(\phi) =
+  \begin{pmatrix}
+   \cos\phi & -\sin\phi & 0 \\
+   \sin\phi & \cos\phi & 0 \\
+   0 & 0 & 1
+  \end{pmatrix}.
+ \end{equation}
+ %
+ The directional mapping is given by $N(\phi, u) = -\theta(\phi)$, which is also the canonical normal $n = \eta_1 \times \eta_2$ with
+ $\eta_j = \partial_{u_j} X / \ABS{\partial_{u_j} X}$. It is $P(\phi, u) = \lbrace N(\phi, u)\rbrace$.\\
+ %
+ Finally, the geodesics are straight lines, and their formula is
+ %
+ \begin{equation*}
+  \tilde G_\phi(u) = \big( s \mapsto X(\phi, u) + (1-S) N(\phi, u),\ s > 0 \big).
+ \end{equation*}
+ %
+ They start at the far end of the object support $\Omega$ (see below) and continue to the detector, hence the integration domain of the $s$ 
+ integral can be extended to $\RR$.\\[1ex]
+ %
+ We consider $L^2$ functions in the unit ball in $\RR^3$, i.e. $\Omega = B_1$ and the parallel X-ray transform
+ %
+ \begin{align*}
+  \OPP: L^2(B_1) \to L^2(T \times U) \\
+  \OPP f(\phi, u) 
+  &= \int_{\tilde G_\phi(u)} f\, \D G \\
+  &= \int_0^\infty f\big(X(\phi, u) + (1-s) N(\phi, u)\big)\, \D s \\
+  &= \int_\RR f\big(s \theta(\phi) + R(\phi) \cdot \TRANSP{(u_1, 0, u_2)}\big)\, \D s,
+ \end{align*}
+ %
+ which is the classical transform in parametrized form.
+ To compare the well-known backprojection with the adjoint obtained with \eqref{eq:adj_op_onedir}, we observe that we can write $x \in 
+ \Omega$ as
+ %
+ \begin{align*}
+  x 
+  &= \INNER{\theta(\phi)}{x}\, \theta(\phi) + \big(x - \INNER{\theta(\phi)}{x}\, \theta(\phi)\big) \\
+  &= \INNER{\theta(\phi)}{x}\, \theta(\phi) + \INNER{\theta^\perp(\phi)}{x}\, \theta^\perp(\phi) + \INNER{e_z}{x}\, e_z \\
+  &= \INNER{\theta(\phi)}{x}\, \theta(\phi) + R(\phi) \TRANSP{\big(\INNER{\theta^\perp(\phi)}{x}, 0, \INNER{e_z}{x}\big)}
+ \end{align*}
+ %
+ with $\theta^\perp(\phi) = \TRANSP{(\cos\phi, \sin\phi, 0)}$, the first column of $R(\phi)$. This means that for 
+ $s = 1 - \INNER{\theta(\phi)}{x}$ and $u = \TRANSP{\big(\INNER{\theta^\perp(\phi)}{x}, \INNER{e_z}{x}\big)}$, it is 
+ $x = G\big(\phi, u, N(\phi, u)\big)(s)$, and thus the mapping $\Gamma_\phi$ can be explicitly determined as
+ %
+ \begin{equation*}
+  \Gamma_\phi(x) = \TRANSP{\big(1 - \INNER{\theta(\phi)}{x}, \INNER{\theta^\perp(\phi)}{x}, \INNER{e_z}{x}\big)}
+ \end{equation*}
+ %
+ The Jacobian of this coordinate transform is apparently a column permutation of $R(\phi)$, hence the additional factors in the integral 
+ \eqref{eq:adj_op_onedir} are one, and we can conclude that
+ %
+ \begin{equation*}
+  \OPP g(x) = \int_0^\pi g\big(\phi, \INNER{\theta^\perp(\phi)}{x}, \INNER{e_z}{x}\big)\, \D\phi,
+ \end{equation*}
+ %
+ which is the parametrized form of the well-known backprojection formula.
+\end{example}
+%
+%
+%
+\begin{example}[Fan beam geometry]
+ Here, we consider the case of 2D functions on $\Omega = B_1 \subset \RR^2$. The detector is a segment of a circle with radius $r > 1$ and 
+ detects rays coming from a point source on the opposite side of the same circle. We parametrize the detector as follows:
+ %
+ \begin{align*}
+  & T = [0, 2\pi),\quad U = [-\psi_0/2, \psi_0/2] \\
+  & X(\phi, \psi) = r \theta(\phi + \psi), \quad \theta(\phi) = (\cos\phi, \sin\phi).
+ \end{align*}
+ %
+ The directional field of the detector is given by the normalized line from a detector point to the source located at 
+ $x_{\mathrm{S}} = -r \theta(\phi)$. Without normalization, we acquire
+ %
+ \begin{align*}
+  \tilde N(\phi, \psi) 
+  &= X(\phi, \psi) - x_{\mathrm{S}} \\
+  &= - r \big(\theta(\phi + \psi) + \theta(\phi)\big) \\
+  &= - r \big(\cos(\phi + \psi) + \cos\phi, \sin(\phi + \psi) + \sin\phi \big)\\
+  &= - \sqrt{2(1 + \cos\psi)}\, r \theta\big(\phi + \delta(\psi)\big), \quad \tan\delta = \frac{1 - \cos\psi}{1 + \cos\psi}
+ \end{align*}
+ %
+ as one can check using trigonometric identities. Thus, the normalized vector field is
+ %
+ \begin{equation}
+  N(\phi, \psi) = - \theta\big(\phi + \delta(\psi)\big).
+ \end{equation} 
+ %
+ Again, as in the parallel geometry, we have $P(\phi,\psi) = \lbrace N(\phi,\psi)\rbrace$, and the geodesics are lines from the far end of 
+ the object to the detector. We select a virtual point beyond the source as its starting point:
+ %
+ \begin{equation*}
+  \tilde G(\phi, \psi) = s \mapsto X(\phi,\psi) + (2r-s) N(\phi,\psi).
+ \end{equation*}
+ %
+ This leads to the transform
+ %
+ \begin{align*}
+  \OPD: L^2(B_1) &\Lto L^2\big([0,2\pi) \times [-\psi_0/2, \psi_0/2]\big)\\
+  \OPD f(\phi, \psi) 
+  &= \int_{\tilde G(\phi,\psi)}\, f \, \D G\\
+  &= \int_0^\infty f\big(r\theta(\phi + \psi) + (s-2r)\theta(\phi + \delta(\psi))\big)\, \D s \\
+  &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi))\big) \D s,
+ \end{align*}
+ %
+ which is the well-known divergent beam transform in our parametrization. In order to determine the adjoint, we need to find
+ $\Gamma_\phi$ as the inverse of $(\psi, s) \mapsto \tilde G_\phi(\psi)(s)$, i.e. for $x \in \RR^2$, we need to solve
+ %
+ \begin{equation*}
+  r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi)) = x
+ \end{equation*}
+ %
+ for $\psi$ and $s$. To find this coordinate change, we consider for $\theta=\theta(\phi)$ the line
+ %
+ \begin{equation*}
+  \gamma_x(\sigma) = -r\theta + \sigma(x+r\theta)
+ \end{equation*}
+ %
+ from the source point ($\sigma=0$) through x ($\sigma=1$). The intersection with the circle $\ABS{x}=r$ determines the detector point 
+reached by the 
+ ray, from which the parameters $\sigma$ and $\psi$ can be calculated. It is
+ %
+ \begin{align*}
+  \ABS{\gamma_x(\sigma)}^2 - r^2 
+  &= r^2 + \sigma^2 \ABS{x + r\theta}^2 -2rt \big(r + \INNER{x}{\theta}\big) - r^2 \\
+  &= \sigma \left(\sigma \ABS{x + r\theta}^2 -2r \big(r + \INNER{x}{\theta}\big)\right).
+ \end{align*}
+ %
+ The second zero of this expression besides $\sigma=0$ is apparently
+ %
+ \begin{equation}
+  \sigma_x = \frac{2r \INNER{x + r\theta}{\theta}}{\ABS{x + r\theta}^2},
+ \end{equation} 
+ %
+ and the corresponding curve point is
+ %
+ \begin{align*}
+  \gamma_x(\sigma_x) &= \frac{2r \INNER{x + r\theta}{\theta}}{\ABS{x + r\theta}^2}\, x + 
+  r\, \frac{2 \INNER{x + r\theta}{r\theta} - \ABS{x + r\theta}^2}{\ABS{x + r\theta}^2}\, \theta \\
+  &= \ABS{x + r\theta}^{-2} \left(2r \INNER{x + r\theta}{\theta}\, x + r(\ABS{x}^2 - r^2)\, \theta \right)
+ \end{align*}
+ %
+ Setting this expression equal to $r\theta(\phi + \psi)$ yields the following alternative ways of acquiring $\psi$:
+ %
+ \begin{align}
+  \psi + \phi
+  \label{eq:fanbeam_psi_1}
+  &= \arccos\left(\frac{2 \INNER{x + r\theta}{r\theta}\, x_1 + (\ABS{x}^2 - r^2)\, r\cos\phi}{\ABS{x + r\theta}^2} \right) \\
+  \label{eq:fanbeam_psi_2}
+  &= \arcsin\left(\frac{2 \INNER{x + r\theta}{r\theta}\, x_2 + (\ABS{x}^2 - r^2)\, r\sin\phi)}{\ABS{x + r\theta}^2} \right) \\
+  \label{eq:fanbeam_psi_3}
+  &= \arctan\left(\frac{2 \INNER{x + r\theta}{r\theta}\, x_2 + (\ABS{x}^2 - r^2)\, r\sin\phi}{
+  2 \INNER{x + r\theta}{r\theta}\, x_1 + (\ABS{x}^2 - r^2)\, r\cos\phi} \right).
+ \end{align}
+ %
+ Now we compute the change of coordinates Jacobian using the mapping
+ %
+ \begin{equation*}
+  \Gamma_\phi^{-1}(\sigma,\psi) = r \theta(\phi + \psi) + \sigma \theta\big(\phi + \delta(\psi)\big)
+ \end{equation*}
+ %
+ to apply the result in \eqref{eq:adj_op_onedir_alt}. Differentiating with respect to $\sigma$ yields
+ %
+ \begin{equation*}
+  \partial_\sigma \Gamma_\phi^{-1}(\sigma,\psi) = \theta\big(\phi + \delta(\psi)\big),
+ \end{equation*}
+ %
+ so the factor $\ABS{\partial_\sigma\Gamma_\phi^{-1}}$ in \eqref{eq:adj_op_onedir_alt} is equal to $1$. On the other hand, due to 
+ rotational symmetry, we can consider the case $\phi=0$ and calculate the determinant of the Jacobian $\partial(\sigma,\psi)/\partial x$. 
+ After lengthy derivations, one can finally acquire
+ %
+ \begin{equation*}
+  \DET \frac{\partial(\sigma,\psi)}{\partial x} = - \frac{4 \INNER{r\theta}{x+r\theta}}{\ABS{x+r\theta}^4},
+ \end{equation*}
+ %
+ which is invariate under simultaneous rotations of $x$ and $\theta$ as expected. Therefore, the adjoint is given as
+ %
+ \begin{equation}
+  \OPD^* g(x) = \int_0^{2\pi} \frac{4 \INNER{r\theta(\phi)}{x+r\theta(\phi)}}{\ABS{x+r\theta(\phi)}^4}\, g(\phi, \Pi_{G_\phi}x) \, \D \phi
+ \end{equation} 
+ %
+ with the projection $\Pi_{G_\phi}x = \psi$ given by one of the formulas \eqref{eq:fanbeam_psi_1}--\eqref{eq:fanbeam_psi_3}.
+ %
+
+\end{example}
+
+
+\end{document}

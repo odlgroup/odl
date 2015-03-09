@@ -320,6 +320,7 @@ class Gfunc(Ugrid):
         sub_kwargs = {}
         arrange_subplots = (121, 122)  # horizontal arrangement
         block = kwargs.get('block', False)
+        show = kwargs.pop('show', True)
 
         if self.dim == 1:  # TODO: maybe a plotter class would be better
             if not method:
@@ -417,7 +418,8 @@ class Gfunc(Ugrid):
                 ticks = [minval, (maxval + minval) / 2., maxval]
                 cbar = plt.colorbar(csub, ticks=ticks, format='%.4g')
 
-        plt.show(block=block)
+        if show:
+            plt.show(block=block)
         if saveto:
             fig.savefig(saveto)
 
