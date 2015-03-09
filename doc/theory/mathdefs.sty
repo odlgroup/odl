@@ -4,51 +4,85 @@
 
 % Spaces
 
-\newcommand*{\W}{\ensuremath{\mathscr{W}}}
-\newcommand*{\X}{\ensuremath{\mathscr{X}}}
-\newcommand*{\Y}{\ensuremath{\mathscr{Y}}}
-\newcommand*{\Z}{\ensuremath{\mathscr{Z}}}
+\newcommand*{\SPACE}[1]{\ensuremath{\mathscr{#1}}}
 
-\newcommand*{\dual}[1]{\ensuremath{#1^*}}
+\newcommand*{\SPCH}{{\SPACE{H}}}
+\newcommand*{\SPCW}{{\SPACE{W}}}
+\newcommand*{\SPCX}{{\SPACE{X}}}
+\newcommand*{\SPCY}{{\SPACE{Y}}}
+\newcommand*{\SPCZ}{{\SPACE{Z}}}
 
-\newcommand*{\Wdual}{\dual{\W}}
-\newcommand*{\Xdual}{\dual{\X}}
-\newcommand*{\Ydual}{\dual{\Y}}
-\newcommand*{\Zdual}{\dual{\Z}}
+\newcommand*{\DUAL}[1]{\ensuremath{#1^*}}
 
-\newcommand*{\dpW}[2]{\ensuremath{\langle #1,\,#2\rangle}_{\W\times\Wdual}}
-\newcommand*{\dpX}[2]{\ensuremath{\langle #1,\,#2\rangle}_{\X\times\Xdual}}
-\newcommand*{\dpY}[2]{\ensuremath{\langle #1,\,#2\rangle}_{\Y\times\Ydual}}
-\newcommand*{\dpZ}[2]{\ensuremath{\langle #1,\,#2\rangle}_{\Z\times\Zdual}}
+\newcommand*{\DUALW}{{\dual{\SCPW}}}
+\newcommand*{\DUALX}{{\dual{\SCPX}}}
+\newcommand*{\DUALY}{{\dual{\SCPY}}}
+\newcommand*{\DUALZ}{{\dual{\SCPZ}}}
+
+\newcommand*{\DPW}[2]{{\ensuremath{\langle #1,\,#2\rangle}_{\SPCW\times\DUALW}}}
+\newcommand*{\DPX}[2]{{\ensuremath{\langle #1,\,#2\rangle}_{\SPCX\times\DUALX}}}
+\newcommand*{\DPY}[2]{{\ensuremath{\langle #1,\,#2\rangle}_{\SPCY\times\DUALY}}}
+\newcommand*{\DPZ}[2]{{\ensuremath{\langle #1,\,#2\rangle}_{\SPCZ\times\DUALZ}}}
 
 
 
 % Operators
 
-\newcommand*{\op}[1]{\ensuremath{\mathcal{#1}}}
+\newcommand*{\OP}[1]{\ensuremath{\mathcal{#1}}}
 
-\newcommand*{\Aop}{{\op{A}}}
-\newcommand*{\Bop}{{\op{B}}}
-\newcommand*{\Cop}{{\op{C}}}
-\newcommand*{\Dop}{{\op{D}}}
-\newcommand*{\Fop}{{\op{F}}}
-\newcommand*{\Hop}{{\op{H}}}
-\newcommand*{\Iop}{{\op{I}}}
-\newcommand*{\Lop}{{\op{L}}}
-\newcommand*{\Mop}{{\op{M}}}
-\newcommand*{\Pop}{{\op{P}}}
-\newcommand*{\Rop}{{\op{R}}}
-\newcommand*{\Sop}{{\op{S}}}
-\newcommand*{\Top}{{\op{T}}}
-\newcommand*{\Uop}{{\op{U}}}
-\newcommand*{\Xop}{{\op{X}}}
+\newcommand*{\OPA}{{\OP{A}}}
+\newcommand*{\OPB}{{\OP{B}}}
+\newcommand*{\OPC}{{\OP{C}}}
+\newcommand*{\OPD}{{\OP{D}}}
+\newcommand*{\OPE}{{\OP{E}}}
+\newcommand*{\OPF}{{\OP{F}}}
+\newcommand*{\OPG}{{\OP{G}}}
+\newcommand*{\OPH}{{\OP{H}}}
+\newcommand*{\OPI}{{\OP{I}}}
+\newcommand*{\OPJ}{{\OP{J}}}
+\newcommand*{\OPK}{{\OP{K}}}
+\newcommand*{\OPL}{{\OP{L}}}
+\newcommand*{\OPM}{{\OP{M}}}
+\newcommand*{\OPN}{{\OP{N}}}
+\newcommand*{\OPO}{{\OP{O}}}
+\newcommand*{\OPP}{{\OP{P}}}
+\newcommand*{\OPQ}{{\OP{Q}}}
+\newcommand*{\OPR}{{\OP{R}}}
+\newcommand*{\OPS}{{\OP{S}}}
+\newcommand*{\OPT}{{\OP{T}}}
+\newcommand*{\OPU}{{\OP{U}}}
+\newcommand*{\OPV}{{\OP{V}}}
+\newcommand*{\OPW}{{\OP{W}}}
+\newcommand*{\OPX}{{\OP{X}}}
+\newcommand*{\OPY}{{\OP{Y}}}
+\newcommand*{\OPZ}{{\OP{Z}}}
 
-\newcommand*{\Adual}{{\dual{\Aop}}}
-\newcommand*{\Bdual}{{\dual{\Bop}}}
-\newcommand*{\Cdual}{{\dual{\Cop}}}
-\newcommand*{\Ldual}{{\dual{\Lop}}}
-\newcommand*{\Pdual}{{\dual{\Pop}}}
-\newcommand*{\Rdual}{{\dual{\Rop}}}
+\newcommand*{\DUALOPA}{{\DUAL{\OPA}}}
+\newcommand*{\DUALOPB}{{\DUAL{\OPB}}}
+\newcommand*{\DUALOPC}{{\DUAL{\OPC}}}
+\newcommand*{\DUALOPD}{{\DUAL{\OPD}}}
+\newcommand*{\DUALOPE}{{\DUAL{\OPE}}}
+\newcommand*{\DUALOPF}{{\DUAL{\OPF}}}
+\newcommand*{\DUALOPG}{{\DUAL{\OPG}}}
+\newcommand*{\DUALOPH}{{\DUAL{\OPH}}}
+\newcommand*{\DUALOPI}{{\DUAL{\OPI}}}
+\newcommand*{\DUALOPJ}{{\DUAL{\OPJ}}}
+\newcommand*{\DUALOPK}{{\DUAL{\OPK}}}
+\newcommand*{\DUALOPL}{{\DUAL{\OPL}}}
+\newcommand*{\DUALOPM}{{\DUAL{\OPM}}}
+\newcommand*{\DUALOPN}{{\DUAL{\OPN}}}
+\newcommand*{\DUALOPO}{{\DUAL{\OPO}}}
+\newcommand*{\DUALOPP}{{\DUAL{\OPP}}}
+\newcommand*{\DUALOPQ}{{\DUAL{\OPQ}}}
+\newcommand*{\DUALOPR}{{\DUAL{\OPR}}}
+\newcommand*{\DUALOPS}{{\DUAL{\OPS}}}
+\newcommand*{\DUALOPT}{{\DUAL{\OPT}}}
+\newcommand*{\DUALOPU}{{\DUAL{\OPU}}}
+\newcommand*{\DUALOPV}{{\DUAL{\OPV}}}
+\newcommand*{\DUALOPW}{{\DUAL{\OPW}}}
+\newcommand*{\DUALOPX}{{\DUAL{\OPX}}}
+\newcommand*{\DUALOPY}{{\DUAL{\OPY}}}
+\newcommand*{\DUALOPZ}{{\DUAL{\OPZ}}}
 
 
 
@@ -134,32 +168,35 @@
 
 % Other math stuff
 
-\newcommand*{\abs}[1]{\ensuremath{|#1|}}
-\newcommand*{\absbig}[1]{\ensuremath{\big| #1 \big|}}
-\newcommand*{\abslr}[1]{\ensuremath{\left| #1 \right|}}
-\newcommand*{\norm}[1]{\ensuremath{\Vert #1 \Vert}}
-\newcommand*{\normbig}[1]{\ensuremath{\big\Vert #1 \big\Vert}}
-\newcommand*{\normlr}[1]{\ensuremath{\left\Vert #1 \right\Vert}}
-\newcommand*{\spr}[2]{\ensuremath{\langle #1,\,#2\rangle}}
-\newcommand*{\sprbig}[2]{\ensuremath{\big\langle #1,\,#2\big\rangle}}
-\newcommand*{\sprlr}[2]{\ensuremath{\left\langle #1,\,#2\right\rangle}}
-\newcommand*{\inv}[1]{\ensuremath{\frac{1}{#1}}}
-\newcommand*{\diff}[0]{\ensuremath{\mathrm{d}}}
-\renewcommand*{\Re}[0]{\ensuremath{\mathrm{Re}}}
-\renewcommand*{\Im}[0]{\ensuremath{\mathrm{Im}}}
-\renewcommand*{\i}[0]{\ensuremath{i}}
-\newcommand*{\tx}[0]{\ensuremath{\textstyle}}
-\newcommand*{\longto}[0]{\ensuremath{\longrightarrow}}
-\newcommand*{\Longto}[0]{\ensuremath{\Longrightarrow}}
-\newcommand*{\Eq}[0]{\ensuremath{\Leftrightarrow}}
-\newcommand*{\LEq}[0]{\ensuremath{\Longleftrightarrow}}
+\newcommand*{\TRANSP}[1]{{\ensuremath{#1^{\mathrm{T}}}}}
+\newcommand*{\ABS}[1]{\ensuremath{|#1|}}
+\newcommand*{\ABSbig}[1]{\ensuremath{\big| #1 \big|}}
+\newcommand*{\ABSBig}[1]{\ensuremath{\Big| #1 \Big|}}
+\newcommand*{\ABSbigg}[1]{\ensuremath{\bigg| #1 \bigg|}}
+\newcommand*{\ABSLR}[1]{\ensuremath{\left| #1 \right|}}
+\newcommand*{\NORM}[1]{\ensuremath{\Vert #1 \Vert}}
+\newcommand*{\NORMbig}[1]{\ensuremath{\big\Vert #1 \big\Vert}}
+\newcommand*{\NORMlr}[1]{\ensuremath{\left\Vert #1 \right\Vert}}
+\newcommand*{\INNER}[2]{\ensuremath{\langle #1,\,#2\rangle}}
+\newcommand*{\INNERbig}[2]{\ensuremath{\big\langle #1,\,#2\big\rangle}}
+\newcommand*{\INNERlr}[2]{\ensuremath{\left\langle #1,\,#2\right\rangle}}
+\newcommand*{\INV}[1]{\ensuremath{\frac{1}{#1}}}
+\newcommand*{\D}[0]{\ensuremath{\mathrm{d}}}
+\newcommand*{\REAL}[0]{\ensuremath{\mathrm{Re}}}
+\newcommand*{\IMAG}[0]{\ensuremath{\mathrm{Im}}}
+\newcommand*{\I}[0]{\ensuremath{i}}
+\newcommand*{\TS}[0]{\ensuremath{\textstyle}}
+\newcommand*{\Lto}[0]{\ensuremath{\longrightarrow}}
+\newcommand*{\LTo}[0]{\ensuremath{\Longrightarrow}}
+\newcommand*{\EQ}[0]{\ensuremath{\Leftrightarrow}}
+\newcommand*{\LEQ}[0]{\ensuremath{\Longleftrightarrow}}
 \newcommand*{\id}[0]{\ensuremath{\mathrm{id}}}
-\newcommand*{\nfhalf}{{\ensuremath{\nicefrac{1}{2}}}}
-\newcommand*{\Lapl}[0]{\ensuremath{\varDelta}}
-\newcommand*{\Order}[0]{\ensuremath{\mathcal{O}}}
-\newcommand*{\order}[0]{\ensuremath{o}}
-\newcommand*{\pderiv}[2]{{\ensuremath{\frac{\partial #1}{\partial #2}}}}
-\newcommand*{\eps}{{\ensuremath{\varepsilon}}}
+\newcommand*{\HALF}{{\ensuremath{\nicefrac{1}{2}}}}
+\newcommand*{\LAPLACE}[0]{\ensuremath{\varDelta}}
+\newcommand*{\ORD}[0]{\ensuremath{\mathcal{O}}}
+\newcommand*{\ORDS}[0]{\ensuremath{o}}
+\newcommand*{\PARTD}[2]{{\ensuremath{\frac{\partial #1}{\partial #2}}}}
+\newcommand*{\EPS}{{\ensuremath{\varepsilon}}}
 
 
 
@@ -170,6 +207,7 @@
 \DeclareMathOperator*{\RANGE}{range}
 \DeclareMathOperator*{\DIAG}{diag}
 \DeclareMathOperator*{\SPAN}{span}
+\DeclareMathOperator*{\DET}{det}
 
 
 \DeclareMathOperator*{\CTF}{CTF}
@@ -207,28 +245,27 @@
 
 % General and special sets
 
-\newcommand*{\setbig}[2]{\ensuremath{\big\{#1\,\big|\,#2\big\}}}
-\newcommand*{\setlr}[2]{\ensuremath{\left\{#1\,\right|\left.\,#2\right\}}}
-\DeclareMathOperator{\Span}{span}
+\newcommand*{\SET}[2]{\ensuremath{\{#1\,\big|\,#2\}}}
+\newcommand*{\SETbig}[2]{\ensuremath{\big\{#1\,\big|\,#2\big\}}}
+\newcommand*{\SETlr}[2]{\ensuremath{\left\{#1\,\right|\left.\,#2\right\}}}
 
 \newcommand*{\NN}[0]{{\ensuremath{\mathbb{N}}}}
 \newcommand*{\ZZ}[0]{{\ensuremath{\mathbb{Z}}}}
 \newcommand*{\RR}[0]{{\ensuremath{\mathbb{R}}}}
 \newcommand*{\CC}[0]{{\ensuremath{\mathbb{C}}}}
 
-\newcommand*{\Domain}{\ensuremath{\mathscr{D}}}
-\newcommand*{\Range}{\ensuremath{\mathscr{R}}}
-\newcommand*{\Null}{\ensuremath{\mathscr{N}}}
-\newcommand*{\Sphere}{\ensuremath{\mathscr{S}}}
-\newcommand*{\Circle}{\ensuremath{\mathscr{C}}}
-\newcommand*{\Schwartz}{\ensuremath{S}}
-\newcommand*{\HalfSpace}{\ensuremath{\mathscr{H}}}
-\newcommand*{\TanBundle}{\ensuremath{\mathscr{T}}}
-\newcommand*{\Grid}{\ensuremath{\mathscr{G}}}
+\newcommand*{\DOMAIN}{\ensuremath{\mathscr{D}}}
+\newcommand*{\NULL}{\ensuremath{\mathscr{N}}}
+\newcommand*{\SPHERE}{\ensuremath{\mathscr{S}}}
+\newcommand*{\CIRCLE}{\ensuremath{\mathscr{C}}}
+\newcommand*{\SCHWARZ}{\ensuremath{S}}
+\newcommand*{\HALFSPC}{\ensuremath{\mathscr{H}}}
+\newcommand*{\TANBDL}{\ensuremath{\mathscr{T}}}
+\newcommand*{\GRID}{\ensuremath{\mathscr{G}}}
 
-\newcommand*{\BoundedOp}{\ensuremath{\ell}}
-\newcommand*{\DdefinedOp}{\ensuremath{d}}
-\newcommand*{\ClosableOp}{\ensuremath{c}}
-\newcommand*{\ClosedOp}{\ensuremath{C}}
+\newcommand*{\BOUNDEDOP}{\ensuremath{\ell}}
+\newcommand*{\DENSEOP}{\ensuremath{d}}
+\newcommand*{\CLSABLEOP}{\ensuremath{c}}
+\newcommand*{\CLSDOP}{\ensuremath{C}}
 
 
