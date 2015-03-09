@@ -19,13 +19,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import division, print_function, unicode_literals
 from __future__ import absolute_import
 from future import standard_library
+from future.builtins import range
 standard_library.install_aliases()
-from builtins import range
 
 import os
 from math import pi
