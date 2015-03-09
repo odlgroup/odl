@@ -26,8 +26,8 @@ from future.builtins import object
 from future import standard_library
 standard_library.install_aliases()
 
-
 from abc import ABCMeta, abstractmethod
+import numpy as np
 
 
 # TODO move this
@@ -40,8 +40,6 @@ class abstractstatic(staticmethod):
         super(abstractstatic, self).__init__(function)
         function.__isabstractmethod__ = True
     __isabstractmethod__ = True
-
-import numpy as np
 
 
 class Operator(object):
