@@ -79,6 +79,12 @@ class Operator(object):
         else:
             raise TypeError('Expected an operator or a scalar')
 
+    @property
+    def T(self):
+        """Get the adjoint operator
+        """
+        return OperatorAdjoint(self)
+
 class LinearOperator(Operator):
     """ Linear operator, satisfies A(ax+by)=aA(x)+bA(y)
     """

@@ -35,20 +35,20 @@ class RNTest(unittest.TestCase):
         r3 = RN(3)
 
         A = np.random.rand(3,3)
-        Aop = r3.MultiplyOp(A)
         x = np.random.rand(3)
+        Aop = r3.MakeMultiplyOp(A)
+        xvec = r3.makeVector(x)
 
-        self.assertTrue(np.allclose(Aop(x),np.dot(A,x)))
+        self.assertTrue(np.allclose(Aop(xvec),np.dot(A,x)))
 
     def testAdjoint(self):
         r3 = RN(3)
 
-        A = np.random.rand(3,3)
-        Aop = r3.MultiplyOp(A)
-        x = np.random.rand(3)
-        y = np.random.rand(3)
+        A = r3.MakeMultiplyOp(np.random.rand(3,3))
+        x = r3.makeVector(np.random.rand(3))
+        y = r3.makeVector(np.random.rand(3))
 
-        self.assertAlmostEqual(r3.inner(Aop(x),y),r3.inner(x,Aop.applyAdjoint(y)))
+        self.assertAlmostEqual(A(x).inner(y),x.inner(A.T(y)))
 
 if __name__ == '__main__':
     unittest.main(exit = False)

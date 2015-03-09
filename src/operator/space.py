@@ -79,7 +79,7 @@ class Space(object):
             self.space.linComb(other,self,0,tmp)
             return tmp
         
-        def inner(self,a,x):       return self.space.inner(a,x,1,self)
+        def inner(self,x):         return self.space.inner(x,self)
         def normSquared(self):     return self.space.normSquared(self)
         def norm(self):            return self.space.norm(self)
 
@@ -297,18 +297,22 @@ class RN(Space):
         def clone(self):
             return self.space.makeVector(self, copy = True)
 
-    class MultiplyOp(OP.Operator):
-        """Multiply with matrix
-        """
+    def MakeMultiplyOp(self,A):
+        class MultiplyOp(OP.Operator):
+            """Multiply with matrix
+            """
 
-        def __init__(self,A):
-            self.A = A
+            def __init__(self,space,A):
+                self.space = space
+                self.A = A
 
-        def apply(self,rhs):
-            return np.dot(self.A,rhs)
+            def apply(self,rhs):
+                return self.space.makeVector(np.dot(self.A,rhs))
 
-        def applyAdjoint(self,rhs):
-            return np.dot(self.A.T,rhs)
+            def applyAdjoint(self,rhs):
+                return self.space.makeVector(np.dot(self.A.T,rhs))
+
+        return MultiplyOp(self,A)
 
 #Example of a space:
 class L2(Space):
