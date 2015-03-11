@@ -306,13 +306,14 @@ which is equal to
  %
  This leads to the transform
  %
- \begin{align*}
+ \begin{align}
   \OPD: L^2(B_1) &\Lto L^2\big([0,2\pi) \times [-\psi_0/2, \psi_0/2]\big)\\
-  \OPD f(\phi, \psi) 
-  &= \int_{\tilde \gamma(\phi,\psi)}\, f \, \D \gamma\\
-  &= \int_0^\infty f\big(r\theta(\phi + \psi) + (s-2r)\theta(\phi + \delta(\psi))\big)\, \D s \\
-  &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi))\big) \D s,
- \end{align*}
+  \OPD f(\phi, \psi)
+  &= \int_{\tilde \gamma(\phi,\psi)}\, f \, \D \gamma \notag \\
+  &= \int_0^\infty f\big(r\theta(\phi + \psi) + (s-2r)\theta(\phi + \delta(\psi))\big)\, \D s \notag \\
+  \label{eq:fanbeam_fwd_op_parametr}
+  &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi))\big)\, \D s,
+ \end{align}
  %
  which is the well-known divergent beam transform in our parametrization. In order to determine the adjoint, we need to find
  $\Gamma_\phi$ as the inverse of $(\psi, s) \mapsto \tilde \gamma_\phi(\psi)(s)$, i.e. for $x \in \RR^2$, we need to solve
@@ -324,60 +325,60 @@ which is equal to
  for $\psi$ and $s$. To find this coordinate change, we consider for $\theta=\theta(\phi)$ the line
  %
  \begin{equation*}
-  \gamma_x(\sigma) = -r\theta + \sigma(x+r\theta)
+  \gamma_x(\sigma) = -r\theta + \sigma\, \frac{x+r\theta}{\ABS{x + r \theta}}
  \end{equation*}
  %
- from the source point ($\sigma=0$) through x ($\sigma=1$). The intersection with the circle $\ABS{x}=r$ determines the detector point 
-reached by the 
- ray, from which the parameters $\sigma$ and $\psi$ can be calculated. It is
+ from the source point ($\sigma=0$) through $x$ ($\sigma=\ABS{x+r\theta}$). The intersection with the circle $\ABS{x}=r$ determines the 
+ detector point reached by the ray, from which the parameters $\sigma$ and $\psi$ can be calculated. It is
  %
  \begin{align*}
   \ABS{\gamma_x(\sigma)}^2 - r^2 
-  &= r^2 + \sigma^2 \ABS{x + r\theta}^2 -2rt \big(r + \INNER{x}{\theta}\big) - r^2 \\
-  &= \sigma \left(\sigma \ABS{x + r\theta}^2 -2r \big(r + \INNER{x}{\theta}\big)\right).
+  &= r^2 + \sigma^2 - 2 \sigma\, \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r\theta} - r^2 \\
+  &= \sigma \left(\sigma - 2 \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r \theta}\right).
  \end{align*}
  %
  The second zero of this expression besides $\sigma=0$ is apparently
  %
  \begin{equation}
-  \sigma_x = \frac{2r \INNER{x + r\theta}{\theta}}{\ABS{x + r\theta}^2},
+  \label{eq:fanbeam_intersec_param}
+  \sigma_x = \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}} ,
  \end{equation} 
  %
  and the corresponding curve point is
  %
  \begin{align*}
-  \gamma_x(\sigma_x) &= \frac{2r \INNER{x + r\theta}{\theta}}{\ABS{x + r\theta}^2}\, x + 
-  r\, \frac{2 \INNER{x + r\theta}{r\theta} - \ABS{x + r\theta}^2}{\ABS{x + r\theta}^2}\, \theta \\
-  &= \ABS{x + r\theta}^{-2} \left(2r \INNER{x + r\theta}{\theta}\, x + r(\ABS{x}^2 - r^2)\, \theta \right)
+  \gamma_x(\sigma_x) 
+  &= -r \theta + \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}}\, \frac{x + r\theta}{\ABS{x + r \theta}} \\
+  &= \ABS{x + r \theta}^{-2} \left(-r \ABS{x + r\theta}^2\, \theta  + 2 \INNER{x + r \theta}{r \theta} (x + r\theta)\right) \\
+  &= \ABS{x + r \theta}^{-2} \left(-r \big(\ABS{x}^2 + r^2 + 2\INNER{x}{r\theta}\big)\, \theta  +
+  2 \INNER{x + r \theta}{r \theta} x + 2r \big(\INNER{x}{r \theta} + r^2\big)\theta \right) \\
+  &= \ABS{x + r\theta}^{-2} \left(r(r^2 - \ABS{x}^2)\, \theta + 2r \INNER{x + r\theta}{\theta}\, x \right)
  \end{align*}
  %
- Setting this expression equal to $r\theta(\phi + \psi)$ yields the following alternative ways of acquiring $\psi$:
+ Setting this expression equal to $r\theta(\phi + \psi_x)$ yields the following alternative ways of acquiring $\psi_x$:
  %
  \begin{align}
-  \psi + \phi
+  \psi_x + \phi
   \label{eq:fanbeam_psi_1}
-  &= \arccos\left(\frac{2 \INNER{x + r\theta}{r\theta}\, x_1 + (\ABS{x}^2 - r^2)\, r\cos\phi}{\ABS{x + r\theta}^2} \right) \\
+  &= \arccos\left(\frac{(r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1}{\ABS{x + r\theta}^2} \right) \\
   \label{eq:fanbeam_psi_2}
-  &= \arcsin\left(\frac{2 \INNER{x + r\theta}{r\theta}\, x_2 + (\ABS{x}^2 - r^2)\, r\sin\phi)}{\ABS{x + r\theta}^2} \right) \\
+  &= \arcsin\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{\ABS{x + r\theta}^2} \right) \\
   \label{eq:fanbeam_psi_3}
-  &= \arctan\left(\frac{2 \INNER{x + r\theta}{r\theta}\, x_2 + (\ABS{x}^2 - r^2)\, r\sin\phi}{
-  2 \INNER{x + r\theta}{r\theta}\, x_1 + (\ABS{x}^2 - r^2)\, r\cos\phi} \right).
+  &= \arctan\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{
+  (r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1} \right).
  \end{align}
  %
- Using the mapping
+ Since the rays were parametrized with respect to arc length, the first factor $\ABS{\partial_\sigma\Gamma_\phi^{-1}}$ in 
+ \eqref{eq:adj_op_onedir_alt} is equal to $1$. On the other hand, due to rotational symmetry, we can consider the case $\phi=0$ and 
+ calculate  the determinant of the Jacobian $\partial(\sigma,\psi)/\partial x$ for
  %
- \begin{equation*}
-  \Gamma_\phi^{-1}(\sigma,\psi) = r \theta(\phi + \psi) + \sigma \theta\big(\phi + \delta(\psi)\big),
- \end{equation*}
+ \begin{align*}
+  \sigma_x &= \frac{2r (x_1 + r)}{\sqrt{(x_1 + r)^2 + x_2^2}}, \\
+  \psi_x &= \arctan\left(\frac{2 (x_1 + r) x_2}{r^2 - x_1^2 - x_2^2 + 2 (x_1 + r) x_1} \right)
+ \end{align*}
  %
- we can calculate the first factor $\ABS{\partial_\sigma\Gamma_\phi^{-1}}$ in \eqref{eq:adj_op_onedir_alt} as
- %
- \begin{equation*}
-  \ABS{\partial_\sigma \Gamma_\phi^{-1}(\sigma,\psi)} = \ABS{\theta\big(\phi + \delta(\psi)\big)} = 1,
- \end{equation*}
- %
- On the other hand, due to rotational symmetry, we can consider the case $\phi=0$ and calculate the determinant of the Jacobian 
- $\partial(\sigma,\psi)/\partial x$. After lengthy derivations, one can finally acquire
+ \note{Something must be wrong, determinant is 0!!}
+ After lengthy derivations, one can finally acquire
  %
  \begin{equation*}
   \DET \frac{\partial(\sigma,\psi)}{\partial x} = - \frac{4 \INNER{r\theta}{x+r\theta}}{\ABS{x+r\theta}^4},
