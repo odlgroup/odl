@@ -280,24 +280,43 @@ which is equal to
  \end{align*}
  %
  The directional field of the detector is given by the normalized line from a detector point to the source located at 
- $x_{\mathrm{S}} = -r \theta(\phi)$. Without normalization, we acquire
+ $x_{\mathrm{S}} = -r \theta(\phi)$, i.e.
  %
- \begin{align*}
+ \begin{equation*}
   \tilde N(\phi, \psi) 
-  &= X(\phi, \psi) - x_{\mathrm{S}} \\
-  &= - r \big(\theta(\phi + \psi) + \theta(\phi)\big) \\
-  &= - r \big(\cos(\phi + \psi) + \cos\phi, \sin(\phi + \psi) + \sin\phi \big)\\
-  &= - \sqrt{2(1 + \cos\psi)}\, r \theta\big(\phi + \delta(\psi)\big), \quad \tan\delta = \frac{1 - \cos\psi}{1 + \cos\psi} 
-  = \tan^2(\psi/2)
+  = x_{\mathrm{S}} - X(\phi, \psi) \\
+  = - r \big(\theta(\phi + \psi) + \theta(\phi)\big)
+%   &= - r \big(\cos(\phi + \psi) + \cos\phi, \sin(\phi + \psi) + \sin\phi \big)\\
+%   &= - \sqrt{2(1 + \cos\psi)}\, r \theta\big(\phi + \delta(\psi)\big), \quad \tan\delta = \frac{1 - \cos\psi}{1 + \cos\psi} 
+%   = \tan^2(\psi/2)
+ \end{equation*}
+ %
+ without normalization. It is
+ \begin{align*}
+  \ABS{\tilde N(\phi, \psi)}^2 = r^2 \big(2 + 2\INNER{\theta(\phi + \psi)}{\theta(\phi)} \big) = r^2 (2 + 2\cos\psi)
  \end{align*}
  %
- as one can check using trigonometric identities. Thus, the normalized vector field is
+ and thus
+ %
+ \begin{equation*}
+  N(\phi,\psi) = - \frac{\theta(\phi + \psi) + \theta(\phi)}{\sqrt{2(1 + \cos\psi)}}.
+ \end{equation*}
+ %
+ The angle of this vector relative to $-\theta(\phi)$ is determined by
+ %
+ \begin{align*}
+  \cos\delta = \frac{\INNERbig{\theta(\phi + \psi) + \theta(\phi)}{\theta(\phi)}}{\sqrt{2(1 + \cos\psi)}} 
+  = \sqrt{\frac{1 + \cos\psi}{2}} = \cos(\psi/2),
+ \end{align*}
+ %
+ hence we can write the directional vector field as
  %
  \begin{equation}
-  N(\phi, \psi) = - \theta\big(\phi + \delta(\psi)\big).
+  \label{eq:fanbeam_dir_field}
+  N(\phi,\psi) = - \theta(\phi + \psi/2).
  \end{equation} 
  %
- Again, as in the parallel geometry, we have $P(\phi,\psi) = \lbrace N(\phi,\psi)\rbrace$, and the rays are lines from the far end of 
+ As in the parallel geometry, we have $P(\phi,\psi) = \lbrace N(\phi,\psi)\rbrace$, and the rays are lines from the far end of 
  the object to the detector. We select a virtual point beyond the source as its starting point:
  %
  \begin{equation*}
@@ -310,16 +329,16 @@ which is equal to
   \OPD: L^2(B_1) &\Lto L^2\big([0,2\pi) \times [-\psi_0/2, \psi_0/2]\big)\\
   \OPD f(\phi, \psi)
   &= \int_{\tilde \gamma(\phi,\psi)}\, f \, \D \gamma \notag \\
-  &= \int_0^\infty f\big(r\theta(\phi + \psi) + (s-2r)\theta(\phi + \delta(\psi))\big)\, \D s \notag \\
+  &= \int_0^\infty f\big(r\theta(\phi + \psi) + (s-2r)\theta(\phi + \psi/2)\big)\, \D s \notag \\
   \label{eq:fanbeam_fwd_op_parametr}
-  &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi))\big)\, \D s,
+  &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \psi/2)\big)\, \D s,
  \end{align}
  %
  which is the well-known divergent beam transform in our parametrization. In order to determine the adjoint, we need to find
  $\Gamma_\phi$ as the inverse of $(\psi, s) \mapsto \tilde \gamma_\phi(\psi)(s)$, i.e. for $x \in \RR^2$, we need to solve
  %
  \begin{equation*}
-  r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi)) = x
+  r\theta(\phi + \psi) + s\theta(\phi + \psi/2) = x
  \end{equation*}
  %
  for $\psi$ and $s$. To find this coordinate change, we consider for $\theta=\theta(\phi)$ the line
