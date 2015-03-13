@@ -334,85 +334,87 @@ which is equal to
   &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \psi/2)\big)\, \D s,
  \end{align}
  %
- which is the well-known divergent beam transform in our parametrization. In order to determine the adjoint, we need to find
- $\Gamma_\phi$ as the inverse of $(\psi, s) \mapsto \tilde \gamma_\phi(\psi)(s)$, i.e. for $x \in \RR^2$, we need to solve
+ which is the well-known divergent beam transform
+ %
+ \begin{equation*}
+  \OPD f(\phi, \psi) = \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \psi/2)\big)\, \D s
+ \end{equation*}
+ %
+ in our parametrization. The adjoint cannot be directly calculated with \eqref{eq:adj_op_onedir} since the equation 
  %
  \begin{equation*}
   r\theta(\phi + \psi) + s\theta(\phi + \psi/2) = x
  \end{equation*}
  %
- for $\psi$ and $s$. To find this coordinate change, we consider for $\theta=\theta(\phi)$ the line
- %
- \begin{equation*}
-  \gamma_x(\sigma) = -r\theta + \sigma\, \frac{x+r\theta}{\ABS{x + r \theta}}
- \end{equation*}
- %
- from the source point ($\sigma=0$) through $x$ ($\sigma=\ABS{x+r\theta}$). The intersection with the circle $\ABS{x}=r$ determines the 
- detector point reached by the ray, from which the parameters $\sigma$ and $\psi$ can be calculated. It is
- %
- \begin{align*}
-  \ABS{\gamma_x(\sigma)}^2 - r^2 
-  &= r^2 + \sigma^2 - 2 \sigma\, \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r\theta} - r^2 \\
-  &= \sigma \left(\sigma - 2 \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r \theta}\right).
- \end{align*}
- %
- The second zero of this expression besides $\sigma=0$ is apparently
- %
- \begin{equation}
-  \label{eq:fanbeam_intersec_param}
-  \sigma_x = \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}} ,
- \end{equation} 
- %
- and the corresponding curve point is
- %
- \begin{align*}
-  \gamma_x(\sigma_x) 
-  &= -r \theta + \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}}\, \frac{x + r\theta}{\ABS{x + r \theta}} \\
-  &= \ABS{x + r \theta}^{-2} \left(-r \ABS{x + r\theta}^2\, \theta  + 2 \INNER{x + r \theta}{r \theta} (x + r\theta)\right) \\
-  &= \ABS{x + r \theta}^{-2} \left(-r \big(\ABS{x}^2 + r^2 + 2\INNER{x}{r\theta}\big)\, \theta  +
-  2 \INNER{x + r \theta}{r \theta} x + 2r \big(\INNER{x}{r \theta} + r^2\big)\theta \right) \\
-  &= \ABS{x + r\theta}^{-2} \left(r(r^2 - \ABS{x}^2)\, \theta + 2r \INNER{x + r\theta}{\theta}\, x \right)
- \end{align*}
- %
- Setting this expression equal to $r\theta(\phi + \psi_x)$ yields the following alternative ways of acquiring $\psi_x$:
+ cannot be analytically solved. Therefore, we exploit the relation to the parallel beam X-ray transform \NOTE{at least I don't know how}
  %
  \begin{align}
-  \psi_x + \phi
-  \label{eq:fanbeam_psi_1}
-  &= \arccos\left(\frac{(r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1}{\ABS{x + r\theta}^2} \right) \\
-  \label{eq:fanbeam_psi_2}
-  &= \arcsin\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{\ABS{x + r\theta}^2} \right) \\
-  \label{eq:fanbeam_psi_3}
-  &= \arctan\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{
-  (r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1} \right).
- \end{align}
+  \label{eq:fanbeam_xray_trafo_param}
+  &\OPP: L^2(B_1) \Lto L^2([0,2\pi) \times \RR) \\
+  &\OPP f(\phi, \tau) = \int_\RR f\big(s\theta(\phi) + \tau \theta^\perp(\phi)\big)\, \D s,
+ \end{align} 
  %
- Since the rays were parametrized with respect to arc length, the first factor $\ABS{\partial_\sigma\Gamma_\phi^{-1}}$ in 
- \eqref{eq:adj_op_onedir_alt} is equal to $1$. On the other hand, due to rotational symmetry, we can consider the case $\phi=0$ and 
- calculate  the determinant of the Jacobian $\partial(\sigma,\psi)/\partial x$ for
+ with $\theta^\perp(\phi) = \TRANSP{(-\sin\phi, \cos\phi)}$. It is
  %
  \begin{align*}
-  \sigma_x &= \frac{2r (x_1 + r)}{\sqrt{(x_1 + r)^2 + x_2^2}}, \\
-  \psi_x &= \arctan\left(\frac{2 (x_1 + r) x_2}{r^2 - x_1^2 - x_2^2 + 2 (x_1 + r) x_1} \right)
+  \OPD f(\phi, \psi) 
+  &= \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \psi/2)\big)\, \D s \\
+  &= \int_\RR f\big(s \theta(\phi + \psi/2) - r \Pi_{\theta(\phi + \psi/2)}\theta(\phi) + \big)\, \D s,
  \end{align*}
  %
- \note{Something must be wrong, determinant is 0!!}
- After lengthy derivations, one can finally acquire
+ and the projection $\Pi_{\theta(\phi + \psi/2)}\theta(\phi)$ can be calculated as
  %
- \begin{equation*}
-  \DET \frac{\partial(\sigma,\psi)}{\partial x} = - \frac{4 \INNER{r\theta}{x+r\theta}}{\ABS{x+r\theta}^4},
- \end{equation*}
+ \begin{align*}
+  \Pi_{\theta(\phi + \psi/2)}\theta(\phi)
+  &= \theta(\phi) - \INNERLR{\theta(\phi)}{\theta(\phi + \psi/2)}\, \theta(\phi + \psi/2) \\
+  &=
+  \begin{pmatrix}
+   \cos\phi - \cos(\psi/2)\, \cos(\phi + \psi/2) \\
+   \sin\phi - \cos(\psi/2)\, \sin(\phi + \psi/2)
+  \end{pmatrix} \\
+  &=
+  \begin{pmatrix}
+   \sin(\phi + \psi/2)\, \sin(\psi/2) \\
+   -\cos(\phi + \psi/2)\, \sin(\psi/2)
+  \end{pmatrix} \\
+  &= -\sin(\psi/2)\, \theta^\perp(\phi + \psi/2)
+ \end{align*}
  %
- which is invariate under simultaneous rotations of $x$ and $\theta$ as expected. Therefore, the adjoint is given as
+ and thus 
+ %
+ \begin{align*}
+  \OPD f(\phi, \psi)
+  &= \int_\RR f\big(s \theta(\phi + \psi/2) + r \sin(\psi/2)\, \theta^\perp(\phi + \psi/2) + \big)\, \D s \\
+  &= \OPP f\big(\phi + \psi/2, r\sin(\psi/2)\big) \\
+  &= \OPU \OPP f(\phi, \psi)
+ \end{align*}
+ %
+ with the transform
+ %
+ \begin{align}
+  \label{eq:fanbeam_unit_trafo}
+  &\OPU: L^2([0,2\pi) \times \RR) \Lto L^2([0,2\pi) \times [-\psi_0/2,\psi_0/2]) \\
+  &\OPU g(\phi, \psi) = g\big(\phi + \psi/2, r\sin(\psi/2)\big)
+ \end{align} 
+ %
+ To compute its adjoint, we apply the substitution $\tau = r\sin(\psi/2),\ \D\tau = \sqrt{r^2-\tau^2} / 2\, \D \psi$ and get
+ %
+ \begin{align*}
+  \INNER{\OPU g}{h} 
+  &= \int_0^{2\pi} \int_{-\psi_0/2}^{\psi_0/2} g\big(\phi + \psi/2, r\sin(\psi/2)\big)\, h(\phi, \psi)\, \D\psi\, \D\phi \\
+  &= \int_{-\psi_0/2}^{\psi_0/2} \int_{\psi/2}^{2\pi + \psi/2} g\big(\phi, r\sin(\psi/2)\big)\, h(\phi - \psi/2, \psi)\, \D\phi\, \D\psi \\
+  &= \int_{-r\sin(\psi_0/4)}^{r\sin(\psi_0/4)} \int_{\arcsin(\tau/r)}^{2\pi + \arcsin(\tau/r)} g(\phi, \tau)\, 
+  h\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, \frac{2}{\sqrt{r^2-\tau^2}} \D\phi\, \D\tau,
+ \end{align*}
+ %
+ hence
  %
  \begin{equation}
-  \OPD^* g(x) = \int_0^{2\pi} \frac{4 \INNER{r\theta(\phi)}{x+r\theta(\phi)}}{\ABS{x+r\theta(\phi)}^4}\, g(\phi, \Pi_{\gamma_\phi}x) \, \D 
-\phi
- \end{equation} 
+  \DUALOPU h(\phi, \tau) = h\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, \frac{2}{\sqrt{r^2-\tau^2}}.
+ \end{equation}
  %
- with the projection $\Pi_{\gamma_\phi}x = \psi$ given by one of the formulas \eqref{eq:fanbeam_psi_1}--\eqref{eq:fanbeam_psi_3}.
- %
-
+ Note that if the $\phi$ range is not $[0,2\pi)$ but $[0,\phi_0]$, an additional factor $\chi_{[\arcsin(\tau/r), \phi_0 + 
+\arcsin(\tau/r)]}$  needs to be added.
 \end{example}
 
 
