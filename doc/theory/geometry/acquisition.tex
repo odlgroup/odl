@@ -406,9 +406,9 @@ which is equal to
  Thus, if \eqref{eq:fanbeam_condition_roi} is fulfilled, it is $\DUALOPD = \DUALOPP\DUALOPU$, i.e.
  %
  \begin{align}
-  \label{eq:fanbeam_backproj}
   \DUALOPD g(x)
-  &= \int_0^{2\pi} \DUALOPU g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi \\
+  &= \int_0^{2\pi} \DUALOPU g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi \notag\\
+  \label{eq:fanbeam_backproj}
   &= \int_0^{2\pi} \frac{2}{\sqrt{r^2-\tau(\phi, x)^2}} g_0\left(\phi - \psi(\phi,x)/2, \psi(\phi,x) \right)\, \D\phi,
  \end{align}
  %
@@ -466,15 +466,85 @@ which is equal to
   &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \psi/2)\big)\, \D s,
  \end{align}
  %
- which is the well-known divergent beam transform
- in our parametrization. The adjoint cannot be directly calculated with \eqref{eq:adj_op_onedir} since the equation 
+ which is the same as \eqref{eq:fanbeam_fwdproj} up to an offset in the $s$ integration. In order to determine the adjoint using 
+ \eqref{eq:adj_op_onedir}, we need to find $\Gamma_\phi$ as the inverse of $(\psi, s) \mapsto \tilde \gamma_\phi(\psi)(s)$, i.e. for $x \in 
+ \RR^2$, we need to solve
  %
  \begin{equation*}
-  r\theta(\phi + \psi) + s\theta(\phi + \psi/2) = x
+  r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi)) = x
  \end{equation*}
  %
- cannot be analytically solved. Therefore, we exploit the relation to the parallel beam X-ray transform \NOTE{at least I don't know how}
+ for $\psi$ and $s$. To find this coordinate change, we consider for $\theta=\theta(\phi)$ the line
  %
+ \begin{equation*}
+  \gamma_x(\sigma) = -r\theta + \sigma\, \frac{x+r\theta}{\ABS{x + r \theta}}
+ \end{equation*}
+ %
+ from the source point ($\sigma=0$) through $x$ ($\sigma=\ABS{x+r\theta}$). The intersection with the circle $\ABS{x}=r$ determines the 
+ detector point reached by the ray, from which the parameter $\psi$ can be calculated. It is
+ %
+ \begin{align*}
+  \ABS{\gamma_x(\sigma)}^2 - r^2 
+  &= r^2 + \sigma^2 - 2 \sigma\, \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r\theta} - r^2 \\
+  &= \sigma \left(\sigma - 2 \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r \theta}\right).
+ \end{align*}
+ %
+ The second zero of this expression besides $\sigma=0$ is apparently
+ %
+ \begin{equation}
+  \label{eq:fanbeam_intersec_param}
+  \sigma_{\mathrm{D}} = \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}} ,
+ \end{equation} 
+ %
+ and the corresponding curve point is
+ %
+ \begin{align*}
+  \gamma_x(\sigma_{\mathrm{D}}) 
+  &= -r \theta + \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}}\, \frac{x + r\theta}{\ABS{x + r \theta}} \\
+  &= \ABS{x + r \theta}^{-2} \left(-r \ABS{x + r\theta}^2\, \theta  + 2 \INNER{x + r \theta}{r \theta} (x + r\theta)\right) \\
+  &= \ABS{x + r \theta}^{-2} \left(-r \big(\ABS{x}^2 + r^2 + 2\INNER{x}{r\theta}\big)\, \theta  +
+  2 \INNER{x + r \theta}{r \theta} x + 2r \big(\INNER{x}{r \theta} + r^2\big)\theta \right) \\
+  &= \ABS{x + r\theta}^{-2} \left(r(r^2 - \ABS{x}^2)\, \theta + 2r \INNER{x + r\theta}{\theta}\, x \right)
+ \end{align*}
+ %
+ Setting this expression equal to $r\theta(\phi + \psi_x)$ yields the following alternative ways of acquiring $\psi_x$:
+ %
+ \begin{align}
+  \psi_x + \phi
+  \label{eq:fanbeam_psi_1}
+  &= \arccos\left(\frac{(r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1}{\ABS{x + r\theta}^2} \right) \\
+  \label{eq:fanbeam_psi_2}
+  &= \arcsin\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{\ABS{x + r\theta}^2} \right) \\
+  \label{eq:fanbeam_psi_3}
+  &= \arctan\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{
+  (r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1} \right).
+ \end{align}
+ %
+ Since the rays were parametrized with respect to arc length, the first factor $\ABS{\partial_s\Gamma_\phi^{-1}}$ in 
+ \eqref{eq:adj_op_onedir_alt} is equal to $1$. On the other hand, due to rotational symmetry, we can consider the case $\phi=0$ and 
+ calculate  the determinant of the Jacobian $\partial(s,\psi)/\partial x$ for
+ %
+ \begin{align*}
+  s(x) &= \sqrt{(x_1 + r)^2 + x_2^2}, \\
+  \psi(x) &= \arctan\left(\frac{2 (x_1 + r) x_2}{r^2 - x_1^2 - x_2^2 + 2 (x_1 + r) x_1} \right)
+ \end{align*}
+ %
+ It is straightforward to prove that
+ %
+ \begin{equation}
+  \label{eq:fanbeam_jacobian_det}
+  \DET \frac{\partial(s,\psi)}{\partial x} = \frac{2}{\ABS{x + r\theta}}.
+ \end{equation}
+ %
+ This implies that
+ %
+ \begin{equation}
+  \label{eq:fanbeam_backproj_alt}
+  \DUALOPD g(x) = \int_0^{\phi_0} \frac{2}{\ABS{x + r\theta(\phi)}}\, g\big(\phi, \psi(\phi,x)\big)\, \D\phi
+ \end{equation}
+ %
+ with $\psi(\phi, x)$ determined from one of the representations \eqref{eq:fanbeam_psi_1}--\eqref{eq:fanbeam_psi_3}. It is not obvious that 
+ this formula is equivalent to \eqref{eq:fanbeam_backproj}. \NOTE{I hope the calculation is correct.}
 \end{example}
 
 
