@@ -1,0 +1,966 @@
+\documentclass[a4paper]{paper}
+
+%%%% Standard LaTeX macros
+\usepackage[latin1]{inputenc}
+\usepackage{xspace}
+\usepackage{acro}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+\usepackage[squaren,thickqspace]{SIunits}
+\usepackage{hyperref}
+\hypersetup{%
+    bookmarks=true,         % show bookmarks bar?
+    pdfmenubar=true,       % show Acrobat's menu?
+    pdffitwindow=false,     % window fit to page when opened
+    pdfstartview={FitH},    % fits the width of the page to the window
+    pdftitle={A general software framework for regularisation},            
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=red,          % color of internal links
+    citecolor=red,        % color of links to bibliography
+    filecolor=blue,      % color of file links
+    urlcolor=blue,           % color of external links
+    pdfborder = {0,0,0}
+}
+\usepackage{paralist}
+\usepackage{amsmath, amsthm, amssymb,mathrsfs}
+\usepackage{ragged2e,array,booktabs,threeparttable}
+\usepackage{ifthen}
+
+%%%% Other extra packages
+\usepackage{specialdef}
+%%%% Load acronyms
+\usepackage{projectacronyms}
+\acuse{TV}
+\acuse{KTH}
+\acuse{EU}
+\acuse{KI}
+\acuse{SMILE}
+\acuse{PET}
+\acuse{SPECT}
+\acuse{CT}
+\acuse{MRI}
+\acuse{PI}
+\acuse{CPU}
+\acuse{GPU}
+\acuse{IO}
+
+\title{A general software framework for regularisation}
+
+\begin{document}
+\maketitle
+This note discusses various issues and opportunities associated with building up a general software framework 
+for regularisation in tomographic reconstruction. The main motivation is to avoid implementing all necessary software 
+components from the ground up, \ie, to make use of existing forward model and optimisation softwares.
+
+\section{Mathematical setting}\label{sec:Math}
+Most tomographic imaging problems can be formulated in a common framework as an inverse problem. 
+Now, an image can be represented by real-valued functions, \eg, a 3D image is represented by 
+real-valued functions that models a 3D spatial distribution of some quantity of interest and temporal variation of 
+this spatial distribution adds another dimension. Hence, in general a $k$-dimensional image is represented 
+by a function $\signal \colon \Omega \to \Real$ where $\Omega \subset \Real^k$.
+The goal is now to \emph{reconstruct} the function (\emph{image}) $\truesignal\in \RecSpace$ from \emph{measured data} 
+$\measureddata\in \Real^m$ assuming 
+\begin{equation}\label{eq:InvProb}
+  \measureddata= \ForwardOpDiscrete(\truesignal)+\datanoise.
+\end{equation}  
+In the above, we have the following:
+\begin{itemize}
+\item $\RecSpace$ (\emph{reconstruction space}) is the vector space of feasible images.
+\item $\DataSpace$ (\emph{data space}) is a vector space of all possible continuum data (\ie, data assuming no 
+  discretisation due to sampling), $\DataSpaceDig \subset \Real^m$ is the corresponding set of digitsed data, 
+  and $\DataDigitisationOp \colon \DataSpace \to \DataSpaceDig \subset \Real^m$ models the actual digitisation of 
+  data. 
+\item The mapping $\ForwardOpDiscrete \colon \RecSpace \to \DataSpaceDig$ is the \emph{(partly) 
+  discretised forward model} 
+  \[  \ForwardOpDiscrete := \DataDigitisationOp \circ \ForwardOp \]
+  where $\ForwardOp \colon \RecSpace \to \DataSpace$ (\emph{forward model}) describes how an image 
+  gives rise to continuum data in absence of noise and digitisation.
+\item The array $\datanoise \in \Real^m$ is a sample of a random variable representing the noise component of data
+  (note that it may the case that $\datanoise \not\in \DataSpaceDig$).
+\end{itemize}
+Many inverse problems in imaging are ill-posed, \ie, \eqref{eq:InvProb} lacks a unique maximum likelihood solution 
+and/or such a solution is overly sensitive to small variations in data (instability). 
+There are various approaches for solving such ill-posed problems, but a common feature is that useful methods all
+involve a regularisation that introduces uniqueness and stability, \eg, by penalising `image complexity'.
+
+The project will primarily focus on \emph{variational regularisation methods} where the true (unknown) 
+image $\truesignal \in \RecSpace$ is estimated by solving an optimisation problem: 
+\begin{equation}\label{eq:VarReg}
+  \min_{\signal \in \RecSpace} \,\,\lambda \RegFunc(\signal) + 
+  \DataDisc\bigl( \ForwardOpDiscrete(\signal), \measureddata\bigr).
+\end{equation} 
+In the above:
+\begin{itemize}
+\item $\RegFunc \colon \RecSpace \to \Real_+$ (\emph{regularisation functional}) 
+  introduces uniqueness and stability by encoding a priori information about $\truesignal$.
+\item $\DataDisc \colon \DataSpaceDig \times \DataSpaceDig \to \Real_+$ (\emph{data discrepancy}) quantifies the 
+  goodness-of-fit. It is often given as a norm, but preferably it should be chosen so that minimising it 
+  should be equivalent to minimising the negative log-likelihood of 
+  measured data. Then, solving \eqref{eq:VarReg} with $\lambda=0$ would correspond to seeking an \ac{ML} solution.
+\item $\lambda\geq 0$ (\emph{regularisation parameter}) quantifies the trade-off between stability and goodness-of-fit.
+\end{itemize}
+The data discrepancy is in some sense dictate by the physics of the experimental setup and choice of 
+regularisation parameter is given by the noise level in data. On the other hand, the choice of the regularisation 
+functional $\RegFunc$ is governed by what image features that are considered important 
+and what reliable a priori information one has about $\truesignal$. Thus, its choice/design needs to be 
+adapted to the imaging task at hand.
+
+\paragraph{Fully discrete setting}
+Note that unless the vector space $\RecSpace$ is finite dimensional, \eqref{eq:VarReg} is an
+optimisation problem over an infinite dimensional vector space. At some stage, such an optimisation 
+problem needs to be recast to an optimisation over a finite dimensional vector space $\Real^n$. 
+Thus, we introduce the \emph{image digitisation operator}
+\[ \ImageDigitisationOp \colon \RecSpace \to \RecSpaceDig \subset \Real^n \]
+where $\RecSpaceDig$ is the set of arrays that correspond to feasible digital images in 
+$\RecSpace$. 
+
+Next, define the \emph{fully discrete forward operator} as the 
+mapping $\ForwardOpFullyDiscrete \colon \RecSpaceDig \to \Real^m$ 
+that corresponds to $\ForwardOpDiscrete$ in the sense that 
+\[   \ForwardOpFullyDiscrete \circ \ImageDigitisationOp \approx \ForwardOpDiscrete  
+     \quad\text{on $\RecSpace$.} \]
+Likewise, we define the \emph{discretised regularisation functional} as the mapping 
+$\RegFuncDigital \colon \RecSpaceDig \to \Real_+$ that 
+corresponds to $\RegFunc$ in \eqref{eq:VarReg} in the sense that 
+\[  \RegFuncDigital \circ \ImageDigitisationOp \approx \RegFunc \quad\text{on $\RecSpace$.} \]
+Finally, we define the \emph{discretised data discrepancy functional} as the mapping 
+$\DataDiscDigital \colon \RecSpaceDig \times \DataSpaceDig \to \Real_+$ that 
+corresponds to $\DataDisc$ in \eqref{eq:VarReg} in the sense that 
+\[  \DataDiscDigital(\vsignal,\measureddata) \approx 
+        \DataDisc\bigl( \ForwardOpFullyDiscrete(\vsignal), \measureddata\bigr)
+        \quad\text{on $\RecSpaceDig \times \DataSpaceDig$.}
+\]
+The finite dimensional optimisation problem corresponding to \eqref{eq:VarReg} now reads as
+\begin{equation}\label{eq:VarRegDisc}
+  \min_{\vsignal \in X} \,\,\lambda \RegFuncDigital(\vsignal) + 
+  \DataDiscDigital\bigl( \ForwardOpFullyDiscrete(\vsignal), \measureddata\bigr).
+\end{equation} 
+
+\section{Software framework for variational regularisation}\label{sec:DesignPlatformVarReg}
+We here outline design principles for a software framework for variational regularisation of inverse 
+problems of the type \eqref{eq:InvProb}. Focus is on image reconstruction from tomographic data 
+in medical imaging.
+The structure in \eqref{eq:VarReg} and its relation to \eqref{eq:VarRegDisc} clearly points to a natural modularization for such a software framework.
+
+\subsection{Data pre-processing software}\label{PreProcessSoft}
+  Measured raw data often needs to undergo some pre-processing. 
+  Hence, there is often need for software components that perform such pre-processing, which typically is given 
+  as a number of data-to-data mappings, \ie, transformations that 
+  map an array representing raw data into another array 
+  representing data $\measureddata \in \DataSpaceDig$ in \eqref{eq:InvProb}.
+
+\subsection{File I/O library}\label{I/O}
+Software components to read and properly interpret both raw and pre-processed data.
+There are a variety of data formats to consider that depend on the imaging modalities 
+that are used. 
+
+\subsection{Forward model software}\label{ForwardSoft}
+Software components for evaluating the action of the fully discrete forward operator, 
+\ie, to evaluate the map $\vsignal \mapsto \ForwardOpFullyDiscrete(\vsignal)$
+given a digital image $\vsignal \in \RecSpaceDig \subset \Real^n$. 
+Ideally, the same library can also evaluate the action of the adjoint of the derivative of this map.
+
+\subsection{Data discretisation library}\label{DataDiscSoft}
+ Software components for generating arrays that correspond to digitisations of data  
+ consistent with a specific data acquisition protocol. Data is here assumed to be pre-processed. This 
+ library must make use of the file~I/O library and there are several different types of data 
+ digitsations to consider.
+
+\subsection{Image discretisation library}\label{ImageDiscSoft}
+ Highly optimised software components for generating arrays of varying dimensions that correspond to 
+ different image digitisations. There are several different types of image digitsations to consider.
+   
+\subsection{Optimisation software}\label{OptimSoft}
+  Software components for solving optimisation problems of the type in \eqref{eq:VarRegDisc}.
+  Here, one is given pre-processed digitised data $\measureddata \in \DataSpaceDig$ as well
+  as routines for evaluating the discretised regularisation and data discrepancy functionals 
+  and their derivatives, and a method for choosing the regularisation parameter. 
+
+\subsection{Regularisation library}\label{RegLib}
+This is a software framework for representing (not solving) inverse problems of the type \eqref{eq:InvProb}
+and associated regularisation methods of the type \eqref{eq:VarReg}. The actual numerical routines 
+for solving \eqref{eq:VarReg} through \eqref{eq:VarRegDisc} are mostly performed by external 
+software libraries, such as those in sections~\ref{PreProcessSoft}--\ref{OptimSoft}. 
+
+Such a framework needs to have certain properties, some of which we list below. 
+Section~\ref{sec:DesignPlatformVarReg} has a more detailed discussion.
+
+\subsubsection{Functional analysis library}
+This is a middle-ware that provides a system of types for numerical functional analysis that 
+enables one to \emph{define} and \emph{represent} infinite dimensional variational problems of the type  
+\eqref{eq:VarReg} independently of implementation related details, which require explicit 
+data and image digitisations. 
+
+More specifically, the library must offer types and data structures for representing 
+elements in infinite dimensional vector spaces, operators and functionals defined on such spaces,
+and operations between such structures. Some specific features are: 
+\begin{enumerate}
+\item Representing data digitisation operators
+   $\DataDigitisationOp \colon \DataSpace \to \DataSpaceDig \subset \Real^m$,
+   \ie, types and data structures for handling continuum data (element in 
+   infinite dimensional data space $\DataSpace$) while retaining the 
+   couplings to the correct data digitisation routines (section~\ref{DataDiscSoft}) that correspond
+   to how pre-processed measured data is formed from continuum data.
+\item Representing image digitisation operators 
+   $\ImageDigitisationOp \colon \RecSpace \to \RecSpaceDig \subset \Real^n$,
+   \ie, types and data structures for handling images (element in 
+   infinite dimensional reconstruction space $\RecSpace$) while retaining the 
+   couplings to the correct image digitisation routines (section~\ref{ImageDiscSoft}) 
+   that correspond to how images are digitised.
+\item Representing the discretised forward model $\ForwardOpDiscrete
+  \colon \RecSpace \to \DataSpaceDig \subset \Real^m$ together 
+  with the adjoint of its derivative while retaining the 
+  couplings to the correct forward model software routines (section~\ref{ForwardSoft}) 
+  that correspond to how images and data are digitised.
+\item Representing various functionals and their derivatives, such as the regularisation functional 
+  $\RegFunc$ and the data discrepancy functional $\DataDisc$.
+\item Enable consistency checks of operations involving vector space elements, functionals and operators, 
+  \eg, have a system to check whether an operator composition is possible or to check 
+  whether two operators are adjoint to each other.
+\item Have a system based on the chain rule for automatically assembling the first derivative of a 
+  composition of functionals given software components that provide derivatives of the latter. 
+\item Delegate evaluation of operations involving vector space elements, functionals and operators
+  to numerical routines contained in external libraries that carry their own specific data structures.
+\item Act as a middle-ware connecting the above functional analysis structures to routines and 
+    specific data structures provided by internal/external software for optimisation
+    (section~\ref{OptimSoft}).  
+\end{enumerate}
+   
+\subsubsection{Regularisation functional software} 
+Types and data structures for representing the regularisation functionals 
+$\signal \mapsto \RegFunc(\signal)$ and their sensitivity (derivative) for 
+images $\signal \in \RecSpace$. Numerical software routines for evaluating the 
+corresponding discretised regularisation functional 
+$\RegFuncDigital \colon \RecSpaceDig \to \Real_+$ given an image digitisation
+operator.
+
+\subsubsection{Data discrepancy software}
+Types and data structures for representing the data discrepancy functional 
+$\signal \mapsto \DataDisc\bigl( \ForwardOpDiscrete(\signal), \measureddata\bigr)$
+and its sensitivity (derivative) for images $\signal \in \RecSpace$ and 
+digitised data $\measureddata\in \DataSpaceDig$.
+Numerical software routines for evaluating the corresponding discretised data discrepancy functional 
+$\DataDiscDigital \colon \RecSpaceDig \times \DataSpaceDig \to \Real_+$ given 
+image and data digitisation operators.
+
+\subsubsection{Regularisation parameter selection software}
+Software components for determining regularisation parameter(s), like $\lambda>0$ in \eqref{eq:VarReg}, given 
+a statistical model for the noise in pre-processed data $\measureddata\in \DataSpaceDig$ and the 
+type of data discrepancy functional that is used. 
+
+\subsubsection{Nuisance parameters}
+Structures and types for representing methods that involve solving a sequence of variational 
+regularisation problems \eqref{eq:VarReg}.
+
+ 
+
+\section{Forward model software}\label{subsec:ForwardModelSoftwareLibraries}
+Forward model software is essentially a collection of software components that evaluate 
+$\ForwardOpDiscrete(\signal)$ given an image $\signal \in \RecSpace$. Ideally, the same library can also 
+evaluate the adjoint of the derivative of $\signal \mapsto \ForwardOpDiscrete(\signal)$.
+Such software needs to follow certain design principles if 
+it is to be used as an external software library for a general software framework for regularisation.
+The most important ones are listed below:
+\begin{itdesc}
+\item[Licensing:] A licensing scheme that provides access to source code for research purposes.
+\item[Modularisation:] 
+  The software framework should be appropriately modularised in the sense that software components 
+  are separated and organised into sub-libraries with associated \acp{API} that are 
+  callable from C/C++ and high-level languages like MATLAB and Python. There should be such 
+  sub-libraries for 
+  \begin{inparaenum}[(i)]
+  \item file \ac{IO} routines with software primitives that encode data acquisition protocols, 
+  \item data pre-processing, 
+  \item evaluating the forward model and the adjoint of its derivative, and
+  \item evaluating functionals.
+  \end{inparaenum}
+\item[Forward models:] 
+  Provide computationally efficient, yet sufficiently accurate, implementations of the forward model and the 
+  adjoint of its derivative relevant for the imaging modality at hand. 
+\item[\ac{IO} routines and data acquisition protocols:]
+  Provide software primitives for reading and writing files in appropriate formats. This also includes encode 
+  data acquisition protocols, such as source--detector positioning, relevant 
+  for the imaging modality at hand. 
+\item[Data pre-processing:] 
+  Data often undergo various pre-processing steps in order to better match 
+  \begin{inparaenum}[(i)]
+  \item the forward model and 
+  \item the data acquisition protocol 
+  \end{inparaenum}
+  that are implicitly, or explicitly, assumed when reconstructing. These are data-to-data transformations
+  and examples are calibration steps and correction for beam hardening and scatter.
+  Another example is re-binning, which is used to map an actual data acquisition protocol to 
+  an ideal one that is more suitable for reconstruction. 
+\item[Reconstruction methods:]
+  Provide software primitives for selected reconstruction methods.
+\item[Computational feasibility:]
+  Software components should be efficiently implemented in the sense that one can perform 
+  basic iterative reconstructions,\eg, a conjugate gradient type of iterative scheme, on realistic data sets 
+  within the time-frame required by the clinical setting.
+\end{itdesc}
+Below we list some forward model software that seem to live up to the above requirements. Note that 
+these are actually software suites for reconstruction, however our interest is only in the forward model software
+part.
+
+\subsubsection*{ASTRA}
+\href{http://sourceforge.net/projects/astra-toolbox/}{ASTRA} is a C++ framework with Python and MATLAB 
+extensions for 2D and 3D transmission tomography \cite{PaBaSi11}. It is developed and maintained by 
+the Vision Lab research group at the University of Antwerp. 
+\begin{itdesc}
+\item[Licensing:] GNU GPL v3
+\item[Modularisation:]
+  Separate components for the forward problem and for file \ac{IO}. No \acp{API} or software primitives for variational 
+  regularisation. No \acp{API} or software primitives for representing operators or functionals. The software is 
+  however integrated with \href{http://www.cs.ubc.ca/labs/scl/spot/}{Spot}, a linear-operator toolbox for MATLAB. 
+  Here, one can perform MATLAB operations with linear operators in the same way as with regular matrices, but 
+  without requiring explicit matrix representation. Hence, columns/rows of the final matrix representation of the linear 
+  operator are generated as the operator is applied, so one does not have to store the entire matrix.
+\item[Forward models:] 
+  Software components for evaluating the ray transform and its associated backprojection relevant for 
+  transmission tomography applications. 
+\item[\ac{IO} routines and data acquisition protocols:]
+  Software primitives to encode highly flexible source/detector positioning in 2D parallel \& fan beam geometries, 
+  and in 3D parallel \& cone beam geometries.
+  Need to determine what data formats that are supported.
+\item[Data pre-processing:] 
+  Need to determine what pre-processing steps that are implemented. 
+\item[Reconstruction methods:]
+  \Ac{FBP}, \ac{SIRT}, \ac{SART}, \ac{CGLS}, and \ac{DART}.
+\item[Computational feasibility:]
+  Computationally intensive functions, like the evaluation of the forward model and the adjoint of its derivative, 
+  are \ac{GPU} accelerated using the CUDA library. 
+  Furthermore, a distributed computing framework is being implemented to handle very large tomographic 
+  problems. 
+\end{itdesc}
+
+\subsubsection*{NiftyRec}
+\href{http://sourceforge.net/projects/niftyrec}{NiftyRec} is a C library with Python and MATLAB extensions 
+for tomography \cite{PeBoErMo10}. 
+It was initially developed at the Centre for Medical Image 
+Computing, University College London during the period 2009--2012 and is currently being developed at the 
+Martinos Center for Biomedical Imaging, Massachusetts General Hospital, Harvard University.
+\begin{itdesc}
+\item[Licensing:] BSD License
+\item[Modularisation:] 
+  Separate components for the forward problem and for file \ac{IO}. No \acp{API} or software primitives for variational 
+  regularisation. No \acp{API} or software primitives for representing operators or functionals. 
+\item[Forward models:] 
+  Forward models for  transmission tomography, emission tomography (with depth-dependent resolution modelling), 
+  synchrotron X-ray tomography, neutron tomography, and optical projection tomography.
+\item[\ac{IO} routines and data acquisition protocols:]
+  3D parallel beam, cone-beam, fan-beam, and helical cone-beam geometries.
+  Need to determine what data formats that are supported.
+\item[Data pre-processing:] 
+  Need to determine what pre-processing steps that are implemented. 
+\item[Reconstruction methods:]
+ \ac{MLEM}, \ac{OSEM}, and \ac{OSL-MAPEM}.
+\item[Computational feasibility:]
+  Computationally intensive functions, like the evaluation of the forward model and the adjoint of its derivative, 
+  are \ac{GPU} accelerated using the CUDA library. 
+\end{itdesc}
+
+\subsubsection*{ASPIRE}
+\href{http://web.eecs.umich.edu/~fessler/aspire/}{ASPIRE} is a 
+C library for tomographic image reconstruction developed at the University of 
+Michigan by Jeff Fessler and his students \cite{Fe13,Fe09}. There is also a 
+\href{http://web.eecs.umich.edu/~fessler/code/}{MATLAB image reconstruction toolbox}
+developed by the same author that contains many of the algorithms from 
+\href{http://web.eecs.umich.edu/~fessler/aspire/}{ASPIRE}.
+\begin{itdesc}
+\item[Licensing:] 
+  The compiled executables are available for free access to both academic and industrial users for research 
+  purposes. To access the source code one must agree to the terms of the license agreement, which prohibits 
+  selling or further distributing the software.
+\item[Modularisation:] 
+  Unclear since source code is not available. It is however likely that components for the forward problem and 
+  for file \ac{IO} are properly modularised. The software may also contain \acp{API} and/or software primitives for variational 
+  regularisation. No \acp{API} or software primitives for representing operators or functionals. 
+\item[Forward models:] 
+  Forward models for transmission and emission tomography, the latter with depth-dependent resolution modelling.
+  \href{http://web.eecs.umich.edu/~fessler/terse/index.html}{TERSE} is an extension for 
+  combined \ac{SPECT}/\ac{CT} imaging. 
+\item[\ac{IO} routines and data acquisition protocols:]
+  3D parallel beam, cone-beam, fan-beam, and helical cone-beam geometries.
+  Need to determine what data formats that are supported.  
+\item[Data pre-processing:] 
+  Need to determine what pre-processing steps that are implemented. 
+\item[Reconstruction methods:]
+  \ac{MLEM} and penalised-likelihood (variational regularisation) methods. Currently, all the penalty functions 
+  implemented on the gradient (1st-order pixel differences) and they include 2-norm of 
+  the gradient magnitude as well as the Huber function on the gradient magnitude \cite{Fe13}.
+\item[Computational feasibility:]
+  To be determined.
+\end{itdesc}
+
+\subsubsection*{Other}
+\href{http://tomopy.github.io/tomopy/}{TomoPy} is a Python toolbox to perform tomographic 
+data processing and image reconstruction \cite{GuDeXiJa14}. The aim is to provide a single software framework for 
+reconstruction for tomographic datasets at synchrotron light sources (including X-ray transmission tomography, X-ray fluorescence microscopy and X-ray diffraction tomography). It has several advanced data pre-processing routines that aim to prepare data for reconstruction.
+
+\href{http://www.openrtk.org/}{Reconstruction Toolkit} is an open-source and cross-platform software for fast circular 
+cone-beam \ac{CT} reconstruction used primarily for treatment planning in radiation therapy \cite{RiViBrLaSaSh14}. 
+The software is based on Insight Toolkit and it provides a variety if algebraic iterative reconstruction methods. It is 
+also modularised in the sense that basic operators for reconstruction, \eg, filtering, forward, projection and backprojection 
+are separately available and implemented in multithreaded \ac{CPU} and \ac{GPU} versions. There are furthermore 
+tools for respiratory motion correction, routines for file \ac{IO} for several scanners,
+and routines for pre-processing of raw data for scatter correction. In this context one may also mention 
+\href{http://www.dig.cs.gc.cuny.edu/software/snark09/}{SNARK09} that provides a variety of 
+algebraic iterative reconstruction methods for 2D tomography with fan beam and parallel beam geometry 
+\cite{KlDaHe13}. A more recent MATLAB package is 
+\href{http://www.compute.dtu.dk/~pcha/AIRtools/index.html}{AIR Tools} that has several 2D algebraic iterative reconstruction 
+methods for discretisations of inverse problems \cite{HaSa12}.
+
+Finally, \href{http://www.compute.dtu.dk/~pcha/TVReg}{TVreg} is a software package for \ac{TV} image reconstruction 
+written in C with MEX interface to MATLAB \cite{JeJoHaJe11}. 
+
+\section{Optimisation software}\label{subsec:OptimSoftwareLibraries}
+This section considers primarily software libraries for general purpose large scale optimisation that 
+are suitable for solving the variational problem in \eqref{eq:VarReg}
+in the context of medical imaging. Since \eqref{eq:VarReg} is a very-large scale non-linear optimisation problem,
+optimisation software that require storage of matrices with size $n \times m$ ($n$ is the number of voxels, $m$ is the 
+number of data points), such as the matrix representing the Jacobian of 
+the objective functional, are computationally unfeasible. On the other hand, storing one or two vectors of 
+size $n$ and $m$ is feasible, so in the context of optimisation, it is enough to require the action of the Jacobian
+to evaluate and store a gradient direction.
+
+A number of software libraries for optimisation are listed in the 
+\href{http://en.wikipedia.org/wiki/List_of_optimisation_software}{Wikipedia entry for optimisation software},
+see also the listing at the \href{http://neos-server.org/neos}{NEOS Server}, a free internet-based service for 
+solving numerical optimisation problems.  Below is an selection that may be 
+useful for solving the variational problem in \eqref{eq:VarReg}.
+
+\begin{description}
+\item[Galahad:]
+The \href{http://www.galahad.rl.ac.uk}{Galahad library} \cite{GoOrTo04} is a freely available 
+thread-safe library for optimisation. The areas covered by the library are unconstrained 
+and bound-constrained optimisation, quadratic programming, non-linear programming, systems of non-linear 
+equations and inequalities, and non-linear least squares problems. The library is mostly written in the Fortran 90 
+programming language.
+
+It is based on augmented Lagrangian methods which have recently turned out to be useful 
+for \ac{TV}-denoising and compressed sensing, see, \eg, the 
+\href{http://cascais.lx.it.pt/~mafonso/salsa.html}{SALSA and C-SALSA} \cite{AfBiFi10,AfBiFi11} 
+packages. The \href{http://www.galahad.rl.ac.uk}{Galahad library} also includes a filter-based method for 
+systems of linear and non-linear equations and inequalities, an active-set method for non-convex quadratic 
+programming, a primal-dual interior-point method for non-convex quadratic programming,
+a pre-solver for quadratic programs, a Lanczos method for trust-region subproblems, and 
+an interior-point method to solve linear programs or separable convex programs or alternatively, to 
+compute the analytic centre of a set defined by such constraints, if it exists.
+
+\item[SNOPT:]
+\href{http://en.wikipedia.org/wiki/SNOPT}{Sparse non-linear OPTimizer (SNOPT)} \cite{GiMuSa05} is a
+commercial software written in Fortran, but interfaces to C and C++, as well as MATLAB are available.
+
+\href{http://en.wikipedia.org/wiki/SNOPT}{SNOPT} employs a sparse sequential quadratic programming 
+algorithm with limited-memory quasi-Newton approximations to the Hessian of Lagrangian. It is especially effective 
+for non-linear problems whose functions and gradients are expensive to evaluate. 
+The functions should be smooth but need not be convex. \href{http://en.wikipedia.org/wiki/SNOPT}{SNOPT} 
+is part of a \href{http://web.stanford.edu/group/SOL/download.html}{large collection} of optimisation software 
+libraries developed by UC~San Diego and the Stanford Systems Optimization Laboratory 
+at Stanford University. 
+
+\item[KNitro:]
+\href{http://www.ziena.com/knitro.htm}{KNitro} \cite{ByNoWa06} is a commercial modern C-package 
+for non-linear optimisation that implements interior (barrier) type method with trust regions. It 
+provides a wide range of interfaces, including C, C++, Fortran, Java, Python, and MATLAB.
+\href{http://www.ziena.com/knitro.htm}{KNitro} is designed for large-scale problems, \eg, 
+it does not require a user to provide a matrix representation of the Jacobian of the objective 
+functional.
+
+\item[OPT++:]
+\href{https://software.sandia.gov/opt++/}{OPT++} \cite{MeOlHoWi07} is a free library of non-linear 
+optimisation algorithms written in C++. The aim is to provide a software framework for rapid prototyping and 
+development of new optimisation algorithms. Specific focus is on robust and efficient algorithms for 
+problems where function and constraint evaluations require the execution of an expensive computer 
+simulation. 
+
+\href{https://software.sandia.gov/opt++/}{OPT++} distinguishes between an algorithm-independent class hierarchy for 
+non-linear optimisation problems and a class hierarchy for non-linear optimisation methods that is 
+based on common algorithmic traits. Currently, \href{https://software.sandia.gov/opt++/}{OPT++} includes the 
+classic Newton methods, a nonlinear interior-point method, parallel direct search, generating set search, a 
+trust region-parallel direct search hybrid, and a wrapper to NPSOL. Between these methods, a wide range of 
+problems can be solved, \eg, with or without constraints, with or without analytic gradients, simulation based, 
+\etc
+
+\item[YALMIP:]
+\href{users.isy.liu.se/johanl/yalmip/}{YALMIP} \cite{Lo04} is an free modelling language for advanced modeling and solution 
+of convex and non-convex optimisation problems. It is implemented as a toolbox for MATLAB. 
+The main motivation for using it is rapid algorithm development. The language is consistent with standard MATLAB 
+syntax, thus making it extremely simple to use for anyone familiar with MATLAB.
+Another benefit of \href{users.isy.liu.se/johanl/yalmip/}{YALMIP} is that it implements a large amount of modeling 
+tricks, allowing the user to concentrate on the high-level model, while \href{users.isy.liu.se/johanl/yalmip/}{YALMIP} 
+takes care of the low-level modeling to obtain as efficient and numerically sound models as possible. 
+
+The modelling language supports a large number of optimisation classes, such as linear, quadratic, second order 
+cone, semidefinite, mixed integer conic, geometric, local and global polynomial, multiparametric, bilevel and robust 
+programming. \href{users.isy.liu.se/johanl/yalmip/}{YALMIP} relies on external solvers for the actual computations. 
+It does however have a low-level scripting language that enables one to solve sub-problems using the external 
+solvers.
+
+
+
+\item[pyOpt:]
+\href{http://www.pyopt.org}{pyOpt} \cite{PeJaMa12} is an free object-oriented Python-based framework for formulating 
+and solving nonlinear constrained optimisation problems in an efficient, reusable and portable manner.
+The framework uses object-oriented concepts, such as class inheritance and operator overloading, to maintain 
+a distinct separation between the problem formulation and the optimisation approach used to solve the problem. 
+This creates a common interface in a flexible environment where both practitioners and developers alike can 
+solve their optimisation problems or develop and benchmark their own optimisation algorithms. The framework is 
+developed in the Python programming language, which allows for easy integration of optimisation software 
+programmed in Fortran, C/C++, and other languages. A variety of optimisation algorithms are integrated in 
+\href{http://www.pyopt.org}{pyOpt} and are accessible through the common interface. 
+
+\item[TOMLAB:]
+\href{http://tomopt.com/tomlab/}{TOMLAB} \cite{HoEdGo03} is a commercial optimisation platform and modelling 
+language for solving optimisation problems in MATLAB. The overall objective is to provide the best modelling and 
+optimisation tools for the MATLAB user and thereby enable a wide range of opportunities for large-scale robust 
+optimisation for practically every area of optimisation.
+
+The base module of \href{http://tomopt.com/tomlab/}{TOMLAB} supplies more than 70 different algorithms for 
+linear, discrete, global and non-linear optimisation. All routines are call-compatible with the MATLAB Optimisation 
+Toolbox and there are additional add-on modules that provide connection to a wide range of external solvers. These are 
+distributed as compiled binary MEX DLLs on Windows-systems, and compiled MEX library files on Unix and other 
+systems. 
+
+\item[TFOCS:]
+\href{http://tfocs.stanford.edu}{TFOCS} \cite{BeCaGr11} is a 
+set of MATLAB templates, or building blocks, that can be used to construct efficient, customised solvers for a 
+variety of convex models, including in particular those employed in sparse recovery applications.
+
+\item[Other:] 
+A number of software packages for reconstruction/regularisation also contain sophisticated 
+optimisation schemes. The Department of Computational and Applied Mathematics at Rice University 
+\href{http://www.caam.rice.edu/~optimisation/L1/}{lists a number of optimisation software} related to sparsity promoting regularisation, see also the \href{http://dsp.rice.edu/cs}{Rice Compressive Sensing Resources} maintained by the
+Digital Signal Processing group at Rice University. A similar  
+\href{https://sites.google.com/site/igorcarron2/cs#reconstruction}{list} of various solvers for sparsity promoting 
+regularisation is provided in the
+\href{https://sites.google.com/site/igorcarron2/cs}{Big Picture in Compressive Sensing} page
+and the \href{http://nuit-blanche.blogspot.fr/search/label/implementation}{implementation entries in
+the Nuit Blanche blog}.
+
+Most of the software packages mentioned in the lists above are however not suitable for large-scale problems 
+and/or have too uncertain developer support. A couple are however worth taking a close look at.
+One is \href{http://www.math.ucdavis.edu/~mpf/spgl1}{SPGL1} \cite{BeFr11}, a MATLAB solver for 
+large-scale $\ell_1$-norm regularised least squares. Another is 
+\href{http://statweb.stanford.edu/~candes/nesta/}{NESTA} \cite{BeBoCa11}, a fast and robust first-order 
+method than solves basis-pursuit problems and a large number of extensions (including \ac{TV}-regularisation).
+The \href{http://spams-devel.gforge.inria.fr/}{SPArse modelling Software} \cite{MaBaPoSa10,MaBaPoSa09}
+and \href{http://sparselab.stanford.edu/}{SparseLab} also have several optimisation routines 
+for solving various sparsity promoting variational regularisation problems, even though they are mostly for 
+smaller problems than 3D tomography reconstruction. 
+A nice survey of GPU accelerated implementation of several greedy algorithms for $\ell_1$ regularisation is provided 
+in \cite{BlTa13}.
+
+Finally, optimisation for minimising entropy type of functionals is implemented in the 
+\href{http://wayback.cecm.sfu.ca/projects/MomEnt+/}{MomEnt+} software package
+and in the MemSys5 and MitSys software packages developed by 
+\href{http://www.maxent.co.uk}{Maximum Entropy Data Consultants Ltd}. A modified and more up-to-date
+approach making use of entropy to penalise complexity in image reconstruction  
+is provided by the \href{http://www.pixon.com/pixonsoftware.html}{Pixon Software} \cite{PuGoYa05}.
+
+\end{description}
+Various optimisation methods have also been compared against each other to asses their performance in the 
+context of regularisation. One such systematic comparison is the 
+\href{https://www.tu-braunschweig.de/iaa/personal/lorenz/l1testpack}{L1TestPack} \cite{Lo12,LoPfTi13} that 
+consists of several MATLAB files to generate test instances for the so-called Basis Pursuit Denoising problem 
+and to check several conditions related to these problems. Another comparison is provided by 
+\href{http://www.cs.ubc.ca/~schmidtm/Software/L1General.html}{L1General}, which is a 
+set of MATLAB routines implementing several of the available strategies for solving 
+$\ell_1$-regularisation. The software only assumes that the user can provide a `black box' function that returns 
+values of the functional and its gradient for a given parameter setting. The purpose of the software 
+is to compare the performance of different optimisation strategies in this black box setting. Although treating the 
+functionals as a black box means that the codes cannot take full take advantage of the structure of the objective
+functional, this perspective makes it very easy to use the codes to solve a variety of different 
+$\ell_1$-regularisation problems.
+
+
+\section{Regularisation library}\label{sec:DesignPlatformVarReg}
+
+\subsection{Overall design goals}
+The platform for variational regularisation we seek should consist of software components that 
+are self-contained in that they hide implementation details from the user (encapsulation).
+The platform should be modular and flexible in that it should be relatively easy to add new; 
+algorithms, data acquisition protocols, pre-processing schemes, forward models, and image discretisation 
+schemes. Ideally, it should be possible to select at run-time which version of these components you want to use. 
+The advantages of such a platform are 
+\begin{inparaenum}[(a)]
+\item modularity and flexibility of the reconstruction building blocks to implement new reconstruction algorithms, 
+\item possibility to compare analytic and iterative methods within a common framework, 
+\item the possibility to use the same software implementation of the building blocks to perform image reconstruction on different scanner geometries and 
+\item independence of the computer platform on which the software runs.
+\end{inparaenum}
+Another aspect is that the platform should contain software components to run parts of the reconstruction in parallel on 
+distributed memory architectures, although these are not distributed yet. This will enable the software to be run not 
+only on single processors, but also on massively parallel computers, or on clusters of workstations.
+Finally, it should be portable on all systems supporting the GNU C/C++ compiler or MS Visual C/C++ 
+(or hopefully any ANSI C/C++ compliant compiler). 
+
+Now, a key part is to appropriately capture the abstraction layers provided by mathematics. More 
+precisely, images are represented by real valued functions, so the reconstruction space $\RecSpace$ in 
+\eqref{eq:InvProb} is typically some infinite dimensional vector space and the variational problem in 
+\eqref{eq:VarReg} is an optimisation over infinite dimensional vector spaces. A natural 
+\emph{design goal} for a software platform for variational regularisation is therefore to   
+provide computational types realising the principal concepts of calculus in (infinite dimensional) 
+vector spaces. In particular it should contain the following:
+\begin{enumerate}
+\item Components that encode core concepts of calculus in Hilbert space
+(vector, function, functional, \ldots) with minimal implementation dependence.
+\item Components that encode the notion of discretisation, \ie, how elements in an infinite dimensional 
+  vector space are repented in a finite dimensional setting.
+\item Standardised interfaces behind which to hide application-dependent implementation details 
+(data containers, function objects). 
+\end{enumerate}
+Given the above, a variety of coordinate-free algorithms from linear algebra and optimisation may then be 
+expressed purely in terms of this system of components, resulting in a code that can be used without 
+alteration in a wide range of imaging applications, and in serial and parallel computing environments.
+
+\subsection{Relation to external software libraries}
+Evaluation of the discretised forward model corresponds to simulating the imaging process.
+This involves a variety of computational types and data structures specific for the physical modelling and
+numerical implementation. Next, it is often desirable to use optimisation methods that make use of 
+gradient information in solving \eqref{eq:VarReg}. Hence, one also needs to evaluate the adjoint of 
+its (Fr\'echet) derivative of the forward model. 
+
+Due to the problem size in tomography, the evaluation of the discretised forward model 
+$\ForwardOpDiscrete \colon \RecSpace \to \DataSpaceDig$ and the adjoint of its derivative will involve large 
+scale calculations, so a variety of high performance computing techniques are commonly employed.
+Next, such software libraries also presuppose a specific discretisation of both the image (\ie, element in $\RecSpace$) 
+and data (\ie, element in $\DataSpace$), which are given by the operators 
+$\ImageDigitisationOp \colon \RecSpace \to X \subset \Real^n$ and 
+$\DataDigitisationOp \colon \DataSpace \to \DataSpaceDig \subset \Real^m$, respectively.
+These can be data structures for representing arrangement of lines, geometric meshes or grids and rules for 
+their construction and refinement, functions on these grids representing physical fields, equations relating grid 
+functions and embodying (discretised versions of) physical laws, and iterative or recursive algorithms which produce 
+solutions of these equations. Hence, we can expect forward model softwares to evolve over time.
+Next, modelling choices considered reasonable today may likely give way in 
+the future to other systems incorporating 
+more complete physics, so one may expect an evolution of forward model software. Likewise, new 
+source-detector arrangements gives rise to new data acquisition protocols, so the representation of the digitisation 
+of data, \ie, the implementation of $\DataDigitisationOp$, will have to be evolvable. 
+
+Optimisation and linear algebra algorithms, on the other hand, generally have no intrinsic interaction with physics 
+and its numerical realisation, involving instead a more abstract layer of mathematical constructs: vectors, functions, 
+gradients, \ldots. Many of these algorithms, including some of the most effective ones for large-scale problems, may be 
+expressed without explicit reference to coordinates. These coordinate-free (sometimes called matrix-free) algorithms 
+use only the intrinsic operations of linear algebra and calculus in Hilbert space. 
+%, and form an active subject of research in the numerical optimisation community. 
+Examples include Krylov subspace methods for the solution of linear systems and eigenvalue problems, Newton 
+and quasi-Newton methods for unconstrained optimisation, and many constrained optimisation 
+methods. These algorithms also gain complexity as their effectiveness increases, especially with regard to the 
+incorporation of model constraints. Thus, it is desirable to protect the investment in effective optimisation algorithms.
+
+%On the other hand, optimisation algorithms involve generic linear algebra operations such as linear combination or inner product, in addition to interaction with the forward model software packages just described. These algorithms also gain complexity as their effectiveness increases, especially with regard to the incorporation of model constraints. Thus some method for protecting investment in effective optimisation algorithms is also appealing.
+
+In summary, both the forward model software and optimisation software may be quite complex and 
+involve a considerable investment of time and software development effort. These software components may also 
+be developed by different groups of experts. Consequently, incorporating them into a 
+variational regularisation scheme \eqref{eq:VarReg} for solving a particular inverse problem may require extensive 
+modification of both types of software components. Therefore, a good design for a software platform for 
+variational regularisation needs to considerably ease this task. Ideally, such a platform would links to virtually 
+unmodified forward model and optimisation software packages, via a generic middleware package and a 
+minimal amount of additional code.
+
+%When solving \eqref{eq:VarReg}, computational efficiency suggests a gradient-descent approach, \ie, update the 
+%3D/4D image $\signal$ by computing the objective gradient. Both forward model software 
+%(implementation of $\ForwardOp$ and $\DataDigitisationOp$ in \eqref{eq:InvProb}) and optimisation software 
+%may be quite complex and developed by different groups of experts. Consequently, production 
+%of inversion applications may require extensive modification of both types of input codes. 
+%A proper design of a software platform for variational regularisation must considerably ease the task of combining 
+%these parts to produce reconstruction methods applicable to applications. Ideally, one would have a reconstruction 
+%package that links virtually unmodified forward model and optimisation software packages, via a generic middleware 
+%software library and a minimal amount of additional code.
+%
+%
+%
+%
+%some infinite dimensional vector space, the data space $\DataSpace$, and the forward operator 
+%$\ForwardOp \colon \RecSpace \to \DataSpace$ is a mapping between these infinite dimensional vector spaces. 
+%The digitisation of data is given by the measurement and it is represented by the operator 
+%$\DataDigitisationOp \colon \DataSpace \to \Real^m$. The construction of this operator involves the 
+%tomographic data collection geometry. Finally, we also have a digitisation of the image that typically 
+%associates an image to its pixel/voxel values. This is represented by a mapping 
+%$\PixelOp \colon \RecSpace \to \Real^n$.
+%
+%
+%
+%When solving \eqref{eq:VarReg}, computational efficiency suggests a gradient-descent approach, \ie, update the 
+%3D/4D image $\signal$ by computing the objective gradient. Both modelling (implementation of $\ForwardOp$ in \eqref{eq:InvProb}) and optimisation software may be quite complex and developed by different groups of experts. Consequently, production 
+%of inversion applications may require extensive modification of both types of input codes. 
+%
+%A proper abstraction in a software framework must considerably ease the task of combining them to produce inversion applications. Ideally, one would have a reconstruction package that links virtually unmodified modelling and optimisation packages, via a generic middleware package and a minimal amount of additional code.
+%
+%Evaluation of the forward model $\ForwardOp$ involves large scale calculations, so a variety of high performance computing techniques are commonly employed in their implementation. The software necessary for evaluating 
+%$\ForwardOp$ therefore involve a considerable investment of time and programming effort. Finally, modelling choices considered reasonable today may likely give way in the future to other systems incorporating more complete 
+%physics. Optimisation algorithms on the other hand involve generic linear algebra operations such as linear combination or inner product, in addition to interaction with the modelling packages just described. These algorithms also gain complexity as their effectiveness increases, especially with regard to the incorporation of model constraints. Thus some method for protecting investment in effective optimisation algorithms is also appealing.
+%
+%Evaluation of the forward model does corresponds to simulating physical processes that involves a variety of computational types and data structures specific to physical modelling and numerical implementation. Evaluating the forward model typically include data structures for arrangement of lines, geometric meshes or grids and rules for their construction and refinement, functions on these grids representing physical fields, equations relating grid functions and embodying (gridded versions of) physical laws, and iterative or recursive algorithms which produce solutions of these equations.
+%
+%Optimisation, linear algebra and other numerical code can be written to avoid dependence on details of data representation or simulator construction, hence apply without alteration to a wide range of data fitting and similar scientific computing problems. Either implicitly or explicitly, this approach involves so-called object-oriented programming, which centres around the definition and use of domain-adapted data types is central. 
+
+%Optimisation and linear algebra algorithms, on the other hand, generally have no intrinsic interaction with physics and its numerical realisation, involving instead a more abstract layer of mathematical constructs: vectors, functions, gradients, \ldots. Many such algorithms, including some of the most effective for large-scale problems, may be expressed without explicit reference to coordinates. These coordinate-free (sometimes called matrix-free) algorithms use only the intrinsic operations of linear algebra and calculus in Hilbert space, and form an active subject of research in the numerical optimisation community. Examples include Krylov subspace methods for the solution of linear systems and eigenvalue problems, Newton and quasi-Newton methods for unconstrained optimisation, and many constrained optimisation methods. 
+
+\subsection{Programming paradigms}
+The aforementioned discrepancy between levels of abstraction that may arise when using forward model and 
+optimisation software is the source of a software engineering problem: in procedural programs for solving 
+\eqref{eq:VarReg}, the details of structure for evaluating the forward model invariably intrude on the optimisation code, 
+and vice versa. Time-honoured software `tricks' used to hide these details within procedural code (common blocks, parameter arrays, `\verb|void*|' parameters, reverse communication, \ldots) lead to software that is difficult to debug and maintain and nearly impossible to modify, extend, or reuse outside of the originating context.
+One way out of this dilemma is to employ data abstraction and polymorphism. 
+
+Data abstraction defines data objects in terms of the operations used to manipulate them, rather than in terms of their composition out of simpler objects. This device allows implementation details in one part of a program to be hidden completely from other parts which do not intrinsically involve them. Without data abstraction, the algorithm must be written to reference the entire data structure; the implementation becomes dependent on data which is foreign to the algorithm, and cannot be used without modification in a different context. An abstract data array type can expose only those details needed in the context of a specific algorithm or class of algorithms, via a set of operations on these details, and hide other details entirely. Thus data abstraction frees the algorithm writer from the necessity to refer explicitly to all aspects of a data structure.
+
+Polymorphism complements data abstraction to enable reuse of numerical algorithms across many applications. Polymorphic functions accept a variety of argument types, and perform operations dictated by the type of their arguments. This concept is familiar: for example, the `+' operator in Fortran 77 accepts arguments of all arithmetic types and performs the appropriate form of addition for each. Abstract polymorphic functions take this concept a step further: they accept arguments of abstract data types, and rely for their definitions only on the attributes of these types. A polymorphic linear operator type defines the matrix-vector product as an input-output operation on an abstract vector type, and can be realised concretely using either type of definition, accessing the data of the vector arguments as is appropriate. An abstract polymorphic linear operator type does not specify the means by which the matrix-vector product is carried out: it merely provides a promise that it is done. An algorithm written in terms of an abstract polymorphic linear operator type can thus be used in contexts involving either `implicit' or ordinary, explicit matrices, without recoding: the specific instance of the type need supply only the computations mandated by the type, without any reference to the explicit computations by which they are carried out.
+
+Using an object oriented programming paradigm allows one to ensure software components are properly encapsulated.
+Specialisation of concepts is implemented with hierarchies of classes (inheritance)
+and conceptually identical operations are implemented using functions with identical names (polymorphism).
+In the context of tomographic reconstruction, natural building block classes for an object oriented library are;
+information about the data (scanner characteristics, study type, algorithm type, \etc);
+multi-dimensional arrays (any dimension) with various operations, including numeric manipulations;
+reading and writing (\ac{IO}) data in relevant formats; 
+classes of projection data (complete data set, segments, sinograms, viewgrams) and images (2D/3D);
+various filter transfer functions (1D, 2D and 3D); 
+operators representing the forward model  and the adjoint of its derivative; 
+classes for sparse projection matrices, both for on-the-fly computation and pre-stored;
+trimming/zooming utilities on projection and image data;
+classes for data pre-processing (scatter estimation, normalisation and attenuation correction);
+classes for iterative and variational reconstruction algorithms; 
+classes for temporal modelling; and stream-based classes for message passing between different processes, 
+built on top of MPI.
+
+\subsection{Data structures representing data digitisation}\label{sec:Research:SoftwareDataModel}
+One part is to read the relevant data formats (section~\ref{I/O}), another is to correctly represent 
+the data acquisition protocol to properly encode the data.
+
+In tomographic inverse problems, data is mathematically represented as a discretised function defined on a set of 
+lines in $\Real^2$ or $\Real^3$ for the stationary case, temporal variation adds another 
+dimension. Thus, one must first provide a mathematical description of the sets (manifolds) of lines in $\Real^3$
+that correspond to actual data acquisition protocols arising in the tomographic imaging applications.
+For \ac{CT}, one may consult \cite[Chapter~7]{Ci11}, \cite[Chapter~2 and Appendix~A]{Sch11}, \cite[chapter~5]{Ze10},
+\cite[section~3.1]{NaWu01}, and \cite[chapter~4]{Pa04}
+to get an idea of how to mathematically describe the set on lines that represent the data acquisition protocol.
+Similar descriptions are also provided in papers dealing with the development of \ac{FBP} type of inversion formulas,
+\eg, \cite{Ka03,PaXiZoYu04,ZhWa04,Ka06,YuYeZhWa06,WaYeYu07,KaZaSi09,LuKaZhYuWa10}.
+As a final remark, Siemens has a specific acquisition scheme, flying focal spot (FFS) data acquisition, 
+for its \ac{CT} machines that is described in \cite{KaKnPeKa06}.
+In emission tomography, the data acquisition geometries depend on the actual arrangement of 
+detectors in \ac{PET} and \ac{SPECT} machines. This information can also be difficult to obtain without 
+support from the vendor.
+
+Another issue concerns the file format for the data, which is often proprietary and vendor specific. 
+Hence, here we must have access to a format specification and/or vendor supplied software for reading the 
+data. In emission tomography there are some formats that have been made public, \eg, 
+the Interfile format (for which a 3D \ac{PET} extension is proposed), the GE~Advance sinogram data format, 
+and the ECAT6 and ECAT7 formats.
+
+\subsection{Existing general software platforms for reconstruction}
+There are no software platforms for variational regularisation that fulfil the design criteria listed 
+in the previous sections. There are however some software libraries that 
+can be used to design such a software platform.
+
+\subsubsection{The \acl{RVL}}
+The \href{http://www.trip.caam.rice.edu/software/rvl/doc/html/index.html}{\Acf{RVL}} \cite{PaShSy09,SySuEn11}
+is a C++ framework for functional analysis in the context of 
+solving large-scale simulation-driven optimisation problems arising in science and engineering.
+It defines computational types realising the principal concepts of calculus in vector spaces, in the form of C++ classes,
+and links the specific data structures of a forward model to an abstract numerics library, thereby acting as 
+a `middle-ware' translation layer. 
+\ac{RVL} consists of several sub-packages briefly described below, see the class documentation and the 
+above cited publications for a more complete description.
+\begin{description}
+\item[\acs{RVL} (base):] 
+  Fundamental interfaces defining calculus in Hilbert space: vector spaces, vectors, linear and non-linear scalar- 
+  and vector-valued functions, and closely related concepts such as product (block data, operator) decompositions 
+  and abstract quality control tests for derivatives, adjoints, \etc Also data management types (data containers, 
+  function objects) -- uniform abstract interfaces to concrete data structures and implementations.
+\item[Local\acs{RVL}:]
+  A simple realisation of the data management hierarchy for containers that expose a pointer to a contiguous 
+  block of memory (C or Fortran arrays). Useful both in itself and as building block for more complex in-core, 
+  out-of-core, and distributed data management schemes. Includes various utilities.
+\item[MPI\acs{RVL}:]
+  MPI wrappers for the Local\acs{RVL} classes -- makes them available in various ways in distributed applications.
+\item[Algorithm:] 
+  An algorithm is a von Neumann machine, that is, you start it and it runs until it stops. This sub-package contains 
+  simple abstractions for Algorithms and Terminators (objects equipped to give an answer, `yes' or `no' on various 
+  grounds, to the question, `should this algorithm continue?'). Various standard combinations build loops, lists, 
+  decision trees \etc and give an elegant mechanism for expressing virtually any iterative algorithm.
+\item[Umin:]
+  Unconstrained minimisation and iterative linear algebra algorithms, realised as \verb|RVL::Algorithms|. 
+  Quasi-Newton, trust region, Krylov subspace methods for optimisation, linear systems, and eigenvalue problems.
+\item[Sequence:]
+  Example showing how infinite dimensional vector spaces can actually be implemented in \ac{RVL}, 
+  implying that dimension cannot be a general attribute of an \ac{RVL} vector space. Defines space of finite 
+  sequences, a linear operator on them (polynomial multiplication), and approximates the solution of a least squares 
+  problem.
+\item[Time stepping for optimisation:]
+  Time stepping methods encapsulated as \verb|RVL::Operator| interfaces, in terms of natural component interfaces. 
+  Groups forward, linearised, and adjoint iterations together as coherent object. Several schemes for random access 
+  to simulation history to support adjoint state method, including implementations of of Griewank's optimal 
+  checkpointing algorithm for both fixed and adaptive time steps.
+\item[Tests:]
+  A small set of unit tests to verify correct installation of \ac{RVL} and  Local\acs{RVL}.
+\end{description}
+
+%
+%\begin{description}
+%\item[Vector spaces:]
+%Mathematically, a vector space is a set and a number field, together with a linear combination operation, 
+%satisfying certain axioms. The computational realisation of an (infinite) set is a factory, that is, a object 
+%(\verb|RVL::Space|) which will return a dynamically allocated data structure necessary to describe a vector, 
+%upon request. The linear combination operation is an attribute of the space. The vector spaces emulated by 
+%\ac{RVL} are also equipped with an inner product, that is, are Hilbert spaces. The only coordinate-invariant 
+%choice of vector is the zero vector. Spaces must be comparable, so that one can tell whether a vector is a 
+%member or not. Thus \verb|RVL::Space| has five major attributes: a protected method building vector data, 
+%and four public methods: \verb|inner|, \verb|linComb|, \verb|zero| (applying to member \verb|vectors|) and operator \verb|==| 
+%(comparison of spaces). The number field associated with the space is a template parameter of 
+%\verb|RVL::Space|. \verb|RVL::Space| is an abstract (pure virtual) base class.
+%
+%In principle, defining a usable (concrete) subclass involves implementing all five basic methods. \ac{RVL} provides 
+%an partially implemented \verb|RVL::StdSpace| subclass which implements the three vector methods and 
+%encapsulates the others, for spaces whose vector data structure is local, that is, consists of (any number of) elemental parts which expose scalar arrays (pointers). The principal work involved in implementing a new space using \verb|RVL::StdSpace| is the definition of the vector instance data structure (\verb|RVL::DataContainer|, see below) appropriate to the space, and designing code to test equality of spaces. Since the space comparison (operator \verb|==|) will be used in all of the vector function classes listed below, implementations should be as efficient as possible.
+%
+%\item[Vectors:]
+%Vectors are members of spaces, hence meaningless in themselves. Thus \verb|RVL::Vector| is a concrete (fully implemented) class whose instances own 
+%\begin{inparaenum}[(i)]
+%\item a reference to the \verb|RVL::Space| of which the vector is a member, and 
+%\item instance data in the form of an \verb|RVL::DataContainer|. 
+%\end{inparaenum}
+%\verb|RVL::Vector| construction uses the \verb|RVL::Space::buildDataContainer| method to acquire 
+%its \verb|RVL::DataContainer| member, and delegates linear algebra methods to the \verb|RVL::Space| of 
+%which it is a `member'. Note that \verb|RVL::Vector| is a concrete, non-virtual class, and the user will not need 
+%(nor, indeed, be able) to implement subclasses - use as is!
+%
+%\item[Linear Operators:]
+%A linear operator is a function. A function has a domain and a range, and a rule for assigning members of the 
+%former to members of the latter. A linear operator on a Hilbert space has an adjoint operator\footnote{Strictly 
+%  speaking, densely defined linear operators have well-defined adjoints, but for technical reasons all linear 
+%  operators constructible in \ac{RVL} are densely defined.}. 
+%For these reasons, the \verb|RVL::LinearOp| type has four key public attributes: 
+%\begin{inparaenum}[(i)]
+%\item \verb|RVL::LinearOp::getDomain()| returns an \verb|RVL::Space|, as does 
+%\item \verb|RVL::LinearOp::getRange()|; 
+%\item \verb|RVL::LinearOp::applyOp|| takes input and output Vector arguments, as does 
+%\item \verb|RVL::LinearOp::applyAdjOp|. 
+%\end{inparaenum}
+%\verb|RVL::LinearOp| is an abstract base class. The public domain and range methods are pure virtual must 
+%be implemented. The \verb|apply...Op| methods are implemented, in terms of protected \verb|RVL::LinearOp::apply| 
+%and \verb|RVL::LinearOp::applyAdj|. This device, replicated in the other function classes, allows installation of 
+%the obvious sanity test in the public (implemented) interface: calling \verb|RVL::LinearOp::applyOp| with (const) 
+%input \verb|RVL::Vector| and (mutable) output \verb|RVL::Vector| invokes a test using the \verb|RVL::Space| 
+%comparison method to assure that the input is in the domain, and the output in the range. The actual evaluation 
+%takes place in the user-defined protected functions. The important consequences of this design are that 
+%\begin{inparaenum}[(1)]
+%\item the user may write the evaluation code assuming that all attributes related to domain and range spaces 
+%  are correct (for example, dimensions, sample rates, array lengths, \etc), because
+%\item the evaluation code is only accessible via the public interface, which enforces these constraints.
+%\end{inparaenum}
+%
+%\item[non-linear Functions and Operators:]
+%\ac{RVL} uses `Functional' to describe scalar-valued functions, and `Operator' to describe vector-valued functions. 
+%Being functions, both \verb|RVL::Functional| and \verb|RVL::Operator| have a \verb|getDomain()| method, 
+%and \verb|RVL::Operator| has a \verb|getRange()| method -- the range of an \verb|RVL::Functional| being the scalar 
+%field passed via template parameter. Those are the only public methods. Computation of value, derivative, adjoint 
+%derivative, \etc must be supplied to create a usable subclass, by implementation of protected methods declared as 
+%pure virtual in the base classes.
+%
+%Thus applications do not access the computational methods directly. Instead, access to these computations proceeds 
+%through an evaluation class. \verb|RVL::FunctionalEvaluation| and \verb|RVL::OperatorEvaluation| combine a function 
+%and a vector, and return the value of the function at that vector, the value of its derivative (a linear operator), and 
+%(optionally) the value of the second derivative (as a bilinear operator), each these encapsulated as an appropriate 
+%\ac{RVL} object. While \verb|RVL::Functional| and \verb|RVL::Operator| are abstract base classes, and the various 
+%protected \verb|apply...| methods must be implemented to build instantiable subclasses. \verb|RVL::FunctionalEvaluation| 
+%and \verb|RVL::OperatorEvaluation| are fully implemented. Their sanity-check input and output objects, and delegate 
+%the actual evaluation to the protected methods defined in \verb|RVL::Functional| and \verb|RVL::Operator| subclasses, 
+%after the pattern of the \verb|RVL::LinearOp| \verb|apply...| methods. Thus these user-defined protected methods can be written with assurance that all domain and range requirements are satisfied.
+%
+%Besides automated sanity checks, the \verb|Evaluation| device ensures that the various objects attached to a function 
+%at a point of its domain (value, derivative,\ldots) remain coherent, and avoids a great deal of redundant effort otherwise 
+%necessary for correct programming. The evaluation technique has various consequences for the construction of functions.
+%
+%\item[Data structures and low-level functions:]
+%An \verb|RVL::DataContainer| typically does not expose its data -- otherwise, out-of-core data, or data distributed over 
+%the net, would not be representable. Instead, interaction with data occurs through evaluation of function objects 
+%(functions with persistent state). \Ac{RVL} supplies two hierarchies of function objects, based at \verb|RVL::FunctionObject| 
+%and \verb|RVL::FunctionObjectConstEval| (according to whether evaluation may alter the \verb|RVL::DataContainer| 
+%doing the evaluating, or not). \verb|RVL::DataContainer| is also an abstract base, for which evaluation of the two types 
+%of function object must be defined in subclasses. Much of the programming effort in building an \ac{RVL} application 
+%goes into designing and implementing \verb|RVL::DataContainer| subclasses encapsulating various concrete data 
+%structures, and \verb|RVL::FunctionObject| and \verb|RVL::FunctionObjectConstEval| types to manipulate these 
+%data structures.
+%
+%\item[Auxiliary Constructs -- Products:]
+%Most scientific data of any complexity is compound, that is, consists of a number of component data structures. 
+%Linear algebraically, such data define points in Cartesian product vector spaces. \Ac{RVL} supplies an 
+%abstract notion of Cartesian product (\verb|RVL::Product|, \verb|RVL::ROPRoduct|), and partly 
+%(\verb|RVL::ProductSpace|) and fully (\verb|RVL::StdProductSpace|) implemented realisations of Cartesian product 
+%vector space using the product interface. Based on these, various specialisation of the function classes 
+%(\verb|RVL::BlockOperator|, \verb|RVL::Functional|ProductDomain|) are also supplied.
+%
+%\item[Auxiliary Constructs -- Tests:]
+%A great deal of application development time can be saved by elemental component tests. For computational 
+%realisations of linear and non-linear functions, two of the most important are
+%\begin{inparaenum}[(1)]
+%\item adjoint test -- check that implemented adjoint pairs of linear operators (\verb|RVL::LinearOp|) are really 
+%  adjoint to each other, at least to a modest multiple of machine precision, and 
+%\item derivative test -- check that computed derivative are consistent with divided differences, over some range 
+%  of steps. 
+%\end{inparaenum}
+%\Ac{RVL} supplies implemented standalone functions (\verb|RVL::AdjointTest|, \verb|RVL::DerivTest|, 
+%\verb|RVL::GradientTest|) for both purposes, which can be inserted into drivers with one or two lines of code, 
+%and produce formatted diagnostic output.
+%
+%\item[Auxiliary Constructs -- Traits:]
+%Class template \verb|RVL::ScalarFieldTraits| that abstracts the standard properties of scalar fields; use enables 
+%more portable code. 
+%%For example, the float version is \verb|RVL::ScalarFieldTraits < float >One()|. The absolute 
+%%value of a \verb|Complex < double >| is a \verb|RVL::ScalarFieldTraits < Complex < double > > AbsType = double|.
+%
+%\item[Auxiliary Constructs -- ProtectedDivision:]
+%Safeguarded division function template (\verb|RVL::ProtectedDivision|), returns nonzero (true) if 
+%\verb|zerodivide| occurs to floating precision.
+%
+%\item[Auxiliary Constructs -- Operator new:]
+%In general, there is no need to dynamically allocate instances of the critical calculus types -- 
+%\verb|RVL::Space|, \verb|RVL::Vector|, \verb|RVL::LinearOp|, \verb|RVL::Functional|, \verb|RVL::FunctionalEvaluation|, 
+%\verb|RVL::Operator|, and \verb|RVL::OperatorEvaluation|. Therefore, operator new is by default protected (or, in one 
+%case, private) in these classes, and cannot be used except internally to the class and its close relatives (and in particular 
+%not in user code). However, it is conceivable that a case could arise in which dynamic allocation for one of these types 
+%is absolutely essential to accomplish some end, which simply cannot be attained using allocation on the stack. In view 
+%of this (unsubstantiated, as far as I know) possibility, \ac{RVL} permits the user to enable the standard compiler-defined operator new. 
+%%Simply uncomment the definition of \verb|RVL_OPERATOR_NEW_ENABLED| in rvl/rvl/include/utility.hh, and install.
+%\end{description}
+
+\subsubsection{Spot -- A Linear-Operator Toolbox}
+\href{http://www.cs.ubc.ca/labs/scl/spot/}{SPOT} is a MATLAB toolbox that seeks to bring the expressiveness of 
+MATLAB's built-in matrix notation to problems where explicit matrices are not practical, \eg, due to problem size. 
+The software introduces the notion of a Spot operator that represents a matrix, and can be treated in a similar way, 
+but it doesn't rely on the matrix itself to implement most of the methods. 
+ 
+\subsubsection{iLang}
+\href{http://tomographylab.scienceontheweb.net/software/ilang/}{iLang} \cite{PeCaVa14} is 
+a Python module for Bayesian inference designed for imaging applications. It is essentially 
+an imaging inference language that enables probabilistic reasoning in volumetric imaging, simplifying the 
+definition of complex imaging models. The probabilistic models are represented by graphs, which 
+enables the automated synthesis of efficient inference algorithms. The inference engine of iLang enables 
+the definition of non-smooth constraints such as non-negativity and sparsity. The iLang software constitutes 
+a unified framework for multi-modal imaging that enables the integration of image formation, registration, 
+de-noising and other image processing tasks. It has been used for 4D \ac{PET} with motion correction in 
+which the motion is considered a nuisance variable and estimated from the \ac{PET} emission data 
+under the assumption of sparsity.
+
+
+\subsubsection{Other}
+%The design and implementation of a reconstruction software for medical X-ray imaging is a challenging due to
+%the immense computational demands. In order to ensure an efficient clinical workflow it is inevitable to meet high 
+%performance requirements. Hence, the usage of hardware acceleration is mandatory. 
+In \cite[Chapter~3]{Sch11} there is a description of a software architecture for reconstruction in medical X-ray imaging
+that is modular in a sense that different accelerator hardware platforms are supported. Here, one can 
+implement different parts of the algorithm using different acceleration architectures and techniques.
+This enables us to take advantage of the parallelism in off-the-shelf accelerator hardware such as 
+multi-core systems, the Cell processor, and graphics accelerators in a very flexible and reusable way.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+
+\end{document}

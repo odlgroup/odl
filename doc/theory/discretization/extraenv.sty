@@ -1,0 +1,43 @@
+% By Ozan …ktem 960918
+% Packages that are preloaded. 
+\RequirePackage{ifthen}
+\RequirePackage{amsthm}
+\AtBeginDocument{\@ifpackageloaded{babel}{\swedishenv}{\englishenv}}
+
+\newcommand{\swedishenv}{%
+  \theoremstyle{plain}
+  \newtheorem{Thm}{Sats}[section]
+  \newtheorem{Cor}{Korollarium}[section]
+  \newtheorem{Lem}{Lemma}[section]
+  \newtheorem{Prop}{Proposition}[section]
+  \newtheorem{Claim}{P{\aa}st{\aa}ende}[section]
+  \newtheorem{Conj}{F\"ormodan}[section]
+
+  \theoremstyle{definition}
+  \newtheorem{Def}{Definition}[section]
+  \newtheorem{Prob}{Problem}[section]
+  \newtheorem{Not}{Notation}[section]
+  \newtheorem{Rem}{Anm\"arkning}[section]
+  \newtheorem{Exa}{Exempel}[section]
+  \newtheorem{Guess}{Gissning}[section]
+  \newtheorem{Axiom}{Axiom}[section]
+}
+
+\newcommand{\englishenv}{%
+  \theoremstyle{plain}
+  \newtheorem{Thm}{Theorem}[section]
+  \newtheorem{Cor}{Corollary}[section]
+  \newtheorem{Lem}{Lemma}[section]
+  \newtheorem{Prop}{Proposition}[section]
+  \newtheorem{Claim}{Claim}[section]
+  \newtheorem{Conj}{Conjecture}[section]
+
+  \theoremstyle{definition}
+  \newtheorem{Def}{Definition}[section]
+  \newtheorem{Prob}{Problem}[section]
+  \newtheorem{Not}{Notation}[section]
+  \newtheorem{Rem}{Remark}[section]
+  \newtheorem{Exa}{Example}[section]
+  \newtheorem{Guess}{Guess}[section]
+  \newtheorem{Axiom}{Axiom}[section]
+}

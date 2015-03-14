@@ -1,0 +1,348 @@
+\documentclass[a4paper]{article}
+\usepackage{amsmath,amsfonts}
+\usepackage[matrix,arrow]{xy}
+\usepackage{extraenv}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\cX}{\mathcal{F}}
+\newcommand{\Cc}{\mathcal{C}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\loc}{\text{loc}}
+\newcommand{\bxi}{\boldsymbol{\xi}}
+\newcommand{\bx}{\boldsymbol{x}}
+\newcommand{\bb}{\boldsymbol{b}}
+\newcommand{\by}{\boldsymbol{y}}
+\newcommand{\bz}{\boldsymbol{z}}
+\newcommand{\bA}{\boldsymbol{A}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cL}{\mathcal{L}}
+\newcommand{\K}{\mathbb{K}}
+\newcommand{\veps}{\varepsilon}
+\DeclareMathOperator{\prob}{Prob}
+\DeclareMathOperator{\linspan}{linspan}
+\newcommand{\ent}{\text{ent}}
+\newcommand{\ext}{\text{ext}}
+\newcommand{\true}{\text{true}}
+\newcommand{\rest}{\text{rest}}
+\newcommand{\norm}{\text{norm}}
+\newcommand{\ip}[2]{\langle #1,#2 \rangle}  
+\newcommand{\wt}[1]{\widetilde{#1}}
+\newcommand{\optim}[2]
+  {  \begin{split}
+       & #1  \\
+       & #2
+     \end{split}
+  }
+
+\title{The object classes and the discretization problem}
+\author{Ozan \"Oktem}
+
+\begin{document}
+\maketitle
+
+I begin with the general mathematical description of 
+the problem, then I give some examples, and finally I pose the software 
+related problems that we face.
+
+\section{The general dicretization problem}
+We will describe the general theory of discretization following 
+\cite[Chapter~34]{ZeIIB85}. Often one deals with mappings between 
+two infinite dimensional spaces. In order to numerically work with such 
+mappings, one must reduce the infinite dimensional spaces to finite 
+dimensional counterparts. This reduction of dimensionality is 
+referred to as a \emph{discretization}. 
+
+More formally, let $H$ be a Hilbert space over a field $\K$. 
+An \emph{$n$-dimensional 
+discretization of $H$} is determined by the tuple
+\[ \bigl\{ H,H_{n},R_{n},E_{n} \bigr\} \]
+where $H_{n}$ is an $n$-dimensional Hilbert space (usually over $\K$) and 
+\[ R_{n} \colon H \to H_{n}
+   \quad\text{and}\quad
+   E_{n} \colon H_{n} \to H. \]
+The maps $R_{n}$ and $E_{n}$ are called the  \emph{restriction} and 
+\emph{extension} maps associated to the discretization. 
+\begin{Def}
+  The sequence of $n$-dimensional discretizations $\bigl\{ 
+  H,H_{n},R_{n},E_{n} \bigr\}_{n}$ of $H$ is \emph{consistent} whenever
+  \[ \lim_{n\to \infty} 
+     \bigl\Vert ( E_{n}\circ R_{n})(f)-f \bigr\Vert_{H}\to 0
+     \quad\text{for all $f\in H$.}\]
+  Let $H$ and $H'$ be Hilbert spaces over the fields $\K$ and $\K'$ 
+  and $T \colon H \to H'$. Also, let 
+  \[ \bigl\{ H,H_{n},R_{n},E_{n} \bigr\} 
+     \quad\text{and}\quad
+     \bigl\{ H',H_{m},R_{m},E_{m} \bigr\}\]
+  denote $n$- and $m$-dimensional discretizations of $H$ and $H'$, 
+  respectively. Then a map $T_{n,m} \colon H_{n} \to H'_{m}$ is 
+  \emph{consistent with the above discretizations of $H$ and $H'$} 
+  whenever the following diagram commutes:
+  \[ \xymatrix{
+      H \ar[rr]_{T} \ar@<0.3ex>[dd]_{E_{n}} & &  
+      H' \ar@<0.3ex>[dd]_{E_{m}} \\
+       & &  \\
+      H_{n} \ar@<0.3ex>[uu]_{R_{n}} \ar[rr]_{T_{n,m}}  & &     
+      H'_{m} \ar@<0.3ex>[uu]_{R_{m}}  }
+  \]
+  In that case we say that $T_{n,m}$ is the \emph{discretization of $T$}.
+\end{Def}  
+Thus, if we have a sequence $\bigl\{ H,H_{n},R_{n},E_{n} \bigr\}_{n}$ 
+of consistent $n$-dimensional discretizations of $H$, 
+then for large $n$ one can make the approximation that $E_{n}\circ 
+R_{n}$ is the identity operator i.e.\@
+\begin{equation}\label{eq:fApprox}
+    f \approx E_{n}(f_{n}) \quad\text{where}\quad
+    f_{n}:=R_{n}(f).
+\end{equation}  
+Also, given $T$ one can construct a natural discretization $T_{n,m}$ 
+by defining $T_{n,m}:= E_{n} \circ T \circ R_{m}$.
+
+We consider a simple example which is the Galerkin method in Hilbert 
+space. Let $\{ \phi_{i} \}_{i}\subset H$ be a 
+complete orthonormal system in the separable Hilbert space $H$. We 
+then set 
+\[ H_{n} := \linspan \{\phi_{1},\ldots,\phi_{n} \}
+   \quad\text{for $n\in\N$.}
+\]
+Let $R_{n} \colon H \to H_{n}$ be the orthogonal projection operator 
+from $H$ onto $H_{n}$, i.e.\@
+\[ R_{n}(f)=\sum_{i=1}^n \ip{\phi_{i}}{f}_{H}\phi_{i}
+   \quad\text{for all $f\in H$.} \]
+Moreover, let $E_{n}\colon H_{n} \to H'_{n}$ be the embedding operator 
+corresponding to $H_{n}\subset H$. Now consider an
+operator $T \colon H \to H$ (so $H':=H$ and $H'_{n}:=H_{n}$). Then 
+$R_{n}(f)\to f$ as $n\to \infty$, so the discretizations of $H$ are 
+compatible. Moreover, the discretization $T_{n,n}$ of $T$ where 
+\[ T_{n,n}:=R_{n}\circ T \circ E_{n} \]
+is consistent with the discretization of $H$ and the equation
+$T(f)=g$ can be replaced with 
+\[ \ip{T(f_{n})}{\phi_{j}}_{H}=\ip{g}{\phi_{j}}_{H}
+   \quad\text{$f_{n}\in H_{n}$ and $j=1,\ldots,n$.} \]
+Also, note that it is not necessary for $H_{n}$ and $H'_{m}$ to be 
+subsets of $H$ and $H'$. In fact in most of the situations this is not the 
+case. 
+
+\paragraph{Discretization of functions spaces.}
+We begin by introducing some useful notation that well be used 
+throughout this section.
+\begin{Not}
+  Let $X$ be a topological space, $\mu$ a fixed 
+  Borel measure, $\K$ a field, and $Z$ a vector space over $\K$. 
+  Then we define $\cL^1_{\loc,\K}(X,Z)$ as the Hilbert space over $\K$ of
+  locally $\mu$-measurable functions 
+  $f\colon X\to Z$. The notation $\cL^1(X)$ simply stands for 
+  $\cL^1_{\loc,\R}(X,\R)$.
+\end{Not}  
+Throughout this section $Z$ and $W$ are vector spaces over the 
+fields $\K$ and $\K'$ and $X, Y$ are topological spaces.
+Also, let
+\[ H:=\cF_{\K}(X,Z)\subset \cL^1_{\loc,\K}(X,Z) \]
+denote a  Hilbert subspace. Below we consider a specific family of 
+discretizations of $H$  containing all the cases we are 
+interested in. 
+\begin{Def}
+  Let $\cH:=\{ \phi_{1},\ldots,\phi_{m} \}\subset H$ be a 
+  fixed finite set of $m$ functions.
+  Then we make the following definitions:
+  \begin{enumerate}
+  \item The \emph{restriction operator $R(\cdot;\cH)$ induced by 
+    $\cH$} is the  mapping  
+    \[ R_{m}(\cdot;\cH) \colon H \to Z^m \]
+    where 
+    \[ R_{m}(f;\cH):=\bigl( r_{1}(f;\cH),\ldots,r_{m}(f;\cH) \bigr) 
+       \quad\text{for all $f\in H$,} \]
+    with $r_{i}(f;\cH)\in Z$ for $i=1,\ldots,m$.
+    We do not further specify how $r_{i}(\cdot;\cH)$ is defined.
+    Simply note that two choices of $r_{i}(\cdot;\cH)$ are common, namely
+    $r_{i}(f;\cH):=f(x_{i})$ where $x_{i}\in X$ is a fixed point (a sample 
+    point) and $r_{i}(f;\cH):=\ip{f}{\phi_{i}}_{H}$ which is natural whenever
+    $\cH$ is a subset of an orthonormal basis in $H$. Also, 
+    $r_{i}(\cdot;\cH)$ is linear in both these cases.
+    In this context the elements in $\cH$ are called the 
+    \emph{sampling functions}.
+  \item The \emph{extension operator $R(\cdot;\cH)$ induced by 
+    $\cH$} is defined as the mapping  
+    \[ E_{m}(\cdot;\cH) \colon Z^m \to H \]
+    where 
+    \[ E_{m}(\bb;\cH):= x\mapsto \sum_{i=1}^m b_{i}\phi_{i}(x)
+       \quad\text{for all $\bb\in Z^m$.} \]
+    In this context the elements in $\cH$ are called the 
+    \emph{extrapolation functions}.       
+  \end{enumerate}
+\end{Def}
+Note that the sets of sampling and extrapolation functions do not 
+need to coincide.  The only requirement is that the number of 
+elements $m$ must be the same. Thus, a pair 
+$(\cH^m_{\rest},\cH^m_{\ext})$ of $m$ 
+sampling and extrapolation functions defines an $m$-dimensional 
+discretization of $H$ by the tuple
+\[ \bigl\{
+     H,Z^m,R_{m}(\cdot;\cH^m_{\rest}),E_{m}(\cdot;\cH^m_{\ext})
+   \bigr\}. \]
+   
+Now, consider two the following two pairs $(\cH^n_{\rest},\cH^n_{\ext})$ and 
+$(\cH^m_{\rest},\cH^m_{\ext})$ of $n$ and $m$ sampling and extrapolation 
+functions:
+\begin{alignat*}{2}
+  \cH^n_{\rest} &:=\{ \phi_{1},\ldots,\phi_{n} \} &\qquad
+  \cH^m_{\rest} &:=\{ \psi_{1},\ldots,\phi_{m} \}  \\
+  \cH^n_{\ext} &:=\{ \wt{\phi}_{1},\ldots,\wt{\phi}_{n} \} &\qquad
+  \cH^m_{\ext} &:=\{ \wt{\psi}_{1},\ldots,\wt{\psi}_{m} \}    
+\end{alignat*}
+Each pair yields a discretization of $\cF_{\K}(X,Z)$ by the tuples
+\[ 
+   \bigl\{
+     \cF_{\K}(X,Z),Z^n,R_{n}(\cdot;\cH^n_{\rest}),E_{n}(\cdot;\cH^n_{\ext})
+   \bigr\} \]
+and
+\[ \bigl\{
+     \cF_{\K}(X,Z),Z^m,R_{m}(\cdot;\cH^m_{\rest}),E_{m}(\cdot;\cH^m_{\ext})
+   \bigr\}. \] 
+What is the relation between these two discretizations? A function 
+$f\in \cF_{\K}(X,Z)$ is represented by the ``vectors'' 
+\[ \bz_{n}:= R_{n}(f;\cH^n_{\rest})\in Z^n \quad\text{and}\quad
+   \bz_{m}:= R_{m}(\cdot;\cH^m_{\rest})\in Z^m \]
+and we seek the relaation between $\bz_{n}$ and $\bz_{m}$. 
+Now making use of the approximation $f\approx 
+E_{n}(\bz_{n};\cH^n_{\ext})$, i.e.\@
+\[ f \approx x \mapsto 
+       \sum_{i=1}^n z_{n,i} \wt{\phi}_{i}(x)
+   \quad\text{in $\cF_{\K}(X,Z)$,} 
+\]
+which implies that
+\begin{align*}
+  \bz_{m} &:=R_{m}(f;\cH^m_{\rest}) =
+    \bigl( r_{1}(f,\cH^m_{\rest}),\ldots,r_{m}(f,\cH^m_{\rest}) \bigr) \\
+    &\approx 
+      \Bigl( r_{1}\bigl(E_{n}(\bz_{n},\cH^n_{\ext}),\cH^m_{\rest}\bigr),
+             \ldots,
+	     r_{m}\bigl(E_{n}(\bz_{n},\cH^n_{\ext}),\cH^m_{\rest}\bigr)
+      \Bigr).
+\end{align*}
+When $r_{k}(\cdot,\cH^m_{\rest})$ are linear, then 
+\[ r_{k}\bigl(E_{n}(\bz_{n},\cH^n_{\ext}),\cH^m_{\rest}\bigr)=
+     r_{k}\biggl(\sum_{i=1}^n 
+       z_{n,i}\wt{\phi}_{i}(\cdot),\cH^m_{\rest}\biggr)=
+     \sum_{i=1}^n z_{n,i} r_{k}(\wt{\phi}_{i},\cH^m_{\rest}).
+\]   
+Thus, for $k=1,\ldots,m$
+\[
+  z_{m,k}\approx 
+    \sum_{i=1}^n z_{n,i} r_{k}(\wt{\phi}_{i},\cH^m_{\rest}).
+\]    
+and defining 
+\[ A_{i,k}:= r_{k}(\wt{\phi}_{i},\cH^m_{\rest})
+   \text{ for $i=1,\ldots,n$ and $j=1,\ldots,m$,} \]
+enables us to write
+\[ \bz_{m}=\bz_{n}\cdot\bA
+   \quad\text{where } 
+   \bA:=[ A_{i,k} ]_{\substack{1\leq i \leq n \\ 1\leq k \leq m}}
+   \text{ is an $(n\times m)$-matrix.} \]
+Conversly, defining 
+\[ \wt{A}_{k,i}:=r_{i}(\phi_{k},\cH^n_{\rest})
+   \text{ for $i=1,\ldots,n$ and $k=1,\ldots,m$,} \]
+enables us to write
+\[ \bz_{n}=\bz_{m}\cdot\wt{\bA}
+   \quad\text{where } 
+   \wt{\bA}:=[ \wt{A}_{i,k} ]_{\substack{1\leq k \leq M \\ 
+   1\leq i \leq n}}
+   \text{ is an $(m\times n)$-matrix.} \]
+Finally, if $\cH^n_{\rest}=\cH^n_{\rest}$ and 
+$\cH^m_{\ext}=\cH^m_{\rest}$, then $\bA=\wt{\bA}^T$.   
+
+
+\section{Relation to inverse problems}
+Let $X, Y$ be topological spaces and $T \colon \cF(X,\K) \to 
+\cF(Y,\K')$. The inverse problem we are interested in is to find 
+$f\in H_{X}:=\cF(X,\K)$ that solves the operator equation $T(f)=g$ where 
+$g\in H_{Y}:=\cF(Y,\K')$ is 
+known only on a subset $Y_{0}\subset Y$. In reality $Y_{0}$ is a 
+finite set, so $g$ is known only at a finite number of points in $Y$. 
+
+This enables us to replace the continuous inverse  is given, with a sequence of 
+discrete inverse problems of finding $f_{n}\in H_{n}$ such that 
+$T_{n,m}(f_{n})=R_{m}(g)$.
+
+Finally, note that the dimension of the discretization of  $\cF(Y,W)$ 
+occurring in the inverse problem in subsection~\ref{sec:Inv} is naturally 
+determined by the fact that $T(f_{\true})$ is known (up to measurement 
+errors) on a given set $Y_{0}\subset Y$ with $m$ elements. 
+It is natural to choose an $m$-dimensional discretization of 
+$\cF(Y,W)$ where the choice of the sampling and extrapolation functions are 
+related to the elements in $Y_{0}$.
+
+
+
+   
+\section{The object model}
+What we are looking for is an efficient object structure representing 
+the discretization problem described above. The idea is that given an 
+operator 
+\[ T \colon \cF(X) \to \cF(Y) \]
+the object structure in the code must represent the discretization to 
+the level of accuracy that enables one to change between different
+discretizations $T_{N,M}$ and $T_{N',M'}$ of $T$, at least 
+for different sample based discretizations.
+
+The naive way to model the object structure is to fully replicate the 
+mathematical setting (fields, vector spaces over fields, normed spaces, Hilbert 
+spaces over fields, etc) but this produces a very large object structure 
+that we believe is not feasible nor necessary. The idea that we have 
+played with
+is to have an object structure that is general enough to capture different 
+choices of sample based discretizations and relations in between them 
+without being inefficient. 
+As an example, what possible function spaces $\cF(X)$ do we have? Well, 
+mathematically this depends on $T$ and examples for $X=\R^n$ 
+are $\Cc_{c}(\R^n)$ (continuous functions with compact 
+support), $\Cc^\infty_{c}(\R^n)$ (smooth functions with compact 
+support), and 
+$\mathcal{S}(\R^n)$ (functions in the Schwartz class, i.e.\@ fast 
+decaying smooth functions). When using 
+a sample based discretization it is actually not relevant exactly which 
+Hilbert space that one started with. The only important factor is the 
+underlying field and the inner product (which affects the inner 
+product in the finite dimensional representation) since the same 
+sample based discretization yields the same finite dimensional representation for 
+all Hilbert spaces over the same field with the same inner product structure.
+As an example a fixed sample based discretization can not differ between bounded 
+integrable functions or 
+continuous functions if the inner product that we use is the same. 
+Hence, a Hilbert space may be represented by the underlying field 
+($\R$, $\C$,\ldots), and the inner product structure (or at least its 
+discrete counterpart).
+
+\subsection{Consistency checks}
+It is desirable that the object model can check for consisteny. The 
+first problem is to be able to compare two discretizations and 
+determine if they are the same.
+
+As already noted, in order to describe the discretizations we are using 
+one only needs the following information:
+\begin{enumerate}
+\item Representing the Hilbert space $H$. Since $H$ is of the form
+  \[ H:=\cF_{\K}(X,Z)\subset \cL^1_{\loc,\K}(X,Z) \] 
+  it is a set of functions from the topological space $X$ into the 
+  vector space $Z$ (vector space over the field $\K$), $H$ can be described by 
+  \begin{enumerate}
+  \item The dimension of $H$.
+  \item The underlying field $\K$  as a set, so we do not bother to encode 
+    the field structure, we see $\K$ only as a set.
+  \item The domain $X$ as a set, so we do not bother to encode the
+    topology, we see $X$ only as a set. 
+  \item The range $Z$ which is encoded as a set with an underlying 
+   field $\K$, so we do not bother to encode 
+   the vector space structure of $Z$.
+  \end{enumerate}
+\item The dimension $n$ of the discretization.
+\item The family $\cH^n_{\rest}$ of sampling functions.
+\end{enumerate}
+
+\begin{thebibliography}{99}
+\bibitem{ZeIIB85} Zeidler, E., Nonlinear Functional Analysis and its 
+  Applications~II/B, Springer Verlag, 1985
+\end{thebibliography}  
+
+\end{document}
