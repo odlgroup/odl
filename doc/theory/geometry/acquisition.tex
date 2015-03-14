@@ -198,74 +198,87 @@ which is equal to
 \end{equation}
 %
 %
+%
 \begin{example}[Parallel geometry]
  We consider a flat 2D detector moving on the unit circle in the $x$-$y$ plane, oriented to the center of the circle:
  %
  \begin{align*}
-  & T = [0, \pi),\quad U = [-l_y/2, l_y/2] \times [-l_z/2, l_z/2] \\
+  & T = [-\phi_0, \phi_0],\quad U = [-l_x/2, l_x/2] \times [-l_z/2, l_z/2] \\
   & X(\phi, u) = \theta(\phi) + R(\phi) \cdot \TRANSP{(u_1, 0, u_2)}
  \end{align*}
  %
- with
+ with $\phi_0 \in (0, \pi/2]$, $l_x, l_z > 0$ and
  %
- \begin{equation}
-  \theta(\phi) = \TRANSP{(-\sin\phi, \cos\phi, 0)},\quad R(\phi) =
+ \begin{align}
+  \theta(\phi) &= \TRANSP{(-\sin\phi, \cos\phi, 0)}, \\ 
+  R(\phi) &=
   \begin{pmatrix}
    \cos\phi & -\sin\phi & 0 \\
    \sin\phi & \cos\phi & 0 \\
    0 & 0 & 1
-  \end{pmatrix}.
+  \end{pmatrix}
+  = \big(\theta'(\phi) | \theta(\phi) | e_z\big).
+ \end{align}
+ %
+ The classical X-ray transform in these coordinates for functions on a set $\Omega \subset B_1$ in $\RR^3$ is given by
+ %
+ \begin{align}
+  &\OPP: L^2(\Omega) \Lto L^2(T \times U), \notag \\
+  \label{eq:parallel_fwdproj}
+  &\OPP f(\phi, u) = \int_\RR f\big(s\theta(\phi) + u_1 \theta'(\phi) + u_2 e_z\big)\, \D s,
+ \end{align}
+ %
+ and its adjoint is the backprojection
+ %
+ \begin{equation}
+  \label{eq:parallel_backproj}
+  \DUALOPP g(x) = \int_{-\phi_0}^{\phi_0} g\big(\phi, \INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)\, \D \phi.
  \end{equation}
  %
- The directional mapping is given by $N(\phi, u) = -\theta(\phi)$, which is also the canonical normal $n = \eta_1 \times \eta_2$ with
- $\eta_j = \partial_{u_j} X / \ABS{\partial_{u_j} X}$. It is $P(\phi, u) = \lbrace N(\phi, u)\rbrace$.\\
- %
- Finally, the rays are straight lines, and their formula is
+ In our common framework, the directional mapping is given by $N(\phi, u) = -\theta(\phi)$, which is also the canonical normal 
+ $n = \eta_1 \times \eta_2$ with $\eta_j = \partial_{u_j} X / \ABS{\partial_{u_j} X}$. It is $P(\phi, u) = \lbrace N(\phi, u)\rbrace$.
+ The rays are straight lines, and their formula is (leaving out the ``$\,\widetilde{\ }\,$'' to simplify notation)
  %
  \begin{equation*}
-  \tilde \gamma_\phi(u) = \big( s \mapsto X(\phi, u) + (1-S) N(\phi, u),\ s > 0 \big).
+  \gamma_\phi(u) = \big( s \mapsto X(\phi, u) + (1-s) N(\phi, u),\ s > 0 \big).
  \end{equation*}
  %
- They start at the far end of the object support $\Omega$ (see below) and continue to the detector, hence the integration domain of the $s$ 
- integral can be extended to $\RR$.\\[1ex]
- %
- We consider $L^2$ functions in the unit ball in $\RR^3$, i.e. $\Omega = B_1$ and the parallel X-ray transform
+ They start at the far end of the object support $\Omega$ and continue to the detector, hence the integration domain of the $s$ 
+ integral can be extended to $\RR$. Thus, we get the transform
  %
  \begin{align*}
-  \OPP: L^2(B_1) \to L^2(T \times U) \\
+  \OPP: L^2(B_1) & \Lto L^2(T \times U) \\
   \OPP f(\phi, u) 
-  &= \int_{\tilde \gamma_\phi(u)} f\, \D \gamma \\
+  &= \int_{\gamma_\phi(u)} f\, \D \gamma \\
   &= \int_0^\infty f\big(X(\phi, u) + (1-s) N(\phi, u)\big)\, \D s \\
   &= \int_\RR f\big(s \theta(\phi) + R(\phi) \cdot \TRANSP{(u_1, 0, u_2)}\big)\, \D s,
  \end{align*}
  %
- which is the classical transform in parametrized form.
- To compare the well-known backprojection with the adjoint obtained with \eqref{eq:adj_op_onedir}, we observe that we can write $x \in 
- \Omega$ as
+ which is \eqref{eq:parallel_fwdproj}. To compare the adjoint obtained by the generic formula \eqref{eq:adj_op_onedir} with 
+ \eqref{eq:parallel_backproj}, we observe that we can write $x \in \Omega$ as
  %
  \begin{align*}
   x 
-  &= \INNER{\theta(\phi)}{x}\, \theta(\phi) + \big(x - \INNER{\theta(\phi)}{x}\, \theta(\phi)\big) \\
-  &= \INNER{\theta(\phi)}{x}\, \theta(\phi) + \INNER{\theta^\perp(\phi)}{x}\, \theta^\perp(\phi) + \INNER{e_z}{x}\, e_z \\
-  &= \INNER{\theta(\phi)}{x}\, \theta(\phi) + R(\phi) \TRANSP{\big(\INNER{\theta^\perp(\phi)}{x}, 0, \INNER{e_z}{x}\big)}
+  &= \INNER{x}{\theta(\phi)}\, \theta(\phi) + \big(x - \INNER{x}{\theta(\phi)}\, \theta(\phi)\big) \\
+  &= \INNER{x}{\theta(\phi)}\, \theta(\phi) + \INNER{x}{\theta'(\phi)}\, \theta'(\phi) + \INNER{x}{e_z}\, e_z \\
+  &= \INNER{x}{\theta(\phi)}\, \theta(\phi) + R(\phi) \TRANSP{\big(\INNER{x}{\theta'(\phi)}, 0, \INNER{x}{e_z}\big)}.
  \end{align*}
  %
- with $\theta^\perp(\phi) = \TRANSP{(\cos\phi, \sin\phi, 0)}$, the first column of $R(\phi)$. This means that for 
- $s = 1 - \INNER{\theta(\phi)}{x}$ and $u = \TRANSP{\big(\INNER{\theta^\perp(\phi)}{x}, \INNER{e_z}{x}\big)}$, it is 
+ This means that for $s = 1 - \INNER{x}{\theta(\phi)}$ and $u = \TRANSP{\big(\INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)}$, it is 
  $x = \gamma\big(\phi, u, N(\phi, u)\big)(s)$, and thus the mapping $\Gamma_\phi$ can be explicitly determined as
  %
  \begin{equation*}
-  \Gamma_\phi(x) = \TRANSP{\big(1 - \INNER{\theta(\phi)}{x}, \INNER{\theta^\perp(\phi)}{x}, \INNER{e_z}{x}\big)}
+  \Gamma_\phi(x) = \TRANSP{\big(1 - \INNER{x}{\theta(\phi)}, \INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)}
  \end{equation*}
  %
  The Jacobian of this coordinate transform is apparently a column permutation of $R(\phi)$, hence the additional factors in the integral 
  \eqref{eq:adj_op_onedir} are one, and we can conclude that
  %
  \begin{equation*}
-  \OPP g(x) = \int_0^\pi g\big(\phi, \INNER{\theta^\perp(\phi)}{x}, \INNER{e_z}{x}\big)\, \D\phi,
+  \DUALOPP g(x) = \int_{-\phi_0}^{\phi_0} g\big(\phi, \INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)\, \D\phi,
  \end{equation*}
  %
- which is the parametrized form of the well-known backprojection formula.
+ which is the same as \eqref{eq:parallel_backproj}.
 \end{example}
 %
 %
@@ -275,39 +288,158 @@ which is equal to
  detects rays coming from a point source on the opposite side of the same circle. We parametrize the detector as follows:
  %
  \begin{align*}
-  & T = [0, 2\pi),\quad U = [-\psi_0/2, \psi_0/2] \\
-  & X(\phi, \psi) = r \theta(\phi + \psi), \quad \theta(\phi) = (\cos\phi, \sin\phi).
+  & T = [0, \phi_0],\quad U = [-\psi_0, \psi_0] \\
+  & X(\phi, \psi) = r \theta(\phi + \psi), \quad \theta(\phi) = (\cos\phi, \sin\phi)
  \end{align*}
  %
- The directional field of the detector is given by the normalized line from a detector point to the source located at 
- $x_{\mathrm{S}} = -r \theta(\phi)$, i.e.
+ with $\phi_0 \in (0, 2\pi]$ and $\psi_0 \in (0, \pi/2]$. The mathematical model for X-ray tomography in this setting is the divergent beam 
+ transform
+ %
+ \begin{align}
+  &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag\\
+  \label{eq:fanbeam_fwdproj}
+  &\OPD f(\phi, \psi) = \int_0^\infty f\big(x_{\mathrm{s}}(\phi) + s \theta(\phi + \psi/2)\big)\, \D s
+ \end{align}
+ %
+ with the source position $x_{\mathrm{S}} = -r \theta(\phi)$ and the directional vectors $\theta(\phi) = (\cos\phi, \sin\phi)$. First, 
+ we derive its relation to the 2D parallel beam X-ray transform
+ %
+ \begin{align}
+  &\OPP: L^2(B_1) \Lto L^2([0,2\pi) \times [-r,r]) \notag \\
+  \label{eq:fanbeam_xray_fwdproj}
+  &\OPP f(\phi, \tau) = \int_\RR f\big(s\theta(\phi) + \tau \theta'(\phi)\big)\, \D s,
+ \end{align} 
+ %
+ with $\theta'(\phi) = \TRANSP{(-\sin\phi, \cos\phi)}$. Its adjoint is
+ %
+ \begin{equation}
+  \label{eq:fanbeam_xray_backproj}
+  \DUALOPP g(x) = \int_0^{2\pi} g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi.
+ \end{equation} 
+ %
+ We have
+ %
+ \begin{align*}
+  \OPD f(\phi, \psi) 
+  &= \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \psi/2)\big)\, \D s \\
+  &= \int_\RR f\big(s \theta(\phi + \psi/2) - r \Pi_{\theta(\phi + \psi/2)}\theta(\phi) \big)\, \D s,
+ \end{align*}
+ %
+ and the projection $\Pi_{\theta(\phi + \psi/2)}\theta(\phi)$ can be calculated as
+ %
+ \begin{align*}
+  \Pi_{\theta(\phi + \psi/2)}\theta(\phi)
+  &= \theta(\phi) - \INNERLR{\theta(\phi)}{\theta(\phi + \psi/2)}\, \theta(\phi + \psi/2) \\
+  &=
+  \begin{pmatrix}
+   \cos\phi - \cos(\psi/2)\, \cos(\phi + \psi/2) \\
+   \sin\phi - \cos(\psi/2)\, \sin(\phi + \psi/2)
+  \end{pmatrix} \\
+  &=
+  \begin{pmatrix}
+   \sin(\phi + \psi/2)\, \sin(\psi/2) \\
+   -\cos(\phi + \psi/2)\, \sin(\psi/2)
+  \end{pmatrix} \\
+  &= -\sin(\psi/2)\, \theta'(\phi + \psi/2)
+ \end{align*}
+ %
+ and thus 
+ %
+ \begin{align*}
+  \OPD f(\phi, \psi)
+  &= \int_\RR f\big(s \theta(\phi + \psi/2) + r \sin(\psi/2)\, \theta'(\phi + \psi/2) \big)\, \D s \\
+  &= \OPP f\big(\phi + \psi/2, r\sin(\psi/2)\big) \\
+  &= \OPU \OPP f(\phi, \psi)
+ \end{align*}
+ %
+ with the transform
+ %
+ \begin{align}
+  &\OPU: L^2\big([0,2\pi) \times [-r,r]\big) \Lto L^2\big([0,\phi_0] \times [-\psi_0,\psi_0]\big) \notag \\
+  \label{eq:fanbeam_unit_trafo}
+  &\OPU g(\phi, \psi) = g\big(\phi + \psi/2, r\sin(\psi/2)\big).
+ \end{align} 
+ %
+ To compute its adjoint, we apply the substitution $\tau = r\sin(\psi/2),\ \D\tau = \sqrt{r^2-\tau^2} / 2\, \D \psi$ and get
+ %
+ \begin{align*}
+  \INNER{\OPU g}{h} 
+  &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} g\big(\phi + \psi/2, r\sin(\psi/2)\big)\, h(\phi, \psi)\, \D\psi\, \D\phi \\
+  &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi + \psi/2, r\sin(\psi/2)\big)\, h_0(\phi, \psi)\, \D\psi\, \D\phi \\
+  &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi, r\sin(\psi/2)\big)\, h_0(\phi - \psi/2, \psi)\, \D\phi\, \D\psi \\
+  &= \int_0^{2\pi} \int_{-r\sin(\psi_0/2)}^{r\sin(\psi_0/2)} g(\phi, \tau)\, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, 
+  \frac{2}{\sqrt{r^2-\tau^2}} \D\phi\, \D\tau,
+ \end{align*}
+ %
+ where
+ %
+ \begin{equation*}
+  h_0(\phi, \cdot) =
+  \begin{cases}
+   h(\phi, \cdot) & \text{ if } \phi \in [0,\phi_0] \\
+   0 & \text{ else}.
+  \end{cases}
+ \end{equation*}
+ %
+ The integration domain $[-r\sin(\psi_0/2), r\sin(\psi_0/2)]$ covers the support of $g = \OPP f$ if the condition
+ %
+ \begin{equation}
+  \label{eq:fanbeam_condition_roi}
+  r \sin(\psi_0/2) \geq 1
+ \end{equation}
+ %
+ is fulfilled. In this case, all points in $\Omega$ are covered by rays from each direction, and it is
+ %
+ \begin{equation}
+  \label{eq:fanbeam_unit_trafo_adj_good}
+  \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big).
+ \end{equation}
+ %
+ Otherwise, the adjoint involves a cutoff,
+ %
+ \begin{equation}
+  \label{eq:fanbeam_unit_trafo_adj_bad}
+  \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, 
+  \chi_{[0, r\sin(\psi_0/2)]}(\ABS{\tau}).
+ \end{equation}
+ %
+ Thus, if \eqref{eq:fanbeam_condition_roi} is fulfilled, it is $\DUALOPD = \DUALOPP\DUALOPU$, i.e.
+ %
+ \begin{align}
+  \label{eq:fanbeam_backproj}
+  \DUALOPD g(x)
+  &= \int_0^{2\pi} \DUALOPU g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi \\
+  &= \int_0^{2\pi} \frac{2}{\sqrt{r^2-\tau(\phi, x)^2}} g_0\left(\phi - \psi(\phi,x)/2, \psi(\phi,x) \right)\, \D\phi,
+ \end{align}
+ %
+ where $\tau(\phi,x) = \INNER{x}{\theta'(\phi)}$ and $\psi(\phi,x) = 2\arcsin\big(\tau(\phi,x)/r\big)$.\\[1ex]
+ %
+ To compare this to the result from the unified theory, we start by calculating the directional field as the normalized vectors from the 
+ detector points to the source, i.e.
  %
  \begin{equation*}
   \tilde N(\phi, \psi) 
   = x_{\mathrm{S}} - X(\phi, \psi) \\
   = - r \big(\theta(\phi + \psi) + \theta(\phi)\big)
-%   &= - r \big(\cos(\phi + \psi) + \cos\phi, \sin(\phi + \psi) + \sin\phi \big)\\
-%   &= - \sqrt{2(1 + \cos\psi)}\, r \theta\big(\phi + \delta(\psi)\big), \quad \tan\delta = \frac{1 - \cos\psi}{1 + \cos\psi} 
-%   = \tan^2(\psi/2)
  \end{equation*}
  %
- without normalization. It is
+ before normalization. It is
+ %
  \begin{align*}
-  \ABS{\tilde N(\phi, \psi)}^2 = r^2 \big(2 + 2\INNER{\theta(\phi + \psi)}{\theta(\phi)} \big) = r^2 (2 + 2\cos\psi)
+  \ABS{\tilde N(\phi, \psi)}^2 = r^2 \big(2 + 2\INNER{\theta(\phi + \psi)}{\theta(\phi)} \big) = 4 r^2 \cos^2(\psi/2)
  \end{align*}
  %
  and thus
  %
  \begin{equation*}
-  N(\phi,\psi) = - \frac{\theta(\phi + \psi) + \theta(\phi)}{\sqrt{2(1 + \cos\psi)}}.
+  N(\phi,\psi) = - \frac{\theta(\phi + \psi) + \theta(\phi)}{2 \cos(\psi/2)}.
  \end{equation*}
  %
  The angle of this vector relative to $-\theta(\phi)$ is determined by
  %
- \begin{align*}
-  \cos\delta = \frac{\INNERbig{\theta(\phi + \psi) + \theta(\phi)}{\theta(\phi)}}{\sqrt{2(1 + \cos\psi)}} 
-  = \sqrt{\frac{1 + \cos\psi}{2}} = \cos(\psi/2),
- \end{align*}
+ \begin{equation*}
+  \cos\delta = \frac{\INNER{\theta(\phi + \psi) + \theta(\phi)}{\theta(\phi)}}{2 \cos(\psi/2)} = \cos(\psi/2),
+ \end{equation*}
  %
  hence we can write the directional vector field as
  %
@@ -330,16 +462,11 @@ which is equal to
   \OPD f(\phi, \psi)
   &= \int_{\tilde \gamma(\phi,\psi)}\, f \, \D \gamma \notag \\
   &= \int_0^\infty f\big(r\theta(\phi + \psi) + (s-2r)\theta(\phi + \psi/2)\big)\, \D s \notag \\
-  \label{eq:fanbeam_fwd_op_parametr}
+  \label{eq:fanbeam_fwdproj_alt}
   &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \psi/2)\big)\, \D s,
  \end{align}
  %
  which is the well-known divergent beam transform
- %
- \begin{equation*}
-  \OPD f(\phi, \psi) = \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \psi/2)\big)\, \D s
- \end{equation*}
- %
  in our parametrization. The adjoint cannot be directly calculated with \eqref{eq:adj_op_onedir} since the equation 
  %
  \begin{equation*}
@@ -348,73 +475,6 @@ which is equal to
  %
  cannot be analytically solved. Therefore, we exploit the relation to the parallel beam X-ray transform \NOTE{at least I don't know how}
  %
- \begin{align}
-  \label{eq:fanbeam_xray_trafo_param}
-  &\OPP: L^2(B_1) \Lto L^2([0,2\pi) \times \RR) \\
-  &\OPP f(\phi, \tau) = \int_\RR f\big(s\theta(\phi) + \tau \theta^\perp(\phi)\big)\, \D s,
- \end{align} 
- %
- with $\theta^\perp(\phi) = \TRANSP{(-\sin\phi, \cos\phi)}$. It is
- %
- \begin{align*}
-  \OPD f(\phi, \psi) 
-  &= \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \psi/2)\big)\, \D s \\
-  &= \int_\RR f\big(s \theta(\phi + \psi/2) - r \Pi_{\theta(\phi + \psi/2)}\theta(\phi) + \big)\, \D s,
- \end{align*}
- %
- and the projection $\Pi_{\theta(\phi + \psi/2)}\theta(\phi)$ can be calculated as
- %
- \begin{align*}
-  \Pi_{\theta(\phi + \psi/2)}\theta(\phi)
-  &= \theta(\phi) - \INNERLR{\theta(\phi)}{\theta(\phi + \psi/2)}\, \theta(\phi + \psi/2) \\
-  &=
-  \begin{pmatrix}
-   \cos\phi - \cos(\psi/2)\, \cos(\phi + \psi/2) \\
-   \sin\phi - \cos(\psi/2)\, \sin(\phi + \psi/2)
-  \end{pmatrix} \\
-  &=
-  \begin{pmatrix}
-   \sin(\phi + \psi/2)\, \sin(\psi/2) \\
-   -\cos(\phi + \psi/2)\, \sin(\psi/2)
-  \end{pmatrix} \\
-  &= -\sin(\psi/2)\, \theta^\perp(\phi + \psi/2)
- \end{align*}
- %
- and thus 
- %
- \begin{align*}
-  \OPD f(\phi, \psi)
-  &= \int_\RR f\big(s \theta(\phi + \psi/2) + r \sin(\psi/2)\, \theta^\perp(\phi + \psi/2) + \big)\, \D s \\
-  &= \OPP f\big(\phi + \psi/2, r\sin(\psi/2)\big) \\
-  &= \OPU \OPP f(\phi, \psi)
- \end{align*}
- %
- with the transform
- %
- \begin{align}
-  \label{eq:fanbeam_unit_trafo}
-  &\OPU: L^2([0,2\pi) \times \RR) \Lto L^2([0,2\pi) \times [-\psi_0/2,\psi_0/2]) \\
-  &\OPU g(\phi, \psi) = g\big(\phi + \psi/2, r\sin(\psi/2)\big)
- \end{align} 
- %
- To compute its adjoint, we apply the substitution $\tau = r\sin(\psi/2),\ \D\tau = \sqrt{r^2-\tau^2} / 2\, \D \psi$ and get
- %
- \begin{align*}
-  \INNER{\OPU g}{h} 
-  &= \int_0^{2\pi} \int_{-\psi_0/2}^{\psi_0/2} g\big(\phi + \psi/2, r\sin(\psi/2)\big)\, h(\phi, \psi)\, \D\psi\, \D\phi \\
-  &= \int_{-\psi_0/2}^{\psi_0/2} \int_{\psi/2}^{2\pi + \psi/2} g\big(\phi, r\sin(\psi/2)\big)\, h(\phi - \psi/2, \psi)\, \D\phi\, \D\psi \\
-  &= \int_{-r\sin(\psi_0/4)}^{r\sin(\psi_0/4)} \int_{\arcsin(\tau/r)}^{2\pi + \arcsin(\tau/r)} g(\phi, \tau)\, 
-  h\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, \frac{2}{\sqrt{r^2-\tau^2}} \D\phi\, \D\tau,
- \end{align*}
- %
- hence
- %
- \begin{equation}
-  \DUALOPU h(\phi, \tau) = h\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, \frac{2}{\sqrt{r^2-\tau^2}}.
- \end{equation}
- %
- Note that if the $\phi$ range is not $[0,2\pi)$ but $[0,\phi_0]$, an additional factor $\chi_{[\arcsin(\tau/r), \phi_0 + 
-\arcsin(\tau/r)]}$  needs to be added.
 \end{example}
 
 
