@@ -303,29 +303,39 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
  %
  which is the same as \eqref{eq:parallel_backproj}.
 \end{example}
-%
-%
-%
+
+
+
+
 \begin{example}[Fan beam geometry]
- Here, we consider the case of 2D functions on $\Omega = B_1 \subset \RR^2$. The detector is a segment of a circle with radius $r > 1$ and 
- detects rays coming from a point source on the opposite side of the same circle. We parametrize the detector as follows:
+ Here, we consider the case of 2D functions on $\Omega = B_1 \subset \RR^2$. The detector is a segment of a circle with radius $R > 1$ and 
+ detects rays coming from a point source on the opposite side of a smaller circle with radius $r$. We write $R = \beta r$, $\beta \geq 1$ 
+ and parametrize the detector as follows:
  %
  \begin{align*}
   & T = [0, \phi_0],\quad U = [-\psi_0, \psi_0] \\
-  & X(\phi, \psi) = r \theta(\phi + \psi), \quad \theta(\phi) = (\cos\phi, \sin\phi)
+  & X(\phi, \psi) = -(R - r) \theta(\phi) + R \theta(\phi + \psi) = -(\beta - 1) r \theta(\phi) + \beta r \theta(\phi + \psi),
  \end{align*}
  %
- with $\phi_0 \in (0, 2\pi]$ and $\psi_0 \in (0, \pi/2]$. The mathematical model for X-ray tomography in this setting is the divergent beam 
- transform
+ with $\theta(\phi) = (\cos\phi, \sin\phi)$ and parameters $\phi_0 \in (0, 2\pi]$ and $\psi_0 \in (0, \pi/2]$. The mathematical model 
+ for X-ray tomography in this setting is the divergent beam transform
  %
  \begin{align}
   &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag\\
-  \label{eq:fanbeam_fwdproj}
-  &\OPD f(\phi, \psi) = \int_0^\infty f\big(x_{\mathrm{s}}(\phi) + s \theta(\phi + \psi/2)\big)\, \D s
+  \label{eq:fanbeam_fwdproj_otherangle}
+  &\OPD f(\phi, \psi) = \int_0^\infty f\big(x_{\mathrm{S}}(\phi) + s \theta(\phi + \tilde\psi)\big)\, \D s
  \end{align}
  %
- with the source position $x_{\mathrm{S}} = -r \theta(\phi)$ and the directional vectors $\theta(\phi) = (\cos\phi, \sin\phi)$. First, 
- we derive its relation to the 2D parallel beam X-ray transform
+ with the source position $x_{\mathrm{S}} = -r \theta(\phi)$ and the directional vectors $\theta(\phi) = (\cos\phi, \sin\phi)$. Here, 
+ $\tilde\psi$ is the angle between $\theta(\phi)$ and the line from the source to the detector point $X(\phi, \psi)$. By means of simple 
+ geometry, one can show that $2r \tilde\psi = R\psi$, i.e. we have
+ %
+ \begin{equation}
+  \label{eq:fanbeam_fwdproj_realangle}
+  \OPD f(\phi, \psi) = \int_0^\infty f\big(x_{\mathrm{S}}(\phi) + s \theta(\phi + \beta\psi/2)\big)\, \D s.
+ \end{equation} 
+ %
+ Now we derive its relation to the 2D parallel beam X-ray transform
  %
  \begin{align}
   &\OPP: L^2(B_1) \Lto L^2([0,2\pi) \times [-r,r]) \notag \\
@@ -344,34 +354,34 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
  %
  \begin{align*}
   \OPD f(\phi, \psi) 
-  &= \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \psi/2)\big)\, \D s \\
-  &= \int_\RR f\big(s \theta(\phi + \psi/2) - r \Pi_{\theta(\phi + \psi/2)}\theta(\phi) \big)\, \D s,
+  &= \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \beta\psi/2)\big)\, \D s \\
+  &= \int_\RR f\big(s \theta(\phi + \beta\psi/2) - r \Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi) \big)\, \D s,
  \end{align*}
  %
- and the projection $\Pi_{\theta(\phi + \psi/2)}\theta(\phi)$ can be calculated as
+ and the projection $\Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi)$ can be calculated as
  %
  \begin{align*}
-  \Pi_{\theta(\phi + \psi/2)}\theta(\phi)
-  &= \theta(\phi) - \INNERLR{\theta(\phi)}{\theta(\phi + \psi/2)}\, \theta(\phi + \psi/2) \\
+  \Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi)
+  &= \theta(\phi) - \INNERLR{\theta(\phi)}{\theta(\phi + \beta\psi/2)}\, \theta(\phi + \beta\psi/2) \\
   &=
   \begin{pmatrix}
-   \cos\phi - \cos(\psi/2)\, \cos(\phi + \psi/2) \\
-   \sin\phi - \cos(\psi/2)\, \sin(\phi + \psi/2)
+   \cos\phi - \cos(\psi/2)\, \cos(\phi + \beta\psi/2) \\
+   \sin\phi - \cos(\psi/2)\, \sin(\phi + \beta\psi/2)
   \end{pmatrix} \\
   &=
   \begin{pmatrix}
-   \sin(\phi + \psi/2)\, \sin(\psi/2) \\
-   -\cos(\phi + \psi/2)\, \sin(\psi/2)
+   \sin(\phi + \beta\psi/2)\, \sin(\beta\psi/2) \\
+   -\cos(\phi + \beta\psi/2)\, \sin(\beta\psi/2)
   \end{pmatrix} \\
-  &= -\sin(\psi/2)\, \theta'(\phi + \psi/2)
+  &= -\sin(\beta\psi/2)\, \theta'(\phi + \beta\psi/2)
  \end{align*}
  %
  and thus 
  %
  \begin{align*}
   \OPD f(\phi, \psi)
-  &= \int_\RR f\big(s \theta(\phi + \psi/2) + r \sin(\psi/2)\, \theta'(\phi + \psi/2) \big)\, \D s \\
-  &= \OPP f\big(\phi + \psi/2, r\sin(\psi/2)\big) \\
+  &= \int_\RR f\big(s \theta(\phi + \beta\psi/2) + r \sin(\beta\psi/2)\, \theta'(\phi + \beta\psi/2) \big)\, \D s \\
+  &= \OPP f\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big) \\
   &= \OPU \OPP f(\phi, \psi)
  \end{align*}
  %
@@ -380,18 +390,18 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
  \begin{align}
   &\OPU: L^2\big([0,2\pi) \times [-r,r]\big) \Lto L^2\big([0,\phi_0] \times [-\psi_0,\psi_0]\big) \notag \\
   \label{eq:fanbeam_unit_trafo}
-  &\OPU g(\phi, \psi) = g\big(\phi + \psi/2, r\sin(\psi/2)\big).
+  &\OPU g(\phi, \psi) = g\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big).
  \end{align} 
  %
- To compute its adjoint, we apply the substitution $\tau = r\sin(\psi/2),\ \D\tau = \sqrt{r^2-\tau^2} / 2\, \D \psi$ and get
+ To compute its adjoint, we apply the substitution $\tau = r\sin(\beta\psi/2),\ \D\tau = \sqrt{r^2-\tau^2}\, \beta/2\, \D \psi$ and get
  %
  \begin{align*}
   \INNER{\OPU g}{h} 
-  &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} g\big(\phi + \psi/2, r\sin(\psi/2)\big)\, h(\phi, \psi)\, \D\psi\, \D\phi \\
-  &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi + \psi/2, r\sin(\psi/2)\big)\, h_0(\phi, \psi)\, \D\psi\, \D\phi \\
-  &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi, r\sin(\psi/2)\big)\, h_0(\phi - \psi/2, \psi)\, \D\phi\, \D\psi \\
-  &= \int_0^{2\pi} \int_{-r\sin(\psi_0/2)}^{r\sin(\psi_0/2)} g(\phi, \tau)\, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, 
-  \frac{2}{\sqrt{r^2-\tau^2}} \D\phi\, \D\tau,
+  &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} g\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big)\, h(\phi, \psi)\, \D\psi\, \D\phi \\
+  &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big)\, h_0(\phi, \psi)\, \D\psi\, \D\phi \\
+  &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi, r\sin(\beta\psi/2)\big)\, h_0(\phi - \beta\psi/2, \psi)\, \D\phi\, \D\psi \\
+  &= \int_0^{2\pi} \int_{-r\sin(\beta\psi_0/2)}^{r\sin(\beta\psi_0/2)} g(\phi, \tau)\, h_0\big(\phi - \arcsin(\tau/r), 
+  2\arcsin(\tau/r)/\beta\big)\, \frac{2}{\beta\sqrt{r^2-\tau^2}} \D\phi\, \D\tau,
  \end{align*}
  %
  where
@@ -404,26 +414,26 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
   \end{cases}
  \end{equation*}
  %
- The integration domain $[-r\sin(\psi_0/2), r\sin(\psi_0/2)]$ covers the support of $g = \OPP f$ if the condition
+ The integration domain $[-r\sin(\beta\psi_0/2), r\sin(\beta\psi_0/2)]$ covers the support of $g = \OPP f$ if the condition
  %
  \begin{equation}
   \label{eq:fanbeam_condition_roi}
-  r \sin(\psi_0/2) \geq 1
+  r \sin(\beta\psi_0/2) \geq 1
  \end{equation}
  %
  is fulfilled. In this case, all points in $\Omega$ are covered by rays from each direction, and it is
  %
  \begin{equation}
   \label{eq:fanbeam_unit_trafo_adj_good}
-  \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big).
+  \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)/\beta\big).
  \end{equation}
  %
  Otherwise, the adjoint involves a cutoff,
  %
  \begin{equation}
   \label{eq:fanbeam_unit_trafo_adj_bad}
-  \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)\big)\, 
-  \chi_{[0, r\sin(\psi_0/2)]}(\ABS{\tau}).
+  \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)/\beta\big)\, 
+  \chi_{[0, r\sin(\beta\psi_0/2)]}(\ABS{\tau}).
  \end{equation}
  %
  Thus, if \eqref{eq:fanbeam_condition_roi} is fulfilled, it is $\DUALOPD = \DUALOPP\DUALOPU$, i.e.
@@ -432,143 +442,77 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
   \DUALOPD g(x)
   &= \int_0^{2\pi} \DUALOPU g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi \notag\\
   \label{eq:fanbeam_backproj}
-  &= \int_0^{2\pi} \frac{2}{\sqrt{r^2-\tau(\phi, x)^2}} g_0\left(\phi - \psi(\phi,x)/2, \psi(\phi,x) \right)\, \D\phi,
+  &= \int_0^{2\pi} \frac{2}{\beta\sqrt{r^2-\tau(\phi, x)^2}} g_0\left(\phi - \psi(\phi,x)/2, \psi(\phi,x) \right)\, \D\phi,
  \end{align}
  %
- where $\tau(\phi,x) = \INNER{x}{\theta'(\phi)}$ and $\psi(\phi,x) = 2\arcsin\big(\tau(\phi,x)/r\big)$.\\[1ex]
+ where $\tau(\phi,x) = \INNER{x}{\theta'(\phi)}$ and $\psi(\phi,x) = 2\arcsin\big(\tau(\phi,x)/r\big) / \beta$.\\[1ex]
  %
- To compare this to the result from the unified theory, we start by calculating the directional field as the normalized vectors from the 
- detector points to the source, i.e.
- %
- \begin{equation*}
-  \tilde N(\phi, \psi) 
-  = x_{\mathrm{S}} - X(\phi, \psi) \\
-  = - r \big(\theta(\phi + \psi) + \theta(\phi)\big)
- \end{equation*}
- %
- before normalization. It is
- %
- \begin{align*}
-  \ABS{\tilde N(\phi, \psi)}^2 = r^2 \big(2 + 2\INNER{\theta(\phi + \psi)}{\theta(\phi)} \big) = 4 r^2 \cos^2(\psi/2)
- \end{align*}
- %
- and thus
+ We now apply the unified theory to compare the results. For the directional field $N$, we already showed that 
+ $N(\phi,\psi) = -\theta(\phi + \beta\psi/2)$, see \eqref{eq:fanbeam_fwdproj_realangle}. As in the parallel geometry, we have 
+ $P(\phi,\psi) = \lbrace N(\phi,\psi)\rbrace$, and the rays are lines from the far end of the object to the detector. In order to determine 
+ the adjoint using \eqref{eq:adj_op_onedir}, we need to find $\Gamma_\phi$ as the inverse of 
+ $(\psi, s) \mapsto \tilde X(\phi, \psi) + (2r - s) N(\phi,\psi)$. However, since $s$ is only a help variable which does not appear in the 
+ final formula, we can select any parametrization of a ray through $x$ by arc length. An obvious choice is
  %
  \begin{equation*}
-  N(\phi,\psi) = - \frac{\theta(\phi + \psi) + \theta(\phi)}{2 \cos(\psi/2)}.
+  \gamma_x(s) = -r \theta(\phi) + s\, \frac{x + r\theta}{\ABS{x + r\theta}}
  \end{equation*}
  %
- The angle of this vector relative to $-\theta(\phi)$ is determined by
+ from the source point ($s=0$) through $x$ with parameter $s_x=\ABS{x + r\theta}$. If we denote by $\tilde\psi_x$ the angle between this 
+ray and  $\theta(\phi)$, we can immediately conclude that
  %
  \begin{equation*}
-  \cos\delta = \frac{\INNER{\theta(\phi + \psi) + \theta(\phi)}{\theta(\phi)}}{2 \cos(\psi/2)} = \cos(\psi/2),
+  \cos \tilde\psi_x = \frac{\INNER{x + r\theta(\phi)}{\theta(\phi)}}{\ABS{x + r\theta(\phi)}} 
+  = \frac{r + \INNER{x}{\theta(\phi)}}{\sqrt{\ABS{x}^2 + r^2 + 2r \INNER{x}{\theta(\phi)}}}.
  \end{equation*}
  %
- hence we can write the directional vector field as
+ The same argument as in the derivation of \eqref{eq:fanbeam_fwdproj_realangle} yields the corresponding detector angle
  %
  \begin{equation}
-  \label{eq:fanbeam_dir_field}
-  N(\phi,\psi) = - \theta(\phi + \psi/2).
- \end{equation} 
- %
- As in the parallel geometry, we have $P(\phi,\psi) = \lbrace N(\phi,\psi)\rbrace$, and the rays are lines from the far end of 
- the object to the detector. We select a virtual point beyond the source as its starting point:
- %
- \begin{equation*}
-  \tilde \gamma(\phi, \psi) = s \mapsto X(\phi,\psi) + (2r-s) N(\phi,\psi).
- \end{equation*}
- %
- This leads to the transform
- %
- \begin{align}
-  \OPD: L^2(B_1) &\Lto L^2\big([0,2\pi) \times [-\psi_0/2, \psi_0/2]\big)\\
-  \OPD f(\phi, \psi)
-  &= \int_{\tilde \gamma(\phi,\psi)}\, f \, \D \gamma \notag \\
-  &= \int_0^\infty f\big(r\theta(\phi + \psi) + (s-2r)\theta(\phi + \psi/2)\big)\, \D s \notag \\
-  \label{eq:fanbeam_fwdproj_alt}
-  &= \int_\RR f\big(r\theta(\phi + \psi) + s\theta(\phi + \psi/2)\big)\, \D s,
- \end{align}
- %
- which is the same as \eqref{eq:fanbeam_fwdproj} up to an offset in the $s$ integration. In order to determine the adjoint using 
- \eqref{eq:adj_op_onedir}, we need to find $\Gamma_\phi$ as the inverse of $(\psi, s) \mapsto \tilde \gamma_\phi(\psi)(s)$, i.e. for $x \in 
- \RR^2$, we need to solve
- %
- \begin{equation*}
-  r\theta(\phi + \psi) + s\theta(\phi + \delta(\psi)) = x
- \end{equation*}
- %
- for $\psi$ and $s$. To find this coordinate change, we consider for $\theta=\theta(\phi)$ the line
- %
- \begin{equation*}
-  \gamma_x(\sigma) = -r\theta + \sigma\, \frac{x+r\theta}{\ABS{x + r \theta}}
- \end{equation*}
- %
- from the source point ($\sigma=0$) through $x$ ($\sigma=\ABS{x+r\theta}$). The intersection with the circle $\ABS{x}=r$ determines the 
- detector point reached by the ray, from which the parameter $\psi$ can be calculated. It is
- %
- \begin{align*}
-  \ABS{\gamma_x(\sigma)}^2 - r^2 
-  &= r^2 + \sigma^2 - 2 \sigma\, \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r\theta} - r^2 \\
-  &= \sigma \left(\sigma - 2 \ABS{x + r \theta}^{-1} \INNER{x + r \theta}{r \theta}\right).
- \end{align*}
- %
- The second zero of this expression besides $\sigma=0$ is apparently
- %
- \begin{equation}
-  \label{eq:fanbeam_intersec_param}
-  \sigma_{\mathrm{D}} = \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}} ,
- \end{equation} 
- %
- and the corresponding curve point is
- %
- \begin{align*}
-  \gamma_x(\sigma_{\mathrm{D}}) 
-  &= -r \theta + \frac{2 \INNER{x + r \theta}{r \theta}}{\ABS{x + r \theta}}\, \frac{x + r\theta}{\ABS{x + r \theta}} \\
-  &= \ABS{x + r \theta}^{-2} \left(-r \ABS{x + r\theta}^2\, \theta  + 2 \INNER{x + r \theta}{r \theta} (x + r\theta)\right) \\
-  &= \ABS{x + r \theta}^{-2} \left(-r \big(\ABS{x}^2 + r^2 + 2\INNER{x}{r\theta}\big)\, \theta  +
-  2 \INNER{x + r \theta}{r \theta} x + 2r \big(\INNER{x}{r \theta} + r^2\big)\theta \right) \\
-  &= \ABS{x + r\theta}^{-2} \left(r(r^2 - \ABS{x}^2)\, \theta + 2r \INNER{x + r\theta}{\theta}\, x \right)
- \end{align*}
- %
- Setting this expression equal to $r\theta(\phi + \psi_x)$ yields the following alternative ways of acquiring $\psi_x$:
- %
- \begin{align}
-  \psi_x + \phi
-  \label{eq:fanbeam_psi_1}
-  &= \arccos\left(\frac{(r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1}{\ABS{x + r\theta}^2} \right) \\
-  \label{eq:fanbeam_psi_2}
-  &= \arcsin\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{\ABS{x + r\theta}^2} \right) \\
-  \label{eq:fanbeam_psi_3}
-  &= \arctan\left(\frac{(r^2 - \ABS{x}^2)\, \sin\phi + 2 \INNER{x + r\theta}{\theta}\, x_2}{
-  (r^2 - \ABS{x}^2)\, \cos\phi + 2 \INNER{x + r\theta}{\theta}\, x_1} \right).
- \end{align}
- %
- Since the rays were parametrized with respect to arc length, the first factor $\ABS{\partial_s\Gamma_\phi^{-1}}$ in 
- \eqref{eq:adj_op_onedir_alt} is equal to $1$. On the other hand, due to rotational symmetry, we can consider the case $\phi=0$ and 
- calculate  the determinant of the Jacobian $\partial(s,\psi)/\partial x$ for
- %
- \begin{align*}
-  s(x) &= \sqrt{(x_1 + r)^2 + x_2^2}, \\
-  \psi(x) &= \arctan\left(\frac{2 (x_1 + r) x_2}{r^2 - x_1^2 - x_2^2 + 2 (x_1 + r) x_1} \right)
- \end{align*}
- %
- It is straightforward to prove that
- %
- \begin{equation}
-  \label{eq:fanbeam_jacobian_det}
-  \DET \frac{\partial(s,\psi)}{\partial x} = \frac{2}{\ABS{x + r\theta}}.
+  \label{eq:fanbeam_psi_x}
+  \psi_x = \frac{2}{\beta}\, \arccos\left( \frac{r + \INNER{x}{\theta(\phi)}}{\sqrt{\ABS{x}^2 + r^2 + 2r \INNER{x}{\theta(\phi)}}} \right).
  \end{equation}
  %
- This implies that
+ Now it remains to calculate the functional determinant of the change of coordinates $(\psi, s) \to x$. In an intermediate step, we set 
+ $\mu_x = \cos \tilde\psi_x$ and get the functional determinant
+ %
+ \begin{equation*}
+  \DET \frac{\partial(\mu_x, s_x)}{\partial x} = - \frac{\INNER{x}{\theta'(\phi)}}{\ABS{x + r \theta(\phi)}^3}.
+ \end{equation*}
+ %
+ Furthermore, it is
+ %
+ \begin{equation*}
+  \frac{\D \tilde\psi_x}{\D \mu_x}\big(\mu_x\big) = \arccos'(\mu_x) = - \frac{1}{\sqrt{1 - \mu_x^2}}.
+ \end{equation*}
+ %
+ This expression can be simplified as follows:
+ %
+ \begin{align*}
+  1 - \mu_x^2 
+  &= \frac{\ABS{x + r\theta(\phi)}^2 - \big(\INNER{x}{\theta(\phi)} + r\big)^2}{\ABS{x + r\theta(\phi)}^2} \\
+  &= \frac{\ABS{x}^2 + 2r \INNER{x}{\theta(\phi)} + r^2 - \INNER{x}{\theta(\phi)}^2 - 2r\INNER{x}{\theta(\phi)} - r^2}{\ABS{x + 
+  r\theta(\phi)}^2} \\
+  &= \frac{\ABS{x}^2 - \INNER{x}{\theta(\phi)}^2}{\ABS{x + r\theta(\phi)}^2} \\
+  &= \frac{\INNER{x}{\theta'(\phi)}^2}{\ABS{x + r\theta(\phi)}^2}.
+ \end{align*}
+ %
+ Hence, with the chain rule, we get
+ %
+ \begin{equation*}
+  \ABSLR{\DET \frac{\partial(\tilde\psi_x, s_x)}{\partial x} (x)} = \ABSLR{\DET \frac{\partial(\mu_x, s_x)}{\partial x} (x)} \cdot
+  \ABSLR{\frac{\D \tilde\psi_x}{\D \mu_x}\big(\mu_x\big)} = \frac{1}{\ABS{x + r\theta(\phi)}^2}.
+ \end{equation*}
+ %
+ The transition from $\tilde\psi_x$ to $\psi_x$ introduces a factor $2/\beta$, and the adjoint can be finally written as
  %
  \begin{equation}
   \label{eq:fanbeam_backproj_alt}
-  \DUALOPD g(x) = \int_0^{\phi_0} \frac{2}{\ABS{x + r\theta(\phi)}}\, g\big(\phi, \psi(\phi,x)\big)\, \D\phi
+  \OPD^* g(x) = \int_0^{\phi_0} \frac{2}{\beta \ABS{x + r\theta(\phi)}^2}\, g\big(\phi, \psi(\phi, x)\big)\, \D \phi
  \end{equation}
  %
- with $\psi(\phi, x)$ determined from one of the representations \eqref{eq:fanbeam_psi_1}--\eqref{eq:fanbeam_psi_3}. It is not obvious that 
- this formula is equivalent to \eqref{eq:fanbeam_backproj}. \NOTE{I hope the calculation is correct.}
+ with $\psi(\phi, x) = \psi_x$ as defined in \eqref{eq:fanbeam_psi_x}. It is not obvious that this formula is equivalent to 
+ \eqref{eq:fanbeam_backproj}.
 \end{example}
-
 
 \end{document}
