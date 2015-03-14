@@ -73,6 +73,13 @@
 
 \maketitle
 
+
+
+
+\section{General theory}
+%
+%
+%
 During data acquisition, detector and sample move relative to each other. Thus, the position of a specific point on the detector varies 
 with time or some other parameter, like a rotation angle. Furthermore, we consider detectors which are surface-, curve- or point-like and 
 can be regarded as manifolds in $\RR^D$ parameterized over an open set in $\RR^d$ with typically $d < D$. Hence, we use the following 
@@ -179,8 +186,8 @@ Now we can rewrite the integral \eqref{eq:adj_calculation_step1} as
 \end{align*}
 %
 where $[\partial \Gamma_t]_1$ stands for the first column of the Jacobian of $\Gamma_t$ and $\Pi_{\gamma_t}(x) = [\Gamma_t(x)]_2$ is the 
-$u$ 
-component of $(s, u) = \Gamma_t(x)$. Hence, the adjoint operator can be written as
+$u$ component of $(s, u) = \Gamma_t(x)$. Note that $\ABS{[\partial \Gamma_t]_1} = 1$ if the rays are parametrized with respect to arc 
+length. Hence, the adjoint operator can be written as
 %
 \begin{equation}
  \label{eq:adj_op_onedir}
@@ -194,11 +201,27 @@ which is equal to
 \begin{equation}
  \label{eq:adj_op_onedir_alt}
  \DUALOPA g(x) = \int_T \ABSLR{\partial_s \Gamma_t^{-1}\big(\Gamma_t(x)\big)}\, 
- \ABS{\DET{\partial \Gamma_t^{-1}\big(\Gamma_t(x)\big)}}^{-1}\, g\big(t, \Pi_{\gamma_t}(x)\big)\, \D t
+ \ABS{\DET{\partial \Gamma_t^{-1}\big(\Gamma_t(x)\big)}}^{-1}\, g\big(t, \Pi_{\gamma_t}(x)\big)\, \D t.
 \end{equation}
 %
+If the transformation factors cannot be determined, it is still possible to calculate the adjoint
 %
+\begin{align}
+ \OPA^\#: \SPCH_2(T \times U, w) \Lto \SPCH_1(\Omega) \notag \\
+ \label{eq:adj_op_onedir_weighted}
+ \OPA^\# g(x) = \int_T g\big(t, \Pi_{\gamma_t}(x)\big)\, \D t
+\end{align}
 %
+on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0, \infty)$. 
+
+
+
+
+
+\section{Examples}
+
+
+
 \begin{example}[Parallel geometry]
  We consider a flat 2D detector moving on the unit circle in the $x$-$y$ plane, oriented to the center of the circle:
  %
