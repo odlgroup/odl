@@ -610,7 +610,58 @@ ray and  $\theta(\phi)$, we can immediately conclude that
   &= \int_0^{2\pi} \frac{2r}{\cos^2\big(\psi(\phi,x)\big)\sqrt{r^2-\tau(\phi, x)^2}}\,
   g_0\left(\phi - \psi(\phi,x)/2, 2r \tan\big(\psi(\phi,x)\big) \right)\, \D\phi 
  \end{align} 
-
 \end{example}
+
+
+
+\begin{example}[Cone beam geometry, circular acquisition, curved detector]
+ In this setting, we consider a detector which is curved both horizontally and vertically, but with possibly different curvatures. Let
+ %
+ \begin{equation}
+  \label{eq:conecurved_unitvecs}
+  \theta(\phi) = \TRANSP{(\cos\phi, \sin\phi, 0)}, \quad \theta(\phi) = \TRANSP{(-\sin\phi, \cos\phi, 0)}, \quad e_z = \TRANSP{(0, 0, 1)}.
+ \end{equation}
+ %
+ be the unit vectors in the rotating system. The detector is parametrized over the sets
+ %
+ \begin{equation}
+  \label{eq:conecurved_params}
+  T = [0, \phi_0],\quad U = [-\psi_0, \psi_0] \times [-\vartheta_0, \vartheta_0],
+ \end{equation}
+ %
+ and is assumed to have curvature $1/R_\phi$ along $\theta'(\phi)$ and $1/R_z$ along $e_z$. From the 2D case, we know that for $\theta=0$, 
+ the detector point associated with $\phi$ and $\psi$ is
+ %
+ \begin{equation*}
+  d_1 = c_1 + R_1 \theta(\phi + \psi), \quad c_1 = -(R_1 - r) \theta(\phi).
+ \end{equation*}
+ %
+ If $\theta \neq 0$, the detector point is given by a second rotation applied to $d_1$, the center of rotation being $c_2 = -(R_2 - r) 
+ \theta(\phi)$ and the rotation axis being $-\theta'(\phi)$. This rotation can be generally expressed as
+ %
+ \begin{equation*}
+  x \mapsto c_2 + R(x - c_2), \quad R(x) = \INNER{x}{\theta'}\, \theta' + \cos\vartheta \big(x - \INNER{x}{\theta'}\, \theta'\big) 
+  - \sin\vartheta\, \theta' \times x
+ \end{equation*}
+ %
+ with the cross product $\times$ in $\RR^3$. Using the relations
+ %
+ \begin{align*}
+  \theta'(\phi) \times \theta(\phi) &= -e_z, \\
+  e_z \times \theta'(\phi) &= -\theta(\phi), \\
+  \INNER{\theta(\phi + \psi)}{\theta'(\phi)} &= \sin\psi \\
+  \theta(\phi + \psi) - \INNER{\theta(\phi + \psi)}{\theta'(\phi)}\, \theta'(\phi) &= \cos\psi \theta(\phi)\\
+  \theta'(\phi) \times \theta(\phi + \psi) &= -\cos\psi e_z.
+ \end{align*}
+ %
+ and inserting $x = d_1$, we get the detector point
+ %
+ \begin{align*}
+  d
+  &= 
+ \end{align*}
+ 
+\end{example}
+
 
 \end{document}
