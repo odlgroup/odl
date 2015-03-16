@@ -9,7 +9,7 @@ class RLTestCase(unittest.TestCase):
 
     def assertAllAlmostEquals(self,iter1,iter2,*args,**kwargs):
         for [i1,i2] in zip(iter1,iter2):
-            if isinstance(i1, Iterable):
-                self.assertAllAlmostEquals(i1,i2,*args,**kwargs)
-            else:
-                self.assertAlmostEqual(i1,i2,*args,**kwargs)
+            try:
+                self.assertAllAlmostEquals(iter(i1),iter(i2),*args,**kwargs)
+            except TypeError:
+                self.assertAlmostEquals(float(i1),float(i2),*args,**kwargs)

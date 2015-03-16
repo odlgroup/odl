@@ -31,6 +31,7 @@ from math import sqrt
 import numpy as np
 
 import RL.operator.operatorAlternative as OP
+import RL.operator.functional as FUN
 from RL.utility.utility import allEqual
 from RL.operator.measure import *
 
@@ -58,25 +59,44 @@ class Space(object):
             """Assign the values of other to this vector
             """
 
+        #Convinience operators
+        def __iadd__(self,other):
+            """Vector addition (self+=other)
+            """
+            self.space.linComb(1.,other,1.,self)
+            return self
+
+        def __isub__(self,other):
+            """Vector subtraction (self+=other)
+            """
+            self.space.linComb(1.,other,-1.,self)
+            return self
+
+        def __imul__(self,scalar):
+            """Vector multiplication by scalar (self*=scalar)
+            """
+            self.space.linComb(0.0,self,scalar,self)
+            return self
+
         def __add__(self, other):
             """Vector addition
             """
             tmp = self.clone()
-            self.space.linComb(1,other,1,tmp)
+            tmp += other
             return tmp
 
         def __sub__(self, other):
             """Vector subtraction
             """
             tmp = self.clone()
-            self.space.linComb(-1,other,1,tmp)
+            tmp -= other
             return tmp
 
-        def __mul__(self, other):
+        def __mul__(self, scalar):
             """Scalar multiplication
             """
             tmp = self.clone()
-            self.space.linComb(other,self,0,tmp)
+            tmp *= scalar
             return tmp
 
         def clone(self):
@@ -244,11 +264,11 @@ class Reals(Space):
         def assign(self,other):
             self.__val__ = other.__val__
 
-        def __float__(self):        return self.__val__.__float__()              # XXX
+        def __float__(self):        return self.__val__.__float__()
         # Conversions
         def __str__(self):          return "" + self.__val__.__str__()
         # Represenation
-        def __repr__(self):         return "%Real(%d)" % (self.__val__)
+        def __repr__(self):         return "Real(%d)" % (self.__val__)
 
     class MultiplyOp(OP.SelfAdjointOperator):    
         """Multiply with scalar
@@ -294,10 +314,10 @@ class RN(Space):
         self.n = n
 
     def inner(self,x,y):
-        return np.vdot(x,y)
+        return np.vdot(x.data,y.data)
     
     def linComb(self,a,x,b,y):
-        y[:]=a*x+b*y
+        y.data[:]=a*x.data+b*y.data
 
     def zero(self):
         return self.makeVector(np.zeros(self.n),copy = False)
@@ -319,16 +339,19 @@ class RN(Space):
     def makeVector(self, *args, **kwargs):
         return RN.Vector(self,*args, **kwargs)
 
-    class Vector(np.ndarray,Space.Vector):
-        def __new__(cls, space, *args, **kwargs):
-            data = np.array(*args,**kwargs)
-            return data.view(RN.Vector)
-        
+    class Vector(Space.Vector):        
         def __init__(self,space,*args, **kwargs):
             Space.Vector.__init__(self,space, *args,**kwargs)
+            self.data = np.array(*args,**kwargs)
 
         def assign(self,other):
-            self[:] = other
+            self.data[:] = other.data
+            
+        def __str__(self):          return "" + self.data.__str__()
+        # Represenation
+        def __repr__(self):         return "RNVector("+self.data.__str__()+")"
+
+        def __getitem__(self,index):    return self.data[index]
 
     def MakeMultiplyOp(self,A):
         class MultiplyOp(OP.Operator):
@@ -340,10 +363,10 @@ class RN(Space):
                 self.A = A
 
             def apply(self,rhs,out):
-                out.assign(np.dot(self.A,rhs))
+                out.assign(np.dot(self.A,rhs.data))
 
             def applyAdjoint(self,rhs,out):
-                out.assign(np.dot(self.A.T,rhs))
+                out.assign(np.dot(self.A.T,rhs.data))
 
             @property
             def mat(self):
@@ -390,7 +413,7 @@ class L2(Space):
     def makeVector(self, *args, **kwargs):
         return L2.Vector(self,*args, **kwargs)
 
-    class Vector(OP.Operator,Space.Vector):
+    class Vector(FUN.Functional,Space.Vector):
         """ L2 Vectors are operators from the domain onto R(C)
         """
 
@@ -402,7 +425,13 @@ class L2(Space):
             return self.function(rhs)
 
         def assign(self,other):
-            raise NotImplementedError("Todo")
+            self.function = other.function
+
+        def domain(self):
+            return self.space.domain
+
+        def range(self):
+            return self.space.field
 
 
 class UniformDiscretization(RN, Discretization):
@@ -434,22 +463,23 @@ class UniformDiscretization(RN, Discretization):
         return UniformDiscretization.Vector(self,*args, **kwargs)
 
     def integrate(self,f):
-        return np.trapz(f,dx=(self.parent.domain.end-self.parent.domain.begin)/(self.n-1))
+        return np.trapz(f.data,dx=(self.parent.domain.end-self.parent.domain.begin)/(self.n-1))
 
     def points(self):
         return np.linspace(self.parent.domain.begin,self.parent.domain.end,self.n)
 
     class Vector(RN.Vector):
-        def __new__(cls, space, *args, **kwargs):
-            if (isinstance(args[0],L2.Vector) and args[0].space == space.parent):
-                data = args[0](space.points())
-            else:
-                data = RN.Vector.__new__(cls,space,*args,**kwargs)
-
-            return data.view(UniformDiscretization.Vector)
-
         def __init__(self,space, *args,**kwargs):
-            RN.Vector.__init__(self,space, *args,**kwargs)
+            if (len(args)==1 and isinstance(args[0],L2.Vector) and args[0].space == space.parent):
+                data = RN.Vector.__init__(self,space,args[0](space.points()),copy = False)
+            else:
+                data = RN.Vector.__init__(self,space,*args,**kwargs)
+
+        def __mul__(self,other):
+            if isinstance(other,UniformDiscretization.Vector):
+                return self.space.makeVector(self.data*other.data)
+            else:
+                Space.Vector.__mul__(self,other)
 
         def assign(self,other):
-            self[:]=other
+            RN.Vector.assign(self,other)

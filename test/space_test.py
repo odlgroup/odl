@@ -38,6 +38,8 @@ class RealsTest(RLTestCase):
         y = R.makeVector(4.0)
         z = R.makeVector(5.0)
 
+        print(x+y)
+
         self.assertAlmostEqual(x+y,z)
 
 class RNTest(RLTestCase):
@@ -99,15 +101,15 @@ class ProductTest(RLTestCase):
         self.assertAllAlmostEquals(v,expected)
 
     def testConstructR1xR2(self):
-        R1 = RN(1)
+        R3 = RN(3)
         R2 = RN(2)
-        S = ProductSpace(R1,R2)
-        self.assertTrue(S.dimension == 3)
+        S = ProductSpace(R3,R2)
+        self.assertTrue(S.dimension == 5)
 
-        v1 = R1.makeVector([1.0])
+        v1 = R3.makeVector([1.0,5.0,7.0])
         v2 = R2.makeVector([2.0,3.0])
         v = S.makeVector(v1,v2)
-        
+
         self.assertAllAlmostEquals([v1,v2],v)
         self.assertAlmostEqual(v.normSquared(),v1.normSquared()+v2.normSquared())
 

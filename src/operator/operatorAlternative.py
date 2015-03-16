@@ -57,19 +57,16 @@ class Operator(object):
         else:
             raise TypeError('Expected an operator')
 
-    def __mul__(self, other):
-        """Pointwise multiplication of operators (A*B)(x) == A(x)*B(x)
-        or scalar multiplication
+    def __rmul__(self, other):
+        """Multiplication of operators with sclars (a*A)(x) = a*A(x)
         """
 
-        if isinstance(other, Operator):
-            return PointwiseProduct(self,other)
-        elif isinstance(other, Number):
+        if isinstance(other, Number):
             return OperatorScalarMultiplication(self,other)
         else:
             raise TypeError('Expected an operator or a scalar')
 
-    __rmul__ = __mul__
+    #__mul__ = __rmul__ Should we have this?
 
     @abstractmethod
     def domain(self):
@@ -106,15 +103,32 @@ class SelfAdjointOperator(LinearOperator):
 class OperatorSum(Operator):
     """Expression type for the sum of operators
     """
-    def __init__(self,left,right):
-        self.left = left
-        self.right = right
+    def __init__(self,op1,op2):
+        if (op1.range() != op2.range() or op1.domain() != op2.domain()):
+            raise TypeError("Range and domain of operators do not fit")
+
+        self.op1 = op1
+        self.op2 = op2
 
     def apply(self, rhs, out):
-        self.left(rhs, out) + self.right(rhs, out)
+        tmp1 = self.range().empty()
+        tmp2 = self.range().empty()
+        self.op1.apply(rhs, tmp1)
+        self.op2.apply(rhs, tmp2)
+        out.assign(tmp1+tmp2)
 
     def applyAdjoint(self, rhs, out):
-        self.left.applyAdjoint(rhs, out) + self.right.applyAdjoint(rhs, out)
+        tmp1 = self.domain().empty()
+        tmp2 = self.domain().empty()
+        self.op1.applyAdjoint(rhs, tmp1)
+        self.op2.applyAdjoint(rhs, tmp2)
+        out.assign(tmp1+tmp2)
+
+    def domain(self):
+        return self.op1.domain()
+
+    def range(self):
+        return self.op1.range()
 
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
@@ -127,13 +141,13 @@ class OperatorComposition(Operator):
         self.left = left
         self.right = right
 
-    def apply(self, rhs,out):
-        tmp = self.left.domain().empty()
+    def apply(self,rhs,out):
+        tmp = self.right.range().empty()
         self.right.apply(rhs,tmp)
         self.left.apply(tmp,out)
     
-    def applyAdjoint(self, rhs):
-        tmp = self.right.domain().empty()
+    def applyAdjoint(self,rhs,out):
+        tmp = self.left.domain().empty()
         self.left.applyAdjoint(rhs,tmp)
         self.right.applyAdjoint(tmp,out)
 
@@ -154,8 +168,12 @@ class PointwiseProduct(Operator):
         self.op1 = op1
         self.op2 = op2
 
-    def apply(self,rhs):
-        return self.op1(rhs) * self.op2(rhs)
+    def apply(self,rhs,out):
+        tmp1 = self.op1.range().empty()
+        tmp2 = self.op2.range().empty()
+        self.op1.apply(rhs, tmp1)
+        self.op2.apply(rhs, tmp2)
+        out.assign(tmp1*tmp2)
 
 class OperatorScalarMultiplication(Operator):
     """Expression type for the multiplication of operators with scalars
