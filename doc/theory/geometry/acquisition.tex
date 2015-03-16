@@ -226,21 +226,21 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
  We consider a flat 2D detector moving on the unit circle in the $x$-$y$ plane, oriented to the center of the circle:
  %
  \begin{align*}
-  & T = [-\phi_0, \phi_0],\quad U = [-l_x/2, l_x/2] \times [-l_z/2, l_z/2] \\
-  & X(\phi, u) = \theta(\phi) + R(\phi) \cdot \TRANSP{(u_1, 0, u_2)}
+  & T = [-\phi_0, \phi_0],\quad U = [-l_y, l_y] \times [-l_z, l_z] \\
+  & X(\phi, u) = \theta(\phi) + R(\phi) \cdot \TRANSP{(0, u_1, u_2)}
  \end{align*}
  %
- with $\phi_0 \in (0, \pi/2]$, $l_x, l_z > 0$ and
+ with $\phi_0 \in (0, \pi/2]$, $l_y, l_z > 0$ and
  %
  \begin{align}
-  \theta(\phi) &= \TRANSP{(-\sin\phi, \cos\phi, 0)}, \\ 
+  \theta(\phi) &= \TRANSP{(\cos\phi, \sin\phi, 0)}, \\ 
   R(\phi) &=
   \begin{pmatrix}
    \cos\phi & -\sin\phi & 0 \\
    \sin\phi & \cos\phi & 0 \\
    0 & 0 & 1
   \end{pmatrix}
-  = \big(\theta'(\phi) | \theta(\phi) | e_z\big).
+  = \big(\theta(\phi) | \theta'(\phi) | e_z\big).
  \end{align}
  %
  The classical X-ray transform in these coordinates for functions on a set $\Omega \subset B_1$ in $\RR^3$ is given by
@@ -258,8 +258,8 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
   \DUALOPP g(x) = \int_{-\phi_0}^{\phi_0} g\big(\phi, \INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)\, \D \phi.
  \end{equation}
  %
- In our common framework, the directional mapping is given by $N(\phi, u) = -\theta(\phi)$, which is also the canonical normal 
- $n = \eta_1 \times \eta_2$ with $\eta_j = \partial_{u_j} X / \ABS{\partial_{u_j} X}$. It is $P(\phi, u) = \lbrace N(\phi, u)\rbrace$.
+ In our common framework, the directional mapping is given by $N(\phi, u) = -\theta(\phi)$, which is the negative of the canonical normal 
+ $N = \eta_1 \times \eta_2$ with $\eta_j = \partial_{u_j} X / \ABS{\partial_{u_j} X}$. It is $P(\phi, u) = \lbrace N(\phi, u)\rbrace$.
  The rays are straight lines, and their formula is (leaving out the ``$\,\widetilde{\ }\,$'' to simplify notation)
  %
  \begin{equation*}
@@ -307,7 +307,7 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
 
 
 
-\begin{example}[Fan beam geometry]
+\begin{example}[Fan beam geometry, curved detector]
  Here, we consider the case of 2D functions on $\Omega = B_1 \subset \RR^2$. The detector is a segment of a circle with radius $R > 1$ and 
  detects rays coming from a point source on the opposite side of a smaller circle with radius $r$. We write $R = \beta r$, $\beta \geq 1$ 
  and parametrize the detector as follows:
@@ -447,6 +447,10 @@ on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0,
  %
  where $\tau(\phi,x) = \INNER{x}{\theta'(\phi)}$ and $\psi(\phi,x) = 2\arcsin\big(\tau(\phi,x)/r\big) / \beta$.\\[1ex]
  %
+ \textbf{Important note:} It is not clear if the following reasoning holds due to the $x$-dependent ray definition. Even though $s$ does 
+ not explicitly appear in either one of the formulas \eqref{eq:adj_op_onedir}--\eqref{eq:adj_op_onedir_weighted}, it implicitly does in the 
+ evaluation point of the functional determinant.\\[1ex]
+ %
  We now apply the unified theory to compare the results. For the directional field $N$, we already showed that 
  $N(\phi,\psi) = -\theta(\phi + \beta\psi/2)$, see \eqref{eq:fanbeam_fwdproj_realangle}. As in the parallel geometry, we have 
  $P(\phi,\psi) = \lbrace N(\phi,\psi)\rbrace$, and the rays are lines from the far end of the object to the detector. In order to determine 
@@ -513,6 +517,100 @@ ray and  $\theta(\phi)$, we can immediately conclude that
  %
  with $\psi(\phi, x) = \psi_x$ as defined in \eqref{eq:fanbeam_psi_x}. It is not obvious that this formula is equivalent to 
  \eqref{eq:fanbeam_backproj}.
+\end{example}
+
+
+
+
+\begin{example}[Fan beam geometry, flat detector]
+ The situation with a flat detector can be reduced to the curved detector setting with $R = 2r$. Here, we have the parameter sets
+ %
+ \begin{equation}
+  \label{eq:fanflat_params}
+  T = [0, \phi_0], \quad U = [-l, l]
+ \end{equation}
+ %
+ for the parametrization
+ %
+ \begin{equation*}
+  X(\phi, \tau) = - r \theta(\phi) + 2 r \theta\big(\phi + \psi(\tau)\big)
+ \end{equation*}
+ %
+ of the detector. The relation between the detector coordinate $\tau$ and the angle between the central ray and the ray to the detector 
+ position defined by $\tau$ is given by the relation
+ %
+ \begin{equation*}
+  \tan\psi = \frac{\tau}{2r},
+ \end{equation*}
+ %
+ hence the detector parametrization is
+ %
+ \begin{equation}
+  \label{eq:fanflat_detector_parametr}
+  X(\phi, \tau) = - r \theta(\phi) + 2 r \theta\big(\phi + \arctan(\tau/2r)\big).
+ \end{equation}
+ %
+ The directional field $N$ can be read off this definition as
+ %
+ \begin{equation}
+  \label{eq:fanflat_dirfield}
+  N(\phi, \tau) = -\theta\big(\phi + \arctan(\tau/2r)\big).
+ \end{equation} 
+ %
+ Alternatively, we can parametrize the detector as
+ %
+ \begin{equation}
+  \label{eq:fanflat_detector_parametr_alt}
+  X(\phi, \tau) = r \theta(\phi) + \tau \theta'(\phi),\quad \theta'(\phi) = \TRANSP{(-\sin\phi, \cos\phi)}.
+ \end{equation}
+ %
+ If we denote with $\OPD_{\mathrm{c}}$ the divergent beam transform \eqref{eq:fanbeam_fwdproj_realangle} with $\beta=2$, the flat detector 
+ transform
+ %
+ \begin{align}
+  &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag \\
+  \label{eq:fanflat_fwdproj}
+  &\OPD f(\phi, \tau) = \int_0^\infty f\left(-r \theta(\phi) + s \theta\big(\phi + \arctan(\tau/2r)\big) \right)\, \D s
+ \end{align}
+ %
+ can be expressed as a transformed version of $\OPD_{\mathrm{c}}$:
+ %
+ \begin{equation*}
+  \OPD f(\phi, \tau) = \OPD_{\mathrm{c}} f\big(\phi,  \arctan(\tau/2r)\big) = \OPT \OPD_{\mathrm{c}} f(\phi, \tau)
+ \end{equation*}
+ %
+ with
+ %
+ \begin{equation*}
+  \OPT: L^2\big([0, \phi_0] \times [-\psi_0, \psi_0]) \Lto L^2\big([0, \phi_0] \times [-l, l]\big), \quad \psi_0 = \arctan(l/2r).
+ \end{equation*}
+ %
+ Its adjoint can be determined with the coordinate change $\psi = \arctan(\tau/2r),\ \D\psi = \cos^2\psi / 2r\, \D\tau$ from
+ %
+ \begin{align*}
+  \INNER{\OPT g}{h} 
+  &= \int_0^{\phi_0} \int_{-l}^l g\big(\phi, \arctan(\tau/2r)\big)\, h(\phi, \tau)\, \D\tau\, \D\phi \\
+  &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} g(\phi, \psi)\, h(\phi, 2r\tan\psi)\, \frac{2r}{\cos^2\psi} \D\psi\, \D\phi,
+ \end{align*}
+ %
+ i.e.
+ %
+ \begin{equation}
+  \label{eq:fanflat_curved2flat_adj}
+  \DUALOPT h(\phi, \psi) = h(\phi, 2r\tan\psi)\, \frac{2r}{\cos^2\psi}.
+ \end{equation} 
+ %
+ Using the expression \eqref{eq:fanbeam_backproj} for $\DUAL{\OPD_{\mathrm{c}}}$, we conclude that
+ %
+ \begin{align}
+  \DUALOPD g(x) 
+  &= \int_0^{2\pi} \frac{1}{\sqrt{r^2-\tau(\phi, x)^2}} (\DUALOPT g)_0\left(\phi - \psi(\phi,x)/2, \psi(\phi,x) \right)\, \D\phi 
+  \notag \\
+  \label{eq:fanflat_backproj}
+  &= \int_0^{2\pi} \frac{2r}{\cos^2\big(\psi(\phi,x)\big)\sqrt{r^2-\tau(\phi, x)^2}}\,
+  g_0\left(\phi - \psi(\phi,x)/2, 2r \tan\big(\psi(\phi,x)\big) \right)\, \D\phi 
+ \end{align} 
+
 \end{example}
 
 \end{document}
