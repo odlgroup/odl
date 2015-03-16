@@ -11,41 +11,13 @@ class Set(object):
 
     __metaclass__ = ABCMeta #Set as abstract
 
-
-class Measure(object):
-    """ A measure on some set
-    """
-
-    __metaclass__ = ABCMeta #Set as abstract
-
-    def __call__(self,set):
-        return self.measure(set)
-
     @abstractmethod
-    def measure(self,set):
-        """Calculate the measure of set
+    def __eq__(self,other):
+        """ Test two sets for equality
         """
 
-
-class MeasurableSets(object):
-    """ Some measurable sets, subsets of some set
-    """
-
-    __metaclass__ = ABCMeta #Set as abstract
-
-
-class Discretization(MeasurableSets):
-    """ A discretization of some measurable sets
-    """
-    __metaclass__ = ABCMeta #Set as abstract
-
-    @abstractmethod
-    def __iter__(self):
-        """Discrete spaces can be iterated over
-        """
-
-class MeasureSpace(object):
-    """ A space where integration is defined
+class Discretization(object):
+    """ A discretization of some set
     """
 
     __metaclass__ = ABCMeta #Set as abstract
@@ -55,41 +27,11 @@ class MeasureSpace(object):
         """Calculate the integral of f
         """
 
-
 #Example implementation
-
 class Interval(Set):
     def __init__(self,begin,end):
         self.begin = begin
         self.end = end
 
-    def midpoint(self):
-        return (self.end+self.begin)/2.0
-
-
-class BorelMeasure(Measure):
-    def measure(self, interval):
-        return interval.end-interval.begin
-
-
-class UniformDiscretization(Discretization):
-    def __init__(self,interval,n):
-        self.interval = interval
-        self.n = n
-
-    def __iter__(self):
-        step = (self.interval.end - self.interval.begin)/self.n
-        currrent = self.interval.begin
-        for i in range(self.n):
-            interval = Interval(currrent, currrent+step)
-            currrent += step
-            yield interval
-
-
-class DiscreteMeaureSpace(MeasureSpace):
-    def __init__(self,discretization,measure):
-        self.discretization = discretization
-        self.measure = measure
-
-    def integrate(self,f):
-        return sum(f(subset.midpoint()) * self.measure(subset) for subset in self.discretization)
+    def __eq__(self, other):
+        return isinstance(other,Interval) and self.begin == other.begin and self.end == other.end #TODO float?

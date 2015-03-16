@@ -23,6 +23,7 @@ from __future__ import division,print_function, unicode_literals,absolute_import
 from future import standard_library
 standard_library.install_aliases()
 import unittest
+from testutils import RLTestCase
 from math import pi
 
 import numpy as np
@@ -30,7 +31,7 @@ from RL.operator.operatorAlternative import *
 from RL.operator.space import *
 import SimRec2DPy as SR
 
-class RNTest(unittest.TestCase):
+class RNTest(RLTestCase):
     def testMultiply(self):
         r3 = RN(3)
 
@@ -49,6 +50,16 @@ class RNTest(unittest.TestCase):
         y = r3.makeVector(np.random.rand(3))
 
         self.assertAlmostEqual(A(x).inner(y),x.inner(A.T(y)))
+
+    def testCompose(self):
+        r3 = RN(3)
+
+        A = r3.MakeMultiplyOp(np.random.rand(3,3))
+        B = r3.MakeMultiplyOp(np.random.rand(3,3))
+        C = OperatorComposition(A,B)
+        x = r3.makeVector(np.random.rand(3))
+
+        self.assertAllAlmostEquals(C(x),np.dot(A.mat,np.dot(B.mat,x)))
 
 if __name__ == '__main__':
     unittest.main(exit = False)

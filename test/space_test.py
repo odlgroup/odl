@@ -126,19 +126,14 @@ class ProductTest(RLTestCase):
 
 class L2Test(RLTestCase):
     def testR(self):
-        I = Interval(0,pi)
-        d = UniformDiscretization(I,1000)
-        m = BorelMeasure()
-        measureSpace = DiscreteMeaureSpace(d,m)
-        space = L2(measureSpace)
+        I=Interval(0,pi)
+        space = L2(I)
+        d = UniformDiscretization(space,10)
 
-        class SinFunction(L2.Vector):
-            def apply(self,rhs):
-                return sin(rhs)
+        l2sin = space.makeVector(np.sin)
+        sind = d.makeVector(l2sin)
 
-        s = SinFunction(space)
-        
-        self.assertAlmostEqual(s.normSquared(),pi/2)
+        self.assertAlmostEqual(sind.normSquared(),pi/2,places=10)
 
 if __name__ == '__main__':
     unittest.main(exit = False)

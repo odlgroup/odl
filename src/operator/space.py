@@ -54,8 +54,8 @@ class Space(object):
             self.space = space
 
         @abstractmethod
-        def clone(self):
-            """Create a clone of this vector
+        def assign(self, other):
+            """Assign the values of other to this vector
             """
 
         def __add__(self, other):
@@ -78,6 +78,14 @@ class Space(object):
             tmp = self.clone()
             self.space.linComb(other,self,0,tmp)
             return tmp
+
+        def clone(self):
+            result = self.space.empty()
+            result.assign(self)
+            return result
+
+        def linComb(self,a,x):
+            self.space.linComb(a,x,1.,self)
         
         def inner(self,x):         return self.space.inner(x,self)
         def normSquared(self):     return self.space.normSquared(self)
@@ -101,9 +109,9 @@ class Space(object):
         """
 
     @abstractmethod
-    def equals(self, x):
+    def __eq__(self, x):
         """check spaces for equality
-        """ 
+        """
 
     @abstractproperty
     def field(self):
@@ -117,19 +125,22 @@ class Space(object):
         """
         pass
 
+    #Default implemented operators
+    def empty(self):
+        """An empty vector (of undefined state) defaults to zero vector if no implementation is provided
+        """
+        return self.zero()
+
     #Implicitly defined operators
 
     def normSquared(self,x):
         return self.inner(x,x)
 
     def norm(self,x):
-        return sqrt(self.normSquared(x,x))
-
-    def __eq__(self,other):
-        return self.equals(other)
+        return sqrt(self.normSquared(x))
 
     def __ne__(self,other):
-        return not self.equals(other)
+        return not self == other
     
 class ProductSpace(Space):
     """Product space (X1 x X2 x ... x Xn)
@@ -163,8 +174,8 @@ class ProductSpace(Space):
     def dimension(self):
         return self._dimension
 
-    def equals(self, other):
-        return all(x.equals(y) for [x,y] in zip(self.spaces,other.spaces))
+    def __eq__(self, other):
+        return all(x == y for [x,y] in zip(self.spaces,other.spaces))
     
     def makeVector(self,*args):
         return ProductSpace.Vector(self,*args)
@@ -183,8 +194,9 @@ class ProductSpace(Space):
 
                 self.parts = args
 
-        def clone(self):
-            return self.space.makeVector(*[part.clone() for part in self.parts])
+        def assign(self, other):
+            for [p1,p2] in zip(self.parts,other.parts):
+                p1.assign(p2)
 
         def __getitem__(self,index):
             return self.parts[index]
@@ -214,7 +226,7 @@ class Reals(Space):
     def dimension(self):
         return 1
     
-    def equals(self, other):
+    def __eq__(self, other):
         return isinstance(other,Reals)
 
     def makeVector(self,value):
@@ -229,8 +241,8 @@ class Reals(Space):
             Space.Vector.__init__(self,space)
             self.__val__ = v
 
-        def clone(self):
-            return self.space.makeVector(self.__val__)
+        def assign(self,other):
+            self.__val__ = other.__val__
 
         def __float__(self):        return self.__val__.__float__()              # XXX
         # Conversions
@@ -242,21 +254,36 @@ class Reals(Space):
         """Multiply with scalar
         """
 
-        def __init__(self,a):
+        def __init__(self,space,a):
+            self.space = space
             self.a = a
 
-        def apply(self,rhs):
-            return self.a * rhs
+        def apply(self,rhs,out):
+            out.assign(self.a*rhs)
+
+        def domain(self):
+            return self.space
+
+        def range(self):
+            return self.space
+
 
     class AddOp(OP.SelfAdjointOperator):
         """Add scalar
         """
 
-        def __init__(self,a):
+        def __init__(self,space,a):
+            self.space = space
             self.a = a
 
-        def apply(self,rhs):
-            return self.a + rhs
+        def apply(self,rhs,out):
+            out.assign(self.a + rhs)
+
+        def domain(self):
+            return self.space
+
+        def range(self):
+            return self.space
 
 
 class RN(Space):
@@ -273,7 +300,10 @@ class RN(Space):
         y[:]=a*x+b*y
 
     def zero(self):
-        return np.zeros(n)
+        return self.makeVector(np.zeros(self.n),copy = False)
+
+    def empty(self):
+        return self.makeVector(np.empty(self.n),copy = False)
 
     @property
     def field(self):
@@ -283,7 +313,7 @@ class RN(Space):
     def dimension(self):
         return self.n
 
-    def equals(self, other):
+    def __eq__(self, other):
         return isinstance(other,RN) and self.n == other.n
 
     def makeVector(self, *args, **kwargs):
@@ -293,9 +323,12 @@ class RN(Space):
         def __new__(cls, space, *args, **kwargs):
             data = np.array(*args,**kwargs)
             return data.view(RN.Vector)
+        
+        def __init__(self,space,*args, **kwargs):
+            Space.Vector.__init__(self,space, *args,**kwargs)
 
-        def clone(self):
-            return self.space.makeVector(self, copy = True)
+        def assign(self,other):
+            self[:] = other
 
     def MakeMultiplyOp(self,A):
         class MultiplyOp(OP.Operator):
@@ -306,11 +339,21 @@ class RN(Space):
                 self.space = space
                 self.A = A
 
-            def apply(self,rhs):
-                return self.space.makeVector(np.dot(self.A,rhs))
+            def apply(self,rhs,out):
+                out.assign(np.dot(self.A,rhs))
 
-            def applyAdjoint(self,rhs):
-                return self.space.makeVector(np.dot(self.A.T,rhs))
+            def applyAdjoint(self,rhs,out):
+                out.assign(np.dot(self.A.T,rhs))
+
+            @property
+            def mat(self):
+                return self.A
+
+            def domain(self):
+                return self.space
+
+            def range(self):
+                return self.space
 
         return MultiplyOp(self,A)
 
@@ -323,29 +366,90 @@ class L2(Space):
         self.domain = domain
 
     def inner(self,v1,v2):
-        return self.domain.integrate(OP.PointwiseProduct(v1,v2))
+        raise NotImplementedError("You cannot calculate inner products in non-discrete spaces")
 
-    def linComb(self,a,b,A,B):
-        return a*A+b*B #Use operator overloading
+    def innerImpl(self,integrator,v1,v2):
+        #v1 and v2 elements in discretized space
+        return integrator.integrate(v1*v2)
+
+    def linComb(self,a,x,b,y):
+        return a*x+b*y #Use operator overloading
 
     def field(self):
         return Field.Real
 
     def dimension(self):
-        return 1.0/0.0
+        raise NotImplementedError("TODO: infinite")
     
-    def equals(self, other):
-        raise NotImplementedError("Todo")
+    def __eq__(self, other):
+        return isinstance(other,L2) and self.domain == other.domain
 
     def zero(self):
-        class ZeroFunction(L2.Vector):
-            def apply(self,rhs):
-                return 0.0
-        return ZeroFunction(self)
+        return self.makeVector(lambda t: 0)
+
+    def makeVector(self, *args, **kwargs):
+        return L2.Vector(self,*args, **kwargs)
 
     class Vector(OP.Operator,Space.Vector):
         """ L2 Vectors are operators from the domain onto R(C)
         """
 
-        def clone(self):
+        def __init__(self, space, function):
+            Space.Vector.__init__(self,space)
+            self.function = function
+
+        def apply(self,rhs):
+            return self.function(rhs)
+
+        def assign(self,other):
             raise NotImplementedError("Todo")
+
+
+class UniformDiscretization(RN, Discretization):
+    """ Uniform discretization of an interval
+    Represents vectors by RN elements
+    Uses trapetzoid method for integration
+    """
+
+    def __init__(self,parent,n):
+        if not isinstance(parent.domain,Interval):
+            raise NotImplementedError("Can only discretize intervals")
+
+        self.parent = parent
+        RN.__init__(self,n)
+
+    def inner(self,v1,v2): #Delegate to main space
+        return self.parent.innerImpl(self,v1,v2)
+
+    def zero(self):
+        return self.makeVector(np.zeros(self.n),copy = False)
+
+    def empty(self):
+        return self.makeVector(np.empty(self.n),copy = False)
+    
+    def __eq__(self, other):
+        return isinstance(other,UniformDiscretization) and RN.__eq__(self,other)
+
+    def makeVector(self, *args, **kwargs):
+        return UniformDiscretization.Vector(self,*args, **kwargs)
+
+    def integrate(self,f):
+        return np.trapz(f,dx=(self.parent.domain.end-self.parent.domain.begin)/(self.n-1))
+
+    def points(self):
+        return np.linspace(self.parent.domain.begin,self.parent.domain.end,self.n)
+
+    class Vector(RN.Vector):
+        def __new__(cls, space, *args, **kwargs):
+            if (isinstance(args[0],L2.Vector) and args[0].space == space.parent):
+                data = args[0](space.points())
+            else:
+                data = RN.Vector.__new__(cls,space,*args,**kwargs)
+
+            return data.view(UniformDiscretization.Vector)
+
+        def __init__(self,space, *args,**kwargs):
+            RN.Vector.__init__(self,space, *args,**kwargs)
+
+        def assign(self,other):
+            self[:]=other
