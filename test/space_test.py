@@ -28,6 +28,7 @@ from math import pi
 import numpy as np
 from RL.operator.operatorAlternative import *
 from RL.operator.space import *
+from RL.operator.defaultSpaces import *
 import SimRec2DPy as SR
 from testutils import RLTestCase
 

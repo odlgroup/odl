@@ -23,54 +23,38 @@ from __future__ import division,print_function, unicode_literals,absolute_import
 from future import standard_library
 standard_library.install_aliases()
 import unittest
-from testutils import RLTestCase
 from math import pi
 
 import numpy as np
 from RL.operator.operatorAlternative import *
 from RL.operator.space import *
 from RL.operator.defaultSpaces import *
+from RL.operator.CudaSpace import *
 import SimRec2DPy as SR
+from testutils import RLTestCase
 
-class RNTest(RLTestCase):
-    def testMultiply(self):
-        r3 = RN(3)
+class TestInit(RLTestCase):
+    def testAddition(self):
+        R = CudaRN(3)
+        x = R.makeVector(np.array([1.0,2.0,3.0]))
+        y = R.makeVector(np.array([1.0,2.0,3.0]))
+        z = R.empty()
+        print(z)
 
-        A = np.random.rand(3,3)
-        x = np.random.rand(3)
-        Aop = r3.MakeMultiplyOp(A)
-        xvec = r3.makeVector(x)
+        print(x+y)
 
-        Aop(xvec)
-    """
-    def testMultiply(self):
-        r3 = RN(3)
+class TestRNInteractions(RLTestCase):
+    def testAddition(self):
+        R3c = CudaRN(3)
+        R3 = RN(3)
+        x = R3c.makeVector(np.array([1.0,2.0,3.0]))
+        y = R3c.makeVector(np.array([1.0,2.0,3.0]))
 
-        A = np.random.rand(3,3)
-        x = np.random.rand(3)
-        Aop = r3.MakeMultiplyOp(A)
-        xvec = r3.makeVector(x)
+        z = x.asRNVector(R3)
 
-        self.assertTrue(np.allclose(Aop(xvec),np.dot(A,x)))
+        print(z)
 
-    def testAdjoint(self):
-        r3 = RN(3)
-
-        A = r3.MakeMultiplyOp(np.random.rand(3,3))
-        x = r3.makeVector(np.random.rand(3))
-        y = r3.makeVector(np.random.rand(3))
-
-        self.assertAlmostEqual(A(x).inner(y),x.inner(A.T(y)))
-
-    def testCompose(self):
-        r3 = RN(3)
-
-        A = r3.MakeMultiplyOp(np.random.rand(3,3))
-        B = r3.MakeMultiplyOp(np.random.rand(3,3))
-        C = OperatorComposition(A,B)
-        x = r3.makeVector(np.random.rand(3))
-
-        self.assertAllAlmostEquals(C(x),np.dot(A.mat,np.dot(B.mat,x)))"""
+        print(x+y)
 
 if __name__ == '__main__':
     unittest.main(exit = False)
