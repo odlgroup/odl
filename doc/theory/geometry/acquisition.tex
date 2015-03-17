@@ -761,9 +761,22 @@ For the operator $\OPU$, we calculate
  \INNER{\OPU g}{h}
  &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} \int_{-\vartheta_0}^{\vartheta_0} g\big( \phi + \beta_1\psi/2, \beta_2\vartheta/2, 
  r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) \cos(\beta_2\vartheta/2) \big) \cdot \phantom{x} \\
- &\hspace{85pt} h(\phi, \psi, \vartheta)\, \D\vartheta\, \D\psi\, \D\phi \\
- &= 
+ &\hspace{80pt} h(\phi, \psi, \vartheta)\, \D\vartheta\, \D\psi\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2} g\big( \phi, \vartheta, 
+ r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) \cos\vartheta \big) \cdot \phantom{x} \\
+ &\hspace{95pt} h_0\big( \phi - \beta_1\psi/2, \psi, 2\vartheta_0/\beta_2 \big)\, 
+ \frac{2}{\beta_2}\, \D\vartheta\, \D\psi\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-r\sin(\beta_1\psi_0/2)}^{r\sin(\beta_1\psi_0/2)} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2}
+ g\big( \phi, \vartheta, \sigma, \sqrt{r^2 - \sigma^2} \cos\vartheta \big) \cdot \phantom{x} \\
+ &\hspace{135pt} h_0\big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/2)/\beta_1, 2\vartheta/\beta_2 \big)\, \cdot \phantom{x} \\
+ &\hspace{135pt} \frac{4}{\beta_1\beta_2\sqrt{r^2 - \sigma^2}}\, \D\vartheta\, \D\psi\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-r\sin(\beta_1\psi_0/2)}^{r\sin(\beta_1\psi_0/2)} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2} \int_\RR
+ g(\phi, \vartheta, \sigma, \tau)\, \delta\big(\tau - \sqrt{r^2 - \sigma^2} \cos\vartheta \big) \cdot \phantom{x} \\
+ &\hspace{135pt} h_0\big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/2)/\beta_1, 2\vartheta/\beta_2 \big)\, \cdot \phantom{x} \\
+ &\hspace{135pt} \frac{4}{\beta_1\beta_2\sqrt{r^2 - \sigma^2}}\, \D\tau\, \D\vartheta\, \D\psi\, \D\phi.
 \end{align*}
-
+%
+The adjoint of $\OPU$ in the sense of unbounded operators can be read off the last identity. Since the composition $\OPU \OPP$ is known to 
+be bounded, its adjoint is given by $\DUALOPP \DUALOPU$.
 %
 \end{document}
