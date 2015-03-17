@@ -182,10 +182,10 @@ class RN(HilbertSpace):
         self.n = n
 
     def inner(self,x,y):
-        return np.vdot(x.data,y.data)
+        return np.vdot(x.values,y.values)
     
     def linComb(self,a,x,b,y):
-        y.data[:]=a*x.data+b*y.data
+        y.values[:]=a*x.values+b*y.values
 
     def zero(self):
         return self.makeVector(np.zeros(self.n),copy = False)
@@ -210,14 +210,14 @@ class RN(HilbertSpace):
     class Vector(HilbertSpace.Vector):        
         def __init__(self,space,*args, **kwargs):
             HilbertSpace.Vector.__init__(self,space)
-            self.data = np.array(*args,**kwargs)
+            self.values = np.array(*args,**kwargs)
 
         def assign(self,other):
-            self.data[:] = other.data
+            self.values[:] = other.values
             
-        def __str__(self):              return "" + self.data.__str__()
-        def __repr__(self):             return "RNVector("+self.data.__str__()+")"
-        def __getitem__(self,index):    return self.data[index]
+        def __str__(self):              return "" + self.values.__str__()
+        def __repr__(self):             return "RNVector("+self.values.__str__()+")"
+        def __getitem__(self,index):    return self.values[index]
 
     def MakeMultiplyOp(self,A):
         class MultiplyOp(OP.LinearOperator):
@@ -229,10 +229,10 @@ class RN(HilbertSpace):
                 self.A = A
 
             def apply(self,rhs,out):
-                out.data[:] = np.dot(self.A,rhs.data)
+                out.values[:] = np.dot(self.A,rhs.values)
 
             def applyAdjoint(self,rhs,out):
-                out.data[:] = np.dot(self.A.T,rhs.data)
+                out.values[:] = np.dot(self.A.T,rhs.values)
 
             @property
             def mat(self):              return self.A
@@ -319,7 +319,7 @@ class UniformDiscretization(RN, Discretization):
         return UniformDiscretization.Vector(self,*args, **kwargs)
 
     def integrate(self,f):
-        return np.trapz(f.data,dx=(self.parent.domain.end-self.parent.domain.begin)/(self.n-1))
+        return np.trapz(f.values,dx=(self.parent.domain.end-self.parent.domain.begin)/(self.n-1))
 
     def points(self):
         return np.linspace(self.parent.domain.begin,self.parent.domain.end,self.n)
@@ -333,7 +333,7 @@ class UniformDiscretization(RN, Discretization):
 
         def __mul__(self,other):
             if isinstance(other,UniformDiscretization.Vector):
-                return self.space.makeVector(self.data*other.data)
+                return self.space.makeVector(self.values*other.values)
             else:
                 HilbertSpace.Vector.__mul__(self,other)
 

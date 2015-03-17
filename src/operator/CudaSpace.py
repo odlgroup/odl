@@ -74,8 +74,35 @@ class CudaRN(HilbertSpace):
 
         def assign(self,other):
             self.impl.assign(other.impl)
+
+        def asRNVector(self,rn):
+            return rn.makeVector(self.impl.copyToHost(), copy = False)
             
-        def __str__(self):              return "" + self.impl.__str__()
-        def __repr__(self):             return "CudaRNVector("+self.impl.__str__()+")"
-        def __getitem__(self,index):    return self.data[index]
+        def __str__(self):                      return "" + self.impl.__str__()
+        def __repr__(self):                     return "CudaRNVector("+self.impl.__str__()+")"
+
+        #Slow get and set, for testing and nothing else!
+        def __getitem__(self,index):
+            if isinstance(index,slice):
+                if 0>index.start or index.stop>=self.space.n:
+                    raise IndexError("Out of range")
+                
+                return self.impl.getSlice(index)
+            else:
+                if 0>index or index>=self.space.n:
+                    raise IndexError("Out of range")
+
+                return self.impl.__getitem__(index)
+
+        def __setitem__(self,index,value):    
+            if isinstance(index,slice):
+                if 0>index.start or index.stop>=self.space.n:
+                    raise IndexError("Out of range")
+                
+                return self.impl.setSlice(index,value)
+            else:
+                if 0>index or index>=self.space.n:
+                    raise IndexError("Out of range")
+
+            return self.impl.__setitem__(index,value)
 

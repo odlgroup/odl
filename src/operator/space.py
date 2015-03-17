@@ -206,7 +206,7 @@ class HilbertSpace(LinearSpace):
         """ Inner product of the vectors x,y
         """
 
-    class Vector(LinearSpace.Vector):
+    class Vector(NormedSpace.Vector):
         def inner(self,x):         return self.space.inner(self,x)
     
     def normSquared(self,x):

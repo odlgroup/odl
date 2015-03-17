@@ -34,27 +34,73 @@ import SimRec2DPy as SR
 from testutils import RLTestCase
 
 class TestInit(RLTestCase):
-    def testAddition(self):
+    def testZero(self):
+        R = CudaRN(3)
+        x = R.zero()
+
+    def testEmpty(self):
+        R = CudaRN(3)
+        x = R.empty()
+
+    def testNPInit(self):
         R = CudaRN(3)
         x = R.makeVector(np.array([1.0,2.0,3.0]))
-        y = R.makeVector(np.array([1.0,2.0,3.0]))
-        z = R.empty()
-        print(z)
 
-        print(x+y)
+class TestAccessors(RLTestCase):
+    def testGetItem(self):
+        R3d = CudaRN(3)
+        R3h = RN(3)
+        x = R3d.makeVector(np.array([1.0,2.0,3.0]))
+
+        self.assertAlmostEquals(x[1],2.0)
+
+    def testSetItem(self):
+        R3d = CudaRN(3)
+        R3h = RN(3)
+        x = R3d.makeVector(np.array([1.0,2.0,3.0]))
+        x[1]=5.0
+
+        self.assertAlmostEquals(x[1],5.0)
+
+    def testGetSlice(self):
+        R3d = CudaRN(3)
+        R3h = RN(3)
+        x = R3d.makeVector(np.array([1.0,2.0,3.0]))
+
+        self.assertAllAlmostEquals(x[1:2],[2.0,3.0])
+
+    def testSetSlice(self):
+        R3d = CudaRN(3)
+        R3h = RN(3)
+        x = R3d.makeVector(np.array([1.0,2.0,3.0]))
+        x[1:2] = np.array([5.0,6.0])
+
+        self.assertAllAlmostEquals(x,[1.0,5.0,6.0])
 
 class TestRNInteractions(RLTestCase):
+    def testZero(self):
+        R3d = CudaRN(3)
+        R3h = RN(3)
+        self.assertAllAlmostEquals(R3d.zero(),R3h.zero())
+
     def testAddition(self):
-        R3c = CudaRN(3)
-        R3 = RN(3)
-        x = R3c.makeVector(np.array([1.0,2.0,3.0]))
-        y = R3c.makeVector(np.array([1.0,2.0,3.0]))
+        R3d = CudaRN(3)
+        R3h = RN(3)
+        xd = R3d.makeVector(np.array([1.0,2.0,3.0]))
+        yd = R3d.makeVector(np.array([5.0,3.0,7.0]))
+        xh = R3h.makeVector(np.array([1.0,2.0,3.0]))
+        yh = R3h.makeVector(np.array([5.0,3.0,7.0]))
 
-        z = x.asRNVector(R3)
+        self.assertAllAlmostEquals(xd + yd,xh + yh)
 
-        print(z)
+    def testScalarMult(self):
+        R3d = CudaRN(3)
+        R3h = RN(3)
+        xd = R3d.makeVector(np.array([1.0,2.0,3.0]))
+        xh = R3h.makeVector(np.array([1.0,2.0,3.0]))
+        C = 5
 
-        print(x+y)
+        self.assertAllAlmostEquals(C*xd,C*xh)
 
 if __name__ == '__main__':
     unittest.main(exit = False)

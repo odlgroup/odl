@@ -32,7 +32,7 @@ from RL.operator.space import *
 from RL.operator.defaultSpaces import *
 import SimRec2DPy as SR
 
-class RNTest(RLTestCase):
+class RNTest(RLTestCase):   
     def testMultiply(self):
         r3 = RN(3)
 
@@ -41,17 +41,7 @@ class RNTest(RLTestCase):
         Aop = r3.MakeMultiplyOp(A)
         xvec = r3.makeVector(x)
 
-        Aop(xvec)
-    """
-    def testMultiply(self):
-        r3 = RN(3)
-
-        A = np.random.rand(3,3)
-        x = np.random.rand(3)
-        Aop = r3.MakeMultiplyOp(A)
-        xvec = r3.makeVector(x)
-
-        self.assertTrue(np.allclose(Aop(xvec),np.dot(A,x)))
+        self.assertAllAlmostEquals(Aop(xvec),np.dot(A,x))
 
     def testAdjoint(self):
         r3 = RN(3)
@@ -65,12 +55,17 @@ class RNTest(RLTestCase):
     def testCompose(self):
         r3 = RN(3)
 
-        A = r3.MakeMultiplyOp(np.random.rand(3,3))
-        B = r3.MakeMultiplyOp(np.random.rand(3,3))
-        C = OperatorComposition(A,B)
-        x = r3.makeVector(np.random.rand(3))
+        A = np.random.rand(3,3)
+        B = np.random.rand(3,3)
+        x = np.random.rand(3)
 
-        self.assertAllAlmostEquals(C(x),np.dot(A.mat,np.dot(B.mat,x)))"""
+        Aop = r3.MakeMultiplyOp(A)
+        Bop = r3.MakeMultiplyOp(B)
+        xvec = r3.makeVector(x)
+
+        C = OperatorComposition(Aop,Bop)
+
+        self.assertAllAlmostEquals(C(xvec),np.dot(A,np.dot(B,x)))
 
 if __name__ == '__main__':
     unittest.main(exit = False)
