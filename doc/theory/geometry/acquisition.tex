@@ -629,7 +629,7 @@ be the unit vectors in the rotating system. The detector is parametrized over th
  T = [0, \phi_0],\quad U = [-\psi_0, \psi_0] \times [-\vartheta_0, \vartheta_0],
 \end{equation}
 %
-and is assumed to have curvature $1/R_1$ along $\theta'(\phi)$ and $1/R_2$ along $e_z$ with $R1,R_2 >0$. From the 2D case, we know that 
+and is assumed to have curvature $1/R_1$ along $\theta'(\phi)$ and $1/R_2$ along $e_z$ with $R_1,R_2 >0$. From the 2D case, we know that 
 for $\theta=0$, the detector point associated with $\phi$ and $\psi$ is
 %
 \begin{equation*}
@@ -649,7 +649,7 @@ with the cross product $\times$ in $\RR^3$. Using the relations
 \begin{align*}
  \theta'(\phi) \times \theta(\phi) &= -e_z, \\
  e_z \times \theta'(\phi) &= -\theta(\phi), \\
- \INNER{\theta(\phi + \psi)}{\theta'(\phi)} &= \sin\psi \\
+ \INNER{\theta(\phi + \psi)}{\theta'(\phi)} &= -\sin\psi \\
  \theta(\phi + \psi) - \INNER{\theta(\phi + \psi)}{\theta'(\phi)}\, \theta'(\phi) &= \cos\psi\, \theta(\phi)\\
  \theta'(\phi) \times \theta(\phi + \psi) &= -\cos\psi\, e_z.
 \end{align*}
@@ -662,19 +662,19 @@ and inserting $x = d_1$, we get the detector point
  &= -(R_2 - r) \theta(\phi) + R\big(c_1 + R_1 \theta(\phi + \psi) - c_2\big) \notag \\
  &= -(R_2 - r) \theta(\phi) + R\big((R_2-R_1) \theta(\phi) + R_1 \theta(\phi + \psi)\big) \notag \\
  &= -(R_2 - r) \theta(\phi) + (R_2-R_1) R\big(\theta(\phi)\big) + R_1 R\big(\theta(\phi + \psi)\big) \notag \\
- &= -(R_2 - r) \theta(\phi) + (R_2-R_1) \big[ \cos\vartheta\, \theta(\phi) + \sin\vartheta\, e_z \big] + \notag \\
- &\hspace{25pt} R_1 \big[ \sin\psi\, \theta'(\phi) + \cos\vartheta\, \cos\psi\, \theta(\phi) + \sin\vartheta\, \cos\psi\, e_z \big] \notag 
+ &= -(R_2 - r) \theta(\phi) + (R_2-R_1) \big[ \cos\vartheta\, \theta(\phi) + \sin\vartheta\, e_z \big] + \phantom{x} \notag \\
+ &\hspace{25pt} R_1 \big[ -\sin\psi\, \theta'(\phi) + \cos\vartheta\, \cos\psi\, \theta(\phi) + \sin\vartheta\, \cos\psi\, e_z \big] \notag 
  \\
  &= \big[ -(R_2 - r) + (R_2 - R_1) \cos\vartheta + R_1 \, \cos\vartheta\, \cos\psi \big]\, \theta(\phi) + \phantom{x} \notag \\
- &\hspace{14pt} \big[R_1 \sin\psi\big]\, \theta'(\phi) + \big[ (R_2 - R_1) \sin\vartheta + R_1\, \sin\vartheta\, \cos\psi \big]\, e_z 
+ &\hspace{14pt} \big[-R_1 \sin\psi\big]\, \theta'(\phi) + \big[ (R_2 - R_1) \sin\vartheta + R_1\, \sin\vartheta\, \cos\psi \big]\, e_z 
 \notag  \\
  \label{eq:conecurved_detector_parametr}
- &= \big[ r - 2R_2 \sin^2(\vartheta/2) - 2R_1 \cos\vartheta \sin^2(\psi/2) \big]\, \theta(\phi) + \big[R_1 \sin\psi\big]\, 
+ &= \big[ r - 2R_2 \sin^2(\vartheta/2) - 2R_1 \cos\vartheta \sin^2(\psi/2) \big]\, \theta(\phi) + \big[-R_1 \sin\psi\big]\, 
  \theta'(\phi) + \phantom{x} \\
  &\hspace{14pt} \big[ -2R_1 \sin\vartheta\sin^2(\psi/2) + R_2\sin\vartheta \big]\, e_z \notag 
 \end{align}
 %
-\NOTE{Check if this makes sense!}%
+\NOTE{Check if this makes sense -- especially if the $z$ component can really depend on $\psi$!}%
 The two rotations with respect to the angles $\psi$ and $\vartheta$ are independent, thus the result from the 2D case on the relation 
 between detector angles and angles as seen from the source point holds for both $\psi$ and $\vartheta$ separately. It follows immediately 
 that the directions from the detector to the source are given by
@@ -691,5 +691,79 @@ with $R_j = \beta_j r,\ j=1,2$ and the unit vector
  \omega(\phi, \theta) = \TRANSP{(\sin\vartheta \cos\phi, \sin\vartheta\sin\phi, \cos\vartheta)}.
 \end{equation} 
 %
+Now we define the 3D divergent beam transform for functions on $\Omega = B_1 \subset \RR^3$:
+%
+\begin{align}
+ &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag \\
+ \label{eq:conecurved_fwdproj}
+ &\OPD f(\phi, \psi, \vartheta) = \int_0^\infty f\big( -r\theta(\phi) + s\omega(\phi + \beta_1\psi/2, \beta_2\vartheta/2) \big)\, \D s.
+\end{align}
+%
+To relate this operator to the parallel beam X-ray transform, we need to calculate the projection of $\theta(\phi)$ onto
+$\omega(\phi + \beta_1\psi/2, \beta_2\vartheta/2)$. For angles $\phi$ and $\vartheta$, the canonical basis in 
+$\omega(\phi, \vartheta)^\perp$ is given by the normalized derivatives with respect to $\phi$ and $\vartheta$, respectively. These vectors 
+are
+%
+\begin{align*}
+ \omega_1^\perp(\phi, \vartheta) &= \theta'(\phi), \\
+ \omega_2^\perp(\phi, \vartheta) &= \cos\vartheta\, \theta(\phi) - \sin\vartheta\, e_z.
+\end{align*}
+%
+Thus, we can write
+%
+\begin{align*}
+ \Pi_{\omega(\phi + \beta_1\psi/2, \beta_2\vartheta/2)} \theta(\phi)
+ &= \INNER{\theta(\phi)}{\theta'(\phi + \beta_1\psi/2)}\, \omega_1^\perp + \phantom{x} \\
+ &\hspace{14pt} \INNER{\theta(\phi)}{\cos(\beta_2\vartheta/2)\, \theta(\phi + \beta_1\psi/2) - \sin(\beta_2\vartheta/2)\, e_z}\, 
+ \omega_2^\perp \\
+ &= -\sin(\beta_1\psi/2)\, \omega_1^\perp + \cos(\beta_1\psi/2) \cos(\beta_2\vartheta/2)\, \omega_2^\perp.
+\end{align*}
+%
+In consequence,
+%
+\begin{align*}
+ \OPD f(\phi, \psi, \vartheta)
+ &= \int_\RR f\big( s\omega(\phi + \beta_1\psi/2, \beta_2\vartheta/2) + r\sin(\beta_1\psi/2)\, \omega_1^\perp - 
+ r \cos(\beta_1\psi/2) \cos(\beta_2\vartheta/2)\, \omega_2^\perp \big)\, \D s \\
+ &= \OPP f\big(\phi + \beta_1\psi/2, \beta_2\vartheta/2, r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) \cos(\beta_2\vartheta/2) \big) \\
+ &= \OPU \OPP f(\phi, \psi, \vartheta)
+\end{align*}
+%
+with the 3D X-ray transform
+%
+\begin{align}
+ &\OPP: L^2(\Omega) \Lto L^2\big( [0, 2\pi) \times [-\pi/2, \pi/2] \times \RR^2 \big) \notag \\
+ \label{eq:conecurved_xray_proj}
+ &\OPP f(\phi, \vartheta, \sigma, \tau) = \int_\RR f(s \omega(\phi, \vartheta) + \sigma \omega_1^\perp + \tau \omega_2^\perp \big)\, \D s
+\end{align}
+%
+and the coordinate transform
+%
+\begin{align}
+ &\OPU: L^2\big( [0, 2\pi) \times [-\pi/2, \pi/2] \times \RR^2 \big) \Lto L^2([0, \phi_0] \times [-\psi_0, \psi_0] \times 
+ [-\vartheta_0, \vartheta_0] \big) \notag \\
+ \label{eq:conecurved_coord_op}
+ &\OPU g(\phi, \psi, \vartheta) = g\big( \phi + \beta_1\psi/2, \beta_2\vartheta/2, r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) 
+ \cos(\beta_2\vartheta/2) \big).
+\end{align}
+%
+The adjoint of $\OPP$ is the usual parallel beam backprojection
+%
+\begin{equation}
+ \label{eq:conecurved_backproj}
+ \DUALOPP g(x) = \int_0^{2\pi} \int_{-\pi/2}^{\pi/2} g\big( \phi, \vartheta, \INNER{x}{\omega_1^\perp(\phi, \vartheta)}, 
+ \INNER{x}{\omega_2^\perp(\phi, \vartheta)} \big)\, \D\vartheta\, \D\phi.
+\end{equation} 
+%
+For the operator $\OPU$, we calculate
+%
+\begin{align*}
+ \INNER{\OPU g}{h}
+ &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} \int_{-\vartheta_0}^{\vartheta_0} g\big( \phi + \beta_1\psi/2, \beta_2\vartheta/2, 
+ r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) \cos(\beta_2\vartheta/2) \big) \cdot \phantom{x} \\
+ &\hspace{85pt} h(\phi, \psi, \vartheta)\, \D\vartheta\, \D\psi\, \D\phi \\
+ &= 
+\end{align*}
 
+%
 \end{document}
