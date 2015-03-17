@@ -52,31 +52,42 @@ class Space(object):
         __metaclass__ = ABCMeta #Set as abstract
 
         def __init__(self,space,*args, **kwargs):
-            self.space = space
+            self.__space__ = space
 
         @abstractmethod
         def assign(self, other):
             """Assign the values of other to this vector
             """
 
+        @property
+        def space(self):
+            return self.__space__
+
         #Convinience operators
         def __iadd__(self,other):
-            """Vector addition (self+=other)
+            """Vector addition (self += other)
             """
-            self.space.linComb(1.,other,1.,self)
+            self.linComb(1.,other)
             return self
 
         def __isub__(self,other):
-            """Vector subtraction (self+=other)
+            """Vector subtraction (self -= other)
             """
-            self.space.linComb(1.,other,-1.,self)
+            self.linComb(-1.,other)
             return self
 
         def __imul__(self,scalar):
-            """Vector multiplication by scalar (self*=scalar)
+            """Vector multiplication by scalar (self *= scalar)
             """
-            self.space.linComb(0.0,self,scalar,self)
+            self.space.linComb(0.,self,scalar,self)
             return self
+
+        def __itruediv__(self,scalar):
+            """Vector division by scalar (self *= 1/scalar)
+            """
+            return self.__imul__(1./scalar)
+
+        __idiv__ = __itruediv__
 
         def __add__(self, other):
             """Vector addition
@@ -98,20 +109,40 @@ class Space(object):
             tmp = self.clone()
             tmp *= scalar
             return tmp
+        
+        __rmul__ = __mul__
+
+        def __truediv__(self, scalar):
+            """Scalar multiplication
+            """
+            tmp = self.clone()
+            tmp /= scalar
+            return tmp
+
+        __div__ = __truediv__
+
+        def __neg__(self):
+            """ Unary negation, used in assignments:
+            a = -b
+            """
+            tmp = self.clone()
+            tmp *= -1
+            return tmp
+
+        def __pos__(self):
+            """ Unary plus (the identity operator)
+            """
+            return self.clone()
 
         def clone(self):
             result = self.space.empty()
             result.assign(self)
             return result
 
-        def linComb(self,a,x):
-            self.space.linComb(a,x,1.,self)
-        
-        def inner(self,x):         return self.space.inner(x,self)
+        def linComb(self,a,x):     self.space.linComb(a,x,1.,self)
+        def inner(self,x):         return self.space.inner(self,x)
         def normSquared(self):     return self.space.normSquared(self)
         def norm(self):            return self.space.norm(self)
-
-        __rmul__ = __mul__
 
     @abstractmethod
     def zero(self):
@@ -152,15 +183,9 @@ class Space(object):
         return self.zero()
 
     #Implicitly defined operators
-
-    def normSquared(self,x):
-        return self.inner(x,x)
-
-    def norm(self,x):
-        return sqrt(self.normSquared(x))
-
-    def __ne__(self,other):
-        return not self == other
+    def normSquared(self,x):        return self.inner(x,x)
+    def norm(self,x):               return sqrt(self.normSquared(x))
+    def __ne__(self,other):         return not self == other
     
 class ProductSpace(Space):
     """Product space (X1 x X2 x ... x Xn)
@@ -178,6 +203,9 @@ class ProductSpace(Space):
 
     def zero(self):
         return self.makeVector(*[A.zero() for A in self.spaces])
+
+    def zero(self):
+        return self.makeVector(*[A.empty() for A in self.spaces])
     
     def inner(self,v1,v2):
         return sum(space.inner(v1p,v2p) for [space,v1p,v2p] in zip(self.spaces,v1.parts,v2.parts))
@@ -205,7 +233,8 @@ class ProductSpace(Space):
 
     class Vector(Space.Vector):
         def __init__(self,space,*args):
-            self.space = space
+            Space.Vector.__init__(self,space)
+
             if (not isinstance(args[0],Space.Vector)): #Delegate constructors
                 self.parts = [space.makeVector(arg) for [arg,space] in zip(args,space.spaces)]
             else: #Construct from existing tuple
@@ -261,13 +290,9 @@ class Reals(Space):
             Space.Vector.__init__(self,space)
             self.__val__ = v
 
-        def assign(self,other):
-            self.__val__ = other.__val__
-
+        def assign(self,other):     self.__val__ = other.__val__
         def __float__(self):        return self.__val__.__float__()
-        # Conversions
         def __str__(self):          return "" + self.__val__.__str__()
-        # Represenation
         def __repr__(self):         return "Real(%d)" % (self.__val__)
 
     class MultiplyOp(OP.SelfAdjointOperator):    
@@ -281,11 +306,8 @@ class Reals(Space):
         def apply(self,rhs,out):
             out.assign(self.a*rhs)
 
-        def domain(self):
-            return self.space
-
-        def range(self):
-            return self.space
+        def domain(self):           return self.space
+        def range(self):            return self.space
 
 
     class AddOp(OP.SelfAdjointOperator):
@@ -299,11 +321,8 @@ class Reals(Space):
         def apply(self,rhs,out):
             out.assign(self.a + rhs)
 
-        def domain(self):
-            return self.space
-
-        def range(self):
-            return self.space
+        def domain(self):           return self.space
+        def range(self):            return self.space
 
 
 class RN(Space):
@@ -347,14 +366,12 @@ class RN(Space):
         def assign(self,other):
             self.data[:] = other.data
             
-        def __str__(self):          return "" + self.data.__str__()
-        # Represenation
-        def __repr__(self):         return "RNVector("+self.data.__str__()+")"
-
+        def __str__(self):              return "" + self.data.__str__()
+        def __repr__(self):             return "RNVector("+self.data.__str__()+")"
         def __getitem__(self,index):    return self.data[index]
 
     def MakeMultiplyOp(self,A):
-        class MultiplyOp(OP.Operator):
+        class MultiplyOp(OP.LinearOperator):
             """Multiply with matrix
             """
 
@@ -369,14 +386,9 @@ class RN(Space):
                 out.assign(np.dot(self.A.T,rhs.data))
 
             @property
-            def mat(self):
-                return self.A
-
-            def domain(self):
-                return self.space
-
-            def range(self):
-                return self.space
+            def mat(self):              return self.A
+            def domain(self):           return self.space
+            def range(self):            return self.space
 
         return MultiplyOp(self,A)
 
@@ -424,14 +436,9 @@ class L2(Space):
         def apply(self,rhs):
             return self.function(rhs)
 
-        def assign(self,other):
-            self.function = other.function
-
-        def domain(self):
-            return self.space.domain
-
-        def range(self):
-            return self.space.field
+        def assign(self,other):     self.function = other.function
+        def domain(self):           return self.space.domain
+        def range(self):            return self.space.field
 
 
 class UniformDiscretization(RN, Discretization):

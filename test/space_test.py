@@ -38,8 +38,6 @@ class RealsTest(RLTestCase):
         y = R.makeVector(4.0)
         z = R.makeVector(5.0)
 
-        print(x+y)
-
         self.assertAlmostEqual(x+y,z)
 
 class RNTest(RLTestCase):
@@ -52,13 +50,70 @@ class RNTest(RLTestCase):
         
         self.assertAllAlmostEquals(y,z)
 
-    def testAddition(self):
+class OperatorOverloadTest(RLTestCase):
+    def testAdd(self):
         R3 = RN(3)
         x = R3.makeVector([1.,2.,3.])
         y = R3.makeVector([3.,5.,7.])
         z = R3.makeVector([4.,7.,10.])
         
         self.assertAllAlmostEquals(x+y,z)
+
+    def testIncAdd(self):
+        R3 = RN(3)
+        x = R3.makeVector([1.,2.,3.])
+        y = R3.makeVector([3.,5.,7.])
+        z = R3.makeVector([1.,2.,3.])
+        z += y
+        
+        self.assertAllAlmostEquals(x+y,z)
+
+    def testIncSub(self):
+        R3 = RN(3)
+        x = R3.makeVector([1.,2.,3.])
+        y = R3.makeVector([3.,5.,7.])
+        z = R3.makeVector([1.,2.,3.])
+        z -= y
+        
+        self.assertAllAlmostEquals(x-y,z)
+
+    def testMul(self):
+        R3 = RN(3)
+        x = R3.makeVector([1.,2.,3.])
+        y = R3.makeVector([4.,8.,12.])
+        
+        self.assertAllAlmostEquals(4*x,y)
+
+    def testIncMul(self):
+        R3 = RN(3)
+        x = R3.makeVector([1.,2.,3.])
+        y = R3.makeVector([4.,8.,12.])
+        x *= 4
+        
+        self.assertAllAlmostEquals(x,y)
+
+    def testDiv(self):
+        R3 = RN(3)
+        x = R3.makeVector([4.,8.,12.])
+        y = R3.makeVector([1.,2.,3.])
+        
+        self.assertAllAlmostEquals(x/4,y)
+
+    def testIncDiv(self):
+        R3 = RN(3)
+        x = R3.makeVector([4.,8.,12.])
+        y = R3.makeVector([1.,2.,3.])
+        x /= 4
+        
+        self.assertAllAlmostEquals(x,y)
+
+    def testNeg(self):
+        R3 = RN(3)
+        x = R3.makeVector([1.,2.,3.])
+        y = R3.makeVector([-1.,-2.,-3.])
+        z = -x
+        
+        self.assertAllAlmostEquals(y,z)
 
 class ProductTest(RLTestCase):
     def testRxR(self):
