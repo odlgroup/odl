@@ -616,6 +616,7 @@ i.e.
  \DUALOPT h(\phi, \psi) = h(\phi, 2r\tan\psi)\, \frac{2r}{\cos^2\psi}.
 \end{equation} 
 %
+\NOTE{TODO: formulate condition on $l$}%
 Using the expression \eqref{eq:fancurved:backproj} for $\DUAL{\OPD_{\mathrm{c}}}$, we conclude that
 %
 \begin{align}
@@ -670,7 +671,7 @@ with the cross product $\times$ in $\RR^3$. Using the relations
 \begin{align*}
  \theta'(\phi) \times \theta(\phi) &= -e_z, \\
  e_z \times \theta'(\phi) &= -\theta(\phi), \\
- \INNER{\theta(\phi + \psi)}{\theta'(\phi)} &= -\sin\psi \\
+ \INNER{\theta(\phi + \psi)}{\theta'(\phi)} &= \sin\psi \\
  \theta(\phi + \psi) - \INNER{\theta(\phi + \psi)}{\theta'(\phi)}\, \theta'(\phi) &= \cos\psi\, \theta(\phi)\\
  \theta'(\phi) \times \theta(\phi + \psi) &= -\cos\psi\, e_z.
 \end{align*}
@@ -684,13 +685,13 @@ and inserting $x = d_1$, we get the detector point
  &= -(R_2 - r) \theta(\phi) + \rho\big((R_2-R_1) \theta(\phi) + R_1 \theta(\phi + \psi)\big) \notag \\
  &= -(R_2 - r) \theta(\phi) + (R_2-R_1) \rho\big(\theta(\phi)\big) + R_1 \rho\big(\theta(\phi + \psi)\big) \notag \\
  &= -(R_2 - r) \theta(\phi) + (R_2-R_1) \big[ \cos\vartheta\, \theta(\phi) + \sin\vartheta\, e_z \big] + \phantom{x} \notag \\
- &\hspace{25pt} R_1 \big[ -\sin\psi\, \theta'(\phi) + \cos\vartheta\, \cos\psi\, \theta(\phi) + \sin\vartheta\, \cos\psi\, e_z \big] \notag 
+ &\hspace{25pt} R_1 \big[ \sin\psi\, \theta'(\phi) + \cos\vartheta\, \cos\psi\, \theta(\phi) + \sin\vartheta\, \cos\psi\, e_z \big] \notag 
  \\
  &= \big[ -(R_2 - r) + (R_2 - R_1) \cos\vartheta + R_1 \, \cos\vartheta\, \cos\psi \big]\, \theta(\phi) + \phantom{x} \notag \\
- &\hspace{14pt} \big[-R_1 \sin\psi\big]\, \theta'(\phi) + \big[ (R_2 - R_1) \sin\vartheta + R_1\, \sin\vartheta\, \cos\psi \big]\, e_z 
+ &\hspace{14pt} \big[R_1 \sin\psi\big]\, \theta'(\phi) + \big[ (R_2 - R_1) \sin\vartheta + R_1\, \sin\vartheta\, \cos\psi \big]\, e_z 
 \notag  \\
  \label{eq:conecurved:detector_parametr}
- &= \big[ r - 2R_2 \sin^2(\vartheta/2) - 2R_1 \cos\vartheta \sin^2(\psi/2) \big]\, \theta(\phi) + \big[-R_1 \sin\psi\big]\, 
+ &= \big[ r - 2R_2 \sin^2(\vartheta/2) - 2R_1 \cos\vartheta \sin^2(\psi/2) \big]\, \theta(\phi) + \big[R_1 \sin\psi\big]\, 
  \theta'(\phi) + \phantom{x} \\
  &\hspace{14pt} \big[ -2R_1 \sin\vartheta\sin^2(\psi/2) + R_2\sin\vartheta \big]\, e_z \notag 
 \end{align}
@@ -725,10 +726,12 @@ $\omega(\phi + \beta_1\psi/2, \beta_2\vartheta/2)$. For angles $\phi$ and $\vart
 $\omega(\phi, \vartheta)^\perp$ is given by the normalized derivatives with respect to $\phi$ and $\vartheta$, respectively. These vectors 
 are
 %
-\begin{align*}
+\begin{align}
+ \label{eq:conecurved:omega1perp}
  \omega_1^\perp(\phi, \vartheta) &= \theta'(\phi), \\
+ \label{eq:conecurved:omega2perp}
  \omega_2^\perp(\phi, \vartheta) &= -\sin\vartheta\, \theta(\phi) + \cos\vartheta\, e_z.
-\end{align*}
+\end{align}
 %
 Thus, we can write
 %
@@ -949,6 +952,7 @@ with
  \OPT g(\phi, \psi, z) = g\big(\phi, \psi, \tan(z/2r)\big).
 \end{equation}
 %
+\NOTE{TODO: formulate the condition on $h$}%
 Similarly to \eqref{eq:fanflat:curved2flat_adj}, the adjoint of $\OPT$ is
 %
 \begin{equation}
@@ -1023,5 +1027,75 @@ with $c = c(\phi, x) = \sqrt{r^2 - \sigma(\phi, x)^2}$ and the usual definitions
 
 
 \subsection{Cone beam geometry -- helical acquisition}
+\label{sec:applications:cone_helical}
+
+In the helical or spiral geometry, both source and detector move on a helix instead of a circle. We assume the spiral to have constant 
+pitch $\tilde p>0$, i.e. a full rotation by $2\pi$ corresponds to a $z$ shift by $\tilde p$. For simpler notation, we write 
+$p = \tilde p/(2\pi)$. The source-detector system now executes $k > 0$ instead of one rotation in order to allow for objects which 
+are extended in $z$ direction.
+
+\subsubsection{Two-fold curved detector}
+\label{sec:applications:cone_helical:twofoldcurved}
+
+We now have the parameter sets
+%
+\begin{equation}
+ \label{eq:hconecurved:params}
+ T = [0, 2\pi k], \quad U = [-\psi_0, \psi_0] \times [-\vartheta_0, \vartheta_0].
+\end{equation}
+%
+The detector parametrization can be derived from the circular acquisition situation \eqref{eq:conecurved:detector_parametr} by adding the 
+shift $p \phi e_z$:
+%
+\begin{align}
+ \label{eq:hconecurved:detector_parametr}
+ X(\phi, \psi, \vartheta)
+ &= \big[ r - 2R_2 \sin^2(\vartheta/2) - 2R_1 \cos\vartheta \sin^2(\psi/2) \big]\, \theta(\phi) + \big[-R_1 \sin\psi\big]\, 
+ \theta'(\phi) + \phantom{x} \\
+ &\hspace{14pt} \big[ -2R_1 \sin\vartheta\sin^2(\psi/2) + R_2\sin\vartheta + p\phi \big]\, e_z \notag 
+\end{align}
+%
+Since both source and detector are shifted simultaneously, the direction field is the same as before,
+%
+\begin{equation}
+ \label{eq:hconecurved:direction_field}
+ N(\phi, \psi, \vartheta) = -\omega(\phi + \beta_1\psi/2, \beta_2\vartheta/2),
+\end{equation} 
+%
+but the definition of the forward projection operator changes to
+%
+\begin{align}
+ &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag \\
+ \label{eq:hconecurved:fwdproj}
+ &\OPD f(\phi, \psi, \vartheta) = \int_0^\infty f\big(-r\theta(\phi) + p\phi e_z + s \omega(\phi + \beta_1\psi/2, \beta_2\vartheta/2)\big)
+ \D s.
+\end{align}
+%
+To relate this operator to the X-ray transform, we again need to calculate the projection of the source point location onto $\omega$. Apart 
+from the projection of $\theta(\phi)$ as calculated in section \ref{sec:applications:cone_circular:twofoldcurved}, we also need the 
+projection of $e_z$. Using \eqref{eq:conecurved:omega1perp}--\eqref{eq:conecurved:omega2perp}, we see that the unit vector 
+$\omega_1^\perp$ gives no contribution, and on the other hand,
+%
+\begin{equation*}
+ \INNER{e_z}{\omega_2^\perp(\phi, \vartheta)} = \cos\vartheta.
+\end{equation*}
+%
+\NOTE{TODO: formulate conditions on $l$ and $h$}%
+It can be immediately concluded that
+%
+\begin{align*}
+ \OPD f(\phi, \psi, \vartheta) 
+ &= \OPP\big( \phi + \beta_1\psi/2, \beta_2\vartheta/2, r\sin(\beta_1\psi/2), r\cos(\beta_1\psi/2)\sin(\beta_2\vartheta/2) + 
+ p\phi \cos(\beta_2\vartheta/2) \big)
+ &= \OPU \OPP f(\phi, \psi, \vartheta).
+\end{align*}
+%
+This operator $\OPU$ can be treated in the same way as the transform \eqref{eq:conecurved:coord_op}:
+%
+\begin{align*}
+ \INNER{\OPU g}{h}
+ &= 
+\end{align*}
+
 
 \end{document}
