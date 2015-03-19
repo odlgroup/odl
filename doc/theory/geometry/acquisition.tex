@@ -220,7 +220,8 @@ If the transformation factors cannot be determined, it is still possible to calc
  \OPA^\# g(x) = \int_T g\big(t, \Pi_{\gamma_t}(x)\big)\, \D t
 \end{align}
 %
-on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0, \infty)$. 
+on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0, \infty)$.%
+\vspace{5ex}%
 
 
 
@@ -237,14 +238,14 @@ We consider a flat 2D detector moving on the unit circle in the $x$-$y$ plane, o
 %
 \begin{align*}
  & T = [-\phi_0, \phi_0],\quad U = [-l_y, l_y] \times [-l_z, l_z] \\
- & X(\phi, u) = \theta(\phi) + R(\phi) \cdot \TRANSP{(0, u_1, u_2)}
+ & X(\phi, u) = \theta(\phi) + \rho(\phi) \cdot \TRANSP{(0, u_1, u_2)}
 \end{align*}
 %
 with $\phi_0 \in (0, \pi/2]$, $l_y, l_z > 0$ and
 %
 \begin{align}
  \theta(\phi) &= \TRANSP{(\cos\phi, \sin\phi, 0)}, \\ 
- R(\phi) &=
+ \rho(\phi) &=
  \begin{pmatrix}
   \cos\phi & -\sin\phi & 0 \\
   \sin\phi & \cos\phi & 0 \\
@@ -284,7 +285,7 @@ integral can be extended to $\RR$. Thus, we get the transform
  \OPP f(\phi, u) 
  &= \int_{\gamma_\phi(u)} f\, \D \gamma \\
  &= \int_0^\infty f\big(X(\phi, u) + (1-s) N(\phi, u)\big)\, \D s \\
- &= \int_\RR f\big(s \theta(\phi) + R(\phi) \cdot \TRANSP{(u_1, 0, u_2)}\big)\, \D s,
+ &= \int_\RR f\big(s \theta(\phi) + \rho(\phi) \cdot \TRANSP{(u_1, 0, u_2)}\big)\, \D s,
 \end{align*}
 %
 which is \eqref{eq:parflat:fwdproj}. To compare the adjoint obtained by the generic formula \eqref{eq:general:backproj_onedir} with 
@@ -294,7 +295,7 @@ which is \eqref{eq:parflat:fwdproj}. To compare the adjoint obtained by the gene
  x 
  &= \INNER{x}{\theta(\phi)}\, \theta(\phi) + \big(x - \INNER{x}{\theta(\phi)}\, \theta(\phi)\big) \\
  &= \INNER{x}{\theta(\phi)}\, \theta(\phi) + \INNER{x}{\theta'(\phi)}\, \theta'(\phi) + \INNER{x}{e_z}\, e_z \\
- &= \INNER{x}{\theta(\phi)}\, \theta(\phi) + R(\phi) \TRANSP{\big(\INNER{x}{\theta'(\phi)}, 0, \INNER{x}{e_z}\big)}.
+ &= \INNER{x}{\theta(\phi)}\, \theta(\phi) + \rho(\phi) \TRANSP{\big(\INNER{x}{\theta'(\phi)}, 0, \INNER{x}{e_z}\big)}.
 \end{align*}
 %
 This means that for $s = 1 - \INNER{x}{\theta(\phi)}$ and $u = \TRANSP{\big(\INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)}$, it is 
@@ -304,14 +305,15 @@ $x = \gamma\big(\phi, u, N(\phi, u)\big)(s)$, and thus the mapping $\Gamma_\phi$
  \Gamma_\phi(x) = \TRANSP{\big(1 - \INNER{x}{\theta(\phi)}, \INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)}
 \end{equation*}
 %
-The Jacobian of this coordinate transform is apparently a column permutation of $R(\phi)$, hence the additional factors in the integral 
+The Jacobian of this coordinate transform is apparently a column permutation of $\rho(\phi)$, hence the additional factors in the integral 
 \eqref{eq:general:backproj_onedir} are one, and we can conclude that
 %
 \begin{equation*}
  \DUALOPP g(x) = \int_{-\phi_0}^{\phi_0} g\big(\phi, \INNER{x}{\theta'(\phi)}, \INNER{x}{e_z}\big)\, \D\phi,
 \end{equation*}
 %
-which is the same as \eqref{eq:parflat:backproj}.
+which is the same as \eqref{eq:parflat:backproj}.%
+\vspace{5ex}%
 
 
 
@@ -375,7 +377,7 @@ and the projection $\Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi)$ can be calcula
 %
 \begin{align*}
  \Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi)
- &= \theta(\phi) - \INNERLR{\theta(\phi)}{\theta(\phi + \beta\psi/2)}\, \theta(\phi + \beta\psi/2) \\
+ &= \theta(\phi) - \INNER{\theta(\phi)}{\theta(\phi + \beta\psi/2)}\, \theta(\phi + \beta\psi/2) \\
  &=
  \begin{pmatrix}
   \cos\phi - \cos(\psi/2)\, \cos(\phi + \beta\psi/2) \\
@@ -624,6 +626,7 @@ Using the expression \eqref{eq:fancurved:backproj} for $\DUAL{\OPD_{\mathrm{c}}}
  &= \int_0^{2\pi} \frac{2r}{\cos^2\big(\psi(\phi,x)\big)\sqrt{r^2-\tau(\phi, x)^2}}\,
  g_0\left(\phi - \psi(\phi,x)/2, 2r \tan\big(\psi(\phi,x)\big) \right)\, \D\phi 
 \end{align} 
+%\vspace{5ex}%
 
 
 
@@ -658,7 +661,7 @@ If $\theta \neq 0$, the detector point is given by a second rotation applied to 
 \theta(\phi)$ and the rotation axis being $-\theta'(\phi)$. This rotation can be generally expressed as
 %
 \begin{equation*}
- x \mapsto c_2 + R(x - c_2), \quad R(x) = \INNER{x}{\theta'}\, \theta' + \cos\vartheta \big(x - \INNER{x}{\theta'}\, \theta'\big) 
+ x \mapsto c_2 + \rho(x - c_2), \quad \rho(x) = \INNER{x}{\theta'}\, \theta' + \cos\vartheta \big(x - \INNER{x}{\theta'}\, \theta'\big) 
  - \sin\vartheta\, (\theta' \times x)
 \end{equation*}
 %
@@ -676,10 +679,10 @@ and inserting $x = d_1$, we get the detector point
 %
 \begin{align}
  X(\phi, \psi, \theta)
- &= c_2 + R(d_1 - c_2) \notag \\
- &= -(R_2 - r) \theta(\phi) + R\big(c_1 + R_1 \theta(\phi + \psi) - c_2\big) \notag \\
- &= -(R_2 - r) \theta(\phi) + R\big((R_2-R_1) \theta(\phi) + R_1 \theta(\phi + \psi)\big) \notag \\
- &= -(R_2 - r) \theta(\phi) + (R_2-R_1) R\big(\theta(\phi)\big) + R_1 R\big(\theta(\phi + \psi)\big) \notag \\
+ &= c_2 + \rho(d_1 - c_2) \notag \\
+ &= -(R_2 - r) \theta(\phi) + \rho\big(c_1 + R_1 \theta(\phi + \psi) - c_2\big) \notag \\
+ &= -(R_2 - r) \theta(\phi) + \rho\big((R_2-R_1) \theta(\phi) + R_1 \theta(\phi + \psi)\big) \notag \\
+ &= -(R_2 - r) \theta(\phi) + (R_2-R_1) \rho\big(\theta(\phi)\big) + R_1 \rho\big(\theta(\phi + \psi)\big) \notag \\
  &= -(R_2 - r) \theta(\phi) + (R_2-R_1) \big[ \cos\vartheta\, \theta(\phi) + \sin\vartheta\, e_z \big] + \phantom{x} \notag \\
  &\hspace{25pt} R_1 \big[ -\sin\psi\, \theta'(\phi) + \cos\vartheta\, \cos\psi\, \theta(\phi) + \sin\vartheta\, \cos\psi\, e_z \big] \notag 
  \\
@@ -809,7 +812,15 @@ be bounded, its adjoint is given by $\DUALOPP \DUALOPU$. The $\vartheta$ integra
 with the $\delta$ distribution if for each $\tau$ and each $\sigma$ in the respective intervals, there is a $\vartheta$ in the integration 
 domain such that $\tau - \sqrt{r^2 - \sigma^2} \sin\vartheta = 0$. Since we insert $\sigma = \INNER{x}{\omega_1^\perp}$ and $\tau = 
 \INNER{x}{\omega_2^\perp}$, $\ABS{\tau_{\text{max}}} = 1$ and the minimum of the root is $\sqrt{r^2 - 1}$ or 
-$\sqrt{r^2 - \sigma_{\text{max}}^2} = r\cos(\beta_1\psi_0/2)$. Thus, the conditions on $\psi_0$ and $\vartheta_0$ read as
+$\sqrt{r^2 - \sigma_{\text{max}}^2} = r\cos(\beta_1\psi_0/2)$. Thus, $\vartheta_0$ has to fulfill at least
+%
+\begin{equation}
+ r\sin(\beta_2\vartheta_0/2) \geq \frac{1}{\cos(\beta_1\psi_0/2)}
+\end{equation}
+%
+\NOTE{In fact, it can, but yields identically zero where the integration domain contains no zero of the delta argument.}%
+since otherwise, the $\vartheta$ integral cannot be reduced with the $\delta$ distribution. 
+The simultaneous conditions on $\psi_0$ and $\vartheta_0$ read as
 %
 \NOTE{Check if this makes sense. Geometrically, the condition on $\vartheta_0$ should look similar to the one for $\psi_0$.}%
 \begin{align}
@@ -881,8 +892,11 @@ In total, we get the representation
 with
 %
 \begin{align}
+ \label{eq:conecurved:bp_sigma}
  \sigma &= \sigma(\phi, x) = \INNER{x}{\theta'(\phi)}, \\
+ \label{eq:conecurved:bp_a}
  a &= a(x) = \INNER{x}{e_z}, \\
+ \label{eq:conecurved:bp_b}
  b &= b(\phi, x) = \INNER{x}{\theta(\phi)} + \sqrt{r^2 - \sigma(\phi,x)^2}.
 \end{align}
 \vspace{5ex}%
@@ -904,25 +918,110 @@ with $h>0$ and has the representation
 %
 \begin{equation}
  \label{eq:conestack:detector_parametr}
- X(\phi, \psi, z) = -(R - r)\, \theta(\phi) + R\, \theta(\phi + \psi) + \tan(z/2r)\, e_z.
+ X(\phi, \psi, z) = -(R - r)\, \theta(\phi) + R\, \theta(\phi + \psi) + \arctan(z/2r)\, e_z.
 \end{equation}
 %
 The directional field can be written, analogously to \eqref{eq:fanflat:dirfield}, as
 %
 \begin{equation}
  \label{eq:conestack:dirfield}
- N(\phi, \psi, z) = -\theta\big( \phi + \beta\psi/2, \tan(z/2r) \big),
+ N(\phi, \psi, z) = -\theta\big( \phi + \beta\psi/2, \arctan(z/2r) \big),
 \end{equation} 
 %
 and the corresponding forward projection is
 %
 \begin{align}
  &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag \\
- &\OPD f(\phi, \psi, z) = \int_0^\infty f\left( -r\theta(\phi) + s \theta\big( \phi + \beta\psi/2, \tan(z/2r) \big) \right)\, \D s.
+ &\OPD f(\phi, \psi, z) = \int_0^\infty f\left( -r\theta(\phi) + s \theta\big( \phi + \beta\psi/2, \arctan(z/2r) \big) \right)\, \D s.
 \end{align}
 %
-We use its relation to the two-folded curved operator $\OPD_{\mathrm{TC}}$ as defined in \eqref{eq:conecurved:fwdproj} and proceed as in 
-section \ref{sec:applications:fanbeam:flat} to get the backprojection:
+We use its relation to the two-folded curved operator $\OPD_{\mathrm{TC}}$ as defined in \eqref{eq:conecurved:fwdproj} with $\beta_2 = 2$. 
+It is
 %
+\begin{equation*}
+ \OPD f(\phi, \psi, z) = \OPD_{\mathrm{TC}} f\big(\phi, \psi, \tan(z/2r)\big) = \OPT \OPD_{\mathrm{TC}} f(\phi, \psi, z)
+\end{equation*}
+%
+with
+%
+\begin{equation}
+ \label{eq:conestack:curved2flat}
+ \OPT g(\phi, \psi, z) = g\big(\phi, \psi, \tan(z/2r)\big).
+\end{equation}
+%
+Similarly to \eqref{eq:fanflat:curved2flat_adj}, the adjoint of $\OPT$ is
+%
+\begin{equation}
+ \label{eq:conestack:curved2flat_adj}
+ \DUALOPT g(\phi, \psi, \vartheta) = g(\phi, \psi, 2r\tan\vartheta)\, \frac{2r}{\cos^2\vartheta}.
+\end{equation}
+%
+Thus, by inserting $\DUALOPT g$ into \eqref{eq:conecurved:backproj} and using $1/\cos^2 = 1 + \tan^2$, we get the backprojection
+%
+\begin{align}
+ \label{eq:conestack:backproj}
+ \DUALOPD g(x)
+ &= \int_0^{2\pi} \frac{4r \sqrt{a^2 + b^2}}{\beta b^2 \sqrt{r^2 - \sigma^2}} \cdot \phantom{x} \\
+ &\hspace{35pt} g_0 \big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/r)/\beta, 2r\, a/b \big)\, \D\phi \notag
+\end{align}
+%
+with $\sigma, a, b$ as in \eqref{eq:conecurved:bp_sigma}--\eqref{eq:conecurved:bp_b}.
+\vspace{5ex}%
+
+
+
+
+\subsubsection{Flat detector}
+
+This type of detector is mostly used in nondestructive testing. We parametrize it over the sets
+%
+\begin{equation}
+ \label{eq:coneflat:params}
+ T = [0, \phi_0], \quad U = [-l, l] \times [-h, h]
+\end{equation}
+%
+by
+%
+\begin{equation}
+ \label{eq:coneflat:detector_parametr}
+ X(\phi, \tau, z) = r\theta(\phi) + \tau\, \theta'(\phi) + z\, e_z.
+\end{equation} 
+%
+We can directly write down the direction vectors
+%
+\begin{equation}
+ \label{eq:coneflat:direction_field}
+ N(\phi, \tau, z) = - \omega\big(\phi + \arctan(\tau/2r), \arctan(z/2r)\big)
+\end{equation}
+%
+and the corresponding forward projection
+%
+\begin{align*}
+ &\OPD: L^2(\Omega) \Lto L^2(T \times U) \\
+ \label{eq:coneflat:fwdproj}
+ &\OPD f(\phi, \tau, z) = \int_0^\infty f\left( -r\theta(\phi) + s \omega\big(\phi + \arctan(\tau/2r), \arctan(z/2r)\big) \right) \D s.
+\end{align*}
+%
+By repeating the argument from section \ref{sec:applications:cone_circular:curvedstack} and using
+%
+\begin{equation*}
+ \arcsin x = \arctan\left( \frac{x}{\sqrt{x^2 - 1}} \right),
+\end{equation*}
+%
+we can write the adjoint of $\OPD$ as
+%
+\begin{align}
+ \label{eq:conestack:backproj}
+ \DUALOPD g(x)
+ &= \int_0^{2\pi} \frac{4r^3 \sqrt{a^2 + b^2}}{b^2 c^3} g_0 \big( \phi - \arcsin(\sigma/r), 2r \sigma/c, 2r\, a/b \big)\, \D\phi \notag
+\end{align}
+%
+with $c = c(\phi, x) = \sqrt{r^2 - \sigma(\phi, x)^2}$ and the usual definitions of $\sigma, a, b$.
+\vspace{5ex}%
+
+
+
+
+\subsection{Cone beam geometry -- helical acquisition}
 
 \end{document}
