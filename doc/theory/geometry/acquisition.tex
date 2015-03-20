@@ -788,11 +788,11 @@ For the operator $\OPU$, we calculate
  &\hspace{80pt} h(\phi, \psi, \vartheta)\, \D\vartheta\, \D\psi\, \D\phi \\
  &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2} g\big( \phi, \vartheta, 
  r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) \sin\vartheta \big) \cdot \phantom{x} \\
- &\hspace{95pt} h_0\big( \phi - \beta_1\psi/2, \psi, 2\vartheta_0/\beta_2 \big)\, 
+ &\hspace{95pt} h_0\big( \phi - \beta_1\psi/2, \psi, 2\vartheta/\beta_2 \big)\, 
  \frac{2}{\beta_2}\, \D\vartheta\, \D\psi\, \D\phi \\
  &= \int_0^{2\pi} \int_{-r\sin(\beta_1\psi_0/2)}^{r\sin(\beta_1\psi_0/2)} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2}
  g\big( \phi, \vartheta, \sigma, \sqrt{r^2 - \sigma^2} \sin\vartheta \big) \cdot \phantom{x} \\
- &\hspace{135pt} h_0\big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/2)/\beta_1, 2\vartheta/\beta_2 \big)\, \cdot \phantom{x} \\
+ &\hspace{135pt} h_0\big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/r)/\beta_1, 2\vartheta/\beta_2 \big)\, \cdot \phantom{x} \\
  &\hspace{135pt} \frac{4}{\beta_1\beta_2\sqrt{r^2 - \sigma^2}}\, \D\vartheta\, \D\psi\, \D\phi \\
  &= \int_0^{2\pi} \int_{-r\sin(\beta_1\psi_0/2)}^{r\sin(\beta_1\psi_0/2)} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2} \int_{-r}^r
  g(\phi, \vartheta, \sigma, \tau)\, \delta\big(\tau - \sqrt{r^2 - \sigma^2} \sin\vartheta \big) \cdot \phantom{x} \\
@@ -834,7 +834,7 @@ The simultaneous conditions on $\psi_0$ and $\vartheta_0$ read as
 Then, the integral over $\vartheta$ can be evaluated using
 %
 \begin{equation*}
- \delta\big(p(u)\big) = \sum_{u:p(u)=0} \frac{\delta(u)}{\ABS{p'(u)}}.
+ \delta\big(w(u)\big) = \sum_{u:w(u)=0} \frac{\delta(u)}{\ABS{w'(u)}}.
 \end{equation*}
 %
 If we insert $\DUALOPU g$ into $\DUALOPP$ with the abbreviation $\Phi(\vartheta)$ for the integrand except the delta distribution, we get 
@@ -847,7 +847,7 @@ the $\vartheta$ integral
  \right)\, \D\vartheta.
 \end{equation}
 %
-The zero of the argument $p(\vartheta)$ of $\delta$ can be calculated as
+The zero of the argument $w(\vartheta)$ of $\delta$ can be calculated as
 %
 \begin{align}
  &\cos\vartheta \INNER{x}{e_z} - \sin\vartheta \Big( \INNER{x}{\theta(\phi)} + \sqrt{r^2 - \INNER{x}{\theta'(\phi)}^2} \Big) = 0 \quad
@@ -860,12 +860,13 @@ The zero of the argument $p(\vartheta)$ of $\delta$ can be calculated as
 and its derivative evaluated at this point is
 %
 \begin{equation*}
- p'(\vartheta^*) = \left. -\sin\vartheta \INNER{x}{e_z} - \cos\vartheta \Big( \INNER{x}{\theta(\phi)} + \sqrt{r^2 - 
+ w'(\vartheta^*) = \left. -\sin\vartheta \INNER{x}{e_z} - \cos\vartheta \Big( \INNER{x}{\theta(\phi)} + \sqrt{r^2 - 
  \INNER{x}{\theta'(\phi)}^2} \Big) \right|_{\vartheta = \vartheta^*}.
 \end{equation*}
 %
 Using the relations $\sin\vartheta = \tan\vartheta / \sqrt{\tan^2\vartheta + 1}$ and $\cos\vartheta = 1 / \sqrt{\tan^2\vartheta + 1}$ and 
 the abbreviations $a$ and $b$ for nominator and denumerator of the argument of $\arctan$ in \eqref{eq:conecurved:theta_in_delta}, we get 
+\NOTE{Check if signs of $a$ and $b$ matter}%
 %
 \begin{equation*}
  \sin\vartheta^* = \frac{a}{\sqrt{a^2 + b^2}}, \quad \cos\vartheta^* = \frac{b}{\sqrt{a^2 + b^2}},
@@ -976,6 +977,7 @@ with $\sigma, a, b$ as in \eqref{eq:conecurved:bp_sigma}--\eqref{eq:conecurved:b
 
 
 \subsubsection{Flat detector}
+\label{sec:applications:cone_circular:flat}
 
 This type of detector is mostly used in nondestructive testing. We parametrize it over the sets
 %
@@ -1032,7 +1034,14 @@ with $c = c(\phi, x) = \sqrt{r^2 - \sigma(\phi, x)^2}$ and the usual definitions
 In the helical or spiral geometry, both source and detector move on a helix instead of a circle. We assume the spiral to have constant 
 pitch $\tilde p>0$, i.e. a full rotation by $2\pi$ corresponds to a $z$ shift by $\tilde p$. For simpler notation, we write 
 $p = \tilde p/(2\pi)$. The source-detector system now executes $k > 0$ instead of one rotation in order to allow for objects which 
-are extended in $z$ direction.
+are extended in $z$ direction. We account for this situation by setting the domain of the preimage space functions as
+%
+\begin{equation}
+ \label{eq:hcone:cylinderdomain}
+ \Omega = B_1 \times [H_1, H_2]
+\end{equation}
+%
+with $B_1 \subset \RR^2$ and $0 < H_1 < H_2$.
 
 \subsubsection{Two-fold curved detector}
 \label{sec:applications:cone_helical:twofoldcurved}
@@ -1086,7 +1095,7 @@ It can be immediately concluded that
 \begin{align*}
  \OPD f(\phi, \psi, \vartheta) 
  &= \OPP\big( \phi + \beta_1\psi/2, \beta_2\vartheta/2, r\sin(\beta_1\psi/2), r\cos(\beta_1\psi/2)\sin(\beta_2\vartheta/2) + 
- p\phi \cos(\beta_2\vartheta/2) \big)
+ p\phi \cos(\beta_2\vartheta/2) \big) \\
  &= \OPU \OPP f(\phi, \psi, \vartheta).
 \end{align*}
 %
@@ -1094,8 +1103,97 @@ This operator $\OPU$ can be treated in the same way as the transform \eqref{eq:c
 %
 \begin{align*}
  \INNER{\OPU g}{h}
- &= 
+ &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} \int_{-\vartheta_0}^{\vartheta_0} g\big( \phi + \beta_1\psi/2, \beta_2\vartheta/2, 
+ r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) \sin(\beta_2\vartheta/2) + \phantom{x} \\
+ &\hspace{80pt} p \phi \cos(\beta_2\vartheta/2) \big)\, h(\phi, \psi, \vartheta)\, \D\vartheta\, \D\psi\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2} g\big( \phi, \vartheta, 
+ r\sin(\beta_1\psi/2), r \cos(\beta_1\psi/2) \sin\vartheta + (\phi - \beta_1\psi/2)\, p \cos\vartheta \big) \cdot \phantom{x} \\
+ &\hspace{95pt} h_0\big( \phi - \beta_1\psi/2, \psi, 2\vartheta/\beta_2 \big)\, 
+ \frac{2}{\beta_2}\, \D\vartheta\, \D\psi\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-r\sin(\beta_1\psi_0/2)}^{r\sin(\beta_1\psi_0/2)} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2}
+ g\left( \phi, \vartheta, \sigma, \sqrt{r^2 - \sigma^2} \sin\vartheta + \big(\phi - \arcsin(\sigma/r)\big)\, p \cos\vartheta \right) \cdot 
+ \phantom{x} \\
+ &\hspace{135pt} h_0\big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/r)/\beta_1, 2\vartheta/\beta_2 \big)\, \cdot \phantom{x} \\
+ &\hspace{135pt} \frac{4}{\beta_1\beta_2\sqrt{r^2 - \sigma^2}}\, \D\vartheta\, \D\psi\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-r\sin(\beta_1\psi_0/2)}^{r\sin(\beta_1\psi_0/2)} \int_{-\beta_2\vartheta_0/2}^{\beta_2\vartheta_0/2} \int_{-r}^r
+ g(\phi, \vartheta, \sigma, \tau) \cdot \phantom{x} \\
+ &\hspace{145pt} \delta\left( \tau - \sqrt{r^2 - \sigma^2} \sin\vartheta - \big(\phi - \arcsin(\sigma/r)\big)\, p \cos\vartheta \right) 
+ \cdot \phantom{x} \\
+ &\hspace{145pt} h_0\big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/r)/\beta_1, 2\vartheta/\beta_2 \big) \cdot \phantom{x} \\
+ &\hspace{145pt} \frac{4}{\beta_1\beta_2\sqrt{r^2 - \sigma^2}}\, \D\tau\, \D\vartheta\, \D\sigma\, \D\phi.
 \end{align*}
+%
+The delta distribution is reduced with the $\vartheta$ integral as for the circular acquisition, with the same arguments $\sigma$ and 
+$\tau$. For the $\delta$ argument, we have
+%
+\begin{align*}
+ w(\vartheta) 
+ &= -\sin\vartheta \INNER{x}{\theta(\phi)} + \cos\vartheta \INNER{x}{e_z} - \sqrt{r^2 - \INNER{x}{\theta'(\phi)}^2} \sin\vartheta - 
+ \big(\phi - \arcsin(\INNER{x}{\theta'(\phi)}/r)\big)\, p \cos\vartheta \\
+ &= -\sin\vartheta \left( \INNER{x}{\theta(\phi)} + \sqrt{r^2 - \INNER{x}{\theta'(\phi)}^2} \right) + 
+ \cos\vartheta \left( \INNER{x}{e_z} - p\, \big(\phi - \arcsin(\INNER{x}{\theta'(\phi)}/r)\big) \right)
+\end{align*}
+%
+which has its zero at
+%
+\begin{equation}
+ \label{eq:hconecurved:theta_in_delta}
+ \vartheta^*(\phi, x) = \arctan \left( \frac{\INNER{x}{e_z} - p\, \big(\phi - \arcsin(\INNER{x}{\theta'(\phi)}/r)}{\INNER{x}{\theta(\phi)} + 
+ \sqrt{r^2 - \INNER{x}{\theta'(\phi)}^2}} \right)
+\end{equation} 
+%
+or in short $\vartheta^* = \arctan\big((a - pd) / b\big)$ with $a, b$ as in \eqref{eq:conecurved:bp_a}--\eqref{eq:conecurved:bp_b} and
+%
+\begin{equation}
+ \label{eq:hconecurved:bp_d}
+ d = d(\phi, x) = \big(\phi - \arcsin(\INNER{x}{\theta'(\phi)}/r)\big).
+\end{equation}
+%
+Inserting $\vartheta^*$ into $w'(\vartheta)$ yields 
+%
+\begin{align*}
+ w'(\vartheta) 
+ &= -b \cos(\vartheta^*) + (a - pd)\sin(\vartheta^*) \\
+ &= -b \frac{1}{\sqrt{\tan^2\vartheta^* + 1}} - (a - pd) \frac{\tan\vartheta^*}{\sqrt{\tan^2\vartheta^* + 1}} \\
+ &= -b \frac{b}{\sqrt{(a-pd)^2 + b^2}} - (a - pd) \frac{a - pd}{\sqrt{(a-pd)^2 + b^2}} \\
+ &= - \sqrt{(a-pd)^2 + b^2}.
+\end{align*}
+%
+\NOTE{TODO: work out conditions for the integration domain to contain a zero of $w$}%
+Hence, the $\vartheta$ integral reduces to
+%
+\begin{align*}
+ \int_{-\beta_1\vartheta_0/2}^{\beta_1\vartheta_0/2} \Phi(\vartheta)\, \delta \big(w(\vartheta)\big) \, \D\vartheta = 
+ \frac{\Phi(\vartheta^*)}{\sqrt{(a-pd)^2 + b^2}},
+\end{align*}
+%
+and thus we acquire the backprojection
+%
+\begin{align}
+ \label{eq:hconecurved:backproj}
+ \DUALOPD g(x)
+ &= \int_0^{2\pi} \frac{4}{\beta_1\beta_2\sqrt{r^2 - \sigma^2} \sqrt{(a-pd)^2 + b^2}} \cdot \phantom{x} \\
+ &\hspace{35pt} g_0 \left( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/r)/\beta_1, 2\arctan\big((a-pd)/b\big)/\beta_2 \right)\, \D\phi. \notag
+\end{align}
+\vspace{5ex}%
+
+
+
+\subsubsection{Detector curved only along $\phi$}
+\label{sec:applications:cone_helical:curvedstack}
+
+Straightforward application of the arguments from section \ref{sec:applications:cone_circular:curvedstack}. TODO
+\vspace{5ex}%
+
+
+\subsubsection{Flat detector}
+\label{sec:applications:cone_helical:flat}
+
+Straightforward application of the arguments from section \ref{sec:applications:cone_circular:flat}. TODO
+\vspace{5ex}%
+
+
+\subsection{PET and SPECT geometries -- big TODO}
 
 
 \end{document}
