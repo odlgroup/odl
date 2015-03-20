@@ -152,7 +152,7 @@ setting, we can study forward operators of the form
 \begin{align}
  & \OPA: \SPCH_1(\Omega) \Lto \SPCH_2(T \times U) \notag \\
  \label{eq:general:fwdproj}
- & \OPA f(t, u) = \int_{P(t, u)} \int_{\gamma(t, u, \theta) \cap \Omega} f \, \D \gamma\, \D \theta.
+ & \OPA f(t, u) = \int_{P(t, u)} \int_{\gamma(t, u, \theta)} f \, \D \gamma\, \D \theta.
 \end{align}
 %
 which maps a pair of parameters $(t, u)$ to the integral of $f$ along all rays arriving at $X(t, u)$. For $L^2$ spaces, we want to 
@@ -161,7 +161,7 @@ calculate the adjoint operator:
 \begin{align}
  \INNER{\OPA f}{g}_2 
  &= \int_T \int_U \OPA f(t, u)\, g(t, u)\, \D u\, \D t \notag \\
- &= \int_T \int_U \int_{P(t, u)} \int_{\gamma(t, u, \theta) \cap \Omega} f \, \D \gamma\, \D \theta\, g(t, u)\, \D u\, \D t \notag \\
+ &= \int_T \int_U \int_{P(t, u)} \int_{\gamma(t, u, \theta)} f \, \D \gamma\, \D \theta\, g(t, u)\, \D u\, \D t \notag \\
  \label{eq:general:backproj_calculation_step1}
  &= \int_T \int_U \int_{P(t, u)} \int_0^\infty  [f \circ \gamma(t, u, \theta)](s)\, \ABS{\gamma(t, u, \theta)'(s)}\, g(t, u)\, \D s\, 
  \D \theta\, \D u\, \D t.
@@ -221,6 +221,7 @@ If the transformation factors cannot be determined, it is still possible to calc
 \end{align}
 %
 on the weighted image space $\SPCH_2$ with unknown weight $w: T \times U \to [0, \infty)$.%
+\NOTE{TODO: consider the second case, too}
 \vspace{5ex}%
 
 
