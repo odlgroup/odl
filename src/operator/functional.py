@@ -26,20 +26,46 @@ from future import standard_library
 standard_library.install_aliases()
 
 from numbers import Number
-from math import sin,cos,sqrt
 from abc import ABCMeta, abstractmethod, abstractproperty
-import numpy as np
 
 class Functional(object):
-    """Abstract operator
+    """Abstract functional
     """
     __metaclass__ = ABCMeta #Set as abstract
 
+    #Abstract methods
     @abstractmethod
-    def apply(self, rhs):
-        """Apply the operator, abstract
+    def applyImpl(self, rhs):
+        """Apply the functional,
+        abstract, pseudocode:
+
+        return function(rhs)
         """
         pass
+    
+    @abstractproperty
+    def domain(self):
+        """Get the domain of the functional
+        """
+
+    @abstractproperty
+    def range(self):
+        """Get the range of the functional
+        """
+
+    #Implicitly defined methods
+    def apply(self, rhs):
+        """Apply the operator with error checking
+        """
+        if not self.domain.isMember(rhs): 
+            raise TypeError('rhs ({}) is not in the domain ({}) of this functional'.format(rhs, self.domain))
+
+        result = self.applyImpl(rhs)
+        
+        if not self.range.isMember(result): 
+            raise TypeError('functional returned: ({}), is in wrong set'.format(result))
+
+        return result
 
     def __call__(self, rhs):
         """Shorthand for self.apply(rhs)
@@ -51,9 +77,9 @@ class Functional(object):
         """
 
         if isinstance(other, Functional):  # Calculate sum
-            return FunctionalSum(self,other)
+            return FunctionalSum(self, other)
         else:
-            raise TypeError('Expected an operator')
+            raise TypeError('Expected a Functional')
 
     def __mul__(self, other):
         """Pointwise multiplication of operators (A*B)(x) == A(x)*B(x)
@@ -61,91 +87,101 @@ class Functional(object):
         """
 
         if isinstance(other, Functional):
-            return FunctionalPointwiseProduct(self,other)
+            return FunctionalPointwiseProduct(self, other)
         elif isinstance(other, Number):
-            return FunctionalScalarMultiplication(self,other)
+            return FunctionalScalarMultiplication(self, other)
         else:
-            raise TypeError('Expected an operator or a scalar')
+            raise TypeError('Expected a Functional or a scalar')
 
     __rmul__ = __mul__
-
-    @abstractmethod
-    def domain(self):
-        """Get the domain of the operator
-        """
-
-    @abstractmethod
-    def range(self):
-        """Get the range of the operator
-        """
+    
+    def __str__(self):
+        return "Functional " + self.__class__.__name__ + ": " + str(self.domain) + "->" + str(self.range)
 
 
 class FunctionalComposition(Functional):
     """Expression type for the composition of functionals
     """
 
-    def __init__(self,left,right):
-        if (right.range() != left.domain()):
-            raise TypeError("Range and domain of operators do not fit")
+    def __init__(self, left, right):
+        if right.range != left.domain:
+            raise TypeError("Range and domain of functionals do not fit")
 
         self.left = left
         self.right = right
 
-    def apply(self, rhs):
-        return left(right(rhs))
+    def applyImpl(self, rhs):
+        return self.left.applyImpl(self.right.applyImpl(rhs))
 
+    @property
     def domain(self):
-        return self.right.domain()
+        return self.right.domain
 
+    @property
     def range(self):
-        return self.left.range()
+        return self.left.range
 
 class FunctionalSum(Functional):
     """Expression type for the sum of functionals
     """
-    def __init__(self,op1,op2):
-        if (op1.range() != op2.range() or op1.domain() != op2.domain()):
-            raise TypeError("Range and domain of operators do not fit")
+    def __init__(self, op1, op2):
+        if op1.range != op2.range or op1.domain != op2.domain:
+            raise TypeError("Range and domain of functionals do not fit")
 
         self.op1 = op1
         self.op2 = op2
 
-    def apply(self, rhs):
-        return op1(rhs)+op2(rhs)
+    def applyImpl(self, rhs):
+        return self.op1.applyImpl(rhs)+self.op2.applyImpl(rhs)
 
+    @property
     def domain(self):
-        return self.op1.domain()
+        return self.op1.domain
 
+    @property
     def range(self):
-        return self.op1.range()
+        return self.op1.range
 
 class FunctionalPointwiseProduct(Functional):    
     """Pointwise multiplication of functionals
     """
 
-    def __init__(self,op1,op2):
-        if (op1.range() != op2.range() or op1.domain() != op2.domain()):
-            raise TypeError("Range and domain of operators do not fit")
+    def __init__(self, op1, op2):
+        if op1.range != op2.range or op1.domain != op2.domain:
+            raise TypeError("Range and domain of functionals do not fit")
 
         self.op1 = op1
         self.op2 = op2
 
-    def apply(self,rhs):
-        return op1(rhs)*op2(rhs)
+    def applyImpl(self, rhs):
+        return self.op1.applyImpl(rhs)*self.op2.applyImpl(rhs)
+
+    @property
+    def domain(self):
+        return self.op1.domain
+
+    @property
+    def range(self):
+        return self.op1.range
 
 class FunctionalScalarMultiplication(Functional):
     """Expression type for the multiplication of functionals with scalars
     """
 
-    def __init__(self,op,scalar):
-        self.op = op
+    def __init__(self, op, scalar):
+        if not op.range.isMember(scalar):
+            raise TypeError("Scalar is not compatible with this functional")
+
+        self.operator = operator
         self.scalar = scalar
 
-    def apply(self, rhs):
-        return self.scalar*self.op(rhs)
+    def applyImpl(self, rhs):
+        return self.scalar*self.operator.applyImpl(rhs)
 
+    @property
     def domain(self):
-        return self.op.domain()
+        return self.operator.domain
 
+    @property
     def range(self):
-        return self.op.range()
+        return self.operator.range

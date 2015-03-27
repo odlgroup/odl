@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+simple_test_astra.py -- a simple test script
+
 Copyright 2014, 2015 Holger Kohr
 
 This file is part of RL.
@@ -17,26 +19,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-# from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
+from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+import unittest
 
+#Runs all automated tests
 
-from distutils.core import setup
+from operator_test import *
+from cudarn_test import *
+from space_test import *
+from functionSpaces_test import *
 
-# from RL import __version__
-
-setup(name='RL',
-      # version=__version__,
-      version='0.1.0',
-      author='Holger Kohr',
-      author_email='kohr@kth.se',
-      url='https://gits-14.sys.kth.se/LCR/RL',
-      description='What did RL again stand for?',
-      license='GPLv3',
-      packages=['RL', 'RL.builders', 'RL.datamodel', 'RL.geometry', 'RL.operator', 'RL.utility', 'RL.space'],
-      package_dir={'RL': 'src'})
+if __name__ == '__main__':
+    unittest.main(exit=False)

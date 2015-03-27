@@ -26,9 +26,8 @@ from future import standard_library
 standard_library.install_aliases()
 
 from numbers import Number
-from math import sin,cos,sqrt
 from abc import ABCMeta, abstractmethod, abstractproperty
-import numpy as np
+
 
 class Operator(object):
     """Abstract operator
@@ -36,16 +35,35 @@ class Operator(object):
     __metaclass__ = ABCMeta #Set as abstract
 
     @abstractmethod
-    def apply(self, rhs, out):
+    def applyImpl(self, rhs, out):
         """Apply the operator, abstract
         """
         pass
 
+    @abstractproperty
+    def domain(self):
+        """Get the domain of the operator
+        """
+
+    @abstractproperty
+    def range(self):
+        """Get the range of the operator
+        """
+
+    #Implicitly defined operators
+    def apply(self, rhs, out):
+        if not self.domain.isMember(rhs): 
+            raise TypeError('rhs ({}) is not in the domain of this operator ({})'.format(rhs, self))
+        if not self.range.isMember(out): 
+            raise TypeError('out ({}) is not in the range of this operator ({})'.format(out, self))
+
+        self.applyImpl(rhs, out)
+
     def __call__(self, rhs):
         """Shorthand for self.apply(rhs)
         """
-        tmp = self.domain().empty()
-        self.apply(rhs,tmp)
+        tmp = self.domain.empty()
+        self.apply(rhs, tmp)
         return tmp
 
     def __add__(self, other):
@@ -53,7 +71,7 @@ class Operator(object):
         """
 
         if isinstance(other, Operator):  # Calculate sum
-            return OperatorSum(self,other)
+            return OperatorSum(self, other)
         else:
             raise TypeError('Expected an operator')
 
@@ -62,156 +80,219 @@ class Operator(object):
         """
 
         if isinstance(other, Number):
-            return OperatorScalarMultiplication(self,other)
+            return OperatorScalarMultiplication(self, other)
         else:
             raise TypeError('Expected an operator or a scalar')
 
-    #__mul__ = __rmul__ Should we have this?
+    __mul__ = __rmul__ #Should we have this?
 
-    @abstractmethod
-    def domain(self):
-        """Get the domain of the operator
-        """
+    def __str__(self):
+        return "Operator " + self.__class__.__name__ + ": " + str(self.domain) + "->" + str(self.range)
 
-    @abstractmethod
-    def range(self):
-        """Get the range of the operator
-        """
-
-    @property
-    def T(self):
-        """Get the adjoint operator
-        """
-        return OperatorAdjoint(self)
-
-class LinearOperator(Operator):
-    """ Linear operator, satisfies A(ax+by)=aA(x)+bA(y)
-    """
-    
-    @abstractmethod
-    def applyAdjoint(self, rhs, out):
-        """Apply the adjoint of the operator, abstract
-        """
-        pass
-
-class SelfAdjointOperator(LinearOperator):
-    """ Special case of self adjoint operators where A(x) = A.T(x)
-    """
-    def applyAdjoint(self, rhs, out):
-        self.apply(rhs, out)
 
 class OperatorSum(Operator):
     """Expression type for the sum of operators
     """
-    def __init__(self,op1,op2):
-        if (op1.range() != op2.range() or op1.domain() != op2.domain()):
+    def __init__(self, op1, op2):
+        if op1.range != op2.range or op1.domain != op2.domain:
             raise TypeError("Range and domain of operators do not fit")
 
         self.op1 = op1
         self.op2 = op2
 
-    def apply(self, rhs, out):
-        tmp1 = self.range().empty()
-        tmp2 = self.range().empty()
-        self.op1.apply(rhs, tmp1)
-        self.op2.apply(rhs, tmp2)
-        out.assign(tmp1+tmp2)
+    def applyImpl(self, rhs, out):
+        tmp = self.range.empty()
+        self.op1.applyImpl(rhs, out)
+        self.op2.applyImpl(rhs, tmp)
+        out += tmp
 
-    def applyAdjoint(self, rhs, out):
-        tmp1 = self.domain().empty()
-        tmp2 = self.domain().empty()
-        self.op1.applyAdjoint(rhs, tmp1)
-        self.op2.applyAdjoint(rhs, tmp2)
-        out.assign(tmp1+tmp2)
-
+    @property
     def domain(self):
-        return self.op1.domain()
+        return self.op1.domain
 
+    @property
     def range(self):
-        return self.op1.range()
+        return self.op1.range
 
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
     """
 
-    def __init__(self,left,right):
-        if (right.range() != left.domain()):
+    def __init__(self, left, right):
+        if right.range != left.domain:
             raise TypeError("Range and domain of operators do not fit")
 
         self.left = left
         self.right = right
 
-    def apply(self,rhs,out):
-        tmp = self.right.range().empty()
-        self.right.apply(rhs,tmp)
-        self.left.apply(tmp,out)
-    
-    def applyAdjoint(self,rhs,out):
-        tmp = self.left.domain().empty()
-        self.left.applyAdjoint(rhs,tmp)
-        self.right.applyAdjoint(tmp,out)
-
+    def applyImpl(self, rhs, out):
+        tmp = self.right.range.empty()
+        self.right.applyImpl(rhs, tmp)
+        self.left.applyImpl(tmp, out)
+        
+    @property
     def domain(self):
-        return self.right.domain()
+        return self.right.domain
 
+    @property
     def range(self):
-        return self.left.range()
+        return self.left.range
 
 class PointwiseProduct(Operator):    
     """Pointwise multiplication of operators
     """
 
-    def __init__(self,op1,op2):
-        if (op1.range() != op2.range() or op1.domain() != op2.domain()):
+    def __init__(self, op1, op2):
+        if op1.range() != op2.range or op1.domain != op2.domain:
             raise TypeError("Range and domain of operators do not fit")
 
         self.op1 = op1
         self.op2 = op2
 
-    def apply(self,rhs,out):
-        tmp1 = self.op1.range().empty()
-        tmp2 = self.op2.range().empty()
-        self.op1.apply(rhs, tmp1)
-        self.op2.apply(rhs, tmp2)
-        out.assign(tmp1*tmp2)
+    def applyImpl(self, rhs, out):
+        tmp = self.op2.range.empty()
+        self.op1.applyImpl(rhs, out)
+        self.op2.applyImpl(rhs, tmp)
+        out *= tmp
+
+    @property
+    def domain(self):
+        return self.op1.domain
+
+    @property
+    def range(self):
+        return self.op1.range
 
 class OperatorScalarMultiplication(Operator):
     """Expression type for the multiplication of operators with scalars
     """
 
-    def __init__(self,op,scalar):
-        self.op = op
+    def __init__(self, op, scalar):
+        self.operator = operator
         self.scalar = scalar
 
-    def apply(self, rhs, out):
-        self.op.apply(rhs, out)
-        out*=scalar
-    
-    def applyAdjoint(self, rhs, out):
-        self.op.applyAdjoint(rhs, out)
-        out*=scalar
+    def applyImpl(self, rhs, out):
+        self.operator.applyImpl(rhs, out)
+        out *= self.scalar
 
+    @property
     def domain(self):
-        return self.op.domain()
+        return self.operator.domain
 
+    @property
     def range(self):
-        return self.op.range()
+        return self.operator.range
+
+    
+class LinearOperator(Operator):
+    """ Linear operator, satisfies A(ax+by)=aA(x)+bA(y)
+    """
+    
+    @abstractmethod
+    def applyAdjointImpl(self, rhs, out):
+        """Apply the adjoint of the operator, abstract
+        """
+        pass
+
+    #Implicitly defined operators
+    @property
+    def T(self):
+        return OperatorAdjoint(self)
+
+    def applyAdjoint(self, rhs, out):
+        if not self.range.isMember(rhs): 
+            raise TypeError('rhs ({}) is not in the domain of this operators adjoint'.format(rhs))
+        if not self.domain.isMember(out): 
+            raise TypeError('out ({}) is not in the range of this operators adjoint'.format(out))
+
+        self.applyAdjointImpl(rhs, out)
+
+    def __add__(self, other):
+        """Operator addition (pointwise)
+        """
+
+        if isinstance(other, LinearOperator): #Specialization if both are linear
+            return LinearOperatorSum(self, other)
+        else:
+            return Operator.__add__(self, other)
+
+    def __rmul__(self, other):
+        """Multiplication of operators with scalars (a*A)(x) = a*A(x)
+        """
+
+        if isinstance(other, Number):
+            return LinearOperatorScalarMultiplication(self, other)
+        else:
+            raise TypeError('Expected an operator or a scalar')
+
+    __mul__ = __rmul__ #Should we have this?
+
+
+class SelfAdjointOperator(LinearOperator):
+    """ Special case of self adjoint operators where A(x) = A.T(x)
+    """
+    
+    __metaclass__ = ABCMeta #Set as abstract
+
+    def applyAdjointImpl(self, rhs, out):
+        self.applyImpl(rhs, out)
+
 
 class OperatorAdjoint(LinearOperator):
     """Expression type for the adjoint of an operator
     """
 
-    def __init__(self,op):
-        self.op = op
+    def __init__(self, op):
+        self.operator = op
 
-    def apply(self, rhs, out):
-        self.op.applyAdjoint(rhs, out)
+    def applyImpl(self, rhs, out):
+        self.operator.applyAdjointImpl(rhs, out)
     
-    def applyAdjoint(self, rhs, out):
-        self.op.apply(rhs, out)
+    def applyAdjointImpl(self, rhs, out):
+        self.operator.applyImpl(rhs, out)
 
+    @property
     def domain(self):
-        return self.op.range()
+        return self.operator.range
 
+    @property
     def range(self):
-        return self.op.domain()
+        return self.operator.domain
+
+
+class LinearOperatorSum(OperatorSum, LinearOperator):
+    """Expression type for the sum of linear operators
+    """
+    def __init__(self, op1, op2):
+        LinearOperator.__init__(self, op1, op2)
+
+    def applyAdjointImpl(self, rhs, out):
+        tmp = self.domain.empty()
+        self.op1.applyAdjointImpl(rhs, out)
+        self.op2.applyAdjointImpl(rhs, tmp)
+        out += tmp
+
+
+class LinearOperatorComposition(OperatorComposition, LinearOperator):
+    """Expression type for the composition of operators
+    """
+
+    def __init__(self, left, right):
+        OperatorComposition.__init__(self, left, right)
+    
+    def applyAdjointImpl(self, rhs, out):
+        tmp = self.left.domain.empty()
+        self.left.applyAdjoint(rhs, tmp)
+        self.right.applyAdjoint(tmp, out)
+
+
+class LinearOperatorScalarMultiplication(OperatorScalarMultiplication, LinearOperator):
+    """Expression type for the multiplication of operators with scalars
+    """
+
+    def __init__(self, op, scalar):
+        OperatorScalarMultiplication.__init__(self, op, scalar)
+    
+    def applyAdjointImpl(self, rhs, out):
+        self.op.applyAdjointImpl(rhs, out)
+        out *= self.scalar

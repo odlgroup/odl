@@ -29,32 +29,36 @@ from RL.operator.operatorAlternative import *
 from RL.space.space import *
 from RL.space.defaultSpaces import *
 from RL.space.functionSpaces import *
+import RL.space.CudaSpace as CS
 from RL.space.measure import *
+import RLcpp
 from testutils import RLTestCase, Timer, consume
 from solverExamples import *
 
 import matplotlib.pyplot as plt
-from scipy import ndimage
 
-class Convolution(LinearOperator):
+class CudaConvolution(LinearOperator):
+    """ Calculates the circular convolution of two CUDA vectors
+    """
+
     def __init__(self, kernel):
-        if not isinstance(kernel.space, RN):
-            raise TypeError("Kernel must be RN vector")
-
-        self.kernel = kernel.values
-        self.adjkernel = kernel.values[::-1]
+        if not isinstance(kernel.space, CS.CudaRN):
+            raise TypeError("Kernel must be CudaRN vector")
+        
         self.space = kernel.space
-        self.norm = float(sum(abs(self.kernel)))
+        self.kernel = kernel
+        self.adjkernel = self.space.makeVector(kernel[::-1]) #The adjoint is the kernel reversed
+        self.norm = float(sum(abs(self.kernel[:]))) #eval at host
 
     def applyImpl(self, rhs, out):
-        ndimage.convolve(rhs.values, self.kernel, output=out.values, mode='wrap')
+        RLcpp.cuda.conv(rhs.impl, self.kernel.impl, out.impl)
 
     def applyAdjointImpl(self, rhs, out):
-        ndimage.convolve(rhs.values, self.adjkernel, output=out.values, mode='wrap')
+        RLcpp.cuda.conv(rhs.impl, self.adjkernel.impl, out.impl)
 
-    def opNorm(self):
+    def opNorm(self): #An upper limit estimate of the operator norm
         return self.norm
-    
+
     @property
     def domain(self):
         return self.space
@@ -63,7 +67,8 @@ class Convolution(LinearOperator):
     def range(self):
         return self.space
 
-class TestsConvolutionVisually(RLTestCase):
+
+class TestsCudaConvolutionVisually(RLTestCase):
     """ Does not do any asserts, only for manual checking
     """
     def setUp(self):
@@ -72,24 +77,24 @@ class TestsConvolutionVisually(RLTestCase):
         space = L2(I)
 
         #Complicated functions to check performance
+        n = 5000
         kernelL2 = space.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
         rhsL2 = space.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
 
         #Discretization
-        n = 500
-        d = UniformDiscretization(space, n)
-        kernel = d.makeVector(kernelL2)
+        d = CS.CudaUniformDiscretization(space, n)
+        self.kernel = d.makeVector(kernelL2)
         self.rhs = d.makeVector(rhsL2)
 
         #Create operator
-        self.conv = Convolution(kernel)
+        self.conv = CudaConvolution(self.kernel)
 
         #Initial guess
         self.x0 = d.zero()
 
         #Dampening parameter for landweber
         self.omega = 1/self.conv.opNorm()**2
-
+        
     def testCGN(self):
         plt.figure()
 
@@ -121,7 +126,8 @@ class TestsConvolutionVisually(RLTestCase):
 
         with Timer("Basic LW"):
             consume(landweberBase(self.conv, self.x0, self.rhs, self.omega, iterations=100))
-       
+
+
 if __name__ == '__main__':
     unittest.main(exit=False)
     plt.show()

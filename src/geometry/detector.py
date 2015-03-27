@@ -78,7 +78,7 @@ class PointDetectors(Detector):
 
     # TODO: implement point colletion type support
     def __init__(self, points, **kwargs):
-        return NotImplementedError
+        raise NotImplementedError
         super().__init__(points, None, **kwargs)
 
     @property
