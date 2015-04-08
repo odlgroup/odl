@@ -68,7 +68,7 @@ class ProductSpace(HilbertSpace):
         return self._dimension
 
     def equals(self, other):
-        return isinstance(other,ProductSpace) and all(x == y for [x, y] in zip(self.spaces, other.spaces))
+        return isinstance(other,ProductSpace) and all(x.equals(y) for [x, y] in zip(self.spaces, other.spaces))
     
     def makeVector(self, *args):
         return ProductSpace.Vector(self, *args)

@@ -32,7 +32,7 @@ from RL.space.set import *
 from RLcpp.PyCuda import *
 import numpy as np
 
-class CudaRN(HilbertSpace):
+class CudaRN(HilbertSpace,Algebra):
     """The real space R^n
     """
 
@@ -49,6 +49,9 @@ class CudaRN(HilbertSpace):
     
     def linCombImpl(self, a, x, b, y):
         self.impl.linComb(a, x.impl, b, y.impl)
+
+    def multiplyImpl(self, x, y):
+        self.impl.multiply(x.impl,y.impl)
 
     def zero(self):
         return self.makeVector(self.impl.zero())
@@ -70,7 +73,7 @@ class CudaRN(HilbertSpace):
     def makeVector(self, *args, **kwargs):
         return CudaRN.Vector(self, *args, **kwargs)
 
-    class Vector(HilbertSpace.Vector):
+    class Vector(HilbertSpace.Vector,Algebra.Vector):
         def __init__(self, space, *args):
             HilbertSpace.Vector.__init__(self, space)
             if isinstance(args[0], CudaRNVectorImpl):
@@ -165,3 +168,44 @@ class CudaUniformDiscretization(CudaRN, Discretization):
                 CudaRN.Vector.__init__(self, space, np.array([args[0](point) for point in space.points()], dtype=np.float))
             else:
                 CudaRN.Vector.__init__(self, space, *args, **kwargs)
+
+
+class CudaPixelDiscretization(CudaRN, Discretization):
+    """ Uniform discretization of an square
+    Represents vectors by RN elements
+    Uses sum method for integration
+    """
+
+    def __init__(self, parent, cols, rows):
+        if not isinstance(parent.domain, Square):
+            raise NotImplementedError("Can only discretize Squares")
+
+        self.parent = parent
+        self.cols = cols
+        self.rows = rows
+        CudaRN.__init__(self, cols*rows)
+
+    def zero(self):
+        return self.makeVector(self.impl.zero())
+
+    def empty(self):
+        return self.makeVector(self.impl.empty())
+    
+    def __eq__(self, other):
+        return isinstance(other, CudaUniformDiscretization) and self.cols == other.cols and self.rows == other.rows and CudaRN.__eq__(self, other)
+
+    def makeVector(self, *args, **kwargs):
+        return CudaPixelDiscretization.Vector(self, *args, **kwargs)
+
+    def integrate(self, vector):
+        dx = (self.parent.domain.end[1]-self.parent.domain.begin[0])/(self.cols-1)
+        dy = (self.parent.domain.end[1]-self.parent.domain.begin[1])/(self.rows-1)
+        return float(vector.impl.sum() * dx * dy)
+
+    def points(self):
+        return np.meshgrid(np.linspace(self.parent.domain.begin[0], self.parent.domain.end[0],self.cols),
+                           np.linspace(self.parent.domain.begin[1], self.parent.domain.end[1],self.rows))
+
+    class Vector(CudaRN.Vector):
+        def __init__(self, space, *args, **kwargs):
+            CudaRN.Vector.__init__(self, space, *args, **kwargs)

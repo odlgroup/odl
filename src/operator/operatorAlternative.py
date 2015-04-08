@@ -62,7 +62,7 @@ class Operator(object):
     def __call__(self, rhs):
         """Shorthand for self.apply(rhs)
         """
-        tmp = self.domain.empty()
+        tmp = self.range.empty()
         self.apply(rhs, tmp)
         return tmp
 
@@ -76,7 +76,7 @@ class Operator(object):
             raise TypeError('Expected an operator')
 
     def __rmul__(self, other):
-        """Multiplication of operators with sclars (a*A)(x) = a*A(x)
+        """Multiplication of operators with scalars (a*A)(x) = a*A(x)
         """
 
         if isinstance(other, Number):

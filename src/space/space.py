@@ -301,11 +301,15 @@ class Algebra(LinearSpace):
         
         __metaclass__ = ABCMeta #Set as abstract
 
+        
+        def multiply(self, other):
+            self.space.multiply(other,self)
+
         def __imul__(self, other):
             """ Overloads the *= operator to mean pointwise multiplication if the other object is a vector
             """
             if isinstance(other, Algebra.Vector):
-                self.space.multiply(other, self)
+                self.multiply(other)
                 return self
             else:
                 return LinearSpace.Vector.__imul__(self, other)

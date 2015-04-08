@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<ProfilingTarget xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <StandaloneTarget>
+    <PythonInterpreter>
+      <Id>9a7a9026-48c1-4688-9d5d-e5699d47d074</Id>
+      <Version>2.7</Version>
+    </PythonInterpreter>
+    <WorkingDirectory>E:\Github\RL\test\</WorkingDirectory>
+    <Script>E:\Github\RL\test\cudaTVDenoise.py</Script>
+    <Arguments />
+  </StandaloneTarget>
+  <Reports>
+    <Report>
+      <Filename>C:\Users\JonasAdler\AppData\Local\Temp\cudaTVDenoise_20150407.vsp</Filename>
+    </Report>
+  </Reports>
+</ProfilingTarget>

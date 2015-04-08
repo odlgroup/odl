@@ -1,0 +1,145 @@
+# -*- coding: utf-8 -*-
+"""
+simple_test_astra.py -- a simple test script
+
+Copyright 2014, 2015 Holger Kohr
+
+This file is part of RL.
+
+RL is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RL is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with RL.  If not, see <http://www.gnu.org/licenses/>.
+"""
+from __future__ import division, print_function, unicode_literals, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+import unittest
+
+import numpy as np
+from RL.operator.operatorAlternative import *
+from RL.space.space import *
+from RL.space.defaultSpaces import *
+from RL.space.functionSpaces import *
+import RL.space.CudaSpace as CS
+from RL.space.measure import *
+import RLcpp
+from testutils import RLTestCase, Timer, consume
+from solverExamples import *
+
+import matplotlib.pyplot as plt
+
+class ForwardDiff2D(LinearOperator):
+    """ Calculates the gradient in 2D on cuda
+    """
+
+    def __init__(self, space):
+        if not isinstance(space, CS.CudaPixelDiscretization):
+            raise TypeError("space must be CudaPixelDiscretization")
+
+        self._domain = space
+        self._range = ProductSpace(space,space)
+        
+    def applyImpl(self, rhs, out):
+        RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl, self.domain.cols, self.domain.rows)
+
+    def applyAdjointImpl(self, rhs, out):
+        RLcpp.cuda.forwardDiff2DAdj(rhs[0].impl, rhs[1].impl, out.impl, self.domain.cols, self.domain.rows)
+
+    @property
+    def domain(self):
+        return self._domain
+    
+    @property
+    def range(self):
+        return self._range
+
+def TVdenoise2D(x0, la, mu, iterations = 1):
+    diff = ForwardDiff2D(x0.space)
+    
+    ran = diff.range
+    dom = diff.domain
+
+    x = x0.copy()
+    f = x0.copy()
+    b = ran.zero()
+    d = ran.zero()
+    xdiff = ran.zero()
+    tmp = dom.zero()
+
+    C1 = mu/(mu+2*la)
+    C2 = la/(mu+2*la)
+
+    for i in range(iterations):
+        # x = ((f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la))
+        diff.apply(x,xdiff)
+        xdiff += d
+        xdiff -= b
+        diff.applyAdjoint(xdiff,tmp)
+
+        dom.linComb(C1,f,2*C2,x)
+        x.linComb(C2,tmp)
+        
+        # d = diff(x)+b
+        diff.apply(x,d)
+        d += b
+
+        for i in range(ran.dimension):
+            # tmp = d/abs(d)
+            RLcpp.cuda.sign(d[i].impl,tmp.impl)
+
+            # d = sign(diff(x)+b)
+            RLcpp.cuda.abs(d[i].impl,d[i].impl)
+            RLcpp.cuda.addScalar(d[i].impl,-1.0/la,d[i].impl)
+            RLcpp.cuda.maxVectorScalar(d[i].impl,0.0,d[i].impl)
+            d[i].multiply(tmp)
+
+        # b = b + diff(x) - d
+        diff.apply(x,xdiff)
+        b += xdiff
+        b -= d
+    
+    n = x0.space.cols
+    m = x0.space.rows
+
+    p = plt.imshow(x[:].reshape(n,m), interpolation='nearest')
+    plt.set_cmap('bone')
+    plt.colorbar(p)
+
+class TestCudaDenoise(RLTestCase):       
+    def testLargeDenoise(self):
+        #Continuous definition of problem
+        I = Square([0,0],[1,1])
+        space = L2(I)
+
+        #Complicated functions to check performance
+        n = 2000
+        m = 2000
+
+        #Discretization
+        d = CS.CudaPixelDiscretization(space, n, m)
+        x,y = d.points()
+        data = RLcpp.utils.phantom([n,m])
+        data[1:-1,1:-1] += np.random.rand(n-2,m-2)-0.5
+        fun = d.makeVector(data)
+        plt.imshow(fun[:].reshape(n,m), interpolation='nearest')
+        plt.set_cmap('bone')
+
+        la=0.1
+        mu=2.5
+        plt.figure()
+        with Timer("denoise GPU:"):
+            TVdenoise2D(fun,la,mu,2000)
+
+
+if __name__ == '__main__':
+    unittest.main(exit=False)
+    plt.show()
