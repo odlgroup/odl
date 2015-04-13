@@ -321,320 +321,556 @@ which is the same as \eqref{eq:parflat:backproj}.%
 \subsection{Fan beam geometry}
 \label{sec:applications:fanbeam}
 
-\subsubsection{Curved detector}
-\label{sec:applications:fanbeam:curved}
-
-\NOTE{TODO here and all the way down: detector on a larger circle!}
-Here, we consider the case of 2D functions on $\Omega = B_1 \subset \RR^2$. The detector is a segment of a circle with radius $R > 1$ and 
-detects rays coming from a point source on the opposite side of a smaller circle with radius $r$. We write $R = \beta r$, $\beta \geq 1$ 
-and parametrize the detector as follows:
-%
-\begin{align*}
- & T = [0, \phi_0],\quad U = [-\psi_0, \psi_0] \\
- & X(\phi, \psi) = -(R - r) \theta(\phi) + R \theta(\phi + \psi) = -(\beta - 1) r \theta(\phi) + \beta r \theta(\phi + \psi),
-\end{align*}
-%
-with $\theta(\phi) = (\cos\phi, \sin\phi)$ and parameters $\phi_0 \in (0, 2\pi]$ and $\psi_0 \in (0, \pi/2]$. The mathematical model 
-for X-ray tomography in this setting is the divergent beam transform
-%
-\begin{align}
- &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag\\
- \label{eq:fancurved:fwdproj_otherangle}
- &\OPD f(\phi, \psi) = \int_0^\infty f\big(x_{\mathrm{S}}(\phi) + s \theta(\phi + \tilde\psi)\big)\, \D s
-\end{align}
-%
-with the source position $x_{\mathrm{S}} = -r \theta(\phi)$ and the directional vectors $\theta(\phi) = (\cos\phi, \sin\phi)$. Here, 
-$\tilde\psi$ is the angle between $\theta(\phi)$ and the line from the source to the detector point $X(\phi, \psi)$. By means of simple 
-geometry, one can show that $2r \tilde\psi = R\psi$, i.e. we have
-%
-\begin{equation}
- \label{eq:fancurved:fwdproj_realangle}
- \OPD f(\phi, \psi) = \int_0^\infty f\big(x_{\mathrm{S}}(\phi) + s \theta(\phi + \beta\psi/2)\big)\, \D s.
-\end{equation} 
-%
-Now we derive its relation to the 2D parallel beam X-ray transform
-%
-\begin{align}
- &\OPP: L^2(B_1) \Lto L^2([0,2\pi) \times [-r,r]) \notag \\
- \label{eq:fancurved:xray_fwdproj}
- &\OPP f(\phi, \tau) = \int_\RR f\big(s\theta(\phi) + \tau \theta'(\phi)\big)\, \D s,
-\end{align} 
-%
-with $\theta'(\phi) = \TRANSP{(-\sin\phi, \cos\phi)}$. Its adjoint is
-%
-\begin{equation}
- \label{eq:fancurved:xray_backproj}
- \DUALOPP g(x) = \int_0^{2\pi} g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi.
-\end{equation} 
-%
-We have
-%
-\begin{align*}
- \OPD f(\phi, \psi) 
- &= \int_\RR f\big(- r\theta(\phi) + s \theta(\phi + \beta\psi/2)\big)\, \D s \\
- &= \int_\RR f\big(s \theta(\phi + \beta\psi/2) - r \Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi) \big)\, \D s,
-\end{align*}
-%
-and the projection $\Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi)$ can be calculated as
-%
-\begin{align*}
- \Pi_{\theta(\phi + \beta\psi/2)}\theta(\phi)
- &= \theta(\phi) - \INNER{\theta(\phi)}{\theta(\phi + \beta\psi/2)}\, \theta(\phi + \beta\psi/2) \\
- &=
- \begin{pmatrix}
-  \cos\phi - \cos(\psi/2)\, \cos(\phi + \beta\psi/2) \\
-  \sin\phi - \cos(\psi/2)\, \sin(\phi + \beta\psi/2)
- \end{pmatrix} \\
- &=
- \begin{pmatrix}
-  \sin(\phi + \beta\psi/2)\, \sin(\beta\psi/2) \\
-  -\cos(\phi + \beta\psi/2)\, \sin(\beta\psi/2)
- \end{pmatrix} \\
- &= -\sin(\beta\psi/2)\, \theta'(\phi + \beta\psi/2)
-\end{align*}
-%
-and thus 
-%
-\begin{align*}
- \OPD f(\phi, \psi)
- &= \int_\RR f\big(s \theta(\phi + \beta\psi/2) + r \sin(\beta\psi/2)\, \theta'(\phi + \beta\psi/2) \big)\, \D s \\
- &= \OPP f\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big) \\
- &= \OPU \OPP f(\phi, \psi)
-\end{align*}
-%
-with the transform
-%
-\begin{align}
- &\OPU: L^2\big([0,2\pi) \times [-r,r]\big) \Lto L^2\big([0,\phi_0] \times [-\psi_0,\psi_0]\big) \notag \\
- \label{eq:fancurved:unit_trafo}
- &\OPU g(\phi, \psi) = g\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big).
-\end{align} 
-%
-To compute its adjoint, we apply the substitution $\tau = r\sin(\beta\psi/2),\ \D\tau = \sqrt{r^2-\tau^2}\, \beta/2\, \D \psi$ and get
-%
-\begin{align*}
- \INNER{\OPU g}{h} 
- &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} g\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big)\, h(\phi, \psi)\, \D\psi\, \D\phi \\
- &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi + \beta\psi/2, r\sin(\beta\psi/2)\big)\, h_0(\phi, \psi)\, \D\psi\, \D\phi \\
- &= \int_0^{2\pi} \int_{-\psi_0}^{\psi_0} g\big(\phi, r\sin(\beta\psi/2)\big)\, h_0(\phi - \beta\psi/2, \psi)\, \D\phi\, \D\psi \\
- &= \int_0^{2\pi} \int_{-r\sin(\beta\psi_0/2)}^{r\sin(\beta\psi_0/2)} g(\phi, \tau)\, h_0\big(\phi - \arcsin(\tau/r), 
- 2\arcsin(\tau/r)/\beta\big)\, \frac{2}{\beta\sqrt{r^2-\tau^2}} \D\phi\, \D\tau,
-\end{align*}
-%
-where
-%
-\begin{equation*}
- h_0(\phi, \cdot) =
- \begin{cases}
-  h(\phi, \cdot) & \text{ if } \phi \in [0,\phi_0] \\
-  0 & \text{ else}.
- \end{cases}
-\end{equation*}
-%
-The integration domain $[-r\sin(\beta\psi_0/2), r\sin(\beta\psi_0/2)]$ covers the support of $g = \OPP f$ if the condition
-%
-\begin{equation}
- \label{eq:fancurved:condition_roi}
- r \sin(\beta\psi_0/2) \geq 1
-\end{equation}
-%
-is fulfilled. In this case, all points in $\Omega$ are covered by rays from each direction, and it is
-%
-\begin{equation}
- \label{eq:fancurved:unit_trafo_adj_good}
- \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)/\beta\big).
-\end{equation}
-%
-Otherwise, the adjoint involves a cutoff,
-%
-\begin{equation}
- \label{eq:fancurved:unit_trafo_adj_bad}
- \DUALOPU h(\phi, \tau) = \frac{2}{\sqrt{r^2-\tau^2}} \, h_0\big(\phi - \arcsin(\tau/r), 2\arcsin(\tau/r)/\beta\big)\, 
- \chi_{[0, r\sin(\beta\psi_0/2)]}(\ABS{\tau}).
-\end{equation}
-%
-Thus, if \eqref{eq:fancurved:condition_roi} is fulfilled, it is $\DUALOPD = \DUALOPP\DUALOPU$, i.e.
-%
-\begin{align}
- \DUALOPD g(x)
- &= \int_0^{2\pi} \DUALOPU g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi \notag\\
- \label{eq:fancurved:backproj}
- &= \int_0^{2\pi} \frac{2}{\beta\sqrt{r^2-\tau(\phi, x)^2}} g_0\left(\phi - \psi(\phi,x)/2, \psi(\phi,x) \right)\, \D\phi,
-\end{align}
-%
-where $\tau(\phi,x) = \INNER{x}{\theta'(\phi)}$ and $\psi(\phi,x) = 2\arcsin\big(\tau(\phi,x)/r\big) / \beta$.\\[1ex]
-%
-\textbf{Important note:} It is not clear if the following reasoning holds due to the $x$-dependent ray definition. Even though $s$ does 
-not explicitly appear in either one of the formulas \eqref{eq:general:backproj_onedir}--\eqref{eq:general:backproj_onedir_weighted}, it 
-implicitly does in the evaluation point of the functional determinant.\\[1ex]
-%
-We now apply the unified theory to compare the results. For the directional field $N$, we already showed that 
-$N(\phi,\psi) = -\theta(\phi + \beta\psi/2)$, see \eqref{eq:fancurved:fwdproj_realangle}. As in the parallel geometry, we have 
-$P(\phi,\psi) = \lbrace N(\phi,\psi)\rbrace$, and the rays are lines from the far end of the object to the detector. In order to determine 
-the adjoint using \eqref{eq:general:backproj_onedir}, we need to find $\Gamma_\phi$ as the inverse of 
-$(\psi, s) \mapsto \tilde X(\phi, \psi) + (2r - s) N(\phi,\psi)$. However, since $s$ is only a help variable which does not appear in the 
-final formula, we can select any parametrization of a ray through $x$ by arc length. An obvious choice is
-%
-\begin{equation*}
- \gamma_x(s) = -r \theta(\phi) + s\, \frac{x + r\theta}{\ABS{x + r\theta}}
-\end{equation*}
-%
-from the source point ($s=0$) through $x$ with parameter $s_x=\ABS{x + r\theta}$. If we denote by $\tilde\psi_x$ the angle between this 
-ray and  $\theta(\phi)$, we can immediately conclude that
-%
-\begin{equation*}
- \cos \tilde\psi_x = \frac{\INNER{x + r\theta(\phi)}{\theta(\phi)}}{\ABS{x + r\theta(\phi)}} 
- = \frac{r + \INNER{x}{\theta(\phi)}}{\sqrt{\ABS{x}^2 + r^2 + 2r \INNER{x}{\theta(\phi)}}}.
-\end{equation*}
-%
-The same argument as in the derivation of \eqref{eq:fancurved:fwdproj_realangle} yields the corresponding detector angle
-%
-\begin{equation}
- \label{eq:fancurved:psi_x}
- \psi_x = \frac{2}{\beta}\, \arccos\left( \frac{r + \INNER{x}{\theta(\phi)}}{\sqrt{\ABS{x}^2 + r^2 + 2r \INNER{x}{\theta(\phi)}}} \right).
-\end{equation}
-%
-Now it remains to calculate the functional determinant of the change of coordinates $(\psi, s) \to x$. In an intermediate step, we set 
-$\mu_x = \cos \tilde\psi_x$ and get the functional determinant
-%
-\begin{equation*}
- \DET \frac{\partial(\mu_x, s_x)}{\partial x} = - \frac{\INNER{x}{\theta'(\phi)}}{\ABS{x + r \theta(\phi)}^3}.
-\end{equation*}
-%
-Furthermore, it is
-%
-\begin{equation*}
- \frac{\D \tilde\psi_x}{\D \mu_x}\big(\mu_x\big) = \arccos'(\mu_x) = - \frac{1}{\sqrt{1 - \mu_x^2}}.
-\end{equation*}
-%
-This expression can be simplified as follows:
-%
-\begin{align*}
- 1 - \mu_x^2 
- &= \frac{\ABS{x + r\theta(\phi)}^2 - \big(\INNER{x}{\theta(\phi)} + r\big)^2}{\ABS{x + r\theta(\phi)}^2} \\
- &= \frac{\ABS{x}^2 + 2r \INNER{x}{\theta(\phi)} + r^2 - \INNER{x}{\theta(\phi)}^2 - 2r\INNER{x}{\theta(\phi)} - r^2}{\ABS{x + 
- r\theta(\phi)}^2} \\
- &= \frac{\ABS{x}^2 - \INNER{x}{\theta(\phi)}^2}{\ABS{x + r\theta(\phi)}^2} \\
- &= \frac{\INNER{x}{\theta'(\phi)}^2}{\ABS{x + r\theta(\phi)}^2}.
-\end{align*}
-%
-Hence, with the chain rule, we get
-%
-\begin{equation*}
- \ABSLR{\DET \frac{\partial(\tilde\psi_x, s_x)}{\partial x} (x)} = \ABSLR{\DET \frac{\partial(\mu_x, s_x)}{\partial x} (x)} \cdot
- \ABSLR{\frac{\D \tilde\psi_x}{\D \mu_x}\big(\mu_x\big)} = \frac{1}{\ABS{x + r\theta(\phi)}^2}.
-\end{equation*}
-%
-The transition from $\tilde\psi_x$ to $\psi_x$ introduces a factor $2/\beta$, and the adjoint can be finally written as
-%
-\begin{equation}
- \label{eq:fancurved:backproj_alt}
- \OPD^* g(x) = \int_0^{\phi_0} \frac{2}{\beta \ABS{x + r\theta(\phi)}^2}\, g\big(\phi, \psi(\phi, x)\big)\, \D \phi
-\end{equation}
-%
-with $\psi(\phi, x) = \psi_x$ as defined in \eqref{eq:fancurved:psi_x}. It is not obvious that this formula is equivalent to 
-\eqref{eq:fancurved:backproj}.
-\vspace{5ex}%
-
-
+In fan beam geometry, we consider objects described by a function supported in the unit ball $\Omega = B_1 \subset \RR^2$, a source moving 
+on a circle with radius $r > 1$ and the detector moving on another circle with radius $R > 1$ such that source and detector always have 
+maximum distance $R+r$ to each other, and the ray to the detector center is perpendicular to the detector line.
 
 \subsubsection{Flat detector}
 \label{sec:applications:fanbeam:flat}
 
-The situation with a flat detector can be reduced to the curved detector setting with $R = 2r$. Here, we have the parameter sets
+A flat detector is described with the parameters
 %
 \begin{equation}
  \label{eq:fanflat:params}
- T = [0, \phi_0], \quad U = [-l, l]
+ T = [0, \phi_0], \quad U = [-\tau_0, \tau_0], \quad 0 < \phi_0 \leq 2\pi,\ \tau_0 > 0,
 \end{equation}
 %
-for the parametrization
-%
-\begin{equation*}
- X(\phi, \tau) = - r \theta(\phi) + 2 r \theta\big(\phi + \psi(\tau)\big)
-\end{equation*}
-%
-of the detector. The relation between the detector coordinate $\tau$ and the angle between the central ray and the ray to the detector 
-position defined by $\tau$ is given by the relation
-%
-\begin{equation*}
- \tan\psi = \frac{\tau}{2r},
-\end{equation*}
-%
-hence the detector parametrization is
-%
-\begin{equation}
- \label{eq:fanflat:detector_parametr}
- X(\phi, \tau) = - r \theta(\phi) + 2 r \theta\big(\phi + \arctan(\tau/2r)\big).
-\end{equation}
-%
-The directional field $N$ can be read off this definition as
-%
-\begin{equation}
- \label{eq:fanflat:dirfield}
- N(\phi, \tau) = -\theta\big(\phi + \arctan(\tau/2r)\big).
-\end{equation} 
-%
-Alternatively, we can parametrize the detector as
+and has the parametrization
 %
 \begin{equation}
  \label{eq:fanflat:detector_parametr_alt}
- X(\phi, \tau) = r \theta(\phi) + \tau \theta'(\phi),\quad \theta'(\phi) = \TRANSP{(-\sin\phi, \cos\phi)}.
+ X(\phi, \tau) = R \theta(\phi) + \tau \theta'(\phi)
 \end{equation}
 %
-If we denote with $\OPD_{\mathrm{c}}$ the divergent beam transform \eqref{eq:fancurved:fwdproj_realangle} with $\beta=2$, the flat detector 
-transform
+with $\theta'(\phi) = \theta(\phi + \pi/2)$. The relation between the detector coordinate $\tau$ and the angle $\psi$ between the 
+central ray and the ray from the source at $-r \theta(\phi)$ to the detector position $X(\phi,\tau)$ is given by the relation
+%
+\begin{equation*}
+ \tan\alpha = \frac{\tau}{R + r},
+\end{equation*}
+%
+hence the directional field $N$ is given by
+%
+\begin{equation}
+ \label{eq:fanflat:dirfield}
+ N(\phi, \tau) = -\theta\big(\phi + \alpha(\tau)\big), \quad \alpha(\tau) = \arctan\left( \frac{\tau}{R+r} \right) .
+\end{equation} 
+%
+The forward model of the fan beam geometry for flat detector is the divergent beam transform
 %
 \begin{align}
  &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag \\
  \label{eq:fanflat:fwdproj}
- &\OPD f(\phi, \tau) = \int_0^\infty f\left(-r \theta(\phi) + s \theta\big(\phi + \arctan(\tau/2r)\big) \right)\, \D s
+ &\OPD f(\phi, \tau) = \int_0^\infty f\left(-r \theta(\phi) + s \theta\big(\phi + \alpha(\tau)\big) \right)\, \D s.
 \end{align}
 %
-can be expressed as a transformed version of $\OPD_{\mathrm{c}}$:
+To relate this operator to the parallel beam X-ray transform, we calculate
 %
 \begin{equation*}
- \OPD f(\phi, \tau) = \OPD_{\mathrm{c}} f\big(\phi,  \arctan(\tau/2r)\big) = \OPT \OPD_{\mathrm{c}} f(\phi, \tau)
+ \INNER{\theta(\phi)}{\theta'(\phi+\alpha)} = \cos(\alpha + \pi/2) = -\sin\alpha,
 \end{equation*}
+%
+which implies
+%
+\begin{align*}
+ \OPD f(\phi, \tau) 
+ &= \int_\RR f \left( -r \theta(\phi) + s \theta\big(\phi + \alpha(\tau)\big) \right)\, \D s \\
+ &= \int_\RR f \left( s \theta\big(\phi + \alpha(\tau)\big) + r\sin\alpha(\tau)\, \theta'\big(\phi + \alpha(\tau)\big) \right)\, 
+ \D s \\
+ &= \OPP f \big(\phi + \alpha(\tau), r\sin\alpha(\tau)\big) \\
+ &= \OPU \OPP f(\phi, \tau)
+\end{align*}
+%
+with the 2D parallel beam X-ray transform
+%
+\begin{align}
+ &\OPP: L^2(B_1) \Lto L^2([0,2\pi) \times [-r,r]) \notag \\
+ \label{eq:fanflat:xray_fwdproj}
+ &\OPP f(\phi, \tau) = \int_\RR f\big(s\theta(\phi) + \tau \theta'(\phi)\big)\, \D s,
+\end{align} 
+%
+and the coordinate transform 
+%
+\begin{align}
+ &\OPU: L^2\big([0,2\pi) \times [-1,1]\big) \Lto L^2\big([0,\phi_0] \times [-\tau_0,\tau_0]\big) \notag \\
+ \label{eq:fanflat:unit_trafo}
+ &\OPU g(\phi, \tau) = g\big(\phi + \alpha(\tau), r\sin\alpha(\tau)\big).
+\end{align} 
+%
+To calculate the backprojection $\OPD^*$, we determine the adjoint of $\OPU$:
+%
+\begin{align*}
+ \INNER{\OPU g}{h}_{L^2([0,\phi_0] \times [-\tau_0,\tau_0])}
+ &= \int_0^{\phi_0} \int_{-\tau_0}^{\tau_0} \OPU g(\phi, \tau)\, h(\phi, \tau)\, \D\tau\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-\tau_0}^{\tau_0} g\big(\phi + \alpha(\tau), r\sin\alpha(\tau)\big)\, h_0(\phi, \tau)\, \D\tau\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-\tau_0}^{\tau_0} g\big(\phi, r\sin\alpha(\tau)\big)\, h_0(\phi - \alpha(\tau), \tau)\, \D\tau\, \D\phi,
+\end{align*}
+%
+where $h_0$ is the continuation of $h$ by zero to $[0,2\pi)\times\RR$. The coordinate change $s = r\sin\alpha(\tau)$, has the 
+inverse
+%
+\begin{equation*}
+ \tau = \frac{(R+r)s}{\sqrt{r^2-s^2}},
+\end{equation*}
+%
+and further
+%
+\begin{equation*}
+ \ABSLR{\frac{\D\tau}{\D s}} = \frac{r^2(R+r)}{(r^2-s^2)^{\nicefrac{3}{2}}}.
+\end{equation*}
+%
+Thus, we get
+%
+\begin{align*}
+ \INNER{\OPU g}{h}
+ &= \int_0^{2\pi} \int_{-s_0}^{s_0} g\big(\phi, s\big)\, h_0\left( \phi - \arcsin(s/r), \frac{(R+r)s}{\sqrt{r^2-s^2}} \right)\, 
+ \frac{r^2(R+r)}{(r^2-s^2)^{\nicefrac{3}{2}}}\, \D s\, \D\phi,
+\end{align*}
+%
+with $s_0 = r\tau_0 / \sqrt{(R+r)^2 + \tau_0^2}$. If $s_0\geq 1$, i.e.
+%
+\begin{equation}
+ \label{eq:fanflat:condition_det_width}
+ \tau_0 \geq \frac{R + r}{\sqrt{r^2-1}},
+\end{equation}
+%
+the inner integral extends over $[-1,1]$, such that the adjoint operator is
+%
+\begin{equation}
+ \label{eq:fanflat:unit_trafo_adj}
+ \OPU^* h(\phi, s) = \frac{r^2(R+r)}{(r^2-s^2)^{\nicefrac{3}{2}}}\, h_0\left( \phi - \arcsin(s/r), \frac{(R+r)s}{\sqrt{r^2-s^2}} \right).
+\end{equation} 
+%
+Otherwise, a cutoff function $\chi_{[-s_0,s_0]}$ has to be added as an additional factor. This formula can be inserted as an argument to
+$\OPP^*$, resulting in
+%
+\begin{equation*}
+ \OPD^*g(x) = \OPP^*\OPU^*g(x) = \int_0^{2\pi} \OPU^*g\big(\phi, \INNER{x}{\theta'(\phi)}\big)\, \D\phi,
+\end{equation*}
+%
+hence
+%
+\begin{equation}
+ \label{eq:fanflat:backproj}
+ \OPD^*g(x) = \int_0^{2\pi} w_{\text{ff}}(s)\, g_0\left( \phi - \arcsin(s/r), \frac{(R+r)s}{\sqrt{r^2-s^2}} \right)\, \D\phi
+\end{equation} 
 %
 with
 %
+\begin{equation}
+ \label{eq:fanflat:backproj_s}
+ s = s(x; \phi) = \INNER{x}{\theta'(\phi)}
+\end{equation}
+%
+and the integration weight
+%
+\begin{equation}
+ \label{eq:fanflat:backproj_weight}
+ w_{\text{ff}}(s) = \frac{r^2(R+r)}{(r^2-s^2)^{\nicefrac{3}{2}}}
+\end{equation}
+%
+for the fan beam geometry with flat detector.
+%
+\vspace{5ex}
+
+\subsubsection{Curved detector}
+\label{sec:applications:fanbeam:curved}
+
+Now we consider a detector with constant curvature, i.e. a part of a circle with radius $\rho \geq r$ centered at $-(\rho-R)\theta(\phi)$. 
+It is parametrized over
+%
 \begin{equation*}
- \OPT: L^2\big([0, \phi_0] \times [-\psi_0, \psi_0]) \Lto L^2\big([0, \phi_0] \times [-l, l]\big), \quad \psi_0 = \arctan(l/2r).
+ T = [0, \phi_0],\quad U = [-\psi_0, \psi_0]
 \end{equation*}
 %
-Its adjoint can be determined with the coordinate change $\psi = \arctan(\tau/2r),\ \D\psi = \cos^2\psi / 2r\, \D\tau$ from
+and can be written as
 %
-\begin{align*}
- \INNER{\OPT g}{h} 
- &= \int_0^{\phi_0} \int_{-l}^l g\big(\phi, \arctan(\tau/2r)\big)\, h(\phi, \tau)\, \D\tau\, \D\phi \\
- &= \int_0^{\phi_0} \int_{-\psi_0}^{\psi_0} g(\phi, \psi)\, h(\phi, 2r\tan\psi)\, \frac{2r}{\cos^2\psi} \D\psi\, \D\phi,
-\end{align*}
+\begin{equation}
+ \label{eq:fancurved:detector_parametr}
+ X(\phi,\psi) = -(\rho-R) \theta(\phi) + \rho \theta(\phi + \psi).
+\end{equation} 
+%
+To determine the directional field, we need the angle $\beta$ between the central ray and the line from the source $x_{\text{s}} = 
+-r\theta(\phi)$ to a detector point $X(\phi,\psi)$. It is
+%
+\begin{equation*}
+ \cos\beta = \frac{\INNER{X(\phi,\psi)-x_{\text{s}}}{\theta(\phi)}}{\ABSLR{X(\phi,\psi)-x_{\text{s}}}}
+ = \frac{R+r-\rho + \rho\cos\psi}{\sqrt{(R+r-\rho)^2 + \rho^2 + 2\rho(R+r-\rho)\cos\psi}},
+\end{equation*}
 %
 i.e.
 %
 \begin{equation}
- \label{eq:fanflat:curved2flat_adj}
- \DUALOPT h(\phi, \psi) = h(\phi, 2r\tan\psi)\, \frac{2r}{\cos^2\psi}.
+ \label{eq:fancurved:direction_field_angle}
+ \beta(\psi) = \arccos \left( \frac{R+r-\rho(1-\cos\psi)}{\sqrt{(R+r-\rho)^2 + \rho^2 + 2\rho(R+r-\rho)\cos\psi}} \right)
 \end{equation} 
 %
-\NOTE{TODO: formulate condition on $l$}%
-Using the expression \eqref{eq:fancurved:backproj} for $\DUAL{\OPD_{\mathrm{c}}}$, we conclude that
+and
+\begin{equation}
+ \label{eq:fancurved:direction_field}
+ N(\phi,\psi) = -\theta\big(\phi + \beta(\psi)\big).
+\end{equation} 
+%
+The relation between the parameter $\psi$ of the curved detector and the variable $\tau$ in the flat geometry is $\tau = \rho\tan\psi$, 
+thus the divergent beam transform
 %
 \begin{align}
- \DUALOPD g(x) 
- &= \int_0^{2\pi} \frac{1}{\sqrt{r^2-\tau(\phi, x)^2}} (\DUALOPT g)_0\left(\phi - \psi(\phi,x)/2, \psi(\phi,x) \right)\, \D\phi 
- \notag \\
- \label{eq:fanflat:backproj}
- &= \int_0^{2\pi} \frac{2r}{\cos^2\big(\psi(\phi,x)\big)\sqrt{r^2-\tau(\phi, x)^2}}\,
- g_0\left(\phi - \psi(\phi,x)/2, 2r \tan\big(\psi(\phi,x)\big) \right)\, \D\phi 
-\end{align} 
+ &\OPD: L^2(\Omega) \Lto L^2(T \times U), \notag \\
+ \label{eq:fancurved:fwdproj}
+ &\OPD f(\phi, \psi) = \int_0^\infty f\left(-r \theta(\phi) + s \theta\big(\phi + \beta(\psi)\big) \right)\, \D s,
+\end{align}
+%
+relates to the projection $\OPD_{\text{f}}$ of the flat geometry as
+%
+\begin{equation*}
+ \OPD f(\phi,\psi) = \OPD_{\text{f}} f(\phi, \rho\tan\psi) = \OPT \OPD_{\text{f}}(\phi,\psi)
+\end{equation*} 
+%
+with the coordinate transform
+%
+\begin{align}
+ & \OPT: L^2([0,\phi_0]\times \RR) \Lto L^2([0,\phi_0] \times [-\psi_0, \psi_0]), \notag \\
+ \label{eq:fancurved:coord_op}
+ & \OPT g(\phi, \psi) = g(\phi, \rho\tan\psi).
+\end{align}
+%
+Its adjoint is determined via the change of variables
+%
+\begin{equation*}
+ \tau = \rho\tan\psi,\quad \frac{\D\tau}{\D\psi} = \rho (1 + \tan^2\psi) = \frac{\rho^2 + \tau^2}{\rho}
+\end{equation*}
+%
+as
+%
+\begin{equation}
+ \label{eq:fancurved:coord_op_adjoint}
+ \OPT^* g(\phi, \tau) = g_0\big(\phi, \arctan(\tau/\rho)\big)\, \frac{\rho}{\rho^2 + \tau^2},
+\end{equation} 
+%
+where $g_0$ is the continuation of $g$ to $[0,\phi_0] \times \RR$ by zero. Hence, the backprojection in curved coordinates is
+%
+\begin{equation*}
+ \OPD^*g(x) = \int_0^{2\pi} w_{\text{ff}}(s)\, (\OPT^*g)_0\left( \phi - \arcsin(s/r), 
+ \frac{(R+r)s}{\sqrt{r^2-s^2}} \right)\, \D\phi
+\end{equation*}
+%
+with $s = s(x; \phi)$ according to \eqref{eq:fanflat:backproj_s}. Inserting $\tau = (R+r)s/\sqrt{r^2-s^2}$ into the factor 
+$\rho/(\rho^2+\tau^2)$ and multiplying with $w_{\text{ff}}$ yields the total weight 
+%
+\begin{equation}
+ \label{eq:fancurved:backproj_weight}
+ w_{\text{fc}}(s) = \frac{\rho r^2(R+r)}{\sqrt{r^2-s^2}\left( \rho^2 r^2 + \big((R+r)^2 - \rho^2\big) s^2 \right)}
+\end{equation}
+%
+for the curved geometry. The backprojection thus is
+%
+\begin{equation}
+ \label{eq:fancurved:backproj}
+ \OPD^*g(x) = \int_0^{2\pi} w_{\text{fc}}(s)\, g_0\left( \phi - \arcsin(s/r), 
+ \arctan \left(\frac{(R+r)s}{\rho\sqrt{r^2-s^2}} \right) \right)\, \D\phi
+\end{equation} 
+%
+with $s = s(x; \phi) = \INNER{x}{\theta'(\phi)}$. The condition on $\tau_0$ reads as
+%
+\begin{equation}
+ \label{eq:fancurved:condition_det_width}
+ \psi_0 \geq \arctan\left( \frac{R+r}{\rho\sqrt{r^2-1}} \right)
+\end{equation}
+%
+here.
+\vspace{5ex}%
+
+
+
 %\vspace{5ex}%
 
 
 
 \subsection{Cone beam geometry -- circular acquisition}
 \label{sec:applications:cone_circular}
+
+Cone beam geometry is the 3D equivalent to the 2D fan beam geometry. Many more different acquisition curves can be realized due to the 
+larger flexibility in three dimensions. We consider first the circular acquisition case, where source and detector move on circles with 
+radii $r$ or $R$, respectively, in a common 2D plane. The detector is now also two-dimensional, so different combinations of curvature can 
+be considered. Objects are assumed to be supported in $\Omega = B_1 \subset \RR^3$.
+
+\subsubsection{Flat detector}
+\label{sec:applications:cone_circular:flat}
+
+We start with the flat detector as used mostly in nondestructive testing. We parametrize it over the sets
+%
+\begin{equation}
+ \label{eq:coneflat:params}
+ T = [0, \phi_0], \quad U = [-\tau_0, \tau_0] \times [-z_0, z_0]
+\end{equation}
+%
+by
+%
+\begin{equation}
+ \label{eq:coneflat:detector_parametr}
+ X(\phi, \tau, z) = r\theta(\phi) + \tau\, \theta'(\phi) + z\, e_z,
+\end{equation} 
+%
+using the unit vectors
+%
+\begin{equation}
+ \label{eq:coneflat:unit_vectors}
+ \theta(\phi) = \TRANSP{(\cos\phi, \sin\phi, 0)}, \quad \theta'(\phi) = \TRANSP{(-\sin\phi, \cos\phi, 0)}, \quad e_z = \TRANSP{(0,0,1)}.
+\end{equation}
+%
+Hence, the rotation axis is the $z$ axis. Since the azimuthal and vertical components can be treated independently, we can conclude from 
+the 2D case that the directional field is given by
+%
+\begin{equation}
+ \label{eq:coneflat:direction_field}
+ N(\phi, \tau, z) = - \omega\big(\phi + \alpha(\tau), \alpha(z)\big), \quad \alpha(\tau) = \arctan\left( \frac{\tau}{R+r} \right)
+\end{equation}
+%
+(cf. \eqref{eq:fanflat:dirfield}) and the unit vector
+%
+\begin{equation}
+ \label{eq:coneflat:unit_vec_3d}
+ \omega(\phi, \vartheta) = \TRANSP{(\cos\vartheta\cos\phi, \cos\vartheta\sin\phi, \sin\vartheta)} = \cos\vartheta\, \theta(\phi) + 
+ \sin\vartheta\, e_z.
+\end{equation} 
+%
+Following these considerations, we define the forward projection
+%
+\begin{align}
+ &\OPD: L^2(\Omega) \Lto L^2(T \times U) \\
+ \label{eq:coneflat:fwdproj}
+ &\OPD f(\phi, \tau, z) = \int_0^\infty f\left( -r\theta(\phi) + s \omega\big(\phi + \alpha(\tau), \alpha(z)\big) \right) \D s.
+\end{align}
+%
+As in the 2D case, we want to use the relation to the parallel beam X-ray transform. In three dimensions, this operator is defined as
+%
+\begin{align}
+ & \OPP: L^2(\Omega) \Lto L^2([0,2\pi) \times [-\pi/2, \pi/2] \times \RR^2) \notag \\
+ \label{eq:coneflat:xray_fwdproj}
+ & \OPP f(\phi, \vartheta, s, v) = \int_\RR f\left( t\omega(\phi, \vartheta) + s \theta'(\phi) + v \omega'(\phi,\vartheta) 
+ \right)\, \D t, 
+\end{align}
+%
+where $\omega$, $\theta'$ and $\omega'(\phi, \vartheta) = -\sin\vartheta\, \theta(\phi) + \cos\vartheta\, e_z$ form the natural 
+right-handed coordinate system on the unit sphere. The adjoint of $\OPP$ is given by
+%
+\begin{equation}
+ \label{eq:coneflat:xray_backproj}
+ \OPP^* g(x) = \int_0^{2\pi} \int_{-\pi/2}^{\pi/2} g\left( \phi, \vartheta, \INNER{x}{\theta'(\phi)}, \INNER{x}{\omega'(\phi, \vartheta} 
+ \right) \D\vartheta\, \D\phi.
+\end{equation}
+%
+To relate $\OPD$ to $\OPP$, we calculate
+%
+\begin{align*}
+ \INNER{\theta(\phi)}{\omega'(\phi + \alpha_1, \alpha_2)} 
+ &= -\sin\alpha_2 \INNER{\theta(\phi)}{\theta(\phi + \alpha_1)} + \cos\alpha_2 \INNER{\theta(\phi)}{e_z} \\
+ &= -\cos\alpha_1 \sin\alpha_2.
+\end{align*}
+%
+Using the result $\INNER{\theta(\phi)}{\theta'(\phi+\alpha_1)} = -\sin\alpha_1$ from the 2D case, we acquire the relation
+%
+\begin{align*}
+ \OPD f(\phi, \tau, z) 
+ &= \OPP f\left( \phi + \alpha(\tau), \alpha(z), r\sin\alpha(\tau), r\cos\alpha(\tau) \sin\alpha(z) \right) \\
+ &= \OPU \OPP f(\phi, \tau, z)
+\end{align*}
+%
+with the coordinate transform operator
+%
+\begin{align}
+ & \OPU: L^2([0,2\pi) \times [-\pi/2, \pi/2] \times B_1) \Lto L^2([0,\phi_0] \times [-\tau_0, \tau_0] \times [-z_0, z_0]) \notag \\
+ & \OPU g(\phi, \tau, z) = g\left( \phi + \alpha(\tau), \alpha(z), r\sin\alpha(\tau), r\cos\alpha(\tau) \sin\alpha(z) \right),
+\end{align}
+%
+where $B_1 \subset \RR^2$. Note that this operator is unbounded in the $L^2$ sense since it reduces 
+dimensionality by 1. However, its composition with $\OPP$ is bounded in $L^2$, such that we can proceed formally and ensure that the final 
+composed expression for the adjoint is well-defined. We calculate
+%
+\begin{align*}
+ \INNER{\OPU g}{h} 
+ &= \int_0^{\phi_0} \int_{-\tau_0}^{\tau_0} \int_{-z_0}^{z_0} \OPU g(\phi, \tau, z)\, h(\phi, \tau, z)\, \D z\, \D\tau\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-\tau_0}^{\tau_0} \int_{-z_0}^{z_0} g\left( \phi + \alpha(\tau), \alpha(z), r\sin\alpha(\tau), r\cos\alpha(\tau) 
+ \sin\alpha(z) \right)\, h_0(\phi, \tau, z)\, \D z\, \D\tau\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-\tau_0}^{\tau_0} \int_{-z_0}^{z_0} g\left( \phi, \alpha(z), r\sin\alpha(\tau), r\cos\alpha(\tau) 
+ \sin\alpha(z) \right)\, h_0\left( \phi - \alpha(\tau), \tau, z \right)\, \D z\, \D\tau\, \D\phi \\
+ &= \int_0^{2\pi} \int_{-\tau_0}^{\tau_0} \int_{-\vartheta_0}^{\vartheta_0} g\left( \phi, \vartheta, r\sin\alpha(\tau), r\cos\alpha(\tau) 
+ \sin\vartheta \right) \cdot \phantom{x} \\ 
+ & \hspace{80pt} h_0\left( \phi - \alpha(\tau), \tau, (R+r)\tan\vartheta \right)\, (R+r)(1+\tan^2\vartheta)\, \D \vartheta\, \D\tau\, 
+ \D\phi,
+\end{align*}
+%
+with $\vartheta_0 = \arctan(z_0/(R+r))$, where the change of variables $z = (R+r)\tan\vartheta$ was applied. With $h_0$, we denote 
+analogously to the 2D case the continuation of $h$ by zero to $[0,2\pi)\times\RR^2$. Next, the same variable change $s=r\sin\alpha(\tau)$ as 
+for \eqref{eq:fanflat:unit_trafo} leads to
+%
+\begin{align*}
+ \INNER{\OPU g}{h} 
+ = \int_0^{2\pi} \int_{-s_0}^{s_0} \int_{-\vartheta_0}^{\vartheta_0} & g\left( \phi, \vartheta, s, \sqrt{r^2-s^2}\sin\vartheta \right)
+ \cdot \phantom{x} \\ 
+ & h_0\left( \phi - \arcsin(s/r), \frac{(R+r)s}{\sqrt{r^2-s^2}}, (R+r)\tan\vartheta \right) \cdot \phantom{x} \\
+ &\frac{r^2(R+r)^2(1+\tan^2\vartheta)}{(r^2-s^2)^{\nicefrac{3}{2}}} \, \D \vartheta\, \D\tau\, \D\phi.
+\end{align*}
+%
+Writing the point evaluation in the fourth argument of $g$ as an integral with the Delta distribution 
+$\delta\big(v - \sqrt{r^2-s^2}\sin\vartheta\big)$, the adjoint of $\OPU$ can be identified as
+%
+\begin{align}
+ \label{eq:coneflat:coord_op_adjoint}
+ \OPU^*h(\phi,\vartheta,s,v) =\ &\delta\left( v - \sqrt{r^2-s^2}\sin\vartheta \right)\, 
+ h_0\left( \phi - \arcsin(s/r), \frac{(R+r)s}{\sqrt{r^2-s^2}}, (R+r)\tan\vartheta \right) \cdot \phantom{x} \\
+ &\frac{r^2(R+r)^2}{\cos^2\vartheta\, (r^2-s^2)^{\nicefrac{3}{2}}} \, \D \vartheta\, \D\tau\, \D\phi. \notag
+\end{align}
+%
+If this expression is inserted into the formula for $\OPP^*$, the $\vartheta$ integration can be eliminated with the Delta distribution. To 
+do this, the distribution must be expressed in terms of $\vartheta$ with the help of
+%
+\begin{equation*}
+ \delta\big(w(\vartheta)\big) = \sum_{\vartheta:w(\vartheta)=0} \frac{\delta(\vartheta)}{\ABS{w'(\vartheta)}}
+\end{equation*}
+%
+using
+%
+\begin{align*}
+ w(\vartheta) 
+ &= v(x; \phi, \vartheta) - \sqrt{r^2-s^2}\sin\vartheta \\
+ &= -\sin\vartheta \INNER{x}{\theta'(\phi)} + \cos\vartheta \INNER{x}{e_z} - \sqrt{r^2-s^2}\sin\vartheta \\
+ &= -\sin\vartheta\, \big(s + \sqrt{r^2-s^2}\big) + \cos\vartheta\, x_3.
+\end{align*}
+
+The only zero of this function is
+%
+\begin{equation*}
+ \vartheta^* = \arctan\left( \frac{x_3}{s + \sqrt{r^2 - s^2}} \right).
+\end{equation*}
+%
+With $\sin(\arctan x) = x/\sqrt{1+x^2}$ and $\cos(\arctan x) = 1/\sqrt{1+x^2}$, we have
+%
+\begin{align*}
+ \sin\vartheta^* &= \frac{x_3}{\sqrt{x_3^2 + \big(s + \sqrt{r^2-s^2}\big)^2}} = \frac{x_3}{\sqrt{x_3^2 + r^2 + 2s\sqrt{r^2-s^2}}} \\
+ \cos\vartheta^* &= \frac{\sqrt{r^2 + 2s\sqrt{r^2-s^2}}}{\sqrt{x_3^2 + r^2 + 2s\sqrt{r^2-s^2}}},
+\end{align*}
+%
+such that the derivative of $w$ at $\vartheta^*$ can be evaluated as
+%
+\begin{align*}
+ w'(\vartheta^*) 
+ &= -s \cos\vartheta^* - x_3 \sin\vartheta^* \\
+ &= - \frac{s \sqrt{r^2 + 2s\sqrt{r^2-s^2}} + x_3^2}{\sqrt{x_3^2 + r^2 + 2s\sqrt{r^2-s^2}}}
+\end{align*}
+%
+Since $s^2+v^2 \leq 1$, the zero $\vartheta^*$ is contained in the $\vartheta$ integral if $\tan\vartheta_0 \geq 1/\sqrt{r^2-1}$ or, 
+expressed with $z_0$,
+%
+\begin{equation}
+ \label{eq:coneflat:condition_det_height}
+ z_0 \geq \frac{R+r}{\sqrt{r^2-1}}.
+\end{equation}
+%
+The same condition for $s_0$ can be applied from the 2D case, see \eqref{eq:fanflat:condition_det_width}. If one of the conditions is not 
+fullfilled, the adjoint $\OPU^*$ has to be supplemented with a cutoff function in the corresponding variable. Finally, the adjoint $\OPD^*$ 
+can be expressed as
+%
+\begin{align*}
+ \OPD^* g(x)
+ &= \int_0^{2\pi} \int_{-\pi/2}^{\pi/2} \OPU^* g\left( \phi, \vartheta, s(\phi,x), v(\phi,\vartheta, x) \right) \D\vartheta\, \D\phi \\
+ &= \int_0^{2\pi} g_0 \left( \phi - \arcsin(s/r), \frac{(R+r)s}{\sqrt{r^2-s^2}}, 
+ \frac{(R+r)x_3}{s + \sqrt{r^2-s^2}} \right) \cdot \phantom{x} \\ 
+ &\hspace{35pt} \frac{r^2(R+r)^2}{(r^2-s^2)^{\nicefrac{3}{2}}}\, 
+ \frac{\big(x_3^2 + r^2 + 2s\sqrt{r^2-s^2}\big)^{\nicefrac{3}{2}}}{\left( s \sqrt{r^2 + 2s\sqrt{r^2-s^2}} + x_3^2 \right)
+ \left( r^2 + 2s\sqrt{r^2-s^2} \right)}\, \D\phi,
+\end{align*}
+%
+hence
+%
+\begin{equation}
+ \label{eq:coneflat:backproj}
+ \OPD^* g(x) = \int_0^{2\pi} w_{\text{ccf}}(s)\, g_0 \left( \phi - \arcsin(s/r), \frac{(R+r)s}{\sqrt{r^2-s^2}}, 
+ \frac{(R+r)x_3}{s + \sqrt{r^2-s^2}} \right)\, \D\phi
+\end{equation} 
+%
+with the weight function
+%
+\begin{equation}
+ \label{eq:coneflat:backproj_weight}
+ w_{\text{ccf}}(s) =\frac{r^2(R+r)^2}{(r^2-s^2)^{\nicefrac{3}{2}}}\, 
+ \frac{\big(x_3^2 + r^2 + 2s\sqrt{r^2-s^2}\big)^{\nicefrac{3}{2}}}{\left( s \sqrt{r^2 + 2s\sqrt{r^2-s^2}} + x_3^2 \right)
+ \left( r^2 + 2s\sqrt{r^2-s^2} \right)}
+\end{equation} 
+%
+of the circular cone beam geometry with flat detector and
+%
+\begin{align}
+ s &= s(\phi; x) = \INNER{x}{\theta'(\phi)}, \\
+ x_3 &= \INNER{x}{e_z}.
+\end{align}
+%
+\vspace{5ex}
+
+
+
+\subsubsection{Detector curved along the azimuth angle}
+\label{sec:applications:cone_circular:curvedstack}
+
+These detectors are probably the most common ones in medical imaging. They consist in curved line detectors stacked along the vertical 
+axis, hence the results from the curved detectors in the fan beam geometry (section \ref{sec:applications:fanbeam:curved} can be applied. 
+We assume again a curvature radius of $\rho > 0$ and use the parameter sets
+%
+\begin{equation}
+ \label{eq:conestack:params}
+ T = [0, \phi_0],\quad U = [-\psi_0, \psi_0] \times [-z_0, z_0], \quad 0 < \phi_0 < 2\pi,\ 0 < \psi_0 < \pi/2,\ z_0 > 0,
+\end{equation}
+%
+to represent the detector as
+%
+\begin{equation}
+ \label{eq:conestack:detector_parametr}
+ X(\phi, \psi, z) = -(\rho - R)\, \theta(\phi) + \rho\, \theta\big((\phi + \alpha(\psi)\big) + z\, e_z.
+\end{equation}
+%
+The directional field can be written, analogously to \eqref{eq:fancurved:direction_field}, as
+%
+\begin{equation}
+ \label{eq:conestack:dirfield}
+ N(\phi, \psi, z) = -\omega\big( \phi + \beta(\psi), \alpha(z) \big),
+\end{equation} 
+%
+with $\alpha$ and $\beta$ defined as before. The corresponding forward projection is
+%
+\begin{align}
+ &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag \\
+ &\OPD f(\phi, \psi, z) = \int_0^\infty f\left( -r\theta(\phi) + s \omega\big( \phi + \beta(\psi), \alpha(z) \big) \right)\, \D s.
+\end{align}
+%
+We use its relation to the operator $\OPD_{\text{f}}$ for flat detector as defined in \eqref{eq:coneflat:fwdproj} with the coordinate 
+transform $\tau = \rho\tan\psi$, i.e. 
+%
+\begin{equation*}
+ \OPD f(\phi, \psi, z) = \OPD_{\text{f}} f\big(\phi, \rho\tan\psi, z\big) = \OPT \OPD_{\text{f}} f(\phi, \psi, z)
+\end{equation*}
+%
+where $\OPT$ acts as the transform \eqref{eq:fancurved:coord_op} in the second variable. Thus, by inserting the adjoint analogous 
+to \eqref{eq:fancurved:coord_op_adjoint} into the formula \eqref{eq:coneflat:backproj} for $\OPD_{\text{f}}^*$, we get the backprojection
+%
+\begin{equation}
+ \label{eq:conestack:backproj}
+ \OPD^* g(x) = \int_0^{2\pi} w_{\text{cca}}(s)\, g_0 \left( \phi - \arcsin(s/r), \arctan\left( \frac{(R+r)s}{\rho\sqrt{r^2-s^2}} \right), 
+ \frac{(R+r)v}{\sqrt{r^2-s^2-v^2}} \right)\, \D\phi
+\end{equation} 
+%
+with the weight function
+%
+\begin{equation}
+ \label{eq:conestack:backproj_weight}
+ w_{\text{cca}}(s) = \frac{\rho r^2(R+r)^2\sqrt{r^2-s^2}}{\left( \rho^2 r^2 + \big((R+r)^2 - \rho^2\big) s^2 \right)}
+\end{equation}
+%
+for the \textbf{c}ircular \textbf{c}one beam geometry with \textbf{a}zimuthally curved detector and $s=s(x;\phi), v=v(x;\phi,\vartheta)$ as 
+defined in .
+
+\vspace{5ex}%
+
+
 
 \subsubsection{Two-fold curved detector}
 \label{sec:applications:cone_circular:twofoldcurved}
@@ -905,126 +1141,6 @@ with
  \label{eq:conecurved:bp_b}
  b &= b(\phi, x) = \INNER{x}{\theta(\phi)} + \sqrt{r^2 - \sigma(\phi,x)^2}.
 \end{align}
-\vspace{5ex}%
-
-
-\subsubsection{Detector curved only along $\phi$}
-\label{sec:applications:cone_circular:curvedstack}
-
-These detectors are probably the most common ones in medical imaging. They consist in curved line detectors stacked along the vertical 
-axis. We set $R = R_1$ and $\beta = \beta_1$ for the corresponding quantities along $\phi$ in section 
-\ref{sec:applications:cone_circular:twofoldcurved}. The detector is parametrized over the sets
-%
-\begin{equation}
- \label{eq:conestack:params}
- T = [0, \phi_0],\quad U = [-\psi_0, \psi_0] \times [-h, h]
-\end{equation}
-%
-with $h>0$ and has the representation
-%
-\begin{equation}
- \label{eq:conestack:detector_parametr}
- X(\phi, \psi, z) = -(R - r)\, \theta(\phi) + R\, \theta(\phi + \psi) + \arctan(z/2r)\, e_z.
-\end{equation}
-%
-The directional field can be written, analogously to \eqref{eq:fanflat:dirfield}, as
-%
-\begin{equation}
- \label{eq:conestack:dirfield}
- N(\phi, \psi, z) = -\theta\big( \phi + \beta\psi/2, \arctan(z/2r) \big),
-\end{equation} 
-%
-and the corresponding forward projection is
-%
-\begin{align}
- &\OPD: L^2(\Omega) \Lto L^2(T \times U) \notag \\
- &\OPD f(\phi, \psi, z) = \int_0^\infty f\left( -r\theta(\phi) + s \theta\big( \phi + \beta\psi/2, \arctan(z/2r) \big) \right)\, \D s.
-\end{align}
-%
-We use its relation to the two-folded curved operator $\OPD_{\mathrm{TC}}$ as defined in \eqref{eq:conecurved:fwdproj} with $\beta_2 = 2$. 
-It is
-%
-\begin{equation*}
- \OPD f(\phi, \psi, z) = \OPD_{\mathrm{TC}} f\big(\phi, \psi, \tan(z/2r)\big) = \OPT \OPD_{\mathrm{TC}} f(\phi, \psi, z)
-\end{equation*}
-%
-with
-%
-\begin{equation}
- \label{eq:conestack:curved2flat}
- \OPT g(\phi, \psi, z) = g\big(\phi, \psi, \tan(z/2r)\big).
-\end{equation}
-%
-\NOTE{TODO: formulate the condition on $h$}%
-Similarly to \eqref{eq:fanflat:curved2flat_adj}, the adjoint of $\OPT$ is
-%
-\begin{equation}
- \label{eq:conestack:curved2flat_adj}
- \DUALOPT g(\phi, \psi, \vartheta) = g(\phi, \psi, 2r\tan\vartheta)\, \frac{2r}{\cos^2\vartheta}.
-\end{equation}
-%
-Thus, by inserting $\DUALOPT g$ into \eqref{eq:conecurved:backproj} and using $1/\cos^2 = 1 + \tan^2$, we get the backprojection
-%
-\begin{align}
- \label{eq:conestack:backproj}
- \DUALOPD g(x)
- &= \int_0^{2\pi} \frac{4r \sqrt{a^2 + b^2}}{\beta b^2 \sqrt{r^2 - \sigma^2}} \cdot \phantom{x} \\
- &\hspace{35pt} g_0 \big( \phi - \arcsin(\sigma/r), 2\arcsin(\sigma/r)/\beta, 2r\, a/b \big)\, \D\phi \notag
-\end{align}
-%
-with $\sigma, a, b$ as in \eqref{eq:conecurved:bp_sigma}--\eqref{eq:conecurved:bp_b}.
-\vspace{5ex}%
-
-
-
-
-\subsubsection{Flat detector}
-\label{sec:applications:cone_circular:flat}
-
-This type of detector is mostly used in nondestructive testing. We parametrize it over the sets
-%
-\begin{equation}
- \label{eq:coneflat:params}
- T = [0, \phi_0], \quad U = [-l, l] \times [-h, h]
-\end{equation}
-%
-by
-%
-\begin{equation}
- \label{eq:coneflat:detector_parametr}
- X(\phi, \tau, z) = r\theta(\phi) + \tau\, \theta'(\phi) + z\, e_z.
-\end{equation} 
-%
-We can directly write down the direction vectors
-%
-\begin{equation}
- \label{eq:coneflat:direction_field}
- N(\phi, \tau, z) = - \omega\big(\phi + \arctan(\tau/2r), \arctan(z/2r)\big)
-\end{equation}
-%
-and the corresponding forward projection
-%
-\begin{align*}
- &\OPD: L^2(\Omega) \Lto L^2(T \times U) \\
- \label{eq:coneflat:fwdproj}
- &\OPD f(\phi, \tau, z) = \int_0^\infty f\left( -r\theta(\phi) + s \omega\big(\phi + \arctan(\tau/2r), \arctan(z/2r)\big) \right) \D s.
-\end{align*}
-%
-By repeating the argument from section \ref{sec:applications:cone_circular:curvedstack} and using
-%
-\begin{equation*}
- \arcsin x = \arctan\left( \frac{x}{\sqrt{x^2 - 1}} \right),
-\end{equation*}
-%
-we can write the adjoint of $\OPD$ as
-%
-\begin{align}
- \label{eq:conestack:backproj}
- \DUALOPD g(x)
- &= \int_0^{2\pi} \frac{4r^3 \sqrt{a^2 + b^2}}{b^2 c^3} g_0 \big( \phi - \arcsin(\sigma/r), 2r \sigma/c, 2r\, a/b \big)\, \D\phi \notag
-\end{align}
-%
-with $c = c(\phi, x) = \sqrt{r^2 - \sigma(\phi, x)^2}$ and the usual definitions of $\sigma, a, b$.
 \vspace{5ex}%
 
 
