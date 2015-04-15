@@ -63,3 +63,5 @@ target/
 *.suo
 *.pyproj
 *.pyproj.user
+*.pyperf
+*.psess
