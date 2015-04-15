@@ -25,12 +25,16 @@ from future.builtins import object
 from future import standard_library
 standard_library.install_aliases()
 
+import RL.operator.function as fun 
 from RL.space.space import *
 from RL.space.functionSpaces import L2
 from RL.space.measure import *
 from RL.space.set import *
-from RLcpp.PyCuda import *
+import RLcpp.PyCuda
 import numpy as np
+
+import RL.operator.defaultFunctions as df
+
 
 class CudaRN(HilbertSpace,Algebra):
     """The real space R^n
@@ -39,7 +43,7 @@ class CudaRN(HilbertSpace,Algebra):
     def __init__(self, n):
         self.n = n
         self._field = RealNumbers()
-        self.impl = CudaRNImpl(n)
+        self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
     def innerImpl(self, x, y):
         return self.impl.inner(x.impl, y.impl)
@@ -73,13 +77,41 @@ class CudaRN(HilbertSpace,Algebra):
     def makeVector(self, *args, **kwargs):
         return CudaRN.Vector(self, *args, **kwargs)
 
+    @property
+    def abs(self):
+        return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.abs(input.impl,output.impl), 
+                                  (self, self))
+
+    @property
+    def sign(self):
+        return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.sign(input.impl,output.impl), 
+                                  input = (self, self))
+      
+    @property
+    def addScalar(self):
+        return  fun.LambdaFunction(lambda input, scalar, output: RLcpp.PyCuda.addScalar(input.impl, scalar, output.impl), 
+                                   input = (self, self.field, self))
+     
+    @property
+    def maxVectorScalar(self):
+        return fun.LambdaFunction(lambda input, scalar, output: RLcpp.PyCuda.maxVectorScalar(input.impl, scalar, output.impl),
+                                  input = (self, self.field, self))
+
+    @property
+    def maxVectorVector(self):
+        return fun.LambdaFunction(lambda input1, input2, output: RLcpp.PyCuda.maxVectorVector(input1.impl, input2.impl, output.impl),
+                                  input = (self, self, self))
+
+    @property
+    def sum(self):
+        return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.abs(input.impl), 
+                                  input = (self), returns = self.field)
+
     class Vector(HilbertSpace.Vector,Algebra.Vector):
         def __init__(self, space, *args):
             HilbertSpace.Vector.__init__(self, space)
-            if isinstance(args[0], CudaRNVectorImpl):
+            if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
                 self.impl = args[0]
-            elif isinstance(args[0], CudaRN.Vector): #Move constructor
-                self.impl = args[0].impl
             elif isinstance(args[0], np.ndarray):
                 self.impl = space.impl.empty()
                 self[:] = args[0]
@@ -87,35 +119,23 @@ class CudaRN(HilbertSpace,Algebra):
                 self.impl = space.impl.empty()
                 self[:] = np.array(args[0], dtype=np.float)
             else:
-                self.impl = CudaRNVectorImpl(*args)
+                self.impl = RLcpp.PyCuda.CudaRNVectorImpl(*args)
             
         def __str__(self):
-            return "[" + self[:].__str__() + "]"
+            return self.space.__str__() + "::Vector(" + self[:].__str__() + ")"
 
         def __repr__(self):
-            return "CudaRNVector("+self[:].__repr__()+")"
+            return self.space.__repr__() + "::Vector(" + self[:].__repr__() + ")"
 
         #Slow get and set, for testing and nothing else!
         def __getitem__(self, index):
             if isinstance(index, slice):
-                if index.start is not None and 0 > index.start or index.stop is not None and index.stop > self.space.n:
-                    raise IndexError("Out of range")
-                
                 return self.impl.getSlice(index)
             else:
-                if index < 0: #Some negative indices should work (y[-1] is last element)
-                    index = self.space.n+index
-
-                if index < 0 or index >= self.space.n:
-                    raise IndexError("Out of range")
-
                 return self.impl.__getitem__(index)
 
         def __setitem__(self, index, value):
             if isinstance(index, slice):
-                if index.start is not None and 0 > index.start or index.stop is not None and index.stop > self.space.n:
-                    raise IndexError("Out of range")
-                
                 #Convert value to the correct type
                 if not isinstance(value, np.ndarray):
                     value = np.array(value, dtype=np.float)
@@ -124,88 +144,4 @@ class CudaRN(HilbertSpace,Algebra):
 
                 self.impl.setSlice(index, value)
             else:
-                if 0 > index or index >= self.space.n:
-                    raise IndexError("Out of range")
-
                 self.impl.__setitem__(index, value)
-
-
-class CudaUniformDiscretization(CudaRN, Discretization):
-    """ Uniform discretization of an interval
-    Represents vectors by RN elements
-    Uses trapezoid method for integration
-    """
-
-    def __init__(self, parent, n):
-        if not isinstance(parent.domain, Interval):
-            raise NotImplementedError("Can only discretize intervals")
-
-        self.parent = parent
-        CudaRN.__init__(self, n)
-
-    def zero(self):
-        return self.makeVector(self.impl.zero())
-
-    def empty(self):
-        return self.makeVector(self.impl.empty())
-    
-    def __eq__(self, other):
-        return isinstance(other, CudaUniformDiscretization) and CudaRN.__eq__(self, other)
-
-    def makeVector(self, *args, **kwargs):
-        return CudaUniformDiscretization.Vector(self, *args, **kwargs)
-
-    def integrate(self, vector):
-        dx = (self.parent.domain.end-self.parent.domain.begin)/(self.n-1)
-        return float(vector.impl.sum() * dx)
-
-    def points(self):
-        return np.linspace(self.parent.domain.begin, self.parent.domain.end, self.n)
-
-    class Vector(CudaRN.Vector):
-        def __init__(self, space, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], L2.Vector) and args[0].space == space.parent:
-                CudaRN.Vector.__init__(self, space, np.array([args[0](point) for point in space.points()], dtype=np.float))
-            else:
-                CudaRN.Vector.__init__(self, space, *args, **kwargs)
-
-
-class CudaPixelDiscretization(CudaRN, Discretization):
-    """ Uniform discretization of an square
-    Represents vectors by RN elements
-    Uses sum method for integration
-    """
-
-    def __init__(self, parent, cols, rows):
-        if not isinstance(parent.domain, Square):
-            raise NotImplementedError("Can only discretize Squares")
-
-        self.parent = parent
-        self.cols = cols
-        self.rows = rows
-        CudaRN.__init__(self, cols*rows)
-
-    def zero(self):
-        return self.makeVector(self.impl.zero())
-
-    def empty(self):
-        return self.makeVector(self.impl.empty())
-    
-    def __eq__(self, other):
-        return isinstance(other, CudaUniformDiscretization) and self.cols == other.cols and self.rows == other.rows and CudaRN.__eq__(self, other)
-
-    def makeVector(self, *args, **kwargs):
-        return CudaPixelDiscretization.Vector(self, *args, **kwargs)
-
-    def integrate(self, vector):
-        dx = (self.parent.domain.end[1]-self.parent.domain.begin[0])/(self.cols-1)
-        dy = (self.parent.domain.end[1]-self.parent.domain.begin[1])/(self.rows-1)
-        return float(vector.impl.sum() * dx * dy)
-
-    def points(self):
-        return np.meshgrid(np.linspace(self.parent.domain.begin[0], self.parent.domain.end[0],self.cols),
-                           np.linspace(self.parent.domain.begin[1], self.parent.domain.end[1],self.rows))
-
-    class Vector(CudaRN.Vector):
-        def __init__(self, space, *args, **kwargs):
-            CudaRN.Vector.__init__(self, space, *args, **kwargs)

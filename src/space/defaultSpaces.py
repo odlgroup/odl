@@ -22,7 +22,7 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
+from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
@@ -39,7 +39,7 @@ class ProductSpace(HilbertSpace):
     def __init__(self, *spaces):
         if len(spaces) == 0:
             raise TypeError("Empty product not allowed")
-        if not allEqual(spaces, lambda x, y: x.field == y.field):
+        if not all(spaces[0].field == y.field for y in spaces):
             raise TypeError("All spaces must have the same field")
 
         self.spaces = spaces
@@ -47,16 +47,16 @@ class ProductSpace(HilbertSpace):
         self._field = spaces[0].field  #X_n has same field
 
     def zero(self):
-        return self.makeVector(*[A.zero() for A in self.spaces])
+        return self.makeVector(*[space.zero() for space in self.spaces])
 
     def empty(self):
-        return self.makeVector(*[A.empty() for A in self.spaces])
+        return self.makeVector(*[space.empty() for space in self.spaces])
     
     def innerImpl(self, x, y):
-        return sum(space.innerImpl(xp, yp) for [space ,xp, yp] in zip(self.spaces, x.parts, y.parts))
+        return sum(space.innerImpl(xp, yp) for space, xp, yp in zip(self.spaces, x.parts, y.parts))
 
     def linCombImpl(self, a, x, b, y):
-        for [space, xp, yp] in zip(self.spaces, x.parts, y.parts):
+        for space, xp, yp in zip(self.spaces, x.parts, y.parts):
             space.linCombImpl(a, xp, b, yp)
 
     @property
@@ -68,7 +68,7 @@ class ProductSpace(HilbertSpace):
         return self._dimension
 
     def equals(self, other):
-        return isinstance(other,ProductSpace) and all(x.equals(y) for [x, y] in zip(self.spaces, other.spaces))
+        return isinstance(other,ProductSpace) and all(x.equals(y) for x, y in zip(self.spaces, other.spaces))
     
     def makeVector(self, *args):
         return ProductSpace.Vector(self, *args)
@@ -76,30 +76,29 @@ class ProductSpace(HilbertSpace):
     def __getitem__(self, index):
         return self.spaces[index]
 
+    def __len(self):
+        return self.dimension
+
     class Vector(HilbertSpace.Vector):
         def __init__(self, space, *args):
             HilbertSpace.Vector.__init__(self, space)
 
             if not isinstance(args[0], HilbertSpace.Vector): #Delegate constructors
-                self.parts = [space.makeVector(arg) for [arg, space] in zip(args, space.spaces)]
+                self.parts = tuple(space.makeVector(arg) for arg, space in zip(args, space.spaces))
             else: #Construct from existing tuple
-                if any(part.space != space for [part, space] in zip(args, space.spaces)):
+                if any(part.space != space for part, space in zip(args, space.spaces)):
                     raise TypeError("The spaces of all parts must correspond to this space's parts")
 
                 self.parts = args
-
-        def assign(self, other):
-            for [p1, p2] in zip(self.parts, other.parts):
-                p1.assign(p2)
 
         def __getitem__(self,index):
             return self.parts[index]
 
         def __str__(self):          
-            return "[" + ",".join(str(part) for part in self.parts) + "]"
+            return self.space.__str__() + "::Vector(" + ",".join(str(part) for part in self.parts) + ")"
 
         def __repr__(self):         
-            return "%s(%s)" % (self.__class__.__name__, str(self))
+            return self.space.__repr__() + "::Vector(" + ",".join(part.__repr__() for part in self.parts) + ")"
 
 
 class PowerSpace(HilbertSpace):
@@ -107,11 +106,11 @@ class PowerSpace(HilbertSpace):
     """
 
     def __init__(self,underlying_space,dimension):
-        if dimension == 0:
-            raise TypeError("Empty product not allowed")
+        if dimension <= 0:
+            raise TypeError("Empty or negative product not allowed")
 
         self.underlying_space = underlying_space
-        self.dimension = dimension
+        self._dimension = dimension
 
     def zero(self):
         return self.makeVector(*[self.underlying_space.zero() for _ in range(self.dimension)])
@@ -120,10 +119,10 @@ class PowerSpace(HilbertSpace):
         return self.makeVector(*[self.underlying_space.empty() for _ in range(self.dimension)])
     
     def innerImpl(self, x, y):
-        return sum(self.underlying_space.innerImpl(xp, yp) for [xp, yp] in zip(x.parts, y.parts))
+        return sum(self.underlying_space.innerImpl(xp, yp) for xp, yp in zip(x.parts, y.parts))
 
     def linCombImpl(self, a, x, b, y):
-        for [xp, yp] in zip(x.parts, y.parts):
+        for xp, yp in zip(x.parts, y.parts):
             self.underlying_space.linCombImpl(a, xp, b, yp)
 
     @property
@@ -132,25 +131,30 @@ class PowerSpace(HilbertSpace):
 
     @property
     def dimension(self):
-        return self.dimension
+        return self._dimension
 
     def equals(self, other):
-        return instanceof(other, PowerSpace) and self.underlying_space == other.underlying_space and self.dimension == other.dimension
+        return isinstance(other, PowerSpace) and self.underlying_space.equals(other.underlying_space) and self.dimension == other.dimension
     
     def makeVector(self, *args):
         return PowerSpace.Vector(self, *args)
 
     def __getitem__(self, index):
+        if index < 0 or index > self.dimension:
+            raise IndexError("Index out of range") 
         return self.underlying_space
+
+    def __len(self):
+        return self.dimension
 
     class Vector(HilbertSpace.Vector):
         def __init__(self, space, *args):
             HilbertSpace.Vector.__init__(self, space)
 
             if not isinstance(args[0], HilbertSpace.Vector): #Delegate constructors
-                self.parts = [space.makeVector(arg) for [arg, space] in zip(args, space.spaces)]
+                self.parts = tuple(space.makeVector(arg) for arg, space in zip(args, space.spaces))
             else: #Construct from existing tuple
-                if len(args) != self.space.underlying_space.dimension:
+                if len(args) != self.space.dimension:
                     raise TypeError("The dimension of the space must be correct")
 
                 if any(part.space != self.space.underlying_space for part in args):
@@ -158,18 +162,14 @@ class PowerSpace(HilbertSpace):
 
                 self.parts = args
 
-        def assign(self, other):
-            for [p1, p2] in zip(self.parts, other.parts):
-                p1.assign(p2)
-
         def __getitem__(self, index):
             return self.parts[index]
 
         def __str__(self):          
-            return "[" + ",".join(str(part) for part in self.parts) + "]"
+            return self.space.__str__() + "::Vector(" + ",".join(str(part) for part in self.parts) + ")"
 
         def __repr__(self):         
-            return "%s(%s)" % (self.__class__.__name__, str(self))
+            return self.space.__repr__() + "::Vector(" + ",".join(part.__repr__() for part in self.parts) + ")"
 
 
 class Reals(HilbertSpace):
@@ -215,10 +215,10 @@ class Reals(HilbertSpace):
             return self.__val__.__float__()
 
         def __str__(self):          
-            return "" + self.__val__.__str__()
+            return self.space.__str__() + "::Vector(" + self.__val__.__str__() + ")"
 
         def __repr__(self):         
-            return "Real(%d)" % (self.__val__)
+            return self.space.__repr__() + "::Vector(" + self.__val__.__repr__() + ")"
 
 
 class RN(LinearSpace):
@@ -233,10 +233,10 @@ class RN(LinearSpace):
         y.values[:] = a*x.values + b*y.values
 
     def zero(self):
-        return self.makeVector(np.zeros(self.n), copy=False)
+        return self.makeVector(np.zeros(self.n), dtype=float, copy=False)
 
     def empty(self):
-        return self.makeVector(np.empty(self.n), copy=False)
+        return self.makeVector(np.empty(self.n), dtype=float, copy=False)
 
     @property
     def field(self):
@@ -255,16 +255,16 @@ class RN(LinearSpace):
     class Vector(HilbertSpace.Vector, Algebra.Vector):        
         def __init__(self, space, *args, **kwargs):
             HilbertSpace.Vector.__init__(self, space)
-            self.values = np.array(*args, dtype=float, **kwargs)
+            self.values = np.array(*args, **kwargs)
         
         def __abs__(self):                  
             return self.space.makeVector(abs(self.values))
 
         def __str__(self):                  
-            return "" + self.values.__str__()
+            return self.space.__str__() + "::Vector(" + self.values.__str__() + ")"
 
         def __repr__(self):                 
-            return "RNVector("+self.values.__repr__()+")"
+            return self.space.__repr__() + "::Vector(" + self.values.__repr__() + ")"
 
         def __getitem__(self, index):        
             return self.values.__getitem__(index)
@@ -282,3 +282,30 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
 
     def multiplyImpl(self, x, y):
         y.values[:] = x.values*y.values
+
+def makePooledSpace(BaseSpace, *args, **kwargs):
+    """ Pooled space provides a optimization in reusing vectors and returning them from empty.
+    """
+    class PooledSpace(BaseSpace):
+        def __init__(self, *args, **kwargs):
+            self._pool = []
+            self._poolMaxSize = kwargs.pop('maxPoolSize', 1)
+            initPoolSize = kwargs.pop('initPoolSize', 0)
+
+            BaseSpace.__init__(self, *args, **kwargs)
+
+            for _ in range(initPoolSize):
+                self._pool.append(BaseSpace.empty(self))
+
+        def empty(self):
+            if self._pool:
+                return self._pool.pop()
+            else:
+                return BaseSpace.empty(self)
+
+        class Vector(BaseSpace.Vector):
+            def __del__(self):
+                if len(self.space._pool) < self.space._poolMaxSize:
+                    self.space._pool.append(self)
+
+    return PooledSpace(*args, **kwargs)

@@ -108,7 +108,7 @@ class TestCudaForwardDifference(RLTestCase):
         self.assertAllAlmostEquals(diff.T(diff(fun)),[0,-3,5,-1,0,0])
 
 class TestCudaForwardDifference2D(RLTestCase):       
-    def testCGN(self):
+    def testSquare(self):
         #Continuous definition of problem
         I = Square([0,0],[1,1])
         space = L2(I)
@@ -139,6 +139,41 @@ class TestCudaForwardDifference2D(RLTestCase):
                                                                   [0,0,-1,0,0],
                                                                   [0,0,0,0,0],
                                                                   [0,0,0,0,0]])
+
+    def testRectangle(self):
+        #Continuous definition of problem
+        I = Square([0,0],[1,1])
+        space = L2(I)
+
+        #Complicated functions to check performance
+        n = 5
+        m = 7
+
+        #Discretization
+        d = CS.CudaPixelDiscretization(space, n, m)
+        x,y = d.points()
+        fun = d.makeVector([[0,0,0,0,0,0,0],
+                            [0,0,0,0,0,0,0],
+                            [0,0,1,0,0,0,0],
+                            [0,0,0,0,0,0,0],
+                            [0,0,0,0,0,0,0]])
+
+        diff = ForwardDiff2D(d)
+        derivative = diff(fun)
+
+        print(derivative[0][:].reshape(n,m))
+        print(derivative[1][:].reshape(n,m))
+        self.assertAllAlmostEquals(derivative[0][:].reshape(n,m),[[0,0,0,0,0,0,0],
+                                                                  [0,0,0,0,0,0,0],
+                                                                  [0,1,-1,0,0,0,0],
+                                                                  [0,0,0,0,0,0,0],
+                                                                  [0,0,0,0,0,0,0]])
+
+        self.assertAllAlmostEquals(derivative[1][:].reshape(n,m),[[0,0,0,0,0,0,0],
+                                                                  [0,0,1,0,0,0,0],
+                                                                  [0,0,-1,0,0,0,0],
+                                                                  [0,0,0,0,0,0,0],
+                                                                  [0,0,0,0,0,0,0]])
 
 
 if __name__ == '__main__':

@@ -31,6 +31,7 @@ from RL.space.space import *
 from RL.space.defaultSpaces import *
 from RL.space.functionSpaces import *
 import RL.space.CudaSpace as CS
+import RL.space.defaultDiscretizations as DS
 from RL.space.measure import *
 import RLcpp
 from testutils import RLTestCase, Timer, consume
@@ -67,7 +68,6 @@ class ForwardDiff(LinearOperator):
 
 def denoise(x0, la, mu, iterations = 1):
     scale = (x0.space.dimension - 1.0)/(x0.space.parent.domain.end - x0.space.parent.domain.begin)
-    print(scale)
 
     diff = ForwardDiff(x0.space,scale)
     
@@ -124,7 +124,8 @@ class TestCudaDenoise(RLTestCase):
         n = 1000
 
         #Discretization
-        d = CS.CudaUniformDiscretization(space, n)
+        rn = CS.CudaRN(n)
+        d = DS.makeDefaultUniformDiscretization(space, rn)
         x = d.points()
         fun = d.makeVector(2*((x>0.3).astype(float) - (x>0.6).astype(float)) + np.random.rand(n))
         plt.plot(fun)

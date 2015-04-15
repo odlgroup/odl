@@ -28,6 +28,7 @@ import numpy as np
 from RL.operator.operatorAlternative import *
 from RL.space.space import *
 from RL.space.defaultSpaces import *
+import RL.space.defaultDiscretizations as DS
 from RL.space.functionSpaces import *
 from RL.space.measure import *
 from testutils import RLTestCase, Timer, consume
@@ -77,7 +78,8 @@ class TestsConvolutionVisually(RLTestCase):
 
         #Discretization
         n = 500
-        d = UniformDiscretization(space, n)
+        rn = EuclidianSpace(n)
+        d = DS.makeDefaultUniformDiscretization(space, rn)
         kernel = d.makeVector(kernelL2)
         self.rhs = d.makeVector(rhsL2)
 

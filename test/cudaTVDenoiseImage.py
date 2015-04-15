@@ -30,6 +30,7 @@ from RL.space.space import *
 from RL.space.defaultSpaces import *
 from RL.space.functionSpaces import *
 import RL.space.CudaSpace as CS
+import RL.space.defaultDiscretizations as DS
 from RL.space.measure import *
 import RLcpp
 from testutils import RLTestCase, Timer, consume
@@ -37,16 +38,19 @@ from solverExamples import *
 
 import matplotlib.pyplot as plt
 
+class RegularizationType(object):
+    Anisotropic, Isotropic = range(2)
+
 class ForwardDiff2D(LinearOperator):
     """ Calculates the gradient in 2D on cuda
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaPixelDiscretization):
-            raise TypeError("space must be CudaPixelDiscretization")
+        if not isinstance(space, CS.CudaRN):
+            raise TypeError("space must be CudaRN")
 
         self._domain = space
-        self._range = ProductSpace(space,space)
+        self._range = PowerSpace(space,2)
         
     def applyImpl(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl, self.domain.cols, self.domain.rows)
@@ -62,18 +66,21 @@ class ForwardDiff2D(LinearOperator):
     def range(self):
         return self._range
 
-def TVdenoise2D(x0, la, mu, iterations = 1):
-    diff = ForwardDiff2D(x0.space)
     
-    ran = diff.range
-    dom = diff.domain
+def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
+    diff = ForwardDiff2D(x0.space)
+
+    dimension = 2
+    
+    L2 = diff.domain
+    L2xL2 = diff.range
 
     x = x0.copy()
     f = x0.copy()
-    b = ran.zero()
-    d = ran.zero()
-    xdiff = ran.zero()
-    tmp = dom.zero()
+    b = L2xL2.zero()
+    d = L2xL2.zero()
+    xdiff = L2xL2.zero()
+    tmp = L2.zero()
 
     C1 = mu/(mu+2*la)
     C2 = la/(mu+2*la)
@@ -85,21 +92,77 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
         xdiff -= b
         diff.applyAdjoint(xdiff,tmp)
 
-        dom.linComb(C1,f,2*C2,x)
+        L2.linComb(C1,f,2*C2,x)
         x.linComb(C2,tmp)
         
         # d = diff(x)+b
+        diff.apply(x,xdiff)
+        xdiff += b
+        d.assign(xdiff)
+
+        # s = xdiff[0] = sqrt(dx^2+dy^2)
+        for i in range(dimension):
+            xdiff[i].multiply(xdiff[i])
+
+        for i in range(1,dimension):
+            xdiff[0].linComb(1,xdiff[i])
+
+        L2.sqrt(xdiff[0],xdiff[0])
+
+        # c = tmp = max(s - la^-1, 0) / s
+        L2.addScalar(xdiff[0],-1.0/la,tmp)            
+        L2.maxVectorScalar(tmp,0.0,tmp)
+        L2.divideVectorVector(tmp,xdiff[0],tmp)
+
+        # d = d * c = d * max(s - la^-1, 0) / s
+        for i in range(dimension):
+            d[i].multiply(tmp)
+
+
+        # b = b + diff(x) - d
+        diff.apply(x,xdiff)
+        b += xdiff
+        b -= d
+    
+    return x
+
+def TVdenoise2DOpt(x0, la, mu, iterations = 1):
+    diff = ForwardDiff2D(x0.space)
+
+    dimension = 2
+    L2 = diff.domain
+    L2xL2 = diff.range
+
+    x = x0.copy()
+    f = x0.copy()
+    b = L2xL2.zero()
+    d = L2xL2.zero()
+    xdiff = L2xL2.zero()
+    tmp = L2.zero()
+
+    C1 = mu/(mu+2*la)
+    C2 = la/(mu+2*la)
+    for i in range(iterations):
+        # x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
+        diff.apply(x,xdiff)
+        xdiff += d
+        xdiff -= b
+        diff.applyAdjoint(xdiff,tmp)
+        L2.linComb(C1,f,2*C2,x)
+        x.linComb(C2,tmp)
+        
+        #d = diff(x)+b
         diff.apply(x,d)
         d += b
 
-        for i in range(ran.dimension):
+        for i in range(dimension):
             # tmp = d/abs(d)
-            RLcpp.cuda.sign(d[i].impl,tmp.impl)
+            L2.sign(d[i],tmp)
 
-            # d = sign(diff(x)+b)
-            RLcpp.cuda.abs(d[i].impl,d[i].impl)
-            RLcpp.cuda.addScalar(d[i].impl,-1.0/la,d[i].impl)
-            RLcpp.cuda.maxVectorScalar(d[i].impl,0.0,d[i].impl)
+            # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
+            L2.abs(d[i],d[i])
+            L2.addScalar(d[i],-1.0/la,d[i])
+            L2.maxVectorScalar(d[i],0.0,d[i])
             d[i].multiply(tmp)
 
         # b = b + diff(x) - d
@@ -107,14 +170,43 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
         b += xdiff
         b -= d
     
-    n = x0.space.cols
-    m = x0.space.rows
+    return x
 
-    p = plt.imshow(x[:].reshape(n,m), interpolation='nearest')
-    plt.set_cmap('bone')
-    plt.colorbar(p)
+def TVdenoise2D(x0, la, mu, iterations = 1):
+    diff = ForwardDiff2D(x0.space)
 
-class TestCudaDenoise(RLTestCase):       
+    dimension = 2
+    L2 = diff.domain
+    L2xL2 = diff.range
+
+    x = x0.copy()
+    f = x0.copy()
+
+    b = L2xL2.zero()
+    d = L2xL2.zero()
+    xdiff = L2xL2.zero()
+    tmp = L2.zero()
+
+    for i in range(iterations):
+        x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
+        
+        d = diff(x)+b
+
+        for i in range(dimension):
+            # tmp = d/abs(d)
+            L2.sign(d[i],tmp)
+
+            # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
+            L2.abs(d[i],d[i])
+            L2.addScalar(d[i],-1.0/la,d[i])
+            L2.maxVectorScalar(d[i],0.0,d[i])
+            d[i].multiply(tmp)
+
+        b = b + diff(x) - d
+        
+    return x
+
+class TestCudaDenoise(RLTestCase):    
     def testLargeDenoise(self):
         #Continuous definition of problem
         I = Square([0,0],[1,1])
@@ -123,22 +215,33 @@ class TestCudaDenoise(RLTestCase):
         #Complicated functions to check performance
         n = 2000
         m = 2000
-
+        
         #Discretization
-        d = CS.CudaPixelDiscretization(space, n, m)
+        rn = makePooledSpace(CS.CudaRN, n*m, maxPoolSize=5, initPoolSize=5)
+        d = DS.makeDefaultPixelDiscretization(space, rn, n, m)
+        #d = CS.CudaPixelDiscretization(space, n, m)
         x,y = d.points()
         data = RLcpp.utils.phantom([n,m])
         data[1:-1,1:-1] += np.random.rand(n-2,m-2)-0.5
         fun = d.makeVector(data)
-        plt.imshow(fun[:].reshape(n,m), interpolation='nearest')
-        plt.set_cmap('bone')
-
-        la=0.1
-        mu=2.5
+        
+        #Show input
         plt.figure()
-        with Timer("denoise GPU:"):
-            TVdenoise2D(fun,la,mu,2000)
+        p = plt.imshow(fun[:].reshape(n,m), interpolation='nearest')
+        plt.set_cmap('bone')
+        plt.axis('off')
 
+        #Call denoising
+        la=0.3
+        mu=5.0
+        with Timer("denoising time"):
+            result = TVdenoise2D(fun,la,mu,200)
+
+        #Show result    
+        plt.figure()
+        p = plt.imshow(result[:].reshape(n,m), interpolation='nearest')
+        plt.set_cmap('bone')
+        plt.axis('off')
 
 if __name__ == '__main__':
     unittest.main(exit=False)

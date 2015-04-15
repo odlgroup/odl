@@ -27,8 +27,9 @@ from future import standard_library
 standard_library.install_aliases()
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
+from RL.space.set import AbstractSet
 
-class LinearSpace(set):
+class LinearSpace(AbstractSet):
     """ Abstract linear space
     """
 
@@ -76,10 +77,10 @@ class LinearSpace(set):
         
         #Check spaces
         if not self.isMember(x): 
-            raise TypeError('x ({}) is in wrong space'.format(x))
+            raise TypeError('x ({}) is not in space ({})'.format(x, self))
 
         if not self.isMember(y): 
-            raise TypeError('y ({}) is in wrong space'.format(y))
+            raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
         #Call method
         return self.linCombImpl(a, x, b, y)
@@ -106,12 +107,23 @@ class LinearSpace(set):
             """
             return self.__space__
 
-        #Convenience operators
+        #Convenience functions
         def assign(self, other):
             """ Assign the values of other to this vector
             """
             self.space.linComb(1, other, 0, self)
 
+        def copy(self):
+            """ Creates an identical clone of this vector
+            """
+            result = self.space.empty()
+            result.assign(self)
+            return result
+        
+        def linComb(self, a, x):     
+            self.space.linComb(a, x, 1, self)
+
+        #Convenience operators
         def __iadd__(self, other):
             """Vector addition (self += other)
             """
@@ -184,21 +196,11 @@ class LinearSpace(set):
             """
             return self.copy()
 
-        def copy(self):
-            """ Creates an identical clone of this vector
-            """
-            result = self.space.empty()
-            result.assign(self)
-            return result
-
         def __len__(self):
             return self.space.dimension
 
         def __str__(self):
-            return str(self.space) + " Vector "
-
-        def linComb(self, a, x):     
-            self.space.linComb(a, x, 1, self)
+            return str(self.space) + "::Vector"
 
 
 class NormedSpace(LinearSpace):
@@ -295,7 +297,7 @@ class Algebra(LinearSpace):
         if not self.isMember(y): 
             raise TypeError('y ({}) is in wrong space'.format(y))
 
-        return self.multiplyImpl(x, y)
+        self.multiplyImpl(x, y)
 
     class Vector(LinearSpace.Vector):
         

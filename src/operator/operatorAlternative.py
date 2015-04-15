@@ -38,7 +38,6 @@ class Operator(object):
     def applyImpl(self, rhs, out):
         """Apply the operator, abstract
         """
-        pass
 
     @abstractproperty
     def domain(self):
@@ -192,7 +191,6 @@ class LinearOperator(Operator):
     def applyAdjointImpl(self, rhs, out):
         """Apply the adjoint of the operator, abstract
         """
-        pass
 
     #Implicitly defined operators
     @property
@@ -201,9 +199,9 @@ class LinearOperator(Operator):
 
     def applyAdjoint(self, rhs, out):
         if not self.range.isMember(rhs): 
-            raise TypeError('rhs ({}) is not in the domain of this operators adjoint'.format(rhs))
+            raise TypeError('rhs ({}) is not in the domain of this operators ({}) adjoint'.format(rhs,self))
         if not self.domain.isMember(out): 
-            raise TypeError('out ({}) is not in the range of this operators adjoint'.format(out))
+            raise TypeError('out ({}) is not in the range of this operators ({}) adjoint'.format(out,self))
 
         self.applyAdjointImpl(rhs, out)
 

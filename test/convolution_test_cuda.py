@@ -30,6 +30,7 @@ from RL.space.space import *
 from RL.space.defaultSpaces import *
 from RL.space.functionSpaces import *
 import RL.space.CudaSpace as CS
+import RL.space.defaultDiscretizations as DS
 from RL.space.measure import *
 import RLcpp
 from testutils import RLTestCase, Timer, consume
@@ -82,7 +83,8 @@ class TestsCudaConvolutionVisually(RLTestCase):
         rhsL2 = space.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
 
         #Discretization
-        d = CS.CudaUniformDiscretization(space, n)
+        rn = CS.CudaRN(n)
+        d = DS.makeDefaultUniformDiscretization(space, rn)
         self.kernel = d.makeVector(kernelL2)
         self.rhs = d.makeVector(rhsL2)
 
@@ -93,12 +95,13 @@ class TestsCudaConvolutionVisually(RLTestCase):
         self.x0 = d.zero()
 
         #Dampening parameter for landweber
+        self.iterations = 10
         self.omega = 1/self.conv.opNorm()**2
         
     def testCGN(self):
         plt.figure()
 
-        for result in conjugateGradient(self.conv, self.x0, self.rhs, iterations=100):
+        for result in conjugateGradient(self.conv, self.x0, self.rhs, iterations=self.iterations):
             plt.plot(self.conv(result)[:])
 
         plt.plot(self.rhs)
@@ -107,7 +110,7 @@ class TestsCudaConvolutionVisually(RLTestCase):
     def testLandweber(self):
         plt.figure()
 
-        for result in landweber(self.conv, self.x0, self.rhs, self.omega, iterations=100):
+        for result in landweber(self.conv, self.x0, self.rhs, self.omega, iterations=self.iterations):
             plt.plot(self.conv(result)[:])
 
         plt.plot(self.rhs)
@@ -115,17 +118,17 @@ class TestsCudaConvolutionVisually(RLTestCase):
         
     def testTimingCG(self):
         with Timer("Optimized CG"):
-            consume(conjugateGradient(self.conv, self.x0, self.rhs, iterations=100))
+            consume(conjugateGradient(self.conv, self.x0, self.rhs, iterations=self.iterations))
 
         with Timer("Basic CG"):
-            consume(conjugateGradientBase(self.conv, self.x0, self.rhs, iterations=100))
+            consume(conjugateGradientBase(self.conv, self.x0, self.rhs, iterations=self.iterations))
 
     def testTimingLW(self):
         with Timer("Optimized LW"):
-            consume(landweber(self.conv, self.x0, self.rhs, self.omega, iterations=100))
+            consume(landweber(self.conv, self.x0, self.rhs, self.omega, iterations=self.iterations))
 
         with Timer("Basic LW"):
-            consume(landweberBase(self.conv, self.x0, self.rhs, self.omega, iterations=100))
+            consume(landweberBase(self.conv, self.x0, self.rhs, self.omega, iterations=self.iterations))
 
 
 if __name__ == '__main__':

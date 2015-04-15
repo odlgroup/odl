@@ -29,6 +29,14 @@ class AbstractSet(object):
     def __ne__(self, other):         
         return not self.equals(other)
 
+class EmptySet(AbstractSet):
+    """ The empty set has no members (None is considered "no element")
+    """
+    def equals(self, other):
+        return isinstance(other, EmptySet)
+
+    def isMember(self, other):
+        return other is None
 
 class ComplexNumbers(AbstractSet):
     """ The set of complex numbers
@@ -46,7 +54,7 @@ class RealNumbers(ComplexNumbers):
     """
 
     def equals(self, other):
-        return isinstance(other ,RealNumbers)
+        return isinstance(other, RealNumbers)
 
     def isMember(self, other):
         return isinstance(other, Real)
