@@ -21,7 +21,7 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
+from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
@@ -55,6 +55,13 @@ def makeDefaultUniformDiscretization(parent, rnimpl):
 
             self.parent = parent
             self.rn = rn
+            self.scale = (self.parent.domain.end-self.parent.domain.begin)/(self.n-1)
+
+        def innerImpl(self, v1, v2):
+            return self.rn.innerImpl(v1, v2)*self.scale
+
+        def normSqImpl(self, vector):
+            return self.rn.normSqImpl(vector)*self.scale
     
         def __eq__(self, other):
             return isinstance(other, DefaultUniformDiscretization) and self.parent.equals(other.parent) and self.rn.equals(other.rn)
@@ -66,8 +73,7 @@ def makeDefaultUniformDiscretization(parent, rnimpl):
                 return DefaultUniformDiscretization.Vector(self, *args, **kwargs)
 
         def integrate(self, vector):
-            dx = (self.parent.domain.end-self.parent.domain.begin)/(self.n-1)
-            return float(self.rn.sum(vector) * dx)
+            return float(self.rn.sum(vector) * self.scale)
 
         def points(self):
             return np.linspace(self.parent.domain.begin, self.parent.domain.end, self.n)
@@ -83,8 +89,6 @@ def makeDefaultUniformDiscretization(parent, rnimpl):
 def makeDefaultPixelDiscretization(parent, rnimpl, cols, rows):
     RNType = type(rnimpl)
     RNVectortype = RNType.Vector
-
-    print(RNType, RNVectortype)
 
     class DefaultPixelDiscretization(RNType, Discretization):
         """ Uniform discretization of an square
@@ -109,17 +113,28 @@ def makeDefaultPixelDiscretization(parent, rnimpl, cols, rows):
             self.cols = cols
             self.rows = rows
             self.rn = rn
+            dx = (self.parent.domain.end[1]-self.parent.domain.begin[0])/(self.cols-1)
+            dy = (self.parent.domain.end[1]-self.parent.domain.begin[1])/(self.rows-1)
+            self.scale = dx * dy
+
+        def innerImpl(self, v1, v2):
+            return self.rn.innerImpl(v1, v2)*self.scale
+
+        def normSqImpl(self, vector):
+            return self.rn.normSqImpl(vector)*self.scale
     
         def equals(self, other):
             return isinstance(other, DefaultPixelDiscretization) and self.cols == other.cols and self.rows == other.rows and self.rn.equals(other.rn)
 
         def makeVector(self, *args, **kwargs):
-            return DefaultPixelDiscretization.Vector(self, *args, **kwargs)
+            if len(args) == 1 and isinstance(args[0], L2.Vector):
+                xarr, yarr = self.points()
+                return self.makeVector(np.array([args[0]([x,y]) for x,y in zip(xarr.flat,yarr.flat)], dtype=np.float))
+            else:
+                return DefaultPixelDiscretization.Vector(self, *args, **kwargs)
 
         def integrate(self, vector):
-            dx = (self.parent.domain.end[1]-self.parent.domain.begin[0])/(self.cols-1)
-            dy = (self.parent.domain.end[1]-self.parent.domain.begin[1])/(self.rows-1)
-            return float(self.rn.sum(vector) * dx * dy)
+            return float(self.rn.sum(vector) * self.scale)
 
         def points(self):
             return np.meshgrid(np.linspace(self.parent.domain.begin[0], self.parent.domain.end[0],self.cols),

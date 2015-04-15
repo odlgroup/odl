@@ -29,20 +29,35 @@ import numpy as np
 from RL.operator.operatorAlternative import *
 from RL.space.space import *
 from RL.space.defaultSpaces import *
+from RL.space.defaultDiscretizations import *
 from RL.space.functionSpaces import *
 from testutils import RLTestCase
 
 
 class L2Test(RLTestCase):
-    def testR(self):
+    def testInterval(self):
         I = Interval(0, pi)
         space = L2(I)
-        d = UniformDiscretization(space, 10)
+        rn = EuclidianSpace(10)
+        d = makeDefaultUniformDiscretization(space, rn)
 
         l2sin = space.makeVector(np.sin)
         sind = d.makeVector(l2sin)
 
         self.assertAlmostEqual(sind.normSq(), pi/2, places=10)
+
+    def testSquare(self):
+        I = Square((0, 0), (pi, pi))
+        space = L2(I)
+        n = 10
+        m = 10
+        rn = EuclidianSpace(n*m)
+        d =  makeDefaultPixelDiscretization(space, rn, n, m)
+
+        l2sin = space.makeVector(lambda point: np.sin(point[0]) * np.sin(point[1]))
+        sind = d.makeVector(l2sin)
+
+        self.assertAlmostEqual(sind.normSq(), pi**2 / 4, places=10)
 
 if __name__ == '__main__':
     unittest.main(exit=False)

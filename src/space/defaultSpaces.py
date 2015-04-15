@@ -140,7 +140,7 @@ class PowerSpace(HilbertSpace):
         return PowerSpace.Vector(self, *args)
 
     def __getitem__(self, index):
-        if index < 0 or index > self.dimension:
+        if index < -self.dimension or index >= self.dimension:
             raise IndexError("Index out of range") 
         return self.underlying_space
 
@@ -282,6 +282,7 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
 
     def multiplyImpl(self, x, y):
         y.values[:] = x.values*y.values
+
 
 def makePooledSpace(BaseSpace, *args, **kwargs):
     """ Pooled space provides a optimization in reusing vectors and returning them from empty.

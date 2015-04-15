@@ -85,8 +85,8 @@ class Interval(RealNumbers):
         return RealNumbers.isMember(self, other) and self.begin <= other <= self.end
 
 class Square(AbstractSet):
-
     def __init__(self, begin, end):
+        self.reals = RealNumbers()
         self.begin = begin
         self.end = end
 
@@ -94,5 +94,5 @@ class Square(AbstractSet):
         return isinstance(other, Square) and self.begin == other.begin and self.end == other.end
 
     def isMember(self, other):
-        return RealNumbers.isMember(self, other[0])  and self.begin[0] <= other[0] <= self.end[0] and \
-               RealNumbers.isMember(self, other[1])  and self.begin[1] <= other[1] <= self.end[1]
+        return self.reals.isMember(other[0])  and self.begin[0] <= other[0] <= self.end[0] and \
+               self.reals.isMember(other[1])  and self.begin[1] <= other[1] <= self.end[1]
