@@ -69,7 +69,7 @@ class Projector(OP.LinearOperator):
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
             back.append(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].values)
-
+            
         out.values = back.finalize().flatten()
 
     @property
@@ -82,15 +82,15 @@ class Projector(OP.LinearOperator):
 
 class ProjectionTest(unittest.TestCase):
     def testForward(self):
-        side = 100
-        volumeSize = np.array([side,side])
-        data = SR.SRPyUtils.phantom(volumeSize)
+        #Set volume parameters
+        volumeSize = np.array([400,400])
         volumeOrigin = np.array([-10.0,-10.0])
-        voxelSize = np.array([20.0/side,20.0/side])
-        detectorSize = 200
+        voxelSize = np.array([20.0,20.0])/volumeSize
+        detectorSize = 400
         stepSize = voxelSize.max()/2.0
 
-        nProjection = 300
+        #Define projection geometries
+        nProjection = 100
         geometries = []
         for theta in np.linspace(0,2*pi,nProjection):
             x0 = np.array([cos(theta), sin(theta)])
@@ -101,28 +101,48 @@ class ProjectionTest(unittest.TestCase):
             pixelDirection = y0 * 60.0 / detectorSize
             geometries.append(ProjectionGeometry(sourcePosition, detectorOrigin, pixelDirection))
     
+        #Define the space of one projection
         projectionSpace = fs.L2(sets.Interval(0,1))
         projectionRN = ds.EuclidianSpace(detectorSize)
+
+        #Discretize projection space
         projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
+
+        #Create the data space, which is the carthesian product of the single projection spaces
         dataDisc = ds.PowerSpace(projectionDisc, nProjection)
 
+        #Define the reconstruction space
         reconSpace = fs.L2(sets.Square((0, 0), (1, 1)))
-        reconRN = ds.EuclidianSpace(side*side)
-        reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, side, side)
 
+        #Discretize the reconstruction space
+        reconRN = ds.EuclidianSpace(volumeSize.prod())
+        reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, volumeSize[0], volumeSize[1])
+
+        #Create a phantom
+        data = SR.SRPyUtils.phantom(volumeSize)
         dataVec = reconDisc.makeVector(data)
         
+        print(SR.SRPyUtils.printArray(data))
+        plt.figure()
+        plt.imshow(data)
+        plt.show()
+
+
+        #Make the operator
         projector = Projector(volumeOrigin, voxelSize, volumeSize, detectorSize, stepSize, geometries, reconDisc, dataDisc)
 
+        #Apply once to find norm estimate
         ret = projector(dataVec)
         recon = projector.T(ret)
         normEst = recon.norm() / dataVec.norm()
-        
+
         plt.figure()
         plt.imshow(recon.values.reshape(volumeSize))
+        plt.show()
 
+        #Solve using landweber
         x = reconDisc.zero()
-        solvers.landweber(projector, x, ret, 0.5/normEst, 50, partialResults = solvers.printStatusPartial())
+        solvers.landweber(projector, x, ret, 10, omega=0.5/normEst, partialResults = solvers.printStatusPartial())
 
         plt.figure()
         plt.imshow(x.values.reshape(volumeSize))

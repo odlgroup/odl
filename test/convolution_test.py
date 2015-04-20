@@ -119,7 +119,7 @@ class TestsConvolutionVisually(RLTestCase):
         plt.figure()
 
         partial = solvers.storePartial()
-        solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations, partial)
+        solvers.landweber(self.conv, self.x0, self.rhs, self.iterations, self.omega, partial)
 
         for result in partial.results:
             plt.plot(self.conv(result)[:])
@@ -136,10 +136,10 @@ class TestsConvolutionVisually(RLTestCase):
 
     def testTimingLW(self):
         with Timer("Optimized LW"):
-            solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations)
+            solvers.landweber(self.conv, self.x0, self.rhs, self.iterations, self.omega)
 
         with Timer("Basic LW"):
-            landweberBase(self.conv, self.x0, self.rhs, self.omega, self.iterations)
+            landweberBase(self.conv, self.x0, self.rhs, self.iterations, self.omega)
        
 if __name__ == '__main__':
     unittest.main(exit=False)

@@ -45,6 +45,8 @@ class forEachPartial(object):
         self.function(result)
 
 class printStatusPartial(object):
+    """ Prints the interation count and current norm of each iterate
+    """
     def __init__(self):
         self.iter = 0
 
@@ -52,7 +54,7 @@ class printStatusPartial(object):
         print("iter = {}, norm = {}".format(self.iter, result.norm()))
         self.iter += 1
 
-def landweber(operator, x, rhs, omega=1, iterations=1, partialResults=None):
+def landweber(operator, x, rhs, iterations=1, omega=1, partialResults=None):
     """ General and efficient implementation of Landweber iteration
     """
 
@@ -73,6 +75,7 @@ def landweber(operator, x, rhs, omega=1, iterations=1, partialResults=None):
 def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
     """ Optimized version of CGN, uses no temporaries etc.
     """
+
     d = operator(x)
     d.space.linComb(1, rhs, -1, d)       #d = rhs - A x
     p = operator.T(d)

@@ -69,7 +69,7 @@ def makeUniformDiscretization(parent, rnimpl):
             if len(args) == 1 and isinstance(args[0], L2.Vector):
                 return self.makeVector(np.array([args[0](point) for point in self.points()], dtype=np.float))
             else:
-                return UniformDiscretization.Vector(self, *args, **kwargs)
+                return RNType.makeVector(self, *args, **kwargs)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)
@@ -131,17 +131,24 @@ def makePixelDiscretization(parent, rnimpl, cols, rows):
 
         def makeVector(self, *args, **kwargs):
             if len(args) == 1 and isinstance(args[0], L2.Vector):
-                xarr, yarr = self.points()
-                return self.makeVector(np.array([args[0]([x,y]) for x,y in zip(xarr.flat,yarr.flat)], dtype=np.float))
-            else:
-                return PixelDiscretization.Vector(self, *args, **kwargs)
+                return self.makeVector(np.array([args[0]([x,y]) for x,y in zip(*self.points())], dtype=np.float))
+            elif len(args) == 1 and isinstance(args[0], np.ndarray):
+                if args[0].shape == (self.cols, self.rows):
+                    return self.makeVector(args[0].flatten())
+                elif args[0].shape == (self.dimension,):
+                    return RNType.makeVector(self, args[0])
+                else:
+                    raise ValueError("Input numpy array ({}) is of shape {}, expected shape shape {} or {}".format(args[0],args[0].shape, (self.n,), (self.cols, self.rows)))
+            else:                
+                return RNType.makeVector(self, *args, **kwargs)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)
 
         def points(self):
-            return np.meshgrid(np.linspace(self.parent.domain.begin[0], self.parent.domain.end[0],self.cols),
-                               np.linspace(self.parent.domain.begin[1], self.parent.domain.end[1],self.rows))
+            x,y = np.meshgrid(np.linspace(self.parent.domain.begin[0], self.parent.domain.end[0],self.cols),
+                              np.linspace(self.parent.domain.begin[1], self.parent.domain.end[1],self.rows))
+            return x.flatten(), y.flatten()
 
         def __getattr__(self, name):
             return getattr(self._rn, name)

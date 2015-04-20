@@ -27,9 +27,14 @@ import unittest
 #Runs all automated tests
 
 from operator_test import *
-from cudarn_test import *
 from space_test import *
 from functionSpaces_test import *
+
+try: #Only run these tests if RLCpp is available
+    __import__('RLCpp').find_module('cuda')
+    from cudarn_test import *
+except ImportError:
+    pass
 
 if __name__ == '__main__':
     unittest.main(exit=False)

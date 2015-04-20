@@ -258,12 +258,18 @@ class RN(LinearSpace):
         return isinstance(other, RN) and self.n == other.n
 
     def makeVector(self, *args, **kwargs):
-        return RN.Vector(self, *args, **kwargs)
+        if isinstance(args[0], np.ndarray):
+            if args[0].shape == (self.n,):
+                return RN.Vector(self, args[0])
+            else:
+                raise ValueError("Input numpy array ({}) is of shape {}, expected shape shape {}".format(args[0],args[0].shape, (self.n,)))
+        else:
+            return self.makeVector(np.array(*args, **kwargs))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):        
-        def __init__(self, space, *args, **kwargs):
+        def __init__(self, space, values):
             HilbertSpace.Vector.__init__(self, space)
-            self.values = np.array(*args, **kwargs).flatten()
+            self.values = values
         
         def __abs__(self):                  
             return self.space.makeVector(abs(self.values))
