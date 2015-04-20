@@ -25,21 +25,21 @@ standard_library.install_aliases()
 import unittest
 
 import numpy as np
-from RL.operator.operatorAlternative import *
-from RL.space.space import *
-from RL.space.defaultSpaces import *
-import RL.space.defaultDiscretizations as DS
-from RL.space.functionSpaces import *
-from RL.space.measure import *
+import RL.operator.operatorAlternative as op
+import RL.operator.defaultSolvers as solvers 
+import RL.space.defaultSpaces as ds
+import RL.space.set as sets
+import RL.space.defaultDiscretizations as dd
+import RL.space.functionSpaces as fs
 from testutils import RLTestCase, Timer, consume
 from solverExamples import *
 
 import matplotlib.pyplot as plt
 from scipy import ndimage
 
-class Convolution(LinearOperator):
+class Convolution(op.LinearOperator):
     def __init__(self, kernel):
-        if not isinstance(kernel.space, RN):
+        if not isinstance(kernel.space, ds.RN):
             raise TypeError("Kernel must be RN vector")
 
         self.kernel = kernel.values
@@ -64,22 +64,30 @@ class Convolution(LinearOperator):
     def range(self):
         return self.space
 
+def plotPartialResults(conv):
+    while True:
+        x = yield
+        if x is None:
+            raise StopIteration()
+        else:
+            plt.plot(conv(x)[:])
+
 class TestsConvolutionVisually(RLTestCase):
     """ Does not do any asserts, only for manual checking
     """
     def setUp(self):
         #Continuous definition of problem
-        I = Interval(0, 10)
-        space = L2(I)
+        I = sets.Interval(0, 10)
+        l2 = fs.L2(I)
 
         #Complicated functions to check performance
-        kernelL2 = space.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
-        rhsL2 = space.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
+        kernelL2 = l2.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
+        rhsL2 = l2.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
 
         #Discretization
         n = 500
-        rn = EuclidianSpace(n)
-        d = DS.makeDefaultUniformDiscretization(space, rn)
+        rn = ds.EuclidianSpace(n)
+        d = dd.makeUniformDiscretization(l2, rn)
         kernel = d.makeVector(kernelL2)
         self.rhs = d.makeVector(rhsL2)
 
@@ -90,21 +98,30 @@ class TestsConvolutionVisually(RLTestCase):
         self.x0 = d.zero()
 
         #Dampening parameter for landweber
+        self.iterations = 100
         self.omega = 1/self.conv.opNorm()**2
 
     def testCGN(self):
         plt.figure()
 
-        for result in conjugateGradient(self.conv, self.x0, self.rhs, iterations=100):
+        partial = solvers.storePartial()
+        solvers.conjugateGradient(self.conv, self.x0, self.rhs, self.iterations, partial)
+
+        for result in partial.results:
             plt.plot(self.conv(result)[:])
+
+        plt.plot(self.x0)
 
         plt.plot(self.rhs)
         plt.draw()
-
+        
     def testLandweber(self):
         plt.figure()
 
-        for result in landweber(self.conv, self.x0, self.rhs, self.omega, iterations=100):
+        partial = solvers.storePartial()
+        solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations, partial)
+
+        for result in partial.results:
             plt.plot(self.conv(result)[:])
 
         plt.plot(self.rhs)
@@ -112,17 +129,17 @@ class TestsConvolutionVisually(RLTestCase):
         
     def testTimingCG(self):
         with Timer("Optimized CG"):
-            consume(conjugateGradient(self.conv, self.x0, self.rhs, iterations=100))
+            solvers.conjugateGradient(self.conv, self.x0, self.rhs, self.iterations)
 
         with Timer("Basic CG"):
-            consume(conjugateGradientBase(self.conv, self.x0, self.rhs, iterations=100))
+            conjugateGradientBase(self.conv, self.x0, self.rhs, self.iterations)
 
     def testTimingLW(self):
         with Timer("Optimized LW"):
-            consume(landweber(self.conv, self.x0, self.rhs, self.omega, iterations=100))
+            solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations)
 
         with Timer("Basic LW"):
-            consume(landweberBase(self.conv, self.x0, self.rhs, self.omega, iterations=100))
+            landweberBase(self.conv, self.x0, self.rhs, self.omega, self.iterations)
        
 if __name__ == '__main__':
     unittest.main(exit=False)

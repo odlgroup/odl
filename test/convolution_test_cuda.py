@@ -25,25 +25,25 @@ standard_library.install_aliases()
 import unittest
 
 import numpy as np
-from RL.operator.operatorAlternative import *
-from RL.space.space import *
-from RL.space.defaultSpaces import *
-from RL.space.functionSpaces import *
-import RL.space.CudaSpace as CS
-import RL.space.defaultDiscretizations as DS
-from RL.space.measure import *
+import RL.operator.operatorAlternative as op
+import RL.operator.defaultSolvers as solvers 
+import RL.space.defaultSpaces as ds
+import RL.space.set as sets
+import RL.space.defaultDiscretizations as dd
+import RL.space.functionSpaces as fs
+import RL.space.CudaSpace as cs
 import RLcpp
 from testutils import RLTestCase, Timer, consume
 from solverExamples import *
 
 import matplotlib.pyplot as plt
 
-class CudaConvolution(LinearOperator):
+class CudaConvolution(op.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
     def __init__(self, kernel):
-        if not isinstance(kernel.space, CS.CudaRN):
+        if not isinstance(kernel.space, cs.CudaRN):
             raise TypeError("Kernel must be CudaRN vector")
         
         self.space = kernel.space
@@ -74,17 +74,17 @@ class TestsCudaConvolutionVisually(RLTestCase):
     """
     def setUp(self):
         #Continuous definition of problem
-        I = Interval(0, 10)
-        space = L2(I)
+        I = sets.Interval(0, 10)
+        l2 = fs.L2(I)
 
         #Complicated functions to check performance
         n = 5000
-        kernelL2 = space.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
-        rhsL2 = space.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
+        kernelL2 = l2.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
+        rhsL2 = l2.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
 
         #Discretization
-        rn = CS.CudaRN(n)
-        d = DS.makeDefaultUniformDiscretization(space, rn)
+        rn = cs.CudaRN(n)
+        d = dd.makeUniformDiscretization(l2, rn)
         self.kernel = d.makeVector(kernelL2)
         self.rhs = d.makeVector(rhsL2)
 
@@ -95,22 +95,31 @@ class TestsCudaConvolutionVisually(RLTestCase):
         self.x0 = d.zero()
 
         #Dampening parameter for landweber
-        self.iterations = 10
+        self.iterations = 100
         self.omega = 1/self.conv.opNorm()**2
         
+    
     def testCGN(self):
         plt.figure()
 
-        for result in conjugateGradient(self.conv, self.x0, self.rhs, iterations=self.iterations):
+        partial = solvers.storePartial()
+        solvers.conjugateGradient(self.conv, self.x0, self.rhs, self.iterations, partial)
+
+        for result in partial.results:
             plt.plot(self.conv(result)[:])
+
+        plt.plot(self.x0)
 
         plt.plot(self.rhs)
         plt.draw()
-
+        
     def testLandweber(self):
         plt.figure()
 
-        for result in landweber(self.conv, self.x0, self.rhs, self.omega, iterations=self.iterations):
+        partial = solvers.storePartial()
+        solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations, partial)
+
+        for result in partial.results:
             plt.plot(self.conv(result)[:])
 
         plt.plot(self.rhs)
@@ -118,17 +127,17 @@ class TestsCudaConvolutionVisually(RLTestCase):
         
     def testTimingCG(self):
         with Timer("Optimized CG"):
-            consume(conjugateGradient(self.conv, self.x0, self.rhs, iterations=self.iterations))
+            solvers.conjugateGradient(self.conv, self.x0, self.rhs, self.iterations)
 
         with Timer("Basic CG"):
-            consume(conjugateGradientBase(self.conv, self.x0, self.rhs, iterations=self.iterations))
+            conjugateGradientBase(self.conv, self.x0, self.rhs, self.iterations)
 
     def testTimingLW(self):
         with Timer("Optimized LW"):
-            consume(landweber(self.conv, self.x0, self.rhs, self.omega, iterations=self.iterations))
+            solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations)
 
         with Timer("Basic LW"):
-            consume(landweberBase(self.conv, self.x0, self.rhs, self.omega, iterations=self.iterations))
+            landweberBase(self.conv, self.x0, self.rhs, self.omega, self.iterations)
 
 
 if __name__ == '__main__':

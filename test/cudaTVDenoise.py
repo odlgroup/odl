@@ -125,7 +125,7 @@ class TestCudaDenoise(RLTestCase):
 
         #Discretization
         rn = CS.CudaRN(n)
-        d = DS.makeDefaultUniformDiscretization(space, rn)
+        d = DS.makeUniformDiscretization(space, rn)
         x = d.points()
         fun = d.makeVector(2*((x>0.3).astype(float) - (x>0.6).astype(float)) + np.random.rand(n))
         plt.plot(fun)

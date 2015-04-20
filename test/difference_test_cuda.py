@@ -66,7 +66,7 @@ class ForwardDiff2D(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaPixelDiscretization):
+        if not isinstance(space, CS.CudaRN):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self._domain = space

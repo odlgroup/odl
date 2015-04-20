@@ -26,84 +26,87 @@ from future import standard_library
 standard_library.install_aliases()
 
 import RL.operator.function as fun 
-from RL.space.space import *
 from RL.space.functionSpaces import L2
-from RL.space.measure import *
-from RL.space.set import *
-import RLcpp.PyCuda
+from RL.space.measure import Discretization
+import RL.space.set as sets
+import RL.space.space as space
 import numpy as np
 
-def makeDefaultUniformDiscretization(parent, rnimpl):
+def makeUniformDiscretization(parent, rnimpl):
     RNType = type(rnimpl)
     RNVectortype = RNType.Vector
 
-    class DefaultUniformDiscretization(RNType, Discretization):
+    class UniformDiscretization(RNType, Discretization):
         """ Uniform discretization of an interval
             Represents vectors by RN elements
             Uses trapezoid method for integration
         """
 
         def __init__(self, parent, rn):
-            if not isinstance(parent.domain, Interval):
+            if not isinstance(parent.domain, sets.Interval):
                 raise NotImplementedError("Can only discretize intervals")
 
-            if not isinstance(rn, HilbertSpace):
+            if not isinstance(rn, space.HilbertSpace):
                 raise NotImplementedError("RN has to be a hilbert space")
 
-            if not isinstance(rn, Algebra):
+            if not isinstance(rn, space.Algebra):
                 raise NotImplementedError("RN has to be an algebra")
 
             self.parent = parent
-            self.rn = rn
+            self._rn = rn
             self.scale = (self.parent.domain.end-self.parent.domain.begin)/(self.n-1)
 
         def innerImpl(self, v1, v2):
-            return self.rn.innerImpl(v1, v2)*self.scale
+            return self._rn.innerImpl(v1, v2)*self.scale
 
         def normSqImpl(self, vector):
-            return self.rn.normSqImpl(vector)*self.scale
+            return self._rn.normSqImpl(vector)*self.scale
     
         def __eq__(self, other):
-            return isinstance(other, DefaultUniformDiscretization) and self.parent.equals(other.parent) and self.rn.equals(other.rn)
+            return isinstance(other, UniformDiscretization) and self.parent.equals(other.parent) and self._rn.equals(other._rn)
 
         def makeVector(self, *args, **kwargs):
             if len(args) == 1 and isinstance(args[0], L2.Vector):
                 return self.makeVector(np.array([args[0](point) for point in self.points()], dtype=np.float))
             else:
-                return DefaultUniformDiscretization.Vector(self, *args, **kwargs)
+                return UniformDiscretization.Vector(self, *args, **kwargs)
 
         def integrate(self, vector):
-            return float(self.rn.sum(vector) * self.scale)
+            return float(self._rn.sum(vector) * self.scale)
 
         def points(self):
             return np.linspace(self.parent.domain.begin, self.parent.domain.end, self.n)
 
         def __getattr__(self, name):
-            return getattr(self.rn, name)
+            return getattr(self._rn, name)
+        
+        def __str__(self):
+            return "UniformDiscretization(" + str(self._rn) + ")"
 
         class Vector(RNVectortype):
             pass
 
-    return DefaultUniformDiscretization(parent, rnimpl)
 
-def makeDefaultPixelDiscretization(parent, rnimpl, cols, rows):
+    return UniformDiscretization(parent, rnimpl)
+
+def makePixelDiscretization(parent, rnimpl, cols, rows):
     RNType = type(rnimpl)
     RNVectortype = RNType.Vector
 
-    class DefaultPixelDiscretization(RNType, Discretization):
+    class PixelDiscretization(RNType, Discretization):
         """ Uniform discretization of an square
             Represents vectors by RN elements
             Uses sum method for integration
         """
 
         def __init__(self, parent, rn, cols, rows):
-            if not isinstance(parent.domain, Square):
+            if not isinstance(parent.domain, sets.Square):
                 raise NotImplementedError("Can only discretize Squares")
 
-            if not isinstance(rn, HilbertSpace):
+            if not isinstance(rn, space.HilbertSpace):
                 raise NotImplementedError("RN has to be a hilbert space")
 
-            if not isinstance(rn, Algebra):
+            if not isinstance(rn, space.Algebra):
                 raise NotImplementedError("RN has to be an algebra")
 
             if not rn.dimension == cols*rows:
@@ -112,38 +115,41 @@ def makeDefaultPixelDiscretization(parent, rnimpl, cols, rows):
             self.parent = parent
             self.cols = cols
             self.rows = rows
-            self.rn = rn
+            self._rn = rn
             dx = (self.parent.domain.end[1]-self.parent.domain.begin[0])/(self.cols-1)
             dy = (self.parent.domain.end[1]-self.parent.domain.begin[1])/(self.rows-1)
             self.scale = dx * dy
 
         def innerImpl(self, v1, v2):
-            return self.rn.innerImpl(v1, v2)*self.scale
+            return self._rn.innerImpl(v1, v2)*self.scale
 
         def normSqImpl(self, vector):
-            return self.rn.normSqImpl(vector)*self.scale
+            return self._rn.normSqImpl(vector)*self.scale
     
         def equals(self, other):
-            return isinstance(other, DefaultPixelDiscretization) and self.cols == other.cols and self.rows == other.rows and self.rn.equals(other.rn)
+            return isinstance(other, PixelDiscretization) and self.cols == other.cols and self.rows == other.rows and self._rn.equals(other._rn)
 
         def makeVector(self, *args, **kwargs):
             if len(args) == 1 and isinstance(args[0], L2.Vector):
                 xarr, yarr = self.points()
                 return self.makeVector(np.array([args[0]([x,y]) for x,y in zip(xarr.flat,yarr.flat)], dtype=np.float))
             else:
-                return DefaultPixelDiscretization.Vector(self, *args, **kwargs)
+                return PixelDiscretization.Vector(self, *args, **kwargs)
 
         def integrate(self, vector):
-            return float(self.rn.sum(vector) * self.scale)
+            return float(self._rn.sum(vector) * self.scale)
 
         def points(self):
             return np.meshgrid(np.linspace(self.parent.domain.begin[0], self.parent.domain.end[0],self.cols),
                                np.linspace(self.parent.domain.begin[1], self.parent.domain.end[1],self.rows))
 
         def __getattr__(self, name):
-            return getattr(self.rn, name)
+            return getattr(self._rn, name)
+
+        def __str__(self):
+            return "PixelDiscretization(" + str(self._rn) + ", " + str(self.cols) + "x" + str(self.rows) + ")"
 
         class Vector(RNVectortype):
             pass
 
-    return DefaultPixelDiscretization(parent, rnimpl, cols, rows)
+    return PixelDiscretization(parent, rnimpl, cols, rows)

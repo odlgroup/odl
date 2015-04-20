@@ -216,10 +216,12 @@ class TestCudaDenoise(RLTestCase):
         n = 2000
         m = 2000
         
-        #Discretization
-        rn = makePooledSpace(CS.CudaRN, n*m, maxPoolSize=5, initPoolSize=5)
-        d = DS.makeDefaultPixelDiscretization(space, rn, n, m)
-        #d = CS.CudaPixelDiscretization(space, n, m)
+        #Underlying RN space
+        rn = CS.CudaRN(n*m)
+        rnpooled = makePooledSpace(rn, maxPoolSize=5) #Example of using an vector pool to reduce allocation overhead
+
+        #Discretize
+        d = DS.makePixelDiscretization(space, rnpooled, n, m)
         x,y = d.points()
         data = RLcpp.utils.phantom([n,m])
         data[1:-1,1:-1] += np.random.rand(n-2,m-2)-0.5
@@ -235,7 +237,7 @@ class TestCudaDenoise(RLTestCase):
         la=0.3
         mu=5.0
         with Timer("denoising time"):
-            result = TVdenoise2D(fun,la,mu,200)
+            result = TVdenoise2D(fun,la,mu,1000)
 
         #Show result    
         plt.figure()

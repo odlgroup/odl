@@ -77,6 +77,9 @@ class CudaRN(HilbertSpace,Algebra):
     def makeVector(self, *args, **kwargs):
         return CudaRN.Vector(self, *args, **kwargs)
 
+    def __str__(self):
+        return "CudaRN(" + str(self.n) + ")"
+
     @property
     def abs(self):
         return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.abs(input.impl,output.impl), 

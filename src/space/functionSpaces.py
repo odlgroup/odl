@@ -35,15 +35,15 @@ from RL.space.defaultSpaces import *
 
 #Example of a space:
 class FunctionSpace(Algebra):
-    """The space of functions on some domain
+    """ The space scalar valued of functions on some domain
     """
 
-    def __init__(self, domain):
+    def __init__(self, domain, field = None):
         if not isinstance(domain, AbstractSet): 
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
-        self._field = RealNumbers()
+        self._field = field if field is not None else RealNumbers()
 
     def linCombImpl(self, a, x, b, y):
         return a*x + b*y #Use operator overloading
@@ -61,6 +61,9 @@ class FunctionSpace(Algebra):
     
     def equals(self, other):
         return isinstance(other, FunctionSpace) and self.domain == other.domain
+
+    def empty(self):
+        return self.makeVector(lambda *args: 0)
 
     def zero(self):
         return self.makeVector(lambda *args: 0)

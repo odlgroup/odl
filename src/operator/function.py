@@ -82,7 +82,7 @@ class Function(object):
         self.apply(*args)
         
     def __str__(self):
-        return "Function " + self.__class__.__name__ + "(" + ",".join(str(self.domain(i)) for i in range(self.nargs)) + ")"
+        return "Function " + self.__class__.__name__ + "(" + ", ".join(str(self.domain(i)) for i in range(self.nargs)) + ")"
 
 class LambdaFunction(Function):
     """ Shorthand for defining a function with a lambda

@@ -79,6 +79,9 @@ class ProductSpace(HilbertSpace):
     def __len(self):
         return self.dimension
 
+    def __str__(self):
+        return "ProductSpace(" + ", ".join(str(space) for space in self.spaces) + ")"
+
     class Vector(HilbertSpace.Vector):
         def __init__(self, space, *args):
             HilbertSpace.Vector.__init__(self, space)
@@ -95,10 +98,10 @@ class ProductSpace(HilbertSpace):
             return self.parts[index]
 
         def __str__(self):          
-            return self.space.__str__() + "::Vector(" + ",".join(str(part) for part in self.parts) + ")"
+            return self.space.__str__() + "::Vector(" + ", ".join(str(part) for part in self.parts) + ")"
 
         def __repr__(self):         
-            return self.space.__repr__() + "::Vector(" + ",".join(part.__repr__() for part in self.parts) + ")"
+            return self.space.__repr__() + "::Vector(" + ", ".join(part.__repr__() for part in self.parts) + ")"
 
 
 class PowerSpace(HilbertSpace):
@@ -147,6 +150,9 @@ class PowerSpace(HilbertSpace):
     def __len(self):
         return self.dimension
 
+    def __str__(self):
+        return "PowerSpace(" + str(self.underlying_space) + ", " + str(self.dimension) + ")"
+
     class Vector(HilbertSpace.Vector):
         def __init__(self, space, *args):
             HilbertSpace.Vector.__init__(self, space)
@@ -166,10 +172,10 @@ class PowerSpace(HilbertSpace):
             return self.parts[index]
 
         def __str__(self):          
-            return self.space.__str__() + "::Vector(" + ",".join(str(part) for part in self.parts) + ")"
+            return self.space.__str__() + "::Vector(" + ", ".join(str(part) for part in self.parts) + ")"
 
         def __repr__(self):         
-            return self.space.__repr__() + "::Vector(" + ",".join(part.__repr__() for part in self.parts) + ")"
+            return self.space.__repr__() + "::Vector(" + ", ".join(part.__repr__() for part in self.parts) + ")"
 
 
 class Reals(HilbertSpace):
@@ -185,7 +191,7 @@ class Reals(HilbertSpace):
     def linCombImpl(self, a, x, b, y):        
         y.__val__ = a*x.__val__ + b*y.__val__
 
-    def zero(self):
+    def empty(self):
         return self.makeVector(0.0)
 
     @property
@@ -226,6 +232,8 @@ class RN(LinearSpace):
     """
 
     def __init__(self, n):
+        if not isinstance(n, Integral) or n<1:
+            raise TypeError("n ({}) has to be a positive integer".format(np))
         self.n = n
         self._field = RealNumbers()
     
@@ -255,7 +263,7 @@ class RN(LinearSpace):
     class Vector(HilbertSpace.Vector, Algebra.Vector):        
         def __init__(self, space, *args, **kwargs):
             HilbertSpace.Vector.__init__(self, space)
-            self.values = np.array(*args, **kwargs)
+            self.values = np.array(*args, **kwargs).flatten()
         
         def __abs__(self):                  
             return self.space.makeVector(abs(self.values))
@@ -270,8 +278,13 @@ class RN(LinearSpace):
             return self.values.__getitem__(index)
 
         def __setitem__(self, index, value):  
-            return self.values.__setitem__(index, values)
+            return self.values.__setitem__(index, value)
 
+    def __str__(self):
+        return self.__class__.__name__ + "(" + str(self.n) + ")"
+
+    def __repr__(self):                 
+        return "RN(" + str(self.n) + ")"
 
 class EuclidianSpace(RN, HilbertSpace, Algebra):
     """The real space R^n with the euclidean norm
@@ -284,29 +297,35 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         y.values[:] = x.values*y.values
 
 
-def makePooledSpace(BaseSpace, *args, **kwargs):
+def makePooledSpace(base, *args, **kwargs):
     """ Pooled space provides a optimization in reusing vectors and returning them from empty.
     """
-    class PooledSpace(BaseSpace):
-        def __init__(self, *args, **kwargs):
+    BaseType = type(base)
+    BaseVectorType = BaseType.Vector
+
+    class PooledSpace(BaseType):
+        def __init__(self, base, *args, **kwargs):
             self._pool = []
             self._poolMaxSize = kwargs.pop('maxPoolSize', 1)
-            initPoolSize = kwargs.pop('initPoolSize', 0)
-
-            BaseSpace.__init__(self, *args, **kwargs)
-
-            for _ in range(initPoolSize):
-                self._pool.append(BaseSpace.empty(self))
+            self._base = base
 
         def empty(self):
             if self._pool:
                 return self._pool.pop()
             else:
-                return BaseSpace.empty(self)
+                return BaseType.empty(self)
 
-        class Vector(BaseSpace.Vector):
+        def __getattr__(self, name):
+            return getattr(self._base, name)
+
+        def __str__(self):
+            return "PooledSpace(" + str(self._base) + ", Pool size:" + str(len(self._pool)) + ")"
+
+        class Vector(BaseVectorType):
             def __del__(self):
                 if len(self.space._pool) < self.space._poolMaxSize:
                     self.space._pool.append(self)
+                else:
+                    pass#TODO BaseVectorType.__del__(self)
 
-    return PooledSpace(*args, **kwargs)
+    return PooledSpace(base, *args, **kwargs)

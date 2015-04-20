@@ -36,13 +36,13 @@ class LinearSpace(AbstractSet):
     __metaclass__ = ABCMeta #Set as abstract
 
     @abstractmethod
-    def zero(self):
-        """ The zero element of the space
+    def empty(self):
+        """ Create an empty vector (of undefined state)
         """
 
     @abstractmethod
     def linCombImpl(self, a, x, b, y):
-        """ Calculate y=ax+by
+        """ Calculate y=ax+by. This method is intended to be private, public callers should resort to linComb which is type checked.
         """
 
     @abstractproperty
@@ -57,13 +57,21 @@ class LinearSpace(AbstractSet):
 
     # Also equals(self,other) from set
 
-    #Default implemented operators
-    def empty(self):
-        """An empty vector (of undefined state)
+    # Default implemented operators
+    def zero(self):
+        """ The zero vector of this space
         """
-        #defaults to zero vector if no implementation is provided
-        return self.zero()
+        #Default implementation using linComb
+        tmp = self.empty()
+        self.linCombImpl(0, tmp, 0, tmp)
+        return tmp
 
+    def isMember(self, x):
+        """ check vector for membership in space
+        """
+        return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
+
+    # Error checking variant of methods
     def linComb(self, a, x, b, y):
         """ Calculate y=ax+by with error checking of types
         """
@@ -84,11 +92,6 @@ class LinearSpace(AbstractSet):
 
         #Call method
         return self.linCombImpl(a, x, b, y)
-
-    def isMember(self, x):
-        """ check vector for membership in space
-        """
-        return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
 
     class Vector(object):
         """ Abstract vector

@@ -24,20 +24,16 @@ from future import standard_library
 standard_library.install_aliases()
 
 
-def landweberBase(operator, x0, rhs, omega=1, iterations=1):
+def landweberBase(operator, x, rhs, omega=1, iterations=1):
     """ Straightforward implementation of Landweber iteration
     """
-    x = x0.copy()
     for _ in range(iterations):
         x = x - omega * operator.T(operator(x)-rhs)
 
-        yield x
 
-
-def landweber(operator, x0, rhs, omega=1, iterations=1):
+def landweber(operator, x, rhs, omega=1, iterations=1):
     """ General and efficient implementation of Landweber iteration
     """
-    x = x0.copy()
 
     #Reusable temporaries
     tmpRan = operator.range.empty()
@@ -48,14 +44,11 @@ def landweber(operator, x0, rhs, omega=1, iterations=1):
         tmpRan -= rhs                               #tmpRan = tmpRan - rhs
         operator.applyAdjoint(tmpRan, tmpDom)       #tmpDom = A^T tmpRan
         x.linComb(-omega, tmpDom)                   #x = x - omega * tmpDom
-
-        yield x
         
 
-def conjugateGradientBase(op, x0, rhs, iterations=1):
+def conjugateGradientBase(op, x, rhs, iterations=1):
     """ Non-optimized CGN
     """
-    x = x0.copy()
     d = rhs - op(x)
     p = op.T(d)
     s = p.copy()
@@ -70,13 +63,10 @@ def conjugateGradientBase(op, x0, rhs, iterations=1):
         b = s.normSq()/norms2
         p = s + b*p
 
-        yield x
 
-
-def conjugateGradient(op, x0, rhs, iterations=1):
+def conjugateGradient(op, x, rhs, iterations=1):
     """ Optimized version of CGN, uses no temporaries etc.
     """
-    x = x0.copy()
     d = op(x)
     d.space.linComb(1, rhs, -1, d)       #d = rhs - A x
     p = op.T(d)
@@ -96,5 +86,3 @@ def conjugateGradient(op, x0, rhs, iterations=1):
         normsOld = normsNew
 
         op.domain.linComb(1, s, b, p)      #p = s + b * p
-
-        yield x
