@@ -56,3 +56,12 @@ target/
 
 # Backups from futurize/pasteurize
 *.py.bak
+
+# Visual studio
+*.sdf
+*.sln
+*.suo
+*.pyproj
+*.pyproj.user
+*.pyperf
+*.psess
