@@ -27,13 +27,13 @@ import unittest
 import numpy as np
 from RL.operator.operatorAlternative import *
 from RL.space.space import *
-from RL.space.defaultSpaces import *
+import RL.space.defaultSpaces as ds
+import RL.space.defaultDiscretizations as dd
 from RL.space.functionSpaces import *
 import RL.space.CudaSpace as CS
 from RL.space.measure import *
 import RLcpp
 from testutils import RLTestCase, Timer, consume
-from solverExamples import *
 
 import matplotlib.pyplot as plt
 
@@ -93,19 +93,18 @@ class TestCudaForwardDifference(RLTestCase):
         I = Interval(0, 1)
         space = L2(I)
 
-        #Complicated functions to check performance
-        n = 6
-
         #Discretization
-        d = CS.CudaUniformDiscretization(space, n)
-        fun = d.makeVector([1,2,5,3,2,1])
+        n = 6
+        rn = CS.CudaRN(n)
+        d = dd.makeUniformDiscretization(space, rn)
+        fun = d.makeVector([1, 2, 5, 3, 2, 1])
 
         #Create operator
         diff = ForwardDiff(d)
 
-        self.assertAllAlmostEquals(diff(fun),[0,3,-2,-1,-1,0])
-        self.assertAllAlmostEquals(diff.T(fun),[0,-1,-3,2,1,0])
-        self.assertAllAlmostEquals(diff.T(diff(fun)),[0,-3,5,-1,0,0])
+        self.assertAllAlmostEquals(diff(fun),[0, 3, -2, -1, -1, 0])
+        self.assertAllAlmostEquals(diff.T(fun),[0, -1, -3, 2, 1, 0])
+        self.assertAllAlmostEquals(diff.T(diff(fun)),[0, -3, 5, -1, 0, 0])
 
 class TestCudaForwardDifference2D(RLTestCase):       
     def testSquare(self):
@@ -113,36 +112,44 @@ class TestCudaForwardDifference2D(RLTestCase):
         I = Square([0,0],[1,1])
         space = L2(I)
 
-        #Complicated functions to check performance
+        #Discretization
         n = 5
         m = 5
-
-        #Discretization
-        d = CS.CudaPixelDiscretization(space, n, m)
+        rn = CS.CudaRN(n*m)
+        d = dd.makePixelDiscretization(space, rn, n, m)
         x,y = d.points()
-        fun = d.makeVector([[0,0,0,0,0],
-                            [0,0,0,0,0],
-                            [0,0,1,0,0],
-                            [0,0,0,0,0],
-                            [0,0,0,0,0]])
+        fun = d.makeVector([[0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0],
+                            [0, 0, 1, 0, 0],
+                            [0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0]])
 
         diff = ForwardDiff2D(d)
         derivative = diff(fun)
-        self.assertAllAlmostEquals(derivative[0][:].reshape(n,m),[[0,0,0,0,0],
-                                                                  [0,0,0,0,0],
-                                                                  [0,1,-1,0,0],
-                                                                  [0,0,0,0,0],
-                                                                  [0,0,0,0,0]])
+        self.assertAllAlmostEquals(derivative[0][:].reshape(n,m),[[0, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0],
+                                                                  [0, 1,-1, 0, 0],
+                                                                  [0, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0]])
 
-        self.assertAllAlmostEquals(derivative[1][:].reshape(n,m),[[0,0,0,0,0],
-                                                                  [0,0,1,0,0],
-                                                                  [0,0,-1,0,0],
-                                                                  [0,0,0,0,0],
-                                                                  [0,0,0,0,0]])
+        self.assertAllAlmostEquals(derivative[1][:].reshape(n,m),[[0, 0, 0, 0, 0],
+                                                                  [0, 0, 1, 0, 0],
+                                                                  [0, 0,-1, 0, 0],
+                                                                  [0, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0]])
+
+        #Verify that the adjoint is ok
+        laplacian = -diff.T(derivative) # -gradient.T(gradient(x)) is the laplacian
+        self.assertAllAlmostEquals(laplacian[:].reshape(n,m),[[0, 0, 0, 0, 0],
+                                                              [0, 0, 1, 0, 0],
+                                                              [0, 1,-4, 1 ,0],
+                                                              [0, 0, 1, 0, 0],
+                                                              [0, 0, 0, 0, 0]])
+
 
     def testRectangle(self):
         #Continuous definition of problem
-        I = Square([0,0],[1,1])
+        I = Square([0, 0],[1,1])
         space = L2(I)
 
         #Complicated functions to check performance
@@ -150,30 +157,36 @@ class TestCudaForwardDifference2D(RLTestCase):
         m = 7
 
         #Discretization
-        d = CS.CudaPixelDiscretization(space, n, m)
+        rn = CS.CudaRN(n*m)
+        d = dd.makePixelDiscretization(space, rn, n, m)
         x,y = d.points()
-        fun = d.makeVector([[0,0,0,0,0,0,0],
-                            [0,0,0,0,0,0,0],
-                            [0,0,1,0,0,0,0],
-                            [0,0,0,0,0,0,0],
-                            [0,0,0,0,0,0,0]])
+        fun = d.makeVector([[0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 1, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0]])
 
         diff = ForwardDiff2D(d)
         derivative = diff(fun)
 
-        print(derivative[0][:].reshape(n,m))
-        print(derivative[1][:].reshape(n,m))
-        self.assertAllAlmostEquals(derivative[0][:].reshape(n,m),[[0,0,0,0,0,0,0],
-                                                                  [0,0,0,0,0,0,0],
-                                                                  [0,1,-1,0,0,0,0],
-                                                                  [0,0,0,0,0,0,0],
-                                                                  [0,0,0,0,0,0,0]])
+        self.assertAllAlmostEquals(derivative[0][:].reshape(n,m),[[0, 0, 0, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0, 0, 0],
+                                                                  [0, 1,-1, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0, 0, 0]])
 
-        self.assertAllAlmostEquals(derivative[1][:].reshape(n,m),[[0,0,0,0,0,0,0],
-                                                                  [0,0,1,0,0,0,0],
-                                                                  [0,0,-1,0,0,0,0],
-                                                                  [0,0,0,0,0,0,0],
-                                                                  [0,0,0,0,0,0,0]])
+        self.assertAllAlmostEquals(derivative[1][:].reshape(n,m),[[0, 0, 0, 0, 0, 0, 0],
+                                                                  [0, 0, 1, 0, 0, 0, 0],
+                                                                  [0, 0,-1, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0, 0, 0],
+                                                                  [0, 0, 0, 0, 0, 0, 0]])
+        #Verify that the adjoint is ok
+        laplacian = -diff.T(derivative) # -gradient.T(gradient(x)) is the laplacian
+        self.assertAllAlmostEquals(laplacian[:].reshape(n,m),[[0, 0, 0, 0, 0, 0, 0],
+                                                              [0, 0, 1, 0, 0, 0, 0],
+                                                              [0, 1,-4, 1, 0, 0, 0],
+                                                              [0, 0, 1, 0, 0, 0, 0],
+                                                              [0, 0, 0, 0, 0, 0, 0]])
 
 
 if __name__ == '__main__':

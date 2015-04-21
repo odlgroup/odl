@@ -114,27 +114,22 @@ def denoise(x0, la, mu, iterations = 1):
 
     plt.plot(x)
 
-class TestCudaDenoise(RLTestCase):       
-    def testCGN(self):
-        #Continuous definition of problem
-        I = Interval(0, 1)
-        space = L2(I)
+#Continuous definition of problem
+I = Interval(0, 1)
+space = L2(I)
 
-        #Complicated functions to check performance
-        n = 1000
+#Complicated functions to check performance
+n = 1000
 
-        #Discretization
-        rn = CS.CudaRN(n)
-        d = DS.makeUniformDiscretization(space, rn)
-        x = d.points()
-        fun = d.makeVector(2*((x>0.3).astype(float) - (x>0.6).astype(float)) + np.random.rand(n))
-        plt.plot(fun)
+#Discretization
+rn = CS.CudaRN(n)
+d = DS.makeUniformDiscretization(space, rn)
+x = d.points()
+fun = d.makeVector(2*((x>0.3).astype(float) - (x>0.6).astype(float)) + np.random.rand(n))
+plt.plot(fun)
 
-        la=0.00001
-        mu=200.0
-        denoise(fun,la,mu,500)
+la=0.00001
+mu=200.0
+denoise(fun,la,mu,500)
 
-
-if __name__ == '__main__':
-    unittest.main(exit=False)
-    plt.show()
+plt.show()

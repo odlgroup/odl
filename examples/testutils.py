@@ -11,9 +11,6 @@ class RLTestCase(unittest.TestCase):
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
         differentLengthSentinel = object() #Sentinel object used to check that both iterators are the same length.
 
-        if iter1 is None and iter2 is None:
-            return
-
         for [i1, i2] in izip_longest(iter1, iter2, fillvalue=differentLengthSentinel):
             #Verify that none of the lists has ended (then they are not the same size
             self.assertIsNot(i1, differentLengthSentinel)

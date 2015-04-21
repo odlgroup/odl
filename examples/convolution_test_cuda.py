@@ -69,77 +69,52 @@ class CudaConvolution(op.LinearOperator):
         return self.space
 
 
-class TestsCudaConvolutionVisually(RLTestCase):
-    """ Does not do any asserts, only for manual checking
-    """
-    def setUp(self):
-        #Continuous definition of problem
-        I = sets.Interval(0, 10)
-        l2 = fs.L2(I)
 
-        #Complicated functions to check performance
-        n = 5000
-        kernelL2 = l2.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
-        rhsL2 = l2.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
+#Continuous definition of problem
+continuousSpace = fs.L2(sets.Interval(0, 10))
 
-        #Discretization
-        rn = cs.CudaRN(n)
-        d = dd.makeUniformDiscretization(l2, rn)
-        self.kernel = d.makeVector(kernelL2)
-        self.rhs = d.makeVector(rhsL2)
+#Complicated functions to check performance
+continuousKernel = continuousSpace.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
+continuousRhs = continuousSpace.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
 
-        #Create operator
-        self.conv = CudaConvolution(self.kernel)
+#Discretization
+rn = cs.CudaRN(5000)
+d = dd.makeUniformDiscretization(continuousSpace, rn)
+kernel = d.makeVector(continuousKernel)
+rhs = d.makeVector(continuousRhs)
 
-        #Initial guess
-        self.x0 = d.zero()
+#Create operator
+conv = CudaConvolution(kernel)
 
-        #Dampening parameter for landweber
-        self.iterations = 100
-        self.omega = 1/self.conv.opNorm()**2
+#Dampening parameter for landweber
+iterations = 10
+omega = 1/conv.opNorm()**2
+
+#Display partial
+partial = solvers.forEachPartial(lambda result: plt.plot(conv(result)[:]))
+
+#Test CGN
+plt.figure()
+plt.plot(rhs)
+solvers.conjugateGradient(conv, d.zero(), rhs, iterations, partial)
+
+#Landweber
+plt.figure()
+plt.plot(rhs)
+solvers.landweber(conv, d.zero(), rhs, iterations, omega, partial)
         
-    
-    def testCGN(self):
-        plt.figure()
+#testTimingCG
+with Timer("Optimized CG"):
+    solvers.conjugateGradient(conv, d.zero(), rhs, iterations)
+            
+with Timer("Base CG"):
+    conjugateGradientBase(conv, d.zero(), rhs, iterations)
 
-        partial = solvers.storePartial()
-        solvers.conjugateGradient(self.conv, self.x0, self.rhs, self.iterations, partial)
+#Landweber timing
+with Timer("Optimized LW"):
+    solvers.landweber(conv, d.zero(), rhs, iterations, omega)
 
-        for result in partial.results:
-            plt.plot(self.conv(result)[:])
+with Timer("Basic LW"):
+    landweberBase(conv, d.zero(), rhs, iterations, omega)
 
-        plt.plot(self.x0)
-
-        plt.plot(self.rhs)
-        plt.draw()
-        
-    def testLandweber(self):
-        plt.figure()
-
-        partial = solvers.storePartial()
-        solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations, partial)
-
-        for result in partial.results:
-            plt.plot(self.conv(result)[:])
-
-        plt.plot(self.rhs)
-        plt.draw()
-        
-    def testTimingCG(self):
-        with Timer("Optimized CG"):
-            solvers.conjugateGradient(self.conv, self.x0, self.rhs, self.iterations)
-
-        with Timer("Basic CG"):
-            conjugateGradientBase(self.conv, self.x0, self.rhs, self.iterations)
-
-    def testTimingLW(self):
-        with Timer("Optimized LW"):
-            solvers.landweber(self.conv, self.x0, self.rhs, self.omega, self.iterations)
-
-        with Timer("Basic LW"):
-            landweberBase(self.conv, self.x0, self.rhs, self.omega, self.iterations)
-
-
-if __name__ == '__main__':
-    unittest.main(exit=False)
-    plt.show()
+plt.show()

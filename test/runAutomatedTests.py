@@ -28,13 +28,15 @@ import unittest
 
 from operator_test import *
 from space_test import *
+from rn_test import *
 from functionSpaces_test import *
 
 try: #Only run these tests if RLCpp is available
-    __import__('RLCpp').find_module('cuda')
+    #__import__('RLCpp').find_module('cuda')
     from cudarn_test import *
+    from difference_test_cuda import *
 except ImportError:
-    pass
+    print("Could not run cuda tests, lacking RLCpp")
 
 if __name__ == '__main__':
     unittest.main(exit=False)

@@ -24,26 +24,11 @@ from future import standard_library
 standard_library.install_aliases()
 
 
-def landweberBase(operator, x, rhs, omega=1, iterations=1):
+def landweberBase(operator, x, rhs, iterations=1, omega=1):
     """ Straightforward implementation of Landweber iteration
     """
     for _ in range(iterations):
         x = x - omega * operator.T(operator(x)-rhs)
-
-
-def landweber(operator, x, rhs, omega=1, iterations=1):
-    """ General and efficient implementation of Landweber iteration
-    """
-
-    #Reusable temporaries
-    tmpRan = operator.range.empty()
-    tmpDom = operator.domain.empty()
-    for _ in range(iterations):
-        #Optimized code (as an example)
-        operator.apply(x, tmpRan)                   #tmpRan = Ax
-        tmpRan -= rhs                               #tmpRan = tmpRan - rhs
-        operator.applyAdjoint(tmpRan, tmpDom)       #tmpDom = A^T tmpRan
-        x.linComb(-omega, tmpDom)                   #x = x - omega * tmpDom
         
 
 def conjugateGradientBase(op, x, rhs, iterations=1):
@@ -62,27 +47,3 @@ def conjugateGradientBase(op, x, rhs, iterations=1):
         s = op.T(d)
         b = s.normSq()/norms2
         p = s + b*p
-
-
-def conjugateGradient(op, x, rhs, iterations=1):
-    """ Optimized version of CGN, uses no temporaries etc.
-    """
-    d = op(x)
-    d.space.linComb(1, rhs, -1, d)       #d = rhs - A x
-    p = op.T(d)
-    s = p.copy()
-    q = op.range.empty()
-    normsOld = s.normSq()               #Only recalculate norm after update
-
-    for _ in range(iterations):
-        op.apply(p, q)                   #q = A p
-        a = normsOld / q.normSq()
-        x.linComb(a, p)                  #x = x + a*p
-        d.linComb(-a, q)                 #d = d - a*q
-        op.applyAdjoint(d, s)            #s = A^T d
-
-        normsNew = s.normSq()
-        b = normsNew/normsOld
-        normsOld = normsNew
-
-        op.domain.linComb(1, s, b, p)      #p = s + b * p

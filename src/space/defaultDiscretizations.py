@@ -116,10 +116,10 @@ def makePixelDiscretization(parent, rnimpl, cols, rows):
             self.cols = cols
             self.rows = rows
             self._rn = rn
-            dx = (self.parent.domain.end[1]-self.parent.domain.begin[0])/(self.cols-1)
+            dx = (self.parent.domain.end[0]-self.parent.domain.begin[0])/(self.cols-1)
             dy = (self.parent.domain.end[1]-self.parent.domain.begin[1])/(self.rows-1)
             self.scale = dx * dy
-
+            
         def innerImpl(self, v1, v2):
             return self._rn.innerImpl(v1, v2)*self.scale
 

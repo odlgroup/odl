@@ -45,7 +45,7 @@ class L2Test(RLTestCase):
         l2sin = l2.makeVector(np.sin)
         sind = d.makeVector(l2sin)
 
-        self.assertAlmostEqual(sind.normSq(), pi/2, places=10)
+        self.assertAlmostEqual(sind.normSq(), pi/2)
 
     def testSquare(self):
         I = sets.Square((0, 0), (pi, pi))
@@ -58,7 +58,7 @@ class L2Test(RLTestCase):
         l2sin = l2.makeVector(lambda point: np.sin(point[0]) * np.sin(point[1]))
         sind = d.makeVector(l2sin)
 
-        self.assertAlmostEqual(sind.normSq(), pi**2 / 4, places=10)
+        self.assertAlmostEqual(sind.normSq(), pi**2 / 4)
 
 if __name__ == '__main__':
     unittest.main(exit=False)

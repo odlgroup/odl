@@ -27,6 +27,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+from scipy.lib.blas import get_blas_funcs
 
 from RL.utility.utility import allEqual
 from RL.space.space import *
@@ -236,9 +237,16 @@ class RN(LinearSpace):
             raise TypeError("n ({}) has to be a positive integer".format(np))
         self.n = n
         self._field = RealNumbers()
+        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy','scal','copy'])
     
-    def linCombImpl(self, a, x, b, y):
-        y.values[:] = a*x.values + b*y.values
+    def linCombImpl(self, a, x, b, y):        #Implement y = a*x + b*y using optimized BLAS rutines        if b == 0:            if a == 0:                y.values[:] = 0            else:                self._copy(x.values, y.values)                if a != 1:
+                    self._scal(b, y.values)        else:
+            if b != 1:
+                self._scal(b, y.values)
+
+            if a != 0:
+                self._axpy(x.values, y.values, self.dimension, a)
+
 
     def zero(self):
         return self.makeVector(np.zeros(self.n), dtype=float, copy=False)
@@ -264,7 +272,7 @@ class RN(LinearSpace):
             else:
                 raise ValueError("Input numpy array ({}) is of shape {}, expected shape shape {}".format(args[0],args[0].shape, (self.n,)))
         else:
-            return self.makeVector(np.array(*args, **kwargs))
+            return self.makeVector(np.array(*args, **kwargs).astype(float, copy = False))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):        
         def __init__(self, space, values):

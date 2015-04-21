@@ -84,7 +84,7 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
     normsOld = s.normSq()               #Only recalculate norm after update
 
     for _ in range(iterations):
-        operator.apply(p, q)                                          #q = A p
+        operator.apply(p, q)                                    #q = A p
         a = normsOld / q.normSq()
         x.linComb(a, p)                                         #x = x + a*p
         d.linComb(-a, q)                                        #d = d - a*q

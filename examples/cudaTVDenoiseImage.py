@@ -206,45 +206,41 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
         
     return x
 
-class TestCudaDenoise(RLTestCase):    
-    def testLargeDenoise(self):
-        #Continuous definition of problem
-        I = Square([0,0],[1,1])
-        space = L2(I)
+#Continuous definition of problem
+I = Square([0,0],[1,1])
+space = L2(I)
 
-        #Complicated functions to check performance
-        n = 2000
-        m = 2000
+#Complicated functions to check performance
+n = 2000
+m = 2000
         
-        #Underlying RN space
-        rn = CS.CudaRN(n*m)
-        rnpooled = makePooledSpace(rn, maxPoolSize=5) #Example of using an vector pool to reduce allocation overhead
+#Underlying RN space
+rn = CS.CudaRN(n*m)
+rnpooled = makePooledSpace(rn, maxPoolSize=5) #Example of using an vector pool to reduce allocation overhead
 
-        #Discretize
-        d = DS.makePixelDiscretization(space, rnpooled, n, m)
-        x,y = d.points()
-        data = RLcpp.utils.phantom([n,m])
-        data[1:-1,1:-1] += np.random.rand(n-2,m-2)-0.5
-        fun = d.makeVector(data)
+#Discretize
+d = DS.makePixelDiscretization(space, rnpooled, n, m)
+x,y = d.points()
+data = RLcpp.utils.phantom([n,m])
+data[1:-1,1:-1] += np.random.rand(n-2,m-2)-0.5
+fun = d.makeVector(data)
         
-        #Show input
-        plt.figure()
-        p = plt.imshow(fun[:].reshape(n,m), interpolation='nearest')
-        plt.set_cmap('bone')
-        plt.axis('off')
+#Show input
+plt.figure()
+p = plt.imshow(fun[:].reshape(n,m), interpolation='nearest')
+plt.set_cmap('bone')
+plt.axis('off')
 
-        #Call denoising
-        la=0.3
-        mu=5.0
-        with Timer("denoising time"):
-            result = TVdenoise2D(fun,la,mu,1000)
+#Call denoising
+la=0.3
+mu=5.0
+with Timer("denoising time"):
+    result = TVdenoise2D(fun,la,mu,100)
 
-        #Show result    
-        plt.figure()
-        p = plt.imshow(result[:].reshape(n,m), interpolation='nearest')
-        plt.set_cmap('bone')
-        plt.axis('off')
+#Show result    
+plt.figure()
+p = plt.imshow(result[:].reshape(n,m), interpolation='nearest')
+plt.set_cmap('bone')
+plt.axis('off')
 
-if __name__ == '__main__':
-    unittest.main(exit=False)
-    plt.show()
+plt.show()
