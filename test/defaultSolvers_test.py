@@ -64,7 +64,7 @@ class TestMatrixSolve(RLTestCase):
         #Np as validation
         A = np.random.rand(n, n)
         x = np.random.rand(n)
-        b = np.random.rand(n)
+        b = np.dot(A,x) + 0.1 * np.random.rand(n) #Landweber is slow and needs a decent initial guess
         
         #Vector representation
         rn = EuclidianSpace(n)
@@ -75,8 +75,30 @@ class TestMatrixSolve(RLTestCase):
         norm = np.linalg.norm(A, ord=2)
         Aop = MultiplyOp(A)
 
-        solvers.landweber(Aop, xVec, bVec, n*50, 0.5/norm**2)
-        print(xVec, np.linalg.solve(A,b))
+        #Solve using landweber
+        solvers.landweber(Aop, xVec, bVec, iterations=n*50, omega=1/norm**2)
+
+        self.assertAllAlmostEquals(xVec, x, places = 2)
+
+    def testCGN(self):
+        n=3
+
+        #Np as validation
+        A = np.random.rand(n, n)
+        b = np.random.rand(n)
+        x = np.random.rand(n)
+        
+        #Vector representation
+        rn = EuclidianSpace(n)
+        xVec = rn.makeVector(x)
+        bVec = rn.makeVector(b)
+
+        #Make operator
+        norm = np.linalg.norm(A, ord=2)
+        Aop = MultiplyOp(A)
+
+        #Solve using conjugate gradient
+        solvers.conjugateGradient(Aop, xVec, bVec, iterations=n)
 
         self.assertAllAlmostEquals(xVec, np.linalg.solve(A,b), places = 2)
 

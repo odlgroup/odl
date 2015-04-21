@@ -33,7 +33,6 @@ from functionSpaces_test import *
 from defaultSolvers_test import *
 
 try: #Only run these tests if RLCpp is available
-    #__import__('RLCpp').find_module('cuda')
     from cudarn_test import *
     from difference_test_cuda import *
 except ImportError:
