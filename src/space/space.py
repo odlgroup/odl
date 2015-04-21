@@ -41,8 +41,8 @@ class LinearSpace(AbstractSet):
         """
 
     @abstractmethod
-    def linCombImpl(self, a, x, b, y):
-        """ Calculate y=ax+by. This method is intended to be private, public callers should resort to linComb which is type checked.
+    def linCombImpl(self, z, a, x, b, y):
+        """ Calculate z = ax + by. This method is intended to be private, public callers should resort to linComb which is type checked.
         """
 
     @abstractproperty
@@ -63,7 +63,7 @@ class LinearSpace(AbstractSet):
         """
         #Default implementation using linComb
         tmp = self.empty()
-        self.linCombImpl(0, tmp, 0, tmp)
+        self.linCombImpl(tmp, 0, tmp, 0, tmp)
         return tmp
 
     def isMember(self, x):
@@ -72,26 +72,37 @@ class LinearSpace(AbstractSet):
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
 
     # Error checking variant of methods
-    def linComb(self, a, x, b, y):
-        """ Calculate y=ax+by with error checking of types
-        """
-
-        #Check scalars
-        if not self.field.isMember(a): 
-            raise TypeError('a ({}) is not in field ({})'.format(a, self.field)) 
-          
-        if not self.field.isMember(b): 
-            raise TypeError('b ({}) is not in field ({})'.format(b, self.field))
+    def linComb(self, z, a, x, b = None, y = None):
+        """ Calculates 
+        z = ax
+        or
+        z = ax + by 
         
-        #Check spaces
+        with error checking of types
+        """
+        
+        if not self.isMember(z): 
+            raise TypeError('z ({}) is not in space ({})'.format(z, self))
+
+        if not self.field.isMember(a): 
+            raise TypeError('a ({}) is not in field ({})'.format(a, self.field))
         if not self.isMember(x): 
             raise TypeError('x ({}) is not in space ({})'.format(x, self))
 
-        if not self.isMember(y): 
-            raise TypeError('y ({}) is not in space ({})'.format(y, self))
+          
+        if b is None:
+            if y is not None:
+                raise ValueError('y ({}) provided but not b'.format(y, self))
 
-        #Call method
-        return self.linCombImpl(a, x, b, y)
+            return self.linCombImpl(z, a, x, 0, x)
+        else:
+            if not self.field.isMember(b): 
+                raise TypeError('b ({}) is not in field ({})'.format(b, self.field))
+            if not self.isMember(y): 
+                raise TypeError('y ({}) is not in space ({})'.format(y, self))
+
+            #Call method
+            return self.linCombImpl(z, a, x, b, y)
 
     class Vector(object):
         """ Abstract vector
@@ -102,19 +113,19 @@ class LinearSpace(AbstractSet):
         def __init__(self, space):
             """ Default initializer of vectors, must be called by all deriving classes to set space
             """
-            self.__space__ = space
+            self._space = space
 
         @property
         def space(self):
             """ Get the space this vector belongs to
             """
-            return self.__space__
+            return self._space
 
         #Convenience functions
         def assign(self, other):
             """ Assign the values of other to this vector
             """
-            self.space.linComb(1, other, 0, self)
+            self.space.linComb(self, 1, other)
 
         def copy(self):
             """ Creates an identical clone of this vector
@@ -123,66 +134,64 @@ class LinearSpace(AbstractSet):
             result.assign(self)
             return result
         
-        def linComb(self, a, x):     
-            self.space.linComb(a, x, 1, self)
+        def linComb(self, a, x, b=None, y=None):
+            """ Wrapper for space.linComb(self, a, x, b, y)
+            """
+            self.space.linComb(self, a, x, b, y)
 
         #Convenience operators
         def __iadd__(self, other):
             """Vector addition (self += other)
             """
-            self.space.linComb(1, other, 1, self)
+            self.space.linComb(self, 1, self, 1, other)
             return self
 
         def __isub__(self, other):
             """Vector subtraction (self -= other)
             """
-            self.space.linComb(-1, other, 1, self)
+            self.space.linComb(self, 1, self, -1, other)
             return self
 
         def __imul__(self, scalar):
             """Vector multiplication by scalar (self *= scalar)
             """
-            self.space.linComb(0, self, scalar, self)
+            self.space.linComb(self, scalar, self)
             return self
 
         def __itruediv__(self, scalar):
             """Vector division by scalar (self *= (1/scalar))
             """
-            self.space.linComb(0, self, 1./scalar, self)
-            return self
+            return self.__imul__(1./scalar)
 
         __idiv__ = __itruediv__
 
         def __add__(self, other):
-            """Vector addition (ret = self - other)
+            """Vector addition (ret = self + other)
             """
-            tmp = self.copy()
-            tmp += other
+            tmp = self.space.empty()
+            self.space.linComb(tmp, 1, self, 1, other)
             return tmp
 
         def __sub__(self, other):
             """Vector subtraction (ret = self - other)
             """
-            tmp = self.copy()
-            tmp -= other
+            tmp = self.space.empty()
+            self.space.linComb(tmp, 1, self, -1, other)
             return tmp
 
-        def __mul__(self, other):
-            """Scalar multiplication (ret = self * other)
-            In linear spaces, other needs to be a scalar. In Algebras, __imul__ is overloaded to mean pointwise multiplication
+        def __mul__(self, scalar):
+            """Scalar multiplication (ret = self * scalar)
             """
-            tmp = self.copy()
-            tmp *= other
+            tmp = self.space.empty()
+            self.space.linComb(tmp, scalar, self)
             return tmp
         
         __rmul__ = __mul__
 
-        def __truediv__(self, other):
+        def __truediv__(self, scalar):
             """ Scalar division (ret = self / scalar)
             """
-            tmp = self.copy()
-            tmp /= other
-            return tmp
+            return self.__mul__(1.0 / scalar)
 
         __div__ = __truediv__
 
@@ -190,8 +199,8 @@ class LinearSpace(AbstractSet):
             """ Unary negation, used in assignments:
             a = -b
             """
-            tmp = self.copy()
-            tmp *= -1
+            tmp = self.space.empty()
+            self.space.linComb(tmp, -1.0, self)
             return tmp
 
         def __pos__(self):

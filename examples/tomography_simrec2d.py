@@ -148,16 +148,16 @@ recon = projector.T(projections)
 normEst = recon.norm() / phantomVec.norm()
 
 #Define function to plot each result
-#plt.figure()
-#plt.ion()
-#plt.set_cmap('bone')
-#def plotResult(x):
-#    plt.imshow(x.values.reshape(nVoxels))
-#    plt.draw()
-#    plt.pause(0.01)
+plt.figure()
+plt.ion()
+plt.set_cmap('bone')
+def plotResult(x):
+    plt.imshow(x.values.reshape(nVoxels))
+    plt.draw()
+    plt.pause(0.01)
             
 #Solve using landweber
 x = reconDisc.zero()
-solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.printStatusPartial()) #partialResults=solvers.forEachPartial(plotResult))
+solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.forEachPartial(plotResult))
         
 #plt.show()

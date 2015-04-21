@@ -56,9 +56,9 @@ class ProductSpace(HilbertSpace):
     def innerImpl(self, x, y):
         return sum(space.innerImpl(xp, yp) for space, xp, yp in zip(self.spaces, x.parts, y.parts))
 
-    def linCombImpl(self, a, x, b, y):
-        for space, xp, yp in zip(self.spaces, x.parts, y.parts):
-            space.linCombImpl(a, xp, b, yp)
+    def linCombImpl(self, z, a, x, b, y):
+        for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
+            space.linCombImpl(zp, a, xp, b, yp)
 
     @property
     def field(self):
@@ -125,9 +125,9 @@ class PowerSpace(HilbertSpace):
     def innerImpl(self, x, y):
         return sum(self.underlying_space.innerImpl(xp, yp) for xp, yp in zip(x.parts, y.parts))
 
-    def linCombImpl(self, a, x, b, y):
-        for xp, yp in zip(x.parts, y.parts):
-            self.underlying_space.linCombImpl(a, xp, b, yp)
+    def linCombImpl(self, z, a, x, b, y):
+        for zp, xp, yp in zip(z.parts, x.parts, y.parts):
+            self.underlying_space.linCombImpl(zp, a, xp, b, yp)
 
     @property
     def field(self):
@@ -189,8 +189,8 @@ class Reals(HilbertSpace):
     def innerImpl(self, x, y):        
         return x.__val__ * y.__val__
 
-    def linCombImpl(self, a, x, b, y):        
-        y.__val__ = a*x.__val__ + b*y.__val__
+    def linCombImpl(self, z, a, x, b, y):        
+        z.__val__ = a*x.__val__ + b*y.__val__
 
     def empty(self):
         return self.makeVector(0.0)
@@ -239,20 +239,52 @@ class RN(LinearSpace):
         self._field = RealNumbers()
         self._axpy, self._scal, self._copy = get_blas_funcs(['axpy','scal','copy'])
     
-    def linCombImpl(self, a, x, b, y):        #Implement y = a*x + b*y using optimized BLAS rutines        if b == 0:            if a == 0:                y.values[:] = 0            else:                self._copy(x.values, y.values)                if a != 1:
-                    self._scal(b, y.values)        else:
-            if b != 1:
-                self._scal(b, y.values)
+    def linCombImpl(self, z, a, x, b, y):
+        #Implement y = a*x + b*y using optimized BLAS rutines
 
+        if x is y and b != 0:
+            self.linCombImpl(z, a+b, x, 0, x)
+        elif z is x and z is y:
+            self._scal(a+b, z.values)
+        elif z is x:
+            if a != 1:
+                self._scal(a, z.values)
+            if b != 0:
+                self._axpy(y.values, z.values, self.dimension, b)
+        elif z is y:
+            if b != 1:
+                self._scal(b, z.values)
             if a != 0:
-                self._axpy(x.values, y.values, self.dimension, a)
+                self._axpy(x.values, z.values, self.dimension, a)
+        else:
+            if b == 0:
+                if a == 0:
+                    z.values[:] = 0
+                else:
+                    self._copy(x.values, z.values)
+                    if a != 1:
+                        self._scal(a, z.values)
+            else:
+                if a == 0:
+                    self._copy(y.values, z.values)
+                    if b!= 1:
+                        self._scal(b, z.values)
+
+                elif a == 1:
+                    self._copy(x.values, z.values)
+                    self._axpy(y.values, z.values, self.dimension, b)
+                else:
+                    self._copy(y.values, z.values)
+                    if b != 1:
+                        self._scal(b, z.values)
+                    self._axpy(x.values, z.values, self.dimension, a)
 
 
     def zero(self):
-        return self.makeVector(np.zeros(self.n), dtype=float, copy=False)
+        return self.makeVector(np.zeros(self.n, dtype=float))
 
     def empty(self):
-        return self.makeVector(np.empty(self.n), dtype=float, copy=False)
+        return self.makeVector(np.empty(self.n, dtype=float))
 
     @property
     def field(self):

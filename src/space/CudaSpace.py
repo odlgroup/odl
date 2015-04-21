@@ -51,8 +51,8 @@ class CudaRN(HilbertSpace,Algebra):
     def normSqImpl(self, x): #Optimized separately from inner
         return self.impl.normSq(x.impl)
     
-    def linCombImpl(self, a, x, b, y):
-        self.impl.linComb(a, x.impl, b, y.impl)
+    def linCombImpl(self, z, a, x, b, y):
+        self.impl.linComb(z.impl, a, x.impl, b, y.impl)
 
     def multiplyImpl(self, x, y):
         self.impl.multiply(x.impl,y.impl)

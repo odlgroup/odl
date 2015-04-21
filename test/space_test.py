@@ -70,13 +70,14 @@ class ProductTest(RLTestCase):
 
         u = R2.makeVector(1, 4)
         v = R2.makeVector(3, 7)
+        z = R2.empty()
         a = 4
         b = 2
         expected = R2.makeVector(a*u[0] + b*v[0], a*u[1] + b*v[1])
 
-        R2.linComb(a, u, b, v)
+        R2.linComb(z, a, u, b, v)
         
-        self.assertAllAlmostEquals(v, expected)
+        self.assertAllAlmostEquals(z, expected)
 
     def testConstructR1xR2(self):
         R3 = EuclidianSpace(3)

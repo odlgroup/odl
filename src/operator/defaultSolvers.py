@@ -66,7 +66,7 @@ def landweber(operator, x, rhs, iterations=1, omega=1, partialResults=None):
         operator.apply(x, tmpRan)                                   #tmpRan = Ax
         tmpRan -= rhs                                               #tmpRan = tmpRan - rhs
         operator.getDerivative(x).applyAdjoint(tmpRan, tmpDom)      #tmpDom = A^T tmpRan
-        x.linComb(-omega, tmpDom)                                   #x = x - omega * tmpDom
+        x.linComb(1, x, -omega, tmpDom)                             #x = x - omega * tmpDom
 
         if partialResults is not None:
             partialResults.send(x)
@@ -77,24 +77,24 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
     """
 
     d = operator(x)
-    d.space.linComb(1, rhs, -1, d)       #d = rhs - A x
+    d.linComb(1, rhs, -1, d)       #d = rhs - A x
     p = operator.T(d)
     s = p.copy()
     q = operator.range.empty()
-    normsOld = s.normSq()               #Only recalculate norm after update
+    normsOld = s.normSq()       #Only recalculate norm after update
 
     for _ in range(iterations):
         operator.apply(p, q)                                    #q = A p
         a = normsOld / q.normSq()
-        x.linComb(a, p)                                         #x = x + a*p
-        d.linComb(-a, q)                                        #d = d - a*q
+        x.linComb(1, x, a, p)                                   #x = x + a*p
+        d.linComb(1, d, -a, q)                                  #d = d - a*q
         operator.getDerivative(p).applyAdjoint(d, s)            #s = A^T d
 
         normsNew = s.normSq()
         b = normsNew/normsOld
         normsOld = normsNew
 
-        operator.domain.linComb(1, s, b, p)      #p = s + b * p
+        p.linComb(1, s, b, p)      #p = s + b * p
 
         if partialResults is not None:
             partialResults.send(x)

@@ -37,38 +37,50 @@ deviceSpace = CudaRN(n)
 hostSpace = RN(n)
 x = np.random.rand(n)
 y = np.random.rand(n)
+z = np.empty(n)
 
 xDevice = deviceSpace.makeVector(x)
 yDevice = deviceSpace.makeVector(y)
+zDevice = deviceSpace.makeVector(z)
 xHost = hostSpace.makeVector(x)
 yHost = hostSpace.makeVector(y)
+zHost = hostSpace.makeVector(z)
 
 
 def doTest(function, message):
     with Timer('+GPU ' + message):
         for _ in range(iterations):
-            function(xDevice, yDevice)
+            function(zDevice, xDevice, yDevice)
 
     with Timer('-CPU ' + message):
         for _ in range(iterations):
-            function(xHost, yHost)
+            function(zHost, xHost, yHost)
 
 #Lincomb tests
-doTest(lambda x,y: x.space.linComb(0,x,0,y), "y = 0")
-doTest(lambda x,y: x.space.linComb(0,x,1,y), "y = y")
-doTest(lambda x,y: x.space.linComb(0,x,2,y), "y = b*y")
+doTest(lambda z,x,y: x.space.linComb(z,0,x,0,y), "z = 0")
+doTest(lambda z,x,y: x.space.linComb(z,0,x,1,y), "z = y")
+doTest(lambda z,x,y: x.space.linComb(z,0,x,2,y), "z = b*y")
 
-doTest(lambda x,y: x.space.linComb(1,x,0,y), "y = x")
-doTest(lambda x,y: x.space.linComb(1,x,1,y), "y += x")
-doTest(lambda x,y: x.space.linComb(1,x,2,y), "y = x + b*y")
+doTest(lambda z,x,y: x.space.linComb(z,1,x,0,y), "z = x")
+doTest(lambda z,x,y: x.space.linComb(z,1,x,1,y), "z = x + y")
+doTest(lambda z,x,y: x.space.linComb(z,1,x,2,y), "z = x + b*y")
 
-doTest(lambda x,y: x.space.linComb(2,x,0,y), "y = b*x")
-doTest(lambda x,y: x.space.linComb(2,x,1,y), "y += b*x")
-doTest(lambda x,y: x.space.linComb(2,x,2,y), "y = a*x + b*y")
+doTest(lambda z,x,y: x.space.linComb(z,2,x,0,y), "z = a*x")
+doTest(lambda z,x,y: x.space.linComb(z,2,x,1,y), "z = a*x + y")
+doTest(lambda z,x,y: x.space.linComb(z,2,x,2,y), "z = a*x + b*y")
 
-#Test optimization for aliased vectors
-doTest(lambda x,y: x.space.linComb(2,y,2,y), "y = (a+b)*y")
+#Test optimization for 1 aliased vector
+doTest(lambda z,x,y: x.space.linComb(z,1,z,0,y), "z = z")
+doTest(lambda z,x,y: x.space.linComb(z,1,z,1,y), "z += y")
+doTest(lambda z,x,y: x.space.linComb(z,1,z,2,y), "z += b*y")
+
+doTest(lambda z,x,y: x.space.linComb(z,2,z,0,y), "z = a*z")
+doTest(lambda z,x,y: x.space.linComb(z,2,z,1,y), "z = a*z + y")
+doTest(lambda z,x,y: x.space.linComb(z,2,z,2,y), "z = a*z + b*y")
+
+#Test optimization for 2 aliased vectors
+doTest(lambda z,x,y: x.space.linComb(z,2,z,2,z), "z = (a+b)*z")
 
 #Non lincomb tests
-doTest(lambda x,y: x+y, "z = x + y")
-doTest(lambda x,y: y.assign(x), "y.assign(x)")
+doTest(lambda z,x,y: x+y, "z = x + y")
+doTest(lambda z,x,y: y.assign(x), "y.assign(x)")

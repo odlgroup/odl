@@ -30,79 +30,126 @@ from RL.space.defaultSpaces import *
 from RL.space.functionSpaces import *
 from testutils import RLTestCase
 
-class RealsTest(RLTestCase):
-    def testAddition(self):
-        R = Reals()
-        x = R.makeVector(1)
-        y = R.makeVector(4)
-
-        self.assertAlmostEqual(x+y, 5)
-
-class ProductTest(RLTestCase):
-    def testRxR(self):
-        R = Reals()
-        R2 = ProductSpace(R, R)
-        self.assertTrue(R2.dimension == 2)
-
-        v1 = R.makeVector(1)
-        v2 = R.makeVector(2)
-        v = R2.makeVector(v1, v2)
-        u = R2.makeVector(1, 2)
+class RNTest(RLTestCase):
+    def makeVectors(self, rn):
+        #Generate numpy vectors
+        y = np.random.rand(rn.dimension)
+        x = np.random.rand(rn.dimension)  
+        z = np.zeros(rn.dimension)       
         
-        self.assertAllAlmostEquals([v1, v2], v)
-        self.assertAllAlmostEquals([v1, v2], u)
+        #Make rn vectors
+        yVec = rn.makeVector(y)
+        xVec = rn.makeVector(x)
+        zVec = rn.makeVector(z)
+        return x,y,z, xVec,yVec,zVec
 
-    def testAdd(self):
-        R = Reals()
-        R2 = ProductSpace(R, R)
+    def doLincombTest(self, a, b, n=10):
+        #Validates lincomb against the result on host with randomized data and given a,b
+        rn = RN(n)
 
-        u = R2.makeVector(1, 4)
-        v = R2.makeVector(3, 7)
+        #Unaliased data
+        x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
 
-        sum = u+v
-        expected = R2.makeVector(u[0]+v[0], u[1]+v[1])
-        
-        self.assertAllAlmostEquals(sum, expected)
+        z[:] = a*x + b*y
+        rn.linComb(zVec, a, xVec, b, yVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+
+        #One aliased
+        x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
+
+        z[:] = a*z + b*y
+        rn.linComb(zVec, a, zVec, b, yVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+
+        #One aliased
+        x,y,z,xVec,yVec,zVec = self.makeVectors(rn)
+
+        z[:] = a*z + b*y
+        rn.linComb(zVec, a, zVec, b, yVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+
+        #All aliased
+        x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
+        z[:] = a*z + b*z
+        rn.linComb(zVec, a, zVec, b, zVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
 
     def testLinComb(self):
-        R = Reals()
-        R2 = ProductSpace(R, R)
+        scalar_values = [3.41, -1, 0, 1, 10.0, 1.0001]
+        for a in scalar_values:
+            for b in scalar_values:
+                self.doLincombTest(a, b)
 
-        u = R2.makeVector(1, 4)
-        v = R2.makeVector(3, 7)
-        a = 4
-        b = 2
-        expected = R2.makeVector(a*u[0] + b*v[0], a*u[1] + b*v[1])
-
-        R2.linComb(a, u, b, v)
+class OperatorOverloadTest(RLTestCase):
+    def doUnaryOperatorTest(self, function, n=10):
+        """ Verifies that the statement y=function(x) gives equivalent results to numpy.
+        """
+        x = np.random.rand(n)        
         
-        self.assertAllAlmostEquals(v, expected)
+        rn = RN(n)
+        xVec = rn.makeVector(x)
 
-    def testConstructR1xR2(self):
-        R3 = EuclidianSpace(3)
-        R2 = EuclidianSpace(2)
-        S = ProductSpace(R3, R2)
-        self.assertTrue(S.dimension == 2)
+        y = function(x)
+        yVec = function(xVec)
 
-        v1 = R3.makeVector([1, 5, 7])
-        v2 = R2.makeVector([2, 3])
-        v = S.makeVector(v1, v2)
+        self.assertAllAlmostEquals(xVec, x)
+        self.assertAllAlmostEquals(yVec, y)
 
-        self.assertAllAlmostEquals([v1, v2], v)
-        self.assertAlmostEqual(v.normSq(), v1.normSq()+v2.normSq())
-
-    def testArbitraryProduct(self):
-        R = Reals()
-        R3 = ProductSpace(R, R, R)
-        self.assertTrue(R3.dimension == 3)
-
-        v1 = R.makeVector(1)
-        v2 = R.makeVector(2)
-        v3 = R.makeVector(3)
-        v = R3.makeVector(1, 2, 3)
+    def doBinaryOperatorTest(self, function, n=10):
+        """ Verifies that the statement z=function(x,y) gives equivalent results to numpy.
+        """
+        y = np.random.rand(n)
+        x = np.random.rand(n)        
         
-        self.assertAllAlmostEquals([v1, v2, v3], v)
-        self.assertAlmostEqual(v.normSq(), v1.normSq()+v2.normSq()+v3.normSq())
+        rn = RN(n)
+        yVec = rn.makeVector(y)
+        xVec = rn.makeVector(x)
+
+        z = function(x,y)
+        zVec = function(xVec,yVec)
+
+        self.assertAllAlmostEquals(xVec, x)
+        self.assertAllAlmostEquals(yVec, y)
+        self.assertAllAlmostEquals(zVec, z)
+
+    def testOperators(self):
+        """ Test of all operator overloads against the corresponding numpy implementation
+        """
+        # Unary operators
+        self.doUnaryOperatorTest(lambda x: +x)
+        self.doUnaryOperatorTest(lambda x: -x)
+
+        # Scalar multiplication
+        for scalar in [-31.2, -1, 0, 1, 2.13]:
+            def incMul(x): x *= scalar
+            self.doUnaryOperatorTest(incMul)
+            self.doUnaryOperatorTest(lambda x: x*scalar)
+        
+        # Scalar division
+        for scalar in [-31.2, -1, 1, 2.13]:
+            def incDiv(x): x /= scalar
+            self.doUnaryOperatorTest(incDiv)
+            self.doUnaryOperatorTest(lambda x: x/scalar)
+
+        # Incremental operations
+        def incAdd(x,y): x += y
+        def incSub(x,y): x -= y
+        self.doBinaryOperatorTest(incAdd)
+        self.doBinaryOperatorTest(incSub)
+
+        # Incremental operators with aliased inputs
+        def incAddAliased(x): x += x
+        def incSubAliased(x): x -= x
+        self.doUnaryOperatorTest(incAddAliased)
+        self.doUnaryOperatorTest(incSubAliased)
+
+        # Binary operators
+        self.doBinaryOperatorTest(lambda x,y: x+y)
+        self.doBinaryOperatorTest(lambda x,y: x-y)
+
+        # Binary with aliased inputs
+        self.doUnaryOperatorTest(lambda x: x+x)
+        self.doUnaryOperatorTest(lambda x: x-x)
 
 
 if __name__ == '__main__':

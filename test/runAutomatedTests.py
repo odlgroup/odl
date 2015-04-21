@@ -30,6 +30,7 @@ from operator_test import *
 from space_test import *
 from rn_test import *
 from functionSpaces_test import *
+from defaultSolvers_test import *
 
 try: #Only run these tests if RLCpp is available
     #__import__('RLCpp').find_module('cuda')

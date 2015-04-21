@@ -164,25 +164,50 @@ class TestFunctions(RLTestCase):
         self.assertAlmostEquals(R3d.norm(xd),correct_norm)
         self.assertAlmostEquals(xd.normSq(),correct_norm_squared)
         self.assertAlmostEquals(xd.norm(),correct_norm)
+
+    def makeVectors(self, rn):
+        #Generate numpy vectors
+        y = np.random.rand(rn.dimension)
+        x = np.random.rand(rn.dimension)  
+        z = np.zeros(rn.dimension)       
         
+        #Make rn vectors
+        yVec = rn.makeVector(y)
+        xVec = rn.makeVector(x)
+        zVec = rn.makeVector(z)
+        return x,y,z, xVec,yVec,zVec
+
     def doLincombTest(self, a, b, n=100):
         #Validates lincomb against the result on host with randomized data and given a,b
         
-        #Generate vectors
-        yHost = np.random.rand(n)
-        xHost = np.random.rand(n)        
-        
-        R3d = CudaRN(n)
-        yDevice = R3d.makeVector(yHost)
-        xDevice = R3d.makeVector(xHost)
-        
-        #Host side calculation
-        yHost[:] = a*xHost + b*yHost
-        
-        #Device side calculation
-        R3d.linComb(a, xDevice, b, yDevice)
-        
-        self.assertAllAlmostEquals(yDevice, yHost, places=5) #Cuda only uses floats, so require 5 places
+        rn = CudaRN(n)
+
+        #Unaliased data
+        x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
+
+        z[:] = a*x + b*y
+        rn.linComb(zVec, a, xVec, b, yVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+
+        #One aliased
+        x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
+
+        z[:] = a*z + b*y
+        rn.linComb(zVec, a, zVec, b, yVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+
+        #One aliased
+        x,y,z,xVec,yVec,zVec = self.makeVectors(rn)
+
+        z[:] = a*z + b*y
+        rn.linComb(zVec, a, zVec, b, yVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+
+        #All aliased
+        x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
+        z[:] = a*z + b*z
+        rn.linComb(zVec, a, zVec, b, zVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
 
     def testLinComb(self):
         scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
@@ -203,7 +228,7 @@ class TestFunctions(RLTestCase):
         xDevice = R3d.makeVector(xHost)
         
         #Host side calculation
-        yHost[:] = a*xHost + yHost
+        yHost[:] = a*xHost
         
         #Device side calculation
         yDevice.linComb(a, xDevice)
