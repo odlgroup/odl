@@ -100,7 +100,7 @@ detectorAxisDistance = 20.0
 #Discretization parameters
 nVoxels = np.array([400, 400])
 nPixels = 400
-nProjection = 200
+nProjection = 500
         
 #Scale factors
 voxelSize = volumeSize/nVoxels

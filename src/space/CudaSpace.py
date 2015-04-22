@@ -26,23 +26,22 @@ from future import standard_library
 standard_library.install_aliases()
 
 import RL.operator.function as fun 
-from RL.space.space import *
+import RL.space.space as spaces
+import RL.space.set as sets
 from RL.space.functionSpaces import L2
-from RL.space.measure import *
-from RL.space.set import *
 import RLcpp.PyCuda
 import numpy as np
 
 import RL.operator.defaultFunctions as df
 
 
-class CudaRN(HilbertSpace,Algebra):
+class CudaRN(spaces.HilbertSpace,spaces.Algebra):
     """The real space R^n
     """
 
     def __init__(self, n):
         self.n = n
-        self._field = RealNumbers()
+        self._field = sets.RealNumbers()
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
     def innerImpl(self, x, y):
@@ -110,9 +109,9 @@ class CudaRN(HilbertSpace,Algebra):
         return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.abs(input.impl), 
                                   input = (self), returns = self.field)
 
-    class Vector(HilbertSpace.Vector,Algebra.Vector):
+    class Vector(spaces.HilbertSpace.Vector,spaces.Algebra.Vector):
         def __init__(self, space, *args):
-            HilbertSpace.Vector.__init__(self, space)
+            spaces.HilbertSpace.Vector.__init__(self, space)
             if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
                 self.impl = args[0]
             elif isinstance(args[0], np.ndarray):

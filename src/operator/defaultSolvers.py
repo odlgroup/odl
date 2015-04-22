@@ -92,6 +92,7 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
 
         normsNew = s.normSq()
         b = normsNew/normsOld
+        print(b)
         normsOld = normsNew
 
         p.linComb(1, s, b, p)      #p = s + b * p

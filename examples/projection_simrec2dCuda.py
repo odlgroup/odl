@@ -30,19 +30,15 @@ import numpy as np
 import RL.operator.operator as OP
 import RL.space.functionSpaces as fs
 import RL.space.defaultSpaces as ds
+import RL.space.CudaSpace as cs
 import RL.space.defaultDiscretizations as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
-
 import matplotlib.pyplot as plt
 
-class ProjectionGeometry(object):
-    def __init__(self, sourcePosition, detectorOrigin, pixelDirection):
-        self.sourcePosition = sourcePosition
-        self.detectorOrigin = detectorOrigin
-        self.pixelDirection = pixelDirection
+from testutils import Timer
 
-class Projection(OP.LinearOperator):
+class CudaProjection(OP.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, volumeSize, detectorSize, stepSize, sourcePosition, detectorOrigin, pixelDirection, domain, range):
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
@@ -55,19 +51,14 @@ class Projection(OP.LinearOperator):
         self._domain = domain
         self._range = range
 
-    def applyImpl(self,data, out):
-        forward = SR.SRPyForwardProject.SimpleForwardProjector(data.values.reshape(volumeSize),self.volumeOrigin,self.voxelSize,self.detectorSize,self.stepSize)
+    def applyImpl(self, data, out):
+        forward = SR.SRPyCuda.CudaForwardProjector(data.impl.dataPtr(), self.volumeSize, self.volumeOrigin, self.voxelSize, self.detectorSize, self.stepSize)
 
-        result = forward.project(self.sourcePosition,self.detectorOrigin,self.pixelDirection)
-
-        out[:] = result.transpose()
+        forward.project(self.sourcePosition, self.detectorOrigin, self.pixelDirection, out.impl.dataPtr())
 
     def applyAdjointImpl(self, projection, out):
-        back = SR.SRPyReconstruction.FilteredBackProjection(self.volumeSize,self.volumeOrigin,self.voxelSize)
-
-        back.append(self.sourcePosition,self.detectorOrigin,self.pixelDirection,projection)
-
-        out[:] = back.finalize()[:]
+        #TODO
+        pass
 
     @property
     def domain(self):
@@ -78,15 +69,15 @@ class Projection(OP.LinearOperator):
         return self._range
 
 
-side = 100
+side = 1000
 volumeSize = np.array([side,side])
 data = SR.SRPyUtils.phantom(volumeSize)
 plt.imshow(data)
 plt.figure()
 volumeOrigin = np.array([-10.0,-10.0])
 voxelSize = np.array([20.0/side,20.0/side])
-detectorSize = 200
-stepSize = 0.01
+detectorSize = 2000
+stepSize = 0.001
 
 theta = 0.0
 x0 = np.array([cos(theta), sin(theta)])
@@ -98,17 +89,22 @@ pixelDirection = y0 * 60.0 / detectorSize
 
     
 dataSpace = fs.L2(sets.Interval(0,1))
-dataRN = ds.EuclidianSpace(detectorSize)
+dataRN = cs.CudaRN(detectorSize)
 dataDisc = dd.makeUniformDiscretization(dataSpace, dataRN)
 
 reconSpace = fs.L2(sets.Square((0, 0), (1, 1)))
-reconRN = ds.EuclidianSpace(side*side)
+reconRN = cs.CudaRN(side*side)
 reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, side, side)
 
 dataVec = reconDisc.makeVector(data)
         
-projector = Projection(volumeOrigin, voxelSize, volumeSize, detectorSize, stepSize, sourcePosition, detectorOrigin, pixelDirection, reconDisc, dataDisc)
+projector = CudaProjection(volumeOrigin, voxelSize, volumeSize, detectorSize, stepSize, sourcePosition, detectorOrigin, pixelDirection, reconDisc, dataDisc)
 
-ret = projector(dataVec)
-plt.plot(ret)
+result = dataDisc.empty()
+
+with Timer("x runs"):
+    for i in range(1000):
+        projector.apply(dataVec,result)
+
+plt.plot(result[:])
 plt.show()

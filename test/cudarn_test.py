@@ -181,7 +181,7 @@ class TestFunctions(RLTestCase):
         #Validates lincomb against the result on host with randomized data and given a,b
         rn = CudaRN(n)
 
-        #Unaliased data
+        #Unaliased arguments
         x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
 
         z[:] = a*x + b*y
@@ -198,8 +198,8 @@ class TestFunctions(RLTestCase):
         #Second argument aliased with output
         x,y,z,xVec,yVec,zVec = self.makeVectors(rn)
 
-        z[:] = a*z + b*y
-        rn.linComb(zVec, a, zVec, b, yVec)
+        z[:] = a*x + b*z
+        rn.linComb(zVec, a, xVec, b, zVec)
         self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
 
         #Both arguments aliased with each other
@@ -217,7 +217,7 @@ class TestFunctions(RLTestCase):
 
 
     def testLinComb(self):
-        scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
+        scalar_values = [0, 1, -1, 3.41]
         for a in scalar_values:
             for b in scalar_values:
                 self.doLincombTest(a, b)

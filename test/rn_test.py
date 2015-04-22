@@ -47,35 +47,42 @@ class RNTest(RLTestCase):
         #Validates lincomb against the result on host with randomized data and given a,b
         rn = RN(n)
 
-        #Unaliased data
+        #Unaliased arguments
         x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
 
         z[:] = a*x + b*y
         rn.linComb(zVec, a, xVec, b, yVec)
-        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z])
 
-        #One aliased
+        #First argument aliased with output
         x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
 
         z[:] = a*z + b*y
         rn.linComb(zVec, a, zVec, b, yVec)
-        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z])
 
-        #One aliased
+        #Second argument aliased with output
         x,y,z,xVec,yVec,zVec = self.makeVectors(rn)
 
-        z[:] = a*z + b*y
-        rn.linComb(zVec, a, zVec, b, yVec)
-        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+        z[:] = a*x + b*z
+        rn.linComb(zVec, a, xVec, b, zVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z])
+
+        #Both arguments aliased with each other
+        x,y,z,xVec,yVec,zVec = self.makeVectors(rn)
+
+        z[:] = a*x + b*x
+        rn.linComb(zVec, a, xVec, b, xVec)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z])
 
         #All aliased
         x,y,z, xVec,yVec,zVec = self.makeVectors(rn)
         z[:] = a*z + b*z
         rn.linComb(zVec, a, zVec, b, zVec)
-        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z], places=4)
+        self.assertAllAlmostEquals([xVec,yVec,zVec], [x,y,z])
 
     def testLinComb(self):
-        scalar_values = [3.41, -1, 0, 1, 10.0, 1.0001]
+        scalar_values = [0, 1, -1, 3.41]
         for a in scalar_values:
             for b in scalar_values:
                 self.doLincombTest(a, b)
