@@ -39,4 +39,4 @@ setup(name='RL',
       description='What did RL again stand for?',
       license='GPLv3',
       packages=['RL', 'RL.builders', 'RL.datamodel', 'RL.geometry', 'RL.operator', 'RL.utility', 'RL.space'],
-      package_dir={'RL': 'src'})
+      package_dir={'RL': 'RL'})

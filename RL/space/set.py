@@ -4,6 +4,7 @@ from future.builtins import object
 from future import standard_library
 standard_library.install_aliases()
 from abc import ABCMeta, abstractmethod, abstractproperty
+
 from numbers import Integral, Real, Complex
 
 class AbstractSet(object):
@@ -94,5 +95,5 @@ class Square(AbstractSet):
         return isinstance(other, Square) and self.begin == other.begin and self.end == other.end
 
     def isMember(self, other):
-        return self.reals.isMember(other[0])  and self.begin[0] <= other[0] <= self.end[0] and \
-               self.reals.isMember(other[1])  and self.begin[1] <= other[1] <= self.end[1]
+        return self.reals.isMember(other[0]) and self.begin[0] <= other[0] <= self.end[0] and \
+               self.reals.isMember(other[1]) and self.begin[1] <= other[1] <= self.end[1]

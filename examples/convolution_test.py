@@ -22,18 +22,18 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-import unittest
 
-import numpy as np
 import RL.operator.operator as op
-import RL.operator.defaultSolvers as solvers 
-import RL.space.defaultSpaces as ds
+import RL.operator.solvers as solvers 
+import RL.space.euclidean as ds
 import RL.space.set as sets
-import RL.space.defaultDiscretizations as dd
-import RL.space.functionSpaces as fs
-from testutils import RLTestCase, Timer, consume
+import RL.space.discretizations as dd
+import RL.space.function as fs
 from solverExamples import *
 
+from RL.utility.testutils import Timer, consume
+
+import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
 

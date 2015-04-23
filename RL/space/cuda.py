@@ -28,12 +28,9 @@ standard_library.install_aliases()
 import RL.operator.function as fun 
 import RL.space.space as spaces
 import RL.space.set as sets
-from RL.space.functionSpaces import L2
+from RL.space.function import L2
 import RLcpp.PyCuda
 import numpy as np
-
-import RL.operator.defaultFunctions as df
-
 
 class CudaRN(spaces.HilbertSpace,spaces.Algebra):
     """The real space R^n

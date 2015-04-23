@@ -26,12 +26,14 @@ from math import sin,cos,pi
 
 import numpy as np
 import RL.operator.operator as OP
-import RL.space.functionSpaces as fs
-import RL.space.defaultSpaces as ds
-import RL.space.defaultDiscretizations as dd
+import RL.space.function as fs
+import RL.space.cuda as cs
+import RL.space.euclidean as ds
+import RL.space.product as prod
+import RL.space.discretizations as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
-import RL.operator.defaultSolvers as solvers
+import RL.operator.solvers as solvers
 
 import matplotlib.pyplot as plt
 
@@ -43,40 +45,36 @@ class ProjectionGeometry(object):
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
 
-class Projector(OP.LinearOperator):
+class CudaProjector(OP.LinearOperator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
-        self.volumeOrigin = volumeOrigin
-        self.voxelSize = voxelSize
-        self.nVoxels = nVoxels
-        self.nPixels = nPixels
-        self.stepSize = stepSize
         self.geometries = geometries
         self._domain = domain
         self._range = range
+        self.forward = SR.SRPyCuda.CudaForwardProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+
 
     def applyImpl(self, data, out):
         #Create projector
-        forward = SR.SRPyForwardProject.SimpleForwardProjector(data.values.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
+        self.forward.setData(data.impl.dataPtr())
 
         #Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            result = forward.project(geo.sourcePosition,geo.detectorOrigin,geo.pixelDirection)
-            out[i][:] = result.transpose()
+            self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, out[i].impl.dataPtr())
+
 
     def applyAdjointImpl(self, projections, out):
-        #Create backprojector
-        back = SR.SRPyReconstruction.BackProjector(self.nVoxels,self.volumeOrigin,self.voxelSize)
+        #Zero out the return data
+        out.setZero()
 
         #Append all projections
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            back.append(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].values)
-            
-        #Perform back projection
-        out.values = back.finalize().flatten() * (51770422.4687/16720.1875882)
+            self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].impl.dataPtr(), out.impl.dataPtr())
+
 
     @property
     def domain(self):
@@ -94,13 +92,13 @@ volumeOrigin = -volumeSize/2.0
 detectorSize = 50.0
 detectorOrigin = -detectorSize/2.0
 
-sourceAxisDistance = 600.0
+sourceAxisDistance = 2000.0
 detectorAxisDistance = 20.0
 
 #Discretization parameters
-nVoxels = np.array([400, 400])
-nPixels = 400
-nProjection = 500
+nVoxels = np.array([500, 500])
+nPixels = 4000
+nProjection = 1000
         
 #Scale factors
 voxelSize = volumeSize/nVoxels
@@ -120,19 +118,19 @@ for theta in np.linspace(0, 2*pi, nProjection):
     
 #Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRN = ds.EuclidianSpace(nPixels)
+projectionRN = cs.CudaRN(nPixels)
 
 #Discretize projection space
 projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
-dataDisc = ds.PowerSpace(projectionDisc, nProjection)
+dataDisc = prod.PowerSpace(projectionDisc, nProjection)
 
 #Define the reconstruction space
 reconSpace = fs.L2(sets.Square([0, 0], volumeSize))
 
 #Discretize the reconstruction space
-reconRN = ds.EuclidianSpace(nVoxels.prod())
+reconRN = cs.CudaRN(nVoxels.prod())
 reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
 
 #Create a phantom
@@ -140,7 +138,7 @@ phantom = SR.SRPyUtils.phantom(nVoxels)
 phantomVec = reconDisc.makeVector(phantom)
 
 #Make the operator
-projector = Projector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
+projector = CudaProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
 
 #Apply once to find norm estimate
 projections = projector(phantomVec)
@@ -152,14 +150,14 @@ plt.figure()
 plt.ion()
 plt.set_cmap('bone')
 def plotResult(x):
-    plt.imshow(x.values.reshape(nVoxels))
+    plt.imshow(x[:].reshape(nVoxels))
     plt.draw()
     print((x-phantomVec).norm())
     plt.pause(0.01)
-            
+
 #Solve using landweber
 x = reconDisc.zero()
-#solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.forEachPartial(plotResult))
-solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, partialResults=solvers.forEachPartial(plotResult))
+#solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
         
-#plt.show()
+plt.show()

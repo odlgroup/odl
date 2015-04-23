@@ -27,14 +27,16 @@ import unittest
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.defaultSpaces import *
-from RL.space.functionSpaces import *
-import RL.space.CudaSpace as CS
-import RL.space.defaultDiscretizations as DS
-from RL.space.measure import *
+from RL.space.product import PowerSpace
+from RL.space.euclidean import *
+from RL.space.function import *
+import RL.space.cuda as CS
+import RL.space.discretizations as DS
 import RLcpp
-from testutils import RLTestCase, Timer, consume
-from solverExamples import *
+
+from pooled import makePooledSpace
+
+from RL.utility.testutils import Timer
 
 import matplotlib.pyplot as plt
 

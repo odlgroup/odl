@@ -27,6 +27,7 @@ from future import standard_library
 standard_library.install_aliases()
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
+
 from RL.space.set import AbstractSet
 
 class LinearSpace(AbstractSet):
@@ -72,7 +73,7 @@ class LinearSpace(AbstractSet):
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
 
     # Error checking variant of methods
-    def linComb(self, z, a, x, b = None, y = None):
+    def linComb(self, z, a, x, b=None, y=None):
         """ Calculates 
         z = ax
         or
@@ -82,24 +83,24 @@ class LinearSpace(AbstractSet):
         """
         
         if not self.isMember(z): 
-            raise TypeError('z ({}) is not in space ({})'.format(z, self))
+            raise TypeError('Lincomb failed, z ({}) is not in space ({})'.format(z, self))
 
         if not self.field.isMember(a): 
-            raise TypeError('a ({}) is not in field ({})'.format(a, self.field))
+            raise TypeError('Lincomb failed, a ({}) is not in field ({})'.format(a, self.field))
         if not self.isMember(x): 
-            raise TypeError('x ({}) is not in space ({})'.format(x, self))
+            raise TypeError('Lincomb failed, x ({}) is not in space ({})'.format(x, self))
 
           
         if b is None:
             if y is not None:
-                raise ValueError('y ({}) provided but not b'.format(y, self))
+                raise ValueError('Lincomb failed, y ({}) provided but not b'.format(y, self))
 
             return self.linCombImpl(z, a, x, 0, x)
         else:
             if not self.field.isMember(b): 
-                raise TypeError('b ({}) is not in field ({})'.format(b, self.field))
+                raise TypeError('Lincomb failed, b ({}) is not in field ({})'.format(b, self.field))
             if not self.isMember(y): 
-                raise TypeError('y ({}) is not in space ({})'.format(y, self))
+                raise TypeError('Lincomb failed, y ({}) is not in space ({})'.format(y, self))
 
             #Call method
             return self.linCombImpl(z, a, x, b, y)
@@ -138,6 +139,11 @@ class LinearSpace(AbstractSet):
             """ Wrapper for space.linComb(self, a, x, b, y)
             """
             self.space.linComb(self, a, x, b, y)
+
+        def setZero(self):
+            """ Sets this vector to the zero vector
+            """
+            self.space.linComb(self, 0, self, 0, self)
 
         #Convenience operators
         def __iadd__(self, other):

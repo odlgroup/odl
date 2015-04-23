@@ -22,20 +22,26 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-import unittest
 
-#Runs all automated tests
+import RL.operator.operator as op
 
-from operator_test import *
-from productpace_test import *
-from rn_test import *
-from functionSpaces_test import *
-from defaultSolvers_test import *
+class IdentityOperator(op.SelfAdjointOperator):
+    def __init__(self, space):
+        self._space = space
 
-try: #Only run these tests if RLCpp is available
-    from cudarn_test import *
-except ImportError:
-    print("Could not run cuda tests, lacking RLCpp")
+    def applyImpl(self, input, out):
+        out.assign(input)
 
-if __name__ == '__main__':
-    unittest.main(exit=False)
+    @property
+    def domain(self):
+        return self._space
+
+    @property
+    def range(self):
+        return self._space
+
+    def __repr__(self):
+        return "IdentityOperator(" + repr(self._space) + ")"
+
+    def __str__(self):
+        return "I"

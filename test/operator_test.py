@@ -23,12 +23,13 @@ from __future__ import division, print_function, unicode_literals, absolute_impo
 from future import standard_library
 standard_library.install_aliases()
 import unittest
-from testutils import RLTestCase
 
 import numpy as np
 import RL.operator.operator as OP
-from RL.space.space import *
-from RL.space.defaultSpaces import *
+import RL.space.space as space
+from RL.space.euclidean import EuclidianSpace
+
+from RL.utility.testutils import RLTestCase
 
 
 class MultiplyOp(OP.LinearOperator):

@@ -17,4 +17,6 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# __all__ = ['']
+__version__ = '0.01a'
+
+__all__ = ['builders', 'datamodel', 'geometry', 'utility', 'operator', 'space']

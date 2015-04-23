@@ -25,18 +25,16 @@ from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
-import RL.operator.function as fun 
-from RL.space.functionSpaces import L2
-from RL.space.measure import Discretization
 import RL.space.set as sets
 import RL.space.space as space
+from RL.space.function import L2
 import numpy as np
 
 def makeUniformDiscretization(parent, rnimpl):
     RNType = type(rnimpl)
     RNVectortype = RNType.Vector
 
-    class UniformDiscretization(RNType, Discretization):
+    class UniformDiscretization(RNType):
         """ Uniform discretization of an interval
             Represents vectors by RN elements
             Uses trapezoid method for integration
@@ -89,17 +87,21 @@ def makeUniformDiscretization(parent, rnimpl):
 
     return UniformDiscretization(parent, rnimpl)
 
-def makePixelDiscretization(parent, rnimpl, cols, rows):
+def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
+    """ Creates an pixel discretization of space parent using rn as the underlying representation.
+
+    order indicates the order data is stored in, 'C'-order is the default numpy order, also called row major.
+    """
     RNType = type(rnimpl)
     RNVectortype = RNType.Vector
 
-    class PixelDiscretization(RNType, Discretization):
+    class PixelDiscretization(RNType):
         """ Uniform discretization of an square
             Represents vectors by RN elements
             Uses sum method for integration
         """
 
-        def __init__(self, parent, rn, cols, rows):
+        def __init__(self, parent, rn, cols, rows, order):
             if not isinstance(parent.domain, sets.Square):
                 raise NotImplementedError("Can only discretize Squares")
 
@@ -115,6 +117,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows):
             self.parent = parent
             self.cols = cols
             self.rows = rows
+            self.order = order
             self._rn = rn
             dx = (self.parent.domain.end[0]-self.parent.domain.begin[0])/(self.cols-1)
             dy = (self.parent.domain.end[1]-self.parent.domain.begin[1])/(self.rows-1)
@@ -134,7 +137,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows):
                 return self.makeVector(np.array([args[0]([x,y]) for x,y in zip(*self.points())], dtype=np.float))
             elif len(args) == 1 and isinstance(args[0], np.ndarray):
                 if args[0].shape == (self.cols, self.rows):
-                    return self.makeVector(args[0].flatten())
+                    return self.makeVector(args[0].flatten(self.order))
                 elif args[0].shape == (self.dimension,):
                     return RNType.makeVector(self, args[0])
                 else:
@@ -148,7 +151,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows):
         def points(self):
             x,y = np.meshgrid(np.linspace(self.parent.domain.begin[0], self.parent.domain.end[0],self.cols),
                               np.linspace(self.parent.domain.begin[1], self.parent.domain.end[1],self.rows))
-            return x.flatten(), y.flatten()
+            return x.flatten(self.order), y.flatten(self.order)
 
         def __getattr__(self, name):
             return getattr(self._rn, name)
@@ -159,4 +162,4 @@ def makePixelDiscretization(parent, rnimpl, cols, rows):
         class Vector(RNVectortype):
             pass
 
-    return PixelDiscretization(parent, rnimpl, cols, rows)
+    return PixelDiscretization(parent, rnimpl, cols, rows, order)

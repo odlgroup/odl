@@ -28,14 +28,11 @@ from math import sin
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.defaultSpaces import *
-from RL.space.functionSpaces import *
-import RL.space.CudaSpace as CS
-import RL.space.defaultDiscretizations as DS
-from RL.space.measure import *
+from RL.space.euclidean import *
+from RL.space.function import *
+import RL.space.cuda as CS
+import RL.space.discretizations as DS
 import RLcpp
-from testutils import RLTestCase, Timer, consume
-from solverExamples import *
 
 import matplotlib.pyplot as plt
 
@@ -87,12 +84,12 @@ def denoise(x0, la, mu, iterations = 1):
 
     for i in range(iterations):
         # x = ((f * mu + (diff.T(diff(x)) + 2*x - diff.T(d-b)) * la)/(mu+2*la))
-        diff.apply(x,xdiff)
-        dom.linComb(C1,f,2*C2,x)
+        diff.apply(x, xdiff)
+        x.linComb(C1, f, 2*C2, x)
         xdiff -= d
         xdiff += b
-        diff.applyAdjoint(xdiff,tmp)
-        x.linComb(C2,tmp)
+        diff.applyAdjoint(xdiff, tmp)
+        x.linComb(1, x, C2, tmp)
         
         # d = diff(x)-b
         diff.apply(x,d)

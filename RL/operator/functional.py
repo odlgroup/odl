@@ -132,7 +132,7 @@ class FunctionalSum(Functional):
         self.op2 = op2
 
     def applyImpl(self, rhs):
-        return self.op1.applyImpl(rhs)+self.op2.applyImpl(rhs)
+        return self.op1.applyImpl(rhs) + self.op2.applyImpl(rhs)
 
     @property
     def domain(self):
@@ -154,7 +154,7 @@ class FunctionalPointwiseProduct(Functional):
         self.op2 = op2
 
     def applyImpl(self, rhs):
-        return self.op1.applyImpl(rhs)*self.op2.applyImpl(rhs)
+        return self.op1.applyImpl(rhs) * self.op2.applyImpl(rhs)
 
     @property
     def domain(self):
@@ -176,7 +176,7 @@ class FunctionalScalarMultiplication(Functional):
         self.scalar = scalar
 
     def applyImpl(self, rhs):
-        return self.scalar*self.operator.applyImpl(rhs)
+        return self.scalar * self.operator.applyImpl(rhs)
 
     @property
     def domain(self):

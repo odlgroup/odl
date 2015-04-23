@@ -24,11 +24,12 @@ from future import standard_library
 standard_library.install_aliases()
 import unittest
 
-from RL.operator.operator import *
-from RL.space.space import *
-from RL.space.defaultSpaces import *
-from RL.space.functionSpaces import *
-from testutils import RLTestCase
+import RL.operator.operator as op
+import RL.space.space as space
+from RL.space.euclidean import RN
+from RL.utility.testutils import RLTestCase
+
+import numpy as np
 
 class RNTest(RLTestCase):
     def makeVectors(self, rn):

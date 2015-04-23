@@ -24,19 +24,15 @@ from future import standard_library
 standard_library.install_aliases()
 import unittest
 import math
-import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.defaultSpaces import *
-from RL.space.CudaSpace import *
-from testutils import RLTestCase, Timer
+from RL.space.cuda import *
+from RL.space.euclidean import RN
+from RL.utility.testutils import RLTestCase, Timer
+
+import numpy as np
 
 class TestInit(RLTestCase):
-    def testZero(self):
-        R = CudaRN(3)
-        x = R.zero()
-        self.assertAllAlmostEquals(x, [0]*3)
-
     def testEmpty(self):
         R = CudaRN(3)
         x = R.empty()
@@ -44,8 +40,7 @@ class TestInit(RLTestCase):
 
     def testZero(self):
         R3d = CudaRN(3)
-        R3h = RN(3)
-        self.assertAllAlmostEquals(R3d.zero(), R3h.zero())
+        self.assertAllAlmostEquals(R3d.zero(), [0, 0, 0])
 
     def testListInit(self):
         R = CudaRN(3)
@@ -55,14 +50,17 @@ class TestInit(RLTestCase):
     def testNPInit(self):
         R = CudaRN(3)
         
-        x = R.makeVector(np.array([1.,2.,3.]))
-        self.assertAllAlmostEquals(x, [1, 2, 3])
+        x0 = np.array([1.,2.,3.])
+        x = R.makeVector(x0)
+        self.assertAllAlmostEquals(x, x0)
 
-        x = R.makeVector(np.array([1,2,3],dtype = float))
-        self.assertAllAlmostEquals(x, [1, 2, 3])
+        x0 = np.array([1,2,3], dtype=float)
+        x = R.makeVector(x0)
+        self.assertAllAlmostEquals(x, x0)
 
-        x = R.makeVector(np.array([1,2,3],dtype = int))
-        self.assertAllAlmostEquals(x, [1, 2, 3])
+        x0 = np.array([1,2,3], dtype=int)
+        x = R.makeVector(x0)
+        self.assertAllAlmostEquals(x, x0)
 
 class TestAccessors(RLTestCase):
     def testGetItem(self):

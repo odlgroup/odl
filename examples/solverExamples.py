@@ -28,7 +28,9 @@ def landweberBase(operator, x, rhs, iterations=1, omega=1):
     """ Straightforward implementation of Landweber iteration
     """
     for _ in range(iterations):
-        x = x - omega * operator.T(operator(x)-rhs)
+        x -= omega * operator.T(operator(x)-rhs)
+
+    return x
         
 
 def conjugateGradientBase(op, x, rhs, iterations=1):
@@ -42,7 +44,7 @@ def conjugateGradientBase(op, x, rhs, iterations=1):
         q = op(p)                       
         norms2 = s.normSq()
         a = norms2 / q.normSq()
-        x = x + a*p                    
+        x += a*p                    
         d = d - a*q                  
         s = op.T(d)
         b = s.normSq()/norms2

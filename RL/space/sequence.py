@@ -29,10 +29,9 @@ standard_library.install_aliases()
 import numpy as np
 
 import RL.operator.functional as FUN
-from RL.space.measure import *
 from RL.space.space import *
-from RL.space.defaultSpaces import *
-from RL.space.functionSpaces import *
+from RL.space.euclidean import *
+from RL.space.function import *
 
 class SequenceSpace(FunctionSpace):
     """The space of sequences

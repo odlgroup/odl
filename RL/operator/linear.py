@@ -36,26 +36,57 @@ class Operator(object):
 
     @abstractmethod
     def applyImpl(self, rhs, out):
-        """Apply the operator, abstract
+        """Apply the operator.
+
+        This method is not intended to be called by external users.
+        It is intended that classes that derive from Operator derive from this method.
+
+        Args:
+            rhs:    The point the operator should be applied at. 
+                    Has to be a member in the set given by `domain`.
+
+            out:    The point that the result should be written to.
+                    Any result in out is written over and the result is
+                    expected to be independend of the value of `out`.
+
+        Returns:
+            None
         """
 
     @abstractproperty
     def domain(self):
-        """Get the domain of the operator
+        """Get the domain of the operator.
+
+        The domain of an operator is expected to derive from RL.space.set.AbstractSet
         """
 
     @abstractproperty
     def range(self):
-        """Get the range of the operator
+        """Get the range of the operator.
+        
+        The range of an operator is expected to derive from RL.space.set.AbstractSet
         """
 
     def getDerivative(self, point):
-        """ Get the derivative of this operator in some point
+        """ Get the derivative operator of this operator at `point`
         """
         raise NotImplementedError("getDerivative not implemented for this operator ({})".format(self))
         
     #Implicitly defined operators
     def apply(self, rhs, out):
+        """ Apply this operator in place.   Informally: out = f(rhs)
+
+        Args:
+            rhs:    The point the operator should be applied at. 
+                    Has to be a member in the set given by `domain`.
+
+            out:    The point that the result should be written to.
+                    Any result in out is written over.
+
+        Returns:
+            None
+        """
+
         if not self.domain.isMember(rhs): 
             raise TypeError('rhs ({}) is not in the domain of this operator ({})'.format(rhs, self))
 
@@ -68,14 +99,21 @@ class Operator(object):
         self.applyImpl(rhs, out)
 
     def __call__(self, rhs):
-        """Shorthand for self.apply(rhs)
+        """ Shorthand for self.apply(rhs). Out is allocated dynamically.
+
+        Args:
+            rhs:    The point the operator should be applied at. 
+                    Has to be a member in the set given by `domain`.
+
+        Returns:
+            A object in `self.range` given by the evaluation
         """
         tmp = self.range.empty()
         self.apply(rhs, tmp)
         return tmp
 
     def __add__(self, other):
-        """Operator addition (pointwise)
+        """ Operator addition (A+B)(x) = A(x) + B(x)
         """
 
         if isinstance(other, Operator):
@@ -84,7 +122,7 @@ class Operator(object):
             raise TypeError('Expected an operator')
 
     def __mul__(self, other):
-        """Left multiplication of operators with scalars (a*A)(x) = a*A(x)
+        """ Left multiplication of operators with scalars (a*A)(x) = a*A(x)
         """
 
         if isinstance(other, Number):
@@ -102,26 +140,40 @@ class Operator(object):
             raise TypeError('Expected a scalar')
 
     def __str__(self):
-        return "Operator " + self.__class__.__name__ + ": " + str(self.domain) + "->" + str(self.range)
+        return self.__class__.__name__
+
+    def __repr__(self):
+        return self.__class__.__name__ + ": " + str(self.domain) + "->" + str(self.range)
 
 
 class OperatorSum(Operator):
     """ Expression type for the sum of operators:
 
     OperatorSum(op1,op2)(x) = op1(x) + op2(x)
+
+    tmp is an optional argument which the sum will use to store the intermediate result
     """
-    def __init__(self, op1, op2):
+    def __init__(self, op1, op2, tmp=None):
         if op1.range != op2.range:
-            raise TypeError("Ranges ({}, {}) of operators are not equal".format(op1.range, op2.range))
+            raise TypeError("OperatorSum requires that ranges of operators are equal. Given ranges do not match ({}, {}).".format(op1.range, op2.range))
 
         if op1.domain != op2.domain:
-            raise TypeError("Domains ({}, {}) of operators are not equal".format(op1.domain, op2.domain))
+            raise TypeError("OperatorSum requires that domains of operators are equal. Given domains do not match ({}, {}).".format(op1.domain, op2.domain))
+
+        if tmp is not None and not op1.domain.isMember(tmp):
+            raise TypeError("Tmp ({}) must be an element in the range of the operators ({}).".format(tmp, op1.domain))
+
 
         self.op1 = op1
         self.op2 = op2
+        self.tmp = tmp
 
     def applyImpl(self, rhs, out):
-        tmp = self.range.empty()
+        if self.tmp is not None:
+            tmp = self.tmp
+        else:
+            tmp = self.range.empty()
+
         self.op1.applyImpl(rhs, out)
         self.op2.applyImpl(rhs, tmp)
         out += tmp
@@ -133,6 +185,12 @@ class OperatorSum(Operator):
     @property
     def range(self):
         return self.op1.range
+
+    def __repr__(self):
+        return "OperatorSum( " + repr(self.op1) + ", " + repr(self.op2) + ")"
+
+    def __str__(self):
+        return "(" + str(self.op1) + " + " + str(self.op2) + ")"
 
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
@@ -159,6 +217,12 @@ class OperatorComposition(Operator):
     @property
     def range(self):
         return self.left.range
+
+    def __repr__(self):
+        return "OperatorComposition( " + repr(self.left) + ", " + repr(self.right) + ")"
+
+    def __str__(self):
+        return str(self.left) + " o " + str(self.right)
 
 class OperatorPointwiseProduct(Operator):    
     """Pointwise multiplication of operators defined on Banach Algebras (with pointwise multiplication)
@@ -215,6 +279,12 @@ class OperatorLeftScalarMultiplication(Operator):
     def range(self):
         return self.op.range
 
+    def __repr__(self):
+        return "OperatorLeftScalarMultiplication( " + repr(self.op) + ", " + repr(self.scalar) + ")"
+
+    def __str__(self):
+        return str(self.scalar) + " * " + str(self.op)
+
 class OperatorRightScalarMultiplication(Operator):
     """Expression type for the right multiplication of operators with scalars.
 
@@ -242,6 +312,12 @@ class OperatorRightScalarMultiplication(Operator):
     @property
     def range(self):
         return self.op.range
+
+    def __repr__(self):
+        return "OperatorRightScalarMultiplication( " + repr(self.op) + ", " + repr(self.scalar) + ")"
+
+    def __str__(self):
+        return str(self.op) + " * " + str(self.scalar)
 
     
 class LinearOperator(Operator):
@@ -335,19 +411,27 @@ class OperatorAdjoint(LinearOperator):
     def range(self):
         return self.op.domain
 
+    def __str__(self):
+        return str(self.op) + "^T"
+
 
 class LinearOperatorSum(OperatorSum, LinearOperator):
     """Expression type for the sum of linear operators
     """
-    def __init__(self, op1, op2):
+    def __init__(self, op1, op2, tmp=None):
         if not isinstance(op1, LinearOperator):
-            raise TypeError('op1 ({}) is not a LinearOperator. LinearOperatorSum is only defined for LinearOperators'.format(op1))
+            raise TypeError('op1 ({}) is not a LinearOperator. LinearOperatorSum is only defined for LinearOperators.'.format(op1))
         if not isinstance(op2, LinearOperator):
-            raise TypeError('op2 ({}) is not a LinearOperator. LinearOperatorSum is only defined for LinearOperators'.format(op2))
+            raise TypeError('op2 ({}) is not a LinearOperator. LinearOperatorSum is only defined for LinearOperators.'.format(op2))
 
-        OperatorSum.__init__(self, op1, op2)
+        OperatorSum.__init__(self, op1, op2, tmp)
 
     def applyAdjointImpl(self, rhs, out):
+        if self.tmp is not None:
+            tmp = self.tmp
+        else:
+            tmp = self.range.empty()
+
         tmp = self.domain.empty()
         self.op1.applyAdjointImpl(rhs, out)
         self.op2.applyAdjointImpl(rhs, tmp)

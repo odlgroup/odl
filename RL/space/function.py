@@ -28,10 +28,9 @@ standard_library.install_aliases()
 
 import numpy as np
 
-import RL.operator.functional as FUN
-from RL.space.measure import *
-from RL.space.space import *
-from RL.space.defaultSpaces import *
+import RL.operator.functional as fun
+from RL.space.space import HilbertSpace, Algebra
+import RL.space.set as sets
 
 #Example of a space:
 class FunctionSpace(Algebra):
@@ -39,11 +38,11 @@ class FunctionSpace(Algebra):
     """
 
     def __init__(self, domain, field = None):
-        if not isinstance(domain, AbstractSet): 
+        if not isinstance(domain, sets.AbstractSet): 
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
-        self._field = field if field is not None else RealNumbers()
+        self._field = field if field is not None else sets.RealNumbers()
 
     def linCombImpl(self, a, x, b, y):
         return a*x + b*y #Use operator overloading
@@ -71,7 +70,7 @@ class FunctionSpace(Algebra):
     def makeVector(self, *args, **kwargs):
         return FunctionSpace.Vector(self, *args, **kwargs)
 
-    class Vector(HilbertSpace.Vector, Algebra.Vector, FUN.Functional):
+    class Vector(HilbertSpace.Vector, Algebra.Vector, fun.Functional):
         """ L2 Vectors are functions from the domain
         """
 
@@ -86,7 +85,7 @@ class FunctionSpace(Algebra):
             self.function = other.function
 
         @property
-        def domain(self):           
+        def domain(self):
             return self.space.domain
         
         @property

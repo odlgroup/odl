@@ -28,19 +28,20 @@ from math import pi
 import numpy as np
 from RL.operator.operator import *
 import RL.space.space as space
-import RL.space.defaultSpaces as ds
-import RL.space.defaultDiscretizations as dd
-import RL.space.functionSpaces as fs
+from RL.space.euclidean import EuclidianSpace
+import RL.space.discretizations as disc
+import RL.space.function as fs
 import RL.space.set as sets
-from testutils import RLTestCase
+
+from RL.utility.testutils import RLTestCase
 
 
 class L2Test(RLTestCase):
     def testInterval(self):
         I = sets.Interval(0, pi)
         l2 = fs.L2(I)
-        rn = ds.EuclidianSpace(10)
-        d = dd.makeUniformDiscretization(l2, rn)
+        rn = EuclidianSpace(10)
+        d = disc.makeUniformDiscretization(l2, rn)
 
         l2sin = l2.makeVector(np.sin)
         sind = d.makeVector(l2sin)
@@ -52,8 +53,8 @@ class L2Test(RLTestCase):
         l2 = fs.L2(I)
         n = 10
         m = 10
-        rn = ds.EuclidianSpace(n*m)
-        d =  dd.makePixelDiscretization(l2, rn, n, m)
+        rn = EuclidianSpace(n*m)
+        d =  disc.makePixelDiscretization(l2, rn, n, m)
 
         l2sin = l2.makeVector(lambda point: np.sin(point[0]) * np.sin(point[1]))
         sind = d.makeVector(l2sin)

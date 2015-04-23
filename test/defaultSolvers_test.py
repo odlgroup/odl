@@ -23,13 +23,14 @@ from __future__ import division, print_function, unicode_literals, absolute_impo
 from future import standard_library
 standard_library.install_aliases()
 import unittest
-from testutils import RLTestCase
 
 import numpy as np
 import RL.operator.operator as OP
-import RL.operator.defaultSolvers as solvers
+import RL.operator.solvers as solvers
 from RL.space.space import *
-from RL.space.defaultSpaces import *
+from RL.space.euclidean import *
+
+from RL.utility.testutils import RLTestCase
 
 
 class MultiplyOp(OP.LinearOperator):
@@ -84,9 +85,9 @@ class TestMatrixSolve(RLTestCase):
         n=3
 
         #Np as validation
-        A = np.random.rand(n, n)
-        b = np.random.rand(n)
+        A = np.random.rand(n, n)        
         x = np.random.rand(n)
+        b = np.dot(A,x) + 0.1 * np.random.rand(n) #Landweber is slow and needs a decent initial guess
         
         #Vector representation
         rn = EuclidianSpace(n)
@@ -100,7 +101,29 @@ class TestMatrixSolve(RLTestCase):
         #Solve using conjugate gradient
         solvers.conjugateGradient(Aop, xVec, bVec, iterations=n)
 
-        self.assertAllAlmostEquals(xVec, np.linalg.solve(A,b), places = 2)
+        self.assertAllAlmostEquals(xVec, x, places = 2)
+
+    def testGaussNewton(self):
+        n=100
+
+        #Np as validation
+        A = np.random.rand(n, n)        
+        x = np.random.rand(n)
+        b = np.dot(A,x) + 0.1 * np.random.rand(n) #Landweber is slow and needs a decent initial guess
+        
+        #Vector representation
+        rn = EuclidianSpace(n)
+        xVec = rn.makeVector(x)
+        bVec = rn.makeVector(b)
+
+        #Make operator
+        norm = np.linalg.norm(A, ord=2)
+        Aop = MultiplyOp(A)
+
+        #Solve using conjugate gradient
+        solvers.gaussNewton(Aop, xVec, bVec, iterations=n)
+
+        self.assertAllAlmostEquals(xVec, x, places = 2)
 
 
 if __name__ == '__main__':

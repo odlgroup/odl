@@ -26,12 +26,12 @@ from math import sin,cos,pi
 
 import numpy as np
 import RL.operator.operator as OP
-import RL.space.functionSpaces as fs
-import RL.space.defaultSpaces as ds
-import RL.space.defaultDiscretizations as dd
+import RL.space.function as fs
+import RL.space.euclidean as ds
+import RL.space.discretizations as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
-import RL.operator.defaultSolvers as solvers
+import RL.operator.solvers as solvers
 
 import matplotlib.pyplot as plt
 
@@ -98,7 +98,7 @@ sourceAxisDistance = 600.0
 detectorAxisDistance = 20.0
 
 #Discretization parameters
-nVoxels = np.array([400, 400])
+nVoxels = np.array([500, 400])
 nPixels = 400
 nProjection = 200
         
@@ -157,9 +157,14 @@ def plotResult(x):
     print((x-phantomVec).norm())
     plt.pause(0.01)
             
+x = phantomVec
+y = projections
+print(x.inner(projector.T(y)), projector(x).inner(y))
+
 #Solve using landweber
 x = reconDisc.zero()
 #solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.forEachPartial(plotResult))
-solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+#solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+solvers.gaussNewton(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
         
 #plt.show()

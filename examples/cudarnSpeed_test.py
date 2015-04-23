@@ -29,7 +29,7 @@ from RL.operator.operator import *
 from RL.space.space import *
 from RL.space.defaultSpaces import *
 from RL.space.CudaSpace import *
-#from testutils import Timer
+from testutils import Timer
 
 n=10**7
 iterations = 100
@@ -48,11 +48,11 @@ zHost = hostSpace.makeVector(z)
 
 
 def doTest(function, message):
-    #with Timer('+GPU ' + message):
+    with Timer('+GPU ' + message):
         for _ in range(iterations):
             function(zDevice, xDevice, yDevice)
 
-    #with Timer('-CPU ' + message):
+    with Timer('-CPU ' + message):
         for _ in range(iterations):
             function(zHost, xHost, yHost)
 

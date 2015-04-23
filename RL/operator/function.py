@@ -27,7 +27,8 @@ standard_library.install_aliases()
 
 from numbers import Number
 from abc import ABCMeta, abstractmethod, abstractproperty
-from RL.space.set import EmptySet
+
+from RL.space.set import AbstractSet, EmptySet
 
 class Function(object):
     """Abstract function on some sets

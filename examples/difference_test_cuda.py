@@ -27,13 +27,17 @@ import unittest
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-import RL.space.defaultSpaces as ds
-import RL.space.defaultDiscretizations as dd
-from RL.space.functionSpaces import *
-import RL.space.CudaSpace as CS
-from RL.space.measure import *
+import RL.space.euclidean as ds
+import RL.space.discretizations as dd
+from RL.space.function import *
+import RL.space.set as sets
+import RL.space.cuda as CS
+from RL.space.product import ProductSpace
+
+
+import RL
 import RLcpp
-from testutils import RLTestCase, Timer, consume
+from RL.utility.testutils import RLTestCase, Timer, consume
 
 import matplotlib.pyplot as plt
 
@@ -90,7 +94,7 @@ class ForwardDiff2D(LinearOperator):
 class TestCudaForwardDifference(RLTestCase):       
     def testCGN(self):
         #Continuous definition of problem
-        I = Interval(0, 1)
+        I = sets.Interval(0, 1)
         space = L2(I)
 
         #Discretization
@@ -109,7 +113,7 @@ class TestCudaForwardDifference(RLTestCase):
 class TestCudaForwardDifference2D(RLTestCase):       
     def testSquare(self):
         #Continuous definition of problem
-        I = Square([0,0],[1,1])
+        I = sets.Square([0,0],[1,1])
         space = L2(I)
 
         #Discretization
@@ -149,7 +153,7 @@ class TestCudaForwardDifference2D(RLTestCase):
 
     def testRectangle(self):
         #Continuous definition of problem
-        I = Square([0, 0],[1,1])
+        I = sets.Square([0, 0],[1,1])
         space = L2(I)
 
         #Complicated functions to check performance

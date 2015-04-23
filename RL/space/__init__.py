@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-simple_test_astra.py -- a simple test script
-
 Copyright 2014, 2015 Holger Kohr
 
 This file is part of RL.
@@ -20,5 +17,4 @@ You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import SimRec2DPy as SR
-import RLcpp.PyCuda as rlcpp
+#__all__ = ['']
