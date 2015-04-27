@@ -114,32 +114,21 @@ class Operator(object):
 
     def __add__(self, other):
         """ Operator addition (A+B)(x) = A(x) + B(x)
-
-        Implemented using 
         """
 
-        if isinstance(other, Operator):
-            return OperatorSum(self, other)
-        else:
-            raise TypeError('Expected an operator')
+        return OperatorSum(self, other)
 
     def __mul__(self, other):
-        """ Left multiplication of operators with scalars (a*A)(x) = a*A(x)
-        """
-
-        if isinstance(other, Number):
-            return OperatorLeftScalarMultiplication(self, other)
-        else:
-            raise TypeError('Expected a scalar')
-
-    def __rmul__(self, other):
         """Right multiplication of operators with scalars (A*a)(x) = A(a*x)
         """
 
-        if isinstance(other, Number):
-            return OperatorRightScalarMultiplication(self, other)
-        else:
-            raise TypeError('Expected a scalar')
+        return OperatorRightScalarMultiplication(self, other)
+
+    def __rmul__(self, other):
+        """ Left multiplication of operators with scalars (a*A)(x) = a*A(x)
+        """
+
+        return OperatorLeftScalarMultiplication(self, other)
 
     def __str__(self):
         return self.__class__.__name__
@@ -149,13 +138,19 @@ class Operator(object):
 
 
 class OperatorSum(Operator):
-    """ Expression type for the sum of operators:
-
-    OperatorSum(op1,op2)(x) = op1(x) + op2(x)
-
-    tmp is an optional argument which the sum will use to store the intermediate result
+    """ Expression type for the sum of operators
     """
     def __init__(self, op1, op2, tmp=None):
+        """ Create the abstract operator sum defined by:
+
+        OperatorSum(op1,op2)(x) = op1(x) + op2(x)
+
+        Args:
+            LinearOperator  `op1`       The first operator
+            LinearOperator  `op2`       The second operator
+            Vector          `tmp`       A vector in the domain of this operator.
+                                        Used to avoid the creation of a temporary when applying the operator.
+        """
         if op1.range != op2.range:
             raise TypeError("OperatorSum requires that ranges of operators are equal. Given ranges do not match ({}, {}).".format(op1.range, op2.range))
 
@@ -166,65 +161,73 @@ class OperatorSum(Operator):
             raise TypeError("Tmp ({}) must be an element in the range of the operators ({}).".format(tmp, op1.domain))
 
 
-        self.op1 = op1
-        self.op2 = op2
+        self._op1 = op1
+        self._op2 = op2
         self.tmp = tmp
 
     def applyImpl(self, rhs, out):
-        if self.tmp is not None:
-            tmp = self.tmp
-        else:
-            tmp = self.range.empty()
-
-        self.op1.applyImpl(rhs, out)
-        self.op2.applyImpl(rhs, tmp)
+        tmp = self.tmp if self.tmp is not None else self.range.empty()
+        self._op1.applyImpl(rhs, out)
+        self._op2.applyImpl(rhs, tmp)
         out += tmp
 
     @property
     def domain(self):
-        return self.op1.domain
+        return self._op1.domain
 
     @property
     def range(self):
-        return self.op1.range
+        return self._op1.range
 
     def __repr__(self):
-        return "OperatorSum( " + repr(self.op1) + ", " + repr(self.op2) + ")"
+        return "OperatorSum( " + repr(self._op1) + ", " + repr(self._op2) + ")"
 
     def __str__(self):
-        return "(" + str(self.op1) + " + " + str(self.op2) + ")"
+        return "(" + str(self._op1) + " + " + str(self._op2) + ")"
 
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
-
-    OperatorComposition(left,right)(x) = left(right(x))
     """
 
-    def __init__(self, left, right):
+    def __init__(self, left, right, tmp=None):
+        """ Create the abstract operator composition defined by:
+
+        OperatorComposition(left,right)(x) = left(right(x))
+
+        Args:
+            LinearOperator  `op1`       The first operator
+            LinearOperator  `op2`       The second operator
+            Vector          `tmp`       A vector in the range of this operator.
+                                        Used to avoid the creation of a temporary when applying the operator.
+        """
         if right.range != left.domain:
             raise TypeError("Range of right operator ({}) does not equal domain of left operator ({})".format(right.range,left.domain))
 
-        self.left = left
-        self.right = right
+        if tmp is not None and not right.range.isMember(tmp):
+            raise TypeError("Tmp ({}) must be an element in the range of the operators ({}).".format(tmp, op1.domain))
+
+        self._left = left
+        self._right = right
+        self._tmp = tmp
 
     def applyImpl(self, rhs, out):
-        tmp = self.right.range.empty()
-        self.right.applyImpl(rhs, tmp)
-        self.left.applyImpl(tmp, out)
+        tmp = self._tmp if self._tmp is not None else self._right.range.empty()
+        self._right.applyImpl(rhs, tmp)
+        self._left.applyImpl(tmp, out)
         
     @property
     def domain(self):
-        return self.right.domain
+        return self._right.domain
 
     @property
     def range(self):
-        return self.left.range
+        return self._left.range
 
     def __repr__(self):
-        return "OperatorComposition( " + repr(self.left) + ", " + repr(self.right) + ")"
+        return "OperatorComposition( " + repr(self._left) + ", " + repr(self._right) + ")"
 
     def __str__(self):
-        return str(self.left) + " o " + str(self.right)
+        return str(self._left) + " o " + str(self._right)
 
 class OperatorPointwiseProduct(Operator):    
     """Pointwise multiplication of operators defined on Banach Algebras (with pointwise multiplication)
@@ -239,22 +242,22 @@ class OperatorPointwiseProduct(Operator):
         if op1.domain != op2.domain:
             raise TypeError("Domains ({}, {}) of operators are not equal".format(op1.domain, op2.domain))
 
-        self.op1 = op1
-        self.op2 = op2
+        self._op1 = op1
+        self._op2 = op2
 
     def applyImpl(self, rhs, out):
-        tmp = self.op2.range.empty()
-        self.op1.applyImpl(rhs, out)
-        self.op2.applyImpl(rhs, tmp)
+        tmp = self._op2.range.empty()
+        self._op1.applyImpl(rhs, out)
+        self._op2.applyImpl(rhs, tmp)
         out *= tmp
 
     @property
     def domain(self):
-        return self.op1.domain
+        return self._op1.domain
 
     @property
     def range(self):
-        return self.op1.range
+        return self._op1.range
 
 class OperatorLeftScalarMultiplication(Operator):
     """Expression type for the left multiplication of operators with scalars
@@ -266,62 +269,74 @@ class OperatorLeftScalarMultiplication(Operator):
         if not op.range.field.isMember(scalar):
             raise TypeError("Scalar ({}) not compatible with field of range ({}) of operator".format(scalar,op.range.field))
 
-        self.op = op
-        self.scalar = scalar
+        self._op = op
+        self._scalar = scalar
 
     def applyImpl(self, rhs, out):
-        self.op.applyImpl(rhs, out)
-        out *= self.scalar
+        self._op.applyImpl(rhs, out)
+        out *= self._scalar
 
     @property
     def domain(self):
-        return self.op.domain
+        return self._op.domain
 
     @property
     def range(self):
-        return self.op.range
+        return self._op.range
 
     def __repr__(self):
-        return "OperatorLeftScalarMultiplication( " + repr(self.op) + ", " + repr(self.scalar) + ")"
+        return "OperatorLeftScalarMultiplication( " + repr(self._op) + ", " + repr(self._scalar) + ")"
 
     def __str__(self):
-        return str(self.scalar) + " * " + str(self.op)
+        return str(self._scalar) + " * " + str(self._op)
 
 class OperatorRightScalarMultiplication(Operator):
     """Expression type for the right multiplication of operators with scalars.
 
-    Typically slower than left multiplication since this requires a copy
-
-    OperatorRightScalarMultiplication(op,scalar)(x) = op(scalar * x)
+    Typically slower than left multiplication since this requires a copy.
     """
 
-    def __init__(self, op, scalar):
+    def __init__(self, op, scalar, tmp=None):
+        """ Create the OperatorRightScalarMultiplication defined by
+        
+        OperatorRightScalarMultiplication(op,scalar)(x) = op(scalar * x)
+
+        Args:
+            Operator    `op`        Any operator
+            Scalar      `scalar`    An element in the field of the domain of `op`
+            Vector      `tmp`       Vector in the domain of `op` in which to store the intermediate result of (scalar * x) 
+        """
         if not op.domain.field.isMember(scalar):
             raise TypeError("Scalar ({}) not compatible with field of domain ({}) of operator".format(scalar,op.domain.field))
 
-        self.op = op
-        self.scalar = scalar
+        if tmp is not None and not op.domain.isMember(tmp):
+            raise TypeError("Tmp ({}) must be an element in the range of the operators ({}).".format(tmp, op1.domain))
+
+        self._op = op
+        self._scalar = scalar
+        self._tmp = tmp
 
     def applyImpl(self, rhs, out):
-        tmp = rhs.copy()
-        tmp *= self.scalar
-        self.op.applyImpl(tmp, out)
+        tmp = self._tmp if self._tmp is not None else self.domain.empty()
+        tmp.linComb(self._scalar, rhs)
+        self._op.applyImpl(tmp, out)
 
     @property
     def domain(self):
-        return self.op.domain
+        return self._op.domain
 
     @property
     def range(self):
-        return self.op.range
+        return self._op.range
 
     def __repr__(self):
-        return "OperatorRightScalarMultiplication( " + repr(self.op) + ", " + repr(self.scalar) + ")"
+        return "OperatorRightScalarMultiplication( " + self._op.__repr__() + ", " + repr(self._scalar) + ")"
 
     def __str__(self):
-        return str(self.op) + " * " + str(self.scalar)
+        return str(self._op) + " * " + str(self._scalar)
 
     
+# DEFINITION OF LINEAR OPERATOR AND RELATED METHODS
 class LinearOperator(Operator):
     """ Linear operator, satisfies A(ax+by)=a*A(x)+b*A(y)
     """
@@ -336,14 +351,29 @@ class LinearOperator(Operator):
     #Implicitly defined operators
     @property
     def T(self):
+        """ Get the adjoint of this operator such that:
+        
+        op.T.apply(rhs, out) = op.applyAdjoint(rhs,out)
+        and
+        op.T.applyAdjoint(rhs, out) = op.apply(rhs,out)
+        """
         return OperatorAdjoint(self)
 
     def getDerivative(self, point):
-        """ Get the derivative of this operator in some point. The derivative of linear operators is the operator itself.
-        """
+        #The derivative of linear operators is the operator itself
         return self
 
     def applyAdjoint(self, rhs, out):
+        """ Applies the adjoint of the operator, informally:
+        out = op(rhs)
+
+        Args:
+            Vector `rhs`       A vector in the range of this operator.
+                               The point the adjoint should be evaluated in.
+            Vector `out`       A vector in the domain of this operator.
+                               The result of the evaluation is written to this vector.
+                               Any previous content is overwritten.
+        """
         if not self.range.isMember(rhs): 
             raise TypeError('rhs ({}) is not in the domain of this operators ({}) adjoint'.format(rhs,self))
         if not self.domain.isMember(out): 
@@ -376,7 +406,7 @@ class LinearOperator(Operator):
         else:
             raise TypeError('Expected an operator or a scalar')
 
-    __rmul__ = __mul__ #Should we have this?
+    __rmul__ = __mul__
 
 
 class SelfAdjointOperator(LinearOperator):
@@ -388,74 +418,111 @@ class SelfAdjointOperator(LinearOperator):
     def applyAdjointImpl(self, rhs, out):
         self.applyImpl(rhs, out)
 
+    @property
+    def range(self):
+        return self.domain
+
 
 class OperatorAdjoint(LinearOperator):
-    """Expression type for the adjoint of an operator
+    """Expression type for the adjoint of an operator.
     """
 
     def __init__(self, op):
-        if not isinstance(op, LinearOperator):
-            raise TypeError('op ({}) is not a LinearOperator. OperatorAdjoint is only defined for LinearOperators'.format(op))
+        """ Create an operator that is the adjoint of `op`
+        
+        It is defined by:
+        OperatorAdjoint(op).apply(rhs,out) = op.applyAdjoint(rhs,out)
+        and
+        OperatorAdjoint(op).applyAdjoint(rhs,out) = op.apply(rhs,out)
+        """
 
-        self.op = op
+        if not isinstance(op, LinearOperator):
+            raise TypeError('Operator ({}) is not a LinearOperator. OperatorAdjoint is only defined for LinearOperators'.format(op))
+
+        self._op = op
 
     def applyImpl(self, rhs, out):
-        self.op.applyAdjointImpl(rhs, out)
+        self._op.applyAdjointImpl(rhs, out)
     
     def applyAdjointImpl(self, rhs, out):
-        self.op.applyImpl(rhs, out)
+        self._op.applyImpl(rhs, out)
 
     @property
     def domain(self):
-        return self.op.range
+        return self._op.range
 
     @property
     def range(self):
-        return self.op.domain
+        return self._op.domain
+
+    def __repr__(self):
+        return "OperatorAdjoint( " + repr(self._op) + ")"
 
     def __str__(self):
-        return str(self.op) + "^T"
+        return str(self._op) + "^T"
 
 
 class LinearOperatorSum(OperatorSum, LinearOperator):
     """Expression type for the sum of linear operators
     """
-    def __init__(self, op1, op2, tmp=None):
+    def __init__(self, op1, op2, tmpRan=None, tmpDom=None):
+        """ Create the abstract operator sum defined by:
+
+        LinearOperatorSum(op1,op2)(x) = op1(x) + op2(x)
+
+        Args:
+            LinearOperator  `op1`       The first operator
+            LinearOperator  `op2`       The second operator
+            Vector          `tmpRan`    A vector in the domain of this operator.
+                                        Used to avoid the creation of a temporary when applying the operator.
+            Vector          `tmpDom`    A vector in the range of this operator.
+                                        Used to avoid the creation of a temporary when applying the adjoint of this operator.
+        """
         if not isinstance(op1, LinearOperator):
             raise TypeError('op1 ({}) is not a LinearOperator. LinearOperatorSum is only defined for LinearOperators.'.format(op1))
         if not isinstance(op2, LinearOperator):
             raise TypeError('op2 ({}) is not a LinearOperator. LinearOperatorSum is only defined for LinearOperators.'.format(op2))
 
-        OperatorSum.__init__(self, op1, op2, tmp)
+        OperatorSum.__init__(self, op1, op2, tmpRan)
+        self._tmpDom = tmpDom
 
     def applyAdjointImpl(self, rhs, out):
-        if self.tmp is not None:
-            tmp = self.tmp
-        else:
-            tmp = self.range.empty()
-
-        tmp = self.domain.empty()
-        self.op1.applyAdjointImpl(rhs, out)
-        self.op2.applyAdjointImpl(rhs, tmp)
+        tmp = self._tmpDom if self._tmpDom is not None else self.domain.empty()
+        self._op1.applyAdjointImpl(rhs, out)
+        self._op2.applyAdjointImpl(rhs, tmp)
         out += tmp
 
 
 class LinearOperatorComposition(OperatorComposition, LinearOperator):
-    """Expression type for the composition of operators
+    """Expression type for the composition of linear operators
     """
 
-    def __init__(self, left, right):
+    def __init__(self, left, right, tmp=None):
+        """ Create the abstract operator composition defined by:
+
+        LinearOperatorComposition(left,right)(x) = left(right(x))
+
+        With adjoint defined by
+        LinearOperatorComposition(left,right).T(y) = right.T(left.T(y))
+
+        Args:
+            LinearOperator  `left`      The first operator
+            LinearOperator  `right`     The second operator
+            Vector          `tmp`       A vector in the range of `right`.
+                                        Used to avoid the creation of a temporary when applying the operator.
+        """
+
         if not isinstance(left, LinearOperator):
             raise TypeError('left ({}) is not a LinearOperator. LinearOperatorComposition is only defined for LinearOperators'.format(left))
         if not isinstance(right, LinearOperator):
             raise TypeError('right ({}) is not a LinearOperator. LinearOperatorComposition is only defined for LinearOperators'.format(right))
 
-        OperatorComposition.__init__(self, left, right)
+        OperatorComposition.__init__(self, left, right, tmp)
     
     def applyAdjointImpl(self, rhs, out):
-        tmp = self.left.domain.empty()
-        self.left.applyAdjoint(rhs, tmp)
-        self.right.applyAdjoint(tmp, out)
+        tmp = self._tmp if self._tmp is not None else self._right.range.empty()
+        self._left.applyAdjoint(rhs, tmp)
+        self._right.applyAdjoint(tmp, out)
 
 
 class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication, LinearOperator):
@@ -463,11 +530,19 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication, Linea
     """
 
     def __init__(self, op, scalar):
+        """ Create the LinearOperatorScalarMultiplication defined by
+        
+        LinearOperatorScalarMultiplication(op,scalar)(x) = scalar * op(x)
+
+        Args:
+            Operator    `op`        Any operator
+            Scalar      `scalar`    An element in the field of the domain of `op`
+        """
         if not isinstance(op, LinearOperator):
             raise TypeError('op ({}) is not a LinearOperator. LinearOperatorScalarMultiplication is only defined for LinearOperators'.format(op))
 
         OperatorLeftScalarMultiplication.__init__(self, op, scalar)
     
     def applyAdjointImpl(self, rhs, out):
-        self.op.applyAdjointImpl(rhs, out)
-        out *= self.scalar
+        self._op.applyAdjointImpl(rhs, out)
+        out *= self._scalar

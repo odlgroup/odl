@@ -120,7 +120,7 @@ class RN(LinearSpace):
             return self.space.makeVector(abs(self.values))
 
         def __str__(self):                  
-            return str(self.space) + "::Vector(" + str(self.values) + ")"
+            return str(self.values)
 
         def __repr__(self):                 
             return repr(self.space) + "::Vector(" + repr(self.values) + ")"

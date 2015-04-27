@@ -25,15 +25,15 @@ standard_library.install_aliases()
 import unittest
 
 import numpy as np
-import RL.operator.operator as OP
+import RL.operator.operator as op
 import RL.space.space as space
 from RL.space.euclidean import EuclidianSpace
 
 from RL.utility.testutils import RLTestCase
 
 
-class MultiplyOp(OP.LinearOperator):
-    """Multiply with matrix
+class MultiplyAndSquareOp(op.Operator):
+    """ Example of a nonlinear operator, Calculates (A*x)**2
     """
 
     def __init__(self, matrix, domain = None, range = None):
@@ -42,10 +42,12 @@ class MultiplyOp(OP.LinearOperator):
         self.matrix = matrix
 
     def applyImpl(self, rhs, out):
-        out.values[:] = np.dot(self.matrix, rhs.values)
+        np.dot(self.matrix, rhs.values, out=out.values)
+        out.values **= 2
 
     def applyAdjointImpl(self, rhs, out):
-        out.values[:] = np.dot(self.matrix.T, rhs.values)
+        np.dot(self.matrix.T, rhs.values, out=out.values)
+        out.values **= 2
 
     @property
     def domain(self):           
@@ -55,151 +57,101 @@ class MultiplyOp(OP.LinearOperator):
     def range(self):            
         return self._range
 
+    def __str__(self):
+        return "MaS: " + str(self.matrix) + "**2"
+
+def opNumpy(A, x):
+    #The same as MultiplyAndSquareOp but only using numpy
+    return np.dot(A,x)**2
+
 class TestRN(RLTestCase):   
-    def testSquareMultiplyOp(self):
-        #Verify that the multiply op does indeed work as expected
-        r3 = EuclidianSpace(3)
-
-        A = np.random.rand(3, 3)
-        x = np.random.rand(3)
-        Aop = MultiplyOp(A)
-        xvec = r3.makeVector(x)
-
-        self.assertAllAlmostEquals(Aop(xvec), np.dot(A,x))
-
-
-    def testNonSquareMultiplyOp(self):
-        #Verify that the multiply op does indeed work as expected
-        r3 = EuclidianSpace(3)
-
+    def testMultiplyAndSquareOp(self):
+        #Verify that the operator does indeed work as expected
         A = np.random.rand(4, 3)
         x = np.random.rand(3)
-        Aop = MultiplyOp(A)
-        xvec = r3.makeVector(x)
+        Aop = MultiplyAndSquareOp(A)
+        xvec = Aop.domain.makeVector(x)
 
-        self.assertAllAlmostEquals(Aop(xvec), np.dot(A,x))
-
-
-    def testAdjoint(self):
-        r3 = EuclidianSpace(3)
-
-        A = np.random.rand(3, 3)
-        x = np.random.rand(3)
-        Aop = MultiplyOp(A)
-        xvec = r3.makeVector(x)
-
-        self.assertAllAlmostEquals(Aop.T(xvec), np.dot(A.T,x))
-
+        self.assertAllAlmostEquals(Aop(xvec), opNumpy(A, x))
 
     def testAdd(self):
-        r3 = EuclidianSpace(3)
-
-        A = np.random.rand(3, 3)
-        B = np.random.rand(3, 3)
+        #Test operator addition
+        A = np.random.rand(4, 3)
+        B = np.random.rand(4, 3)
         x = np.random.rand(3)
 
-        Aop = MultiplyOp(A)
-        Bop = MultiplyOp(B)
-        xvec = r3.makeVector(x)
+        Aop = MultiplyAndSquareOp(A)
+        Bop = MultiplyAndSquareOp(B)
+        xvec = Aop.domain.makeVector(x)
 
         #Explicit instantiation
-        C = OP.LinearOperatorSum(Aop, Bop)
-        
-        self.assertAllAlmostEquals(C(xvec), np.dot(A,x) + np.dot(B,x))
-        self.assertAllAlmostEquals(C.T(xvec), np.dot(A.T,x) + np.dot(B.T,x))
+        C = op.OperatorSum(Aop, Bop)
+        self.assertAllAlmostEquals(C(xvec), opNumpy(A,x) + opNumpy(B,x))
 
-        #Using operator overloading
-        COverloading = Aop + Bop
-        
-        self.assertAllAlmostEquals(COverloading(xvec), np.dot(A,x) + np.dot(B,x))
+        #Using operator overloading        
+        self.assertAllAlmostEquals((Aop + Bop)(xvec), opNumpy(A,x) + opNumpy(B,x))
+
+        #Verify that unmatched operators domains fail
+        C = np.random.rand(4, 4)
+        Cop = MultiplyAndSquareOp(C)
+
+        with self.assertRaises(TypeError):
+            C = op.OperatorSum(Aop, Cop)
 
     def testScale(self):
-        r3 = EuclidianSpace(3)
-
-        A = np.random.rand(3, 3)
-        B = np.random.rand(3, 3)
+        A = np.random.rand(4, 3)
         x = np.random.rand(3)
 
-        Aop = MultiplyOp(A)
-        xvec = r3.makeVector(x)
+        Aop = MultiplyAndSquareOp(A)
+        xvec = Aop.domain.makeVector(x)
 
-        #Test a range of scalars (scalar multiplication could implement optimizations for (-1, 0, 1).
+        #Test a range of scalars (scalar multiplication could implement optimizations for (-1, 0, 1)).
         scalars = [-1.432, -1, 0, 1, 3.14]
         for scale in scalars:
-            C = OP.LinearOperatorScalarMultiplication(Aop, scale)
+            LeftScaled = op.OperatorLeftScalarMultiplication(Aop, scale)
+            RightScaled = op.OperatorRightScalarMultiplication(Aop, scale)
         
-            self.assertAllAlmostEquals(C(xvec), scale * np.dot(A,x))
-            self.assertAllAlmostEquals(C.T(xvec), scale * np.dot(A.T,x))
+            self.assertAllAlmostEquals(LeftScaled(xvec), scale * opNumpy(A,x))
+            self.assertAllAlmostEquals(RightScaled(xvec), opNumpy(A, scale * x))
 
             #Using operator overloading
-            COverloadingLeft = scale * Aop
-            COverloadingRight = Aop * scale
-        
-            self.assertAllAlmostEquals(COverloadingLeft(xvec), scale * np.dot(A,x))
-            self.assertAllAlmostEquals(COverloadingRight(xvec), np.dot(A, scale * x))
+            self.assertAllAlmostEquals((scale * Aop)(xvec), scale*opNumpy(A,x))
+            self.assertAllAlmostEquals((Aop * scale)(xvec), opNumpy(A, scale*x))
+
+        #Fail when scaling by wrong scalar type (A complex number)
+        NonScalars = [1j, [1,2], Aop] #Define some objects that are not scalars
+        for nonscalar in NonScalars: 
+            with self.assertRaises(TypeError):
+                C = op.OperatorLeftScalarMultiplication(Aop, nonscalar)
+
+            with self.assertRaises(TypeError):
+                C = op.OperatorRightScalarMultiplication(Aop, nonscalar)
+
+            with self.assertRaises(TypeError):
+                C = Aop * nonscalar
+
+            with self.assertRaises(TypeError):
+                C = nonscalar * Aop
+
+           
 
 
     def testCompose(self):
-        r3 = EuclidianSpace(3)
-
-        A = np.random.rand(3, 3)
-        B = np.random.rand(3, 3)
+        A = np.random.rand(5, 4)
+        B = np.random.rand(4, 3)
         x = np.random.rand(3)
 
-        Aop = MultiplyOp(A)
-        Bop = MultiplyOp(B)
-        xvec = r3.makeVector(x)
+        Aop = MultiplyAndSquareOp(A)
+        Bop = MultiplyAndSquareOp(B)
+        xvec = Bop.domain.makeVector(x)
 
-        C = OP.LinearOperatorComposition(Aop, Bop)
+        C = op.OperatorComposition(Aop, Bop)
 
-        self.assertAllAlmostEquals(C(xvec), np.dot(A,np.dot(B,x)))
-        self.assertAllAlmostEquals(C.T(xvec), np.dot(B.T,np.dot(A.T,x)))
+        self.assertAllAlmostEquals(C(xvec), opNumpy(A,opNumpy(B,x)))
 
-    def testTypechecking(self):
-        r3 = EuclidianSpace(3)
-        r4 = EuclidianSpace(4)
-
-        Aop = MultiplyOp(np.random.rand(3, 3))
-        r3Vec1 = r3.zero()        
-        r3Vec2 = r3.zero()
-        r4Vec1 = r4.zero()
-        r4Vec2 = r4.zero()
-        
-        #Verify that correct usage works
-        Aop.apply(r3Vec1, r3Vec2)
-        Aop.applyAdjoint(r3Vec1, r3Vec2)
-
-        #Test that erroneous usage raises TypeError
-        with self.assertRaises(TypeError):  
-            Aop(r4Vec1)
-
-        with self.assertRaises(TypeError):  
-            Aop.T(r4Vec1)
-
-        with self.assertRaises(TypeError):  
-            Aop.apply(r3Vec1, r4Vec1)
-
-        with self.assertRaises(TypeError):  
-            Aop.applyAdjoint(r3Vec1, r4Vec1)
-
-        with self.assertRaises(TypeError):  
-            Aop.apply(r4Vec1, r3Vec1)
-
-        with self.assertRaises(TypeError):  
-            Aop.applyAdjoint(r4Vec1, r3Vec1)
-
-        with self.assertRaises(TypeError):  
-            Aop.apply(r4Vec1, r4Vec2)
-
-        with self.assertRaises(TypeError):  
-            Aop.applyAdjoint(r4Vec1, r4Vec2)
-
-        #Check test against aliased values
-        with self.assertRaises(ValueError):  
-            Aop.apply(r3Vec1, r3Vec1)
-            
-        with self.assertRaises(ValueError):  
-            Aop.applyAdjoint(r3Vec1, r3Vec1)
+        #Verify that incorrect order fails
+        with self.assertRaises(TypeError):
+            C = op.OperatorComposition(Bop, Aop)
 
 
 if __name__ == '__main__':

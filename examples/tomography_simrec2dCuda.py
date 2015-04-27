@@ -37,6 +37,8 @@ import RL.operator.solvers as solvers
 
 import matplotlib.pyplot as plt
 
+from RL.utility.testutils import Timer
+
 class ProjectionGeometry(object):
     """ Geometry for a specific projection
     """
@@ -92,7 +94,7 @@ volumeOrigin = -volumeSize/2.0
 detectorSize = 50.0
 detectorOrigin = -detectorSize/2.0
 
-sourceAxisDistance = 2000.0
+sourceAxisDistance = 20.0
 detectorAxisDistance = 20.0
 
 #Discretization parameters
@@ -103,7 +105,7 @@ nProjection = 1000
 #Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
-stepSize = voxelSize.max()/2.0
+stepSize = voxelSize.max()
 
 #Define projection geometries
 geometries = []
@@ -157,7 +159,9 @@ def plotResult(x):
 
 #Solve using landweber
 x = reconDisc.zero()
-solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, partialResults=solvers.forEachPartial(plotResult))
+#solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, partialResults=solvers.forEachPartial(plotResult))
+solvers.landweber(projector, x, projections, 100, omega=0.4/normEst, partialResults=solvers.printIterationPartial())
 #solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
         
+plt.imshow(x[:].reshape(nVoxels))
 plt.show()

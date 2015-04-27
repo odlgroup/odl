@@ -75,9 +75,9 @@ class LinearSpace(AbstractSet):
     # Error checking variant of methods
     def linComb(self, z, a, x, b=None, y=None):
         """ Calculates 
-        z = ax
-        or
-        z = ax + by 
+        z = a*x
+        or of b and y are given
+        z = a*x + b*y 
         
         with error checking of types
         """
@@ -106,7 +106,7 @@ class LinearSpace(AbstractSet):
             return self.linCombImpl(z, a, x, b, y)
 
     class Vector(object):
-        """ Abstract vector
+        """ Abstract vector, al element in the linear space
         """
 
         __metaclass__ = ABCMeta #Set as abstract
@@ -129,7 +129,7 @@ class LinearSpace(AbstractSet):
             self.space.linComb(self, 1, other)
 
         def copy(self):
-            """ Creates an identical clone of this vector
+            """ Creates an identical copy of this vector
             """
             result = self.space.empty()
             result.assign(self)
@@ -202,22 +202,25 @@ class LinearSpace(AbstractSet):
         __div__ = __truediv__
 
         def __neg__(self):
-            """ Unary negation, used in assignments:
-            a = -b
+            """ Unary negation, used in assignments (ret = -self)
             """
             tmp = self.space.empty()
             self.space.linComb(tmp, -1.0, self)
             return tmp
 
         def __pos__(self):
-            """ Unary plus (the identity operator), creates a clone of this object
+            """ Unary plus (the identity operator), creates a copy of this object
             """
             return self.copy()
 
         def __len__(self):
+            """ The dimension of the space this vector resides in
+            """
             return self.space.dimension
 
         def __str__(self):
+            """ A default representation of the vector
+            """
             return str(self.space) + "::Vector"
 
 
@@ -291,11 +294,18 @@ class HilbertSpace(NormedSpace):
 
         __metaclass__ = ABCMeta #Set as abstract
 
-        def inner(self, x):         
+        def inner(self, x):
+            """ Shortcut for self.space.inner(self, x)
+
+            Args:
+                x:  Vector in same space as self
+            """    
             return self.space.inner(self, x)
 
 
 class Algebra(LinearSpace):
+    """ Algebras, or Banach Algebras are linear spaces with multiplication defined
+    """
     
     __metaclass__ = ABCMeta #Set as abstract
 

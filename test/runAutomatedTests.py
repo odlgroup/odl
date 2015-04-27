@@ -27,6 +27,7 @@ import unittest
 #Runs all automated tests
 
 from operator_test import *
+from linear_operator_test import *
 from productpace_test import *
 from rn_test import *
 from functionSpaces_test import *
@@ -34,6 +35,7 @@ from defaultSolvers_test import *
 
 try: #Only run these tests if RLCpp is available
     from cudarn_test import *
+    from difference_test_cuda import *
 except ImportError:
     print("Could not run cuda tests, lacking RLCpp")
 
