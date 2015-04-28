@@ -1,24 +1,20 @@
-# -*- coding: utf-8 -*-
-"""
-operator.py -- functional analytic operators
+# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+#
+# This file is part of RL.
+#
+# RL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# RL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2014, 2015 Holger Kohr
-
-This file is part of RL.
-
-RL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-RL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with RL.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
@@ -33,19 +29,20 @@ from RL.utility.utility import allEqual
 from RL.space.space import *
 from RL.space.set import *
 
+
 class RN(LinearSpace):
     """The real space R^n
     """
 
     def __init__(self, n):
-        if not isinstance(n, Integral) or n<1:
+        if not isinstance(n, Integral) or n < 1:
             raise TypeError("n ({}) has to be a positive integer".format(np))
         self.n = n
         self._field = RealNumbers()
-        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy','scal','copy'])
-    
+        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy', 'scal', 'copy'])
+
     def linCombImpl(self, z, a, x, b, y):
-        #Implement y = a*x + b*y using optimized BLAS rutines
+        # Implement y = a*x + b*y using optimized BLAS rutines
 
         if x is y and b != 0:
             self.linCombImpl(z, a+b, x, 0, x)
@@ -72,7 +69,7 @@ class RN(LinearSpace):
             else:
                 if a == 0:
                     self._copy(y.values, z.values)
-                    if b!= 1:
+                    if b != 1:
                         self._scal(b, z.values)
 
                 elif a == 1:
@@ -83,7 +80,6 @@ class RN(LinearSpace):
                     if b != 1:
                         self._scal(b, z.values)
                     self._axpy(x.values, z.values, self.dimension, a)
-
 
     def zero(self):
         return self.makeVector(np.zeros(self.n, dtype=float))
@@ -107,35 +103,36 @@ class RN(LinearSpace):
             if args[0].shape == (self.n,):
                 return RN.Vector(self, args[0])
             else:
-                raise ValueError("Input numpy array ({}) is of shape {}, expected shape shape {}".format(args[0],args[0].shape, (self.n,)))
+                raise ValueError("Input numpy array ({}) is of shape {}, expected shape shape {}".format(args[0], args[0].shape, (self.n,)))
         else:
-            return self.makeVector(np.array(*args, **kwargs).astype(float, copy = False))
+            return self.makeVector(np.array(*args, **kwargs).astype(float, copy=False))
 
-    class Vector(HilbertSpace.Vector, Algebra.Vector):        
+    class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, values):
             HilbertSpace.Vector.__init__(self, space)
             self.values = values
-        
-        def __abs__(self):                  
+
+        def __abs__(self):
             return self.space.makeVector(abs(self.values))
 
-        def __str__(self):                  
+        def __str__(self):
             return str(self.values)
 
-        def __repr__(self):                 
+        def __repr__(self):
             return repr(self.space) + "::Vector(" + repr(self.values) + ")"
 
-        def __getitem__(self, index):        
+        def __getitem__(self, index):
             return self.values.__getitem__(index)
 
-        def __setitem__(self, index, value):  
+        def __setitem__(self, index, value):
             return self.values.__setitem__(index, value)
 
     def __str__(self):
         return self.__class__.__name__ + "(" + str(self.n) + ")"
 
-    def __repr__(self):                 
+    def __repr__(self):
         return "RN(" + str(self.n) + ")"
+
 
 class EuclidianSpace(RN, HilbertSpace, Algebra):
     """The real space R^n with the euclidean norm
@@ -177,6 +174,6 @@ def makePooledSpace(base, *args, **kwargs):
                 if len(self.space._pool) < self.space._poolMaxSize:
                     self.space._pool.append(self)
                 else:
-                    pass#TODO BaseVectorType.__del__(self)
+                    pass  # TODO BaseVectorType.__del__(self)
 
     return PooledSpace(base, *args, **kwargs)

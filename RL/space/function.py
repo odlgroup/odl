@@ -1,24 +1,20 @@
-# -*- coding: utf-8 -*-
-"""
-operator.py -- functional analytic operators
+# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+#
+# This file is part of RL.
+#
+# RL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# RL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2014, 2015 Holger Kohr
-
-This file is part of RL.
-
-RL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-RL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with RL.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
@@ -32,20 +28,21 @@ import RL.operator.functional as fun
 from RL.space.space import HilbertSpace, Algebra
 import RL.space.set as sets
 
-#Example of a space:
+
+# Example of a space:
 class FunctionSpace(Algebra):
     """ The space scalar valued of functions on some domain
     """
 
-    def __init__(self, domain, field = None):
-        if not isinstance(domain, sets.AbstractSet): 
+    def __init__(self, domain, field=None):
+        if not isinstance(domain, sets.AbstractSet):
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
         self._field = field if field is not None else sets.RealNumbers()
 
     def linCombImpl(self, a, x, b, y):
-        return a*x + b*y #Use operator overloading
+        return a*x + b*y  # Use operator overloading
 
     def multiplyImpl(self, x, y):
         return self.makeVector(lambda *args: x(*args)*y(*args))
@@ -57,7 +54,7 @@ class FunctionSpace(Algebra):
     @property
     def dimension(self):
         raise NotImplementedError("TODO: infinite")
-    
+
     def equals(self, other):
         return isinstance(other, FunctionSpace) and self.domain == other.domain
 
@@ -81,13 +78,13 @@ class FunctionSpace(Algebra):
         def applyImpl(self, rhs):
             return self.function(rhs)
 
-        def assign(self, other):     
+        def assign(self, other):
             self.function = other.function
 
         @property
         def domain(self):
             return self.space.domain
-        
+
         @property
         def range(self):
             return self.space.field

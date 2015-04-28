@@ -1,3 +1,21 @@
+# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+#
+# This file is part of RL.
+#
+# RL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# RL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 from future.builtins import object
@@ -7,11 +25,12 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 
 from numbers import Integral, Real, Complex
 
+
 class AbstractSet(object):
     """ An arbitrary set
     """
 
-    __metaclass__ = ABCMeta #Set as abstract
+    __metaclass__ = ABCMeta  # Set as abstract
 
     @abstractmethod
     def equals(self, other):
@@ -23,12 +42,13 @@ class AbstractSet(object):
         """ Test if other is a member of self
         """
 
-    #Implicitly default implemented methods
-    def __eq__(self, other):         
+    # Implicitly default implemented methods
+    def __eq__(self, other):
         return self.equals(other)
 
-    def __ne__(self, other):         
+    def __ne__(self, other):
         return not self.equals(other)
+
 
 class EmptySet(AbstractSet):
     """ The empty set has no members (None is considered "no element")
@@ -38,6 +58,7 @@ class EmptySet(AbstractSet):
 
     def isMember(self, other):
         return other is None
+
 
 class ComplexNumbers(AbstractSet):
     """ The set of complex numbers
@@ -59,6 +80,7 @@ class RealNumbers(ComplexNumbers):
 
     def isMember(self, other):
         return isinstance(other, Real)
+
 
 class Integers(RealNumbers):
     """ The set of all non-negative integers
@@ -84,6 +106,7 @@ class Interval(RealNumbers):
 
     def isMember(self, other):
         return RealNumbers.isMember(self, other) and self.begin <= other <= self.end
+
 
 class Square(AbstractSet):
     def __init__(self, begin, end):

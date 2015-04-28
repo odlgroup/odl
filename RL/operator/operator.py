@@ -1,24 +1,20 @@
-# -*- coding: utf-8 -*-
-"""
-operator.py -- functional analytic operators
+# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+#
+# This file is part of RL.
+#
+# RL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# RL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2014, 2015 Holger Kohr
-
-This file is part of RL.
-
-RL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-RL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with RL.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
 from __future__ import unicode_literals, print_function, division, absolute_import
 from future.builtins import object
@@ -32,7 +28,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 class Operator(object):
     """Abstract operator
     """
-    __metaclass__ = ABCMeta #Set as abstract
+    __metaclass__ = ABCMeta  # Set as abstract
 
     @abstractmethod
     def applyImpl(self, rhs, out):
@@ -42,7 +38,7 @@ class Operator(object):
         It is intended that classes that derive from Operator derive from this method.
 
         Args:
-            rhs:    The point the operator should be applied at. 
+            rhs:    The point the operator should be applied at.
                     Has to be a member in the set given by `domain`.
 
             out:    The point that the result should be written to.
@@ -63,7 +59,7 @@ class Operator(object):
     @abstractproperty
     def range(self):
         """Get the range of the operator.
-        
+
         The range of an operator is expected to derive from RL.space.set.AbstractSet
         """
 
@@ -71,13 +67,13 @@ class Operator(object):
         """ Get the derivative operator of this operator at `point`
         """
         raise NotImplementedError("getDerivative not implemented for this operator ({})".format(self))
-        
-    #Implicitly defined operators
+
+    # Implicitly defined operators
     def apply(self, rhs, out):
         """ Apply this operator in place.   Informally: out = f(rhs)
 
         Args:
-            rhs:    The point the operator should be applied at. 
+            rhs:    The point the operator should be applied at.
                     Has to be a member in the set given by `domain`.
 
             out:    The point that the result should be written to.
@@ -87,14 +83,14 @@ class Operator(object):
             None
         """
 
-        if not self.domain.isMember(rhs): 
+        if not self.domain.isMember(rhs):
             raise TypeError('rhs ({}) is not in the domain of this operator ({})'.format(rhs, self))
 
-        if not self.range.isMember(out): 
+        if not self.range.isMember(out):
             raise TypeError('out ({}) is not in the range of this operator ({})'.format(out, self))
-        
+
         if rhs is out:
-            raise ValueError('rhs ({}) is the same as out ({}) operators do not permit aliased arguments'.format(rhs,out))
+            raise ValueError('rhs ({}) is the same as out ({}) operators do not permit aliased arguments'.format(rhs, out))
 
         self.applyImpl(rhs, out)
 
@@ -102,7 +98,7 @@ class Operator(object):
         """ Shorthand for self.apply(rhs). Out is allocated dynamically.
 
         Args:
-            rhs:    The point the operator should be applied at. 
+            rhs:    The point the operator should be applied at.
                     Has to be a member in the set given by `domain`.
 
         Returns:
@@ -160,7 +156,6 @@ class OperatorSum(Operator):
         if tmp is not None and not op1.domain.isMember(tmp):
             raise TypeError("Tmp ({}) must be an element in the range of the operators ({}).".format(tmp, op1.domain))
 
-
         self._op1 = op1
         self._op2 = op2
         self.tmp = tmp
@@ -185,6 +180,7 @@ class OperatorSum(Operator):
     def __str__(self):
         return "(" + str(self._op1) + " + " + str(self._op2) + ")"
 
+
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
     """
@@ -201,7 +197,7 @@ class OperatorComposition(Operator):
                                         Used to avoid the creation of a temporary when applying the operator.
         """
         if right.range != left.domain:
-            raise TypeError("Range of right operator ({}) does not equal domain of left operator ({})".format(right.range,left.domain))
+            raise TypeError("Range of right operator ({}) does not equal domain of left operator ({})".format(right.range, left.domain))
 
         if tmp is not None and not right.range.isMember(tmp):
             raise TypeError("Tmp ({}) must be an element in the range of the operators ({}).".format(tmp, op1.domain))
@@ -214,7 +210,7 @@ class OperatorComposition(Operator):
         tmp = self._tmp if self._tmp is not None else self._right.range.empty()
         self._right.applyImpl(rhs, tmp)
         self._left.applyImpl(tmp, out)
-        
+
     @property
     def domain(self):
         return self._right.domain
@@ -229,9 +225,10 @@ class OperatorComposition(Operator):
     def __str__(self):
         return str(self._left) + " o " + str(self._right)
 
-class OperatorPointwiseProduct(Operator):    
+
+class OperatorPointwiseProduct(Operator):
     """Pointwise multiplication of operators defined on Banach Algebras (with pointwise multiplication)
-    
+
     OperatorPointwiseProduct(op1,op2)(x) = op1(x) * op2(x)
     """
 
@@ -259,15 +256,16 @@ class OperatorPointwiseProduct(Operator):
     def range(self):
         return self._op1.range
 
+
 class OperatorLeftScalarMultiplication(Operator):
     """Expression type for the left multiplication of operators with scalars
-    
+
     OperatorLeftScalarMultiplication(op,scalar)(x) = scalar * op(x)
     """
 
     def __init__(self, op, scalar):
         if not op.range.field.isMember(scalar):
-            raise TypeError("Scalar ({}) not compatible with field of range ({}) of operator".format(scalar,op.range.field))
+            raise TypeError("Scalar ({}) not compatible with field of range ({}) of operator".format(scalar, op.range.field))
 
         self._op = op
         self._scalar = scalar
@@ -290,6 +288,7 @@ class OperatorLeftScalarMultiplication(Operator):
     def __str__(self):
         return str(self._scalar) + " * " + str(self._op)
 
+
 class OperatorRightScalarMultiplication(Operator):
     """Expression type for the right multiplication of operators with scalars.
 
@@ -298,16 +297,16 @@ class OperatorRightScalarMultiplication(Operator):
 
     def __init__(self, op, scalar, tmp=None):
         """ Create the OperatorRightScalarMultiplication defined by
-        
+
         OperatorRightScalarMultiplication(op,scalar)(x) = op(scalar * x)
 
         Args:
             Operator    `op`        Any operator
             Scalar      `scalar`    An element in the field of the domain of `op`
-            Vector      `tmp`       Vector in the domain of `op` in which to store the intermediate result of (scalar * x) 
+            Vector      `tmp`       Vector in the domain of `op` in which to store the intermediate result of (scalar * x)
         """
         if not op.domain.field.isMember(scalar):
-            raise TypeError("Scalar ({}) not compatible with field of domain ({}) of operator".format(scalar,op.domain.field))
+            raise TypeError("Scalar ({}) not compatible with field of domain ({}) of operator".format(scalar, op.domain.field))
 
         if tmp is not None and not op.domain.isMember(tmp):
             raise TypeError("Tmp ({}) must be an element in the range of the operators ({}).".format(tmp, op1.domain))
@@ -335,12 +334,12 @@ class OperatorRightScalarMultiplication(Operator):
     def __str__(self):
         return str(self._op) + " * " + str(self._scalar)
 
-    
+
 # DEFINITION OF LINEAR OPERATOR AND RELATED METHODS
 class LinearOperator(Operator):
     """ Linear operator, satisfies A(ax+by)=a*A(x)+b*A(y)
     """
-    
+
     @abstractmethod
     def applyAdjointImpl(self, rhs, out):
         """Apply the adjoint of the operator, abstract should be implemented by subclasses.
@@ -348,11 +347,11 @@ class LinearOperator(Operator):
         Public callers should instead use applyAdjoint which provides type checking.
         """
 
-    #Implicitly defined operators
+    # Implicitly defined operators
     @property
     def T(self):
         """ Get the adjoint of this operator such that:
-        
+
         op.T.apply(rhs, out) = op.applyAdjoint(rhs,out)
         and
         op.T.applyAdjoint(rhs, out) = op.apply(rhs,out)
@@ -360,7 +359,7 @@ class LinearOperator(Operator):
         return OperatorAdjoint(self)
 
     def getDerivative(self, point):
-        #The derivative of linear operators is the operator itself
+        # The derivative of linear operators is the operator itself
         return self
 
     def applyAdjoint(self, rhs, out):
@@ -374,12 +373,12 @@ class LinearOperator(Operator):
                                The result of the evaluation is written to this vector.
                                Any previous content is overwritten.
         """
-        if not self.range.isMember(rhs): 
-            raise TypeError('rhs ({}) is not in the domain of this operators ({}) adjoint'.format(rhs,self))
-        if not self.domain.isMember(out): 
-            raise TypeError('out ({}) is not in the range of this operators ({}) adjoint'.format(out,self))
+        if not self.range.isMember(rhs):
+            raise TypeError('rhs ({}) is not in the domain of this operators ({}) adjoint'.format(rhs, self))
+        if not self.domain.isMember(out):
+            raise TypeError('out ({}) is not in the range of this operators ({}) adjoint'.format(out, self))
         if rhs is out:
-            raise ValueError('rhs ({}) is the same as out ({}). Operators do not permit aliased arguments'.format(rhs,out))
+            raise ValueError('rhs ({}) is the same as out ({}). Operators do not permit aliased arguments'.format(rhs, out))
 
         self.applyAdjointImpl(rhs, out)
 
@@ -389,14 +388,14 @@ class LinearOperator(Operator):
         (self + other)(x) = self(x) + other(x)
         """
 
-        if isinstance(other, LinearOperator): #Specialization if both are linear
+        if isinstance(other, LinearOperator):  # Specialization if both are linear
             return LinearOperatorSum(self, other)
         else:
             return Operator.__add__(self, other)
 
     def __mul__(self, other):
         """Multiplication of operators with scalars.
-        
+
         (a*A)(x) = a*A(x)
         (A*a)(x) = a*A(x)
         """
@@ -412,8 +411,8 @@ class LinearOperator(Operator):
 class SelfAdjointOperator(LinearOperator):
     """ Special case of self adjoint operators where A(x) = A.T(x)
     """
-    
-    __metaclass__ = ABCMeta #Set as abstract
+
+    __metaclass__ = ABCMeta  # Set as abstract
 
     def applyAdjointImpl(self, rhs, out):
         self.applyImpl(rhs, out)
@@ -429,7 +428,7 @@ class OperatorAdjoint(LinearOperator):
 
     def __init__(self, op):
         """ Create an operator that is the adjoint of `op`
-        
+
         It is defined by:
         OperatorAdjoint(op).apply(rhs,out) = op.applyAdjoint(rhs,out)
         and
@@ -443,7 +442,7 @@ class OperatorAdjoint(LinearOperator):
 
     def applyImpl(self, rhs, out):
         self._op.applyAdjointImpl(rhs, out)
-    
+
     def applyAdjointImpl(self, rhs, out):
         self._op.applyImpl(rhs, out)
 
@@ -518,7 +517,7 @@ class LinearOperatorComposition(OperatorComposition, LinearOperator):
             raise TypeError('right ({}) is not a LinearOperator. LinearOperatorComposition is only defined for LinearOperators'.format(right))
 
         OperatorComposition.__init__(self, left, right, tmp)
-    
+
     def applyAdjointImpl(self, rhs, out):
         tmp = self._tmp if self._tmp is not None else self._right.range.empty()
         self._left.applyAdjoint(rhs, tmp)
@@ -531,7 +530,7 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication, Linea
 
     def __init__(self, op, scalar):
         """ Create the LinearOperatorScalarMultiplication defined by
-        
+
         LinearOperatorScalarMultiplication(op,scalar)(x) = scalar * op(x)
 
         Args:
@@ -542,7 +541,7 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication, Linea
             raise TypeError('op ({}) is not a LinearOperator. LinearOperatorScalarMultiplication is only defined for LinearOperators'.format(op))
 
         OperatorLeftScalarMultiplication.__init__(self, op, scalar)
-    
+
     def applyAdjointImpl(self, rhs, out):
         self._op.applyAdjointImpl(rhs, out)
         out *= self._scalar
