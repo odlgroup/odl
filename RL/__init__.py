@@ -18,4 +18,4 @@
 
 __version__ = '0.01a'
 
-__all__ = ['builders', 'datamodel', 'geometry', 'utility', 'operator', 'space']
+__all__ = ['geometry', 'operator', 'space']
