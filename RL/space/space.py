@@ -40,7 +40,8 @@ class LinearSpace(AbstractSet):
 
     @abstractmethod
     def linCombImpl(self, z, a, x, b, y):
-        """ Calculate z = ax + by. This method is intended to be private, public callers should resort to linComb which is type checked.
+        """ Calculate z = ax + by. This method is intended to be private,
+        public callers should resort to linComb which is type checked.
         """
 
     @abstractproperty
@@ -73,7 +74,7 @@ class LinearSpace(AbstractSet):
     def linComb(self, z, a, x, b=None, y=None):
         """ Calculates
         z = a*x
-        or of b and y are given
+        or if b and y are given
         z = a*x + b*y
 
         with error checking of types
@@ -89,7 +90,7 @@ class LinearSpace(AbstractSet):
 
         if b is None:
             if y is not None:
-                raise ValueError('Lincomb failed, y ({}) provided but not b'.format(y, self))
+                raise ValueError('Lincomb failed, y ({}) provided but not b'.format(y))
 
             return self.linCombImpl(z, a, x, 0, x)
         else:
@@ -102,13 +103,14 @@ class LinearSpace(AbstractSet):
             return self.linCombImpl(z, a, x, b, y)
 
     class Vector(object):
-        """ Abstract vector, al element in the linear space
+        """ Abstract vector, an element in the linear space
         """
 
         __metaclass__ = ABCMeta  # Set as abstract
 
         def __init__(self, space):
-            """ Default initializer of vectors, must be called by all deriving classes to set space
+            """ Default initializer of vectors, must be called by all deriving
+            classes to set space
             """
             self._space = space
 
