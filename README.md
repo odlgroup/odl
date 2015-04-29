@@ -1,7 +1,9 @@
 RL
 =====
 
-Tomography library - WIP
+Regularization Library
+
+TODO: Update information!
 
 Installation
 ------------
