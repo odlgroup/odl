@@ -16,12 +16,14 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import division, print_function, unicode_literals, absolute_import
-from future import standard_library
-standard_library.install_aliases()
+from __future__ import division, print_function, unicode_literals
+from __future__ import absolute_import
 
 from RL.operator.operator import LinearOperatorComposition, LinearOperatorSum
 from RL.operator.default_operators import IdentityOperator
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class storePartial(object):
@@ -158,7 +160,8 @@ def gaussNewton(operator, x, rhs, iterations=1,
 
         # Solve equation system
         # (opPrime.T o opPrime + tm * I)^-1 u = dx
-        A = LinearOperatorSum(LinearOperatorComposition(opPrime.T, opPrime), tm * I, tmpDom)
+        A = LinearOperatorSum(LinearOperatorComposition(opPrime.T, opPrime),
+                              tm * I, tmpDom)
         conjugateGradient(A, dx, u, 3)  # TODO allow user to select other method
 
         # Update x
