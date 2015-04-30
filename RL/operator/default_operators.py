@@ -16,11 +16,13 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import division, print_function, unicode_literals, absolute_import
-from future import standard_library
-standard_library.install_aliases()
+from __future__ import division, print_function, unicode_literals
+from __future__ import absolute_import
 
 import RL.operator.operator as op
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class IdentityOperator(op.SelfAdjointOperator):
@@ -39,7 +41,7 @@ class IdentityOperator(op.SelfAdjointOperator):
         return self._space
 
     def __repr__(self):
-        return "IdentityOperator(" + repr(self._space) + ")"
+        return 'IdentityOperator(' + repr(self._space) + ')'
 
     def __str__(self):
         return "I"

@@ -16,13 +16,17 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import unicode_literals, print_function, division, absolute_import
+from __future__ import unicode_literals, print_function, division
+from __future__ import absolute_import
 from future.builtins import object
-from future import standard_library
-standard_library.install_aliases()
 
 from numbers import Number
 from abc import ABCMeta, abstractmethod, abstractproperty
+
+from RL.utility.utility import errfmt
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class Functional(object):
@@ -55,12 +59,16 @@ class Functional(object):
         """Apply the operator with error checking
         """
         if not self.domain.isMember(rhs):
-            raise TypeError('rhs ({}) is not in the domain ({}) of this functional'.format(rhs, self.domain))
+            raise TypeError(errfmt('''
+            rhs ({}) is not in the domain ({}) of this functional
+            '''.format(rhs, self.domain)))
 
         result = self.applyImpl(rhs)
 
         if not self.range.isMember(result):
-            raise TypeError('functional returned: ({}), is in wrong set'.format(result))
+            raise TypeError(errfmt('''
+            functional returned: ({}), is in wrong set
+            '''.format(result)))
 
         return result
 
@@ -93,7 +101,8 @@ class Functional(object):
     __rmul__ = __mul__
 
     def __str__(self):
-        return "Functional " + self.__class__.__name__ + ": " + str(self.domain) + "->" + str(self.range)
+        return ('Functional ' + self.__class__.__name__ + ': ' +
+                str(self.domain) + '->' + str(self.range))
 
 
 class FunctionalComposition(Functional):
@@ -124,7 +133,7 @@ class FunctionalSum(Functional):
     """
     def __init__(self, op1, op2):
         if op1.range != op2.range or op1.domain != op2.domain:
-            raise TypeError("Range and domain of functionals do not fit")
+            raise TypeError('Range and domain of functionals do not fit')
 
         self.op1 = op1
         self.op2 = op2
@@ -147,7 +156,7 @@ class FunctionalPointwiseProduct(Functional):
 
     def __init__(self, op1, op2):
         if op1.range != op2.range or op1.domain != op2.domain:
-            raise TypeError("Range and domain of functionals do not fit")
+            raise TypeError('Range and domain of functionals do not fit')
 
         self.op1 = op1
         self.op2 = op2
@@ -170,9 +179,9 @@ class FunctionalScalarMultiplication(Functional):
 
     def __init__(self, op, scalar):
         if not op.range.isMember(scalar):
-            raise TypeError("Scalar is not compatible with this functional")
+            raise TypeError('Scalar is not compatible with this functional')
 
-        self.operator = operator
+        self.operator = op
         self.scalar = scalar
 
     def applyImpl(self, rhs):

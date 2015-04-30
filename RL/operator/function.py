@@ -16,15 +16,18 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import unicode_literals, print_function, division, absolute_import
-from future.builtins import object, zip
+from __future__ import unicode_literals, print_function, division
+from __future__ import absolute_import
+from future.builtins import object  # , zip
+
+# from numbers import Number
+from abc import ABCMeta, abstractmethod  # , abstractproperty
+
+from RL.space.set import EmptySet,  # , AbstractSet
+from RL.utility.utility import errfmt
+
 from future import standard_library
 standard_library.install_aliases()
-
-from numbers import Number
-from abc import ABCMeta, abstractmethod, abstractproperty
-
-from RL.space.set import AbstractSet, EmptySet
 
 
 class Function(object):
@@ -49,7 +52,7 @@ class Function(object):
 
     @property
     def range(self):
-        """ The return type of this function
+        """The return type of this function
         """
         return self._returns
 
@@ -61,16 +64,23 @@ class Function(object):
 
     def apply(self, *args):
         if len(args) != self.nargs:
-            raise TypeError("Number of arguments provided ({}) does not match the expected number ({}) of this function ({})".format(len(args), self.nargs, self))
+            raise TypeError(errfmt('''
+            Number of arguments provided ({}) does not match the expected
+            number ({}) of this function ({})
+            '''.format(len(args), self.nargs, self)))
 
         for i in range(self.nargs):
             if not self.domain(i).isMember(args[i]):
-                raise TypeError('The {}:th argument ({}) is not in the domain of this function ({})'.format(i, args[i], self))
+                raise TypeError(errfmt('''
+                The {}:th argument ({}) is not in the domain of this function
+                ({})'''.format(i, args[i], self)))
 
         returnValue = self.applyImpl(*args)
 
         if not self.range.isMember(returnValue):
-            raise TypeError('The return value ({}) is not in the range ({}) of this function ({})'.format(returnValue, self.range, self))
+            raise TypeError(errfmt('''
+            The return value ({}) is not in the range ({}) of this function
+            ({})'''.format(returnValue, self.range, self)))
 
         return returnValue
 
@@ -80,11 +90,13 @@ class Function(object):
         self.apply(*args)
 
     def __str__(self):
-        return "Function " + self.__class__.__name__ + "(" + ", ".join(str(self.domain(i)) for i in range(self.nargs)) + ")"
+        return ('Function ' + self.__class__.__name__ + '(' +
+                ', '.join(str(self.domain(i)) for i in range(self.nargs)) +
+                ')')
 
 
 class LambdaFunction(Function):
-    """ Shorthand for defining a function with a lambda
+    """Shorthand for defining a function with a lambda
     """
 
     def __init__(self, fun, *args, **kwargs):
