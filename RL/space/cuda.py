@@ -16,21 +16,28 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
+try:
+    from builtins import str
+except ImportError:
+    from future.builtins import str
 from future import standard_library
-standard_library.install_aliases()
 
+# External module imports
+import numpy as np
+
+# RL imports
 import RL.operator.function as fun
 import RL.space.space as spaces
 import RL.space.set as sets
-from RL.space.function import L2
 import RLcpp.PyCuda
-import numpy as np
+
+standard_library.install_aliases()
 
 
-class CudaRN(spaces.HilbertSpace,spaces.Algebra):
+class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     """The real space R^n
     """
 
@@ -76,33 +83,47 @@ class CudaRN(spaces.HilbertSpace,spaces.Algebra):
 
     @property
     def abs(self):
-        return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.abs(input.impl, output.impl),
+        return fun.LambdaFunction(lambda input,
+                                  output: RLcpp.PyCuda.abs(input.impl,
+                                                           output.impl),
                                   (self, self))
 
     @property
     def sign(self):
-        return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.sign(input.impl, output.impl),
+        return fun.LambdaFunction(lambda input,
+                                  output: RLcpp.PyCuda.sign(input.impl,
+                                                            output.impl),
                                   input=(self, self))
 
     @property
     def addScalar(self):
-        return  fun.LambdaFunction(lambda input, scalar, output: RLcpp.PyCuda.addScalar(input.impl, scalar, output.impl),
-                                   input=(self, self.field, self))
+        return fun.LambdaFunction(lambda input, scalar,
+                                  output: RLcpp.PyCuda.addScalar(input.impl,
+                                                                 scalar,
+                                                                 output.impl),
+                                  input=(self, self.field, self))
 
     @property
     def maxVectorScalar(self):
-        return fun.LambdaFunction(lambda input, scalar, output: RLcpp.PyCuda.maxVectorScalar(input.impl, scalar, output.impl),
+        return fun.LambdaFunction(lambda input, scalar,
+                                  output: RLcpp.PyCuda.maxVectorScalar(input.impl,
+                                                                       scalar,
+                                                                       output.impl),
                                   input=(self, self.field, self))
 
     @property
     def maxVectorVector(self):
-        return fun.LambdaFunction(lambda input1, input2, output: RLcpp.PyCuda.maxVectorVector(input1.impl, input2.impl, output.impl),
+        return fun.LambdaFunction(lambda input1, input2,
+                                  output: RLcpp.PyCuda.maxVectorVector(input1.impl,
+                                                                       input2.impl,
+                                                                       output.impl),
                                   input=(self, self, self))
 
     @property
     def sum(self):
-        return fun.LambdaFunction(lambda input, output: RLcpp.PyCuda.abs(input.impl),
-                                  input=(self), returns = self.field)
+        return fun.LambdaFunction(lambda input,
+                                  output: RLcpp.PyCuda.abs(input.impl),
+                                  input=(self), returns=self.field)
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         def __init__(self, space, *args):
@@ -119,10 +140,12 @@ class CudaRN(spaces.HilbertSpace,spaces.Algebra):
                 self.impl = RLcpp.PyCuda.CudaRNVectorImpl(*args)
 
         def __str__(self):
-            return self.space.__str__() + "::Vector(" + self[:].__str__() + ")"
+            return (self.space.__str__() + '::Vector(' + self[:].__str__() +
+                    ')')
 
         def __repr__(self):
-            return self.space.__repr__() + "::Vector(" + self[:].__repr__() + ")"
+            return (self.space.__repr__() + '::Vector(' + self[:].__repr__() +
+                    ')')
 
         # Slow get and set, for testing and nothing else!
         def __getitem__(self, index):

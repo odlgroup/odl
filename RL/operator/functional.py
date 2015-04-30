@@ -16,23 +16,29 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
+try:
+    from builtins import str, object
+except ImportError:
+    from future.builtins import str, object
+from future import standard_library
+from future.utils import with_metaclass
 
+# External module imports
 from numbers import Number
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+# RL imports
 from RL.utility.utility import errfmt
 
-from future import standard_library
 standard_library.install_aliases()
 
 
-class Functional(object):
+class Functional(with_metaclass(ABCMeta, object)):
     """Abstract functional
     """
-    __metaclass__ = ABCMeta  # Set as abstract
 
     # Abstract methods
     @abstractmethod

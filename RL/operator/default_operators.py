@@ -16,12 +16,15 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import division, print_function, unicode_literals
 from __future__ import absolute_import
 
+from future import standard_library
+
+# RL imports
 import RL.operator.operator as op
 
-from future import standard_library
 standard_library.install_aliases()
 
 

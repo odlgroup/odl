@@ -16,25 +16,30 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
+try:
+    from builtins import object, str
+except ImportError:
+    from future.builtins import object, str
+from future.utils import with_metaclass
+from future import standard_library
 
+# External module imports
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
 
+# RL imports
 from RL.space.set import AbstractSet
 from RL.utility.utility import errfmt
 
-from future import standard_library
 standard_library.install_aliases()
 
 
-class LinearSpace(AbstractSet):
+class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
     """ Abstract linear space
     """
-
-    __metaclass__ = ABCMeta  # Set as abstract
 
     @abstractmethod
     def empty(self):
@@ -114,11 +119,9 @@ class LinearSpace(AbstractSet):
             # Call method
             return self.linCombImpl(z, a, x, b, y)
 
-    class Vector(object):
+    class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
         """
-
-        __metaclass__ = ABCMeta  # Set as abstract
 
         def __init__(self, space):
             """ Default initializer of vectors, must be called by all deriving
@@ -235,11 +238,9 @@ class LinearSpace(AbstractSet):
             return str(self.space) + "::Vector"
 
 
-class NormedSpace(LinearSpace):
+class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
     """ Abstract normed space
     """
-
-    __metaclass__ = ABCMeta  # Set as abstract
 
     @abstractmethod
     def normSqImpl(self, vector):
@@ -261,11 +262,8 @@ class NormedSpace(LinearSpace):
         """
         return sqrt(self.normSq(vector))
 
-    class Vector(LinearSpace.Vector):
+    class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 
-        __metaclass__ = ABCMeta  # Set as abstract
-
-        # Member variants of the space method
         def normSq(self):
             return self.space.normSq(self)
 
@@ -273,11 +271,9 @@ class NormedSpace(LinearSpace):
             return self.space.norm(self)
 
 
-class HilbertSpace(NormedSpace):
+class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
     """ Abstract (pre)-Hilbert space or inner product space
     """
-
-    __metaclass__ = ABCMeta  # Set as abstract
 
     @abstractmethod
     def innerImpl(self, x, y):
@@ -304,9 +300,7 @@ class HilbertSpace(NormedSpace):
         """
         return self.innerImpl(x, x)
 
-    class Vector(NormedSpace.Vector):
-
-        __metaclass__ = ABCMeta  # Set as abstract
+    class Vector(with_metaclass(ABCMeta, NormedSpace.Vector)):
 
         def inner(self, x):
             """ Shortcut for self.space.inner(self, x)
@@ -317,12 +311,10 @@ class HilbertSpace(NormedSpace):
             return self.space.inner(self, x)
 
 
-class Algebra(LinearSpace):
+class Algebra(with_metaclass(ABCMeta, LinearSpace)):
     """ Algebras, or Banach Algebras are linear spaces with multiplication
     defined
     """
-
-    __metaclass__ = ABCMeta  # Set as abstract
 
     @abstractmethod
     def multiplyImpl(self, x, y):
@@ -342,9 +334,7 @@ class Algebra(LinearSpace):
 
         self.multiplyImpl(x, y)
 
-    class Vector(LinearSpace.Vector):
-
-        __metaclass__ = ABCMeta  # Set as abstract
+    class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 
         def multiply(self, other):
             self.space.multiply(other, self)
