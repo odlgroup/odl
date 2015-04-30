@@ -1,30 +1,24 @@
-# -*- coding: utf-8 -*-
-"""
-fourier.py -- uniform and non-uniform Fourier transforms
+# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+#
+# This file is part of RL.
+#
+# RL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# RL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2014, 2015 Holger Kohr
-
-This file is part of RL.
-
-RL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-RL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with RL.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
 from __future__ import division, unicode_literals, print_function
 from __future__ import absolute_import
 from builtins import object, super, range
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
 from numpy import pi
@@ -37,6 +31,9 @@ from functools import partial
 from RL.datamodel import ugrid as ug
 from RL.datamodel import gfunc as gf
 from RL.utility.utility import errfmt, InputValidationError, SQRT_2PI
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class FourierTransform(object):
