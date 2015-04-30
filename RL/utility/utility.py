@@ -19,12 +19,12 @@
 from __future__ import division, unicode_literals, print_function
 from __future__ import absolute_import
 from future.builtins import range
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
 from textwrap import dedent, fill
 
+from future import standard_library
+standard_library.install_aliases()
 
 SQRT_2PI = 2.5066282746310002
 
@@ -40,7 +40,7 @@ def plot3d_scatter(arr, figsize=None, savefig=None):
     sub.set_zlabel('z')
     csub = sub.scatter(arr[:, 0], arr[:, 1], arr[:, 2])  # TODO: axes??
     plt.show()
-    if savefig:
+    if savefig is not None:
         fig.savefig(savefig)
 
 
