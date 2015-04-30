@@ -1,27 +1,50 @@
+# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+#
+# This file is part of RL.
+#
+# RL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# RL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from itertools import izip_longest
 import unittest
 from time import time
 
 
-#Todo move
+# Todo move
 class RLTestCase(unittest.TestCase):
     def assertAlmostEqual(self, f1, f2, *args, **kwargs):
-        unittest.TestCase.assertAlmostEqual(self, float(f1), float(f2), *args, **kwargs)
+        unittest.TestCase.assertAlmostEqual(self, float(f1), float(f2), *args,
+                                            **kwargs)
 
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
-        differentLengthSentinel = object() #Sentinel object used to check that both iterators are the same length.
+        # Sentinel object used to check that both iterators are the same length
+        differentLengthSentinel = object()
 
         if iter1 is None and iter2 is None:
             return
 
-        for [i1, i2] in izip_longest(iter1, iter2, fillvalue=differentLengthSentinel):
-            #Verify that none of the lists has ended (then they are not the same size
+        for [i1, i2] in izip_longest(iter1, iter2,
+                                     fillvalue=differentLengthSentinel):
+            # Verify that none of the lists has ended (then they are not the
+            # same size)
             self.assertIsNot(i1, differentLengthSentinel)
             self.assertIsNot(i2, differentLengthSentinel)
             try:
                 self.assertAllAlmostEquals(iter(i1), iter(i2), *args, **kwargs)
             except TypeError:
                 self.assertAlmostEquals(float(i1), float(i2), *args, **kwargs)
+
 
 class Timer(object):
     def __init__(self, name=None):
@@ -37,7 +60,7 @@ class Timer(object):
 
 
 def consume(iterator):
-    """ Consumes an iterator and returns the last value
+    """Consumes an iterator and returns the last value
     """
     for x in iterator:
         pass
