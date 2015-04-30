@@ -65,3 +65,7 @@ target/
 *.pyproj.user
 *.pyperf
 *.psess
+
+# Spyder project files
+.spyderproject
+.spyderworkspace
