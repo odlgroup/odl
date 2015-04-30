@@ -21,7 +21,7 @@ from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
     from builtins import str, zip, range
-except ImportError:
+except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, zip, range
 from future import standard_library
 

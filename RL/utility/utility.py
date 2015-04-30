@@ -16,14 +16,19 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import division, unicode_literals, print_function
 from __future__ import absolute_import
-from future.builtins import range
+try:
+    from builtins import next, range
+except ImportError:  # Versions < 0.14 of python-future
+    from future.builtins import next, range
+from future import standard_library
 
+# External module imports
 import numpy as np
 from textwrap import dedent, fill
 
-from future import standard_library
 standard_library.install_aliases()
 
 SQRT_2PI = 2.5066282746310002

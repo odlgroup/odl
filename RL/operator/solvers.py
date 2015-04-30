@@ -22,7 +22,7 @@ from __future__ import absolute_import
 
 try:
     from builtins import object, next, range
-except ImportError:
+except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import object, next, range
 from future import standard_library
 

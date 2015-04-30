@@ -16,9 +16,21 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from itertools import izip_longest
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, unicode_literals, division
+from __future__ import absolute_import
+try:
+    from builtins import object
+except ImportError:
+    from future.builtins import object
+from future import standard_library
+
+# External module imports
+from itertools import zip_longest
 import unittest
 from time import time
+
+standard_library.install_aliases()
 
 
 # Todo move
@@ -34,8 +46,8 @@ class RLTestCase(unittest.TestCase):
         if iter1 is None and iter2 is None:
             return
 
-        for [i1, i2] in izip_longest(iter1, iter2,
-                                     fillvalue=differentLengthSentinel):
+        for [i1, i2] in zip_longest(iter1, iter2,
+                                    fillvalue=differentLengthSentinel):
             # Verify that none of the lists has ended (then they are not the
             # same size)
             self.assertIsNot(i1, differentLengthSentinel)
@@ -55,8 +67,8 @@ class Timer(object):
 
     def __exit__(self, type, value, traceback):
         if self.name:
-            print '[%s]' % self.name,
-        print 'Elapsed: %s' % (time() - self.tstart)
+            print('[{}] '.format(self.name))
+        print('Elapsed: {}'.format(time() - self.tstart))
 
 
 def consume(iterator):
