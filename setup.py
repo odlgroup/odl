@@ -36,5 +36,5 @@ setup(name='RL',
       url='https://gits-14.sys.kth.se/LCR/RL',
       description='Regularization Library',
       license='GPLv3',
-      packages=['RL', 'RL.geometry', 'RL.operator', 'RL.space'],
+      packages=['RL', 'RL.geometry', 'RL.operator', 'RL.space', 'RL.utility'],
       package_dir={'RL': 'RL'})
