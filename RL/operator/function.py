@@ -16,24 +16,30 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object  # , zip
+try:
+    from builtins import str, range, object
+except ImportError:
+    from future.builtins import str, range, object
+from future.utils import with_metaclass
+from future import standard_library
 
+# External module imports
 # from numbers import Number
 from abc import ABCMeta, abstractmethod  # , abstractproperty
 
+# RL imports
 from RL.space.set import EmptySet,  # , AbstractSet
 from RL.utility.utility import errfmt
 
-from future import standard_library
 standard_library.install_aliases()
 
 
-class Function(object):
+class Function(with_metaclass(ABCMeta, object)):
     """Abstract function on some sets
     """
-    __metaclass__ = ABCMeta  # Set as abstract
 
     def __init__(self, input, returns=EmptySet()):
         self._sets = input

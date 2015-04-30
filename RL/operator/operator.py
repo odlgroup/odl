@@ -16,23 +16,29 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
+try:
+    from builtins import str, object
+except ImportError:
+    from future.builtins import str, object
+from future.utils import with_metaclass
+from future import standard_library
 
+# External module imports
 from numbers import Number
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+# RL imports
 from RL.utility.utility import errfmt
 
-from future import standard_library
 standard_library.install_aliases()
 
 
-class Operator(object):
+class Operator(with_metaclass(ABCMeta, object)):
     """Abstract operator
     """
-    __metaclass__ = ABCMeta  # Set as abstract
 
     @abstractmethod
     def applyImpl(self, rhs, out):
@@ -466,11 +472,9 @@ class LinearOperator(Operator):
     __rmul__ = __mul__
 
 
-class SelfAdjointOperator(LinearOperator):
+class SelfAdjointOperator(with_metaclass(ABCMeta, LinearOperator)):
     """ Special case of self adjoint operators where A(x) = A.T(x)
     """
-
-    __metaclass__ = ABCMeta  # Set as abstract
 
     def applyAdjointImpl(self, rhs, out):
         self.applyImpl(rhs, out)

@@ -16,16 +16,20 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 
+# External module imports
 import numpy as np
 
+# RL imports
 from RL.space.space import *
 from RL.space.euclidean import *
 from RL.space.function import *
 
-from future import standard_library
 standard_library.install_aliases()
 
 

@@ -16,19 +16,24 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-# from future.builtins import object, zip
+try:
+    from builtins import str
+except ImportError:
+    from future.builtins import str
+from future import standard_library
 
+# External module imports
 import numpy as np
 from scipy.lib.blas import get_blas_funcs
 
-# from RL.utility.utility import allEqual
+# RL imports
 from RL.space.space import *
 from RL.space.set import *
 from RL.utility.utility import errfmt
 
-from future import standard_library
 standard_library.install_aliases()
 
 

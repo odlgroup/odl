@@ -16,6 +16,10 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import division, unicode_literals, print_function
+from __future__ import absolute_import
+
+
 __version__ = '0.01a'
 
 __all__ = ['geometry', 'operator', 'space', 'utility']
