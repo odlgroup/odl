@@ -19,12 +19,15 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 from future.builtins import object
-from future import standard_library
-standard_library.install_aliases()
+
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
 
 from RL.space.set import AbstractSet
+from RL.utility.utility import errfmt
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class LinearSpace(AbstractSet):
@@ -40,7 +43,7 @@ class LinearSpace(AbstractSet):
 
     @abstractmethod
     def linCombImpl(self, z, a, x, b, y):
-        """ Calculate z = ax + by. This method is intended to be private,
+        """ Calculate z = a*x + b*y. This method is intended to be private,
         public callers should resort to linComb which is type checked.
         """
 
@@ -81,23 +84,32 @@ class LinearSpace(AbstractSet):
         """
 
         if not self.isMember(z):
-            raise TypeError('Lincomb failed, z ({}) is not in space ({})'.format(z, self))
+            raise TypeError(errfmt('''
+            Lincomb failed, z ({}) is not in space ({})'''.format(z, self)))
 
         if not self.field.isMember(a):
-            raise TypeError('Lincomb failed, a ({}) is not in field ({})'.format(a, self.field))
+            raise TypeError(errfmt('''
+            Lincomb failed, a ({}) is not in field ({})
+            '''.format(a, self.field)))
         if not self.isMember(x):
-            raise TypeError('Lincomb failed, x ({}) is not in space ({})'.format(x, self))
+            raise TypeError(errfmt('''
+            Lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
 
         if b is None:
             if y is not None:
-                raise ValueError('Lincomb failed, y ({}) provided but not b'.format(y))
+                raise ValueError(errfmt('''
+                Lincomb failed, y ({}) provided but not b'''.format(y)))
 
             return self.linCombImpl(z, a, x, 0, x)
         else:
             if not self.field.isMember(b):
-                raise TypeError('Lincomb failed, b ({}) is not in field ({})'.format(b, self.field))
+                raise TypeError(errfmt('''
+                Lincomb failed, b ({}) is not in field ({})
+                '''.format(b, self.field)))
             if not self.isMember(y):
-                raise TypeError('Lincomb failed, y ({}) is not in space ({})'.format(y, self))
+                raise TypeError(errfmt('''
+                Lincomb failed, y ({}) is not in space ({})
+                '''.format(y, self)))
 
             # Call method
             return self.linCombImpl(z, a, x, b, y)
@@ -207,7 +219,8 @@ class LinearSpace(AbstractSet):
             return tmp
 
         def __pos__(self):
-            """ Unary plus (the identity operator), creates a copy of this object
+            """ Unary plus (the identity operator), creates a copy of this
+            object
             """
             return self.copy()
 
@@ -243,7 +256,8 @@ class NormedSpace(LinearSpace):
         return self.normSqImpl(vector)
 
     def norm(self, vector):
-        """ The norm of the vector, default implementation uses the normSquared implementation
+        """ The norm of the vector, default implementation uses the
+        normSquared implementation
         """
         return sqrt(self.normSq(vector))
 
@@ -285,7 +299,8 @@ class HilbertSpace(NormedSpace):
         return self.innerImpl(x, y)
 
     def normSqImpl(self, x):
-        """ The norm in Hilbert spaces is implicitly defined by the inner product
+        """ The norm in Hilbert spaces is implicitly defined by the inner
+        product
         """
         return self.innerImpl(x, x)
 
@@ -303,7 +318,8 @@ class HilbertSpace(NormedSpace):
 
 
 class Algebra(LinearSpace):
-    """ Algebras, or Banach Algebras are linear spaces with multiplication defined
+    """ Algebras, or Banach Algebras are linear spaces with multiplication
+    defined
     """
 
     __metaclass__ = ABCMeta  # Set as abstract
@@ -315,7 +331,7 @@ class Algebra(LinearSpace):
 
     def multiply(self, x, y):
         """ Calculates the pointwise product of x and y and assigns it to y
-        y = x*y
+        y = x * y
         """
         # Check spaces
         if not self.isMember(x):
@@ -334,7 +350,8 @@ class Algebra(LinearSpace):
             self.space.multiply(other, self)
 
         def __imul__(self, other):
-            """ Overloads the *= operator to mean pointwise multiplication if the other object is a vector
+            """ Overloads the *= operator to mean pointwise multiplication if
+            the other object is a vector
             """
             if isinstance(other, Algebra.Vector):
                 self.multiply(other)

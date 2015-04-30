@@ -19,11 +19,13 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 from future.builtins import object
-from future import standard_library
-standard_library.install_aliases()
-from abc import ABCMeta, abstractmethod, abstractproperty
+
+from abc import ABCMeta, abstractmethod  # , abstractproperty
 
 from numbers import Integral, Real, Complex
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class AbstractSet(object):
@@ -102,10 +104,12 @@ class Interval(RealNumbers):
         self.end = end
 
     def equals(self, other):
-        return isinstance(other, Interval) and self.begin == other.begin and self.end == other.end
+        return (isinstance(other, Interval) and self.begin == other.begin and
+                self.end == other.end)
 
     def isMember(self, other):
-        return RealNumbers.isMember(self, other) and self.begin <= other <= self.end
+        return (RealNumbers.isMember(self, other) and
+                self.begin <= other <= self.end)
 
 
 class Square(AbstractSet):
@@ -115,8 +119,11 @@ class Square(AbstractSet):
         self.end = end
 
     def equals(self, other):
-        return isinstance(other, Square) and self.begin == other.begin and self.end == other.end
+        return (isinstance(other, Square) and self.begin == other.begin and
+                self.end == other.end)
 
     def isMember(self, other):
-        return self.reals.isMember(other[0]) and self.begin[0] <= other[0] <= self.end[0] and \
-               self.reals.isMember(other[1]) and self.begin[1] <= other[1] <= self.end[1]
+        return (self.reals.isMember(other[0]) and
+                self.begin[0] <= other[0] <= self.end[0] and
+                self.reals.isMember(other[1]) and
+                self.begin[1] <= other[1] <= self.end[1])

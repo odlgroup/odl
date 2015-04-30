@@ -18,16 +18,18 @@
 
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object, zip
-from future import standard_library
-standard_library.install_aliases()
+# from future.builtins import object, zip
 
 import numpy as np
 from scipy.lib.blas import get_blas_funcs
 
-from RL.utility.utility import allEqual
+# from RL.utility.utility import allEqual
 from RL.space.space import *
 from RL.space.set import *
+from RL.utility.utility import errfmt
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class RN(LinearSpace):
@@ -36,10 +38,11 @@ class RN(LinearSpace):
 
     def __init__(self, n):
         if not isinstance(n, Integral) or n < 1:
-            raise TypeError("n ({}) has to be a positive integer".format(np))
+            raise TypeError('n ({}) has to be a positive integer'.format(np))
         self.n = n
         self._field = RealNumbers()
-        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy', 'scal', 'copy'])
+        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy', 'scal',
+                                                             'copy'])
 
     def linCombImpl(self, z, a, x, b, y):
         # Implement y = a*x + b*y using optimized BLAS rutines
@@ -103,9 +106,13 @@ class RN(LinearSpace):
             if args[0].shape == (self.n,):
                 return RN.Vector(self, args[0])
             else:
-                raise ValueError("Input numpy array ({}) is of shape {}, expected shape shape {}".format(args[0], args[0].shape, (self.n,)))
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of shape {}, expected shape shape {}
+                '''.format(args[0], args[0].shape, (self.n,))))
         else:
-            return self.makeVector(np.array(*args, **kwargs).astype(float, copy=False))
+            return self.makeVector(np.array(*args,
+                                            **kwargs).astype(float,
+                                                             copy=False))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, values):
@@ -119,7 +126,7 @@ class RN(LinearSpace):
             return str(self.values)
 
         def __repr__(self):
-            return repr(self.space) + "::Vector(" + repr(self.values) + ")"
+            return repr(self.space) + '::Vector(' + repr(self.values) + ')'
 
         def __getitem__(self, index):
             return self.values.__getitem__(index)
@@ -131,7 +138,7 @@ class RN(LinearSpace):
         return self.__class__.__name__ + "(" + str(self.n) + ")"
 
     def __repr__(self):
-        return "RN(" + str(self.n) + ")"
+        return 'RN(' + str(self.n) + ')'
 
 
 class EuclidianSpace(RN, HilbertSpace, Algebra):
@@ -146,7 +153,8 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
 
 
 def makePooledSpace(base, *args, **kwargs):
-    """ Pooled space provides a optimization in reusing vectors and returning them from empty.
+    """ Pooled space provides a optimization in reusing vectors and returning
+    them from empty.
     """
     BaseType = type(base)
     BaseVectorType = BaseType.Vector
@@ -167,7 +175,8 @@ def makePooledSpace(base, *args, **kwargs):
             return getattr(self._base, name)
 
         def __str__(self):
-            return "PooledSpace(" + str(self._base) + ", Pool size:" + str(len(self._pool)) + ")"
+            return ('PooledSpace(' + str(self._base) + ', Pool size:' +
+                    str(len(self._pool)) + ')')
 
         class Vector(BaseVectorType):
             def __del__(self):

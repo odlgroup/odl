@@ -18,16 +18,15 @@
 
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
 
-import RL.operator.functional as FUN
 from RL.space.space import *
 from RL.space.euclidean import *
 from RL.space.function import *
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class SequenceSpace(FunctionSpace):
@@ -38,7 +37,8 @@ class SequenceSpace(FunctionSpace):
         FunctionSpace.__init__(self, Integers())
 
     def equals(self, other):
-        return isinstance(other, sequenceSpace) and FunctionSpace.equals(self, other)
+        return (isinstance(other, SequenceSpace) and
+                FunctionSpace.equals(self, other))
 
 
 class TruncationDiscretization(EuclidianSpace, Discretization):
@@ -63,7 +63,8 @@ class TruncationDiscretization(EuclidianSpace, Discretization):
         return self.makeVector(np.empty(self.n), copy=False)
 
     def equals(self, other):
-        return isinstance(other, TruncationDiscretization) and EuclidianSpace.equals(self, other)
+        return (isinstance(other, TruncationDiscretization) and
+                EuclidianSpace.equals(self, other))
 
     def makeVector(self, *args, **kwargs):
         return TruncationDiscretization.Vector(self, *args, **kwargs)
@@ -76,7 +77,13 @@ class TruncationDiscretization(EuclidianSpace, Discretization):
 
     class Vector(EuclidianSpace.Vector):
         def __init__(self, space, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], SequenceSpace.Vector) and args[0].space == space.parent:
-                data = EuclidianSpace.Vector.__init__(self, space, args[0](space.points()), copy=False)
+            if ((len(args) == 1 and
+                 isinstance(args[0], SequenceSpace.Vector) and
+                 args[0].space == space.parent)):
+
+                data = EuclidianSpace.Vector.__init__(self, space,
+                                                      args[0](space.points()),
+                                                      copy=False)
             else:
-                data = EuclidianSpace.Vector.__init__(self, space, *args, **kwargs)
+                data = EuclidianSpace.Vector.__init__(self, space, *args,
+                                                      **kwargs)

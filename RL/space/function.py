@@ -18,15 +18,17 @@
 
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-from future.builtins import object
-from future import standard_library
-standard_library.install_aliases()
+# from future.builtins import object
 
-import numpy as np
+# import numpy as np
 
 import RL.operator.functional as fun
 from RL.space.space import HilbertSpace, Algebra
 import RL.space.set as sets
+from RL.utility.utility import errfmt
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 # Example of a space:
@@ -98,7 +100,8 @@ class L2(FunctionSpace, HilbertSpace):
         FunctionSpace.__init__(self, domain)
 
     def innerImpl(self, v1, v2):
-        raise NotImplementedError("You cannot calculate inner products in non-discretized spaces")
+        raise NotImplementedError(errfmt('''
+        You cannot calculate inner products in non-discretized spaces'''))
 
     def equals(self, other):
         return isinstance(other, L2) and FunctionSpace.equals(self, other)
