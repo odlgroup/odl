@@ -32,7 +32,7 @@ standard_library.install_aliases()
 
 # Example of a space:
 class FunctionSpace(Algebra):
-    """ The space scalar valued of functions on some domain
+    """ The space of scalar valued functions on some domain
     """
 
     def __init__(self, domain, field=None):

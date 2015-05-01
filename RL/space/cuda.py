@@ -83,47 +83,44 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
     @property
     def abs(self):
-        return fun.LambdaFunction(lambda input,
-                                  output: RLcpp.PyCuda.abs(input.impl,
-                                                           output.impl),
-                                  (self, self))
+        return fun.LambdaFunction(
+            lambda input, output: RLcpp.PyCuda.abs(input.impl, output.impl),
+            (self, self))
 
     @property
     def sign(self):
-        return fun.LambdaFunction(lambda input,
-                                  output: RLcpp.PyCuda.sign(input.impl,
-                                                            output.impl),
-                                  input=(self, self))
+        return fun.LambdaFunction(
+            lambda input, output: RLcpp.PyCuda.sign(input.impl, output.impl),
+            input=(self, self))
 
     @property
     def addScalar(self):
-        return fun.LambdaFunction(lambda input, scalar,
-                                  output: RLcpp.PyCuda.addScalar(input.impl,
-                                                                 scalar,
-                                                                 output.impl),
-                                  input=(self, self.field, self))
+        return fun.LambdaFunction(
+            lambda input, scalar,
+            output: RLcpp.PyCuda.addScalar(input.impl, scalar, output.impl),
+            input=(self, self.field, self))
 
     @property
     def maxVectorScalar(self):
-        return fun.LambdaFunction(lambda input, scalar,
-                                  output: RLcpp.PyCuda.maxVectorScalar(input.impl,
-                                                                       scalar,
-                                                                       output.impl),
-                                  input=(self, self.field, self))
+        return fun.LambdaFunction(
+            lambda input, scalar,
+            output: RLcpp.PyCuda.maxVectorScalar(input.impl, scalar,
+                                                 output.impl),
+            input=(self, self.field, self))
 
     @property
     def maxVectorVector(self):
-        return fun.LambdaFunction(lambda input1, input2,
-                                  output: RLcpp.PyCuda.maxVectorVector(input1.impl,
-                                                                       input2.impl,
-                                                                       output.impl),
-                                  input=(self, self, self))
+        return fun.LambdaFunction(
+            lambda input1, input2,
+            output: RLcpp.PyCuda.maxVectorVector(input1.impl, input2.impl,
+                                                 output.impl),
+            input=(self, self, self))
 
     @property
     def sum(self):
-        return fun.LambdaFunction(lambda input,
-                                  output: RLcpp.PyCuda.abs(input.impl),
-                                  input=(self), returns=self.field)
+        return fun.LambdaFunction(
+            lambda input, output: RLcpp.PyCuda.abs(input.impl),
+            input=(self), returns=self.field)
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         def __init__(self, space, *args):

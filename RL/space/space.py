@@ -36,6 +36,8 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
+__all__ = ['LinearSpace', 'NormedSpace', 'HilbertSpace', 'Algebra']
+
 
 class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
     """ Abstract linear space
