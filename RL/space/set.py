@@ -139,10 +139,14 @@ class IntervalProd(AbstractSet):
     def dim(self):
         return len(self._begin)
 
+    @property
+    def volume(self):
+        return np.prod(self._end - self._begin)
+
     def equals(self, other):
         return (isinstance(other, IntervalProd) and
-                self.begin == other.begin and
-                self.end == other.end)
+                np.all(self.begin == other.begin) and
+                np.all(self.end == other.end))
 
     def contains(self, other):
         other = np.atleast_1d(other)
@@ -174,6 +178,10 @@ class Interval(IntervalProd):
             'begin' and 'end' must scalar or have length 1 (got {}).
             '''.format(self.dim)))
 
+    @property
+    def length(self):
+        return self.end - self.begin
+
     def __repr__(self):
         return ('Interval({b}, {e})'.format(b=self.begin, e=self.end))
 
@@ -185,6 +193,10 @@ class Rectangle(IntervalProd):
             raise ValueError(errfmt('''
             Lengths of 'begin' and 'end' must be equal to 2 (got {}).
             '''.format(self.dim)))
+
+    @property
+    def area(self):
+        return self.volume
 
     def __repr__(self):
         return ('Rectangle({b}, {e})'.format(b=self.begin, e=self.end))
