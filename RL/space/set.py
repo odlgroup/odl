@@ -20,15 +20,19 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import object
+    from builtins import object, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import object
+    from future.builtins import object, super
 from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
+import numpy as np
+
+# RL imports
+from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
@@ -43,7 +47,7 @@ class AbstractSet(with_metaclass(ABCMeta, object)):
         """
 
     @abstractmethod
-    def isMember(self, other):
+    def contains(self, other):
         """ Test if other is a member of self
         """
 
@@ -54,6 +58,9 @@ class AbstractSet(with_metaclass(ABCMeta, object)):
     def __ne__(self, other):
         return not self.equals(other)
 
+    def __contains__(self, other):
+        return self.contains(other)
+
 
 class EmptySet(AbstractSet):
     """ The empty set has no members (None is considered "no element")
@@ -61,7 +68,7 @@ class EmptySet(AbstractSet):
     def equals(self, other):
         return isinstance(other, EmptySet)
 
-    def isMember(self, other):
+    def contains(self, other):
         return other is None
 
 
@@ -72,7 +79,7 @@ class ComplexNumbers(AbstractSet):
     def equals(self, other):
         return isinstance(other, ComplexNumbers)
 
-    def isMember(self, other):
+    def contains(self, other):
         return isinstance(other, Complex)
 
 
@@ -83,7 +90,7 @@ class RealNumbers(ComplexNumbers):
     def equals(self, other):
         return isinstance(other, RealNumbers)
 
-    def isMember(self, other):
+    def contains(self, other):
         return isinstance(other, Real)
 
 
@@ -94,39 +101,81 @@ class Integers(RealNumbers):
     def equals(self, other):
         return isinstance(other, Integers)
 
-    def isMember(self, other):
+    def contains(self, other):
         return isinstance(other, Integral)
 
 
-class Interval(RealNumbers):
-    """ The set of real numbers in the interval [begin,end]
+class IntervalProd(AbstractSet):
+    """The product of N intervals, i.e. an N-dimensional rectangular
+    box (aligned with the coordinate axes) as a subset of R^N.
     """
 
     def __init__(self, begin, end):
+        begin = np.atleast_1d(begin)
+        end = np.atleast_1d(end)
+
+        if len(begin) != len(end):
+            raise ValueError(errfmt('''
+            Lengths of 'begin' ({}) and 'end' ({}) do not match.
+            '''.format(len(begin), len(end))))
+
+        if not np.all(begin <= end):
+            raise ValueError(errfmt('''
+            Entries of 'begin' may not exceed those of 'end'.'''))
+
         self.begin = begin
         self.end = end
 
+    @property
+    def dim(self):
+        return len(self.begin)
+
     def equals(self, other):
-        return (isinstance(other, Interval) and self.begin == other.begin and
+        return (isinstance(other, IntervalProd) and
+                self.begin == other.begin and
                 self.end == other.end)
 
-    def isMember(self, other):
-        return (RealNumbers.isMember(self, other) and
-                self.begin <= other <= self.end)
+    def contains(self, other):
+        other = np.atleast_1d(other)
+        if len(other) != self.dim:
+            return False
+
+        reals = RealNumbers()
+        for i, (begin_i, end_i) in enumerate(zip(self.begin, self.end)):
+            if other[i] not in reals:
+                return False
+            if not begin_i <= other[i] <= end_i:
+                return False
+        return True
+
+    def __repr__(self):
+        return ('IntervalProd({b}, {e})'.format(b=self.begin, e=self.end))
+
+    def __str__(self):
+        return self.__repr__()
 
 
-class Square(AbstractSet):
+class Interval(IntervalProd):
+    """ The set of real numbers in the interval [begin, end]
+    """
     def __init__(self, begin, end):
-        self.reals = RealNumbers()
-        self.begin = begin
-        self.end = end
+        super().__init__(begin, end)
+        if self.dim != 1:
+            raise ValueError(errfmt('''
+            'begin' and 'end' must scalar or have length 1 (got {}).
+            '''.format(self.dim)))
 
-    def equals(self, other):
-        return (isinstance(other, Square) and self.begin == other.begin and
-                self.end == other.end)
+    def __repr__(self):
+        return ('Interval({b[0]}, {e[0]})'.format(b=self.begin, e=self.end))
 
-    def isMember(self, other):
-        return (self.reals.isMember(other[0]) and
-                self.begin[0] <= other[0] <= self.end[0] and
-                self.reals.isMember(other[1]) and
-                self.begin[1] <= other[1] <= self.end[1])
+
+class Rectangle(IntervalProd):
+    def __init__(self, begin, end):
+        super().__init__(begin, end)
+        if self.dim != 2:
+            raise ValueError(errfmt('''
+            Lengths of 'begin' and 'end' must be equal to 2 (got {}).
+            '''.format(self.dim)))
+
+    def __repr__(self):
+        return ('Rectangle({b}, {e})'.format(b=self.begin, e=self.end))
