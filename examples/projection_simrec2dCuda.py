@@ -97,7 +97,7 @@ dataSpace = fs.L2(sets.Interval(0,1))
 dataRN = cs.CudaRN(nPixels)
 dataDisc = dd.makeUniformDiscretization(dataSpace, dataRN)
 
-reconSpace = fs.L2(sets.Square((0, 0), (1, 1)))
+reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
 reconRN = cs.CudaRN(nVoxels.prod())
 reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
 

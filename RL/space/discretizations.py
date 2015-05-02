@@ -117,7 +117,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
         """
 
         def __init__(self, parent, rn, cols, rows, order):
-            if not isinstance(parent.domain, sets.Square):
+            if not isinstance(parent.domain, sets.Rectangle):
                 raise NotImplementedError('Can only discretize Squares')
 
             if not isinstance(rn, space.HilbertSpace):

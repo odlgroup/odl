@@ -106,7 +106,7 @@ dataSpace = fs.L2(sets.Interval(0,1))
 dataRN = ds.EuclidianSpace(nPixels)
 dataDisc = dd.makeUniformDiscretization(dataSpace, dataRN)
 
-reconSpace = fs.L2(sets.Square((0, 0), (1, 1)))
+reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
 reconRN = ds.EuclidianSpace(nVoxels.prod())
 reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
 

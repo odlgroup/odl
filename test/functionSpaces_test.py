@@ -49,9 +49,9 @@ class L2Test(RLTestCase):
 
         self.assertAlmostEqual(sind.normSq(), pi/2)
 
-    def testSquare(self):
-        I = sets.Square((0, 0), (pi, pi))
-        l2 = fs.L2(I)
+    def testRectangle(self):
+        R = sets.Rectangle((0, 0), (pi, 2*pi))
+        l2 = fs.L2(R)
         n = 10
         m = 10
         rn = EuclidianSpace(n*m)
@@ -61,7 +61,7 @@ class L2Test(RLTestCase):
                               np.sin(point[1]))
         sind = d.makeVector(l2sin)
 
-        self.assertAlmostEqual(sind.normSq(), pi**2 / 4)
+        self.assertAlmostEqual(sind.normSq(), pi**2 / 2)
 
 if __name__ == '__main__':
     unittest.main(exit=False)

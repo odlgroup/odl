@@ -64,14 +64,14 @@ class Functional(with_metaclass(ABCMeta, object)):
     def apply(self, rhs):
         """Apply the operator with error checking
         """
-        if not self.domain.isMember(rhs):
+        if not self.domain.contains(rhs):
             raise TypeError(errfmt('''
             rhs ({}) is not in the domain ({}) of this functional
             '''.format(rhs, self.domain)))
 
         result = self.applyImpl(rhs)
 
-        if not self.range.isMember(result):
+        if not self.range.contains(result):
             raise TypeError(errfmt('''
             functional returned: ({}), is in wrong set
             '''.format(result)))
@@ -161,7 +161,7 @@ class FunctionalScalarMultiplication(Functional):
     """
 
     def __init__(self, op, scalar):
-        if not op.range.isMember(scalar):
+        if not op.range.contains(scalar):
             raise TypeError('Scalar is not compatible with this functional')
 
         self.operator = op

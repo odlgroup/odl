@@ -123,12 +123,21 @@ class IntervalProd(AbstractSet):
             raise ValueError(errfmt('''
             Entries of 'begin' may not exceed those of 'end'.'''))
 
-        self.begin = begin
-        self.end = end
+        self._begin = begin
+        self._end = end
+
+    # TODO: setters?
+    @property
+    def begin(self):
+        return self._begin[0] if self.dim == 1 else self._begin
+
+    @property
+    def end(self):
+        return self._end[0] if self.dim == 1 else self._end
 
     @property
     def dim(self):
-        return len(self.begin)
+        return len(self._begin)
 
     def equals(self, other):
         return (isinstance(other, IntervalProd) and
@@ -141,7 +150,7 @@ class IntervalProd(AbstractSet):
             return False
 
         reals = RealNumbers()
-        for i, (begin_i, end_i) in enumerate(zip(self.begin, self.end)):
+        for i, (begin_i, end_i) in enumerate(zip(self._begin, self._end)):
             if other[i] not in reals:
                 return False
             if not begin_i <= other[i] <= end_i:
@@ -166,7 +175,7 @@ class Interval(IntervalProd):
             '''.format(self.dim)))
 
     def __repr__(self):
-        return ('Interval({b[0]}, {e[0]})'.format(b=self.begin, e=self.end))
+        return ('Interval({b}, {e})'.format(b=self.begin, e=self.end))
 
 
 class Rectangle(IntervalProd):

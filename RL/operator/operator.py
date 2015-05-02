@@ -98,12 +98,12 @@ class Operator(with_metaclass(ABCMeta, object)):
             None
         """
 
-        if not self.domain.isMember(rhs):
+        if not self.domain.contains(rhs):
             raise TypeError(errfmt('''
             rhs ({}) is not in the domain of this operator ({})
             '''.format(rhs, self)))
 
-        if not self.range.isMember(out):
+        if not self.range.contains(out):
             raise TypeError(errfmt('''
             out ({}) is not in the range of this operator ({})
             '''.format(out, self)))
@@ -183,7 +183,7 @@ class OperatorSum(Operator):
             domains do not match ({}, {}).
             '''.format(op1.domain, op2.domain)))
 
-        if tmp is not None and not op1.domain.isMember(tmp):
+        if tmp is not None and not op1.domain.contains(tmp):
             raise TypeError(errfmt('''
             Tmp ({}) must be an element in the range of the operators ({}).
             '''.format(tmp, op1.domain)))
@@ -235,7 +235,7 @@ class OperatorComposition(Operator):
             operator ({})
             '''.format(right.range, left.domain)))
 
-        if tmp is not None and not right.range.isMember(tmp):
+        if tmp is not None and not right.range.contains(tmp):
             raise TypeError(errfmt('''
             Tmp ({}) must be an element in the range of the operators ({}).
             '''.format(tmp, left.domain)))
@@ -308,7 +308,7 @@ class OperatorLeftScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar):
-        if not op.range.field.isMember(scalar):
+        if not op.range.field.contains(scalar):
             raise TypeError(errfmt('''
             Scalar ({}) not compatible with field of range ({}) of operator
             '''.format(scalar, op.range.field)))
@@ -356,12 +356,12 @@ class OperatorRightScalarMultiplication(Operator):
                                     (scalar * x)
         """
 
-        if not op.domain.field.isMember(scalar):
+        if not op.domain.field.contains(scalar):
             raise TypeError(errfmt('''
             Scalar ({}) not compatible with field of domain ({}) of operator
             '''.format(scalar, op.domain.field)))
 
-        if tmp is not None and not op.domain.isMember(tmp):
+        if tmp is not None and not op.domain.contains(tmp):
             raise TypeError(errfmt('''
             Tmp ({}) must be an element in the domain of the operator ({}).
             '''.format(tmp, op.domain)))
@@ -431,11 +431,11 @@ class LinearOperator(Operator):
                                The result of the evaluation is written to this
                                vector. Any previous content is overwritten.
         """
-        if not self.range.isMember(rhs):
+        if not self.range.contains(rhs):
             raise TypeError(errfmt('''
             rhs ({}) is not in the domain of this operators ({}) adjoint
             '''.format(rhs, self)))
-        if not self.domain.isMember(out):
+        if not self.domain.contains(out):
             raise TypeError(errfmt('''
             out ({}) is not in the range of this operators ({}) adjoint
             '''.format(out, self)))

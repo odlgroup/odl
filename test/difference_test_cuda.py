@@ -115,7 +115,7 @@ class TestCudaForwardDifference(RLTestCase):
 class TestCudaForwardDifference2D(RLTestCase):
     def testSquare(self):
         # Continuous definition of problem
-        I = sets.Square([0, 0], [1, 1])
+        I = sets.Rectangle([0, 0], [1, 1])
         space = L2(I)
 
         # Discretization
@@ -158,7 +158,7 @@ class TestCudaForwardDifference2D(RLTestCase):
 
     def testRectangle(self):
         # Continuous definition of problem
-        I = sets.Square([0, 0], [1, 1])
+        I = sets.Rectangle([0, 0], [1, 1])
         space = L2(I)
 
         # Complicated functions to check performance

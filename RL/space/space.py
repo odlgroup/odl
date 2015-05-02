@@ -75,7 +75,7 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         self.linCombImpl(tmp, 0, tmp, 0, tmp)
         return tmp
 
-    def isMember(self, x):
+    def contains(self, x):
         """ check vector for membership in space
         """
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
@@ -90,15 +90,15 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         with error checking of types
         """
 
-        if not self.isMember(z):
+        if not self.contains(z):
             raise TypeError(errfmt('''
             Lincomb failed, z ({}) is not in space ({})'''.format(z, self)))
 
-        if not self.field.isMember(a):
+        if not self.field.contains(a):
             raise TypeError(errfmt('''
             Lincomb failed, a ({}) is not in field ({})
             '''.format(a, self.field)))
-        if not self.isMember(x):
+        if not self.contains(x):
             raise TypeError(errfmt('''
             Lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
 
@@ -109,17 +109,20 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
 
             return self.linCombImpl(z, a, x, 0, x)
         else:
-            if not self.field.isMember(b):
+            if not self.field.contains(b):
                 raise TypeError(errfmt('''
                 Lincomb failed, b ({}) is not in field ({})
                 '''.format(b, self.field)))
-            if not self.isMember(y):
+            if not self.contains(y):
                 raise TypeError(errfmt('''
                 Lincomb failed, y ({}) is not in space ({})
                 '''.format(y, self)))
 
             # Call method
             return self.linCombImpl(z, a, x, b, y)
+
+    def __contains__(self, other):
+        return self.contains(other)
 
     class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
@@ -253,7 +256,7 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
     def normSq(self, vector):
         """ Calculate the squared norm of the vector
         """
-        if not self.isMember(vector):
+        if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
         return self.normSqImpl(vector)
@@ -288,10 +291,10 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
         """
 
         # Check spaces
-        if not self.isMember(x):
+        if not self.contains(x):
             raise TypeError('x ({}) is not in space ({})'.format(x, self))
 
-        if not self.isMember(y):
+        if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
         return self.innerImpl(x, y)
@@ -328,10 +331,10 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
         y = x * y
         """
         # Check spaces
-        if not self.isMember(x):
+        if not self.contains(x):
             raise TypeError('x ({}) is in wrong space'.format(x))
 
-        if not self.isMember(y):
+        if not self.contains(y):
             raise TypeError('y ({}) is in wrong space'.format(y))
 
         self.multiplyImpl(x, y)

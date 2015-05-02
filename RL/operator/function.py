@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import str, range, object
+    from builtins import range, object, str, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, range, object
+    from future.builtins import range, object, str, super
 from future.utils import with_metaclass
 from future import standard_library
 
@@ -76,19 +76,19 @@ class Function(with_metaclass(ABCMeta, object)):
             '''.format(len(args), self.nargs, self)))
 
         for i in range(self.nargs):
-            if not self.domain(i).isMember(args[i]):
+            if not self.domain(i).contains(args[i]):
                 raise TypeError(errfmt('''
                 The {}:th argument ({}) is not in the domain of this function
                 ({})'''.format(i, args[i], self)))
 
-        returnValue = self.applyImpl(*args)
+        retval = self.applyImpl(*args)
 
-        if not self.range.isMember(returnValue):
+        if not self.range.contains(retval):
             raise TypeError(errfmt('''
             The return value ({}) is not in the range ({}) of this function
-            ({})'''.format(returnValue, self.range, self)))
+            ({})'''.format(retval, self.range, self)))
 
-        return returnValue
+        return retval
 
     def __call__(self, *args):
         """Shorthand for self.apply(rhs)

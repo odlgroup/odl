@@ -209,7 +209,7 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
     return x
 
 #Continuous definition of problem
-I = Square([0,0],[1,1])
+I = Rectangle([0,0],[1,1])
 space = L2(I)
 
 #Complicated functions to check performance
