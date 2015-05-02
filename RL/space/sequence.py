@@ -20,6 +20,10 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 from future import standard_library
+try:
+    from builtins import super
+except ImportError:  # Versions < 0.14 of python-future
+    from future.builtins import super
 
 # External module imports
 import numpy as np
@@ -41,7 +45,7 @@ class SequenceSpace(FunctionSpace):
 
     def equals(self, other):
         return (isinstance(other, SequenceSpace) and
-                FunctionSpace.equals(self, other))
+                super().equals(other))
 
 
 class TruncationDiscretization(EuclidianSpace, Discretization):
@@ -54,10 +58,10 @@ class TruncationDiscretization(EuclidianSpace, Discretization):
             raise NotImplementedError("Can only discretize the integers")
 
         self.parent = parent
-        EuclidianSpace.__init__(self, n)
+        super().__init__(n)
 
     def innerImpl(self, v1, v2):
-        return EuclidianSpace.innerImpl(self, v1, v2)
+        return super().innerImpl(v1, v2)
 
     def zero(self):
         return self.makeVector(np.zeros(self.n), copy=False)
@@ -67,7 +71,7 @@ class TruncationDiscretization(EuclidianSpace, Discretization):
 
     def equals(self, other):
         return (isinstance(other, TruncationDiscretization) and
-                EuclidianSpace.equals(self, other))
+                super().equals(other))
 
     def makeVector(self, *args, **kwargs):
         return TruncationDiscretization.Vector(self, *args, **kwargs)
@@ -84,9 +88,7 @@ class TruncationDiscretization(EuclidianSpace, Discretization):
                  isinstance(args[0], SequenceSpace.Vector) and
                  args[0].space == space.parent)):
 
-                data = EuclidianSpace.Vector.__init__(self, space,
-                                                      args[0](space.points()),
-                                                      copy=False)
+                data = super().__init__(space, args[0](space.points()),
+                                        copy=False)
             else:
-                data = EuclidianSpace.Vector.__init__(self, space, *args,
-                                                      **kwargs)
+                data = super().__init__(space, *args, **kwargs)

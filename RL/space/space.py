@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import object, str
+    from builtins import object, str, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import object, str
+    from future.builtins import object, str, super
 from future.utils import with_metaclass
 from future import standard_library
 
@@ -352,4 +352,4 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
                 self.multiply(other)
                 return self
             else:
-                return LinearSpace.Vector.__imul__(self, other)
+                return super().__imul__(other)

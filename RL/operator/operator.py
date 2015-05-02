@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import str, object
+    from builtins import str, object, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, object
+    from future.builtins import str, object, super
 from future.utils import with_metaclass
 from future import standard_library
 
@@ -455,7 +455,7 @@ class LinearOperator(Operator):
         if isinstance(other, LinearOperator):  # Special if both are linear
             return LinearOperatorSum(self, other)
         else:
-            return Operator.__add__(self, other)
+            return super().__add__(other)
 
     def __mul__(self, other):
         """Multiplication of operators with scalars.
@@ -553,7 +553,7 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
             op2 ({}) is not a LinearOperator. LinearOperatorSum is only
             defined for LinearOperators.'''.format(op2)))
 
-        OperatorSum.__init__(self, op1, op2, tmpRan)
+        super().__init__(op1, op2, tmpRan)
         self._tmpDom = tmpDom
 
     def applyAdjointImpl(self, rhs, out):
@@ -621,7 +621,7 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
             LinearOperatorScalarMultiplication is only defined for
             LinearOperators'''.format(op)))
 
-        OperatorLeftScalarMultiplication.__init__(self, op, scalar)
+        super().__init__(op, scalar)
 
     def applyAdjointImpl(self, rhs, out):
         self._op.applyAdjointImpl(rhs, out)

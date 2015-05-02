@@ -107,7 +107,7 @@ class LambdaFunction(Function):
 
     def __init__(self, fun, *args, **kwargs):
         self.fun = fun
-        Function.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def applyImpl(self, *args, **kwargs):
         self.fun(*args, **kwargs)

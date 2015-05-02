@@ -20,6 +20,10 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 from future import standard_library
+try:
+    from builtins import super
+except ImportError:  # Versions < 0.14 of python-future
+    from future.builtins import super
 
 # RL imports
 import RL.operator.functional as fun
@@ -73,7 +77,7 @@ class FunctionSpace(Algebra):
         """
 
         def __init__(self, space, function):
-            HilbertSpace.Vector.__init__(self, space)
+            super().__init__(space)
             self.function = function
 
         def applyImpl(self, rhs):
@@ -96,7 +100,7 @@ class L2(FunctionSpace, HilbertSpace):
     """
 
     def __init__(self, domain):
-        FunctionSpace.__init__(self, domain)
+        super().__init__(domain)
 
     def innerImpl(self, v1, v2):
         raise NotImplementedError(errfmt('''

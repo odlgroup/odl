@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import str, zip, range
+    from builtins import str, zip, range, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, zip, range
+    from future.builtins import str, zip, range, super
 from future import standard_library
 
 # RL imports
@@ -87,7 +87,7 @@ class ProductSpace(HilbertSpace):
 
     class Vector(HilbertSpace.Vector):
         def __init__(self, space, *args):
-            HilbertSpace.Vector.__init__(self, space)
+            super().__init__(space)
 
             if not isinstance(args[0], HilbertSpace.Vector):
                 # Delegate constructors
@@ -172,7 +172,7 @@ class PowerSpace(HilbertSpace):
 
     class Vector(HilbertSpace.Vector):
         def __init__(self, space, *args):
-            HilbertSpace.Vector.__init__(self, space)
+            super().__init__(space)
 
             if not isinstance(args[0], HilbertSpace.Vector):
                 # Delegate constructors

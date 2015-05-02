@@ -20,6 +20,10 @@
 from __future__ import division, print_function, unicode_literals
 from __future__ import absolute_import
 from future import standard_library
+try:
+    from builtins import range
+except ImportError:
+    from future.builtins import range
 
 # External module imports
 import unittest
@@ -62,6 +66,16 @@ class L2Test(RLTestCase):
         sind = d.makeVector(l2sin)
 
         self.assertAlmostEqual(sind.normSq(), pi**2 / 2)
+
+#    def testCubes(self):
+#        dmax = 6
+#        for dim in range(3, dmax):
+#            start = [0] * dim
+#            end = [2*pi] * dim
+#            cube = sets.IntervalProd(start, end)
+#            l2 = fs.L2(cube)
+#            rn = EuclidianSpace(10**dim)
+#            discr = disc.makePixelDiscretization
 
 if __name__ == '__main__':
     unittest.main(exit=False)

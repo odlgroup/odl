@@ -101,7 +101,6 @@ class TestMatrixSolve(RLTestCase):
         bVec = rn.makeVector(b)
 
         # Make operator
-        norm = np.linalg.norm(A, ord=2)
         Aop = MultiplyOp(A)
 
         # Solve using conjugate gradient
@@ -123,7 +122,6 @@ class TestMatrixSolve(RLTestCase):
         bVec = rn.makeVector(b)
 
         # Make operator
-        norm = np.linalg.norm(A, ord=2)
         Aop = MultiplyOp(A)
 
         # Solve using conjugate gradient

@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import str
+    from builtins import str, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str
+    from future.builtins import str, super
 from future import standard_library
 
 # External module imports
@@ -121,7 +121,7 @@ class RN(LinearSpace):
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, values):
-            HilbertSpace.Vector.__init__(self, space)
+            super().__init__(space)
             self.values = values
 
         def __abs__(self):

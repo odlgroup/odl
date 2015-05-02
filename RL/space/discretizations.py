@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import str, zip
+    from builtins import str, zip, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, zip
+    from future.builtins import str, zip, super
 from future import standard_library
 
 # External module imports
@@ -52,15 +52,14 @@ def makeUniformDiscretization(parent, rnimpl):
                 raise NotImplementedError("Can only discretize intervals")
 
             if not isinstance(rn, space.HilbertSpace):
-                raise NotImplementedError("RN has to be a hilbert space")
+                raise NotImplementedError("RN has to be a Hilbert space")
 
             if not isinstance(rn, space.Algebra):
                 raise NotImplementedError("RN has to be an algebra")
 
             self.parent = parent
             self._rn = rn
-            self.scale = ((self.parent.domain.end - self.parent.domain.begin) /
-                          (self.n - 1))
+            self.scale = (self.parent.domain.length / (self.n - 1))
 
         def innerImpl(self, v1, v2):
             return self._rn.innerImpl(v1, v2) * self.scale
@@ -79,7 +78,7 @@ def makeUniformDiscretization(parent, rnimpl):
                                dtype=np.float)
                 return self.makeVector(tmp)
             else:
-                return RNType.makeVector(self, *args, **kwargs)
+                return super().makeVector(*args, **kwargs)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)
@@ -164,14 +163,14 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                 if args[0].shape == (self.cols, self.rows):
                     return self.makeVector(args[0].flatten(self.order))
                 elif args[0].shape == (self.dimension,):
-                    return RNType.makeVector(self, args[0])
+                    return super().makeVector(args[0])
                 else:
                     raise ValueError(errfmt('''
                     Input numpy array ({}) is of shape {}, expected shape
                     {} or {}'''.format(args[0], args[0].shape, (self.n,),
                                        (self.cols, self.rows))))
             else:
-                return RNType.makeVector(self, *args, **kwargs)
+                return super().makeVector(*args, **kwargs)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)

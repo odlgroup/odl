@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import str
+    from builtins import str, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str
+    from future.builtins import str, super
 from future import standard_library
 
 # External module imports
@@ -124,7 +124,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         def __init__(self, space, *args):
-            spaces.HilbertSpace.Vector.__init__(self, space)
+            super().__init__(space)
             if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
                 self.impl = args[0]
             elif isinstance(args[0], np.ndarray):
