@@ -20,9 +20,9 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import object, super
+    from builtins import object, super, zip
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import object, super
+    from future.builtins import object, super, zip
 from future.utils import with_metaclass
 from future import standard_library
 
