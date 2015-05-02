@@ -111,29 +111,6 @@ class Functional(with_metaclass(ABCMeta, object)):
                 str(self.domain) + '->' + str(self.range))
 
 
-class FunctionalComposition(Functional):
-    """Expression type for the composition of functionals
-    """
-
-    def __init__(self, left, right):
-        if right.range != left.domain:
-            raise TypeError("Range and domain of functionals do not fit")
-
-        self.left = left
-        self.right = right
-
-    def applyImpl(self, rhs):
-        return self.left.applyImpl(self.right.applyImpl(rhs))
-
-    @property
-    def domain(self):
-        return self.right.domain
-
-    @property
-    def range(self):
-        return self.left.range
-
-
 class FunctionalSum(Functional):
     """Expression type for the sum of functionals
     """
