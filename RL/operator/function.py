@@ -31,7 +31,7 @@ from future import standard_library
 from abc import ABCMeta, abstractmethod  # , abstractproperty
 
 # RL imports
-from RL.space.set import EmptySet,  # , AbstractSet
+from RL.space.set import EmptySet  # , AbstractSet
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
