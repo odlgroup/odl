@@ -125,10 +125,10 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
             if not isinstance(rn, space.Algebra):
                 raise NotImplementedError('RN has to be an algebra')
 
-            if not rn.dimension == cols*rows:
+            if not rn.n == cols*rows:
                 raise NotImplementedError(errfmt('''
                 Dimensions do not match, expected {}x{} = {}, got {}
-                '''.format(cols, rows, cols*rows, rn.dimension)))
+                '''.format(cols, rows, cols*rows, rn.n)))
 
             self.parent = parent
             self.cols = cols
@@ -162,7 +162,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
             elif len(args) == 1 and isinstance(args[0], np.ndarray):
                 if args[0].shape == (self.cols, self.rows):
                     return self.makeVector(args[0].flatten(self.order))
-                elif args[0].shape == (self.dimension,):
+                elif args[0].shape == (self.n,):
                     return super().makeVector(args[0])
                 else:
                     raise ValueError(errfmt('''

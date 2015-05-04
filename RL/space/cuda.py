@@ -42,7 +42,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     """
 
     def __init__(self, n):
-        self.n = n
+        self._n = n
         self._field = sets.RealNumbers()
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
@@ -69,17 +69,17 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         return self._field
 
     @property
-    def dimension(self):
-        return self.n
+    def n(self):
+        return self._n
 
     def equals(self, other):
-        return isinstance(other, CudaRN) and self.n == other.n
+        return isinstance(other, CudaRN) and self._n == other._n
 
     def makeVector(self, *args, **kwargs):
         return CudaRN.Vector(self, *args, **kwargs)
 
     def __str__(self):
-        return "CudaRN(" + str(self.n) + ")"
+        return "CudaRN(" + str(self._n) + ")"
 
     @property
     def abs(self):
@@ -145,6 +145,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                     ')')
 
         # Slow get and set, for testing and nothing else!
+        def __len__(self):
+            return self.space.n
+
         def __getitem__(self, index):
             if isinstance(index, slice):
                 return self.impl.getSlice(index)

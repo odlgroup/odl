@@ -59,12 +59,7 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         """ Get the underlying field
         """
 
-    @abstractproperty
-    def dimension(self):
-        """ Get the dimension of the space
-        """
-
-    # Also equals(self,other) from set
+    # Also abstract equals(self,other) from set
 
     # Default implemented operators
     def zero(self):
@@ -232,11 +227,6 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             """
             return self.copy()
 
-        def __len__(self):
-            """ The dimension of the space this vector resides in
-            """
-            return self.space.dimension
-
         def __str__(self):
             """ A default representation of the vector
             """
@@ -259,13 +249,13 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
-        return self.normSqImpl(vector)
+        return float(self.normSqImpl(vector))
 
     def norm(self, vector):
         """ The norm of the vector, default implementation uses the
         normSquared implementation
         """
-        return sqrt(self.normSq(vector))
+        return float(sqrt(self.normSq(vector)))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 

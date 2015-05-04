@@ -38,7 +38,7 @@ class ProductTest(RLTestCase):
     def testRxR(self):
         H = RN(2)
         HxH = ProductSpace(H, H)
-        self.assertTrue(HxH.dimension == 2)
+        self.assertTrue(len(HxH) == 2)
 
         v1 = H.makeVector([1, 2])
         v2 = H.makeVector([3, 4])

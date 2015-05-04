@@ -56,10 +56,6 @@ class FunctionSpace(Algebra):
     def field(self):
         return self._field
 
-    @property
-    def dimension(self):
-        raise NotImplementedError("TODO: infinite")
-
     def equals(self, other):
         return isinstance(other, FunctionSpace) and self.domain == other.domain
 

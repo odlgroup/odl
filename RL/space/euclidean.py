@@ -44,9 +44,10 @@ class RN(LinearSpace):
     def __init__(self, n):
         if not isinstance(n, Integral) or n < 1:
             raise TypeError('n ({}) has to be a positive integer'.format(np))
-        self.n = n
+        self._n = n
         self._field = RealNumbers()
-        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy', 'scal',
+        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy', 
+                                                             'scal',
                                                              'copy'])
 
     def linCombImpl(self, z, a, x, b, y):
@@ -60,12 +61,12 @@ class RN(LinearSpace):
             if a != 1:
                 self._scal(a, z.values)
             if b != 0:
-                self._axpy(y.values, z.values, self.dimension, b)
+                self._axpy(y.values, z.values, self._n, b)
         elif z is y:
             if b != 1:
                 self._scal(b, z.values)
             if a != 0:
-                self._axpy(x.values, z.values, self.dimension, a)
+                self._axpy(x.values, z.values, self._n, a)
         else:
             if b == 0:
                 if a == 0:
@@ -82,33 +83,35 @@ class RN(LinearSpace):
 
                 elif a == 1:
                     self._copy(x.values, z.values)
-                    self._axpy(y.values, z.values, self.dimension, b)
+                    self._axpy(y.values, z.values, self._n, b)
                 else:
                     self._copy(y.values, z.values)
                     if b != 1:
                         self._scal(b, z.values)
-                    self._axpy(x.values, z.values, self.dimension, a)
+                    self._axpy(x.values, z.values, self._n, a)
 
     def zero(self):
-        return self.makeVector(np.zeros(self.n, dtype=float))
+        return self.makeVector(np.zeros(self._n, dtype=float))
 
     def empty(self):
-        return self.makeVector(np.empty(self.n, dtype=float))
+        return self.makeVector(np.empty(self._n, dtype=float))
 
     @property
     def field(self):
         return self._field
 
     @property
-    def dimension(self):
-        return self.n
+    def n(self):
+        """ The number of dimensions of this space
+        """
+        return self._n
 
     def equals(self, other):
-        return isinstance(other, RN) and self.n == other.n
+        return isinstance(other, RN) and self._n == other._n
 
     def makeVector(self, *args, **kwargs):
         if isinstance(args[0], np.ndarray):
-            if args[0].shape == (self.n,):
+            if args[0].shape == (self._n,):
                 return RN.Vector(self, args[0])
             else:
                 raise ValueError(errfmt('''
@@ -128,10 +131,13 @@ class RN(LinearSpace):
             return self.space.makeVector(abs(self.values))
 
         def __str__(self):
-            return str(self.values)
+            return self.__class__.__name__ + "(" + str(self.values) + ')'
 
         def __repr__(self):
             return repr(self.space) + '::Vector(' + repr(self.values) + ')'
+        
+        def __len__(self):
+            return self.space._n
 
         def __getitem__(self, index):
             return self.values.__getitem__(index)

@@ -31,10 +31,6 @@ class Reals(HilbertSpace, Algebra):
     @property
     def field(self):
         return self._field
-
-    @property
-    def dimension(self):
-        return 1
     
     def equals(self, other):
         return isinstance(other, Reals)

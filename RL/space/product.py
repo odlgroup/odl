@@ -43,7 +43,7 @@ class ProductSpace(HilbertSpace):
             raise TypeError("All spaces must have the same field")
 
         self.spaces = spaces
-        self._dimension = len(self.spaces)
+        self._nProducts = len(self.spaces)
         self._field = spaces[0].field  # X_n has same field
 
     def zero(self):
@@ -64,10 +64,6 @@ class ProductSpace(HilbertSpace):
     def field(self):
         return self._field
 
-    @property
-    def dimension(self):
-        return self._dimension
-
     def equals(self, other):
         return (isinstance(other, ProductSpace) and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
@@ -75,11 +71,11 @@ class ProductSpace(HilbertSpace):
     def makeVector(self, *args):
         return ProductSpace.Vector(self, *args)
 
+    def __len__(self):
+        return self._nProducts
+
     def __getitem__(self, index):
         return self.spaces[index]
-
-    def __len__(self):
-        return self.dimension
 
     def __str__(self):
         return ('ProductSpace(' +
@@ -102,6 +98,9 @@ class ProductSpace(HilbertSpace):
 
                 self.parts = args
 
+        def __len__(self):
+            return self.space._nProducts
+
         def __getitem__(self, index):
             return self.parts[index]
 
@@ -119,20 +118,20 @@ class PowerSpace(HilbertSpace):
     """Product space with the same underlying space (X x X x ... x X)
     """
 
-    def __init__(self, underlying_space, dimension):
-        if dimension <= 0:
+    def __init__(self, underlying_space, nProducts):
+        if nProducts <= 0:
             raise TypeError('Empty or negative product not allowed')
 
         self.underlying_space = underlying_space
-        self._dimension = dimension
+        self._nProducts = nProducts
 
     def zero(self):
         return self.makeVector(*[self.underlying_space.zero()
-                                 for _ in range(self.dimension)])
+                                 for _ in range(self._nProducts)])
 
     def empty(self):
         return self.makeVector(*[self.underlying_space.empty()
-                                 for _ in range(self.dimension)])
+                                 for _ in range(self._nProducts)])
 
     def innerImpl(self, x, y):
         return sum(self.underlying_space.innerImpl(xp, yp)
@@ -146,29 +145,28 @@ class PowerSpace(HilbertSpace):
     def field(self):
         return self.underlying_space.field
 
-    @property
-    def dimension(self):
-        return self._dimension
+    def __len__(self):
+        return self._nProducts
 
     def equals(self, other):
         return (isinstance(other, PowerSpace) and
                 self.underlying_space.equals(other.underlying_space) and
-                self.dimension == other.dimension)
+                self._nProducts == other._nProducts)
 
     def makeVector(self, *args):
         return PowerSpace.Vector(self, *args)
 
     def __getitem__(self, index):
-        if index < -self.dimension or index >= self.dimension:
+        if index < -self._nProducts or index >= self._nProducts:
             raise IndexError('Index out of range')
         return self.underlying_space
 
     def __len__(self):
-        return self.dimension
+        return self._nProducts
 
     def __str__(self):
         return ('PowerSpace(' + str(self.underlying_space) + ', ' +
-                str(self.dimension) + ')')
+                str(self._nProducts) + ')')
 
     class Vector(HilbertSpace.Vector):
         def __init__(self, space, *args):
@@ -179,7 +177,7 @@ class PowerSpace(HilbertSpace):
                 self.parts = tuple(space.makeVector(arg)
                                    for arg, space in zip(args, space.spaces))
             else:  # Construct from existing tuple
-                if len(args) != self.space.dimension:
+                if len(args) != self.space._nProducts:
                     raise TypeError('The dimension of the space is wrong')
 
                 if any(part.space != self.space.underlying_space
@@ -189,6 +187,9 @@ class PowerSpace(HilbertSpace):
                     parts'''))
 
                 self.parts = args
+
+        def __len__(self):
+            return self.space._nProducts
 
         def __getitem__(self, index):
             return self.parts[index]

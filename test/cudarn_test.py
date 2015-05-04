@@ -172,9 +172,9 @@ class TestFunctions(RLTestCase):
 
     def makeVectors(self, rn):
         # Generate numpy vectors
-        x = np.random.rand(rn.dimension)
-        y = np.random.rand(rn.dimension)
-        z = np.random.rand(rn.dimension)
+        x = np.random.rand(rn.n)
+        y = np.random.rand(rn.n)
+        z = np.random.rand(rn.n)
 
         # Make rn vectors
         xVec = rn.makeVector(x)

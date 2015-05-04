@@ -28,6 +28,7 @@ import numpy as np
 import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.euclidean as ds
+import RL.space.product as ps
 import RL.space.discretizations as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
@@ -126,7 +127,7 @@ projectionRN = ds.EuclidianSpace(nPixels)
 projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
-dataDisc = ds.PowerSpace(projectionDisc, nProjection)
+dataDisc = ps.PowerSpace(projectionDisc, nProjection)
 
 #Define the reconstruction space
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
@@ -164,7 +165,7 @@ print(x.inner(projector.T(y)), projector(x).inner(y))
 #Solve using landweber
 x = reconDisc.zero()
 #solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.forEachPartial(plotResult))
-#solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
-solvers.gaussNewton(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+#solvers.gaussNewton(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
         
 #plt.show()
