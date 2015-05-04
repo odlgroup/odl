@@ -42,10 +42,10 @@ def conjugateGradientBase(op, x, rhs, iterations=1):
 
     for _ in range(iterations):
         q = op(p)                       
-        norms2 = s.normSq()
-        a = norms2 / q.normSq()
+        norms2 = s.norm()**2
+        a = norms2 / q.norm()**2
         x = x + a*p                    
         d = d - a*q                  
         s = op.T(d)
-        b = s.normSq()/norms2
+        b = s.norm()**2/norms2
         p = s + b*p

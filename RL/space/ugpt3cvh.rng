@@ -238,8 +238,8 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
     """
 
     @abstractmethod
-    def normImpl(self, vector):
-        """ implementation of norm
+    def normSqImpl(self, vector):
+        """ implementation of normSq
         """
 
     # Default implemented methods
@@ -249,7 +249,7 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
-        return float(self.normImpl(vector))
+        return float(self.normSqImpl(vector))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 

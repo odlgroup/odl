@@ -24,6 +24,7 @@ try:
 except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, super
 from future import standard_library
+from math import sqrt
 
 # External module imports
 import numpy as np
@@ -49,8 +50,8 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     def innerImpl(self, x, y):
         return self.impl.inner(x.impl, y.impl)
 
-    def normSqImpl(self, x):  # Optimized separately from inner
-        return self.impl.normSq(x.impl)
+    def normImpl(self, x):  # Optimized separately from inner
+        return sqrt(self.impl.normSq(x.impl))
 
     def linCombImpl(self, z, a, x, b, y):
         self.impl.linComb(z.impl, a, x.impl, b, y.impl)

@@ -165,9 +165,7 @@ class TestFunctions(RLTestCase):
         correct_norm_squared = 1**2 + 2**2 + 3**2
         correct_norm = math.sqrt(correct_norm_squared)
 
-        self.assertAlmostEquals(R3d.normSq(xd), correct_norm_squared)
         self.assertAlmostEquals(R3d.norm(xd), correct_norm)
-        self.assertAlmostEquals(xd.normSq(), correct_norm_squared)
         self.assertAlmostEquals(xd.norm(), correct_norm)
 
     def makeVectors(self, rn):

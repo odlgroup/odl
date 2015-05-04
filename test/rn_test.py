@@ -96,7 +96,7 @@ class RNTest(RLTestCase):
 class OperatorOverloadTest(RLTestCase):
     def doUnaryOperatorTest(self, function, n=10):
         """ Verifies that the statement y=function(x) gives equivalent
-        results to numpy.
+        results to Numpy.
         """
         x = np.random.rand(n)
 
@@ -111,7 +111,7 @@ class OperatorOverloadTest(RLTestCase):
 
     def doBinaryOperatorTest(self, function, n=10):
         """ Verifies that the statement z=function(x,y) gives equivalent
-        results to numpy.
+        results to Numpy.
         """
         y = np.random.rand(n)
         x = np.random.rand(n)
@@ -129,7 +129,7 @@ class OperatorOverloadTest(RLTestCase):
 
     def testOperators(self):
         """ Test of all operator overloads against the corresponding
-        numpy implementation
+        Numpy implementation
         """
         # Unary operators
         self.doUnaryOperatorTest(lambda x: +x)

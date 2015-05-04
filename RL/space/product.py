@@ -25,8 +25,11 @@ except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, zip, range, super
 from future import standard_library
 
+# 
+from itertools import repeat
+
 # RL imports
-from RL.space.space import HilbertSpace
+from RL.space.space import HilbertSpace, NormedSpace, LinearSpace
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -36,9 +39,21 @@ class ProductSpace(HilbertSpace):
     """Product space (X1 x X2 x ... x Xn)
     """
 
-    def __init__(self, *spaces):
+    def __init__(self, *spaces):        
+        """ Creates a Cartesian product of an arbitrary set of spaces.
+
+        For example:
+
+        `ProductSpace(Reals(), Reals())` is mathematically equivalent to `RN(2)`
+
+        Note that the later is obviously more efficient.
+
+        Args:
+            spaces    (multiple) LinearSpace     One or more instances of linear spaces
+        """
         if len(spaces) == 0:
             raise TypeError("Empty product not allowed")
+
         if not all(spaces[0].field == y.field for y in spaces):
             raise TypeError("All spaces must have the same field")
 
@@ -66,15 +81,20 @@ class ProductSpace(HilbertSpace):
 
     def equals(self, other):
         return (isinstance(other, ProductSpace) and
+                self._nProducts == other._nProducts and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 
     def makeVector(self, *args):
         return ProductSpace.Vector(self, *args)
 
     def __len__(self):
+        """ Get the number of parts of this product space
+        """
         return self._nProducts
 
     def __getitem__(self, index):
+        """ Get the i:th part of this product space
+        """
         return self.spaces[index]
 
     def __str__(self):
@@ -114,90 +134,19 @@ class ProductSpace(HilbertSpace):
                     ', '.join(part.__repr__() for part in self.parts) + ')')
 
 
-class PowerSpace(HilbertSpace):
+class PowerSpace(ProductSpace):
     """Product space with the same underlying space (X x X x ... x X)
     """
 
     def __init__(self, underlying_space, nProducts):
-        if nProducts <= 0:
-            raise TypeError('Empty or negative product not allowed')
+        """ Creates a Cartesian "power" of a space. For example,
 
-        self.underlying_space = underlying_space
-        self._nProducts = nProducts
+        `PowerSpace(Reals(),10)` is mathematically the same as `RN(10)`
 
-    def zero(self):
-        return self.makeVector(*[self.underlying_space.zero()
-                                 for _ in range(self._nProducts)])
+        Note that the later is obviously more efficient.
 
-    def empty(self):
-        return self.makeVector(*[self.underlying_space.empty()
-                                 for _ in range(self._nProducts)])
-
-    def innerImpl(self, x, y):
-        return sum(self.underlying_space.innerImpl(xp, yp)
-                   for xp, yp in zip(x.parts, y.parts))
-
-    def linCombImpl(self, z, a, x, b, y):
-        for zp, xp, yp in zip(z.parts, x.parts, y.parts):
-            self.underlying_space.linCombImpl(zp, a, xp, b, yp)
-
-    @property
-    def field(self):
-        return self.underlying_space.field
-
-    def __len__(self):
-        return self._nProducts
-
-    def equals(self, other):
-        return (isinstance(other, PowerSpace) and
-                self.underlying_space.equals(other.underlying_space) and
-                self._nProducts == other._nProducts)
-
-    def makeVector(self, *args):
-        return PowerSpace.Vector(self, *args)
-
-    def __getitem__(self, index):
-        if index < -self._nProducts or index >= self._nProducts:
-            raise IndexError('Index out of range')
-        return self.underlying_space
-
-    def __len__(self):
-        return self._nProducts
-
-    def __str__(self):
-        return ('PowerSpace(' + str(self.underlying_space) + ', ' +
-                str(self._nProducts) + ')')
-
-    class Vector(HilbertSpace.Vector):
-        def __init__(self, space, *args):
-            super().__init__(space)
-
-            if not isinstance(args[0], HilbertSpace.Vector):
-                # Delegate constructors
-                self.parts = tuple(space.makeVector(arg)
-                                   for arg, space in zip(args, space.spaces))
-            else:  # Construct from existing tuple
-                if len(args) != self.space._nProducts:
-                    raise TypeError('The dimension of the space is wrong')
-
-                if any(part.space != self.space.underlying_space
-                       for part in args):
-                    raise TypeError(errfmt('''
-                    The spaces of all parts must correspond to this space's
-                    parts'''))
-
-                self.parts = args
-
-        def __len__(self):
-            return self.space._nProducts
-
-        def __getitem__(self, index):
-            return self.parts[index]
-
-        def __str__(self):
-            return (self.space.__str__() + '::Vector(' +
-                    ', '.join(str(part) for part in self.parts) + ')')
-
-        def __repr__(self):
-            return (self.space.__repr__() + '::Vector(' +
-                    ', '.join(part.__repr__() for part in self.parts) + ')')
+        Args:
+            underlying_space    LinearSpace     An instance of some linear space
+            nProducts           Integer         The number of times the underlying space should be replicated
+        """
+        super().__init__(*([underlying_space]*nProducts))

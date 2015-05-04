@@ -27,7 +27,7 @@ except ImportError:
 
 # External module imports
 import unittest
-from math import pi
+from math import pi, sqrt
 import numpy as np
 
 # RL imports
@@ -51,7 +51,7 @@ class L2Test(RLTestCase):
         l2sin = l2.makeVector(np.sin)
         sind = d.makeVector(l2sin)
 
-        self.assertAlmostEqual(sind.normSq(), pi/2)
+        self.assertAlmostEqual(sind.norm(), sqrt(pi/2))
 
     def testRectangle(self):
         R = sets.Rectangle((0, 0), (pi, 2*pi))
@@ -65,7 +65,7 @@ class L2Test(RLTestCase):
                               np.sin(point[1]))
         sind = d.makeVector(l2sin)
 
-        self.assertAlmostEqual(sind.normSq(), pi**2 / 2)
+        self.assertAlmostEqual(sind.norm(), sqrt(pi**2 / 2))
 
 #    def testCubes(self):
 #        dmax = 6

@@ -25,6 +25,8 @@ except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, zip, super
 from future import standard_library
 
+from math import sqrt
+
 # External module imports
 import numpy as np
 
@@ -64,8 +66,8 @@ def makeUniformDiscretization(parent, rnimpl):
         def innerImpl(self, v1, v2):
             return self._rn.innerImpl(v1, v2) * self.scale
 
-        def normSqImpl(self, vector):
-            return self._rn.normSqImpl(vector) * self.scale
+        def normImpl(self, vector):
+            return self._rn.normImpl(vector) * sqrt(self.scale)
 
         def __eq__(self, other):
             return (isinstance(other, UniformDiscretization) and
@@ -144,8 +146,8 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
         def innerImpl(self, v1, v2):
             return self._rn.innerImpl(v1, v2) * self.scale
 
-        def normSqImpl(self, vector):
-            return self._rn.normSqImpl(vector) * self.scale
+        def normImpl(self, vector):
+            return self._rn.normImpl(vector) * sqrt(self.scale)
 
         def equals(self, other):
             return (isinstance(other, PixelDiscretization) and
