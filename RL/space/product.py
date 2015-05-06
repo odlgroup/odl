@@ -35,7 +35,7 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-class ProductSpace(HilbertSpace):
+class ProductSpace(LinearSpace):
     """Product space (X1 x X2 x ... x Xn)
     """
 
@@ -67,9 +67,8 @@ class ProductSpace(HilbertSpace):
     def empty(self):
         return self.makeVector(*[space.empty() for space in self.spaces])
 
-    def innerImpl(self, x, y):
-        return (sum(space.innerImpl(xp, yp)
-                    for space, xp, yp in zip(self.spaces, x.parts, y.parts)))
+    def normImpl(self, x):
+        return super(ProductSpace, self).normImpl(x)
 
     def linCombImpl(self, z, a, x, b, y):
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
@@ -133,20 +132,95 @@ class ProductSpace(HilbertSpace):
             return (self.space.__repr__() + '::Vector(' +
                     ', '.join(part.__repr__() for part in self.parts) + ')')
 
+    
+class NormedProductSpace(NormedSpace,ProductSpace):
+    """ A product space of Normed Spaces
+    """
+    
+    def __init__(self, *spaces, **kwargs):
+        """ Creates a NormedProductSpace of the given spaces
 
-class PowerSpace(ProductSpace):
-    """Product space with the same underlying space (X x X x ... x X)
+        Arguments:
+
+        spaces      NormedSpace's       A set of normed spaces
+        kwargs:
+            ord     Real                The order of the norm.
+
+        The following values for `ord` can be specified. 
+        Note that any value of ord < 1 only gives a pseudonorm
+
+        =====  ==========================
+        ord    Definition
+        =====  ==========================
+        inf    max(norm(x[0]), ..., norm(x[n-1]))
+        -inf   min(norm(x[0]), ..., norm(x[n-1]))
+        0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
+        other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
+        =====  ===========================
+        """
+        self.ord = kwargs.pop('ord',2)
+
+        super().__init__(*spaces)
+
+    def normImpl(self, x):
+        if self.ord == float('inf'):
+            return max(space.normImpl(xp) for space, xp in zip(self.spaces, x.parts))        
+        elif self.ord == -float('inf'):
+            return min(space.normImpl(xp) for space, xp in zip(self.spaces, x.parts))
+        elif self.ord == 0:
+            return sum(space.normImpl(xp) != 0 for space, xp in zip(self.spaces, x.parts))
+        else:
+            return sum(space.normImpl(xp)**self.ord for space, xp in zip(self.spaces, x.parts))**(1/self.ord)
+
+class HilbertProductSpace(HilbertSpace,NormedProductSpace):
+    """ A product space of Hilbert Spaces
     """
 
-    def __init__(self, underlying_space, nProducts):
-        """ Creates a Cartesian "power" of a space. For example,
+    def __init__(self, *spaces, **kwargs):
+        """ Creates a HilbertProductSpace of the given spaces
 
-        `PowerSpace(Reals(),10)` is mathematically the same as `RN(10)`
+        Arguments:
 
-        Note that the later is obviously more efficient.
-
-        Args:
-            underlying_space    LinearSpace     An instance of some linear space
-            nProducts           Integer         The number of times the underlying space should be replicated
+        spaces      HilbertSpace's      A set of normed spaces
+        kwargs:
+            weights Array-Like          List of weights, same size as spaces
         """
-        super().__init__(*([underlying_space]*nProducts))
+        self.weights = kwargs.pop('weights', None)
+
+        super().__init__(*spaces)
+
+    def innerImpl(self, x, y):
+        if self.weights:
+            return sum(space.innerImpl(xp, yp)
+                       for space, weight, xp, yp in zip(self.spaces, self.weights, x.parts, y.parts))
+        else:
+            return sum(space.innerImpl(xp, yp)
+                       for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+
+def makeProductSpace(*spaces):
+    """ Creates an appropriate ProductSpace
+
+    Selects the type of product space that has the most structure (Inner product, norm)
+    given a set of spaces
+
+    """
+    if all(isinstance(space, HilbertSpace) for space in spaces):
+        return HilbertProductSpace(*spaces)
+    elif all(isinstance(space, NormedSpace) for space in spaces):
+        return NormedProductSpace(*spaces)
+    else:
+        return ProductSpace(*spaces)
+
+def makePowerSpace(underlying_space, nProducts):
+    """ Creates a Cartesian "power" of a space. For example,
+
+    `PowerSpace(Reals(),10)` is mathematically the same as `RN(10)`
+    Note that the later is more efficient.
+
+    The type of ProductSpace (Normed/Hilbert/etc) is selected according to the type of the underlying space.
+
+    Args:
+        underlying_space    LinearSpace     An instance of some linear space
+        nProducts           Integer         The number of times the underlying space should be replicated
+    """
+    return makeProductSpace(*([underlying_space]*nProducts))

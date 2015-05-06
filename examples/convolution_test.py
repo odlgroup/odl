@@ -82,7 +82,7 @@ rhs = d.makeVector(continuousRhs)
 conv = Convolution(kernel)
 
 #Dampening parameter for landweber
-iterations = 10
+iterations = 100
 omega = 1/conv.opNorm()**2
 
 #Display partial

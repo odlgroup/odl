@@ -75,6 +75,9 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         """
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
 
+    #Overload for `vec in space` syntax
+    __contains__ = contains
+
     # Error checking variant of methods
     def linComb(self, z, a, x, b=None, y=None):
         """ Calculates
@@ -116,8 +119,6 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             # Call method
             return self.linCombImpl(z, a, x, b, y)
 
-    def __contains__(self, other):
-        return self.contains(other)
 
     class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
@@ -142,7 +143,7 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             self.space.linComb(self, 1, other)
 
         def copy(self):
-            """ Creates an identical copy of this vector
+            """ Creates an identical (deep) copy of this vector
             """
             result = self.space.empty()
             result.assign(self)
@@ -252,8 +253,12 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
         return float(self.normImpl(vector))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
+        """ Abstract vector in a normed space
+        """
 
         def norm(self):
+            """ Shortcut for self.space.norm(self)
+            """
             return self.space.norm(self)
 
 
@@ -287,6 +292,8 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
         return sqrt(self.innerImpl(x, x))
 
     class Vector(with_metaclass(ABCMeta, NormedSpace.Vector)):
+        """ Abstract vector in a Hilbert-space
+        """
 
         def inner(self, x):
             """ Shortcut for self.space.inner(self, x)

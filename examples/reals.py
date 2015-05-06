@@ -6,7 +6,7 @@ standard_library.install_aliases()
 
 from RL.space.space import HilbertSpace, Algebra
 
-""" An example of a very simple space, the space of real numbers
+""" An example of a very simple space, the space RN
 """
 
 class Reals(HilbertSpace, Algebra):

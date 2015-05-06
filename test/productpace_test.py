@@ -28,7 +28,7 @@ import unittest
 from RL.space.space import *
 from RL.space.euclidean import *
 from RL.space.function import *
-from RL.space.product import ProductSpace, PowerSpace
+from RL.space.product import *
 from RL.utility.testutils import RLTestCase
 
 standard_library.install_aliases()
@@ -57,8 +57,8 @@ class ProductTest(RLTestCase):
         u1 = H.makeVector([-1, 7])
         u2 = H.makeVector([2, 1])
 
-        v = HxH.makeVector(v1.copy(), v2.copy())
-        u = HxH.makeVector(u1.copy(), u2.copy())
+        v = HxH.makeVector(v1, v2)
+        u = HxH.makeVector(u1, u2)
         z = HxH.empty()
 
         a = 3.12
@@ -69,10 +69,45 @@ class ProductTest(RLTestCase):
 
         self.assertAllAlmostEquals(z, expected)
 
+    def testNorm(self):
+        H = EuclidianSpace(2)
+        v1 = H.makeVector([1, 2])
+        v2 = H.makeVector([5, 3])
+
+        # 0-norm
+        HxH = NormedProductSpace(H, H, ord=0.0)
+        w = HxH.makeVector(v1, v2)
+        self.assertAlmostEquals(w.norm(), 2) #No term is nonzero
+
+        # 1-norm
+        HxH = NormedProductSpace(H, H, ord=1.0)
+        w = HxH.makeVector(v1, v2)
+        self.assertAlmostEquals(w.norm(), v1.norm()+v2.norm())
+
+        # 2-norm
+        HxH = NormedProductSpace(H, H, ord=2.0)
+        w = HxH.makeVector(v1, v2)
+        self.assertAlmostEquals(w.norm(), (v1.norm()**2+v2.norm()**2)**(1/2.0))
+
+        # -inf norm
+        HxH = NormedProductSpace(H, H, ord=-float('inf'))
+        w = HxH.makeVector(v1, v2)
+        self.assertAlmostEquals(w.norm(), min(v1.norm(),v2.norm()))
+
+        # inf norm
+        HxH = NormedProductSpace(H, H, ord=float('inf'))
+        w = HxH.makeVector(v1, v2)
+        self.assertAlmostEquals(w.norm(), max(v1.norm(),v2.norm()))
+
+
+        
+
+
+
 class PowerTest(RLTestCase):
     def testRxR(self):
         H = RN(2)
-        HxH = PowerSpace(H, 2)
+        HxH = makePowerSpace(H, 2)
         self.assertTrue(len(HxH) == 2)
 
         v1 = H.makeVector([1, 2])
@@ -85,15 +120,15 @@ class PowerTest(RLTestCase):
 
     def testLinComb(self):
         H = RN(2)
-        HxH = ProductSpace(H, H)
+        HxH = makePowerSpace(H, 2)
 
         v1 = H.makeVector([1, 2])
         v2 = H.makeVector([5, 3])
         u1 = H.makeVector([-1, 7])
         u2 = H.makeVector([2, 1])
 
-        v = HxH.makeVector(v1.copy(), v2.copy())
-        u = HxH.makeVector(u1.copy(), u2.copy())
+        v = HxH.makeVector(v1, v2)
+        u = HxH.makeVector(u1, u2)
         z = HxH.empty()
 
         a = 3.12
@@ -103,6 +138,29 @@ class PowerTest(RLTestCase):
         HxH.linComb(z, a, v, b, u)
 
         self.assertAllAlmostEquals(z, expected)
+
+    def testInplaceModify(self):
+        H = RN(2)
+        HxH = makePowerSpace(H, 2)
+
+        v1 = H.makeVector([1, 2])
+        v2 = H.makeVector([5, 3])
+        u1 = H.makeVector([-1, 7])
+        u2 = H.makeVector([2, 1])
+        z1 = H.empty()
+        z2 = H.empty()
+
+        v = HxH.makeVector(v1, v2)
+        u = HxH.makeVector(u1, u2)
+        z = HxH.makeVector(z1, z2) #z is simply a wrapper for z1 and z2
+
+        a = 3.12
+        b = 1.23
+
+        HxH.linComb(z, a, v, b, u)
+
+        #Assert that z1 and z2 has been modified aswell
+        self.assertAllAlmostEquals(z, [z1, z2])
 
 
 if __name__ == '__main__':
