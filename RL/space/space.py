@@ -389,6 +389,8 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 
         def multiply(self, other):
+            """ Shortcut for space.multiply(self, other)
+            """
             self.space.multiply(other, self)
 
         def __imul__(self, other):

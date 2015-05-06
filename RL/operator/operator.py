@@ -48,16 +48,23 @@ class Operator(with_metaclass(ABCMeta, object)):
         It is intended that classes that derive from Operator derive from this
         method.
 
-        Args:
-            rhs:    The point the operator should be applied at.
-                    Has to be a member in the set given by `domain`.
+        
+        Parameters
+        ----------
 
-            out:    The point that the result should be written to.
-                    Any result in out is written over and the result is
-                    expected to be independend of the value of `out`.
+        rhs : element in self.domain   
+              An object in the domain of this operator. This object is "constant", 
+              and must not be modified.
+              This is the point that the operator should be applied in.
 
-        Returns:
-            None
+        out : element in self.range
+              An object in the range of this operator. This object is "mutable", 
+              the result should be written to it. The result must not depend on
+              the initial state of this element.
+
+        Returns
+        -------
+        None
         """
 
     @abstractproperty
@@ -87,15 +94,33 @@ class Operator(with_metaclass(ABCMeta, object)):
     def apply(self, rhs, out):
         """ Apply this operator in place.   Informally: out = f(rhs)
 
-        Args:
-            rhs:    The point the operator should be applied at.
-                    Has to be a member in the set given by `domain`.
+        Parameters
+        ----------
 
-            out:    The point that the result should be written to.
-                    Any result in out is written over.
+        rhs : element in self.domain   
+              An object in the domain of this operator. This object is "constant", 
+              and will not be modified.
+              This is the point that the operator should be applied in.
 
-        Returns:
-            None
+        out : element in self.range
+              An object in the range of this operator. This object is "mutable", 
+              the result will be written to it. The result is independent on the state
+              of this element.
+
+        Returns
+        -------
+        None
+
+        Example
+        -------
+
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> y = rn.empty()
+        >>> Op.apply(x, y)
+        >>> y
+        [1.0, 2.0, 3.0]
         """
 
         if not self.domain.contains(rhs):
@@ -117,15 +142,32 @@ class Operator(with_metaclass(ABCMeta, object)):
         self.applyImpl(rhs, out)
 
     def __call__(self, rhs):
-        """ Shorthand for self.apply(rhs). Out is allocated dynamically.
+        """ Evaluates the operator. The output element is allocated dynamically.
+        
+        Parameters
+        ----------
+        rhs : element in self.domain   
+              An object in the domain of this operator. This object is "constant", 
+              and will not be modified.
+              This is the point that the operator should be applied in.
 
-        Args:
-            rhs:    The point the operator should be applied at.
-                    Has to be a member in the set given by `domain`.
+        Returns
+        -------
+        element in self.range
+            The result of evaluating the operator.
 
-        Returns:
-            A object in `self.range` given by the evaluation
+        Example
+        -------
+
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> y = rn.empty()
+        >>> Op.apply(x, y)
+        >>> y
+        [1.0, 2.0, 3.0]
         """
+
         tmp = self.range.empty()
         self.apply(rhs, tmp)
         return tmp
