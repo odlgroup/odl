@@ -100,10 +100,6 @@ class ProductTest(RLTestCase):
         self.assertAlmostEquals(w.norm(), max(v1.norm(),v2.norm()))
 
 
-        
-
-
-
 class PowerTest(RLTestCase):
     def testRxR(self):
         H = RN(2)
