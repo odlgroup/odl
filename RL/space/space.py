@@ -46,6 +46,18 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
     @abstractmethod
     def empty(self):
         """ Create an empty vector (of undefined state)
+
+        An empty vector may be any vector in this space. 
+        No guarantee of the state of the vector is given.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        v : Vector
+            An arbitrary vector in this space
         """
 
     @abstractmethod
@@ -63,7 +75,18 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
 
     # Default implemented operators
     def zero(self):
-        """ The zero vector of this space
+        """ A zero vector in this space
+
+        The zero vector is defined as the additive unit of a space.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        v : Vector
+            The zero vector of this space
         """
         # Default implementation using linComb
         tmp = self.empty()
@@ -80,12 +103,45 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
 
     # Error checking variant of methods
     def linComb(self, z, a, x, b=None, y=None):
-        """ Calculates
+        """ Linear combination of vectors
+
+        Calculates
+
         z = a*x
         or if b and y are given
         z = a*x + b*y
 
-        with error checking of types
+        with error checking of types.
+
+        Parameters
+        ----------
+        z : Vector
+            The Vector that the result should be written to.
+        a : Scalar in the field of this space
+            Scalar to multiply `x` with.
+        x : Vector
+            The first of the summands
+        b : Scalar, optional
+            Scalar to multiply `y` with.
+        y : Vector, optional
+            The second of the summands
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Some notes and examples
+
+        ##### Alignment
+        The vectors `z`, `x` and `y` may be aligned, thus a call
+
+        space.linComb(x,2,x,3.14,x)
+
+        is (mathematically) equivalent to
+
+        x = x * (1 + 2 + 3.14)
         """
 
         if not self.contains(z):
@@ -96,17 +152,19 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             raise TypeError(errfmt('''
             Lincomb failed, a ({}) is not in field ({})
             '''.format(a, self.field)))
+
         if not self.contains(x):
             raise TypeError(errfmt('''
             Lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
 
-        if b is None:
+        if b is None: #Single argument
             if y is not None:
                 raise ValueError(errfmt('''
                 Lincomb failed, y ({}) provided but not b'''.format(y)))
 
+            # Call method
             return self.linCombImpl(z, a, x, 0, x)
-        else:
+        else: #Two arguments
             if not self.field.contains(b):
                 raise TypeError(errfmt('''
                 Lincomb failed, b ({}) is not in field ({})
