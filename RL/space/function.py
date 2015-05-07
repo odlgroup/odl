@@ -19,8 +19,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 from future import standard_library
 try:
     from builtins import super

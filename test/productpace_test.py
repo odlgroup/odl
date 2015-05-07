@@ -77,7 +77,7 @@ class ProductTest(RLTestCase):
         # 0-norm
         HxH = NormedProductSpace(H, H, ord=0.0)
         w = HxH.makeVector(v1, v2)
-        self.assertAlmostEquals(w.norm(), 2) #No term is nonzero
+        self.assertAlmostEquals(w.norm(), 2)  # No term is nonzero
 
         # 1-norm
         HxH = NormedProductSpace(H, H, ord=1.0)
@@ -92,12 +92,12 @@ class ProductTest(RLTestCase):
         # -inf norm
         HxH = NormedProductSpace(H, H, ord=-float('inf'))
         w = HxH.makeVector(v1, v2)
-        self.assertAlmostEquals(w.norm(), min(v1.norm(),v2.norm()))
+        self.assertAlmostEquals(w.norm(), min(v1.norm(), v2.norm()))
 
         # inf norm
         HxH = NormedProductSpace(H, H, ord=float('inf'))
         w = HxH.makeVector(v1, v2)
-        self.assertAlmostEquals(w.norm(), max(v1.norm(),v2.norm()))
+        self.assertAlmostEquals(w.norm(), max(v1.norm(), v2.norm()))
 
 
 class PowerTest(RLTestCase):
@@ -148,14 +148,14 @@ class PowerTest(RLTestCase):
 
         v = HxH.makeVector(v1, v2)
         u = HxH.makeVector(u1, u2)
-        z = HxH.makeVector(z1, z2) #z is simply a wrapper for z1 and z2
+        z = HxH.makeVector(z1, z2)  # z is simply a wrapper for z1 and z2
 
         a = 3.12
         b = 1.23
 
         HxH.linComb(z, a, v, b, u)
 
-        #Assert that z1 and z2 has been modified aswell
+        # Assert that z1 and z2 has been modified as well
         self.assertAllAlmostEquals(z, [z1, z2])
 
 

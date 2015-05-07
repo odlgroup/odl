@@ -17,8 +17,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 try:
     from builtins import object, super, zip
 except ImportError:  # Versions < 0.14 of python-future

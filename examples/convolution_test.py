@@ -19,12 +19,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
 standard_library.install_aliases()
 
 import RL.operator.operator as op
-import RL.operator.solvers as solvers 
+import RL.operator.solvers as solvers
 import RL.space.euclidean as ds
 import RL.space.set as sets
 import RL.space.discretizations as dd
@@ -37,6 +39,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
 
+
 class Convolution(op.LinearOperator):
     def __init__(self, kernel):
         if not isinstance(kernel.space, ds.RN):
@@ -48,64 +51,68 @@ class Convolution(op.LinearOperator):
         self.norm = float(sum(abs(self.kernel)))
 
     def applyImpl(self, rhs, out):
-        ndimage.convolve(rhs.values, self.kernel, output=out.values, mode='wrap')
+        ndimage.convolve(rhs.values, self.kernel, output=out.values,
+                         mode='wrap')
 
     def applyAdjointImpl(self, rhs, out):
-        ndimage.convolve(rhs.values, self.adjkernel, output=out.values, mode='wrap')
+        ndimage.convolve(rhs.values, self.adjkernel, output=out.values,
+                         mode='wrap')
 
     def opNorm(self):
         return self.norm
-    
+
     @property
     def domain(self):
         return self.space
-    
+
     @property
     def range(self):
         return self.space
 
 
-#Continuous definition of problem
+# Continuous definition of problem
 continuousSpace = fs.L2(sets.Interval(0, 10))
 
-#Complicated functions to check performance
-continuousKernel = continuousSpace.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
-continuousRhs = continuousSpace.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
+# Complicated functions to check performance
+continuousKernel = continuousSpace.makeVector(lambda x: np.exp(x/2) *
+                                              np.cos(x*1.172))
+continuousRhs = continuousSpace.makeVector(lambda x: x**2 *
+                                           np.sin(x)**2*(x > 5))
 
-#Discretization
+# Discretization
 rn = ds.EuclidianSpace(500)
 d = dd.makeUniformDiscretization(continuousSpace, rn)
 kernel = d.makeVector(continuousKernel)
 rhs = d.makeVector(continuousRhs)
 
-#Create operator
+# Create operator
 conv = Convolution(kernel)
 
-#Dampening parameter for landweber
+# Dampening parameter for landweber
 iterations = 100
 omega = 1/conv.opNorm()**2
 
-#Display partial
+# Display partial
 partial = solvers.forEachPartial(lambda result: plt.plot(conv(result)[:]))
 
-#Test CGN
+# Test CGN
 plt.figure()
 plt.plot(rhs)
 solvers.conjugateGradient(conv, d.zero(), rhs, iterations, partial)
 
-#Landweber
+# Landweber
 plt.figure()
 plt.plot(rhs)
 solvers.landweber(conv, d.zero(), rhs, iterations, omega, partial)
-        
-#testTimingCG
+
+# testTimingCG
 with Timer("Optimized CG"):
     solvers.conjugateGradient(conv, d.zero(), rhs, iterations)
-            
+
 with Timer("Base CG"):
     conjugateGradientBase(conv, d.zero(), rhs, iterations)
 
-#Landweber timing
+# Landweber timing
 with Timer("Optimized LW"):
     solvers.landweber(conv, d.zero(), rhs, iterations, omega)
 
