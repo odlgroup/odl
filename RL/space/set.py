@@ -37,7 +37,7 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-class AbstractSet(with_metaclass(ABCMeta, object)):
+class Set(with_metaclass(ABCMeta, object)):
     """ An arbitrary set
     """
 
@@ -59,7 +59,7 @@ class AbstractSet(with_metaclass(ABCMeta, object)):
         return not self.equals(other)
 
 
-class EmptySet(AbstractSet):
+class EmptySet(Set):
     """ The empty set has no members (None is considered "no element")
     """
     def equals(self, other):
@@ -75,7 +75,7 @@ class EmptySet(AbstractSet):
         return "EmptySet()"
 
 
-class ComplexNumbers(AbstractSet):
+class ComplexNumbers(Set):
     """ The set of complex numbers
     """
 
@@ -92,7 +92,7 @@ class ComplexNumbers(AbstractSet):
         return "ComplexNumbers()"
 
 
-class RealNumbers(AbstractSet):
+class RealNumbers(Set):
     """ The set of real numbers
     """
 
@@ -109,8 +109,8 @@ class RealNumbers(AbstractSet):
         return "RealNumbers()"
 
 
-class Integers(AbstractSet):
-    """ The set of all non-negative integers
+class Integers(Set):
+    """ The set of all integers
     """
 
     def equals(self, other):
@@ -126,12 +126,32 @@ class Integers(AbstractSet):
         return "Integers()"
 
 
-class IntervalProd(AbstractSet):
-    """The product of N intervals, i.e. an N-dimensional rectangular
-    box (aligned with the coordinate axes) as a subset of R^N.
+class IntervalProd(Set):
+    """ An N-dimensional rectangular box
+
+    An IntervalProd is a Cartesian product of N intervals, i.e. an
+    N-dimensional rectangular box aligned with the coordinate axes
+    as a subset of R^N.
     """
 
     def __init__(self, begin, end):
+        """
+        Parameters
+        ----------
+        begin : array-like or float
+                The lower ends of the intervals in the product
+        end : array-like or float
+                The upper ends of the intervals in the product
+
+        Examples
+        --------
+
+        >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
+        >>> rbox = IntervalProd(b, e)
+        >>> rbox
+        IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
+        """
+
         begin = np.atleast_1d(begin)
         end = np.atleast_1d(end)
 
@@ -166,6 +186,32 @@ class IntervalProd(AbstractSet):
         return np.prod(self._end - self._begin)
 
     def measure(self, dim=None):
+        """
+        The (Lebesgue) measure of the IntervalProd instance
+
+        Parameters
+        ----------
+        point : array-like or float
+                The point to be tested. Its length must be equal
+                to the IntervalProd's dimension. In the 1d case,
+                the point can be given as a float.
+        tol : float, optional
+              The maximum distance (in 'inf'-norm) a point may
+              have to the IntervalProd to be counted as member.
+              Default: 0.0
+
+        Examples
+        --------
+
+        >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
+        >>> rbox = IntervalProd(b, e)
+        >>> rbox.contains([-0.75, 10., 71])
+        True
+        >>> rbox.contains([-1 + np.sqrt(0.5)**2, 10., 71])
+        False
+        >>> rbox.contains([-1 + np.sqrt(0.5)**2, 10., 71], tol=1e-15)
+        True
+        """
         if dim is None:
             return self.volume
         if dim < self.dim - self._ndeg:
@@ -181,36 +227,84 @@ class IntervalProd(AbstractSet):
                 np.all(self.begin == other.begin) and
                 np.all(self.end == other.end))
 
-    def contains(self, vec):
-        vec = np.atleast_1d(vec)
-        if len(vec) != self.dim:
+    def contains(self, point, tol=0.0):
+        """
+        Test if a point is contained
+
+        Parameters
+        ----------
+        point : array-like or float
+                The point to be tested. Its length must be equal
+                to the set's dimension. In the 1d case, 'point'
+                can be given as a float.
+        tol : float, optional
+              The maximum distance (in 'inf'-norm) a point may
+              have to the set to be counted as member.
+              Default: 0.0
+
+        Examples
+        --------
+
+        >>> from math import sqrt
+        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox = IntervalProd(b, e)
+        >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9])
+        False
+        >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-15)
+        True
+        """
+
+        point = np.atleast_1d(point)
+        if len(point) != self.dim:
             return False
 
-        reals = RealNumbers()
-        for i, (begin_i, end_i) in enumerate(zip(self._begin, self._end)):
-            if vec[i] not in reals:
-                return False
-            if not begin_i <= vec[i] <= end_i:
-                return False
+        if not RealNumbers().contains(point[0]):
+            return False
+        if self.dist(point, ord=np.inf) > tol:
+            return False
         return True
 
-    def dist(self, vec, ord=None):
-        vec = np.atleast_1d(vec)
-        if len(vec) != self.dim:
-            raise ValueError(errfmt('''
-            'vector' dimension ({}) different from set dimension ({}).
-            '''.format(len(vec), self.dim)))
+    def dist(self, point, ord=None):
+        """
+        Calculate the distance to a point
 
-        i_larger = np.where(vec > self._end)
-        i_smaller = np.where(vec < self._begin)
-        proj = vec.copy()
+        Parameters
+        ----------
+        point : array-like or float
+                The point. Its length must be equal to the set's
+                dimension. In the 1d case, 'point' can be given as a
+                float.
+        ord : non-zero int or float('inf'), optional
+              The order of the norm (see numpy.linalg.norm).
+              Default: 2
+
+        Examples
+        --------
+
+        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox = IntervalProd(b, e)
+        >>> rbox.dist([-5, 3, 2])
+        5.0
+        >>> rbox.dist([-5, 3, 2], ord=float('inf'))
+        4
+        """
+
+        point = np.atleast_1d(point)
+        if len(point) != self.dim:
+            raise ValueError(errfmt('''
+            'point' dimension ({}) different from set dimension ({}).
+            '''.format(len(point), self.dim)))
+
+        i_larger = np.where(point > self._end)
+        i_smaller = np.where(point < self._begin)
+        proj = point.copy()
         proj[i_larger] = self._end[i_larger]
         proj[i_smaller] = self._begin[i_smaller]
-        print('proj: ', proj)
-        return np.linalg.norm(vec - proj, ord=ord)
+        return np.linalg.norm(point - proj, ord=ord)
 
     def __repr__(self):
-        return ('IntervalProd({b}, {e})'.format(b=self.begin, e=self.end))
+        return ('IntervalProd({b!r}, {e!r})'.format(b=list(self._begin),
+                                                    e=list(self._end)))
 
     def __str__(self):
         return self.__repr__()
@@ -248,3 +342,8 @@ class Rectangle(IntervalProd):
 
     def __repr__(self):
         return ('Rectangle({b}, {e})'.format(b=self.begin, e=self.end))
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

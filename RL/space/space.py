@@ -31,7 +31,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
 
 # RL imports
-from RL.space.set import AbstractSet
+from RL.space.set import Set
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -39,7 +39,7 @@ standard_library.install_aliases()
 __all__ = ['LinearSpace', 'NormedSpace', 'HilbertSpace', 'Algebra']
 
 
-class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
+class LinearSpace(with_metaclass(ABCMeta, Set)):
     """ Abstract linear space
     """
 
