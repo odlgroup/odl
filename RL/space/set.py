@@ -58,9 +58,6 @@ class AbstractSet(with_metaclass(ABCMeta, object)):
     def __ne__(self, other):
         return not self.equals(other)
 
-    def __contains__(self, other):
-        return self.contains(other)
-
 
 class EmptySet(AbstractSet):
     """ The empty set has no members (None is considered "no element")
