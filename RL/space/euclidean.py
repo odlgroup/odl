@@ -33,7 +33,7 @@ except ImportError:  # Versions < 0.14 of python-future
 from future import standard_library
 
 # External module imports
-import numpy as np
+import numpy
 from scipy.lib.blas import get_blas_funcs
 
 # RL imports
@@ -65,6 +65,34 @@ class RN(LinearSpace):
 
     def linCombImpl(self, z, a, x, b, y):
         """ Implement y = a*x + b*y using optimized BLAS rutines
+
+         Parameters
+        ----------
+        z : RNVector
+            The Vector that the result should be written to.
+        a : RealNumber
+            Scalar to multiply `x` with.
+        x : RNVector
+            The first of the summands
+        b : RealNumber
+            Scalar to multiply `y` with.
+        y : RNVector
+            The second of the summands
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> rn = RN(3)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> y = rn.makeVector([4, 5, 6])
+        >>> z = rn.empty()
+        >>> rn.linComb(z, 2, x, 3, y)
+        >>> z
+        [14, 19, 24]
+
         """
 
         if x is y and b != 0:
@@ -112,30 +140,140 @@ class RN(LinearSpace):
 
     def zero(self):
         """ Returns a vector of zeros
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RN.Vector instance
+
+        Note
+        ----
+        While the space has a single (unique) zero vector,
+        each call to this method returns a new instance of this vector.
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> x = rn.zero()
+        >>> x
+        [0.0, 0.0, 0.0]
         """
-        return self.makeVector(np.zeros(self._n, dtype=float))
+        return self.makeVector(numpy.zeros(self._n, dtype=float))
 
     def empty(self):
         """ Returns an arbitrary vector
 
         more efficient than zeros.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RN.Vector instance
+
+        Note
+        ----
+        The values of the returned vector may be _anything_ including
+        inf and NaN. Thus operations such as empty() * 0 need not return
+        the zero vector.
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> x = rn.empty()
+        >>> x in rn
+        True
+
         """
-        return self.makeVector(np.empty(self._n, dtype=float))
+        return self.makeVector(numpy.empty(self._n, dtype=float))
 
     @property
     def field(self):
         """ The underlying field of RN is the real numbers
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RealNumbers instance
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> rn.field
+        RealNumbers()
         """
         return self._field
 
     @property
     def n(self):
         """ The number of dimensions of this space
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RealNumbers instance
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> rn.n
+        3
         """
         return self._n
 
     def equals(self, other):
         """ Verifies that other is a RN instance of dimension `n`
+
+        Parameters
+        ----------
+        other : any object
+                The object to check for equality
+
+        Returns
+        -------
+        boolean      True or false
+
+        Examples
+        --------
+
+        Comparing with self
+        >>> r3 = RN(3)
+        >>> r3.equals(r3)
+        True
+
+        Also true when comparing with similar instance
+        >>> r3a, r3b = RN(3), RN(3)
+        >>> r3a.equals(r3b)
+        True
+
+        False when comparing to other dimension RN
+        >>> r3, r4 = RN(3), RN(4)
+        >>> r3.equals(r4)
+        False
+
+        We also support operators '==' and '!='
+        >>> r3, r4 = RN(3), RN(4)
+        >>> r3 == r3
+        True
+        >>> r3 == r4
+        False
+        >>> r3 != r4
+        True
         """
         return isinstance(other, RN) and self._n == other._n
 
@@ -167,7 +305,7 @@ class RN(LinearSpace):
         --------
 
         >>> rn = RN(3)
-        >>> x = rn.makeVector(numpy.array([1,2,3]))
+        >>> x = rn.makeVector(numpy.array([1., 2., 3.]))
         >>> x
         [1.0, 2.0, 3.0]
         >>> y = rn.makeVector([1,2,3])
@@ -175,13 +313,13 @@ class RN(LinearSpace):
         [1.0, 2.0, 3.0]
 
         """
-        if isinstance(args[0], np.ndarray):
+        if isinstance(args[0], numpy.ndarray):
             if args[0].shape != (self._n,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(args[0], args[0].shape, (self.n,))))
 
-            if args[0].dtype != np.float64:
+            if args[0].dtype != numpy.float64:
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(args[0], args[0].dtype)))
@@ -189,7 +327,7 @@ class RN(LinearSpace):
             return RN.Vector(self, args[0])
         else:
             return self.makeVector(
-                np.array(*args, **kwargs).astype(np.float64, copy=False))
+                numpy.array(*args, **kwargs).astype(numpy.float64, copy=False))
 
     def __str__(self):
         return self.__class__.__name__ + "(" + str(self.n) + ")"
@@ -238,7 +376,7 @@ class RN(LinearSpace):
             Returns
             -------
             If index is an `int`
-            np.float64, value at index
+            numpy.float64, value at index
 
             If index is an `slice`
             numpy.ndarray instance with the values at the slice
@@ -251,8 +389,8 @@ class RN(LinearSpace):
             >>> y = rn.makeVector([1, 2, 3])
             >>> y[0]
             1.0
-            >>> y[1:2]
-            array([2,3])
+            >>> y[1:3]
+            array([ 2.,  3.])
 
             """
             return self.values.__getitem__(index)
@@ -284,7 +422,7 @@ class RN(LinearSpace):
             >>> y[0] = 5
             >>> y
             [5.0, 2.0, 3.0]
-            >>> y[1:2] = [7, 8]
+            >>> y[1:3] = [7, 8]
             >>> y
             [5.0, 7.0, 8.0]
             >>> y[:] = numpy.array([0, 0, 0])
@@ -336,7 +474,7 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         >>> x = rn.makeVector([5, 3, 2])
         >>> y = rn.makeVector([1, 2, 3])
         >>> 5*1 + 3*2 + 2*3
-        17.0
+        17
         >>> rn.inner(x, y)
         17.0
 
@@ -368,8 +506,9 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         >>> x = rn.makeVector([5, 3, 2])
         >>> y = rn.makeVector([1, 2, 3])
         >>> [5*1, 3*2, 2*3]
-        [5.0, 6.0, 6.0]
+        [5, 6, 6]
         >>> rn.multiply(x, y)
+        >>> y
         [5.0, 6.0, 6.0]
         """
         y.values[:] = x.values*y.values
