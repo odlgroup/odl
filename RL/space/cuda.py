@@ -17,8 +17,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 try:
     from builtins import str, super
 except ImportError:  # Versions < 0.14 of python-future
@@ -37,8 +37,7 @@ import RL.operator.function as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
-from RL.utility.utility import errfmt
-
+# from RL.utility.utility import errfmt
 
 
 class CudaRN(spaces.HilbertSpace, spaces.Algebra):
@@ -137,8 +136,8 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
             return CudaRN.Vector(self, args[0])
-        elif isinstance(args[0], np.ndarray): #Create from np array
-            #Create result and assign (this could be optimized to one call)
+        elif isinstance(args[0], np.ndarray): # Create from np array
+            # Create result and assign (this could be optimized to one call)
             result = self.empty()
             result[:] = args[0]
             return result
@@ -151,7 +150,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     def __repr__(self):
         return "CudaRN(" + str(self._n) + ")"
 
-    #These should likely be moved somewhere else!
+    # These should likely be moved somewhere else!
     @property
     def abs(self):
         return fun.LambdaFunction(
@@ -267,8 +266,8 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             value : float or Array-Like
                     The values that should be assigned.
                     If index is an integer, value should be a float.
-                    If index is a slice, value should be an Array-Like of the same
-                    size as the slice.
+                    If index is a slice, value should be an Array-Like of the
+                    same size as the slice.
 
             Returns
             -------
@@ -297,12 +296,14 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                 if not isinstance(value, np.ndarray):
                     value = np.array(value, dtype=np.float64)
                 else:
-                    #Cast to float if required (copy=False makes this a no-op if no cast is needed)
+                    # Cast to float if required (copy=False makes this a no-op
+                    # if no cast is needed)
                     value = value.astype(np.float64, copy=False)
 
-                self.impl.setSlice(index, value) #The impl checks that sizes match.
+                # The impl checks that sizes match.
+                self.impl.setSlice(index, value)
             else:
                 self.impl.__setitem__(index, value)
 
-    #End CudaRN.Vector
-#End CudaRN
+    # End CudaRN.Vector
+# End CudaRN

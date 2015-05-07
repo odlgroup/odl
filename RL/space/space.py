@@ -17,8 +17,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 try:
     from builtins import object, str, super
 except ImportError:  # Versions < 0.14 of python-future
@@ -47,7 +47,7 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
     def empty(self):
         """ Create an empty vector (of undefined state)
 
-        An empty vector may be any vector in this space. 
+        An empty vector may be any vector in this space.
         No guarantee of the state of the vector is given.
 
         Parameters
@@ -98,7 +98,7 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         """
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
 
-    #Overload for `vec in space` syntax
+    # Overload for `vec in space` syntax
     __contains__ = contains
 
     # Error checking variant of methods
@@ -158,14 +158,14 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             raise TypeError(errfmt('''
             Lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
 
-        if b is None: #Single argument
+        if b is None:  # Single argument
             if y is not None:
                 raise ValueError(errfmt('''
                 Lincomb failed, y ({}) provided but not b'''.format(y)))
 
             # Call method
             return self.linCombImpl(z, a, x, 0, x)
-        else: #Two arguments
+        else:  # Two arguments
             if not self.field.contains(b):
                 raise TypeError(errfmt('''
                 Lincomb failed, b ({}) is not in field ({})
@@ -177,7 +177,6 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
 
             # Call method
             return self.linCombImpl(z, a, x, b, y)
-
 
     class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
