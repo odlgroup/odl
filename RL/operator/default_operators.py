@@ -22,18 +22,24 @@ from __future__ import absolute_import
 
 from future import standard_library
 
+try:
+    from builtins import str, object, super
+except ImportError:  # Versions < 0.14 of python-future
+    from future.builtins import str, object, super
+
 # RL imports
 import RL.operator.operator as op
 
 standard_library.install_aliases()
 
 
-class IdentityOperator(op.SelfAdjointOperator):
-    def __init__(self, space):
+class ScalingOperator(op.SelfAdjointOperator):
+    def __init__(self, space, scale):
         self._space = space
+        self._scale = scale
 
     def applyImpl(self, input, out):
-        out.assign(input)
+        out.linComb(self._scale, input)
 
     @property
     def domain(self):
@@ -42,6 +48,16 @@ class IdentityOperator(op.SelfAdjointOperator):
     @property
     def range(self):
         return self._space
+
+    def __repr__(self):
+        return 'LinCombOperator(' + repr(self._space) + ", " + repr(scale) + ')'
+
+    def __str__(self):
+        return str(scale) + "*I"
+
+class IdentityOperator(ScalingOperator):
+    def __init__(self, space):
+        super().__init__(space, 1)
 
     def __repr__(self):
         return 'IdentityOperator(' + repr(self._space) + ')'
