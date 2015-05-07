@@ -177,7 +177,7 @@ class IntervalProd(AbstractSet):
         if len(other) != self.dim:
             return False
 
-        reals = RealNumbers()
+        reals = RealNumbers() #TODO do n
         for i, (begin_i, end_i) in enumerate(zip(self._begin, self._end)):
             if other[i] not in reals:
                 return False
