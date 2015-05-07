@@ -149,6 +149,7 @@ class IntervalProd(AbstractSet):
 
         self._begin = begin
         self._end = end
+        self._ndeg = np.sum(self._begin == self._end)
 
     # TODO: setters?
     @property
@@ -167,23 +168,49 @@ class IntervalProd(AbstractSet):
     def volume(self):
         return np.prod(self._end - self._begin)
 
+    def measure(self, dim=None):
+        if dim is None:
+            return self.volume
+        if dim < self.dim - self._ndeg:
+            return np.inf
+        elif dim > self.dim - self._ndeg:
+            return 0
+        else:
+            i_nondeg = np.where(self._begin != self._end)
+            return np.prod((self._end - self._begin)[i_nondeg])
+
     def equals(self, other):
         return (isinstance(other, IntervalProd) and
                 np.all(self.begin == other.begin) and
                 np.all(self.end == other.end))
 
-    def contains(self, other):
-        other = np.atleast_1d(other)
-        if len(other) != self.dim:
+    def contains(self, vec):
+        vec = np.atleast_1d(vec)
+        if len(vec) != self.dim:
             return False
 
         reals = RealNumbers()
         for i, (begin_i, end_i) in enumerate(zip(self._begin, self._end)):
-            if other[i] not in reals:
+            if vec[i] not in reals:
                 return False
-            if not begin_i <= other[i] <= end_i:
+            if not begin_i <= vec[i] <= end_i:
                 return False
         return True
+
+    def dist(self, vec, ord=None):
+        vec = np.atleast_1d(vec)
+        if len(vec) != self.dim:
+            raise ValueError(errfmt('''
+            'vector' dimension ({}) different from set dimension ({}).
+            '''.format(len(vec), self.dim)))
+
+        i_larger = np.where(vec > self._end)
+        i_smaller = np.where(vec < self._begin)
+        proj = vec.copy()
+        proj[i_larger] = self._end[i_larger]
+        proj[i_smaller] = self._begin[i_smaller]
+        print('proj: ', proj)
+        return np.linalg.norm(vec - proj, ord=ord)
 
     def __repr__(self):
         return ('IntervalProd({b}, {e})'.format(b=self.begin, e=self.end))
