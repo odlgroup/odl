@@ -138,7 +138,7 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         ~~~~~~~~~
         The vectors `z`, `x` and `y` may be aligned, thus a call
 
-        space.linComb(x,2,x,3.14,x)
+        space.linComb(x, 2, x, 3.14, x)
 
         is (mathematically) equivalent to
 

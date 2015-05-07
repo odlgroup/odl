@@ -52,7 +52,7 @@ class RN(LinearSpace):
             raise TypeError('n ({}) has to be a positive integer'.format(np))
         self._n = n
         self._field = RealNumbers()
-        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy', 
+        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy',
                                                              'scal',
                                                              'copy'])
 
@@ -60,7 +60,7 @@ class RN(LinearSpace):
         """ Implement y = a*x + b*y using optimized BLAS rutines
         """
 
-        if x is y and b != 0: 
+        if x is y and b != 0:
             # If x is aligned with y, we are looking at:     z = (a+b)*x
             self.linCombImpl(z, a+b, x, 0, x)
         elif z is x and z is y:
@@ -81,14 +81,14 @@ class RN(LinearSpace):
         else:
             # We have exhausted all alignment options, so x != y != z
             # We now optimize for various values of a and b
-            if b == 0: 
-                if a == 0: # Zero assignment                z = 0
+            if b == 0:
+                if a == 0:  # Zero assignment                z = 0
                     z.values[:] = 0
                 else:                                       # z = a*x
                     self._copy(x.values, z.values)
                     if a != 1:
                         self._scal(a, z.values)
-            else: 
+            else:
                 if a == 0:                                  # z = b*y
                     self._copy(y.values, z.values)
                     if b != 1:
@@ -110,7 +110,7 @@ class RN(LinearSpace):
 
     def empty(self):
         """ Returns an arbitrary vector
-        
+
         more efficient than zeros.
         """
         return self.makeVector(np.empty(self._n, dtype=float))
@@ -137,7 +137,7 @@ class RN(LinearSpace):
 
         Parameters
         ----------
-        The method has two call patter, the first is:
+        The method has two call patterns, the first is:
 
         *args : numpy.ndarray
                 Array that will be used as the underlying representation
@@ -181,8 +181,8 @@ class RN(LinearSpace):
 
             return RN.Vector(self, args[0])
         else:
-            return self.makeVector(np.array(*args,
-                                            **kwargs).astype(np.float64, copy=False))
+            return self.makeVector(
+                np.array(*args, **kwargs).astype(np.float64, copy=False))
 
     def __str__(self):
         return self.__class__.__name__ + "(" + str(self.n) + ")"
@@ -213,7 +213,7 @@ class RN(LinearSpace):
 
         def __repr__(self):
             return repr(self.space) + '.Vector(' + repr(self.values) + ')'
-        
+
         def __len__(self):
             """ Get the dimension of the underlying space
             """
@@ -302,7 +302,7 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
     def __init__(self, n):
         super().__init__(n)
 
-        self._dot, self._nrm2 = get_blas_funcs(['dot', 
+        self._dot, self._nrm2 = get_blas_funcs(['dot',
                                                 'nrm2'])
 
     def innerImpl(self, x, y):
