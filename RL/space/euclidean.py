@@ -1,3 +1,10 @@
+""" Module for spaces whose elements are in R^n
+
+This is the default implementation of R^n and the
+corresponding NormedRN and EuclideanSpace.
+
+The underlying datarepresentation used is Numpy Arrays.
+"""
 # Copyright 2014, 2015 Holger Kohr, Jonas Adler
 #
 # This file is part of RL.
@@ -212,12 +219,12 @@ class RN(LinearSpace):
             return str(self.values)
 
         def __repr__(self):
-            return repr(self.space) + '.Vector(' + repr(self.values) + ')'
+            return repr(self.space) + '.makeVector(' + repr(self.values) + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
             """
-            return self.space._n
+            return self.space.n
 
         def __getitem__(self, index):
             """ Access values of this vector
@@ -261,8 +268,8 @@ class RN(LinearSpace):
             value : float or Array-Like
                     The values that should be assigned.
                     If index is an integer, value should be a float.
-                    If index is a slice, value should be an Array-Like of the same
-                    size as the slice.
+                    If index is a slice, value should be an Array-Like
+                    of the same size as the slice.
 
             Returns
             -------
@@ -328,6 +335,8 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         >>> rn = EuclidianSpace(3)
         >>> x = rn.makeVector([5, 3, 2])
         >>> y = rn.makeVector([1, 2, 3])
+        >>> 5*1 + 3*2 + 2*3
+        17.0
         >>> rn.inner(x, y)
         17.0
 
@@ -335,7 +344,8 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         return float(self._dot(x.values, y.values))
 
     def multiplyImpl(self, x, y):
-        """ Calculates the pointwise product of two vectors and assigns the result to `y`
+        """ Calculates the pointwise product of two vectors and assigns the
+        result to `y`
 
         This is defined as:
 
@@ -357,7 +367,17 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         >>> rn = EuclidianSpace(3)
         >>> x = rn.makeVector([5, 3, 2])
         >>> y = rn.makeVector([1, 2, 3])
+        >>> [5*1, 3*2, 2*3]
+        [5.0, 6.0, 6.0]
         >>> rn.multiply(x, y)
         [5.0, 6.0, 6.0]
         """
         y.values[:] = x.values*y.values
+
+    def __repr__(self):
+        return 'EuclidianSpace(' + str(self.n) + ')'
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

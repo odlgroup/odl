@@ -1,3 +1,9 @@
+""" Module for spaces whose elements are in R^n
+
+This is the default implementation of R^n where the
+data is stored on a GPU.
+"""
+
 # Copyright 2014, 2015 Holger Kohr, Jonas Adler
 #
 # This file is part of RL.
@@ -101,7 +107,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        The method has two call patter, the first is:
+        The method has two call patterns, the first is:
 
         *args : numpy.ndarray
                 Array that will be copied to the GPU.
@@ -136,7 +142,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
             return CudaRN.Vector(self, args[0])
-        elif isinstance(args[0], np.ndarray): # Create from np array
+        elif isinstance(args[0], np.ndarray):  # Create from np array
             # Create result and assign (this could be optimized to one call)
             result = self.empty()
             result[:] = args[0]
@@ -258,16 +264,20 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         def __setitem__(self, index, value):
             """ Set values of this vector
 
+            This will cause the values to be copied to CPU
+            which is a slow operation.
+
             Parameters
             ----------
 
             index : int or slice
                     The position(s) that should be set
-            value : float or Array-Like
+            value : Real or Array-Like
                     The values that should be assigned.
-                    If index is an integer, value should be a float.
-                    If index is a slice, value should be an Array-Like of the
-                    same size as the slice.
+                    If index is an integer, value should be a Number
+                    convertible to float.
+                    If index is a slice, value should be an Array-Like
+                    of the same size as the slice.
 
             Returns
             -------
@@ -277,7 +287,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             Examples
             --------
 
-            >>> rn = RN(3)
+            >>> rn = CudaRN(3)
             >>> y = rn.makeVector([1, 2, 3])
             >>> y[0] = 5
             >>> y
