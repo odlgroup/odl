@@ -153,7 +153,7 @@ class RN(LinearSpace):
 
         Returns
         -------
-        Space.Vector instance
+        RN.Vector instance
 
 
         Examples
@@ -182,10 +182,16 @@ class RN(LinearSpace):
             return RN.Vector(self, args[0])
         else:
             return self.makeVector(np.array(*args,
-                                            **kwargs).astype(np.float64))
+                                            **kwargs).astype(np.float64, copy=False))
+
+    def __str__(self):
+        return self.__class__.__name__ + "(" + str(self.n) + ")"
+
+    def __repr__(self):
+        return 'RN(' + str(self.n) + ')'
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
-        """ A vector in the space RN
+        """ A RN-vector represented using numpy
 
         Parameters
         ----------
@@ -281,12 +287,6 @@ class RN(LinearSpace):
             """
 
             return self.values.__setitem__(index, value)
-
-    def __str__(self):
-        return self.__class__.__name__ + "(" + str(self.n) + ")"
-
-    def __repr__(self):
-        return 'RN(' + str(self.n) + ')'
 
 
 class EuclidianSpace(RN, HilbertSpace, Algebra):
