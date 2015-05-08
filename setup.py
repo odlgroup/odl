@@ -26,7 +26,7 @@ future >= 0.14
 """
 
 setup(name='RL',
-      version='0.01a',
+      version='0.1b0.dev0',
       author='Holger Kohr, Jonas Adler',
       author_email='kohr@kth.se, jonasadl@kth.se',
       url='https://gits-14.sys.kth.se/LCR/RL',
