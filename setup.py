@@ -16,25 +16,24 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# from __future__ import unicode_literals
 from __future__ import print_function
-from __future__ import division
 from __future__ import absolute_import
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
-from future import standard_library
-standard_library.install_aliases()
-
-# from RL import __version__
+requires = """
+future >= 0.14
+"""
 
 setup(name='RL',
-      # version=__version__,
       version='0.01a',
       author='Holger Kohr, Jonas Adler',
       author_email='kohr@kth.se, jonasadl@kth.se',
       url='https://gits-14.sys.kth.se/LCR/RL',
       description='Regularization Library',
       license='GPLv3',
-      packages=['RL', 'RL.geometry', 'RL.operator', 'RL.space', 'RL.utility'],
+      packages=find_packages(exclude=['*test*']),
+      install_requires=[requires],
+      # packages=['RL', 'RL.geometry', 'RL.operator', 'RL.space',
+      #           'RL.utility'],
       package_dir={'RL': 'RL'})

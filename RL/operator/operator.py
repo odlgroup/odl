@@ -48,7 +48,6 @@ class Operator(with_metaclass(ABCMeta, object)):
         It is intended that classes that derive from Operator derive
         from this method.
 
-
         Parameters
         ----------
 
@@ -250,7 +249,7 @@ class Operator(with_metaclass(ABCMeta, object)):
 class OperatorSum(Operator):
     """ Expression type for the sum of operators.
 
-    Sum is only well defined for Operators between LinearSpace´s
+    Sum is only well defined for Operators between LinearSpace:s
 
     Parameters
     ----------
@@ -493,7 +492,7 @@ class OperatorRightScalarMultiplication(Operator):
 class LinearOperator(Operator):
     """ Linear operator, satisfies A(a*x + b*y) = a*A(x) + b*A(y)
 
-    LinearOperators are only defied on LinearSpace´s.
+    LinearOperators are only defied on LinearSpace:s.
     """
 
     @abstractmethod
