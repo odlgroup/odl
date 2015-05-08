@@ -17,8 +17,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
+from __future__ import unicode_literals, print_function, division
+from __future__ import absolute_import
 try:
     from builtins import object, super
 except ImportError:  # Versions < 0.14 of python-future
@@ -371,7 +371,7 @@ class IntervalProd(Set):
         IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
         IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
-        >>> rbox.collapse([1, 2], [0, 3.5])
+        >>> rbox.collapse([1, 2], [0, 3.5])  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
         ValueError: 'value' not within interval boundaries ([3.5] > [3.0])
