@@ -23,12 +23,13 @@ from __future__ import absolute_import
 from future import standard_library
 
 try:
-    from builtins import str, object, super
+    from builtins import str, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, object, super
+    from future.builtins import str, super
 
 # RL imports
 import RL.operator.operator as op
+print(op.__file__)
 
 standard_library.install_aliases()
 
@@ -50,10 +51,12 @@ class ScalingOperator(op.SelfAdjointOperator):
         return self._space
 
     def __repr__(self):
-        return 'LinCombOperator(' + repr(self._space) + ", " + repr(scale) + ')'
+        return ('LinCombOperator(' + repr(self._space) + ", " +
+                repr(self._scale) + ')')
 
     def __str__(self):
-        return str(scale) + "*I"
+        return str(self._scale) + "*I"
+
 
 class IdentityOperator(ScalingOperator):
     def __init__(self, space):
