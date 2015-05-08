@@ -48,17 +48,17 @@ class Operator(with_metaclass(ABCMeta, object)):
         It is intended that classes that derive from Operator derive from this
         method.
 
-        
+
         Parameters
         ----------
 
-        rhs : element in self.domain   
-              An object in the domain of this operator. This object is "constant", 
+        rhs : element in self.domain
+              An object in the domain of this operator. This object is "constant",
               and must not be modified.
               This is the point that the operator should be applied in.
 
         out : element in self.range
-              An object in the range of this operator. This object is "mutable", 
+              An object in the range of this operator. This object is "mutable",
               the result should be written to it. The result must not depend on
               the initial state of this element.
 
@@ -97,13 +97,13 @@ class Operator(with_metaclass(ABCMeta, object)):
         Parameters
         ----------
 
-        rhs : element in self.domain   
-              An object in the domain of this operator. This object is "constant", 
+        rhs : element in self.domain
+              An object in the domain of this operator. This object is "constant",
               and will not be modified.
               This is the point that the operator should be applied in.
 
         out : element in self.range
-              An object in the range of this operator. This object is "mutable", 
+              An object in the range of this operator. This object is "mutable",
               the result will be written to it. The result is independent on the state
               of this element.
 
@@ -143,11 +143,11 @@ class Operator(with_metaclass(ABCMeta, object)):
 
     def __call__(self, rhs):
         """ Evaluates the operator. The output element is allocated dynamically.
-        
+
         Parameters
         ----------
-        rhs : element in self.domain   
-              An object in the domain of this operator. This object is "constant", 
+        rhs : element in self.domain
+              An object in the domain of this operator. This object is "constant",
               and will not be modified.
               This is the point that the operator should be applied in.
 
@@ -207,7 +207,7 @@ class Operator(with_metaclass(ABCMeta, object)):
 
     def __rmul__(self, other):
         """ Left multiplication of operators with scalars (a*A)(x) = a*A(x)
-        
+
         Note that left and right multiplication of operators is different.
 
         Parameters
@@ -245,12 +245,12 @@ class Operator(with_metaclass(ABCMeta, object)):
 class OperatorSum(Operator):
     """ Expression type for the sum of operators.
 
-    Sum is only well defined for Operators between LinearSpace´s
+    Sum is only well defined for Operators between LinearSpace:s
 
     Parameters
     ----------
 
-    op1 : Operator 
+    op1 : Operator
           The first operator
     op2 : Operator
           Operator with the same domain and range as op1
@@ -309,7 +309,7 @@ class OperatorComposition(Operator):
     Parameters
     ----------
 
-    op1 : Operator 
+    op1 : Operator
           The first operator
     op2 : Operator
           Operator with the same domain and range as op1
@@ -436,7 +436,7 @@ class OperatorRightScalarMultiplication(Operator):
     Parameters
     ----------
 
-    op : Operator 
+    op : Operator
          Any operator whose range supports `*= scalar`
     scalar : Number
              An element in the field of the domain of op
@@ -485,7 +485,7 @@ class OperatorRightScalarMultiplication(Operator):
 class LinearOperator(Operator):
     """ Linear operator, satisfies A(a*x + b*y) = a*A(x) + b*A(y)
 
-    LinearOperators are only defied on LinearSpace´s.
+    LinearOperators are only defied on LinearSpace:s.
     """
 
     @abstractmethod
@@ -517,7 +517,7 @@ class LinearOperator(Operator):
         """ Applies the adjoint of the operator, informally:
         out = op(rhs)
 
-        
+
         Parameters
         ----------
         rhs : Vector
@@ -527,7 +527,7 @@ class LinearOperator(Operator):
         out : Vector
               A vector in the domain of this operator.
               The result of the evaluation is written to this
-              vector. Any previous content is overwritten.      
+              vector. Any previous content is overwritten.
         """
         if not self.range.contains(rhs):
             raise TypeError(errfmt('''
