@@ -68,9 +68,6 @@ class EmptySet(Set):
     def contains(self, other):
         return other is None
 
-    def measure(self):
-        return 0.0
-
     def __str__(self):
         return "EmptySet"
 
@@ -222,8 +219,12 @@ class IntervalProd(Set):
         True
         """
 
-        return (isinstance(other, IntervalProd) and
-                np.all(np.abs(self.begin - other.begin) <= tol) and
+        if isinstance(other, EmptySet):
+            return self.dim == 0
+        elif not isinstance(other, IntervalProd):
+            return False
+
+        return (np.all(np.abs(self.begin - other.begin) <= tol) and
                 np.all(np.abs(self.end - other.end) <= tol))
 
     def contains(self, point, tol=0.0):
@@ -429,11 +430,8 @@ class IntervalProd(Set):
         >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
         IntervalProd([-1.0], [-0.5])
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
-        EmptySet()
+        IntervalProd([], [])
         """
-
-        if self.truedim == 0:
-            return EmptySet()
 
         b_new = self._begin[self._inondeg]
         e_new = self._end[self._inondeg]
