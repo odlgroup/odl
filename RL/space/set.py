@@ -126,10 +126,10 @@ class Integers(Set):
         return "Integers()"
 
 
-class IntervalProd(Set):
+class IntervProd(Set):
     """ An N-dimensional rectangular box
 
-    An IntervalProd is a Cartesian product of N intervals, i.e. an
+    An IntervProd is a Cartesian product of N intervals, i.e. an
     N-dimensional rectangular box aligned with the coordinate axes
     as a subset of R^N.
     """
@@ -141,15 +141,15 @@ class IntervalProd(Set):
         begin : array-like or float
                 The lower ends of the intervals in the product
         end : array-like or float
-                The upper ends of the intervals in the product
+              The upper ends of the intervals in the product
 
         Examples
         --------
 
         >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
-        >>> rbox = IntervalProd(b, e)
+        >>> rbox = IntervProd(b, e)
         >>> rbox
-        IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
+        IntervProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
 
         begin = np.atleast_1d(begin).astype(np.float)
@@ -161,8 +161,10 @@ class IntervalProd(Set):
             '''.format(len(begin), len(end))))
 
         if not np.all(begin <= end):
+            i_wrong = np.where(begin > end)
             raise ValueError(errfmt('''
-            Entries of 'begin' may not exceed those of 'end'.'''))
+            Entries of 'begin' exceed those of 'end' ({!r} > {!r})
+            '''.format(list(begin[i_wrong]), list(end[i_wrong]))))
 
         self._begin = begin
         self._end = end
@@ -209,8 +211,8 @@ class IntervalProd(Set):
 
         >>> b1, e1 = [-1, 0, 2], [-0.5, 0, 3]
         >>> b2, e2 = [np.sin(-np.pi/2), 0, 2], [-0.5, 0, np.sqrt(3)**2]
-        >>> rbox1 = IntervalProd(b1, e1)
-        >>> rbox2 = IntervalProd(b2, e2)
+        >>> rbox1 = IntervProd(b1, e1)
+        >>> rbox2 = IntervProd(b2, e2)
         >>> rbox1.equals(rbox2)  # Num error
         False
         >>> rbox1 == rbox2  # Equivalent to rbox1.equals(rbox2)
@@ -221,7 +223,7 @@ class IntervalProd(Set):
 
         if isinstance(other, EmptySet):
             return self.dim == 0
-        elif not isinstance(other, IntervalProd):
+        elif not isinstance(other, IntervProd):
             return False
 
         return (np.all(np.abs(self.begin - other.begin) <= tol) and
@@ -247,7 +249,7 @@ class IntervalProd(Set):
 
         >>> from math import sqrt
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> rbox = IntervProd(b, e)
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9])  # Num error
         False
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-15)
@@ -267,7 +269,7 @@ class IntervalProd(Set):
     # Additional property-like methods
     def measure(self, dim=None):
         """
-        The (Lebesgue) measure of the IntervalProd instance
+        The (Lebesgue) measure of the IntervProd instance
 
         Parameters
         ----------
@@ -279,7 +281,7 @@ class IntervalProd(Set):
         --------
 
         >>> b, e = [-1, 2.5, 70], [-0.5, 10, 70]
-        >>> rbox = IntervalProd(b, e)
+        >>> rbox = IntervProd(b, e)
         >>> rbox.measure()
         3.75
         >>> rbox.measure(dim=3)
@@ -322,7 +324,7 @@ class IntervalProd(Set):
         --------
 
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> rbox = IntervProd(b, e)
         >>> rbox.dist([-5, 3, 2])
         5.0
         >>> rbox.dist([-5, 3, 2], ord=float('inf'))
@@ -360,17 +362,17 @@ class IntervalProd(Set):
 
         Returns
         -------
-        The collapsed IntervalProd
+        The collapsed IntervProd
 
         Examples
         --------
 
         >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> rbox = IntervProd(b, e)
         >>> rbox.collapse(1, 0)
-        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
+        IntervProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
-        IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
+        IntervProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
         >>> rbox.collapse([1, 2], [0, 3.5])  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
@@ -384,7 +386,7 @@ class IntervalProd(Set):
             lengths of 'index' ({}) and 'value' ({}) do not match
             '''.format(len(index), len(value))))
 
-        if np.any(index >= self.dim):
+        if np.any(index < 0) or np.any(index >= self.dim):
             raise IndexError(errfmt('''
             'index'({!r}) out of range (max {})
             '''.format(list(index), self.dim)))
@@ -408,7 +410,7 @@ class IntervalProd(Set):
         e_new = self._end.copy()
         e_new[index] = value
 
-        return IntervalProd(b_new, e_new)
+        return IntervProd(b_new, e_new)
 
     def squeeze(self):
         """
@@ -418,34 +420,88 @@ class IntervalProd(Set):
 
         Returns
         -------
-        The squeezed IntervalProd
+        The squeezed IntervProd
 
         Examples
         --------
 
         >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> rbox = IntervProd(b, e)
         >>> rbox.collapse(1, 0).squeeze()
-        IntervalProd([-1.0, 2.0], [-0.5, 3.0])
+        IntervProd([-1.0, 2.0], [-0.5, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
-        IntervalProd([-1.0], [-0.5])
+        IntervProd([-1.0], [-0.5])
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
-        IntervalProd([], [])
+        IntervProd([], [])
         """
 
         b_new = self._begin[self._inondeg]
         e_new = self._end[self._inondeg]
-        return IntervalProd(b_new, e_new)
+        return IntervProd(b_new, e_new)
+
+    def insert(self, other, index):
+        """
+        Insert another IntervProd before the given index
+
+        The given IntervProd (dim=m) is inserted into the current
+        one (dim=n) before the given index, resulting in a new
+        IntervProd of dimension n+m.
+        Note that no changes are made in-place.
+
+        Parameters
+        ----------
+        other : IntervProd, float or array-like
+                The IntervProd to be inserted. A float or array a is
+                treated as an IntervProd(a, a).
+        index : int
+                The index of the dimension before which 'other' is to
+                be inserted. Must fulfill 0 <= index <= dim.
+
+        Returns
+        -------
+        The enlarged IntervProd
+
+        Examples
+        --------
+
+        >>> rbox = IntervProd([-1, 2], [-0.5, 3])
+        >>> rbox2 = IntervProd([0, 0], [1, 0])
+        >>> rbox.insert(rbox2, 1)
+        IntervProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
+        >>> rbox.insert([-1.0, 0.0], 2)
+        IntervProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+        >>> rbox.insert(0, 1).squeeze().equals(rbox)
+        True
+        """
+
+        if not 0 <= index <= self.dim:
+            raise IndexError('Index ({}) out of range'.format(index))
+
+        if not isinstance(other, IntervProd):
+            other = IntervProd(other, other)
+
+        new_beg = np.empty(self.dim + other.dim)
+        new_end = np.empty(self.dim + other.dim)
+
+        new_beg[: index] = self._begin[: index]
+        new_end[: index] = self._end[: index]
+        new_beg[index: index+other.dim] = other.begin
+        new_end[index: index+other.dim] = other.end
+        if index < self.dim:  # Avoid IndexError
+            new_beg[index+other.dim:] = self._begin[index:]
+            new_end[index+other.dim:] = self._end[index:]
+
+        return IntervProd(new_beg, new_end)
 
     # Magic methods
     def __repr__(self):
-        return ('IntervalProd({b!r}, {e!r})'.format(b=list(self._begin),
-                                                    e=list(self._end)))
+        return ('IntervProd({b!r}, {e!r})'.format(b=list(self._begin),
+                                                  e=list(self._end)))
 
     __str__ = __repr__
 
 
-class Interval(IntervalProd):
+class Interval(IntervProd):
     """ The set of real numbers in the interval [begin, end]
     """
     def __init__(self, begin, end):
@@ -463,7 +519,7 @@ class Interval(IntervalProd):
         return ('Interval({b}, {e})'.format(b=self.begin, e=self.end))
 
 
-class Rectangle(IntervalProd):
+class Rectangle(IntervProd):
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.dim != 2:
