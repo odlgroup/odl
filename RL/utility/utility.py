@@ -75,7 +75,7 @@ def vec_list_from_arg(arg):
 
 
 def errfmt(errstr):
-    return fill(dedent(errstr))
+    return fill(dedent(errstr)).lstrip()
 
 
 def flat_tuple(seq):
@@ -141,7 +141,7 @@ def euler_matrix(*angles):
     mat = np.matrix(
         [[cph*cps - sph*cth*sps, -cph*sps - sph*cth*cps,  sph*sth],
          [sph*cps + cph*cth*sps, -sph*sps + cph*cth*cps, -cph*sth],
-         [              sth*sps,                sth*cps,      cth]])
+         [sth*sps, sth*cps, cth]])
 
     return mat
 
