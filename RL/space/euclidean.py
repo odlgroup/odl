@@ -66,7 +66,7 @@ class RN(LinearSpace):
     def linCombImpl(self, z, a, x, b, y):
         """ Implement y = a*x + b*y using optimized BLAS rutines
 
-         Parameters
+        Parameters
         ----------
         z : RNVector
             The Vector that the result should be written to.
@@ -492,12 +492,14 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : Vector
-        y : Vector
+        x : RNVector
+            read from
+        y : RNVector
+            read from and written to
 
         Returns
         -------
-        float
+        None
 
         Examples
         --------
@@ -505,8 +507,6 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         >>> rn = EuclidianSpace(3)
         >>> x = rn.makeVector([5, 3, 2])
         >>> y = rn.makeVector([1, 2, 3])
-        >>> [5*1, 3*2, 2*3]
-        [5, 6, 6]
         >>> rn.multiply(x, y)
         >>> y
         [5.0, 6.0, 6.0]

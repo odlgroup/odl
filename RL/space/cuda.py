@@ -64,41 +64,261 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
     def innerImpl(self, x, y):
+        """ Calculates the inner product of x and y
+
+        Parameters
+        ----------
+        x : CudaRNVector
+        y : CudaRNVector
+
+        Returns
+        -------
+        float, inner product of x and y
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> y = rn.makeVector([3, 1, 5])
+        >>> rn.inner(x, y)
+        20.0
+
+        Also has member inner
+        >>> x.inner(y)
+        20.0
+        """
+
         return self.impl.inner(x.impl, y.impl)
 
-    def normImpl(self, x):  # Optimized separately from inner
+    def normImpl(self, x):
+        """ Calculates the 2-norm of x
+
+        This method is implemented separately from `sqrt(inner(x,x))`
+        for efficiency reasons.
+
+        Parameters
+        ----------
+        x : CudaRNVector
+
+        Returns
+        -------
+        float, 2-norm of x
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> x = rn.makeVector([2, 3, 6])
+        >>> rn.norm(x)
+        7.0
+
+        Also has member inner
+        >>> x.norm()
+        7.0
+        """
+
         return sqrt(self.impl.normSq(x.impl))
 
     def linCombImpl(self, z, a, x, b, y):
+        """ Linear combination of x and y
+
+        z = a*x + b*y
+
+        Parameters
+        ----------
+        z : CudaRNVector
+            The Vector that the result should be written to.
+        a : RealNumber
+            Scalar to multiply `x` with.
+        x : CudaRNVector
+            The first of the summands
+        b : RealNumber
+            Scalar to multiply `y` with.
+        y : CudaRNVector
+            The second of the summands
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> rn = CudaRN(3)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> y = rn.makeVector([4, 5, 6])
+        >>> z = rn.empty()
+        >>> rn.linComb(z, 2, x, 3, y)
+        >>> z
+        CudaRNVector([ 14.  19.  24.])
+        """
         self.impl.linComb(z.impl, a, x.impl, b, y.impl)
 
     def multiplyImpl(self, x, y):
+        """ Calculates the pointwise product of two vectors and assigns the
+        result to `y`
+
+        This is defined as:
+
+        multiply(x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
+
+        Parameters
+        ----------
+
+        x : CudaRNVector
+            read from
+        y : CudaRNVector
+            read from and written to
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> x = rn.makeVector([5, 3, 2])
+        >>> y = rn.makeVector([1, 2, 3])
+        >>> rn.multiply(x, y)
+        >>> y
+        CudaRNVector([ 5.  6.  6.])
+        """
         self.impl.multiply(x.impl, y.impl)
 
     def zero(self):
         """ Returns a vector of zeros
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        CudaRNVector instance with all elements set to zero (0.0)
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> y = rn.zero()
+        >>> y
+        CudaRNVector([ 0.  0.  0.])
         """
         return self.makeVector(self.impl.zero())
 
     def empty(self):
-        """ Returns a vector of zeros (CUDA memory is always initialized)
+        """ Returns a vector of zeros 
+        
+        CUDA memory is always initialized
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        CudaRNVector instance
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> y = rn.empty()
+        >>> y in rn
+        True
+        >>> y.assign(rn.zero())
+        >>> y
+        CudaRNVector([ 0.  0.  0.])
         """
         return self.makeVector(self.impl.empty())
 
     @property
     def field(self):
         """ The underlying field of RN is the real numbers
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RealNumbers instance
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> rn.field
+        RealNumbers()
         """
         return self._field
 
     @property
     def n(self):
-        """ The number of dimensions of this space
+        """ The dimension of this space
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        Integer
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> rn.n
+        3
         """
         return self._n
 
     def equals(self, other):
-        """ Verifies that other is a RN instance of dimension `n`
+        """ Verifies that other is a CudaRN instance of dimension `n`
+
+        Parameters
+        ----------
+        other : any object
+                The object to check for equality
+
+        Returns
+        -------
+        boolean      True if equal, else false
+
+        Examples
+        --------
+
+        Comparing with self
+        >>> r3 = CudaRN(3)
+        >>> r3.equals(r3)
+        True
+
+        Also true when comparing with similar instance
+        >>> r3a, r3b = CudaRN(3), CudaRN(3)
+        >>> r3a.equals(r3b)
+        True
+
+        False when comparing to other dimension RN
+        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3.equals(r4)
+        False
+
+        We also support operators '==' and '!='
+        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3 == r3
+        True
+        >>> r3 == r4
+        False
+        >>> r3 != r4
+        True
         """
         return isinstance(other, CudaRN) and self._n == other._n
 
