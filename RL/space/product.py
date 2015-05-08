@@ -17,186 +17,356 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 try:
     from builtins import str, zip, range, super
 except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, zip, range, super
 from future import standard_library
 
+# 
+from itertools import repeat
+
 # RL imports
-from RL.space.space import HilbertSpace
+from RL.space.space import HilbertSpace, NormedSpace, LinearSpace
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
 
-class ProductSpace(HilbertSpace):
+class ProductSpace(LinearSpace):
     """Product space (X1 x X2 x ... x Xn)
+    Creates a Cartesian product of an arbitrary set of spaces.
+
+    For example:
+
+    `ProductSpace(Reals(), Reals())` is mathematically equivalent to `RN(2)`
+
+    Note that the later is obviously more efficient.
+
+    Args:
+        spaces    (multiple) LinearSpace     One or more instances of linear spaces
     """
 
-    def __init__(self, *spaces):
+    def __init__(self, *spaces):        
         if len(spaces) == 0:
             raise TypeError("Empty product not allowed")
+
         if not all(spaces[0].field == y.field for y in spaces):
             raise TypeError("All spaces must have the same field")
 
         self.spaces = spaces
-        self._dimension = len(self.spaces)
+        self._nProducts = len(self.spaces)
         self._field = spaces[0].field  # X_n has same field
 
     def zero(self):
+        """ Create a vector whose components is the zero vectors in the underlying spaces
+        """
         return self.makeVector(*[space.zero() for space in self.spaces])
 
     def empty(self):
+        """ Create a vector whose components is arbitrary vectors in the underlying spaces
+        """
         return self.makeVector(*[space.empty() for space in self.spaces])
 
-    def innerImpl(self, x, y):
-        return (sum(space.innerImpl(xp, yp)
-                    for space, xp, yp in zip(self.spaces, x.parts, y.parts)))
-
     def linCombImpl(self, z, a, x, b, y):
+        """ Applies linComb to each component
+        """
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
             space.linCombImpl(zp, a, xp, b, yp)
 
     @property
     def field(self):
+        """ Get the underlying field of this product space.
+        The field is the same for each underlying space.
+        """
         return self._field
 
-    @property
-    def dimension(self):
-        return self._dimension
-
     def equals(self, other):
+        """ Tests two objects for equality.
+
+        Returns true if other is a ProductSpace with the same subspaces as this space.
+        """
         return (isinstance(other, ProductSpace) and
+                self._nProducts == other._nProducts and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 
     def makeVector(self, *args):
-        return ProductSpace.Vector(self, *args)
+        """ Creates an element in the product space
 
-    def __getitem__(self, index):
-        return self.spaces[index]
+        Parameters
+        ----------
+        The method has two call patter, the first is:
+
+        *args : tuple of LinearSpace.Vector's
+                A tuple of vectors in the underlying space.
+                This will simply wrap the Vectors (not copy).
+
+        The second pattern is to create a new Vector from scratch, in this case
+
+        *args : Argument for i:th vector
+
+        Returns
+        -------
+        ProductSpace.Vector instance
+
+
+        Examples
+        --------
+
+        >>> rn = RN(2)
+        >>> rm = RN(3)
+        >>> prod = ProductSpace(rn,rm)
+        >>> x = rn.makeVector([1,2])
+        >>> y = rm.makeVector([1,2,3])
+        >>> z = prod.makeVector(x, y)
+        >>> z
+        {[ 1.  2.], [ 1.  2.  3.]}
+
+        """
+
+        if not isinstance(args[0], LinearSpace.Vector):
+            # Delegate constructors
+            return self.makeVector(*(space.makeVector(arg)
+                                   for arg, space in zip(args, self.spaces)))
+        else:  # Construct from existing tuple
+            if any(part.space != space
+                    for part, space in zip(args, self.spaces)):
+                raise TypeError(errfmt('''
+                The spaces of all parts must correspond to this
+                space's parts'''))
+
+            #Use class to allow subclassing
+            return self.__class__.Vector(self, *args)
 
     def __len__(self):
-        return self.dimension
+        """ Get the number of parts of this product space
+        """
+        return self._nProducts
+
+    def __getitem__(self, index):
+        """ Access the index:th subspace of this space
+
+        Parameters
+        ----------
+
+        index : int
+                The position that should be accessed
+
+        Returns
+        -------
+        LinearSpace, the index:th subspace
+
+        Examples
+        --------
+
+        >>> rn = RN(2)
+        >>> rm = RN(3)
+        >>> prod = ProductSpace(rn, rm)
+        >>> prod[0]
+        RN(2)
+        >>> prod[1]
+        RN(3)
+
+        """
+        return self.spaces[index]
 
     def __str__(self):
+        return ' x '.join(str(space) for space in self.spaces)
+
+    def __repr__(self):
         return ('ProductSpace(' +
                 ', '.join(str(space) for space in self.spaces) + ')')
 
-    class Vector(HilbertSpace.Vector):
+    class Vector(LinearSpace.Vector):
         def __init__(self, space, *args):
             super().__init__(space)
+            self.parts = args
 
-            if not isinstance(args[0], HilbertSpace.Vector):
-                # Delegate constructors
-                self.parts = (tuple(space.makeVector(arg)
-                                    for arg, space in zip(args, space.spaces)))
-            else:  # Construct from existing tuple
-                if any(part.space != space
-                       for part, space in zip(args, space.spaces)):
-                    raise TypeError(errfmt('''
-                    The spaces of all parts must correspond to this
-                    space's parts'''))
-
-                self.parts = args
+        def __len__(self):
+            """ The number of components of this vector
+            """
+            return self.space._nProducts
 
         def __getitem__(self, index):
+            """ Access the index:th component of this vector
+
+            Parameters
+            ----------
+
+            index : int
+                    The position that should be accessed
+
+            Returns
+            -------
+            LinearSpace.Vector of type self.space[index], the index:th sub-vector
+
+            Examples
+            --------
+
+            >>> rn = RN(2)
+            >>> rm = RN(3)
+            >>> prod = ProductSpace(rn, rm)
+            >>> z = prod.makeVector([1, 2], [1, 2, 3])
+            >>> z[0]
+            [1.0, 2.0]
+            >>> z[1]
+            [1.0, 2.0, 3.0]
+
+            """
             return self.parts[index]
 
         def __str__(self):
-            return (self.space.__str__() +
-                    '::Vector(' + ', '.join(str(part) for part in self.parts) +
-                    ')')
+            return ('{' + ', '.join(str(part) for part in self.parts) +
+                    '}')
 
         def __repr__(self):
-            return (self.space.__repr__() + '::Vector(' +
+            return (self.space.__repr__() + '.Vector(' +
                     ', '.join(part.__repr__() for part in self.parts) + ')')
 
+    
+class NormedProductSpace(ProductSpace,NormedSpace):
+    """ A product space of Normed Spaces (X1 x X2 x ... x Xn)
 
-class PowerSpace(HilbertSpace):
-    """Product space with the same underlying space (X x X x ... x X)
+    Creates a Cartesian product of an arbitrary set of spaces.
+
+    For example:
+
+    `NormedProductSpace(Reals(), Reals())` is mathematically equivalent to `RN(2)` ##TODO MAKE NORMED RN SPACE
+
+    Note that the later is obviously more efficient.
+
+    Parameters
+    ----------
+
+    *spaces : NormedSpace's       
+                A set of normed spaces
+    **kwargs : {'ord'}
+                'ord' : string
+                        The order of the norm.
+
+    The following values for `ord` can be specified. 
+    Note that any value of ord < 1 only gives a pseudonorm
+
+    =====  ==========================
+    ord    Definition
+    =====  ==========================
+    inf    max(norm(x[0]), ..., norm(x[n-1]))
+    -inf   min(norm(x[0]), ..., norm(x[n-1]))
+    0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
+    other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
+    =====  ==========================
+    """
+    
+    def __init__(self, *spaces, **kwargs):
+        self.ord = kwargs.pop('ord',2)
+
+        super().__init__(*spaces)
+
+    def normImpl(self, x):
+        if self.ord == float('inf'):
+            return max(space.normImpl(xp) for space, xp in zip(self.spaces, x.parts))        
+        elif self.ord == -float('inf'):
+            return min(space.normImpl(xp) for space, xp in zip(self.spaces, x.parts))
+        elif self.ord == 0:
+            return sum(space.normImpl(xp) != 0 for space, xp in zip(self.spaces, x.parts))
+        else:
+            return sum(space.normImpl(xp)**self.ord for space, xp in zip(self.spaces, x.parts))**(1/self.ord)
+
+        
+    class Vector(ProductSpace.Vector,NormedSpace.Vector):
+        pass
+
+class HilbertProductSpace(HilbertSpace,NormedProductSpace):
+    """ A product space of HilbertSpaces (X1 x X2 x ... x Xn)
+
+    Creates a Cartesian product of an arbitrary set of spaces.
+
+    For example:
+
+    `HilbertProductSpace(Reals(), Reals())` is mathematically equivalent to `EuclideanSpace(2)`
+
+    Note that the later is obviously more efficient.
+
+    Parameters
+    ----------
+
+    *spaces : HilbertSpace's       
+              A set of HilbertSpace's
+    **kwargs : {'weights'}
+                'weights' : Array-Like
+                            List of weights, same size as spaces
+
+    The inner product in the HilbertProductSpace is per default defined as
+
+    inner(x, y) = x[0]*y[0] + ... + x[n-1]*y[n-1]
+
+    The optional parameter `weights` changes this behaviour to
+
+    inner(x, y) = weights[0]*x[0]*y[0] + ... + weights[n-1]*x[n-1]*y[n-1]
     """
 
-    def __init__(self, underlying_space, dimension):
-        if dimension <= 0:
-            raise TypeError('Empty or negative product not allowed')
+    def __init__(self, *spaces, **kwargs):
+        self.weights = kwargs.pop('weights', None)
 
-        self.underlying_space = underlying_space
-        self._dimension = dimension
-
-    def zero(self):
-        return self.makeVector(*[self.underlying_space.zero()
-                                 for _ in range(self.dimension)])
-
-    def empty(self):
-        return self.makeVector(*[self.underlying_space.empty()
-                                 for _ in range(self.dimension)])
+        super().__init__(*spaces)
 
     def innerImpl(self, x, y):
-        return sum(self.underlying_space.innerImpl(xp, yp)
-                   for xp, yp in zip(x.parts, y.parts))
+        if self.weights:
+            return sum(space.innerImpl(xp, yp)
+                       for space, weight, xp, yp in zip(self.spaces, self.weights, x.parts, y.parts))
+        else:
+            return sum(space.innerImpl(xp, yp)
+                       for space, xp, yp in zip(self.spaces, x.parts, y.parts))
 
-    def linCombImpl(self, z, a, x, b, y):
-        for zp, xp, yp in zip(z.parts, x.parts, y.parts):
-            self.underlying_space.linCombImpl(zp, a, xp, b, yp)
+    class Vector(ProductSpace.Vector,HilbertSpace.Vector):
+        pass
 
-    @property
-    def field(self):
-        return self.underlying_space.field
+def makeProductSpace(*spaces):
+    """ Creates an appropriate ProductSpace
 
-    @property
-    def dimension(self):
-        return self._dimension
+    Selects the type of product space that has the most structure (Inner product, norm)
+    given a set of spaces
 
-    def equals(self, other):
-        return (isinstance(other, PowerSpace) and
-                self.underlying_space.equals(other.underlying_space) and
-                self.dimension == other.dimension)
+    Parameters
+    ----------
 
-    def makeVector(self, *args):
-        return PowerSpace.Vector(self, *args)
+    *spaces : LinearSpace's       
+              A set of LinearSpace's
 
-    def __getitem__(self, index):
-        if index < -self.dimension or index >= self.dimension:
-            raise IndexError('Index out of range')
-        return self.underlying_space
+    Returns
+    -------
+    ProductSpace, NormedProductSpace or HilbertProductSpace depending on the lowest common denominator in spaces.
 
-    def __len__(self):
-        return self.dimension
+    """
+    if all(isinstance(space, HilbertSpace) for space in spaces):
+        return HilbertProductSpace(*spaces)
+    elif all(isinstance(space, NormedSpace) for space in spaces):
+        return NormedProductSpace(*spaces)
+    else:
+        return ProductSpace(*spaces)
 
-    def __str__(self):
-        return ('PowerSpace(' + str(self.underlying_space) + ', ' +
-                str(self.dimension) + ')')
+def makePowerSpace(underlying_space, nProducts):
+    """ Creates a Cartesian "power" of a space. For example,
 
-    class Vector(HilbertSpace.Vector):
-        def __init__(self, space, *args):
-            super().__init__(space)
+    `PowerSpace(Reals(),3)` is mathematically the same as `RN(3)` or `R x R x R`
+    Note that the later is more efficient.
 
-            if not isinstance(args[0], HilbertSpace.Vector):
-                # Delegate constructors
-                self.parts = tuple(space.makeVector(arg)
-                                   for arg, space in zip(args, space.spaces))
-            else:  # Construct from existing tuple
-                if len(args) != self.space.dimension:
-                    raise TypeError('The dimension of the space is wrong')
+    Selects the type of product space that has the most structure (Inner product, norm)
+    given a set of spaces
 
-                if any(part.space != self.space.underlying_space
-                       for part in args):
-                    raise TypeError(errfmt('''
-                    The spaces of all parts must correspond to this space's
-                    parts'''))
+    Parameters
+    ----------
 
-                self.parts = args
+    underlying_space : LinearSpace     
+                       The underlying space that should be repeated
+    nProduct         : Int
+                       Number of products in the result
 
-        def __getitem__(self, index):
-            return self.parts[index]
+    Returns
+    -------
+    ProductSpace, NormedProductSpace or HilbertProductSpace depending on the lowest common denominator in spaces.
 
-        def __str__(self):
-            return (self.space.__str__() + '::Vector(' +
-                    ', '.join(str(part) for part in self.parts) + ')')
-
-        def __repr__(self):
-            return (self.space.__repr__() + '::Vector(' +
-                    ', '.join(part.__repr__() for part in self.parts) + ')')
+    """
+    return makeProductSpace(*([underlying_space]*nProducts))

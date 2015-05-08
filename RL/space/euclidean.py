@@ -1,3 +1,10 @@
+""" Module for spaces whose elements are in R^n
+
+This is the default implementation of R^n and the
+corresponding NormedRN and EuclideanSpace.
+
+The underlying datarepresentation used is Numpy Arrays.
+"""
 # Copyright 2014, 2015 Holger Kohr, Jonas Adler
 #
 # This file is part of RL.
@@ -26,7 +33,7 @@ except ImportError:  # Versions < 0.14 of python-future
 from future import standard_library
 
 # External module imports
-import numpy as np
+import numpy
 from scipy.lib.blas import get_blas_funcs
 
 # RL imports
@@ -39,105 +46,288 @@ standard_library.install_aliases()
 
 class RN(LinearSpace):
     """The real space R^n
+
+    Parameters
+    ----------
+
+    n : int
+        The dimension of the space
     """
 
     def __init__(self, n):
         if not isinstance(n, Integral) or n < 1:
             raise TypeError('n ({}) has to be a positive integer'.format(np))
-        self.n = n
+        self._n = n
         self._field = RealNumbers()
-        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy', 'scal',
+        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy',
+                                                             'scal',
                                                              'copy'])
 
     def linCombImpl(self, z, a, x, b, y):
-        # Implement y = a*x + b*y using optimized BLAS rutines
+        """ Implement y = a*x + b*y using optimized BLAS rutines
+
+        Parameters
+        ----------
+        z : RNVector
+            The Vector that the result should be written to.
+        a : RealNumber
+            Scalar to multiply `x` with.
+        x : RNVector
+            The first of the summands
+        b : RealNumber
+            Scalar to multiply `y` with.
+        y : RNVector
+            The second of the summands
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> rn = RN(3)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> y = rn.makeVector([4, 5, 6])
+        >>> z = rn.empty()
+        >>> rn.linComb(z, 2, x, 3, y)
+        >>> z
+        [14, 19, 24]
+
+        """
 
         if x is y and b != 0:
+            # If x is aligned with y, we are looking at:     z = (a+b)*x
             self.linCombImpl(z, a+b, x, 0, x)
         elif z is x and z is y:
+            # If all the vectors are aligned we have:        z = (a+b)*z
             self._scal(a+b, z.values)
         elif z is x:
+            # If z is aligned with x we have                 z = a*z + b*y
             if a != 1:
                 self._scal(a, z.values)
             if b != 0:
-                self._axpy(y.values, z.values, self.dimension, b)
+                self._axpy(y.values, z.values, self._n, b)
         elif z is y:
+            # If z is aligned with y we have                 z = a*x + b*z
             if b != 1:
                 self._scal(b, z.values)
             if a != 0:
-                self._axpy(x.values, z.values, self.dimension, a)
+                self._axpy(x.values, z.values, self._n, a)
         else:
+            # We have exhausted all alignment options, so x != y != z
+            # We now optimize for various values of a and b
             if b == 0:
-                if a == 0:
+                if a == 0:  # Zero assignment                z = 0
                     z.values[:] = 0
-                else:
+                else:                                       # z = a*x
                     self._copy(x.values, z.values)
                     if a != 1:
                         self._scal(a, z.values)
             else:
-                if a == 0:
+                if a == 0:                                  # z = b*y
                     self._copy(y.values, z.values)
                     if b != 1:
                         self._scal(b, z.values)
 
-                elif a == 1:
+                elif a == 1:                                # z = x + b*y
                     self._copy(x.values, z.values)
-                    self._axpy(y.values, z.values, self.dimension, b)
-                else:
+                    self._axpy(y.values, z.values, self._n, b)
+                else:                                       # z = a*x + b*y
                     self._copy(y.values, z.values)
                     if b != 1:
                         self._scal(b, z.values)
-                    self._axpy(x.values, z.values, self.dimension, a)
+                    self._axpy(x.values, z.values, self._n, a)
 
     def zero(self):
-        return self.makeVector(np.zeros(self.n, dtype=float))
+        """ Returns a vector of zeros
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RN.Vector instance
+
+        Note
+        ----
+        While the space has a single (unique) zero vector,
+        each call to this method returns a new instance of this vector.
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> x = rn.zero()
+        >>> x
+        [0.0, 0.0, 0.0]
+        """
+        return self.makeVector(numpy.zeros(self._n, dtype=float))
 
     def empty(self):
-        return self.makeVector(np.empty(self.n, dtype=float))
+        """ Returns an arbitrary vector
+
+        more efficient than zeros.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RN.Vector instance
+
+        Note
+        ----
+        The values of the returned vector may be _anything_ including
+        inf and NaN. Thus operations such as empty() * 0 need not return
+        the zero vector.
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> x = rn.empty()
+        >>> x in rn
+        True
+
+        """
+        return self.makeVector(numpy.empty(self._n, dtype=float))
 
     @property
     def field(self):
+        """ The underlying field of RN is the real numbers
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RealNumbers instance
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> rn.field
+        RealNumbers()
+        """
         return self._field
 
     @property
-    def dimension(self):
-        return self.n
+    def n(self):
+        """ The number of dimensions of this space
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RealNumbers instance
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> rn.n
+        3
+        """
+        return self._n
 
     def equals(self, other):
-        return isinstance(other, RN) and self.n == other.n
+        """ Verifies that other is a RN instance of dimension `n`
+
+        Parameters
+        ----------
+        other : any object
+                The object to check for equality
+
+        Returns
+        -------
+        boolean      True or false
+
+        Examples
+        --------
+
+        Comparing with self
+        >>> r3 = RN(3)
+        >>> r3.equals(r3)
+        True
+
+        Also true when comparing with similar instance
+        >>> r3a, r3b = RN(3), RN(3)
+        >>> r3a.equals(r3b)
+        True
+
+        False when comparing to other dimension RN
+        >>> r3, r4 = RN(3), RN(4)
+        >>> r3.equals(r4)
+        False
+
+        We also support operators '==' and '!='
+        >>> r3, r4 = RN(3), RN(4)
+        >>> r3 == r3
+        True
+        >>> r3 == r4
+        False
+        >>> r3 != r4
+        True
+        """
+        return isinstance(other, RN) and self._n == other._n
 
     def makeVector(self, *args, **kwargs):
-        if isinstance(args[0], np.ndarray):
-            if args[0].shape == (self.n,):
-                return RN.Vector(self, args[0])
-            else:
+        """ Creates an element in RN
+
+        Parameters
+        ----------
+        The method has two call patterns, the first is:
+
+        *args : numpy.ndarray
+                Array that will be used as the underlying representation
+                The dtype of the array must be float64
+                The shape of the array must be (n,)
+
+        **kwargs : None
+
+        The second pattern is to create a new numpy array, in this case
+
+        *args : Options for numpy.array constructor
+        **kwargs : Options for numpy.array constructor
+
+        Returns
+        -------
+        RN.Vector instance
+
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> x = rn.makeVector(numpy.array([1., 2., 3.]))
+        >>> x
+        [1.0, 2.0, 3.0]
+        >>> y = rn.makeVector([1,2,3])
+        >>> y
+        [1.0, 2.0, 3.0]
+
+        """
+        if isinstance(args[0], numpy.ndarray):
+            if args[0].shape != (self._n,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(args[0], args[0].shape, (self.n,))))
+
+            if args[0].dtype != numpy.float64:
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of type {}, expected float64
+                '''.format(args[0], args[0].dtype)))
+
+            return RN.Vector(self, args[0])
         else:
-            return self.makeVector(np.array(*args,
-                                            **kwargs).astype(float,
-                                                             copy=False))
-
-    class Vector(HilbertSpace.Vector, Algebra.Vector):
-        def __init__(self, space, values):
-            super().__init__(space)
-            self.values = values
-
-        def __abs__(self):
-            return self.space.makeVector(abs(self.values))
-
-        def __str__(self):
-            return str(self.values)
-
-        def __repr__(self):
-            return repr(self.space) + '::Vector(' + repr(self.values) + ')'
-
-        def __getitem__(self, index):
-            return self.values.__getitem__(index)
-
-        def __setitem__(self, index, value):
-            return self.values.__setitem__(index, value)
+            return self.makeVector(
+                numpy.array(*args, **kwargs).astype(numpy.float64, copy=False))
 
     def __str__(self):
         return self.__class__.__name__ + "(" + str(self.n) + ")"
@@ -145,49 +335,188 @@ class RN(LinearSpace):
     def __repr__(self):
         return 'RN(' + str(self.n) + ')'
 
+    class Vector(HilbertSpace.Vector, Algebra.Vector):
+        """ A RN-vector represented using numpy
 
-class EuclidianSpace(RN, HilbertSpace, Algebra):
-    """The real space R^n with the euclidean norm
-    """
+        Parameters
+        ----------
 
-    def innerImpl(self, x, y):
-        return float(np.vdot(x.values, y.values))
+        space : RN
+                Instance of RN this vector lives in
+        values : numpy.ndarray
+                 Underlying data-representation to be used by this vector
+                 The dtype of the array must be float64
+                 The shape of the array must be (n,)
+        """
 
-    def multiplyImpl(self, x, y):
-        y.values[:] = x.values*y.values
-
-
-def makePooledSpace(base, *args, **kwargs):
-    """ Pooled space provides a optimization in reusing vectors and returning
-    them from empty.
-    """
-    BaseType = type(base)
-    BaseVectorType = BaseType.Vector
-
-    class PooledSpace(BaseType):
-        def __init__(self, base, *args, **kwargs):
-            self._pool = []
-            self._poolMaxSize = kwargs.pop('maxPoolSize', 1)
-            self._base = base
-
-        def empty(self):
-            if self._pool:
-                return self._pool.pop()
-            else:
-                return BaseType.empty(self)
-
-        def __getattr__(self, name):
-            return getattr(self._base, name)
+        def __init__(self, space, values):
+            super().__init__(space)
+            self.values = values
 
         def __str__(self):
-            return ('PooledSpace(' + str(self._base) + ', Pool size:' +
-                    str(len(self._pool)) + ')')
+            return str(self.values)
 
-        class Vector(BaseVectorType):
-            def __del__(self):
-                if len(self.space._pool) < self.space._poolMaxSize:
-                    self.space._pool.append(self)
-                else:
-                    pass  # TODO BaseVectorType.__del__(self)
+        def __repr__(self):
+            return repr(self.space) + '.makeVector(' + repr(self.values) + ')'
 
-    return PooledSpace(base, *args, **kwargs)
+        def __len__(self):
+            """ Get the dimension of the underlying space
+            """
+            return self.space.n
+
+        def __getitem__(self, index):
+            """ Access values of this vector
+
+            Parameters
+            ----------
+
+            index : int or slice
+                    The position(s) that should be accessed
+
+            Returns
+            -------
+            If index is an `int`
+            numpy.float64, value at index
+
+            If index is an `slice`
+            numpy.ndarray instance with the values at the slice
+
+
+            Examples
+            --------
+
+            >>> rn = RN(3)
+            >>> y = rn.makeVector([1, 2, 3])
+            >>> y[0]
+            1.0
+            >>> y[1:3]
+            array([ 2.,  3.])
+
+            """
+            return self.values.__getitem__(index)
+
+        def __setitem__(self, index, value):
+            """ Set values of this vector
+
+            Parameters
+            ----------
+
+            index : int or slice
+                    The position(s) that should be set
+            value : float or Array-Like
+                    The values that should be assigned.
+                    If index is an integer, value should be a float.
+                    If index is a slice, value should be an Array-Like
+                    of the same size as the slice.
+
+            Returns
+            -------
+            None
+
+
+            Examples
+            --------
+
+            >>> rn = RN(3)
+            >>> y = rn.makeVector([1, 2, 3])
+            >>> y[0] = 5
+            >>> y
+            [5.0, 2.0, 3.0]
+            >>> y[1:3] = [7, 8]
+            >>> y
+            [5.0, 7.0, 8.0]
+            >>> y[:] = numpy.array([0, 0, 0])
+            >>> y
+            [0.0, 0.0, 0.0]
+
+            """
+
+            return self.values.__setitem__(index, value)
+
+
+class EuclidianSpace(RN, HilbertSpace, Algebra):
+    """The real space R^n with the usual inner product.
+
+    Parameters
+    ----------
+
+    n : int
+        The dimension of the space
+    """
+
+    def __init__(self, n):
+        super().__init__(n)
+
+        self._dot, self._nrm2 = get_blas_funcs(['dot',
+                                                'nrm2'])
+
+    def innerImpl(self, x, y):
+        """ Calculates the inner product of two vectors
+
+        This is defined as:
+
+        inner(x,y) := x[0]*y[0] + x[1]*y[1] + ... x[n-1]*y[n-1]
+
+        Parameters
+        ----------
+
+        x : Vector
+        y : Vector
+
+        Returns
+        -------
+        float
+
+        Examples
+        --------
+
+        >>> rn = EuclidianSpace(3)
+        >>> x = rn.makeVector([5, 3, 2])
+        >>> y = rn.makeVector([1, 2, 3])
+        >>> 5*1 + 3*2 + 2*3
+        17
+        >>> rn.inner(x, y)
+        17.0
+
+        """
+        return float(self._dot(x.values, y.values))
+
+    def multiplyImpl(self, x, y):
+        """ Calculates the pointwise product of two vectors and assigns the
+        result to `y`
+
+        This is defined as:
+
+        multiply(x,y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
+
+        Parameters
+        ----------
+
+        x : RNVector
+            read from
+        y : RNVector
+            read from and written to
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> rn = EuclidianSpace(3)
+        >>> x = rn.makeVector([5, 3, 2])
+        >>> y = rn.makeVector([1, 2, 3])
+        >>> rn.multiply(x, y)
+        >>> y
+        [5.0, 6.0, 6.0]
+        """
+        y.values[:] = x.values*y.values
+
+    def __repr__(self):
+        return 'EuclidianSpace(' + str(self.n) + ')'
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

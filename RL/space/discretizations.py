@@ -17,13 +17,15 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 try:
     from builtins import str, zip, super
 except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, zip, super
 from future import standard_library
+
+from math import sqrt
 
 # External module imports
 import numpy as np
@@ -64,8 +66,8 @@ def makeUniformDiscretization(parent, rnimpl):
         def innerImpl(self, v1, v2):
             return self._rn.innerImpl(v1, v2) * self.scale
 
-        def normSqImpl(self, vector):
-            return self._rn.normSqImpl(vector) * self.scale
+        def normImpl(self, vector):
+            return self._rn.normImpl(vector) * sqrt(self.scale)
 
         def __eq__(self, other):
             return (isinstance(other, UniformDiscretization) and
@@ -125,10 +127,10 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
             if not isinstance(rn, space.Algebra):
                 raise NotImplementedError('RN has to be an algebra')
 
-            if not rn.dimension == cols*rows:
+            if not rn.n == cols*rows:
                 raise NotImplementedError(errfmt('''
                 Dimensions do not match, expected {}x{} = {}, got {}
-                '''.format(cols, rows, cols*rows, rn.dimension)))
+                '''.format(cols, rows, cols*rows, rn.n)))
 
             self.parent = parent
             self.cols = cols
@@ -144,8 +146,8 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
         def innerImpl(self, v1, v2):
             return self._rn.innerImpl(v1, v2) * self.scale
 
-        def normSqImpl(self, vector):
-            return self._rn.normSqImpl(vector) * self.scale
+        def normImpl(self, vector):
+            return self._rn.normImpl(vector) * sqrt(self.scale)
 
         def equals(self, other):
             return (isinstance(other, PixelDiscretization) and
@@ -162,7 +164,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
             elif len(args) == 1 and isinstance(args[0], np.ndarray):
                 if args[0].shape == (self.cols, self.rows):
                     return self.makeVector(args[0].flatten(self.order))
-                elif args[0].shape == (self.dimension,):
+                elif args[0].shape == (self.n,):
                     return super().makeVector(args[0])
                 else:
                     raise ValueError(errfmt('''

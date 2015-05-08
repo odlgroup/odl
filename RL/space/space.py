@@ -17,8 +17,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 try:
     from builtins import object, str, super
 except ImportError:  # Versions < 0.14 of python-future
@@ -46,6 +46,18 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
     @abstractmethod
     def empty(self):
         """ Create an empty vector (of undefined state)
+
+        An empty vector may be any vector in this space.
+        No guarantee of the state of the vector is given.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        v : Vector
+            An arbitrary vector in this space
         """
 
     @abstractmethod
@@ -59,16 +71,22 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         """ Get the underlying field
         """
 
-    @abstractproperty
-    def dimension(self):
-        """ Get the dimension of the space
-        """
-
-    # Also equals(self,other) from set
+    # Also abstract equals(self,other) from set
 
     # Default implemented operators
     def zero(self):
-        """ The zero vector of this space
+        """ A zero vector in this space
+
+        The zero vector is defined as the additive unit of a space.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        v : Vector
+            The zero vector of this space
         """
         # Default implementation using linComb
         tmp = self.empty()
@@ -80,14 +98,51 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
         """
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
 
+    # Overload for `vec in space` syntax
+    __contains__ = contains
+
     # Error checking variant of methods
     def linComb(self, z, a, x, b=None, y=None):
-        """ Calculates
+        """ Linear combination of vectors
+
+        Calculates
+
         z = a*x
         or if b and y are given
         z = a*x + b*y
 
-        with error checking of types
+        with error checking of types.
+
+        Parameters
+        ----------
+        z : Vector
+            The Vector that the result should be written to.
+        a : Scalar in the field of this space
+            Scalar to multiply `x` with.
+        x : Vector
+            The first of the summands
+        b : Scalar, optional
+            Scalar to multiply `y` with.
+        y : Vector, optional
+            The second of the summands
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Some notes and examples
+
+        Alignment
+        ~~~~~~~~~
+        The vectors `z`, `x` and `y` may be aligned, thus a call
+
+        space.linComb(x, 2, x, 3.14, x)
+
+        is (mathematically) equivalent to
+
+        x = x * (1 + 2 + 3.14)
         """
 
         if not self.contains(z):
@@ -98,17 +153,19 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             raise TypeError(errfmt('''
             Lincomb failed, a ({}) is not in field ({})
             '''.format(a, self.field)))
+
         if not self.contains(x):
             raise TypeError(errfmt('''
             Lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
 
-        if b is None:
+        if b is None:  # Single argument
             if y is not None:
                 raise ValueError(errfmt('''
                 Lincomb failed, y ({}) provided but not b'''.format(y)))
 
+            # Call method
             return self.linCombImpl(z, a, x, 0, x)
-        else:
+        else:  # Two arguments
             if not self.field.contains(b):
                 raise TypeError(errfmt('''
                 Lincomb failed, b ({}) is not in field ({})
@@ -120,9 +177,6 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
 
             # Call method
             return self.linCombImpl(z, a, x, b, y)
-
-    def __contains__(self, other):
-        return self.contains(other)
 
     class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
@@ -147,7 +201,7 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             self.space.linComb(self, 1, other)
 
         def copy(self):
-            """ Creates an identical copy of this vector
+            """ Creates an identical (deep) copy of this vector
             """
             result = self.space.empty()
             result.assign(self)
@@ -232,11 +286,6 @@ class LinearSpace(with_metaclass(ABCMeta, AbstractSet)):
             """
             return self.copy()
 
-        def __len__(self):
-            """ The dimension of the space this vector resides in
-            """
-            return self.space.dimension
-
         def __str__(self):
             """ A default representation of the vector
             """
@@ -248,31 +297,26 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
     """
 
     @abstractmethod
-    def normSqImpl(self, vector):
-        """ implementation of normSq
+    def normImpl(self, vector):
+        """ implementation of norm
         """
 
     # Default implemented methods
-    def normSq(self, vector):
-        """ Calculate the squared norm of the vector
+    def norm(self, vector):
+        """ Calculate the norm of a vector
         """
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
-        return self.normSqImpl(vector)
-
-    def norm(self, vector):
-        """ The norm of the vector, default implementation uses the
-        normSquared implementation
-        """
-        return sqrt(self.normSq(vector))
+        return float(self.normImpl(vector))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
-
-        def normSq(self):
-            return self.space.normSq(self)
+        """ Abstract vector in a normed space
+        """
 
         def norm(self):
+            """ Shortcut for self.space.norm(self)
+            """
             return self.space.norm(self)
 
 
@@ -299,13 +343,15 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
 
         return self.innerImpl(x, y)
 
-    def normSqImpl(self, x):
+    def normImpl(self, x):
         """ The norm in Hilbert spaces is implicitly defined by the inner
         product
         """
-        return self.innerImpl(x, x)
+        return sqrt(self.innerImpl(x, x))
 
     class Vector(with_metaclass(ABCMeta, NormedSpace.Vector)):
+        """ Abstract vector in a Hilbert-space
+        """
 
         def inner(self, x):
             """ Shortcut for self.space.inner(self, x)
@@ -342,6 +388,8 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 
         def multiply(self, other):
+            """ Shortcut for space.multiply(self, other)
+            """
             self.space.multiply(other, self)
 
         def __imul__(self, other):

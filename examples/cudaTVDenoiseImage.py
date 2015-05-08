@@ -27,7 +27,7 @@ import unittest
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.product import PowerSpace
+from RL.space.product import makePowerSpace
 from RL.space.euclidean import *
 from RL.space.function import *
 import RL.space.cuda as CS
@@ -52,7 +52,7 @@ class ForwardDiff2D(LinearOperator):
             raise TypeError("space must be CudaRN")
 
         self._domain = space
-        self._range = PowerSpace(space,2)
+        self._range = makePowerSpace(space,2)
         
     def applyImpl(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl, self.domain.cols, self.domain.rows)

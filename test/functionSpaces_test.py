@@ -27,7 +27,7 @@ except ImportError:
 
 # External module imports
 import unittest
-from math import pi
+from math import pi, sqrt
 import numpy as np
 
 # RL imports
@@ -45,37 +45,28 @@ class L2Test(RLTestCase):
     def testInterval(self):
         I = sets.Interval(0, pi)
         l2 = fs.L2(I)
+        l2sin = l2.makeVector(np.sin)
+
         rn = EuclidianSpace(10)
         d = disc.makeUniformDiscretization(l2, rn)
 
-        l2sin = l2.makeVector(np.sin)
         sind = d.makeVector(l2sin)
 
-        self.assertAlmostEqual(sind.normSq(), pi/2)
+        self.assertAlmostEqual(sind.norm(), sqrt(pi/2))
 
     def testRectangle(self):
         R = sets.Rectangle((0, 0), (pi, 2*pi))
         l2 = fs.L2(R)
+        l2sin = l2.makeVector(lambda point: np.sin(point[0]) * np.sin(point[1]))
+
         n = 10
         m = 10
         rn = EuclidianSpace(n*m)
         d = disc.makePixelDiscretization(l2, rn, n, m)
 
-        l2sin = l2.makeVector(lambda point: np.sin(point[0]) *
-                              np.sin(point[1]))
         sind = d.makeVector(l2sin)
 
-        self.assertAlmostEqual(sind.normSq(), pi**2 / 2)
-
-#    def testCubes(self):
-#        dmax = 6
-#        for dim in range(3, dmax):
-#            start = [0] * dim
-#            end = [2*pi] * dim
-#            cube = sets.IntervalProd(start, end)
-#            l2 = fs.L2(cube)
-#            rn = EuclidianSpace(10**dim)
-#            discr = disc.makePixelDiscretization
+        self.assertAlmostEqual(sind.norm(), sqrt(pi**2 / 2))
 
 if __name__ == '__main__':
     unittest.main(exit=False)

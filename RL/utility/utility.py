@@ -75,7 +75,7 @@ def vec_list_from_arg(arg):
 
 
 def errfmt(errstr):
-    return fill(dedent(errstr))
+    return fill(dedent(errstr)).lstrip()
 
 
 def flat_tuple(seq):

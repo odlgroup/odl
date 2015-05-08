@@ -17,8 +17,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 try:
     from builtins import object, super, zip
 except ImportError:  # Versions < 0.14 of python-future
@@ -71,6 +71,12 @@ class EmptySet(AbstractSet):
     def contains(self, other):
         return other is None
 
+    def __str__(self):
+        return "EmptySet"
+
+    def __repr__(self):
+        return "EmptySet()"
+
 
 class ComplexNumbers(AbstractSet):
     """ The set of complex numbers
@@ -82,8 +88,14 @@ class ComplexNumbers(AbstractSet):
     def contains(self, other):
         return isinstance(other, Complex)
 
+    def __str__(self):
+        return "ComplexNumbers"
 
-class RealNumbers(ComplexNumbers):
+    def __repr__(self):
+        return "ComplexNumbers()"
+
+
+class RealNumbers(AbstractSet):
     """ The set of real numbers
     """
 
@@ -93,8 +105,14 @@ class RealNumbers(ComplexNumbers):
     def contains(self, other):
         return isinstance(other, Real)
 
+    def __str__(self):
+        return "RealNumbers"
 
-class Integers(RealNumbers):
+    def __repr__(self):
+        return "RealNumbers()"
+
+
+class Integers(AbstractSet):
     """ The set of all non-negative integers
     """
 
@@ -103,6 +121,12 @@ class Integers(RealNumbers):
 
     def contains(self, other):
         return isinstance(other, Integral)
+
+    def __str__(self):
+        return "Integers"
+
+    def __repr__(self):
+        return "Integers()"
 
 
 class IntervalProd(AbstractSet):
@@ -153,7 +177,7 @@ class IntervalProd(AbstractSet):
         if len(other) != self.dim:
             return False
 
-        reals = RealNumbers()
+        reals = RealNumbers() #TODO do n
         for i, (begin_i, end_i) in enumerate(zip(self._begin, self._end)):
             if other[i] not in reals:
                 return False

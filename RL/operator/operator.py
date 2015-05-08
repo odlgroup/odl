@@ -48,16 +48,23 @@ class Operator(with_metaclass(ABCMeta, object)):
         It is intended that classes that derive from Operator derive from this
         method.
 
-        Args:
-            rhs:    The point the operator should be applied at.
-                    Has to be a member in the set given by `domain`.
+        
+        Parameters
+        ----------
 
-            out:    The point that the result should be written to.
-                    Any result in out is written over and the result is
-                    expected to be independend of the value of `out`.
+        rhs : element in self.domain   
+              An object in the domain of this operator. This object is "constant", 
+              and must not be modified.
+              This is the point that the operator should be applied in.
 
-        Returns:
-            None
+        out : element in self.range
+              An object in the range of this operator. This object is "mutable", 
+              the result should be written to it. The result must not depend on
+              the initial state of this element.
+
+        Returns
+        -------
+        None
         """
 
     @abstractproperty
@@ -87,15 +94,33 @@ class Operator(with_metaclass(ABCMeta, object)):
     def apply(self, rhs, out):
         """ Apply this operator in place.   Informally: out = f(rhs)
 
-        Args:
-            rhs:    The point the operator should be applied at.
-                    Has to be a member in the set given by `domain`.
+        Parameters
+        ----------
 
-            out:    The point that the result should be written to.
-                    Any result in out is written over.
+        rhs : element in self.domain   
+              An object in the domain of this operator. This object is "constant", 
+              and will not be modified.
+              This is the point that the operator should be applied in.
 
-        Returns:
-            None
+        out : element in self.range
+              An object in the range of this operator. This object is "mutable", 
+              the result will be written to it. The result is independent on the state
+              of this element.
+
+        Returns
+        -------
+        None
+
+        Example
+        -------
+
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> y = rn.empty()
+        >>> Op.apply(x, y)
+        >>> y
+        [1.0, 2.0, 3.0]
         """
 
         if not self.domain.contains(rhs):
@@ -117,15 +142,30 @@ class Operator(with_metaclass(ABCMeta, object)):
         self.applyImpl(rhs, out)
 
     def __call__(self, rhs):
-        """ Shorthand for self.apply(rhs). Out is allocated dynamically.
+        """ Evaluates the operator. The output element is allocated dynamically.
+        
+        Parameters
+        ----------
+        rhs : element in self.domain   
+              An object in the domain of this operator. This object is "constant", 
+              and will not be modified.
+              This is the point that the operator should be applied in.
 
-        Args:
-            rhs:    The point the operator should be applied at.
-                    Has to be a member in the set given by `domain`.
+        Returns
+        -------
+        element in self.range
+            The result of evaluating the operator.
 
-        Returns:
-            A object in `self.range` given by the evaluation
+        Example
+        -------
+
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> Op(x)
+        [1.0, 2.0, 3.0]
         """
+
         tmp = self.range.empty()
         self.apply(rhs, tmp)
         return tmp
@@ -138,12 +178,58 @@ class Operator(with_metaclass(ABCMeta, object)):
 
     def __mul__(self, other):
         """Right multiplication of operators with scalars (A*a)(x) = A(a*x)
+
+        Note that left and right multiplication of operators is different.
+
+        Parameters
+        ----------
+        other : Operator
+                Operator with same domain and range as this operator
+
+        Returns
+        -------
+        OperatorRightScalarMultiplication instance
+
+        Example
+        -------
+
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> Op(x)
+        [1.0, 2.0, 3.0]
+        >>> Scaled = Op * 3
+        >>> Scaled(x)
+        [3.0, 6.0, 9.0]
         """
 
         return OperatorRightScalarMultiplication(self, other)
 
     def __rmul__(self, other):
         """ Left multiplication of operators with scalars (a*A)(x) = a*A(x)
+        
+        Note that left and right multiplication of operators is different.
+
+        Parameters
+        ----------
+        other : Operator
+                Operator with same domain and range as this operator
+
+        Returns
+        -------
+        OperatorLeftScalarMultiplication instance
+
+        Example
+        -------
+
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.makeVector([1, 2, 3])
+        >>> Op(x)
+        [1.0, 2.0, 3.0]
+        >>> Scaled = 3 * Op
+        >>> Scaled(x)
+        [3.0, 6.0, 9.0]
         """
 
         return OperatorLeftScalarMultiplication(self, other)
@@ -157,20 +243,22 @@ class Operator(with_metaclass(ABCMeta, object)):
 
 
 class OperatorSum(Operator):
-    """ Expression type for the sum of operators
+    """ Expression type for the sum of operators.
+
+    Sum is only well defined for Operators between LinearSpace´s
+
+    Parameters
+    ----------
+
+    op1 : Operator 
+          The first operator
+    op2 : Operator
+          Operator with the same domain and range as op1
+    tmp : Element in the range
+          Used to avoid the creation of a
+          temporary when applying the operator.
     """
     def __init__(self, op1, op2, tmp=None):
-        """ Create the abstract operator sum defined by:
-
-        OperatorSum(op1, op2)(x) = op1(x) + op2(x)
-
-        Args:
-            LinearOperator  `op1`      The first operator
-            LinearOperator  `op2`      The second operator
-            Vector          `tmp`      A vector in the domain of this operator.
-                                       Used to avoid the creation of a
-                                       temporary when applying the operator.
-        """
         if op1.range != op2.range:
             raise TypeError(errfmt('''
             OperatorSum requires that ranges of operators are equal. Given
@@ -215,20 +303,22 @@ class OperatorSum(Operator):
 
 class OperatorComposition(Operator):
     """Expression type for the composition of operators
+
+    OperatorComposition(left, right)(x) = left(right(x))
+
+    Parameters
+    ----------
+
+    op1 : Operator 
+          The first operator
+    op2 : Operator
+          Operator with the same domain and range as op1
+    tmp : Element in the range of this operator
+          Used to avoid the creation of a
+          temporary when applying the operator.
     """
 
     def __init__(self, left, right, tmp=None):
-        """ Create the abstract operator composition defined by:
-
-        OperatorComposition(left, right)(x) = left(right(x))
-
-        Args:
-            LinearOperator  `left`      The first operator
-            LinearOperator  `right`     The second operator
-            Vector          `tmp`       A vector in the range of this operator
-                                        Used to avoid the creation of a
-                                        temporary when applying the operator.
-        """
         if right.range != left.domain:
             raise TypeError(errfmt('''
             Range of right operator ({}) does not equal domain of left
@@ -339,23 +429,23 @@ class OperatorLeftScalarMultiplication(Operator):
 class OperatorRightScalarMultiplication(Operator):
     """Expression type for the right multiplication of operators with scalars.
 
+    OperatorRightScalarMultiplication(op, scalar)(x) = op(scalar * x)
+
     Typically slower than left multiplication since this requires a copy.
+
+    Parameters
+    ----------
+
+    op : Operator 
+         Any operator whose range supports `*= scalar`
+    scalar : Number
+             An element in the field of the domain of op
+    tmp : Element in the range of this operator
+          Used to avoid the creation of a
+          temporary when applying the operator.
     """
 
     def __init__(self, op, scalar, tmp=None):
-        """ Create the OperatorRightScalarMultiplication defined by
-
-        OperatorRightScalarMultiplication(op, scalar)(x) = op(scalar * x)
-
-        Args:
-            Operator    `op`        Any operator
-            Scalar      `scalar`    An element in the field of the domain of
-                                    `op`
-            Vector      `tmp`       Vector in the domain of `op` in which to
-                                    store the intermediate result of
-                                    (scalar * x)
-        """
-
         if not op.domain.field.contains(scalar):
             raise TypeError(errfmt('''
             Scalar ({}) not compatible with field of domain ({}) of operator
@@ -393,7 +483,9 @@ class OperatorRightScalarMultiplication(Operator):
 
 # DEFINITION OF LINEAR OPERATOR AND RELATED METHODS
 class LinearOperator(Operator):
-    """ Linear operator, satisfies A(a*x + b*y) = a * A(x) + b * A(y)
+    """ Linear operator, satisfies A(a*x + b*y) = a*A(x) + b*A(y)
+
+    LinearOperators are only defied on LinearSpace´s.
     """
 
     @abstractmethod
@@ -417,19 +509,25 @@ class LinearOperator(Operator):
         return OperatorAdjoint(self)
 
     def getDerivative(self, point):
-        # The derivative of linear operators is the operator itself
+        """ The derivative of linear operators is the operator itself
+        """
         return self
 
     def applyAdjoint(self, rhs, out):
         """ Applies the adjoint of the operator, informally:
         out = op(rhs)
 
-        Args:
-            Vector `rhs`       A vector in the range of this operator.
-                               The point the adjoint should be evaluated in.
-            Vector `out`       A vector in the domain of this operator.
-                               The result of the evaluation is written to this
-                               vector. Any previous content is overwritten.
+        
+        Parameters
+        ----------
+        rhs : Vector
+              A vector in the range of this operator.
+              The point the adjoint should be evaluated in.
+
+        out : Vector
+              A vector in the domain of this operator.
+              The result of the evaluation is written to this
+              vector. Any previous content is overwritten.      
         """
         if not self.range.contains(rhs):
             raise TypeError(errfmt('''

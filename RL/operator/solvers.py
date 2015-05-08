@@ -104,11 +104,11 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
     p = operator.T(d)
     s = p.copy()
     q = operator.range.empty()
-    normsOld = s.normSq()           # Only recalculate norm after update
+    normsOld = s.norm()**2           # Only recalculate norm after update
 
     for _ in range(iterations):
         operator.apply(p, q)                                    # q = A p
-        qnorm = q.normSq()
+        qnorm = q.norm()**2
         if qnorm == 0.0:  # Return if residual is 0
             return
 
@@ -117,7 +117,7 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
         d.linComb(1, d, -a, q)                                  # d = d - a*q
         operator.getDerivative(p).applyAdjoint(d, s)            # s = A^T d
 
-        normsNew = s.normSq()
+        normsNew = s.norm()**2
         b = normsNew/normsOld
         normsOld = normsNew
 

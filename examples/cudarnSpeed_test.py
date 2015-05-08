@@ -27,9 +27,9 @@ import unittest
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.defaultSpaces import *
-from RL.space.CudaSpace import *
-from testutils import Timer
+from RL.space.euclidean import *
+from RL.space.cuda import *
+from RL.utility.testutils import Timer
 
 n=10**7
 iterations = 100

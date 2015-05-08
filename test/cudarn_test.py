@@ -74,12 +74,8 @@ class TestAccessors(RLTestCase):
         y = [1, 2, 3]
         x = R3d.makeVector(y)
 
-        self.assertAlmostEquals(x[0], y[0])
-        self.assertAlmostEquals(x[1], y[1])
-        self.assertAlmostEquals(x[2], y[2])
-        self.assertAlmostEquals(x[-1], y[-1])
-        self.assertAlmostEquals(x[-2], y[-2])
-        self.assertAlmostEquals(x[-3], y[-3])
+        for index in [0, 1, 2, -1, -2, -3]:
+            self.assertAlmostEquals(x[index], y[index])
 
     def testIterator(self):
         R3d = CudaRN(3)
@@ -100,10 +96,11 @@ class TestAccessors(RLTestCase):
 
     def testSetItem(self):
         R3d = CudaRN(3)
-        x = R3d.makeVector([1, 2, 3])
-        x[1] = 5
+        x = R3d.makeVector([42,42,42])
 
-        self.assertAlmostEquals(x[1], 5)
+        for index in [0, 1, 2, -1, -2, -3]:
+            x[index] = index
+            self.assertAlmostEquals(x[index], index)
 
     def testSetItemOutOfBounds(self):
         R3d = CudaRN(3)
@@ -115,7 +112,7 @@ class TestAccessors(RLTestCase):
         with self.assertRaises(IndexError):
             x[3] = 0
 
-    def doGetCase(self, slice):
+    def doGetSliceCase(self, slice):
         # Validate get against python list behaviour
         R6d = CudaRN(6)
         y = [0, 1, 2, 3, 4, 5]
@@ -132,9 +129,17 @@ class TestAccessors(RLTestCase):
         for start in starts:
             for end in ends:
                 for step in steps:
-                    self.doGetCase(slice(start, end, step))
+                    self.doGetSliceCase(slice(start, end, step))
 
-    def doSetCase(self, slice):
+    def testGetSliceExceptions(self):
+        R3d = CudaRN(3)
+        xd = R3d.makeVector([1, 2, 3])
+
+        #Bad slice
+        with self.assertRaises(IndexError):
+            result = xd[10:13]
+
+    def doSetSliceCase(self, slice):
         # Validate set against python list behaviour
         R6d = CudaRN(6)
         z = [7, 8, 9, 10, 11, 10]
@@ -154,7 +159,25 @@ class TestAccessors(RLTestCase):
         for start in starts:
             for end in ends:
                 for step in steps:
-                    self.doSetCase(slice(start, end, step))
+                    self.doSetSliceCase(slice(start, end, step))
+
+    def testSetSliceExceptions(self):
+        R3d = CudaRN(3)
+        xd = R3d.makeVector([1, 2, 3])
+
+        #Bad slice
+        with self.assertRaises(IndexError):
+            xd[10:13] = [1, 2, 3]
+
+        #Bad size of rhs
+        with self.assertRaises(IndexError):
+            xd[:] = []
+
+        with self.assertRaises(IndexError):
+            xd[:] = [1, 2]
+
+        with self.assertRaises(IndexError):
+            xd[:] = [1, 2, 3, 4]
 
 
 class TestFunctions(RLTestCase):
@@ -164,22 +187,33 @@ class TestFunctions(RLTestCase):
 
         correct_norm_squared = 1**2 + 2**2 + 3**2
         correct_norm = math.sqrt(correct_norm_squared)
-
-        self.assertAlmostEquals(R3d.normSq(xd), correct_norm_squared)
+        
+        #Space function
         self.assertAlmostEquals(R3d.norm(xd), correct_norm)
-        self.assertAlmostEquals(xd.normSq(), correct_norm_squared)
+
+        #Member function
         self.assertAlmostEquals(xd.norm(), correct_norm)
+
+    def testInner(self):
+        R3d = CudaRN(3)
+        xd = R3d.makeVector([1, 2, 3])
+        yd = R3d.makeVector([5, 3, 9])
+
+        correct_inner = 1*5 + 2*3 + 3*9
+        
+        #Space function
+        self.assertAlmostEquals(R3d.inner(xd,yd), correct_inner)
+
+        #Member function
+        self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
     def makeVectors(self, rn):
         # Generate numpy vectors
-        x = np.random.rand(rn.dimension)
-        y = np.random.rand(rn.dimension)
-        z = np.random.rand(rn.dimension)
+        x, y, z = np.random.rand(rn.n), np.random.rand(rn.n), np.random.rand(rn.n)
 
         # Make rn vectors
-        xVec = rn.makeVector(x)
-        yVec = rn.makeVector(y)
-        zVec = rn.makeVector(z)
+        xVec, yVec, zVec = rn.makeVector(x), rn.makeVector(y), rn.makeVector(z)
+
         return x, y, z, xVec, yVec, zVec
 
     def doLincombTest(self, a, b, n=100):
@@ -326,7 +360,6 @@ class TestConvenience(RLTestCase):
 
         with self.assertRaises(TypeError):
             z = xA-xB
-
 
 if __name__ == '__main__':
     unittest.main(exit=False)
