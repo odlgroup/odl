@@ -18,7 +18,7 @@
 
 from __future__ import absolute_import
 
-__version__ = '0.01a'
+__version__ = '0.1b0.dev0'
 
 __all__ = ['geometry', 'operator', 'space', 'utility']
 
