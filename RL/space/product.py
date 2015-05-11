@@ -223,7 +223,7 @@ class LinearProductSpace(ProductSpace):
 
         if not isinstance(args[0], LinearSpace.Vector):
             # Delegate constructors
-            return self.makeVector(*(space.vector(arg)
+            return self.makeVector(*(space.makeVector(arg)
                                      for arg, space in zip(args, self.spaces)))
         else:  # Construct from existing tuple
             if any(part.space != space
