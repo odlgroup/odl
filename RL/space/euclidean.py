@@ -434,7 +434,7 @@ class RN(LinearSpace):
             return self.values.__setitem__(index, value)
 
 
-class EuclidianSpace(RN, HilbertSpace, Algebra):
+class EuclideanSpace(RN, HilbertSpace, Algebra):
     """The real space R^n with the usual inner product.
 
     Parameters
@@ -470,7 +470,7 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclidianSpace(3)
+        >>> rn = EuclideanSpace(3)
         >>> x = rn.makeVector([5, 3, 2])
         >>> y = rn.makeVector([1, 2, 3])
         >>> 5*1 + 3*2 + 2*3
@@ -504,7 +504,7 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclidianSpace(3)
+        >>> rn = EuclideanSpace(3)
         >>> x = rn.makeVector([5, 3, 2])
         >>> y = rn.makeVector([1, 2, 3])
         >>> rn.multiply(x, y)
@@ -514,7 +514,7 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         y.values[:] = x.values*y.values
 
     def __repr__(self):
-        return 'EuclidianSpace(' + str(self.n) + ')'
+        return 'EuclideanSpace(' + str(self.n) + ')'
 
 
 if __name__ == '__main__':

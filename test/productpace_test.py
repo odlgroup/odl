@@ -70,7 +70,7 @@ class ProductTest(RLTestCase):
         self.assertAllAlmostEquals(z, expected)
 
     def testNorm(self):
-        H = EuclidianSpace(2)
+        H = EuclideanSpace(2)
         v1 = H.makeVector([1, 2])
         v2 = H.makeVector([5, 3])
 

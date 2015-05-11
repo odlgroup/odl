@@ -87,17 +87,18 @@ class ProductSpace(LinearSpace):
 
         instance = super().__new__(newcls)
 
-        # TODO: figure out when __init__ is actually called
-        # __init__ is called automatically only if `newclass` is a
+        # __init__ is called automatically only if `newcls` is a
         # subclass of `cls`. This may not always be the case, e.g.
         # if `cls == PowerSpace`
         if not issubclass(newcls, cls):
-            print('newcls: ', newcls.__name__)
-            print('cls: ', cls.__name__)
-            print('Run instance.__init__()')
             instance.__init__(*spaces, **kwargs)
 
         return instance
+
+    # Dummy methods to overload abstract base class methods
+    def empty(self):
+        raise NotImplementedError
+    field = linCombImpl = empty
 
 
 class LinearProductSpace(ProductSpace):
@@ -128,17 +129,15 @@ class LinearProductSpace(ProductSpace):
     'LinearProductSpace'
     """
 
-    def __init__(self, *spaces, **kwargs):
-        print('Running LinearProductSpace.__init__()')
+    def __init__(self, *spaces):
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
-            wrong_spc = filter(lambda spc: not isinstance(spc, LinearSpace),
-                               spaces)
+            wrong_spc = [spc for spc in spaces
+                         if not isinstance(spc, LinearSpace)]
             raise TypeError('{} not LinearSpace instance(s)'.format(wrong_spc))
 
         self.spaces = spaces
         self._nfactors = len(self.spaces)
-        self._field = spaces[0].field  # X_n has same field
-        super().__init__(**kwargs)
+        self._field = spaces[0].field
 
     def zero(self):
         """ Create the zero vector of the product space
@@ -146,45 +145,102 @@ class LinearProductSpace(ProductSpace):
         The i:th component of the product space zero vector is the
         zero vector of the i:th space in the product.
 
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        zero : LinearProducSpace.Vector
+            The zero vector in the product space
+
         Example
         -------
-        >>> from RL.space.euclidean import RN
-        >>> r2, r3 = RN(2), RN(3)
+        >>> from RL.space.euclidean import EuclideanSpace
+        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = ProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
-        >>> zero_2x3[0] == zero_2
+        >>> r2.norm(zero_2 - zero_2x3[0]) == 0
         True
-        >>> zero_2x3[1] == zero_3
+        >>> r3.norm(zero_3 - zero_2x3[1]) == 0
         True
         """
+
         return self.makeVector(*[space.zero() for space in self.spaces])
 
     def empty(self):
-        """ Create a vector whose components is arbitrary vectors in the underlying spaces
+        """ Create some vector in the product space
+
+        The main purpose of this function is to allocate memory
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        vec : LinearProducSpace.Vector
+            Some vector in the product space
+
+        Example
+        -------
+        >>> from RL.space.euclidean import EuclideanSpace
+        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+        >>> vec_2, vec_3 = r2.empty(), r3.empty()
+        >>> r2x3 = ProductSpace(r2, r3)
+        >>> vec_2x3 = r2x3.empty()
+        >>> vec_2.space == vec_2x3[0].space
+        True
+        >>> vec_3.space == vec_2x3[1].space
+        True
         """
+
         return self.makeVector(*[space.empty() for space in self.spaces])
 
     def linCombImpl(self, z, a, x, b, y):
-        """ Applies linComb to each component
-        """
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
             space.linCombImpl(zp, a, xp, b, yp)
 
     @property
     def field(self):
-        """ Get the underlying field of this product space.
-        The field is the same for each underlying space.
-        """
         return self._field
 
     def equals(self, other):
-        """ Tests two objects for equality.
+        """ Test if the product space is equal to another
 
-        Returns true if other is a ProductSpace with the same subspaces as this space.
+        Parameters
+        ----------
+        other : object
+            The object to be compared
+
+        Returns
+        -------
+        equal : boolean
+            `True` if `other` is a ProductSpace instance, has same length
+            and the same factors. `False` otherwise.
+
+        Example
+        -------
+        >>> from RL.space.euclidean import EuclideanSpace
+        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+        >>> rn, rm = EuclideanSpace(2), EuclideanSpace(3)
+        >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
+        >>> r2x3.equals(rnxm)
+        True
+        >>> r3x2 = ProductSpace(r3, r2)
+        >>> r2x3.equals(r3x2)
+        False
+        >>> r5 = Productspace(*[EuclideanSpace(1)]*5)
+        >>> r2x3.equals(r5)
+        False
+        >>> r5 = EuclideanSpace(5)
+        >>> r2x3.equals(r5)
+        False
         """
+
         return (isinstance(other, ProductSpace) and
-                self._nfactors == other._nfactors and
+                len(self) == len(other) and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 
     def makeVector(self, *args):
@@ -192,7 +248,7 @@ class LinearProductSpace(ProductSpace):
 
         Parameters
         ----------
-        The method has two call patter, the first is:
+        The method has two call patterns, the first is:
 
         *args : tuple of LinearSpace.Vector's
                 A tuple of vectors in the underlying space.
@@ -210,7 +266,7 @@ class LinearProductSpace(ProductSpace):
         Examples
         --------
 
-        >>> rn = RN(2)
+        >>> r2, r3 = RN(2), RN(3)
         >>> rm = RN(3)
         >>> prod = ProductSpace(rn,rm)
         >>> x = rn.makeVector([1,2])
@@ -227,7 +283,7 @@ class LinearProductSpace(ProductSpace):
                                      for arg, space in zip(args, self.spaces)))
         else:  # Construct from existing tuple
             if any(part.space != space
-                    for part, space in zip(args, self.spaces)):
+                   for part, space in zip(args, self.spaces)):
                 raise TypeError(errfmt('''
                 The spaces of all parts must correspond to this
                 space's parts'''))
@@ -282,7 +338,7 @@ class LinearProductSpace(ProductSpace):
         def __len__(self):
             """ The number of components of this vector
             """
-            return self.space._nfactors
+            return len(self.space)
 
         def __getitem__(self, index):
             """ Access the index:th component of this vector
@@ -356,8 +412,8 @@ class NormedProductSpace(LinearProductSpace, NormedSpace):
 
     def __init__(self, *spaces, **kwargs):
         if not all(isinstance(spc, NormedSpace) for spc in spaces):
-            wrong_spc = filter(lambda spc: not isinstance(spc, NormedSpace),
-                               spaces)
+            wrong_spc = [spc for spc in spaces
+                         if not isinstance(spc, NormedSpace)]
             raise TypeError('{} not NormedSpace instance(s)'.format(wrong_spc))
 
         self.ord = kwargs.pop('ord', 2)
@@ -410,8 +466,7 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
         self.weights = kwargs.pop('weights', None)
 
         if not all(isinstance(spc, HilbertSpace) for spc in spaces):
-            wrong_spc = filter(lambda spc: not isinstance(spc, HilbertSpace),
-                               spaces)
+            wrong_spc = [spc for spc in spaces if not isinstance(spc, HilbertSpace)]
             raise TypeError('{} not HilbertSpace instance(s)'.format(wrong_spc))
 
         super().__init__(*spaces, **kwargs)
@@ -462,8 +517,12 @@ class PowerSpace(ProductSpace):
         # __init__ is not automatically called since __new__ does not return
         # and instance of 'cls'
         instance = super().__new__(cls, *spaces, **kwargs)
-        instance.__init__(*spaces, **kwargs)
         return instance
+
+    # Dummy methods to overload abstract base class methods
+    def empty(self):
+        raise NotImplementedError
+    field = linCombImpl = empty
 
 
 if __name__ == '__main__':

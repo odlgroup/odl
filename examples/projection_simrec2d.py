@@ -75,7 +75,7 @@ class Projection(OP.LinearOperator):
 #Set geometry parameters
 volumeSize = np.array([20.0,20.0])
 volumeOrigin = -volumeSize/2.0
-        
+
 detectorSize = 50.0
 detectorOrigin = -detectorSize/2.0
 
@@ -86,7 +86,7 @@ detectorAxisDistance = 20.0
 nVoxels = np.array([500, 400])
 nPixels = 400
 nProjection = 500
-        
+
 #Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
@@ -101,19 +101,19 @@ sourcePosition = -sourceAxisDistance * x0
 detectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
 pixelDirection = y0 * pixelSize
 
-    
+
 dataSpace = fs.L2(sets.Interval(0,1))
-dataRN = ds.EuclidianSpace(nPixels)
+dataRN = ds.EuclideanSpace(nPixels)
 dataDisc = dd.makeUniformDiscretization(dataSpace, dataRN)
 
 reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
-reconRN = ds.EuclidianSpace(nVoxels.prod())
+reconRN = ds.EuclideanSpace(nVoxels.prod())
 reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
 phantomVec = reconDisc.makeVector(phantom)
-        
+
 projector = Projection(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, sourcePosition, detectorOrigin, pixelDirection, reconDisc, dataDisc)
 
 result = dataDisc.empty()
