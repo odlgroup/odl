@@ -20,9 +20,9 @@
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 try:
-    from builtins import str, zip, range, super
+    from builtins import str, zip, super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, zip, range, super
+    from future.builtins import str, zip, super
 from future import standard_library
 
 # RL imports
@@ -33,38 +33,103 @@ standard_library.install_aliases()
 
 
 class ProductSpace(LinearSpace):
-    """Product space (X1 x X2 x ... x Xn)
-    Creates a Cartesian product of an arbitrary set of spaces.
+    """ The Cartesian product of N linear spaces.
 
-    For example:
+    The product X1 x ... x XN is itself a linear space, where the
+    linear combination is defined component-wise. Automatically
+    selects the most specific subclass possible.
 
-    `ProductSpace(Reals(), Reals())` is mathematically equivalent to `RN(2)`
+    Parameters
+    ----------
+    spaces : LinearSpace instances
+    kwargs : {'ord', 'weights'}
+        Passed to the init function of the subclass
 
-    Note that the later is obviously more efficient.
+    Returns
+    -------
+    prodspace : ProductSpace instance
+        If `all(isinstance(spc, LinearSpace) for spc in spaces) ->
+        `type(prodspace) == LinearProductSpace`\n
+        If `all(isinstance(spc, NormedSpace) for spc in spaces) ->
+        `type(prodspace) == NormedProductSpace`\n
+        If `all(isinstance(spc, HilbertSpace) for spc in spaces) ->
+        `type(prodspace) == HilbertProductSpace`
 
-    Args:
-        spaces    (multiple) LinearSpace     One or more instances of linear spaces
+    Examples
+    --------
+    >>> from RL.space.euclidean import RN, EuclideanSpace
+    >>> r2x3 = ProductSpace(RN(2), RN(3))
+    >>> r2x3.__class__.__name__
+    'LinearProductSpace'
+    >>> r2x3 = ProductSpace(EuclideanSpace(2), RN(3))
+    >>> r2x3.__class__.__name__
+    'LinearProductSpace'
+    >>> r2x3 = ProductSpace(EuclideanSpace(2), EuclideanSpace(3))
+    >>> r2x3.__class__.__name__
+    'HilbertProductSpace'
     """
 
     def __new__(cls, *spaces, **kwargs):
-
         if not all(spaces[0].field == spc.field for spc in spaces):
             raise TypeError('All spaces must have the same field')
 
-        if all(isinstance(spc, HilbertSpace) for spc in spaces):
-            cls = HilbertProductSpace
-        elif all(isinstance(spc, NormedSpace) for spc in spaces):
-            cls = NormedProductSpace
+        # Do not change subclass if it was explicitly called
+        if cls not in (LinearProductSpace, NormedProductSpace,
+                       HilbertProductSpace):
+            if all(isinstance(spc, HilbertSpace) for spc in spaces):
+                newcls = HilbertProductSpace
+            elif all(isinstance(spc, NormedSpace) for spc in spaces):
+                newcls = NormedProductSpace
+            elif all(isinstance(spc, LinearSpace) for spc in spaces):
+                newcls = LinearProductSpace
         else:
-            cls = LinearProductSpace
+            newcls = cls
 
-        return super().__new__(cls, *spaces, **kwargs)
+        instance = super().__new__(newcls)
+
+        # TODO: figure out when __init__ is actually called
+        # __init__ is called automatically only if `newclass` is a
+        # subclass of `cls`. This may not always be the case, e.g.
+        # if `cls == PowerSpace`
+        if not issubclass(newcls, cls):
+            print('newcls: ', newcls.__name__)
+            print('cls: ', cls.__name__)
+            print('Run instance.__init__()')
+            instance.__init__(*spaces, **kwargs)
+
+        return instance
 
 
 class LinearProductSpace(ProductSpace):
+    """The Cartesian product of N linear spaces.
+
+    The product X1 x ... x XN is itself a linear space, where the
+    linear combination is defined component-wise.
+
+    Parameters
+    ----------
+    spaces : LinearSpace instances
+
+    Returns
+    -------
+    prodspace : LinearProductSpace instance
+
+    Examples
+    --------
+    >>> from RL.space.euclidean import RN, EuclideanSpace
+    >>> r2x3 = LinearProductSpace(RN(2), RN(3))
+    >>> r2x3.__class__.__name__
+    'LinearProductSpace'
+    >>> r2x3 = LinearProductSpace(EuclideanSpace(2), RN(3))
+    >>> r2x3.__class__.__name__
+    'LinearProductSpace'
+    >>> r2x3 = LinearProductSpace(EuclideanSpace(2), EuclideanSpace(3))
+    >>> r2x3.__class__.__name__
+    'LinearProductSpace'
+    """
 
     def __init__(self, *spaces, **kwargs):
-
+        print('Running LinearProductSpace.__init__()')
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
             wrong_spc = filter(lambda spc: not isinstance(spc, LinearSpace),
                                spaces)
@@ -76,7 +141,22 @@ class LinearProductSpace(ProductSpace):
         super().__init__(**kwargs)
 
     def zero(self):
-        """ Create a vector whose components is the zero vectors in the underlying spaces
+        """ Create the zero vector of the product space
+
+        The i:th component of the product space zero vector is the
+        zero vector of the i:th space in the product.
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> r2, r3 = RN(2), RN(3)
+        >>> zero_2, zero_3 = r2.zero(), r3.zero()
+        >>> r2x3 = ProductSpace(r2, r3)
+        >>> zero_2x3 = r2x3.zero()
+        >>> zero_2x3[0] == zero_2
+        True
+        >>> zero_2x3[1] == zero_3
+        True
         """
         return self.makeVector(*[space.zero() for space in self.spaces])
 
@@ -143,8 +223,8 @@ class LinearProductSpace(ProductSpace):
 
         if not isinstance(args[0], LinearSpace.Vector):
             # Delegate constructors
-            return self.makeVector(*(space.makeVector(arg)
-                                   for arg, space in zip(args, self.spaces)))
+            return self.makeVector(*(space.vector(arg)
+                                     for arg, space in zip(args, self.spaces)))
         else:  # Construct from existing tuple
             if any(part.space != space
                     for part, space in zip(args, self.spaces)):
@@ -378,7 +458,14 @@ class PowerSpace(ProductSpace):
             '''.format(nfactors)))
 
         spaces = [base] * nfactors
-        # TODO: Figure out why tests fail without __init__
+
+        # __init__ is not automatically called since __new__ does not return
+        # and instance of 'cls'
         instance = super().__new__(cls, *spaces, **kwargs)
         instance.__init__(*spaces, **kwargs)
         return instance
+
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)
