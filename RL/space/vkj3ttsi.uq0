@@ -118,6 +118,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Modifying other methods
     -----------------------
+
     LinearSpace provides several other methods which have default implementations
     provided using the above mentioned methods. 
     
