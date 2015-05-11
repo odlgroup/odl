@@ -45,22 +45,21 @@ class Operator(with_metaclass(ABCMeta, object)):
         """Apply the operator.
 
         This method is not intended to be called by external users.
-        It is intended that classes that derive from Operator derive from this
-        method.
-
+        It is intended that classes that derive from Operator derive
+        from this method.
 
         Parameters
         ----------
 
         rhs : element in self.domain
-              An object in the domain of this operator. This object is "constant",
-              and must not be modified.
+              An object in the domain of this operator. This object is
+              "constant", and must not be modified.
               This is the point that the operator should be applied in.
 
         out : element in self.range
-              An object in the range of this operator. This object is "mutable",
-              the result should be written to it. The result must not depend on
-              the initial state of this element.
+              An object in the range of this operator. This object is
+              "mutable", the result should be written to it. The result
+              must not depend on the initial state of this element.
 
         Returns
         -------
@@ -72,7 +71,7 @@ class Operator(with_metaclass(ABCMeta, object)):
         """Get the domain of the operator.
 
         The domain of an operator is expected to derive from
-        RL.space.set.AbstractSet
+        RL.space.set.Set
         """
 
     @abstractproperty
@@ -80,7 +79,7 @@ class Operator(with_metaclass(ABCMeta, object)):
         """Get the range of the operator.
 
         The range of an operator is expected to derive from
-        RL.space.set.AbstractSet
+        RL.space.set.Set
         """
 
     def getDerivative(self, point):
@@ -98,14 +97,14 @@ class Operator(with_metaclass(ABCMeta, object)):
         ----------
 
         rhs : element in self.domain
-              An object in the domain of this operator. This object is "constant",
-              and will not be modified.
+              An object in the domain of this operator. This object is
+              "constant", and will not be modified.
               This is the point that the operator should be applied in.
 
         out : element in self.range
-              An object in the range of this operator. This object is "mutable",
-              the result will be written to it. The result is independent on the state
-              of this element.
+              An object in the range of this operator. This object is
+              "mutable", the result will be written to it. The result
+              is independent of the state of this element.
 
         Returns
         -------
@@ -135,20 +134,21 @@ class Operator(with_metaclass(ABCMeta, object)):
 
         if rhs is out:
             raise ValueError(errfmt('''
-            rhs ({}) is the same as out ({}) operators do not permit aliased
-            arguments
+            rhs ({}) is the same as out ({}) operators do not permit
+            aliased arguments
             '''.format(rhs, out)))
 
         self.applyImpl(rhs, out)
 
     def __call__(self, rhs):
-        """ Evaluates the operator. The output element is allocated dynamically.
+        """ Evaluates the operator. The output element is allocated
+        dynamically.
 
         Parameters
         ----------
         rhs : element in self.domain
-              An object in the domain of this operator. This object is "constant",
-              and will not be modified.
+              An object in the domain of this operator. This object is
+              "constant", and will not be modified.
               This is the point that the operator should be applied in.
 
         Returns
@@ -177,9 +177,11 @@ class Operator(with_metaclass(ABCMeta, object)):
         return OperatorSum(self, other)
 
     def __mul__(self, other):
-        """Right multiplication of operators with scalars (A*a)(x) = A(a*x)
+        """Right multiplication of operators with scalars
+        (A*a)(x) = A(a*x)
 
-        Note that left and right multiplication of operators is different.
+        Note that left and right multiplication of operators is
+        different.
 
         Parameters
         ----------
@@ -206,9 +208,11 @@ class Operator(with_metaclass(ABCMeta, object)):
         return OperatorRightScalarMultiplication(self, other)
 
     def __rmul__(self, other):
-        """ Left multiplication of operators with scalars (a*A)(x) = a*A(x)
+        """ Left multiplication of operators with scalars
+        (a*A)(x) = a*A(x)
 
-        Note that left and right multiplication of operators is different.
+        Note that left and right multiplication of operators is
+        different.
 
         Parameters
         ----------
@@ -392,7 +396,8 @@ class OperatorPointwiseProduct(Operator):
 
 
 class OperatorLeftScalarMultiplication(Operator):
-    """Expression type for the left multiplication of operators with scalars
+    """Expression type for the left multiplication of operators with
+    scalars
 
     OperatorLeftScalarMultiplication(op, scalar)(x) = scalar * op(x)
     """
@@ -427,11 +432,13 @@ class OperatorLeftScalarMultiplication(Operator):
 
 
 class OperatorRightScalarMultiplication(Operator):
-    """Expression type for the right multiplication of operators with scalars.
+    """Expression type for the right multiplication of operators with
+    scalars.
 
     OperatorRightScalarMultiplication(op, scalar)(x) = op(scalar * x)
 
-    Typically slower than left multiplication since this requires a copy.
+    Typically slower than left multiplication since this requires a
+    copy.
 
     Parameters
     ----------
@@ -490,11 +497,11 @@ class LinearOperator(Operator):
 
     @abstractmethod
     def applyAdjointImpl(self, rhs, out):
-        """Apply the adjoint of the operator. Abstract, should be implemented
-        by subclasses.
+        """Apply the adjoint of the operator. Abstract, should be
+        implemented by subclasses.
 
-        Public callers should instead use applyAdjoint which provides type
-        checking.
+        Public callers should instead use applyAdjoint which provides
+        type checking.
         """
 
     # Implicitly defined operators

@@ -43,7 +43,7 @@ class FunctionSpace(Algebra):
     Parameters
     ----------
 
-    domain : AbstractSet
+    domain : Set
              The set the functions take values from
     field : {RealNumbers, ComplexNumbers}, optional
             The field that the functions map values into.
@@ -52,7 +52,7 @@ class FunctionSpace(Algebra):
     """
 
     def __init__(self, domain, field=None):
-        if not isinstance(domain, sets.AbstractSet):
+        if not isinstance(domain, sets.Set):
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
