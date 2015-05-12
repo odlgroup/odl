@@ -463,6 +463,8 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
             """
             Test two vectors for equality.
 
+            Two vectors are equal if their distance is 0
+
             Parameters
             ----------
             other : MetricSpace.Vector
@@ -484,8 +486,13 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
 
             >>> X = RN(1)
             >>> x = X.vector([0.1])
-            >>> y = X.vector([0.3])
-            >>> x+x+x == y
+            >>> x == x
+            True
+            >>> y = X.vector([0.1])
+            >>> x == y
+            True
+            >>> z = X.vector([0.3])
+            >>> x+x+x == z
             False
             """
 
