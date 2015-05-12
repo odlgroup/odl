@@ -91,7 +91,7 @@ class RN(LinearSpace):
         >>> z = rn.empty()
         >>> rn.linComb(z, 2, x, 3, y)
         >>> z
-        [14, 19, 24]
+        RN(3).makeVector([ 14.,  19.,  24.])
 
         """
 
@@ -160,7 +160,7 @@ class RN(LinearSpace):
         >>> rn = RN(3)
         >>> x = rn.zero()
         >>> x
-        [0.0, 0.0, 0.0]
+        RN(3).makeVector([ 0.,  0.,  0.])
         """
         return self.makeVector(numpy.zeros(self._n, dtype=float))
 
@@ -307,10 +307,10 @@ class RN(LinearSpace):
         >>> rn = RN(3)
         >>> x = rn.makeVector(numpy.array([1., 2., 3.]))
         >>> x
-        [1.0, 2.0, 3.0]
-        >>> y = rn.makeVector([1,2,3])
+        RN(3).makeVector([ 1.,  2.,  3.])
+        >>> y = rn.makeVector([1, 2, 3])
         >>> y
-        [1.0, 2.0, 3.0]
+        RN(3).makeVector([ 1.,  2.,  3.])
 
         """
         if isinstance(args[0], numpy.ndarray):
@@ -330,12 +330,12 @@ class RN(LinearSpace):
                 numpy.array(*args, **kwargs).astype(numpy.float64, copy=False))
 
     def __str__(self):
-        return self.__class__.__name__ + "(" + str(self.n) + ")"
+        return "RN(" + str(self.n) + ")"
 
     def __repr__(self):
         return 'RN(' + str(self.n) + ')'
 
-    class Vector(HilbertSpace.Vector, Algebra.Vector):
+    class Vector(LinearSpace.Vector):
         """ A RN-vector represented using numpy
 
         Parameters
@@ -357,7 +357,8 @@ class RN(LinearSpace):
             return str(self.values)
 
         def __repr__(self):
-            return repr(self.space) + '.makeVector(' + repr(self.values) + ')'
+            val_str = repr(self.values).lstrip('array(').rstrip(')')
+            return repr(self.space) + '.makeVector(' + val_str + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
@@ -421,13 +422,13 @@ class RN(LinearSpace):
             >>> y = rn.makeVector([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            [5.0, 2.0, 3.0]
+            RN(3).makeVector([ 5.,  2.,  3.])
             >>> y[1:3] = [7, 8]
             >>> y
-            [5.0, 7.0, 8.0]
+            RN(3).makeVector([ 5.,  7.,  8.])
             >>> y[:] = numpy.array([0, 0, 0])
             >>> y
-            [0.0, 0.0, 0.0]
+            RN(3).makeVector([ 0.,  0.,  0.])
 
             """
 
@@ -509,12 +510,18 @@ class EuclidianSpace(RN, HilbertSpace, Algebra):
         >>> y = rn.makeVector([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        [5.0, 6.0, 6.0]
+        EuclidianSpace(3).makeVector([ 5.,  6.,  6.])
         """
         y.values[:] = x.values*y.values
 
     def __repr__(self):
         return 'EuclidianSpace(' + str(self.n) + ')'
+
+    def __repr__(self):
+        return 'EuclidianSpace(' + str(self.n) + ')'
+    
+    class Vector(RN.Vector, HilbertSpace.Vector, Algebra.Vector):
+        pass
 
 
 if __name__ == '__main__':

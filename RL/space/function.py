@@ -30,7 +30,7 @@ except ImportError:  # Versions < 0.14 of python-future
 # RL imports
 import RL.operator.functional as fun
 from RL.space.space import HilbertSpace, Algebra
-import RL.space.set as sets
+from RL.space.set import RealNumbers
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -56,7 +56,7 @@ class FunctionSpace(Algebra):
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
-        self._field = field if field is not None else sets.RealNumbers()
+        self._field = field if field is not None else RealNumbers()
 
     def linCombImpl(self, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
@@ -170,7 +170,7 @@ class FunctionSpace(Algebra):
             return str(self.function)
 
         def __repr__(self):
-            return 'FunctionSpace.Vector(' + repr(self.function) + ')'
+            return repr(self.space) + '.makeVector(' + repr(self.function) + ')'
 
 
 class L2(FunctionSpace, HilbertSpace):
@@ -190,3 +190,13 @@ class L2(FunctionSpace, HilbertSpace):
         """ Verify that other is equal to this space as a FunctionSpace and also a L2 space.
         """
         return isinstance(other, L2) and FunctionSpace.equals(self, other)
+
+    def __str__(self):
+        return "L2 " + str(self.domain) + "->" + str(self.field)
+
+    def __repr__(self):
+        return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
