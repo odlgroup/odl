@@ -70,9 +70,9 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     where `x`, `y` and `z` are vectors in the space, and `a` and `b` are scalars.
 
-    RL allows `x`, `y` and `z` to be aliased, i.e. they may be the same vector. 
-    
-    Using this many of the usual vector arithmetic operations can be performed, 
+    RL allows `x`, `y` and `z` to be aliased, i.e. they may be the same vector.
+
+    Using this many of the usual vector arithmetic operations can be performed,
     for example
 
     | Mathematical | Linear combination      |
@@ -82,7 +82,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     | z = -x       | linComb(z, -1, x, 0, x) |
     | z = x + y    | linComb(z,  1, x, 1, y) |
     | z = 3*z      | linComb(z,  3, z, 0, z) |
-   
+
     To aid in rapid prototyping, an implementer needs only implement linComb, and
     RL then provides all of the standard mathematical operators
 
@@ -119,10 +119,10 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     Modifying other methods
     -----------------------
     LinearSpace provides several other methods which have default implementations
-    provided using the above mentioned methods. 
-    
-    A subclass may want to modify these for performance reasons. However, be 
-    advised that modification should be done in a consistent manner. For 
+    provided using the above mentioned methods.
+
+    A subclass may want to modify these for performance reasons. However, be
+    advised that modification should be done in a consistent manner. For
     example, if a space modifies `+`, it should also modify `+=`, `-` and `-=`.
 
     """
@@ -201,7 +201,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         Notes
         -----
-        
+
         Subclasses
         ~~~~~~~~~~
         If X is a subclass of Y, then `Y.contains(X.vector(...))` returns True.
@@ -447,12 +447,13 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             """
             return repr(self.space) + ".vector"
 
+
 class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
     """ Abstract metric space
     """
 
     @abstractmethod
-    def distImpl(self, vector):
+    def distImpl(self, x, y):
         """ implementation of distance
         """
 
@@ -476,20 +477,20 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
         """
         if not self.contains(x):
             raise TypeError('x ({}) is not in space ({})'.format(x, self))
-        
+
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return float(self.normImpl(vector))
+        return float(self.distImpl(x, y))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
         """ Abstract vector in a metric space
         """
 
         def dist(self, other):
-            """ 
+            """
             Calculates the distance to another vector.
-            
+
             Shortcut for self.space.dist(self, other)
 
             Parameters
@@ -504,7 +505,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
             return self.space.dist(self, other)
 
         def equals(self, other):
-            """ 
+            """
             Test two vectors for equality.
 
             Parameters
@@ -520,8 +521,11 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
             Note
             ----
             Equality is very sensitive to numerical errors, thus any
-            operations on a vector should be expected to break equality testing.
-            For example
+            operations on a vector should be expected to break equality
+            testing.
+
+            Example
+            -------
 
             >>> X = RN(1)
             >>> x = X.vector([0.1])
@@ -529,11 +533,14 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
             >>> x+x+x == y
             False
             """
-            if not isinstance(other, LinearSpace.Vector) or other.space != self.space: 
-                # Cannot use (if other not in self.space) since this is not reflexive.
+
+            if (not isinstance(other, LinearSpace.Vector) or
+                    other.space != self.space):
+                # Cannot use (if other not in self.space) since this is not
+                # reflexive.
                 return False
             elif other is self:
-                 #Optimization for the most common case
+                # Optimization for the most common case
                 return True
             else:
                 return self.dist(other) == 0
@@ -543,6 +550,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
 
         def __ne__(self, other):
             return not self.equals(other)
+
 
 class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
     """ Abstract normed space
@@ -573,7 +581,7 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
 
         return float(self.normImpl(vector))
 
-    #Default implmentation
+    # Default implmentation
     def distImpl(self, x, y):
         """ The distance in Normed spaces is implicitly defined by the norm
         """
@@ -584,9 +592,9 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
         """
 
         def norm(self):
-            """ 
+            """
             Calculates the norm of this Vector
-            
+
             Shortcut for self.space.norm(self)
 
             Parameters
@@ -637,7 +645,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
 
         return self.innerImpl(x, y)
 
-    #Default implmentation
+    # Default implmentation
     def normImpl(self, x):
         """ The norm in Hilbert spaces is implicitly defined by the inner
         product
@@ -650,7 +658,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
 
         def inner(self, x):
             """ Calculate the inner product of this and another vector
-            
+
             Shortcut for self.space.inner(self, x)
 
             Parameters
