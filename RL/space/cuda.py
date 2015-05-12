@@ -361,7 +361,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         """
 
         if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
-            return CudaRNVector(self, args[0])
+            return self.Vector(self, args[0])
         elif isinstance(args[0], np.ndarray):  # Create from np array
             # Create result and assign (this could be optimized to one call)
             result = self.empty()

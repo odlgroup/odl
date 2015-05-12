@@ -324,7 +324,7 @@ class RN(LinearSpace):
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(args[0], args[0].dtype)))
 
-            return RN.Vector(self, args[0])
+            return self.Vector(self, args[0])
         else:
             return self.makeVector(
                 numpy.array(*args, **kwargs).astype(numpy.float64, copy=False))

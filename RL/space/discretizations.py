@@ -33,7 +33,7 @@ import numpy as np
 # RL imports
 import RL.space.set as sets
 import RL.space.space as space
-from RL.space.function import L2
+from RL.space.function import FunctionSpace, L2
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -75,7 +75,7 @@ def makeUniformDiscretization(parent, rnimpl):
                     self._rn.equals(other._rn))
 
         def makeVector(self, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], L2.Vector):
+            if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
                 tmp = np.array([args[0](point) for point in self.points()],
                                dtype=np.float)
                 return self.makeVector(tmp)
@@ -155,7 +155,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                     self._rn.equals(other._rn))
 
         def makeVector(self, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], L2.Vector):
+            if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
                 tmp = np.array([args[0]([x, y])
                                 for x, y in zip(*self.points())],
                                dtype=np.float)

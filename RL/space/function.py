@@ -30,7 +30,8 @@ except ImportError:  # Versions < 0.14 of python-future
 # RL imports
 import RL.operator.functional as fun
 from RL.space.space import HilbertSpace, Algebra
-import RL.space.set as sets
+
+from RL.space.set import RealNumbers, Set
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -52,7 +53,7 @@ class FunctionSpace(Algebra):
     """
 
     def __init__(self, domain, field=None):
-        if not isinstance(domain, sets.Set):
+        if not isinstance(domain, Set):
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
@@ -128,7 +129,7 @@ class FunctionSpace(Algebra):
     def __repr__(self):
         return "FunctionSpace(" + str(self.domain) + ", " + str(self.field) + ")"
 
-    class Vector(HilbertSpace.Vector, Algebra.Vector, fun.Functional):
+    class Vector(Algebra.Vector, fun.Functional):
         """ A Vector in a FunctionSpace
 
         FunctionSpace-Vectors are themselves also Functionals, and inherit
@@ -190,3 +191,16 @@ class L2(FunctionSpace, HilbertSpace):
         """ Verify that other is equal to this space as a FunctionSpace and also a L2 space.
         """
         return isinstance(other, L2) and FunctionSpace.equals(self, other)
+
+    def __str__(self):
+        return "L2 " + str(self.domain) + "->" + str(self.field)
+
+    def __repr__(self):
+        return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
+
+    class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
+        pass
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
