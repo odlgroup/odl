@@ -267,11 +267,11 @@ class MetricProductSpace(ProductSpace, MetricSpace):
         if self.ord == float('inf'):
             return max(space.distImpl(xp, yp) for space, xp, yp in zip(self.spaces, x.parts, y.parts))        
         elif self.ord == -float('inf'):
-            return min(space.distImpl(xp, yp) for space, xp, xp, yp in zip(self.spaces, x.parts, y.parts))
+            return min(space.distImpl(xp, yp) for space, xp, yp in zip(self.spaces, x.parts, y.parts))
         elif self.ord == 0:
-            return sum(space.distImpl(xp, yp) != 0 for space, xp, xp, yp in zip(self.spaces, x.parts, y.parts))
+            return sum(space.distImpl(xp, yp) != 0 for space, xp, yp in zip(self.spaces, x.parts, y.parts))
         else:
-            return sum(space.distImpl(xp, yp)**self.ord for space, xp, xp, yp in zip(self.spaces, x.parts, y.parts))**(1/self.ord)
+            return sum(space.distImpl(xp, yp)**self.ord for space, xp, yp in zip(self.spaces, x.parts, y.parts))**(1/self.ord)
 
     def __repr__(self):
         return ('MetricProductSpace(' +
@@ -280,7 +280,7 @@ class MetricProductSpace(ProductSpace, MetricSpace):
     class Vector(ProductSpace.Vector, MetricSpace.Vector):
         pass
 
-class NormedProductSpace(MetricProductSpace, NormedSpace):
+class NormedProductSpace(ProductSpace, NormedSpace):
     """ A product space of Normed Spaces (X1 x X2 x ... x Xn)
 
     Creates a Cartesian product of an arbitrary set of spaces.
