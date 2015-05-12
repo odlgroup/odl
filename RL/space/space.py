@@ -36,7 +36,8 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
-__all__ = ['LinearSpace', 'NormedSpace', 'HilbertSpace', 'Algebra']
+__all__ = ['LinearSpace', 'MetricSpace', 'NormedSpace', 'HilbertSpace',
+           'Algebra']
 
 
 class LinearSpace(with_metaclass(ABCMeta, Set)):
@@ -54,11 +55,11 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Linear Spaces in RL
     -------------------
-    In RL the two operations are supplied using the fused "linComb" method,
-    inspired from RVL (Rice Vector Library).
+    In RL the two operations are supplied using the fused "linComb"
+    method, inspired from RVL (Rice Vector Library).
 
-    What follows is a short introduction of the methods that each space has to
-    implement.
+    What follows is a short introduction of the methods that each space
+    has to implement.
 
     Linear Combination
     ~~~~~~~~~~~~~~~~~~
@@ -68,12 +69,14 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     linComb(z, a, x, b, y)    < == >    z = a*x + b*y
     ``
 
-    where `x`, `y` and `z` are vectors in the space, and `a` and `b` are scalars.
+    where `x`, `y` and `z` are vectors in the space, and `a` and `b`
+    are scalars.
 
-    RL allows `x`, `y` and `z` to be aliased, i.e. they may be the same vector.
+    RL allows `x`, `y` and `z` to be aliased, i.e. they may be the same
+    vector.
 
-    Using this many of the usual vector arithmetic operations can be performed,
-    for example
+    Using this many of the usual vector arithmetic operations can be
+    performed, for example
 
     | Mathematical | Linear combination      |
     |--------------|-------------------------|
@@ -83,8 +86,9 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     | z = x + y    | linComb(z,  1, x, 1, y) |
     | z = 3*z      | linComb(z,  3, z, 0, z) |
 
-    To aid in rapid prototyping, an implementer needs only implement linComb, and
-    RL then provides all of the standard mathematical operators
+    To aid in rapid prototyping, an implementer needs only implement
+    linComb, and RL then provides all of the standard mathematical
+    operators
 
     `+`, `*`, `-`, `/`
 
@@ -94,11 +98,12 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Constructing Elements
     ~~~~~~~~~~~~~~~~~~~~~
-    RL also requires the existence of an `empty()` method. This method can be
-    used to construct a vector in the space, which may be assigned to.
+    RL also requires the existence of an `empty()` method. This method
+    can be used to construct a vector in the space, which may be
+    assigned to.
 
-    Using this method RL provides some auxiliary methods, such as `zero()`, which
-    returns a zero vector in the space.
+    Using this method RL provides some auxiliary methods, such as
+    `zero()`, which returns a zero vector in the space.
 
     ``
     x = space.zero()
@@ -111,20 +116,21 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Field of a space
     ~~~~~~~~~~~~~~~~
-    Each space also needs to provide access to its underlying field. This field is
-    an instance of `RL.space.set.AbstractSet` and allows space to test scalars for
-    validity. For example, in a real space, trying to multiply a vector by a complex
-    number will yield an error.
+    Each space also needs to provide access to its underlying field.
+    This field is an instance of `RL.space.set.AbstractSet` and allows
+    space to test scalars for validity. For example, in a real space,
+    trying to multiply a vector by a complex number will yield an
+    error.
 
     Modifying other methods
     -----------------------
-    LinearSpace provides several other methods which have default implementations
-    provided using the above mentioned methods.
+    LinearSpace provides several other methods which have default
+    implementations provided using the above mentioned methods.
 
-    A subclass may want to modify these for performance reasons. However, be
-    advised that modification should be done in a consistent manner. For
-    example, if a space modifies `+`, it should also modify `+=`, `-` and `-=`.
-
+    A subclass may want to modify these for performance reasons.
+    However, be advised that modification should be done in a
+    consistent manner. For example, if a space modifies `+`, it should
+    also modify `+=`, `-` and `-=`.
     """
 
     @abstractmethod
@@ -153,15 +159,6 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     @abstractproperty
     def field(self):
         """ Get the underlying field
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        field : subclass of AbstractSet
-                The set of scalars for this space
         """
 
     # Also abstract equals(self,other) from set
@@ -181,6 +178,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         v : Vector
             The zero vector of this space
         """
+
         # Default implementation using linComb
         tmp = self.empty()
         self.linCombImpl(tmp, 0, tmp, 0, tmp)
@@ -204,10 +202,14 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         Subclasses
         ~~~~~~~~~~
-        If X is a subclass of Y, then `Y.contains(X.vector(...))` returns True.
-
+        If X is a subclass of Y, then `Y.contains(X.vector(...))`
+        returns True.
         """
+
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
+
+    # Overload for `vec in space` syntax
+    __contains__ = contains
 
     # Error checking variant of methods
     def linComb(self, z, a, x, b=None, y=None):
@@ -291,55 +293,25 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         """
 
         def __init__(self, space):
-            """ Default initializer of vectors, must be called by all deriving
-            classes to set space
+            """ Default initializer of vectors, must be called by all
+            deriving classes to set space
             """
             self._space = space
 
         @property
         def space(self):
-            """ Get the space of this vector
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            space : LinearSpace
-                    The space this vector belongs to.
+            """ Get the space this vector belongs to
             """
             return self._space
 
         # Convenience functions
         def assign(self, other):
             """ Assign the values of other to this vector
-
-            Parameters
-            ----------
-            other : LinearSpace.Vector
-                    Another vector in the same space whose
-                    values should be copied to this vector
-
-            Returns
-            -------
-            None
-
             """
             self.space.linComb(self, 1, other)
 
         def copy(self):
             """ Creates an identical (deep) copy of this vector
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            copy : LinearSpace.Vector
-                   A identical copy of this vector
-
             """
             result = self.space.empty()
             result.assign(self)
@@ -351,16 +323,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             self.space.linComb(self, a, x, b, y)
 
         def setZero(self):
-            """ Sets this vector to the zero vector.
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            None
-
+            """ Sets this vector to the zero vector
             """
             self.space.linComb(self, 0, self, 0, self)
 
@@ -434,18 +397,9 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             return self.copy()
 
         def __str__(self):
-            """ Get a default representation of the vector.
-
-            Subclasses are encouraged to override this method.
+            """ A default representation of the vector
             """
-            return str(self.space) + ".vector"
-
-        def __repr__(self):
-            """ Get a default representation of the vector.
-
-            Subclasses are encouraged to override this method.
-            """
-            return repr(self.space) + ".vector"
+            return str(self.space) + "::Vector"
 
 
 class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
@@ -502,6 +456,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
             dist : float
                    Distance to other.
             """
+
             return self.space.dist(self, other)
 
         def equals(self, other):
@@ -563,18 +518,7 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
 
     # Default implemented methods
     def norm(self, vector):
-        """
-        Calculate the norm of a vector.
-
-        Parameters
-        ----------
-        vector : NormedSpace.Vector
-                 Vector in this space.
-
-        Returns
-        -------
-        norm : float
-               Norm of the vector.
+        """ Calculate the norm of a vector
         """
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
@@ -605,7 +549,9 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
             -------
             norm : float
                    Norm of the vector.
+
             """
+
             return self.space.norm(self)
 
 
@@ -620,20 +566,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
 
     # Default implemented methods
     def inner(self, x, y):
-        """ Calculates the inner product of the vectors.
-
-        Parameters
-        ----------
-        x : NormedSpace.Vector
-            Vector in this space.
-
-        y : NormedSpace.Vector
-            Vector in this space.
-
-        Returns
-        -------
-        inner : float
-                Inner product of x and y
+        """ Calculates the inner product of the vectors x and y
         """
 
         # Check spaces
@@ -650,6 +583,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
         """ The norm in Hilbert spaces is implicitly defined by the inner
         product
         """
+
         return sqrt(self.innerImpl(x, x))
 
     class Vector(with_metaclass(ABCMeta, NormedSpace.Vector)):
@@ -661,16 +595,10 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
 
             Shortcut for self.space.inner(self, x)
 
-            Parameters
-            ----------
-            x : NormedSpace.Vector
-                Vector in this space.
-
-            Returns
-            -------
-            inner : float
-                    Inner product of x and y
+            Args:
+                x:  Vector in same space as self
             """
+
             return self.space.inner(self, x)
 
 
@@ -686,21 +614,7 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
 
     def multiply(self, x, y):
         """ Calculates the pointwise product of x and y and assigns it to y
-
         y = x * y
-
-        Parameters
-        ----------
-        x : Algebra.Vector
-            Vector in this space.
-
-        x : Algebra.Vector
-            Vector in this space.
-
-        Returns
-        -------
-        None
-
         """
         # Check spaces
         if not self.contains(x):
@@ -714,20 +628,7 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 
         def multiply(self, other):
-            """ Multiplies this pointwise by another vector.
-
-            Shortcut for space.multiply(other, self),
-            this vector is modified.
-
-            Parameters
-            ----------
-            x : Algebra.Vector
-                Vector in this space.
-
-            Returns
-            -------
-            None
-
+            """ Shortcut for space.multiply(self, other)
             """
             self.space.multiply(other, self)
 

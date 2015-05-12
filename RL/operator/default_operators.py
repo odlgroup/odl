@@ -29,7 +29,6 @@ except ImportError:  # Versions < 0.14 of python-future
 
 # RL imports
 import RL.operator.operator as op
-print(op.__file__)
 
 standard_library.install_aliases()
 
