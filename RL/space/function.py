@@ -57,7 +57,7 @@ class FunctionSpace(Algebra):
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
-        self._field = field if field is not None else sets.RealNumbers()
+        self._field = field if field is not None else RealNumbers()
 
     def linCombImpl(self, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
@@ -171,7 +171,7 @@ class FunctionSpace(Algebra):
             return str(self.function)
 
         def __repr__(self):
-            return 'FunctionSpace.Vector(' + repr(self.function) + ')'
+            return repr(self.space) + '.makeVector(' + repr(self.function) + ')'
 
 
 class L2(FunctionSpace, HilbertSpace):
