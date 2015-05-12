@@ -32,7 +32,7 @@ import numpy as np
 
 # RL imports
 from RL.operator.operator import *
-from RL.space.euclidean import EuclidianSpace
+from RL.space.euclidean import EuclideanSpace
 import RL.space.discretizations as disc
 import RL.space.function as fs
 import RL.space.set as sets
@@ -47,7 +47,7 @@ class L2Test(RLTestCase):
         l2 = fs.L2(I)
         l2sin = l2.makeVector(np.sin)
 
-        rn = EuclidianSpace(10)
+        rn = EuclideanSpace(10)
         d = disc.makeUniformDiscretization(l2, rn)
 
         sind = d.makeVector(l2sin)
@@ -61,7 +61,7 @@ class L2Test(RLTestCase):
 
         n = 10
         m = 10
-        rn = EuclidianSpace(n*m)
+        rn = EuclideanSpace(n*m)
         d = disc.makePixelDiscretization(l2, rn, n, m)
 
         sind = d.makeVector(l2sin)

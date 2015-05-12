@@ -80,7 +80,7 @@ continuousRhs = continuousSpace.makeVector(lambda x: x**2 *
                                            np.sin(x)**2*(x > 5))
 
 # Discretization
-rn = ds.EuclidianSpace(500)
+rn = ds.EuclideanSpace(500)
 d = dd.makeUniformDiscretization(continuousSpace, rn)
 kernel = d.makeVector(continuousKernel)
 rhs = d.makeVector(continuousRhs)

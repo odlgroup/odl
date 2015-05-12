@@ -18,7 +18,7 @@ from scipy.lib.blas import get_blas_funcs
 from RL.space.space import *
 from RL.space.set import *
 from RL.utility.utility import errfmt
-from RL.space.euclidean import EuclidianSpace
+from RL.space.euclidean import EuclideanSpace
 from RL.utility.testutils import Timer
 
 standard_library.install_aliases()
@@ -97,7 +97,7 @@ x = np.random.rand(n)
 y = np.random.rand(n)
 z = np.random.rand(n)
 
-optX = EuclidianSpace(n)
+optX = EuclideanSpace(n)
 simpleX = SimpleRN(n)
 
 ox, oy, oz = optX.makeVector(x.copy()), optX.makeVector(y.copy()), optX.makeVector(z.copy())
@@ -110,7 +110,7 @@ with Timer("SimpleRN"):
         simpleX.linComb(sz, 2.13, sx, 3.14, sy)
 print("result: {}".format(sz[1:5]))
 
-with Timer("EuclidianSpace"):
+with Timer("EuclideanSpace"):
     for _ in range(iterations):
         optX.linComb(oz, 2.13, ox, 3.14, oy)
 print("result: {}".format(oz[1:5]))
@@ -122,7 +122,7 @@ with Timer("SimpleRN"):
         result = sz.norm()
 print("result: {}".format(result))
 
-with Timer("EuclidianSpace"):
+with Timer("EuclideanSpace"):
     for _ in range(iterations):
         result = oz.norm()
 print("result: {}".format(result))
@@ -134,7 +134,7 @@ with Timer("SimpleRN"):
         result = sz.inner(sx)
 print("result: {}".format(result))
 
-with Timer("EuclidianSpace"):
+with Timer("EuclideanSpace"):
     for _ in range(iterations):
         result = oz.inner(ox)
 print("result: {}".format(result))
