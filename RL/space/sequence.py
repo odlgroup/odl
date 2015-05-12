@@ -48,7 +48,7 @@ class SequenceSpace(FunctionSpace):
                 super().equals(other))
 
 
-class TruncationDiscretization(EuclidianSpace, Discretization):
+class TruncationDiscretization(EuclideanSpace, Discretization):
     """ Truncation discretization of the integers
     Represents vectors by RN elements
     """
@@ -82,7 +82,7 @@ class TruncationDiscretization(EuclidianSpace, Discretization):
     def points(self):
         return np.arange(self.n)
 
-    class Vector(EuclidianSpace.Vector):
+    class Vector(EuclideanSpace.Vector):
         def __init__(self, space, *args, **kwargs):
             if ((len(args) == 1 and
                  isinstance(args[0], SequenceSpace.Vector) and

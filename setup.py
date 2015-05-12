@@ -23,6 +23,8 @@ from setuptools import setup, find_packages
 
 requires = """
 future >= 0.14
+numpy >= 1.8
+scipy >= 0.14
 """
 
 setup(name='RL',

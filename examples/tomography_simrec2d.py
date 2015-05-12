@@ -75,7 +75,7 @@ class Projector(OP.LinearOperator):
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
             back.append(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].values)
-            
+
         #Perform back projection
         out.values = back.finalize().flatten() * (51770422.4687/16720.1875882)
 
@@ -91,7 +91,7 @@ class Projector(OP.LinearOperator):
 #Set geometry parameters
 volumeSize = np.array([20.0,20.0])
 volumeOrigin = -volumeSize/2.0
-        
+
 detectorSize = 50.0
 detectorOrigin = -detectorSize/2.0
 
@@ -102,7 +102,7 @@ detectorAxisDistance = 20.0
 nVoxels = np.array([500, 400])
 nPixels = 400
 nProjection = 200
-        
+
 #Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
@@ -118,10 +118,10 @@ for theta in np.linspace(0, 2*pi, nProjection):
     projDetectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
     projPixelDirection = y0 * pixelSize
     geometries.append(ProjectionGeometry(projSourcePosition, projDetectorOrigin, projPixelDirection))
-    
+
 #Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRN = ds.EuclidianSpace(nPixels)
+projectionRN = ds.EuclideanSpace(nPixels)
 
 #Discretize projection space
 projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
@@ -133,7 +133,7 @@ dataDisc = ps.makePowerSpace(projectionDisc, nProjection)
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 #Discretize the reconstruction space
-reconRN = ds.EuclidianSpace(nVoxels.prod())
+reconRN = ds.EuclideanSpace(nVoxels.prod())
 reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
 
 #Create a phantom
@@ -157,7 +157,7 @@ def plotResult(x):
     plt.draw()
     print((x-phantomVec).norm())
     plt.pause(0.01)
-            
+
 x = phantomVec
 y = projections
 print(x.inner(projector.T(y)), projector(x).inner(y))
@@ -167,5 +167,5 @@ x = reconDisc.zero()
 #solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.forEachPartial(plotResult))
 solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
 #solvers.gaussNewton(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
-        
+
 #plt.show()
