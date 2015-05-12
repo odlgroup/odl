@@ -52,6 +52,13 @@ class Set(with_metaclass(ABCMeta, object)):
         """
 
     # Implicitly default implemented methods
+    def __contains__(self, other):
+        """ Magic method for:
+
+        other in self
+        """
+        return self.contains(other)
+
     def __eq__(self, other):
         return self.equals(other)
 
@@ -224,9 +231,7 @@ class IntervProd(Set):
         True
         """
 
-        if isinstance(other, EmptySet):
-            return self.dim == 0
-        elif not isinstance(other, IntervProd):
+        if not isinstance(other, IntervProd):
             return False
 
         return (np.all(np.abs(self.begin - other.begin) <= tol) and
@@ -260,6 +265,7 @@ class IntervProd(Set):
         """
 
         point = np.atleast_1d(point)
+
         if len(point) != self.dim:
             return False
 
@@ -283,7 +289,7 @@ class IntervProd(Set):
         Examples
         --------
 
-        >>> b, e = [-1, 2.5, 70], [-0.5, 10, 70]
+        >>> b, e = [-1, 2.5, 0], [-0.5, 10, 0]
         >>> rbox = IntervProd(b, e)
         >>> rbox.measure()
         3.75
