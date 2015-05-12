@@ -32,6 +32,8 @@ except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, super
 from future import standard_library
 
+from math import sqrt
+
 # External module imports
 import numpy
 from scipy.lib.blas import get_blas_funcs
@@ -482,17 +484,26 @@ class NormedRN(RN, NormedSpace):
         Examples
         --------
 
-        >>> rn = NormedRN(2, 2)
+        >>> rn = NormedRN(2, ord=2)
         >>> x = rn.makeVector([3, 4])
-        >>> (3**2 + 4**2)**0.5
-        5.0
         >>> rn.norm(x)
         5.0
+
+
+        >>> rn = NormedRN(2, ord=1)
+        >>> x = rn.makeVector([3, 4])
+        >>> rn.norm(x)
+        7.0
+
+        >>> rn = NormedRN(2, ord=0)
+        >>> x = rn.makeVector([3, 0])
+        >>> rn.norm(x)
+        1.0
 
         """
 
         #Use numpy norm
-        return np.linalg.norm(vector.data, ord=self.ord)
+        return np.linalg.norm(vector.values, ord=self.ord)
 
     class Vector(RN.Vector, NormedSpace.Vector):
         pass
@@ -513,6 +524,34 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         self._dot, self._nrm2 = get_blas_funcs(['dot',
                                                 'nrm2'])
 
+    def normImpl(self, x):
+        """ Calculates the norm of a vector.
+
+        This is defined as:
+
+        norm(x) := sqrt(x[0]**2 + x[1]**2 + ... x[n-1]**2)
+
+        Parameters
+        ----------
+
+        x : EuclideanSpace.Vector
+
+        Returns
+        -------
+        norm : float
+               Norm of the vector
+
+        Examples
+        --------
+
+        >>> rn = EuclideanSpace(2)
+        >>> x = rn.makeVector([3, 4])
+        >>> rn.norm(x)
+        5.0
+
+        """
+        return float(self._nrm2(x.values)) #TODO: nrm2 seems slow compared to dot
+
     def innerImpl(self, x, y):
         """ Calculates the inner product of two vectors
 
@@ -523,12 +562,13 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : Vector
-        y : Vector
+        x : EuclideanSpace.Vector
+        y : EuclideanSpace.Vector
 
         Returns
         -------
-        float
+        inner : float
+                Inner product of x and y.
 
         Examples
         --------
