@@ -418,119 +418,120 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             lambda input, output: RLcpp.PyCuda.abs(input.impl),
             input=(self), returns=self.field)
 
-class CudaRNVector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
-    """ A RN-vector represented in CUDA
-
-    Parameters
-    ----------
-
-    space : CudaRN
-            Instance of CudaRN this vector lives in
-    values : RLcpp.PyCuda.CudaRNVectorImpl
-                Underlying data-representation to be used by this vector
-    """
-    def __init__(self, space, impl):
-        super().__init__(space)
-        self.impl = impl
-
-    def __str__(self):
-        return str(self[:])
-
-    def __repr__(self):
-        return 'CudaRNVector(' + str(self[:]) + ')'
-
-    def __len__(self):
-        """ Get the dimension of the underlying space
-        """
-        return self.space.n
-
-    def __getitem__(self, index):
-        """ Access values of this vector.
-
-        This will cause the values to be copied to CPU
-        which is a slow operation.
+    class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
+        """ A RN-vector represented in CUDA
 
         Parameters
         ----------
 
-        index : int or slice
-                The position(s) that should be accessed
-
-        Returns
-        -------
-        If index is an `int`
-        float, value at index
-
-        If index is an `slice`
-        numpy.ndarray instance with the values at the slice
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> y = rn.makeVector([1, 2, 3])
-        >>> y[0]
-        1.0
-        >>> y[1:2]
-        array([ 2.])
-
+        space : CudaRN
+                Instance of CudaRN this vector lives in
+        values : RLcpp.PyCuda.CudaRNVectorImpl
+                    Underlying data-representation to be used by this vector
         """
-        if isinstance(index, slice):
-            return self.impl.getSlice(index)
-        else:
-            return self.impl.__getitem__(index)
+        def __init__(self, space, impl):
+            super().__init__(space)
+            self.impl = impl
 
-    def __setitem__(self, index, value):
-        """ Set values of this vector
+        def __str__(self):
+            return str(self[:])
 
-        This will cause the values to be copied to CPU
-        which is a slow operation.
+        def __repr__(self):
+            val_str = repr(self[:]).lstrip('array(').rstrip(')')
+            return repr(self.space) + '.vector(' + val_str + ')'
 
-        Parameters
-        ----------
+        def __len__(self):
+            """ Get the dimension of the underlying space
+            """
+            return self.space.n
 
-        index : int or slice
-                The position(s) that should be set
-        value : Real or Array-Like
-                The values that should be assigned.
-                If index is an integer, value should be a Number convertible to float.
-                If index is a slice, value should be an Array-Like of the same
-                size as the slice.
+        def __getitem__(self, index):
+            """ Access values of this vector.
 
-        Returns
-        -------
-        None
+            This will cause the values to be copied to CPU
+            which is a slow operation.
+
+            Parameters
+            ----------
+
+            index : int or slice
+                    The position(s) that should be accessed
+
+            Returns
+            -------
+            If index is an `int`
+            float, value at index
+
+            If index is an `slice`
+            numpy.ndarray instance with the values at the slice
 
 
-        Examples
-        --------
+            Examples
+            --------
+
+            >>> rn = CudaRN(3)
+            >>> y = rn.makeVector([1, 2, 3])
+            >>> y[0]
+            1.0
+            >>> y[1:2]
+            array([ 2.])
+
+            """
+            if isinstance(index, slice):
+                return self.impl.getSlice(index)
+            else:
+                return self.impl.__getitem__(index)
+
+        def __setitem__(self, index, value):
+            """ Set values of this vector
+
+            This will cause the values to be copied to CPU
+            which is a slow operation.
+
+            Parameters
+            ----------
+
+            index : int or slice
+                    The position(s) that should be set
+            value : Real or Array-Like
+                    The values that should be assigned.
+                    If index is an integer, value should be a Number convertible to float.
+                    If index is a slice, value should be an Array-Like of the same
+                    size as the slice.
+
+            Returns
+            -------
+            None
 
 
-        >>> rn = CudaRN(3)
-        >>> y = rn.makeVector([1, 2, 3])
-        >>> y[0] = 5
-        >>> y
-        CudaRNVector([ 5.  2.  3.])
-        >>> y[1:3] = [7, 8]
-        >>> y
-        CudaRNVector([ 5.  7.  8.])
-        >>> y[:] = np.array([0, 0, 0])
-        >>> y
-        CudaRNVector([ 0.  0.  0.])
+            Examples
+            --------
 
-        """
 
-        if isinstance(index, slice):
-            # Convert value to the correct type
-            if not isinstance(value, np.ndarray):
-                value = np.array(value, dtype=np.float64)
+            >>> rn = CudaRN(3)
+            >>> y = rn.makeVector([1, 2, 3])
+            >>> y[0] = 5
+            >>> y
+            CudaRNVector([ 5.  2.  3.])
+            >>> y[1:3] = [7, 8]
+            >>> y
+            CudaRNVector([ 5.  7.  8.])
+            >>> y[:] = np.array([0, 0, 0])
+            >>> y
+            CudaRNVector([ 0.  0.  0.])
+
+            """
+
+            if isinstance(index, slice):
+                # Convert value to the correct type
+                if not isinstance(value, np.ndarray):
+                    value = np.array(value, dtype=np.float64)
             
-            value = value.astype(np.float64, copy=False)
+                value = value.astype(np.float64, copy=False)
 
-            self.impl.setSlice(index, value)
-        else:
-            self.impl.__setitem__(index, value)
+                self.impl.setSlice(index, value)
+            else:
+                self.impl.__setitem__(index, value)
 
 
 if __name__ == '__main__':
