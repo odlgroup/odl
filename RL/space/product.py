@@ -29,7 +29,7 @@ from future import standard_library
 from itertools import repeat
 
 # RL imports
-from RL.space.space import HilbertSpace, NormedSpace, LinearSpace
+from RL.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -226,14 +226,68 @@ class ProductSpace(LinearSpace):
                     ', '.join(repr(part) for part in self.parts) + ')')
 
     
-class NormedProductSpace(ProductSpace,NormedSpace):
+class MetricProductSpace(ProductSpace, MetricSpace):
+    """ A product space of Metric Spaces (X1 x X2 x ... x Xn)
+
+    Creates a Cartesian product of an arbitrary set of spaces.
+
+    For example:
+
+    `MetricProductSpace(Reals(), Reals())` is mathematically equivalent to `RN(2)` ##TODO MAKE METRIC RN SPACE
+
+    Note that the later is obviously more efficient.
+
+    Parameters
+    ----------
+
+    *spaces : MetricSpace's       
+              A set of normed spaces
+    **kwargs : {'ord'}
+                'ord' : string, optional
+                        The manner in which to combine the metrics. Default value 2
+
+    The following values for `ord` can be specified. 
+
+    =====  ================================================================
+    ord    Definition
+    =====  ================================================================
+    inf    max(dist(x[0],y[0]), ..., dist(x[n-1],y[n-1]))
+    -inf   min(dist(x[0],y[0]), ..., dist(x[n-1],y[n-1]))
+    0      (dist(x[0],y[0]) != 0 + ... + dist(x[n-1],y[n-1]) != 0)
+    other  (dist(x[0],y[0])**ord + ... + dist(x[n-1],y[n-1])**ord)**(1/ord)
+    =====  ================================================================
+    """
+    
+    def __init__(self, *spaces, **kwargs):
+        self.ord = kwargs.pop('ord', 2)
+
+        super().__init__(*spaces)
+
+    def distImpl(self, x, y):
+        if self.ord == float('inf'):
+            return max(space.distImpl(xp, yp) for space, xp, yp in zip(self.spaces, x.parts, y.parts))        
+        elif self.ord == -float('inf'):
+            return min(space.distImpl(xp, yp) for space, xp, xp, yp in zip(self.spaces, x.parts, y.parts))
+        elif self.ord == 0:
+            return sum(space.distImpl(xp, yp) != 0 for space, xp, xp, yp in zip(self.spaces, x.parts, y.parts))
+        else:
+            return sum(space.distImpl(xp, yp)**self.ord for space, xp, xp, yp in zip(self.spaces, x.parts, y.parts))**(1/self.ord)
+
+    def __repr__(self):
+        return ('MetricProductSpace(' +
+                ', '.join(str(space) for space in self.spaces) + ')')
+        
+    class Vector(ProductSpace.Vector, MetricSpace.Vector):
+        pass
+
+class NormedProductSpace(MetricProductSpace, NormedSpace):
     """ A product space of Normed Spaces (X1 x X2 x ... x Xn)
 
     Creates a Cartesian product of an arbitrary set of spaces.
 
     For example:
 
-    `NormedProductSpace(Reals(), Reals())` is mathematically equivalent to `RN(2)` ##TODO MAKE NORMED RN SPACE
+    `NormedProductSpace(Reals(), Reals())` is mathematically equivalent to `NormedRN(2)`
 
     Note that the later is obviously more efficient.
 
@@ -249,14 +303,14 @@ class NormedProductSpace(ProductSpace,NormedSpace):
     The following values for `ord` can be specified. 
     Note that any value of ord < 1 only gives a pseudonorm
 
-    =====  ==========================
+    =====  ================================================================
     ord    Definition
-    =====  ==========================
+    =====  ================================================================
     inf    max(norm(x[0]), ..., norm(x[n-1]))
     -inf   min(norm(x[0]), ..., norm(x[n-1]))
     0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
     other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
-    =====  ==========================
+    =====  ================================================================
     """
     
     def __init__(self, *spaces, **kwargs):
@@ -278,10 +332,10 @@ class NormedProductSpace(ProductSpace,NormedSpace):
         return ('NormedProductSpace(' +
                 ', '.join(str(space) for space in self.spaces) + ')')
         
-    class Vector(ProductSpace.Vector, NormedSpace.Vector):
+    class Vector(MetricProductSpace.Vector, NormedSpace.Vector):
         pass
 
-class HilbertProductSpace(HilbertSpace,NormedProductSpace):
+class HilbertProductSpace(NormedProductSpace, HilbertSpace):
     """ A product space of HilbertSpaces (X1 x X2 x ... x Xn)
 
     Creates a Cartesian product of an arbitrary set of spaces.
@@ -327,7 +381,7 @@ class HilbertProductSpace(HilbertSpace,NormedProductSpace):
         return ('HilbertProductSpace(' +
                 ', '.join(str(space) for space in self.spaces) + ')')
 
-    class Vector(ProductSpace.Vector,HilbertSpace.Vector):
+    class Vector(ProductSpace.Vector, HilbertSpace.Vector):
         pass
 
 def makeProductSpace(*spaces):
