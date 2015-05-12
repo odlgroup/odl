@@ -433,6 +433,68 @@ class RN(LinearSpace):
 
             return self.values.__setitem__(index, value)
 
+class NormedRN(RN, NormedSpace):
+    """ The real space R^n with the p-norm.
+
+    Parameters
+    ----------
+
+    n : int
+        The dimension of the space
+    ord : float
+          The order of the norm
+
+    Notes
+    -----
+
+    The following values for `ord` can be specified. 
+    Note that any value of ord < 1 only gives a pseudonorm.
+
+    =====  ====================================================
+    ord    Definition
+    =====  ====================================================
+    inf    max(norm(x[0]), ..., norm(x[n-1]))
+    -inf   min(norm(x[0]), ..., norm(x[n-1]))
+    0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
+    other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
+    =====  ====================================================
+    """
+    
+    def __init__(self, n, ord=None):
+        self.ord = ord if ord is not None else 2
+
+        super().__init__(n)
+
+    def normImpl(self, vector):
+        """ Calculates the p-norm of a vector
+
+        Parameters
+        ----------
+
+        vector : NormedRN.Vector
+
+        Returns
+        -------
+        norm : float
+               Norm of the vector
+
+        Examples
+        --------
+
+        >>> rn = NormedRN(2, 2)
+        >>> x = rn.makeVector([3, 4])
+        >>> (3**2 + 4**2)**0.5
+        5.0
+        >>> rn.norm(x)
+        5.0
+
+        """
+
+        #Use numpy norm
+        return np.linalg.norm(vector.data, ord=self.ord)
+
+    class Vector(RN.Vector, NormedSpace.Vector):
+        pass
 
 class EuclidianSpace(RN, HilbertSpace, Algebra):
     """The real space R^n with the usual inner product.
