@@ -373,8 +373,8 @@ class LinearProductSpace(ProductSpace):
                     '}')
 
         def __repr__(self):
-            return (self.space.__repr__() + '.Vector(' +
-                    ', '.join(part.__repr__() for part in self.parts) + ')')
+            return (repr(self.space) + '.makeVector(' +
+                    ', '.join(repr(part) for part in self.parts) + ')')
 
 
 class NormedProductSpace(LinearProductSpace, NormedSpace):
@@ -429,6 +429,10 @@ class NormedProductSpace(LinearProductSpace, NormedSpace):
         else:
             return sum(space.normImpl(xp)**self.ord for space, xp in zip(self.spaces, x.parts))**(1/self.ord)
 
+    def __repr__(self):
+        return ('NormedProductSpace(' +
+                ', '.join(str(space) for space in self.spaces) + ')')
+
     class Vector(LinearProductSpace.Vector, NormedSpace.Vector):
         pass
 
@@ -478,6 +482,10 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
         else:
             return sum(space.innerImpl(xp, yp)
                        for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+
+    def __repr__(self):
+        return ('HilbertProductSpace(' +
+                ', '.join(str(space) for space in self.spaces) + ')')
 
     class Vector(NormedProductSpace.Vector, HilbertSpace.Vector):
         pass
