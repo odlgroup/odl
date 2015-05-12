@@ -69,6 +69,45 @@ class ProductTest(RLTestCase):
 
         self.assertAllAlmostEquals(z, expected)
 
+    def testMetric(self):
+        H = EuclideanSpace(2)
+        v11 = H.makeVector([1, 2])
+        v12 = H.makeVector([5, 3])
+
+        v21 = H.makeVector([1, 2])
+        v22 = H.makeVector([8, 9])
+
+        # 0-norm
+        HxH = MetricProductSpace(H, H, ord=0.0)
+        w1 = HxH.makeVector(v11, v12)
+        w2 = HxH.makeVector(v21, v22)
+        self.assertAlmostEquals(w1.dist(w2), 1)  # One term is equal
+
+        # 1-norm
+        HxH = MetricProductSpace(H, H, ord=1.0)
+        w1 = HxH.makeVector(v11, v12)
+        w2 = HxH.makeVector(v21, v22)
+        self.assertAlmostEquals(w1.dist(w2), v11.dist(v21)+v12.dist(v22))
+
+        # 2-norm
+        HxH = MetricProductSpace(H, H, ord=2.0)
+        w1 = HxH.makeVector(v11, v12)
+        w2 = HxH.makeVector(v21, v22)
+        self.assertAlmostEquals(
+            w1.dist(w2), (v11.dist(v21)**2+v12.dist(v22)**2)**(1/2.0))
+
+        # -inf norm
+        HxH = MetricProductSpace(H, H, ord=-float('inf'))
+        w1 = HxH.makeVector(v11, v12)
+        w2 = HxH.makeVector(v21, v22)
+        self.assertAlmostEquals(w1.dist(w2), min(v11.dist(v21), v12.dist(v22)))
+
+        # inf norm
+        HxH = MetricProductSpace(H, H, ord=float('inf'))
+        w1 = HxH.makeVector(v11, v12)
+        w2 = HxH.makeVector(v21, v22)
+        self.assertAlmostEquals(w1.dist(w2), max(v11.dist(v21), v12.dist(v22)))
+
     def testNorm(self):
         H = EuclideanSpace(2)
         v1 = H.makeVector([1, 2])

@@ -29,8 +29,7 @@ from future import standard_library
 import numpy as np
 
 # RL imports
-from RL.space.space import (HilbertSpace, NormedSpace, LinearSpace,
-                            MetricSpace)
+from RL.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()

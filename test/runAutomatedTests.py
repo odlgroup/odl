@@ -27,7 +27,7 @@ import unittest
 # Run all automated tests
 from operator_test import *
 from linear_operator_test import *
-from productpace_test import *
+from productspace_test import *
 from rn_test import *
 from functionSpaces_test import *
 from defaultSolvers_test import *
