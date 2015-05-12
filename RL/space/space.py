@@ -447,8 +447,104 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             """
             return repr(self.space) + ".vector"
 
+class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
+    """ Abstract metric space
+    """
 
-class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
+    @abstractmethod
+    def distImpl(self, vector):
+        """ implementation of distance
+        """
+
+    # Default implemented methods
+    def dist(self, x, y):
+        """
+        Calculate the distance between two vectors
+
+        Parameters
+        ----------
+        x : MetricSpace.Vector
+            Vector in this space.
+
+        y : MetricSpace.Vector
+            Vector in this space.
+
+        Returns
+        -------
+        dist : float
+               Distance between vectors
+        """
+        if not self.contains(x):
+            raise TypeError('x ({}) is not in space ({})'.format(x, self))
+        
+        if not self.contains(y):
+            raise TypeError('y ({}) is not in space ({})'.format(y, self))
+
+        return float(self.normImpl(vector))
+
+    class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
+        """ Abstract vector in a metric space
+        """
+
+        def dist(self, other):
+            """ 
+            Calculates the distance to another vector.
+            
+            Shortcut for self.space.dist(self, other)
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            dist : float
+                   Distance to other.
+            """
+            return self.space.dist(self, other)
+
+        def equals(self, other):
+            """ 
+            Test two vectors for equality.
+
+            Parameters
+            ----------
+            other : MetricSpace.Vector
+                    Vector in this space.
+
+            Returns
+            -------
+            equals : boolean
+                     True if the vectors are equal, else false.
+
+            Note
+            ----
+            Equality is very sensitive to numerical errors, thus any
+            operations on a vector should be expected to break equality testing.
+            For example
+
+            >>> X = RN(1)
+            >>> x = X.vector([0.1])
+            >>> y = X.vector([0.3])
+            >>> x+x+x == y
+            False
+            """
+            if not isinstance(other, LinearSpace.Vector) or other.space != self.space: 
+                # Cannot use (if other not in self.space) since this is not reflexive.
+                return False
+            elif other is self:
+                 #Optimization for the most common case
+                return True
+            else:
+                return self.dist(other) == 0
+
+        def __eq__(self, other):
+            return self.equals(other)
+
+        def __ne__(self, other):
+            return not self.equals(other)
+
+class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
     """ Abstract normed space
     """
 
@@ -477,7 +573,13 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
 
         return float(self.normImpl(vector))
 
-    class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
+    #Default implmentation
+    def distImpl(self, x, y):
+        """ The distance in Normed spaces is implicitly defined by the norm
+        """
+        return self.normImpl(x-y)
+
+    class Vector(with_metaclass(ABCMeta, MetricSpace.Vector)):
         """ Abstract vector in a normed space
         """
 
@@ -489,8 +591,7 @@ class NormedSpace(with_metaclass(ABCMeta, LinearSpace)):
 
             Parameters
             ----------
-            vector : NormedSpace.Vector
-                     Vector in this space.
+            None
 
             Returns
             -------
