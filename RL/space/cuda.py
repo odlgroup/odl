@@ -68,8 +68,8 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        x : CudaRNVector
-        y : CudaRNVector
+        x : CudaRN.Vector
+        y : CudaRN.Vector
 
         Returns
         -------
@@ -100,7 +100,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        x : CudaRNVector
+        x : CudaRN.Vector
 
         Returns
         -------
@@ -129,15 +129,15 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        z : CudaRNVector
+        z : CudaRN.Vector
             The Vector that the result should be written to.
         a : RealNumber
             Scalar to multiply `x` with.
-        x : CudaRNVector
+        x : CudaRN.Vector
             The first of the summands
         b : RealNumber
             Scalar to multiply `y` with.
-        y : CudaRNVector
+        y : CudaRN.Vector
             The second of the summands
 
         Returns
@@ -152,7 +152,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> z = rn.empty()
         >>> rn.linComb(z, 2, x, 3, y)
         >>> z
-        CudaRNVector([ 14.  19.  24.])
+        CudaRN(3).makeVector([ 14.,  19.,  24.])
         """
         self.impl.linComb(z.impl, a, x.impl, b, y.impl)
 
@@ -167,9 +167,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Parameters
         ----------
 
-        x : CudaRNVector
+        x : CudaRN.Vector
             read from
-        y : CudaRNVector
+        y : CudaRN.Vector
             read from and written to
 
         Returns
@@ -184,7 +184,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> y = rn.makeVector([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        CudaRNVector([ 5.  6.  6.])
+        CudaRN(3).makeVector([ 5.,  6.,  6.])
         """
         self.impl.multiply(x.impl, y.impl)
 
@@ -197,7 +197,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        CudaRNVector instance with all elements set to zero (0.0)
+        CudaRN.Vector instance with all elements set to zero (0.0)
 
 
         Examples
@@ -206,7 +206,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> rn = CudaRN(3)
         >>> y = rn.zero()
         >>> y
-        CudaRNVector([ 0.  0.  0.])
+        CudaRN(3).makeVector([ 0.,  0.,  0.])
         """
         return self.makeVector(self.impl.zero())
 
@@ -221,7 +221,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        CudaRNVector instance
+        CudaRN.Vector instance
 
 
         Examples
@@ -233,7 +233,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         True
         >>> y.assign(rn.zero())
         >>> y
-        CudaRNVector([ 0.  0.  0.])
+        CudaRN(3).makeVector([ 0.,  0.,  0.])
         """
         return self.makeVector(self.impl.empty())
 
@@ -353,15 +353,15 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> rn = CudaRN(3)
         >>> x = rn.makeVector(np.array([1, 2, 3]))
         >>> x
-        CudaRNVector([ 1.  2.  3.])
+        CudaRN(3).makeVector([ 1.,  2.,  3.])
         >>> y = rn.makeVector([1, 2, 3])
         >>> y
-        CudaRNVector([ 1.  2.  3.])
+        CudaRN(3).makeVector([ 1.,  2.,  3.])
 
         """
 
         if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
-            return CudaRNVector(self, args[0])
+            return CudaRN.Vector(self, args[0])
         elif isinstance(args[0], np.ndarray):  # Create from np array
             # Create result and assign (this could be optimized to one call)
             result = self.empty()
@@ -437,8 +437,28 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             return str(self[:])
 
         def __repr__(self):
+            """ Get a representation of this vector
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            repr : string
+                   String representation of this vector
+
+            Examples
+            --------
+
+            >>> rn = CudaRN(3)
+            >>> x = rn.makeVector([1, 2, 3])
+            >>> y = eval(repr(x))
+            >>> y
+            CudaRN(3).makeVector([ 1.,  2.,  3.])
+            """
             val_str = repr(self[:]).lstrip('array(').rstrip(')')
-            return repr(self.space) + '.vector(' + val_str + ')'
+            return repr(self.space) + '.makeVector(' + val_str + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
@@ -512,13 +532,13 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             >>> y = rn.makeVector([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            CudaRNVector([ 5.  2.  3.])
+            CudaRN(3).makeVector([ 5.,  2.,  3.])
             >>> y[1:3] = [7, 8]
             >>> y
-            CudaRNVector([ 5.  7.  8.])
+            CudaRN(3).makeVector([ 5.,  7.,  8.])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            CudaRNVector([ 0.  0.  0.])
+            CudaRN(3).makeVector([ 0.,  0.,  0.])
 
             """
 
