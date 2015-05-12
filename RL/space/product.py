@@ -25,6 +25,9 @@ except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, zip, super
 from future import standard_library
 
+# External
+import numpy as np
+
 # RL imports
 from RL.space.space import (HilbertSpace, NormedSpace, LinearSpace,
                             MetricSpace)
@@ -259,13 +262,14 @@ class LinearProductSpace(ProductSpace):
         ----------
         The method has two call patterns, the first is:
 
-        *args : tuple of LinearSpace.Vector's
-                A tuple of vectors in the underlying space.
-                This will simply wrap the Vectors (not copy).
+        args : tuple of LinearSpace.Vector's
+            A tuple of vectors in the underlying space.
+            This will simply wrap the Vectors (not copy).
 
-        The second pattern is to create a new Vector from scratch, in this case
+        The second pattern is to create a new Vector from scratch, in
+        this case
 
-        *args : Argument for i:th vector
+        args : tuple of array-like objects
 
         Returns
         -------
@@ -361,18 +365,21 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
                   The order of the norm. Default: 2
               'weights' : array-like, optional
                   Array of weights, same size as number of space
-                  components
+                  components.  All weights must be positive.
+                  Ignored if 'ord' is -inf, 0 or +inf.
 
     The following values for `ord` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm
 
     =====  ==========================
-    ord    Definition
+    ord    Distance Definition [z = (dist(x[0], y[0]),...,\
+     dist(x[n-1], y[n-1]))]
     =====  ==========================
-    inf    max(norm(x[0]), ..., norm(x[n-1]))
-    -inf   min(norm(x[0]), ..., norm(x[n-1]))
-    0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
-    other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
+    inf    max(z)
+    -inf   min(z)
+    0      sum(z != 0)
+    other  sum(z**ord)**(1/ord) -- unweighted\n
+           sum(w * z**ord)**(1/ord) -- weighted
     =====  ==========================
 
     Returns
@@ -396,45 +403,55 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     True
     >>> r2x3.dist(x, y) == x.dist(y) == y.dist(x)
     True
+    >>> # TODO: weights
     """
 
-    # TODO: weights!
     def __init__(self, *spaces, **kwargs):
         if not all(isinstance(spc, MetricSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, MetricSpace)]
             raise TypeError('{} not MetricSpace instance(s)'.format(wrong_spc))
 
-        # print('Calling MetricProductSpace.__init__() with kwargs=', kwargs)
+        weights = kwargs.get('weights', None)
+        if weights is not None:
+            weights = np.array(weights)
+            if not np.all(weights > 0):
+                raise ValueError('weights must all be positive')
+
         self.ord = kwargs.get('ord', 2)
-        self.weights = kwargs.get('weights', None)
+        self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def distImpl(self, x, y):
+        # Ignore weights for -inf, 0, and inf R^N norms
+        if self.ord == float('inf'):
+            return max(
+                space.distImpl(xp, yp)
+                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+        elif self.ord == -float('inf'):
+            return min(
+                space.distImpl(xp, yp)
+                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+        elif self.ord == 0:
+            return sum(
+                space.distImpl(xp, yp) != 0
+                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+
         if self.weights is not None:
-            if self.ord == float('inf'):
-                return max(
-                    space.distImpl(xp, yp) * weight
-                    for space, weight, xp, yp in zip(self.spaces, self.weights,
-                                                     x.parts, y.parts))
-            elif self.ord == -float('inf'):
-                return min(
-                    space.distImpl(xp, yp) * weight
-                    for space, weight, xp, yp in zip(self.spaces, self.weights,
-                                                     x.parts, y.parts))
-            elif self.ord == 0:
-                return sum(
-                    space.distImpl(xp, yp) != 0
-                    for space, xp, yp in zip(self.spaces, x.parts, y.parts))
-            else:
-                return sum(
-                    space.distImpl(xp, yp)**self.ord
-                    for space, xp, yp in zip(self.spaces, x.parts, y.parts)
-                    )**(1/self.ord)
+            return sum(
+                space.distImpl(xp, yp)**self.ord * weight
+                for space, weight, xp, yp in zip(self.spaces, self.weights,
+                                                 x.parts, y.parts)
+                )**(1/self.ord)
+        else:
+            return sum(
+                space.distImpl(xp, yp)**self.ord
+                for space, xp, yp in zip(self.spaces, x.parts, y.parts)
+                )**(1/self.ord)
 
     def __repr__(self):
-        return ('MetricProductSpace(' + ', '.join(str(space)
-                for space in self.spaces) + ')')
+        return ('MetricProductSpace(' + ', '.join(
+            str(space) for space in self.spaces) + ')')
 
     class Vector(LinearProductSpace.Vector, MetricSpace.Vector):
         pass
@@ -445,9 +462,11 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
     The product X1 x ... x XN is itself a normed space, where the
     linear combination is defined component-wise. The product space
-    norm is the R^N norm of the vector of norms of the components, i.e.
-    for x = (x1, ..., xN), it is norm(x) = RN(N).norm(z), where
-    z = (norm(x1), ..., norm(xN)).
+    norm is the R^N norm of the vector of norms of the components.
+
+    If weights are provided, a weighted R^N norm is applied to the
+    vector of component norms. All weight entries must be
+    positive since norm() does not define a norm otherwise.
 
     Parameters
     ----------
@@ -457,18 +476,20 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
                   The order of the norm. Default: 2
               'weights' : array-like, optional
                   Array of weights, same size as number of space
-                  components
+                  components. All weights must be positive.
+                  Ignored if 'ord' is -inf, 0 or +inf.
 
-    The following values for `ord` can be specified.
+    The following values for 'ord' can be specified.
     Note that any value of ord < 1 only gives a pseudonorm
 
     =====  ==========================
-    ord    Definition
+    ord    Norm Definition [z = (norm(x[0]),..., norm(x[n-1]))]
     =====  ==========================
-    inf    max(norm(x[0]), ..., norm(x[n-1]))
-    -inf   min(norm(x[0]), ..., norm(x[n-1]))
-    0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
-    other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
+    inf    max(z)
+    -inf   min(z)
+    0      sum(z != 0)
+    other  sum(z**ord)**(1/ord) -- unweighted\n
+           sum(w * z**ord)**(1/ord) -- weighted
     =====  ==========================
 
     Returns
@@ -489,20 +510,29 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     True
     >>> r2x3.norm(x) == x.norm()
     True
+    >>> w2x3 = NormedProductSpace(r2, r3, ord=1, weights=[0.2, 0.8])
+    >>> w2x3.norm(x)
+    <value>
     """
 
-    # TODO: weights!
     def __init__(self, *spaces, **kwargs):
         if not all(isinstance(spc, NormedSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, NormedSpace)]
             raise TypeError('{} not NormedSpace instance(s)'.format(wrong_spc))
 
-        # print('Calling NormedProductSpace.__init__() with kwargs=', kwargs)
+        weights = kwargs.get('weights', None)
+        if weights is not None:
+            weights = np.array(weights)
+            if not np.all(weights > 0):
+                raise ValueError('weights must all be positive')
+
         self.ord = kwargs.get('ord', 2)
+        self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def normImpl(self, x):
+        # Ignore weights for -inf, 0, and inf R^N norms
         if self.ord == float('inf'):
             return max(space.normImpl(xp)
                        for space, xp in zip(self.spaces, x.parts))
@@ -512,14 +542,19 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
         elif self.ord == 0:
             return sum(space.normImpl(xp) != 0
                        for space, xp in zip(self.spaces, x.parts))
+        if self.weights is not None:
+            return sum(
+                space.normImpl(xp)**self.ord * weight
+                for space, weight, xp in zip(self.spaces, self.weights,
+                                             x.parts))**(1/self.ord)
         else:
             return sum(
                 space.normImpl(xp)**self.ord
                 for space, xp in zip(self.spaces, x.parts))**(1/self.ord)
 
     def __repr__(self):
-        return ('NormedProductSpace(' + ', '.join(str(space)
-                for space in self.spaces) + ')')
+        return ('NormedProductSpace(' + ', '.join(
+            str(space) for space in self.spaces) + ')')
 
     class Vector(MetricProductSpace.Vector, NormedSpace.Vector):
         pass
@@ -531,8 +566,12 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
     The product X1 x ... x XN is itself a (pre-)Hilbert space, where
     the linear combination is defined component-wise. The product space
     inner product is sum of the inner products of the components, i.e.
-    for x = (x1, ..., xN) and y = (y1, ..., yN), it is
-    inner(x, y) = sum(z), where z = (inner(x1, y1), ..., inner(xN, yN)).
+    for x = (x1,..., xN) and y = (y1,..., yN), it is
+    inner(x, y) = sum(z), where z = (inner(x1, y1),..., inner(xN, yN)).
+
+    If weights w = (w1,..., wN) are provided,
+    inner(x, y) = sum(w * z) instead. All weight entries must be
+    positive since inner() does not define an inner product otherwise.
 
     Parameters
     ----------
@@ -540,9 +579,7 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
     kwargs : {'weights'}
               'weights' : array-like, optional
                   Array of weights, same size as number of space
-                  components
-
-    TODO: explain weights
+                  components. All weights must be positive.
 
     Returns
     -------
@@ -554,14 +591,19 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
     """
 
     def __init__(self, *spaces, **kwargs):
-        self.weights = kwargs.get('weights', None)
-
         if not all(isinstance(spc, HilbertSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, HilbertSpace)]
             raise TypeError(errfmt('''
             {} not HilbertSpace instance(s)'''.format(wrong_spc)))
 
+        weights = kwargs.get('weights', None)
+        if weights is not None:
+            weights = np.array(weights)
+            if not np.all(weights > 0):
+                raise ValueError('weights must all be positive')
+
+        self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def innerImpl(self, x, y):
@@ -583,40 +625,45 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
 
 
 class PowerSpace(ProductSpace):
-    """ Creates a Cartesian "power" of a space. For example,
+    """The Cartesian product of N identical linear spaces.
 
-    `PowerSpace(Reals(),3)` is mathematically the same as `RN(3)` or `R x R x R`
-    Note that the later is more efficient.
-
-    Selects the type of product space that has the most structure (Inner product, norm)
-    given a set of spaces
+    The product X^N is itself a linear space, where the
+    linear combination is defined component-wise.
 
     Parameters
     ----------
-
-    underlying_space : LinearSpace
-                       The underlying space that should be repeated
-    nProduct         : Int
-                       Number of products in the result
+    base : LinearSpace instance
+        The space to be raised to the N:th power
+    power : int
+        The power of the product space, i.e. the number of factors.
+        Must be positive.
+    kwargs: {'ord', 'weights'}
+        Passed to the ProductSpace constructor
+        TODO: write exactly
 
     Returns
     -------
-    ProductSpace, NormedProductSpace or HilbertProductSpace depending on the lowest common denominator in spaces.
+    prodspace : ProductSpace instance
 
+    Remark
+    ------
+    PowerSpace(RN(1), N) is mathematically equivalent to RN(N), however
+    the latter is much more efficient numerically.
+
+    Examples
+    --------
+    TODO
     """
 
-    def __new__(cls, base, nfactors, **kwargs):
-        if nfactors <= 0:
+    def __new__(cls, base, power, **kwargs):
+        if power <= 0:
             raise ValueError(errfmt('''
-            'nfactors' must be a positive integer, got {}
-            '''.format(nfactors)))
+            'power' must be a positive integer, got {}
+            '''.format(power)))
 
-        spaces = [base] * nfactors
+        spaces = [base] * power
 
-        # __init__ is not automatically called since __new__ does not return
-        # and instance of 'cls'
-        instance = super().__new__(cls, *spaces, **kwargs)
-        return instance
+        return super().__new__(cls, *spaces, **kwargs)
 
     # Dummy methods to overload abstract base class methods
     def empty(self):
