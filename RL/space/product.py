@@ -91,7 +91,7 @@ class ProductSpace(LinearSpace):
         else:
             newcls = cls
 
-        print('Calling ProductSpace.__new__() with kwargs=', kwargs)
+        # print('Calling ProductSpace.__new__() with kwargs=', kwargs)
         instance = super().__new__(newcls, **kwargs)
 
         # __init__ is called automatically only if `newcls` is a
@@ -142,7 +142,7 @@ class LinearProductSpace(ProductSpace):
                          if not isinstance(spc, LinearSpace)]
             raise TypeError('{} not LinearSpace instance(s)'.format(wrong_spc))
 
-        print('Calling LinearProductSpace.__init__() with kwargs=', kwargs)
+        # print('Calling LinearProductSpace.__init__() with kwargs=', kwargs)
         self.spaces = spaces
         self._nfactors = len(self.spaces)
         self._field = spaces[0].field
@@ -405,7 +405,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
                          if not isinstance(spc, MetricSpace)]
             raise TypeError('{} not MetricSpace instance(s)'.format(wrong_spc))
 
-        print('Calling MetricProductSpace.__init__() with kwargs=', kwargs)
+        # print('Calling MetricProductSpace.__init__() with kwargs=', kwargs)
         self.ord = kwargs.get('ord', 2)
         self.weights = kwargs.pop('weights', None)
         super().__init__(*spaces, **kwargs)
@@ -495,7 +495,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
                          if not isinstance(spc, NormedSpace)]
             raise TypeError('{} not NormedSpace instance(s)'.format(wrong_spc))
 
-        print('Calling NormedProductSpace.__init__() with kwargs=', kwargs)
+        # print('Calling NormedProductSpace.__init__() with kwargs=', kwargs)
         self.ord = kwargs.get('ord', 2)
         super().__init__(*spaces, **kwargs)
 
@@ -533,86 +533,40 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
 
     Parameters
     ----------
-    spaces : NormedSpace instances
-    kwargs : {'ord', 'weights'}
-              'ord' : float, optional
-                  The order of the norm. Default: 2
+    spaces : NormedSpace instances\n
+    kwargs : {'weights'}
               'weights' : array-like, optional
                   Array of weights, same size as number of space
                   components
 
-    The following values for `ord` can be specified.
-    Note that any value of ord < 1 only gives a pseudonorm
-
-    =====  ==========================
-    ord    Definition
-    =====  ==========================
-    inf    max(norm(x[0]), ..., norm(x[n-1]))
-    -inf   min(norm(x[0]), ..., norm(x[n-1]))
-    0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
-    other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
-    =====  ==========================
+    TODO: explain weights
 
     Returns
     -------
-    prodspace : NormedProductSpace instance
+    prodspace : HilbertProductSpace instance
 
     Examples
     --------
-    >>> from RL.space.euclidean import EuclideanSpace
-    >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-    >>> r2x3 = NormedProductSpace(r2, r3, ord=float('inf'))
-    >>> x_2 = r2.makeVector([2.0, 3.5])
-    >>> x_3 = r3.makeVector([-0.3, 2.0, 3.5])
-    >>> x = r2x3.makeVector(x_2, x_3)
-    >>> r2x3.norm(x)
-    4.042276586281547
-    >>> r2x3.norm(x) == max((r2.norm(x_2), r3.norm(x_3)))
-    True
-    >>> r2x3.norm(x) == x.norm()
-    True
-    """
-    """ A product space of HilbertSpaces (X1 x X2 x ... x Xn)
-
-    Creates a Cartesian product of an arbitrary set of spaces.
-
-    For example:
-
-    `HilbertProductSpace(Reals(), Reals())` is mathematically equivalent to `EuclideanSpace(2)`
-
-    Note that the later is obviously more efficient.
-
-    Parameters
-    ----------
-
-    *spaces : HilbertSpace's
-              A set of HilbertSpace's
-    **kwargs : {'weights'}
-                'weights' : Array-Like
-                            List of weights, same size as spaces
-
-    The inner product in the HilbertProductSpace is per default defined as
-
-    inner(x, y) = x[0]*y[0] + ... + x[n-1]*y[n-1]
-
-    The optional parameter `weights` changes this behaviour to
-
-    inner(x, y) = weights[0]*x[0]*y[0] + ... + weights[n-1]*x[n-1]*y[n-1]
+    TODO
     """
 
     def __init__(self, *spaces, **kwargs):
-        self.weights = kwargs.pop('weights', None)
+        self.weights = kwargs.get('weights', None)
 
         if not all(isinstance(spc, HilbertSpace) for spc in spaces):
-            wrong_spc = [spc for spc in spaces if not isinstance(spc, HilbertSpace)]
-            raise TypeError('{} not HilbertSpace instance(s)'.format(wrong_spc))
+            wrong_spc = [spc for spc in spaces
+                         if not isinstance(spc, HilbertSpace)]
+            raise TypeError(errfmt('''
+            {} not HilbertSpace instance(s)'''.format(wrong_spc)))
 
         super().__init__(*spaces, **kwargs)
 
     def innerImpl(self, x, y):
-        if self.weights:
-            return sum(space.innerImpl(xp, yp)
-                       for space, weight, xp, yp in zip(self.spaces, self.weights, x.parts, y.parts))
+        if self.weights is not None:
+            return sum(
+                space.innerImpl(xp, yp) * weight
+                for space, weight, xp, yp in zip(self.spaces, self.weights,
+                                                 x.parts, y.parts))
         else:
             return sum(space.innerImpl(xp, yp)
                        for space, xp, yp in zip(self.spaces, x.parts, y.parts))
