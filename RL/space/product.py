@@ -407,27 +407,30 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
 
         # print('Calling MetricProductSpace.__init__() with kwargs=', kwargs)
         self.ord = kwargs.get('ord', 2)
-        self.weights = kwargs.pop('weights', None)
+        self.weights = kwargs.get('weights', None)
         super().__init__(*spaces, **kwargs)
 
     def distImpl(self, x, y):
-        if self.ord == float('inf'):
-            return max(
-                space.distImpl(xp, yp)
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
-        elif self.ord == -float('inf'):
-            return min(
-                space.distImpl(xp, yp)
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
-        elif self.ord == 0:
-            return sum(
-                space.distImpl(xp, yp) != 0
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
-        else:
-            return sum(
-                space.distImpl(xp, yp)**self.ord
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts)
-                )**(1/self.ord)
+        if self.weights is not None:
+            if self.ord == float('inf'):
+                return max(
+                    space.distImpl(xp, yp) * weight
+                    for space, weight, xp, yp in zip(self.spaces, self.weights,
+                                                     x.parts, y.parts))
+            elif self.ord == -float('inf'):
+                return min(
+                    space.distImpl(xp, yp) * weight
+                    for space, weight, xp, yp in zip(self.spaces, self.weights,
+                                                     x.parts, y.parts))
+            elif self.ord == 0:
+                return sum(
+                    space.distImpl(xp, yp) != 0
+                    for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+            else:
+                return sum(
+                    space.distImpl(xp, yp)**self.ord
+                    for space, xp, yp in zip(self.spaces, x.parts, y.parts)
+                    )**(1/self.ord)
 
     def __repr__(self):
         return ('MetricProductSpace(' + ', '.join(str(space)
