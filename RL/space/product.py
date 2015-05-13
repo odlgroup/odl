@@ -36,7 +36,7 @@ standard_library.install_aliases()
 
 
 class ProductSpace(LinearSpace):
-    """ The Cartesian product of N linear spaces.
+    """The Cartesian product of N linear spaces.
 
     The product X1 x ... x XN is itself a linear space, where the
     linear combination is defined component-wise. Automatically
@@ -51,8 +51,6 @@ class ProductSpace(LinearSpace):
     Returns
     -------
     prodspace : ProductSpace instance
-        If `all(isinstance(spc, LinearSpace) for spc in spaces) ->
-        `type(prodspace) == LinearProductSpace`\n
         If `all(isinstance(spc, MetricSpace) for spc in spaces) ->
         `type(prodspace) == MetricProductSpace`\n
         If `all(isinstance(spc, NormedSpace) for spc in spaces) ->
@@ -65,10 +63,10 @@ class ProductSpace(LinearSpace):
     >>> from RL.space.euclidean import RN, EuclideanSpace
     >>> r2x3 = ProductSpace(RN(2), RN(3))
     >>> r2x3.__class__.__name__
-    'LinearProductSpace'
+    'ProductSpace'
     >>> r2x3 = ProductSpace(EuclideanSpace(2), RN(3))
     >>> r2x3.__class__.__name__
-    'LinearProductSpace'
+    'ProductSpace'
     >>> r2x3 = ProductSpace(EuclideanSpace(2), EuclideanSpace(3))
     >>> r2x3.__class__.__name__
     'HilbertProductSpace'
@@ -79,8 +77,7 @@ class ProductSpace(LinearSpace):
             raise TypeError('All spaces must have the same field')
 
         # Do not change subclass if it was explicitly called
-        subs = (LinearProductSpace, NormedProductSpace, MetricProductSpace,
-                HilbertProductSpace)
+        subs = (NormedProductSpace, MetricProductSpace, HilbertProductSpace)
         if cls not in subs:
             if all(isinstance(spc, HilbertSpace) for spc in spaces):
                 newcls = HilbertProductSpace
@@ -88,46 +85,12 @@ class ProductSpace(LinearSpace):
                 newcls = NormedProductSpace
             elif all(isinstance(spc, MetricSpace) for spc in spaces):
                 newcls = MetricProductSpace
-            elif all(isinstance(spc, LinearSpace) for spc in spaces):
-                newcls = LinearProductSpace
+            else:
+                newcls = ProductSpace
         else:
             newcls = cls
 
         return super().__new__(newcls, **kwargs)
-
-    # Dummy methods to overload abstract base class methods
-    def empty(self):
-        raise NotImplementedError
-    field = linCombImpl = empty
-
-
-class LinearProductSpace(ProductSpace):
-    """The Cartesian product of N linear spaces.
-
-    The product X1 x ... x XN is itself a linear space, where the
-    linear combination is defined component-wise.
-
-    Parameters
-    ----------
-    spaces : LinearSpace instances
-
-    Returns
-    -------
-    prodspace : LinearProductSpace instance
-
-    Examples
-    --------
-    >>> from RL.space.euclidean import RN, EuclideanSpace
-    >>> r2x3 = LinearProductSpace(RN(2), RN(3))
-    >>> r2x3.__class__.__name__
-    'LinearProductSpace'
-    >>> r2x3 = LinearProductSpace(EuclideanSpace(2), RN(3))
-    >>> r2x3.__class__.__name__
-    'LinearProductSpace'
-    >>> r2x3 = LinearProductSpace(EuclideanSpace(2), EuclideanSpace(3))
-    >>> r2x3.__class__.__name__
-    'LinearProductSpace'
-    """
 
     def __init__(self, *spaces, **kwargs):
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
@@ -135,7 +98,6 @@ class LinearProductSpace(ProductSpace):
                          if not isinstance(spc, LinearSpace)]
             raise TypeError('{} not LinearSpace instance(s)'.format(wrong_spc))
 
-        # print('Calling LinearProductSpace.__init__() with kwargs=', kwargs)
         self._spaces = spaces
         self._nfactors = len(self.spaces)
         self._field = spaces[0].field
@@ -161,7 +123,7 @@ class LinearProductSpace(ProductSpace):
 
         Returns
         -------
-        zero : LinearProducSpace.Vector
+        zero : ProducSpace.Vector
             The zero vector in the product space
 
         Example
@@ -190,7 +152,7 @@ class LinearProductSpace(ProductSpace):
 
         Returns
         -------
-        vec : LinearProducSpace.Vector
+        vec : ProducSpace.Vector
             Some vector in the product space
 
         Example
@@ -341,7 +303,7 @@ class LinearProductSpace(ProductSpace):
                     ', '.join(repr(part) for part in self.parts) + ')')
 
 
-class MetricProductSpace(LinearProductSpace, MetricSpace):
+class MetricProductSpace(ProductSpace, MetricSpace):
     """The Cartesian product of N metric linear spaces.
 
     The product X1 x ... x XN is itself a metric space, where the
@@ -447,7 +409,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         return ('MetricProductSpace(' + ', '.join(
             str(space) for space in self.spaces) + ')')
 
-    class Vector(LinearProductSpace.Vector, MetricSpace.Vector):
+    class Vector(ProductSpace.Vector, MetricSpace.Vector):
         pass
 
 
