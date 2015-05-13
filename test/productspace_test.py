@@ -142,7 +142,7 @@ class ProductTest(RLTestCase):
 class PowerTest(RLTestCase):
     def testRxR(self):
         H = RN(2)
-        HxH = PowerSpace(H, 2)
+        HxH = powerspace(H, 2)
         self.assertTrue(len(HxH) == 2)
 
         v1 = H.makeVector([1, 2])
@@ -155,7 +155,7 @@ class PowerTest(RLTestCase):
 
     def testLinComb(self):
         H = RN(2)
-        HxH = PowerSpace(H, 2)
+        HxH = powerspace(H, 2)
 
         v1 = H.makeVector([1, 2])
         v2 = H.makeVector([5, 3])
@@ -176,7 +176,7 @@ class PowerTest(RLTestCase):
 
     def testInplaceModify(self):
         H = RN(2)
-        HxH = PowerSpace(H, 2)
+        HxH = powerspace(H, 2)
 
         v1 = H.makeVector([1, 2])
         v2 = H.makeVector([5, 3])

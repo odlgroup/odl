@@ -93,16 +93,7 @@ class ProductSpace(LinearSpace):
         else:
             newcls = cls
 
-        # print('Calling ProductSpace.__new__() with kwargs=', kwargs)
-        instance = super().__new__(newcls, **kwargs)
-
-        # __init__ is called automatically only if `newcls` is a
-        # subclass of `cls`. This may not always be the case, e.g.
-        # if `cls == PowerSpace`
-        if not issubclass(newcls, cls):
-            instance.__init__(*spaces, **kwargs)
-
-        return instance
+        return super().__new__(newcls, **kwargs)
 
     # Dummy methods to overload abstract base class methods
     def empty(self):
@@ -145,10 +136,18 @@ class LinearProductSpace(ProductSpace):
             raise TypeError('{} not LinearSpace instance(s)'.format(wrong_spc))
 
         # print('Calling LinearProductSpace.__init__() with kwargs=', kwargs)
-        self.spaces = spaces
+        self._spaces = spaces
         self._nfactors = len(self.spaces)
         self._field = spaces[0].field
         super().__init__(**kwargs)
+
+    @property
+    def field(self):
+        return self._field
+
+    @property
+    def spaces(self):
+        return self._spaces
 
     def zero(self):
         """ Create the zero vector of the product space
@@ -212,10 +211,6 @@ class LinearProductSpace(ProductSpace):
     def linCombImpl(self, z, a, x, b, y):
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
             space.linCombImpl(zp, a, xp, b, yp)
-
-    @property
-    def field(self):
-        return self._field
 
     def equals(self, other):
         """ Test if the product space is equal to another
@@ -413,7 +408,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
 
         weights = kwargs.get('weights', None)
         if weights is not None:
-            weights = np.array(weights)
+            weights = np.asarray(weights)
             if not np.all(weights > 0):
                 raise ValueError('weights must all be positive')
 
@@ -522,7 +517,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
         weights = kwargs.get('weights', None)
         if weights is not None:
-            weights = np.array(weights)
+            weights = np.asarray(weights)
             if not np.all(weights > 0):
                 raise ValueError('weights must all be positive')
 
@@ -598,7 +593,7 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
 
         weights = kwargs.get('weights', None)
         if weights is not None:
-            weights = np.array(weights)
+            weights = np.asarray(weights)
             if not np.all(weights > 0):
                 raise ValueError('weights must all be positive')
 
@@ -623,22 +618,10 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
         pass
 
 
-class PowerSpace(ProductSpace):
-    """The Cartesian product of N identical linear spaces.
+def powerspace(base, power, **kwargs):
+    """ Creates a power space X^N = X x ... x X
 
-    The product X^N is itself a linear space, where the
-    linear combination is defined component-wise.
-
-    Parameters
-    ----------
-    base : LinearSpace instance
-        The space to be raised to the N:th power
-    power : int
-        The power of the product space, i.e. the number of factors.
-        Must be positive.
-    kwargs: {'ord', 'weights'}
-        Passed to the ProductSpace constructor
-        TODO: write exactly
+    A shorthand for ProductSpace(*([base] * power), **kwargs)
 
     Returns
     -------
@@ -646,28 +629,15 @@ class PowerSpace(ProductSpace):
 
     Remark
     ------
-    PowerSpace(RN(1), N) is mathematically equivalent to RN(N), however
+    powerspace(RN(1), N) is mathematically equivalent to RN(N), however
     the latter is much more efficient numerically.
 
-    Examples
+    See also
     --------
-    TODO
+    ProductSpace
     """
 
-    def __new__(cls, base, power, **kwargs):
-        if power <= 0:
-            raise ValueError(errfmt('''
-            'power' must be a positive integer, got {}
-            '''.format(power)))
-
-        spaces = [base] * power
-
-        return super().__new__(cls, *spaces, **kwargs)
-
-    # Dummy methods to overload abstract base class methods
-    def empty(self):
-        raise NotImplementedError
-    field = linCombImpl = empty
+    return ProductSpace(*([base] * power), **kwargs)
 
 
 if __name__ == '__main__':
