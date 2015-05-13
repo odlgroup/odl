@@ -233,11 +233,6 @@ class LinearProductSpace(LinearSpace):
         return self._nfactors
 
     def __getitem__(self, index):
-        """ Access the index:th subspace of this space
-
-        TODO: Move this to the module docstring
-        """
-
         return self.spaces[index]
 
     def __str__(self):
@@ -256,11 +251,6 @@ class LinearProductSpace(LinearSpace):
             return len(self.space)
 
         def __getitem__(self, index):
-            """ Access the index:th component of this vector
-
-            TODO: Move this to the module docstring
-            """
-
             return self.parts[index]
 
         def __str__(self):
@@ -292,7 +282,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
               'weights' : array-like, optional
                   Array of weights, same size as number of space
                   components.  All weights must be positive.
-                  Ignored if 'ord' is -inf, 0 or +inf.
+                  Default: (1,...,1)
 
     The following values for `ord` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm
@@ -340,39 +330,41 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
 
         weights = kwargs.get('weights', None)
         if weights is not None:
-            weights = np.asarray(weights)
+            weights = np.atleast_1d(weights)
             if not np.all(weights > 0):
                 raise ValueError('weights must all be positive')
+            if not len(weights) == len(spaces):
+                raise ValueError(errfmt('''
+                'spaces' and 'weights' have different lengths ({} != {})
+                '''.format(len(spaces), len(weights))))
+        else:
+            weights = np.ones(len(spaces))
 
-        self.ord = kwargs.get('ord', 2)
+        self.ord = float(kwargs.get('ord', 2))
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def distImpl(self, x, y):
-        # Ignore weights for -inf, 0, and inf R^N norms
         if self.ord == float('inf'):
             return max(
-                space.distImpl(xp, yp)
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+                spc.distImpl(xp, yp) * w
+                for spc, w, xp, yp in zip(self.spaces, self.weights,
+                                          x.parts, y.parts))
         elif self.ord == -float('inf'):
             return min(
-                space.distImpl(xp, yp)
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+                spc.distImpl(xp, yp) * w
+                for spc, w, xp, yp in zip(self.spaces, self.weights,
+                                          x.parts, y.parts))
         elif self.ord == 0:
             return sum(
-                space.distImpl(xp, yp) != 0
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+                spc.distImpl(xp, yp) != 0
+                for spc, xp, yp in zip(self.spaces, x.parts, y.parts))
 
-        if self.weights is not None:
-            return sum(
-                space.distImpl(xp, yp)**self.ord * weight
-                for space, weight, xp, yp in zip(self.spaces, self.weights,
-                                                 x.parts, y.parts)
-                )**(1/self.ord)
         else:
             return sum(
-                space.distImpl(xp, yp)**self.ord
-                for space, xp, yp in zip(self.spaces, x.parts, y.parts)
+                spc.distImpl(xp, yp)**self.ord * w
+                for spc, w, xp, yp in zip(self.spaces, self.weights,
+                                          x.parts, y.parts)
                 )**(1/self.ord)
 
     def __repr__(self):
@@ -404,7 +396,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
               'weights' : array-like, optional
                   Array of weights, same size as number of space
                   components. All weights must be positive.
-                  Ignored if 'ord' is -inf, 0 or +inf.
+                  Default: (1,...,1)
 
     The following values for 'ord' can be specified.
     Note that any value of ord < 1 only gives a pseudonorm
@@ -450,34 +442,38 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
         weights = kwargs.get('weights', None)
         if weights is not None:
-            weights = np.asarray(weights)
+            weights = np.atleast_1d(weights)
             if not np.all(weights > 0):
                 raise ValueError('weights must all be positive')
+            if not len(weights) == len(spaces):
+                raise ValueError(errfmt('''
+                'spaces' and 'weights' have different lengths ({} != {})
+                '''.format(len(spaces), len(weights))))
+        else:
+            weights = np.ones(len(spaces))
 
-        self.ord = kwargs.get('ord', 2)
+        self.ord = float(kwargs.get('ord', 2))
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def normImpl(self, x):
-        # Ignore weights for -inf, 0, and inf R^N norms
         if self.ord == float('inf'):
-            return max(space.normImpl(xp)
-                       for space, xp in zip(self.spaces, x.parts))
+            return max(spc.normImpl(xp) * w
+                       for spc, w, xp in zip(self.spaces, self.weights,
+                                             x.parts))
         elif self.ord == -float('inf'):
-            return min(space.normImpl(xp)
-                       for space, xp in zip(self.spaces, x.parts))
+            return min(spc.normImpl(xp) * w
+                       for spc, w, xp in zip(self.spaces, self.weights,
+                                             x.parts))
         elif self.ord == 0:
             return sum(space.normImpl(xp) != 0
                        for space, xp in zip(self.spaces, x.parts))
         if self.weights is not None:
             return sum(
-                space.normImpl(xp)**self.ord * weight
-                for space, weight, xp in zip(self.spaces, self.weights,
-                                             x.parts))**(1/self.ord)
-        else:
-            return sum(
-                space.normImpl(xp)**self.ord
-                for space, xp in zip(self.spaces, x.parts))**(1/self.ord)
+                spc.normImpl(xp)**self.ord * w
+                for spc, w, xp in zip(self.spaces, self.weights,
+                                      x.parts)
+                )**(1/self.ord)
 
     def __repr__(self):
         return ('NormedProductSpace(' + ', '.join(
@@ -507,6 +503,7 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
               'weights' : array-like, optional
                   Array of weights, same size as number of space
                   components. All weights must be positive.
+                  Default: (1,...,1)
 
     Returns
     -------
@@ -526,22 +523,24 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
 
         weights = kwargs.get('weights', None)
         if weights is not None:
-            weights = np.asarray(weights)
+            weights = np.atleast_1d(weights)
             if not np.all(weights > 0):
                 raise ValueError('weights must all be positive')
+            if not len(weights) == len(spaces):
+                raise ValueError(errfmt('''
+                'spaces' and 'weights' have different lengths ({} != {})
+                '''.format(len(spaces), len(weights))))
+        else:
+            weights = np.ones(len(spaces))
 
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def innerImpl(self, x, y):
-        if self.weights is not None:
-            return sum(
-                space.innerImpl(xp, yp) * weight
-                for space, weight, xp, yp in zip(self.spaces, self.weights,
-                                                 x.parts, y.parts))
-        else:
-            return sum(space.innerImpl(xp, yp)
-                       for space, xp, yp in zip(self.spaces, x.parts, y.parts))
+        return sum(
+            spc.innerImpl(xp, yp) * w
+            for spc, w, xp, yp in zip(self.spaces, self.weights,
+                                      x.parts, y.parts))
 
     def __repr__(self):
         return ('HilbertProductSpace(' +
@@ -551,26 +550,95 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
         pass
 
 
-def powerspace(base, power, **kwargs):
-    """ Creates a power space X^N = X x ... x X
+def productspace(*spaces, **kwargs):
+    """ Creates a product space X1 x ... x XN
 
-    A shorthand for LinearProductSpace(*([base] * power), **kwargs)
+    Selects the 'most powerful' space possible, i.e. if all spaces
+    are HilbertSpace instances, a HilbertProductSpace instance is
+    returned.
+
+    Parameters
+    ----------
+    spaces : <Which>Space instances
+        <Which> is either Hilbert, Normed, Metric or Linear
+    kwargs : {'ord', 'weights'}
+        'ord' : float, optional
+            The order of the R^N norm. Default: 2
+            see MetricProductSpace or NormedProductSpace
+        'weights' : array-like, optional
+            Array of weights, same size as number of space
+            components. All weights must be positive.
+            Default: (1,...,1)
+            See MetricProductSpace, NormedProductSpace or
+            HilbertProductSpace
 
     Returns
     -------
-    prodspace : LinearProductSpace instance
+    prodspace : <Which>ProductSpace instance
+        <Which> is either Hilbert, Normed, Metric or Linear
 
     Remark
     ------
-    powerspace(RN(1), N) is mathematically equivalent to RN(N), however
-    the latter is much more efficient numerically.
+    productspace(RN(1), RN(1)) is mathematically equivalent to RN(2),
+    however the latter is much more efficient numerically.
 
     See also
     --------
-    LinearProductSpace
+    LinearProductSpace, MetricProductSpace, NormedProductSpace,
+    HilbertProductSpace
     """
 
-    return LinearProductSpace(*([base] * power), **kwargs)
+    if all(isinstance(spc, HilbertSpace) for spc in spaces):
+        return HilbertProductSpace(*spaces, **kwargs)
+    elif all(isinstance(spc, NormedSpace) for spc in spaces):
+        return NormedProductSpace(*spaces, **kwargs)
+    elif all(isinstance(spc, MetricSpace) for spc in spaces):
+        return MetricProductSpace(*spaces, **kwargs)
+    else:
+        return LinearProductSpace(*spaces, **kwargs)
+
+
+def powerspace(base, power, **kwargs):
+    """ Creates a power space X^N = X x ... x X
+
+    Selects the 'most powerful' space possible, i.e. if all spaces
+    are HilbertSpace instances, a HilbertProductSpace instance is
+    returned.
+
+    Parameters
+    ----------
+    base : <Which>Space instance
+        <Which> is either Hilbert, Normed, Metric or Linear
+    power : int
+        The number of factors in the product
+    kwargs : {'ord', 'weights'}
+        'ord' : float, optional
+            The order of the R^N norm. Default: 2
+            see MetricProductSpace or NormedProductSpace
+        'weights' : array-like, optional
+            Array of weights, same size as number of space
+            components. All weights must be positive.
+            Default: (1,...,1)
+            See MetricProductSpace, NormedProductSpace or
+            HilbertProductSpace
+
+    Returns
+    -------
+    prodspace : <Which>ProductSpace instance
+        <Which> is either Hilbert, Normed, Metric or Linear
+
+    Remark
+    ------
+    powerspace(RN(1), 2) is mathematically equivalent to RN(2),
+    however the latter is usually more efficient numerically.
+
+    See also
+    --------
+    LinearProductSpace, MetricProductSpace, NormedProductSpace,
+    HilbertProductSpace
+    """
+
+    return productspace(*([base] * power), **kwargs)
 
 
 if __name__ == '__main__':
