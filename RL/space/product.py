@@ -35,62 +35,31 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-class ProductSpace(LinearSpace):
+class LinearProductSpace(LinearSpace):
     """The Cartesian product of N linear spaces.
 
     The product X1 x ... x XN is itself a linear space, where the
-    linear combination is defined component-wise. Automatically
-    selects the most specific subclass possible.
+    linear combination is defined component-wise.
 
     Parameters
     ----------
     spaces : LinearSpace instances
-    kwargs : {'ord', 'weights'}
-        Passed to the init function of the subclass
+        The factors of the product space
 
     Returns
     -------
-    prodspace : ProductSpace instance
-        If `all(isinstance(spc, MetricSpace) for spc in spaces) ->
-        `type(prodspace) == MetricProductSpace`\n
-        If `all(isinstance(spc, NormedSpace) for spc in spaces) ->
-        `type(prodspace) == NormedProductSpace`\n
-        If `all(isinstance(spc, HilbertSpace) for spc in spaces) ->
-        `type(prodspace) == HilbertProductSpace`
+    prodspace : LinearProductSpace instance
 
     Examples
     --------
     >>> from RL.space.euclidean import RN, EuclideanSpace
-    >>> r2x3 = ProductSpace(RN(2), RN(3))
+    >>> r2x3 = LinearProductSpace(RN(2), RN(3))
     >>> r2x3.__class__.__name__
-    'ProductSpace'
-    >>> r2x3 = ProductSpace(EuclideanSpace(2), RN(3))
+    'LinearProductSpace'
+    >>> r2x3 = LinearProductSpace(EuclideanSpace(2), RN(3))
     >>> r2x3.__class__.__name__
-    'ProductSpace'
-    >>> r2x3 = ProductSpace(EuclideanSpace(2), EuclideanSpace(3))
-    >>> r2x3.__class__.__name__
-    'HilbertProductSpace'
+    'LinearProductSpace'
     """
-
-    def __new__(cls, *spaces, **kwargs):
-        if not all(spaces[0].field == spc.field for spc in spaces):
-            raise TypeError('All spaces must have the same field')
-
-        # Do not change subclass if it was explicitly called
-        subs = (NormedProductSpace, MetricProductSpace, HilbertProductSpace)
-        if cls not in subs:
-            if all(isinstance(spc, HilbertSpace) for spc in spaces):
-                newcls = HilbertProductSpace
-            elif all(isinstance(spc, NormedSpace) for spc in spaces):
-                newcls = NormedProductSpace
-            elif all(isinstance(spc, MetricSpace) for spc in spaces):
-                newcls = MetricProductSpace
-            else:
-                newcls = ProductSpace
-        else:
-            newcls = cls
-
-        return super().__new__(newcls, **kwargs)
 
     def __init__(self, *spaces, **kwargs):
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
@@ -98,10 +67,13 @@ class ProductSpace(LinearSpace):
                          if not isinstance(spc, LinearSpace)]
             raise TypeError('{} not LinearSpace instance(s)'.format(wrong_spc))
 
+        if not all(spc.field == spaces[0].field for spc in spaces):
+            raise TypeError('All spaces must have the same field')
+
         self._spaces = spaces
         self._nfactors = len(self.spaces)
         self._field = spaces[0].field
-        super().__init__(**kwargs)
+        super().__init__()
 
     @property
     def field(self):
@@ -131,7 +103,7 @@ class ProductSpace(LinearSpace):
         >>> from RL.space.euclidean import EuclideanSpace
         >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
-        >>> r2x3 = ProductSpace(r2, r3)
+        >>> r2x3 = LinearProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
         >>> r2.norm(zero_2 - zero_2x3[0]) == 0
         True
@@ -160,7 +132,7 @@ class ProductSpace(LinearSpace):
         >>> from RL.space.euclidean import EuclideanSpace
         >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
         >>> vec_2, vec_3 = r2.empty(), r3.empty()
-        >>> r2x3 = ProductSpace(r2, r3)
+        >>> r2x3 = LinearProductSpace(r2, r3)
         >>> vec_2x3 = r2x3.empty()
         >>> vec_2.space == vec_2x3[0].space
         True
@@ -185,7 +157,7 @@ class ProductSpace(LinearSpace):
         Returns
         -------
         equal : boolean
-            `True` if `other` is a ProductSpace instance, has same length
+            `True` if `other` is a LinearProductSpace instance, has same length
             and the same factors. `False` otherwise.
 
         Example
@@ -193,13 +165,13 @@ class ProductSpace(LinearSpace):
         >>> from RL.space.euclidean import EuclideanSpace
         >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
         >>> rn, rm = EuclideanSpace(2), EuclideanSpace(3)
-        >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
+        >>> r2x3, rnxm = LinearProductSpace(r2, r3), LinearProductSpace(rn, rm)
         >>> r2x3.equals(rnxm)
         True
-        >>> r3x2 = ProductSpace(r3, r2)
+        >>> r3x2 = LinearProductSpace(r3, r2)
         >>> r2x3.equals(r3x2)
         False
-        >>> r5 = Productspace(*[EuclideanSpace(1)]*5)
+        >>> r5 = LinearProductSpace(*[EuclideanSpace(1)]*5)
         >>> r2x3.equals(r5)
         False
         >>> r5 = EuclideanSpace(5)
@@ -207,7 +179,7 @@ class ProductSpace(LinearSpace):
         False
         """
 
-        return (isinstance(other, ProductSpace) and
+        return (isinstance(other, LinearProductSpace) and
                 len(self) == len(other) and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 
@@ -229,21 +201,18 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        ProductSpace.Vector instance
+        LinearProductSpace.Vector instance
 
 
-        Examples
-        --------
-
+        Example
+        -------
         >>> r2, r3 = RN(2), RN(3)
-        >>> rm = RN(3)
-        >>> prod = ProductSpace(rn,rm)
-        >>> x = rn.makeVector([1,2])
-        >>> y = rm.makeVector([1,2,3])
-        >>> z = prod.makeVector(x, y)
-        >>> z
+        >>> prod = LinearProductSpace(r2, r3)
+        >>> x2 = r2.makeVector([1, 2])
+        >>> x3 = r3.makeVector([1, 2, 3])
+        >>> x = prod.makeVector(x2, x3)
+        >>> print(x)
         {[ 1.  2.], [ 1.  2.  3.]}
-
         """
 
         if not isinstance(args[0], LinearSpace.Vector):
@@ -275,7 +244,7 @@ class ProductSpace(LinearSpace):
         return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
-        return ('ProductSpace(' +
+        return ('LinearProductSpace(' +
                 ', '.join(str(space) for space in self.spaces) + ')')
 
     class Vector(LinearSpace.Vector):
@@ -303,7 +272,7 @@ class ProductSpace(LinearSpace):
                     ', '.join(repr(part) for part in self.parts) + ')')
 
 
-class MetricProductSpace(ProductSpace, MetricSpace):
+class MetricProductSpace(LinearProductSpace, MetricSpace):
     """The Cartesian product of N metric linear spaces.
 
     The product X1 x ... x XN is itself a metric space, where the
@@ -316,6 +285,7 @@ class MetricProductSpace(ProductSpace, MetricSpace):
     Parameters
     ----------
     spaces : MetricSpace instances
+        The factors of the product space
     kwargs : {'ord', 'weights'}
               'ord' : float, optional
                   The order of the norm. Default: 2
@@ -409,7 +379,7 @@ class MetricProductSpace(ProductSpace, MetricSpace):
         return ('MetricProductSpace(' + ', '.join(
             str(space) for space in self.spaces) + ')')
 
-    class Vector(ProductSpace.Vector, MetricSpace.Vector):
+    class Vector(LinearProductSpace.Vector, MetricSpace.Vector):
         pass
 
 
@@ -427,6 +397,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     Parameters
     ----------
     spaces : NormedSpace instances
+        The factors of the product space
     kwargs : {'ord', 'weights'}
               'ord' : float, optional
                   The order of the norm. Default: 2
@@ -583,11 +554,11 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
 def powerspace(base, power, **kwargs):
     """ Creates a power space X^N = X x ... x X
 
-    A shorthand for ProductSpace(*([base] * power), **kwargs)
+    A shorthand for LinearProductSpace(*([base] * power), **kwargs)
 
     Returns
     -------
-    prodspace : ProductSpace instance
+    prodspace : LinearProductSpace instance
 
     Remark
     ------
@@ -596,10 +567,10 @@ def powerspace(base, power, **kwargs):
 
     See also
     --------
-    ProductSpace
+    LinearProductSpace
     """
 
-    return ProductSpace(*([base] * power), **kwargs)
+    return LinearProductSpace(*([base] * power), **kwargs)
 
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@ standard_library.install_aliases()
 class ProductTest(RLTestCase):
     def testRxR(self):
         H = RN(2)
-        HxH = ProductSpace(H, H)
+        HxH = LinearProductSpace(H, H)
         self.assertTrue(len(HxH) == 2)
 
         v1 = H.makeVector([1, 2])
@@ -50,7 +50,7 @@ class ProductTest(RLTestCase):
 
     def testLinComb(self):
         H = RN(2)
-        HxH = ProductSpace(H, H)
+        HxH = LinearProductSpace(H, H)
 
         v1 = H.makeVector([1, 2])
         v2 = H.makeVector([5, 3])
