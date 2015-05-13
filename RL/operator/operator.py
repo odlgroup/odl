@@ -35,9 +35,40 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
+class OperatorMeta(ABCMeta):
+    def __call__(cls, *args, **kwargs):
+        obj = ABCMeta.__call__(cls, *args, **kwargs)
+        if not hasattr(obj, 'domain'): 
+            raise NotImplementedError("'Operator' instances should have a 'domain' attribute")
+        if not hasattr(obj, 'range'): 
+            raise NotImplementedError("'Operator' instances should have a 'range' attribute")
+        return obj
 
-class Operator(with_metaclass(ABCMeta, object)):
+class Operator(with_metaclass(OperatorMeta, object)):
     """Abstract operator
+
+    A subclass of this has to have the attributes
+   
+    domain : AbstractSet
+            The set this operator takes values from
+
+    range : AbstractSet
+            The set this operator takes values in
+
+
+    It also needs to implement a method that evaluates the operator.
+
+    applyImpl(self, rhs, out)
+
+    Where the arguments are
+
+    rhs : domain element
+          The point the operator should be evaluated in.
+
+    out : range element
+          The result of the evaluation.
+
+
     """
 
     @abstractmethod
@@ -64,22 +95,6 @@ class Operator(with_metaclass(ABCMeta, object)):
         Returns
         -------
         None
-        """
-
-    @abstractproperty
-    def domain(self):
-        """Get the domain of the operator.
-
-        The domain of an operator is expected to derive from
-        RL.space.set.Set
-        """
-
-    @abstractproperty
-    def range(self):
-        """Get the range of the operator.
-
-        The range of an operator is expected to derive from
-        RL.space.set.Set
         """
 
     def getDerivative(self, point):
