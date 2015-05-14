@@ -78,35 +78,43 @@ class ProductTest(RLTestCase):
         v22 = H.makeVector([8, 9])
 
         # 0-norm
-        HxH = MetricProductSpace(H, H, ord=0.0)
+        HxH = MetricProductSpace(H, H, prod_norm=0.0)
         w1 = HxH.makeVector(v11, v12)
         w2 = HxH.makeVector(v21, v22)
         self.assertAlmostEquals(w1.dist(w2), 1)  # One term is equal
 
         # 1-norm
-        HxH = MetricProductSpace(H, H, ord=1.0)
+        HxH = MetricProductSpace(H, H, prod_norm=1.0)
         w1 = HxH.makeVector(v11, v12)
         w2 = HxH.makeVector(v21, v22)
         self.assertAlmostEquals(w1.dist(w2), v11.dist(v21)+v12.dist(v22))
 
         # 2-norm
-        HxH = MetricProductSpace(H, H, ord=2.0)
+        HxH = MetricProductSpace(H, H, prod_norm=2.0)
         w1 = HxH.makeVector(v11, v12)
         w2 = HxH.makeVector(v21, v22)
         self.assertAlmostEquals(
             w1.dist(w2), (v11.dist(v21)**2+v12.dist(v22)**2)**(1/2.0))
 
         # -inf norm
-        HxH = MetricProductSpace(H, H, ord=-float('inf'))
+        HxH = MetricProductSpace(H, H, prod_norm=-float('inf'))
         w1 = HxH.makeVector(v11, v12)
         w2 = HxH.makeVector(v21, v22)
         self.assertAlmostEquals(w1.dist(w2), min(v11.dist(v21), v12.dist(v22)))
 
         # inf norm
-        HxH = MetricProductSpace(H, H, ord=float('inf'))
+        HxH = MetricProductSpace(H, H, prod_norm=float('inf'))
         w1 = HxH.makeVector(v11, v12)
         w2 = HxH.makeVector(v21, v22)
         self.assertAlmostEquals(w1.dist(w2), max(v11.dist(v21), v12.dist(v22)))
+
+        # Custom norm
+        def my_norm(x):
+            return np.sum(x)  # Same as 1-norm
+        HxH = MetricProductSpace(H, H, prod_norm=my_norm)
+        w1 = HxH.makeVector(v11, v12)
+        w2 = HxH.makeVector(v21, v22)
+        self.assertAlmostEquals(w1.dist(w2), v11.dist(v21) + v12.dist(v22))
 
     def testNorm(self):
         H = EuclideanSpace(2)
@@ -114,29 +122,36 @@ class ProductTest(RLTestCase):
         v2 = H.makeVector([5, 3])
 
         # 0-norm
-        HxH = NormedProductSpace(H, H, ord=0.0)
+        HxH = NormedProductSpace(H, H, prod_norm=0.0)
         w = HxH.makeVector(v1, v2)
         self.assertAlmostEquals(w.norm(), 2)  # No term is nonzero
 
         # 1-norm
-        HxH = NormedProductSpace(H, H, ord=1.0)
+        HxH = NormedProductSpace(H, H, prod_norm=1.0)
         w = HxH.makeVector(v1, v2)
         self.assertAlmostEquals(w.norm(), v1.norm()+v2.norm())
 
         # 2-norm
-        HxH = NormedProductSpace(H, H, ord=2.0)
+        HxH = NormedProductSpace(H, H, prod_norm=2.0)
         w = HxH.makeVector(v1, v2)
         self.assertAlmostEquals(w.norm(), (v1.norm()**2+v2.norm()**2)**(1/2.0))
 
         # -inf norm
-        HxH = NormedProductSpace(H, H, ord=-float('inf'))
+        HxH = NormedProductSpace(H, H, prod_norm=-float('inf'))
         w = HxH.makeVector(v1, v2)
         self.assertAlmostEquals(w.norm(), min(v1.norm(), v2.norm()))
 
         # inf norm
-        HxH = NormedProductSpace(H, H, ord=float('inf'))
+        HxH = NormedProductSpace(H, H, prod_norm=float('inf'))
         w = HxH.makeVector(v1, v2)
         self.assertAlmostEquals(w.norm(), max(v1.norm(), v2.norm()))
+
+        # Custom norm
+        def my_norm(x):
+            return np.sum(x)  # Same as 1-norm
+        HxH = NormedProductSpace(H, H, prod_norm=my_norm)
+        w = HxH.makeVector(v1, v2)
+        self.assertAlmostEquals(w.norm(), v1.norm() + v2.norm())
 
 
 class PowerTest(RLTestCase):

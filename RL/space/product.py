@@ -27,6 +27,7 @@ from future import standard_library
 
 # External
 import numpy as np
+from functools import partial
 
 # RL imports
 from RL.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
@@ -206,6 +207,7 @@ class LinearProductSpace(LinearSpace):
 
         Example
         -------
+        >>> from RL.space.euclidean import RN
         >>> r2, r3 = RN(2), RN(3)
         >>> prod = LinearProductSpace(r2, r3)
         >>> x2 = r2.makeVector([1, 2])
@@ -276,27 +278,34 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     ----------
     spaces : MetricSpace instances
         The factors of the product space
-    kwargs : {'ord', 'weights'}
-              'ord' : float, optional
-                  The order of the norm. Default: 2
+    kwargs : {'prod_norm', 'weights'}
+              'prod_norm' : float or callable, optional
+                  If a float is given, it defines the order of the
+                  RN norm applied to the tuple of distances.
+                  If a function is given, it is applied to the tuple
+                  of distances instead of the RN norm.
+                  Default: 2.0
               'weights' : array-like, optional
                   Array of weights, same size as number of space
-                  components.  All weights must be positive.
-                  Default: (1,...,1)
+                  components. All weights must be positive. It is
+                  multiplied with the tuple of distances before
+                  applying the RN norm or 'prod_norm'.
+                  Default: (1.0,...,1.0)
 
-    The following values for `ord` can be specified.
-    Note that any value of ord < 1 only gives a pseudonorm
+    The following float values for `prod_norm` can be specified.
+    Note that any value of ord < 1 only gives a pseudonorm.
 
-    =====  ==========================
-    ord    Distance Definition [z = (dist(x[0], y[0]),...,\
-     dist(x[n-1], y[n-1]))]
-    =====  ==========================
-    inf    max(z)
-    -inf   min(z)
-    0      sum(z != 0)
-    other  sum(z**ord)**(1/ord) -- unweighted\n
-           sum(w * z**ord)**(1/ord) -- weighted
-    =====  ==========================
+    =========  ==========================
+    prod_norm    Distance Definition
+    =========  ==========================
+    'inf'       max(w * z)
+    '-inf'      min(w * z)
+    0           sum(w * z != 0)
+    other       sum(w * z**ord)**(1/ord)
+    =========  ==========================
+
+    Here, z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1])) and
+    w = weights.
 
     Returns
     -------
@@ -306,7 +315,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     --------
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-    >>> r2x3 = MetricProductSpace(r2, r3, ord=float('inf'))
+    >>> r2x3 = MetricProductSpace(r2, r3, prod_norm='inf')
     >>> x_2 = r2.makeVector([2.0, 3.5])
     >>> y_2 = r2.makeVector([2.0, 3.5])
     >>> x_3 = r3.makeVector([-0.3, 2.0, 3.5])
@@ -340,32 +349,22 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         else:
             weights = np.ones(len(spaces))
 
-        self.ord = float(kwargs.get('ord', 2))
+        prod_norm = kwargs.get('prod_norm', 2.0)
+        if callable(prod_norm):
+            self.prod_norm = prod_norm
+        else:
+            order = float(prod_norm)
+            self.prod_norm = partial(np.linalg.norm, ord=order)
+
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def distImpl(self, x, y):
-        if self.ord == float('inf'):
-            return max(
-                spc.distImpl(xp, yp) * w
-                for spc, w, xp, yp in zip(self.spaces, self.weights,
-                                          x.parts, y.parts))
-        elif self.ord == -float('inf'):
-            return min(
-                spc.distImpl(xp, yp) * w
-                for spc, w, xp, yp in zip(self.spaces, self.weights,
-                                          x.parts, y.parts))
-        elif self.ord == 0:
-            return sum(
-                spc.distImpl(xp, yp) != 0
-                for spc, xp, yp in zip(self.spaces, x.parts, y.parts))
-
-        else:
-            return sum(
-                spc.distImpl(xp, yp)**self.ord * w
-                for spc, w, xp, yp in zip(self.spaces, self.weights,
-                                          x.parts, y.parts)
-                )**(1/self.ord)
+        dists = np.array(
+            [spc.distImpl(xp, yp) * w
+             for spc, w, xp, yp in zip(self.spaces, self.weights,
+                                       x.parts, y.parts)])
+        return self.prod_norm(dists)
 
     def __repr__(self):
         return ('MetricProductSpace(' + ', '.join(
@@ -388,28 +387,33 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
     Parameters
     ----------
-    spaces : NormedSpace instances
-        The factors of the product space
-    kwargs : {'ord', 'weights'}
-              'ord' : float, optional
-                  The order of the norm. Default: 2
+    kwargs : {'prod_norm', 'weights'}
+              'prod_norm' : float or callable, optional
+                  If a float is given, it defines the order of the
+                  RN norm applied to the tuple of norms.
+                  If a function is given, it is applied to the tuple
+                  of norms instead of the RN norm.
+                  Default: 2.0
               'weights' : array-like, optional
                   Array of weights, same size as number of space
-                  components. All weights must be positive.
-                  Default: (1,...,1)
+                  components. All weights must be positive. It is
+                  multiplied with the tuple of norms before
+                  applying the RN norm or 'prod_norm'.
+                  Default: (1.0,...,1.0)
 
-    The following values for 'ord' can be specified.
-    Note that any value of ord < 1 only gives a pseudonorm
+    The following float values for `prod_norm` can be specified.
+    Note that any value of ord < 1 only gives a pseudonorm.
 
-    =====  ==========================
-    ord    Norm Definition [z = (norm(x[0]),..., norm(x[n-1]))]
-    =====  ==========================
-    inf    max(z)
-    -inf   min(z)
-    0      sum(z != 0)
-    other  sum(z**ord)**(1/ord) -- unweighted\n
-           sum(w * z**ord)**(1/ord) -- weighted
-    =====  ==========================
+    =========  ==========================
+    prod_norm    Product Norm Definition
+    =========  ==========================
+    'inf'       max(w * z)
+    '-inf'      min(w * z)
+    0           sum(w * z != 0)
+    other       sum(w * z**ord)**(1/ord)
+    =========  ==========================
+
+    Here, z = (x[0].norm(),..., x[n-1].norm()) and w = weights.
 
     Returns
     -------
@@ -419,7 +423,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     --------
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-    >>> r2x3 = NormedProductSpace(r2, r3, ord=float('inf'))
+    >>> r2x3 = NormedProductSpace(r2, r3, prod_norm='inf')
     >>> x_2 = r2.makeVector([2.0, 3.5])
     >>> x_3 = r3.makeVector([-0.3, 2.0, 3.5])
     >>> x = r2x3.makeVector(x_2, x_3)
@@ -452,28 +456,21 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
         else:
             weights = np.ones(len(spaces))
 
-        self.ord = float(kwargs.get('ord', 2))
+        prod_norm = kwargs.get('prod_norm', 2.0)
+        if callable(prod_norm):
+            self.prod_norm = prod_norm
+        else:
+            order = float(prod_norm)
+            self.prod_norm = partial(np.linalg.norm, ord=order)
+
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def normImpl(self, x):
-        if self.ord == float('inf'):
-            return max(spc.normImpl(xp) * w
-                       for spc, w, xp in zip(self.spaces, self.weights,
-                                             x.parts))
-        elif self.ord == -float('inf'):
-            return min(spc.normImpl(xp) * w
-                       for spc, w, xp in zip(self.spaces, self.weights,
-                                             x.parts))
-        elif self.ord == 0:
-            return sum(space.normImpl(xp) != 0
-                       for space, xp in zip(self.spaces, x.parts))
-        if self.weights is not None:
-            return sum(
-                spc.normImpl(xp)**self.ord * w
-                for spc, w, xp in zip(self.spaces, self.weights,
-                                      x.parts)
-                )**(1/self.ord)
+        norms = np.array(
+            [spc.normImpl(xp) * w
+             for spc, w, xp in zip(self.spaces, self.weights, x.parts)])
+        return self.prod_norm(norms)
 
     def __repr__(self):
         return ('NormedProductSpace(' + ', '.join(
@@ -503,7 +500,7 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
               'weights' : array-like, optional
                   Array of weights, same size as number of space
                   components. All weights must be positive.
-                  Default: (1,...,1)
+                  Default: (1.0,...,1.0)
 
     Returns
     -------
