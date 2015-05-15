@@ -351,8 +351,22 @@ class RN(LinearSpace):
         """
 
         def __init__(self, space, values):
+            if not isinstance(values, np.ndarray):
+                raise TypeError(errfmt('''
+                'values' ({}) must be a numpy.ndarray
+                '''.format(type(values))))
+
+            if values.dtype != np.float64:
+                raise TypeError(errfmt('''
+                type('values') ({}) must be numpy.float64
+                '''.format(values.dtype)))
+
             super().__init__(space)
-            self.values = np.atleast_1d(values).astype(np.float64)
+            self._values = values
+
+        @property
+        def values(self):
+            return self._values
 
         def __str__(self):
             return str(self.values)
