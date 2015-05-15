@@ -32,11 +32,10 @@ except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, super
 from future import standard_library
 
-from math import sqrt
-
 # External module imports
 import numpy
 from scipy.lib.blas import get_blas_funcs
+from numbers import Integral
 
 # RL imports
 from RL.space.space import *
@@ -353,7 +352,7 @@ class RN(LinearSpace):
 
         def __init__(self, space, values):
             super().__init__(space)
-            self.values = values
+            self.values = np.atleast_1d(values).astype(np.float64)
 
         def __str__(self):
             return str(self.values)
@@ -436,6 +435,7 @@ class RN(LinearSpace):
 
             return self.values.__setitem__(index, value)
 
+
 class NormedRN(RN, NormedSpace):
     """ The real space R^n with the p-norm.
 
@@ -450,7 +450,7 @@ class NormedRN(RN, NormedSpace):
     Notes
     -----
 
-    The following values for `ord` can be specified. 
+    The following values for `ord` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm.
 
     =====  ====================================================
@@ -462,7 +462,7 @@ class NormedRN(RN, NormedSpace):
     other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
     =====  ====================================================
     """
-    
+
     def __init__(self, n, ord=None):
         self.ord = ord if ord is not None else 2
 
@@ -502,11 +502,12 @@ class NormedRN(RN, NormedSpace):
 
         """
 
-        #Use numpy norm
+        # Use numpy norm
         return np.linalg.norm(vector.values, ord=self.ord)
 
     class Vector(RN.Vector, NormedSpace.Vector):
         pass
+
 
 class EuclideanSpace(RN, HilbertSpace, Algebra):
     """The real space R^n with the usual inner product.
@@ -521,8 +522,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
     def __init__(self, n):
         super().__init__(n)
 
-        self._dot, self._nrm2 = get_blas_funcs(['dot',
-                                                'nrm2'])
+        self._dot, self._nrm2 = get_blas_funcs(['dot', 'nrm2'])
 
     def normImpl(self, x):
         """ Calculates the norm of a vector.
@@ -550,7 +550,8 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         5.0
 
         """
-        return float(self._nrm2(x.values)) #TODO: nrm2 seems slow compared to dot
+        # TODO: nrm2 seems slow compared to dot
+        return float(self._nrm2(x.values))
 
     def innerImpl(self, x, y):
         """ Calculates the inner product of two vectors
@@ -614,7 +615,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         >>> y
         EuclideanSpace(3).makeVector([ 5.,  6.,  6.])
         """
-        y.values[:] = x.values*y.values
+        y.values[:] = x.values * y.values
 
     def __repr__(self):
         return 'EuclideanSpace(' + str(self.n) + ')'

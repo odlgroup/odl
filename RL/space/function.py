@@ -54,7 +54,7 @@ class FunctionSpace(Algebra):
 
     def __init__(self, domain, field=None):
         if not isinstance(domain, Set):
-            raise TypeError("domain ({}) is not a set".format(domain))
+            raise TypeError("domain ({}) is not a Set instance".format(domain))
 
         self.domain = domain
         self._field = field if field is not None else RealNumbers()
@@ -68,7 +68,7 @@ class FunctionSpace(Algebra):
 
     def multiplyImpl(self, x, y):
         """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
-        
+
         The created object is rather slow, and should only be used for testing purposes.
         """
         return self.makeVector(lambda *args: x(*args)*y(*args))
@@ -114,7 +114,7 @@ class FunctionSpace(Algebra):
         --------
 
         >>> R = RealNumbers()
-        >>> space = FunctionSpace(R, R) 
+        >>> space = FunctionSpace(R, R)
         >>> x = space.makeVector(lambda t: t**2)
         >>> x(1)
         1.0
@@ -139,13 +139,15 @@ class FunctionSpace(Algebra):
         ----------
 
         space : FunctionSpace
-                Instance of FunctionSpace this vector lives in
-        values : Function from space.domain to space.field
-                 The function that should be converted/reinterpreted as a vector.
+            Instance of FunctionSpace this vector lives in
+        function : Function from space.domain to space.field
+            The function that should be converted/reinterpreted as a vector.
         """
 
         def __init__(self, space, function):
             super().__init__(space)
+            if not callable(function):
+                raise TypeError("'function' is not callable")
             self.function = function
 
         def applyImpl(self, rhs):
