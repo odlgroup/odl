@@ -353,17 +353,23 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         if callable(prod_norm):
             self.prod_norm = prod_norm
         else:
-            order = float(prod_norm)
+            try:
+                order = float(prod_norm)
+            except TypeError:
+                raise TypeError(errfmt('''
+                'prod_norm' must be either callable or convertible to
+                float'''))
             self.prod_norm = partial(np.linalg.norm, ord=order)
 
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def distImpl(self, x, y):
-        dists = np.array(
-            [spc.distImpl(xp, yp) * w
-             for spc, w, xp, yp in zip(self.spaces, self.weights,
-                                       x.parts, y.parts)])
+        dists = np.fromiter((
+            spc.distImpl(xp, yp) * w
+            for spc, w, xp, yp in zip(self.spaces, self.weights,
+                                      x.parts, y.parts)),
+            dtype=np.float, count=self._nfactors)
         return self.prod_norm(dists)
 
     def __repr__(self):
@@ -460,16 +466,22 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
         if callable(prod_norm):
             self.prod_norm = prod_norm
         else:
-            order = float(prod_norm)
+            try:
+                order = float(prod_norm)
+            except TypeError:
+                raise TypeError(errfmt('''
+                'prod_norm' must be either callable or convertible to
+                float'''))
             self.prod_norm = partial(np.linalg.norm, ord=order)
 
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def normImpl(self, x):
-        norms = np.array(
-            [spc.normImpl(xp) * w
-             for spc, w, xp in zip(self.spaces, self.weights, x.parts)])
+        norms = np.fromiter((
+            spc.normImpl(xp) * w
+            for spc, w, xp in zip(self.spaces, self.weights, x.parts)),
+            dtype=np.float, count=self._nfactors)
         return self.prod_norm(norms)
 
     def __repr__(self):
