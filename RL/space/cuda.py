@@ -434,7 +434,11 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                 return TypeError(errfmt('''
                 'values' ({}) must be a CudaRNVectorImpl instance
                 '''.format(values)))
-            self.values = values
+            self._values = values
+
+        @property
+        def values(self):
+            return self._values
 
         def __str__(self):
             return str(self[:])
