@@ -91,7 +91,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         20.0
         """
 
-        return self.impl.inner(x.values, y.values)
+        return self.impl.inner(x.data, y.data)
 
     def normImpl(self, x):
         """ Calculates the 2-norm of x
@@ -121,7 +121,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return sqrt(self.impl.normSq(x.values))
+        return sqrt(self.impl.normSq(x.data))
 
     def linCombImpl(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -155,7 +155,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> z
         CudaRN(3).makeVector([ 14.,  19.,  24.])
         """
-        self.impl.linComb(z.values, a, x.values, b, y.values)
+        self.impl.linComb(z.data, a, x.data, b, y.data)
 
     def multiplyImpl(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -187,7 +187,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> y
         CudaRN(3).makeVector([ 5.,  6.,  6.])
         """
-        self.impl.multiply(x.values, y.values)
+        self.impl.multiply(x.data, y.data)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -381,40 +381,40 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     @property
     def abs(self):
         return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.abs(inp.values, outp.values),
+            lambda inp, outp: RLcpp.PyCuda.abs(inp.data, outp.data),
             input=(self, self))
 
     @property
     def sign(self):
         return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.sign(inp.values, outp.values),
+            lambda inp, outp: RLcpp.PyCuda.sign(inp.data, outp.data),
             input=(self, self))
 
     @property
     def addScalar(self):
         return fun.LambdaFunction(
-            lambda inp, scal, outp: RLcpp.PyCuda.addScalar(inp.values, scal,
-                                                           outp.values),
+            lambda inp, scal, outp: RLcpp.PyCuda.addScalar(inp.data, scal,
+                                                           outp.data),
             input=(self, self.field, self))
 
     @property
     def maxVectorScalar(self):
         return fun.LambdaFunction(
             lambda inp, scal, outp: RLcpp.PyCuda.maxVectorScalar(
-                inp.values, scal, outp.values),
+                inp.data, scal, outp.data),
             input=(self, self.field, self))
 
     @property
     def maxVectorVector(self):
         return fun.LambdaFunction(
             lambda inp1, inp2, outp: RLcpp.PyCuda.maxVectorVector(
-                inp1.values, inp2.values, outp.values),
+                inp1.data, inp2.data, outp.data),
             input=(self, self, self))
 
     @property
     def sum(self):
         return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.abs(inp.values),
+            lambda inp, outp: RLcpp.PyCuda.abs(inp.data),
             input=(self), returns=self.field)
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
@@ -425,20 +425,20 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         space : CudaRN
                 Instance of CudaRN this vector lives in
-        values : RLcpp.PyCuda.CudaRNVectorImpl
+        data : RLcpp.PyCuda.CudaRNVectorImpl
                     Underlying data-representation to be used by this vector
         """
-        def __init__(self, space, values):
+        def __init__(self, space, data):
             super().__init__(space)
-            if not isinstance(values, RLcpp.PyCuda.CudaRNVectorImpl):
+            if not isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
                 return TypeError(errfmt('''
-                'values' ({}) must be a CudaRNVectorImpl instance
-                '''.format(values)))
-            self._values = values
+                'data' ({}) must be a CudaRNVectorImpl instance
+                '''.format(data)))
+            self._data = data
 
         @property
-        def values(self):
-            return self._values
+        def data(self):
+            return self._data
 
         def __str__(self):
             return str(self[:])
@@ -505,9 +505,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
             """
             if isinstance(index, slice):
-                return self.values.getSlice(index)
+                return self.data.getSlice(index)
             else:
-                return self.values.__getitem__(index)
+                return self.data.__getitem__(index)
 
         def __setitem__(self, index, value):
             """ Set values of this vector
@@ -556,9 +556,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
                 value = value.astype(np.float64, copy=False)
 
-                self.values.setSlice(index, value)
+                self.data.setSlice(index, value)
             else:
-                self.values.__setitem__(index, value)
+                self.data.__setitem__(index, value)
 
 
 if __name__ == '__main__':
