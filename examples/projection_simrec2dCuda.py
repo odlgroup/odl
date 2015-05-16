@@ -52,7 +52,7 @@ class CudaProjection(OP.LinearOperator):
         self.forward.setData(data.impl.dataPtr())
         self.forward.project(self.sourcePosition, self.detectorOrigin, self.pixelDirection, out.impl.dataPtr())
 
-    def applyAdjointImpl(self, projection, out):        
+    def applyAdjointImpl(self, projection, out):
         self.back.backProject(self.sourcePosition, self.detectorOrigin, self.pixelDirection, projection.impl.dataPtr(), out.impl.dataPtr())
 
     @property
@@ -67,7 +67,7 @@ class CudaProjection(OP.LinearOperator):
 #Set geometry parameters
 volumeSize = np.array([20.0,20.0])
 volumeOrigin = -volumeSize/2.0
-        
+
 detectorSize = 50.0
 detectorOrigin = -detectorSize/2.0
 
@@ -78,7 +78,7 @@ detectorAxisDistance = 20.0
 nVoxels = np.array([500, 400])
 nPixels = 400
 nProjection = 500
-        
+
 #Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
@@ -92,7 +92,7 @@ y0 = np.array([-sin(theta), cos(theta)])
 sourcePosition = -sourceAxisDistance * x0
 detectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
 pixelDirection = y0 * pixelSize
-    
+
 dataSpace = fs.L2(sets.Interval(0,1))
 dataRN = cs.CudaRN(nPixels)
 dataDisc = dd.makeUniformDiscretization(dataSpace, dataRN)
@@ -104,17 +104,17 @@ reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
 plt.imshow(phantom)
-phantomVec = reconDisc.makeVector(phantom)
-        
+phantomVec = reconDisc.element(phantom)
+
 projector = CudaProjection(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, sourcePosition, detectorOrigin, pixelDirection, reconDisc, dataDisc)
 
-result = dataDisc.empty()
+result = dataDisc.element()
 projector.apply(phantomVec,result)
 
 plt.figure()
 plt.plot(result[:])
 
-backprojected = reconDisc.empty()
+backprojected = reconDisc.element()
 projector.applyAdjoint(result,backprojected)
 
 plt.figure()

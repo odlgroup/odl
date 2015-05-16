@@ -138,7 +138,7 @@ reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
-phantomVec = reconDisc.makeVector(phantom)
+phantomVec = reconDisc.element(phantom)
 
 #Make the operator
 projector = Projector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)

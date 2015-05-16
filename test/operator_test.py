@@ -79,7 +79,7 @@ class TestRN(RLTestCase):
         A = np.random.rand(4, 3)
         x = np.random.rand(3)
         Aop = MultiplyAndSquareOp(A)
-        xvec = Aop.domain.makeVector(x)
+        xvec = Aop.domain.element(x)
 
         self.assertAllAlmostEquals(Aop(xvec), opNumpy(A, x))
 
@@ -91,7 +91,7 @@ class TestRN(RLTestCase):
 
         Aop = MultiplyAndSquareOp(A)
         Bop = MultiplyAndSquareOp(B)
-        xvec = Aop.domain.makeVector(x)
+        xvec = Aop.domain.element(x)
 
         # Explicit instantiation
         C = op.OperatorSum(Aop, Bop)
@@ -113,7 +113,7 @@ class TestRN(RLTestCase):
         x = np.random.rand(3)
 
         Aop = MultiplyAndSquareOp(A)
-        xvec = Aop.domain.makeVector(x)
+        xvec = Aop.domain.element(x)
 
         # Test a range of scalars (scalar multiplication could implement
         # optimizations for (-1, 0, 1)).
@@ -155,7 +155,7 @@ class TestRN(RLTestCase):
 
         Aop = MultiplyAndSquareOp(A)
         Bop = MultiplyAndSquareOp(B)
-        xvec = Bop.domain.makeVector(x)
+        xvec = Bop.domain.element(x)
 
         C = op.OperatorComposition(Aop, Bop)
 

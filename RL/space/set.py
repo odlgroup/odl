@@ -30,6 +30,7 @@ from future import standard_library
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
+from numpy import int32, float64, complex128
 
 # RL imports
 from RL.utility.utility import errfmt
@@ -51,13 +52,10 @@ class Set(with_metaclass(ABCMeta, object)):
         """ Test if other is a member of self
         """
 
-    # Implicitly default implemented methods
-    def __contains__(self, other):
-        """ Magic method for:
-
-        other in self
+    @abstractmethod
+    def element(self):
+        """ Return some (arbitrary) element
         """
-        return self.contains(other)
 
     def __eq__(self, other):
         return self.equals(other)
@@ -78,6 +76,9 @@ class EmptySet(Set):
     def contains(self, other):
         return other is None
 
+    def element(self):
+        return None
+
     def __str__(self):
         return "EmptySet"
 
@@ -94,6 +95,9 @@ class ComplexNumbers(Set):
 
     def contains(self, other):
         return isinstance(other, Complex)
+
+    def element(self, value=0):
+        return complex128(value)
 
     def __str__(self):
         return "ComplexNumbers"
@@ -112,6 +116,9 @@ class RealNumbers(Set):
     def contains(self, other):
         return isinstance(other, Real)
 
+    def element(self, value=0):
+        return float64(value)
+
     def __str__(self):
         return "RealNumbers"
 
@@ -128,6 +135,9 @@ class Integers(Set):
 
     def contains(self, other):
         return isinstance(other, Integral)
+
+    def element(self, value=0):
+        return int32(value)
 
     def __str__(self):
         return "Integers"
@@ -162,8 +172,8 @@ class IntervProd(Set):
         IntervProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
 
-        begin = np.atleast_1d(begin).astype(np.float)
-        end = np.atleast_1d(end).astype(np.float)
+        begin = np.atleast_1d(begin).astype(float64)
+        end = np.atleast_1d(end).astype(float64)
 
         if len(begin) != len(end):
             raise ValueError(errfmt('''
@@ -178,10 +188,10 @@ class IntervProd(Set):
 
         self._begin = begin
         self._end = end
+        self._ideg = np.where(self._begin == self._end)[0]
         self._inondeg = np.where(self._begin != self._end)[0]
 
     # Basic properties
-    # TODO: setters?
     @property
     def begin(self):
         return self._begin[0] if self.dim == 1 else self._begin
@@ -201,6 +211,13 @@ class IntervProd(Set):
     @property
     def volume(self):
         return self.measure(dim=self.dim)
+
+    def element(self):
+        """ Return some element (the midpoint)
+        """
+        midp = (self._end - self._begin) / 2.
+        midp[self._ideg] = self._begin[self._ideg]
+        return midp[0] if self.dim == 1 else midp
 
     # Overrides of the abstract base class methods
     def equals(self, other, tol=0.0):
@@ -340,6 +357,7 @@ class IntervProd(Set):
         4
         """
 
+        # TODO: Apply same principle as in MetricProductSpace?
         point = np.atleast_1d(point)
         if len(point) != self.dim:
             raise ValueError(errfmt('''

@@ -83,8 +83,8 @@ def landweber(operator, x, rhs, iterations=1, omega=1, partialResults=None):
     """
 
     # Reusable temporaries
-    tmpRan = operator.range.empty()
-    tmpDom = operator.domain.empty()
+    tmpRan = operator.range.element()
+    tmpDom = operator.domain.element()
 
     for _ in range(iterations):
         operator.apply(x, tmpRan)                               # tmpRan = Ax
@@ -103,7 +103,7 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
     d.linComb(1, rhs, -1, d)       # d = rhs - A x
     p = operator.T(d)
     s = p.copy()
-    q = operator.range.empty()
+    q = operator.range.element()
     normsOld = s.norm()**2           # Only recalculate norm after update
 
     for _ in range(iterations):
@@ -147,10 +147,10 @@ def gaussNewton(operator, x, rhs, iterations=1,
     I = IdentityOperator(operator.domain)
     dx = x.space.zero()
 
-    tmpDom = operator.domain.empty()
-    u = operator.domain.empty()
-    tmpRan = operator.range.empty()
-    v = operator.range.empty()
+    tmpDom = operator.domain.element()
+    u = operator.domain.element()
+    tmpRan = operator.range.element()
+    v = operator.range.element()
 
     for m in range(iterations):
         tm = next(zeroSequence)

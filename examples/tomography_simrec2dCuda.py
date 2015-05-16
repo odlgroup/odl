@@ -90,7 +90,7 @@ class CudaProjector(OP.LinearOperator):
 #Set geometry parameters
 volumeSize = np.array([20.0,20.0])
 volumeOrigin = -volumeSize/2.0
-        
+
 detectorSize = 50.0
 detectorOrigin = -detectorSize/2.0
 
@@ -101,7 +101,7 @@ detectorAxisDistance = 20.0
 nVoxels = np.array([500, 500])
 nPixels = 4000
 nProjection = 1000
-        
+
 #Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
@@ -117,7 +117,7 @@ for theta in np.linspace(0, 2*pi, nProjection):
     projDetectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
     projPixelDirection = y0 * pixelSize
     geometries.append(ProjectionGeometry(projSourcePosition, projDetectorOrigin, projPixelDirection))
-    
+
 #Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
 projectionRN = cs.CudaRN(nPixels)
@@ -137,7 +137,7 @@ reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
-phantomVec = reconDisc.makeVector(phantom)
+phantomVec = reconDisc.element(phantom)
 
 #Make the operator
 projector = CudaProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
@@ -162,6 +162,6 @@ x = reconDisc.zero()
 #solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, partialResults=solvers.forEachPartial(plotResult))
 solvers.landweber(projector, x, projections, 100, omega=0.4/normEst, partialResults=solvers.printIterationPartial())
 #solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
-        
+
 plt.imshow(x[:].reshape(nVoxels))
 plt.show()

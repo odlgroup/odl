@@ -24,6 +24,7 @@ from future import standard_library
 # External module imports
 import unittest
 import math
+from numpy import float64
 
 # RL imports
 from RL.operator.operator import *
@@ -40,7 +41,7 @@ standard_library.install_aliases()
 class TestInit(RLTestCase):
     def testEmpty(self):
         R = CudaRN(3)
-        x = R.empty()
+        x = R.element()
         # Nothing to test, simply check that code runs
 
     def testZero(self):
@@ -49,22 +50,22 @@ class TestInit(RLTestCase):
 
     def testListInit(self):
         R = CudaRN(3)
-        x = R.makeVector([1, 2, 3])
+        x = R.element([1, 2, 3])
         self.assertAllAlmostEquals(x, [1, 2, 3])
 
     def testNPInit(self):
         R = CudaRN(3)
 
         x0 = np.array([1., 2., 3.])
-        x = R.makeVector(x0)
+        x = R.element(x0)
         self.assertAllAlmostEquals(x, x0)
 
-        x0 = np.array([1, 2, 3], dtype=float)
-        x = R.makeVector(x0)
+        x0 = np.array([1, 2, 3], dtype=float64)
+        x = R.element(x0)
         self.assertAllAlmostEquals(x, x0)
 
         x0 = np.array([1, 2, 3], dtype=int)
-        x = R.makeVector(x0)
+        x = R.element(x0)
         self.assertAllAlmostEquals(x, x0)
 
 
@@ -72,7 +73,7 @@ class TestAccessors(RLTestCase):
     def testGetItem(self):
         R3d = CudaRN(3)
         y = [1, 2, 3]
-        x = R3d.makeVector(y)
+        x = R3d.element(y)
 
         for index in [0, 1, 2, -1, -2, -3]:
             self.assertAlmostEquals(x[index], y[index])
@@ -80,13 +81,13 @@ class TestAccessors(RLTestCase):
     def testIterator(self):
         R3d = CudaRN(3)
         y = [1, 2, 3]
-        x = R3d.makeVector(y)
+        x = R3d.element(y)
 
         self.assertAlmostEquals([a for a in x], [b for b in y])
 
     def testGetExceptions(self):
         R3d = CudaRN(3)
-        x = R3d.makeVector([1, 2, 3])
+        x = R3d.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
             result = x[-4]
@@ -96,7 +97,7 @@ class TestAccessors(RLTestCase):
 
     def testSetItem(self):
         R3d = CudaRN(3)
-        x = R3d.makeVector([42,42,42])
+        x = R3d.element([42,42,42])
 
         for index in [0, 1, 2, -1, -2, -3]:
             x[index] = index
@@ -104,7 +105,7 @@ class TestAccessors(RLTestCase):
 
     def testSetItemOutOfBounds(self):
         R3d = CudaRN(3)
-        x = R3d.makeVector([1, 2, 3])
+        x = R3d.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
             x[-4] = 0
@@ -116,7 +117,7 @@ class TestAccessors(RLTestCase):
         # Validate get against python list behaviour
         R6d = CudaRN(6)
         y = [0, 1, 2, 3, 4, 5]
-        x = R6d.makeVector(y)
+        x = R6d.element(y)
 
         self.assertAllAlmostEquals(x[slice], y[slice])
 
@@ -133,7 +134,7 @@ class TestAccessors(RLTestCase):
 
     def testGetSliceExceptions(self):
         R3d = CudaRN(3)
-        xd = R3d.makeVector([1, 2, 3])
+        xd = R3d.element([1, 2, 3])
 
         #Bad slice
         with self.assertRaises(IndexError):
@@ -144,7 +145,7 @@ class TestAccessors(RLTestCase):
         R6d = CudaRN(6)
         z = [7, 8, 9, 10, 11, 10]
         y = [0, 1, 2, 3, 4, 5]
-        x = R6d.makeVector(y)
+        x = R6d.element(y)
 
         x[slice] = z[slice]
         y[slice] = z[slice]
@@ -163,7 +164,7 @@ class TestAccessors(RLTestCase):
 
     def testSetSliceExceptions(self):
         R3d = CudaRN(3)
-        xd = R3d.makeVector([1, 2, 3])
+        xd = R3d.element([1, 2, 3])
 
         #Bad slice
         with self.assertRaises(IndexError):
@@ -183,11 +184,11 @@ class TestAccessors(RLTestCase):
 class TestFunctions(RLTestCase):
     def testNorm(self):
         R3d = CudaRN(3)
-        xd = R3d.makeVector([1, 2, 3])
+        xd = R3d.element([1, 2, 3])
 
         correct_norm_squared = 1**2 + 2**2 + 3**2
         correct_norm = math.sqrt(correct_norm_squared)
-        
+
         #Space function
         self.assertAlmostEquals(R3d.norm(xd), correct_norm)
 
@@ -196,23 +197,23 @@ class TestFunctions(RLTestCase):
 
     def testInner(self):
         R3d = CudaRN(3)
-        xd = R3d.makeVector([1, 2, 3])
-        yd = R3d.makeVector([5, 3, 9])
+        xd = R3d.element([1, 2, 3])
+        yd = R3d.element([5, 3, 9])
 
         correct_inner = 1*5 + 2*3 + 3*9
-        
+
         #Space function
         self.assertAlmostEquals(R3d.inner(xd,yd), correct_inner)
 
         #Member function
         self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
-    def makeVectors(self, rn):
+    def elements(self, rn):
         # Generate numpy vectors
         x, y, z = np.random.rand(rn.n), np.random.rand(rn.n), np.random.rand(rn.n)
 
         # Make rn vectors
-        xVec, yVec, zVec = rn.makeVector(x), rn.makeVector(y), rn.makeVector(z)
+        xVec, yVec, zVec = rn.element(x), rn.element(y), rn.element(z)
 
         return x, y, z, xVec, yVec, zVec
 
@@ -222,35 +223,35 @@ class TestFunctions(RLTestCase):
         rn = CudaRN(n)
 
         # Unaliased arguments
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*y
         rn.linComb(zVec, a, xVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
 
         # First argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*z + b*y
         rn.linComb(zVec, a, zVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
 
         # Second argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*z
         rn.linComb(zVec, a, xVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
 
         # Both arguments aliased with each other
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*x
         rn.linComb(zVec, a, xVec, b, xVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
 
         # All aliased
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
         z[:] = a*z + b*z
         rn.linComb(zVec, a, zVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
@@ -271,8 +272,8 @@ class TestFunctions(RLTestCase):
         xHost = np.random.rand(n)
 
         R3d = CudaRN(n)
-        yDevice = R3d.makeVector(yHost)
-        xDevice = R3d.makeVector(xHost)
+        yDevice = R3d.element(yHost)
+        xDevice = R3d.element(xHost)
 
         # Host side calculation
         yHost[:] = a*xHost
@@ -295,8 +296,8 @@ class TestFunctions(RLTestCase):
         xHost = np.random.rand(n)
 
         R3d = CudaRN(n)
-        yDevice = R3d.makeVector(yHost)
-        xDevice = R3d.makeVector(xHost)
+        yDevice = R3d.element(yHost)
+        xDevice = R3d.element(xHost)
 
         # Host side calculation
         yHost[:] = xHost*yHost
@@ -315,8 +316,8 @@ class TestFunctions(RLTestCase):
         xHost = np.random.rand(n)
 
         R3d = CudaRN(n)
-        yDevice = R3d.makeVector(yHost)
-        xDevice = R3d.makeVector(xHost)
+        yDevice = R3d.element(yHost)
+        xDevice = R3d.element(xHost)
 
         # Host side calculation
         yHost[:] = xHost*yHost
@@ -331,14 +332,14 @@ class TestFunctions(RLTestCase):
 class TestConvenience(RLTestCase):
     def testAddition(self):
         R3d = CudaRN(3)
-        xd = R3d.makeVector([1, 2, 3])
-        yd = R3d.makeVector([5, 3, 7])
+        xd = R3d.element([1, 2, 3])
+        yd = R3d.element([5, 3, 7])
 
         self.assertAllAlmostEquals(xd + yd, [6, 5, 10])
 
     def testScalarMult(self):
         R3d = CudaRN(3)
-        xd = R3d.makeVector([1, 2, 3])
+        xd = R3d.element([1, 2, 3])
         C = 5
 
         self.assertAllAlmostEquals(C*xd, [5, 10, 15])

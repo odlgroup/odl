@@ -29,6 +29,7 @@ from future import standard_library
 # External module imports
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
+from numpy import float64
 
 # RL imports
 from RL.space.set import Set
@@ -98,7 +99,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Constructing Elements
     ~~~~~~~~~~~~~~~~~~~~~
-    RL also requires the existence of an `empty()` method. This method
+    RL also requires the existence of an `element()` method. This method
     can be used to construct a vector in the space, which may be
     assigned to.
 
@@ -110,7 +111,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Is the same as
 
-    x = space.empty()
+    x = space.element()
     space.linComb(x, 0, x, 0, x)
     ``
 
@@ -134,20 +135,21 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     """
 
     @abstractmethod
-    def empty(self):
-        """ Create an empty vector (of undefined state)
+    def element(self, data=None):
+        """ Create an arbitrary element or an element from given data
 
-        An empty vector may be any vector in this space.
-        No guarantee of the state of the vector is given.
+        If called without 'data' argument, an arbitrary element in the
+        space is generated without guarantee of its state.
 
         Parameters
         ----------
-        None
+        data : object, optional
+            The data from which to create the element
 
         Returns
         -------
         v : Vector
-            An arbitrary vector in this space
+            A vector in this space
         """
 
     @abstractmethod
@@ -180,7 +182,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         """
 
         # Default implementation using linComb
-        tmp = self.empty()
+        tmp = self.element()
         self.linCombImpl(tmp, 0, tmp, 0, tmp)
         return tmp
 
@@ -313,7 +315,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         def copy(self):
             """ Creates an identical (deep) copy of this vector
             """
-            result = self.space.empty()
+            result = self.space.element()
             result.assign(self)
             return result
 
@@ -356,21 +358,21 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         def __add__(self, other):
             """Vector addition (ret = self + other)
             """
-            tmp = self.space.empty()
+            tmp = self.space.element()
             self.space.linComb(tmp, 1, self, 1, other)
             return tmp
 
         def __sub__(self, other):
             """Vector subtraction (ret = self - other)
             """
-            tmp = self.space.empty()
+            tmp = self.space.element()
             self.space.linComb(tmp, 1, self, -1, other)
             return tmp
 
         def __mul__(self, scalar):
             """Scalar multiplication (ret = self * scalar)
             """
-            tmp = self.space.empty()
+            tmp = self.space.element()
             self.space.linComb(tmp, scalar, self)
             return tmp
 
@@ -386,7 +388,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         def __neg__(self):
             """ Unary negation, used in assignments (ret = -self)
             """
-            tmp = self.space.empty()
+            tmp = self.space.element()
             self.space.linComb(tmp, -1.0, self)
             return tmp
 
@@ -435,7 +437,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return float(self.distImpl(x, y))
+        return float64(self.distImpl(x, y))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
         """ Abstract vector in a metric space
@@ -530,7 +532,7 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
-        return float(self.normImpl(vector))
+        return float64(self.normImpl(vector))
 
     # Default implmentation
     def distImpl(self, x, y):

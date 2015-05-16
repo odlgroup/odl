@@ -32,10 +32,9 @@ except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, super
 from future import standard_library
 
-from math import sqrt
-
 # External module imports
-import numpy
+import numpy as np
+from numpy import float64
 from scipy.lib.blas import get_blas_funcs
 
 # RL imports
@@ -65,6 +64,88 @@ class RN(LinearSpace):
                                                              'scal',
                                                              'copy'])
 
+    def element(self, data=None):
+        """ Returns an arbitrary vector
+
+        more efficient than zeros.
+        TODO: rewrite
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RN.Vector instance
+
+        Note
+        ----
+        The values of the returned vector may be _anything_ including
+        inf and NaN. Thus operations such as empty() * 0 need not return
+        the zero vector.
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> x = rn.element()
+        >>> x in rn
+        True
+
+        Creates an element in RN
+
+        Parameters
+        ----------
+        The method has two call patterns, the first is:
+
+        *args : numpy.ndarray
+                Array that will be used as the underlying representation
+                The dtype of the array must be float64
+                The shape of the array must be (n,)
+
+        **kwargs : None
+
+        The second pattern is to create a new numpy array, in this case
+
+        *args : Options for numpy.array constructor
+        **kwargs : Options for numpy.array constructor
+
+        Returns
+        -------
+        RN.Vector instance
+
+
+        Examples
+        --------
+
+        >>> rn = RN(3)
+        >>> x = rn.element(numpy.array([1., 2., 3.]))
+        >>> x
+        RN(3).element([ 1.,  2.,  3.])
+        >>> y = rn.element([1, 2, 3])
+        >>> y
+        RN(3).element([ 1.,  2.,  3.])
+
+        """
+
+        if data is None:
+            data = np.empty(self._n, dtype=float64)
+
+        if not isinstance(data, np.ndarray):
+            data = np.array(data).astype(float64, copy=False)
+        else:
+            if data.shape != (self._n,):
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of shape {}, expected shape shape {}
+                '''.format(data, data.shape, (self.n,))))
+
+            if data.dtype != float64:
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of type {}, expected float64
+                '''.format(data, data.dtype)))
+
+        return self.__class__.Vector(self, data)
+
     def linCombImpl(self, z, a, x, b, y):
         """ Implement y = a*x + b*y using optimized BLAS rutines
 
@@ -88,12 +169,12 @@ class RN(LinearSpace):
         Examples
         --------
         >>> rn = RN(3)
-        >>> x = rn.makeVector([1, 2, 3])
-        >>> y = rn.makeVector([4, 5, 6])
-        >>> z = rn.empty()
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([4, 5, 6])
+        >>> z = rn.element()
         >>> rn.linComb(z, 2, x, 3, y)
         >>> z
-        RN(3).makeVector([ 14.,  19.,  24.])
+        RN(3).element([ 14.,  19.,  24.])
 
         """
 
@@ -162,39 +243,9 @@ class RN(LinearSpace):
         >>> rn = RN(3)
         >>> x = rn.zero()
         >>> x
-        RN(3).makeVector([ 0.,  0.,  0.])
+        RN(3).element([ 0.,  0.,  0.])
         """
-        return self.makeVector(numpy.zeros(self._n, dtype=float))
-
-    def empty(self):
-        """ Returns an arbitrary vector
-
-        more efficient than zeros.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        RN.Vector instance
-
-        Note
-        ----
-        The values of the returned vector may be _anything_ including
-        inf and NaN. Thus operations such as empty() * 0 need not return
-        the zero vector.
-
-        Examples
-        --------
-
-        >>> rn = RN(3)
-        >>> x = rn.empty()
-        >>> x in rn
-        True
-
-        """
-        return self.makeVector(numpy.empty(self._n, dtype=float))
+        return self.element(np.zeros(self._n, dtype=float64))
 
     @property
     def field(self):
@@ -279,58 +330,6 @@ class RN(LinearSpace):
         """
         return isinstance(other, RN) and self._n == other._n
 
-    def makeVector(self, *args, **kwargs):
-        """ Creates an element in RN
-
-        Parameters
-        ----------
-        The method has two call patterns, the first is:
-
-        *args : numpy.ndarray
-                Array that will be used as the underlying representation
-                The dtype of the array must be float64
-                The shape of the array must be (n,)
-
-        **kwargs : None
-
-        The second pattern is to create a new numpy array, in this case
-
-        *args : Options for numpy.array constructor
-        **kwargs : Options for numpy.array constructor
-
-        Returns
-        -------
-        RN.Vector instance
-
-
-        Examples
-        --------
-
-        >>> rn = RN(3)
-        >>> x = rn.makeVector(numpy.array([1., 2., 3.]))
-        >>> x
-        RN(3).makeVector([ 1.,  2.,  3.])
-        >>> y = rn.makeVector([1, 2, 3])
-        >>> y
-        RN(3).makeVector([ 1.,  2.,  3.])
-
-        """
-        if isinstance(args[0], numpy.ndarray):
-            if args[0].shape != (self._n,):
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(args[0], args[0].shape, (self.n,))))
-
-            if args[0].dtype != numpy.float64:
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of type {}, expected float64
-                '''.format(args[0], args[0].dtype)))
-
-            return self.Vector(self, args[0])
-        else:
-            return self.makeVector(
-                numpy.array(*args, **kwargs).astype(numpy.float64, copy=False))
-
     def __str__(self):
         return "RN(" + str(self.n) + ")"
 
@@ -360,7 +359,7 @@ class RN(LinearSpace):
 
         def __repr__(self):
             val_str = repr(self.values).lstrip('array(').rstrip(')')
-            return repr(self.space) + '.makeVector(' + val_str + ')'
+            return repr(self.space) + '.element(' + val_str + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
@@ -389,7 +388,7 @@ class RN(LinearSpace):
             --------
 
             >>> rn = RN(3)
-            >>> y = rn.makeVector([1, 2, 3])
+            >>> y = rn.element([1, 2, 3])
             >>> y[0]
             1.0
             >>> y[1:3]
@@ -408,7 +407,7 @@ class RN(LinearSpace):
                     The position(s) that should be set
             value : float or Array-Like
                     The values that should be assigned.
-                    If index is an integer, value should be a float.
+                    If index is an integer, value should be a float64.
                     If index is a slice, value should be an Array-Like
                     of the same size as the slice.
 
@@ -421,20 +420,21 @@ class RN(LinearSpace):
             --------
 
             >>> rn = RN(3)
-            >>> y = rn.makeVector([1, 2, 3])
+            >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            RN(3).makeVector([ 5.,  2.,  3.])
+            RN(3).element([ 5.,  2.,  3.])
             >>> y[1:3] = [7, 8]
             >>> y
-            RN(3).makeVector([ 5.,  7.,  8.])
+            RN(3).element([ 5.,  7.,  8.])
             >>> y[:] = numpy.array([0, 0, 0])
             >>> y
-            RN(3).makeVector([ 0.,  0.,  0.])
+            RN(3).element([ 0.,  0.,  0.])
 
             """
 
             return self.values.__setitem__(index, value)
+
 
 class NormedRN(RN, NormedSpace):
     """ The real space R^n with the p-norm.
@@ -450,7 +450,7 @@ class NormedRN(RN, NormedSpace):
     Notes
     -----
 
-    The following values for `ord` can be specified. 
+    The following values for `ord` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm.
 
     =====  ====================================================
@@ -462,7 +462,7 @@ class NormedRN(RN, NormedSpace):
     other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
     =====  ====================================================
     """
-    
+
     def __init__(self, n, ord=None):
         self.ord = ord if ord is not None else 2
 
@@ -485,28 +485,29 @@ class NormedRN(RN, NormedSpace):
         --------
 
         >>> rn = NormedRN(2, ord=2)
-        >>> x = rn.makeVector([3, 4])
+        >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         5.0
 
 
         >>> rn = NormedRN(2, ord=1)
-        >>> x = rn.makeVector([3, 4])
+        >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         7.0
 
         >>> rn = NormedRN(2, ord=0)
-        >>> x = rn.makeVector([3, 0])
+        >>> x = rn.element([3, 0])
         >>> rn.norm(x)
         1.0
 
         """
 
-        #Use numpy norm
+        # Use numpy norm
         return np.linalg.norm(vector.values, ord=self.ord)
 
     class Vector(RN.Vector, NormedSpace.Vector):
         pass
+
 
 class EuclideanSpace(RN, HilbertSpace, Algebra):
     """The real space R^n with the usual inner product.
@@ -545,12 +546,13 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         --------
 
         >>> rn = EuclideanSpace(2)
-        >>> x = rn.makeVector([3, 4])
+        >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         5.0
 
         """
-        return float(self._nrm2(x.values)) #TODO: nrm2 seems slow compared to dot
+        # TODO: nrm2 seems slow compared to dot
+        return float64(self._nrm2(x.values))
 
     def innerImpl(self, x, y):
         """ Calculates the inner product of two vectors
@@ -574,15 +576,15 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         --------
 
         >>> rn = EuclideanSpace(3)
-        >>> x = rn.makeVector([5, 3, 2])
-        >>> y = rn.makeVector([1, 2, 3])
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
         >>> 5*1 + 3*2 + 2*3
         17
         >>> rn.inner(x, y)
         17.0
 
         """
-        return float(self._dot(x.values, y.values))
+        return float64(self._dot(x.values, y.values))
 
     def multiplyImpl(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -608,11 +610,11 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         --------
 
         >>> rn = EuclideanSpace(3)
-        >>> x = rn.makeVector([5, 3, 2])
-        >>> y = rn.makeVector([1, 2, 3])
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        EuclideanSpace(3).makeVector([ 5.,  6.,  6.])
+        EuclideanSpace(3).element([ 5.,  6.,  6.])
         """
         y.values[:] = x.values*y.values
 

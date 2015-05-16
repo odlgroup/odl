@@ -24,6 +24,7 @@ from future import standard_library
 standard_library.install_aliases()
 import unittest
 from math import sin
+from numpy import float64
 
 import numpy as np
 from RL.operator.operator import *
@@ -43,10 +44,10 @@ class ForwardDiff(LinearOperator):
     def __init__(self, space, scale = 1.0):
         if not isinstance(space, CS.CudaRN):
             raise TypeError("space must be CudaRN")
-        
+
         self.space = space
         self.scale = scale
-        
+
     def applyImpl(self, rhs, out):
         RLcpp.cuda.forwardDiff(rhs.impl, out.impl)
         out *= self.scale
@@ -58,7 +59,7 @@ class ForwardDiff(LinearOperator):
     @property
     def domain(self):
         return self.space
-    
+
     @property
     def range(self):
         return self.space
@@ -67,7 +68,7 @@ def denoise(x0, la, mu, iterations = 1):
     scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end - x0.space.parent.domain.begin)
 
     diff = ForwardDiff(x0.space,scale)
-    
+
     ran = diff.range
     dom = diff.domain
 
@@ -90,7 +91,7 @@ def denoise(x0, la, mu, iterations = 1):
         xdiff += b
         diff.applyAdjoint(xdiff, tmp)
         x.linComb(1, x, C2, tmp)
-        
+
         # d = diff(x)-b
         diff.apply(x,d)
         d -= b
@@ -98,7 +99,7 @@ def denoise(x0, la, mu, iterations = 1):
         # sign = d/abs(d)
         RLcpp.cuda.sign(d.impl,sign.impl)
 
-        # 
+        #
         RLcpp.cuda.abs(d.impl,d.impl)
         RLcpp.cuda.addScalar(d.impl,-1.0/la,d.impl)
         RLcpp.cuda.maxVectorScalar(d.impl,0.0,d.impl)
@@ -122,7 +123,7 @@ n = 1000
 rn = CS.CudaRN(n)
 d = DS.makeUniformDiscretization(space, rn)
 x = d.points()
-fun = d.makeVector(2*((x>0.3).astype(float) - (x>0.6).astype(float)) + np.random.rand(n))
+fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))
 plt.plot(fun)
 
 la=0.00001

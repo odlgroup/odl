@@ -24,7 +24,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import RL.operator.operator as op
-import RL.operator.solvers as solvers 
+import RL.operator.solvers as solvers
 import RL.space.euclidean as ds
 import RL.space.set as sets
 import RL.space.discretizations as dd
@@ -37,6 +37,7 @@ from RL.utility.testutils import Timer, consume
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import float64
 
 class CudaConvolution(op.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
@@ -45,11 +46,11 @@ class CudaConvolution(op.LinearOperator):
     def __init__(self, kernel):
         if not isinstance(kernel.space, cs.CudaRN):
             raise TypeError("Kernel must be CudaRN vector")
-        
+
         self.space = kernel.space
         self.kernel = kernel
-        self.adjkernel = self.space.makeVector(kernel[::-1]) #The adjoint is the kernel reversed
-        self.norm = float(sum(abs(self.kernel[:]))) #eval at host
+        self.adjkernel = self.space.element(kernel[::-1]) #The adjoint is the kernel reversed
+        self.norm = float64(sum(abs(self.kernel[:]))) #eval at host
 
     def applyImpl(self, rhs, out):
         RLcpp.cuda.conv(rhs.impl, self.kernel.impl, out.impl)
@@ -63,7 +64,7 @@ class CudaConvolution(op.LinearOperator):
     @property
     def domain(self):
         return self.space
-    
+
     @property
     def range(self):
         return self.space
@@ -74,14 +75,14 @@ class CudaConvolution(op.LinearOperator):
 continuousSpace = fs.L2(sets.Interval(0, 10))
 
 #Complicated functions to check performance
-continuousKernel = continuousSpace.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
-continuousRhs = continuousSpace.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
+continuousKernel = continuousSpace.element(lambda x: np.exp(x/2)*np.cos(x*1.172))
+continuousRhs = continuousSpace.element(lambda x: x**2*np.sin(x)**2*(x > 5))
 
 #Discretization
 rn = cs.CudaRN(5000)
 d = dd.makeUniformDiscretization(continuousSpace, rn)
-kernel = d.makeVector(continuousKernel)
-rhs = d.makeVector(continuousRhs)
+kernel = d.element(continuousKernel)
+rhs = d.element(continuousRhs)
 
 #Create operator
 conv = CudaConvolution(kernel)
@@ -102,11 +103,11 @@ solvers.conjugateGradient(conv, d.zero(), rhs, iterations, partial)
 plt.figure()
 plt.plot(rhs)
 solvers.landweber(conv, d.zero(), rhs, iterations, omega, partial)
-        
+
 #testTimingCG
 with Timer("Optimized CG"):
     solvers.conjugateGradient(conv, d.zero(), rhs, iterations)
-            
+
 with Timer("Base CG"):
     conjugateGradientBase(conv, d.zero(), rhs, iterations)
 

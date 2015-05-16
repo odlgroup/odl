@@ -59,46 +59,10 @@ class FunctionSpace(Algebra):
         self.domain = domain
         self._field = field if field is not None else RealNumbers()
 
-    def linCombImpl(self, a, x, b, y):
-        """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
-
-        The created object is rather slow, and should only be used for testing purposes.
-        """
-        return a*x + b*y  # Use operator overloading
-
-    def multiplyImpl(self, x, y):
-        """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
-        
-        The created object is rather slow, and should only be used for testing purposes.
-        """
-        return self.makeVector(lambda *args: x(*args)*y(*args))
-
-    @property
-    def field(self):
-        """ The field that the functions map values into.
-
-        Since FunctionSpace is a LinearSpace, this is also
-        the set of scalars for this space.
-        """
-        return self._field
-
-    def equals(self, other):
-        """ Verify that other is a FunctionSpace with the same domain and field
-        """
-        return isinstance(other, FunctionSpace) and self.domain == other.domain and self.field == other.field
-
-    def empty(self):
-        """ Returns the zero function (the function which maps any value to zero)
-        """
-        return self.makeVector(lambda *args: 0)
-
-    def zero(self):
-        """ Returns the zero function (the function which maps any value to zero)
-        """
-        return self.makeVector(lambda *args: 0)
-
-    def makeVector(self, function):
+    def element(self, function=None):
         """ Creates an element in FunctionSpace
+
+        TODO: rewrite
 
         Parameters
         ----------
@@ -114,14 +78,51 @@ class FunctionSpace(Algebra):
         --------
 
         >>> R = RealNumbers()
-        >>> space = FunctionSpace(R, R) 
-        >>> x = space.makeVector(lambda t: t**2)
+        >>> space = FunctionSpace(R, R)
+        >>> x = space.element(lambda t: t**2)
         >>> x(1)
         1.0
         >>> x(3)
         9.0
         """
+
+        if function is None:
+            def function(*args):
+                return 0
         return FunctionSpace.Vector(self, function)
+
+    def linCombImpl(self, a, x, b, y):
+        """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
+
+        The created object is rather slow, and should only be used for testing purposes.
+        """
+        return a*x + b*y  # Use operator overloading
+
+    def multiplyImpl(self, x, y):
+        """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
+
+        The created object is rather slow, and should only be used for testing purposes.
+        """
+        return self.element(lambda *args: x(*args)*y(*args))
+
+    @property
+    def field(self):
+        """ The field that the functions map values into.
+
+        Since FunctionSpace is a LinearSpace, this is also
+        the set of scalars for this space.
+        """
+        return self._field
+
+    def equals(self, other):
+        """ Verify that other is a FunctionSpace with the same domain and field
+        """
+        return isinstance(other, FunctionSpace) and self.domain == other.domain and self.field == other.field
+
+    def zero(self):
+        """ Returns the zero function (the function which maps any value to zero)
+        """
+        return self.element(lambda *args: 0)
 
     def __str__(self):
         return "FunctionSpace " + str(self.domain) + "->" + str(self.field)
@@ -171,7 +172,7 @@ class FunctionSpace(Algebra):
             return str(self.function)
 
         def __repr__(self):
-            return repr(self.space) + '.makeVector(' + repr(self.function) + ')'
+            return repr(self.space) + '.element(' + repr(self.function) + ')'
 
 
 class L2(FunctionSpace, HilbertSpace):

@@ -29,11 +29,12 @@ from math import sqrt
 
 # External module imports
 import numpy as np
+from numpy import float64
 
 # RL imports
 import RL.space.set as sets
 import RL.space.space as space
-from RL.space.function import FunctionSpace, L2
+from RL.space.function import FunctionSpace
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -74,13 +75,14 @@ def makeUniformDiscretization(parent, rnimpl):
                     self.parent.equals(other.parent) and
                     self._rn.equals(other._rn))
 
-        def makeVector(self, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
-                tmp = np.array([args[0](point) for point in self.points()],
-                               dtype=np.float)
-                return self.makeVector(tmp)
+        def element(self, data=None):
+            # TODO: 'data' is not a good name here
+            if isinstance(data, FunctionSpace.Vector):
+                tmp = np.array([data(point) for point in self.points()],
+                               dtype=float64)
+                return self.element(tmp)
             else:
-                return super().makeVector(*args, **kwargs)
+                return super().element(data)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)
@@ -154,28 +156,28 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                     self.cols == other.cols and self.rows == other.rows and
                     self._rn.equals(other._rn))
 
-        def makeVector(self, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
-                tmp = np.array([args[0]([x, y])
+        def element(self, data=None):
+            if isinstance(data, FunctionSpace.Vector):
+                tmp = np.array([data([x, y])
                                 for x, y in zip(*self.points())],
-                               dtype=np.float)
-                return self.makeVector(tmp)
+                               dtype=float64)
+                return self.element(tmp)
 
-            elif len(args) == 1 and isinstance(args[0], np.ndarray):
-                if args[0].shape == (self.cols, self.rows):
-                    return self.makeVector(args[0].flatten(self.order))
-                elif args[0].shape == (self.n,):
-                    return super().makeVector(args[0])
+            elif isinstance(data, np.ndarray):
+                if data.shape == (self.cols, self.rows):
+                    return self.element(data.flatten(self.order))
+                elif data.shape == (self.n,):
+                    return super().element(data)
                 else:
                     raise ValueError(errfmt('''
-                    Input numpy array ({}) is of shape {}, expected shape
-                    {} or {}'''.format(args[0], args[0].shape, (self.n,),
+                    Input numpy array is of shape {}, expected shape
+                    {} or {}'''.format(data.shape, (self.n,),
                                        (self.cols, self.rows))))
             else:
-                return super().makeVector(*args, **kwargs)
+                return super().element(data)
 
         def integrate(self, vector):
-            return float(self._rn.sum(vector) * self.scale)
+            return float64(self._rn.sum(vector) * self.scale)
 
         def points(self):
             x, y = np.meshgrid(np.linspace(self.parent.domain.begin[0],

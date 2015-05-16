@@ -68,8 +68,8 @@ class TestRN(RLTestCase):
         out = np.random.rand(3)
 
         Aop = MultiplyOp(A)
-        xvec = Aop.domain.makeVector(x)
-        outvec = Aop.range.empty()
+        xvec = Aop.domain.element(x)
+        outvec = Aop.range.element()
 
         # Using apply
         Aop.apply(xvec, outvec)
@@ -86,8 +86,8 @@ class TestRN(RLTestCase):
         out = np.random.rand(4)
 
         Aop = MultiplyOp(A)
-        xvec = Aop.domain.makeVector(x)
-        outvec = Aop.range.empty()
+        xvec = Aop.domain.element(x)
+        outvec = Aop.range.element()
 
         # Using apply
         Aop.apply(xvec, outvec)
@@ -103,8 +103,8 @@ class TestRN(RLTestCase):
         out = np.random.rand(3)
 
         Aop = MultiplyOp(A)
-        xvec = Aop.range.makeVector(x)
-        outvec = Aop.domain.empty()
+        xvec = Aop.range.element(x)
+        outvec = Aop.domain.element()
 
         # Using applyAdjoint
         Aop.applyAdjoint(xvec, outvec)
@@ -126,8 +126,8 @@ class TestRN(RLTestCase):
 
         Aop = MultiplyOp(A)
         Bop = MultiplyOp(B)
-        xvec = Aop.domain.makeVector(x)
-        yvec = Aop.range.makeVector(y)
+        xvec = Aop.domain.element(x)
+        yvec = Aop.range.element(y)
 
         # Explicit instantiation
         C = op.LinearOperatorSum(Aop, Bop)
@@ -148,8 +148,8 @@ class TestRN(RLTestCase):
         y = np.random.rand(4)
 
         Aop = MultiplyOp(A)
-        xvec = Aop.domain.makeVector(x)
-        yvec = Aop.range.makeVector(y)
+        xvec = Aop.domain.element(x)
+        yvec = Aop.range.element(y)
 
         # Test a range of scalars (scalar multiplication could implement
         # optimizations for (-1, 0, 1).
@@ -178,8 +178,8 @@ class TestRN(RLTestCase):
 
         Aop = MultiplyOp(A)
         Bop = MultiplyOp(B)
-        xvec = Bop.domain.makeVector(x)
-        yvec = Aop.range.makeVector(y)
+        xvec = Bop.domain.element(x)
+        yvec = Aop.range.element(y)
 
         C = op.LinearOperatorComposition(Aop, Bop)
 

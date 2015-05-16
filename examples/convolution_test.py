@@ -36,6 +36,7 @@ from solverExamples import *
 from RL.utility.testutils import Timer, consume
 
 import numpy as np
+from numpy import float64
 import matplotlib.pyplot as plt
 from scipy import ndimage
 
@@ -48,7 +49,7 @@ class Convolution(op.LinearOperator):
         self.kernel = kernel.values
         self.adjkernel = kernel.values[::-1]
         self.space = kernel.space
-        self.norm = float(sum(abs(self.kernel)))
+        self.norm = float64(sum(abs(self.kernel)))
 
     def applyImpl(self, rhs, out):
         ndimage.convolve(rhs.values, self.kernel, output=out.values,
@@ -74,16 +75,16 @@ class Convolution(op.LinearOperator):
 continuousSpace = fs.L2(sets.Interval(0, 10))
 
 # Complicated functions to check performance
-continuousKernel = continuousSpace.makeVector(lambda x: np.exp(x/2) *
-                                              np.cos(x*1.172))
-continuousRhs = continuousSpace.makeVector(lambda x: x**2 *
-                                           np.sin(x)**2*(x > 5))
+continuousKernel = continuousSpace.element(lambda x: np.exp(x/2) *
+                                           np.cos(x*1.172))
+continuousRhs = continuousSpace.element(lambda x: x**2 *
+                                        np.sin(x)**2*(x > 5))
 
 # Discretization
 rn = ds.EuclideanSpace(500)
 d = dd.makeUniformDiscretization(continuousSpace, rn)
-kernel = d.makeVector(continuousKernel)
-rhs = d.makeVector(continuousRhs)
+kernel = d.element(continuousKernel)
+rhs = d.element(continuousRhs)
 
 # Create operator
 conv = Convolution(kernel)

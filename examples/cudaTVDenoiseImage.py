@@ -53,7 +53,7 @@ class ForwardDiff2D(LinearOperator):
 
         self._domain = space
         self._range = makePowerSpace(space,2)
-        
+
     def applyImpl(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl, self.domain.cols, self.domain.rows)
 
@@ -63,17 +63,17 @@ class ForwardDiff2D(LinearOperator):
     @property
     def domain(self):
         return self._domain
-    
+
     @property
     def range(self):
         return self._range
 
-    
+
 def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
     diff = ForwardDiff2D(x0.space)
 
     dimension = 2
-    
+
     L2 = diff.domain
     L2xL2 = diff.range
 
@@ -96,7 +96,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
 
         L2.linComb(C1,f,2*C2,x)
         x.linComb(C2,tmp)
-        
+
         # d = diff(x)+b
         diff.apply(x,xdiff)
         xdiff += b
@@ -112,7 +112,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
         L2.sqrt(xdiff[0],xdiff[0])
 
         # c = tmp = max(s - la^-1, 0) / s
-        L2.addScalar(xdiff[0],-1.0/la,tmp)            
+        L2.addScalar(xdiff[0],-1.0/la,tmp)
         L2.maxVectorScalar(tmp,0.0,tmp)
         L2.divideVectorVector(tmp,xdiff[0],tmp)
 
@@ -125,7 +125,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
         diff.apply(x,xdiff)
         b += xdiff
         b -= d
-    
+
     return x
 
 def TVdenoise2DOpt(x0, la, mu, iterations = 1):
@@ -152,7 +152,7 @@ def TVdenoise2DOpt(x0, la, mu, iterations = 1):
         diff.applyAdjoint(xdiff,tmp)
         L2.linComb(C1,f,2*C2,x)
         x.linComb(C2,tmp)
-        
+
         #d = diff(x)+b
         diff.apply(x,d)
         d += b
@@ -171,7 +171,7 @@ def TVdenoise2DOpt(x0, la, mu, iterations = 1):
         diff.apply(x,xdiff)
         b += xdiff
         b -= d
-    
+
     return x
 
 def TVdenoise2D(x0, la, mu, iterations = 1):
@@ -191,7 +191,7 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
 
     for i in range(iterations):
         x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
-        
+
         d = diff(x)+b
 
         for i in range(dimension):
@@ -205,7 +205,7 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
             d[i].multiply(tmp)
 
         b = b + diff(x) - d
-        
+
     return x
 
 #Continuous definition of problem
@@ -215,7 +215,7 @@ space = L2(I)
 #Complicated functions to check performance
 n = 2000
 m = 2000
-        
+
 #Underlying RN space
 rn = CS.CudaRN(n*m)
 rnpooled = makePooledSpace(rn, maxPoolSize=5) #Example of using an vector pool to reduce allocation overhead
@@ -225,8 +225,8 @@ d = DS.makePixelDiscretization(space, rnpooled, n, m)
 x,y = d.points()
 data = RLcpp.utils.phantom([n,m])
 data[1:-1,1:-1] += np.random.rand(n-2,m-2)-0.5
-fun = d.makeVector(data)
-        
+fun = d.element(data)
+
 #Show input
 plt.figure()
 p = plt.imshow(fun[:].reshape(n,m), interpolation='nearest')
@@ -239,7 +239,7 @@ mu=5.0
 with Timer("denoising time"):
     result = TVdenoise2D(fun,la,mu,100)
 
-#Show result    
+#Show result
 plt.figure()
 p = plt.imshow(result[:].reshape(n,m), interpolation='nearest')
 plt.set_cmap('bone')

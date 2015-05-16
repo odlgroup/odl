@@ -64,17 +64,20 @@ class TruncationDiscretization(EuclideanSpace, Discretization):
         return super().innerImpl(v1, v2)
 
     def zero(self):
-        return self.makeVector(np.zeros(self.n), copy=False)
+        return self.element(np.zeros(self.n), copy=False)
 
     def empty(self):
-        return self.makeVector(np.empty(self.n), copy=False)
+        # FIXME: Remove this function
+        return self.element(np.empty(self.n), copy=False)
 
     def equals(self, other):
         return (isinstance(other, TruncationDiscretization) and
                 super().equals(other))
 
-    def makeVector(self, *args, **kwargs):
-        return TruncationDiscretization.Vector(self, *args, **kwargs)
+    def element(self, *args, **kwargs):
+        # FIXME: This is incomplete and does not fully implement the new
+        # element() behavior
+        return self.__class__.Vector(self, *args, **kwargs)
 
     def integrate(self, vector):
         return vector.values.sum()

@@ -12,6 +12,7 @@ from future import standard_library
 
 # External module imports
 import numpy as np
+from numpy import float64
 from scipy.lib.blas import get_blas_funcs
 
 # RL imports
@@ -40,13 +41,13 @@ class SimpleRN(HilbertSpace, Algebra):
         z.values[:] = a*x.values + b*y.values
 
     def innerImpl(self, x, y):
-        return float(np.vdot(x.values, y.values))
+        return float64(np.vdot(x.values, y.values))
 
     def multiplyImpl(self, x, y):
         y.values[:] = x.values*y.values
 
     def empty(self):
-        return self.makeVector(np.empty(self._n, dtype=float))
+        return self.makeVector(np.empty(self._n, dtype=float64))
 
     @property
     def field(self):
@@ -71,7 +72,7 @@ class SimpleRN(HilbertSpace, Algebra):
                 '''.format(args[0], args[0].shape, (self.n,))))
         else:
             return self.makeVector(np.array(*args,
-                                            **kwargs).astype(float,
+                                            **kwargs).astype(float64,
                                                              copy=False))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):

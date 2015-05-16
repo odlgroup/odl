@@ -38,9 +38,9 @@ standard_library.install_aliases()
 class OperatorMeta(ABCMeta):
     def __call__(cls, *args, **kwargs):
         obj = ABCMeta.__call__(cls, *args, **kwargs)
-        if not hasattr(obj, 'domain'): 
+        if not hasattr(obj, 'domain'):
             raise NotImplementedError("'Operator' instances should have a 'domain' attribute")
-        if not hasattr(obj, 'range'): 
+        if not hasattr(obj, 'range'):
             raise NotImplementedError("'Operator' instances should have a 'range' attribute")
         return obj
 
@@ -48,7 +48,7 @@ class Operator(with_metaclass(OperatorMeta, object)):
     """Abstract operator
 
     A subclass of this has to have the attributes
-   
+
     domain : AbstractSet
             The set this operator takes values from
 
@@ -130,8 +130,8 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.makeVector([1, 2, 3])
-        >>> y = rn.empty()
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element()
         >>> Op.apply(x, y)
         >>> y
         [1.0, 2.0, 3.0]
@@ -176,12 +176,12 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.makeVector([1, 2, 3])
+        >>> x = rn.element([1, 2, 3])
         >>> Op(x)
         [1.0, 2.0, 3.0]
         """
 
-        tmp = self.range.empty()
+        tmp = self.range.element()
         self.apply(rhs, tmp)
         return tmp
 
@@ -212,7 +212,7 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.makeVector([1, 2, 3])
+        >>> x = rn.element([1, 2, 3])
         >>> Op(x)
         [1.0, 2.0, 3.0]
         >>> Scaled = Op * 3
@@ -243,7 +243,7 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.makeVector([1, 2, 3])
+        >>> x = rn.element([1, 2, 3])
         >>> Op(x)
         [1.0, 2.0, 3.0]
         >>> Scaled = 3 * Op
@@ -300,7 +300,7 @@ class OperatorSum(Operator):
         self.tmp = tmp
 
     def applyImpl(self, rhs, out):
-        tmp = self.tmp if self.tmp is not None else self.range.empty()
+        tmp = self.tmp if self.tmp is not None else self.range.element()
         self._op1.applyImpl(rhs, out)
         self._op2.applyImpl(rhs, tmp)
         out += tmp
@@ -354,7 +354,7 @@ class OperatorComposition(Operator):
         self._tmp = tmp
 
     def applyImpl(self, rhs, out):
-        tmp = self._tmp if self._tmp is not None else self._right.range.empty()
+        tmp = self._tmp if self._tmp is not None else self._right.range.element()
         self._right.applyImpl(rhs, tmp)
         self._left.applyImpl(tmp, out)
 
@@ -396,7 +396,7 @@ class OperatorPointwiseProduct(Operator):
         self._op2 = op2
 
     def applyImpl(self, rhs, out):
-        tmp = self._op2.range.empty()
+        tmp = self._op2.range.element()
         self._op1.applyImpl(rhs, out)
         self._op2.applyImpl(rhs, tmp)
         out *= tmp
@@ -483,7 +483,7 @@ class OperatorRightScalarMultiplication(Operator):
         self._tmp = tmp
 
     def applyImpl(self, rhs, out):
-        tmp = self._tmp if self._tmp is not None else self.domain.empty()
+        tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.linComb(self._scalar, rhs)
         self._op.applyImpl(tmp, out)
 
@@ -677,7 +677,7 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
         self._tmpDom = tmpDom
 
     def applyAdjointImpl(self, rhs, out):
-        tmp = self._tmpDom if self._tmpDom is not None else self.domain.empty()
+        tmp = self._tmpDom if self._tmpDom is not None else self.domain.element()
         self._op1.applyAdjointImpl(rhs, out)
         self._op2.applyAdjointImpl(rhs, tmp)
         out += tmp
@@ -715,7 +715,7 @@ class LinearOperatorComposition(OperatorComposition, LinearOperator):
         OperatorComposition.__init__(self, left, right, tmp)
 
     def applyAdjointImpl(self, rhs, out):
-        tmp = self._tmp if self._tmp is not None else self._right.range.empty()
+        tmp = self._tmp if self._tmp is not None else self._right.range.element()
         self._left.applyAdjoint(rhs, tmp)
         self._right.applyAdjoint(tmp, out)
 

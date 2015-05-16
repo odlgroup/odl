@@ -75,8 +75,8 @@ class TestMatrixSolve(RLTestCase):
 
         # Vector representation
         rn = EuclideanSpace(n)
-        xVec = rn.makeVector(x)
-        bVec = rn.makeVector(b)
+        xVec = rn.element(x)
+        bVec = rn.element(b)
 
         # Make operator
         norm = np.linalg.norm(A, ord=2)
@@ -97,8 +97,8 @@ class TestMatrixSolve(RLTestCase):
 
         # Vector representation
         rn = EuclideanSpace(n)
-        xVec = rn.makeVector(x)
-        bVec = rn.makeVector(b)
+        xVec = rn.element(x)
+        bVec = rn.element(b)
 
         # Make operator
         Aop = MultiplyOp(A)
@@ -118,8 +118,8 @@ class TestMatrixSolve(RLTestCase):
 
         # Vector representation
         rn = EuclideanSpace(n)
-        xVec = rn.makeVector(x)
-        bVec = rn.makeVector(b)
+        xVec = rn.element(x)
+        bVec = rn.element(b)
 
         # Make operator
         Aop = MultiplyOp(A)

@@ -102,7 +102,7 @@ class TestCudaForwardDifference(RLTestCase):
         n = 6
         rn = CS.CudaRN(n)
         d = dd.makeUniformDiscretization(space, rn)
-        fun = d.makeVector([1, 2, 5, 3, 2, 1])
+        fun = d.element([1, 2, 5, 3, 2, 1])
 
         # Create operator
         diff = ForwardDiff(d)
@@ -124,7 +124,7 @@ class TestCudaForwardDifference2D(RLTestCase):
         rn = CS.CudaRN(n*m)
         d = dd.makePixelDiscretization(space, rn, n, m)
         x, y = d.points()
-        fun = d.makeVector([[0, 0, 0, 0, 0],
+        fun = d.element([[0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0],
                             [0, 0, 1, 0, 0],
                             [0, 0, 0, 0, 0],
@@ -169,7 +169,7 @@ class TestCudaForwardDifference2D(RLTestCase):
         rn = CS.CudaRN(n*m)
         d = dd.makePixelDiscretization(space, rn, n, m)
         x, y = d.points()
-        fun = d.makeVector([[0, 0, 0, 0, 0, 0, 0],
+        fun = d.element([[0, 0, 0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0, 0],
                             [0, 0, 1, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0, 0],

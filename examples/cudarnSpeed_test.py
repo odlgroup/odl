@@ -39,12 +39,12 @@ x = np.random.rand(n)
 y = np.random.rand(n)
 z = np.empty(n)
 
-xDevice = deviceSpace.makeVector(x)
-yDevice = deviceSpace.makeVector(y)
-zDevice = deviceSpace.makeVector(z)
-xHost = hostSpace.makeVector(x)
-yHost = hostSpace.makeVector(y)
-zHost = hostSpace.makeVector(z)
+xDevice = deviceSpace.element(x)
+yDevice = deviceSpace.element(y)
+zDevice = deviceSpace.element(z)
+xHost = hostSpace.element(x)
+yHost = hostSpace.element(y)
+zHost = hostSpace.element(z)
 
 
 def doTest(function, message):

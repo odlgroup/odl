@@ -35,16 +35,16 @@ standard_library.install_aliases()
 
 
 class RNTest(RLTestCase):
-    def makeVectors(self, rn):
+    def elements(self, rn):
         # Generate numpy vectors
         y = np.random.rand(rn.n)
         x = np.random.rand(rn.n)
         z = np.random.rand(rn.n)
 
         # Make rn vectors
-        yVec = rn.makeVector(y)
-        xVec = rn.makeVector(x)
-        zVec = rn.makeVector(z)
+        yVec = rn.element(y)
+        xVec = rn.element(x)
+        zVec = rn.element(z)
         return x, y, z, xVec, yVec, zVec
 
     def doLincombTest(self, a, b, n=10):
@@ -53,35 +53,35 @@ class RNTest(RLTestCase):
         rn = RN(n)
 
         # Unaliased arguments
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*y
         rn.linComb(zVec, a, xVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # First argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*z + b*y
         rn.linComb(zVec, a, zVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Second argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*z
         rn.linComb(zVec, a, xVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Both arguments aliased with each other
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*x
         rn.linComb(zVec, a, xVec, b, xVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # All aliased
-        x, y, z, xVec, yVec, zVec = self.makeVectors(rn)
+        x, y, z, xVec, yVec, zVec = self.elements(rn)
         z[:] = a*z + b*z
         rn.linComb(zVec, a, zVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
@@ -101,7 +101,7 @@ class OperatorOverloadTest(RLTestCase):
         x = np.random.rand(n)
 
         rn = RN(n)
-        xVec = rn.makeVector(x)
+        xVec = rn.element(x)
 
         y = function(x)
         yVec = function(xVec)
@@ -117,8 +117,8 @@ class OperatorOverloadTest(RLTestCase):
         x = np.random.rand(n)
 
         rn = RN(n)
-        yVec = rn.makeVector(y)
-        xVec = rn.makeVector(x)
+        yVec = rn.element(y)
+        xVec = rn.element(x)
 
         z = function(x, y)
         zVec = function(xVec, yVec)

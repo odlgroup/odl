@@ -22,7 +22,7 @@ class addOp(Operator):
 
 n = 3
 rn = RN(n)
-x = rn.makeVector([1, 2, 3])
+x = rn.element([1, 2, 3])
 
 op = addOp(n, 10)
 
