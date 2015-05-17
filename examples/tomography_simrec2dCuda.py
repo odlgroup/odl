@@ -60,12 +60,12 @@ class CudaProjector(OP.LinearOperator):
 
     def applyImpl(self, data, out):
         #Create projector
-        self.forward.setData(data.impl.dataPtr())
+        self.forward.setData(data.data_ptr)
 
         #Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, out[i].impl.dataPtr())
+            self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, out[i].data_ptr)
 
 
     def applyAdjointImpl(self, projections, out):
@@ -75,7 +75,7 @@ class CudaProjector(OP.LinearOperator):
         #Append all projections
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].impl.dataPtr(), out.impl.dataPtr())
+            self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].data_ptr, out.data_ptr)
 
 
     @property
@@ -126,7 +126,7 @@ projectionRN = cs.CudaRN(nPixels)
 projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
-dataDisc = prod.makePowerSpace(projectionDisc, nProjection)
+dataDisc = prod.powerspace(projectionDisc, nProjection)
 
 #Define the reconstruction space
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
@@ -160,7 +160,7 @@ def plotResult(x):
 #Solve using landweber
 x = reconDisc.zero()
 #solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, partialResults=solvers.forEachPartial(plotResult))
-solvers.landweber(projector, x, projections, 100, omega=0.4/normEst, partialResults=solvers.printIterationPartial())
+solvers.landweber(projector, x, projections, 5, omega=0.4/normEst, partialResults=solvers.printIterationPartial())
 #solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
         
 plt.imshow(x[:].reshape(nVoxels))

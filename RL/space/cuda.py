@@ -438,7 +438,33 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         @property
         def data(self):
+            """ Get the data of this Vector
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            ptr : RLcpp.PyCuda.CudaRNVectorImpl
+                  Underlying cuda data representation
+            """
             return self._data
+        
+        @property
+        def data_ptr(self):
+            """ Get a raw pointer to the data of this Vector
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            ptr : Int
+                  Pointer to the CUDA data of this vector
+            """
+            return self._data.dataPtr()
 
         def __str__(self):
             return str(self[:])

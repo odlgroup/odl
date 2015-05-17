@@ -48,11 +48,11 @@ class ForwardDiff(LinearOperator):
         self.scale = scale
         
     def applyImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiff(rhs.impl, out.impl)
+        RLcpp.cuda.forwardDiff(rhs.data, out.data)
         out *= self.scale
 
     def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiffAdj(rhs.impl, out.impl)
+        RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
         out *= self.scale
 
     @property
@@ -96,12 +96,12 @@ def denoise(x0, la, mu, iterations = 1):
         d -= b
 
         # sign = d/abs(d)
-        RLcpp.cuda.sign(d.impl,sign.impl)
+        RLcpp.cuda.sign(d.data,sign.data)
 
         # 
-        RLcpp.cuda.abs(d.impl,d.impl)
-        RLcpp.cuda.addScalar(d.impl,-1.0/la,d.impl)
-        RLcpp.cuda.maxVectorScalar(d.impl,0.0,d.impl)
+        RLcpp.cuda.abs(d.data,d.data)
+        RLcpp.cuda.addScalar(d.data,-1.0/la,d.data)
+        RLcpp.cuda.maxVectorScalar(d.data,0.0,d.data)
         d *= sign
 
         # b = b - diff(x) + d

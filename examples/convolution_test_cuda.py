@@ -52,10 +52,10 @@ class CudaConvolution(op.LinearOperator):
         self.norm = float(sum(abs(self.kernel[:]))) #eval at host
 
     def applyImpl(self, rhs, out):
-        RLcpp.cuda.conv(rhs.impl, self.kernel.impl, out.impl)
+        RLcpp.cuda.conv(rhs.data, self.kernel.data, out.data)
 
     def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.conv(rhs.impl, self.adjkernel.impl, out.impl)
+        RLcpp.cuda.conv(rhs.data, self.adjkernel.data, out.data)
 
     def opNorm(self): #An upper limit estimate of the operator norm
         return self.norm
