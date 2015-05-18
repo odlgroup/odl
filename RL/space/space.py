@@ -29,7 +29,6 @@ from future import standard_library
 # External module imports
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
-from numpy import float64
 
 # RL imports
 from RL.space.set import Set

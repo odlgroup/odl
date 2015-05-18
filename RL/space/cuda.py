@@ -154,7 +154,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        inner: float64
+        inner: float
             The inner product of x and y
 
 
@@ -186,7 +186,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        norm : float64
+        norm : float
             The 2-norm of x
 
 

@@ -357,9 +357,9 @@ class RN(LinearSpace):
                 'data' ({}) must be a numpy.ndarray
                 '''.format(type(data))))
 
-            if data.dtype != np.float64:
+            if data.dtype != float64:
                 raise TypeError(errfmt('''
-                type('data') ({}) must be numpy.float64
+                type('data') ({}) must be float64
                 '''.format(data.dtype)))
 
             super().__init__(space)
@@ -426,7 +426,7 @@ class RN(LinearSpace):
                     The position(s) that should be set
             value : float or Array-Like
                     The values that should be assigned.
-                    If index is an integer, value should be a float64.
+                    If index is an integer, value should be a float.
                     If index is a slice, value should be an Array-Like
                     of the same size as the slice.
 

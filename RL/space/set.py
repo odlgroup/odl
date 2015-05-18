@@ -30,7 +30,7 @@ from future import standard_library
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
-from numpy import int32, float64, complex128
+from numpy import float64
 
 # RL imports
 from RL.utility.utility import errfmt
@@ -97,7 +97,7 @@ class ComplexNumbers(Set):
         return isinstance(other, Complex)
 
     def element(self, value=0):
-        return complex128(value)
+        return complex(value)
 
     def __str__(self):
         return "ComplexNumbers"
@@ -137,7 +137,7 @@ class Integers(Set):
         return isinstance(other, Integral)
 
     def element(self, value=0):
-        return int32(value)
+        return int(value)
 
     def __str__(self):
         return "Integers"
