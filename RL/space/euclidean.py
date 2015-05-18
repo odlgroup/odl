@@ -368,6 +368,10 @@ class RN(LinearSpace):
         def data(self):
             return self._data
 
+        @property
+        def data_ptr(self):
+            return self._data.ctypes.data
+
         def __str__(self):
             return str(self.data)
 
