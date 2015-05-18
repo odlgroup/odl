@@ -32,7 +32,7 @@ import RL.space.discretizations as dd
 from RL.space.function import *
 import RL.space.set as sets
 import RL.space.cuda as CS
-from RL.space.product import ProductSpace
+from RL.space.product import productspace
 import RLcpp
 from RL.utility.testutils import RLTestCase  # , Timer, consume
 
@@ -73,7 +73,7 @@ class ForwardDiff2D(LinearOperator):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self._domain = space
-        self._range = ProductSpace(space, space)
+        self._range = productspace(space, space)
 
     def applyImpl(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl,

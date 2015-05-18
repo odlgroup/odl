@@ -126,19 +126,18 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         """
 
-        if data is None:
-            elem = self.impl.element()
-
-        if not isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
-            if isinstance(data, np.ndarray):  # Create from numpy array
-                # Create result and assign (could be optimized to one call)
-                elem = self.impl.element()
-                elem[:] = data
-            else:  # Create from intermediate numpy array
-                data = np.array(data)
-                return self.element(data)
-
-        return elem
+        if isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
+            return self.Vector(self, data)
+        elif data is None:
+            return self.element(self.impl.empty())
+        elif isinstance(data, np.ndarray):  # Create from numpy array
+            # Create result and assign (could be optimized to one call)
+            elem = self.element()
+            elem[:] = data
+            return elem
+        else:  # Create from intermediate numpy array
+            data = np.array(data, dtype=np.float64)
+            return self.element(data)
 
     def innerImpl(self, x, y):
         """ Calculates the inner product of x and y
