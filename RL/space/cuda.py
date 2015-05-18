@@ -41,7 +41,7 @@ import RL.operator.function as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
-# from RL.utility.utility import errfmt
+from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
@@ -131,13 +131,20 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         elif data is None:
             return self.element(self.impl.empty())
         elif isinstance(data, np.ndarray):  # Create from numpy array
+            if data.shape != (self._n,):
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of shape {}, expected shape shape {}
+                '''.format(data, data.shape, (self.n,))))
+
+            data = data.astype(np.float64, copy=False)
+
             # Create result and assign (could be optimized to one call)
             elem = self.element()
             elem[:] = data
             return elem
         else:  # Create from intermediate numpy array
-            data = np.array(data, dtype=np.float64)
-            return self.element(data)
+            as_array = np.array(data, dtype=np.float64)
+            return self.element(as_array)
 
     def innerImpl(self, x, y):
         """ Calculates the inner product of x and y
