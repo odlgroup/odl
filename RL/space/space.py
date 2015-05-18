@@ -56,7 +56,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Linear Spaces in RL
     -------------------
-    In RL the two operations are supplied using the fused "linComb"
+    In RL the two operations are supplied using the fused "lincomb"
     method, inspired from RVL (Rice Vector Library).
 
     What follows is a short introduction of the methods that each space
@@ -64,10 +64,10 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     Linear Combination
     ~~~~~~~~~~~~~~~~~~
-    The method `linComb` is defined as:
+    The method `lincomb` is defined as:
 
     ``
-    linComb(z, a, x, b, y)    < == >    z = a*x + b*y
+    lincomb(z, a, x, b, y)    < == >    z = a*x + b*y
     ``
 
     where `x`, `y` and `z` are vectors in the space, and `a` and `b`
@@ -81,14 +81,14 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
     | Mathematical | Linear combination      |
     |--------------|-------------------------|
-    | z = 0        | linComb(z,  0, z, 0, z) |
-    | z = x        | linComb(z,  1, x, 0, x) |
-    | z = -x       | linComb(z, -1, x, 0, x) |
-    | z = x + y    | linComb(z,  1, x, 1, y) |
-    | z = 3*z      | linComb(z,  3, z, 0, z) |
+    | z = 0        | lincomb(z,  0, z, 0, z) |
+    | z = x        | lincomb(z,  1, x, 0, x) |
+    | z = -x       | lincomb(z, -1, x, 0, x) |
+    | z = x + y    | lincomb(z,  1, x, 1, y) |
+    | z = 3*z      | lincomb(z,  3, z, 0, z) |
 
     To aid in rapid prototyping, an implementer needs only implement
-    linComb, and RL then provides all of the standard mathematical
+    lincomb, and RL then provides all of the standard mathematical
     operators
 
     `+`, `*`, `-`, `/`
@@ -112,7 +112,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     Is the same as
 
     x = space.element()
-    space.linComb(x, 0, x, 0, x)
+    space.lincomb(x, 0, x, 0, x)
     ``
 
     Field of a space
@@ -153,9 +153,9 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         """
 
     @abstractmethod
-    def linCombImpl(self, z, a, x, b, y):
+    def lincombImpl(self, z, a, x, b, y):
         """ Calculate z = a*x + b*y. This method is intended to be private,
-        public callers should resort to linComb which is type checked.
+        public callers should resort to lincomb which is type checked.
         """
 
     @abstractproperty
@@ -181,9 +181,9 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             The zero vector of this space
         """
 
-        # Default implementation using linComb
+        # Default implementation using lincomb
         tmp = self.element()
-        self.linCombImpl(tmp, 0, tmp, 0, tmp)
+        self.lincombImpl(tmp, 0, tmp, 0, tmp)
         return tmp
 
     def contains(self, x):
@@ -214,7 +214,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     __contains__ = contains
 
     # Error checking variant of methods
-    def linComb(self, z, a, x, b=None, y=None):
+    def lincomb(self, z, a, x, b=None, y=None):
         """ Linear combination of vectors
 
         Calculates
@@ -250,7 +250,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         ~~~~~~~~~
         The vectors `z`, `x` and `y` may be aligned, thus a call
 
-        space.linComb(x, 2, x, 3.14, x)
+        space.lincomb(x, 2, x, 3.14, x)
 
         is (mathematically) equivalent to
 
@@ -259,36 +259,36 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         if not self.contains(z):
             raise TypeError(errfmt('''
-            Lincomb failed, z ({}) is not in space ({})'''.format(z, self)))
+            lincomb failed, z ({}) is not in space ({})'''.format(z, self)))
 
         if not self.field.contains(a):
             raise TypeError(errfmt('''
-            Lincomb failed, a ({}) is not in field ({})
+            lincomb failed, a ({}) is not in field ({})
             '''.format(a, self.field)))
 
         if not self.contains(x):
             raise TypeError(errfmt('''
-            Lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
+            lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
 
         if b is None:  # Single argument
             if y is not None:
                 raise ValueError(errfmt('''
-                Lincomb failed, y ({}) provided but not b'''.format(y)))
+                lincomb failed, y ({}) provided but not b'''.format(y)))
 
             # Call method
-            return self.linCombImpl(z, a, x, 0, x)
+            return self.lincombImpl(z, a, x, 0, x)
         else:  # Two arguments
             if not self.field.contains(b):
                 raise TypeError(errfmt('''
-                Lincomb failed, b ({}) is not in field ({})
+                lincomb failed, b ({}) is not in field ({})
                 '''.format(b, self.field)))
             if not self.contains(y):
                 raise TypeError(errfmt('''
-                Lincomb failed, y ({}) is not in space ({})
+                lincomb failed, y ({}) is not in space ({})
                 '''.format(y, self)))
 
             # Call method
-            return self.linCombImpl(z, a, x, b, y)
+            return self.lincombImpl(z, a, x, b, y)
 
     class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
@@ -310,7 +310,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         def assign(self, other):
             """ Assign the values of other to this vector
             """
-            self.space.linComb(self, 1, other)
+            self.space.lincomb(self, 1, other)
 
         def copy(self):
             """ Creates an identical (deep) copy of this vector
@@ -319,33 +319,33 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             result.assign(self)
             return result
 
-        def linComb(self, a, x, b=None, y=None):
-            """ Wrapper for space.linComb(self, a, x, b, y)
+        def lincomb(self, a, x, b=None, y=None):
+            """ Wrapper for space.lincomb(self, a, x, b, y)
             """
-            self.space.linComb(self, a, x, b, y)
+            self.space.lincomb(self, a, x, b, y)
 
         def setZero(self):
             """ Sets this vector to the zero vector
             """
-            self.space.linComb(self, 0, self, 0, self)
+            self.space.lincomb(self, 0, self, 0, self)
 
         # Convenience operators
         def __iadd__(self, other):
             """Vector addition (self += other)
             """
-            self.space.linComb(self, 1, self, 1, other)
+            self.space.lincomb(self, 1, self, 1, other)
             return self
 
         def __isub__(self, other):
             """Vector subtraction (self -= other)
             """
-            self.space.linComb(self, 1, self, -1, other)
+            self.space.lincomb(self, 1, self, -1, other)
             return self
 
         def __imul__(self, scalar):
             """Vector multiplication by scalar (self *= scalar)
             """
-            self.space.linComb(self, scalar, self)
+            self.space.lincomb(self, scalar, self)
             return self
 
         def __itruediv__(self, scalar):
@@ -359,21 +359,21 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             """Vector addition (ret = self + other)
             """
             tmp = self.space.element()
-            self.space.linComb(tmp, 1, self, 1, other)
+            self.space.lincomb(tmp, 1, self, 1, other)
             return tmp
 
         def __sub__(self, other):
             """Vector subtraction (ret = self - other)
             """
             tmp = self.space.element()
-            self.space.linComb(tmp, 1, self, -1, other)
+            self.space.lincomb(tmp, 1, self, -1, other)
             return tmp
 
         def __mul__(self, scalar):
             """Scalar multiplication (ret = self * scalar)
             """
             tmp = self.space.element()
-            self.space.linComb(tmp, scalar, self)
+            self.space.lincomb(tmp, scalar, self)
             return tmp
 
         __rmul__ = __mul__
@@ -389,7 +389,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             """ Unary negation, used in assignments (ret = -self)
             """
             tmp = self.space.element()
-            self.space.linComb(tmp, -1.0, self)
+            self.space.lincomb(tmp, -1.0, self)
             return tmp
 
         def __pos__(self):

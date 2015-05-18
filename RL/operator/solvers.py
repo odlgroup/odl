@@ -90,7 +90,7 @@ def landweber(operator, x, rhs, iterations=1, omega=1, partialResults=None):
         operator.apply(x, tmpRan)                               # tmpRan = Ax
         tmpRan -= rhs                                           # tmpRan = tmpRan - rhs
         operator.getDerivative(x).applyAdjoint(tmpRan, tmpDom)  # tmpDom = A^T tmpRan
-        x.linComb(1, x, -omega, tmpDom)                         # x = x - omega * tmpDom
+        x.lincomb(1, x, -omega, tmpDom)                         # x = x - omega * tmpDom
 
         if partialResults is not None:
             partialResults.send(x)
@@ -100,7 +100,7 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
     """ Optimized version of CGN, uses no temporaries etc.
     """
     d = operator(x)
-    d.linComb(1, rhs, -1, d)       # d = rhs - A x
+    d.lincomb(1, rhs, -1, d)       # d = rhs - A x
     p = operator.T(d)
     s = p.copy()
     q = operator.range.element()
@@ -113,15 +113,15 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
             return
 
         a = normsOld / qnorm
-        x.linComb(1, x, a, p)                                   # x = x + a*p
-        d.linComb(1, d, -a, q)                                  # d = d - a*q
+        x.lincomb(1, x, a, p)                                   # x = x + a*p
+        d.lincomb(1, d, -a, q)                                  # d = d - a*q
         operator.getDerivative(p).applyAdjoint(d, s)            # s = A^T d
 
         normsNew = s.norm()**2
         b = normsNew/normsOld
         normsOld = normsNew
 
-        p.linComb(1, s, b, p)      # p = s + b * p
+        p.lincomb(1, s, b, p)      # p = s + b * p
 
         if partialResults is not None:
             partialResults.send(x)
@@ -159,8 +159,8 @@ def gaussNewton(operator, x, rhs, iterations=1,
         # v = rhs - op(x) - opPrime(x0-x)
         # u = opPrime.T(v)
         operator.apply(x, tmpRan)       # evaluate          op(x)
-        v.linComb(1, rhs, -1, tmpRan)   # assign            v = rhs - op(x)
-        tmpDom.linComb(1,  x0, -1, x)   # assign temp       tmpDom = x0 - x
+        v.lincomb(1, rhs, -1, tmpRan)   # assign            v = rhs - op(x)
+        tmpDom.lincomb(1,  x0, -1, x)   # assign temp       tmpDom = x0 - x
         opPrime.apply(tmpDom, tmpRan)   # evaluate          opPrime(x0-x)
         v -= tmpRan                     # assign            v = rhs - op(x) - opPrime(x0-x)
         opPrime.applyAdjoint(v, u)      # evaluate/assign   u = opPrime.T(v)
@@ -172,7 +172,7 @@ def gaussNewton(operator, x, rhs, iterations=1,
         conjugateGradient(A, dx, u, 3)  # TODO allow user to select other method
 
         # Update x
-        x.linComb(1, x0, 1, dx)  # x = x0 + dx
+        x.lincomb(1, x0, 1, dx)  # x = x0 + dx
 
         if partialResults is not None:
             partialResults.send(x)

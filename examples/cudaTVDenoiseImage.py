@@ -94,8 +94,8 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
         xdiff -= b
         diff.applyAdjoint(xdiff,tmp)
 
-        L2.linComb(C1,f,2*C2,x)
-        x.linComb(C2,tmp)
+        L2.lincomb(C1,f,2*C2,x)
+        x.lincomb(C2,tmp)
 
         # d = diff(x)+b
         diff.apply(x,xdiff)
@@ -107,7 +107,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
             xdiff[i].multiply(xdiff[i])
 
         for i in range(1,dimension):
-            xdiff[0].linComb(1,xdiff[i])
+            xdiff[0].lincomb(1,xdiff[i])
 
         L2.sqrt(xdiff[0],xdiff[0])
 
@@ -150,8 +150,8 @@ def TVdenoise2DOpt(x0, la, mu, iterations = 1):
         xdiff += d
         xdiff -= b
         diff.applyAdjoint(xdiff,tmp)
-        L2.linComb(C1,f,2*C2,x)
-        x.linComb(C2,tmp)
+        L2.lincomb(C1,f,2*C2,x)
+        x.lincomb(C2,tmp)
 
         #d = diff(x)+b
         diff.apply(x,d)

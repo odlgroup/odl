@@ -47,7 +47,7 @@ class RNTest(RLTestCase):
         zVec = rn.element(z)
         return x, y, z, xVec, yVec, zVec
 
-    def doLincombTest(self, a, b, n=10):
+    def dolincombTest(self, a, b, n=10):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
         rn = RN(n)
@@ -56,41 +56,41 @@ class RNTest(RLTestCase):
         x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*y
-        rn.linComb(zVec, a, xVec, b, yVec)
+        rn.lincomb(zVec, a, xVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # First argument aliased with output
         x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*z + b*y
-        rn.linComb(zVec, a, zVec, b, yVec)
+        rn.lincomb(zVec, a, zVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Second argument aliased with output
         x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*z
-        rn.linComb(zVec, a, xVec, b, zVec)
+        rn.lincomb(zVec, a, xVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Both arguments aliased with each other
         x, y, z, xVec, yVec, zVec = self.elements(rn)
 
         z[:] = a*x + b*x
-        rn.linComb(zVec, a, xVec, b, xVec)
+        rn.lincomb(zVec, a, xVec, b, xVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # All aliased
         x, y, z, xVec, yVec, zVec = self.elements(rn)
         z[:] = a*z + b*z
-        rn.linComb(zVec, a, zVec, b, zVec)
+        rn.lincomb(zVec, a, zVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
-    def testLinComb(self):
+    def testlincomb(self):
         scalar_values = [0, 1, -1, 3.41]
         for a in scalar_values:
             for b in scalar_values:
-                self.doLincombTest(a, b)
+                self.dolincombTest(a, b)
 
 
 class OperatorOverloadTest(RLTestCase):

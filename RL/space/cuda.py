@@ -201,7 +201,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         return sqrt(self.impl.normSq(x.impl))
 
-    def linCombImpl(self, z, a, x, b, y):
+    def lincombImpl(self, z, a, x, b, y):
         """ Linear combination of x and y
 
         z = a*x + b*y
@@ -229,11 +229,11 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([4, 5, 6])
         >>> z = rn.element()
-        >>> rn.linComb(z, 2, x, 3, y)
+        >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
         CudaRN(3).element([ 14.,  19.,  24.])
         """
-        self.impl.linComb(z.impl, a, x.impl, b, y.impl)
+        self.impl.lincomb(z.impl, a, x.impl, b, y.impl)
 
     def multiplyImpl(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the

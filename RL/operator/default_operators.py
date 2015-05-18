@@ -39,7 +39,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         self._scale = scale
 
     def applyImpl(self, input, out):
-        out.linComb(self._scale, input)
+        out.lincomb(self._scale, input)
 
     @property
     def domain(self):

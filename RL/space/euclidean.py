@@ -146,7 +146,7 @@ class RN(LinearSpace):
 
         return self.__class__.Vector(self, data)
 
-    def linCombImpl(self, z, a, x, b, y):
+    def lincombImpl(self, z, a, x, b, y):
         """ Implement y = a*x + b*y using optimized BLAS rutines
 
         Parameters
@@ -172,7 +172,7 @@ class RN(LinearSpace):
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([4, 5, 6])
         >>> z = rn.element()
-        >>> rn.linComb(z, 2, x, 3, y)
+        >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
         RN(3).element([ 14.,  19.,  24.])
 
@@ -180,7 +180,7 @@ class RN(LinearSpace):
 
         if x is y and b != 0:
             # If x is aligned with y, we are looking at:     z = (a+b)*x
-            self.linCombImpl(z, a+b, x, 0, x)
+            self.lincombImpl(z, a+b, x, 0, x)
         elif z is x and z is y:
             # If all the vectors are aligned we have:        z = (a+b)*z
             self._scal(a+b, z.values)

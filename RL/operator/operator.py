@@ -484,7 +484,7 @@ class OperatorRightScalarMultiplication(Operator):
 
     def applyImpl(self, rhs, out):
         tmp = self._tmp if self._tmp is not None else self.domain.element()
-        tmp.linComb(self._scalar, rhs)
+        tmp.lincomb(self._scalar, rhs)
         self._op.applyImpl(tmp, out)
 
     @property

@@ -91,7 +91,7 @@ class FunctionSpace(Algebra):
                 return 0
         return FunctionSpace.Vector(self, function)
 
-    def linCombImpl(self, a, x, b, y):
+    def lincombImpl(self, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
 
         The created object is rather slow, and should only be used for testing purposes.

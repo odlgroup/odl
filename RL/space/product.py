@@ -198,9 +198,9 @@ class LinearProductSpace(LinearSpace):
 
         return self.element([space.zero() for space in self.spaces])
 
-    def linCombImpl(self, z, a, x, b, y):
+    def lincombImpl(self, z, a, x, b, y):
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
-            space.linCombImpl(zp, a, xp, b, yp)
+            space.lincombImpl(zp, a, xp, b, yp)
 
     def equals(self, other):
         """ Test if the product space is equal to another

@@ -48,7 +48,7 @@ class ProductTest(RLTestCase):
         self.assertAllAlmostEquals([v1, v2], v)
         self.assertAllAlmostEquals([v1, v2], u)
 
-    def testLinComb(self):
+    def testlincomb(self):
         H = RN(2)
         HxH = LinearProductSpace(H, H)
 
@@ -65,7 +65,7 @@ class ProductTest(RLTestCase):
         b = 1.23
 
         expected = [a*v1 + b*u1, a*v2 + b*u2]
-        HxH.linComb(z, a, v, b, u)
+        HxH.lincomb(z, a, v, b, u)
 
         self.assertAllAlmostEquals(z, expected)
 
@@ -168,7 +168,7 @@ class PowerTest(RLTestCase):
         self.assertAllAlmostEquals([v1, v2], v)
         self.assertAllAlmostEquals([v1, v2], u)
 
-    def testLinComb(self):
+    def testlincomb(self):
         H = RN(2)
         HxH = powerspace(H, 2)
 
@@ -185,7 +185,7 @@ class PowerTest(RLTestCase):
         b = 1.23
 
         expected = [a*v1 + b*u1, a*v2 + b*u2]
-        HxH.linComb(z, a, v, b, u)
+        HxH.lincomb(z, a, v, b, u)
 
         self.assertAllAlmostEquals(z, expected)
 
@@ -207,7 +207,7 @@ class PowerTest(RLTestCase):
         a = 3.12
         b = 1.23
 
-        HxH.linComb(z, a, v, b, u)
+        HxH.lincomb(z, a, v, b, u)
 
         # Assert that z1 and z2 has been modified as well
         self.assertAllAlmostEquals(z, [z1, z2])

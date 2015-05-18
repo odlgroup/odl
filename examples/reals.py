@@ -19,7 +19,7 @@ class Reals(HilbertSpace, Algebra):
     def innerImpl(self, x, y):
         return x.__val__ * y.__val__
 
-    def linCombImpl(self, z, a, x, b, y):
+    def lincombImpl(self, z, a, x, b, y):
         z.__val__ = a*x.__val__ + b*y.__val__
 
     def multiplyImpl(self, x, y):

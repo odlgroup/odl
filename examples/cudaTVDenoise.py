@@ -86,11 +86,11 @@ def denoise(x0, la, mu, iterations = 1):
     for i in range(iterations):
         # x = ((f * mu + (diff.T(diff(x)) + 2*x - diff.T(d-b)) * la)/(mu+2*la))
         diff.apply(x, xdiff)
-        x.linComb(C1, f, 2*C2, x)
+        x.lincomb(C1, f, 2*C2, x)
         xdiff -= d
         xdiff += b
         diff.applyAdjoint(xdiff, tmp)
-        x.linComb(1, x, C2, tmp)
+        x.lincomb(1, x, C2, tmp)
 
         # d = diff(x)-b
         diff.apply(x,d)

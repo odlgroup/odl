@@ -56,30 +56,30 @@ def doTest(function, message):
         for _ in range(iterations):
             function(zHost, xHost, yHost)
 
-#Lincomb tests
-doTest(lambda z,x,y: x.space.linComb(z,0,x,0,y), "z = 0")
-doTest(lambda z,x,y: x.space.linComb(z,0,x,1,y), "z = y")
-doTest(lambda z,x,y: x.space.linComb(z,0,x,2,y), "z = b*y")
+#lincomb tests
+doTest(lambda z,x,y: x.space.lincomb(z,0,x,0,y), "z = 0")
+doTest(lambda z,x,y: x.space.lincomb(z,0,x,1,y), "z = y")
+doTest(lambda z,x,y: x.space.lincomb(z,0,x,2,y), "z = b*y")
 
-doTest(lambda z,x,y: x.space.linComb(z,1,x,0,y), "z = x")
-doTest(lambda z,x,y: x.space.linComb(z,1,x,1,y), "z = x + y")
-doTest(lambda z,x,y: x.space.linComb(z,1,x,2,y), "z = x + b*y")
+doTest(lambda z,x,y: x.space.lincomb(z,1,x,0,y), "z = x")
+doTest(lambda z,x,y: x.space.lincomb(z,1,x,1,y), "z = x + y")
+doTest(lambda z,x,y: x.space.lincomb(z,1,x,2,y), "z = x + b*y")
 
-doTest(lambda z,x,y: x.space.linComb(z,2,x,0,y), "z = a*x")
-doTest(lambda z,x,y: x.space.linComb(z,2,x,1,y), "z = a*x + y")
-doTest(lambda z,x,y: x.space.linComb(z,2,x,2,y), "z = a*x + b*y")
+doTest(lambda z,x,y: x.space.lincomb(z,2,x,0,y), "z = a*x")
+doTest(lambda z,x,y: x.space.lincomb(z,2,x,1,y), "z = a*x + y")
+doTest(lambda z,x,y: x.space.lincomb(z,2,x,2,y), "z = a*x + b*y")
 
 #Test optimization for 1 aliased vector
-doTest(lambda z,x,y: x.space.linComb(z,1,z,0,y), "z = z")
-doTest(lambda z,x,y: x.space.linComb(z,1,z,1,y), "z += y")
-doTest(lambda z,x,y: x.space.linComb(z,1,z,2,y), "z += b*y")
+doTest(lambda z,x,y: x.space.lincomb(z,1,z,0,y), "z = z")
+doTest(lambda z,x,y: x.space.lincomb(z,1,z,1,y), "z += y")
+doTest(lambda z,x,y: x.space.lincomb(z,1,z,2,y), "z += b*y")
 
-doTest(lambda z,x,y: x.space.linComb(z,2,z,0,y), "z = a*z")
-doTest(lambda z,x,y: x.space.linComb(z,2,z,1,y), "z = a*z + y")
-doTest(lambda z,x,y: x.space.linComb(z,2,z,2,y), "z = a*z + b*y")
+doTest(lambda z,x,y: x.space.lincomb(z,2,z,0,y), "z = a*z")
+doTest(lambda z,x,y: x.space.lincomb(z,2,z,1,y), "z = a*z + y")
+doTest(lambda z,x,y: x.space.lincomb(z,2,z,2,y), "z = a*z + b*y")
 
 #Test optimization for 2 aliased vectors
-doTest(lambda z,x,y: x.space.linComb(z,2,z,2,z), "z = (a+b)*z")
+doTest(lambda z,x,y: x.space.lincomb(z,2,z,2,z), "z = (a+b)*z")
 
 #Non lincomb tests
 doTest(lambda z,x,y: x+y, "z = x + y")

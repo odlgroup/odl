@@ -35,7 +35,7 @@ class SimpleRN(HilbertSpace, Algebra):
         self._n = n
         self._field = RealNumbers()
 
-    def linCombImpl(self, z, a, x, b, y):
+    def lincombImpl(self, z, a, x, b, y):
         # Implement y = a*x + b*y using optimized BLAS rutines
 
         z.values[:] = a*x.values + b*y.values
@@ -105,15 +105,15 @@ ox, oy, oz = optX.makeVector(x.copy()), optX.makeVector(y.copy()), optX.makeVect
 sx, sy, sz = simpleX.makeVector(x.copy()), simpleX.makeVector(y.copy()), simpleX.makeVector(z.copy())
 
 
-print(" Lincomb:")
+print(" lincomb:")
 with Timer("SimpleRN"):
     for _ in range(iterations):
-        simpleX.linComb(sz, 2.13, sx, 3.14, sy)
+        simpleX.lincomb(sz, 2.13, sx, 3.14, sy)
 print("result: {}".format(sz[1:5]))
 
 with Timer("EuclideanSpace"):
     for _ in range(iterations):
-        optX.linComb(oz, 2.13, ox, 3.14, oy)
+        optX.lincomb(oz, 2.13, ox, 3.14, oy)
 print("result: {}".format(oz[1:5]))
 
 
