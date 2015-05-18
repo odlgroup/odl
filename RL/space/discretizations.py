@@ -97,6 +97,9 @@ def makeUniformDiscretization(parent, rnimpl):
         def __str__(self):
             return "UniformDiscretization(" + str(self._rn) + ")"
 
+        def __repr__(self):
+            return "UniformDiscretization(" + repr(self.parent) + "," + repr(self._rn) + ")"
+
         class Vector(RNVectortype):
             pass
 
@@ -194,6 +197,10 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
         def __str__(self):
             return ('PixelDiscretization(' + str(self._rn) + ', ' +
                     str(self.cols) + 'x' + str(self.rows) + ')')
+
+        
+        def __repr__(self):
+            return "PixelDiscretization(" + repr(self.parent) + ", " + repr(self._rn) + ", " + str(self.cols) + ', ' + str(self.rows) + ")"
 
         class Vector(RNVectortype):
             pass

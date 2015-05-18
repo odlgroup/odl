@@ -120,7 +120,7 @@ class RN(LinearSpace):
         --------
 
         >>> rn = RN(3)
-        >>> x = rn.element(numpy.array([1., 2., 3.]))
+        >>> x = rn.element(np.array([1., 2., 3.]))
         >>> x
         RN(3).element([ 1.,  2.,  3.])
         >>> y = rn.element([1, 2, 3])
@@ -128,24 +128,23 @@ class RN(LinearSpace):
         RN(3).element([ 1.,  2.,  3.])
 
         """
-
         if data is None:
             data = np.empty(self._n, dtype=float64)
 
         if not isinstance(data, np.ndarray):
-            data = np.array(data).astype(float64, copy=False)
+            data = np.array(data, dtype=np.float64)
         else:
             if data.shape != (self._n,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.n,))))
 
-            if data.dtype != float64:
+            if data.dtype != np.float64:
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(data, data.dtype)))
 
-        return self.__class__.Vector(self, data)
+        return self.Vector(self, data)
 
     def _lincomb(self, z, a, x, b, y):
         """ Implement y = a*x + b*y using optimized BLAS rutines
@@ -446,7 +445,7 @@ class RN(LinearSpace):
             >>> y[1:3] = [7, 8]
             >>> y
             RN(3).element([ 5.,  7.,  8.])
-            >>> y[:] = numpy.array([0, 0, 0])
+            >>> y[:] = np.array([0, 0, 0])
             >>> y
             RN(3).element([ 0.,  0.,  0.])
 

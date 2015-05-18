@@ -45,8 +45,6 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
-standard_library.install_aliases()
-
 
 class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     """The real space R^n, implemented in CUDA
@@ -130,19 +128,25 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         """
 
-        if data is None:
-            elem = self.impl.element()
+        if isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
+            return self.Vector(self, data)
+        elif data is None:
+            return self.element(self.impl.empty())
+        elif isinstance(data, np.ndarray):  # Create from numpy array
+            if data.shape != (self._n,):
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of shape {}, expected shape shape {}
+                '''.format(data, data.shape, (self.n,))))
 
-        if not isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
-            if isinstance(data, np.ndarray):  # Create from numpy array
-                # Create result and assign (could be optimized to one call)
-                elem = self.impl.element()
-                elem[:] = data
-            else:  # Create from intermediate numpy array
-                data = np.array(data)
-                return self.element(data)
+            data = data.astype(np.float64, copy=False)
 
-        return elem
+            # Create result and assign (could be optimized to one call)
+            elem = self.element()
+            elem[:] = data
+            return elem
+        else:  # Create from intermediate numpy array
+            as_array = np.array(data, dtype=np.float64)
+            return self.element(as_array)
 
     def _inner(self, x, y):
         """ Calculates the inner product of x and y

@@ -258,7 +258,8 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         if not self.contains(z):
             raise TypeError(errfmt('''
-            lincomb failed, z ({}) is not in space ({})'''.format(z, self)))
+            lincomb failed, z ({}) is not in space ({})
+            '''.format(repr(z), repr(self))))
 
         if not self.field.contains(a):
             raise TypeError(errfmt('''
@@ -267,12 +268,13 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         if not self.contains(x):
             raise TypeError(errfmt('''
-            lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
+            lincomb failed, x ({}) is not in space ({})
+            '''.format(repr(x), repr(self))))
 
         if b is None:  # Single argument
             if y is not None:
                 raise ValueError(errfmt('''
-                lincomb failed, y ({}) provided but not b'''.format(y)))
+                lincomb failed, y ({}) provided but not b'''.format(repr(y))))
 
             # Call method
             return self._lincomb(z, a, x, 0, x)
@@ -284,7 +286,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             if not self.contains(y):
                 raise TypeError(errfmt('''
                 lincomb failed, y ({}) is not in space ({})
-                '''.format(y, self)))
+                '''.format(repr(y), repr(self))))
 
             # Call method
             return self._lincomb(z, a, x, b, y)
@@ -599,7 +601,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return self._inner(x, y)
+        return float(self._inner(x, y))
 
     # Default implmentation
     def _norm(self, x):
