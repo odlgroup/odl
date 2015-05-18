@@ -259,7 +259,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         if not self.contains(z):
             raise TypeError(errfmt('''
-            Lincomb failed, z ({}) is not in space ({})'''.format(z, self)))
+            Lincomb failed, z ({}) is not in space ({})'''.format(repr(z), repr(self))))
 
         if not self.field.contains(a):
             raise TypeError(errfmt('''
@@ -268,12 +268,12 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         if not self.contains(x):
             raise TypeError(errfmt('''
-            Lincomb failed, x ({}) is not in space ({})'''.format(x, self)))
+            Lincomb failed, x ({}) is not in space ({})'''.format(repr(x), repr(self))))
 
         if b is None:  # Single argument
             if y is not None:
                 raise ValueError(errfmt('''
-                Lincomb failed, y ({}) provided but not b'''.format(y)))
+                Lincomb failed, y ({}) provided but not b'''.format(repr(y))))
 
             # Call method
             return self.linCombImpl(z, a, x, 0, x)
@@ -285,7 +285,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             if not self.contains(y):
                 raise TypeError(errfmt('''
                 Lincomb failed, y ({}) is not in space ({})
-                '''.format(y, self)))
+                '''.format(repr(y), repr(self))))
 
             # Call method
             return self.linCombImpl(z, a, x, b, y)
@@ -532,7 +532,7 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
-        return float64(self.normImpl(vector))
+        return float(self.normImpl(vector))
 
     # Default implmentation
     def distImpl(self, x, y):
@@ -585,7 +585,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return self.innerImpl(x, y)
+        return float(self.innerImpl(x, y))
 
     # Default implmentation
     def normImpl(self, x):

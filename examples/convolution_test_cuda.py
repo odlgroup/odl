@@ -50,7 +50,7 @@ class CudaConvolution(op.LinearOperator):
         self.space = kernel.space
         self.kernel = kernel
         self.adjkernel = self.space.element(kernel[::-1]) #The adjoint is the kernel reversed
-        self.norm = float64(sum(abs(self.kernel[:]))) #eval at host
+        self.norm = float(sum(abs(self.kernel[:]))) #eval at host
 
     def applyImpl(self, rhs, out):
         RLcpp.cuda.conv(rhs.impl, self.kernel.impl, out.impl)

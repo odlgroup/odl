@@ -126,7 +126,7 @@ projectionRN = cs.CudaRN(nPixels)
 projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
-dataDisc = prod.makePowerSpace(projectionDisc, nProjection)
+dataDisc = prod.powerspace(projectionDisc, nProjection)
 
 #Define the reconstruction space
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))

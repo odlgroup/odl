@@ -37,6 +37,9 @@ standard_library.install_aliases()
 
 class OperatorMeta(ABCMeta):
     def __call__(cls, *args, **kwargs):
+        pass
+
+    def __call__(cls, *args, **kwargs):
         obj = ABCMeta.__call__(cls, *args, **kwargs)
         if not hasattr(obj, 'domain'):
             raise NotImplementedError("'Operator' instances should have a 'domain' attribute")
@@ -97,7 +100,7 @@ class Operator(with_metaclass(OperatorMeta, object)):
         None
         """
 
-    def getDerivative(self, point):
+    def derivative(self, point):
         """ Get the derivative operator of this operator at `point`
         """
         raise NotImplementedError(errfmt('''
@@ -530,7 +533,7 @@ class LinearOperator(Operator):
         """
         return OperatorAdjoint(self)
 
-    def getDerivative(self, point):
+    def derivative(self, point):
         """ The derivative of linear operators is the operator itself
         """
         return self
@@ -554,15 +557,15 @@ class LinearOperator(Operator):
         if not self.range.contains(rhs):
             raise TypeError(errfmt('''
             rhs ({}) is not in the domain of this operators ({}) adjoint
-            '''.format(rhs, self)))
+            '''.format(repr(rhs), self)))
         if not self.domain.contains(out):
             raise TypeError(errfmt('''
             out ({}) is not in the range of this operators ({}) adjoint
-            '''.format(out, self)))
+            '''.format(repr(out), self)))
         if rhs is out:
             raise ValueError(errfmt('''
             rhs ({}) is the same as out ({}). Operators do not permit aliased
-            arguments'''.format(rhs, out)))
+            arguments'''.format(repr(rhs), repr(out))))
 
         self.applyAdjointImpl(rhs, out)
 
