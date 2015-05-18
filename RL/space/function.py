@@ -81,9 +81,9 @@ class FunctionSpace(Algebra):
         >>> space = FunctionSpace(R, R)
         >>> x = space.element(lambda t: t**2)
         >>> x(1)
-        1.0
+        1
         >>> x(3)
-        9.0
+        9
         """
 
         if function is None:
