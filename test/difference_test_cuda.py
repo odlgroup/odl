@@ -49,10 +49,10 @@ class ForwardDiff(LinearOperator):
 
         self.space = space
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff(rhs.data, out.data)
 
-    def applyAdjointImpl(self, rhs, out):
+    def _apply_adjoint(self, rhs, out):
         RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
 
     @property
@@ -75,11 +75,11 @@ class ForwardDiff2D(LinearOperator):
         self._domain = space
         self._range = productspace(space, space)
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
                                  self.domain.cols, self.domain.rows)
 
-    def applyAdjointImpl(self, rhs, out):
+    def _apply_adjoint(self, rhs, out):
         RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
                                     self.domain.cols, self.domain.rows)
 
@@ -93,7 +93,7 @@ class ForwardDiff2D(LinearOperator):
 
 
 class TestCudaForwardDifference(RLTestCase):
-    def testCGN(self):
+    def test_fwd_diff(self):
         # Continuous definition of problem
         I = sets.Interval(0, 1)
         space = L2(I)
@@ -113,7 +113,7 @@ class TestCudaForwardDifference(RLTestCase):
 
 
 class TestCudaForwardDifference2D(RLTestCase):
-    def testSquare(self):
+    def test_square(self):
         # Continuous definition of problem
         I = sets.Rectangle([0, 0], [1, 1])
         space = L2(I)
@@ -125,10 +125,10 @@ class TestCudaForwardDifference2D(RLTestCase):
         d = dd.makePixelDiscretization(space, rn, n, m)
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0],
-                            [0, 0, 1, 0, 0],
-                            [0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0]])
+                         [0, 0, 0, 0, 0],
+                         [0, 0, 1, 0, 0],
+                         [0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0]])
 
         diff = ForwardDiff2D(d)
         derivative = diff(fun)
@@ -156,7 +156,7 @@ class TestCudaForwardDifference2D(RLTestCase):
                                     [0, 0, 1, 0, 0],
                                     [0, 0, 0, 0, 0]])
 
-    def testRectangle(self):
+    def test_rectangle(self):
         # Continuous definition of problem
         I = sets.Rectangle([0, 0], [1, 1])
         space = L2(I)
@@ -170,10 +170,10 @@ class TestCudaForwardDifference2D(RLTestCase):
         d = dd.makePixelDiscretization(space, rn, n, m)
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 1, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0]])
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 1, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0]])
 
         diff = ForwardDiff2D(d)
         derivative = diff(fun)

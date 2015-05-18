@@ -58,7 +58,7 @@ class CudaProjector(OP.LinearOperator):
         self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
 
-    def applyImpl(self, data, out):
+    def _apply(self, data, out):
         #Create projector
         self.forward.setData(data.data_ptr)
 
@@ -68,9 +68,9 @@ class CudaProjector(OP.LinearOperator):
             self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, out[i].data_ptr)
 
 
-    def applyAdjointImpl(self, projections, out):
+    def _apply_adjoint(self, projections, out):
         #Zero out the return data
-        out.setZero()
+        out.set_zero()
 
         #Append all projections
         for i in range(len(self.geometries)):
@@ -159,9 +159,9 @@ def plotResult(x):
 
 #Solve using landweber
 x = reconDisc.zero()
-#solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, partialResults=solvers.forEachPartial(plotResult))
-solvers.landweber(projector, x, projections, 5, omega=0.4/normEst, partialResults=solvers.printIterationPartial())
-#solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+#solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, part_results=solvers.ForEachPartial(plotResult))
+solvers.landweber(projector, x, projections, 5, omega=0.4/normEst, part_results=solvers.PrintIterationPartial())
+#solvers.conjugate_gradient(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
 
 plt.imshow(x[:].reshape(nVoxels))
 plt.show()

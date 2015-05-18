@@ -35,7 +35,7 @@ standard_library.install_aliases()
 
 
 class ProductTest(RLTestCase):
-    def testRxR(self):
+    def test_RxR(self):
         H = RN(2)
         HxH = LinearProductSpace(H, H)
         self.assertTrue(len(HxH) == 2)
@@ -48,7 +48,7 @@ class ProductTest(RLTestCase):
         self.assertAllAlmostEquals([v1, v2], v)
         self.assertAllAlmostEquals([v1, v2], u)
 
-    def testlincomb(self):
+    def test_lincomb(self):
         H = RN(2)
         HxH = LinearProductSpace(H, H)
 
@@ -69,7 +69,7 @@ class ProductTest(RLTestCase):
 
         self.assertAllAlmostEquals(z, expected)
 
-    def testMetric(self):
+    def test_metric(self):
         H = EuclideanSpace(2)
         v11 = H.element([1, 2])
         v12 = H.element([5, 3])
@@ -116,7 +116,7 @@ class ProductTest(RLTestCase):
         w2 = HxH.element(v21, v22)
         self.assertAlmostEquals(w1.dist(w2), v11.dist(v21) + v12.dist(v22))
 
-    def testNorm(self):
+    def test_norm(self):
         H = EuclideanSpace(2)
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])
@@ -155,7 +155,7 @@ class ProductTest(RLTestCase):
 
 
 class PowerTest(RLTestCase):
-    def testRxR(self):
+    def test_RxR(self):
         H = RN(2)
         HxH = powerspace(H, 2)
         self.assertTrue(len(HxH) == 2)
@@ -168,7 +168,7 @@ class PowerTest(RLTestCase):
         self.assertAllAlmostEquals([v1, v2], v)
         self.assertAllAlmostEquals([v1, v2], u)
 
-    def testlincomb(self):
+    def test_lincomb(self):
         H = RN(2)
         HxH = powerspace(H, 2)
 
@@ -189,7 +189,7 @@ class PowerTest(RLTestCase):
 
         self.assertAllAlmostEquals(z, expected)
 
-    def testInplaceModify(self):
+    def test_inplace_modify(self):
         H = RN(2)
         HxH = powerspace(H, 2)
 

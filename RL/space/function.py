@@ -91,14 +91,14 @@ class FunctionSpace(Algebra):
                 return 0
         return FunctionSpace.Vector(self, function)
 
-    def lincombImpl(self, a, x, b, y):
+    def _lincomb(self, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
 
         The created object is rather slow, and should only be used for testing purposes.
         """
         return a*x + b*y  # Use operator overloading
 
-    def multiplyImpl(self, x, y):
+    def _multiply(self, x, y):
         """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
 
         The created object is rather slow, and should only be used for testing purposes.
@@ -151,7 +151,7 @@ class FunctionSpace(Algebra):
                 raise TypeError("'function' is not callable")
             self.function = function
 
-        def applyImpl(self, rhs):
+        def _apply(self, rhs):
             """ Apply the functional in some point
             """
             return self.function(rhs)
@@ -184,7 +184,7 @@ class L2(FunctionSpace, HilbertSpace):
     def __init__(self, domain, field=None):
         super().__init__(domain, field)
 
-    def innerImpl(self, v1, v2):
+    def _inner(self, v1, v2):
         """ TODO: remove?
         """
         raise NotImplementedError(errfmt('''

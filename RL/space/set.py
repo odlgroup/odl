@@ -117,7 +117,7 @@ class RealNumbers(Set):
         return isinstance(other, Real)
 
     def element(self, value=0):
-        return float64(value)
+        return float(value)
 
     def __str__(self):
         return "RealNumbers"

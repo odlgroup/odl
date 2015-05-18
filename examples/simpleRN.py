@@ -35,16 +35,16 @@ class SimpleRN(HilbertSpace, Algebra):
         self._n = n
         self._field = RealNumbers()
 
-    def lincombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         # Implement y = a*x + b*y using optimized BLAS rutines
 
-        z.values[:] = a*x.values + b*y.values
+        z.data[:] = a*x.data + b*y.data
 
-    def innerImpl(self, x, y):
-        return float64(np.vdot(x.values, y.values))
+    def _inner(self, x, y):
+        return float(np.vdot(x.data, y.data))
 
-    def multiplyImpl(self, x, y):
-        y.values[:] = x.values*y.values
+    def _multiply(self, x, y):
+        y.data[:] = x.data * y.data
 
     def empty(self):
         return self.makeVector(np.empty(self._n, dtype=float64))
@@ -76,18 +76,18 @@ class SimpleRN(HilbertSpace, Algebra):
                                                              copy=False))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
-        def __init__(self, space, values):
+        def __init__(self, space, data):
             super().__init__(space)
-            self.values = values
+            self.data = data
 
         def __len__(self):
             return self.space._n
 
         def __getitem__(self, index):
-            return self.values.__getitem__(index)
+            return self.data.__getitem__(index)
 
         def __setitem__(self, index, value):
-            return self.values.__setitem__(index, value)
+            return self.data.__setitem__(index, value)
 
 
 #Do some tests to compare

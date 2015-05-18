@@ -45,7 +45,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         self._space = space
         self._scal = float(scalar)
 
-    def applyImpl(self, input, out):
+    def _apply(self, input, out):
         out.lincomb(self._scal, input)
 
     @property

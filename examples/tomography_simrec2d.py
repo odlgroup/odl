@@ -57,7 +57,7 @@ class Projector(OP.LinearOperator):
         self._domain = domain
         self._range = range
 
-    def applyImpl(self, data, out):
+    def _apply(self, data, out):
         #Create projector
         forward = SR.SRPyForwardProject.SimpleForwardProjector(data.data.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
 
@@ -67,7 +67,7 @@ class Projector(OP.LinearOperator):
             result = forward.project(geo.sourcePosition,geo.detectorOrigin,geo.pixelDirection)
             out[i][:] = result.transpose()
 
-    def applyAdjointImpl(self, projections, out):
+    def _apply_adjoint(self, projections, out):
         #Create backprojector
         back = SR.SRPyReconstruction.BackProjector(self.nVoxels,self.volumeOrigin,self.voxelSize)
 
@@ -164,8 +164,8 @@ print(x.inner(projector.T(y)), projector(x).inner(y))
 
 #Solve using landweber
 x = reconDisc.zero()
-#solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.forEachPartial(plotResult))
-solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
-#solvers.gaussNewton(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+#solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, part_results=solvers.ForEachPartial(plotResult))
+solvers.conjugate_gradient(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
+#solvers.gauss_newton(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
 
 #plt.show()

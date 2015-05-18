@@ -36,7 +36,6 @@ from solverExamples import *
 from RL.utility.testutils import Timer, consume
 
 import numpy as np
-from numpy import float64
 import matplotlib.pyplot as plt
 from scipy import ndimage
 
@@ -49,13 +48,13 @@ class Convolution(op.LinearOperator):
         self.kernel = kernel.data
         self.adjkernel = kernel.data[::-1]
         self.space = kernel.space
-        self.norm = float64(sum(abs(self.kernel)))
+        self.norm = float(sum(abs(self.kernel)))
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         ndimage.convolve(rhs.data, self.kernel, output=out.data,
                          mode='wrap')
 
-    def applyAdjointImpl(self, rhs, out):
+    def _apply_adjoint(self, rhs, out):
         ndimage.convolve(rhs.data, self.adjkernel, output=out.data,
                          mode='wrap')
 
@@ -94,12 +93,12 @@ iterations = 100
 omega = 1/conv.opNorm()**2
 
 # Display partial
-partial = solvers.forEachPartial(lambda result: plt.plot(conv(result)[:]))
+partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result)[:]))
 
 # Test CGN
 plt.figure()
 plt.plot(rhs)
-solvers.conjugateGradient(conv, d.zero(), rhs, iterations, partial)
+solvers.conjugate_gradient(conv, d.zero(), rhs, iterations, partial)
 
 # Landweber
 plt.figure()
@@ -108,10 +107,10 @@ solvers.landweber(conv, d.zero(), rhs, iterations, omega, partial)
 
 # testTimingCG
 with Timer("Optimized CG"):
-    solvers.conjugateGradient(conv, d.zero(), rhs, iterations)
+    solvers.conjugate_gradient(conv, d.zero(), rhs, iterations)
 
 with Timer("Base CG"):
-    conjugateGradientBase(conv, d.zero(), rhs, iterations)
+    conjugate_gradientBase(conv, d.zero(), rhs, iterations)
 
 # Landweber timing
 with Timer("Optimized LW"):

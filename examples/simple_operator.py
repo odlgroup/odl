@@ -17,8 +17,8 @@ class addOp(Operator):
         self.range = RN(n)
         self.domain = RN(n)
 
-    def applyImpl(self, rhs, out):
-        out.values[:] = rhs.values[:] + self.x
+    def _apply(self, rhs, out):
+        out.data[:] = rhs.data[:] + self.x
 
 n = 3
 rn = RN(n)

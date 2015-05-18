@@ -35,7 +35,7 @@ standard_library.install_aliases()
 
 
 class RNTest(RLTestCase):
-    def elements(self, rn):
+    def vectors(self, rn):
         # Generate numpy vectors
         y = np.random.rand(rn.n)
         x = np.random.rand(rn.n)
@@ -47,132 +47,134 @@ class RNTest(RLTestCase):
         zVec = rn.element(z)
         return x, y, z, xVec, yVec, zVec
 
-    def dolincombTest(self, a, b, n=10):
+    def _test_lincomb(self, a, b, n=10):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
         rn = RN(n)
 
         # Unaliased arguments
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x, y, z, xVec, yVec, zVec = self.vectors(rn)
 
         z[:] = a*x + b*y
         rn.lincomb(zVec, a, xVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # First argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x, y, z, xVec, yVec, zVec = self.vectors(rn)
 
         z[:] = a*z + b*y
         rn.lincomb(zVec, a, zVec, b, yVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Second argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x, y, z, xVec, yVec, zVec = self.vectors(rn)
 
         z[:] = a*x + b*z
         rn.lincomb(zVec, a, xVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Both arguments aliased with each other
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x, y, z, xVec, yVec, zVec = self.vectors(rn)
 
         z[:] = a*x + b*x
         rn.lincomb(zVec, a, xVec, b, xVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # All aliased
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x, y, z, xVec, yVec, zVec = self.vectors(rn)
         z[:] = a*z + b*z
         rn.lincomb(zVec, a, zVec, b, zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
-    def testlincomb(self):
+    def test_lincomb(self):
         scalar_values = [0, 1, -1, 3.41]
         for a in scalar_values:
             for b in scalar_values:
-                self.dolincombTest(a, b)
+                self._test_lincomb(a, b)
 
 
 class OperatorOverloadTest(RLTestCase):
-    def doUnaryOperatorTest(self, function, n=10):
+    def _test_unary_operator(self, function, n=10):
         """ Verifies that the statement y=function(x) gives equivalent
         results to Numpy.
         """
-        x = np.random.rand(n)
-
         rn = RN(n)
-        xVec = rn.element(x)
 
+        x_arr = np.random.rand(n)
+        y_arr = function(x_arr)
+
+        x = rn.element(x_arr)
         y = function(x)
-        yVec = function(xVec)
 
-        self.assertAllAlmostEquals(xVec, x)
-        self.assertAllAlmostEquals(yVec, y)
+        self.assertAllAlmostEquals(x, x_arr)
+        self.assertAllAlmostEquals(y, y_arr)
 
-    def doBinaryOperatorTest(self, function, n=10):
+    def _test_binary_operator(self, function, n=10):
         """ Verifies that the statement z=function(x,y) gives equivalent
         results to Numpy.
         """
-        y = np.random.rand(n)
-        x = np.random.rand(n)
-
         rn = RN(n)
-        yVec = rn.element(y)
-        xVec = rn.element(x)
 
+        x_arr = np.random.rand(n)
+        y_arr = np.random.rand(n)
+        z_arr = function(x_arr, y_arr)
+
+        x = rn.element(x_arr)
+        y = rn.element(y_arr)
         z = function(x, y)
-        zVec = function(xVec, yVec)
 
-        self.assertAllAlmostEquals(xVec, x)
-        self.assertAllAlmostEquals(yVec, y)
-        self.assertAllAlmostEquals(zVec, z)
+        self.assertAllAlmostEquals(x, x_arr)
+        self.assertAllAlmostEquals(y, y_arr)
+        self.assertAllAlmostEquals(z, z_arr)
 
-    def testOperators(self):
+    def test_operators(self):
         """ Test of all operator overloads against the corresponding
         Numpy implementation
         """
         # Unary operators
-        self.doUnaryOperatorTest(lambda x: +x)
-        self.doUnaryOperatorTest(lambda x: -x)
+        self._test_unary_operator(lambda x: +x)
+        self._test_unary_operator(lambda x: -x)
 
         # Scalar multiplication
         for scalar in [-31.2, -1, 0, 1, 2.13]:
-            def incMul(x): x *= scalar
-            self.doUnaryOperatorTest(incMul)
-            self.doUnaryOperatorTest(lambda x: x*scalar)
+            def imul(x):
+                x *= scalar
+            self._test_unary_operator(imul)
+            self._test_unary_operator(lambda x: x*scalar)
 
         # Scalar division
         for scalar in [-31.2, -1, 1, 2.13]:
-            def incDiv(x): x /= scalar
-            self.doUnaryOperatorTest(incDiv)
-            self.doUnaryOperatorTest(lambda x: x/scalar)
+            def idiv(x):
+                x /= scalar
+            self._test_unary_operator(idiv)
+            self._test_unary_operator(lambda x: x/scalar)
 
         # Incremental operations
-        def incAdd(x, y):
+        def iadd(x, y):
             x += y
 
-        def incSub(x, y):
+        def isub(x, y):
             x -= y
 
-        self.doBinaryOperatorTest(incAdd)
-        self.doBinaryOperatorTest(incSub)
+        self._test_binary_operator(iadd)
+        self._test_binary_operator(isub)
 
         # Incremental operators with aliased inputs
-        def incAddAliased(x):
+        def iadd_aliased(x):
             x += x
 
-        def incSubAliased(x):
+        def isub_aliased(x):
             x -= x
-        self.doUnaryOperatorTest(incAddAliased)
-        self.doUnaryOperatorTest(incSubAliased)
+        self._test_unary_operator(iadd_aliased)
+        self._test_unary_operator(isub_aliased)
 
         # Binary operators
-        self.doBinaryOperatorTest(lambda x, y: x + y)
-        self.doBinaryOperatorTest(lambda x, y: x - y)
+        self._test_binary_operator(lambda x, y: x + y)
+        self._test_binary_operator(lambda x, y: x - y)
 
         # Binary with aliased inputs
-        self.doUnaryOperatorTest(lambda x: x + x)
-        self.doUnaryOperatorTest(lambda x: x - x)
+        self._test_unary_operator(lambda x: x + x)
+        self._test_unary_operator(lambda x: x - x)
 
 
 if __name__ == '__main__':

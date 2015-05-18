@@ -46,10 +46,10 @@ class MultiplyOp(OP.LinearOperator):
                        if range is None else range)
         self.matrix = matrix
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         out.data[:] = np.dot(self.matrix, rhs.data)
 
-    def applyAdjointImpl(self, rhs, out):
+    def _apply_adjoint(self, rhs, out):
         out.data[:] = np.dot(self.matrix.T, rhs.data)
 
     @property
@@ -64,7 +64,7 @@ class MultiplyOp(OP.LinearOperator):
 class TestMatrixSolve(RLTestCase):
     """ Tests solutions of the linear equation Ax = b with dense A
     """
-    def testLandweber(self):
+    def test_landweber(self):
         n = 3
 
         # Np as validation
@@ -75,19 +75,19 @@ class TestMatrixSolve(RLTestCase):
 
         # Vector representation
         rn = EuclideanSpace(n)
-        xVec = rn.element(x)
-        bVec = rn.element(b)
+        xvec = rn.element(x)
+        bvec = rn.element(b)
 
         # Make operator
         norm = np.linalg.norm(A, ord=2)
         Aop = MultiplyOp(A)
 
         # Solve using landweber
-        solvers.landweber(Aop, xVec, bVec, iterations=n*50, omega=1/norm**2)
+        solvers.landweber(Aop, xvec, bvec, iterations=n*50, omega=1/norm**2)
 
-        self.assertAllAlmostEquals(xVec, x, places=2)
+        self.assertAllAlmostEquals(xvec, x, places=2)
 
-    def testCGN(self):
+    def test_conjugate_gradient(self):
         n = 3
 
         # Np as validation
@@ -97,18 +97,18 @@ class TestMatrixSolve(RLTestCase):
 
         # Vector representation
         rn = EuclideanSpace(n)
-        xVec = rn.element(x)
-        bVec = rn.element(b)
+        xvec = rn.element(x)
+        bvec = rn.element(b)
 
         # Make operator
         Aop = MultiplyOp(A)
 
         # Solve using conjugate gradient
-        solvers.conjugateGradient(Aop, xVec, bVec, iterations=n)
+        solvers.conjugate_gradient(Aop, xvec, bvec, iterations=n)
 
-        self.assertAllAlmostEquals(xVec, x, places=2)
+        self.assertAllAlmostEquals(xvec, x, places=2)
 
-    def testGaussNewton(self):
+    def test_gauss_newton(self):
         n = 100
 
         # Np as validation
@@ -118,16 +118,16 @@ class TestMatrixSolve(RLTestCase):
 
         # Vector representation
         rn = EuclideanSpace(n)
-        xVec = rn.element(x)
-        bVec = rn.element(b)
+        xvec = rn.element(x)
+        bvec = rn.element(b)
 
         # Make operator
         Aop = MultiplyOp(A)
 
         # Solve using conjugate gradient
-        solvers.gaussNewton(Aop, xVec, bVec, iterations=n)
+        solvers.gauss_newton(Aop, xvec, bvec, iterations=n)
 
-        self.assertAllAlmostEquals(xVec, x, places=2)
+        self.assertAllAlmostEquals(xvec, x, places=2)
 
 
 if __name__ == '__main__':

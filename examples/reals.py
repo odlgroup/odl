@@ -16,13 +16,13 @@ class Reals(HilbertSpace, Algebra):
     def __init__(self):
         self._field = RealNumbers()
 
-    def innerImpl(self, x, y):
+    def _inner(self, x, y):
         return x.__val__ * y.__val__
 
-    def lincombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         z.__val__ = a*x.__val__ + b*y.__val__
 
-    def multiplyImpl(self, x, y):
+    def _multiply(self, x, y):
         y.__val__ *= x.__val__
 
     @property

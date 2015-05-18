@@ -57,12 +57,12 @@ class ForwardDiff2D(LinearOperator):
 
 =======
         self._range = powerspace(space,2)
-        
+
 >>>>>>> master
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data, self.domain.cols, self.domain.rows)
 
-    def applyAdjointImpl(self, rhs, out):
+    def _apply_adjoint(self, rhs, out):
         RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data, self.domain.cols, self.domain.rows)
 
     @property
@@ -97,7 +97,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
         diff.apply(x,xdiff)
         xdiff += d
         xdiff -= b
-        diff.applyAdjoint(xdiff,tmp)
+        diff.apply_adjoint(xdiff,tmp)
 
         L2.lincomb(C1,f,2*C2,x)
         x.lincomb(C2,tmp)
@@ -154,7 +154,7 @@ def TVdenoise2DOpt(x0, la, mu, iterations = 1):
         diff.apply(x,xdiff)
         xdiff += d
         xdiff -= b
-        diff.applyAdjoint(xdiff,tmp)
+        diff.apply_adjoint(xdiff,tmp)
         L2.lincomb(C1,f,2*C2,x)
         x.lincomb(C2,tmp)
 

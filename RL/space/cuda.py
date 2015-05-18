@@ -144,7 +144,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         return elem
 
-    def innerImpl(self, x, y):
+    def _inner(self, x, y):
         """ Calculates the inner product of x and y
 
         Parameters
@@ -174,7 +174,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         return self.impl.inner(x.data, y.data)
 
-    def normImpl(self, x):
+    def _norm(self, x):
         """ Calculates the 2-norm of x
 
         This method is implemented separately from `sqrt(inner(x,x))`
@@ -205,7 +205,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         return sqrt(self.impl.normSq(x.data))
 
-    def lincombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
 
         z = a*x + b*y
@@ -237,9 +237,10 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> z
         CudaRN(3).element([ 14.,  19.,  24.])
         """
+
         self.impl.lincomb(z.data, a, x.data, b, y.data)
 
-    def multiplyImpl(self, x, y):
+    def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
         result to `y`
 

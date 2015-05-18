@@ -198,9 +198,9 @@ class LinearProductSpace(LinearSpace):
 
         return self.element([space.zero() for space in self.spaces])
 
-    def lincombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
-            space.lincombImpl(zp, a, xp, b, yp)
+            space._lincomb(zp, a, xp, b, yp)
 
     def equals(self, other):
         """ Test if the product space is equal to another
@@ -362,19 +362,19 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
             self.prod_norm = prod_norm
         else:
             try:
-                order = float64(prod_norm)
+                order = float(prod_norm)
             except TypeError:
                 raise TypeError(errfmt('''
                 'prod_norm' must be either callable or convertible to
-                float64'''))
+                float'''))
             self.prod_norm = partial(np.linalg.norm, ord=order)
 
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
-    def distImpl(self, x, y):
+    def _dist(self, x, y):
         dists = np.fromiter((
-            spc.distImpl(xp, yp) * w
+            spc._dist(xp, yp) * w
             for spc, w, xp, yp in zip(self.spaces, self.weights,
                                       x.parts, y.parts)),
             dtype=float64, count=self._nfactors)
@@ -475,19 +475,19 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
             self.prod_norm = prod_norm
         else:
             try:
-                order = float64(prod_norm)
+                order = float(prod_norm)
             except TypeError:
                 raise TypeError(errfmt('''
                 'prod_norm' must be either callable or convertible to
-                float64'''))
+                float'''))
             self.prod_norm = partial(np.linalg.norm, ord=order)
 
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
-    def normImpl(self, x):
+    def _norm(self, x):
         norms = np.fromiter((
-            spc.normImpl(xp) * w
+            spc._norm(xp) * w
             for spc, w, xp in zip(self.spaces, self.weights, x.parts)),
             dtype=float64, count=self._nfactors)
         return self.prod_norm(norms)
@@ -553,9 +553,9 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
-    def innerImpl(self, x, y):
+    def _inner(self, x, y):
         return sum(
-            spc.innerImpl(xp, yp) * w
+            spc._inner(xp, yp) * w
             for spc, w, xp, yp in zip(self.spaces, self.weights,
                                       x.parts, y.parts))
 

@@ -60,8 +60,8 @@ class TruncationDiscretization(EuclideanSpace, Discretization):
         self.parent = parent
         super().__init__(n)
 
-    def innerImpl(self, v1, v2):
-        return super().innerImpl(v1, v2)
+    def _inner(self, v1, v2):
+        return super()._inner(v1, v2)
 
     def zero(self):
         return self.element(np.zeros(self.n), copy=False)
@@ -80,7 +80,7 @@ class TruncationDiscretization(EuclideanSpace, Discretization):
         return self.__class__.Vector(self, *args, **kwargs)
 
     def integrate(self, vector):
-        return vector.values.sum()
+        return vector.data.sum()
 
     def points(self):
         return np.arange(self.n)

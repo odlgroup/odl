@@ -64,11 +64,11 @@ def makeUniformDiscretization(parent, rnimpl):
             self._rn = rn
             self.scale = (self.parent.domain.length / (self.n - 1))
 
-        def innerImpl(self, v1, v2):
-            return self._rn.innerImpl(v1, v2) * self.scale
+        def _inner(self, v1, v2):
+            return self._rn._inner(v1, v2) * self.scale
 
-        def normImpl(self, vector):
-            return self._rn.normImpl(vector) * sqrt(self.scale)
+        def _norm(self, vector):
+            return self._rn._norm(vector) * sqrt(self.scale)
 
         def __eq__(self, other):
             return (isinstance(other, UniformDiscretization) and
@@ -145,11 +145,11 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                   (self.rows - 1))
             self.scale = dx * dy
 
-        def innerImpl(self, v1, v2):
-            return self._rn.innerImpl(v1, v2) * self.scale
+        def _inner(self, v1, v2):
+            return self._rn._inner(v1, v2) * self.scale
 
-        def normImpl(self, vector):
-            return self._rn.normImpl(vector) * sqrt(self.scale)
+        def _norm(self, vector):
+            return self._rn._norm(vector) * sqrt(self.scale)
 
         def equals(self, other):
             return (isinstance(other, PixelDiscretization) and
@@ -177,7 +177,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                 return super().element(data)
 
         def integrate(self, vector):
-            return float64(self._rn.sum(vector) * self.scale)
+            return float(self._rn.sum(vector) * self.scale)
 
         def points(self):
             x, y = np.meshgrid(np.linspace(self.parent.domain.begin[0],

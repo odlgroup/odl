@@ -39,55 +39,55 @@ standard_library.install_aliases()
 
 
 class TestInit(RLTestCase):
-    def testEmpty(self):
-        R = CudaRN(3)
-        x = R.element()
+    def test_empty(self):
+        r3 = CudaRN(3)
+        x = r3.element()
         # Nothing to test, simply check that code runs
 
-    def testZero(self):
-        R3d = CudaRN(3)
-        self.assertAllAlmostEquals(R3d.zero(), [0, 0, 0])
+    def test_zero(self):
+        r3 = CudaRN(3)
+        self.assertAllAlmostEquals(r3.zero(), [0, 0, 0])
 
-    def testListInit(self):
-        R = CudaRN(3)
-        x = R.element([1, 2, 3])
+    def test_list_init(self):
+        r3 = CudaRN(3)
+        x = r3.element([1, 2, 3])
         self.assertAllAlmostEquals(x, [1, 2, 3])
 
-    def testNPInit(self):
-        R = CudaRN(3)
+    def test_ndarray_init(self):
+        r3 = CudaRN(3)
 
         x0 = np.array([1., 2., 3.])
-        x = R.element(x0)
+        x = r3.element(x0)
         self.assertAllAlmostEquals(x, x0)
 
         x0 = np.array([1, 2, 3], dtype=float64)
-        x = R.element(x0)
+        x = r3.element(x0)
         self.assertAllAlmostEquals(x, x0)
 
         x0 = np.array([1, 2, 3], dtype=int)
-        x = R.element(x0)
+        x = r3.element(x0)
         self.assertAllAlmostEquals(x, x0)
 
 
 class TestAccessors(RLTestCase):
-    def testGetItem(self):
-        R3d = CudaRN(3)
+    def test_getitem(self):
+        r3 = CudaRN(3)
         y = [1, 2, 3]
-        x = R3d.element(y)
+        x = r3.element(y)
 
         for index in [0, 1, 2, -1, -2, -3]:
             self.assertAlmostEquals(x[index], y[index])
 
-    def testIterator(self):
-        R3d = CudaRN(3)
+    def test_iterator(self):
+        r3 = CudaRN(3)
         y = [1, 2, 3]
-        x = R3d.element(y)
+        x = r3.element(y)
 
         self.assertAlmostEquals([a for a in x], [b for b in y])
 
-    def testGetExceptions(self):
-        R3d = CudaRN(3)
-        x = R3d.element([1, 2, 3])
+    def test_getitem_index_error(self):
+        r3 = CudaRN(3)
+        x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
             result = x[-4]
@@ -95,17 +95,17 @@ class TestAccessors(RLTestCase):
         with self.assertRaises(IndexError):
             result = x[3]
 
-    def testSetItem(self):
-        R3d = CudaRN(3)
-        x = R3d.element([42,42,42])
+    def test_setitem(self):
+        r3 = CudaRN(3)
+        x = r3.element([42, 42, 42])
 
         for index in [0, 1, 2, -1, -2, -3]:
             x[index] = index
             self.assertAlmostEquals(x[index], index)
 
-    def testSetItemOutOfBounds(self):
-        R3d = CudaRN(3)
-        x = R3d.element([1, 2, 3])
+    def test_setitem_index_error(self):
+        r3 = CudaRN(3)
+        x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
             x[-4] = 0
@@ -113,15 +113,15 @@ class TestAccessors(RLTestCase):
         with self.assertRaises(IndexError):
             x[3] = 0
 
-    def doGetSliceCase(self, slice):
+    def _test_getslice(self, slice):
         # Validate get against python list behaviour
-        R6d = CudaRN(6)
+        r6 = CudaRN(6)
         y = [0, 1, 2, 3, 4, 5]
-        x = R6d.element(y)
+        x = r6.element(y)
 
         self.assertAllAlmostEquals(x[slice], y[slice])
 
-    def testGetSlice(self):
+    def test_getslice(self):
         # Tests getting all combinations of slices
         steps = [None, -2, -1, 1, 2]
         starts = [None, -1, -3, 0, 2, 5]
@@ -130,28 +130,28 @@ class TestAccessors(RLTestCase):
         for start in starts:
             for end in ends:
                 for step in steps:
-                    self.doGetSliceCase(slice(start, end, step))
+                    self._test_getslice(slice(start, end, step))
 
     def testGetSliceExceptions(self):
-        R3d = CudaRN(3)
-        xd = R3d.element([1, 2, 3])
+        r3 = CudaRN(3)
+        xd = r3.element([1, 2, 3])
 
-        #Bad slice
+        # Bad slice
         with self.assertRaises(IndexError):
             result = xd[10:13]
 
-    def doSetSliceCase(self, slice):
+    def _test_setslice(self, slice):
         # Validate set against python list behaviour
-        R6d = CudaRN(6)
+        r6 = CudaRN(6)
         z = [7, 8, 9, 10, 11, 10]
         y = [0, 1, 2, 3, 4, 5]
-        x = R6d.element(y)
+        x = r6.element(y)
 
         x[slice] = z[slice]
         y[slice] = z[slice]
         self.assertAllAlmostEquals(x, y)
 
-    def testSetSlice(self):
+    def test_setslice(self):
         # Tests a range of combination of slices
         steps = [None, -2, -1, 1, 2]
         starts = [None, -1, -3, 0, 2, 5]
@@ -160,17 +160,17 @@ class TestAccessors(RLTestCase):
         for start in starts:
             for end in ends:
                 for step in steps:
-                    self.doSetSliceCase(slice(start, end, step))
+                    self._test_setslice(slice(start, end, step))
 
-    def testSetSliceExceptions(self):
-        R3d = CudaRN(3)
-        xd = R3d.element([1, 2, 3])
+    def test_setslice_index_error(self):
+        r3 = CudaRN(3)
+        xd = r3.element([1, 2, 3])
 
-        #Bad slice
+        # Bad slice
         with self.assertRaises(IndexError):
             xd[10:13] = [1, 2, 3]
 
-        #Bad size of rhs
+        # Bad size of rhs
         with self.assertRaises(IndexError):
             xd[:] = []
 
@@ -181,173 +181,175 @@ class TestAccessors(RLTestCase):
             xd[:] = [1, 2, 3, 4]
 
 
-class TestFunctions(RLTestCase):
-    def testNorm(self):
-        R3d = CudaRN(3)
-        xd = R3d.element([1, 2, 3])
+class TestMethods(RLTestCase):
+    def test_norm(self):
+        r3 = CudaRN(3)
+        xd = r3.element([1, 2, 3])
 
         correct_norm_squared = 1**2 + 2**2 + 3**2
         correct_norm = math.sqrt(correct_norm_squared)
 
-        #Space function
-        self.assertAlmostEquals(R3d.norm(xd), correct_norm)
+        # Space function
+        self.assertAlmostEquals(r3.norm(xd), correct_norm)
 
-        #Member function
+        # Member function
         self.assertAlmostEquals(xd.norm(), correct_norm)
 
-    def testInner(self):
-        R3d = CudaRN(3)
-        xd = R3d.element([1, 2, 3])
-        yd = R3d.element([5, 3, 9])
+    def test_inner(self):
+        r3 = CudaRN(3)
+        xd = r3.element([1, 2, 3])
+        yd = r3.element([5, 3, 9])
 
         correct_inner = 1*5 + 2*3 + 3*9
 
-        #Space function
-        self.assertAlmostEquals(R3d.inner(xd,yd), correct_inner)
+        # Space function
+        self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
 
-        #Member function
+        # Member function
         self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
-    def elements(self, rn):
-        # Generate numpy vectors
-        x, y, z = np.random.rand(rn.n), np.random.rand(rn.n), np.random.rand(rn.n)
+    def vectors(self, rn):
+        # Generate numpy arrays
+        x_arr, y_arr, z_arr = (np.random.rand(rn.n), np.random.rand(rn.n),
+                               np.random.rand(rn.n))
 
         # Make rn vectors
-        xVec, yVec, zVec = rn.element(x), rn.element(y), rn.element(z)
+        x, y, z = rn.element(x_arr), rn.element(y_arr), rn.element(z_arr)
 
-        return x, y, z, xVec, yVec, zVec
+        return x_arr, y_arr, z_arr, x, y, z
 
-    def dolincombTest(self, a, b, n=100):
+    def _test_lincomb(self, a, b, n=100):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
         rn = CudaRN(n)
 
         # Unaliased arguments
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a*x + b*y
-        rn.lincomb(zVec, a, xVec, b, yVec)
-        self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
+        z[:] = a * x_arr + b * y_arr
+        rn.lincomb(z, a, x, b, y)
+        self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # First argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a*z + b*y
-        rn.lincomb(zVec, a, zVec, b, yVec)
-        self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
+        z[:] = a * z_arr + b * y_arr
+        rn.lincomb(zVec, a, z, b, y)
+        self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # Second argument aliased with output
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a*x + b*z
-        rn.lincomb(zVec, a, xVec, b, zVec)
-        self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
+        z[:] = a * x_arr + b * z_arr
+        rn.lincomb(z, a, x, b, z)
+        self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # Both arguments aliased with each other
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
+        x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a*x + b*x
-        rn.lincomb(zVec, a, xVec, b, xVec)
-        self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
+        z[:] = a * x_arr + b * x_arr
+        rn.lincomb(z, a, x, b, x)
+        self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # All aliased
-        x, y, z, xVec, yVec, zVec = self.elements(rn)
-        z[:] = a*z + b*z
-        rn.lincomb(zVec, a, zVec, b, zVec)
-        self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z], places=4)
+        x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-    def testlincomb(self):
+        z[:] = a * z_arr + b * z_arr
+        rn.lincomb(z, a, z, b, z)
+        self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
+
+    def test_lincomb(self):
         scalar_values = [0, 1, -1, 3.41]
         for a in scalar_values:
             for b in scalar_values:
-                self.dolincombTest(a, b)
+                self.test_lincomb(a, b)
 
-    def dolincombMemberTest(self, a, n=100):
+    def _test_member_lincomb(self, a, n=100):
         # Validates vector member lincomb against the result on host with
         # randomized data
         n = 100
 
         # Generate vectors
-        yHost = np.random.rand(n)
-        xHost = np.random.rand(n)
+        y_host = np.random.rand(n)
+        x_host = np.random.rand(n)
 
-        R3d = CudaRN(n)
-        yDevice = R3d.element(yHost)
-        xDevice = R3d.element(xHost)
+        r3 = CudaRN(n)
+        y_device = r3.element(y_host)
+        x_device = r3.element(x_host)
 
         # Host side calculation
-        yHost[:] = a*xHost
+        y_host[:] = a*x_host
 
         # Device side calculation
-        yDevice.lincomb(a, xDevice)
+        y_device.lincomb(a, x_device)
 
         # Cuda only uses floats, so require 5 places
-        self.assertAllAlmostEquals(yDevice, yHost, places=5)
+        self.assertAllAlmostEquals(y_device, y_host, places=5)
 
-    def testMemberlincomb(self):
+    def test_member_lincomb(self):
         scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
         for a in scalar_values:
-            self.dolincombMemberTest(a)
+            self._test_member_lincomb(a)
 
-    def testMultiply(self):
+    def test_multiply(self):
         # Validates multiply against the result on host with randomized data
         n = 100
-        yHost = np.random.rand(n)
-        xHost = np.random.rand(n)
+        y_host = np.random.rand(n)
+        x_host = np.random.rand(n)
 
-        R3d = CudaRN(n)
-        yDevice = R3d.element(yHost)
-        xDevice = R3d.element(xHost)
+        r3 = CudaRN(n)
+        y_device = r3.element(y_host)
+        x_device = r3.element(x_host)
 
         # Host side calculation
-        yHost[:] = xHost*yHost
+        y_host[:] = x_host*y_host
 
         # Device side calculation
-        R3d.multiply(xDevice, yDevice)
+        r3.multiply(x_device, y_device)
 
         # Cuda only uses floats, so require 5 places
-        self.assertAllAlmostEquals(yDevice, yHost, places=5)
+        self.assertAllAlmostEquals(y_device, y_host, places=5)
 
-    def testMemberMultiply(self):
+    def test_member_multiply(self):
         # Validates vector member multiply against the result on host
         # with randomized data
         n = 100
-        yHost = np.random.rand(n)
-        xHost = np.random.rand(n)
+        y_host = np.random.rand(n)
+        x_host = np.random.rand(n)
 
-        R3d = CudaRN(n)
-        yDevice = R3d.element(yHost)
-        xDevice = R3d.element(xHost)
+        r3 = CudaRN(n)
+        y_device = r3.element(y_host)
+        x_device = r3.element(x_host)
 
         # Host side calculation
-        yHost[:] = xHost*yHost
+        y_host[:] = x_host*y_host
 
         # Device side calculation
-        yDevice.multiply(xDevice)
+        y_device.multiply(x_device)
 
         # Cuda only uses floats, so require 5 places
-        self.assertAllAlmostEquals(yDevice, yHost, places=5)
+        self.assertAllAlmostEquals(y_device, y_host, places=5)
 
 
 class TestConvenience(RLTestCase):
-    def testAddition(self):
-        R3d = CudaRN(3)
-        xd = R3d.element([1, 2, 3])
-        yd = R3d.element([5, 3, 7])
+    def test_addition(self):
+        r3 = CudaRN(3)
+        xd = r3.element([1, 2, 3])
+        yd = r3.element([5, 3, 7])
 
         self.assertAllAlmostEquals(xd + yd, [6, 5, 10])
 
-    def testScalarMult(self):
-        R3d = CudaRN(3)
-        xd = R3d.element([1, 2, 3])
+    def test_scalar_mult(self):
+        r3 = CudaRN(3)
+        xd = r3.element([1, 2, 3])
         C = 5
 
         self.assertAllAlmostEquals(C*xd, [5, 10, 15])
 
-    def testIncompatibleOperations(self):
-        R3d = CudaRN(3)
+    def test_incompatible_operations(self):
+        r3 = CudaRN(3)
         R3h = RN(3)
-        xA = R3d.zero()
+        xA = r3.zero()
         xB = R3h.zero()
 
         with self.assertRaises(TypeError):

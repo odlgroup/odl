@@ -153,7 +153,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
         """
 
     @abstractmethod
-    def lincombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         """ Calculate z = a*x + b*y. This method is intended to be private,
         public callers should resort to lincomb which is type checked.
         """
@@ -183,7 +183,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
 
         # Default implementation using lincomb
         tmp = self.element()
-        self.lincombImpl(tmp, 0, tmp, 0, tmp)
+        self._lincomb(tmp, 0, tmp, 0, tmp)
         return tmp
 
     def contains(self, x):
@@ -276,7 +276,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
                 lincomb failed, y ({}) provided but not b'''.format(y)))
 
             # Call method
-            return self.lincombImpl(z, a, x, 0, x)
+            return self._lincomb(z, a, x, 0, x)
         else:  # Two arguments
             if not self.field.contains(b):
                 raise TypeError(errfmt('''
@@ -288,7 +288,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
                 '''.format(y, self)))
 
             # Call method
-            return self.lincombImpl(z, a, x, b, y)
+            return self._lincomb(z, a, x, b, y)
 
     class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
@@ -327,7 +327,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             """
             self.space.lincomb(self, a, x, b, y)
 
-        def setZero(self):
+        def set_zero(self):
             """ Sets this vector to the zero vector
             """
             self.space.lincomb(self, 0, self, 0, self)
@@ -412,7 +412,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
     """
 
     @abstractmethod
-    def distImpl(self, x, y):
+    def _dist(self, x, y):
         """ implementation of distance
         """
 
@@ -440,7 +440,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return float64(self.distImpl(x, y))
+        return float(self._dist(x, y))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
         """ Abstract vector in a metric space
@@ -530,7 +530,7 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
     """
 
     @abstractmethod
-    def normImpl(self, vector):
+    def _norm(self, vector):
         """ implementation of norm
         """
 
@@ -541,13 +541,13 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
-        return float64(self.normImpl(vector))
+        return float(self._norm(vector))
 
     # Default implmentation
-    def distImpl(self, x, y):
+    def _dist(self, x, y):
         """ The distance in Normed spaces is implicitly defined by the norm
         """
-        return self.normImpl(x-y)
+        return self._norm(x-y)
 
     class Vector(with_metaclass(ABCMeta, MetricSpace.Vector)):
         """ Abstract vector in a normed space
@@ -584,7 +584,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
     """
 
     @abstractmethod
-    def innerImpl(self, x, y):
+    def _inner(self, x, y):
         """ Implementation of inner
         """
 
@@ -600,15 +600,15 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return self.innerImpl(x, y)
+        return self._inner(x, y)
 
     # Default implmentation
-    def normImpl(self, x):
+    def _norm(self, x):
         """ The norm in Hilbert spaces is implicitly defined by the inner
         product
         """
 
-        return sqrt(self.innerImpl(x, x))
+        return sqrt(self._inner(x, x))
 
     class Vector(with_metaclass(ABCMeta, NormedSpace.Vector)):
         """ Abstract vector in a Hilbert-space
@@ -638,7 +638,7 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
     """
 
     @abstractmethod
-    def multiplyImpl(self, x, y):
+    def _multiply(self, x, y):
         """ Implementation of multiply
         """
 
@@ -653,7 +653,7 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
         if not self.contains(y):
             raise TypeError('y ({}) is in wrong space'.format(y))
 
-        self.multiplyImpl(x, y)
+        self._multiply(x, y)
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
 

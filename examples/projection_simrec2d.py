@@ -49,14 +49,14 @@ class Projection(OP.LinearOperator):
         self._domain = domain
         self._range = range
 
-    def applyImpl(self,data, out):
+    def _apply(self,data, out):
         forward = SR.SRPyForwardProject.SimpleForwardProjector(data.data.reshape(self.volumeSize),self.volumeOrigin,self.voxelSize,self.detectorSize,self.stepSize)
 
         result = forward.project(self.sourcePosition,self.detectorOrigin,self.pixelDirection)
 
         out[:] = result.transpose()
 
-    def applyAdjointImpl(self, projection, out):
+    def _apply_adjoint(self, projection, out):
         back = SR.SRPyReconstruction.FilteredBackProjection(self.volumeSize,self.volumeOrigin,self.voxelSize)
 
         back.append(self.sourcePosition,self.detectorOrigin,self.pixelDirection,projection)

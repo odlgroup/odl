@@ -147,7 +147,7 @@ class RN(LinearSpace):
 
         return self.__class__.Vector(self, data)
 
-    def lincombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         """ Implement y = a*x + b*y using optimized BLAS rutines
 
         Parameters
@@ -181,7 +181,7 @@ class RN(LinearSpace):
 
         if x is y and b != 0:
             # If x is aligned with y, we are looking at:     z = (a+b)*x
-            self.lincombImpl(z, a+b, x, 0, x)
+            self._lincomb(z, a+b, x, 0, x)
         elif z is x and z is y:
             # If all the vectors are aligned we have:        z = (a+b)*z
             self._scal(a+b, z.data)
@@ -377,7 +377,7 @@ class RN(LinearSpace):
             return str(self.data)
 
         def __repr__(self):
-            val_str = repr(self.values).lstrip('array(').rstrip(')')
+            val_str = repr(self.data).lstrip('array(').rstrip(')')
             return repr(self.space) + '.element(' + val_str + ')'
 
         def __len__(self):
@@ -487,7 +487,7 @@ class NormedRN(RN, NormedSpace):
 
         super().__init__(n)
 
-    def normImpl(self, vector):
+    def _norm(self, vector):
         """ Calculates the p-norm of a vector
 
         Parameters
@@ -543,7 +543,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
 
         self._dot, self._nrm2 = get_blas_funcs(['dot', 'nrm2'])
 
-    def normImpl(self, x):
+    def _norm(self, x):
         """ Calculates the norm of a vector.
 
         This is defined as:
@@ -570,9 +570,9 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
 
         """
         # TODO: nrm2 seems slow compared to dot
-        return float64(self._nrm2(x.values))
+        return float(self._nrm2(x.data))
 
-    def innerImpl(self, x, y):
+    def _inner(self, x, y):
         """ Calculates the inner product of two vectors
 
         This is defined as:
@@ -603,9 +603,9 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
 
         """
 
-        return float64(self._dot(x.data, y.data))
+        return float(self._dot(x.data, y.data))
 
-    def multiplyImpl(self, x, y):
+    def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
         result to `y`
 

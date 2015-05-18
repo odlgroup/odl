@@ -48,11 +48,11 @@ class ForwardDiff(LinearOperator):
         self.space = space
         self.scale = scale
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff(rhs.data, out.data)
         out *= self.scale
 
-    def applyAdjointImpl(self, rhs, out):
+    def _apply_adjoint(self, rhs, out):
         RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
         out *= self.scale
 
@@ -89,7 +89,7 @@ def denoise(x0, la, mu, iterations = 1):
         x.lincomb(C1, f, 2*C2, x)
         xdiff -= d
         xdiff += b
-        diff.applyAdjoint(xdiff, tmp)
+        diff.apply_adjoint(xdiff, tmp)
         x.lincomb(1, x, C2, tmp)
 
         # d = diff(x)-b
@@ -99,17 +99,10 @@ def denoise(x0, la, mu, iterations = 1):
         # sign = d/abs(d)
         RLcpp.cuda.sign(d.data,sign.data)
 
-<<<<<<< HEAD
         #
-        RLcpp.cuda.abs(d.impl,d.impl)
-        RLcpp.cuda.addScalar(d.impl,-1.0/la,d.impl)
-        RLcpp.cuda.maxVectorScalar(d.impl,0.0,d.impl)
-=======
-        # 
         RLcpp.cuda.abs(d.data,d.data)
         RLcpp.cuda.addScalar(d.data,-1.0/la,d.data)
         RLcpp.cuda.maxVectorScalar(d.data,0.0,d.data)
->>>>>>> master
         d *= sign
 
         # b = b - diff(x) + d

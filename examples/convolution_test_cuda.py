@@ -37,7 +37,6 @@ from RL.utility.testutils import Timer, consume
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy import float64
 
 class CudaConvolution(op.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
@@ -50,12 +49,12 @@ class CudaConvolution(op.LinearOperator):
         self.space = kernel.space
         self.kernel = kernel
         self.adjkernel = self.space.element(kernel[::-1]) #The adjoint is the kernel reversed
-        self.norm = float64(sum(abs(self.kernel[:]))) #eval at host
+        self.norm = float(sum(abs(self.kernel[:]))) #eval at host
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.conv(rhs.data, self.kernel.data, out.data)
 
-    def applyAdjointImpl(self, rhs, out):
+    def _apply_adjoint(self, rhs, out):
         RLcpp.cuda.conv(rhs.data, self.adjkernel.data, out.data)
 
     def opNorm(self): #An upper limit estimate of the operator norm
@@ -92,12 +91,12 @@ iterations = 100
 omega = 1/conv.opNorm()**2
 
 #Display partial
-partial = solvers.forEachPartial(lambda result: plt.plot(conv(result)[:]))
+partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result)[:]))
 
 #Test CGN
 plt.figure()
 plt.plot(rhs)
-solvers.conjugateGradient(conv, d.zero(), rhs, iterations, partial)
+solvers.conjugate_gradient(conv, d.zero(), rhs, iterations, partial)
 
 #Landweber
 plt.figure()
@@ -106,10 +105,10 @@ solvers.landweber(conv, d.zero(), rhs, iterations, omega, partial)
 
 #testTimingCG
 with Timer("Optimized CG"):
-    solvers.conjugateGradient(conv, d.zero(), rhs, iterations)
+    solvers.conjugate_gradient(conv, d.zero(), rhs, iterations)
 
 with Timer("Base CG"):
-    conjugateGradientBase(conv, d.zero(), rhs, iterations)
+    conjugate_gradientBase(conv, d.zero(), rhs, iterations)
 
 #Landweber timing
 with Timer("Optimized LW"):
