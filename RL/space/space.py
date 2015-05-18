@@ -296,6 +296,9 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             """ Default initializer of vectors, must be called by all
             deriving classes to set space
             """
+            if not isinstance(space, LinearSpace):
+                raise TypeError(errfmt('''
+                'space' ({}) is not a LinearSpace instance'''.format(space)))
             self._space = space
 
         @property
@@ -441,6 +444,12 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
         """ Abstract vector in a metric space
         """
 
+        def __init__(self, space):
+            if not isinstance(space, MetricSpace):
+                raise TypeError(errfmt('''
+                'space' ({}) is not a MetricSpace instance'''.format(space)))
+            super().__init__(space)
+
         def dist(self, other):
             """
             Calculates the distance to another vector.
@@ -542,6 +551,12 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
         """ Abstract vector in a normed space
         """
 
+        def __init__(self, space):
+            if not isinstance(space, NormedSpace):
+                raise TypeError(errfmt('''
+                'space' ({}) is not a NormedSpace instance'''.format(space)))
+            super().__init__(space)
+
         def norm(self):
             """
             Calculates the norm of this Vector
@@ -597,6 +612,12 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
         """ Abstract vector in a Hilbert-space
         """
 
+        def __init__(self, space):
+            if not isinstance(space, HilbertSpace):
+                raise TypeError(errfmt('''
+                'space' ({}) is not a HilbertSpace instance'''.format(space)))
+            super().__init__(space)
+
         def inner(self, x):
             """ Calculate the inner product of this and another vector
 
@@ -633,6 +654,12 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
         self.multiplyImpl(x, y)
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
+
+        def __init__(self, space):
+            if not isinstance(space, Algebra):
+                raise TypeError(errfmt('''
+                'space' ({}) is not an Algebra instance'''.format(space)))
+            super().__init__(space)
 
         def multiply(self, other):
             """ Shortcut for space.multiply(self, other)

@@ -77,7 +77,7 @@ def makeUniformDiscretization(parent, rnimpl):
         def makeVector(self, *args, **kwargs):
             if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
                 tmp = np.array([args[0](point) for point in self.points()],
-                               dtype=np.float)
+                               dtype=np.float64)
                 return self.makeVector(tmp)
             else:
                 return super().makeVector(*args, **kwargs)
@@ -158,7 +158,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
             if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
                 tmp = np.array([args[0]([x, y])
                                 for x, y in zip(*self.points())],
-                               dtype=np.float)
+                               dtype=np.float64)
                 return self.makeVector(tmp)
 
             elif len(args) == 1 and isinstance(args[0], np.ndarray):

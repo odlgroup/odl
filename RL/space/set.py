@@ -51,14 +51,6 @@ class Set(with_metaclass(ABCMeta, object)):
         """ Test if other is a member of self
         """
 
-    # Implicitly default implemented methods
-    def __contains__(self, other):
-        """ Magic method for:
-
-        other in self
-        """
-        return self.contains(other)
-
     def __eq__(self, other):
         return self.equals(other)
 
@@ -162,8 +154,8 @@ class IntervProd(Set):
         IntervProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
 
-        begin = np.atleast_1d(begin).astype(np.float)
-        end = np.atleast_1d(end).astype(np.float)
+        begin = np.atleast_1d(begin).astype(np.float64)
+        end = np.atleast_1d(end).astype(np.float64)
 
         if len(begin) != len(end):
             raise ValueError(errfmt('''
@@ -363,11 +355,11 @@ class IntervProd(Set):
         Parameters
         ----------
         index : int or tuple of ints
-                The indices of the dimensions along which to collapse
+            The indices of the dimensions along which to collapse
         value : float or array-like
-                The values to which to collapse. Must have the same
-                lenght as 'index'. Values must lie within the interval
-                boundaries.
+            The values to which to collapse. Must have the same
+            lenght as 'index'. Values must lie within the interval
+            boundaries.
 
         Returns
         -------
@@ -382,7 +374,7 @@ class IntervProd(Set):
         IntervProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
         IntervProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
-        >>> rbox.collapse([1, 2], [0, 3.5])  # doctest: +NORMALIZE_WHITESPACE
+        >>> rbox.collapse([1, 2], [0, 3.5])
         Traceback (most recent call last):
             ...
         ValueError: 'value' not within interval boundaries ([3.5] > [3.0])
@@ -546,5 +538,5 @@ class Rectangle(IntervProd):
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

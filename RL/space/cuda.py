@@ -1,9 +1,3 @@
-""" Module for spaces whose elements are in R^n
-
-This is the default implementation of R^n where the
-data is stored on a GPU.
-"""
-
 # Copyright 2014, 2015 Holger Kohr, Jonas Adler
 #
 # This file is part of RL.
@@ -21,6 +15,11 @@ data is stored on a GPU.
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Module for spaces whose elements are in R^n
+
+This is the default implementation of R^n where the
+data is stored on a GPU.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -30,20 +29,20 @@ try:
 except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, super
 from future import standard_library
-standard_library.install_aliases()
-
-
-from math import sqrt
 
 # External module imports
 import numpy as np
+from math import sqrt
+from numbers import Integral
 
 # RL imports
 import RL.operator.function as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
-# from RL.utility.utility import errfmt
+from RL.utility.utility import errfmt
+
+standard_library.install_aliases()
 
 
 class CudaRN(spaces.HilbertSpace, spaces.Algebra):
@@ -59,6 +58,8 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     """
 
     def __init__(self, n):
+        if not isinstance(n, Integral) or n < 1:
+            raise TypeError('n ({}) has to be a positive integer'.format(np))
         self._n = n
         self._field = sets.RealNumbers()
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
@@ -90,7 +91,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         20.0
         """
 
-        return self.impl.inner(x.impl, y.impl)
+        return self.impl.inner(x.data, y.data)
 
     def normImpl(self, x):
         """ Calculates the 2-norm of x
@@ -120,7 +121,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return sqrt(self.impl.normSq(x.impl))
+        return sqrt(self.impl.normSq(x.data))
 
     def linCombImpl(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -154,7 +155,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> z
         CudaRN(3).makeVector([ 14.,  19.,  24.])
         """
-        self.impl.linComb(z.impl, a, x.impl, b, y.impl)
+        self.impl.linComb(z.data, a, x.data, b, y.data)
 
     def multiplyImpl(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -186,7 +187,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> y
         CudaRN(3).makeVector([ 5.,  6.,  6.])
         """
-        self.impl.multiply(x.impl, y.impl)
+        self.impl.multiply(x.data, y.data)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -211,8 +212,8 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         return self.makeVector(self.impl.zero())
 
     def empty(self):
-        """ Returns a vector of zeros 
-        
+        """ Returns a vector of zeros
+
         CUDA memory is always initialized
 
         Parameters
@@ -380,42 +381,40 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     @property
     def abs(self):
         return fun.LambdaFunction(
-            lambda input, output: RLcpp.PyCuda.abs(input.impl, output.impl),
-            (self, self))
+            lambda inp, outp: RLcpp.PyCuda.abs(inp.data, outp.data),
+            input=(self, self))
 
     @property
     def sign(self):
         return fun.LambdaFunction(
-            lambda input, output: RLcpp.PyCuda.sign(input.impl, output.impl),
+            lambda inp, outp: RLcpp.PyCuda.sign(inp.data, outp.data),
             input=(self, self))
 
     @property
     def addScalar(self):
         return fun.LambdaFunction(
-            lambda input, scalar,
-            output: RLcpp.PyCuda.addScalar(input.impl, scalar, output.impl),
+            lambda inp, scal, outp: RLcpp.PyCuda.addScalar(inp.data, scal,
+                                                           outp.data),
             input=(self, self.field, self))
 
     @property
     def maxVectorScalar(self):
         return fun.LambdaFunction(
-            lambda input, scalar,
-            output: RLcpp.PyCuda.maxVectorScalar(input.impl, scalar,
-                                                 output.impl),
+            lambda inp, scal, outp: RLcpp.PyCuda.maxVectorScalar(
+                inp.data, scal, outp.data),
             input=(self, self.field, self))
 
     @property
     def maxVectorVector(self):
         return fun.LambdaFunction(
-            lambda input1, input2,
-            output: RLcpp.PyCuda.maxVectorVector(input1.impl, input2.impl,
-                                                 output.impl),
+            lambda inp1, inp2, outp: RLcpp.PyCuda.maxVectorVector(
+                inp1.data, inp2.data, outp.data),
             input=(self, self, self))
 
     @property
     def sum(self):
         return fun.LambdaFunction(
-            lambda input, output: RLcpp.PyCuda.abs(input.impl),
+            lambda inp, outp: RLcpp.PyCuda.abs(inp.data),
             input=(self), returns=self.field)
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
@@ -426,12 +425,46 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         space : CudaRN
                 Instance of CudaRN this vector lives in
-        values : RLcpp.PyCuda.CudaRNVectorImpl
+        data : RLcpp.PyCuda.CudaRNVectorImpl
                     Underlying data-representation to be used by this vector
         """
-        def __init__(self, space, impl):
+        def __init__(self, space, data):
             super().__init__(space)
-            self.impl = impl
+            if not isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
+                return TypeError(errfmt('''
+                'data' ({}) must be a CudaRNVectorImpl instance
+                '''.format(data)))
+            self._data = data
+
+        @property
+        def data(self):
+            """ Get the data of this Vector
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            ptr : RLcpp.PyCuda.CudaRNVectorImpl
+                  Underlying cuda data representation
+            """
+            return self._data
+        
+        @property
+        def data_ptr(self):
+            """ Get a raw pointer to the data of this Vector
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            ptr : Int
+                  Pointer to the CUDA data of this vector
+            """
+            return self._data.dataPtr()
 
         def __str__(self):
             return str(self[:])
@@ -498,9 +531,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
             """
             if isinstance(index, slice):
-                return self.impl.getSlice(index)
+                return self.data.getSlice(index)
             else:
-                return self.impl.__getitem__(index)
+                return self.data.__getitem__(index)
 
         def __setitem__(self, index, value):
             """ Set values of this vector
@@ -546,12 +579,12 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                 # Convert value to the correct type
                 if not isinstance(value, np.ndarray):
                     value = np.array(value, dtype=np.float64)
-            
+
                 value = value.astype(np.float64, copy=False)
 
-                self.impl.setSlice(index, value)
+                self.data.setSlice(index, value)
             else:
-                self.impl.__setitem__(index, value)
+                self.data.__setitem__(index, value)
 
 
 if __name__ == '__main__':
