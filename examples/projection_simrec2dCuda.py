@@ -49,11 +49,16 @@ class CudaProjection(OP.LinearOperator):
         self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
     def applyImpl(self, data, out):
-        self.forward.setData(data.impl.dataPtr())
-        self.forward.project(self.sourcePosition, self.detectorOrigin, self.pixelDirection, out.impl.dataPtr())
+        self.forward.setData(data.data_ptr)
+        self.forward.project(self.sourcePosition, self.detectorOrigin, self.pixelDirection, out.data_ptr)
 
+<<<<<<< HEAD
     def applyAdjointImpl(self, projection, out):
         self.back.backProject(self.sourcePosition, self.detectorOrigin, self.pixelDirection, projection.impl.dataPtr(), out.impl.dataPtr())
+=======
+    def applyAdjointImpl(self, projection, out):        
+        self.back.backProject(self.sourcePosition, self.detectorOrigin, self.pixelDirection, projection.data_ptr, out.data_ptr)
+>>>>>>> master
 
     @property
     def domain(self):

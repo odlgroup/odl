@@ -32,7 +32,7 @@ import RL.space.discretizations as dd
 from RL.space.function import *
 import RL.space.set as sets
 import RL.space.cuda as CS
-from RL.space.product import ProductSpace
+from RL.space.product import productspace
 import RLcpp
 from RL.utility.testutils import RLTestCase  # , Timer, consume
 
@@ -50,10 +50,10 @@ class ForwardDiff(LinearOperator):
         self.space = space
 
     def applyImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiff(rhs.impl, out.impl)
+        RLcpp.cuda.forwardDiff(rhs.data, out.data)
 
     def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiffAdj(rhs.impl, out.impl)
+        RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
 
     @property
     def domain(self):
@@ -73,14 +73,14 @@ class ForwardDiff2D(LinearOperator):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self._domain = space
-        self._range = ProductSpace(space, space)
+        self._range = productspace(space, space)
 
     def applyImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl,
+        RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
                                  self.domain.cols, self.domain.rows)
 
     def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiff2DAdj(rhs[0].impl, rhs[1].impl, out.impl,
+        RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
                                     self.domain.cols, self.domain.rows)
 
     @property

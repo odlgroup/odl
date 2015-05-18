@@ -35,14 +35,18 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
+
 class OperatorMeta(ABCMeta):
     def __call__(cls, *args, **kwargs):
         obj = ABCMeta.__call__(cls, *args, **kwargs)
         if not hasattr(obj, 'domain'):
-            raise NotImplementedError("'Operator' instances should have a 'domain' attribute")
+            raise NotImplementedError(errfmt('''
+            'Operator' instances must have a 'domain' attribute'''))
         if not hasattr(obj, 'range'):
-            raise NotImplementedError("'Operator' instances should have a 'range' attribute")
+            raise NotImplementedError(errfmt('''
+            'Operator' instances must have a 'range' attribute'''))
         return obj
+
 
 class Operator(with_metaclass(OperatorMeta, object)):
     """Abstract operator
@@ -420,7 +424,7 @@ class OperatorLeftScalarMultiplication(Operator):
     def __init__(self, op, scalar):
         if not op.range.field.contains(scalar):
             raise TypeError(errfmt('''
-            Scalar ({}) not compatible with field of range ({}) of operator
+            'scalar' ({}) not compatible with field of range ({}) of 'op'
             '''.format(scalar, op.range.field)))
 
         self._op = op
@@ -470,12 +474,12 @@ class OperatorRightScalarMultiplication(Operator):
     def __init__(self, op, scalar, tmp=None):
         if not op.domain.field.contains(scalar):
             raise TypeError(errfmt('''
-            Scalar ({}) not compatible with field of domain ({}) of operator
+            'scalar' ({}) not compatible with field of domain ({}) of 'op'
             '''.format(scalar, op.domain.field)))
 
         if tmp is not None and not op.domain.contains(tmp):
             raise TypeError(errfmt('''
-            Tmp ({}) must be an element in the domain of the operator ({}).
+            'tmp' ({}) must be an element in the domain of 'op' ({}).
             '''.format(tmp, op.domain)))
 
         self._op = op
@@ -648,7 +652,7 @@ class OperatorAdjoint(LinearOperator):
 class LinearOperatorSum(OperatorSum, LinearOperator):
     """Expression type for the sum of linear operators
     """
-    def __init__(self, op1, op2, tmpRan=None, tmpDom=None):
+    def __init__(self, op1, op2, tmp_ran=None, tmp_dom=None):
         """Create the abstract operator sum defined by:
 
         LinearOperatorSum(op1, op2)(x) = op1(x) + op2(x)
@@ -656,10 +660,10 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
         Args:
             LinearOperator  `op1`      The first operator
             LinearOperator  `op2`      The second operator
-            Vector          `tmpRan`   A vector in the domain of this operator.
+            Vector          `tmp_ran`  A vector in the domain of this operator.
                                        Used to avoid the creation of a
                                        temporary when applying the operator.
-            Vector          `tmpDom`   A vector in the range of this operator.
+            Vector          `tmp_dom`  A vector in the range of this operator.
                                        Used to avoid the creation of a
                                        temporary when applying the adjoint of
                                        this operator.
@@ -673,11 +677,12 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
             op2 ({}) is not a LinearOperator. LinearOperatorSum is only
             defined for LinearOperators.'''.format(op2)))
 
-        super().__init__(op1, op2, tmpRan)
-        self._tmpDom = tmpDom
+        super().__init__(op1, op2, tmp_ran)
+        self._tmp_dom = tmp_dom
 
     def applyAdjointImpl(self, rhs, out):
-        tmp = self._tmpDom if self._tmpDom is not None else self.domain.element()
+        tmp = (self._tmp_dom if self._tmp_dom is not None
+               else self.domain.element())
         self._op1.applyAdjointImpl(rhs, out)
         self._op2.applyAdjointImpl(rhs, tmp)
         out += tmp
@@ -712,7 +717,7 @@ class LinearOperatorComposition(OperatorComposition, LinearOperator):
             right ({}) is not a LinearOperator. LinearOperatorComposition is
             only defined for LinearOperators'''.format(right)))
 
-        OperatorComposition.__init__(self, left, right, tmp)
+        super().__init__(left, right, tmp)
 
     def applyAdjointImpl(self, rhs, out):
         tmp = self._tmp if self._tmp is not None else self._right.range.element()

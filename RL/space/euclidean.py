@@ -36,6 +36,7 @@ from future import standard_library
 import numpy as np
 from numpy import float64
 from scipy.lib.blas import get_blas_funcs
+from numbers import Integral
 
 # RL imports
 from RL.space.space import *
@@ -183,43 +184,43 @@ class RN(LinearSpace):
             self.lincombImpl(z, a+b, x, 0, x)
         elif z is x and z is y:
             # If all the vectors are aligned we have:        z = (a+b)*z
-            self._scal(a+b, z.values)
+            self._scal(a+b, z.data)
         elif z is x:
             # If z is aligned with x we have                 z = a*z + b*y
             if a != 1:
-                self._scal(a, z.values)
+                self._scal(a, z.data)
             if b != 0:
-                self._axpy(y.values, z.values, self._n, b)
+                self._axpy(y.data, z.data, self._n, b)
         elif z is y:
             # If z is aligned with y we have                 z = a*x + b*z
             if b != 1:
-                self._scal(b, z.values)
+                self._scal(b, z.data)
             if a != 0:
-                self._axpy(x.values, z.values, self._n, a)
+                self._axpy(x.data, z.data, self._n, a)
         else:
             # We have exhausted all alignment options, so x != y != z
             # We now optimize for various values of a and b
             if b == 0:
                 if a == 0:  # Zero assignment                z = 0
-                    z.values[:] = 0
+                    z.data[:] = 0
                 else:                                       # z = a*x
-                    self._copy(x.values, z.values)
+                    self._copy(x.data, z.data)
                     if a != 1:
-                        self._scal(a, z.values)
+                        self._scal(a, z.data)
             else:
                 if a == 0:                                  # z = b*y
-                    self._copy(y.values, z.values)
+                    self._copy(y.data, z.data)
                     if b != 1:
-                        self._scal(b, z.values)
+                        self._scal(b, z.data)
 
                 elif a == 1:                                # z = x + b*y
-                    self._copy(x.values, z.values)
-                    self._axpy(y.values, z.values, self._n, b)
+                    self._copy(x.data, z.data)
+                    self._axpy(y.data, z.data, self._n, b)
                 else:                                       # z = a*x + b*y
-                    self._copy(y.values, z.values)
+                    self._copy(y.data, z.data)
                     if b != 1:
-                        self._scal(b, z.values)
-                    self._axpy(x.values, z.values, self._n, a)
+                        self._scal(b, z.data)
+                    self._axpy(x.data, z.data, self._n, a)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -344,18 +345,36 @@ class RN(LinearSpace):
 
         space : RN
                 Instance of RN this vector lives in
-        values : numpy.ndarray
+        data : numpy.ndarray
                  Underlying data-representation to be used by this vector
                  The dtype of the array must be float64
                  The shape of the array must be (n,)
         """
 
-        def __init__(self, space, values):
+        def __init__(self, space, data):
+            if not isinstance(data, np.ndarray):
+                raise TypeError(errfmt('''
+                'data' ({}) must be a numpy.ndarray
+                '''.format(type(data))))
+
+            if data.dtype != np.float64:
+                raise TypeError(errfmt('''
+                type('data') ({}) must be numpy.float64
+                '''.format(data.dtype)))
+
             super().__init__(space)
-            self.values = values
+            self._data = data
+
+        @property
+        def data(self):
+            return self._data
+
+        @property
+        def data_ptr(self):
+            return self._data.ctypes.data
 
         def __str__(self):
-            return str(self.values)
+            return str(self.data)
 
         def __repr__(self):
             val_str = repr(self.values).lstrip('array(').rstrip(')')
@@ -395,7 +414,7 @@ class RN(LinearSpace):
             array([ 2.,  3.])
 
             """
-            return self.values.__getitem__(index)
+            return self.data.__getitem__(index)
 
         def __setitem__(self, index, value):
             """ Set values of this vector
@@ -433,7 +452,7 @@ class RN(LinearSpace):
 
             """
 
-            return self.values.__setitem__(index, value)
+            return self.data.__setitem__(index, value)
 
 
 class NormedRN(RN, NormedSpace):
@@ -503,7 +522,7 @@ class NormedRN(RN, NormedSpace):
         """
 
         # Use numpy norm
-        return np.linalg.norm(vector.values, ord=self.ord)
+        return np.linalg.norm(vector.data, ord=self.ord)
 
     class Vector(RN.Vector, NormedSpace.Vector):
         pass
@@ -522,8 +541,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
     def __init__(self, n):
         super().__init__(n)
 
-        self._dot, self._nrm2 = get_blas_funcs(['dot',
-                                                'nrm2'])
+        self._dot, self._nrm2 = get_blas_funcs(['dot', 'nrm2'])
 
     def normImpl(self, x):
         """ Calculates the norm of a vector.
@@ -584,7 +602,8 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         17.0
 
         """
-        return float64(self._dot(x.values, y.values))
+
+        return float64(self._dot(x.data, y.data))
 
     def multiplyImpl(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -616,7 +635,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         >>> y
         EuclideanSpace(3).element([ 5.,  6.,  6.])
         """
-        y.values[:] = x.values*y.values
+        y.data[:] = x.data * y.data
 
     def __repr__(self):
         return 'EuclideanSpace(' + str(self.n) + ')'

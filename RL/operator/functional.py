@@ -118,19 +118,19 @@ class FunctionalSum(Functional):
         if op1.range != op2.range or op1.domain != op2.domain:
             raise TypeError('Range and domain of functionals do not fit')
 
-        self.op1 = op1
-        self.op2 = op2
+        self._op1 = op1
+        self._op2 = op2
 
     def applyImpl(self, rhs):
-        return self.op1.applyImpl(rhs) + self.op2.applyImpl(rhs)
+        return self._op1.applyImpl(rhs) + self._op2.applyImpl(rhs)
 
     @property
     def domain(self):
-        return self.op1.domain
+        return self._op1.domain
 
     @property
     def range(self):
-        return self.op1.range
+        return self._op1.range
 
 
 class FunctionalPointwiseProduct(Functional):
@@ -141,19 +141,19 @@ class FunctionalPointwiseProduct(Functional):
         if op1.range != op2.range or op1.domain != op2.domain:
             raise TypeError('Range and domain of functionals do not fit')
 
-        self.op1 = op1
-        self.op2 = op2
+        self._op1 = op1
+        self._op2 = op2
 
     def applyImpl(self, rhs):
-        return self.op1.applyImpl(rhs) * self.op2.applyImpl(rhs)
+        return self._op1.applyImpl(rhs) * self._op2.applyImpl(rhs)
 
     @property
     def domain(self):
-        return self.op1.domain
+        return self._op1.domain
 
     @property
     def range(self):
-        return self.op1.range
+        return self._op1.range
 
 
 class FunctionalScalarMultiplication(Functional):
@@ -164,16 +164,16 @@ class FunctionalScalarMultiplication(Functional):
         if not op.range.contains(scalar):
             raise TypeError('Scalar is not compatible with this functional')
 
-        self.operator = op
-        self.scalar = scalar
+        self._op = op
+        self._scal = scalar
 
     def applyImpl(self, rhs):
-        return self.scalar * self.operator.applyImpl(rhs)
+        return self._scal * self._op.applyImpl(rhs)
 
     @property
     def domain(self):
-        return self.operator.domain
+        return self._op.domain
 
     @property
     def range(self):
-        return self.operator.range
+        return self._op.range

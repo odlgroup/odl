@@ -29,17 +29,24 @@ except ImportError:  # Versions < 0.14 of python-future
 
 # RL imports
 import RL.operator.operator as op
+from RL.space.space import LinearSpace
+from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
 
 class ScalingOperator(op.SelfAdjointOperator):
-    def __init__(self, space, scale):
+    def __init__(self, space, scalar):
+        if not isinstance(space, LinearSpace):
+            raise TypeError(errfmt('''
+            'space' ({}) must be a LinearSpace instance
+            '''.format(space)))
+
         self._space = space
-        self._scale = scale
+        self._scal = float(scalar)
 
     def applyImpl(self, input, out):
-        out.lincomb(self._scale, input)
+        out.lincomb(self._scal, input)
 
     @property
     def domain(self):

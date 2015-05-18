@@ -381,11 +381,11 @@ class IntervProd(Set):
         Parameters
         ----------
         index : int or tuple of ints
-                The indices of the dimensions along which to collapse
+            The indices of the dimensions along which to collapse
         value : float or array-like
-                The values to which to collapse. Must have the same
-                lenght as 'index'. Values must lie within the interval
-                boundaries.
+            The values to which to collapse. Must have the same
+            lenght as 'index'. Values must lie within the interval
+            boundaries.
 
         Returns
         -------
@@ -400,7 +400,7 @@ class IntervProd(Set):
         IntervProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
         IntervProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
-        >>> rbox.collapse([1, 2], [0, 3.5])  # doctest: +NORMALIZE_WHITESPACE
+        >>> rbox.collapse([1, 2], [0, 3.5])
         Traceback (most recent call last):
             ...
         ValueError: 'value' not within interval boundaries ([3.5] > [3.0])
@@ -564,5 +564,5 @@ class Rectangle(IntervProd):
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

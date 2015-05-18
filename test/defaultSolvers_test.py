@@ -47,10 +47,10 @@ class MultiplyOp(OP.LinearOperator):
         self.matrix = matrix
 
     def applyImpl(self, rhs, out):
-        out.values[:] = np.dot(self.matrix, rhs.values)
+        out.data[:] = np.dot(self.matrix, rhs.data)
 
     def applyAdjointImpl(self, rhs, out):
-        out.values[:] = np.dot(self.matrix.T, rhs.values)
+        out.data[:] = np.dot(self.matrix.T, rhs.data)
 
     @property
     def domain(self):

@@ -59,7 +59,7 @@ class Projector(OP.LinearOperator):
 
     def applyImpl(self, data, out):
         #Create projector
-        forward = SR.SRPyForwardProject.SimpleForwardProjector(data.values.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
+        forward = SR.SRPyForwardProject.SimpleForwardProjector(data.data.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
 
         #Project all geometries
         for i in range(len(self.geometries)):
@@ -74,10 +74,10 @@ class Projector(OP.LinearOperator):
         #Append all projections
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            back.append(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].values)
+            back.append(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].data)
 
         #Perform back projection
-        out.values = back.finalize().flatten() * (51770422.4687/16720.1875882)
+        out.data[:] = back.finalize().flatten() * (51770422.4687/16720.1875882)
 
     @property
     def domain(self):
@@ -127,7 +127,7 @@ projectionRN = ds.EuclideanSpace(nPixels)
 projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
-dataDisc = ps.makePowerSpace(projectionDisc, nProjection)
+dataDisc = ps.powerspace(projectionDisc, nProjection)
 
 #Define the reconstruction space
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
@@ -153,7 +153,7 @@ plt.figure()
 plt.ion()
 plt.set_cmap('bone')
 def plotResult(x):
-    plt.imshow(x.values.reshape(nVoxels))
+    plt.imshow(x.data.reshape(nVoxels))
     plt.draw()
     print((x-phantomVec).norm())
     plt.pause(0.01)

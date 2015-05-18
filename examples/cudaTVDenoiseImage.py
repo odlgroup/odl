@@ -27,7 +27,7 @@ import unittest
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.product import makePowerSpace
+from RL.space.product import powerspace
 from RL.space.euclidean import *
 from RL.space.function import *
 import RL.space.cuda as CS
@@ -52,13 +52,18 @@ class ForwardDiff2D(LinearOperator):
             raise TypeError("space must be CudaRN")
 
         self._domain = space
+<<<<<<< HEAD
         self._range = makePowerSpace(space,2)
 
+=======
+        self._range = powerspace(space,2)
+        
+>>>>>>> master
     def applyImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl, self.domain.cols, self.domain.rows)
+        RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data, self.domain.cols, self.domain.rows)
 
     def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiff2DAdj(rhs[0].impl, rhs[1].impl, out.impl, self.domain.cols, self.domain.rows)
+        RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data, self.domain.cols, self.domain.rows)
 
     @property
     def domain(self):
