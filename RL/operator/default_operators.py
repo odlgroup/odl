@@ -38,7 +38,10 @@ class ScalingOperator(op.SelfAdjointOperator):
         self._space = space
         self._scale = scale
 
-    def applyImpl(self, input, out):
+    def _call(self, input):
+        return self._scale * input
+
+    def _apply(self, input, out):
         out.linComb(self._scale, input)
 
     @property

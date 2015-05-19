@@ -54,7 +54,7 @@ class ForwardDiff2D(LinearOperator):
         self._domain = space
         self._range = makePowerSpace(space,2)
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl, self.domain.cols, self.domain.rows)
 
     def applyAdjointImpl(self, rhs, out):

@@ -57,7 +57,7 @@ class Projector(OP.LinearOperator):
         self._domain = domain
         self._range = range
 
-    def applyImpl(self, data, out):
+    def _apply(self, data, out):
         #Create projector
         forward = SR.SRPyForwardProject.SimpleForwardProjector(data.values.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
 

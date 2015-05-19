@@ -58,7 +58,7 @@ class CudaProjector(OP.LinearOperator):
         self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
 
-    def applyImpl(self, data, out):
+    def _apply(self, data, out):
         #Create projector
         self.forward.setData(data.impl.dataPtr())
 

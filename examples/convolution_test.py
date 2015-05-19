@@ -51,7 +51,7 @@ class Convolution(op.LinearOperator):
         self.space = kernel.space
         self.norm = float(sum(abs(self.kernel)))
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         ndimage.convolve(rhs.values, self.kernel, output=out.values,
                          mode='wrap')
 

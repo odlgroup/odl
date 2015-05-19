@@ -49,7 +49,7 @@ class Projection(OP.LinearOperator):
         self._domain = domain
         self._range = range
 
-    def applyImpl(self,data, out):
+    def _apply(self,data, out):
         forward = SR.SRPyForwardProject.SimpleForwardProjector(data.values.reshape(self.volumeSize),self.volumeOrigin,self.voxelSize,self.detectorSize,self.stepSize)
 
         result = forward.project(self.sourcePosition,self.detectorOrigin,self.pixelDirection)
