@@ -48,12 +48,8 @@ class MultiplyAndSquareOp(op.Operator):
                       if range is None else range)
         self.matrix = matrix
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         np.dot(self.matrix, rhs.values, out=out.values)
-        out.values **= 2
-
-    def applyAdjointImpl(self, rhs, out):
-        np.dot(self.matrix.T, rhs.values, out=out.values)
         out.values **= 2
 
     def __str__(self):

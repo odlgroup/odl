@@ -40,25 +40,18 @@ class MultiplyOp(OP.LinearOperator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (EuclideanSpace(matrix.shape[1])
+        self.domain = (EuclideanSpace(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (EuclideanSpace(matrix.shape[0])
+        self.range = (EuclideanSpace(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         out.values[:] = np.dot(self.matrix, rhs.values)
 
-    def applyAdjointImpl(self, rhs, out):
-        out.values[:] = np.dot(self.matrix.T, rhs.values)
-
     @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
+    def adjoint(self):
+        return MultiplyOp(self.matrix.T, self.range, self.domain)
 
 
 class TestMatrixSolve(RLTestCase):

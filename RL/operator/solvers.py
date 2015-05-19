@@ -89,7 +89,7 @@ def landweber(operator, x, rhs, iterations=1, omega=1, partialResults=None):
     for _ in range(iterations):
         operator.apply(x, tmpRan)                               # tmpRan = Ax
         tmpRan -= rhs                                           # tmpRan = tmpRan - rhs
-        operator.derivative(x).applyAdjoint(tmpRan, tmpDom)  # tmpDom = A^T tmpRan
+        operator.derivative(x).adjoint.apply(tmpRan, tmpDom)    # tmpDom = A^T tmpRan
         x.linComb(1, x, -omega, tmpDom)                         # x = x - omega * tmpDom
 
         if partialResults is not None:
@@ -115,7 +115,7 @@ def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
         a = normsOld / qnorm
         x.linComb(1, x, a, p)                                   # x = x + a*p
         d.linComb(1, d, -a, q)                                  # d = d - a*q
-        operator.derivative(p).applyAdjoint(d, s)            # s = A^T d
+        operator.derivative(p).adjoint.apply(d, s)              # s = A^T d
 
         normsNew = s.norm()**2
         b = normsNew/normsOld
@@ -155,6 +155,7 @@ def gaussNewton(operator, x, rhs, iterations=1,
     for m in range(iterations):
         tm = next(zeroSequence)
         opPrime = operator.derivative(x)
+        adjoint = opPrime.adjoint
 
         # v = rhs - op(x) - opPrime(x0-x)
         # u = opPrime.T(v)
@@ -163,7 +164,7 @@ def gaussNewton(operator, x, rhs, iterations=1,
         tmpDom.linComb(1,  x0, -1, x)   # assign temp       tmpDom = x0 - x
         opPrime.apply(tmpDom, tmpRan)   # evaluate          opPrime(x0-x)
         v -= tmpRan                     # assign            v = rhs - op(x) - opPrime(x0-x)
-        opPrime.applyAdjoint(v, u)      # evaluate/assign   u = opPrime.T(v)
+        adjoint.apply(v, u)             # evaluate/assign   u = opPrime.T(v)
 
         # Solve equation system
         # (opPrime.T o opPrime + tm * I)^-1 u = dx

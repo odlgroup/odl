@@ -48,7 +48,7 @@ class ForwardDiff(LinearOperator):
         self.space = space
         self.scale = scale
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff(rhs.impl, out.impl)
         out *= self.scale
 
