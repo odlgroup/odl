@@ -146,16 +146,17 @@ class LinearProductSpace(LinearSpace):
         """
 
         # If data is given as keyword arg, prefer it over arg list
-        data = kwargs.get('data')
+        data = kwargs.pop('data')
         if data is None:
             if not args:  # No argument at all -> arbitrary vector
-                data = elements = [space.element() for space in self.spaces]
+                data = elements = [space.element(**kwargs)
+                                   for space in self.spaces]
             else:
                 data = args
 
         if not all(isinstance(v, LinearSpace.Vector) for v in data):
             # Delegate constructors
-            elements = [space.element(arg)
+            elements = [space.element(arg, **kwargs)
                         for arg, space in zip(data, self.spaces)]
         else:  # Construct from existing tuple
             if any(part.space != space
@@ -362,11 +363,11 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
             self.prod_norm = prod_norm
         else:
             try:
-                order = float64(prod_norm)
+                order = float(prod_norm)
             except TypeError:
                 raise TypeError(errfmt('''
                 'prod_norm' must be either callable or convertible to
-                float64'''))
+                float'''))
             self.prod_norm = partial(np.linalg.norm, ord=order)
 
         self.weights = weights
@@ -475,11 +476,11 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
             self.prod_norm = prod_norm
         else:
             try:
-                order = float64(prod_norm)
+                order = float(prod_norm)
             except TypeError:
                 raise TypeError(errfmt('''
                 'prod_norm' must be either callable or convertible to
-                float64'''))
+                float'''))
             self.prod_norm = partial(np.linalg.norm, ord=order)
 
         self.weights = weights

@@ -64,7 +64,7 @@ class RN(LinearSpace):
                                                              'scal',
                                                              'copy'])
 
-    def element(self, data=None):
+    def element(self, data=None, **kwargs):
         """ Returns an arbitrary vector
 
         more efficient than zeros.
@@ -127,18 +127,21 @@ class RN(LinearSpace):
         RN(3).element([ 1.,  2.,  3.])
 
         """
+
+        dtype = kwargs.pop('dtype', float64)
+
         if data is None:
-            data = np.empty(self._n, dtype=float64)
+            data = np.empty(self._n, dtype=dtype, **kwargs)
 
         if not isinstance(data, np.ndarray):
-            data = np.array(data, dtype=np.float64)
+            data = np.array(data, dtype=dtype, **kwargs)
         else:
             if data.shape != (self._n,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.n,))))
 
-            if data.dtype != np.float64:
+            if data.dtype != float64:
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(data, data.dtype)))
@@ -406,7 +409,7 @@ class RN(LinearSpace):
                     The position(s) that should be set
             value : float or Array-Like
                     The values that should be assigned.
-                    If index is an integer, value should be a float64.
+                    If index is an integer, value should be a float.
                     If index is a slice, value should be an Array-Like
                     of the same size as the slice.
 
@@ -551,7 +554,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
 
         """
         # TODO: nrm2 seems slow compared to dot
-        return float64(self._nrm2(x.values))
+        return float(self._nrm2(x.values))
 
     def innerImpl(self, x, y):
         """ Calculates the inner product of two vectors
@@ -583,7 +586,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         17.0
 
         """
-        return float64(self._dot(x.values, y.values))
+        return float(self._dot(x.values, y.values))
 
     def multiplyImpl(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the

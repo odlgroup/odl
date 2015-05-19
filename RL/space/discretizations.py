@@ -29,7 +29,6 @@ from math import sqrt
 
 # External module imports
 import numpy as np
-from numpy import float64
 
 # RL imports
 import RL.space.set as sets
@@ -75,14 +74,14 @@ def makeUniformDiscretization(parent, rnimpl):
                     self.parent.equals(other.parent) and
                     self._rn.equals(other._rn))
 
-        def element(self, data=None):
+        def element(self, data=None, **kwargs):
             # TODO: 'data' is not a good name here
             if isinstance(data, FunctionSpace.Vector):
                 tmp = np.array([data(point) for point in self.points()],
-                               dtype=float64)
+                               **kwargs)
                 return self.element(tmp)
             else:
-                return super().element(data)
+                return super().element(data, **kwargs)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)
@@ -159,11 +158,11 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                     self.cols == other.cols and self.rows == other.rows and
                     self._rn.equals(other._rn))
 
-        def element(self, data=None):
+        def element(self, data=None, **kwargs):
             if isinstance(data, FunctionSpace.Vector):
                 tmp = np.array([data([x, y])
                                 for x, y in zip(*self.points())],
-                               dtype=float64)
+                               **kwargs)
                 return self.element(tmp)
 
             elif isinstance(data, np.ndarray):
@@ -177,10 +176,10 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                     {} or {}'''.format(data.shape, (self.n,),
                                        (self.cols, self.rows))))
             else:
-                return super().element(data)
+                return super().element(data, **kwargs)
 
         def integrate(self, vector):
-            return float64(self._rn.sum(vector) * self.scale)
+            return float(self._rn.sum(vector) * self.scale)
 
         def points(self):
             x, y = np.meshgrid(np.linspace(self.parent.domain.begin[0],
@@ -198,7 +197,7 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
             return ('PixelDiscretization(' + str(self._rn) + ', ' +
                     str(self.cols) + 'x' + str(self.rows) + ')')
 
-        
+
         def __repr__(self):
             return "PixelDiscretization(" + repr(self.parent) + ", " + repr(self._rn) + ", " + str(self.cols) + ', ' + str(self.rows) + ")"
 

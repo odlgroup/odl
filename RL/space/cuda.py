@@ -63,7 +63,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         self._field = sets.RealNumbers()
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
-    def element(self, data=None):
+    def element(self, data=None, **kwargs):
         """ Returns a vector of zeros
 
         CUDA memory is always initialized
@@ -136,14 +136,15 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.n,))))
 
-            data = data.astype(np.float64, copy=False)
+            dtype = kwargs.pop('dtype', float64)
+            data = data.astype(dtype, copy=False)
 
             # Create result and assign (could be optimized to one call)
             elem = self.element()
             elem[:] = data
             return elem
         else:  # Create from intermediate numpy array
-            as_array = np.array(data, dtype=np.float64)
+            as_array = np.array(data, dtype=dtype, **kwargs)
             return self.element(as_array)
 
     def innerImpl(self, x, y):
@@ -156,7 +157,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        inner: float64
+        inner: float
             The inner product of x and y
 
 
@@ -188,7 +189,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        norm : float64
+        norm : float
             The 2-norm of x
 
 

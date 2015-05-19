@@ -41,7 +41,7 @@ class SimpleRN(HilbertSpace, Algebra):
         z.values[:] = a*x.values + b*y.values
 
     def innerImpl(self, x, y):
-        return float64(np.vdot(x.values, y.values))
+        return float(np.vdot(x.values, y.values))
 
     def multiplyImpl(self, x, y):
         y.values[:] = x.values*y.values
