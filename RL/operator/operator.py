@@ -582,37 +582,6 @@ class LinearOperator(Operator):
         """
         return self
 
-    def apply_adjoint(self, rhs, out):
-        """ Applies the adjoint of the operator, informally:
-        out = op(rhs)
-
-
-        Parameters
-        ----------
-        rhs : Vector
-              A vector in the range of this operator.
-              The point the adjoint should be evaluated in.
-
-        out : Vector
-              A vector in the domain of this operator.
-              The result of the evaluation is written to this
-              vector. Any previous content is overwritten.
-        """
-        if not self.range.contains(rhs):
-            raise TypeError(errfmt('''
-            rhs ({}) is not in the domain of this operators ({}) adjoint
-            '''.format(repr(rhs), repr(self))))
-        if not self.domain.contains(out):
-            raise TypeError(errfmt('''
-            out ({}) is not in the range of this operators ({}) adjoint
-            '''.format(repr(out), repr(self))))
-        if rhs is out:
-            raise ValueError(errfmt('''
-            rhs ({}) is the same as out ({}). Operators do not permit aliased
-            arguments'''.format(repr(rhs), repr(out))))
-
-        self._apply_adjoint(rhs, out)
-
     def __add__(self, other):
         """Operator addition
 

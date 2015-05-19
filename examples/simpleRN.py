@@ -36,8 +36,6 @@ class SimpleRN(HilbertSpace, Algebra):
         self._field = RealNumbers()
 
     def linCombImpl(self, z, a, x, b, y):
-        # Implement y = a*x + b*y using optimized BLAS rutines
-
         z.values[:] = a*x.values + b*y.values
 
     def innerImpl(self, x, y):
@@ -94,13 +92,11 @@ class SimpleRN(HilbertSpace, Algebra):
 n = 10**7
 iterations = 10
 
-x = np.random.rand(n)
-y = np.random.rand(n)
-z = np.random.rand(n)
 
 optX = EuclideanSpace(n)
 simpleX = SimpleRN(n)
 
+x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
 ox, oy, oz = optX.element(x.copy()), optX.element(y.copy()), optX.element(z.copy())
 sx, sy, sz = simpleX.element(x.copy()), simpleX.element(y.copy()), simpleX.element(z.copy())
 

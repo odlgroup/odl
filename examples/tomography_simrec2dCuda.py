@@ -52,11 +52,10 @@ class CudaProjector(OP.LinearOperator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
         self.geometries = geometries
-        self._domain = domain
-        self._range = range
+        self.domain = domain
+        self.range = range
         self.forward = SR.SRPyCuda.CudaForwardProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-
+        self._adjoint = CudaBackProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, range, domain)
 
     def _apply(self, data, out):
         #Create projector
@@ -67,8 +66,19 @@ class CudaProjector(OP.LinearOperator):
             geo = self.geometries[i]
             self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, out[i].impl.dataPtr())
 
+    @property
+    def adjoint(self):
+        return self._adjoint
 
-    def applyAdjointImpl(self, projections, out):
+
+class CudaBackProjector(OP.LinearOperator):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
+        self.geometries = geometries
+        self.domain = domain
+        self.range = range
+        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+
+    def _apply(self, projections, out):
         #Zero out the return data
         out.setZero()
 
@@ -77,14 +87,6 @@ class CudaProjector(OP.LinearOperator):
             geo = self.geometries[i]
             self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].impl.dataPtr(), out.impl.dataPtr())
 
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
 
 
 #Set geometry parameters

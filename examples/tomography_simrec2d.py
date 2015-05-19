@@ -54,8 +54,9 @@ class Projector(OP.LinearOperator):
         self.nPixels = nPixels
         self.stepSize = stepSize
         self.geometries = geometries
-        self._domain = domain
-        self._range = range
+        self.domain = domain
+        self.range = range
+        self._adjoint = BackProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, range, domain)
 
     def _apply(self, data, out):
         #Create projector
@@ -67,7 +68,23 @@ class Projector(OP.LinearOperator):
             result = forward.project(geo.sourcePosition,geo.detectorOrigin,geo.pixelDirection)
             out[i][:] = result.transpose()
 
-    def applyAdjointImpl(self, projections, out):
+    @property
+    def adjoint(self):
+        return self._adjoint
+
+
+class BackProjector(OP.LinearOperator):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
+        self.volumeOrigin = volumeOrigin
+        self.voxelSize = voxelSize
+        self.nVoxels = nVoxels
+        self.nPixels = nPixels
+        self.stepSize = stepSize
+        self.geometries = geometries
+        self.domain = domain
+        self.range = range
+
+    def _apply(self, projections, out):
         #Create backprojector
         back = SR.SRPyReconstruction.BackProjector(self.nVoxels,self.volumeOrigin,self.voxelSize)
 
@@ -78,14 +95,6 @@ class Projector(OP.LinearOperator):
 
         #Perform back projection
         out.values = back.finalize().flatten() * (51770422.4687/16720.1875882)
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
 
 
 #Set geometry parameters
@@ -127,7 +136,7 @@ projectionRN = ds.EuclideanSpace(nPixels)
 projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
-dataDisc = ps.makePowerSpace(projectionDisc, nProjection)
+dataDisc = ps.powerspace(projectionDisc, nProjection)
 
 #Define the reconstruction space
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))

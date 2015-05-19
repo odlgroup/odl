@@ -202,10 +202,7 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
     xdiff = L2xL2.zero()
     tmp = L2.zero()
 
-    print(repr(tmp))
-
     for i in range(iterations):
-        print(i)
         x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
 
         d = diff(x)+b
@@ -253,7 +250,7 @@ plt.axis('off')
 la=0.3
 mu=5.0
 with Timer("denoising time"):
-    result = TVdenoise2D(fun,la,mu,10)
+    result = TVdenoise2D(fun,la,mu,100)
 
 #Show result
 plt.figure()
