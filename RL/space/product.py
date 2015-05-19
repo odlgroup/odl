@@ -146,7 +146,7 @@ class LinearProductSpace(LinearSpace):
         """
 
         # If data is given as keyword arg, prefer it over arg list
-        data = kwargs.pop('data')
+        data = kwargs.pop('data', None)
         if data is None:
             if not args:  # No argument at all -> arbitrary vector
                 data = elements = [space.element(**kwargs)
