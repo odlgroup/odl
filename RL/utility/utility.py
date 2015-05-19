@@ -27,7 +27,6 @@ from future import standard_library
 
 # External module imports
 import numpy as np
-from numpy import float64
 from textwrap import dedent, fill
 
 standard_library.install_aliases()
@@ -153,7 +152,7 @@ def axis_rotation(vec, axis, angle):
 
     vec = np.array(vec)
     axis = np.array(axis)
-    angle = float64(angle)
+    angle = float(angle)
 
     if angle == 0. or angle == 2 * pi:
         return vec
@@ -171,7 +170,7 @@ def axis_rotation_matrix(axis, angle):
     from math import cos, sin
 
     axis = np.array(axis)
-    angle = float64(angle)
+    angle = float(angle)
     cos_ang = cos(angle)
     sin_ang = sin(angle)
 

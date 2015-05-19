@@ -29,7 +29,6 @@ from future import standard_library
 # External module imports
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
-from numpy import float64
 
 # RL imports
 from RL.space.set import Set
@@ -437,7 +436,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return float64(self.distImpl(x, y))
+        return float(self.distImpl(x, y))
 
     class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
         """ Abstract vector in a metric space
