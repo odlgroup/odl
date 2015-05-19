@@ -27,7 +27,7 @@ import unittest
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.product import makePowerSpace
+from RL.space.product import powerspace
 from RL.space.euclidean import *
 from RL.space.function import *
 import RL.space.cuda as CS
@@ -44,29 +44,42 @@ class RegularizationType(object):
     Anisotropic, Isotropic = range(2)
 
 class ForwardDiff2D(LinearOperator):
-    """ Calculates the gradient in 2D on cuda
+    """ Calculates the circular convolution of two CUDA vectors
     """
 
     def __init__(self, space):
         if not isinstance(space, CS.CudaRN):
-            raise TypeError("space must be CudaRN")
+            raise TypeError("space must be CudaPixelDiscretization")
 
-        self._domain = space
-        self._range = makePowerSpace(space,2)
+        self.domain = space
+        self.range = powerspace(space, 2)
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl, self.domain.cols, self.domain.rows)
-
-    def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.forwardDiff2DAdj(rhs[0].impl, rhs[1].impl, out.impl, self.domain.cols, self.domain.rows)
+        RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl,
+                                 self.domain.cols, self.domain.rows)
 
     @property
-    def domain(self):
-        return self._domain
+    def adjoint(self):
+        return ForwardDiff2DAdjoint(self.domain)
+
+class ForwardDiff2DAdjoint(LinearOperator):
+    """ Calculates the circular convolution of two CUDA vectors
+    """
+
+    def __init__(self, space):
+        if not isinstance(space, CS.CudaRN):
+            raise TypeError("space must be CudaPixelDiscretization")
+
+        self.domain = powerspace(space, 2)
+        self.range = space
+
+    def _apply(self, rhs, out):
+        RLcpp.cuda.forwardDiff2DAdj(rhs[0].impl, rhs[1].impl, out.impl,
+                                    self.range.cols, self.range.rows)
 
     @property
-    def range(self):
-        return self._range
+    def adjoint(self):
+        return ForwardDiff2D(self.range)
 
 
 def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
@@ -92,7 +105,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations = 1):
         diff.apply(x,xdiff)
         xdiff += d
         xdiff -= b
-        diff.applyAdjoint(xdiff,tmp)
+        diff.adjoint.apply(xdiff,tmp)
 
         L2.linComb(C1,f,2*C2,x)
         x.linComb(C2,tmp)
@@ -149,7 +162,7 @@ def TVdenoise2DOpt(x0, la, mu, iterations = 1):
         diff.apply(x,xdiff)
         xdiff += d
         xdiff -= b
-        diff.applyAdjoint(xdiff,tmp)
+        diff.adjoint.apply(xdiff,tmp)
         L2.linComb(C1,f,2*C2,x)
         x.linComb(C2,tmp)
 
@@ -189,7 +202,10 @@ def TVdenoise2D(x0, la, mu, iterations = 1):
     xdiff = L2xL2.zero()
     tmp = L2.zero()
 
+    print(repr(tmp))
+
     for i in range(iterations):
+        print(i)
         x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
 
         d = diff(x)+b
@@ -237,7 +253,7 @@ plt.axis('off')
 la=0.3
 mu=5.0
 with Timer("denoising time"):
-    result = TVdenoise2D(fun,la,mu,100)
+    result = TVdenoise2D(fun,la,mu,10)
 
 #Show result
 plt.figure()

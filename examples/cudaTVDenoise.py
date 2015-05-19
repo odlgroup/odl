@@ -45,24 +45,35 @@ class ForwardDiff(LinearOperator):
         if not isinstance(space, CS.CudaRN):
             raise TypeError("space must be CudaRN")
 
-        self.space = space
+        self.domain = self.range = space
         self.scale = scale
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff(rhs.impl, out.impl)
         out *= self.scale
 
-    def applyAdjointImpl(self, rhs, out):
+    @property
+    def adjoint(self):
+        return ForwardDiffAdj(self.domain, self.scale)
+
+class ForwardDiffAdj(LinearOperator):
+    """ Calculates the circular convolution of two CUDA vectors
+    """
+
+    def __init__(self, space, scale = 1.0):
+        if not isinstance(space, CS.CudaRN):
+            raise TypeError("space must be CudaRN")
+
+        self.domain = self.range = space
+        self.scale = scale
+
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiffAdj(rhs.impl, out.impl)
         out *= self.scale
 
     @property
-    def domain(self):
-        return self.space
-
-    @property
-    def range(self):
-        return self.space
+    def adjoint(self):
+        return ForwardDiffAdj(self.domain, self.scale)
 
 def denoise(x0, la, mu, iterations = 1):
     scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end - x0.space.parent.domain.begin)
@@ -89,7 +100,7 @@ def denoise(x0, la, mu, iterations = 1):
         x.linComb(C1, f, 2*C2, x)
         xdiff -= d
         xdiff += b
-        diff.applyAdjoint(xdiff, tmp)
+        diff.adjoint.apply(xdiff, tmp)
         x.linComb(1, x, C2, tmp)
 
         # d = diff(x)-b

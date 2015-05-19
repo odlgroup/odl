@@ -66,7 +66,7 @@ class DefaultApplyOperator(object):
     None
     """
     def _apply(self, rhs, out):
-        out.assign(self._apply(rhs))
+        out.assign(self._call(rhs))
 
 class OperatorMeta(type):
     def __new__(cls, name, bases, attrs):
@@ -559,7 +559,7 @@ class LinearOperator(Operator):
         """Apply the adjoint of the operator. Abstract, should be
         implemented by subclasses.
 
-        Public callers should instead use applyAdjoint which provides
+        Public callers should instead use adjoint.apply which provides
         type checking.
         """
         raise NotImplementedError(errfmt('''
@@ -571,9 +571,9 @@ class LinearOperator(Operator):
     def T(self):
         """ Get the adjoint of this operator such that:
 
-        op.T.apply(rhs, out) = op.applyAdjoint(rhs,out)
+        op.T.apply(rhs, out) = op.adjoint.apply(rhs,out)
         and
-        op.T.applyAdjoint(rhs, out) = op.apply(rhs,out)
+        op.T.adjoint.apply(rhs, out) = op.apply(rhs,out)
         """
         return self.adjoint
 

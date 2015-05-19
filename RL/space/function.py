@@ -52,12 +52,12 @@ class FunctionSpace(Algebra):
             the set of scalars for this space.
     """
 
-    def __init__(self, domain, field=None):
+    def __init__(self, domain, field=RealNumbers()):
         if not isinstance(domain, Set):
             raise TypeError("domain ({}) is not a set".format(domain))
 
         self.domain = domain
-        self._field = field if field is not None else RealNumbers()
+        self._field = field
 
     def element(self, function=None):
         """ Creates an element in FunctionSpace
@@ -125,10 +125,16 @@ class FunctionSpace(Algebra):
         return self.element(lambda *args: 0)
 
     def __str__(self):
-        return "FunctionSpace " + str(self.domain) + "->" + str(self.field)
+        if isinstance(self.field, RealNumbers):
+            return "FunctionSpace(" + str(self.domain) + ")"
+        else:
+            return "FunctionSpace(" + str(self.domain) + ", " + str(self.field) + ")"
 
     def __repr__(self):
-        return "FunctionSpace(" + str(self.domain) + ", " + str(self.field) + ")"
+        if isinstance(self.field, RealNumbers):
+            return "FunctionSpace(" + repr(self.domain) + ")"
+        else:
+            return "FunctionSpace(" + repr(self.domain) + ", " + repr(self.field) + ")"
 
     class Vector(Algebra.Vector, fun.Functional):
         """ A Vector in a FunctionSpace
@@ -179,7 +185,7 @@ class L2(FunctionSpace, HilbertSpace):
     """The space of square integrable functions on some domain
     """
 
-    def __init__(self, domain, field=None):
+    def __init__(self, domain, field=RealNumbers()):
         super().__init__(domain, field)
 
     def innerImpl(self, v1, v2):
@@ -194,10 +200,16 @@ class L2(FunctionSpace, HilbertSpace):
         return isinstance(other, L2) and FunctionSpace.equals(self, other)
 
     def __str__(self):
-        return "L2 " + str(self.domain) + "->" + str(self.field)
+        if isinstance(self.field, RealNumbers):
+            return "L2(" + str(self.domain) + ")"
+        else:
+            return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
 
     def __repr__(self):
-        return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
+        if isinstance(self.field, RealNumbers):
+            return "L2(" + repr(self.domain) + ")"
+        else:
+            return "L2(" + repr(self.domain) + ", " + repr(self.field) + ")"
 
     class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
         pass

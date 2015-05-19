@@ -46,7 +46,20 @@ class SimpleRN(HilbertSpace, Algebra):
     def multiplyImpl(self, x, y):
         y.values[:] = x.values*y.values
 
-    def empty(self):
+    def element(self, *args, **kwargs):
+        if not args and not kwargs:
+            return self.element(np.empty(self.n))
+        if isinstance(args[0], np.ndarray):
+            if args[0].shape == (self._n,):
+                return SimpleRN.Vector(self, args[0])
+            else:
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of shape {}, expected shape shape {}
+                '''.format(args[0], args[0].shape, (self.n,))))
+        else:
+            return self.makeVector(np.array(*args,
+                                            **kwargs).astype(float64,
+                                                             copy=False))
         return self.makeVector(np.empty(self._n, dtype=float64))
 
     @property
@@ -61,19 +74,6 @@ class SimpleRN(HilbertSpace, Algebra):
 
     def equals(self, other):
         return isinstance(other, SimpleRN) and self._n == other._n
-
-    def makeVector(self, *args, **kwargs):
-        if isinstance(args[0], np.ndarray):
-            if args[0].shape == (self._n,):
-                return SimpleRN.Vector(self, args[0])
-            else:
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(args[0], args[0].shape, (self.n,))))
-        else:
-            return self.makeVector(np.array(*args,
-                                            **kwargs).astype(float64,
-                                                             copy=False))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, values):
@@ -101,8 +101,8 @@ z = np.random.rand(n)
 optX = EuclideanSpace(n)
 simpleX = SimpleRN(n)
 
-ox, oy, oz = optX.makeVector(x.copy()), optX.makeVector(y.copy()), optX.makeVector(z.copy())
-sx, sy, sz = simpleX.makeVector(x.copy()), simpleX.makeVector(y.copy()), simpleX.makeVector(z.copy())
+ox, oy, oz = optX.element(x.copy()), optX.element(y.copy()), optX.element(z.copy())
+sx, sy, sz = simpleX.element(x.copy()), simpleX.element(y.copy()), simpleX.element(z.copy())
 
 
 print(" Lincomb:")

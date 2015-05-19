@@ -43,20 +43,21 @@ class CudaConvolution(op.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
-    def __init__(self, kernel):
+    def __init__(self, kernel, adjointkernel=None):
         if not isinstance(kernel.space, cs.CudaRN):
             raise TypeError("Kernel must be CudaRN vector")
 
         self.space = kernel.space
         self.kernel = kernel
-        self.adjkernel = self.space.element(kernel[::-1]) #The adjoint is the kernel reversed
+        self.adjkernel = adjointkernel if adjointkernel is not None else self.space.element(kernel[::-1]) #The adjoint is the kernel reversed
         self.norm = float(sum(abs(self.kernel[:]))) #eval at host
 
     def _apply(self, rhs, out):
         RLcpp.cuda.conv(rhs.impl, self.kernel.impl, out.impl)
 
-    def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.conv(rhs.impl, self.adjkernel.impl, out.impl)
+    @property
+    def adjoint(self):
+        return CudaConvolution(self.adjkernel, self.kernel)
 
     def opNorm(self): #An upper limit estimate of the operator norm
         return self.norm

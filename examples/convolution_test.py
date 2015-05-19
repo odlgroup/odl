@@ -42,22 +42,22 @@ from scipy import ndimage
 
 
 class Convolution(op.LinearOperator):
-    def __init__(self, kernel):
+    def __init__(self, kernel, adjkernel=None):
         if not isinstance(kernel.space, ds.RN):
             raise TypeError("Kernel must be RN vector")
 
-        self.kernel = kernel.values
-        self.adjkernel = kernel.values[::-1]
+        self.kernel = kernel
+        self.adjkernel = adjkernel if adjkernel is not None else kernel.space.element(kernel.values[::-1])
         self.space = kernel.space
-        self.norm = float(sum(abs(self.kernel)))
+        self.norm = float(sum(abs(self.kernel.values)))
 
     def _apply(self, rhs, out):
         ndimage.convolve(rhs.values, self.kernel, output=out.values,
                          mode='wrap')
 
-    def applyAdjointImpl(self, rhs, out):
-        ndimage.convolve(rhs.values, self.adjkernel, output=out.values,
-                         mode='wrap')
+    @property
+    def adjoint(self):
+        return Convolution(self.adjkernel, self.kernel)
 
     def opNorm(self):
         return self.norm

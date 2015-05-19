@@ -43,25 +43,31 @@ class CudaProjection(OP.LinearOperator):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
-        self._domain = domain
-        self._range = range
+        self.domain = domain
+        self.range = range
         self.forward = SR.SRPyCuda.CudaForwardProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+        self._adjoint = CudaBackProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, sourcePosition, detectorOrigin, pixelDirection, range, domain)
 
     def _apply(self, data, out):
         self.forward.setData(data.impl.dataPtr())
         self.forward.project(self.sourcePosition, self.detectorOrigin, self.pixelDirection, out.impl.dataPtr())
 
-    def applyAdjointImpl(self, projection, out):
+    @property
+    def adjoint(self):
+        return self._adjoint
+
+
+class CudaBackProjector(OP.LinearOperator):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, sourcePosition, detectorOrigin, pixelDirection, domain, range):
+        self.sourcePosition = sourcePosition
+        self.detectorOrigin = detectorOrigin
+        self.pixelDirection = pixelDirection
+        self.domain = domain
+        self.range = range
+        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+        
+    def _apply(self, projection, out):
         self.back.backProject(self.sourcePosition, self.detectorOrigin, self.pixelDirection, projection.impl.dataPtr(), out.impl.dataPtr())
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
 
 
 #Set geometry parameters
@@ -115,7 +121,7 @@ plt.figure()
 plt.plot(result[:])
 
 backprojected = reconDisc.element()
-projector.applyAdjoint(result,backprojected)
+projector.adjoint.apply(result,backprojected)
 
 plt.figure()
 plt.imshow(backprojected[:].reshape(nVoxels))
