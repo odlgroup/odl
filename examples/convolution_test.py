@@ -42,22 +42,23 @@ standard_library.install_aliases()
 
 
 class Convolution(op.LinearOperator):
-    def __init__(self, kernel):
+    def __init__(self, kernel, adjkernel=None):
         if not isinstance(kernel.space, ds.RN):
             raise TypeError("Kernel must be RN vector")
 
-        self.kernel = kernel.data
-        self.adjkernel = kernel.data[::-1]
+        self.kernel = kernel
+        self.adjkernel = (adjkernel if adjkernel is not None
+                          else kernel.space.element(kernel.values[::-1]))
         self.space = kernel.space
-        self.norm = float(sum(abs(self.kernel)))
+        self.norm = float(sum(abs(self.kernel.values)))
 
     def _apply(self, rhs, out):
         ndimage.convolve(rhs.data, self.kernel, output=out.data,
                          mode='wrap')
 
-    def _apply_adjoint(self, rhs, out):
-        ndimage.convolve(rhs.data, self.adjkernel, output=out.data,
-                         mode='wrap')
+    @property
+    def adjoint(self):
+        return Convolution(self.adjkernel, self.kernel)
 
     def opNorm(self):
         return self.norm

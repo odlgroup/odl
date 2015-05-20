@@ -112,7 +112,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
 
     @property
     def adjoint(self):
-        return ForwardDiff2DAdjoint(self.range)
+        return ForwardDiff2D(self.range)
 
 
 class TestCudaForwardDifference(RLTestCase):

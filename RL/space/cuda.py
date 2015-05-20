@@ -138,15 +138,14 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.n,))))
 
-            dtype = kwargs.pop('dtype', float64)
-            data = data.astype(dtype, copy=False)
+            data = data.astype(np.float64, copy=False)
 
             # Create result and assign (could be optimized to one call)
             elem = self.element()
             elem[:] = data
             return elem
         else:  # Create from intermediate numpy array
-            as_array = np.array(data, dtype=dtype, **kwargs)
+            as_array = np.array(data, dtype=np.float64, **kwargs)
             return self.element(as_array)
 
     def _inner(self, x, y):

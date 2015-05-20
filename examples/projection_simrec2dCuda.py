@@ -39,15 +39,15 @@ standard_library.install_aliases()
 class CudaProjection(OP.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  sourcePosition, detectorOrigin, pixelDirection,
-                 domain, range):
+                 domain, range_):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
         self._domain = domain
-        self._range = range
+        self._range = range_
         self.forward = SR.SRPyCuda.CudaForwardProjector(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-        self.back = SR.SRPyCuda.CudaBackProjector(
+        self._adjoint = SR.SRPyCuda.CudaBackProjector(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
     def _apply(self, data, out):
@@ -55,18 +55,22 @@ class CudaProjection(OP.LinearOperator):
         self.forward.project(self.sourcePosition, self.detectorOrigin,
                              self.pixelDirection, out.data_ptr)
 
-    def _apply_adjoint(self, projection, out):
-        self.back.backProject(self.sourcePosition, self.detectorOrigin,
-                              self.pixelDirection, projection.data_ptr,
-                              out.data_ptr)
-
     @property
-    def domain(self):
-        return self._domain
+    def adjoint(self):
+        return self._adjoint
 
-    @property
-    def range(self):
-        return self._range
+
+class CudaBackProjector(OP.LinearOperator):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, sourcePosition, detectorOrigin, pixelDirection, domain, range):
+        self.sourcePosition = sourcePosition
+        self.detectorOrigin = detectorOrigin
+        self.pixelDirection = pixelDirection
+        self.domain = domain
+        self.range = range
+        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+
+    def _apply(self, projection, out):
+        self.back.backProject(self.sourcePosition, self.detectorOrigin, self.pixelDirection, projection.impl.dataPtr(), out.impl.dataPtr())
 
 
 # Set geometry parameters
@@ -123,7 +127,7 @@ plt.figure()
 plt.plot(result[:])
 
 backprojected = reconDisc.element()
-projector.apply_adjoint(result, backprojected)
+projector.adjoint.apply(result,backprojected)
 
 plt.figure()
 plt.imshow(backprojected[:].reshape(nVoxels))

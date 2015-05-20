@@ -21,11 +21,9 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
-standard_library.install_aliases()
 
 import RL.operator.operator as op
 import RL.operator.solvers as solvers
-import RL.space.euclidean as ds
 import RL.space.set as sets
 import RL.space.discretizations as dd
 import RL.space.function as fs
@@ -33,32 +31,36 @@ import RL.space.cuda as cs
 import RLcpp
 from solverExamples import *
 
-from RL.utility.testutils import Timer, consume
+from RL.utility.testutils import Timer
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+standard_library.install_aliases()
 
 
 class CudaConvolution(op.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
-    def __init__(self, kernel):
+    def __init__(self, kernel, adjointkernel=None):
         if not isinstance(kernel.space, cs.CudaRN):
             raise TypeError("Kernel must be CudaRN vector")
 
         self.space = kernel.space
         self.kernel = kernel
-        self.adjkernel = self.space.element(kernel[::-1]) #The adjoint is the kernel reversed
-        self.norm = float(sum(abs(self.kernel[:]))) #eval at host
+        self.adjkernel = (adjointkernel if adjointkernel is not None
+                          else self.space.element(kernel[::-1]))
+        self.norm = float(sum(abs(self.kernel[:])))  # eval at host
 
     def _apply(self, rhs, out):
         RLcpp.cuda.conv(rhs.data, self.kernel.data, out.data)
 
-    def _apply_adjoint(self, rhs, out):
-        RLcpp.cuda.conv(rhs.data, self.adjkernel.data, out.data)
+    @property
+    def adjoint(self):
+        return CudaConvolution(self.adjkernel, self.kernel)
 
-    def opNorm(self): #An upper limit estimate of the operator norm
+    def opNorm(self):  # An upper limit estimate of the operator norm
         return self.norm
 
     @property

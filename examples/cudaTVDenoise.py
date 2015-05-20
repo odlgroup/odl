@@ -21,9 +21,6 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
-standard_library.install_aliases()
-import unittest
-from math import sin
 from numpy import float64
 
 import numpy as np
@@ -37,37 +34,54 @@ import RLcpp
 
 import matplotlib.pyplot as plt
 
+standard_library.install_aliases()
+
+
 class ForwardDiff(LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
-    def __init__(self, space, scale = 1.0):
+    def __init__(self, space, scale=1.0):
         if not isinstance(space, CS.CudaRN):
             raise TypeError("space must be CudaRN")
 
-        self.space = space
+        self.domain = self.range = space
         self.scale = scale
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff(rhs.data, out.data)
         out *= self.scale
 
-    def _apply_adjoint(self, rhs, out):
+    @property
+    def adjoint(self):
+        return ForwardDiffAdj(self.domain, self.scale)
+
+
+class ForwardDiffAdj(LinearOperator):
+    """ Calculates the circular convolution of two CUDA vectors
+    """
+
+    def __init__(self, space, scale=1.0):
+        if not isinstance(space, CS.CudaRN):
+            raise TypeError("space must be CudaRN")
+
+        self.domain = self.range = space
+        self.scale = scale
+
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
         out *= self.scale
 
     @property
-    def domain(self):
-        return self.space
+    def adjoint(self):
+        return ForwardDiffAdj(self.domain, self.scale)
 
-    @property
-    def range(self):
-        return self.space
 
-def denoise(x0, la, mu, iterations = 1):
-    scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end - x0.space.parent.domain.begin)
+def denoise(x0, la, mu, iterations=1):
+    scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end -
+                                x0.space.parent.domain.begin)
 
-    diff = ForwardDiff(x0.space,scale)
+    diff = ForwardDiff(x0.space, scale)
 
     ran = diff.range
     dom = diff.domain
@@ -89,45 +103,45 @@ def denoise(x0, la, mu, iterations = 1):
         x.lincomb(C1, f, 2*C2, x)
         xdiff -= d
         xdiff += b
-        diff.apply_adjoint(xdiff, tmp)
+        diff.adjoint.apply(xdiff, tmp)
         x.lincomb(1, x, C2, tmp)
 
         # d = diff(x)-b
-        diff.apply(x,d)
+        diff.apply(x, d)
         d -= b
 
         # sign = d/abs(d)
-        RLcpp.cuda.sign(d.data,sign.data)
+        RLcpp.cuda.sign(d.data, sign.data)
 
         #
-        RLcpp.cuda.abs(d.data,d.data)
-        RLcpp.cuda.addScalar(d.data,-1.0/la,d.data)
-        RLcpp.cuda.maxVectorScalar(d.data,0.0,d.data)
+        RLcpp.cuda.abs(d.data, d.data)
+        RLcpp.cuda.addScalar(d.data, -1.0/la, d.data)
+        RLcpp.cuda.maxVectorScalar(d.data, 0.0, d.data)
         d *= sign
 
         # b = b - diff(x) + d
-        diff.apply(x,xdiff)
+        diff.apply(x, xdiff)
         b -= xdiff
         b += d
 
     plt.plot(x)
 
-#Continuous definition of problem
+# Continuous definition of problem
 I = Interval(0, 1)
 space = L2(I)
 
-#Complicated functions to check performance
+# Complicated functions to check performance
 n = 1000
 
-#Discretization
+# Discretization
 rn = CS.CudaRN(n)
 d = DS.makeUniformDiscretization(space, rn)
 x = d.points()
 fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))
 plt.plot(fun)
 
-la=0.00001
-mu=200.0
-denoise(fun,la,mu,500)
+la = 0.00001
+mu = 200.0
+denoise(fun, la, mu, 500)
 
 plt.show()

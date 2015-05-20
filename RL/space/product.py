@@ -196,8 +196,7 @@ class LinearProductSpace(LinearSpace):
         >>> r3.norm(zero_3 - zero_2x3[1]) == 0
         True
         """
-
-        return self.element([space.zero() for space in self.spaces])
+        return self.element(data=[space.zero() for space in self.spaces])
 
     def _lincomb(self, z, a, x, b, y):
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):

@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 class Projection(OP.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, volumeSize, detectorSize,
                  stepSize, sourcePosition, detectorOrigin, pixelDirection,
-                 domain, range):
+                 domain, range_):
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
         self.volumeSize = volumeSize
@@ -48,8 +48,8 @@ class Projection(OP.LinearOperator):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
-        self._domain = domain
-        self._range = range
+        self.domain = domain
+        self.range = range_
 
     def _apply(self, data, out):
         forward = SR.SRPyForwardProject.SimpleForwardProjector(
@@ -60,24 +60,6 @@ class Projection(OP.LinearOperator):
                                  self.pixelDirection)
 
         out[:] = result.transpose()
-
-    def _apply_adjoint(self, projection, out):
-        back = SR.SRPyReconstruction.FilteredBackProjection(
-            self.volumeSize, self.volumeOrigin, self.voxelSize)
-
-        back.append(self.sourcePosition, self.detectorOrigin,
-                    self.pixelDirection, projection)
-
-        out[:] = back.finalize()[:]
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
-
 
 # Set geometry parameters
 volumeSize = np.array([20.0, 20.0])

@@ -36,8 +36,7 @@ class SimpleRN(HilbertSpace, Algebra):
 
     def _lincomb(self, z, a, x, b, y):
         # Implement y = a*x + b*y using optimized BLAS rutines
-
-        z.data[:] = a*x.data + b*y.data
+        z.data[:] = a * x.data + b * y.data
 
     def _inner(self, x, y):
         return float(np.vdot(x.data, y.data))
@@ -45,8 +44,21 @@ class SimpleRN(HilbertSpace, Algebra):
     def _multiply(self, x, y):
         y.data[:] = x.data * y.data
 
-    def empty(self):
-        return self.element(np.empty(self._n, dtype=float64))
+    def element(self, *args, **kwargs):
+        if not args and not kwargs:
+            return self.element(np.empty(self.n))
+        if isinstance(args[0], np.ndarray):
+            if args[0].shape == (self._n,):
+                return SimpleRN.Vector(self, args[0])
+            else:
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of shape {}, expected shape shape {}
+                '''.format(args[0], args[0].shape, (self.n,))))
+        else:
+            return self.makeVector(np.array(*args,
+                                            **kwargs).astype(float64,
+                                                             copy=False))
+        return self.makeVector(np.empty(self._n, dtype=float64))
 
     @property
     def field(self):
@@ -60,18 +72,6 @@ class SimpleRN(HilbertSpace, Algebra):
 
     def equals(self, other):
         return isinstance(other, SimpleRN) and self._n == other._n
-
-    def element(self, *args, **kwargs):
-        if isinstance(args[0], np.ndarray):
-            if args[0].shape == (self._n,):
-                return SimpleRN.Vector(self, args[0])
-            else:
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(args[0], args[0].shape, (self.n,))))
-        else:
-            return self.element(np.array(*args, **kwargs).astype(float64,
-                                                                 copy=False))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, data):
@@ -92,13 +92,11 @@ class SimpleRN(HilbertSpace, Algebra):
 n = 10**7
 iterations = 10
 
-x = np.random.rand(n)
-y = np.random.rand(n)
-z = np.random.rand(n)
 
 optX = EuclideanSpace(n)
 simpleX = SimpleRN(n)
 
+x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
 ox, oy, oz = (optX.element(x.copy()), optX.element(y.copy()),
               optX.element(z.copy()))
 sx, sy, sz = (simpleX.element(x.copy()), simpleX.element(y.copy()),
