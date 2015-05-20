@@ -26,7 +26,7 @@ except ImportError:
 from future import standard_library
 
 # External module imports
-from itertools import zip_longest
+from itertools import izip_longest
 import unittest
 from time import time
 
@@ -46,8 +46,8 @@ class RLTestCase(unittest.TestCase):
         if iter1 is None and iter2 is None:
             return
 
-        for [i1, i2] in zip_longest(iter1, iter2,
-                                    fillvalue=differentLengthSentinel):
+        for [i1, i2] in izip_longest(iter1, iter2,
+                                     fillvalue=differentLengthSentinel):
             # Verify that none of the lists has ended (then they are not the
             # same size)
             self.assertIsNot(i1, differentLengthSentinel)

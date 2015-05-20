@@ -16,6 +16,5 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Imports for common Python 2/3 codebase
 import nose
 result = nose.main()
