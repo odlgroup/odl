@@ -65,7 +65,7 @@ class RN(LinearSpace):
                                                              'scal',
                                                              'copy'])
 
-    def element(self, data=None):
+    def element(self, data=None, **kwargs):
         """ Returns an arbitrary vector
 
         more efficient than zeros.
@@ -128,18 +128,21 @@ class RN(LinearSpace):
         RN(3).element([ 1.,  2.,  3.])
 
         """
+
+        dtype = kwargs.pop('dtype', float64)
+
         if data is None:
-            data = np.empty(self._n, dtype=float64)
+            data = np.empty(self._n, dtype=dtype, **kwargs)
 
         if not isinstance(data, np.ndarray):
-            data = np.array(data, dtype=np.float64)
+            data = np.array(data, dtype=dtype, **kwargs)
         else:
             if data.shape != (self._n,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.n,))))
 
-            if data.dtype != np.float64:
+            if data.dtype != float64:
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(data, data.dtype)))

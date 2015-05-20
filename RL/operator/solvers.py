@@ -91,7 +91,7 @@ def landweber(operator, x, rhs, iterations=1, omega=1, part_results=None):
     for _ in range(iterations):
         operator.apply(x, tmp_ran)
         tmp_ran -= rhs
-        operator.derivative(x).apply_adjoint(tmp_ran, tmp_dom)
+        operator.derivative(x).adjoint.apply(tmp_ran, tmp_dom)
         x.lincomb(1, x, -omega, tmp_dom)
 
         if part_results is not None:
@@ -117,7 +117,7 @@ def conjugate_gradient(operator, x, rhs, iterations=1, part_results=None):
         a = norms_old / qnorm
         x.lincomb(1, x, a, p)                       # x = x + a*p
         d.lincomb(1, d, -a, q)                      # d = d - a*q
-        operator.derivative(p).apply_adjoint(d, s)  # s = A^T d
+        operator.derivative(p).adjoint.apply(d, s)  # s = A^T d
 
         norms_new = s.norm()**2
         b = norms_new/norms_old
@@ -156,6 +156,7 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
     for m in range(iterations):
         tm = next(zero_seq)
         deriv = operator.derivative(x)
+        deriv_adjoint = deriv.adjoint
 
         # v = rhs - op(x) - deriv(x0-x)
         # u = deriv.T(v)
@@ -164,7 +165,7 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
         tmp_dom.lincomb(1,  x0, -1, x)  # assign temp   tmp_dom = x0 - x
         deriv.apply(tmp_dom, tmp_ran)   # eval          deriv(x0-x)
         v -= tmp_ran                    # assign        v = rhs - op(x) - deriv(x0-x)
-        deriv.apply_adjoint(v, u)       # eval/assign   u = deriv.T(v)
+        deriv_adjoint.apply(v, u)       # eval/assign   u = deriv.T(v)
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx

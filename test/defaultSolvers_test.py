@@ -49,9 +49,6 @@ class MultiplyOp(OP.LinearOperator):
     def _apply(self, rhs, out):
         out.data[:] = np.dot(self.matrix, rhs.data)
 
-    def _apply_adjoint(self, rhs, out):
-        out.data[:] = np.dot(self.matrix.T, rhs.data)
-
     @property
     def domain(self):
         return self._domain
@@ -59,6 +56,10 @@ class MultiplyOp(OP.LinearOperator):
     @property
     def range(self):
         return self._range
+
+    @property
+    def adjoint(self):
+        return MultiplyOp(self.matrix.T, self.range, self.domain)
 
 
 class TestMatrixSolve(RLTestCase):

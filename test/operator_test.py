@@ -42,18 +42,22 @@ class MultiplyAndSquareOp(op.Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self.domain = (EuclideanSpace(matrix.shape[1])
-                       if domain is None else domain)
-        self.range = (EuclideanSpace(matrix.shape[0])
-                      if range is None else range)
+        self._domain = (EuclideanSpace(matrix.shape[1])
+                        if domain is None else domain)
+        self._range = (EuclideanSpace(matrix.shape[0])
+                       if range is None else range)
         self.matrix = matrix
+
+    @property
+    def domain(self):
+        return self._domain
+
+    @property
+    def range(self):
+        return self._range
 
     def _apply(self, rhs, out):
         np.dot(self.matrix, rhs.data, out=out.data)
-        out.data **= 2
-
-    def _apply_adjoint(self, rhs, out):
-        np.dot(self.matrix.T, rhs.data, out=out.data)
         out.data **= 2
 
     def __str__(self):

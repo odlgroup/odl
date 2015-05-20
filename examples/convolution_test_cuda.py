@@ -38,6 +38,7 @@ from RL.utility.testutils import Timer, consume
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 class CudaConvolution(op.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """

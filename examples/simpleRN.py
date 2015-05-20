@@ -5,15 +5,14 @@
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
 try:
-    from builtins import str, super
+    from builtins import super
 except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, super
+    from future.builtins import super
 from future import standard_library
 
 # External module imports
 import numpy as np
 from numpy import float64
-from scipy.lib.blas import get_blas_funcs
 
 # RL imports
 from RL.space.space import *
@@ -47,7 +46,7 @@ class SimpleRN(HilbertSpace, Algebra):
         y.data[:] = x.data * y.data
 
     def empty(self):
-        return self.makeVector(np.empty(self._n, dtype=float64))
+        return self.element(np.empty(self._n, dtype=float64))
 
     @property
     def field(self):
@@ -62,7 +61,7 @@ class SimpleRN(HilbertSpace, Algebra):
     def equals(self, other):
         return isinstance(other, SimpleRN) and self._n == other._n
 
-    def makeVector(self, *args, **kwargs):
+    def element(self, *args, **kwargs):
         if isinstance(args[0], np.ndarray):
             if args[0].shape == (self._n,):
                 return SimpleRN.Vector(self, args[0])
@@ -71,9 +70,8 @@ class SimpleRN(HilbertSpace, Algebra):
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(args[0], args[0].shape, (self.n,))))
         else:
-            return self.makeVector(np.array(*args,
-                                            **kwargs).astype(float64,
-                                                             copy=False))
+            return self.element(np.array(*args, **kwargs).astype(float64,
+                                                                 copy=False))
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, data):
@@ -90,7 +88,7 @@ class SimpleRN(HilbertSpace, Algebra):
             return self.data.__setitem__(index, value)
 
 
-#Do some tests to compare
+# Do some tests to compare
 n = 10**7
 iterations = 10
 
@@ -101,8 +99,10 @@ z = np.random.rand(n)
 optX = EuclideanSpace(n)
 simpleX = SimpleRN(n)
 
-ox, oy, oz = optX.makeVector(x.copy()), optX.makeVector(y.copy()), optX.makeVector(z.copy())
-sx, sy, sz = simpleX.makeVector(x.copy()), simpleX.makeVector(y.copy()), simpleX.makeVector(z.copy())
+ox, oy, oz = (optX.element(x.copy()), optX.element(y.copy()),
+              optX.element(z.copy()))
+sx, sy, sz = (simpleX.element(x.copy()), simpleX.element(y.copy()),
+              simpleX.element(z.copy()))
 
 
 print(" lincomb:")

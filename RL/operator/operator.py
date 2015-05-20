@@ -28,7 +28,6 @@ from future import standard_library
 
 # External module imports
 from numbers import Number
-from abc import ABCMeta, abstractmethod
 
 # RL imports
 from RL.utility.utility import errfmt
@@ -36,18 +35,67 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-class OperatorMeta(ABCMeta):
-    def __call__(cls, *args, **kwargs):
-        pass
+class DefaultCallOperator(object):
+    def _call(self, rhs):
+        out = self.range.element()
+        self._apply(rhs, out)
+        return out
+
+
+class DefaultApplyOperator(object):
+    """Apply the operator.
+
+    This method is not intended to be called by external users.
+    It is intended that classes that derive from Operator derive
+    from this method.
+
+    Parameters
+    ----------
+
+    rhs : element in self.domain
+            An object in the domain of this operator. This object is
+            "constant", and must not be modified.
+            This is the point that the operator should be applied in.
+
+    out : element in self.range
+            An object in the range of this operator. This object is
+            "mutable", the result should be written to it. The result
+            must not depend on the initial state of this element.
+
+    Returns
+    -------
+    None
+    """
+    def _apply(self, rhs, out):
+        out.assign(self._apply(rhs))
+
+
+class OperatorMeta(type):
+    def __new__(cls, name, bases, attrs):
+        if "_call" in attrs and "_apply" in attrs:
+            return super().__new__(cls, name, bases, attrs)
+        elif "_call" in attrs:
+            return super().__new__(cls, name, (DefaultApplyOperator,) + bases,
+                                   attrs)
+        elif "_apply" in attrs:
+            return super().__new__(cls, name, (DefaultCallOperator,) + bases,
+                                   attrs)
+        else:
+            return super().__new__(cls, name, bases, attrs)
 
     def __call__(cls, *args, **kwargs):
-        obj = ABCMeta.__call__(cls, *args, **kwargs)
+        obj = type.__call__(cls, *args, **kwargs)
         if not hasattr(obj, 'domain'):
             raise NotImplementedError(errfmt('''
             'Operator' instances must have a 'domain' attribute'''))
         if not hasattr(obj, 'range'):
             raise NotImplementedError(errfmt('''
             'Operator' instances must have a 'range' attribute'''))
+        if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
+            raise NotImplementedError(errfmt('''
+            'Operator' instances must have a '_call' and/or '_apply'
+            attribute'''))
+
         return obj
 
 
@@ -64,6 +112,7 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
 
     It also needs to implement a method that evaluates the operator.
+    TODO FIX DOCUMENTATION HERE
 
     _apply(self, rhs, out)
 
@@ -77,32 +126,6 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
 
     """
-
-    @abstractmethod
-    def _apply(self, rhs, out):
-        """Apply the operator.
-
-        This method is not intended to be called by external users.
-        It is intended that classes that derive from Operator derive
-        from this method.
-
-        Parameters
-        ----------
-
-        rhs : element in self.domain
-              An object in the domain of this operator. This object is
-              "constant", and must not be modified.
-              This is the point that the operator should be applied in.
-
-        out : element in self.range
-              An object in the range of this operator. This object is
-              "mutable", the result should be written to it. The result
-              must not depend on the initial state of this element.
-
-        Returns
-        -------
-        None
-        """
 
     def derivative(self, point):
         """ Get the derivative operator of this operator at `point`
@@ -188,9 +211,12 @@ class Operator(with_metaclass(OperatorMeta, object)):
         [1.0, 2.0, 3.0]
         """
 
-        tmp = self.range.element()
-        self.apply(rhs, tmp)
-        return tmp
+        if not self.domain.contains(rhs):
+            raise TypeError(errfmt('''
+            rhs ({}) is not in the domain of this operator ({})
+            '''.format(rhs, self)))
+
+        return self._call(rhs)
 
     def __add__(self, other):
         """ Operator addition (A+B)(x) = A(x) + B(x)
@@ -304,10 +330,15 @@ class OperatorSum(Operator):
 
         self._op1 = op1
         self._op2 = op2
-        self.tmp = tmp
+        self._tmp = tmp
+
+    def _call(self, rhs):
+        tmp = self._op1._call(rhs)
+        tmp += self._op2._call(rhs)
+        return tmp
 
     def _apply(self, rhs, out):
-        tmp = self.tmp if self.tmp is not None else self.range.element()
+        tmp = self._tmp if self._tmp is not None else self.range.element()
         self._op1._apply(rhs, out)
         self._op2._apply(rhs, tmp)
         out += tmp
@@ -360,6 +391,9 @@ class OperatorComposition(Operator):
         self._right = right
         self._tmp = tmp
 
+    def _call(self, rhs):
+        return self._left._call(self._right._call(rhs))
+
     def _apply(self, rhs, out):
         tmp = (self._tmp if self._tmp is not None
                else self._right.range.element())
@@ -403,6 +437,11 @@ class OperatorPointwiseProduct(Operator):
         self._op1 = op1
         self._op2 = op2
 
+    def _call(self, rhs):
+        tmp = self._op1._call(rhs)
+        tmp *= self._op2._call(rhs)
+        return tmp
+
     def _apply(self, rhs, out):
         tmp = self._op2.range.element()
         self._op1._apply(rhs, out)
@@ -433,6 +472,11 @@ class OperatorLeftScalarMultiplication(Operator):
 
         self._op = op
         self._scalar = scalar
+
+    def _call(self, rhs):
+        tmp = self._op._call(rhs)
+        tmp *= self._scalar
+        return tmp
 
     def _apply(self, rhs, out):
         self._op._apply(rhs, out)
@@ -490,6 +534,9 @@ class OperatorRightScalarMultiplication(Operator):
         self._scalar = scalar
         self._tmp = tmp
 
+    def _call(self, rhs):
+        return self._op._call(self._scalar * rhs)
+
     def _apply(self, rhs, out):
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, rhs)
@@ -518,14 +565,17 @@ class LinearOperator(Operator):
     LinearOperators are only defied on LinearSpace:s.
     """
 
-    @abstractmethod
-    def _apply_adjoint(self, rhs, out):
+    @property
+    def adjoint(self):
         """Apply the adjoint of the operator. Abstract, should be
         implemented by subclasses.
 
         Public callers should instead use apply_adjoint which provides
         type checking.
         """
+        raise NotImplementedError(errfmt('''
+        getDerivative not implemented for this operator ({})
+        '''.format(self)))
 
     # Implicitly defined operators
     @property
@@ -536,7 +586,7 @@ class LinearOperator(Operator):
         and
         op.T.apply_adjoint(rhs, out) = op.apply(rhs,out)
         """
-        return OperatorAdjoint(self)
+        return self.adjoint
 
     def derivative(self, point):
         """ The derivative of linear operators is the operator itself
@@ -562,11 +612,11 @@ class LinearOperator(Operator):
         if not self.range.contains(rhs):
             raise TypeError(errfmt('''
             rhs ({}) is not in the domain of this operators ({}) adjoint
-            '''.format(repr(rhs), self)))
+            '''.format(repr(rhs), repr(self))))
         if not self.domain.contains(out):
             raise TypeError(errfmt('''
             out ({}) is not in the range of this operators ({}) adjoint
-            '''.format(repr(out), self)))
+            '''.format(repr(out), repr(self))))
         if rhs is out:
             raise ValueError(errfmt('''
             rhs ({}) is the same as out ({}). Operators do not permit aliased
@@ -600,57 +650,17 @@ class LinearOperator(Operator):
     __rmul__ = __mul__
 
 
-class SelfAdjointOperator(with_metaclass(ABCMeta, LinearOperator)):
+class SelfAdjointOperator(LinearOperator):
     """ Special case of self adjoint operators where A(x) = A.T(x)
     """
 
-    def _apply_adjoint(self, rhs, out):
-        self._apply(rhs, out)
+    @property
+    def adjoint(self):
+        return self
 
     @property
     def range(self):
         return self.domain
-
-
-class OperatorAdjoint(LinearOperator):
-    """Expression type for the adjoint of an operator.
-    """
-
-    def __init__(self, op):
-        """Create an operator that is the adjoint of `op`
-
-        It is defined by:
-        OperatorAdjoint(op).apply(rhs,out) = op.apply_adjoint(rhs,out)
-        and
-        OperatorAdjoint(op).apply_adjoint(rhs,out) = op.apply(rhs,out)
-        """
-
-        if not isinstance(op, LinearOperator):
-            raise TypeError(errfmt('''
-            Operator ({}) is not a LinearOperator. OperatorAdjoint is only
-            defined for LinearOperators'''.format(op)))
-
-        self._op = op
-
-    def _apply(self, rhs, out):
-        self._op._apply_adjoint(rhs, out)
-
-    def _apply_adjoint(self, rhs, out):
-        self._op._apply(rhs, out)
-
-    @property
-    def domain(self):
-        return self._op.range
-
-    @property
-    def range(self):
-        return self._op.domain
-
-    def __repr__(self):
-        return 'OperatorAdjoint( ' + repr(self._op) + ')'
-
-    def __str__(self):
-        return str(self._op) + "^T"
 
 
 class LinearOperatorSum(OperatorSum, LinearOperator):
@@ -684,12 +694,10 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
         super().__init__(op1, op2, tmp_ran)
         self._tmp_dom = tmp_dom
 
-    def _apply_adjoint(self, rhs, out):
-        tmp = (self._tmp_dom if self._tmp_dom is not None
-               else self.domain.element())
-        self._op1._apply_adjoint(rhs, out)
-        self._op2._apply_adjoint(rhs, tmp)
-        out += tmp
+    @property
+    def adjoint(self):
+        return LinearOperatorSum(self._op1.adjoint, self._op2.adjoint,
+                                 self._tmp_dom, self._tmp)
 
 
 class LinearOperatorComposition(OperatorComposition, LinearOperator):
@@ -723,11 +731,10 @@ class LinearOperatorComposition(OperatorComposition, LinearOperator):
 
         super().__init__(left, right, tmp)
 
-    def _apply_adjoint(self, rhs, out):
-        tmp = (self._tmp if self._tmp is not None
-               else self._right.range.element())
-        self._left.apply_adjoint(rhs, tmp)
-        self._right.apply_adjoint(tmp, out)
+    @property
+    def adjoint(self):
+        return LinearOperatorComposition(self._right.adjoint,
+                                         self._left.adjoint, self._tmp)
 
 
 class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
@@ -753,6 +760,7 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
 
         super().__init__(op, scalar)
 
-    def _apply_adjoint(self, rhs, out):
-        self._op._apply_adjoint(rhs, out)
-        out *= self._scalar
+    @property
+    def adjoint(self):
+        return LinearOperatorScalarMultiplication(self._op.adjoint,
+                                                  self._scalar)

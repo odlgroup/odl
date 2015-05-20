@@ -23,7 +23,6 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import (division, print_function, unicode_literals,
                         absolute_import)
 from future import standard_library
-standard_library.install_aliases()
 
 import RL.operator.operator as op
 import RL.operator.solvers as solvers
@@ -38,6 +37,8 @@ from RL.utility.testutils import Timer, consume
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
+
+standard_library.install_aliases()
 
 
 class Convolution(op.LinearOperator):

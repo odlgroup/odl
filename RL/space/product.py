@@ -146,16 +146,17 @@ class LinearProductSpace(LinearSpace):
         """
 
         # If data is given as keyword arg, prefer it over arg list
-        data = kwargs.get('data')
+        data = kwargs.pop('data', None)
         if data is None:
             if not args:  # No argument at all -> arbitrary vector
-                data = elements = [space.element() for space in self.spaces]
+                data = elements = [space.element(**kwargs)
+                                   for space in self.spaces]
             else:
                 data = args
 
         if not all(isinstance(v, LinearSpace.Vector) for v in data):
             # Delegate constructors
-            elements = [space.element(arg)
+            elements = [space.element(arg, **kwargs)
                         for arg, space in zip(data, self.spaces)]
         else:  # Construct from existing tuple
             if any(part.space != space

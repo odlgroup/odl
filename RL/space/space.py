@@ -134,7 +134,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
     """
 
     @abstractmethod
-    def element(self, data=None):
+    def element(self, *args, **kwargs):
         """ Create an arbitrary element or an element from given data
 
         If called without 'data' argument, an arbitrary element in the

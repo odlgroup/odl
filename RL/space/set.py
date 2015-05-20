@@ -52,10 +52,10 @@ class Set(with_metaclass(ABCMeta, object)):
         """ Test if other is a member of self
         """
 
-    @abstractmethod
     def element(self):
         """ Return some (arbitrary) element
         """
+        raise NotImplementedError("'element' method not implemented")
 
     def __eq__(self, other):
         return self.equals(other)
@@ -76,9 +76,6 @@ class EmptySet(Set):
     def contains(self, other):
         return other is None
 
-    def element(self):
-        return None
-
     def __str__(self):
         return "EmptySet"
 
@@ -95,9 +92,6 @@ class ComplexNumbers(Set):
 
     def contains(self, other):
         return isinstance(other, Complex)
-
-    def element(self, value=0):
-        return complex(value)
 
     def __str__(self):
         return "ComplexNumbers"
@@ -116,9 +110,6 @@ class RealNumbers(Set):
     def contains(self, other):
         return isinstance(other, Real)
 
-    def element(self, value=0):
-        return float(value)
-
     def __str__(self):
         return "RealNumbers"
 
@@ -135,9 +126,6 @@ class Integers(Set):
 
     def contains(self, other):
         return isinstance(other, Integral)
-
-    def element(self, value=0):
-        return int(value)
 
     def __str__(self):
         return "Integers"
@@ -212,8 +200,10 @@ class IntervProd(Set):
     def volume(self):
         return self.measure(dim=self.dim)
 
-    def element(self):
-        """ Return some element (the midpoint)
+    def midpoint(self):
+        """ The midpoint of the interval product
+
+        TODO: doc
         """
         midp = (self._end - self._begin) / 2.
         midp[self._ideg] = self._begin[self._ideg]
