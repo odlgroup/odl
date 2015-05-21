@@ -28,14 +28,17 @@ import math
 # RL imports
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.cuda import *
 from RL.space.euclidean import RN
-from RL.utility.testutils import RLTestCase, Timer
+from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
+
+try:
+    from RL.space.cuda import *
+except ImportError:
+    RLTestCase = skip_all_tests("Missing RLcpp")
 
 import numpy as np
 
 standard_library.install_aliases()
-
 
 class TestInit(RLTestCase):
     def testEmpty(self):
@@ -66,7 +69,6 @@ class TestInit(RLTestCase):
         x0 = np.array([1, 2, 3], dtype=int)
         x = R.makeVector(x0)
         self.assertAllAlmostEquals(x, x0)
-
 
 class TestAccessors(RLTestCase):
     def testGetItem(self):
@@ -326,7 +328,6 @@ class TestFunctions(RLTestCase):
 
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(yDevice, yHost, places=5)
-
 
 class TestConvenience(RLTestCase):
     def testAddition(self):

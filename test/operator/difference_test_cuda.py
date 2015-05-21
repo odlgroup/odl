@@ -23,7 +23,6 @@ from future import standard_library
 
 # External module imports
 import unittest
-import matplotlib.pyplot as plt
 
 # RL imports
 from RL.operator.operator import *
@@ -31,10 +30,16 @@ from RL.space.space import *
 import RL.space.discretizations as dd
 from RL.space.function import *
 import RL.space.set as sets
-import RL.space.cuda as CS
 from RL.space.product import productspace
-import RLcpp
-from RL.utility.testutils import RLTestCase  # , Timer, consume
+from RL.utility.testutils import RLTestCase 
+
+from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
+
+try:
+    import RL.space.cuda as CS
+    import RLcpp
+except ImportError:
+    RLTestCase = skip_all_tests("Missing RLcpp")
 
 standard_library.install_aliases()
 
@@ -205,4 +210,3 @@ class TestCudaForwardDifference2D(RLTestCase):
 
 if __name__ == '__main__':
     unittest.main(exit=False)
-    plt.show()
