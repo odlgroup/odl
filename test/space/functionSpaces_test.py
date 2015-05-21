@@ -42,29 +42,29 @@ standard_library.install_aliases()
 
 
 class L2Test(RLTestCase):
-    def testInterval(self):
+    def test_interval(self):
         I = sets.Interval(0, pi)
         l2 = fs.L2(I)
-        l2sin = l2.makeVector(np.sin)
+        l2sin = l2.element(np.sin)
 
         rn = EuclideanSpace(10)
         d = disc.makeUniformDiscretization(l2, rn)
 
-        sind = d.makeVector(l2sin)
+        sind = d.element(l2sin)
 
         self.assertAlmostEqual(sind.norm(), sqrt(pi/2))
 
-    def testRectangle(self):
+    def test_rectangle(self):
         R = sets.Rectangle((0, 0), (pi, 2*pi))
         l2 = fs.L2(R)
-        l2sin = l2.makeVector(lambda point: np.sin(point[0]) * np.sin(point[1]))
+        l2sin = l2.element(lambda point: np.sin(point[0]) * np.sin(point[1]))
 
         n = 10
         m = 10
         rn = EuclideanSpace(n*m)
         d = disc.makePixelDiscretization(l2, rn, n, m)
 
-        sind = d.makeVector(l2sin)
+        sind = d.element(l2sin)
 
         self.assertAlmostEqual(sind.norm(), sqrt(pi**2 / 2))
 

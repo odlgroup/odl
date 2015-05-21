@@ -42,48 +42,36 @@ class MultiplyAndSquareOp(op.Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (EuclideanSpace(matrix.shape[1])
+        self.domain = (EuclideanSpace(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (EuclideanSpace(matrix.shape[0])
+        self.range = (EuclideanSpace(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
-    def applyImpl(self, rhs, out):
-        np.dot(self.matrix, rhs.values, out=out.values)
-        out.values **= 2
-
-    def applyAdjointImpl(self, rhs, out):
-        np.dot(self.matrix.T, rhs.values, out=out.values)
-        out.values **= 2
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
+    def _apply(self, rhs, out):
+        np.dot(self.matrix, rhs.data, out=out.data)
+        out.data[:] **= 2
 
     def __str__(self):
         return "MaS: " + str(self.matrix) + "**2"
 
 
-def opNumpy(A, x):
+def mult_sq_np(A, x):
     # The same as MultiplyAndSquareOp but only using numpy
     return np.dot(A, x)**2
 
 
 class TestRN(RLTestCase):
-    def testMultiplyAndSquareOp(self):
+    def test_mult_sq_op(self):
         # Verify that the operator does indeed work as expected
         A = np.random.rand(4, 3)
         x = np.random.rand(3)
         Aop = MultiplyAndSquareOp(A)
-        xvec = Aop.domain.makeVector(x)
+        xvec = Aop.domain.element(x)
 
-        self.assertAllAlmostEquals(Aop(xvec), opNumpy(A, x))
+        self.assertAllAlmostEquals(Aop(xvec), mult_sq_np(A, x))
 
-    def testAdd(self):
+    def test_addition(self):
         # Test operator addition
         A = np.random.rand(4, 3)
         B = np.random.rand(4, 3)
@@ -91,15 +79,16 @@ class TestRN(RLTestCase):
 
         Aop = MultiplyAndSquareOp(A)
         Bop = MultiplyAndSquareOp(B)
-        xvec = Aop.domain.makeVector(x)
+        xvec = Aop.domain.element(x)
 
         # Explicit instantiation
         C = op.OperatorSum(Aop, Bop)
-        self.assertAllAlmostEquals(C(xvec), opNumpy(A, x) + opNumpy(B, x))
+        self.assertAllAlmostEquals(C(xvec),
+                                   mult_sq_np(A, x) + mult_sq_np(B, x))
 
         # Using operator overloading
         self.assertAllAlmostEquals((Aop + Bop)(xvec),
-                                   opNumpy(A, x) + opNumpy(B, x))
+                                   mult_sq_np(A, x) + mult_sq_np(B, x))
 
         # Verify that unmatched operators domains fail
         C = np.random.rand(4, 4)
@@ -108,34 +97,34 @@ class TestRN(RLTestCase):
         with self.assertRaises(TypeError):
             C = op.OperatorSum(Aop, Cop)
 
-    def testScale(self):
+    def test_scale(self):
         A = np.random.rand(4, 3)
         x = np.random.rand(3)
 
         Aop = MultiplyAndSquareOp(A)
-        xvec = Aop.domain.makeVector(x)
+        xvec = Aop.domain.element(x)
 
         # Test a range of scalars (scalar multiplication could implement
         # optimizations for (-1, 0, 1)).
         scalars = [-1.432, -1, 0, 1, 3.14]
         for scale in scalars:
-            LeftScaled = op.OperatorLeftScalarMultiplication(Aop, scale)
-            RightScaled = op.OperatorRightScalarMultiplication(Aop, scale)
+            lscaled = op.OperatorLeftScalarMultiplication(Aop, scale)
+            rscaled = op.OperatorRightScalarMultiplication(Aop, scale)
 
-            self.assertAllAlmostEquals(LeftScaled(xvec),
-                                       scale * opNumpy(A, x))
-            self.assertAllAlmostEquals(RightScaled(xvec),
-                                       opNumpy(A, scale*x))
+            self.assertAllAlmostEquals(lscaled(xvec),
+                                       scale * mult_sq_np(A, x))
+            self.assertAllAlmostEquals(rscaled(xvec),
+                                       mult_sq_np(A, scale*x))
 
             # Using operator overloading
             self.assertAllAlmostEquals((scale * Aop)(xvec),
-                                       scale * opNumpy(A, x))
+                                       scale * mult_sq_np(A, x))
             self.assertAllAlmostEquals((Aop * scale)(xvec),
-                                       opNumpy(A, scale*x))
+                                       mult_sq_np(A, scale*x))
 
         # Fail when scaling by wrong scalar type (A complex number)
-        NonScalars = [1j, [1, 2], Aop]
-        for nonscalar in NonScalars:
+        nonscalars = [1j, [1, 2], Aop]
+        for nonscalar in nonscalars:
             with self.assertRaises(TypeError):
                 C = op.OperatorLeftScalarMultiplication(Aop, nonscalar)
 
@@ -148,18 +137,18 @@ class TestRN(RLTestCase):
             with self.assertRaises(TypeError):
                 C = nonscalar * Aop
 
-    def testCompose(self):
+    def test_composition(self):
         A = np.random.rand(5, 4)
         B = np.random.rand(4, 3)
         x = np.random.rand(3)
 
         Aop = MultiplyAndSquareOp(A)
         Bop = MultiplyAndSquareOp(B)
-        xvec = Bop.domain.makeVector(x)
+        xvec = Bop.domain.element(x)
 
         C = op.OperatorComposition(Aop, Bop)
 
-        self.assertAllAlmostEquals(C(xvec), opNumpy(A, opNumpy(B, x)))
+        self.assertAllAlmostEquals(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
 
         # Verify that incorrect order fails
         with self.assertRaises(TypeError):

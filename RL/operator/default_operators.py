@@ -45,8 +45,11 @@ class ScalingOperator(op.SelfAdjointOperator):
         self._space = space
         self._scal = float(scalar)
 
-    def applyImpl(self, input, out):
-        out.linComb(self._scal, input)
+    def _apply(self, input, out):
+        out.lincomb(self._scal, input)
+
+    def _call(self, input):
+        return self._scal * input
 
     @property
     def domain(self):

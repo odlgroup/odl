@@ -21,11 +21,9 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
-standard_library.install_aliases()
 
 import RL.operator.operator as op
-import RL.operator.solvers as solvers 
-import RL.space.euclidean as ds
+import RL.operator.solvers as solvers
 import RL.space.set as sets
 import RL.space.discretizations as dd
 import RL.space.function as fs
@@ -33,37 +31,42 @@ import RL.space.cuda as cs
 import RLcpp
 from solverExamples import *
 
-from RL.utility.testutils import Timer, consume
+from RL.utility.testutils import Timer
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+standard_library.install_aliases()
+
 
 class CudaConvolution(op.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
-    def __init__(self, kernel):
+    def __init__(self, kernel, adjointkernel=None):
         if not isinstance(kernel.space, cs.CudaRN):
             raise TypeError("Kernel must be CudaRN vector")
-        
+
         self.space = kernel.space
         self.kernel = kernel
-        self.adjkernel = self.space.makeVector(kernel[::-1]) #The adjoint is the kernel reversed
-        self.norm = float(sum(abs(self.kernel[:]))) #eval at host
+        self.adjkernel = (adjointkernel if adjointkernel is not None
+                          else self.space.element(kernel[::-1]))
+        self.norm = float(sum(abs(self.kernel[:])))  # eval at host
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.conv(rhs.data, self.kernel.data, out.data)
 
-    def applyAdjointImpl(self, rhs, out):
-        RLcpp.cuda.conv(rhs.data, self.adjkernel.data, out.data)
+    @property
+    def adjoint(self):
+        return CudaConvolution(self.adjkernel, self.kernel)
 
-    def opNorm(self): #An upper limit estimate of the operator norm
+    def opNorm(self):  # An upper limit estimate of the operator norm
         return self.norm
 
     @property
     def domain(self):
         return self.space
-    
+
     @property
     def range(self):
         return self.space
@@ -74,14 +77,14 @@ class CudaConvolution(op.LinearOperator):
 continuousSpace = fs.L2(sets.Interval(0, 10))
 
 #Complicated functions to check performance
-continuousKernel = continuousSpace.makeVector(lambda x: np.exp(x/2)*np.cos(x*1.172))
-continuousRhs = continuousSpace.makeVector(lambda x: x**2*np.sin(x)**2*(x > 5))
+continuousKernel = continuousSpace.element(lambda x: np.exp(x/2)*np.cos(x*1.172))
+continuousRhs = continuousSpace.element(lambda x: x**2*np.sin(x)**2*(x > 5))
 
 #Discretization
 rn = cs.CudaRN(5000)
 d = dd.makeUniformDiscretization(continuousSpace, rn)
-kernel = d.makeVector(continuousKernel)
-rhs = d.makeVector(continuousRhs)
+kernel = d.element(continuousKernel)
+rhs = d.element(continuousRhs)
 
 #Create operator
 conv = CudaConvolution(kernel)
@@ -91,24 +94,24 @@ iterations = 100
 omega = 1/conv.opNorm()**2
 
 #Display partial
-partial = solvers.forEachPartial(lambda result: plt.plot(conv(result)[:]))
+partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result)[:]))
 
 #Test CGN
 plt.figure()
 plt.plot(rhs)
-solvers.conjugateGradient(conv, d.zero(), rhs, iterations, partial)
+solvers.conjugate_gradient(conv, d.zero(), rhs, iterations, partial)
 
 #Landweber
 plt.figure()
 plt.plot(rhs)
 solvers.landweber(conv, d.zero(), rhs, iterations, omega, partial)
-        
+
 #testTimingCG
 with Timer("Optimized CG"):
-    solvers.conjugateGradient(conv, d.zero(), rhs, iterations)
-            
+    solvers.conjugate_gradient(conv, d.zero(), rhs, iterations)
+
 with Timer("Base CG"):
-    conjugateGradientBase(conv, d.zero(), rhs, iterations)
+    conjugate_gradient_base(conv, d.zero(), rhs, iterations)
 
 #Landweber timing
 with Timer("Optimized LW"):

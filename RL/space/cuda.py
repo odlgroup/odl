@@ -33,6 +33,7 @@ from future import standard_library
 # External module imports
 import numpy as np
 from math import sqrt
+from numpy import float64
 from numbers import Integral
 
 # RL imports
@@ -64,7 +65,90 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         self._field = sets.RealNumbers()
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
-    def innerImpl(self, x, y):
+    def element(self, data=None, **kwargs):
+        """ Returns a vector of zeros
+
+        CUDA memory is always initialized
+        TODO: rewrite
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        CudaRN.Vector instance
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> y = rn.element()
+        >>> y in rn
+        True
+        >>> y.assign(rn.zero())
+        >>> y
+        CudaRN(3).element([ 0.,  0.,  0.])
+
+        Creates an element in CudaRN
+
+        Parameters
+        ----------
+        The method has two call patterns, the first is:
+
+        *args : numpy.ndarray
+                Array that will be copied to the GPU.
+                Data is not modified or bound.
+                The shape of the array must be (n,)
+
+        **kwargs : None
+
+        The second pattern is to create a new numpy array which will then
+        be copied to the GPU. In this case
+
+        *args : Options for numpy.array constructor
+        **kwargs : Options for numpy.array constructor
+
+        Returns
+        -------
+        CudaRN.Vector instance
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> x = rn.element(np.array([1, 2, 3]))
+        >>> x
+        CudaRN(3).element([ 1.,  2.,  3.])
+        >>> y = rn.element([1, 2, 3])
+        >>> y
+        CudaRN(3).element([ 1.,  2.,  3.])
+
+        """
+
+        if isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
+            return self.Vector(self, data)
+        elif data is None:
+            return self.element(self.impl.empty())
+        elif isinstance(data, np.ndarray):  # Create from numpy array
+            if data.shape != (self._n,):
+                raise ValueError(errfmt('''
+                Input numpy array ({}) is of shape {}, expected shape shape {}
+                '''.format(data, data.shape, (self.n,))))
+
+            data = data.astype(np.float64, copy=False)
+
+            # Create result and assign (could be optimized to one call)
+            elem = self.element()
+            elem[:] = data
+            return elem
+        else:  # Create from intermediate numpy array
+            as_array = np.array(data, dtype=np.float64, **kwargs)
+            return self.element(as_array)
+
+    def _inner(self, x, y):
         """ Calculates the inner product of x and y
 
         Parameters
@@ -74,15 +158,16 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        float, inner product of x and y
+        inner: float
+            The inner product of x and y
 
 
         Examples
         --------
 
         >>> rn = CudaRN(3)
-        >>> x = rn.makeVector([1, 2, 3])
-        >>> y = rn.makeVector([3, 1, 5])
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([3, 1, 5])
         >>> rn.inner(x, y)
         20.0
 
@@ -93,7 +178,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         return self.impl.inner(x.data, y.data)
 
-    def normImpl(self, x):
+    def _norm(self, x):
         """ Calculates the 2-norm of x
 
         This method is implemented separately from `sqrt(inner(x,x))`
@@ -105,14 +190,15 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        float, 2-norm of x
+        norm : float
+            The 2-norm of x
 
 
         Examples
         --------
 
         >>> rn = CudaRN(3)
-        >>> x = rn.makeVector([2, 3, 6])
+        >>> x = rn.element([2, 3, 6])
         >>> rn.norm(x)
         7.0
 
@@ -123,7 +209,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         return sqrt(self.impl.normSq(x.data))
 
-    def linCombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
 
         z = a*x + b*y
@@ -148,16 +234,17 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
         >>> rn = CudaRN(3)
-        >>> x = rn.makeVector([1, 2, 3])
-        >>> y = rn.makeVector([4, 5, 6])
-        >>> z = rn.empty()
-        >>> rn.linComb(z, 2, x, 3, y)
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([4, 5, 6])
+        >>> z = rn.element()
+        >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        CudaRN(3).makeVector([ 14.,  19.,  24.])
+        CudaRN(3).element([ 14.,  19.,  24.])
         """
+
         self.impl.linComb(z.data, a, x.data, b, y.data)
 
-    def multiplyImpl(self, x, y):
+    def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
         result to `y`
 
@@ -181,11 +268,11 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         --------
 
         >>> rn = CudaRN(3)
-        >>> x = rn.makeVector([5, 3, 2])
-        >>> y = rn.makeVector([1, 2, 3])
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        CudaRN(3).makeVector([ 5.,  6.,  6.])
+        CudaRN(3).element([ 5.,  6.,  6.])
         """
         self.impl.multiply(x.data, y.data)
 
@@ -207,36 +294,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> rn = CudaRN(3)
         >>> y = rn.zero()
         >>> y
-        CudaRN(3).makeVector([ 0.,  0.,  0.])
+        CudaRN(3).element([ 0.,  0.,  0.])
         """
-        return self.makeVector(self.impl.zero())
-
-    def empty(self):
-        """ Returns a vector of zeros
-
-        CUDA memory is always initialized
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        CudaRN.Vector instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> y = rn.empty()
-        >>> y in rn
-        True
-        >>> y.assign(rn.zero())
-        >>> y
-        CudaRN(3).makeVector([ 0.,  0.,  0.])
-        """
-        return self.makeVector(self.impl.empty())
+        return self.element(self.impl.zero())
 
     @property
     def field(self):
@@ -323,54 +383,6 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         """
         return isinstance(other, CudaRN) and self._n == other._n
 
-    def makeVector(self, *args, **kwargs):
-        """ Creates an element in CudaRN
-
-        Parameters
-        ----------
-        The method has two call patterns, the first is:
-
-        *args : numpy.ndarray
-                Array that will be copied to the GPU.
-                Data is not modified or bound.
-                The shape of the array must be (n,)
-
-        **kwargs : None
-
-        The second pattern is to create a new numpy array which will then
-        be copied to the GPU. In this case
-
-        *args : Options for numpy.array constructor
-        **kwargs : Options for numpy.array constructor
-
-        Returns
-        -------
-        CudaRN.Vector instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> x = rn.makeVector(np.array([1, 2, 3]))
-        >>> x
-        CudaRN(3).makeVector([ 1.,  2.,  3.])
-        >>> y = rn.makeVector([1, 2, 3])
-        >>> y
-        CudaRN(3).makeVector([ 1.,  2.,  3.])
-
-        """
-
-        if isinstance(args[0], RLcpp.PyCuda.CudaRNVectorImpl):
-            return self.Vector(self, args[0])
-        elif isinstance(args[0], np.ndarray):  # Create from np array
-            # Create result and assign (this could be optimized to one call)
-            result = self.empty()
-            result[:] = args[0]
-            return result
-        else:
-            return self.makeVector(np.array(*args, **kwargs))
-
     def __str__(self):
         return "CudaRN(" + str(self._n) + ")"
 
@@ -450,7 +462,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                   Underlying cuda data representation
             """
             return self._data
-        
+
         @property
         def data_ptr(self):
             """ Get a raw pointer to the data of this Vector
@@ -485,13 +497,13 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             --------
 
             >>> rn = CudaRN(3)
-            >>> x = rn.makeVector([1, 2, 3])
+            >>> x = rn.element([1, 2, 3])
             >>> y = eval(repr(x))
             >>> y
-            CudaRN(3).makeVector([ 1.,  2.,  3.])
+            CudaRN(3).element([ 1.,  2.,  3.])
             """
             val_str = repr(self[:]).lstrip('array(').rstrip(')')
-            return repr(self.space) + '.makeVector(' + val_str + ')'
+            return repr(self.space) + '.element(' + val_str + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
@@ -523,7 +535,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             --------
 
             >>> rn = CudaRN(3)
-            >>> y = rn.makeVector([1, 2, 3])
+            >>> y = rn.element([1, 2, 3])
             >>> y[0]
             1.0
             >>> y[1:2]
@@ -562,25 +574,25 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
 
             >>> rn = CudaRN(3)
-            >>> y = rn.makeVector([1, 2, 3])
+            >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            CudaRN(3).makeVector([ 5.,  2.,  3.])
+            CudaRN(3).element([ 5.,  2.,  3.])
             >>> y[1:3] = [7, 8]
             >>> y
-            CudaRN(3).makeVector([ 5.,  7.,  8.])
+            CudaRN(3).element([ 5.,  7.,  8.])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            CudaRN(3).makeVector([ 0.,  0.,  0.])
+            CudaRN(3).element([ 0.,  0.,  0.])
 
             """
 
             if isinstance(index, slice):
                 # Convert value to the correct type
                 if not isinstance(value, np.ndarray):
-                    value = np.array(value, dtype=np.float64)
+                    value = np.array(value, dtype=float64)
 
-                value = value.astype(np.float64, copy=False)
+                value = value.astype(float64, copy=False)
 
                 self.data.setSlice(index, value)
             else:

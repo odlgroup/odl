@@ -1,12 +1,1 @@
---- General ---
-- When it comes to style, I (Holger) think we should follow PEP8 as closely as possible. (Some things below are taken from there)
-- Avoid long lines. 79 characters are the limit.
-- Naming scheme: classes should be CamelCase, functions lowercase with underscore if necessary. Keep names short!
-- Docstrings: mandatory for all modules, classes, public methods and public functions. Optional for "magic" methods.
-- doctest: We can think about having simple tests in the docstrings (see doctest module)
-- Wildcard imports: We should only use them as long as there are heavy changes going on in a file. When things converge, switch to explicit imports.
-  Also: no wildcard imports without defining __all__!
-- Check of input parameters: to what degree should one check input parameters?
-
---- set.py ---
-- Why name "AbstractSet"? Why not just "Set"?
+Known issues in RL

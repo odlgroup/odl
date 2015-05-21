@@ -37,7 +37,6 @@ import RL.operator.solvers as solvers
 
 import matplotlib.pyplot as plt
 
-from RL.utility.testutils import Timer
 
 class ProjectionGeometry(object):
     """ Geometry for a specific projection
@@ -52,13 +51,12 @@ class CudaProjector(OP.LinearOperator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
         self.geometries = geometries
-        self._domain = domain
-        self._range = range
+        self.domain = domain
+        self.range = range
         self.forward = SR.SRPyCuda.CudaForwardProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+        self._adjoint = CudaBackProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, range, domain)
 
-
-    def applyImpl(self, data, out):
+    def _apply(self, data, out):
         #Create projector
         self.forward.setData(data.data_ptr)
 
@@ -67,10 +65,21 @@ class CudaProjector(OP.LinearOperator):
             geo = self.geometries[i]
             self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, out[i].data_ptr)
 
+    @property
+    def adjoint(self):
+        return self._adjoint
 
-    def applyAdjointImpl(self, projections, out):
+
+class CudaBackProjector(OP.LinearOperator):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
+        self.geometries = geometries
+        self.domain = domain
+        self.range = range
+        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+
+    def _apply(self, projections, out):
         #Zero out the return data
-        out.setZero()
+        out.set_zero()
 
         #Append all projections
         for i in range(len(self.geometries)):
@@ -78,19 +87,11 @@ class CudaProjector(OP.LinearOperator):
             self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].data_ptr, out.data_ptr)
 
 
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
-
 
 #Set geometry parameters
 volumeSize = np.array([20.0,20.0])
 volumeOrigin = -volumeSize/2.0
-        
+
 detectorSize = 50.0
 detectorOrigin = -detectorSize/2.0
 
@@ -101,7 +102,7 @@ detectorAxisDistance = 20.0
 nVoxels = np.array([500, 500])
 nPixels = 4000
 nProjection = 1000
-        
+
 #Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
@@ -117,7 +118,7 @@ for theta in np.linspace(0, 2*pi, nProjection):
     projDetectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
     projPixelDirection = y0 * pixelSize
     geometries.append(ProjectionGeometry(projSourcePosition, projDetectorOrigin, projPixelDirection))
-    
+
 #Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
 projectionRN = cs.CudaRN(nPixels)
@@ -137,7 +138,7 @@ reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
-phantomVec = reconDisc.makeVector(phantom)
+phantomVec = reconDisc.element(phantom)
 
 #Make the operator
 projector = CudaProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
@@ -159,9 +160,9 @@ def plotResult(x):
 
 #Solve using landweber
 x = reconDisc.zero()
-#solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, partialResults=solvers.forEachPartial(plotResult))
-solvers.landweber(projector, x, projections, 5, omega=0.4/normEst, partialResults=solvers.printIterationPartial())
-#solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
-        
+#solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, part_results=solvers.ForEachPartial(plotResult))
+solvers.landweber(projector, x, projections, 5, omega=0.4/normEst, part_results=solvers.PrintIterationPartial())
+#solvers.conjugate_gradient(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
+
 plt.imshow(x[:].reshape(nVoxels))
 plt.show()
