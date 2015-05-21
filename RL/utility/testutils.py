@@ -20,13 +20,14 @@
 from __future__ import print_function, unicode_literals, division
 from __future__ import absolute_import
 try:
-    from builtins import object
+    from builtins import object, super
 except ImportError:
-    from future.builtins import object
+    from future.builtins import object, super
+from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports
-from itertools import izip_longest
+from itertools import zip_longest
 import unittest
 from time import time
 
@@ -46,8 +47,8 @@ class RLTestCase(unittest.TestCase):
         if iter1 is None and iter2 is None:
             return
 
-        for [i1, i2] in izip_longest(iter1, iter2,
-                                     fillvalue=differentLengthSentinel):
+        for [i1, i2] in zip_longest(iter1, iter2,
+                                    fillvalue=differentLengthSentinel):
             # Verify that none of the lists has ended (then they are not the
             # same size)
             self.assertIsNot(i1, differentLengthSentinel)
@@ -56,7 +57,6 @@ class RLTestCase(unittest.TestCase):
                 self.assertAllAlmostEquals(iter(i1), iter(i2), *args, **kwargs)
             except TypeError:
                 self.assertAlmostEquals(float(i1), float(i2), *args, **kwargs)
-
 
 
 def skip_all_tests(reason=None):
@@ -69,12 +69,13 @@ def skip_all_tests(reason=None):
                 value = local[attr]
                 if attr.startswith('test') and callable(value):
                     local[attr] = unittest.skip(reason)(value)
-            return type.__new__(cls, name, bases, local)
+            return super().__new__(cls, name, bases, local)
 
-    class SkipAllTestCase(unittest.TestCase):
-        __metaclass__ = SkipAllTestsMeta
+    class SkipAllTestCase(with_metaclass(SkipAllTestsMeta, unittest.TestCase)):
+        pass
 
     return SkipAllTestCase
+
 
 class Timer(object):
     def __init__(self, name=None):
