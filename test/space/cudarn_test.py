@@ -29,14 +29,17 @@ from numpy import float64
 # RL imports
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.cuda import *
 from RL.space.euclidean import RN
-from RL.utility.testutils import RLTestCase, Timer
+from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
+
+try:
+    from RL.space.cuda import *
+except ImportError:
+    RLTestCase = skip_all_tests("Missing RLcpp")
 
 import numpy as np
 
 standard_library.install_aliases()
-
 
 class TestInit(RLTestCase):
     def test_empty(self):
@@ -67,7 +70,6 @@ class TestInit(RLTestCase):
         x0 = np.array([1, 2, 3], dtype=int)
         x = r3.element(x0)
         self.assertAllAlmostEquals(x, x0)
-
 
 class TestAccessors(RLTestCase):
     def test_getitem(self):
@@ -226,35 +228,35 @@ class TestMethods(RLTestCase):
         # Unaliased arguments
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a * x_arr + b * y_arr
+        z_arr[:] = a * x_arr + b * y_arr
         rn.lincomb(z, a, x, b, y)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # First argument aliased with output
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a * z_arr + b * y_arr
-        rn.lincomb(zVec, a, z, b, y)
+        z_arr[:] = a * z_arr + b * y_arr
+        rn.lincomb(z, a, z, b, y)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # Second argument aliased with output
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a * x_arr + b * z_arr
+        z_arr[:] = a * x_arr + b * z_arr
         rn.lincomb(z, a, x, b, z)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # Both arguments aliased with each other
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a * x_arr + b * x_arr
+        z_arr[:] = a * x_arr + b * x_arr
         rn.lincomb(z, a, x, b, x)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # All aliased
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
-        z[:] = a * z_arr + b * z_arr
+        z_arr[:] = a * z_arr + b * z_arr
         rn.lincomb(z, a, z, b, z)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
@@ -262,7 +264,7 @@ class TestMethods(RLTestCase):
         scalar_values = [0, 1, -1, 3.41]
         for a in scalar_values:
             for b in scalar_values:
-                self.test_lincomb(a, b)
+                self._test_lincomb(a, b)
 
     def _test_member_lincomb(self, a, n=100):
         # Validates vector member lincomb against the result on host with
@@ -329,7 +331,6 @@ class TestMethods(RLTestCase):
 
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(y_device, y_host, places=5)
-
 
 class TestConvenience(RLTestCase):
     def test_addition(self):

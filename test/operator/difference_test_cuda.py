@@ -23,7 +23,6 @@ from future import standard_library
 
 # External module imports
 import unittest
-import matplotlib.pyplot as plt
 
 # RL imports
 from RL.operator.operator import *
@@ -31,10 +30,16 @@ from RL.space.space import *
 import RL.space.discretizations as dd
 from RL.space.function import *
 import RL.space.set as sets
-import RL.space.cuda as CS
 from RL.space.product import productspace
-import RLcpp
-from RL.utility.testutils import RLTestCase  # , Timer, consume
+from RL.utility.testutils import RLTestCase 
+
+from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
+
+try:
+    import RL.space.cuda as CS
+    import RLcpp
+except ImportError:
+    RLTestCase = skip_all_tests("Missing RLcpp")
 
 standard_library.install_aliases()
 
@@ -68,7 +73,7 @@ class ForwardDiffAdjoint(LinearOperator):
         self.domain = self.range = space
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiffAdj(rhs.impl, out.impl)
+        RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
 
     @property
     def adjoint(self):
@@ -107,7 +112,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
         self.range = space
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2DAdj(rhs[0].impl, rhs[1].impl, out.impl,
+        RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
                                     self.range.cols, self.range.rows)
 
     @property
@@ -228,4 +233,3 @@ class TestCudaForwardDifference2D(RLTestCase):
 
 if __name__ == '__main__':
     unittest.main(exit=False)
-    plt.show()

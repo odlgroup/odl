@@ -242,7 +242,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         CudaRN(3).element([ 14.,  19.,  24.])
         """
 
-        self.impl.lincomb(z.data, a, x.data, b, y.data)
+        self.impl.linComb(z.data, a, x.data, b, y.data)
 
     def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
