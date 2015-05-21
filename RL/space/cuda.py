@@ -396,39 +396,6 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             lambda inp, outp: RLcpp.PyCuda.abs(inp.data, outp.data),
             input=(self, self))
 
-    @property
-    def sign(self):
-        return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.sign(inp.data, outp.data),
-            input=(self, self))
-
-    @property
-    def addScalar(self):
-        return fun.LambdaFunction(
-            lambda inp, scal, outp: RLcpp.PyCuda.addScalar(inp.data, scal,
-                                                           outp.data),
-            input=(self, self.field, self))
-
-    @property
-    def maxVectorScalar(self):
-        return fun.LambdaFunction(
-            lambda inp, scal, outp: RLcpp.PyCuda.maxVectorScalar(
-                inp.data, scal, outp.data),
-            input=(self, self.field, self))
-
-    @property
-    def maxVectorVector(self):
-        return fun.LambdaFunction(
-            lambda inp1, inp2, outp: RLcpp.PyCuda.maxVectorVector(
-                inp1.data, inp2.data, outp.data),
-            input=(self, self, self))
-
-    @property
-    def sum(self):
-        return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.abs(inp.data),
-            input=(self), returns=self.field)
-
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         """ A RN-vector represented in CUDA
 
@@ -598,6 +565,25 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             else:
                 self.data.__setitem__(index, value)
 
+
+#Methods, todo, move
+def abs(inp, outp):
+    RLcpp.PyCuda.abs(inp.data, outp.data)
+
+def sign(inp, outp):
+    RLcpp.PyCuda.sign(inp.data, outp.data)
+
+def addScalar(inp, scal, outp):
+    RLcpp.PyCuda.addScalar(inp.data, scal, outp.data)
+
+def maxVectorScalar(inp, scal, outp):
+    RLcpp.PyCuda.maxVectorScalar(inp.data, scal, outp.data)
+
+def maxVectorVector(inp1, inp2, outp):
+    RLcpp.PyCuda.maxVectorVector(inp1.data, inp2.data, outp.data)
+
+def sum(inp):
+    return RLcpp.PyCuda.sum(inp.data)
 
 if __name__ == '__main__':
     import doctest

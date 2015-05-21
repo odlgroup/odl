@@ -156,12 +156,12 @@ class FunctionSpace(Algebra):
             super().__init__(space)
             if not callable(function):
                 raise TypeError("'function' is not callable")
-            self.function = function
+            self._function = function
 
         def _call(self, rhs):
             """ Apply the functional in some point
             """
-            return self.function(rhs)
+            return self._function(rhs)
 
         @property
         def domain(self):
@@ -178,10 +178,10 @@ class FunctionSpace(Algebra):
             return self.space.field
 
         def __str__(self):
-            return str(self.function)
+            return str(self._function)
 
         def __repr__(self):
-            return repr(self.space) + '.element(' + repr(self.function) + ')'
+            return repr(self.space) + '.element(' + repr(self._function) + ')'
 
 
 class L2(FunctionSpace, HilbertSpace):
