@@ -57,6 +57,16 @@ class RLTestCase(unittest.TestCase):
             except TypeError:
                 self.assertAlmostEquals(float(i1), float(i2), *args, **kwargs)
 
+class SkipAllTestsMeta(type):
+    def __new__(cls, name, bases, local):
+        for attr in local:
+            value = local[attr]
+            if attr.startswith('test') and callable(value):
+                local[attr] = unittest.skip("Skipping all tests in this class")(value)
+        return type.__new__(cls, name, bases, local)
+
+class SkipAllTests(unittest.TestCase):
+    __metaclass__ = SkipAllTestsMeta
 
 class Timer(object):
     def __init__(self, name=None):

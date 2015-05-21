@@ -17,4 +17,8 @@
 
 
 import nose
-result = nose.main()
+import sys
+
+arg = sys.argv[:1]
+arg.append('--verbosity=2')
+out = nose.run(defaultTest='./test/.', argv=arg)
