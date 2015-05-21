@@ -44,7 +44,6 @@ standard_library.install_aliases()
 class RegularizationType(object):
     Anisotropic, Isotropic = range(2)
 
-
 class ForwardDiff2D(LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
@@ -57,7 +56,7 @@ class ForwardDiff2D(LinearOperator):
         self.range = powerspace(space, 2)
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2D(rhs.impl, out[0].impl, out[1].impl,
+        RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
                                  self.domain.cols, self.domain.rows)
 
     @property
@@ -77,7 +76,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
         self.range = space
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2DAdj(rhs[0].impl, rhs[1].impl, out.impl,
+        RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
                                     self.range.cols, self.range.rows)
 
     @property
@@ -125,12 +124,12 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
         for i in range(1, dimension):
             xdiff[0].lincomb(1, xdiff[i])
 
-        L2.sqrt(xdiff[0], xdiff[0])
+        CS.sqrt(xdiff[0], xdiff[0])
 
         # c = tmp = max(s - la^-1, 0) / s
-        L2.addScalar(xdiff[0], -1.0/la, tmp)
-        L2.maxVectorScalar(tmp, 0.0, tmp)
-        L2.divideVectorVector(tmp, xdiff[0], tmp)
+        CS.addScalar(xdiff[0], -1.0/la, tmp)
+        CS.maxVectorScalar(tmp, 0.0, tmp)
+        CS.divideVectorVector(tmp, xdiff[0], tmp)
 
         # d = d * c = d * max(s - la^-1, 0) / s
         for i in range(dimension):
@@ -175,12 +174,12 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            L2.sign(d[i], tmp)
+            CS.sign(d[i], tmp)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            L2.abs(d[i], d[i])
-            L2.addScalar(d[i], -1.0/la, d[i])
-            L2.maxVectorScalar(d[i], 0.0, d[i])
+            CS.abs(d[i], d[i])
+            CS.addScalar(d[i], -1.0/la, d[i])
+            CS.maxVectorScalar(d[i], 0.0, d[i])
             d[i].multiply(tmp)
 
         # b = b + diff(x) - d
@@ -212,12 +211,12 @@ def TVdenoise2D(x0, la, mu, iterations=1):
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            L2.sign(d[i], tmp)
+            CS.sign(d[i], tmp)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            L2.abs(d[i], d[i])
-            L2.addScalar(d[i], -1.0/la, d[i])
-            L2.maxVectorScalar(d[i], 0.0, d[i])
+            CS.abs(d[i], d[i])
+            CS.addScalar(d[i], -1.0/la, d[i])
+            CS.maxVectorScalar(d[i], 0.0, d[i])
             d[i].multiply(tmp)
 
         b = b + diff(x) - d

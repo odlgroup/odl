@@ -26,6 +26,8 @@ except ImportError:  # Versions < 0.14 of python-future
 from future.utils import with_metaclass
 from future import standard_library
 
+from abc import ABCMeta
+
 # External module imports
 from numbers import Number
 
@@ -105,7 +107,7 @@ class DefaultApplyOperator(object):
         out.assign(self._call(rhs))
 
 
-class OperatorMeta(type):
+class OperatorMeta(ABCMeta):
     """ Metaclass used by Operator to ensure correct methods
 
     If an '_apply' method or '_call' method does not exist, it
