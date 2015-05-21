@@ -216,8 +216,22 @@ class Operator(with_metaclass(OperatorMeta, object)):
         """ Get the derivative operator of this operator at `point`
         """
         raise NotImplementedError(errfmt('''
-        derivative not implemented for this operator ({})
+        Derivative not implemented for this operator ({})
         '''.format(self)))
+
+
+    def inverse(self, point):
+        """ Get the inverse operator of this operator
+        """
+        raise NotImplementedError(errfmt('''
+        Inverse not implemented for this operator ({})
+        '''.format(self)))
+
+    @property
+    def I(self):
+        """ Get the inverse of this operator
+        """
+        return self.inverse
 
     # Implicitly defined operators
     def apply(self, rhs, out):
@@ -663,24 +677,21 @@ class LinearOperator(Operator):
 
     @property
     def adjoint(self):
-        """Apply the adjoint of the operator. Abstract, should be
+        """Get the adjoint of the operator. Abstract, should be
         implemented by subclasses.
 
-        Public callers should instead use adjoint.apply which provides
-        type checking.
+        op.T.apply(rhs, out) = op.adjoint.apply(rhs,out)
+        and
+        op.T.adjoint.apply(rhs, out) = op.apply(rhs,out)
         """
         raise NotImplementedError(errfmt('''
-        getDerivative not implemented for this operator ({})
+        Adjoint not implemented for this operator ({})
         '''.format(self)))
 
     # Implicitly defined operators
     @property
     def T(self):
-        """ Get the adjoint of this operator such that:
-
-        op.T.apply(rhs, out) = op.adjoint.apply(rhs,out)
-        and
-        op.T.adjoint.apply(rhs, out) = op.apply(rhs,out)
+        """ Get the adjoint of this operator
         """
         return self.adjoint
 
