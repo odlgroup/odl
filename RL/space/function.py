@@ -28,10 +28,10 @@ except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import super
 
 # RL imports
-import RL.operator.functional as fun
+import RL.operator.operator as fun
 from RL.space.space import HilbertSpace, Algebra
 
-from RL.space.set import RealNumbers, Set
+from RL.space.set import RealNumbers, ComplexNumbers, Set
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -54,15 +54,16 @@ class FunctionSpace(Algebra):
 
     def __init__(self, domain, field=RealNumbers()):
         if not isinstance(domain, Set):
-            raise TypeError("domain ({}) is not a Set instance".format(domain))
+            raise TypeError("domain ({!r}) is not a Set instance".format(domain))
+
+        if not isinstance(field, (RealNumbers, ComplexNumbers)):
+            raise TypeError("field ({!r}) is not a RealNumbers or ComplexNumbers".format(field))
 
         self.domain = domain
         self._field = field
 
     def element(self, function=None):
         """ Creates an element in FunctionSpace
-
-        TODO: rewrite
 
         Parameters
         ----------
@@ -136,7 +137,7 @@ class FunctionSpace(Algebra):
         else:
             return "FunctionSpace(" + repr(self.domain) + ", " + repr(self.field) + ")"
 
-    class Vector(Algebra.Vector, fun.Functional):
+    class Vector(Algebra.Vector, fun.Operator):
         """ A Vector in a FunctionSpace
 
         FunctionSpace-Vectors are themselves also Functionals, and inherit
@@ -157,7 +158,7 @@ class FunctionSpace(Algebra):
                 raise TypeError("'function' is not callable")
             self.function = function
 
-        def _apply(self, rhs):
+        def _call(self, rhs):
             """ Apply the functional in some point
             """
             return self.function(rhs)
