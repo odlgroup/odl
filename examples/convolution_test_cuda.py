@@ -111,7 +111,7 @@ with Timer("Optimized CG"):
     solvers.conjugate_gradient(conv, d.zero(), rhs, iterations)
 
 with Timer("Base CG"):
-    conjugate_gradientBase(conv, d.zero(), rhs, iterations)
+    conjugate_gradient_base(conv, d.zero(), rhs, iterations)
 
 #Landweber timing
 with Timer("Optimized LW"):

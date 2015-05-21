@@ -48,9 +48,9 @@ class Convolution(op.LinearOperator):
 
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
-                          else kernel.space.element(kernel.values[::-1]))
+                          else kernel.space.element(kernel.data[::-1]))
         self.space = kernel.space
-        self.norm = float(sum(abs(self.kernel.values)))
+        self.norm = float(sum(abs(self.kernel.data)))
 
     def _apply(self, rhs, out):
         ndimage.convolve(rhs.data, self.kernel, output=out.data,
@@ -112,7 +112,7 @@ with Timer("Optimized CG"):
     solvers.conjugate_gradient(conv, d.zero(), rhs, iterations)
 
 with Timer("Base CG"):
-    conjugate_gradientBase(conv, d.zero(), rhs, iterations)
+    conjugate_gradient_base(conv, d.zero(), rhs, iterations)
 
 # Landweber timing
 with Timer("Optimized LW"):

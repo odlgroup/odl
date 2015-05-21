@@ -12,7 +12,6 @@ from RL.operator.operator import Operator
 
 class addOp(Operator):
     def __init__(self, n, x):
-        self.n = n
         self.x = x
         self.range = RN(n)
         self.domain = RN(n)
