@@ -33,13 +33,13 @@ import RL.space.set as sets
 from RL.space.product import productspace
 from RL.utility.testutils import RLTestCase 
 
-from RL.utility.testutils import RLTestCase, SkipAllTests, Timer
+from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
 
 try:
     import RL.space.cuda as CS
     import RLcpp
 except ImportError:
-    RLTestCase = SkipAllTests
+    RLTestCase = skip_all_tests("Missing RLcpp")
 
 standard_library.install_aliases()
 

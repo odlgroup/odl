@@ -29,12 +29,12 @@ import math
 from RL.operator.operator import *
 from RL.space.space import *
 from RL.space.euclidean import RN
-from RL.utility.testutils import RLTestCase, SkipAllTests, Timer
+from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
 
 try:
     from RL.space.cuda import *
 except ImportError:
-    RLTestCase = SkipAllTests
+    RLTestCase = skip_all_tests("Missing RLcpp")
 
 import numpy as np
 
