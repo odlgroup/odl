@@ -36,41 +36,82 @@ standard_library.install_aliases()
 
 
 class DefaultCallOperator(object):
+    """ Decorator class that adds a '_call'  method an 'Operator'
+
+    The default implementation assumes that the 'range' of the 
+    operator implements 'element()'.
+    """
+
     def _call(self, rhs):
+        """ Default '_call' implementation using '_apply'.
+
+        Implemented as:
+
+        out = self.range.element()
+        self._apply(rhs, out)
+        return out
+
+        Parameters
+        ----------
+
+        rhs : element in self.domain
+              An object in the domain of this operator.
+              This is the point that the operator should be applied in.
+
+        Returns
+        -------
+
+        out : element in self.range
+              An object in the range of this operator.
+              The result of an operator evaluation.
+        """
+
         out = self.range.element()
         self._apply(rhs, out)
         return out
 
 
 class DefaultApplyOperator(object):
-    """Apply the operator.
+    """ Decorator class that adds a '_apply' method to an 'Operator'
 
-    This method is not intended to be called by external users.
-    It is intended that classes that derive from Operator derive
-    from this method.
-
-    Parameters
-    ----------
-
-    rhs : element in self.domain
-            An object in the domain of this operator. This object is
-            "constant", and must not be modified.
-            This is the point that the operator should be applied in.
-
-    out : element in self.range
-            An object in the range of this operator. This object is
-            "mutable", the result should be written to it. The result
-            must not depend on the initial state of this element.
-
-    Returns
-    -------
-    None
+    The default implementation assumes that elements in the 'range' of the 
+    operator implements 'assign()'.
     """
     def _apply(self, rhs, out):
+        """ Default '_apply' implementation using '_call'.
+
+        Implemented as:
+
+        out.assign(self._call(rhs))
+
+        Parameters
+        ----------
+
+        rhs : element in self.domain
+              An object in the domain of this operator.
+              This is the point that the operator should be applied in.
+
+              
+        out : element in self.range
+              An object in the range of this operator.
+              The result of an operator evaluation.
+
+        Returns
+        -------
+        None
+
+        """
+
         out.assign(self._call(rhs))
 
 
 class OperatorMeta(type):
+    """ Metaclass used by Operator to ensure correct methods
+
+    If an '_apply' method or '_call' method does not exist, it
+    attempts to add a default implmented version. This only works
+    if the range is a `LinearSpace`.
+    """
     def __new__(cls, name, bases, attrs):
         if "_call" in attrs and "_apply" in attrs:
             return super().__new__(cls, name, bases, attrs)
@@ -102,6 +143,14 @@ class OperatorMeta(type):
 class Operator(with_metaclass(OperatorMeta, object)):
     """Abstract operator
 
+    An operator is a mapping from a 'Set' to another 'Set'.
+    In RL all mappings know their domain and range, and have
+    some method of evaluation. They also provide some convenience 
+    functions and error checking.
+
+    Domain and Range
+    ----------------
+
     A subclass of this has to have the attributes
 
     domain : AbstractSet
@@ -110,11 +159,39 @@ class Operator(with_metaclass(OperatorMeta, object)):
     range : AbstractSet
             The set this operator takes values in
 
+    Evaluation
+    ----------
 
     It also needs to implement a method that evaluates the operator.
-    TODO FIX DOCUMENTATION HERE
+    There are two ways to do this, and any implementation needs
+    to implement at least one of them.
 
-    _apply(self, rhs, out)
+    Out-of-place evaluation
+    ~~~~~~~~~~~~~~~~~~~~~~~
+
+    Out-of-place evaluation means the operator is applied and returns
+    the result. In this case, a subclass has to implement
+
+    _call(self, rhs)     <==>     result = operator(rhs)
+
+    Where the arguments are
+
+    rhs : domain element
+          The point the operator should be evaluated in.
+
+    With return value
+
+    result : range element
+             The result of the evaluation.
+
+    In-place evaluation
+    ~~~~~~~~~~~~~~~~~~~
+
+    In-place evaluation means the operator is applied writes
+    the result to a provided argument. This is for performance
+    reasons. In this case, a subclass has to implement
+
+    _apply(self, rhs, out)     <==>     out = operator(rhs)
 
     Where the arguments are
 
@@ -124,6 +201,12 @@ class Operator(with_metaclass(OperatorMeta, object)):
     out : range element
           The result of the evaluation.
 
+    Notes
+    -----
+    
+    If the user only provides one of '_apply' or '_call' and
+    the underlying range is a 'LinearSpace', a default implementation
+    of the other is provided.
 
     """
 
@@ -137,6 +220,8 @@ class Operator(with_metaclass(OperatorMeta, object)):
     # Implicitly defined operators
     def apply(self, rhs, out):
         """ Apply this operator in place.   Informally: out = f(rhs)
+
+        Calls the underlying implementation '_apply' with error checking.
 
         Parameters
         ----------
@@ -170,24 +255,26 @@ class Operator(with_metaclass(OperatorMeta, object)):
         if not self.domain.contains(rhs):
             raise TypeError(errfmt('''
             rhs ({}) is not in the domain of this operator ({})
-            '''.format(rhs, self)))
+            '''.format(repr(rhs), repr(self))))
 
         if not self.range.contains(out):
             raise TypeError(errfmt('''
             out ({}) is not in the range of this operator ({})
-            '''.format(out, self)))
+            '''.format(repr(out), repr(self))))
 
         if rhs is out:
             raise ValueError(errfmt('''
             rhs ({}) is the same as out ({}) operators do not permit
             aliased arguments
-            '''.format(rhs, out)))
+            '''.format(repr(rhs), repr(out))))
 
         self._apply(rhs, out)
 
     def __call__(self, rhs):
         """ Evaluates the operator. The output element is allocated
         dynamically.
+
+        Calls the underlying implementation '_call' with error checking.
 
         Parameters
         ----------
@@ -214,9 +301,16 @@ class Operator(with_metaclass(OperatorMeta, object)):
         if not self.domain.contains(rhs):
             raise TypeError(errfmt('''
             rhs ({}) is not in the domain of this operator ({})
-            '''.format(rhs, self)))
+            '''.format(repr(rhs), repr(self))))
 
-        return self._call(rhs)
+        result = self._call(rhs)
+
+        if not self.range.contains(result):
+            raise TypeError(errfmt('''
+            result ({}) is not in the domain of this operator ({})
+            '''.format(repr(result), repr(self))))
+
+        return result
 
     def __add__(self, other):
         """ Operator addition (A+B)(x) = A(x) + B(x)
