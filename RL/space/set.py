@@ -30,6 +30,7 @@ from future import standard_library
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
+from numpy import float64
 
 # RL imports
 from RL.utility.utility import errfmt
@@ -50,6 +51,11 @@ class Set(with_metaclass(ABCMeta, object)):
     def contains(self, other):
         """ Test if other is a member of self
         """
+
+    def element(self):
+        """ Return some (arbitrary) element
+        """
+        raise NotImplementedError("'element' method not implemented")
 
     def __eq__(self, other):
         return self.equals(other)
@@ -154,8 +160,8 @@ class IntervProd(Set):
         IntervProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
 
-        begin = np.atleast_1d(begin).astype(np.float64)
-        end = np.atleast_1d(end).astype(np.float64)
+        begin = np.atleast_1d(begin).astype(float64)
+        end = np.atleast_1d(end).astype(float64)
 
         if len(begin) != len(end):
             raise ValueError(errfmt('''
@@ -170,10 +176,10 @@ class IntervProd(Set):
 
         self._begin = begin
         self._end = end
+        self._ideg = np.where(self._begin == self._end)[0]
         self._inondeg = np.where(self._begin != self._end)[0]
 
     # Basic properties
-    # TODO: setters?
     @property
     def begin(self):
         return self._begin[0] if self.dim == 1 else self._begin
@@ -193,6 +199,15 @@ class IntervProd(Set):
     @property
     def volume(self):
         return self.measure(dim=self.dim)
+
+    def midpoint(self):
+        """ The midpoint of the interval product
+
+        TODO: doc
+        """
+        midp = (self._end - self._begin) / 2.
+        midp[self._ideg] = self._begin[self._ideg]
+        return midp[0] if self.dim == 1 else midp
 
     # Overrides of the abstract base class methods
     def equals(self, other, tol=0.0):
@@ -332,6 +347,7 @@ class IntervProd(Set):
         4
         """
 
+        # TODO: Apply same principle as in MetricProductSpace?
         point = np.atleast_1d(point)
         if len(point) != self.dim:
             raise ValueError(errfmt('''

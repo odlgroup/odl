@@ -16,26 +16,23 @@ class Reals(HilbertSpace, Algebra):
     def __init__(self):
         self._field = RealNumbers()
 
-    def innerImpl(self, x, y):        
+    def _inner(self, x, y):
         return x.__val__ * y.__val__
 
-    def linCombImpl(self, z, a, x, b, y):        
+    def _lincomb(self, z, a, x, b, y):
         z.__val__ = a*x.__val__ + b*y.__val__
 
-    def multiplyImpl(self, x, y):
+    def _multiply(self, x, y):
         y.__val__ *= x.__val__
-
-    def empty(self):
-        return self.makeVector(0.0)
 
     @property
     def field(self):
         return self._field
-    
+
     def equals(self, other):
         return isinstance(other, Reals)
 
-    def makeVector(self, value):
+    def element(self, value=0):
         return Reals.Vector(self, value)
 
     class Vector(HilbertSpace.Vector):
@@ -47,5 +44,5 @@ class Reals(HilbertSpace, Algebra):
             HilbertSpace.Vector.__init__(self, space)
             self.__val__ = v
 
-        def __float__(self):        
+        def __float__(self):
             return self.__val__.__float__()

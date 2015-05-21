@@ -46,7 +46,7 @@ class Function(with_metaclass(ABCMeta, object)):
         self._returns = returns
 
     @abstractmethod
-    def applyImpl(self, *args):
+    def _apply(self, *args):
         """Apply the function, abstract
         """
 
@@ -81,7 +81,7 @@ class Function(with_metaclass(ABCMeta, object)):
                 The {}:th argument ({}) is not in the domain of this function
                 ({})'''.format(i, args[i], self)))
 
-        retval = self.applyImpl(*args)
+        retval = self._apply(*args)
 
         if not self.range.contains(retval):
             raise TypeError(errfmt('''
@@ -109,5 +109,5 @@ class LambdaFunction(Function):
         self.fun = fun
         super().__init__(*args, **kwargs)
 
-    def applyImpl(self, *args, **kwargs):
+    def _apply(self, *args, **kwargs):
         self.fun(*args, **kwargs)

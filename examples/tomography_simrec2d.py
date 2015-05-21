@@ -54,10 +54,11 @@ class Projector(OP.LinearOperator):
         self.nPixels = nPixels
         self.stepSize = stepSize
         self.geometries = geometries
-        self._domain = domain
-        self._range = range
+        self.domain = domain
+        self.range = range
+        self._adjoint = BackProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, range, domain)
 
-    def applyImpl(self, data, out):
+    def _apply(self, data, out):
         #Create projector
         forward = SR.SRPyForwardProject.SimpleForwardProjector(data.data.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
 
@@ -67,7 +68,23 @@ class Projector(OP.LinearOperator):
             result = forward.project(geo.sourcePosition,geo.detectorOrigin,geo.pixelDirection)
             out[i][:] = result.transpose()
 
-    def applyAdjointImpl(self, projections, out):
+    @property
+    def adjoint(self):
+        return self._adjoint
+
+
+class BackProjector(OP.LinearOperator):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
+        self.volumeOrigin = volumeOrigin
+        self.voxelSize = voxelSize
+        self.nVoxels = nVoxels
+        self.nPixels = nPixels
+        self.stepSize = stepSize
+        self.geometries = geometries
+        self.domain = domain
+        self.range = range
+
+    def _apply(self, projections, out):
         #Create backprojector
         back = SR.SRPyReconstruction.BackProjector(self.nVoxels,self.volumeOrigin,self.voxelSize)
 
@@ -78,14 +95,6 @@ class Projector(OP.LinearOperator):
 
         #Perform back projection
         out.data[:] = back.finalize().flatten() * (51770422.4687/16720.1875882)
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
 
 
 #Set geometry parameters
@@ -138,7 +147,7 @@ reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
-phantomVec = reconDisc.makeVector(phantom)
+phantomVec = reconDisc.element(phantom)
 
 #Make the operator
 projector = Projector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
@@ -164,8 +173,8 @@ print(x.inner(projector.T(y)), projector(x).inner(y))
 
 #Solve using landweber
 x = reconDisc.zero()
-#solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, partialResults=solvers.forEachPartial(plotResult))
-solvers.conjugateGradient(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
-#solvers.gaussNewton(projector, x, projections, 20, partialResults=solvers.forEachPartial(plotResult))
+#solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, part_results=solvers.ForEachPartial(plotResult))
+solvers.conjugate_gradient(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
+#solvers.gauss_newton(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
 
 #plt.show()

@@ -52,21 +52,32 @@ class ForwardDiff(LinearOperator):
         if not isinstance(space, CS.CudaRN):
             raise TypeError("space must be CudaRN")
 
-        self.space = space
+        self.domain = self.range = space
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff(rhs.data, out.data)
 
-    def applyAdjointImpl(self, rhs, out):
+    @property
+    def adjoint(self):
+        return ForwardDiffAdjoint(self.domain)
+
+
+class ForwardDiffAdjoint(LinearOperator):
+    """ Calculates the circular convolution of two CUDA vectors
+    """
+
+    def __init__(self, space):
+        if not isinstance(space, CS.CudaRN):
+            raise TypeError("space must be CudaRN")
+
+        self.domain = self.range = space
+
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
 
     @property
-    def domain(self):
-        return self.space
-
-    @property
-    def range(self):
-        return self.space
+    def adjoint(self):
+        return ForwardDiff(self.domain)
 
 
 class ForwardDiff2D(LinearOperator):
@@ -77,28 +88,40 @@ class ForwardDiff2D(LinearOperator):
         if not isinstance(space, CS.CudaRN):
             raise TypeError("space must be CudaPixelDiscretization")
 
-        self._domain = space
-        self._range = productspace(space, space)
+        self.domain = space
+        self.range = productspace(space, space)
 
-    def applyImpl(self, rhs, out):
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
                                  self.domain.cols, self.domain.rows)
 
-    def applyAdjointImpl(self, rhs, out):
+    @property
+    def adjoint(self):
+        return ForwardDiff2DAdjoint(self.domain)
+
+
+class ForwardDiff2DAdjoint(LinearOperator):
+    """ Calculates the circular convolution of two CUDA vectors
+    """
+
+    def __init__(self, space):
+        if not isinstance(space, CS.CudaRN):
+            raise TypeError("space must be CudaPixelDiscretization")
+
+        self.domain = productspace(space, space)
+        self.range = space
+
+    def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
-                                    self.domain.cols, self.domain.rows)
+                                    self.range.cols, self.range.rows)
 
     @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
+    def adjoint(self):
+        return ForwardDiff2D(self.range)
 
 
 class TestCudaForwardDifference(RLTestCase):
-    def testCGN(self):
+    def test_fwd_diff(self):
         # Continuous definition of problem
         I = sets.Interval(0, 1)
         space = L2(I)
@@ -107,7 +130,7 @@ class TestCudaForwardDifference(RLTestCase):
         n = 6
         rn = CS.CudaRN(n)
         d = dd.makeUniformDiscretization(space, rn)
-        fun = d.makeVector([1, 2, 5, 3, 2, 1])
+        fun = d.element([1, 2, 5, 3, 2, 1])
 
         # Create operator
         diff = ForwardDiff(d)
@@ -118,7 +141,7 @@ class TestCudaForwardDifference(RLTestCase):
 
 
 class TestCudaForwardDifference2D(RLTestCase):
-    def testSquare(self):
+    def test_square(self):
         # Continuous definition of problem
         I = sets.Rectangle([0, 0], [1, 1])
         space = L2(I)
@@ -129,11 +152,11 @@ class TestCudaForwardDifference2D(RLTestCase):
         rn = CS.CudaRN(n*m)
         d = dd.makePixelDiscretization(space, rn, n, m)
         x, y = d.points()
-        fun = d.makeVector([[0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0],
-                            [0, 0, 1, 0, 0],
-                            [0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0]])
+        fun = d.element([[0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0],
+                         [0, 0, 1, 0, 0],
+                         [0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0]])
 
         diff = ForwardDiff2D(d)
         derivative = diff(fun)
@@ -161,7 +184,7 @@ class TestCudaForwardDifference2D(RLTestCase):
                                     [0, 0, 1, 0, 0],
                                     [0, 0, 0, 0, 0]])
 
-    def testRectangle(self):
+    def test_rectangle(self):
         # Continuous definition of problem
         I = sets.Rectangle([0, 0], [1, 1])
         space = L2(I)
@@ -174,11 +197,11 @@ class TestCudaForwardDifference2D(RLTestCase):
         rn = CS.CudaRN(n*m)
         d = dd.makePixelDiscretization(space, rn, n, m)
         x, y = d.points()
-        fun = d.makeVector([[0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 1, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0]])
+        fun = d.element([[0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 1, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0]])
 
         diff = ForwardDiff2D(d)
         derivative = diff(fun)

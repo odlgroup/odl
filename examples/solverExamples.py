@@ -31,9 +31,9 @@ def landweberBase(operator, x, rhs, iterations=1, omega=1):
         x = x - omega * operator.T(operator(x)-rhs)
 
     return x
-        
 
-def conjugateGradientBase(op, x, rhs, iterations=1):
+
+def conjugate_gradient_base(op, x, rhs, iterations=1):
     """ Non-optimized CGN
     """
     d = rhs - op(x)
@@ -41,11 +41,11 @@ def conjugateGradientBase(op, x, rhs, iterations=1):
     s = p.copy()
 
     for _ in range(iterations):
-        q = op(p)                       
+        q = op(p)
         norms2 = s.norm()**2
         a = norms2 / q.norm()**2
-        x = x + a*p                    
-        d = d - a*q                  
+        x = x + a*p
+        d = d - a*q
         s = op.T(d)
         b = s.norm()**2/norms2
         p = s + b*p

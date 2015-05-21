@@ -27,6 +27,7 @@ from future import standard_library
 
 # External
 import numpy as np
+from numpy import float64
 from functools import partial
 
 # RL imports
@@ -84,6 +85,90 @@ class LinearProductSpace(LinearSpace):
     def spaces(self):
         return self._spaces
 
+    def element(self, *args, **kwargs):
+        """ Create some vector in the product space
+
+        TODO: This docstring combines the old `empty` and `makeVector` ones.
+        Write properly!
+        The main purpose of this function is to allocate memory
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        vec : ProducSpace.Vector
+            Some vector in the product space
+
+        Example
+        -------
+        >>> from RL.space.euclidean import EuclideanSpace
+        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+        >>> vec_2, vec_3 = r2.element(), r3.element()
+        >>> r2x3 = LinearProductSpace(r2, r3)
+        >>> vec_2x3 = r2x3.element()
+        >>> vec_2.space == vec_2x3[0].space
+        True
+        >>> vec_3.space == vec_2x3[1].space
+        True
+
+        Creates an element in the product space
+
+        Parameters
+        ----------
+        The method has two call patterns, the first is:
+
+        args : tuple of LinearSpace.Vector's
+            A tuple of vectors in the underlying space.
+            This will simply wrap the Vectors (not copy).
+
+        The second pattern is to create a new Vector from scratch, in
+        this case
+
+        args : tuple of array-like objects
+
+        Returns
+        -------
+        LinearProductSpace.Vector instance
+
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> r2, r3 = RN(2), RN(3)
+        >>> prod = LinearProductSpace(r2, r3)
+        >>> x2 = r2.element([1, 2])
+        >>> x3 = r3.element([1, 2, 3])
+        >>> x = prod.element(x2, x3)
+        >>> print(x)
+        {[ 1.  2.], [ 1.  2.  3.]}
+        """
+
+        # If data is given as keyword arg, prefer it over arg list
+        data = kwargs.pop('data', None)
+        if data is None:
+            if not args:  # No argument at all -> arbitrary vector
+                data = elements = [space.element(**kwargs)
+                                   for space in self.spaces]
+            else:
+                data = args
+
+        if not all(isinstance(v, LinearSpace.Vector) for v in data):
+            # Delegate constructors
+            elements = [space.element(arg, **kwargs)
+                        for arg, space in zip(data, self.spaces)]
+        else:  # Construct from existing tuple
+            if any(part.space != space
+                   for part, space in zip(data, self.spaces)):
+                raise TypeError(errfmt('''
+                The spaces of all parts must correspond to this
+                space's parts'''))
+            elements = data
+
+        # Use __class__ to allow subclassing
+        return self.__class__.Vector(self, *elements)
+
     def zero(self):
         """ Create the zero vector of the product space
 
@@ -102,7 +187,7 @@ class LinearProductSpace(LinearSpace):
         Example
         -------
         >>> from RL.space.euclidean import EuclideanSpace
-        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+        >>> r2, r3 data= EuclideanSpace(2), EuclideanSpace(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
@@ -111,41 +196,11 @@ class LinearProductSpace(LinearSpace):
         >>> r3.norm(zero_3 - zero_2x3[1]) == 0
         True
         """
+        return self.element(data=[space.zero() for space in self.spaces])
 
-        return self.makeVector(*[space.zero() for space in self.spaces])
-
-    def empty(self):
-        """ Create some vector in the product space
-
-        The main purpose of this function is to allocate memory
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        vec : ProducSpace.Vector
-            Some vector in the product space
-
-        Example
-        -------
-        >>> from RL.space.euclidean import EuclideanSpace
-        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-        >>> vec_2, vec_3 = r2.empty(), r3.empty()
-        >>> r2x3 = LinearProductSpace(r2, r3)
-        >>> vec_2x3 = r2x3.empty()
-        >>> vec_2.space == vec_2x3[0].space
-        True
-        >>> vec_3.space == vec_2x3[1].space
-        True
-        """
-
-        return self.makeVector(*[space.empty() for space in self.spaces])
-
-    def linCombImpl(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
-            space.linCombImpl(zp, a, xp, b, yp)
+            space._lincomb(zp, a, xp, b, yp)
 
     def equals(self, other):
         """ Test if the product space is equal to another
@@ -184,53 +239,6 @@ class LinearProductSpace(LinearSpace):
                 len(self) == len(other) and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 
-    def makeVector(self, *args):
-        """ Creates an element in the product space
-
-        Parameters
-        ----------
-        The method has two call patterns, the first is:
-
-        args : tuple of LinearSpace.Vector's
-            A tuple of vectors in the underlying space.
-            This will simply wrap the Vectors (not copy).
-
-        The second pattern is to create a new Vector from scratch, in
-        this case
-
-        args : tuple of array-like objects
-
-        Returns
-        -------
-        LinearProductSpace.Vector instance
-
-
-        Example
-        -------
-        >>> from RL.space.euclidean import RN
-        >>> r2, r3 = RN(2), RN(3)
-        >>> prod = LinearProductSpace(r2, r3)
-        >>> x2 = r2.makeVector([1, 2])
-        >>> x3 = r3.makeVector([1, 2, 3])
-        >>> x = prod.makeVector(x2, x3)
-        >>> print(x)
-        {[ 1.  2.], [ 1.  2.  3.]}
-        """
-
-        if not isinstance(args[0], LinearSpace.Vector):
-            # Delegate constructors
-            return self.makeVector(*(space.makeVector(arg)
-                                     for arg, space in zip(args, self.spaces)))
-        else:  # Construct from existing tuple
-            if any(part.space != space
-                   for part, space in zip(args, self.spaces)):
-                raise TypeError(errfmt('''
-                The spaces of all parts must correspond to this
-                space's parts'''))
-
-            # Use __class__ to allow subclassing
-            return self.__class__.Vector(self, *args)
-
     def __len__(self):
         return self._nfactors
 
@@ -260,7 +268,7 @@ class LinearProductSpace(LinearSpace):
                     '}')
 
         def __repr__(self):
-            return (repr(self.space) + '.makeVector(' +
+            return (repr(self.space) + '.element(' +
                     ', '.join(repr(part) for part in self.parts) + ')')
 
 
@@ -316,12 +324,12 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
     >>> r2x3 = MetricProductSpace(r2, r3, prod_norm='inf')
-    >>> x_2 = r2.makeVector([2.0, 3.5])
-    >>> y_2 = r2.makeVector([2.0, 3.5])
-    >>> x_3 = r3.makeVector([-0.3, 2.0, 3.5])
-    >>> y_3 = r3.makeVector([-1.1, 7.2, 3.5])
-    >>> x = r2x3.makeVector(x_2, x_3)
-    >>> y = r2x3.makeVector(y_2, y_3)
+    >>> x_2 = r2.element([2.0, 3.5])
+    >>> y_2 = r2.element([2.0, 3.5])
+    >>> x_3 = r3.element([-0.3, 2.0, 3.5])
+    >>> y_3 = r3.element([-1.1, 7.2, 3.5])
+    >>> x = r2x3.element(x_2, x_3)
+    >>> y = r2x3.element(y_2, y_3)
     >>> r2x3.dist(x, y)
     <Value>
     >>> r2x3.dist(x, y) == max((r2.dist(x_2, x_3), r3.dist(x_3, y_3)))
@@ -364,12 +372,12 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
-    def distImpl(self, x, y):
+    def _dist(self, x, y):
         dists = np.fromiter((
-            spc.distImpl(xp, yp) * w
+            spc._dist(xp, yp) * w
             for spc, w, xp, yp in zip(self.spaces, self.weights,
                                       x.parts, y.parts)),
-            dtype=np.float64, count=self._nfactors)
+            dtype=float64, count=self._nfactors)
         return self.prod_norm(dists)
 
     def __repr__(self):
@@ -430,9 +438,9 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
     >>> r2x3 = NormedProductSpace(r2, r3, prod_norm='inf')
-    >>> x_2 = r2.makeVector([2.0, 3.5])
-    >>> x_3 = r3.makeVector([-0.3, 2.0, 3.5])
-    >>> x = r2x3.makeVector(x_2, x_3)
+    >>> x_2 = r2.element([2.0, 3.5])
+    >>> x_3 = r3.element([-0.3, 2.0, 3.5])
+    >>> x = r2x3.element(x_2, x_3)
     >>> r2x3.norm(x)
     4.042276586281547
     >>> r2x3.norm(x) == max((r2.norm(x_2), r3.norm(x_3)))
@@ -477,11 +485,11 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
-    def normImpl(self, x):
+    def _norm(self, x):
         norms = np.fromiter((
-            spc.normImpl(xp) * w
+            spc._norm(xp) * w
             for spc, w, xp in zip(self.spaces, self.weights, x.parts)),
-            dtype=np.float64, count=self._nfactors)
+            dtype=float64, count=self._nfactors)
         return self.prod_norm(norms)
 
     def __repr__(self):
@@ -545,9 +553,9 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
         self.weights = weights
         super().__init__(*spaces, **kwargs)
 
-    def innerImpl(self, x, y):
+    def _inner(self, x, y):
         return sum(
-            spc.innerImpl(xp, yp) * w
+            spc._inner(xp, yp) * w
             for spc, w, xp, yp in zip(self.spaces, self.weights,
                                       x.parts, y.parts))
 

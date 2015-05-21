@@ -12,17 +12,16 @@ from RL.operator.operator import Operator
 
 class addOp(Operator):
     def __init__(self, n, x):
-        self.n = n
         self.x = x
         self.range = RN(n)
         self.domain = RN(n)
 
-    def applyImpl(self, rhs, out):
-        out.values[:] = rhs.values[:] + self.x
+    def _apply(self, rhs, out):
+        out.data[:] = rhs.data[:] + self.x
 
 n = 3
 rn = RN(n)
-x = rn.makeVector([1, 2, 3])
+x = rn.element([1, 2, 3])
 
 op = addOp(n, 10)
 

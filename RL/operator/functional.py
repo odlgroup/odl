@@ -42,7 +42,7 @@ class Functional(with_metaclass(ABCMeta, object)):
 
     # Abstract methods
     @abstractmethod
-    def applyImpl(self, rhs):
+    def _apply(self, rhs):
         """Apply the functional,
         abstract, pseudocode:
 
@@ -69,7 +69,7 @@ class Functional(with_metaclass(ABCMeta, object)):
             rhs ({}) is not in the domain ({}) of this functional
             '''.format(rhs, self.domain)))
 
-        result = self.applyImpl(rhs)
+        result = self._apply(rhs)
 
         if not self.range.contains(result):
             raise TypeError(errfmt('''
@@ -121,8 +121,8 @@ class FunctionalSum(Functional):
         self._op1 = op1
         self._op2 = op2
 
-    def applyImpl(self, rhs):
-        return self._op1.applyImpl(rhs) + self._op2.applyImpl(rhs)
+    def _apply(self, rhs):
+        return self._op1._apply(rhs) + self._op2._apply(rhs)
 
     @property
     def domain(self):
@@ -144,8 +144,8 @@ class FunctionalPointwiseProduct(Functional):
         self._op1 = op1
         self._op2 = op2
 
-    def applyImpl(self, rhs):
-        return self._op1.applyImpl(rhs) * self._op2.applyImpl(rhs)
+    def _apply(self, rhs):
+        return self._op1._apply(rhs) * self._op2._apply(rhs)
 
     @property
     def domain(self):
@@ -167,8 +167,8 @@ class FunctionalScalarMultiplication(Functional):
         self._op = op
         self._scal = scalar
 
-    def applyImpl(self, rhs):
-        return self._scal * self._op.applyImpl(rhs)
+    def _apply(self, rhs):
+        return self._scal * self._op._apply(rhs)
 
     @property
     def domain(self):

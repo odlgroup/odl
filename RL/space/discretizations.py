@@ -33,7 +33,7 @@ import numpy as np
 # RL imports
 import RL.space.set as sets
 import RL.space.space as space
-from RL.space.function import FunctionSpace, L2
+from RL.space.function import FunctionSpace
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -63,24 +63,25 @@ def makeUniformDiscretization(parent, rnimpl):
             self._rn = rn
             self.scale = (self.parent.domain.length / (self.n - 1))
 
-        def innerImpl(self, v1, v2):
-            return self._rn.innerImpl(v1, v2) * self.scale
+        def _inner(self, v1, v2):
+            return self._rn._inner(v1, v2) * self.scale
 
-        def normImpl(self, vector):
-            return self._rn.normImpl(vector) * sqrt(self.scale)
+        def _norm(self, vector):
+            return self._rn._norm(vector) * sqrt(self.scale)
 
         def __eq__(self, other):
             return (isinstance(other, UniformDiscretization) and
                     self.parent.equals(other.parent) and
                     self._rn.equals(other._rn))
 
-        def makeVector(self, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
-                tmp = np.array([args[0](point) for point in self.points()],
-                               dtype=np.float64)
-                return self.makeVector(tmp)
+        def element(self, data=None, **kwargs):
+            # TODO: 'data' is not a good name here
+            if isinstance(data, FunctionSpace.Vector):
+                tmp = np.array([data(point) for point in self.points()],
+                               **kwargs)
+                return self.element(tmp)
             else:
-                return super().makeVector(*args, **kwargs)
+                return super().element(data, **kwargs)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)
@@ -94,6 +95,9 @@ def makeUniformDiscretization(parent, rnimpl):
 
         def __str__(self):
             return "UniformDiscretization(" + str(self._rn) + ")"
+
+        def __repr__(self):
+            return "UniformDiscretization(" + repr(self.parent) + "," + repr(self._rn) + ")"
 
         class Vector(RNVectortype):
             pass
@@ -143,36 +147,36 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
                   (self.rows - 1))
             self.scale = dx * dy
 
-        def innerImpl(self, v1, v2):
-            return self._rn.innerImpl(v1, v2) * self.scale
+        def _inner(self, v1, v2):
+            return self._rn._inner(v1, v2) * self.scale
 
-        def normImpl(self, vector):
-            return self._rn.normImpl(vector) * sqrt(self.scale)
+        def _norm(self, vector):
+            return self._rn._norm(vector) * sqrt(self.scale)
 
         def equals(self, other):
             return (isinstance(other, PixelDiscretization) and
                     self.cols == other.cols and self.rows == other.rows and
                     self._rn.equals(other._rn))
 
-        def makeVector(self, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], FunctionSpace.Vector):
-                tmp = np.array([args[0]([x, y])
+        def element(self, data=None, **kwargs):
+            if isinstance(data, FunctionSpace.Vector):
+                tmp = np.array([data([x, y])
                                 for x, y in zip(*self.points())],
-                               dtype=np.float64)
-                return self.makeVector(tmp)
+                               **kwargs)
+                return self.element(tmp)
 
-            elif len(args) == 1 and isinstance(args[0], np.ndarray):
-                if args[0].shape == (self.cols, self.rows):
-                    return self.makeVector(args[0].flatten(self.order))
-                elif args[0].shape == (self.n,):
-                    return super().makeVector(args[0])
+            elif isinstance(data, np.ndarray):
+                if data.shape == (self.cols, self.rows):
+                    return self.element(data.flatten(self.order))
+                elif data.shape == (self.n,):
+                    return super().element(data)
                 else:
                     raise ValueError(errfmt('''
-                    Input numpy array ({}) is of shape {}, expected shape
-                    {} or {}'''.format(args[0], args[0].shape, (self.n,),
+                    Input numpy array is of shape {}, expected shape
+                    {} or {}'''.format(data.shape, (self.n,),
                                        (self.cols, self.rows))))
             else:
-                return super().makeVector(*args, **kwargs)
+                return super().element(data, **kwargs)
 
         def integrate(self, vector):
             return float(self._rn.sum(vector) * self.scale)
@@ -192,6 +196,10 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
         def __str__(self):
             return ('PixelDiscretization(' + str(self._rn) + ', ' +
                     str(self.cols) + 'x' + str(self.rows) + ')')
+
+
+        def __repr__(self):
+            return "PixelDiscretization(" + repr(self.parent) + ", " + repr(self._rn) + ", " + str(self.cols) + ', ' + str(self.rows) + ")"
 
         class Vector(RNVectortype):
             pass

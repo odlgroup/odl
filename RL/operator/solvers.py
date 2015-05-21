@@ -33,7 +33,7 @@ from RL.operator.default_operators import IdentityOperator
 standard_library.install_aliases()
 
 
-class storePartial(object):
+class StorePartial(object):
     """ Simple object for storing all partial results of the solvers
     """
     def __init__(self):
@@ -46,7 +46,7 @@ class storePartial(object):
         return self.results.__iter__()
 
 
-class forEachPartial(object):
+class ForEachPartial(object):
     """ Simple object for applying a function to each iterate
     """
     def __init__(self, function):
@@ -56,7 +56,7 @@ class forEachPartial(object):
         self.function(result)
 
 
-class printIterationPartial(object):
+class PrintIterationPartial(object):
     """ Prints the interation count
     """
     def __init__(self):
@@ -67,7 +67,7 @@ class printIterationPartial(object):
         self.iter += 1
 
 
-class printStatusPartial(object):
+class PrintStatusPartial(object):
     """ Prints the interation count and current norm of each iterate
     """
     def __init__(self):
@@ -78,56 +78,58 @@ class printStatusPartial(object):
         self.iter += 1
 
 
-def landweber(operator, x, rhs, iterations=1, omega=1, partialResults=None):
+def landweber(operator, x, rhs, iterations=1, omega=1, part_results=None):
     """ General and efficient implementation of Landweber iteration
+
+    x <- x - omega * (A')^* (Ax - rhs)
     """
 
     # Reusable temporaries
-    tmpRan = operator.range.empty()
-    tmpDom = operator.domain.empty()
+    tmp_ran = operator.range.element()
+    tmp_dom = operator.domain.element()
 
     for _ in range(iterations):
-        operator.apply(x, tmpRan)                               # tmpRan = Ax
-        tmpRan -= rhs                                           # tmpRan = tmpRan - rhs
-        operator.getDerivative(x).applyAdjoint(tmpRan, tmpDom)  # tmpDom = A^T tmpRan
-        x.linComb(1, x, -omega, tmpDom)                         # x = x - omega * tmpDom
+        operator.apply(x, tmp_ran)
+        tmp_ran -= rhs
+        operator.derivative(x).adjoint.apply(tmp_ran, tmp_dom)
+        x.lincomb(1, x, -omega, tmp_dom)
 
-        if partialResults is not None:
-            partialResults.send(x)
+        if part_results is not None:
+            part_results.send(x)
 
 
-def conjugateGradient(operator, x, rhs, iterations=1, partialResults=None):
+def conjugate_gradient(operator, x, rhs, iterations=1, part_results=None):
     """ Optimized version of CGN, uses no temporaries etc.
     """
     d = operator(x)
-    d.linComb(1, rhs, -1, d)       # d = rhs - A x
+    d.lincomb(1, rhs, -1, d)       # d = rhs - A x
     p = operator.T(d)
     s = p.copy()
-    q = operator.range.empty()
-    normsOld = s.norm()**2           # Only recalculate norm after update
+    q = operator.range.element()
+    norms_old = s.norm()**2           # Only recalculate norm after update
 
     for _ in range(iterations):
-        operator.apply(p, q)                                    # q = A p
+        operator.apply(p, q)                        # q = A p
         qnorm = q.norm()**2
         if qnorm == 0.0:  # Return if residual is 0
             return
 
-        a = normsOld / qnorm
-        x.linComb(1, x, a, p)                                   # x = x + a*p
-        d.linComb(1, d, -a, q)                                  # d = d - a*q
-        operator.getDerivative(p).applyAdjoint(d, s)            # s = A^T d
+        a = norms_old / qnorm
+        x.lincomb(1, x, a, p)                       # x = x + a*p
+        d.lincomb(1, d, -a, q)                      # d = d - a*q
+        operator.derivative(p).adjoint.apply(d, s)  # s = A^T d
 
-        normsNew = s.norm()**2
-        b = normsNew/normsOld
-        normsOld = normsNew
+        norms_new = s.norm()**2
+        b = norms_new/norms_old
+        norms_old = norms_new
 
-        p.linComb(1, s, b, p)      # p = s + b * p
+        p.lincomb(1, s, b, p)                       # p = s + b * p
 
-        if partialResults is not None:
-            partialResults.send(x)
+        if part_results is not None:
+            part_results.send(x)
 
 
-def exponentialZeroSequence(scale):
+def exp_zero_seq(scale):
     """ The default zero sequence given by:
         t_m = scale ^ (-m-1)
     """
@@ -137,9 +139,8 @@ def exponentialZeroSequence(scale):
         yield value
 
 
-def gaussNewton(operator, x, rhs, iterations=1,
-                zeroSequence=exponentialZeroSequence(2.0),
-                partialResults=None):
+def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
+                 part_results=None):
     """ Solves op(x) = rhs using the gauss newton method. The inner-solver
     uses conjugate gradient.
     """
@@ -147,32 +148,33 @@ def gaussNewton(operator, x, rhs, iterations=1,
     I = IdentityOperator(operator.domain)
     dx = x.space.zero()
 
-    tmpDom = operator.domain.empty()
-    u = operator.domain.empty()
-    tmpRan = operator.range.empty()
-    v = operator.range.empty()
+    tmp_dom = operator.domain.element()
+    u = operator.domain.element()
+    tmp_ran = operator.range.element()
+    v = operator.range.element()
 
     for m in range(iterations):
-        tm = next(zeroSequence)
-        opPrime = operator.getDerivative(x)
+        tm = next(zero_seq)
+        deriv = operator.derivative(x)
+        deriv_adjoint = deriv.adjoint
 
-        # v = rhs - op(x) - opPrime(x0-x)
-        # u = opPrime.T(v)
-        operator.apply(x, tmpRan)       # evaluate          op(x)
-        v.linComb(1, rhs, -1, tmpRan)   # assign            v = rhs - op(x)
-        tmpDom.linComb(1,  x0, -1, x)   # assign temp       tmpDom = x0 - x
-        opPrime.apply(tmpDom, tmpRan)   # evaluate          opPrime(x0-x)
-        v -= tmpRan                     # assign            v = rhs - op(x) - opPrime(x0-x)
-        opPrime.applyAdjoint(v, u)      # evaluate/assign   u = opPrime.T(v)
+        # v = rhs - op(x) - deriv(x0-x)
+        # u = deriv.T(v)
+        operator.apply(x, tmp_ran)      # eval          op(x)
+        v.lincomb(1, rhs, -1, tmp_ran)  # assign        v = rhs - op(x)
+        tmp_dom.lincomb(1,  x0, -1, x)  # assign temp   tmp_dom = x0 - x
+        deriv.apply(tmp_dom, tmp_ran)   # eval          deriv(x0-x)
+        v -= tmp_ran                    # assign        v = rhs - op(x) - deriv(x0-x)
+        deriv_adjoint.apply(v, u)       # eval/assign   u = deriv.T(v)
 
         # Solve equation system
-        # (opPrime.T o opPrime + tm * I)^-1 u = dx
-        A = LinearOperatorSum(LinearOperatorComposition(opPrime.T, opPrime),
-                              tm * I, tmpDom)
-        conjugateGradient(A, dx, u, 3)  # TODO allow user to select other method
+        # (deriv.T o deriv + tm * I)^-1 u = dx
+        A = LinearOperatorSum(LinearOperatorComposition(deriv.T, deriv),
+                              tm * I, tmp_dom)
+        conjugate_gradient(A, dx, u, 3)  # TODO allow user to select other method
 
         # Update x
-        x.linComb(1, x0, 1, dx)  # x = x0 + dx
+        x.lincomb(1, x0, 1, dx)  # x = x0 + dx
 
-        if partialResults is not None:
-            partialResults.send(x)
+        if part_results is not None:
+            part_results.send(x)

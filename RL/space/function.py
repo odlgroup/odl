@@ -52,53 +52,17 @@ class FunctionSpace(Algebra):
             the set of scalars for this space.
     """
 
-    def __init__(self, domain, field=None):
+    def __init__(self, domain, field=RealNumbers()):
         if not isinstance(domain, Set):
             raise TypeError("domain ({}) is not a Set instance".format(domain))
 
         self.domain = domain
-        self._field = field if field is not None else RealNumbers()
+        self._field = field
 
-    def linCombImpl(self, a, x, b, y):
-        """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
-
-        The created object is rather slow, and should only be used for testing purposes.
-        """
-        return a*x + b*y  # Use operator overloading
-
-    def multiplyImpl(self, x, y):
-        """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
-
-        The created object is rather slow, and should only be used for testing purposes.
-        """
-        return self.makeVector(lambda *args: x(*args)*y(*args))
-
-    @property
-    def field(self):
-        """ The field that the functions map values into.
-
-        Since FunctionSpace is a LinearSpace, this is also
-        the set of scalars for this space.
-        """
-        return self._field
-
-    def equals(self, other):
-        """ Verify that other is a FunctionSpace with the same domain and field
-        """
-        return isinstance(other, FunctionSpace) and self.domain == other.domain and self.field == other.field
-
-    def empty(self):
-        """ Returns the zero function (the function which maps any value to zero)
-        """
-        return self.makeVector(lambda *args: 0)
-
-    def zero(self):
-        """ Returns the zero function (the function which maps any value to zero)
-        """
-        return self.makeVector(lambda *args: 0)
-
-    def makeVector(self, function):
+    def element(self, function=None):
         """ Creates an element in FunctionSpace
+
+        TODO: rewrite
 
         Parameters
         ----------
@@ -115,19 +79,62 @@ class FunctionSpace(Algebra):
 
         >>> R = RealNumbers()
         >>> space = FunctionSpace(R, R)
-        >>> x = space.makeVector(lambda t: t**2)
+        >>> x = space.element(lambda t: t**2)
         >>> x(1)
-        1.0
+        1
         >>> x(3)
-        9.0
+        9
         """
+
+        if function is None:
+            def function(*args):
+                return 0
         return FunctionSpace.Vector(self, function)
 
+    def _lincomb(self, a, x, b, y):
+        """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
+
+        The created object is rather slow, and should only be used for testing purposes.
+        """
+        return a*x + b*y  # Use operator overloading
+
+    def _multiply(self, x, y):
+        """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
+
+        The created object is rather slow, and should only be used for testing purposes.
+        """
+        return self.element(lambda *args: x(*args)*y(*args))
+
+    @property
+    def field(self):
+        """ The field that the functions map values into.
+
+        Since FunctionSpace is a LinearSpace, this is also
+        the set of scalars for this space.
+        """
+        return self._field
+
+    def equals(self, other):
+        """ Verify that other is a FunctionSpace with the same domain and field
+        """
+        return isinstance(other, FunctionSpace) and self.domain == other.domain and self.field == other.field
+
+    def zero(self):
+        """ Returns the zero function (the function which maps any value to zero)
+        """
+        return self.element(lambda *args: 0)
+
     def __str__(self):
-        return "FunctionSpace " + str(self.domain) + "->" + str(self.field)
+        if isinstance(self.field, RealNumbers):
+            return "FunctionSpace(" + str(self.domain) + ")"
+        else:
+            return "FunctionSpace(" + str(self.domain) + ", " + str(self.field) + ")"
 
     def __repr__(self):
-        return "FunctionSpace(" + str(self.domain) + ", " + str(self.field) + ")"
+        if isinstance(self.field, RealNumbers):
+            return "FunctionSpace(" + repr(self.domain) + ")"
+        else:
+            return "FunctionSpace(" + repr(self.domain) + ", " + repr(self.field) + ")"
 
     class Vector(Algebra.Vector, fun.Functional):
         """ A Vector in a FunctionSpace
@@ -150,7 +157,7 @@ class FunctionSpace(Algebra):
                 raise TypeError("'function' is not callable")
             self.function = function
 
-        def applyImpl(self, rhs):
+        def _apply(self, rhs):
             """ Apply the functional in some point
             """
             return self.function(rhs)
@@ -173,17 +180,17 @@ class FunctionSpace(Algebra):
             return str(self.function)
 
         def __repr__(self):
-            return repr(self.space) + '.makeVector(' + repr(self.function) + ')'
+            return repr(self.space) + '.element(' + repr(self.function) + ')'
 
 
 class L2(FunctionSpace, HilbertSpace):
     """The space of square integrable functions on some domain
     """
 
-    def __init__(self, domain, field=None):
+    def __init__(self, domain, field=RealNumbers()):
         super().__init__(domain, field)
 
-    def innerImpl(self, v1, v2):
+    def _inner(self, v1, v2):
         """ TODO: remove?
         """
         raise NotImplementedError(errfmt('''
@@ -195,10 +202,16 @@ class L2(FunctionSpace, HilbertSpace):
         return isinstance(other, L2) and FunctionSpace.equals(self, other)
 
     def __str__(self):
-        return "L2 " + str(self.domain) + "->" + str(self.field)
+        if isinstance(self.field, RealNumbers):
+            return "L2(" + str(self.domain) + ")"
+        else:
+            return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
 
     def __repr__(self):
-        return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
+        if isinstance(self.field, RealNumbers):
+            return "L2(" + repr(self.domain) + ")"
+        else:
+            return "L2(" + repr(self.domain) + ", " + repr(self.field) + ")"
 
     class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
         pass
