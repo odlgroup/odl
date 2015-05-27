@@ -153,7 +153,7 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
     tmp_ran = operator.range.element()
     v = operator.range.element()
 
-    for m in range(iterations):
+    for _ in range(iterations):
         tm = next(zero_seq)
         deriv = operator.derivative(x)
         deriv_adjoint = deriv.adjoint
@@ -162,7 +162,7 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
         # u = deriv.T(v)
         operator.apply(x, tmp_ran)      # eval          op(x)
         v.lincomb(1, rhs, -1, tmp_ran)  # assign        v = rhs - op(x)
-        tmp_dom.lincomb(1,  x0, -1, x)  # assign temp   tmp_dom = x0 - x
+        tmp_dom.lincomb(1, x0, -1, x)  # assign temp   tmp_dom = x0 - x
         deriv.apply(tmp_dom, tmp_ran)   # eval          deriv(x0-x)
         v -= tmp_ran                    # assign        v = rhs - op(x) - deriv(x0-x)
         deriv_adjoint.apply(v, u)       # eval/assign   u = deriv.T(v)

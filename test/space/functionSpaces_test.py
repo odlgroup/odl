@@ -48,7 +48,7 @@ class L2Test(RLTestCase):
         l2sin = l2.element(np.sin)
 
         rn = EuclideanSpace(10)
-        d = disc.makeUniformDiscretization(l2, rn)
+        d = disc.uniform_discretization(l2, rn)
 
         sind = d.element(l2sin)
 
@@ -62,7 +62,7 @@ class L2Test(RLTestCase):
         n = 10
         m = 10
         rn = EuclideanSpace(n*m)
-        d = disc.makePixelDiscretization(l2, rn, n, m)
+        d = disc.pixel_discretization(l2, rn, n, m)
 
         sind = d.element(l2sin)
 

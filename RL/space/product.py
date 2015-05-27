@@ -373,11 +373,11 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         super().__init__(*spaces, **kwargs)
 
     def _dist(self, x, y):
-        dists = np.fromiter((
-            spc._dist(xp, yp) * w
-            for spc, w, xp, yp in zip(self.spaces, self.weights,
-                                      x.parts, y.parts)),
-            dtype=float64, count=self._nfactors)
+        iter = (spc._dist(xp, yp) * w for spc, w, xp, yp in zip(self.spaces,
+                                                                self.weights,
+                                                                x.parts,
+                                                                y.parts))
+        dists = np.fromiter(iter, dtype=float64, count=self._nfactors)
         return self.prod_norm(dists)
 
     def __repr__(self):
@@ -486,10 +486,10 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
         super().__init__(*spaces, **kwargs)
 
     def _norm(self, x):
-        norms = np.fromiter((
-            spc._norm(xp) * w
-            for spc, w, xp in zip(self.spaces, self.weights, x.parts)),
-            dtype=float64, count=self._nfactors)
+        iter = (spc._norm(xp) * w for spc, w, xp in zip(self.spaces,
+                                                        self.weights,
+                                                        x.parts))
+        norms = np.fromiter(iter, dtype=float64, count=self._nfactors)
         return self.prod_norm(norms)
 
     def __repr__(self):

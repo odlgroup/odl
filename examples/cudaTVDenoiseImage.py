@@ -237,7 +237,7 @@ rn = CS.CudaRN(n*m)
 rnpooled = makePooledSpace(rn, maxPoolSize=5)
 
 # Discretize
-d = DS.makePixelDiscretization(space, rnpooled, n, m)
+d = DS.pixel_discretization(space, rnpooled, n, m)
 x, y = d.points()
 data = RLcpp.utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5

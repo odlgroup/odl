@@ -23,7 +23,6 @@ try:
     from builtins import object, super
 except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import object, super
-from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports
@@ -38,9 +37,10 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-class Set(with_metaclass(ABCMeta, object)):
+class Set(object):
     """ An arbitrary set
     """
+    __metaclass__ = ABCMeta
 
     @abstractmethod
     def equals(self, other):
@@ -76,6 +76,9 @@ class EmptySet(Set):
     def contains(self, other):
         return other is None
 
+    def element(self):
+        return None
+
     def __str__(self):
         return "EmptySet"
 
@@ -92,6 +95,9 @@ class ComplexNumbers(Set):
 
     def contains(self, other):
         return isinstance(other, Complex)
+
+    def element(self):
+        return complex(0.0, 0.0)
 
     def __str__(self):
         return "ComplexNumbers"
@@ -110,6 +116,9 @@ class RealNumbers(Set):
     def contains(self, other):
         return isinstance(other, Real)
 
+    def element(self):
+        return 0.0
+
     def __str__(self):
         return "RealNumbers"
 
@@ -126,6 +135,9 @@ class Integers(Set):
 
     def contains(self, other):
         return isinstance(other, Integral)
+
+    def element(self):
+        return 0
 
     def __str__(self):
         return "Integers"
@@ -208,6 +220,9 @@ class IntervProd(Set):
         midp = (self._end - self._begin) / 2.
         midp[self._ideg] = self._begin[self._ideg]
         return midp[0] if self.dim == 1 else midp
+
+    def element(self):
+        return self.midpoint()
 
     # Overrides of the abstract base class methods
     def equals(self, other, tol=0.0):
@@ -533,7 +548,7 @@ class Interval(IntervProd):
         return self.end - self.begin
 
     def __repr__(self):
-        return ('Interval({b}, {e})'.format(b=self.begin, e=self.end))
+        return 'Interval({b}, {e})'.format(b=self.begin, e=self.end)
 
 
 class Rectangle(IntervProd):

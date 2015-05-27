@@ -118,7 +118,9 @@ class FunctionSpace(Algebra):
     def equals(self, other):
         """ Verify that other is a FunctionSpace with the same domain and field
         """
-        return isinstance(other, FunctionSpace) and self.domain == other.domain and self.field == other.field
+        return (isinstance(other, FunctionSpace) and
+                self.domain == other.domain and
+                self.field == other.field)
 
     def zero(self):
         """ Returns the zero function (the function which maps any value to zero)

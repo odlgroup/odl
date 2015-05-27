@@ -101,10 +101,11 @@ class InputValidationError(ValueError):
     def __str__(self):
         if self.input_name is not None:
             return errfmt("{}: got {}, expected {}".format(self.input_name,
-                          self.got, self.expected))
+                                                           self.got,
+                                                           self.expected))
         else:
             return errfmt("got {}, expected {}".format(self.got,
-                          self.expected))
+                                                       self.expected))
 
 
 def euler_matrix(*angles):

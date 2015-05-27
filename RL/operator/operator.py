@@ -23,7 +23,6 @@ try:
     from builtins import str, object, super
 except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, object, super
-from future.utils import with_metaclass
 from future import standard_library
 
 from abc import ABCMeta
@@ -40,7 +39,7 @@ standard_library.install_aliases()
 class DefaultCallOperator(object):
     """ Decorator class that adds a '_call'  method an 'Operator'
 
-    The default implementation assumes that the 'range' of the 
+    The default implementation assumes that the 'range' of the
     operator implements 'element()'.
     """
 
@@ -76,7 +75,7 @@ class DefaultCallOperator(object):
 class DefaultApplyOperator(object):
     """ Decorator class that adds a '_apply' method to an 'Operator'
 
-    The default implementation assumes that elements in the 'range' of the 
+    The default implementation assumes that elements in the 'range' of the
     operator implements 'assign()'.
     """
     def _apply(self, rhs, out):
@@ -88,12 +87,10 @@ class DefaultApplyOperator(object):
 
         Parameters
         ----------
-
         rhs : element in self.domain
               An object in the domain of this operator.
               This is the point that the operator should be applied in.
-
-              
+        
         out : element in self.range
               An object in the range of this operator.
               The result of an operator evaluation.
@@ -114,17 +111,17 @@ class OperatorMeta(ABCMeta):
     attempts to add a default implmented version. This only works
     if the range is a `LinearSpace`.
     """
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         if "_call" in attrs and "_apply" in attrs:
-            return super().__new__(cls, name, bases, attrs)
+            return super().__new__(mcs, name, bases, attrs)
         elif "_call" in attrs:
-            return super().__new__(cls, name, (DefaultApplyOperator,) + bases,
+            return super().__new__(mcs, name, (DefaultApplyOperator,) + bases,
                                    attrs)
         elif "_apply" in attrs:
-            return super().__new__(cls, name, (DefaultCallOperator,) + bases,
+            return super().__new__(mcs, name, (DefaultCallOperator,) + bases,
                                    attrs)
         else:
-            return super().__new__(cls, name, bases, attrs)
+            return super().__new__(mcs, name, bases, attrs)
 
     def __call__(cls, *args, **kwargs):
         obj = type.__call__(cls, *args, **kwargs)
@@ -142,12 +139,12 @@ class OperatorMeta(ABCMeta):
         return obj
 
 
-class Operator(with_metaclass(OperatorMeta, object)):
+class Operator(object):
     """Abstract operator
 
     An operator is a mapping from a 'Set' to another 'Set'.
     In RL all mappings know their domain and range, and have
-    some method of evaluation. They also provide some convenience 
+    some method of evaluation. They also provide some convenience
     functions and error checking.
 
     Domain and Range
@@ -204,13 +201,13 @@ class Operator(with_metaclass(OperatorMeta, object)):
           The result of the evaluation.
 
     Notes
-    -----
-    
+    -----    
     If the user only provides one of '_apply' or '_call' and
     the underlying range is a 'LinearSpace', a default implementation
     of the other is provided.
-
     """
+
+    __metaclass__ = OperatorMeta
 
     def derivative(self, point):
         """ Get the derivative operator of this operator at `point`
@@ -219,8 +216,8 @@ class Operator(with_metaclass(OperatorMeta, object)):
         Derivative not implemented for this operator ({})
         '''.format(self)))
 
-
-    def inverse(self, point):
+    @property
+    def inverse(self):
         """ Get the inverse operator of this operator
         """
         raise NotImplementedError(errfmt('''
@@ -231,7 +228,7 @@ class Operator(with_metaclass(OperatorMeta, object)):
     def I(self):
         """ Get the inverse of this operator
         """
-        return self.inverse
+        return self.inverse()
 
     # Implicitly defined operators
     def apply(self, rhs, out):
@@ -461,6 +458,10 @@ class OperatorSum(Operator):
     def range(self):
         return self._op1.range
 
+    @property
+    def derivative(self):
+        return OperatorSum(self._op1.derivative, self._op2.derivative)
+
     def __repr__(self):
         return 'OperatorSum( ' + repr(self._op1) + ", " + repr(self._op2) + ')'
 
@@ -476,10 +477,10 @@ class OperatorComposition(Operator):
     Parameters
     ----------
 
-    op1 : Operator
-          The first operator
-    op2 : Operator
-          Operator with the same domain and range as op1
+    left : Operator
+           The first operator
+    right : Operator
+            Operator with the same domain and range as op1
     tmp : Element in the range of this operator
           Used to avoid the creation of a
           temporary when applying the operator.
@@ -517,6 +518,13 @@ class OperatorComposition(Operator):
     @property
     def range(self):
         return self._left.range
+    
+    @property
+    def inverse(self):
+        return OperatorComposition(self._right.inverse, self._left.inverse, self._tmp)
+
+    def derivative(self, point):
+        return OperatorComposition(self.left.derivative(self._right(point)), self._right.derivative(point))
 
     def __repr__(self):
         return ('OperatorComposition( ' + repr(self._left) + ', ' +
@@ -599,6 +607,13 @@ class OperatorLeftScalarMultiplication(Operator):
     @property
     def range(self):
         return self._op.range
+    
+    @property
+    def inverse(self):
+        return OperatorRightScalarMultiplication(self._op.inverse, 1.0/self._scalar)
+
+    def derivative(self, point):
+        return OperatorLeftScalarMultiplication(self._op.derivative(point), self._scalar)
 
     def __repr__(self):
         return ('OperatorLeftScalarMultiplication( ' + repr(self._op) +
@@ -659,6 +674,13 @@ class OperatorRightScalarMultiplication(Operator):
     @property
     def range(self):
         return self._op.range
+
+    @property
+    def inverse(self):
+        return OperatorLeftScalarMultiplication(self._op.inverse, 1.0/self._scalar)
+
+    def derivative(self, point):
+        return OperatorLeftScalarMultiplication(self._op.derivative(point), self._scalar)
 
     def __repr__(self):
         return ('OperatorRightScalarMultiplication( ' + self._op.__repr__() +

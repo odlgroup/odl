@@ -135,7 +135,7 @@ n = 1000
 
 # Discretization
 rn = CS.CudaRN(n)
-d = DS.makeUniformDiscretization(space, rn)
+d = DS.uniform_discretization(space, rn)
 x = d.points()
 fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))
 plt.plot(fun)

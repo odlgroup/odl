@@ -32,8 +32,8 @@ class SourceOnCurve(object):
 
 
 class FlatPanelDetector(object):
-    def __call__(self,x,y):
-        return np.array([x,y])
+    def __call__(self, x, y):
+        return np.array([x, y])
 
 class PointSourceLineBundle(LineBundle):
     def __init__(self,sourceFunc,detectorFunc):
@@ -44,9 +44,9 @@ class PointSourceLineBundle(LineBundle):
         return self.sourcePos(t)
 
     def lineDirection(self, t, *pos):
-        return (self.detectorFunc(t,*pos)-self.sourcePos).normalize()
+        return (self.detectorFunc(t, *pos)-self.sourcePos).normalize()
 
 source = SourceOnCurve()
 fpd = FlatPanelDetector()
-geometry = PointSourceLineBundle(source,fpd)
+geometry = PointSourceLineBundle(source, fpd)
 

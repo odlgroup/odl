@@ -33,11 +33,9 @@ from future import standard_library
 # External module imports
 import numpy as np
 from math import sqrt
-from numpy import float64
 from numbers import Integral
 
 # RL imports
-import RL.operator.function as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
@@ -557,9 +555,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             if isinstance(index, slice):
                 # Convert value to the correct type
                 if not isinstance(value, np.ndarray):
-                    value = np.array(value, dtype=float64)
+                    value = np.array(value, dtype=np.float64)
 
-                value = value.astype(float64, copy=False)
+                value = value.astype(np.float64, copy=False)
 
                 self.data.setSlice(index, value)
             else:

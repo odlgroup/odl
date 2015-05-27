@@ -52,6 +52,10 @@ class ScalingOperator(op.SelfAdjointOperator):
         return self._scal * input
 
     @property
+    def inverse(self):
+        return ScalingOperator(1.0/self._scal)
+
+    @property
     def domain(self):
         return self._space
 
@@ -65,6 +69,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
     def __str__(self):
         return str(self._scale) + "*I"
+
 
 
 class IdentityOperator(ScalingOperator):

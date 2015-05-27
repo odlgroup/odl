@@ -93,11 +93,11 @@ pixelDirection = y0 * pixelSize
 
 dataSpace = fs.L2(sets.Interval(0, 1))
 dataRN = ds.EuclideanSpace(nPixels)
-dataDisc = dd.makeUniformDiscretization(dataSpace, dataRN)
+dataDisc = dd.uniform_discretization(dataSpace, dataRN)
 
 reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
 reconRN = ds.EuclideanSpace(nVoxels.prod())
-reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0],
+reconDisc = dd.pixel_discretization(reconSpace, reconRN, nVoxels[0],
                                        nVoxels[1])
 
 # Create a phantom

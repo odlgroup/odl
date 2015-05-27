@@ -23,7 +23,6 @@ try:
     from builtins import object, super
 except ImportError:
     from future.builtins import object, super
-from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports
@@ -64,15 +63,15 @@ def skip_all_tests(reason=None):
         reason = ''
 
     class SkipAllTestsMeta(type):
-        def __new__(cls, name, bases, local):
+        def __new__(mcs, name, bases, local):
             for attr in local:
                 value = local[attr]
                 if attr.startswith('test') and callable(value):
                     local[attr] = unittest.skip(reason)(value)
-            return super().__new__(cls, name, bases, local)
+            return super().__new__(mcs, name, bases, local)
 
-    class SkipAllTestCase(with_metaclass(SkipAllTestsMeta, unittest.TestCase)):
-        pass
+    class SkipAllTestCase(unittest.TestCase):
+        __metaclass__ = SkipAllTestsMeta
 
     return SkipAllTestCase
 
@@ -88,11 +87,3 @@ class Timer(object):
         if self.name:
             print('[{}] '.format(self.name))
         print('Elapsed: {}'.format(time() - self.tstart))
-
-
-def consume(iterator):
-    """Consumes an iterator and returns the last value
-    """
-    for x in iterator:
-        pass
-    return x

@@ -39,8 +39,8 @@ from scipy.lib.blas import get_blas_funcs
 from numbers import Integral
 
 # RL imports
-from RL.space.space import *
-from RL.space.set import *
+from RL.space.space import LinearSpace, Algebra, HilbertSpace, NormedSpace
+from RL.space.set import RealNumbers
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -571,7 +571,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         5.0
 
         """
-        # TODO: nrm2 seems slow compared to dot
+        # TODO: Possibly change this to 'dot', which is faster
         return float(self._nrm2(x.data))
 
     def _inner(self, x, y):

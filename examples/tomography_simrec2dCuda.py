@@ -124,7 +124,7 @@ projectionSpace = fs.L2(sets.Interval(0, detectorSize))
 projectionRN = cs.CudaRN(nPixels)
 
 #Discretize projection space
-projectionDisc = dd.makeUniformDiscretization(projectionSpace, projectionRN)
+projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
 dataDisc = prod.powerspace(projectionDisc, nProjection)
@@ -134,7 +134,7 @@ reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 #Discretize the reconstruction space
 reconRN = cs.CudaRN(nVoxels.prod())
-reconDisc = dd.makePixelDiscretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
+reconDisc = dd.pixel_discretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)

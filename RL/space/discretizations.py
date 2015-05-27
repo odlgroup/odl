@@ -39,7 +39,7 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-def makeUniformDiscretization(parent, rnimpl):
+def uniform_discretization(parent, rnimpl):
     RNType = type(rnimpl)
     RNVectortype = RNType.Vector
 
@@ -105,7 +105,7 @@ def makeUniformDiscretization(parent, rnimpl):
     return UniformDiscretization(parent, rnimpl)
 
 
-def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
+def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
     """ Creates an pixel discretization of space parent using rn as the
     underlying representation.
 
@@ -199,7 +199,10 @@ def makePixelDiscretization(parent, rnimpl, cols, rows, order='C'):
 
 
         def __repr__(self):
-            return "PixelDiscretization(" + repr(self.parent) + ", " + repr(self._rn) + ", " + str(self.cols) + ', ' + str(self.rows) + ")"
+            return ("PixelDiscretization(" + repr(self.parent) + ", " +
+                    repr(self._rn) + ", " +
+                    str(self.cols) + ', ' +
+                    str(self.rows) + ")")
 
         class Vector(RNVectortype):
             pass
