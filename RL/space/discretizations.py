@@ -44,6 +44,9 @@ standard_library.install_aliases()
 
 
 def uniform_discretization(parent, rnimpl):
+    """ Creates an UniformDiscretization of space parent using rn as the
+    underlying representation.
+    """
     RNType = type(rnimpl)
     RNVectortype = RNType.Vector
 

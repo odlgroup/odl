@@ -43,6 +43,8 @@ class StorePartial(object):
         self.results = []
 
     def send(self, result):
+        """ append result to results list
+        """
         self.results.append(result.copy())
 
     def __iter__(self):
@@ -56,6 +58,8 @@ class ForEachPartial(object):
         self.function = function
 
     def send(self, result):
+        """ Applies function to result
+        """
         self.function(result)
 
 
@@ -66,6 +70,8 @@ class PrintIterationPartial(object):
         self.iter = 0
 
     def send(self, result):
+        """ Print the current iteration
+        """
         print("iter = {}".format(self.iter))
         self.iter += 1
 
@@ -77,6 +83,8 @@ class PrintStatusPartial(object):
         self.iter = 0
 
     def send(self, result):
+        """ Print the current iteration and norm
+        """
         print("iter = {}, norm = {}".format(self.iter, result.norm()))
         self.iter += 1
 

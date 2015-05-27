@@ -446,9 +446,7 @@ class OperatorSum(Operator):
         self._tmp = tmp
 
     def _call(self, rhs):
-        tmp = self._op1._call(rhs)
-        tmp += self._op2._call(rhs)
-        return tmp
+        return self._op1._call(rhs) + self._op2._call(rhs)
 
     def _apply(self, rhs, out):
         tmp = self._tmp if self._tmp is not None else self.range.element()
@@ -561,9 +559,7 @@ class OperatorPointwiseProduct(Operator):
         self._op2 = op2
 
     def _call(self, rhs):
-        tmp = self._op1._call(rhs)
-        tmp *= self._op2._call(rhs)
-        return tmp
+        return self._op1._call(rhs) * self._op2._call(rhs)
 
     def _apply(self, rhs, out):
         tmp = self._op2.range.element()
@@ -597,9 +593,7 @@ class OperatorLeftScalarMultiplication(Operator):
         self._scalar = scalar
 
     def _call(self, rhs):
-        tmp = self._op._call(rhs)
-        tmp *= self._scalar
-        return tmp
+        return scalar * self._op._call(rhs)
 
     def _apply(self, rhs, out):
         self._op._apply(rhs, out)

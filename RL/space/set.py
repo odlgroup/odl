@@ -54,11 +54,12 @@ class Set(object):
         """ Test if other is a member of self
         """
 
-    def element(self):
+    def element(self, *args, **kwargs):
         """ Return some (arbitrary) element
         """
         raise NotImplementedError("'element' method not implemented")
 
+    #Default implemenations
     def __eq__(self, other):
         return self.equals(other)
 
@@ -72,13 +73,20 @@ class Set(object):
 class EmptySet(Set):
     """ The empty set has no members (None is considered "no element")
     """
+
     def equals(self, other):
+        """ Tests if other is an instance of EmptySet
+        """
         return isinstance(other, EmptySet)
 
     def contains(self, other):
+        """ Tests if other is None
+        """
         return other is None
 
     def element(self):
+        """ The only element in the empty set, None
+        """
         return None
 
     def __str__(self):
@@ -93,12 +101,18 @@ class ComplexNumbers(Set):
     """
 
     def equals(self, other):
+        """ Tests if other is an instance of ComplexNumbers
+        """
         return isinstance(other, ComplexNumbers)
 
     def contains(self, other):
+        """ Tests if other is a complex number
+        """
         return isinstance(other, Complex)
 
     def element(self):
+        """ A complex number (zero)
+        """
         return complex(0.0, 0.0)
 
     def __str__(self):
@@ -113,12 +127,18 @@ class RealNumbers(Set):
     """
 
     def equals(self, other):
+        """ Tests if other is an instance of RealNumbers
+        """
         return isinstance(other, RealNumbers)
 
     def contains(self, other):
+        """ Tests if other is a real number
+        """
         return isinstance(other, Real)
 
     def element(self):
+        """ A real number (zero)
+        """
         return 0.0
 
     def __str__(self):
@@ -133,12 +153,18 @@ class Integers(Set):
     """
 
     def equals(self, other):
+        """ Tests if other is an instance of Integers
+        """
         return isinstance(other, Integers)
 
     def contains(self, other):
+        """ Tests if other is an Integer
+        """
         return isinstance(other, Integral)
 
     def element(self):
+        """ An Integer (zero)
+        """
         return 0
 
     def __str__(self):
@@ -196,22 +222,33 @@ class IntervProd(Set):
     # Basic properties
     @property
     def begin(self):
+        """ Numpy array with the startpoints along all dimensions of this IntervalProd
+        """
         return self._begin[0] if self.dim == 1 else self._begin
 
     @property
     def end(self):
+        """ Numpy array with the endpoints along all dimensions of this IntervalProd
+        """
         return self._end[0] if self.dim == 1 else self._end
 
     @property
     def dim(self):
+        """ The dimension of this IntervalProd
+        """
         return len(self._begin)
 
     @property
     def truedim(self):
+        """ The dimension of this IntervalProd where all degenerate (length zero)
+        dimension has been removed
+        """
         return len(self._inondeg)
 
     @property
     def volume(self):
+        """ The n-dimensional volume of this IntervalProd
+        """
         return self.measure(dim=self.dim)
 
     def midpoint(self):
@@ -547,6 +584,8 @@ class Interval(IntervProd):
 
     @property
     def length(self):
+        """ The length of this interval
+        """
         return self.end - self.begin
 
     def __repr__(self):
@@ -563,6 +602,8 @@ class Rectangle(IntervProd):
 
     @property
     def area(self):
+        """ The area of this triangle
+        """
         return self.volume
 
     def __repr__(self):

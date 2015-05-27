@@ -89,6 +89,8 @@ class FunctionSpace(Algebra):
 
         if function is None:
             def function(*args):
+                """ A function that always returns zero
+                """
                 return 0
         return FunctionSpace.Vector(self, function)
 

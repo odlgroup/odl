@@ -82,10 +82,14 @@ class LinearProductSpace(LinearSpace):
 
     @property
     def field(self):
+        """ Get the underlying field
+        """
         return self._field
 
     @property
     def spaces(self):
+        """ Get a tuple of the underlying spaces
+        """
         return self._spaces
 
     def element(self, *args, **kwargs):
