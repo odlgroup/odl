@@ -27,6 +27,7 @@ try:
 except ImportError:
     from future.builtins import object, super
 from future import standard_library
+from future.utils import with_metaclass
 
 # External module imports
 from itertools import zip_longest
@@ -44,7 +45,7 @@ class RLTestCase(unittest.TestCase):
 
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
         """ Assert thaat all elements in iter1 and iter2 are almost equal.
-        
+
         The iterators may be nestled lists or warying types
 
         assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
@@ -81,8 +82,9 @@ def skip_all_tests(reason=None):
                     local[attr] = unittest.skip(reason)(value)
             return super().__new__(mcs, name, bases, local)
 
-    class SkipAllTestCase(unittest.TestCase):
-        __metaclass__ = SkipAllTestsMeta
+    class SkipAllTestCase(with_metaclass(
+            SkipAllTestsMeta, unittest.TestCase)):
+        pass
 
     return SkipAllTestCase
 
