@@ -104,7 +104,8 @@ def uniform_discretization(parent, rnimpl):
             return "UniformDiscretization(" + str(self._rn) + ")"
 
         def __repr__(self):
-            return "UniformDiscretization(" + repr(self.parent) + "," + repr(self._rn) + ")"
+            return ("UniformDiscretization(" + repr(self.parent) + "," +
+                    repr(self._rn) + ")")
 
         class Vector(RNVectortype):
             pass

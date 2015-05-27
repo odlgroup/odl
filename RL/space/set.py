@@ -222,13 +222,15 @@ class IntervProd(Set):
     # Basic properties
     @property
     def begin(self):
-        """ Numpy array with the startpoints along all dimensions of this IntervalProd
+        """ Numpy array with the startpoints along all dimensions of this
+        IntervalProd
         """
         return self._begin[0] if self.dim == 1 else self._begin
 
     @property
     def end(self):
-        """ Numpy array with the endpoints along all dimensions of this IntervalProd
+        """ Numpy array with the endpoints along all dimensions of this
+        IntervalProd
         """
         return self._end[0] if self.dim == 1 else self._end
 
@@ -240,8 +242,8 @@ class IntervProd(Set):
 
     @property
     def truedim(self):
-        """ The dimension of this IntervalProd where all degenerate (length zero)
-        dimension has been removed
+        """ The dimension of this IntervalProd where all degenerate
+        (length zero) dimension has been removed
         """
         return len(self._inondeg)
 

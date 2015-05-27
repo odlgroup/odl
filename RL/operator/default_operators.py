@@ -47,7 +47,6 @@ class ScalingOperator(op.SelfAdjointOperator):
 
     Parameters
     ----------
-
     space : LinearSpace
             The space the vectors should lie in
     scalar : space.field element
@@ -64,13 +63,87 @@ class ScalingOperator(op.SelfAdjointOperator):
         self._scal = float(scalar)
 
     def _apply(self, input, out):
+        """
+        Scales a vector and stores the result in another
+
+        Parameters
+        ----------
+        input : self.domain element
+                An element in the domain of this operator
+        scalar : self.range element
+                 An element in the range of this operator
+
+        Returns
+        -------
+        None
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> r3 = RN(3)
+        >>> vec = r3.element([1, 2, 3])
+        >>> out = r3.element()
+        >>> op = ScalingOperator(r3, 2.0)
+        >>> op.apply(vec, out)
+        >>> out
+        RN(3).element([ 2.,  4.,  6.])
+        """
         out.lincomb(self._scal, input)
 
     def _call(self, input):
+        """
+        Scales a vector
+
+        Parameters
+        ----------
+        input : self.domain element
+                An element in the domain of this operator
+
+
+        Returns
+        -------
+        scaled : self.range element
+                 An element in the range of this operator,
+                 input * self.scale
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> r3 = RN(3)
+        >>> vec = r3.element([1, 2, 3])
+        >>> op = ScalingOperator(r3, 2.0)
+        >>> op(vec)
+        RN(3).element([ 2.,  4.,  6.])
+        """
+
         return self._scal * input
 
     @property
     def inverse(self):
+        """
+        The inverse of a scaling is scaling by 1/self.scale
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        inverse : ScalingOperator
+                  Scaling by 1/self.scale
+
+        Example
+        -------
+        >>> from RL.space.euclidean import EuclideanSpace
+        >>> r3 = EuclideanSpace(3)
+        >>> vec = r3.element([1, 2, 3])
+        >>> op = ScalingOperator(r3, 2.0)
+        >>> inv = op.inverse
+        >>> inv(op(vec)) == vec
+        True
+        >>> op(inv(vec)) == vec
+        True
+        """
         return ScalingOperator(self._space, 1.0/self._scal)
 
     @property
@@ -108,3 +181,7 @@ class IdentityOperator(ScalingOperator):
 
     def __str__(self):
         return "I"
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

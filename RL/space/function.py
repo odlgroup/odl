@@ -68,7 +68,8 @@ class FunctionSpace(Algebra):
         Parameters
         ----------
         function : Function from self.domain to self.field
-                   The function that should be converted/reinterpreted as a vector.
+                   The function that should be converted/reinterpreted
+                   as a vector.
 
         Returns
         -------
@@ -97,16 +98,20 @@ class FunctionSpace(Algebra):
     def _lincomb(self, z, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
 
-        The created object is rather slow, and should only be used for testing purposes.
-        """
-        z._function = a*x + b*y  # Use operator overloading
+        The created object is rather slow,
+        and should only be used for testing purposes.
+        """ 
+        # Use operator overloading
+        z._function = lambda *args: a*x._function(*args) + b*y._function(*args)
 
     def _multiply(self, x, y):
         """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
 
-        The created object is rather slow, and should only be used for testing purposes.
+        The created object is rather slow,
+        and should only be used for testing purposes.
         """
-        return self.element(lambda *args: x(*args)*y(*args))
+        tmp = y._function
+        y._function = lambda *args: x._function(*args)*tmp._function(*args)
 
     @property
     def field(self):
@@ -133,13 +138,15 @@ class FunctionSpace(Algebra):
         if isinstance(self.field, RealNumbers):
             return "FunctionSpace(" + str(self.domain) + ")"
         else:
-            return "FunctionSpace(" + str(self.domain) + ", " + str(self.field) + ")"
+            return ("FunctionSpace(" + str(self.domain) + ", " + 
+                    str(self.field) + ")")
 
     def __repr__(self):
         if isinstance(self.field, RealNumbers):
             return "FunctionSpace(" + repr(self.domain) + ")"
         else:
-            return "FunctionSpace(" + repr(self.domain) + ", " + repr(self.field) + ")"
+            return ("FunctionSpace(" + repr(self.domain) + ", " + 
+                    repr(self.field) + ")")
 
     class Vector(Algebra.Vector, fun.Operator):
         """ A Vector in a FunctionSpace
@@ -202,7 +209,8 @@ class L2(FunctionSpace, HilbertSpace):
         You cannot calculate inner products in non-discretized spaces'''))
 
     def equals(self, other):
-        """ Verify that other is equal to this space as a FunctionSpace and also a L2 space.
+        """ Verify that other is equal to this space as a FunctionSpace 
+        and also a L2 space.
         """
         return isinstance(other, L2) and FunctionSpace.equals(self, other)
 

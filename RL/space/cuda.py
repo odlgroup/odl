@@ -518,8 +518,10 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                     The position(s) that should be set
             value : Real or Array-Like
                     The values that should be assigned.
-                    If index is an integer, value should be a Number convertible to float.
-                    If index is a slice, value should be an Array-Like of the same
+                    If index is an integer,
+                    value should be a Number convertible to float.
+                    If index is a slice,
+                    value should be an Array-Like of the same
                     size as the slice.
 
             Returns

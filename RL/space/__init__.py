@@ -46,7 +46,7 @@ Product Spaces (product)
 LinearProductSpace      Vector space created by the carthesian product
                         of other LinearSpaces
 MetricProductSpace      A LinearProductSpace with a metric
-NormedProductSpace      A MetricProductSpace where the metric is induced 
+NormedProductSpace      A MetricProductSpace where the metric is induced
                         by a norm
 HilbertProductSpace     A HilbertProductSpace where the norm is induced by
                         a inner product

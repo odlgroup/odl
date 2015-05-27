@@ -183,7 +183,8 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
         A = LinearOperatorSum(LinearOperatorComposition(deriv.T, deriv),
                               tm * I, tmp_dom)
 
-        conjugate_gradient(A, dx, u, 3)  # TODO allow user to select other method
+        # TODO allow user to select other method
+        conjugate_gradient(A, dx, u, 3)
 
         # Update x
         x.lincomb(1, x0, 1, dx)  # x = x0 + dx
