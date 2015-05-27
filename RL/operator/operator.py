@@ -593,7 +593,7 @@ class OperatorLeftScalarMultiplication(Operator):
         self._scalar = scalar
 
     def _call(self, rhs):
-        return scalar * self._op._call(rhs)
+        return self._scalar * self._op._call(rhs)
 
     def _apply(self, rhs, out):
         self._op._apply(rhs, out)
@@ -787,8 +787,6 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
             raise TypeError(errfmt('''
             op2 ({}) is not a LinearOperator. LinearOperatorSum is only
             defined for LinearOperators.'''.format(op2)))
-
-        print("MAKING LinearOperatorSum")
 
         super().__init__(op1, op2, tmp_ran)
         self._tmp_dom = tmp_dom
