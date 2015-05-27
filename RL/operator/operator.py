@@ -458,9 +458,8 @@ class OperatorSum(Operator):
     def range(self):
         return self._op1.range
 
-    @property
-    def derivative(self):
-        return OperatorSum(self._op1.derivative, self._op2.derivative)
+    def derivative(self, point):
+        return LinearOperatorSum(self._op1.derivative(point), self._op2.derivative(point))
 
     def __repr__(self):
         return 'OperatorSum( ' + repr(self._op1) + ", " + repr(self._op2) + ')'
@@ -524,7 +523,7 @@ class OperatorComposition(Operator):
         return OperatorComposition(self._right.inverse, self._left.inverse, self._tmp)
 
     def derivative(self, point):
-        return OperatorComposition(self.left.derivative(self._right(point)), self._right.derivative(point))
+        return LinearOperatorComposition(self._left.derivative(self._right(point)), self._right.derivative(point))
 
     def __repr__(self):
         return ('OperatorComposition( ' + repr(self._left) + ', ' +
@@ -613,7 +612,7 @@ class OperatorLeftScalarMultiplication(Operator):
         return OperatorRightScalarMultiplication(self._op.inverse, 1.0/self._scalar)
 
     def derivative(self, point):
-        return OperatorLeftScalarMultiplication(self._op.derivative(point), self._scalar)
+        return LinearOperatorScalarMultiplication(self._op.derivative(point), self._scalar)
 
     def __repr__(self):
         return ('OperatorLeftScalarMultiplication( ' + repr(self._op) +
@@ -680,7 +679,7 @@ class OperatorRightScalarMultiplication(Operator):
         return OperatorLeftScalarMultiplication(self._op.inverse, 1.0/self._scalar)
 
     def derivative(self, point):
-        return OperatorLeftScalarMultiplication(self._op.derivative(point), self._scalar)
+        return LinearOperatorScalarMultiplication(self._op.derivative(point), self._scalar)
 
     def __repr__(self):
         return ('OperatorRightScalarMultiplication( ' + self._op.__repr__() +
@@ -788,6 +787,8 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
             raise TypeError(errfmt('''
             op2 ({}) is not a LinearOperator. LinearOperatorSum is only
             defined for LinearOperators.'''.format(op2)))
+
+        print("MAKING LinearOperatorSum")
 
         super().__init__(op1, op2, tmp_ran)
         self._tmp_dom = tmp_dom

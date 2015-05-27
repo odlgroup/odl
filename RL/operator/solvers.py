@@ -101,6 +101,7 @@ def landweber(operator, x, rhs, iterations=1, omega=1, part_results=None):
 def conjugate_gradient(operator, x, rhs, iterations=1, part_results=None):
     """ Optimized version of CGN, uses no temporaries etc.
     """
+    print(operator, dir(operator))
     d = operator(x)
     d.lincomb(1, rhs, -1, d)       # d = rhs - A x
     p = operator.T(d)
@@ -171,6 +172,8 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
         # (deriv.T o deriv + tm * I)^-1 u = dx
         A = LinearOperatorSum(LinearOperatorComposition(deriv.T, deriv),
                               tm * I, tmp_dom)
+
+        print(A.adjoint)
         conjugate_gradient(A, dx, u, 3)  # TODO allow user to select other method
 
         # Update x
