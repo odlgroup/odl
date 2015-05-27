@@ -43,12 +43,17 @@ load-plugins=
 disable=redefined-builtin,
   super-on-old-class,
   missing-super-argument,
-  no-value-for-parameter
+  no-value-for-parameter,
+  no-member,
+  too-many-function-args
 
 # redefined-builtin: 'object', 'range', 'str', 'super' are redefined, that's okay
 # super-on-old-class: classes are erroneously interpreted as old-style
 # missing-super-argument: used 'newsuper' has one argument less than old 'super'
 # no-value-for-parameter: constructor calls are interpreted wrong, probably an old-style class problem
+# no-member: pylint does not understand complex class structures properly
+# too-many-function-args: see no-member
+
 
 [REPORTS]
 

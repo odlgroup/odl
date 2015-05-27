@@ -30,6 +30,7 @@ try:
 except ImportError:  # Versions < 0.14 of python-future
     from future.builtins import str, object, super
 from future import standard_library
+from future.utils import with_metaclass
 
 from abc import ABCMeta
 
@@ -96,7 +97,7 @@ class DefaultApplyOperator(object):
         rhs : element in self.domain
               An object in the domain of this operator.
               This is the point that the operator should be applied in.
-        
+
         out : element in self.range
               An object in the range of this operator.
               The result of an operator evaluation.
@@ -145,7 +146,7 @@ class OperatorMeta(ABCMeta):
         return obj
 
 
-class Operator(object):
+class Operator(with_metaclass(OperatorMeta, object)):
     """Abstract operator
 
     An operator is a mapping from a 'Set' to another 'Set'.
@@ -213,8 +214,6 @@ class Operator(object):
     of the other is provided.
     """
 
-    __metaclass__ = OperatorMeta
-
     def derivative(self, point):
         """ Get the derivative operator of this operator at `point`
         """
@@ -234,7 +233,7 @@ class Operator(object):
     def I(self):
         """ Get the inverse of this operator
         """
-        return self.inverse()
+        return self.inverse
 
     # Implicitly defined operators
     def apply(self, rhs, out):
@@ -465,7 +464,8 @@ class OperatorSum(Operator):
         return self._op1.range
 
     def derivative(self, point):
-        return LinearOperatorSum(self._op1.derivative(point), self._op2.derivative(point))
+        return LinearOperatorSum(self._op1.derivative(point),
+                                 self._op2.derivative(point))
 
     def __repr__(self):
         return 'OperatorSum( ' + repr(self._op1) + ", " + repr(self._op2) + ')'
@@ -519,17 +519,20 @@ class OperatorComposition(Operator):
     @property
     def domain(self):
         return self._right.domain
-    
+
     @property
     def range(self):
         return self._left.range
-    
+
     @property
     def inverse(self):
-        return OperatorComposition(self._right.inverse, self._left.inverse, self._tmp)
+        return OperatorComposition(self._right.inverse, self._left.inverse,
+                                   self._tmp)
 
     def derivative(self, point):
-        return LinearOperatorComposition(self._left.derivative(self._right(point)), self._right.derivative(point))
+        return LinearOperatorComposition(
+            self._left.derivative(self._right(point)),
+            self._right.derivative(point))
 
     def __repr__(self):
         return ('OperatorComposition( ' + repr(self._left) + ', ' +
@@ -612,13 +615,15 @@ class OperatorLeftScalarMultiplication(Operator):
     @property
     def range(self):
         return self._op.range
-    
+
     @property
     def inverse(self):
-        return OperatorRightScalarMultiplication(self._op.inverse, 1.0/self._scalar)
+        return OperatorRightScalarMultiplication(self._op.inverse,
+                                                 1.0/self._scalar)
 
     def derivative(self, point):
-        return LinearOperatorScalarMultiplication(self._op.derivative(point), self._scalar)
+        return LinearOperatorScalarMultiplication(self._op.derivative(point),
+                                                  self._scalar)
 
     def __repr__(self):
         return ('OperatorLeftScalarMultiplication( ' + repr(self._op) +
@@ -682,10 +687,12 @@ class OperatorRightScalarMultiplication(Operator):
 
     @property
     def inverse(self):
-        return OperatorLeftScalarMultiplication(self._op.inverse, 1.0/self._scalar)
+        return OperatorLeftScalarMultiplication(self._op.inverse,
+                                                1.0/self._scalar)
 
     def derivative(self, point):
-        return LinearOperatorScalarMultiplication(self._op.derivative(point), self._scalar)
+        return LinearOperatorScalarMultiplication(self._op.derivative(point),
+                                                  self._scalar)
 
     def __repr__(self):
         return ('OperatorRightScalarMultiplication( ' + self._op.__repr__() +
