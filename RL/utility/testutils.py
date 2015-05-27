@@ -43,6 +43,12 @@ class RLTestCase(unittest.TestCase):
                                             **kwargs)
 
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
+        """ Assert thaat all elements in iter1 and iter2 are almost equal.
+        
+        The iterators may be nestled lists or warying types
+
+        assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
+        """
         # Sentinel object used to check that both iterators are the same length
         differentLengthSentinel = object()
 
@@ -62,6 +68,8 @@ class RLTestCase(unittest.TestCase):
 
 
 def skip_all_tests(reason=None):
+    """ Creates a unittest.TestCase replacement class where all tests are skipped
+    """
     if reason is None:
         reason = ''
 
@@ -80,6 +88,13 @@ def skip_all_tests(reason=None):
 
 
 class Timer(object):
+    """ A timer to be used as:
+
+    with Timer("name"):
+        Do stuff
+
+    Prints the time stuff took to execute.
+    """
     def __init__(self, name=None):
         self.name = name
 

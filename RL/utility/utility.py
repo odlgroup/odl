@@ -256,15 +256,6 @@ def to_local_sys(vec_in_lab_coords, local_sys):
     trafo_matrix = np.matrix(local_sys)
     return np.dot(trafo_matrix, vec_in_lab_coords)
 
-
-def allEqual(iterator, comp):
-    try:
-        iterator = iter(iterator)
-        first = next(iterator)
-        return all(comp(first, rest) for rest in iterator)
-    except StopIteration:  # True for empty list
-        return True
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
