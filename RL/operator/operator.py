@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+General abstract operators defined on Set's aswell as sums
+and compositions of such.
+
+Also contains LinearOperator specializations for linear operators
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division

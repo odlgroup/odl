@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Utilities for use inside the RL project, not for external use.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, unicode_literals, division

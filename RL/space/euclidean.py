@@ -347,9 +347,9 @@ class RN(LinearSpace):
         space : RN
                 Instance of RN this vector lives in
         data : numpy.ndarray
-                 Underlying data-representation to be used by this vector
-                 The dtype of the array must be float64
-                 The shape of the array must be (n,)
+               Underlying data-representation to be used by this vector
+               The dtype of the array must be float64
+               The shape of the array must be (n,)
         """
 
         def __init__(self, space, data):
@@ -368,10 +368,55 @@ class RN(LinearSpace):
 
         @property
         def data(self):
+            """
+            Get the underlying datacontainer, an numpy-array
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            data : Numpy.ndarray
+                   The underlying data representation
+
+            Examples
+            --------
+            >>> vec = RN(3).element([1, 2, 3])
+            >>> vec.data
+            array([ 1.,  2.,  3.])
+            """
             return self._data
 
         @property
         def data_ptr(self):
+            """
+            Get a pointer to the underlying data.
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            data : Numpy.ndarray
+                   The underlying data representation
+
+            Examples
+            --------
+            >>> import ctypes
+            >>> vec = RN(3).element([1, 2, 3])
+            >>> ArrayType = ctypes.c_double*3
+            >>> arr = np.frombuffer(ArrayType.from_address(vec.data_ptr))
+            >>> arr
+            array([ 1.,  2.,  3.])
+            
+            Inplace modifications
+
+            >>> arr[0] = 5
+            >>> vec
+            RN(3).element([ 5.,  2.,  3.])
+            """
             return self._data.ctypes.data
 
         def __str__(self):
@@ -383,6 +428,21 @@ class RN(LinearSpace):
 
         def __len__(self):
             """ Get the dimension of the underlying space
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            len : int
+
+            Examples
+            --------
+            >>> RN(3).element().__len__()
+            3
+            >>> len(RN(3).element())
+            3
             """
             return self.space.n
 
@@ -526,7 +586,18 @@ class NormedRN(RN, NormedSpace):
         return np.linalg.norm(vector.data, ord=self.ord)
 
     class Vector(RN.Vector, NormedSpace.Vector):
-        pass
+        """ A NormedRN-vector represented using numpy
+
+        Parameters
+        ----------
+
+        space : RN
+                Instance of RN this vector lives in
+        data : numpy.ndarray
+               Underlying data-representation to be used by this vector
+               The dtype of the array must be float64
+               The shape of the array must be (n,)
+        """
 
 
 class EuclideanSpace(RN, HilbertSpace, Algebra):
@@ -642,7 +713,18 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         return 'EuclideanSpace(' + str(self.n) + ')'
 
     class Vector(RN.Vector, HilbertSpace.Vector, Algebra.Vector):
-        pass
+        """ A EuclideanSpace-vector represented using numpy
+
+        Parameters
+        ----------
+
+        space : RN
+                Instance of RN this vector lives in
+        data : numpy.ndarray
+               Underlying data-representation to be used by this vector
+               The dtype of the array must be float64
+               The shape of the array must be (n,)
+        """
 
 
 if __name__ == '__main__':

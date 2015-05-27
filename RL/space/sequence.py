@@ -29,9 +29,8 @@ except ImportError:  # Versions < 0.14 of python-future
 import numpy as np
 
 # RL imports
-from RL.space.space import *
-from RL.space.euclidean import *
-from RL.space.function import *
+from RL.space.euclidean import EuclideanSpace
+from RL.space.function import FunctionSpace
 from RL.space.set import Integers
 
 standard_library.install_aliases()
@@ -67,7 +66,7 @@ class TruncationDiscretization(EuclideanSpace):
     def zero(self):
         return self.element(np.zeros(self.n), copy=False)
 
-    def empty(self):
+    def element(self):
         # FIXME: Remove this function
         return self.element(np.empty(self.n), copy=False)
 
@@ -92,7 +91,7 @@ class TruncationDiscretization(EuclideanSpace):
                  isinstance(args[0], SequenceSpace.Vector) and
                  args[0].space == space.parent)):
 
-                data = super().__init__(space, args[0](space.points()),
+                super().__init__(space, args[0](space.points()),
                                         copy=False)
             else:
-                data = super().__init__(space, *args, **kwargs)
+                super().__init__(space, *args, **kwargs)

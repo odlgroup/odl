@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+General set structure as well as implementations of the most common sets.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division

@@ -401,7 +401,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         def __init__(self, space, data):
             super().__init__(space)
             if not isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
-                return TypeError(errfmt('''
+                raise TypeError(errfmt('''
                 'data' ({}) must be a CudaRNVectorImpl instance
                 '''.format(data)))
             self._data = data

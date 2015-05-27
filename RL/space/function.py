@@ -92,12 +92,12 @@ class FunctionSpace(Algebra):
                 return 0
         return FunctionSpace.Vector(self, function)
 
-    def _lincomb(self, a, x, b, y):
+    def _lincomb(self, z, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
 
         The created object is rather slow, and should only be used for testing purposes.
         """
-        return a*x + b*y  # Use operator overloading
+        z._function = a*x + b*y  # Use operator overloading
 
     def _multiply(self, x, y):
         """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
@@ -217,7 +217,19 @@ class L2(FunctionSpace, HilbertSpace):
             return "L2(" + repr(self.domain) + ", " + repr(self.field) + ")"
 
     class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
-        pass
+        """ A Vector in a L2-space
+
+        FunctionSpace-Vectors are themselves also Functionals, and inherit
+        a large set of features from them.
+
+        Parameters
+        ----------
+
+        space : FunctionSpace
+            Instance of FunctionSpace this vector lives in
+        function : Function from space.domain to space.field
+            The function that should be converted/reinterpreted as a vector.
+        """
 
 if __name__ == '__main__':
     import doctest

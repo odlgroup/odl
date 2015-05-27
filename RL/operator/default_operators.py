@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Default operators defined on any space
+
+Scale vector by scalar, Identity operation
+"""
+
 
 # Imports for common Python 2/3 codebase
 from __future__ import division, print_function, unicode_literals
@@ -36,6 +42,18 @@ standard_library.install_aliases()
 
 
 class ScalingOperator(op.SelfAdjointOperator):
+    """
+    Operator that scales a vector by a scalar
+
+    Parameters
+    ----------
+
+    space : LinearSpace
+            The space the vectors should lie in
+    scalar : space.field element
+             An element in the field of the space that
+             the vectors should be scaled by
+    """
     def __init__(self, space, scalar):
         if not isinstance(space, LinearSpace):
             raise TypeError(errfmt('''
@@ -73,6 +91,15 @@ class ScalingOperator(op.SelfAdjointOperator):
 
 
 class IdentityOperator(ScalingOperator):
+    """
+    The identity operator on a space, copies a vector into another
+
+    Parameters
+    ----------
+
+    space : LinearSpace
+            The space the vectors should lie in
+    """
     def __init__(self, space):
         super().__init__(space, 1)
 
