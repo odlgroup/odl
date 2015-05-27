@@ -201,7 +201,7 @@ class Operator(object):
           The result of the evaluation.
 
     Notes
-    -----    
+    -----
     If the user only provides one of '_apply' or '_call' and
     the underlying range is a 'LinearSpace', a default implementation
     of the other is provided.
@@ -513,7 +513,7 @@ class OperatorComposition(Operator):
     @property
     def domain(self):
         return self._right.domain
-
+    
     @property
     def range(self):
         return self._left.range

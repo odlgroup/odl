@@ -34,7 +34,6 @@ from future import standard_library
 
 # External module imports
 import numpy as np
-from numpy import float64
 from scipy.lib.blas import get_blas_funcs
 from numbers import Integral
 
@@ -129,7 +128,7 @@ class RN(LinearSpace):
 
         """
 
-        dtype = kwargs.pop('dtype', float64)
+        dtype = kwargs.pop('dtype', np.float64)
 
         if data is None:
             data = np.empty(self._n, dtype=dtype, **kwargs)
@@ -142,7 +141,7 @@ class RN(LinearSpace):
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.n,))))
 
-            if data.dtype != float64:
+            if data.dtype != np.float64:
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(data, data.dtype)))
@@ -248,7 +247,7 @@ class RN(LinearSpace):
         >>> x
         RN(3).element([ 0.,  0.,  0.])
         """
-        return self.element(np.zeros(self._n, dtype=float64))
+        return self.element(np.zeros(self._n, dtype=np.float64))
 
     @property
     def field(self):
@@ -359,7 +358,7 @@ class RN(LinearSpace):
                 'data' ({}) must be a numpy.ndarray
                 '''.format(type(data))))
 
-            if data.dtype != float64:
+            if data.dtype != np.float64:
                 raise TypeError(errfmt('''
                 type('data') ({}) must be float64
                 '''.format(data.dtype)))

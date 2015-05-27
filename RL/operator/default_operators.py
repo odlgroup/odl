@@ -53,7 +53,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
     @property
     def inverse(self):
-        return ScalingOperator(1.0/self._scal)
+        return ScalingOperator(self._space, 1.0/self._scal)
 
     @property
     def domain(self):

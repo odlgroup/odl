@@ -29,7 +29,6 @@ from future import standard_library
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
-from numpy import float64
 
 # RL imports
 from RL.utility.utility import errfmt
@@ -172,8 +171,8 @@ class IntervProd(Set):
         IntervProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
 
-        begin = np.atleast_1d(begin).astype(float64)
-        end = np.atleast_1d(end).astype(float64)
+        begin = np.atleast_1d(begin).astype(np.float64)
+        end = np.atleast_1d(end).astype(np.float64)
 
         if len(begin) != len(end):
             raise ValueError(errfmt('''

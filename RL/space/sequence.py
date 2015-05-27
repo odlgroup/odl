@@ -32,6 +32,7 @@ import numpy as np
 from RL.space.space import *
 from RL.space.euclidean import *
 from RL.space.function import *
+from RL.space.set import Integers
 
 standard_library.install_aliases()
 
@@ -48,7 +49,7 @@ class SequenceSpace(FunctionSpace):
                 super().equals(other))
 
 
-class TruncationDiscretization(EuclideanSpace, Discretization):
+class TruncationDiscretization(EuclideanSpace):
     """ Truncation discretization of the integers
     Represents vectors by RN elements
     """

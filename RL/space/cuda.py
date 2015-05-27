@@ -387,13 +387,6 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     def __repr__(self):
         return "CudaRN(" + str(self._n) + ")"
 
-    # These should likely be moved somewhere else!
-    @property
-    def abs(self):
-        return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.abs(inp.data, outp.data),
-            input=(self, self))
-
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         """ A RN-vector represented in CUDA
 

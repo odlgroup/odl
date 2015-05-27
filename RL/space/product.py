@@ -27,7 +27,6 @@ from future import standard_library
 
 # External
 import numpy as np
-from numpy import float64
 from functools import partial
 
 # RL imports
@@ -377,7 +376,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
                                                                 self.weights,
                                                                 x.parts,
                                                                 y.parts))
-        dists = np.fromiter(iter, dtype=float64, count=self._nfactors)
+        dists = np.fromiter(iter, dtype=np.float64, count=self._nfactors)
         return self.prod_norm(dists)
 
     def __repr__(self):
@@ -489,7 +488,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
         iter = (spc._norm(xp) * w for spc, w, xp in zip(self.spaces,
                                                         self.weights,
                                                         x.parts))
-        norms = np.fromiter(iter, dtype=float64, count=self._nfactors)
+        norms = np.fromiter(iter, dtype=np.float64, count=self._nfactors)
         return self.prod_norm(norms)
 
     def __repr__(self):
