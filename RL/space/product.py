@@ -181,9 +181,9 @@ class LinearProductSpace(LinearSpace):
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
-        >>> r2.norm(zero_2 - zero_2x3[0]) == 0
+        >>> zero_2 == zero_2x3[0]
         True
-        >>> r3.norm(zero_3 - zero_2x3[1]) == 0
+        >>> zero_3 == zero_2x3[1]
         True
         """
         return self.element(data=[space.zero() for space in self.spaces])
@@ -276,20 +276,20 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     ----------
     spaces : MetricSpace instances
         The factors of the product space
-    kwargs : {'ord', 'prod_norm', 'weights'}
+    kwargs : {'ord', 'weights', 'prod_norm'}
               'ord' : float, optional
                   Order of the product distance, i.e.
                   dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   Default: 2.0
-              'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances
-                  Default: np.linalg.norm(x, ord=ord)
               'weights' : array-like, optional, only usable with 'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
+              'prod_norm' : callable, optional
+                  Function that should be applied to the array of distances
+                  Default: np.linalg.norm(x, ord=ord)
 
     The following float values for `prod_norm` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm.
@@ -392,20 +392,20 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     ----------
     spaces : NormedSpace instances
              The factors of the product space
-    kwargs : {'ord', 'prod_norm', 'weights'}
+    kwargs : {'ord', 'weights', 'prod_norm'}
               'ord' : float, optional
                   Order of the product distance, i.e.
                   dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   Default: 2.0
-              'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances
-                  Default: np.linalg.norm(x, ord=ord)
               'weights' : array-like, optional, only usable with 'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
+              'prod_norm' : callable, optional
+                  Function that should be applied to the array of distances
+                  Default: np.linalg.norm(x, ord=ord)
 
     The following float values for `prod_norm` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm.
@@ -555,13 +555,19 @@ def productspace(*spaces, **kwargs):
     ----------
     spaces : <Which>Space instances
         <Which> is either Hilbert, Normed, Metric or Linear
-    kwargs : {'ord', 'prod_norm', 'weights'}
+    kwargs : {'ord', 'weights', 'prod_norm'}
               'ord' : float, optional
                   Order of the product distance/norm, i.e.
                   dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   norm(x) = np.linalg.norm(x, ord=ord)
                   If used, forces the space to not be a hilbert space.
                   Default: 2.0
+              'weights' : array-like, optional, only usable with 'ord' option.
+                  Array of weights, same size as number of space
+                  components. All weights must be positive. It is
+                  multiplied with the tuple of distances before
+                  applying the RN norm or 'prod_norm'.
+                  Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
                   Function that should be applied to the array of distances/norms.
                   If used, forces the space to not be a hilbert space.
@@ -569,12 +575,6 @@ def productspace(*spaces, **kwargs):
                       dist = np.linalg.norm(x-y, ord=ord)
                       norm = np.linalg.norm(x, ord=ord)
                       inner = np.vdot(x,y)
-              'weights' : array-like, optional, only usable with 'ord' option.
-                  Array of weights, same size as number of space
-                  components. All weights must be positive. It is
-                  multiplied with the tuple of distances before
-                  applying the RN norm or 'prod_norm'.
-                  Default: (1.0,...,1.0)
 
 
     Returns
@@ -617,25 +617,25 @@ def powerspace(base, power, **kwargs):
         <Which> is either Hilbert, Normed, Metric or Linear
     power : int
         The number of factors in the product
-    kwargs : {'ord', 'prod_norm', 'weights'}
+    kwargs : {'ord', 'weights', 'prod_norm'}
               'ord' : float, optional
                   Order of the product distance/norm, i.e.
                   dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   norm(x) = np.linalg.norm(x, ord=ord)
                   If used, forces the space to not be a hilbert space.
                   Default: 2.0
-              'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances/norms
-                  If used, forces the space to not be a hilbert space.
-                  Defaults if applicable:
-                      dist = np.linalg.norm(x-y, ord=ord)
-                      norm = np.linalg.norm(x, ord=ord)
               'weights' : array-like, optional, only usable with 'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
+              'prod_norm' : callable, optional
+                  Function that should be applied to the array of distances/norms
+                  If used, forces the space to not be a hilbert space.
+                  Defaults if applicable:
+                      dist = np.linalg.norm(x-y, ord=ord)
+                      norm = np.linalg.norm(x, ord=ord)
 
     Returns
     -------
