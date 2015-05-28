@@ -42,6 +42,8 @@ def random_point(set_):
 class IntervProdTest(RLTestCase):
     def test_init(self):
         set_ = IntervProd(1, 2)
+        set_ = IntervProd(-np.inf, 2)
+        set_ = IntervProd(0, np.inf)
         set_ = IntervProd([1], [2])
         set_ = IntervProd((1,), (2,))
 
@@ -59,6 +61,9 @@ class IntervProdTest(RLTestCase):
     def test_begin(self):
         set_ = IntervProd(1, 2)
         self.assertAlmostEquals(set_.begin, 1)
+        
+        set_ = IntervProd(-np.inf, 0)
+        self.assertAlmostEquals(set_.begin, -np.inf)
 
         set_ = IntervProd([1], [2])
         self.assertAlmostEquals(set_.begin, 1)
@@ -69,6 +74,9 @@ class IntervProdTest(RLTestCase):
     def test_end(self):
         set_ = IntervProd(1, 2)
         self.assertAlmostEquals(set_.end, 2)
+
+        set_ = IntervProd(0, np.inf)
+        self.assertAlmostEquals(set_.end, np.inf)
 
         set_ = IntervProd([1], [2])
         self.assertAlmostEquals(set_.end, 2)
@@ -81,6 +89,9 @@ class IntervProdTest(RLTestCase):
         self.assertEquals(set_.dim, 1)
 
         set_ = IntervProd(1, 1)
+        self.assertEquals(set_.dim, 1)
+
+        set_ = IntervProd(0, np.inf)
         self.assertEquals(set_.dim, 1)
 
         set_ = IntervProd([1], [2])
@@ -99,6 +110,9 @@ class IntervProdTest(RLTestCase):
         set_ = IntervProd(1, 1)
         self.assertEquals(set_.truedim, 0)
 
+        set_ = IntervProd(0, np.inf)
+        self.assertEquals(set_.dim, 1)
+
         set_ = IntervProd([1], [2])
         self.assertEquals(set_.truedim, 1)
 
@@ -110,7 +124,10 @@ class IntervProdTest(RLTestCase):
 
     def test_volume(self):
         set_ = IntervProd(1, 2)
-        self.assertEquals(set_.dim, 2-1)
+        self.assertEquals(set_.volume, 2-1)
+
+        set_ = IntervProd(0, np.inf)
+        self.assertEquals(set_.volume, np.inf)
 
         set_ = IntervProd([1, 2, 3], [5, 6, 7])
         self.assertAlmostEquals(set_.volume, (5-1)*(6-2)*(7-3))
@@ -149,13 +166,30 @@ class IntervProdTest(RLTestCase):
         self.assertFalse(rectangle1 == rectangle3)
         self.assertTrue(rectangle1 != rectangle3)
 
-    def test_contains(self):
-        set_1 = IntervProd(1, 2)
-        set_2 = IntervProd(1, 2)
+        R1_1 = IntervProd(-np.inf, np.inf)
+        R1_2 = IntervProd(-np.inf, np.inf)
+        positive_reals = IntervProd(0, np.inf)
+        self.assertTrue(R1_1 == R1_1)
+        self.assertTrue(R1_1 == R1_2)
 
-        self.assertTrue(set_1.equals(set_2))
-        self.assertTrue(set_1 == set_2)
-        self.assertFalse(set_1 != set_2)
+        self.assertTrue(positive_reals == positive_reals)
+        self.assertTrue(positive_reals != R1_1)
+
+    def test_contains(self):
+        set_ = IntervProd(1, 2)
+        
+        self.assertTrue(set_.contains(1))
+        self.assertTrue(set_.contains(2))
+        self.assertTrue(set_.contains(1.5))
+        self.assertFalse(set_.contains(3))
+        self.assertTrue(1.5 in set_)
+        self.assertTrue(3 not in set_)
+
+        positive_reals = IntervProd(0, np.inf)
+        self.assertTrue(positive_reals.contains(1))
+        self.assertTrue(positive_reals.contains(np.inf))
+        self.assertFalse(positive_reals.contains(-1))
+
 
 class IntervalTest(RLTestCase):
     def test_init(self):

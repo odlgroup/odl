@@ -237,8 +237,8 @@ class IntervProd(Set):
         if not isinstance(other, IntervProd):
             return False
 
-        return (np.all(np.abs(self.begin - other.begin) <= tol) and
-                np.all(np.abs(self.end - other.end) <= tol))
+        return (np.allclose(self.begin, other.begin, atol=tol) and
+                np.allclose(self.end, other.end, atol=tol))
 
     def contains(self, point, tol=0.0):
         """
@@ -352,10 +352,14 @@ class IntervProd(Set):
 
         i_larger = np.where(point > self._end)
         i_smaller = np.where(point < self._begin)
-        proj = point.copy()
-        proj[i_larger] = self._end[i_larger]
-        proj[i_smaller] = self._begin[i_smaller]
-        return np.linalg.norm(point - proj, ord=ord)
+
+        #Access [0] since np.where returns tuple.
+        if len(i_larger[0]) == 0 and len(i_smaller[0]) == 0:
+            return 0.0
+        else:
+            proj = np.concatenate((point[i_larger],point[i_smaller]))
+            border = np.concatenate((self._end[i_larger],self._begin[i_smaller]))
+            return np.linalg.norm(proj - border, ord=ord)
 
     # Manipulation
     def collapse(self, index, value):
