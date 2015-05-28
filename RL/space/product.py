@@ -315,15 +315,15 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
     >>> r2x3 = MetricProductSpace(r2, r3, ord='inf')
-    >>> x_2 = r2.element([2.0, 3.5])
-    >>> y_2 = r2.element([2.0, 3.5])
-    >>> x_3 = r3.element([-0.3, 2.0, 3.5])
-    >>> y_3 = r3.element([-1.1, 7.2, 3.5])
+    >>> x_2 = r2.element([0, 0])
+    >>> y_2 = r2.element([3, 4])
+    >>> x_3 = r3.element([0, 0, 0])
+    >>> y_3 = r3.element([1, 2, 2])
     >>> x = r2x3.element(x_2, x_3)
     >>> y = r2x3.element(y_2, y_3)
     >>> r2x3.dist(x, y)
-    <Value>
-    >>> r2x3.dist(x, y) == max((r2.dist(x_2, x_2), r3.dist(x_3, y_3)))
+    5.0
+    >>> r2x3.dist(x, y) == max((r2.dist(x_2, y_2), r3.dist(x_3, y_3)))
     True
     >>> r2x3.dist(x, y) == x.dist(y) == y.dist(x)
     True
@@ -429,19 +429,21 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     --------
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-    >>> r2x3 = NormedProductSpace(r2, r3, prod_norm='inf')
-    >>> x_2 = r2.element([2.0, 3.5])
-    >>> x_3 = r3.element([-0.3, 2.0, 3.5])
+    >>> r2x3 = NormedProductSpace(r2, r3, ord='inf')
+    >>> x_2 = r2.element([3, 4])
+    >>> x_3 = r3.element([2, 2, 1])
     >>> x = r2x3.element(x_2, x_3)
     >>> r2x3.norm(x)
-    4.042276586281547
+    5.0
     >>> r2x3.norm(x) == max((r2.norm(x_2), r3.norm(x_3)))
     True
     >>> r2x3.norm(x) == x.norm()
     True
-    >>> w2x3 = NormedProductSpace(r2, r3, ord=1, weights=[0.2, 0.8])
+    >>> w2x3 = NormedProductSpace(r2, r3, ord=1, weights=[0.2, 1])
     >>> w2x3.norm(x)
-    <value>
+    4.0
+    >>> w2x3.norm(x) == 0.2*r2.norm(x_2) + 1.0*r3.norm(x_3)
+    True
     """
 
     def __init__(self, *spaces, **kwargs):
@@ -561,7 +563,8 @@ def productspace(*spaces, **kwargs):
                   If used, forces the space to not be a hilbert space.
                   Default: 2.0
               'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances
+                  Function that should be applied to the array of distances/norms.
+                  If used, forces the space to not be a hilbert space.
                   Defaults if applicable:
                       dist = np.linalg.norm(x-y, ord=ord)
                       norm = np.linalg.norm(x, ord=ord)
@@ -590,7 +593,8 @@ def productspace(*spaces, **kwargs):
     HilbertProductSpace
     """
 
-    if 'ord' not in kwargs and all(isinstance(spc, HilbertSpace) for spc in spaces):
+    if ('ord' not in kwargs and 'prod_norm' not in kwargs 
+        and all(isinstance(spc, HilbertSpace) for spc in spaces)):
         return HilbertProductSpace(*spaces, **kwargs)
     elif all(isinstance(spc, NormedSpace) for spc in spaces):
         return NormedProductSpace(*spaces, **kwargs)
@@ -621,11 +625,11 @@ def powerspace(base, power, **kwargs):
                   If used, forces the space to not be a hilbert space.
                   Default: 2.0
               'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances
+                  Function that should be applied to the array of distances/norms
+                  If used, forces the space to not be a hilbert space.
                   Defaults if applicable:
                       dist = np.linalg.norm(x-y, ord=ord)
                       norm = np.linalg.norm(x, ord=ord)
-                      inner = np.vdot(x,y)
               'weights' : array-like, optional, only usable with 'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
