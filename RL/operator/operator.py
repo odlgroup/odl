@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=protected-access
 """
 General abstract operators defined on Set's aswell as sums
 and compositions of such.
