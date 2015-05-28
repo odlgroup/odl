@@ -26,10 +26,7 @@ The underlying datarepresentation used is Numpy Arrays.
 # Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
 from __future__ import absolute_import
-try:
-    from builtins import str, super
-except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, super
+from builtins import str, super
 from future import standard_library
 
 # External module imports

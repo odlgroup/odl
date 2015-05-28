@@ -17,12 +17,9 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import print_function, unicode_literals, division
-from __future__ import absolute_import
-try:
-    from builtins import object, super
-except ImportError:
-    from future.builtins import object, super
+from __future__ import (print_function, unicode_literals, division,
+                        absolute_import)
+from builtins import object, super
 from future.utils import with_metaclass
 from future import standard_library
 

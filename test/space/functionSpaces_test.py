@@ -20,10 +20,7 @@
 from __future__ import division, print_function, unicode_literals
 from __future__ import absolute_import
 from future import standard_library
-try:
-    from builtins import range
-except ImportError:
-    from future.builtins import range
+from builtins import range
 
 # External module imports
 import unittest
