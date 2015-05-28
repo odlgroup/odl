@@ -23,10 +23,8 @@ as metric, norm, inner product.
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-try:
-    from builtins import object, str, super
-except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import object, str, super
+from builtins import object, str, super
+from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports

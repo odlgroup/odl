@@ -20,13 +20,9 @@ General and optimized equation system solvers in linear spaces.
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import division, print_function, unicode_literals
-from __future__ import absolute_import
-
-try:
-    from builtins import object, next, range
-except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import object, next, range
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
+from builtins import object, next, range
 from future import standard_library
 
 # RL imports
