@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=protected-access
+
 """
 Default implementations of discretizations of sets using an underlying
 RN representation
@@ -67,8 +69,8 @@ def uniform_discretization(parent, rnimpl):
             self._rn = rn
             self.scale = (self.parent.domain.length / (self.dim - 1))
 
-        def _inner(self, v1, v2):
-            return self._rn._inner(v1, v2) * self.scale
+        def _inner(self, x, y):
+            return self._rn._inner(x, y) * self.scale
 
         def _norm(self, vector):
             return self._rn._norm(vector) * sqrt(self.scale)
@@ -152,8 +154,8 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
                   (self.rows - 1))
             self.scale = dx * dy
 
-        def _inner(self, v1, v2):
-            return self._rn._inner(v1, v2) * self.scale
+        def _inner(self, x, y):
+            return self._rn._inner(x, y) * self.scale
 
         def _norm(self, vector):
             return self._rn._norm(vector) * sqrt(self.scale)

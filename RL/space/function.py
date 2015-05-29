@@ -1,5 +1,3 @@
-""" Module for spaces whose elements are Functionals
-"""
 # Copyright 2014, 2015 Holger Kohr, Jonas Adler
 #
 # This file is part of RL.
@@ -17,6 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=protected-access
+
+"""
+Support for functionspaces, such as L2.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -27,7 +30,6 @@ from builtins import super
 # RL imports
 import RL.operator.operator as fun
 from RL.space.space import HilbertSpace, Algebra
-
 from RL.space.set import RealNumbers, ComplexNumbers, Set
 from RL.utility.utility import errfmt
 
@@ -94,7 +96,7 @@ class FunctionSpace(Algebra):
 
     def _lincomb(self, z, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
-        
+
         The created object is rather slow,
         and should only be used for testing purposes.
         """

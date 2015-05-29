@@ -306,6 +306,8 @@ def instance_method(function):
     such that it may be used as a instance method
     """
     def method(_, *args, **kwargs):
+        """  Calls function with *args, **kwargs
+        """
         return function(*args, **kwargs)
 
     return method

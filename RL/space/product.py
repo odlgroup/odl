@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=protected-access
+
 """
 General carthesian products of LinearSpaces with various metrics, norms,
 inner products.

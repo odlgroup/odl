@@ -457,6 +457,32 @@ class OperatorSum(Operator):
         return self._op1._call(rhs) + self._op2._call(rhs)
 
     def _apply(self, rhs, out):
+        """
+        Calculates op1(rhs) + op2(rhs)
+
+        Parameters
+        ----------
+        rhs : self.domain element
+              The point to evaluate the sum in
+        out : self.range element
+              Object to store the result in
+
+        Returns
+        -------
+        None
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> r3 = RN(3)
+        >>> op = IdentityOperator(r3)
+        >>> rhs = r3.element([1, 2, 3])
+        >>> out = r3.element()
+        >>> OperatorSum(op, op).apply(rhs, out)
+        >>> out
+        RN(3).element([ 2.,  4.,  6.])
+        """
         tmp = self._tmp if self._tmp is not None else self.range.element()
         self._op1._apply(rhs, out)
         self._op2._apply(rhs, tmp)
@@ -464,10 +490,52 @@ class OperatorSum(Operator):
 
     @property
     def domain(self):
+        """
+        Get the domain of this operator
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        domain : Set
+                 The domain of the operator
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> r3 = RN(3)
+        >>> op = IdentityOperator(r3)
+        >>> OperatorSum(op, op).domain
+        RN(3)
+        """
         return self._op1.domain
 
     @property
     def range(self):
+        """
+        Get the range of this operator
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        domain : Set
+                 The domain of the operator
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> r3 = RN(3)
+        >>> op = IdentityOperator(r3)
+        >>> OperatorSum(op, op).range
+        RN(3)
+        """
         return self._op1.range
 
     def derivative(self, point):

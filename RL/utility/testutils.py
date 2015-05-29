@@ -95,6 +95,7 @@ class Timer(object):
     """
     def __init__(self, name=None):
         self.name = name
+        self.tstart = None
 
     def __enter__(self):
         self.tstart = time()
