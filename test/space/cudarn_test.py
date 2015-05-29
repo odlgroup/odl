@@ -212,8 +212,8 @@ class TestMethods(RLTestCase):
 
     def vectors(self, rn):
         # Generate numpy arrays
-        x_arr, y_arr, z_arr = (np.random.rand(rn.n), np.random.rand(rn.n),
-                               np.random.rand(rn.n))
+        x_arr, y_arr, z_arr = (np.random.rand(rn.dim), np.random.rand(rn.dim),
+                               np.random.rand(rn.dim))
 
         # Make rn vectors
         x, y, z = rn.element(x_arr), rn.element(y_arr), rn.element(z_arr)

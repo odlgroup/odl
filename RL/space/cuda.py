@@ -56,7 +56,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     def __init__(self, n):
         if not isinstance(n, Integral) or n < 1:
             raise TypeError('n ({}) has to be a positive integer'.format(np))
-        self._n = n
+        self._dim = n
         self._field = sets.RealNumbers()
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
@@ -128,10 +128,10 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         elif data is None:
             return self.element(self.impl.empty())
         elif isinstance(data, np.ndarray):  # Create from numpy array
-            if data.shape != (self._n,):
+            if data.shape != (self._dim,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(data, data.shape, (self.n,))))
+                '''.format(data, data.shape, (self.dim,))))
 
             data = data.astype(np.float64, copy=False)
 
@@ -316,7 +316,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         return self._field
 
     @property
-    def n(self):
+    def dim(self):
         """ The dimension of this space
 
         Parameters
@@ -332,10 +332,10 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         --------
 
         >>> rn = CudaRN(3)
-        >>> rn.n
+        >>> rn.dim
         3
         """
-        return self._n
+        return self._dim
 
     def equals(self, other):
         """ Verifies that other is a CudaRN instance of dimension `n`
@@ -376,13 +376,13 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> r3 != r4
         True
         """
-        return isinstance(other, CudaRN) and self._n == other._n
+        return isinstance(other, CudaRN) and self.dim == other.dim
 
     def __str__(self):
-        return "CudaRN(" + str(self._n) + ")"
+        return "CudaRN(" + str(self._dim) + ")"
 
     def __repr__(self):
-        return "CudaRN(" + str(self._n) + ")"
+        return "CudaRN(" + str(self._dim) + ")"
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         """ A RN-vector represented in CUDA

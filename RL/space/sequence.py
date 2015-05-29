@@ -63,11 +63,11 @@ class TruncationDiscretization(EuclideanSpace):
         return super()._inner(v1, v2)
 
     def zero(self):
-        return self.element(np.zeros(self.n), copy=False)
+        return self.element(np.zeros(self.dim), copy=False)
 
     def element(self):
         # FIXME: Remove this function
-        return self.element(np.empty(self.n), copy=False)
+        return self.element(np.empty(self.dim), copy=False)
 
     def equals(self, other):
         return (isinstance(other, TruncationDiscretization) and
@@ -82,7 +82,7 @@ class TruncationDiscretization(EuclideanSpace):
         return vector.data.sum()
 
     def points(self):
-        return np.arange(self.n)
+        return np.arange(self.dim)
 
     class Vector(EuclideanSpace.Vector):
         def __init__(self, space, *args, **kwargs):

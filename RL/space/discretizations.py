@@ -65,7 +65,7 @@ def uniform_discretization(parent, rnimpl):
 
             self.parent = parent
             self._rn = rn
-            self.scale = (self.parent.domain.length / (self.n - 1))
+            self.scale = (self.parent.domain.length / (self.dim - 1))
 
         def _inner(self, v1, v2):
             return self._rn._inner(v1, v2) * self.scale
@@ -92,7 +92,7 @@ def uniform_discretization(parent, rnimpl):
 
         def points(self):
             return np.linspace(self.parent.domain.begin,
-                               self.parent.domain.end, self.n)
+                               self.parent.domain.end, self.dim)
 
         def __getattr__(self, name):
             return getattr(self._rn, name)
@@ -136,10 +136,10 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
             if not isinstance(rn, space.Algebra):
                 raise NotImplementedError('RN has to be an algebra')
 
-            if not rn.n == cols*rows:
+            if not rn.dim == cols*rows:
                 raise NotImplementedError(errfmt('''
                 Dimensions do not match, expected {}x{} = {}, got {}
-                '''.format(cols, rows, cols*rows, rn.n)))
+                '''.format(cols, rows, cols*rows, rn.dim)))
 
             self.parent = parent
             self.cols = cols
@@ -173,12 +173,12 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
             elif isinstance(data, np.ndarray):
                 if data.shape == (self.cols, self.rows):
                     return self.element(data.flatten(self.order))
-                elif data.shape == (self.n,):
+                elif data.shape == (self.dim,):
                     return super().element(data)
                 else:
                     raise ValueError(errfmt('''
                     Input numpy array is of shape {}, expected shape
-                    {} or {}'''.format(data.shape, (self.n,),
+                    {} or {}'''.format(data.shape, (self.dim,),
                                        (self.cols, self.rows))))
             else:
                 return super().element(data, **kwargs)

@@ -37,9 +37,9 @@ standard_library.install_aliases()
 class RNTest(RLTestCase):
     def vectors(self, rn):
         # Generate numpy vectors
-        y = np.random.rand(rn.n)
-        x = np.random.rand(rn.n)
-        z = np.random.rand(rn.n)
+        y = np.random.rand(rn.dim)
+        x = np.random.rand(rn.dim)
+        z = np.random.rand(rn.dim)
 
         # Make rn vectors
         yVec = rn.element(y)

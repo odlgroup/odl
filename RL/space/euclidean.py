@@ -55,7 +55,7 @@ class RN(LinearSpace):
     def __init__(self, n):
         if not isinstance(n, Integral) or n < 1:
             raise TypeError('n ({}) has to be a positive integer'.format(np))
-        self._n = n
+        self._dim = n
         self._field = RealNumbers()
         self._axpy, self._scal, self._copy = get_blas_funcs(['axpy',
                                                              'scal',
@@ -128,15 +128,15 @@ class RN(LinearSpace):
         dtype = kwargs.pop('dtype', np.float64)
 
         if data is None:
-            data = np.empty(self._n, dtype=dtype, **kwargs)
+            data = np.empty(self._dim, dtype=dtype, **kwargs)
 
         if not isinstance(data, np.ndarray):
             data = np.array(data, dtype=dtype, **kwargs)
         else:
-            if data.shape != (self._n,):
+            if data.shape != (self._dim,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(data, data.shape, (self.n,))))
+                '''.format(data, data.shape, (self.dim,))))
 
             if data.dtype != np.float64:
                 raise ValueError(errfmt('''
@@ -188,13 +188,13 @@ class RN(LinearSpace):
             if a != 1:
                 self._scal(a, z.data)
             if b != 0:
-                self._axpy(y.data, z.data, self._n, b)
+                self._axpy(y.data, z.data, self._dim, b)
         elif z is y:
             # If z is aligned with y we have                 z = a*x + b*z
             if b != 1:
                 self._scal(b, z.data)
             if a != 0:
-                self._axpy(x.data, z.data, self._n, a)
+                self._axpy(x.data, z.data, self._dim, a)
         else:
             # We have exhausted all alignment options, so x != y != z
             # We now optimize for various values of a and b
@@ -213,12 +213,12 @@ class RN(LinearSpace):
 
                 elif a == 1:                                # z = x + b*y
                     self._copy(x.data, z.data)
-                    self._axpy(y.data, z.data, self._n, b)
+                    self._axpy(y.data, z.data, self._dim, b)
                 else:                                       # z = a*x + b*y
                     self._copy(y.data, z.data)
                     if b != 1:
                         self._scal(b, z.data)
-                    self._axpy(x.data, z.data, self._n, a)
+                    self._axpy(x.data, z.data, self._dim, a)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -244,7 +244,7 @@ class RN(LinearSpace):
         >>> x
         RN(3).element([ 0.,  0.,  0.])
         """
-        return self.element(np.zeros(self._n, dtype=np.float64))
+        return self.element(np.zeros(self._dim, dtype=np.float64))
 
     @property
     def field(self):
@@ -268,7 +268,7 @@ class RN(LinearSpace):
         return self._field
 
     @property
-    def n(self):
+    def dim(self):
         """ The number of dimensions of this space
 
         Parameters
@@ -283,10 +283,10 @@ class RN(LinearSpace):
         --------
 
         >>> rn = RN(3)
-        >>> rn.n
+        >>> rn.dim
         3
         """
-        return self._n
+        return self._dim
 
     def equals(self, other):
         """ Verifies that other is a RN instance of dimension `n`
@@ -327,13 +327,13 @@ class RN(LinearSpace):
         >>> r3 != r4
         True
         """
-        return isinstance(other, RN) and self._n == other._n
+        return isinstance(other, RN) and self.dim == other.dim
 
     def __str__(self):
-        return "RN(" + str(self.n) + ")"
+        return "RN(" + str(self.dim) + ")"
 
     def __repr__(self):
-        return 'RN(' + str(self.n) + ')'
+        return 'RN(' + str(self.dim) + ')'
 
     class Vector(LinearSpace.Vector):
         """ A RN-vector represented using numpy
@@ -441,7 +441,7 @@ class RN(LinearSpace):
             >>> len(RN(3).element())
             3
             """
-            return self.space.n
+            return self.space.dim
 
         def __getitem__(self, index):
             """ Access values of this vector
@@ -707,7 +707,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         y.data[:] = x.data * y.data
 
     def __repr__(self):
-        return 'EuclideanSpace(' + str(self.n) + ')'
+        return 'EuclideanSpace(' + str(self.dim) + ')'
 
     class Vector(RN.Vector, HilbertSpace.Vector, Algebra.Vector):
         """ A EuclideanSpace-vector represented using numpy
