@@ -437,12 +437,13 @@ class IntervalProd(Set):
         i_larger = np.where(point > self._end)
         i_smaller = np.where(point < self._begin)
 
-        #Access [0] since np.where returns tuple.
+        # Access [0] since np.where returns tuple.
         if len(i_larger[0]) == 0 and len(i_smaller[0]) == 0:
             return 0.0
         else:
-            proj = np.concatenate((point[i_larger],point[i_smaller]))
-            border = np.concatenate((self._end[i_larger],self._begin[i_smaller]))
+            proj = np.concatenate((point[i_larger], point[i_smaller]))
+            border = np.concatenate((self._end[i_larger],
+                                     self._begin[i_smaller]))
             return np.linalg.norm(proj - border, ord=ord)
 
     # Manipulation
@@ -645,7 +646,7 @@ class Rectangle(IntervalProd):
                                                  e=list(self._end)))
 
 
-class CarthesianProduct(Set):
+class CartesianProduct(Set):
     def __init__(self, *sets):
         if not all(isinstance(set_, Set) for set_ in sets):
             wrong_set = [set_ for set_ in sets
@@ -661,7 +662,7 @@ class CarthesianProduct(Set):
         return self._sets
 
     def equals(self, other):
-        return (isinstance(other, CarthesianProduct) and
+        return (isinstance(other, CartesianProduct) and
                 len(self) == len(other) and
                 all(x.equals(y) for x, y in zip(self.sets, other.sets)))
 
@@ -678,7 +679,7 @@ class CarthesianProduct(Set):
         return ' x '.join(str(set_) for set_ in self.sets)
 
     def __repr__(self):
-        return ('CarthesianProduct(' +
+        return ('CartesianProduct(' +
                 ', '.join(repr(set_) for set_ in self.sets) + ')')
 
 
