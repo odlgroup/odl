@@ -144,10 +144,50 @@ class ScalingOperator(op.SelfAdjointOperator):
 
     @property
     def domain(self):
+        """
+        Get the domain of this operator
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        domain : LinearSpace
+                 The domain of the operator
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> r3 = RN(3)
+        >>> op = ScalingOperator(r3, 2.0)
+        >>> op.domain
+        RN(3)
+        """
         return self._space
 
     @property
     def range(self):
+        """
+        Get the range of this operator
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        domain : LinearSpace
+                 The domain of the operator
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> r3 = RN(3)
+        >>> op = ScalingOperator(r3, 2.0)
+        >>> op.range
+        RN(3)
+        """
         return self._space
 
     def __repr__(self):
@@ -262,15 +302,15 @@ class MultiplyOperator(op.LinearOperator):
         return "{}*x + {}*y".format(self.a, self.b)
 
 def instance_method(function):
-    """ Adds a self argument to a function 
+    """ Adds a self argument to a function
     such that it may be used as a instance method
     """
-    def method(self, *args, **kwargs):
+    def method(_, *args, **kwargs):
         return function(*args, **kwargs)
 
     return method
 
-def operator(call=None, apply=None, inv=None, deriv=None, 
+def operator(call=None, apply=None, inv=None, deriv=None,
              domain=UniversalSet(), range=UniversalSet()):
     """ Creates a simple operator.
 
@@ -324,7 +364,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
 
     return SimpleOperator()
 
-def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None, 
+def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
                     domain=UniversalSet(), range=UniversalSet()):
     """ Creates a simple operator.
 
@@ -376,6 +416,7 @@ def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
                                       '_apply': instance_method(apply),
                                       'inverse': inv,
                                       'derivative': deriv,
+                                      'adjoint': adj,
                                       'domain': domain,
                                       'range': range})
 

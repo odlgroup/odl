@@ -44,10 +44,10 @@ def uniform_discretization(parent, rnimpl):
     """ Creates an UniformDiscretization of space parent using rn as the
     underlying representation.
     """
-    RNType = type(rnimpl)
-    RNVectortype = RNType.Vector
+    rn_type = type(rnimpl)
+    rn_vector_type = rn_type.Vector
 
-    class UniformDiscretization(RNType):
+    class UniformDiscretization(rn_type):
         """ Uniform discretization of an interval
             Represents vectors by RN elements
             Uses trapezoid method for integration
@@ -104,7 +104,7 @@ def uniform_discretization(parent, rnimpl):
             return ("UniformDiscretization(" + repr(self.parent) + "," +
                     repr(self._rn) + ")")
 
-        class Vector(RNVectortype):
+        class Vector(rn_vector_type):
             pass
 
     return UniformDiscretization(parent, rnimpl)
@@ -117,10 +117,10 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
     order indicates the order data is stored in, 'C'-order is the default
     numpy order, also called row major.
     """
-    RNType = type(rnimpl)
-    RNVectortype = RNType.Vector
+    rn_type = type(rnimpl)
+    rn_vector_type = rn_type.Vector
 
-    class PixelDiscretization(RNType):
+    class PixelDiscretization(rn_type):
         """ Uniform discretization of an square
             Represents vectors by RN elements
             Uses sum method for integration
@@ -209,7 +209,7 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
                     str(self.cols) + ', ' +
                     str(self.rows) + ")")
 
-        class Vector(RNVectortype):
+        class Vector(rn_vector_type):
             pass
 
     return PixelDiscretization(parent, rnimpl, cols, rows, order)

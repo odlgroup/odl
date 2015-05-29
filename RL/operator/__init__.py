@@ -64,5 +64,4 @@ gauss_newton            The Gauss Newton method
 
 from __future__ import absolute_import
 
-__all__ = ['default_operators', 'function', 'functional', 'operator',
-           'solvers']
+__all__ = ['default_operators', 'operator', 'solvers']

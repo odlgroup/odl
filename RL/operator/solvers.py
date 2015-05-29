@@ -65,7 +65,7 @@ class PrintIterationPartial(object):
     def __init__(self):
         self.iter = 0
 
-    def send(self, result):
+    def send(self, _):
         """ Print the current iteration
         """
         print("iter = {}".format(self.iter))

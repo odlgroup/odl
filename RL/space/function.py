@@ -86,7 +86,7 @@ class FunctionSpace(Algebra):
         """
 
         if function is None:
-            def function(*args):
+            def function(*_):
                 """ A function that always returns zero
                 """
                 return 0
@@ -127,8 +127,7 @@ class FunctionSpace(Algebra):
                 self.field == other.field)
 
     def zero(self):
-        """ Returns the zero function 
-        
+        """ Returns the zero function
         The function which maps any value to zero
         """
         return self.element(lambda *args: 0)

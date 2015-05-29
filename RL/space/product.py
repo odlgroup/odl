@@ -63,7 +63,7 @@ class LinearProductSpace(LinearSpace):
     'LinearProductSpace'
     """
 
-    def __init__(self, *spaces, **kwargs):
+    def __init__(self, *spaces, **_):
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, LinearSpace)]

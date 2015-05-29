@@ -407,9 +407,9 @@ class RN(LinearSpace):
             >>> arr = np.frombuffer(ArrayType.from_address(vec.data_ptr))
             >>> arr
             array([ 1.,  2.,  3.])
-            
+
             Inplace modifications
-            
+
             >>> arr[0] = 5
             >>> vec
             RN(3).element([ 5.,  2.,  3.])

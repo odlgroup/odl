@@ -48,21 +48,21 @@ class RLTestCase(unittest.TestCase):
         assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
         """
         # Sentinel object used to check that both iterators are the same length
-        differentLengthSentinel = object()
+        different_length_sentinel = object()
 
         if iter1 is None and iter2 is None:
             return
 
-        for [i1, i2] in zip_longest(iter1, iter2,
-                                    fillvalue=differentLengthSentinel):
+        for [ip1, ip2] in zip_longest(iter1, iter2,
+                                      fillvalue=different_length_sentinel):
             # Verify that none of the lists has ended (then they are not the
             # same size)
-            self.assertIsNot(i1, differentLengthSentinel)
-            self.assertIsNot(i2, differentLengthSentinel)
+            self.assertIsNot(ip1, different_length_sentinel)
+            self.assertIsNot(ip2, different_length_sentinel)
             try:
-                self.assertAllAlmostEquals(iter(i1), iter(i2), *args, **kwargs)
+                self.assertAllAlmostEquals(iter(ip1), iter(ip2), *args, **kwargs)
             except TypeError:
-                self.assertAlmostEquals(float(i1), float(i2), *args, **kwargs)
+                self.assertAlmostEqual(ip1, ip2, *args, **kwargs)
 
 
 def skip_all_tests(reason=None):

@@ -563,13 +563,13 @@ def abs(inp, outp):
 def sign(inp, outp):
     RLcpp.PyCuda.sign(inp.data, outp.data)
 
-def addScalar(inp, scal, outp):
+def add_scalar(inp, scal, outp):
     RLcpp.PyCuda.addScalar(inp.data, scal, outp.data)
 
-def maxVectorScalar(inp, scal, outp):
+def max_vector_scalar(inp, scal, outp):
     RLcpp.PyCuda.maxVectorScalar(inp.data, scal, outp.data)
 
-def maxVectorVector(inp1, inp2, outp):
+def max_vector_vector(inp1, inp2, outp):
     RLcpp.PyCuda.maxVectorVector(inp1.data, inp2.data, outp.data)
 
 def sum(inp):
