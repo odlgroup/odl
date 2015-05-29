@@ -12,7 +12,7 @@ profile=no
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=.git
+ignore=.git, test, examples
 
 # Pickle collected data for later comparisons.
 persistent=yes
@@ -43,12 +43,18 @@ load-plugins=
 disable=redefined-builtin,
   super-on-old-class,
   missing-super-argument,
-  no-value-for-parameter
+  no-value-for-parameter,
+  no-member,
+  too-many-function-args,
+  
 
 # redefined-builtin: 'object', 'range', 'str', 'super' are redefined, that's okay
 # super-on-old-class: classes are erroneously interpreted as old-style
 # missing-super-argument: used 'newsuper' has one argument less than old 'super'
 # no-value-for-parameter: constructor calls are interpreted wrong, probably an old-style class problem
+# no-member: pylint does not understand complex class structures properly
+# too-many-function-args: see no-member
+
 
 [REPORTS]
 
@@ -123,7 +129,7 @@ required-attributes=
 bad-functions=map,filter,apply,input
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_
+good-names=i,j,k,ex,Run,_,a,b,x,y,z
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -133,7 +139,7 @@ bad-names=foo,bar,baz,toto,tutu,tata
 name-group=
 
 # Include a hint for the correct naming format with invalid-name
-include-naming-hint=no
+include-naming-hint=yes
 
 # Regular expression matching correct function names
 function-rgx=[a-z_][a-z0-9_]{2,30}$
@@ -310,7 +316,7 @@ max-parents=7
 max-attributes=7
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=2
+min-public-methods=1
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20

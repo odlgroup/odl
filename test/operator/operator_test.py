@@ -17,13 +17,9 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import division, print_function, unicode_literals
-from __future__ import absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
-try:
-    from builtins import str
-except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str
 
 # External module imports
 import unittest

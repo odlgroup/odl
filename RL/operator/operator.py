@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=protected-access
 """
 General abstract operators defined on Set's aswell as sums
 and compositions of such.
@@ -23,12 +24,9 @@ Also contains LinearOperator specializations for linear operators
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division
-from __future__ import absolute_import
-try:
-    from builtins import str, object, super
-except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import str, object, super
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
+from builtins import str, object, super
 from future import standard_library
 
 from abc import ABCMeta
@@ -234,7 +232,7 @@ class Operator(object):
     def I(self):
         """ Get the inverse of this operator
         """
-        return self.inverse()
+        return self.inverse
 
     # Implicitly defined operators
     def apply(self, rhs, out):
@@ -518,11 +516,11 @@ class OperatorComposition(Operator):
     @property
     def domain(self):
         return self._right.domain
-    
+
     @property
     def range(self):
         return self._left.range
-    
+
     @property
     def inverse(self):
         return OperatorComposition(self._right.inverse, 
@@ -613,7 +611,7 @@ class OperatorLeftScalarMultiplication(Operator):
     @property
     def range(self):
         return self._op.range
-    
+
     @property
     def inverse(self):
         return OperatorRightScalarMultiplication(self._op.inverse,
@@ -685,7 +683,7 @@ class OperatorRightScalarMultiplication(Operator):
 
     @property
     def inverse(self):
-        return OperatorLeftScalarMultiplication(self._op.inverse, 
+        return OperatorLeftScalarMultiplication(self._op.inverse,
                                                 1.0/self._scalar)
 
     def derivative(self, point):

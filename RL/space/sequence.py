@@ -22,10 +22,7 @@
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from future import standard_library
-try:
-    from builtins import super
-except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import super
+from builtins import super
 
 # External module imports
 import numpy as np

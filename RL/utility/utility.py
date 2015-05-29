@@ -20,12 +20,9 @@ Utilities for use inside the RL project, not for external use.
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import division, unicode_literals, print_function
-from __future__ import absolute_import
-try:
-    from builtins import next, range
-except ImportError:  # Versions < 0.14 of python-future
-    from future.builtins import next, range
+from __future__ import (division, unicode_literals, print_function,
+                        absolute_import)
+from builtins import next, range
 from future import standard_library
 
 # External module imports

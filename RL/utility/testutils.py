@@ -20,12 +20,10 @@ Utilities for use inside the RL project, not for external use.
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import print_function, unicode_literals, division
-from __future__ import absolute_import
-try:
-    from builtins import object, super
-except ImportError:
-    from future.builtins import object, super
+
+from __future__ import (print_function, unicode_literals, division,
+                        absolute_import)
+from builtins import object, super
 from future import standard_library
 
 # External module imports
@@ -44,7 +42,7 @@ class RLTestCase(unittest.TestCase):
 
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
         """ Assert thaat all elements in iter1 and iter2 are almost equal.
-        
+
         The iterators may be nestled lists or warying types
 
         assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
