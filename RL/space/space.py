@@ -25,6 +25,7 @@ from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import object, str, super
 from future import standard_library
+from future.utils import with_metaclass
 
 # External module imports
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -291,11 +292,9 @@ class LinearSpace(Set):
             # Call method
             return self._lincomb(z, a, x, b, y)
 
-    class Vector(object):
+    class Vector(with_metaclass(ABCMeta, object)):
         """ Abstract vector, an element in the linear space
         """
-
-        __metaclass__ = ABCMeta
 
         def __init__(self, space):
             """ Default initializer of vectors, must be called by all

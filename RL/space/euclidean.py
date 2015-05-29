@@ -32,14 +32,112 @@ from future import standard_library
 # External module imports
 import numpy as np
 from scipy.lib.blas import get_blas_funcs
-from numbers import Integral
+from numbers import Integral, Real
 
 # RL imports
 from RL.space.space import LinearSpace, Algebra, HilbertSpace, NormedSpace
 from RL.space.set import RealNumbers
 from RL.utility.utility import errfmt
+try:
+    from RL.space.cuda import CudaRN
+    CUDA_AVAILABLE = True
+except ImportError:
+    CUDA_AVAILABLE = False
 
 standard_library.install_aliases()
+
+
+class Rn(LinearSpace):
+
+    def __new__(cls, *args, **kwargs):
+        impl = kwargs.get('impl', 'numpy').lower()
+        dist = kwargs.get('dist', None)
+        norm = kwargs.get('norm', None)
+        norm_p = kwargs.get('norm_p', None)
+        inner = kwargs.get('inner', None)
+
+        if impl == 'numpy':
+            if dist is False:
+                cls = PlainRn
+            elif dist is not None:
+                if norm is not None:
+                    raise ValueError(errfmt('''
+                    'dist' cannot be combined with 'norm' '''))
+                if norm_p is not None:
+                    raise ValueError(errfmt('''
+                    'dist' cannot be combined with 'norm_p' '''))
+                if inner is not None:
+                    raise ValueError(errfmt('''
+                    'dist' cannot be combined with 'inner' '''))
+                cls = MetricRn
+
+            # 'dist' not specified, continuing with 'norm' and 'norm_p'
+            if norm is not None or norm_p is not None:
+                if inner is not None:
+                    raise ValueError(errfmt('''
+                    'norm' and 'norm_p' cannot be combined with
+                    'inner' '''))
+
+                cls = NormedRn
+            else:
+                # neither 'dist' nor 'norm' nor 'norm_p' specified,
+                # assuming inner product space
+                cls = Rn
+
+        if impl == 'cuda':
+            if not CUDA_AVAILABLE:
+                raise ValueError(errfmt('''
+                CUDA implementation not available'''))
+
+            # TODO: move to CudaRn.__init__
+            if norm_p is not None:
+                raise NotImplementedError(errfmt('''
+                p-norms for p != 2.0 in CUDA spaces not implemented'''))
+
+            if norm is not None:
+                raise ValueError(errfmt('''
+                Custom norm implementation not possible for CUDA spaces'''))
+            if inner is not None:
+                raise ValueError(errfmt('''
+                Custom inner product implementation not possible for CUDA
+                spaces'''))
+
+            # TODO: move to CudaRn.__init__
+            if weights is not None:
+                raise NotImplementedError(errfmt('''
+                Weighted CUDA spaces not implemented'''))
+
+            cls = CudaRN
+
+        instance = super().__new__(cls, *args, **kwargs)
+        if cls != Rn:
+            instance.__init__(*args, **kwargs)
+
+        return instance
+
+    def __init__(self, dim, **kwargs):
+        norm = kwargs.pop('norm', None)
+        norm_p = kwargs.pop('norm_p', None)
+        inner = kwargs.pop('inner', None)
+        weights = kwargs.pop('weights', None)
+
+        if norm is not None and norm_p is not None:
+            raise ValueError(errfmt('''
+            'norm' and 'norm_p' cannot be specified at the same
+            time'''))
+        if norm is not None and not callable(norm):
+            raise TypeError(''''norm' must be callable''')
+
+        if norm is not None:
+            if not callable(norm):
+                raise TypeError(''''norm' must be callable''')
+
+
+
+        if not isinstance(norm_p, Real):
+            raise TypeError(errfmt('''
+            'norm_p' must be a real number, got {}'''.format(norm_p)))
+
 
 
 class RN(LinearSpace):
