@@ -36,6 +36,7 @@ from numbers import Number
 
 # RL imports
 from RL.utility.utility import errfmt
+from RL.space.space import LinearSpace
 
 standard_library.install_aliases()
 
@@ -259,14 +260,8 @@ class Operator(object):
 
         Example
         -------
+        #TODO
 
-        >>> rn = RN(3)
-        >>> Op = IdentityOperator(rn)
-        >>> x = rn.element([1, 2, 3])
-        >>> y = rn.element()
-        >>> Op.apply(x, y)
-        >>> y
-        [1.0, 2.0, 3.0]
         """
 
         if not self.domain.contains(rhs):
@@ -308,11 +303,12 @@ class Operator(object):
         Example
         -------
 
-        >>> rn = RN(3)
-        >>> Op = IdentityOperator(rn)
-        >>> x = rn.element([1, 2, 3])
-        >>> Op(x)
-        [1.0, 2.0, 3.0]
+        >>> from default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> A(3)
+        9
+        >>> A.__call__(5)
+        15
         """
 
         if not self.domain.contains(rhs):
@@ -354,14 +350,11 @@ class Operator(object):
         Example
         -------
 
-        >>> rn = RN(3)
-        >>> Op = IdentityOperator(rn)
-        >>> x = rn.element([1, 2, 3])
-        >>> Op(x)
-        [1.0, 2.0, 3.0]
-        >>> Scaled = Op * 3
-        >>> Scaled(x)
-        [3.0, 6.0, 9.0]
+        >>> from default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> Scaled = A*3
+        >>> Scaled(5)
+        45
         """
 
         return OperatorRightScalarMultiplication(self, other)
@@ -385,14 +378,11 @@ class Operator(object):
         Example
         -------
 
-        >>> rn = RN(3)
-        >>> Op = IdentityOperator(rn)
-        >>> x = rn.element([1, 2, 3])
-        >>> Op(x)
-        [1.0, 2.0, 3.0]
-        >>> Scaled = 3 * Op
-        >>> Scaled(x)
-        [3.0, 6.0, 9.0]
+        >>> from default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> Scaled = 3*A
+        >>> Scaled(5)
+        45
         """
 
         return OperatorLeftScalarMultiplication(self, other)
@@ -446,11 +436,23 @@ class OperatorSum(Operator):
     def _call(self, rhs):
         """ Calculates op1(rhs) + op2(rhs)
 
-         Parameters
+        Parameters
         ----------
+        rhs : self.domain element
+              The point to evaluate the sum in
 
-        op1 : Operator
-              The first operator
+        Returns
+        -------
+        result : self.range element
+                 Result of the evaluation
+
+        Example
+        -------
+        >>> from default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> B = operator(lambda x: 5*x)
+        >>> OperatorSum(A, B)(3)
+        24
         """
         return self._op1._call(rhs) + self._op2._call(rhs)
 
@@ -597,7 +599,7 @@ class OperatorLeftScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar):
-        if not op.range.field.contains(scalar):
+        if isinstance(op.range, LinearSpace) and not op.range.field.contains(scalar):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of range ({}) of 'op'
             '''.format(scalar, op.range.field)))
@@ -659,7 +661,7 @@ class OperatorRightScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar, tmp=None):
-        if not op.domain.field.contains(scalar):
+        if isinstance(op, LinearSpace) and not op.domain.field.contains(scalar):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of domain ({}) of 'op'
             '''.format(scalar, op.domain.field)))
@@ -879,3 +881,7 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
     def adjoint(self):
         return LinearOperatorScalarMultiplication(self._op.adjoint,
                                                   self._scalar)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

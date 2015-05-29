@@ -94,6 +94,30 @@ class EmptySet(Set):
         return "EmptySet()"
 
 
+class UniversalSet(Set):
+    """ Every object is a member of the universal set
+
+    Intended to be used in Operators where the user does not
+    want to define a domain or range.
+    """
+
+    def equals(self, other):
+        """ Tests if other is an instance of UniversalSet
+        """
+        return isinstance(other, UniversalSet)
+
+    def contains(self, other):
+        """ Always returns true
+        """
+        return True
+
+    def __str__(self):
+        return "UniversalSet"
+
+    def __repr__(self):
+        return "UniversalSet()"
+
+
 class ComplexNumbers(Set):
     """ The set of complex numbers
     """

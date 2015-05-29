@@ -23,8 +23,7 @@ Scale vector by scalar, Identity operation
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import (division, print_function, unicode_literals,
-                        absolute_import)
+from __future__ import (division, print_function, absolute_import)
 
 from future import standard_library
 from builtins import str, super
@@ -32,6 +31,7 @@ from builtins import str, super
 # RL imports
 import RL.operator.operator as op
 from RL.space.space import LinearSpace
+from RL.space.set import UniversalSet
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -177,6 +177,126 @@ class IdentityOperator(ScalingOperator):
 
     def __str__(self):
         return "I"
+
+def instance_method(function):
+    """ Adds a self argument to a function 
+    such that it may be used as a instance method
+    """
+    def method(self, *args, **kwargs):
+        return function(*args, **kwargs)
+
+    return method
+
+def operator(call=None, apply=None, inv=None, deriv=None, 
+             domain=UniversalSet(), range=UniversalSet()):
+    """ Creates a simple operator.
+
+    Mostly intended for testing.
+
+    Parameters
+    ----------
+    call : Function taking one argument (rhs) returns result
+           The operators _call method
+    apply : Function taking two arguments (rhs, out) returns None
+            The operators _apply method
+    inv : Operator, optional
+          The inverse operator
+          Default: None
+    deriv : LinearOperator, optional
+            The derivative operator
+            Default: None
+    domain : Set, optional
+             The domain of the operator
+             Default: UniversalSet
+    range : Set, optional
+            The range of the operator
+            Default: UniversalSet
+
+    Returns
+    -------
+    operator : Operator
+               An operator with the required properties
+
+    Example
+    -------
+    >>> A = operator(lambda x: 3*x)
+    >>> A(5)
+    15
+    """
+
+
+    if call is None and apply is None:
+        raise ValueError("Need to supply at least one of call or apply")
+
+    metaclass = op.Operator.__metaclass__
+
+    SimpleOperator = metaclass('SimpleOperator',
+                               (op.Operator,),
+                               {'_call': instance_method(call),
+                                '_apply': instance_method(apply),
+                                'inverse': inv,
+                                'derivative': deriv,
+                                'domain': domain,
+                                'range': range})
+
+    return SimpleOperator()
+
+def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None, 
+                    domain=UniversalSet(), range=UniversalSet()):
+    """ Creates a simple operator.
+
+    Mostly intended for testing.
+
+    Parameters
+    ----------
+    call : Function taking one argument (rhs) returns result
+           The operators _call method
+    apply : Function taking two arguments (rhs, out) returns None
+            The operators _apply method
+    inv : Operator, optional
+          The inverse operator
+          Default: None
+    deriv : LinearOperator, optional
+            The derivative operator
+            Default: None
+    adj : LinearOperator, optional
+          The adjoint of the operator
+          Defualt: None
+    domain : Set, optional
+             The domain of the operator
+             Default: UniversalSet
+    range : Set, optional
+            The range of the operator
+            Default: UniversalSet
+
+    Returns
+    -------
+    operator : LinearOperator
+               An operator with the required properties
+
+    Example
+    -------
+    >>> A = linear_operator(lambda x: 3*x)
+    >>> A(5)
+    15
+    """
+
+
+    if call is None and apply is None:
+        raise ValueError("Need to supply at least one of call or apply")
+
+    metaclass = op.LinearOperator.__metaclass__
+
+    SimpleLinearOperator = metaclass('SimpleOperator',
+                                     (op.LinearOperator,),
+                                     {'_call': instance_method(call),
+                                      '_apply': instance_method(apply),
+                                      'inverse': inv,
+                                      'derivative': deriv,
+                                      'domain': domain,
+                                      'range': range})
+
+    return SimpleLinearOperator()
 
 if __name__ == '__main__':
     import doctest
