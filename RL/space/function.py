@@ -127,7 +127,9 @@ class FunctionSpace(Algebra):
                 self.field == other.field)
 
     def zero(self):
-        """ Returns the zero function (the function which maps any value to zero)
+        """ Returns the zero function 
+        
+        The function which maps any value to zero
         """
         return self.element(lambda *args: 0)
 

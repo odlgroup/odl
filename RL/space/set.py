@@ -641,6 +641,43 @@ class Rectangle(IntervalProd):
                                                  e=list(self._end)))
 
 
+class CarthesianProduct(Set):
+    def __init__(self, *sets):
+        if not all(isinstance(set_, Set) for set_ in sets):
+            wrong_set = [set_ for set_ in sets
+                         if not isinstance(set_, Set)]
+            raise TypeError('{} not Set instance(s)'.format(wrong_set))
+
+        self._sets = sets
+
+    @property
+    def sets(self):
+        """ Get a tuple of the underlying sets
+        """
+        return self._sets
+
+    def equals(self, other):
+        return (isinstance(other, CarthesianProduct) and
+                len(self) == len(other) and
+                all(x.equals(y) for x, y in zip(self.sets, other.sets)))
+
+    def contains(self, point):
+        return all(set_.contains(p) for set_, p in zip(self.sets, point))
+
+    def __len__(self):
+        return len(self._sets)
+
+    def __getitem__(self, index):
+        return self._sets[index]
+
+    def __str__(self):
+        return ' x '.join(str(set_) for set_ in self.sets)
+
+    def __repr__(self):
+        return ('CarthesianProduct(' +
+                ', '.join(repr(set_) for set_ in self.sets) + ')')
+
+
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

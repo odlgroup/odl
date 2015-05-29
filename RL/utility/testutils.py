@@ -66,7 +66,7 @@ class RLTestCase(unittest.TestCase):
 
 
 def skip_all_tests(reason=None):
-    """ Creates a unittest.TestCase replacement class where all tests are skipped
+    """ Creates a TestCase replacement class where all tests are skipped
     """
     if reason is None:
         reason = ''

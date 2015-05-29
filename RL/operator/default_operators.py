@@ -31,7 +31,7 @@ from builtins import str, super
 # RL imports
 import RL.operator.operator as op
 from RL.space.space import LinearSpace
-from RL.space.set import UniversalSet
+from RL.space.set import UniversalSet, CarthesianProduct
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -157,8 +157,6 @@ class ScalingOperator(op.SelfAdjointOperator):
     def __str__(self):
         return str(self._scal) + "*I"
 
-
-
 class IdentityOperator(ScalingOperator):
     """
     The identity operator on a space, copies a vector into another
@@ -177,6 +175,91 @@ class IdentityOperator(ScalingOperator):
 
     def __str__(self):
         return "I"
+
+class LinCombOperator(op.LinearOperator):
+    """
+    The lincomb operator calculates:
+
+    out = a*in[0] + b*in[1]
+
+    Parameters
+    ----------
+
+    space : LinearSpace
+            The space the vectors should lie in
+    a : float
+        Scalar to multiply in[0] by
+    b : float
+        Scalar to multiply in[1] by
+    """
+    def __init__(self, space, a, b):
+        self.domain = CarthesianProduct(space, space)
+        self.range = space
+        self.a = a
+        self.b = b
+
+    def _apply(self, input, out):
+        """
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> r3 = RN(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([1, 2, 3])
+        >>> z = r3.element()
+        >>> op = LinCombOperator(r3, 1.0, 1.0)
+        >>> op.apply([x, y], z)
+        >>> z
+        RN(3).element([ 2.,  4.,  6.])
+        """
+        out.lincomb(self.a, input[0], self.b, input[1])
+
+    def __repr__(self):
+        return 'LinCombOperator(' + repr(self.range) + ', ' + repr(self.a) + ', ' + repr(self.b) + ')'
+
+    def __str__(self):
+        return "{}*x + {}*y".format(self.a, self.b)
+
+class MultiplyOperator(op.LinearOperator):
+    """
+    The multiply operator calculates:
+
+    out = in[0] * in[1]
+
+    This is only applicable in Algebras
+
+    Parameters
+    ----------
+
+    space : LinearSpace
+            The space the vectors should lie in
+    """
+    def __init__(self, space):
+        self.domain = CarthesianProduct(space, space)
+        self.range = space
+
+    def _apply(self, input, out):
+        """
+        Example
+        -------
+        >>> from RL.space.euclidean import EuclideanSpace
+        >>> r3 = EuclideanSpace(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([1, 2, 3])
+        >>> z = r3.element()
+        >>> op = MultiplyOperator(r3)
+        >>> op.apply([x, y], z)
+        >>> z
+        EuclideanSpace(3).element([ 1.,  4.,  9.])
+        """
+        out.assign(input[1])
+        out.multiply(input[0])
+
+    def __repr__(self):
+        return 'LinCombOperator(' + repr(self.range) + ', ' + repr(self.a) + ', ' + repr(self.b) + ')'
+
+    def __str__(self):
+        return "{}*x + {}*y".format(self.a, self.b)
 
 def instance_method(function):
     """ Adds a self argument to a function 

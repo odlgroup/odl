@@ -599,7 +599,8 @@ class OperatorLeftScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar):
-        if isinstance(op.range, LinearSpace) and not op.range.field.contains(scalar):
+        if (isinstance(op.range, LinearSpace) 
+            and not op.range.field.contains(scalar)):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of range ({}) of 'op'
             '''.format(scalar, op.range.field)))

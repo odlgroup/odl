@@ -167,12 +167,12 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
 
         # v = rhs - op(x) - deriv(x0-x)
         # u = deriv.T(v)
-        operator.apply(x, tmp_ran)      # eval          op(x)
-        v.lincomb(1, rhs, -1, tmp_ran)  # assign        v = rhs - op(x)
-        tmp_dom.lincomb(1, x0, -1, x)  # assign temp   tmp_dom = x0 - x
-        deriv.apply(tmp_dom, tmp_ran)   # eval          deriv(x0-x)
-        v -= tmp_ran                    # assign        v = rhs - op(x) - deriv(x0-x)
-        deriv_adjoint.apply(v, u)       # eval/assign   u = deriv.T(v)
+        operator.apply(x, tmp_ran)      # eval        op(x)
+        v.lincomb(1, rhs, -1, tmp_ran)  # assign      v = rhs - op(x)
+        tmp_dom.lincomb(1, x0, -1, x)  # assign temp  tmp_dom = x0 - x
+        deriv.apply(tmp_dom, tmp_ran)   # eval        deriv(x0-x)
+        v -= tmp_ran                    # assign      v = rhs-op(x)-deriv(x0-x)
+        deriv_adjoint.apply(v, u)       # eval/assign u = deriv.T(v)
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx
