@@ -1,10 +1,3 @@
-""" Module for spaces whose elements are in R^n
-
-This is the default implementation of R^n and the
-corresponding NormedRN and EuclideanSpace.
-
-The underlying datarepresentation used is Numpy Arrays.
-"""
 # Copyright 2014, 2015 Holger Kohr, Jonas Adler
 #
 # This file is part of RL.
@@ -22,6 +15,13 @@ The underlying datarepresentation used is Numpy Arrays.
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Module for R^n, the space of n-tuples of real numbers
+
+This is the default implementation of R^n and the
+corresponding NormedRn and EuclidRn.
+
+The underlying datarepresentation used is Numpy Arrays.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import unicode_literals, print_function, division
@@ -35,11 +35,12 @@ from scipy.lib.blas import get_blas_funcs
 from numbers import Integral, Real
 
 # RL imports
-from RL.space.space import LinearSpace, Algebra, HilbertSpace, NormedSpace
+from RL.space.space import (LinearSpace, MetricSpace, NormedSpace,
+                            HilbertSpace, Algebra)
 from RL.space.set import RealNumbers
 from RL.utility.utility import errfmt
 try:
-    from RL.space.cuda import CudaRN
+    from RL.space.cuda import CudaRn
     CUDA_AVAILABLE = True
 except ImportError:
     CUDA_AVAILABLE = False
@@ -48,116 +49,23 @@ standard_library.install_aliases()
 
 
 class Rn(LinearSpace):
-
-    def __new__(cls, *args, **kwargs):
-        impl = kwargs.get('impl', 'numpy').lower()
-        dist = kwargs.get('dist', None)
-        norm = kwargs.get('norm', None)
-        norm_p = kwargs.get('norm_p', None)
-        inner = kwargs.get('inner', None)
-
-        if impl == 'numpy':
-            if dist is False:
-                cls = PlainRn
-            elif dist is not None:
-                if norm is not None:
-                    raise ValueError(errfmt('''
-                    'dist' cannot be combined with 'norm' '''))
-                if norm_p is not None:
-                    raise ValueError(errfmt('''
-                    'dist' cannot be combined with 'norm_p' '''))
-                if inner is not None:
-                    raise ValueError(errfmt('''
-                    'dist' cannot be combined with 'inner' '''))
-                cls = MetricRn
-
-            # 'dist' not specified, continuing with 'norm' and 'norm_p'
-            if norm is not None or norm_p is not None:
-                if inner is not None:
-                    raise ValueError(errfmt('''
-                    'norm' and 'norm_p' cannot be combined with
-                    'inner' '''))
-
-                cls = NormedRn
-            else:
-                # neither 'dist' nor 'norm' nor 'norm_p' specified,
-                # assuming inner product space
-                cls = Rn
-
-        if impl == 'cuda':
-            if not CUDA_AVAILABLE:
-                raise ValueError(errfmt('''
-                CUDA implementation not available'''))
-
-            # TODO: move to CudaRn.__init__
-            if norm_p is not None:
-                raise NotImplementedError(errfmt('''
-                p-norms for p != 2.0 in CUDA spaces not implemented'''))
-
-            if norm is not None:
-                raise ValueError(errfmt('''
-                Custom norm implementation not possible for CUDA spaces'''))
-            if inner is not None:
-                raise ValueError(errfmt('''
-                Custom inner product implementation not possible for CUDA
-                spaces'''))
-
-            # TODO: move to CudaRn.__init__
-            if weights is not None:
-                raise NotImplementedError(errfmt('''
-                Weighted CUDA spaces not implemented'''))
-
-            cls = CudaRN
-
-        instance = super().__new__(cls, *args, **kwargs)
-        if cls != Rn:
-            instance.__init__(*args, **kwargs)
-
-        return instance
-
-    def __init__(self, dim, **kwargs):
-        norm = kwargs.pop('norm', None)
-        norm_p = kwargs.pop('norm_p', None)
-        inner = kwargs.pop('inner', None)
-        weights = kwargs.pop('weights', None)
-
-        if norm is not None and norm_p is not None:
-            raise ValueError(errfmt('''
-            'norm' and 'norm_p' cannot be specified at the same
-            time'''))
-        if norm is not None and not callable(norm):
-            raise TypeError(''''norm' must be callable''')
-
-        if norm is not None:
-            if not callable(norm):
-                raise TypeError(''''norm' must be callable''')
-
-
-
-        if not isinstance(norm_p, Real):
-            raise TypeError(errfmt('''
-            'norm_p' must be a real number, got {}'''.format(norm_p)))
-
-
-
-class RN(LinearSpace):
-    """The real space R^n
+    """The real space R^n without any further mathematical structure
 
     Parameters
     ----------
 
-    n : int
+    dim : int
         The dimension of the space
     """
 
-    def __init__(self, n):
-        if not isinstance(n, Integral) or n < 1:
-            raise TypeError('n ({}) has to be a positive integer'.format(np))
-        self._dim = n
+    def __init__(self, dim):
+        if not isinstance(dim, Integral) or dim < 1:
+            raise TypeError(errfmt('''
+            'dim' ({}) has to be a positive integer'''.format(np)))
+        self._dim = dim
         self._field = RealNumbers()
-        self._axpy, self._scal, self._copy = get_blas_funcs(['axpy',
-                                                             'scal',
-                                                             'copy'])
+        self._axpy, self._scal, self._copy = get_blas_funcs(
+            ['axpy', 'scal', 'copy'])
 
     def element(self, data=None, **kwargs):
         """ Returns an arbitrary vector
@@ -171,7 +79,7 @@ class RN(LinearSpace):
 
         Returns
         -------
-        RN.Vector instance
+        Rn.Vector instance
 
         Note
         ----
@@ -182,12 +90,12 @@ class RN(LinearSpace):
         Examples
         --------
 
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> x = rn.element()
         >>> x in rn
         True
 
-        Creates an element in RN
+        Creates an element in Rn
 
         Parameters
         ----------
@@ -207,19 +115,19 @@ class RN(LinearSpace):
 
         Returns
         -------
-        RN.Vector instance
+        Rn.Vector instance
 
 
         Examples
         --------
 
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> x = rn.element(np.array([1., 2., 3.]))
         >>> x
-        RN(3).element([ 1.,  2.,  3.])
+        Rn(3).element([ 1.,  2.,  3.])
         >>> y = rn.element([1, 2, 3])
         >>> y
-        RN(3).element([ 1.,  2.,  3.])
+        Rn(3).element([ 1.,  2.,  3.])
 
         """
 
@@ -248,15 +156,15 @@ class RN(LinearSpace):
 
         Parameters
         ----------
-        z : RNVector
+        z : RnVector
             The Vector that the result should be written to.
         a : RealNumber
             Scalar to multiply `x` with.
-        x : RNVector
+        x : RnVector
             The first of the summands
         b : RealNumber
             Scalar to multiply `y` with.
-        y : RNVector
+        y : RnVector
             The second of the summands
 
         Returns
@@ -265,13 +173,13 @@ class RN(LinearSpace):
 
         Examples
         --------
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([4, 5, 6])
         >>> z = rn.element()
         >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        RN(3).element([ 14.,  19.,  24.])
+        Rn(3).element([ 14.,  19.,  24.])
 
         """
 
@@ -327,7 +235,7 @@ class RN(LinearSpace):
 
         Returns
         -------
-        RN.Vector instance
+        Rn.Vector instance
 
         Note
         ----
@@ -337,16 +245,16 @@ class RN(LinearSpace):
         Examples
         --------
 
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> x = rn.zero()
         >>> x
-        RN(3).element([ 0.,  0.,  0.])
+        Rn(3).element([ 0.,  0.,  0.])
         """
         return self.element(np.zeros(self._dim, dtype=np.float64))
 
     @property
     def field(self):
-        """ The underlying field of RN is the real numbers
+        """ The underlying field of Rn is the real numbers
 
         Parameters
         ----------
@@ -359,7 +267,7 @@ class RN(LinearSpace):
         Examples
         --------
 
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> rn.field
         RealNumbers()
         """
@@ -380,44 +288,40 @@ class RN(LinearSpace):
         Examples
         --------
 
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> rn.dim
         3
         """
         return self._dim
 
     def equals(self, other):
-        """ Verifies that other is a RN instance of dimension `n`
+        """ Check if `other` is an Rn instance of the same dimension
 
         Parameters
         ----------
         other : any object
-                The object to check for equality
+            The object to check for equality
 
         Returns
         -------
-        boolean      True or false
+        output: boolean
 
         Examples
         --------
 
-        Comparing with self
-        >>> r3 = RN(3)
+        >>> r3 = Rn(3)
         >>> r3.equals(r3)
         True
 
-        Also true when comparing with similar instance
-        >>> r3a, r3b = RN(3), RN(3)
+        >>> r3a, r3b = Rn(3), Rn(3)
         >>> r3a.equals(r3b)
         True
 
-        False when comparing to other dimension RN
-        >>> r3, r4 = RN(3), RN(4)
+        >>> r3, r4 = Rn(3), Rn(4)
         >>> r3.equals(r4)
         False
 
-        We also support operators '==' and '!='
-        >>> r3, r4 = RN(3), RN(4)
+        >>> r3, r4 = Rn(3), Rn(4)
         >>> r3 == r3
         True
         >>> r3 == r4
@@ -425,26 +329,27 @@ class RN(LinearSpace):
         >>> r3 != r4
         True
         """
-        return isinstance(other, RN) and self.dim == other.dim
+
+        return isinstance(other, Rn) and self.dim == other.dim
 
     def __str__(self):
-        return "RN(" + str(self.dim) + ")"
+        return "Rn(" + str(self.dim) + ")"
 
     def __repr__(self):
-        return 'RN(' + str(self.dim) + ')'
+        return 'Rn(' + str(self.dim) + ')'
 
     class Vector(LinearSpace.Vector):
-        """ A RN-vector represented using numpy
+        """ A Rn-vector represented using numpy
 
         Parameters
         ----------
 
-        space : RN
-                Instance of RN this vector lives in
+        space : Rn
+            Instance of Rn this vector lives in
         data : numpy.ndarray
-               Underlying data-representation to be used by this vector
-               The dtype of the array must be float64
-               The shape of the array must be (n,)
+            Underlying data-representation to be used by this vector
+            The dtype of the array must be float64
+            The shape of the array must be (n,)
         """
 
         def __init__(self, space, data):
@@ -464,7 +369,7 @@ class RN(LinearSpace):
         @property
         def data(self):
             """
-            Get the underlying datacontainer, an numpy-array
+            Get the underlying data container, a numpy array
 
             Parameters
             ----------
@@ -472,15 +377,16 @@ class RN(LinearSpace):
 
             Returns
             -------
-            data : Numpy.ndarray
-                   The underlying data representation
+            data : numpy.ndarray
+                The underlying data representation
 
             Examples
             --------
-            >>> vec = RN(3).element([1, 2, 3])
+            >>> vec = Rn(3).element([1, 2, 3])
             >>> vec.data
             array([ 1.,  2.,  3.])
             """
+
             return self._data
 
         @property
@@ -494,15 +400,15 @@ class RN(LinearSpace):
 
             Returns
             -------
-            data : Numpy.ndarray
-                   The underlying data representation
+            ptr : int
+                The memory address of the data representation
 
             Examples
             --------
             >>> import ctypes
-            >>> vec = RN(3).element([1, 2, 3])
-            >>> ArrayType = ctypes.c_double*3
-            >>> arr = np.frombuffer(ArrayType.from_address(vec.data_ptr))
+            >>> vec = Rn(3).element([1, 2, 3])
+            >>> arr_type = ctypes.c_double*3
+            >>> arr = np.frombuffer(arr_type.from_address(vec.data_ptr))
             >>> arr
             array([ 1.,  2.,  3.])
 
@@ -510,7 +416,7 @@ class RN(LinearSpace):
 
             >>> arr[0] = 5
             >>> vec
-            RN(3).element([ 5.,  2.,  3.])
+            Rn(3).element([ 5.,  2.,  3.])
             """
             return self._data.ctypes.data
 
@@ -534,9 +440,7 @@ class RN(LinearSpace):
 
             Examples
             --------
-            >>> RN(3).element().__len__()
-            3
-            >>> len(RN(3).element())
+            >>> len(Rn(3).element())
             3
             """
             return self.space.dim
@@ -548,21 +452,18 @@ class RN(LinearSpace):
             ----------
 
             index : int or slice
-                    The position(s) that should be accessed
+                The position(s) that should be accessed
 
             Returns
             -------
-            If index is an `int`
-            numpy.float64, value at index
-
-            If index is an `slice`
-            numpy.ndarray instance with the values at the slice
+            value: numpy.float64 or numpy.ndarray
+                The value(s) at the index (indices)
 
 
             Examples
             --------
 
-            >>> rn = RN(3)
+            >>> rn = Rn(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0]
             1.0
@@ -579,12 +480,12 @@ class RN(LinearSpace):
             ----------
 
             index : int or slice
-                    The position(s) that should be set
-            value : float or Array-Like
-                    The values that should be assigned.
-                    If index is an integer, value should be a float.
-                    If index is a slice, value should be an Array-Like
-                    of the same size as the slice.
+                The position(s) that should be set
+            value : float or array-like
+                The values that should be assigned.
+                If index is an integer, value should be a float.
+                If index is a slice, value should be an array
+                of the same size as the slice.
 
             Returns
             -------
@@ -594,62 +495,138 @@ class RN(LinearSpace):
             Examples
             --------
 
-            >>> rn = RN(3)
+            >>> rn = Rn(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            RN(3).element([ 5.,  2.,  3.])
+            Rn(3).element([ 5.,  2.,  3.])
             >>> y[1:3] = [7, 8]
             >>> y
-            RN(3).element([ 5.,  7.,  8.])
+            Rn(3).element([ 5.,  7.,  8.])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            RN(3).element([ 0.,  0.,  0.])
+            Rn(3).element([ 0.,  0.,  0.])
 
             """
 
             return self.data.__setitem__(index, value)
 
 
-class NormedRN(RN, NormedSpace):
+class MetricRn(Rn, MetricSpace):
+    """ The real space R^n as a metric space without norm
+
+    Parameters
+    ----------
+
+    dim : int
+        The dimension of the space
+    dist : callable
+        The distance function defining a metric on R^n. It must accept
+        two array arguments and return a nonnegative float.
+    """
+
+    def __init__(self, dim, dist):
+        if not callable(dist):
+            raise TypeError("'dist' must be callable.")
+
+        self._dist = dist
+
+        super().__init__(dim)
+
+    class Vector(Rn.Vector, MetricSpace.Vector):
+        """ A MetricRn vector represented using numpy
+
+        Parameters
+        ----------
+
+        space : Rn
+            Instance of Rn this vector lives in
+        data : numpy.ndarray
+            Underlying data representation to be used by this vector
+            The dtype of the array must be float64
+            The shape of the array must be (n,)
+        """
+
+
+class NormedRn(Rn, NormedSpace):
     """ The real space R^n with the p-norm.
 
     Parameters
     ----------
 
-    n : int
+    dim : int
         The dimension of the space
-    ord : float
-          The order of the norm
+    p : float, optional
+        The order of the norm. Default: 2.0
+    kwargs: {'weights', 'norm'}
+            'weights': array-like, optional
+                Array of weights to be used in the norm calculation.
+                It must be broadcastable to size (n,), where n is the
+                space dimension. All entries must be positive.
+                Cannot be combined with 'norm'.
+            'norm': callable, optional
+                A custom norm to use instead of the p-norm. Cannot be
+                combined with 'p'.
 
     Notes
     -----
 
-    The following values for `ord` can be specified.
-    Note that any value of ord < 1 only gives a pseudonorm.
+    The following values for `p` can be specified.
+    Note that any value of p < 1 only gives a pseudonorm.
 
     =====  ====================================================
-    ord    Definition
+    p      Definition
     =====  ====================================================
-    inf    max(norm(x[0]), ..., norm(x[n-1]))
-    -inf   min(norm(x[0]), ..., norm(x[n-1]))
-    0      (norm(x[0]) != 0 + ... + norm(x[n-1]) != 0)
-    other  (norm(x[0])**ord + ... + norm(x[n-1])**ord)**(1/ord)
+    inf    max(abs(x[0]), ..., abs(x[n-1]))
+    -inf   min(abs(x[0]), ..., abs(x[n-1]))
+    0      (x[0] != 0 + ... + x[n-1] != 0)
+    other  (abs(x[0])**p + ... + abs(x[n-1])**p)**(1/p)
     =====  ====================================================
     """
 
-    def __init__(self, n, ord=None):
-        self.ord = ord if ord is not None else 2
+    def __init__(self, dim, p=None, **kwargs):
+        weights = kwargs.get('weights', None)
+        norm = kwargs.get('norm', None)
 
-        super().__init__(n)
+        if p is not None and norm is not None:
+            raise ValueError(errfmt('''
+            'p' and 'norm' cannot be combined.'''))
+
+        p = p if p is not None else 2.0
+        if not isinstance(p, Real):
+            raise TypeError(errfmt('''
+            'p' ({}) must be a real number.'''.format(p)))
+
+        if weights is not None:
+            if norm is not None:
+                raise ValueError(errfmt('''
+                'weights' and 'norm' cannot be combined.'''))
+            try:
+                weights = np.atleast_1d(weights)
+            except TypeError:
+                raise TypeError(errfmt('''
+                'weights' ({}) must be array-like.'''.format(weights)))
+
+            if not np.all(weights > 0):
+                raise ValueError(errfmt('''
+                'weights' must be all positive'''))
+
+        if norm is not None and not callable(norm):
+            raise TypeError("'norm' must be callable.")
+
+        self._p = p
+        self._sqrt_weights = np.sqrt(weights) if weights is not None else None
+        self._custom_norm = norm
+
+        super().__init__(dim)
 
     def _norm(self, vector):
-        """ Calculates the p-norm of a vector
+        """ Calculates the norm of a vector
 
         Parameters
         ----------
 
-        vector : NormedRN.Vector
+        vector : NormedRn.Vector
 
         Returns
         -------
@@ -659,35 +636,41 @@ class NormedRN(RN, NormedSpace):
         Examples
         --------
 
-        >>> rn = NormedRN(2, ord=2)
+        >>> rn = NormedRn(2, p=2)
         >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         5.0
 
-
-        >>> rn = NormedRN(2, ord=1)
+        >>> rn = NormedRn(2, p=1)
         >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         7.0
 
-        >>> rn = NormedRN(2, ord=0)
+        >>> rn = NormedRn(2, p=0)
         >>> x = rn.element([3, 0])
         >>> rn.norm(x)
         1.0
 
+        # TODO: custom norm doctest
+        # TODO: weights doctest
         """
 
-        # Use numpy norm
-        return np.linalg.norm(vector.data, ord=self.ord)
+        if self._custom_norm is not None:
+            return self._custom_norm(vector.data)
+        elif self._weights is None:
+            return np.linalg.norm(vector.data, ord=self._p)
+        else:
+            return np.linalg.norm(vector.data * self._sqrt_weights,
+                                  ord=self._p)
 
-    class Vector(RN.Vector, NormedSpace.Vector):
-        """ A NormedRN-vector represented using numpy
+    class Vector(Rn.Vector, NormedSpace.Vector):
+        """ A NormedRn-vector represented using numpy
 
         Parameters
         ----------
 
-        space : RN
-                Instance of RN this vector lives in
+        space : Rn
+                Instance of Rn this vector lives in
         data : numpy.ndarray
                Underlying data-representation to be used by this vector
                The dtype of the array must be float64
@@ -695,20 +678,43 @@ class NormedRN(RN, NormedSpace):
         """
 
 
-class EuclideanSpace(RN, HilbertSpace, Algebra):
+class EuclidRn(Rn, HilbertSpace, Algebra):
     """The real space R^n with the usual inner product.
 
     Parameters
     ----------
 
-    n : int
+    dim : int
         The dimension of the space
     """
 
-    def __init__(self, n):
-        super().__init__(n)
+    def __init__(self, dim, **kwargs):
+        weights = kwargs.get('weights', None)
+        inner = kwargs.get('inner', None)
 
-        self._dot, self._nrm2 = get_blas_funcs(['dot', 'nrm2'])
+        if weights is not None:
+            if inner is not None:
+                raise ValueError(errfmt('''
+                'weights' and 'inner' cannot be combined.'''))
+            try:
+                weights = np.atleast_1d(weights)
+            except TypeError:
+                raise TypeError(errfmt('''
+                'weights' ({}) must be array-like.'''.format(weights)))
+
+            if not np.all(weights > 0):
+                raise ValueError(errfmt('''
+                'weights' must be all positive'''))
+
+        if inner is not None and not callable(inner):
+            raise TypeError("'inner' must be callable.")
+
+        self._weights = weights
+        self._custom_inner = inner
+
+        super().__init__(dim)
+
+        self._dot = get_blas_funcs(['dot'])[0]
 
     def _norm(self, x):
         """ Calculates the norm of a vector.
@@ -720,7 +726,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : EuclideanSpace.Vector
+        x : EuclidRn.Vector
 
         Returns
         -------
@@ -730,14 +736,14 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclideanSpace(2)
+        >>> rn = EuclidRn(2)
         >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         5.0
 
         """
-        # TODO: Possibly change this to 'dot', which is faster
-        return float(self._nrm2(x.data))
+
+        return self._inner(x, x)
 
     def _inner(self, x, y):
         """ Calculates the inner product of two vectors
@@ -749,8 +755,8 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : EuclideanSpace.Vector
-        y : EuclideanSpace.Vector
+        x : EuclidRn.Vector
+        y : EuclidRn.Vector
 
         Returns
         -------
@@ -760,7 +766,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclideanSpace(3)
+        >>> rn = EuclidRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
         >>> 5*1 + 3*2 + 2*3
@@ -770,7 +776,12 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
 
         """
 
-        return float(self._dot(x.data, y.data))
+        if self._custom_inner is not None:
+            return self._custom_inner(x.data, y.data)
+        elif self._weights is None:
+            return float(self._dot(x.data, y.data))
+        else:
+            return float(self._dot(x.data, self._weights * y.data))
 
     def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -783,9 +794,9 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : RNVector
+        x : RnVector
             read from
-        y : RNVector
+        y : RnVector
             read from and written to
 
         Returns
@@ -795,31 +806,119 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclideanSpace(3)
+        >>> rn = EuclidRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        EuclideanSpace(3).element([ 5.,  6.,  6.])
+        EuclidRn(3).element([ 5.,  6.,  6.])
         """
         y.data[:] = x.data * y.data
 
     def __repr__(self):
-        return 'EuclideanSpace(' + str(self.dim) + ')'
+        return 'EuclidRn(' + str(self.dim) + ')'
 
-    class Vector(RN.Vector, HilbertSpace.Vector, Algebra.Vector):
-        """ A EuclideanSpace-vector represented using numpy
+    class Vector(Rn.Vector, HilbertSpace.Vector, Algebra.Vector):
+        """ A EuclidRn-vector represented using numpy
 
         Parameters
         ----------
 
-        space : RN
-                Instance of RN this vector lives in
+        space : Rn
+                Instance of Rn this vector lives in
         data : numpy.ndarray
                Underlying data-representation to be used by this vector
                The dtype of the array must be float64
                The shape of the array must be (n,)
         """
+
+
+def rnspace(dim, impl='numpy', **kwargs):
+    """ Create an R^n, by default the Euclidean space
+
+    TODO: doc
+    """
+
+    try:
+        impl = impl.lower()
+    except AttributeError:
+        raise TypeError("'impl' must be a string")
+
+    dist = kwargs.get('dist', None)
+    norm = kwargs.get('norm', None)
+    norm_p = kwargs.get('norm_p', None)
+    inner = kwargs.get('inner', None)
+    weights = kwargs.get('weights', None)
+
+    # Check if the parameter combination makes sense. The checks for
+    # correct types or values are delegated to the class initializers
+    if impl == 'numpy':
+        # 'dist' is processed first since int short-cuts to 'Rn' or
+        # 'MetricRn' if provided
+        if dist is False:
+            return Rn(dim)
+        elif dist is not None:
+            if norm is not None:
+                raise ValueError(errfmt('''
+                'dist' cannot be combined with 'norm' '''))
+            if norm_p is not None:
+                raise ValueError(errfmt('''
+                'dist' cannot be combined with 'norm_p' '''))
+            if inner is not None:
+                raise ValueError(errfmt('''
+                'dist' cannot be combined with 'inner' '''))
+            if weights is not None:
+                raise ValueError(errfmt('''
+                'dist' cannot be combined with 'weights' '''))
+
+            return MetricRn(dim, dist=dist)
+
+        # 'dist' not specified, continuing with 'norm' and 'norm_p'
+        if norm is not None and weights is not None:
+            raise ValueError(errfmt('''
+            'norm' cannot be combined with 'weights' '''))
+        elif norm is not None or norm_p is not None:
+            if inner is not None:
+                raise ValueError(errfmt('''
+                'norm' or 'norm_p' cannot be combined with 'inner' '''))
+
+            return NormedRn(dim, norm=norm, norm_p=norm_p, weights=weights)
+        else:
+            # neither 'dist' nor 'norm' nor 'norm_p' specified,
+            # assuming inner product space
+            if inner is not None and weights is not None:
+                raise ValueError(errfmt('''
+                'inner' cannot be combined with 'weights' '''))
+            return EuclidRn(dim, inner=inner, weights=weights)
+
+    if impl == 'cuda':
+        if not CUDA_AVAILABLE:
+            raise ValueError(errfmt('''
+            CUDA implementation not available'''))
+
+        # TODO: move to CudaRn.__init__
+        if norm_p is not None:
+            raise NotImplementedError(errfmt('''
+            p-norms for p != 2.0 in CUDA spaces not implemented'''))
+
+        if norm is not None:
+            raise ValueError(errfmt('''
+            Custom norm implementation not possible for CUDA spaces'''))
+        if inner is not None:
+            raise ValueError(errfmt('''
+            Custom inner product implementation not possible for CUDA
+            spaces'''))
+
+        # TODO: move to CudaRn.__init__
+        if weights is not None:
+            raise NotImplementedError(errfmt('''
+            Weighted CUDA spaces not implemented'''))
+
+        return CudaRn(dim)
+
+    else:
+        raise ValueError(errfmt('''
+        Invalid value {} for 'impl' '''.format(impl)))
 
 
 if __name__ == '__main__':
