@@ -409,7 +409,7 @@ class RN(LinearSpace):
             array([ 1.,  2.,  3.])
             
             Inplace modifications
-
+            
             >>> arr[0] = 5
             >>> vec
             RN(3).element([ 5.,  2.,  3.])

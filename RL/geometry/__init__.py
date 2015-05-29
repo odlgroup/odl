@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" 
+"""
 Geometry library for RL, contains descriptions of Tomography
 geometries, as well as supporting structures needed
 to represent these.

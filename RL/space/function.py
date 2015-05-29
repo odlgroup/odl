@@ -94,10 +94,10 @@ class FunctionSpace(Algebra):
 
     def _lincomb(self, z, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
-
+        
         The created object is rather slow,
         and should only be used for testing purposes.
-        """ 
+        """
         # Use operator overloading
         z._function = lambda *args: a*x._function(*args) + b*y._function(*args)
 
@@ -135,14 +135,14 @@ class FunctionSpace(Algebra):
         if isinstance(self.field, RealNumbers):
             return "FunctionSpace(" + str(self.domain) + ")"
         else:
-            return ("FunctionSpace(" + str(self.domain) + ", " + 
+            return ("FunctionSpace(" + str(self.domain) + ", " +
                     str(self.field) + ")")
 
     def __repr__(self):
         if isinstance(self.field, RealNumbers):
             return "FunctionSpace(" + repr(self.domain) + ")"
         else:
-            return ("FunctionSpace(" + repr(self.domain) + ", " + 
+            return ("FunctionSpace(" + repr(self.domain) + ", " +
                     repr(self.field) + ")")
 
     class Vector(Algebra.Vector, fun.Operator):
@@ -206,7 +206,7 @@ class L2(FunctionSpace, HilbertSpace):
         You cannot calculate inner products in non-discretized spaces'''))
 
     def equals(self, other):
-        """ Verify that other is equal to this space as a FunctionSpace 
+        """ Verify that other is equal to this space as a FunctionSpace
         and also a L2 space.
         """
         return isinstance(other, L2) and FunctionSpace.equals(self, other)

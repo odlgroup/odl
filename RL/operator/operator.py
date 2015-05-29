@@ -444,6 +444,14 @@ class OperatorSum(Operator):
         self._tmp = tmp
 
     def _call(self, rhs):
+        """ Calculates op1(rhs) + op2(rhs)
+
+         Parameters
+        ----------
+
+        op1 : Operator
+              The first operator
+        """
         return self._op1._call(rhs) + self._op2._call(rhs)
 
     def _apply(self, rhs, out):
@@ -523,8 +531,8 @@ class OperatorComposition(Operator):
 
     @property
     def inverse(self):
-        return OperatorComposition(self._right.inverse, 
-                                   self._left.inverse, 
+        return OperatorComposition(self._right.inverse,
+                                   self._left.inverse,
                                    self._tmp)
 
     def derivative(self, point):
@@ -736,7 +744,7 @@ class LinearOperator(Operator):
         (self + other)(x) = self(x) + other(x)
         """
 
-        if isinstance(other, LinearOperator):  
+        if isinstance(other, LinearOperator):
             # Special if both are linear
             return LinearOperatorSum(self, other)
         else:
