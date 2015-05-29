@@ -94,6 +94,6 @@ class TruncationDiscretization(EuclideanSpace):
                  args[0].space == space.parent)):
 
                 super().__init__(space, args[0](space.points()),
-                                        copy=False)
+                                 copy=False)
             else:
                 super().__init__(space, *args, **kwargs)

@@ -156,10 +156,10 @@ class ScalingOperator(op.SelfAdjointOperator):
 
     def __repr__(self):
         return ('LinCombOperator(' + repr(self._space) + ", " +
-                repr(self._scale) + ')')
+                repr(self._scal) + ')')
 
     def __str__(self):
-        return str(self._scale) + "*I"
+        return str(self._scal) + "*I"
 
 
 
