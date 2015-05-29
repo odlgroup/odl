@@ -28,7 +28,7 @@ from future import standard_library
 
 # External
 import numpy as np
-from functools import partial
+from numpy import float64
 
 # RL imports
 from RL.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
@@ -96,16 +96,31 @@ class LinearProductSpace(LinearSpace):
         Write properly!
         The main purpose of this function is to allocate memory
 
+
         Parameters
         ----------
-        None
+        The method has three call patterns, the first is:
+
+        args : None
+            No arguments given, will return a vector by calling all child
+            constructors with no arguments.
+
+        The second is to wrap existing vectors
+
+        args : tuple of LinearSpace.Vector's
+            A tuple of vectors in the underlying space.
+            This will simply wrap the Vectors (not copy).
+
+        The third pattern is to create a new Vector from scratch, in
+        this case
+
+        args : tuple of array-like objects
 
         Returns
         -------
-        vec : ProducSpace.Vector
-            Some vector in the product space
+        LinearProductSpace.Vector instance
 
-        Example
+        Examples
         -------
         >>> from RL.space.euclidean import EuclideanSpace
         >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
@@ -118,27 +133,6 @@ class LinearProductSpace(LinearSpace):
         True
 
         Creates an element in the product space
-
-        Parameters
-        ----------
-        The method has two call patterns, the first is:
-
-        args : tuple of LinearSpace.Vector's
-            A tuple of vectors in the underlying space.
-            This will simply wrap the Vectors (not copy).
-
-        The second pattern is to create a new Vector from scratch, in
-        this case
-
-        args : tuple of array-like objects
-
-        Returns
-        -------
-        LinearProductSpace.Vector instance
-
-
-        Example
-        -------
         >>> from RL.space.euclidean import RN
         >>> r2, r3 = RN(2), RN(3)
         >>> prod = LinearProductSpace(r2, r3)
@@ -191,13 +185,13 @@ class LinearProductSpace(LinearSpace):
         Example
         -------
         >>> from RL.space.euclidean import EuclideanSpace
-        >>> r2, r3 data= EuclideanSpace(2), EuclideanSpace(3)
+        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
-        >>> r2.norm(zero_2 - zero_2x3[0]) == 0
+        >>> zero_2 == zero_2x3[0]
         True
-        >>> r3.norm(zero_3 - zero_2x3[1]) == 0
+        >>> zero_3 == zero_2x3[1]
         True
         """
         return self.element(data=[space.zero() for space in self.spaces])
@@ -290,19 +284,20 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     ----------
     spaces : MetricSpace instances
         The factors of the product space
-    kwargs : {'prod_norm', 'weights'}
-              'prod_norm' : float or callable, optional
-                  If a float is given, it defines the order of the
-                  RN norm applied to the tuple of distances.
-                  If a function is given, it is applied to the tuple
-                  of distances instead of the RN norm.
+    kwargs : {'ord', 'weights', 'prod_norm'}
+              'ord' : float, optional
+                  Order of the product distance, i.e.
+                  dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   Default: 2.0
-              'weights' : array-like, optional
+              'weights' : array-like, optional, only usable with 'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
+              'prod_norm' : callable, optional
+                  Function that should be applied to the array of distances
+                  Default: np.linalg.norm(x, ord=ord)
 
     The following float values for `prod_norm` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm.
@@ -327,16 +322,16 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     --------
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-    >>> r2x3 = MetricProductSpace(r2, r3, prod_norm='inf')
-    >>> x_2 = r2.element([2.0, 3.5])
-    >>> y_2 = r2.element([2.0, 3.5])
-    >>> x_3 = r3.element([-0.3, 2.0, 3.5])
-    >>> y_3 = r3.element([-1.1, 7.2, 3.5])
+    >>> r2x3 = MetricProductSpace(r2, r3, ord='inf')
+    >>> x_2 = r2.element([0, 0])
+    >>> y_2 = r2.element([3, 4])
+    >>> x_3 = r3.element([0, 0, 0])
+    >>> y_3 = r3.element([1, 2, 2])
     >>> x = r2x3.element(x_2, x_3)
     >>> y = r2x3.element(y_2, y_3)
     >>> r2x3.dist(x, y)
-    <Value>
-    >>> r2x3.dist(x, y) == max((r2.dist(x_2, x_3), r3.dist(x_3, y_3)))
+    5.0
+    >>> r2x3.dist(x, y) == max((r2.dist(x_2, y_2), r3.dist(x_3, y_3)))
     True
     >>> r2x3.dist(x, y) == x.dist(y) == y.dist(x)
     True
@@ -349,39 +344,37 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
                          if not isinstance(spc, MetricSpace)]
             raise TypeError('{} not MetricSpace instance(s)'.format(wrong_spc))
 
-        weights = kwargs.get('weights', None)
-        if weights is not None:
-            weights = np.atleast_1d(weights)
-            if not np.all(weights > 0):
-                raise ValueError('weights must all be positive')
-            if not len(weights) == len(spaces):
-                raise ValueError(errfmt('''
-                'spaces' and 'weights' have different lengths ({} != {})
-                '''.format(len(spaces), len(weights))))
-        else:
-            weights = np.ones(len(spaces))
+        prod_norm = kwargs.get('prod_norm', None)
 
-        prod_norm = kwargs.get('prod_norm', 2.0)
-        if callable(prod_norm):
-            self.prod_norm = prod_norm
+        if prod_norm is not None:
+            if callable(prod_norm):
+                self.prod_norm = prod_norm
+            else:
+                raise TypeError(errfmt("'prod_norm' must be callable"))
         else:
-            try:
-                order = float(prod_norm)
-            except TypeError:
-                raise TypeError(errfmt('''
-                'prod_norm' must be either callable or convertible to
-                float'''))
-            self.prod_norm = partial(np.linalg.norm, ord=order)
+            order = float(kwargs.get('ord', 2.0))
 
-        self.weights = weights
+            weights = kwargs.get('weights', None)
+            if weights is not None:
+                weights = np.atleast_1d(weights)
+                if not np.all(weights > 0):
+                    raise ValueError('weights must all be positive')
+                if not len(weights) == len(spaces):
+                    raise ValueError(errfmt('''
+                    'spaces' and 'weights' have different lengths ({} != {})
+                    '''.format(len(spaces), len(weights))))
+
+                self.prod_norm = lambda x: np.linalg.norm(x*weights, ord=order)
+            else:
+                self.prod_norm = lambda x: np.linalg.norm(x, ord=order)
+
         super().__init__(*spaces, **kwargs)
 
     def _dist(self, x, y):
-        iter = (spc._dist(xp, yp) * w for spc, w, xp, yp in zip(self.spaces,
-                                                                self.weights,
-                                                                x.parts,
-                                                                y.parts))
-        dists = np.fromiter(iter, dtype=np.float64, count=self._nfactors)
+        dists = np.fromiter(
+            (spc._dist(xp, yp)
+             for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
+            dtype=float64, count=self._nfactors)
         return self.prod_norm(dists)
 
     def __repr__(self):
@@ -405,19 +398,22 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
     Parameters
     ----------
-    kwargs : {'prod_norm', 'weights'}
-              'prod_norm' : float or callable, optional
-                  If a float is given, it defines the order of the
-                  RN norm applied to the tuple of norms.
-                  If a function is given, it is applied to the tuple
-                  of norms instead of the RN norm.
+    spaces : NormedSpace instances
+             The factors of the product space
+    kwargs : {'ord', 'weights', 'prod_norm'}
+              'ord' : float, optional
+                  Order of the product distance, i.e.
+                  dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   Default: 2.0
-              'weights' : array-like, optional
+              'weights' : array-like, optional, only usable with 'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
-                  multiplied with the tuple of norms before
+                  multiplied with the tuple of distances before
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
+              'prod_norm' : callable, optional
+                  Function that should be applied to the array of distances
+                  Default: np.linalg.norm(x, ord=ord)
 
     The following float values for `prod_norm` can be specified.
     Note that any value of ord < 1 only gives a pseudonorm.
@@ -441,19 +437,21 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     --------
     >>> from RL.space.euclidean import EuclideanSpace
     >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-    >>> r2x3 = NormedProductSpace(r2, r3, prod_norm='inf')
-    >>> x_2 = r2.element([2.0, 3.5])
-    >>> x_3 = r3.element([-0.3, 2.0, 3.5])
+    >>> r2x3 = NormedProductSpace(r2, r3, ord='inf')
+    >>> x_2 = r2.element([3, 4])
+    >>> x_3 = r3.element([2, 2, 1])
     >>> x = r2x3.element(x_2, x_3)
     >>> r2x3.norm(x)
-    4.042276586281547
+    5.0
     >>> r2x3.norm(x) == max((r2.norm(x_2), r3.norm(x_3)))
     True
     >>> r2x3.norm(x) == x.norm()
     True
-    >>> w2x3 = NormedProductSpace(r2, r3, ord=1, weights=[0.2, 0.8])
+    >>> w2x3 = NormedProductSpace(r2, r3, ord=1, weights=[0.2, 1])
     >>> w2x3.norm(x)
-    <value>
+    4.0
+    >>> w2x3.norm(x) == 0.2*r2.norm(x_2) + 1.0*r3.norm(x_3)
+    True
     """
 
     def __init__(self, *spaces, **kwargs):
@@ -462,38 +460,13 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
                          if not isinstance(spc, NormedSpace)]
             raise TypeError('{} not NormedSpace instance(s)'.format(wrong_spc))
 
-        weights = kwargs.get('weights', None)
-        if weights is not None:
-            weights = np.atleast_1d(weights)
-            if not np.all(weights > 0):
-                raise ValueError('weights must all be positive')
-            if not len(weights) == len(spaces):
-                raise ValueError(errfmt('''
-                'spaces' and 'weights' have different lengths ({} != {})
-                '''.format(len(spaces), len(weights))))
-        else:
-            weights = np.ones(len(spaces))
-
-        prod_norm = kwargs.get('prod_norm', 2.0)
-        if callable(prod_norm):
-            self.prod_norm = prod_norm
-        else:
-            try:
-                order = float(prod_norm)
-            except TypeError:
-                raise TypeError(errfmt('''
-                'prod_norm' must be either callable or convertible to
-                float'''))
-            self.prod_norm = partial(np.linalg.norm, ord=order)
-
-        self.weights = weights
         super().__init__(*spaces, **kwargs)
 
     def _norm(self, x):
-        iter = (spc._norm(xp) * w for spc, w, xp in zip(self.spaces,
-                                                        self.weights,
-                                                        x.parts))
-        norms = np.fromiter(iter, dtype=np.float64, count=self._nfactors)
+        norms = np.fromiter(
+            (spc._norm(xp)
+             for spc, xp in zip(self.spaces, x.parts)),
+            dtype=np.float64, count=self._nfactors)
         return self.prod_norm(norms)
 
     def __repr__(self):
@@ -519,9 +492,10 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
 
     Parameters
     ----------
-    spaces : NormedSpace instances\n
+    spaces : HilbertSpace instances
+             The factors of the product space
     kwargs : {'weights'}
-              'weights' : array-like, optional
+              'weights' : array-like, optional, only usable with 'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive.
                   Default: (1.0,...,1.0)
@@ -551,17 +525,25 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
                 raise ValueError(errfmt('''
                 'spaces' and 'weights' have different lengths ({} != {})
                 '''.format(len(spaces), len(weights))))
-        else:
-            weights = np.ones(len(spaces))
 
-        self.weights = weights
+            self.prod_norm = lambda x: np.linalg.norm(x*weights)
+            self.prod_inner = lambda x: np.dotv(x, weights)
+        else:
+            self.prod_norm = np.linalg.norm
+            self.prod_inner = np.sum
+
+        if 'ord' in kwargs or 'prod_norm' in kwargs:
+            raise ValueError(errfmt('''
+            Cannot provide 'prod_norm' or 'ord' for hilbert space'''))
+
         super().__init__(*spaces, **kwargs)
 
     def _inner(self, x, y):
-        return sum(
-            spc._inner(xp, yp) * w
-            for spc, w, xp, yp in zip(self.spaces, self.weights,
-                                      x.parts, y.parts))
+        inners = np.fromiter(
+            (spc._inner(xp, yp)
+             for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
+            dtype=np.float64, count=self._nfactors)
+        return self.prod_norm(inners)
 
     def __repr__(self):
         return ('HilbertProductSpace(' +
@@ -582,16 +564,28 @@ def productspace(*spaces, **kwargs):
     ----------
     spaces : <Which>Space instances
         <Which> is either Hilbert, Normed, Metric or Linear
-    kwargs : {'ord', 'weights'}
-        'ord' : float, optional
-            The order of the R^N norm. Default: 2
-            see MetricProductSpace or NormedProductSpace
-        'weights' : array-like, optional
-            Array of weights, same size as number of space
-            components. All weights must be positive.
-            Default: (1,...,1)
-            See MetricProductSpace, NormedProductSpace or
-            HilbertProductSpace
+    kwargs : {'ord', 'weights', 'prod_norm'}
+              'ord' : float, optional
+                  Order of the product distance/norm, i.e.
+                  dist(x, y) = np.linalg.norm(x-y, ord=ord)
+                  norm(x) = np.linalg.norm(x, ord=ord)
+                  If used, forces the space to not be a hilbert space.
+                  Default: 2.0
+              'weights' : array-like, optional, only usable with 'ord' option.
+                  Array of weights, same size as number of space
+                  components. All weights must be positive. It is
+                  multiplied with the tuple of distances before
+                  applying the RN norm or 'prod_norm'.
+                  Default: (1.0,...,1.0)
+              'prod_norm' : callable, optional
+                  Function that should be applied to the array of
+                  distances/norms.
+                  If used, forces the space to not be a hilbert space.
+                  Defaults if applicable:
+                      dist = np.linalg.norm(x-y, ord=ord)
+                      norm = np.linalg.norm(x, ord=ord)
+                      inner = np.vdot(x,y)
+
 
     Returns
     -------
@@ -609,7 +603,8 @@ def productspace(*spaces, **kwargs):
     HilbertProductSpace
     """
 
-    if all(isinstance(spc, HilbertSpace) for spc in spaces):
+    if ('ord' not in kwargs and 'prod_norm' not in kwargs and
+            all(isinstance(spc, HilbertSpace) for spc in spaces)):
         return HilbertProductSpace(*spaces, **kwargs)
     elif all(isinstance(spc, NormedSpace) for spc in spaces):
         return NormedProductSpace(*spaces, **kwargs)
@@ -632,16 +627,26 @@ def powerspace(base, power, **kwargs):
         <Which> is either Hilbert, Normed, Metric or Linear
     power : int
         The number of factors in the product
-    kwargs : {'ord', 'weights'}
-        'ord' : float, optional
-            The order of the R^N norm. Default: 2
-            see MetricProductSpace or NormedProductSpace
-        'weights' : array-like, optional
-            Array of weights, same size as number of space
-            components. All weights must be positive.
-            Default: (1,...,1)
-            See MetricProductSpace, NormedProductSpace or
-            HilbertProductSpace
+    kwargs : {'ord', 'weights', 'prod_norm'}
+              'ord' : float, optional
+                  Order of the product distance/norm, i.e.
+                  dist(x, y) = np.linalg.norm(x-y, ord=ord)
+                  norm(x) = np.linalg.norm(x, ord=ord)
+                  If used, forces the space to not be a hilbert space.
+                  Default: 2.0
+              'weights' : array-like, optional, only usable with 'ord' option.
+                  Array of weights, same size as number of space
+                  components. All weights must be positive. It is
+                  multiplied with the tuple of distances before
+                  applying the RN norm or 'prod_norm'.
+                  Default: (1.0,...,1.0)
+              'prod_norm' : callable, optional
+                  Function that should be applied to the array of
+                  distances/norms
+                  If used, forces the space to not be a hilbert space.
+                  Defaults if applicable:
+                      dist = np.linalg.norm(x-y, ord=ord)
+                      norm = np.linalg.norm(x, ord=ord)
 
     Returns
     -------
