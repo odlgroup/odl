@@ -599,7 +599,7 @@ class OperatorLeftScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar):
-        if (isinstance(op.range, LinearSpace) 
+        if (isinstance(op.range, LinearSpace)
             and not op.range.field.contains(scalar)):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of range ({}) of 'op'
@@ -653,16 +653,17 @@ class OperatorRightScalarMultiplication(Operator):
     ----------
 
     op : Operator
-         Any operator whose range supports `*= scalar`
+        Any operator whose range supports `*= scalar`
     scalar : Number
-             An element in the field of the domain of op
+        An element in the field of the domain of op
     tmp : Element in the range of this operator
-          Used to avoid the creation of a
-          temporary when applying the operator.
+        Used to avoid the creation of a
+        temporary when applying the operator.
     """
 
     def __init__(self, op, scalar, tmp=None):
-        if isinstance(op, LinearSpace) and not op.domain.field.contains(scalar):
+        if (isinstance(op.domain, LinearSpace)
+                and not op.domain.field.contains(scalar)):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of domain ({}) of 'op'
             '''.format(scalar, op.domain.field)))
