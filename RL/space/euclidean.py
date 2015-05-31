@@ -33,6 +33,7 @@ from future import standard_library
 import numpy as np
 from scipy.lib.blas import get_blas_funcs
 from numbers import Integral, Real
+from math import sqrt
 
 # RL imports
 from RL.space.space import (LinearSpace, MetricSpace, NormedSpace,
@@ -41,9 +42,11 @@ from RL.space.set import RealNumbers
 from RL.utility.utility import errfmt
 try:
     from RL.space.cuda import CudaRn
+    CudaRn(1).element()
     CUDA_AVAILABLE = True
 except ImportError:
     CUDA_AVAILABLE = False
+
 
 standard_library.install_aliases()
 
@@ -529,9 +532,18 @@ class MetricRn(Rn, MetricSpace):
         if not callable(dist):
             raise TypeError("'dist' must be callable.")
 
-        self._dist = dist
+        self._custom_dist = dist
 
         super().__init__(dim)
+
+    def _dist(self, x, y):
+        return self._custom_dist(x, y)
+
+    def __repr__(self):
+        return 'MetricRn({})'.format(self.dim)
+
+    def __str__(self):
+        return self.__repr__()
 
     class Vector(Rn.Vector, MetricSpace.Vector):
         """ A MetricRn vector represented using numpy
@@ -663,6 +675,12 @@ class NormedRn(Rn, NormedSpace):
             return np.linalg.norm(vector.data * self._sqrt_weights,
                                   ord=self._p)
 
+    def __repr__(self):
+        return 'NormedRn({})'.format(self.dim)
+
+    def __str__(self):
+        return self.__repr__()
+
     class Vector(Rn.Vector, NormedSpace.Vector):
         """ A NormedRn-vector represented using numpy
 
@@ -711,10 +729,9 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
 
         self._weights = weights
         self._custom_inner = inner
+        self._dot = get_blas_funcs(['dot'])[0]
 
         super().__init__(dim)
-
-        self._dot = get_blas_funcs(['dot'])[0]
 
     def _norm(self, x):
         """ Calculates the norm of a vector.
@@ -743,7 +760,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
 
         """
 
-        return self._inner(x, x)
+        return sqrt(self._inner(x, x))
 
     def _inner(self, x, y):
         """ Calculates the inner product of two vectors
@@ -816,7 +833,10 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         y.data[:] = x.data * y.data
 
     def __repr__(self):
-        return 'EuclidRn(' + str(self.dim) + ')'
+        return 'EuclidRn({})'.format(self.dim)
+
+    def __str__(self):
+        return self.__repr__()
 
     class Vector(Rn.Vector, HilbertSpace.Vector, Algebra.Vector):
         """ A EuclidRn-vector represented using numpy

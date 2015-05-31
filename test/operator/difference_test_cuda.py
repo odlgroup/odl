@@ -31,7 +31,7 @@ import RL.space.discretizations as dd
 from RL.space.function import *
 import RL.space.set as sets
 from RL.space.product import productspace
-from RL.utility.testutils import RLTestCase 
+from RL.utility.testutils import RLTestCase
 
 from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
 
@@ -49,8 +49,8 @@ class ForwardDiff(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
-            raise TypeError("space must be CudaRN")
+        if not isinstance(space, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
 
@@ -67,8 +67,8 @@ class ForwardDiffAdjoint(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
-            raise TypeError("space must be CudaRN")
+        if not isinstance(space, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
 
@@ -85,7 +85,7 @@ class ForwardDiff2D(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
+        if not isinstance(space, CS.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = space
@@ -105,7 +105,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
+        if not isinstance(space, CS.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = productspace(space, space)
@@ -128,7 +128,7 @@ class TestCudaForwardDifference(RLTestCase):
 
         # Discretization
         n = 6
-        rn = CS.CudaRN(n)
+        rn = CS.CudaRn(n)
         d = dd.uniform_discretization(space, rn)
         fun = d.element([1, 2, 5, 3, 2, 1])
 
@@ -149,7 +149,7 @@ class TestCudaForwardDifference2D(RLTestCase):
         # Discretization
         n = 5
         m = 5
-        rn = CS.CudaRN(n*m)
+        rn = CS.CudaRn(n*m)
         d = dd.pixel_discretization(space, rn, n, m)
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0],
@@ -194,7 +194,7 @@ class TestCudaForwardDifference2D(RLTestCase):
         m = 7
 
         # Discretization
-        rn = CS.CudaRN(n*m)
+        rn = CS.CudaRn(n*m)
         d = dd.pixel_discretization(space, rn, n, m)
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0, 0, 0],

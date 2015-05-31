@@ -103,12 +103,12 @@ detectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
 pixelDirection = y0 * pixelSize
 
 dataSpace = fs.L2(sets.Interval(0, 1))
-dataRN = cs.CudaRN(nPixels)
-dataDisc = dd.uniform_discretization(dataSpace, dataRN)
+dataRn = cs.CudaRn(nPixels)
+dataDisc = dd.uniform_discretization(dataSpace, dataRn)
 
 reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
-reconRN = cs.CudaRN(nVoxels.prod())
-reconDisc = dd.pixel_discretization(reconSpace, reconRN,
+reconRn = cs.CudaRn(nVoxels.prod())
+reconDisc = dd.pixel_discretization(reconSpace, reconRn,
                                        nVoxels[0], nVoxels[1])
 
 # Create a phantom

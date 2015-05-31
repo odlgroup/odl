@@ -41,7 +41,7 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-class CudaRN(spaces.HilbertSpace, spaces.Algebra):
+class CudaRn(spaces.HilbertSpace, spaces.Algebra):
     """The real space R^n, implemented in CUDA
 
     Requires the compiled RL extension RLcpp.
@@ -53,12 +53,13 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         The dimension of the space
     """
 
-    def __init__(self, n):
-        if not isinstance(n, Integral) or n < 1:
-            raise TypeError('n ({}) has to be a positive integer'.format(np))
-        self._dim = n
+    def __init__(self, dim):
+        if not isinstance(dim, Integral) or dim < 1:
+            raise TypeError(errfmt('''
+            'dim' ({}) has to be a positive integer'''.format(np)))
+        self._dim = dim
         self._field = sets.RealNumbers()
-        self.impl = RLcpp.PyCuda.CudaRNImpl(n)
+        self.impl = RLcpp.PyCuda.CudaRNImpl(dim)
 
     def element(self, data=None, **kwargs):
         """ Returns a vector of zeros
@@ -72,21 +73,21 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        CudaRN.Vector instance
+        CudaRn.Vector instance
 
 
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> y = rn.element()
         >>> y in rn
         True
         >>> y.assign(rn.zero())
         >>> y
-        CudaRN(3).element([ 0.,  0.,  0.])
+        CudaRn(3).element([ 0.,  0.,  0.])
 
-        Creates an element in CudaRN
+        Creates an element in CudaRn
 
         Parameters
         ----------
@@ -107,19 +108,19 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        CudaRN.Vector instance
+        CudaRn.Vector instance
 
 
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> x = rn.element(np.array([1, 2, 3]))
         >>> x
-        CudaRN(3).element([ 1.,  2.,  3.])
+        CudaRn(3).element([ 1.,  2.,  3.])
         >>> y = rn.element([1, 2, 3])
         >>> y
-        CudaRN(3).element([ 1.,  2.,  3.])
+        CudaRn(3).element([ 1.,  2.,  3.])
 
         """
 
@@ -128,7 +129,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         elif data is None:
             return self.element(self.impl.empty())
         elif isinstance(data, np.ndarray):  # Create from numpy array
-            if data.shape != (self._dim,):
+            if data.shape != (self.dim,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.dim,))))
@@ -148,8 +149,8 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        x : CudaRN.Vector
-        y : CudaRN.Vector
+        x : CudaRn.Vector
+        y : CudaRn.Vector
 
         Returns
         -------
@@ -160,7 +161,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([3, 1, 5])
         >>> rn.inner(x, y)
@@ -181,7 +182,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        x : CudaRN.Vector
+        x : CudaRn.Vector
 
         Returns
         -------
@@ -192,7 +193,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> x = rn.element([2, 3, 6])
         >>> rn.norm(x)
         7.0
@@ -211,15 +212,15 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        z : CudaRN.Vector
+        z : CudaRn.Vector
             The Vector that the result should be written to.
         a : RealNumber
             Scalar to multiply `x` with.
-        x : CudaRN.Vector
+        x : CudaRn.Vector
             The first of the summands
         b : RealNumber
             Scalar to multiply `y` with.
-        y : CudaRN.Vector
+        y : CudaRn.Vector
             The second of the summands
 
         Returns
@@ -228,13 +229,13 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Examples
         --------
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([4, 5, 6])
         >>> z = rn.element()
         >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        CudaRN(3).element([ 14.,  19.,  24.])
+        CudaRn(3).element([ 14.,  19.,  24.])
         """
 
         self.impl.linComb(z.data, a, x.data, b, y.data)
@@ -250,9 +251,9 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Parameters
         ----------
 
-        x : CudaRN.Vector
+        x : CudaRn.Vector
             read from
-        y : CudaRN.Vector
+        y : CudaRn.Vector
             read from and written to
 
         Returns
@@ -262,12 +263,12 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        CudaRN(3).element([ 5.,  6.,  6.])
+        CudaRn(3).element([ 5.,  6.,  6.])
         """
         self.impl.multiply(x.data, y.data)
 
@@ -280,22 +281,22 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         Returns
         -------
-        CudaRN.Vector instance with all elements set to zero (0.0)
+        CudaRn.Vector instance with all elements set to zero (0.0)
 
 
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> y = rn.zero()
         >>> y
-        CudaRN(3).element([ 0.,  0.,  0.])
+        CudaRn(3).element([ 0.,  0.,  0.])
         """
         return self.element(self.impl.zero())
 
     @property
     def field(self):
-        """ The underlying field of RN is the real numbers
+        """ The underlying field of R^n is the set of real numbers
 
         Parameters
         ----------
@@ -309,7 +310,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> rn.field
         RealNumbers()
         """
@@ -331,14 +332,14 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaRn(3)
         >>> rn.dim
         3
         """
         return self._dim
 
     def equals(self, other):
-        """ Verifies that other is a CudaRN instance of dimension `n`
+        """ Verifies that other is a CudaRn instance of dimension `n`
 
         Parameters
         ----------
@@ -352,23 +353,19 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
 
-        Comparing with self
-        >>> r3 = CudaRN(3)
+        >>> r3 = CudaRn(3)
         >>> r3.equals(r3)
         True
 
-        Also true when comparing with similar instance
-        >>> r3a, r3b = CudaRN(3), CudaRN(3)
+        >>> r3a, r3b = CudaRn(3), CudaRn(3)
         >>> r3a.equals(r3b)
         True
 
-        False when comparing to other dimension RN
-        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3, r4 = CudaRn(3), CudaRn(4)
         >>> r3.equals(r4)
         False
 
-        We also support operators '==' and '!='
-        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3, r4 = CudaRn(3), CudaRn(4)
         >>> r3 == r3
         True
         >>> r3 == r4
@@ -376,22 +373,22 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> r3 != r4
         True
         """
-        return isinstance(other, CudaRN) and self.dim == other.dim
+        return isinstance(other, CudaRn) and self.dim == other.dim
 
     def __str__(self):
-        return "CudaRN(" + str(self._dim) + ")"
+        return "CudaRn(" + str(self.dim) + ")"
 
     def __repr__(self):
-        return "CudaRN(" + str(self._dim) + ")"
+        return "CudaRn(" + str(self.dim) + ")"
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
-        """ A RN-vector represented in CUDA
+        """ A R^n vector represented in CUDA
 
         Parameters
         ----------
 
-        space : CudaRN
-                Instance of CudaRN this vector lives in
+        space : CudaRn
+                Instance of CudaRn this vector lives in
         data : RLcpp.PyCuda.CudaRNVectorImpl
                     Underlying data-representation to be used by this vector
         """
@@ -451,11 +448,11 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             Examples
             --------
 
-            >>> rn = CudaRN(3)
+            >>> rn = CudaRn(3)
             >>> x = rn.element([1, 2, 3])
             >>> y = eval(repr(x))
             >>> y
-            CudaRN(3).element([ 1.,  2.,  3.])
+            CudaRn(3).element([ 1.,  2.,  3.])
             """
             val_str = repr(self[:]).lstrip('array(').rstrip(')')
             return repr(self.space) + '.element(' + val_str + ')'
@@ -489,7 +486,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             Examples
             --------
 
-            >>> rn = CudaRN(3)
+            >>> rn = CudaRn(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0]
             1.0
@@ -530,17 +527,17 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             --------
 
 
-            >>> rn = CudaRN(3)
+            >>> rn = CudaRn(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            CudaRN(3).element([ 5.,  2.,  3.])
+            CudaRn(3).element([ 5.,  2.,  3.])
             >>> y[1:3] = [7, 8]
             >>> y
-            CudaRN(3).element([ 5.,  7.,  8.])
+            CudaRn(3).element([ 5.,  7.,  8.])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            CudaRN(3).element([ 0.,  0.,  0.])
+            CudaRn(3).element([ 0.,  0.,  0.])
 
             """
 

@@ -473,15 +473,15 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.euclidean import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> r3 = RN(3)
+        >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> rhs = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> OperatorSum(op, op).apply(rhs, out)
         >>> out
-        RN(3).element([ 2.,  4.,  6.])
+        Rn(3).element([ 2.,  4.,  6.])
         """
         tmp = self._tmp if self._tmp is not None else self.range.element()
         self._op1._apply(rhs, out)
@@ -504,12 +504,12 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.euclidean import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> r3 = RN(3)
+        >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).domain
-        RN(3)
+        Rn(3)
         """
         return self._op1.domain
 
@@ -529,12 +529,12 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.euclidean import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> r3 = RN(3)
+        >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).range
-        RN(3)
+        Rn(3)
         """
         return self._op1.range
 

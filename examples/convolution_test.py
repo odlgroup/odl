@@ -43,8 +43,8 @@ standard_library.install_aliases()
 
 class Convolution(op.LinearOperator):
     def __init__(self, kernel, adjkernel=None):
-        if not isinstance(kernel.space, ds.RN):
-            raise TypeError("Kernel must be RN vector")
+        if not isinstance(kernel.space, ds.Rn):
+            raise TypeError("Kernel must be Rn vector")
 
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
@@ -82,7 +82,7 @@ continuousRhs = continuousSpace.element(lambda x: x**2 *
                                         np.sin(x)**2*(x > 5))
 
 # Discretization
-rn = ds.EuclideanSpace(500)
+rn = ds.EuclidRn(500)
 d = dd.uniform_discretization(continuousSpace, rn)
 kernel = d.element(continuousKernel)
 rhs = d.element(continuousRhs)

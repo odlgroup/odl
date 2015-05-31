@@ -121,10 +121,10 @@ for theta in np.linspace(0, 2*pi, nProjection):
 
 #Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRN = cs.CudaRN(nPixels)
+projectionRn = cs.CudaRn(nPixels)
 
 #Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN)
+projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
 
 #Create the data space, which is the Cartesian product of the single projection spaces
 dataDisc = prod.powerspace(projectionDisc, nProjection)
@@ -133,8 +133,8 @@ dataDisc = prod.powerspace(projectionDisc, nProjection)
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 #Discretize the reconstruction space
-reconRN = cs.CudaRN(nVoxels.prod())
-reconDisc = dd.pixel_discretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
+reconRn = cs.CudaRn(nVoxels.prod())
+reconDisc = dd.pixel_discretization(reconSpace, reconRn, nVoxels[0], nVoxels[1])
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)

@@ -497,14 +497,14 @@ class MetricSpace(LinearSpace):
             Example
             -------
 
-            >>> X = RN(1)
-            >>> x = X.vector([0.1])
+            >>> r = Rn(1)
+            >>> x = r.vector([0.1])
             >>> x == x
             True
-            >>> y = X.vector([0.1])
+            >>> y = r.vector([0.1])
             >>> x == y
             True
-            >>> z = X.vector([0.3])
+            >>> z = r.vector([0.3])
             >>> x+x+x == z
             False
             """

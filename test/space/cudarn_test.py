@@ -29,10 +29,11 @@ from numpy import float64
 # RL imports
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.euclidean import RN
-from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
+from RL.space.euclidean import Rn
+from RL.utility.testutils import skip_all_tests
 
 try:
+    from RL.utility.testutils import RLTestCase
     from RL.space.cuda import *
 except ImportError:
     RLTestCase = skip_all_tests("Missing RLcpp")
@@ -41,23 +42,24 @@ import numpy as np
 
 standard_library.install_aliases()
 
+
 class TestInit(RLTestCase):
     def test_empty(self):
-        r3 = CudaRN(3)
-        x = r3.element()
+        r3 = CudaRn(3)
+        r3.element()
         # Nothing to test, simply check that code runs
 
     def test_zero(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         self.assertAllAlmostEquals(r3.zero(), [0, 0, 0])
 
     def test_list_init(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         x = r3.element([1, 2, 3])
         self.assertAllAlmostEquals(x, [1, 2, 3])
 
     def test_ndarray_init(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
 
         x0 = np.array([1., 2., 3.])
         x = r3.element(x0)
@@ -71,9 +73,10 @@ class TestInit(RLTestCase):
         x = r3.element(x0)
         self.assertAllAlmostEquals(x, x0)
 
+
 class TestAccessors(RLTestCase):
     def test_getitem(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         y = [1, 2, 3]
         x = r3.element(y)
 
@@ -81,24 +84,24 @@ class TestAccessors(RLTestCase):
             self.assertAlmostEquals(x[index], y[index])
 
     def test_iterator(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         y = [1, 2, 3]
         x = r3.element(y)
 
         self.assertAlmostEquals([a for a in x], [b for b in y])
 
     def test_getitem_index_error(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
-            result = x[-4]
+            x[-4]
 
         with self.assertRaises(IndexError):
-            result = x[3]
+            x[3]
 
     def test_setitem(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         x = r3.element([42, 42, 42])
 
         for index in [0, 1, 2, -1, -2, -3]:
@@ -106,7 +109,7 @@ class TestAccessors(RLTestCase):
             self.assertAlmostEquals(x[index], index)
 
     def test_setitem_index_error(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
@@ -117,7 +120,7 @@ class TestAccessors(RLTestCase):
 
     def _test_getslice(self, slice):
         # Validate get against python list behaviour
-        r6 = CudaRN(6)
+        r6 = CudaRn(6)
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
 
@@ -134,17 +137,17 @@ class TestAccessors(RLTestCase):
                 for step in steps:
                     self._test_getslice(slice(start, end, step))
 
-    def testGetSliceExceptions(self):
-        r3 = CudaRN(3)
+    def test_getslice_index_error(self):
+        r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
 
         # Bad slice
         with self.assertRaises(IndexError):
-            result = xd[10:13]
+            xd[10:13]
 
     def _test_setslice(self, slice):
         # Validate set against python list behaviour
-        r6 = CudaRN(6)
+        r6 = CudaRn(6)
         z = [7, 8, 9, 10, 11, 10]
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
@@ -165,7 +168,7 @@ class TestAccessors(RLTestCase):
                     self._test_setslice(slice(start, end, step))
 
     def test_setslice_index_error(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
 
         # Bad slice
@@ -185,7 +188,7 @@ class TestAccessors(RLTestCase):
 
 class TestMethods(RLTestCase):
     def test_norm(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
 
         correct_norm_squared = 1**2 + 2**2 + 3**2
@@ -198,7 +201,7 @@ class TestMethods(RLTestCase):
         self.assertAlmostEquals(xd.norm(), correct_norm)
 
     def test_inner(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, 3, 9])
 
@@ -223,7 +226,7 @@ class TestMethods(RLTestCase):
     def _test_lincomb(self, a, b, n=100):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
-        rn = CudaRN(n)
+        rn = CudaRn(n)
 
         # Unaliased arguments
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
@@ -275,7 +278,7 @@ class TestMethods(RLTestCase):
         y_host = np.random.rand(n)
         x_host = np.random.rand(n)
 
-        r3 = CudaRN(n)
+        r3 = CudaRn(n)
         y_device = r3.element(y_host)
         x_device = r3.element(x_host)
 
@@ -299,7 +302,7 @@ class TestMethods(RLTestCase):
         y_host = np.random.rand(n)
         x_host = np.random.rand(n)
 
-        r3 = CudaRN(n)
+        r3 = CudaRn(n)
         y_device = r3.element(y_host)
         x_device = r3.element(x_host)
 
@@ -319,7 +322,7 @@ class TestMethods(RLTestCase):
         y_host = np.random.rand(n)
         x_host = np.random.rand(n)
 
-        r3 = CudaRN(n)
+        r3 = CudaRn(n)
         y_device = r3.element(y_host)
         x_device = r3.element(x_host)
 
@@ -332,24 +335,25 @@ class TestMethods(RLTestCase):
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(y_device, y_host, places=5)
 
+
 class TestConvenience(RLTestCase):
     def test_addition(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, 3, 7])
 
         self.assertAllAlmostEquals(xd + yd, [6, 5, 10])
 
     def test_scalar_mult(self):
-        r3 = CudaRN(3)
+        r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
         C = 5
 
         self.assertAllAlmostEquals(C*xd, [5, 10, 15])
 
     def test_incompatible_operations(self):
-        r3 = CudaRN(3)
-        R3h = RN(3)
+        r3 = CudaRn(3)
+        R3h = Rn(3)
         xA = r3.zero()
         xB = R3h.zero()
 
@@ -360,10 +364,11 @@ class TestConvenience(RLTestCase):
             xA -= xB
 
         with self.assertRaises(TypeError):
-            z = xA+xB
+            xA + xB
 
         with self.assertRaises(TypeError):
-            z = xA-xB
+            xA - xB
+
 
 if __name__ == '__main__':
     unittest.main(exit=False)

@@ -33,8 +33,8 @@ from RL.utility.testutils import Timer
 
 n=10**7
 iterations = 100
-deviceSpace = CudaRN(n)
-hostSpace = RN(n)
+deviceSpace = CudaRn(n)
+hostSpace = Rn(n)
 x = np.random.rand(n)
 y = np.random.rand(n)
 z = np.empty(n)

@@ -18,7 +18,7 @@
 # pylint: disable=protected-access
 
 """
-General carthesian products of LinearSpaces with various metrics, norms,
+General Cartesian products of LinearSpaces with various metrics, norms,
 inner products.
 """
 
@@ -56,11 +56,11 @@ class LinearProductSpace(LinearSpace):
 
     Examples
     --------
-    >>> from RL.space.euclidean import RN, EuclideanSpace
-    >>> r2x3 = LinearProductSpace(RN(2), RN(3))
+    >>> from RL.space.euclidean import Rn, EuclidRn
+    >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
     >>> r2x3.__class__.__name__
     'LinearProductSpace'
-    >>> r2x3 = LinearProductSpace(EuclideanSpace(2), RN(3))
+    >>> r2x3 = LinearProductSpace(EuclidRn(2), Rn(3))
     >>> r2x3.__class__.__name__
     'LinearProductSpace'
     """
@@ -124,8 +124,8 @@ class LinearProductSpace(LinearSpace):
 
         Examples
         -------
-        >>> from RL.space.euclidean import EuclideanSpace
-        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+        >>> from RL.space.euclidean import EuclidRn
+        >>> r2, r3 = EuclidRn(2), EuclidRn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> vec_2x3 = r2x3.element()
@@ -135,8 +135,8 @@ class LinearProductSpace(LinearSpace):
         True
 
         Creates an element in the product space
-        >>> from RL.space.euclidean import RN
-        >>> r2, r3 = RN(2), RN(3)
+        >>> from RL.space.euclidean import Rn
+        >>> r2, r3 = Rn(2), Rn(3)
         >>> prod = LinearProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
@@ -186,8 +186,8 @@ class LinearProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from RL.space.euclidean import EuclideanSpace
-        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+        >>> from RL.space.euclidean import EuclidRn
+        >>> r2, r3 = EuclidRn(2), EuclidRn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
@@ -218,19 +218,19 @@ class LinearProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from RL.space.euclidean import EuclideanSpace
-        >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
-        >>> rn, rm = EuclideanSpace(2), EuclideanSpace(3)
+        >>> from RL.space.euclidean import EuclidRn
+        >>> r2, r3 = EuclidRn(2), EuclidRn(3)
+        >>> rn, rm = EuclidRn(2), EuclidRn(3)
         >>> r2x3, rnxm = LinearProductSpace(r2, r3), LinearProductSpace(rn, rm)
         >>> r2x3.equals(rnxm)
         True
         >>> r3x2 = LinearProductSpace(r3, r2)
         >>> r2x3.equals(r3x2)
         False
-        >>> r5 = LinearProductSpace(*[EuclideanSpace(1)]*5)
+        >>> r5 = LinearProductSpace(*[EuclidRn(1)]*5)
         >>> r2x3.equals(r5)
         False
-        >>> r5 = EuclideanSpace(5)
+        >>> r5 = EuclidRn(5)
         >>> r2x3.equals(r5)
         False
         """
@@ -279,7 +279,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     linear combination is defined component-wise. The product space
     distance is the R^N norm of the vector of distances of the
     components, i.e. for x = (x1, ..., xN) and y = (y1, ..., yN),
-    it is dist(x, y) = RN(N).norm(z), where
+    it is dist(x, y) = Rn(N).norm(z), where
     z = (dist(x1, y1), ..., dist(xN, yN)).
 
     Parameters
@@ -295,7 +295,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
-                  applying the RN norm or 'prod_norm'.
+                  applying the Rn norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
                   Function that should be applied to the array of distances
@@ -322,8 +322,8 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
 
     Examples
     --------
-    >>> from RL.space.euclidean import EuclideanSpace
-    >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+    >>> from RL.space.euclidean import EuclidRn
+    >>> r2, r3 = EuclidRn(2), EuclidRn(3)
     >>> r2x3 = MetricProductSpace(r2, r3, ord='inf')
     >>> x_2 = r2.element([0, 0])
     >>> y_2 = r2.element([3, 4])
@@ -418,7 +418,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
-                  applying the RN norm or 'prod_norm'.
+                  applying the Rn norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
                   Function that should be applied to the array of
@@ -445,8 +445,8 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
     Examples
     --------
-    >>> from RL.space.euclidean import EuclideanSpace
-    >>> r2, r3 = EuclideanSpace(2), EuclideanSpace(3)
+    >>> from RL.space.euclidean import EuclidRn
+    >>> r2, r3 = EuclidRn(2), EuclidRn(3)
     >>> r2x3 = NormedProductSpace(r2, r3, ord='inf')
     >>> x_2 = r2.element([3, 4])
     >>> x_3 = r3.element([2, 2, 1])
@@ -593,7 +593,7 @@ def productspace(*spaces, **kwargs):
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
-                  applying the RN norm or 'prod_norm'.
+                  applying the Rn norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
                   Function that should be applied to the array of
@@ -612,7 +612,7 @@ def productspace(*spaces, **kwargs):
 
     Remark
     ------
-    productspace(RN(1), RN(1)) is mathematically equivalent to RN(2),
+    productspace(Rn(1), Rn(1)) is mathematically equivalent to Rn(2),
     however the latter is usually more efficient numerically.
 
     See also
@@ -656,7 +656,7 @@ def powerspace(base, power, **kwargs):
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
-                  applying the RN norm or 'prod_norm'.
+                  applying the Rn norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
                   Function that should be applied to the array of
@@ -673,7 +673,7 @@ def powerspace(base, power, **kwargs):
 
     Remark
     ------
-    powerspace(RN(1), 2) is mathematically equivalent to RN(2),
+    powerspace(Rn(1), 2) is mathematically equivalent to Rn(2),
     however the latter is usually more efficient numerically.
 
     See also

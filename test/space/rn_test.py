@@ -24,17 +24,18 @@ from future import standard_library
 # External module imports
 import unittest
 import numpy as np
+from math import sqrt
 
 # RL imports
 # import RL.operator.operator as op
 # import RL.space.space as space
-from RL.space.euclidean import RN
+from RL.space.euclidean import Rn, EuclidRn
 from RL.utility.testutils import RLTestCase
 
 standard_library.install_aliases()
 
 
-class RNTest(RLTestCase):
+class RnTest(RLTestCase):
     def vectors(self, rn):
         # Generate numpy vectors
         y = np.random.rand(rn.dim)
@@ -50,7 +51,7 @@ class RNTest(RLTestCase):
     def _test_lincomb(self, a, b, n=10):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
-        rn = RN(n)
+        rn = Rn(n)
 
         # Unaliased arguments
         x, y, z, xVec, yVec, zVec = self.vectors(rn)
@@ -98,7 +99,7 @@ class OperatorOverloadTest(RLTestCase):
         """ Verifies that the statement y=function(x) gives equivalent
         results to Numpy.
         """
-        rn = RN(n)
+        rn = Rn(n)
 
         x_arr = np.random.rand(n)
         y_arr = function(x_arr)
@@ -113,7 +114,7 @@ class OperatorOverloadTest(RLTestCase):
         """ Verifies that the statement z=function(x,y) gives equivalent
         results to Numpy.
         """
-        rn = RN(n)
+        rn = Rn(n)
 
         x_arr = np.random.rand(n)
         y_arr = np.random.rand(n)
@@ -175,6 +176,33 @@ class OperatorOverloadTest(RLTestCase):
         # Binary with aliased inputs
         self._test_unary_operator(lambda x: x + x)
         self._test_unary_operator(lambda x: x - x)
+
+
+class MethodTest(RLTestCase):
+    def test_norm(self):
+        r3 = EuclidRn(3)
+        xd = r3.element([1, 2, 3])
+
+        correct_norm = sqrt(1**2 + 2**2 + 3**2)
+
+        # Space function
+        self.assertAlmostEquals(r3.norm(xd), correct_norm)
+
+        # Member function
+        self.assertAlmostEquals(xd.norm(), correct_norm)
+
+    def test_inner(self):
+        r3 = EuclidRn(3)
+        xd = r3.element([1, 2, 3])
+        yd = r3.element([5, -3, 9])
+
+        correct_inner = 1*5 + 2*(-3) + 3*9
+
+        # Space function
+        self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
+
+        # Member function
+        self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
 
 if __name__ == '__main__':

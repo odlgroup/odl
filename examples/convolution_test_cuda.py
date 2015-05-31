@@ -44,8 +44,8 @@ class CudaConvolution(op.LinearOperator):
     """
 
     def __init__(self, kernel, adjointkernel=None):
-        if not isinstance(kernel.space, cs.CudaRN):
-            raise TypeError("Kernel must be CudaRN vector")
+        if not isinstance(kernel.space, cs.CudaRn):
+            raise TypeError("Kernel must be CudaRn vector")
 
         self.space = kernel.space
         self.kernel = kernel
@@ -81,7 +81,7 @@ continuousKernel = continuousSpace.element(lambda x: np.exp(x/2)*np.cos(x*1.172)
 continuousRhs = continuousSpace.element(lambda x: x**2*np.sin(x)**2*(x > 5))
 
 #Discretization
-rn = cs.CudaRN(5000)
+rn = cs.CudaRn(5000)
 d = dd.uniform_discretization(continuousSpace, rn)
 kernel = d.element(continuousKernel)
 rhs = d.element(continuousRhs)

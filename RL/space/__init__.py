@@ -25,7 +25,7 @@ Set             A mathematical set, has method 'contains'
 ComplexNumbers  The set of complex numbers
 RealNumbers     The set of real numbers
 Integers        The set of integers
-IntervalProd    The carthesian product of n intervals
+IntervalProd    The Cartesian product of n intervals
 Interval        IntervalProd specialization in 1-D
 Rectanggle      IntervalProd specialization in 2-D
 ==========================================================================
@@ -43,7 +43,7 @@ HilbertSpace    A NormedSpace where the norm is induced by a inner product
 ==========================================================================
 Product Spaces (product)
 ==========================================================================
-LinearProductSpace      Vector space created by the carthesian product
+LinearProductSpace      Vector space created by the Cartesian product
                         of other LinearSpaces
 MetricProductSpace      A LinearProductSpace with a metric
 NormedProductSpace      A MetricProductSpace where the metric is induced
@@ -54,12 +54,12 @@ HilbertProductSpace     A HilbertProductSpace where the norm is induced by
 
 Also has a set of concerete implemenation of standard spaces
 ==========================================================================
-RN-type spaces (euclidean, cuda)
+R^n type spaces (euclidean, cuda)
 ==========================================================================
-RN                  Basic space of n-reals, uses numpy.
-NormedRN            RN with some norm
-EuclideanSpace      RN with the usual euclidean norm and inner product
-CudaRN              EuclideanSpace implemented in CUDA
+Rn                  Basic space of n-tuples of real numbers, uses numpy.
+NormedRn            R^n with some norm
+EuclidRn            R^n with the usual Euclidean norm and inner product
+CudaRn              EuclidRn implemented in CUDA
 ==========================================================================
 
 ==========================================================================

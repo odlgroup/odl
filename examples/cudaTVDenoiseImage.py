@@ -49,7 +49,7 @@ class ForwardDiff2D(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
+        if not isinstance(space, CS.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = space
@@ -69,7 +69,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
+        if not isinstance(space, CS.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = powerspace(space, 2)
@@ -231,8 +231,8 @@ space = L2(I)
 n = 2000
 m = 2000
 
-# Underlying RN space
-rn = CS.CudaRN(n*m)
+# Underlying Rn space
+rn = CS.CudaRn(n*m)
 # Example of using an vector pool to reduce allocation overhead
 rnpooled = makePooledSpace(rn, maxPoolSize=5)
 

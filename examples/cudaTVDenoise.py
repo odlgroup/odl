@@ -42,8 +42,8 @@ class ForwardDiff(LinearOperator):
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space, CS.CudaRN):
-            raise TypeError("space must be CudaRN")
+        if not isinstance(space, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
         self.scale = scale
@@ -62,8 +62,8 @@ class ForwardDiffAdj(LinearOperator):
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space, CS.CudaRN):
-            raise TypeError("space must be CudaRN")
+        if not isinstance(space, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
         self.scale = scale
@@ -134,7 +134,7 @@ space = L2(I)
 n = 1000
 
 # Discretization
-rn = CS.CudaRN(n)
+rn = CS.CudaRn(n)
 d = DS.uniform_discretization(space, rn)
 x = d.points()
 fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))

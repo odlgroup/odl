@@ -19,7 +19,7 @@
 
 """
 Default implementations of discretizations of sets using an underlying
-RN representation
+R^n representation
 """
 
 # Imports for common Python 2/3 codebase
@@ -43,15 +43,16 @@ standard_library.install_aliases()
 
 
 def uniform_discretization(parent, rnimpl):
-    """ Creates an UniformDiscretization of space parent using rn as the
-    underlying representation.
+    """ Creates an UniformDiscretization of space parent using 'rnimpl'
+    as the underlying representation.
     """
+
     rn_type = type(rnimpl)
     rn_vector_type = rn_type.Vector
 
     class UniformDiscretization(rn_type):
         """ Uniform discretization of an interval
-            Represents vectors by RN elements
+            Represents vectors by Rn elements
             Uses trapezoid method for integration
         """
 
@@ -60,10 +61,10 @@ def uniform_discretization(parent, rnimpl):
                 raise NotImplementedError("Can only discretize intervals")
 
             if not isinstance(rn, space.HilbertSpace):
-                raise NotImplementedError("RN has to be a Hilbert space")
+                raise NotImplementedError("'rn' has to be a Hilbert space")
 
             if not isinstance(rn, space.Algebra):
-                raise NotImplementedError("RN has to be an algebra")
+                raise NotImplementedError("'rn' has to be an algebra")
 
             self.parent = parent
             self._rn = rn
@@ -124,7 +125,7 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
 
     class PixelDiscretization(rn_type):
         """ Uniform discretization of an square
-            Represents vectors by RN elements
+            Represents vectors by R^n elements
             Uses sum method for integration
         """
 
@@ -133,10 +134,10 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
                 raise NotImplementedError('Can only discretize Squares')
 
             if not isinstance(rn, space.HilbertSpace):
-                raise NotImplementedError('RN has to be a Hilbert space')
+                raise NotImplementedError("'rn' has to be a Hilbert space")
 
             if not isinstance(rn, space.Algebra):
-                raise NotImplementedError('RN has to be an algebra')
+                raise NotImplementedError("'rn' has to be an algebra")
 
             if not rn.dim == cols*rows:
                 raise NotImplementedError(errfmt('''

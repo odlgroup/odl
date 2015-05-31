@@ -31,7 +31,7 @@ from builtins import str, super
 # RL imports
 import RL.operator.operator as op
 from RL.space.space import LinearSpace
-from RL.space.set import UniversalSet, CarthesianProduct
+from RL.space.set import UniversalSet, CartesianProduct
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -75,14 +75,14 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
-        >>> r3 = RN(3)
+        >>> from RL.space.euclidean import Rn
+        >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.apply(vec, out)
         >>> out
-        RN(3).element([ 2.,  4.,  6.])
+        Rn(3).element([ 2.,  4.,  6.])
         """
         out.lincomb(self._scal, input)
 
@@ -104,12 +104,12 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
-        >>> r3 = RN(3)
+        >>> from RL.space.euclidean import Rn
+        >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> op(vec)
-        RN(3).element([ 2.,  4.,  6.])
+        Rn(3).element([ 2.,  4.,  6.])
         """
 
         return self._scal * input
@@ -130,8 +130,8 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import EuclideanSpace
-        >>> r3 = EuclideanSpace(3)
+        >>> from RL.space.euclidean import EuclidRn
+        >>> r3 = EuclidRn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> inv = op.inverse
@@ -158,11 +158,11 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
-        >>> r3 = RN(3)
+        >>> from RL.space.euclidean import Rn
+        >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.domain
-        RN(3)
+        Rn(3)
         """
         return self._space
 
@@ -182,11 +182,11 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
-        >>> r3 = RN(3)
+        >>> from RL.space.euclidean import Rn
+        >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.range
-        RN(3)
+        Rn(3)
         """
         return self._space
 
@@ -196,6 +196,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
     def __str__(self):
         return str(self._scal) + "*I"
+
 
 class IdentityOperator(ScalingOperator):
     """
@@ -216,6 +217,7 @@ class IdentityOperator(ScalingOperator):
     def __str__(self):
         return "I"
 
+
 class LinCombOperator(op.LinearOperator):
     """
     The lincomb operator calculates:
@@ -233,7 +235,7 @@ class LinCombOperator(op.LinearOperator):
         Scalar to multiply in[1] by
     """
     def __init__(self, space, a, b):
-        self.domain = CarthesianProduct(space, space)
+        self.domain = CartesianProduct(space, space)
         self.range = space
         self.a = a
         self.b = b
@@ -242,15 +244,15 @@ class LinCombOperator(op.LinearOperator):
         """
         Example
         -------
-        >>> from RL.space.euclidean import RN
-        >>> r3 = RN(3)
+        >>> from RL.space.euclidean import Rn
+        >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = LinCombOperator(r3, 1.0, 1.0)
         >>> op.apply([x, y], z)
         >>> z
-        RN(3).element([ 2.,  4.,  6.])
+        Rn(3).element([ 2.,  4.,  6.])
         """
         out.lincomb(self.a, input[0], self.b, input[1])
 
@@ -259,6 +261,7 @@ class LinCombOperator(op.LinearOperator):
 
     def __str__(self):
         return "{}*x + {}*y".format(self.a, self.b)
+
 
 class MultiplyOperator(op.LinearOperator):
     """
@@ -275,22 +278,22 @@ class MultiplyOperator(op.LinearOperator):
             The space the vectors should lie in
     """
     def __init__(self, space):
-        self.domain = CarthesianProduct(space, space)
+        self.domain = CartesianProduct(space, space)
         self.range = space
 
     def _apply(self, input, out):
         """
         Example
         -------
-        >>> from RL.space.euclidean import EuclideanSpace
-        >>> r3 = EuclideanSpace(3)
+        >>> from RL.space.euclidean import EuclidRn
+        >>> r3 = EuclidRn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
         >>> op.apply([x, y], z)
         >>> z
-        EuclideanSpace(3).element([ 1.,  4.,  9.])
+        EuclidRn(3).element([ 1.,  4.,  9.])
         """
         out.assign(input[1])
         out.multiply(input[0])
@@ -300,6 +303,7 @@ class MultiplyOperator(op.LinearOperator):
 
     def __str__(self):
         return "{}*x + {}*y".format(self.a, self.b)
+
 
 def instance_method(function):
     """ Adds a self argument to a function
@@ -311,6 +315,7 @@ def instance_method(function):
         return function(*args, **kwargs)
 
     return method
+
 
 def operator(call=None, apply=None, inv=None, deriv=None,
              domain=UniversalSet(), range=UniversalSet()):
@@ -349,7 +354,6 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     15
     """
 
-
     if call is None and apply is None:
         raise ValueError("Need to supply at least one of call or apply")
 
@@ -365,6 +369,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
                                 'range': range})
 
     return SimpleOperator()
+
 
 def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
                     domain=UniversalSet(), range=UniversalSet()):
@@ -406,7 +411,6 @@ def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
     15
     """
 
-
     if call is None and apply is None:
         raise ValueError("Need to supply at least one of call or apply")
 
@@ -423,6 +427,7 @@ def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
                                       'range': range})
 
     return SimpleLinearOperator()
+
 
 if __name__ == '__main__':
     import doctest
