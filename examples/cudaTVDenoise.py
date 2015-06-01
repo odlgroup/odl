@@ -78,8 +78,8 @@ class ForwardDiffAdj(LinearOperator):
 
 
 def denoise(x0, la, mu, iterations=1):
-    scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end -
-                                x0.space.parent.domain.begin)
+    scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end[0] -
+                                x0.space.parent.domain.begin[0])
 
     diff = ForwardDiff(x0.space, scale)
 
@@ -135,7 +135,7 @@ n = 1000
 
 # Discretization
 rn = CS.CudaRN(n)
-d = DS.makeUniformDiscretization(space, rn)
+d = DS.uniform_discretization(space, rn)
 x = d.points()
 fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))
 plt.plot(fun)

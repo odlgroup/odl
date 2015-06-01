@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+f# Copyright 2014, 2015 Holger Kohr, Jonas Adler
 #
 # This file is part of RL.
 #

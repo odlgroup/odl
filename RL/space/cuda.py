@@ -34,7 +34,7 @@ from numpy import float64
 from numbers import Integral
 
 # RL imports
-import RL.operator.function as fun
+import RL.operator.operator as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
