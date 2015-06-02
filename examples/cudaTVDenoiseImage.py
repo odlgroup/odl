@@ -57,7 +57,7 @@ class ForwardDiff2D(LinearOperator):
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
-                                 self.domain.cols, self.domain.rows)
+                                 self.domain.shape[0], self.domain.shape[1])
 
     @property
     def adjoint(self):
@@ -77,7 +77,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
-                                    self.range.cols, self.range.rows)
+                                    self.range.shape[0], self.range.shape[1])
 
     @property
     def adjoint(self):
@@ -237,7 +237,7 @@ rn = CS.CudaRN(n*m)
 rnpooled = makePooledSpace(rn, maxPoolSize=5)
 
 # Discretize
-d = DS.makePixelDiscretization(space, rnpooled, n, m)
+d = DS.uniform_discretization(space, rnpooled, (n, m))
 x, y = d.points()
 data = RLcpp.utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5
