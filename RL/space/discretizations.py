@@ -47,7 +47,7 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
     RNVectortype = RNType.Vector
 
     if shape is None:
-        shape = (rnimpl.n, )
+        shape = (rnimpl.n,)
 
     class UniformDiscretization(RNType):
         """ Uniform discretization of an square
@@ -68,7 +68,7 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
             if rn.n != np.prod(shape):
                 raise NotImplementedError(errfmt('''
                 Dimensions do not match, expected {}, got {}
-                '''.format(cols, rows, np.prod(shape), rn.n)))
+                '''.format(np.prod(rn.n), np.prod(shape))))
 
             self.parent = parent
             self.shape = tuple(shape)
@@ -91,7 +91,6 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
 
         def element(self, data=None, **kwargs):
             if isinstance(data, FunctionSpace.Vector):
-                
                 if self.parent.domain.dim == 1:
                     tmp = np.array([data(point)
                                     for point in self.points()],
@@ -132,7 +131,10 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 return tuple(point.flatten(self.order) for point in points)
 
         def __getattr__(self, name):
-            return getattr(self._rn, name)
+            if name in self.__dict__:
+                return self.__dict__[name]
+            else:
+                return getattr(self._rn, name)
 
         def __str__(self):
             return ('uniform_discretization(' + str(self._rn) + ', ' +
