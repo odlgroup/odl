@@ -120,6 +120,7 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
     order indicates the order data is stored in, 'C'-order is the default
     numpy order, also called row major.
     """
+
     rn_type = type(rnimpl)
     rn_vector_type = rn_type.Vector
 

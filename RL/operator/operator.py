@@ -731,7 +731,7 @@ class OperatorRightScalarMultiplication(Operator):
 
     def __init__(self, op, scalar, tmp=None):
         if (isinstance(op.domain, LinearSpace) and
-            not op.domain.field.contains(scalar)):
+                not op.domain.field.contains(scalar)):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of domain ({}) of 'op'
             '''.format(scalar, op.domain.field)))
