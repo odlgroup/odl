@@ -552,6 +552,19 @@ class Rectangle(IntervProd):
         return ('Rectangle({b!r}, {e!r})'.format(b=list(self._begin),
                                                  e=list(self._end)))
 
+    
+class Cube(IntervProd):
+    def __init__(self, begin, end):
+        super().__init__(begin, end)
+        if self.dim != 3:
+            raise ValueError(errfmt('''
+            Lengths of 'begin' and 'end' must be equal to 3 (got {}).
+            '''.format(self.dim)))
+
+    def __repr__(self):
+        return ('Cube({b!r}, {e!r})'.format(b=list(self._begin),
+                                            e=list(self._end)))
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
