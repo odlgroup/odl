@@ -33,6 +33,7 @@ import RL.space.discretizations as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import RL.operator.solvers as solvers
+from RL.utility.testutils import Timer
 
 import matplotlib.pyplot as plt
 
@@ -62,32 +63,33 @@ class CudaProjector3D(OP.LinearOperator):
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
             
-            self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
+            with Timer("projecting"):
+                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
 
 
 #Set geometry parameters
 volumeSize = np.array([20.0,20.0,20.0])
 volumeOrigin = -volumeSize/2.0
 
-detectorSize = np.array([50.0, 50.0])
+detectorSize = np.array([30.0, 30.0])
 detectorOrigin = -detectorSize/2.0
 
 sourceAxisDistance = 600.0
 detectorAxisDistance = 20.0
 
 #Discretization parameters
-nVoxels = np.array([100, 100, 100])
-nPixels = np.array([500, 500])
-nProjection = 1
+nVoxels = np.array([448, 448, 448])
+nPixels = np.array([720, 780])
+nProjection = 332
 
 #Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
-stepSize = voxelSize.max()/2.0
+stepSize = voxelSize.max()
 
 #Define projection geometries
 geometries = []
-for theta in np.linspace(0, 2*pi, nProjection):
+for theta in np.linspace(0, pi, nProjection, endpoint = False):
     x0 = np.array([cos(theta), sin(theta), 0.0])
     y0 = np.array([-sin(theta), cos(theta), 0.0])
     z0 = np.array([0.0, 0.0, 1.0])
@@ -126,6 +128,7 @@ projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
 result = dataDisc.element()
 projector.apply(phantomVec, result)
 
-plt.figure()
-plt.imshow(result[0][:].reshape(nPixels))
+for i in range(5):
+    plt.figure()
+    plt.imshow(result[i][:].reshape(nPixels))
 plt.show()
