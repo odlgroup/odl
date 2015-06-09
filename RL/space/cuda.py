@@ -204,7 +204,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return sqrt(self.impl.normSq(x.data))
+        return self.impl.norm(x.data)
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y

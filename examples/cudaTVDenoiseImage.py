@@ -165,8 +165,8 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
         xdiff += d
         xdiff -= b
         diff.adjoint.apply(xdiff, tmp)
-        L2.lincomb(C1, f, 2*C2, x)
-        x.lincomb(C2, tmp)
+        x.lincomb(C1, f, 2*C2, x)
+        x.lincomb(C2, tmp, 1, x)
 
         # d = diff(x)+b
         diff.apply(x, d)
@@ -253,7 +253,7 @@ plt.axis('off')
 la = 0.3
 mu = 5.0
 with Timer("denoising time"):
-    result = TVdenoise2D(fun, la, mu, 100)
+    result = TVdenoise2DOpt(fun, la, mu, 100)
 
 # Show result
 plt.figure()
