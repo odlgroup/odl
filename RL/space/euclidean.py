@@ -75,16 +75,14 @@ class Rn(LinearSpace):
             ['axpy', 'scal', 'copy'])
 
     def element(self, data=None, **kwargs):
-        """ Creates an element in R^n
+        """ Create an element in R^n
 
         Parameters
         ----------
         data : array-like, optional
-            Will be used to initialize the new element. If 'data' is
-            a numpy.ndarray
             The array of values to fill the new array with. It must
             be castable to a numpy.ndarray with dtype=float64 and
-            shape=(dim,), where 'dim' is the space dimension.
+            shape=(n,).
 
         Returns
         -------
@@ -177,19 +175,19 @@ class Rn(LinearSpace):
         """
 
         if x is y and b != 0:
-            # If x is aligned with y, we are looking at:     z = (a+b)*x
+            # x is aligned with y -> z = (a+b)*x
             self._lincomb(z, a+b, x, 0, x)
         elif z is x and z is y:
-            # If all the vectors are aligned we have:        z = (a+b)*z
+            # All the vectors are aligned -> z = (a+b)*z
             self._scal(a+b, z.data)
         elif z is x:
-            # If z is aligned with x we have                 z = a*z + b*y
+            # z is aligned with x -> z = a*z + b*y
             if a != 1:
                 self._scal(a, z.data)
             if b != 0:
                 self._axpy(y.data, z.data, self._dim, b)
         elif z is y:
-            # If z is aligned with y we have                 z = a*x + b*z
+            # z is aligned with y -> z = a*x + b*z
             if b != 1:
                 self._scal(b, z.data)
             if a != 0:
@@ -198,29 +196,29 @@ class Rn(LinearSpace):
             # We have exhausted all alignment options, so x != y != z
             # We now optimize for various values of a and b
             if b == 0:
-                if a == 0:  # Zero assignment                z = 0
+                if a == 0:  # Zero assignment -> z = 0
                     z.data[:] = 0
-                else:                                       # z = a*x
+                else:  # Scaled copy -> z = a*x
                     self._copy(x.data, z.data)
                     if a != 1:
                         self._scal(a, z.data)
             else:
-                if a == 0:                                  # z = b*y
+                if a == 0:  # Scaled copy -> z = b*y
                     self._copy(y.data, z.data)
                     if b != 1:
                         self._scal(b, z.data)
 
-                elif a == 1:                                # z = x + b*y
+                elif a == 1:  # No scaling in x -> z = x + b*y
                     self._copy(x.data, z.data)
                     self._axpy(y.data, z.data, self._dim, b)
-                else:                                       # z = a*x + b*y
+                else:  # Generic case -> z = a*x + b*y
                     self._copy(y.data, z.data)
                     if b != 1:
                         self._scal(b, z.data)
                     self._axpy(x.data, z.data, self._dim, a)
 
     def zero(self):
-        """ Returns a vector of zeros
+        """ Create a vector of zeros
 
         Parameters
         ----------
@@ -229,11 +227,6 @@ class Rn(LinearSpace):
         Returns
         -------
         zero : Rn.Vector instance
-
-        Note
-        ----
-        While the space has a single (unique) zero vector,
-        each call to this method returns a new instance of this vector.
 
         Examples
         --------
@@ -248,7 +241,7 @@ class Rn(LinearSpace):
 
     @property
     def field(self):
-        """ The underlying field of R^n is the set of real numbers
+        """ The field of R^n, i.e. the real numbers
 
         Parameters
         ----------
@@ -270,7 +263,7 @@ class Rn(LinearSpace):
 
     @property
     def dim(self):
-        """ The number of dimensions of this space
+        """ The dimension of this space
 
         Parameters
         ----------
@@ -309,13 +302,19 @@ class Rn(LinearSpace):
         >>> r3.equals(r3)
         True
 
+        Equality is not identity:
+
         >>> r3a, r3b = Rn(3), Rn(3)
         >>> r3a.equals(r3b)
         True
+        >>> r3a is r3b
+        False
 
         >>> r3, r4 = Rn(3), Rn(4)
         >>> r3.equals(r4)
         False
+
+        Equality can also be checked with "==":
 
         >>> r3, r4 = Rn(3), Rn(4)
         >>> r3 == r3
@@ -335,7 +334,7 @@ class Rn(LinearSpace):
         return self.__repr__()
 
     class Vector(LinearSpace.Vector):
-        """ An R^n vector represented using numpy
+        """ An R^n vector represented with a NumPy array
 
         Parameters
         ----------
@@ -344,7 +343,7 @@ class Rn(LinearSpace):
             Space instance this vector lives in
         data : numpy.ndarray
             Array that will be used as data representation. Its dtype
-            must be float64, and its shape must be (dim,).
+            must be float64, and its shape must be (n,).
         """
 
         def __init__(self, space, data):
@@ -544,7 +543,7 @@ class MetricRn(Rn, MetricSpace):
         return self.__repr__()
 
     class Vector(Rn.Vector, MetricSpace.Vector):
-        """ A MetricRn vector represented using numpy
+        """ A MetricRn vector represented by a NumPy array
 
         Parameters
         ----------
@@ -558,7 +557,7 @@ class MetricRn(Rn, MetricSpace):
 
 
 class NormedRn(Rn, NormedSpace):
-    """ The real space R^n with the p-norm.
+    """ The real space R^n with the p-norm or a custom norm.
 
     Parameters
     ----------
@@ -570,8 +569,8 @@ class NormedRn(Rn, NormedSpace):
     kwargs: {'weights', 'norm'}
             'weights': array-like, optional
                 Array of weights to be used in the norm calculation.
-                It must be broadcastable to size (n,), where n is the
-                space dimension. All entries must be positive.
+                It must be broadcastable to size (n,). All entries
+                must be positive.
                 Cannot be combined with 'norm'.
             'norm': callable, optional
                 A custom norm to use instead of the p-norm. Cannot be
@@ -630,7 +629,7 @@ class NormedRn(Rn, NormedSpace):
         super().__init__(dim)
 
     def _norm(self, vector):
-        """ Calculates the norm of a vector
+        """ Calculate the norm of a vector
 
         Parameters
         ----------
@@ -645,22 +644,30 @@ class NormedRn(Rn, NormedSpace):
         Examples
         --------
 
-        >>> rn = NormedRn(2, p=2)
-        >>> x = rn.element([3, 4])
-        >>> rn.norm(x)
+        >>> r2_2 = NormedRn(2, p=2)
+        >>> x = r2_2.element([3, 4])
+        >>> r2_2.norm(x)
         5.0
 
-        >>> rn = NormedRn(2, p=1)
-        >>> x = rn.element([3, 4])
-        >>> rn.norm(x)
+        >>> r2_1 = NormedRn(2, p=1)
+        >>> x = r2_1.element([3, 4])
+        >>> r2_1.norm(x)
         7.0
 
-        >>> rn = NormedRn(2, p=0)
-        >>> x = rn.element([3, 0])
-        >>> rn.norm(x)
+        >>> r2_0 = NormedRn(2, p=0)
+        >>> x = r2_0.element([3, 0])
+        >>> r2_0.norm(x)
         1.0
 
-        # TODO: custom norm doctest
+        Custom norm:
+
+        >>> from functools import partial
+        >>> norm_0 = partial(np.linalg.norm, ord=0)
+        >>> r2_c = NormedRn(2, norm=norm_0)
+        >>> x = r2_c.element([3, 0])
+        >>> r2_c.norm(x) == r2_0.norm(x)
+        True
+
         # TODO: weights doctest
         """
 
@@ -679,21 +686,21 @@ class NormedRn(Rn, NormedSpace):
         return self.__repr__()
 
     class Vector(Rn.Vector, NormedSpace.Vector):
-        """ A NormedRn vector represented using numpy
+        """ A NormedRn vector represented by a NumPy array
 
         Parameters
         ----------
 
-        space : MetricRn
+        space : NormedRn
             Space instance this vector lives in
         data : numpy.ndarray
             Array that will be used as data representation. Its dtype
-            must be float64, and its shape must be (dim,).
+            must be float64, and its shape must be (n,).
         """
 
 
 class EuclidRn(Rn, HilbertSpace, Algebra):
-    """The real space R^n with the usual inner product.
+    """The real space R^n with the usual inner (dot) product.
 
     Parameters
     ----------
@@ -730,7 +737,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         super().__init__(dim)
 
     def _norm(self, x):
-        """ Calculates the norm of a vector.
+        """ Calculate the norm of a vector.
 
         norm(x) := sqrt(inner(x, x)).
 
@@ -757,7 +764,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         return sqrt(self._inner(x, x))
 
     def _inner(self, x, y):
-        """ Calculates the inner product of two vectors
+        """ Calculate the inner product of two vectors
 
         This is defined as:
 
@@ -780,10 +787,8 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         >>> rn = EuclidRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
-        >>> 5*1 + 3*2 + 2*3
-        17
-        >>> rn.inner(x, y)
-        17.0
+        >>> rn.inner(x, y) == 5*1 + 3*2 + 2*3
+        True
 
         TODO: weighted / custom
         """
@@ -796,7 +801,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
             return float(self._dot(x.data, self._weights * y.data))
 
     def _multiply(self, x, y):
-        """ Calculates the pointwise product of two vectors and assigns the
+        """ Calculate the pointwise product of two vectors and assign the
         result to `y`
 
         This is defined as:
@@ -806,9 +811,9 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : RnVector
+        x : EuclidRn.Vector
             read from
-        y : RnVector
+        y : EuclidRn.Vector
             read from and written to
 
         Returns
