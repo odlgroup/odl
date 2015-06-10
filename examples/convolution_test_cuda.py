@@ -73,10 +73,10 @@ class CudaConvolution(op.LinearOperator):
 
 
 
-#Continuous definition of problem
+# Continuous definition of problem
 continuousSpace = fs.L2(sets.Interval(0, 10))
 
-#Complicated functions to check performance
+# Complicated functions to check performance
 continuousKernel = continuousSpace.element(lambda x: np.exp(x/2)*np.cos(x*1.172))
 continuousRhs = continuousSpace.element(lambda x: x**2*np.sin(x)**2*(x > 5))
 

@@ -29,7 +29,6 @@ from future import standard_library
 
 # External module imports
 import numpy as np
-from math import sqrt
 from numbers import Integral
 
 # RL imports
@@ -203,7 +202,7 @@ class CudaRn(spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return sqrt(self.impl.normSq(x.data))
+        return self.impl.norm(x.data)
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -553,7 +552,7 @@ class CudaRn(spaces.HilbertSpace, spaces.Algebra):
                 self.data.__setitem__(index, value)
 
 
-#Methods, todo, move
+# Methods, TODO: move
 def abs(inp, outp):
     RLcpp.PyCuda.abs(inp.data, outp.data)
 

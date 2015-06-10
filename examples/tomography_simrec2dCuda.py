@@ -99,8 +99,8 @@ sourceAxisDistance = 20.0
 detectorAxisDistance = 20.0
 
 #Discretization parameters
-nVoxels = np.array([500, 500])
-nPixels = 4000
+nVoxels = np.array([1000, 1000])
+nPixels = 1000
 nProjection = 1000
 
 #Scale factors
@@ -134,7 +134,7 @@ reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 #Discretize the reconstruction space
 reconRn = cs.CudaRn(nVoxels.prod())
-reconDisc = dd.pixel_discretization(reconSpace, reconRn, nVoxels[0], nVoxels[1])
+reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels)
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
@@ -161,7 +161,7 @@ def plotResult(x):
 #Solve using landweber
 x = reconDisc.zero()
 #solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, part_results=solvers.ForEachPartial(plotResult))
-solvers.landweber(projector, x, projections, 5, omega=0.4/normEst, part_results=solvers.PrintIterationPartial())
+solvers.landweber(projector, x, projections, 10, omega=0.4/normEst, part_results=solvers.PrintIterationPartial())
 #solvers.conjugate_gradient(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
 
 plt.imshow(x[:].reshape(nVoxels))

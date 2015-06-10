@@ -172,7 +172,7 @@ class FunctionSpace(Algebra):
         def _call(self, rhs):
             """ Apply the functional in some point
             """
-            return self._function(rhs)
+            return float(self._function(rhs))
 
         @property
         def domain(self):

@@ -246,18 +246,14 @@ class IntervalProd(Set):
     @property
     def begin(self):
         """ The left interval boundary/boundaries
-
-        If dim == 1, a float is returned, otherwise an array.
         """
-        return self._begin[0] if self.dim == 1 else self._begin
+        return self._begin
 
     @property
     def end(self):
         """ The right interval boundary/boundaries
-
-        If dim == 1, a float is returned, otherwise an array.
         """
-        return self._end[0] if self.dim == 1 else self._end
+        return self._end
 
     @property
     def dim(self):
@@ -624,7 +620,7 @@ class Interval(IntervalProd):
         return self.end - self.begin
 
     def __repr__(self):
-        return 'Interval({b}, {e})'.format(b=self.begin, e=self.end)
+        return 'Interval({b}, {e})'.format(b=self.begin[0], e=self.end[0])
 
 
 class Rectangle(IntervalProd):
@@ -644,6 +640,19 @@ class Rectangle(IntervalProd):
     def __repr__(self):
         return ('Rectangle({b!r}, {e!r})'.format(b=list(self._begin),
                                                  e=list(self._end)))
+
+
+class Cube(IntervalProd):
+    def __init__(self, begin, end):
+        super().__init__(begin, end)
+        if self.dim != 3:
+            raise ValueError(errfmt('''
+            Lengths of 'begin' and 'end' must be equal to 3 (got {}).
+            '''.format(self.dim)))
+
+    def __repr__(self):
+        return ('Cube({b!r}, {e!r})'.format(b=list(self._begin),
+                                            e=list(self._end)))
 
 
 class CartesianProduct(Set):

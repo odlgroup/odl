@@ -97,8 +97,7 @@ dataDisc = dd.uniform_discretization(dataSpace, dataRn)
 
 reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
 reconRn = ds.EuclidRn(nVoxels.prod())
-reconDisc = dd.pixel_discretization(reconSpace, reconRn, nVoxels[0],
-                                       nVoxels[1])
+reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
