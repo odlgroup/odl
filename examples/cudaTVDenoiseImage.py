@@ -57,7 +57,7 @@ class ForwardDiff2D(LinearOperator):
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
-                                 self.domain.cols, self.domain.rows)
+                                 self.domain.shape[0], self.domain.shape[1])
 
     @property
     def adjoint(self):
@@ -77,7 +77,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
-                                    self.range.cols, self.range.rows)
+                                    self.range.shape[0], self.range.shape[1])
 
     @property
     def adjoint(self):
@@ -165,8 +165,8 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
         xdiff += d
         xdiff -= b
         diff.adjoint.apply(xdiff, tmp)
-        L2.lincomb(C1, f, 2*C2, x)
-        x.lincomb(C2, tmp)
+        x.lincomb(C1, f, 2*C2, x)
+        x.lincomb(C2, tmp, 1, x)
 
         # d = diff(x)+b
         diff.apply(x, d)
@@ -237,7 +237,7 @@ rn = CS.CudaRN(n*m)
 rnpooled = makePooledSpace(rn, maxPoolSize=5)
 
 # Discretize
-d = DS.makePixelDiscretization(space, rnpooled, n, m)
+d = DS.uniform_discretization(space, rnpooled, (n, m))
 x, y = d.points()
 data = RLcpp.utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5
@@ -253,7 +253,7 @@ plt.axis('off')
 la = 0.3
 mu = 5.0
 with Timer("denoising time"):
-    result = TVdenoise2D(fun, la, mu, 100)
+    result = TVdenoise2DOpt(fun, la, mu, 100)
 
 # Show result
 plt.figure()

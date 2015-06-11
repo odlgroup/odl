@@ -93,7 +93,7 @@ class ForwardDiff2D(LinearOperator):
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
-                                 self.domain.cols, self.domain.rows)
+                                 self.domain.shape[0], self.domain.shape[1])
 
     @property
     def adjoint(self):
@@ -113,7 +113,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
 
     def _apply(self, rhs, out):
         RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
-                                    self.range.cols, self.range.rows)
+                                    self.range.shape[0], self.range.shape[1])
 
     @property
     def adjoint(self):
@@ -129,7 +129,7 @@ class TestCudaForwardDifference(RLTestCase):
         # Discretization
         n = 6
         rn = CS.CudaRN(n)
-        d = dd.makeUniformDiscretization(space, rn)
+        d = dd.uniform_discretization(space, rn)
         fun = d.element([1, 2, 5, 3, 2, 1])
 
         # Create operator
@@ -150,7 +150,7 @@ class TestCudaForwardDifference2D(RLTestCase):
         n = 5
         m = 5
         rn = CS.CudaRN(n*m)
-        d = dd.makePixelDiscretization(space, rn, n, m)
+        d = dd.uniform_discretization(space, rn, (n, m))
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0],
@@ -195,7 +195,7 @@ class TestCudaForwardDifference2D(RLTestCase):
 
         # Discretization
         rn = CS.CudaRN(n*m)
-        d = dd.makePixelDiscretization(space, rn, n, m)
+        d = dd.uniform_discretization(space, rn, (n, m))
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0],

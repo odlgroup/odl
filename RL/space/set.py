@@ -178,11 +178,11 @@ class IntervProd(Set):
     # Basic properties
     @property
     def begin(self):
-        return self._begin[0] if self.dim == 1 else self._begin
+        return self._begin
 
     @property
     def end(self):
-        return self._end[0] if self.dim == 1 else self._end
+        return self._end
 
     @property
     def dim(self):
@@ -533,7 +533,7 @@ class Interval(IntervProd):
         return self.end - self.begin
 
     def __repr__(self):
-        return ('Interval({b}, {e})'.format(b=self.begin, e=self.end))
+        return ('Interval({b}, {e})'.format(b=self.begin[0], e=self.end[0]))
 
 
 class Rectangle(IntervProd):
@@ -551,6 +551,19 @@ class Rectangle(IntervProd):
     def __repr__(self):
         return ('Rectangle({b!r}, {e!r})'.format(b=list(self._begin),
                                                  e=list(self._end)))
+
+    
+class Cube(IntervProd):
+    def __init__(self, begin, end):
+        super().__init__(begin, end)
+        if self.dim != 3:
+            raise ValueError(errfmt('''
+            Lengths of 'begin' and 'end' must be equal to 3 (got {}).
+            '''.format(self.dim)))
+
+    def __repr__(self):
+        return ('Cube({b!r}, {e!r})'.format(b=list(self._begin),
+                                            e=list(self._end)))
 
 
 if __name__ == '__main__':

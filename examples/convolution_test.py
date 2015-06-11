@@ -83,7 +83,7 @@ continuousRhs = continuousSpace.element(lambda x: x**2 *
 
 # Discretization
 rn = ds.EuclideanSpace(500)
-d = dd.makeUniformDiscretization(continuousSpace, rn)
+d = dd.uniform_discretization(continuousSpace, rn)
 kernel = d.element(continuousKernel)
 rhs = d.element(continuousRhs)
 

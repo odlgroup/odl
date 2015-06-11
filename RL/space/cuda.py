@@ -34,7 +34,7 @@ from numpy import float64
 from numbers import Integral
 
 # RL imports
-import RL.operator.function as fun
+import RL.operator.operator as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
@@ -204,7 +204,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return sqrt(self.impl.normSq(x.data))
+        return self.impl.norm(x.data)
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
