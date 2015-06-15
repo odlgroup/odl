@@ -147,6 +147,7 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
             return "uniform_discretization(" + repr(self.parent) + ", " + repr(self._rn) + shapestr + orderstr + ")"
 
         class Vector(RNVectortype):
-            pass
+            def as_array(self):
+                return np.reshape(self[:], self.space.shape, self.space.order)
 
     return UniformDiscretization(parent, rnimpl, shape, order)
