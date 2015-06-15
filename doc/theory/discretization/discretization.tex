@@ -946,6 +946,8 @@ $V^m_{\ext}=V^m_{\rest}$, then $\vA=\wt{\vA}^T$.
 
 \section{Software implementation}
 
+\subsection{General considerations}
+%
 \textbf{Discretizations:}
 A discretization is implemented as a discretized linear space $\VecSpace{X}_n = (\VecSpace{X}, \Field^n, \RnX, \EnX)$ as follows:
 %
@@ -954,8 +956,9 @@ A discretization is implemented as a discretized linear space $\VecSpace{X}_n = 
  \item When initialized, it is provided with \emph{instances} of $\VecSpace{X}$ and $\Field^n$
  \item It inherits the ``intersection'' of the structure of $\VecSpace{X}$ and $\Field^n$, i.e. if $\VecSpace{X}$ is a 
  \texttt{MetricSpace} and $\Field^n$ a \texttt{HilbertSpace}, $\VecSpace{X}_n$ will be a \texttt{MetricSpace}.
+ \item Elements in $\VecSpace{X}_n$ are created by casting $n$-tuples of elements of $\Field$ (given as list, array, \ldots).
  \item $\RnX$ can optionally be provided as a \texttt{LinearOperator}. If in the case of $\VecSpace{X}$ being a \texttt{FunctionSpace}, 
- $\RnX$ is given, an analytically defined function (i.e. a   Python function) can be mapped to a function in $\VecSpace{X}_n$, e.g. by 
+ $\RnX$ is given, an analytically defined function (i.e. a   Python function) can be mapped to an element in $\VecSpace{X}_n$, e.g. by 
  point collocation.
  \item $\EnX$ can optionally be provided as a \texttt{LinearOperator}. If $\EnX$ is given and $\VecSpace{X}$ is a \texttt{FunctionSpace}, 
  a discretized function in $\VecSpace{X}_n$ can be evaluated at any given point, e.g. by interpolation. Hence, this defines a continuous 
@@ -974,6 +977,20 @@ $\VecSpace{X}_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ of the same space $\VecS
  composition of these operators by default.
  \item A direct (optimized) implementation and can be provided e.g. by an external software package.
 \end{itemize}
+
+\subsection{Dictionary-based discretization}
+
+\subsection{Examples}
+
+\begin{example}[Re-interpretation]
+ Let $\bar f \in \VecSpace{X}_n = (\VecSpace{X}, \Field^n, \emptyset, \emptyset)$ be represented by $\valpha \in \Field^n$ and 
+ $\VecSpace{X}_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ with $m=n$. Then $\bar f$ can be re-interpreted as $\bar f \in \VecSpace{X}_m$ by 
+ the identity mapping $\Op{I}: \VecSpace{X}_n \to \VecSpace{X}_m$. Practically, the re-mapped element will be aware of the ``added 
+ structure '' $\RmX, \EmX$.
+\end{example}
+
+
+
 
 
 \cleardoublepage
