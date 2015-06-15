@@ -35,8 +35,17 @@
 \newcommand{\imagerange}{V}
 \newcommand{\Op}[1]{\mathcal{#1}}
 \newcommand{\DiscOp}[1]{\mathsf{#1}}
-\DeclareMathOperator{\extend}{\epsilon}
+\newcommand*{\EXT}[2]{\ensuremath{E_{#1}^{#2}}}
+\newcommand*{\REST}[2]{\ensuremath{R_{#1}^{#2}}}
+\newcommand*{\PROJ}[2]{\ensuremath{P_{#1}^{#2}}}
+\newcommand*{\RnX}{\ensuremath{\REST{n}{\VecSpace{X}}}}
+\newcommand*{\RmY}{\ensuremath{\REST{m}{\VecSpace{Y}}}}
+\newcommand*{\EnX}{\ensuremath{\EXT{n}{\VecSpace{X}}}}
+\newcommand*{\EmY}{\ensuremath{\EXT{m}{\VecSpace{Y}}}}
+\newcommand*{\PnX}{\ensuremath{\PROJ{n}{\VecSpace{X}}}}
+\newcommand*{\PmY}{\ensuremath{\PROJ{m}{\VecSpace{Y}}}}
 \DeclareMathOperator{\rest}{\pi}
+\DeclareMathOperator{\extend}{\epsilon}
 \DeclareMathOperator{\range}{Range}
 \DeclareMathOperator{\kernel}{Ker}
 \DeclareMathOperator{\nullspace}{N}
@@ -206,6 +215,11 @@ spaces. Thus, we begin with defining the notion of compatibility of maps w.r.t.\
      \quad\text{and}\quad
      E^{\VecSpace{Y}}_{m} \circ \DiscOp{T}_{n,m} = \Op{T} \circ E_{n}^{\VecSpace{X}}.
   \]
+  \item \emph{$\Op{T}$ and $\DiscOp{T}_{n,m}$ weakly correspond to each 
+  other under the discretizations $\discr_{n}(\VecSpace{X})$ and  $\discr_{m}(\VecSpace{Y})$} if 
+  the following holds for any $n,m \in \Natural$:
+  \[ R^{\VecSpace{Y}}_{m} \circ \Op{T} \circ \EnX = \DiscOp{T}_{n,m}.
+  \]
   \item \emph{$\Op{T}$ and $\DiscOp{T}_{n,m}$ approximately correspond to 
   each other under the discretizations $\discr_{n}(\VecSpace{X})$  and  $\discr_{m}(\VecSpace{Y})$}
   if the following holds:
@@ -220,6 +234,12 @@ spaces. Thus, we begin with defining the notion of compatibility of maps w.r.t.\
   \end{enumerate}  
   If any of the above holds, then we say that $\Op{T}$ and $\DiscOp{T}_{n,m}$ are compatible.
 \end{definition}
+
+\begin{remark}
+ The condition in the definition of weak correspondence can be read as a definition for the discretization of an operator. Weak 
+ correspondence follows from exact correspondence if one of the conditions $\RnX\EnX = \Op{I}$ or $\RmY\EmY = \Op{I}$ hold.
+\end{remark}
+
 
 \paragraph{Identity with finite range}
 There are two natural approximations to the identity mappings on $\VecSpace{Y}$ and $\VecSpace{X}$, 
@@ -568,8 +588,74 @@ discrete mapping in terms of the matrix norms of the latter.
 
 \subsection{The adjoint}
 
+If $\VecSpace{X}$ and $\VecSpace{Y}$ are Hilbert spaces with the same discretizations as above, one can consider the unary operator 
+``$\ast$'' mapping a bounded linear operator between $\VecSpace{X}$ and $\VecSpace{Y}$ to its adjoint. We formally write
+\[
+  \Op{A}: \VecSpace{L}(\VecSpace{X}, \VecSpace{Y}) \to \VecSpace{L}(\VecSpace{Y}, \VecSpace{X}), \quad \Op{A}(\Op{T}) = \Op{T}^*.
+\]
+Then, if the operators $E_n^{\VecSpace{X}}$ and $R_m^{\VecSpace{Y}}$ are bounded and linear, the natural discretization of 
+$\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$ implies a natural discretization $\DiscOp{A}$ as follows. If $\Op{T} \in 
+\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$, the adjoint of its discretization $\DiscOp{T}$ is
+\[
+ \DiscOp{T}^* = \big( R_m^{\VecSpace{Y}} \circ \Op{T} \circ E_n^{\VecSpace{X}} \big)^* = \big( R_m^{\VecSpace{Y}} \big)^* \circ \Op{T}^* 
+\circ  \big( E_n^{\VecSpace{X}} \big)^*.
+\]
+Therefore the definition
+\[
+  \DiscOp{A} := \big( R_m^{\VecSpace{Y}} \big)^* \circ \Op{A} \circ \big( E_n^{\VecSpace{X}} \big)^*
+\]
+for the discretized version of the operator taking the adjoint is consistent with the discretization of $\VecSpace{L}(\VecSpace{X}, 
+\VecSpace{Y})$.
+
 
 \subsection{Discretization of the differential}
+
+Similarly to taking adjoints, the discretization of $\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$ implies a discretization of the Fr\'{e}chet 
+derivative of an operator.
+
+\begin{theorem}
+ Let $\VecSpace{X}$ and $\VecSpace{Y}$ be normed vector spaces with discretizations as before. If $E_n^{\VecSpace{X}}$ and 
+ $R_m^{\VecSpace{Y}}$ are bounded and linear, the Fr\'{e}chet derivative
+ \[
+  \partial\DiscOp{T}: \Field^n \to \VecSpace{L}(\Field^n, \Field^m)
+ \]
+ of the discretized operator $\DiscOp{T} = \REST{mn}{\VecSpace{M}} (\Op{T})$ is given by
+ \[
+  \partial\DiscOp{T} = R_m^{\VecSpace{Y}} \circ \partial\Op{T} \circ E_n^{\VecSpace{X}}
+ \]
+ with $\partial\Op{T} \circ E_n^{\VecSpace{X}}(\valpha)(\vbeta):= \partial\Op{T}\big(E_n^{\VecSpace{X}}(\valpha)\big) 
+ \big(E_n^{\VecSpace{X}}(\vbeta)\big)$. 
+\end{theorem}
+
+\begin{proof}
+ For $\valpha,\vbeta \in \Field^n$, it is
+ %
+ \begin{equation*}
+  \DiscOp{T}(\valpha + \vbeta) = \RmY \circ \Op{T} \circ \EnX (\alpha + \beta).
+ \end{equation*}
+ %
+ From the definition of $\partial \Op{T}$ it follows that
+ %
+ \begin{align*}
+  \Op{T}\big(\EnX(\valpha + \vbeta)\big)
+  &= \Op{T}\big(\EnX(\valpha)\big) + \partial\Op{T}\big(\EnX(\valpha)\big)\big(\EnX(\vbeta)\big) +
+  o\big(\big\Vert \EnX(\vbeta) \big\Vert_{\VecSpace{X}}\big) \\
+  &= \Op{T} \circ \EnX(\valpha) + \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n
+  \big)
+ \end{align*}
+ %
+ for $\Vert \vbeta \Vert_n \to 0$ since $\EnX$ is a bounded operator. By composing from left with the bounded operator $\RmY$, one gets
+ %
+ \begin{align*}
+  \DiscOp{T}(\valpha + \vbeta)
+  &= \RmY \circ \Op{T} \circ \EnX(\valpha) + \RmY \circ \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n \big) \\
+  &= \DiscOp{T}(\alpha) + \RmY \circ \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n \big),
+ \end{align*}
+ %
+ hence $\partial\DiscOp{T}$ is by definition given by the second term.
+\end{proof}
+
+
 
 \subsection{Discretization of equations}
 Let us now turn to discretization of equations in Banach spaces.
