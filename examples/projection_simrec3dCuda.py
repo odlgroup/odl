@@ -22,7 +22,7 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from math import sin,cos,pi
+from math import sin, cos, pi
 
 import numpy as np
 import RL.operator.operator as OP
@@ -43,8 +43,8 @@ class ProjectionGeometry3D(object):
     def __init__(self, sourcePosition, detectorOrigin, pixelDirectionU, pixelDirectionV):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
-        self.pixelDirectionV = pixelDirectionU
-        self.pixelDirectionU = pixelDirectionV
+        self.pixelDirectionU = pixelDirectionU
+        self.pixelDirectionV = pixelDirectionV
 
 class CudaProjector3D(OP.LinearOperator):
     """ A projector that creates several projections as defined by geometries
@@ -61,36 +61,36 @@ class CudaProjector3D(OP.LinearOperator):
 
         #Project all geometries
         
-        with Timer("projecting"):
-            for i in range(len(self.geometries)):
-                geo = self.geometries[i]
+        for i in range(len(self.geometries)):
+            geo = self.geometries[i]
             
-                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
+            with Timer("projecting"):
+                    self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
 
 
 #Set geometry parameters
-volumeSize = np.array([20.0,20.0,20.0])
-volumeOrigin = -volumeSize/2.0
+volumeSize = np.array([224.0,224.0,224.0])
+volumeOrigin = np.array([-112.0,-112.0,10.0]) #-volumeSize/2.0
 
-detectorSize = np.array([30.0, 30.0])
-detectorOrigin = -detectorSize/2.0
+detectorSize = np.array([287.04, 264.94])
+detectorOrigin = np.array([-143.52, 0.0])
 
-sourceAxisDistance = 600.0
-detectorAxisDistance = 20.0
+sourceAxisDistance = 790.0
+detectorAxisDistance = 210.0
 
 #Discretization parameters
 nVoxels = np.array([448, 448, 448])
-nPixels = np.array([720, 780])*2
-nProjection = 332
+nPixels = np.array([780, 720])
+nProjection = 15
 
 #Scale factors
-voxelSize = volumeSize/nVoxels
-pixelSize = detectorSize/nPixels
+voxelSize = np.array([0.5, 0.5, 0.3])
+pixelSize = np.array([0.368, 0.368]) #detectorSize/nPixels
 stepSize = voxelSize.max()
 
 #Define projection geometries
 geometries = []
-for theta in np.linspace(0, pi, nProjection, endpoint = False):
+for theta in np.linspace(0, pi, nProjection, endpoint=False):
     x0 = np.array([cos(theta), sin(theta), 0.0])
     y0 = np.array([-sin(theta), cos(theta), 0.0])
     z0 = np.array([0.0, 0.0, 1.0])
@@ -106,7 +106,7 @@ projectionSpace = fs.L2(sets.Rectangle([0,0], detectorSize))
 projectionRN = cs.CudaRN(nPixels.prod())
 
 #Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN, nPixels)
+projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN, nPixels, 'F')
 
 #Create the data space, which is the Cartesian product of the single projection spaces
 dataDisc = ps.powerspace(projectionDisc, nProjection)
@@ -116,22 +116,19 @@ reconSpace = fs.L2(sets.Cube([0, 0, 0], volumeSize))
 
 #Discretize the reconstruction space
 reconRN = cs.CudaRN(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels)
+reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels, 'F')
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])
-phantom = np.tile(phantom, nVoxels[-1]).reshape(nVoxels)
+phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
 phantomVec = reconDisc.element(phantom)
 
 #Make the operator
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
+result = projector(phantomVec)
 
-result = dataDisc.element()
-
-for i in range(100):
-    projector.apply(phantomVec, result)
-
-for i in range(5):
-    plt.figure()
-    plt.imshow(result[i][:].reshape(nPixels))
+plt.figure()
+for i in range(15):
+    plt.subplot(3, 5, i+1)
+    plt.imshow(result[i].as_array().T, cmap='bone', origin='lower')
 plt.show()
