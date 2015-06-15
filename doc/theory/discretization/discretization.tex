@@ -39,8 +39,10 @@
 \newcommand*{\REST}[2]{\ensuremath{R_{#1}^{#2}}}
 \newcommand*{\PROJ}[2]{\ensuremath{P_{#1}^{#2}}}
 \newcommand*{\RnX}{\ensuremath{\REST{n}{\VecSpace{X}}}}
+\newcommand*{\RmX}{\ensuremath{\REST{m}{\VecSpace{X}}}}
 \newcommand*{\RmY}{\ensuremath{\REST{m}{\VecSpace{Y}}}}
 \newcommand*{\EnX}{\ensuremath{\EXT{n}{\VecSpace{X}}}}
+\newcommand*{\EmX}{\ensuremath{\EXT{m}{\VecSpace{X}}}}
 \newcommand*{\EmY}{\ensuremath{\EXT{m}{\VecSpace{Y}}}}
 \newcommand*{\PnX}{\ensuremath{\PROJ{n}{\VecSpace{X}}}}
 \newcommand*{\PmY}{\ensuremath{\PROJ{m}{\VecSpace{Y}}}}
@@ -941,6 +943,38 @@ $V^m_{\ext}=V^m_{\rest}$, then $\vA=\wt{\vA}^T$.
 %\item The dimension $n$ of the discretization.
 %\item The family $V^n_{\rest}$ of sampling functions.
 %\end{enumerate}
+
+\section{Software implementation}
+
+\textbf{Discretizations:}
+A discretization is implemented as a discretized linear space $\VecSpace{X}_n = (\VecSpace{X}, \Field^n, \RnX, \EnX)$ as follows:
+%
+\begin{itemize}
+ \item $\VecSpace{X}_n$ is a (or derives from) \texttt{LinearSpace}
+ \item When initialized, it is provided with \emph{instances} of $\VecSpace{X}$ and $\Field^n$
+ \item It inherits the ``intersection'' of the structure of $\VecSpace{X}$ and $\Field^n$, i.e. if $\VecSpace{X}$ is a 
+ \texttt{MetricSpace} and $\Field^n$ a \texttt{HilbertSpace}, $\VecSpace{X}_n$ will be a \texttt{MetricSpace}.
+ \item $\RnX$ can optionally be provided as a \texttt{LinearOperator}. If in the case of $\VecSpace{X}$ being a \texttt{FunctionSpace}, 
+ $\RnX$ is given, an analytically defined function (i.e. a   Python function) can be mapped to a function in $\VecSpace{X}_n$, e.g. by 
+ point collocation.
+ \item $\EnX$ can optionally be provided as a \texttt{LinearOperator}. If $\EnX$ is given and $\VecSpace{X}$ is a \texttt{FunctionSpace}, 
+ a discretized function in $\VecSpace{X}_n$ can be evaluated at any given point, e.g. by interpolation. Hence, this defines a continuous 
+ function in $\VecSpace{X}$.
+\end{itemize}
+%
+\textbf{Re-discretizations:}
+A re-discretization $\DiscOp{T}_{m,n}$ is a mapping from one discretized space $\VecSpace{X}_n$ to another discretization 
+$\VecSpace{X}_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ of the same space $\VecSpace{X}$ in the following way:
+%
+\begin{itemize}
+ \item $\DiscOp{T}_{m,n}$ is a \texttt{LinearOperator}\footnote{for now, may be relaxed to \texttt{Operator}} with 
+ $\mathtt{domain} = \VecSpace{X}_n$ and $\mathtt{range} = \VecSpace{X}_m$.
+ \item Mathematically, it is the linear operator $\RmX \circ \EnX: \Field^n \to \Field^m$.
+ \item If $\EnX$ and $\RmX$ are present in $\VecSpace{X}_n$ or $\VecSpace{X}_m$, respectively, $\DiscOp{T}_{m,n}$ is implemented as the 
+ composition of these operators by default.
+ \item A direct (optimized) implementation and can be provided e.g. by an external software package.
+\end{itemize}
+
 
 \cleardoublepage
 \appendix
