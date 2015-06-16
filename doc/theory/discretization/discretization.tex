@@ -20,9 +20,10 @@
 }
 \usepackage{acro}
 \usepackage{extraenv}
+\usepackage{cleveref}
 
 % Specific packages
-\newcommand{\discr}{\mathfrak{D}}
+\newcommand{\Discr}{\mathfrak{D}}
 \newcommand{\VecSpace}[1]{\mathscr{#1}}
 \newcommand{\Smooth}{\mathscr{C}}
 \newcommand{\Lebegue}{\mathscr{L}}
@@ -60,6 +61,7 @@
 \newcommand{\ie}{\textsl{i.e.}\xspace}
 \newcommand{\eg}{\textsl{e.g.}\xspace}
 \newcommand{\etc}{\textsl{e.t.c.}\xspace}
+\newcommand{\wrt}{{w.r.t.}\@\xspace}
 
 
 \newcommand{\vzero}{\boldsymbol{0}}
@@ -71,6 +73,13 @@
 \newcommand{\vA}{\boldsymbol{A}}
 
 \newcommand{\cF}{\mathcal{F}}
+
+\newcommand*{\NORMLR}[1]{\ensuremath{\left\lVert #1 \right\rVert}}
+\newcommand*{\NOTE}[2][\null]{%
+  \marginpar{\renewcommand{\baselinestretch}{1}\vspace{-1em}\hrule\vspace{3pt}%
+  \scriptsize\raggedright\textsf{#2\ifx#1\null\else\\\hfill---
+  {\em #1}\fi}\vspace{1.5em}}%
+}
 
 \newcommand{\ext}{\text{ext}}
 \newcommand{\wt}[1]{\widetilde{#1}}
@@ -84,158 +93,263 @@
 \maketitle
 
 \section{Introduction}
-In many applications one works with mappings between infinite dimensional vector spaces.
-To numerically deal with such mappings, one is forced to find a finite dimensional 
-representation for the infinite dimensional vector spaces. The process of reducing a
-infinite dimensional vector spaces to a finite dimensional one is called \emph{discretization}.
-A discretization of a specific infinite dimensional vector space is intimately 
+\label{sec:introduction}
+%
+In many applications one works with mappings between infinite-dimensional vector spaces.
+To numerically deal with such mappings, one is forced to find a finite-dimensional 
+counterpart. The process of mapping a vector space to a finite-dimensional one is called
+\emph{discretization}. A discretization of a specific space is intimately 
 tied to the numerical methodology that one eventually wishes to use. However, many concepts
-and results about  discretizations can be stated in a general framework, so there is 
-a general mathematical theory describing the discretization process of infinite dimensional 
-vector spaces.  
+and results about discretizations can be stated in a general mathematical framework.  
 
-Most complex numerical software packages work with several 
-different discretizations, even of the same vector space. The general mathematical 
-theory that formalizes the process of discretization yields consistency 
-checks and recipes for how to go between two discretizations. Still, most numerical software 
-packages do not utilize such consistency checks and, even though changes between two 
-discretizations are explicitly coded, this code is often scattered throughout  and even 
-repeated in different parts of the software package.  
+Most complex numerical software packages work with several different discretizations, even
+of the same vector space. The general mathematical theory that formalizes the process of
+discretization yields consistency checks and recipes for how to switch between two
+discretizations. Still, most numerical software packages do not utilize such consistency
+checks and, even though changes between two discretizations are explicitly coded, this
+code is often scattered throughout or even repeated in different parts of the software package.  
 
 To minimize software bugs, it is therefore desirable to be able to abstract and isolate those parts 
 of the code that deal with the discretization. To achieve this, the software must be able to represent 
-the abstract process of
-discretization and an object oriented framework is the most suitable. We will in this note try 
-to describe those parts of the abstract mathematical theory that needs to be captured by 
-the numerical software package in able to achieve the above stated goals. We  start 
-by giving the basic mathematical foundations.
+the abstract process of discretization, and an object oriented framework appears to be most
+suitable. We will in this note describe those parts of the abstract mathematical theory that
+need to be captured by a numerical software package in able to achieve the above stated goals.
+We start by giving the basic mathematical foundations.
 
-
-\section{The general discretization problem}
-In many cases, such as inverse problems arising in applications,  one has to deal with 
-the following problem: Let $\VecSpace{X}$ and $\VecSpace{Y}$ be infinite dimensional vector spaces and 
+In many cases, such as inverse problems arising in applications, one has to deal with 
+the following problem: Let $\VecSpace{X}$ and $\VecSpace{Y}$ be infinite-dimensional vector spaces and 
 $\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$. Consider now the following problem:
-\begin{equation}\label{eq:OpEq}
-   \text{Given $g\in \VecSpace{Y}$, find $f\in \VecSpace{X}$ such that}\quad \Op{T}(f)=g. 
+%
+\begin{equation}
+ \label{eq:operator_equation}
+ \text{Given $g\in \VecSpace{Y}$, find $f\in \VecSpace{X}$ such that}\quad \Op{T}(f)=g. 
 \end{equation}
+%
 The operator $\Op{T}$ can either be given explicitly by a closed form expression, or it can be defined 
 implicitly, \eg, as a solution operator to a differential equation. 
 
-In order to numerically work with \eqref{eq:OpEq} in a software package, one must replace the 
-infinite dimensional vector spaces $\VecSpace{X}$ and $\VecSpace{Y}$ with some finite dimensional 
-counterparts $\Field^{n}$ and $\Field^{m}$, and the map 
-$\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$ with an appropriate
-the following system of (linear or nonlinear) equations with finitely many unknowns:
-\begin{equation}\label{eq:DiscOpEq}
-  \text{Given $g_{m} \in \Field^{m}$, find $f_n \in \Field^{n}$ such that }\quad \DiscOp{T}_{n,m} (f_{n})=g_{m}. 
+In order to numerically work with \eqref{eq:operator_equation} in a software package, one must replace the 
+infinite-dimensional vector spaces $\VecSpace{X}$ and $\VecSpace{Y}$ with some finite-dimensional 
+counterparts $\Field^{n}$ and $\Field^{m}$ with $\Field = \Real \text{ or } \Complex$, and the map 
+$\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$ with an appropriate discretized operator 
+$\DiscOp{T}_{m,n}$. This process yields the following system of (linear or nonlinear) equations
+with finitely many unknowns:
+%
+\begin{equation}
+ \label{eq:discrete_operator_equation}
+ \text{Given $\vbeta \in \Field^{m}$, find $\valpha \in \Field^{n}$ such that }\quad \DiscOp{T}_{n,m} (\valpha)=\vbeta. 
 \end{equation}
-The above process of replacing \eqref{eq:OpEq} with \eqref{eq:DiscOpEq} is referred to 
-as \emph{discretization} of \eqref{eq:OpEq}. A general theory of discretizations is outlined in 
+%
+The above process of replacing \eqref{eq:operator_equation} with \eqref{eq:discrete_operator_equation} is referred to 
+as \emph{discretization} of \eqref{eq:operator_equation}. A general theory of discretizations is outlined in 
 \cite[Chapter~34]{ZeIIB85}, see also \cite{Pe93}, but the results are of little use for ill-posed inverse 
-problems since the discretized problem \eqref{eq:DiscOpEq} does not fulfill the requirements.
-\emph{In this note we only consider a discretization of \eqref{eq:OpEq} 
-as a way of reducing an equation in infinite dimensional setting to an equation 
-\eqref{eq:DiscOpEq} in a finite dimensional setting.}
-Thus, we now properly define we mean by a discretization of an 
-infinite dimensional vector space.
+problems since the discretized problem \eqref{eq:discrete_operator_equation} does not fulfill the requirements.
+\emph{In this note we only consider a discretization of \eqref{eq:operator_equation} 
+as a way of reducing an equation in infinite-dimensional setting to an equation 
+\eqref{eq:discrete_operator_equation} in a finite-dimensional setting.}
+Thus, we now formally introduce the notion of discretization in different contexts along with elementary properties.
+
+
+\section{Discretization and compatibility}
+\label{sec:discretization_compatibility}
+
+\subsection{Discretization of vector spaces}
+\label{subsec:space_discretization}
+
+We start out by defining the discretization of a (infinite-dimensional) vector space with the help of 
+reduction and extension operators.
+
 \begin{definition}
-  Let $\VecSpace{X}$ be a vector space over a field $\Field$. An \emph{$n$-dimensional discretization 
-  $\discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$} is determined by the tuple 
-  \[
-     \discr_{n}(\VecSpace{X}) := \bigl\{ \VecSpace{X},\Field^{n},R_{n},E_{n} \bigr\} 
-  \]
-  where 
-  $R_{n} \colon \VecSpace{X} \to \Field^{n}$, and $E_{n} \colon \Field^{n} \to \VecSpace{X}$.
-  The maps $R_{n}$ and $E_{n}$ are called the  \emph{restriction} and 
-  \emph{extension} maps associated with the discretization. $\discr_{n}(\VecSpace{X})$ is a 
-  \emph{linear discretization} whenever both these maps are linear.
+ \label{def:space_discretization}
+ Let $\VecSpace{X}$ be a vector space over a field $\Field = \Real \text{ or } \Complex$, and $n \in \Natural$.
+ An \emph{$n$-dimensional discretization $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$} is the tuple
+ %
+ \begin{equation*}
+  \Discr_{n}(\VecSpace{X}) := \bigl( \VecSpace{X}, \Field^{n}, \RnX, \EnX \bigr) 
+ \end{equation*}
+ %
+ where $\RnX \colon \VecSpace{X} \to \Field^{n}$ and $\EnX \colon \Field^{n} \to \VecSpace{X}$. The mappings $\RnX$ and $\EnX$ are called 
+ the \emph{restriction} and \emph{extension} mappings associated with the discretization. $\Discr_n(\VecSpace{X})$ is a \emph{linear 
+ discretization} whenever both these mappings are linear.
 \end{definition}
 
 \begin{examp}
-We begin with considering the case where $\VecSpace{X}$ is an $n$-dimensional vector space over $\Field$. 
-Then $\VecSpace{X}$ is then isomorphic to $\Field^{n}$, so we may choose 
-$E_{n}:=R_{n}:=\Id$. The resulting discretization $\{ \Field^n,\Field^n,\Id,\Id \}$ is called the  
-\emph{identity discretization}. 
+ We begin with considering the case where $\VecSpace{X}$ is an $n$-dimensional vector space over $\Field$. Then $\VecSpace{X}$ is 
+ isomorphic to $\Field^{n}$, so we may choose $\EnX:=\RnX:=\Id$. The resulting discretization $( \Field^n, \Field^n, \Id, \Id )$ is called 
+ the \emph{identity discretization}. 
 \end{examp}
 
 \begin{examp}
-Another common discretization for an $n$-dimensional vector space $\VecSpace{X}$ is to first consider 
-a basis $B:=\{ v_1,\ldots,v_{n}\}$ of $\VecSpace{X}$. Any element $x\in \VecSpace{X}$ can then 
-be written as $x=\sum_{i=1}^n \alpha_i v_i$ for unique $\alpha_1,\ldots,\alpha_{n}\in\Field$, so we define 
-\[
-   R_{n}(x) := (\alpha_1,\ldots,\alpha_{n}) \quad\text{and}\quad
-   E_{n}(\alpha_1,\ldots,\alpha_{n}) := \sum_{i=1}^n \alpha_i v_i. 
-\]
-The resulting discretization $\{ \VecSpace{X},\Field^{n},R_{n},E_{n}\}$ is called the \emph{standard discretization
-w.r.t.\@ the basis $B$}.
+ Another common discretization for an $n$-dimensional vector space $\VecSpace{X}$ is to consider a basis $B:=\{ \psi_1,\ldots, \psi_{n}\}$ 
+ of $\VecSpace{X}$. Any element $f \in \VecSpace{X}$ can then be written as $f = \sum_{i=1}^n \alpha_i \psi_i$ for unique 
+ $\valpha = (\alpha_1, \ldots, \alpha_{n})\in\Field^n$,
+ so we define
+ %
+ \begin{align*}
+  \RnX(f) &:= \valpha, \\
+  \EnX(\valpha) &:= \sum_{i=1}^n \alpha_i \psi_i. 
+ \end{align*}
+ %
+ The resulting discretization $( \VecSpace{X}, \Field^{n}, \RnX, \EnX )$ is called the \emph{standard discretization \wrt the basis $B$}.
 \end{examp}
 
-In mathematics it is rather common to construct a new vector space from a collection of vector spaces. If the 
-vector spaces in this collection all have discretizations, then one can use these discretizations to 
-define a natural discretization on the aforementioned new vector space. In the sections that follow, we shall see
-examples of this.
+\begin{examp}
+ A common way to discretize a (possibly infinite-dimensional) vector space $\VecSpace{X}$ is as follows. Let 
+ $\psi_1, \ldots, \psi_n \in \VecSpace{X}$ be linearly independent space elements and $\lambda_1, \ldots, \lambda_n \in \VecSpace{X}^*$ be 
+ linearly independent functionals on $\VecSpace{X}$. Then, restriction and extension operators can be defined as
+ %
+ \begin{align*}
+  \RnX(f) &:= \big( \lambda_1(f), \ldots, \lambda_n(f) \big), \\
+  \EnX(\valpha) &:= \sum_{i=1}^n \alpha_i\, \psi_i.
+ \end{align*}
+\end{examp}
 
-\subsection{Discretizations of product spaces}
-Let $\VecSpace{X}_i$ for $i=1,\ldots,k$ be vector spaces over $\Field$ with $n_i$-dimensional 
-discretizations $\discr_{n_i}(\VecSpace{X}_i)$ given as 
-\[
-     \discr_{n_i}(\VecSpace{X}_i) := \bigl\{ \VecSpace{X}_i,\Field^{n_i},R_{n_i},E_{n_i} \bigr\}. 
-\]
-Then we can define a natural $N$-dimensional discretization, with $N:=n_1+\ldots+n_k$, of the product vector space 
-$\VecSpace{X} := \VecSpace{X}_1 \times \ldots \times \VecSpace{X}_k$ as 
-\[ \discr_{N}(\VecSpace{X}):=\{\VecSpace{X},\Field^{n_1}  \times \ldots \times \Field^{n_k},R_{N}^{\VecSpace{X}},E_{N}^{\VecSpace{X}} \} \]
-where
-\begin{align*}
-   R_{N}^{\VecSpace{X}}(x_1,\ldots,x_k) &:= \bigl( R_{n_1}(x_1),\ldots,R_{n_k}(x_k) \bigr)
-      \quad\text{for $x_i\in \VecSpace{X}_i$ for $i=1,\ldots,k$} \\
-   E_{N}^{\VecSpace{X}}(a_1,\ldots,a_k)  &:=  \bigl( E_{n_1}(a_1),\ldots,E_{n_k}(a_k) \bigr) 
-     \quad\text{for $a_i \in \Field^{n_i}$ for $i=1,\ldots,k$.}
-\end{align*}
-The discretization 
-$ \discr_{N}(\VecSpace{X})$ is referred to as the \emph{product discretization of $\VecSpace{X}$}. Some special cases are 
-when $\VecSpace{X}:=\Field \times \VecSpace{X}_2$ which corresponds to the case $k=2$ and $\VecSpace{X}_1=\Field$ with the 
-identity discretization.
 
-\subsection{Compatibility of maps w.r.t.\@ discretizations}
-We proceed by investigating natural conditions that a discretization should fulfill. Often, 
-we need to perform various operatons on $\VecSpace{X}$ and there are corresponding natural 
-operations on $\Field^{n}$. It is then important that such operations are compatible w.r.t.\@ the discretization. 
-In the general setting, most of these operations can be stated as maps between appropriately chosen vector 
-spaces. Thus, we begin with defining the notion of compatibility of maps w.r.t.\@ discretizations. 
-\begin{definition}\label{def:MapComp}
-  Let $\VecSpace{X}$ and $\VecSpace{Y}$ be vector spaces over $\Field$ with discretizations 
-  $\discr_{n}(\VecSpace{X}):=\{\VecSpace{X}, \Field^{n},R^{\VecSpace{X}}_{n},E^{\VecSpace{X}}_{n} \}$ and 
-  $\discr_{m}(\VecSpace{Y}):=\{ \VecSpace{Y}, \Field^{m},R^{\VecSpace{Y}}_{m},E^{\VecSpace{Y}}_{m}\}$,   
-  respectively. Now, consider the maps 
-  \[  \Op{T} \colon \VecSpace{X} \to \VecSpace{Y}   \quad\text{and}\quad    
-      \DiscOp{T}_{n,m} \colon \Field^{n} \to \Field^{m}.   \]
-  \begin{enumerate}
-  \item \emph{$\Op{T}$ and $\DiscOp{T}_{n,m}$ (exactly) correspond to each 
-  other under the discretizations $\discr_{n}(\VecSpace{X})$ and  $\discr_{m}(\VecSpace{Y})$} if 
+\subsection{Discretization of product spaces}
+\label{subsec:product_space_discretization}
+
+In mathematics it is rather common to construct a new vector space from a collection of vector spaces. If the vector spaces in this 
+collection all have discretizations, then one can use these discretizations to define a natural discretization on the aforementioned new 
+vector space.
+
+\begin{definition}
+ \label{def:product_space_discretization}
+ Let $\VecSpace{X}_i$ for $i=1,\ldots,k$ be vector spaces over $\Field$ with $n_i$-dimensional discretizations 
+ $\Discr_{n_i}(\VecSpace{X}_i)$ given as
+ %
+ \begin{equation*}
+  \Discr_{n_i}(\VecSpace{X}_i) := \bigl( \VecSpace{X}_i, \Field^{n_i}, \REST{n_i}{\VecSpace{X}_i}, \EXT{n_i}{\VecSpace{X}_i} \bigr). 
+ \end{equation*}
+ %
+ Then the \emph{product discretization of $\VecSpace{X} := \VecSpace{X}_1 \times \ldots \times \VecSpace{X}_k$} is defined as 
+ %
+ \begin{equation*}
+  \Discr_{N}(\VecSpace{X}):=\{\VecSpace{X}, \Field^{n_1} \times \ldots \times \Field^{n_k}, R_{N}^{\VecSpace{X}}, E_{N}^{\VecSpace{X}} \}
+ \end{equation*}
+ %
+ with $N := n_1 + \ldots + n_k$, where
+ %
+ \begin{align*}
+  \REST{N}{\VecSpace{X}}(f_1,\ldots,f_k) &:= \bigl( \REST{n_1}{\VecSpace{X}_1}(f_1),\ldots,\REST{n_k}{\VecSpace{X}_k}(f_k) \bigr)
+   \quad\text{for $f_i\in \VecSpace{X}_i$, $i=1,\ldots,k$} \\
+  \EXT{N}{\VecSpace{X}}(f_1,\ldots,f_k) &:= \bigl( \EXT{n_1}{\VecSpace{X}_1}(\valpha_1),\ldots,\EXT{n_k}{\VecSpace{X}_k}(\valpha_k) \bigr)
+   \quad\text{for $\valpha_i\in \Field^{n_i}$, $i=1,\ldots,k$.}
+ \end{align*}
+\end{definition}
+
+%
+Common special cases of product discretizations are $\VecSpace{X}:=\Field \times \VecSpace{X}_2$, which corresponds to the case $k=2$ and 
+$\VecSpace{X}_1=\Field$ with the identity discretization.
+
+
+\subsection{Discretization of operators}
+
+When given an operator $\Op{T}$ between vector spaces $\VecSpace{X}$ and $\VecSpace{Y}$ with given discretizations, there is a natural way 
+of defining a discretized counterpart $\DiscOp{T}: \Field^n \to \Field^m$ of $\Op{T}$ as follows.
+
+\begin{definition}
+ \label{def:operator_discretization}
+ Let $\Op{T}\colon \VecSpace{X} \to \VecSpace{Y}$ be an operator and $\Discr_n(\VecSpace{X})$ and $\Discr_m(\VecSpace{Y})$ be 
+ discretizations of the vector spaces as in Definition~\ref{def:space_discretization}. Then, the \emph{natural operator discretization} 
+$\DiscOp{T}$ of  $\Op{T}$ is defined as
+ %
+ \begin{equation*}
+  \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX.
+ \end{equation*}
+\end{definition}
+
+The above defined natural operator discretization immediately induces a discretization of the space of linear operators from $\VecSpace{X}$ 
+to $\VecSpace{Y})$.
+
+\begin{definition}
+ \label{def:operator_space_discretization}
+ Let $\VecSpace{X}$ and $\VecSpace{Y}$ be vector spaces with discretizations $\Discr_n(\VecSpace{X})$ and $\Discr_m(\VecSpace{Y})$ 
+ as in Definition~\ref{def:space_discretization}. Let further $\VecSpace{M} := L(\VecSpace{X}, \VecSpace{Y})$ be the vector 
+ space of linear operators from $\VecSpace{X}$ to $\VecSpace{Y}$. Then, the \emph{natural discretization of $\VecSpace{M}$} is given by
+ %
+ \begin{equation*}
+  \Discr_{m\times n}(\VecSpace{M}) = \left( \VecSpace{M}, \Field^{m\times n}, \REST{m\times n}{\VecSpace{M}}, \EXT{m\times n}{\VecSpace{M}}
+  \right)
+ \end{equation*}
+ %
+ with the operators
+ %
+ \begin{align*}
+  \REST{m\times n}{\VecSpace{M}}(\Op{T}) &:= \RmY \circ \Op{T} \circ \EnX, \\
+  \EXT{m\times n}{\VecSpace{M}}(\DiscOp{T}) &:= \EmY \circ \DiscOp{T} \circ \RnX.
+ \end{align*}
+ %
+ In this definition, we identify a linear operator $\DiscOp{T}\colon \Field^n \to \Field^m$ with its matrix representation
+ $\mathbb{T} \in \Field^{m\times n}$.
+\end{definition}
+
+
+
+\subsection{Compatibility of operators under discretizations}
+
+We proceed by investigating natural conditions that a discretization should fulfill. Often, we need to perform various operatons on 
+$\VecSpace{X}$, and there are corresponding natural operations on $\Field^{n}$. It is then important that such operations are compatible 
+\wrt the discretization. In the general setting, most of these operations can be stated as mappings between appropriately chosen vector 
+spaces. Thus, we begin with defining the notion of compatibility of mappings \wrt discretizations. 
+%
+\begin{definition}
+ \label{def:operator_compatibility}
+ Let $\VecSpace{X}$ and $\VecSpace{Y}$ be vector spaces over $\Field$ with discretizations $\Discr_{n}(\VecSpace{X})$ and 
+ $\Discr_{m}(\VecSpace{Y})$,   
+ respectively. Now, consider the operators
+ %
+ \begin{equation*}
+  \Op{T} \colon \VecSpace{X} \to \VecSpace{Y} \quad\text{and}\quad \DiscOp{T} \colon \Field^{n} \to \Field^{m}.
+ \end{equation*}
+ %
+ \begin{enumerate}
+  \item \emph{$\Op{T}$ and $\DiscOp{T}$ (exactly) correspond to each 
+  other under the discretizations $\Discr_{n}(\VecSpace{X})$ and  $\Discr_{m}(\VecSpace{Y})$} if 
   the following holds for any $n,m \in \Natural$:
-  \[ R^{\VecSpace{Y}}_{m} \circ \Op{T} = \DiscOp{T}_{n,m} \circ R^{\VecSpace{X}}_{n}
-     \quad\text{and}\quad
-     E^{\VecSpace{Y}}_{m} \circ \DiscOp{T}_{n,m} = \Op{T} \circ E_{n}^{\VecSpace{X}}.
-  \]
-  \item \emph{$\Op{T}$ and $\DiscOp{T}_{n,m}$ weakly correspond to each 
-  other under the discretizations $\discr_{n}(\VecSpace{X})$ and  $\discr_{m}(\VecSpace{Y})$} if 
-  the following holds for any $n,m \in \Natural$:
-  \[ R^{\VecSpace{Y}}_{m} \circ \Op{T} \circ \EnX = \DiscOp{T}_{n,m}.
-  \]
-  \item \emph{$\Op{T}$ and $\DiscOp{T}_{n,m}$ approximately correspond to 
-  each other under the discretizations $\discr_{n}(\VecSpace{X})$  and  $\discr_{m}(\VecSpace{Y})$}
-  if the following holds:
+  %
+  \begin{equation*}
+   \RmY \circ \Op{T} = \DiscOp{T} \circ \RnX  \quad\text{and}\quad  \EmY \circ \DiscOp{T} = \Op{T} \circ \EnX.
+  \end{equation*}
+
+  \item \emph{$\Op{T}$ and $\DiscOp{T}$ approximately correspond to each other under the discretizations $\Discr_{n}(\VecSpace{X})$  
+  and $\Discr_{m}(\VecSpace{Y})$} if the following holds:
+  %
   \begin{align*} 
-    \lim_{n,m\to \infty} 
-       \Bigl\Vert R_{m}^{\VecSpace{Y}} \circ \Op{T} - \DiscOp{T}_{n,m} \circ R^{\VecSpace{X}}_{n} \Bigr\Vert_{m} &= 0 
-     \\[0.5em]
-     \lim_{n,m\to \infty} 
-       \Bigl\Vert E^{\VecSpace{Y}}_{m} \circ \DiscOp{T}_{n,m} - \Op{T} \circ E_{n}^{\VecSpace{X}} 
-       \Bigr\Vert_{\VecSpace{Y}} &= 0.
-  \end{align*} 
-  \end{enumerate}  
-  If any of the above holds, then we say that $\Op{T}$ and $\DiscOp{T}_{n,m}$ are compatible.
+   \lim_{n,m\to \infty} \NORMLR{\RmY \circ \Op{T} - \DiscOp{T} \circ \RnX}_{m} &= 0  \\[0.5em]
+   \lim_{n,m\to \infty} \NORMLR{\EmY \circ \DiscOp{T} - \Op{T} \circ \EnX}_{\VecSpace{Y}} &= 0.
+  \end{align*}
+  %
+ \end{enumerate}  
+ If any of the above holds, then we say that $\Op{T}$ and $\DiscOp{T}$ are \emph{compatible}.
 \end{definition}
+
+In the following Lemma, we investigate under which conditions the natural discretization of an operator leads to compatibility in the sense 
+of the above definition. These conditions can be stated more specifically in special cases, see 
+
+\begin{lemma}
+ Let $\DiscOp{T}$ be the natural discretization of an operator $\Op{T}$ as in \Cref{def:operator_discretization} and
+ %
+ \begin{equation*}
+  \PnX := \EnX \circ \RnX \quad \text{and} \quad \PmY := \EmY \circ \RmY.
+ \end{equation*}
+ %
+ Let further the \emph{domain of injectivity} of an operator $\Op{T}$ defined on $\VecSpace{X}$ be the set
+ %
+ \begin{equation*}
+  \VecSpace{I}(\Op{T}) := \bigcup \{A \subset \VecSpace{X}\, |\, \Op{T} \text{ injective on } A \}.
+ \end{equation*}
+ %
+ Then the following holds:
+ 
+ \begin{enumerate}[a)]
+  \item 
+ \end{enumerate}
+
+
+ 
+\end{lemma}
+
+
 
 \begin{remark}
  The condition in the definition of weak correspondence can be read as a definition for the discretization of an operator. Weak 
@@ -247,31 +361,31 @@ spaces. Thus, we begin with defining the notion of compatibility of maps w.r.t.\
 There are two natural approximations to the identity mappings on $\VecSpace{Y}$ and $\VecSpace{X}$, 
 namely $P^{\VecSpace{Y}}_{m} \colon \VecSpace{Y} \to \VecSpace{Y}$ and 
 $P^{\VecSpace{X}}_{n}\colon \VecSpace{X} \to \VecSpace{X}$ given as 
-\[  P^{\VecSpace{Y}}_{m} := E^{\VecSpace{Y}}_{m} \circ R^{\VecSpace{Y}}_{m}
+\[  P^{\VecSpace{Y}}_{m} := \EmY \circ \RmY
    \quad\text{and}\quad
-   P^{\VecSpace{X}}_{n} := E^{\VecSpace{X}}_{n} \circ R^{\VecSpace{X}}_{n}.
+   P^{\VecSpace{X}}_{n} := \EnX \circ \RnX.
 \]   
-Both these operators do in some sense corresponds to the identity mapping but they have a finite dimensional range.
+Both these operators do in some sense corresponds to the identity mapping but they have a finite-dimensional range.
 
-With these we may re-phrase the conditions for exact correspondence in Definition~\ref{def:MapComp}
+With these we may re-phrase the conditions for exact correspondence in Definition~\ref{def:operator_compatibility}
 in a way that is sometimes more useful. If $\VecSpace{X}$ is a Hilbert space, then
 \begin{align*}
-  E^{\VecSpace{Y}}_{m} \circ \DiscOp{T}_{n,m} = \Op{T} \circ E_{n}^{\VecSpace{X}}
+  \EmY \circ \DiscOp{T} = \Op{T} \circ \EnX
     &\quad\iff\quad
     \Op{T} = P^{\VecSpace{Y}}_{m} \circ \Op{T}
-    \text{ on $\range(E^{\VecSpace{X}}_{n}) \subset \VecSpace{X}$} \\
- R^{\VecSpace{Y}}_{m} \circ \Op{T} = \DiscOp{T}_{n,m} \circ R^{\VecSpace{X}}_{n}
+    \text{ on $\range(\EnX) \subset \VecSpace{X}$} \\
+ \RmY \circ \Op{T} = \DiscOp{T} \circ \RnX
     &\quad\iff\quad
     \Op{T} = \Op{T} \circ P^{\VecSpace{X}}_{n}
-    \text{ on $\range(E^{\VecSpace{X}}_{n}) \subset \VecSpace{X}$}     
+    \text{ on $\range(\EnX) \subset \VecSpace{X}$}     
 \end{align*}
 
-\[  \Op{T} \circ E_{n}^{\VecSpace{X}} = E^{\VecSpace{Y}}_{m} \circ \DiscOp{T}_{n,m} 
-      = E^{\VecSpace{Y}}_{m} \circ R^{\VecSpace{Y}}_{m} \circ \Op{T} \circ E^{\VecSpace{X}}_{n}
+\[  \Op{T} \circ \EnX = \EmY \circ \DiscOp{T} 
+      = \EmY \circ \RmY \circ \Op{T} \circ \EnX
 \]
 which is equivalent to assuming that 
-\[  \Op{T} = E^{\VecSpace{Y}}_{m} \circ R^{\VecSpace{Y}}_{m} \circ \Op{T}
-     \quad\text{on the vector space $\range(E^{\VecSpace{X}}_{n}) \subset \VecSpace{X}$.} 
+\[  \Op{T} = \EmY \circ \RmY \circ \Op{T}
+     \quad\text{on the vector space $\range(\EnX) \subset \VecSpace{X}$.} 
 \]
 In a similar way, 
 
@@ -284,20 +398,21 @@ on vector spaces.
 
 \subsubsection{Compatibility of vector space operations}
 Let $\VecSpace{X}$ be a vector space over $\Field$ and 
-$\discr_{n}(\VecSpace{X}):=\{\VecSpace{X},\Field^{n},R_{n},E_{n}\}$ an $n$-dimensional discretization of 
+$\Discr_{n}(\VecSpace{X}):=\{\VecSpace{X},\Field^{n},\RnX,\EnX\}$ an $n$-dimensional discretization of 
 $\VecSpace{X}$.  Both $\VecSpace{X}$ and $\Field^{n}$ are vector spaces over the field $\Field$. 
 Many numerical algorithms are 
 formulated directly in $\Field^{n}$ and utilize the natural vector space operations in $\Field^{n}$. Therefore it is of
 interest to investigate the relation between the vector space operations in $\VecSpace{X}$ and $\Field^{n}$.
 
-\begin{theorem}\label{ThmVecSpaceCorr}
-  Let $\VecSpace{X}$ be a vector space over $\Field$ with discretization $\discr_{n}(\VecSpace{X})$. Then,
-  the vector space operations between $\VecSpace{X}$ and $\Field^{n}$ correspond
-  to each other in the sense of Definition~\ref{def:MapComp} only when the discretization is linear.
+\begin{theorem}
+ \label{ThmVecSpaceCorr}
+ Let $\VecSpace{X}$ be a vector space over $\Field$ with discretization $\Discr_{n}(\VecSpace{X})$. Then,
+ the vector space operations between $\VecSpace{X}$ and $\Field^{n}$ correspond
+ to each other in the sense of Definition~\ref{def:operator_compatibility} only when the discretization is linear.
 \end{theorem}
 \begin{proof}
 Let us begin with the  group laws on the vector spaces $\VecSpace{X}$ and $\Field^{n}$ which can be 
-represented by the maps $\Op{T}$ and $\DiscOp{T}_{2n,n}$ defined as  
+represented by the mappings $\Op{T}$ and $\DiscOp{T}_{2n,n}$ defined as  
 \[ \Op{T} \colon \VecSpace{X} \times \VecSpace{X} \to \VecSpace{X} 
     \quad\text{where}\quad \Op{T}(x,y):=x+y \] 
 and $+$ denotes the group law in $\VecSpace{X}$ and 
@@ -305,19 +420,19 @@ and $+$ denotes the group law in $\VecSpace{X}$ and
    \quad\text{where}\quad \DiscOp{T}_{2n,n}(a,b):=a+b \] 
 and $+$ denotes the group law in $\Field^{n}$. Then the group laws on $\VecSpace{X}$ and $\Field^{n}$ 
 correspond to each other whenever $T$ and $\DiscOp{T}_{2n,n}$ correspond,
-in the sense of Definition~\ref{def:MapComp},  under the discretizations $\discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
+in the sense of Definition~\ref{def:operator_compatibility},  under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
 and the product discretization of $\VecSpace{X}\times \VecSpace{X}$, \ie,
-\[ R_{n} \circ \Op{T} =  \DiscOp{T}_{2n,n} \circ R_{2n}^{\VecSpace{X}\times \VecSpace{X}} 
+\[ \RnX \circ \Op{T} =  \DiscOp{T}_{2n,n} \circ R_{2n}^{\VecSpace{X}\times \VecSpace{X}} 
    \quad\text{and}\quad 
-   E_{n}\circ \DiscOp{T}_{2n,n} = \Op{T} \circ E_{2n}^{\VecSpace{X}\times \VecSpace{X}},
+   \EnX\circ \DiscOp{T}_{2n,n} = \Op{T} \circ E_{2n}^{\VecSpace{X}\times \VecSpace{X}},
 \]
 which can be rephrased as
-\[ R_{n}(x+y) =  R_{n}(x)+R_{n}(y) 
+\[ \RnX(x+y) =  \RnX(x)+\RnX(y) 
    \quad\text{and}\quad 
-   E_{n}(a+b) = E_{n}(a)+E_{n}(b).
+   \EnX(a+b) = \EnX(a)+\EnX(b).
 \]
 Similarly, the vector space multiplication in the vector spaces $\VecSpace{X}$ and $\Field^{n}$ 
-can be represented by the maps $\Op{T}$ and $\DiscOp{T}_{n+1,n}$ defined as
+can be represented by the mappings $\Op{T}$ and $\DiscOp{T}_{n+1,n}$ defined as
 \[ \Op{T} \colon \Field \times \VecSpace{X} \to \VecSpace{X} 
    \quad\text{where}\quad \Op{T}(\alpha,x):=\alpha \cdot x \] 
 and $\cdot$ denotes the vector space multiplication in $\VecSpace{X}$ and 
@@ -326,19 +441,19 @@ and $\cdot$ denotes the vector space multiplication in $\VecSpace{X}$ and
 and $\cdot$ denotes the vector space multiplication in $\Field^{n}$. Again, 
 the vector space multiplications on $\VecSpace{X}$ and $\Field^{n}$ 
 correspond to each other whenever $\Op{T}$ and $\DiscOp{T}_{n+1,n}$ correspond,
-in the sense of Definition~\ref{def:MapComp}, under the discretizations $\discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
+in the sense of Definition~\ref{def:operator_compatibility}, under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
 and the product discretization of  $\Field \times \Field^{n}$, \ie,
-\[ R_{n} \circ \Op{T} =  \DiscOp{T}_{n+1,n} \circ R_{n+1}^{\Field \times \VecSpace{X}}
+\[ \RnX \circ \Op{T} =  \DiscOp{T}_{n+1,n} \circ R_{n+1}^{\Field \times \VecSpace{X}}
    \quad\text{and}\quad 
-   E_{n}\circ \DiscOp{T}_{n+1,n} =  \Op{T} \circ E_{n+1}^{\Field \times \VecSpace{X}},
+   \EnX\circ \DiscOp{T}_{n+1,n} =  \Op{T} \circ E_{n+1}^{\Field \times \VecSpace{X}},
 \]
 which can be rephrased as
-\[ R_{n}(\alpha x) =  \alpha R_{n}(x) 
+\[ \RnX(\alpha x) =  \alpha \RnX(x) 
    \quad\text{and}\quad 
-   E_{n}(\alpha a) = \alpha E_{n}(a).
+   \EnX(\alpha a) = \alpha \EnX(a).
 \]
 Thus, we see that the vector space operations between $\VecSpace{X}$ and $\Field^{n}$ correspond
-to each other only when the discretization $\discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is linear.
+to each other only when the discretization $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is linear.
 \end{proof}
 
 \subsection{Compatibility of norms and inner products}
@@ -347,44 +462,44 @@ $\VecSpace{X}$ is an inner product space. Since there is a natural norm and inne
 $\Field^{n}$, it is natural to consider compatibility of norms and inner products. 
 \begin{theorem}\label{ThmNormInnerProd}
   Let $\VecSpace{X}$ be a normed vector space over $\Field$ with $n$-dimensional
-  discretization $\discr_{n}(\VecSpace{X}):=\{\VecSpace{X},\Field^{n},R_{n},E_{n}\}$. 
+  discretization $\Discr_{n}(\VecSpace{X}):=\{\VecSpace{X},\Field^{n},\RnX,\EnX\}$. 
   Then the norm on $\VecSpace{X}$ corresponds to the norm of $\Field^{n}$ 
-  in the sense of Definition~\ref{def:MapComp} only when the discretization is an isometry. 
+  in the sense of Definition~\ref{def:operator_compatibility} only when the discretization is an isometry. 
   Likewise, if $\VecSpace{X}$ is an inner product space, then its inner product corresponds to the 
   inner product of $\Field^{n}$ only when the discretization is angle preserving.
 \end{theorem}
 \begin{proof}
 Let $\Vert \cdot \Vert_{\VecSpace{X}}$ denote the norm of $\VecSpace{X}$ and $\Vert \cdot \Vert_{n}$ is the 
-norm of $\Field^{n}$. These norms can be represented by the maps $\Op{T}$ and $\DiscOp{T}_{n,1}$ 
+norm of $\Field^{n}$. These norms can be represented by the mappings $\Op{T}$ and $\DiscOp{T}_{n,1}$ 
 defined as  
 \[ \Op{T} \colon \VecSpace{X}  \to [0,\infty[  \quad\text{where}\quad \Op{T}(x):=\Vert x \Vert_{\VecSpace{X}} \] 
 and 
 \[ \DiscOp{T}_{n,1} \colon \Field^{n} \to [0,\infty[  \quad\text{where}\quad \DiscOp{T}(a):=\Vert a \Vert_{n}. \] 
 Then the norms on $\VecSpace{X}$ and $\Field^{n}$ 
 correspond to each other whenever $\Op{T}$ and $\DiscOp{T}_{n,1}$ correspond,
-in the sense of Definition~\ref{def:MapComp},  under the discretizations $\discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
+in the sense of Definition~\ref{def:operator_compatibility},  under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
 and the identity discretization of  $[0,\infty[$, \ie,
-\[  \Op{T} =  \DiscOp{T}_{n,1} \circ R_{n}
+\[  \Op{T} =  \DiscOp{T}_{n,1} \circ \RnX
    \quad\text{and}\quad 
-   \DiscOp{T}_{n,1} =  \Op{T} \circ E_{n},
+   \DiscOp{T}_{n,1} =  \Op{T} \circ \EnX,
 \]
 which can be rephrased as
-\[ \Vert x \Vert_{\VecSpace{X}} = \bigl\Vert R_{n}(x) \bigr\Vert_{n}
+\[ \Vert x \Vert_{\VecSpace{X}} = \bigl\Vert \RnX(x) \bigr\Vert_{n}
     \quad \text{and}\quad
-   \Vert a \Vert_{n} = \bigl\Vert E_{n}(a) \bigr\Vert_{\VecSpace{X}}.
+   \Vert a \Vert_{n} = \bigl\Vert \EnX(a) \bigr\Vert_{\VecSpace{X}}.
 \]
 Thus, the norms of normed vector spaces $\VecSpace{X}$ and $\Field^{n}$ correspond
-to each other only when the discretization $\discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is an isometry. 
+to each other only when the discretization $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is an isometry. 
 
 Let us now consider the inner product. Then we assume that $\VecSpace{X}$ and $\Field^{n}$ are inner 
 product spaces with inner products $\ip{\cdot}{\cdot}_\VecSpace{X}$ and $\ip{\cdot}{\cdot}_{n}$, 
-respectively. The corresponding maps $\Op{T}$ and $\DiscOp{T}_{2n,1}$ are 
+respectively. The corresponding mappings $\Op{T}$ and $\DiscOp{T}_{2n,1}$ are 
 defined as  
 \[ \Op{T} \colon \VecSpace{X} \times \VecSpace{X}  \to \Field  \quad\text{where}\quad \Op{T}(x,y):=\ip{x}{y}_{\VecSpace{X}} \] 
 and 
 \[ \DiscOp{T}_{2n,1} \colon \Field^{n} \times \Field^{n}  \to \Field  \quad\text{where}\quad \DiscOp{T}_{2n,1}(a,b):=\ip{a}{b}_{n}. \] 
 The inner products on $\VecSpace{X}$ and $\Field^{n}$ 
-correspond to each other in the sense of Definition~\ref{def:MapComp} 
+correspond to each other in the sense of Definition~\ref{def:operator_compatibility} 
 whenever $\Op{T}$ and $\DiscOp{T}_{2n,1}$ correspond to each other 
 under the product discretization of $\VecSpace{X}\times \VecSpace{X}$ and the identity discretization of 
 $\Field$, \ie, whenever 
@@ -393,24 +508,24 @@ $\Field$, \ie, whenever
    \DiscOp{T}_{2n,1} =  \Op{T} \circ E_{2n}^{\VecSpace{X}\times \VecSpace{X}}.
 \]
 This can be rephrased as
-\[ \ip{x}{y}_{\VecSpace{X}} =  \ip{R_{n}(x)}{R_{n}(y)}_{n}
+\[ \ip{x}{y}_{\VecSpace{X}} =  \ip{\RnX(x)}{\RnX(y)}_{n}
     \quad\text{and}\quad 
-   \ip{a}{b}_{n} = \ip{E_{n}(a)}{E_{n}(b)}_{\VecSpace{X}}.
+   \ip{a}{b}_{n} = \ip{\EnX(a)}{\EnX(b)}_{\VecSpace{X}}.
 \]
 Hence, the inner products of $\VecSpace{X}$ corresponds to the inner product of $\Field^{n}$ 
-only when the discretization $\discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is angle preserving.
+only when the discretization $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is angle preserving.
 \end{proof}
 Finally, we conclude this section by considering standard discretizations of $n$-dimensional vector spaces
-w.r.t.\@ a fixed basis. 
+\wrt a fixed basis. 
 \begin{theorem}
   Let $B$ be a basis of the $n$-dimensional inner product space $\VecSpace{X}$ and 
-  consider the standard discretization w.r.t.\@ this basis. 
+  consider the standard discretization \wrt this basis. 
    Then, $\VecSpace{X}$ and $\Field^{n}$ have corresponding inner products if and only if $B$ is an 
    orthonormal basis.
 \end{theorem}
 \begin{proof}
-Let $B := \{ v_1, \ldots, v_n \}$ denote the basis of $\VecSpace{X}$ and $\{ \VecSpace{X},\Field^{n},R_{n},E_{n}\}$ 
-is the standard discretization w.r.t.\@ $B$. This is a linear discretization and for any two elements 
+Let $B := \{ v_1, \ldots, v_n \}$ denote the basis of $\VecSpace{X}$ and $\{ \VecSpace{X},\Field^{n},\RnX,\EnX\}$ 
+is the standard discretization \wrt $B$. This is a linear discretization and for any two elements 
 $x,y \in \VecSpace{X}$ there are $\alpha,\beta\in\Field^{n}$ such that 
 \[  x = \sum_{i=1}^n \alpha_i v_i \quad\text{and}\quad y = \sum_{j=1}^n \beta_j v_j. \]
 Now, by definition
@@ -420,21 +535,21 @@ Now, by definition
 \]
 and
 \begin{align*}
-   \ip{R_{n}(x)}{R_{n}(y)}_{n} &=
-       \ip{R_{n}\biggl( \sum_{i=1}^n \alpha_i v_i  \biggr) }
-           {R_{n} \biggl( \sum_{j=1}^n \beta_j v_j  \biggr)}_{n} \\
-  &= \sum_{i,j=1}^n \alpha_i \beta_j \ip{R_{n}(v_i)}{R_{n}(v_j)}_{n} =
+   \ip{\RnX(x)}{\RnX(y)}_{n} &=
+       \ip{\RnX\biggl( \sum_{i=1}^n \alpha_i v_i  \biggr) }
+           {\RnX \biggl( \sum_{j=1}^n \beta_j v_j  \biggr)}_{n} \\
+  &= \sum_{i,j=1}^n \alpha_i \beta_j \ip{\RnX(v_i)}{\RnX(v_j)}_{n} =
         \sum_{i,j=1}^n \alpha_i \beta_j \ip{\ve_i}{\ve_j}_{n}
 \end{align*}
 where $\ve_i\in\Field^{n}$ is the vector with $1$ at $i$:th position and zeroes otherwise. 
-Hence, we see that $\ip{x}{y}_{\VecSpace{X}} =  \ip{R_{n}(x)}{R_{n}(y)}_{n}$ if and only if 
+Hence, we see that $\ip{x}{y}_{\VecSpace{X}} =  \ip{\RnX(x)}{\RnX(y)}_{n}$ if and only if 
 \[ \ip{v_i}{v_j}_{\VecSpace{X}}=\ip{\ve_i}{\ve_j}_{n}. \]
 Conversely,
-\[ \ip{E_{n}(\alpha)}{E_{n}(\beta)}_{\VecSpace{X}} =
+\[ \ip{\EnX(\alpha)}{\EnX(\beta)}_{\VecSpace{X}} =
        \ip{  \sum_{i=1}^n \alpha_i v_i }{ \sum_{j=1}^n \beta_j v_j }_{\VecSpace{X}} 
    = \sum_{i,j=1}^n \alpha_i \beta_j \ip{v_i}{v_j}_{\VecSpace{X}}.
 \]
-so $ \ip{\alpha}{\beta}_{n} = \ip{E_{n}(\alpha)}{E_{n}(\beta)}_{\VecSpace{X}}$ if and only if 
+so $ \ip{\alpha}{\beta}_{n} = \ip{\EnX(\alpha)}{\EnX(\beta)}_{\VecSpace{X}}$ if and only if 
 \[  \ip{\alpha}{\beta}_{n} =  \sum_{i,j=1}^n \alpha_i \beta_j \ip{v_i}{v_j}_{\VecSpace{X}}. \]
 To summarize, $\VecSpace{X}$ and $\Field^{n}$ have corresponding inner products if and only if 
 \[  \ip{v_i}{v_j}_{\VecSpace{X}}= \ip{\ve_i}{\ve_j}_{n}
@@ -447,15 +562,15 @@ orthonormal basis $B$, \ie,
 \[ \ip{v_i}{v_j}_{\VecSpace{X}} = \begin{cases} 1 & \text{if $i=j$,} \\ 0 & \text{otherwise.} \end{cases} \]
 \end{proof}
 
-\subsection{Discretization of spaces of linear maps}
+\subsection{Discretization of spaces of linear mappings}
 Let $\VecSpace{X}$ and $\VecSpace{Y}$ denote two vector spaces over $\Field$ with 
 $n$- and $m$-dimensional discretizations 
-$\discr_{n}(\VecSpace{X}) := \{ \VecSpace{X}, \Field^{n}, R_{n}^{\VecSpace{X}},E_{n}^{\VecSpace{X}} \}$
+$\Discr_{n}(\VecSpace{X}) := \{ \VecSpace{X}, \Field^{n}, \RnX,\EnX \}$
 and
 %    \quad\text{and}\quad
-    $\discr_{m}(\VecSpace{Y}) := \{ \VecSpace{Y}, \Field^{m}, R_{m}^{\VecSpace{X}},E_{m}^{\VecSpace{X}} \}$.
+    $\Discr_{m}(\VecSpace{Y}) := \{ \VecSpace{Y}, \Field^{m}, \RmX, \EmX \}$.
 %\]    
-We now define $\VecSpace{M}:=\VecSpace{L}(\VecSpace{X},\VecSpace{Y})$ as the vector space of linear bounded maps
+We now define $\VecSpace{M}:=\VecSpace{L}(\VecSpace{X},\VecSpace{Y})$ as the vector space of linear bounded mappings
 between $\VecSpace{X}$ and $\VecSpace{Y}$. Similarly, we have the vector space $M_{n,m}$
 of linear mappings from $\Field^{n}$ to $\Field^{m}$, which are represented by $(m \times n)$-matrices with elements in 
 $\Field$.
@@ -463,49 +578,50 @@ $\Field$.
 We start off by defining the natural discretization of $\VecSpace{M}$. An element $\Op{T} \in \VecSpace{M}$
 is a map $\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$, so it is natural to define a discretization 
 \[ 
- \discr_{m n}(\VecSpace{M}) := \{ \VecSpace{M}, \Field^{m n}, R_{m n}^{\VecSpace{M}},E_{m n}^{\VecSpace{M}} \} 
+ \Discr_{m n}(\VecSpace{M}) := \{ \VecSpace{M}, \Field^{m n}, R_{m n}^{\VecSpace{M}},E_{m n}^{\VecSpace{M}} \} 
 \]
 where
 \[ 
-R_{m n}^{\VecSpace{M}}(\Op{T}) := R_{m}^{\VecSpace{Y}} \circ \Op{T} \circ E_{n}^{\VecSpace{X}} 
+R_{m n}^{\VecSpace{M}}(\Op{T}) := \RmY \circ \Op{T} \circ \EnX 
 \quad\text{and}\quad
-E_{m n}^{\VecSpace{M}}(\DiscOp{T}) := E_{m}^{\VecSpace{Y}} \circ \DiscOp{T} \circ R_{n}^{\VecSpace{X}}.
+E_{m n}^{\VecSpace{M}}(\DiscOp{T}) := \EmY \circ \DiscOp{T} \circ \RnX.
 \]
 Also, the natural norms on $\VecSpace{M}$ and $\Field^{mn}$ are 
-\[  \Vert \Op{T} \Vert_{\VecSpace{M}} := \sup_{f \neq 0} \frac{\bigl\Vert \Op{T}(f) \bigr\Vert_{\VecSpace{Y}}}{\Vert f \Vert_{\VecSpace{X}}} 
+\[  \Vert \Op{T} \Vert_{\VecSpace{M}} := \sup_{f \neq 0} \frac{\bigl\Vert \Op{T}(f) \bigr\Vert_{\VecSpace{Y}}}{\Vert f 
+\Vert_{\VecSpace{X}}} 
    \quad\text{and}\quad
    \Vert \DiscOp{T} \Vert_{m,n} := \sup_{\valpha \neq \vzero} 
      \frac{\bigl\Vert \DiscOp{T}(\valpha) \bigr\Vert_{m}}{\Vert \valpha \Vert_{n}}. 
 \]
 
-The goal now is to derive conditions on $\discr_{n}(\VecSpace{X})$ and $\discr_{n}(\VecSpace{Y})$ so that
+The goal now is to derive conditions on $\Discr_{n}(\VecSpace{X})$ and $\Discr_{n}(\VecSpace{Y})$ so that
 vector space operations on $M_{n,m}$ correspond to those of $\VecSpace{M}$ under the natural discretization of $\VecSpace{M}$.
 Similarly, we investigate the behavior of the operator norms under these discretizations.
 \begin{theorem}
-Assume $\discr_{n}(\VecSpace{X})$ and $ \discr_{m}(\VecSpace{Y})$ are linear discretizations of 
+Assume $\Discr_{n}(\VecSpace{X})$ and $ \Discr_{m}(\VecSpace{Y})$ are linear discretizations of 
 $\VecSpace{X}$ and $\VecSpace{Y}$. Then the following holds:
 \begin{enumerate}[(a)]
 \item Vector space operations on $M_{m,n}$ correspond to those on 
-$\VecSpace{M}$ under the discretization $\discr_{m n}(\VecSpace{M})$.
+$\VecSpace{M}$ under the discretization $\Discr_{m n}(\VecSpace{M})$.
 \item If 
-  $\Vert E_{n}^{\VecSpace{X}} \Vert_{\VecSpace{L}(\Field^n, \VecSpace{X})} \leq 1$
+  $\Vert \EnX \Vert_{\VecSpace{L}(\Field^n, \VecSpace{X})} \leq 1$
   and 
- $\Vert R_{m}^{\VecSpace{Y}} \Vert_{\VecSpace{L}(\VecSpace{Y},\Field^m)} \leq 1$,
+ $\Vert \RmY \Vert_{\VecSpace{L}(\VecSpace{Y},\Field^m)} \leq 1$,
  then $\Vert R_{m n}^{\VecSpace{M}} \Vert_{\VecSpace{L}(\VecSpace{M},\Field^{mn})} \leq 1$.%
  \label{IsoIneq1}%
 \item If 
-  $\Vert E_{m}^{\VecSpace{Y}} \Vert_{\VecSpace{L}(\Field^m, \VecSpace{Y})} \leq 1$ 
+  $\Vert \EmY \Vert_{\VecSpace{L}(\Field^m, \VecSpace{Y})} \leq 1$ 
   and
-  $\Vert R_{n}^{\VecSpace{X}} \Vert_{\VecSpace{L}(\VecSpace{X},\Field^n)} \leq 1$, 
+  $\Vert \RnX \Vert_{\VecSpace{L}(\VecSpace{X},\Field^n)} \leq 1$, 
   then $\Vert E_{m n}^{\VecSpace{M}} \Vert_{\VecSpace{L}(\Field^{mn}, \VecSpace{M})} \leq 1$.%
   \label{IsoIneq2}%
 \end{enumerate}
-In particular, the conditions in \eqref{IsoIneq1} and \eqref{IsoIneq2} hold whenever all restriction and extension maps 
+In particular, the conditions in \eqref{IsoIneq1} and \eqref{IsoIneq2} hold whenever all restriction and extension mappings 
 are isometries.
 \end{theorem}
 \begin{proof}
-$\discr_{m n}(\VecSpace{M})$ is a linear discretization of $\VecSpace{M}$ since 
-$\discr_{n}(\VecSpace{X})$ and $ \discr_{m}(\VecSpace{Y})$ are linear discretizations. Hence,
+$\Discr_{m n}(\VecSpace{M})$ is a linear discretization of $\VecSpace{M}$ since 
+$\Discr_{n}(\VecSpace{X})$ and $ \Discr_{m}(\VecSpace{Y})$ are linear discretizations. Hence,
 by Theorem~\ref{ThmVecSpaceCorr}, the vector space operations on $\Field^{m n}$ correspond to those on $\VecSpace{M}$.
 Since the space operations on $\Field^{m n}$ correspond trivially to those on $M_{n,m}$, we conclude that 
 vector space operations on $M_{m,n}$ correspond to those on $\VecSpace{M}$.
@@ -518,19 +634,19 @@ Next, let us consider the claim in \eqref{IsoIneq1}. By definition,
     \bigl\Vert R_{m n}^{\VecSpace{M}}(\Op{T})(\valpha) \bigr\Vert_{m}    
   =   
   \sup_{\substack{\valpha \in \Field^n\\ \Vert \valpha \Vert_n\leq1}}
-    \bigl\Vert R_{m}^{\VecSpace{Y}} \circ \Op{T} \circ E_{n}^{\VecSpace{X}} (\valpha) \bigr\Vert_{m}.
+    \bigl\Vert \RmY \circ \Op{T} \circ \EnX (\valpha) \bigr\Vert_{m}.
 \]
-Now, $\Vert R_{m}^{\VecSpace{Y}} \Vert_{\VecSpace{L}(\VecSpace{Y},\Field^m)} \leq 1$ so
+Now, $\Vert \RmY \Vert_{\VecSpace{L}(\VecSpace{Y},\Field^m)} \leq 1$ so
 \[
   \bigl\Vert R_{m n}^{\VecSpace{M}}(\Op{T}) \bigr\Vert_{m,n}
   \leq 
   \sup_{\substack{\valpha \in \Field^n\\ \Vert \valpha \Vert_n\leq1}}
-    \bigl\Vert \Op{T} \circ E_{n}^{\VecSpace{X}} (\valpha) \bigr\Vert_{\VecSpace{Y}}
+    \bigl\Vert \Op{T} \circ \EnX (\valpha) \bigr\Vert_{\VecSpace{Y}}
   =
-  \sup_{\substack{f = E_{n}^{\VecSpace{X}}\!(\valpha) \\ \Vert \valpha \Vert_n\leq1}}
-    \bigl\Vert \Op{T} \circ E_{n}^{\VecSpace{X}} (\valpha) \bigr\Vert_{\VecSpace{Y}}.
+  \sup_{\substack{f = \EnX\!(\valpha) \\ \Vert \valpha \Vert_n\leq1}}
+    \bigl\Vert \Op{T} \circ \EnX (\valpha) \bigr\Vert_{\VecSpace{Y}}.
 \]
-Since $\Vert E_{n}^{\VecSpace{X}} \Vert_{\VecSpace{L}(\Field^n, \VecSpace{X})} \leq 1$,
+Since $\Vert \EnX \Vert_{\VecSpace{L}(\Field^n, \VecSpace{X})} \leq 1$,
 we get 
 \[
   \bigl\Vert R_{m n}^{\VecSpace{M}}(\Op{T}) \bigr\Vert_{m,n}
@@ -551,19 +667,19 @@ Let us finally consider the claim in \eqref{IsoIneq2}. By definition,
     \bigl\Vert E_{m n}^{\VecSpace{M}}(\DiscOp{T})(f) \bigr\Vert_{\VecSpace{Y}}    
   =   
   \sup_{\substack{f \in \VecSpace{X} \\ \Vert f \Vert_{\VecSpace{X}} \leq 1}}
-    \bigl\Vert E_{m}^{\VecSpace{Y}} \circ \DiscOp{T} \circ R_{n}^{\VecSpace{X}}(f) \bigr\Vert_{\VecSpace{Y}}.
+    \bigl\Vert \EmY \circ \DiscOp{T} \circ \RnX(f) \bigr\Vert_{\VecSpace{Y}}.
 \]
-Now, $\Vert E_{m}^{\VecSpace{Y}} \Vert_{\VecSpace{L}(\Field^m, \VecSpace{Y})} \leq 1$  so
+Now, $\Vert \EmY \Vert_{\VecSpace{L}(\Field^m, \VecSpace{Y})} \leq 1$  so
 \[
   \bigl\Vert E_{m n}^{\VecSpace{M}}(\DiscOp{T}) \bigr\Vert_{\VecSpace{M}}
   \leq 
   \sup_{\substack{f \in \VecSpace{X} \\ \Vert f \Vert_{\VecSpace{X}} \leq 1}}
-    \bigl\Vert \DiscOp{T} \circ R_{n}^{\VecSpace{X}}(f) \bigr\Vert_{m}
+    \bigl\Vert \DiscOp{T} \circ \RnX(f) \bigr\Vert_{m}
   =
-  \sup_{\substack{\valpha = R_{n}^{\VecSpace{X}}\!(f) \\ \Vert f \Vert_{\VecSpace{X}}\leq1}}
+  \sup_{\substack{\valpha = \RnX\!(f) \\ \Vert f \Vert_{\VecSpace{X}}\leq1}}
     \bigl\Vert \DiscOp{T}(\valpha) \bigr\Vert_{m}.
 \]
-Since $\Vert R_{n}^{\VecSpace{X}} \Vert_{\VecSpace{L}(\VecSpace{X},\Field^n)} \leq 1$,
+Since $\Vert \RnX \Vert_{\VecSpace{L}(\VecSpace{X},\Field^n)} \leq 1$,
 we get 
 \[
   \bigl\Vert E_{m n}^{\VecSpace{M}}(\DiscOp{T}) \bigr\Vert_{\VecSpace{M}}
@@ -662,47 +778,47 @@ derivative of an operator.
 \subsection{Discretization of equations}
 Let us now turn to discretization of equations in Banach spaces.
 \begin{definition} 
-  Let $\VecSpace{X}$ be an infinite dimensional Banach space with norm $\Vert \cdot \Vert_{\VecSpace{X}}$. 
+  Let $\VecSpace{X}$ be an infinite-dimensional Banach space with norm $\Vert \cdot \Vert_{\VecSpace{X}}$. 
   Assume that for each $n=1,2,\ldots$ we are given an $n$-dimensional  discretization
-  \[ \discr_{n} := \{ \VecSpace{X}, \Field^{n}, R_{n},E_{n} \}. \]
-  Then we say that the  sequence $\{ \discr_{n} \}_{n}$ of $n$-dimensional discretizations 
+  \[ \Discr_{n} := \{ \VecSpace{X}, \Field^{n}, \RnX,\EnX \}. \]
+  Then we say that the  sequence $\{ \Discr_{n} \}_{n}$ of $n$-dimensional discretizations 
   of $\VecSpace{X}$ is \emph{compatible} whenever
   \[ \lim_{n\to \infty} 
-     \bigl\Vert ( E_{n}\circ R_{n})(f)-f \bigr\Vert_{\VecSpace{X}}\to 0
+     \bigl\Vert ( \EnX\circ \RnX)(f)-f \bigr\Vert_{\VecSpace{X}}\to 0
     \quad\text{for all $f\in \VecSpace{X}$.}\]
 \end{definition}
-Thus, if one has a sequence $\{ \discr_{n} \}_{n}$ of $n$-dimensional discretizations 
+Thus, if one has a sequence $\{ \Discr_{n} \}_{n}$ of $n$-dimensional discretizations 
 of $\VecSpace{X}$, then for large $n$ one can make the approximation that 
-$E_{n}\circ  R_{n}$ is the identity operator, \ie,
+$\EnX\circ  \RnX$ is the identity operator, \ie,
 \begin{equation}\label{eq:fApprox}
-  f \approx E_{n}(f_{n}) \quad\text{where}\quad
-  f_{n}:=R_{n}(f).
+  f \approx \EnX(f_{n}) \quad\text{where}\quad
+  f_{n}:=\RnX(f).
 \end{equation}
 \begin{definition}
   Let $\VecSpace{X}$ and $\VecSpace{Y}$ be Hilbert spaces over the field $\Field$ and $\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$. 
   Also, let 
-  \[  \discr_{n}(\VecSpace{X}):=\bigl\{ \VecSpace{X},\Field^{n},R_{n},E_{n} \bigr\} 
+  \[  \Discr_{n}(\VecSpace{X}):=\bigl\{ \VecSpace{X},\Field^{n},\RnX,\EnX \bigr\} 
      \quad\text{and}\quad
-     \discr_{m}(\VecSpace{Y}):=\bigl\{ \VecSpace{Y},\Field^{m},R_{m},E_{m} \bigr\}\]
+     \Discr_{m}(\VecSpace{Y}):=\bigl\{ \VecSpace{Y},\Field^{m},R_{m},E_{m} \bigr\}\]
   denote $n$- and $m$-dimensional discretizations of $\VecSpace{X}$ and $\VecSpace{Y}$, 
-  respectively. Then a map $\DiscOp{T}_{n,m} \colon \Field^{n} \to \Field^{m}$ is the
-  \emph{discretization of $\Op{T}$ w.r.t.\@ $\discr_{n}(\VecSpace{X})$ and $\discr_{m}(\VecSpace{Y})$},  
+  respectively. Then a map $\DiscOp{T} \colon \Field^{n} \to \Field^{m}$ is the
+  \emph{discretization of $\Op{T}$ \wrt $\Discr_{n}(\VecSpace{X})$ and $\Discr_{m}(\VecSpace{Y})$},  
   whenever 
-  \[ \DiscOp{T}_{n,m} = R_{m}^{\VecSpace{Y}} \circ \Op{T} \circ E_{n}^{\VecSpace{X}} \quad\text{or}\quad
-    \Op{T} = E_{m}^{\VecSpace{Y}} \circ \DiscOp{T}_{n,m} \circ R_{n}^{\VecSpace{X}}. \]
+  \[ \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX \quad\text{or}\quad
+    \Op{T} = \EmY \circ \DiscOp{T} \circ \RnX. \]
   The problem of  solving the equation
    \[  \Op{T}(f)=g \quad\text{for $f\in \VecSpace{X}$ when $g\in \VecSpace{Y}$ is given,} \]
   is \emph{discretized} as solving 
-  \[   \DiscOp{T}_{n,m}(a)=b \quad\text{for $a\in \Field^{n}$ when $b\in \Field^{m}$ is given.} \]
+  \[   \DiscOp{T}(a)=b \quad\text{for $a\in \Field^{n}$ when $b\in \Field^{m}$ is given.} \]
 \end{definition}  
 \begin{remark}
 Note that we do \emph{not require that both  
-\[ \DiscOp{T}_{n,m} = R_{m}^{\VecSpace{Y}} \circ \Op{T} \circ E_{n}^{\VecSpace{X}} \quad\text{and}\quad
-    \Op{T} = E_{m}^{\VecSpace{Y}} \circ \DiscOp{T}_{n,m} \circ R_{n}^{\VecSpace{X}} \]
-holds}. This would imply that  $R_{m}^{\VecSpace{Y}}$ and $R_{n}^{\VecSpace{X}}$ are the inverses of $E_{m}^{\VecSpace{Y}}$ and 
-$E_{n}^{\VecSpace{X}}$, respectively, which is way to strong. Moreover, note that the requirement that 
-$\DiscOp{T}_{n,m}$ is a discretization of $\Op{T}$ is stronger than  the requirement that 
-$\Op{T}$ and $\DiscOp{T}_{n,m}$ correspond to each other.
+\[ \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX \quad\text{and}\quad
+    \Op{T} = \EmY \circ \DiscOp{T} \circ \RnX \]
+holds}. This would imply that  $\RmY$ and $\RnX$ are the inverses of $\EmY$ and 
+$\EnX$, respectively, which is way to strong. Moreover, note that the requirement that 
+$\DiscOp{T}$ is a discretization of $\Op{T}$ is stronger than  the requirement that 
+$\Op{T}$ and $\DiscOp{T}$ correspond to each other.
 \end{remark}
 
 \begin{examp}
@@ -710,16 +826,16 @@ Let us consider a simple example which is the
 Galerkin method in Hilbert space $\VecSpace{X}$. Let $\{ \phi_{i} \}_{i}\subset \VecSpace{X}$ be a 
 complete orthonormal system in the separable Hilbert space $\VecSpace{X}$ and 
 $\Op{T} \colon \VecSpace{X} \to \VecSpace{X}$. 
-Let $R_{n} \colon \VecSpace{X} \to \Field^{n}$ be the orthogonal projection operator 
+Let $\RnX \colon \VecSpace{X} \to \Field^{n}$ be the orthogonal projection operator 
 from $\VecSpace{X}$ onto $\Field^{n}$, \ie,
-\[ R_{n}(f)= \bigl( \ip{\phi_{1}}{f}_{\VecSpace{X}}, \ldots, \ip{\phi_{n}}{f}_{\VecSpace{X}} \bigr)
+\[ \RnX(f)= \bigl( \ip{\phi_{1}}{f}_{\VecSpace{X}}, \ldots, \ip{\phi_{n}}{f}_{\VecSpace{X}} \bigr)
    \quad\text{for all $f\in \VecSpace{X}$.} \]
-Moreover, let $E_{n}\colon \Field^{n} \to \VecSpace{X}$ be the corresponding embedding operator, so
-\[ E_{n}(\alpha)= \sum_{i?1}^n \alpha_i \phi_{i}
+Moreover, let $\EnX\colon \Field^{n} \to \VecSpace{X}$ be the corresponding embedding operator, so
+\[ \EnX(\alpha)= \sum_{i?1}^n \alpha_i \phi_{i}
    \quad\text{for all $\alpha\in \Field^{n}$.} \]
-Then, $R_{n}(f)\to f$ as $n\to \infty$, so the discretizations of $\VecSpace{X}$ are 
+Then, $\RnX(f)\to f$ as $n\to \infty$, so the discretizations of $\VecSpace{X}$ are 
 compatible. Moreover, the discretization $\DiscOp{T}_{n,n}$ of $\Op{T}$ where 
-\[ \DiscOp{T}_{n,n}:=R_{n}\circ \Op{T} \circ E_{n} \]
+\[ \DiscOp{T}_{n,n}:=\RnX\circ \Op{T} \circ \EnX \]
 is consistent with the discretization of $\VecSpace{X}$ and the equation
 $\Op{T}(f)=g$ can be replaced with 
 \[ \ip{\DiscOp{T}(f_{n})}{\phi_{j}}_{\VecSpace{X}}=\ip{g}{\phi_{j}}_{\VecSpace{X}}
@@ -727,6 +843,8 @@ $\Op{T}(f)=g$ can be replaced with
 \end{examp}
 
 \section{Specific discretizations}
+\label{sec:specific_discretizations}
+
 We will now consider a specific family of discretizations of a Hilbert space $\VecSpace{X}$ over the 
 field $\Field$ which contains all the cases we are interested in. 
 \begin{definition}
@@ -780,7 +898,7 @@ functions:
 Each pair yields a discretization of $\cF_{\Field}(\VecSpace{X},Z)$ by the tuples
 \[ 
    \bigl\{
-     \cF_{\Field}(\VecSpace{X},Z),Z^n,R_{n}(\cdot;V^n_{\rest}),E_{n}(\cdot;V^n_{\ext})
+     \cF_{\Field}(\VecSpace{X},Z),Z^n,\RnX(\cdot;V^n_{\rest}),\EnX(\cdot;V^n_{\ext})
    \bigr\} \]
 and
 \[ \bigl\{
@@ -788,11 +906,11 @@ and
    \bigr\}. \] 
 What is the relation between these two discretizations? A function 
 $f\in \cF_{\Field}(\VecSpace{X},Z)$ is represented by the ``vectors'' 
-\[ z_{n}:= R_{n}(f;V^n_{\rest})\in Z^n \quad\text{and}\quad
+\[ z_{n}:= \RnX(f;V^n_{\rest})\in Z^n \quad\text{and}\quad
    z_{m}:= R_{m}(\cdot;V^m_{\rest})\in Z^m \]
 and we seek the relaation between $z_{n}$ and $z_{m}$. 
 Now making use of the approximation $f\approx 
-E_{n}(z_{n};V^n_{\ext})$, \ie,
+\EnX(z_{n};V^n_{\ext})$, \ie,
 \[ f \approx x \mapsto 
        \sum_{i=1}^n z_{n,i} \wt{\phi}_{i}(x)
    \quad\text{in $\cF_{\Field}(\VecSpace{X},Z)$,} 
@@ -802,13 +920,13 @@ which implies that
   z_{m} &:=R_{m}(f;V^m_{\rest}) =
     \bigl( r_{1}(f,V^m_{\rest}),\ldots,r_{m}(f,V^m_{\rest}) \bigr) \\
     &\approx 
-      \Bigl( r_{1}\bigl(E_{n}(z_{n},V^n_{\ext}),V^m_{\rest}\bigr),
+      \Bigl( r_{1}\bigl(\EnX(z_{n},V^n_{\ext}),V^m_{\rest}\bigr),
              \ldots,
-	     r_{m}\bigl(E_{n}(z_{n},V^n_{\ext}),V^m_{\rest}\bigr)
+	     r_{m}\bigl(\EnX(z_{n},V^n_{\ext}),V^m_{\rest}\bigr)
       \Bigr).
 \end{align*}
 When $r_{k}(\cdot,V^m_{\rest})$ are linear, then 
-\[ r_{k}\bigl(E_{n}(z_{n},V^n_{\ext}),V^m_{\rest}\bigr)=
+\[ r_{k}\bigl(\EnX(z_{n},V^n_{\ext}),V^m_{\rest}\bigr)=
      r_{k}\biggl(\sum_{i=1}^n 
        z_{n,i}\wt{\phi}_{i}(\cdot),V^m_{\rest}\biggr)=
      \sum_{i=1}^n z_{n,i} r_{k}(\wt{\phi}_{i},V^m_{\rest}).
@@ -867,7 +985,7 @@ $V^m_{\ext}=V^m_{\rest}$, then $\vA=\wt{\vA}^T$.
 %
 %This enables us to replace the continuous inverse  is given, with a sequence of 
 %discrete inverse problems of finding $f_{n}\in H_{n}$ such that 
-%$\DiscOp{T}_{n,m}(f_{n})=R_{m}(g)$.
+%$\DiscOp{T}(f_{n})=R_{m}(g)$.
 %
 %Finally, note that the dimension of the discretization of  $\cF(Y,W)$ 
 %occurring in the inverse problem in subsection~\ref{sec:Inv} is naturally 
@@ -908,8 +1026,8 @@ $V^m_{\ext}=V^m_{\rest}$, then $\vA=\wt{\vA}^T$.
 %a sample based discretization it is actually not relevant exactly which 
 %Hilbert space that one started with. The only important factor is the 
 %underlying field and the inner product (which affects the inner 
-%product in the finite dimensional representation) since the same 
-%sample based discretization yields the same finite dimensional representation for 
+%product in the finite-dimensional representation) since the same 
+%sample based discretization yields the same finite-dimensional representation for 
 %all Hilbert spaces over the same field with the same inner product structure.
 %As an example a fixed sample based discretization can not differ between bounded 
 %integrable functions or 
@@ -979,6 +1097,7 @@ $\VecSpace{X}_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ of the same space $\VecS
 \end{itemize}
 
 \subsection{Dictionary-based discretization}
+%
 
 \subsection{Examples}
 
@@ -1010,9 +1129,9 @@ addition and multiplication.
     \begin{enumerate}
     \item addition is associative, \ie, $\alpha + (\beta+\gamma)=(\alpha+\beta)+\gamma$,
     \item addition is commutative, \ie, $\alpha + \beta = \beta+\alpha$,
-    \item the zero element is the identity element w.r.t.\@ the addition so 
+    \item the zero element is the identity element \wrt the addition so 
        $\alpha+0_{\Field}=0_{\Field}+\alpha=\alpha$,
-    \item $-\alpha$ denotes the inverse of $\alpha$  w.r.t.\@ the addition so 
+    \item $-\alpha$ denotes the inverse of $\alpha$  \wrt the addition so 
        $\alpha+(-\alpha)=(-\alpha)+\alpha=0_{\Field}$.
     \end{enumerate}
   \item the multiplication is associative and possesses an identity element $1_{\Field}$, \ie,
@@ -1020,7 +1139,7 @@ addition and multiplication.
     \begin{enumerate}
     \item multiplication is associative, \ie, 
       $\alpha\cdot (\beta\cdot \gamma)=(\alpha\cdot \beta)\cdot \gamma$,
-   \item $1_{\Field}$ is the identity element w.r.t.\@ the multiplication so 
+   \item $1_{\Field}$ is the identity element \wrt the multiplication so 
       $1_{\Field}\cdot \alpha=\alpha \cdot 1_{\Field}=\alpha$, 
   \end{enumerate}
   \item the multiplication is distributive with respect to the addition, \ie,
@@ -1031,7 +1150,7 @@ addition and multiplication.
     \]
   \end{enumerate}
   A ring $\Field$ is called a \emph{field} if it does not consist only of $0_{\Field}$ and every non-zero 
-  element of $\Field$ has an inverse w.r.t.\@ the multiplication. Finally, a field is \emph{commutative}
+  element of $\Field$ has an inverse \wrt the multiplication. Finally, a field is \emph{commutative}
   if its multiplication is commutative.
 \end{definition}
 When working with fields we will simplify the notational burden by not explicitly writing 
@@ -1084,7 +1203,7 @@ as linear combination, basis, and dimension.
    there exists a subset $\{ \alpha_1,\ldots,\alpha_{n} \} \subset \Field$ such that 
    \[  x= \alpha_1 v_1 + \ldots +  \alpha_{n} v_{n}. \]
    The elements $\{ \alpha_1,\ldots,\alpha_{n} \}$ are then called the \emph{coefficients 
-  (or coordinates)  of $x$ w.r.t.\@ $\{ v_1, \ldots, v_{n} \}$}. Moreover, we say that this finite 
+  (or coordinates)  of $x$ \wrt $\{ v_1, \ldots, v_{n} \}$}. Moreover, we say that this finite 
   set is \emph{linearly independent} if 
    \[ \alpha_1 v_1 + \ldots + \alpha_{n} v_{n} =0
       \quad\text{implies that}\quad \alpha_1=\ldots=\alpha_{n}=0. \]
@@ -1113,7 +1232,7 @@ have the same cardinality, the concept of dimension is well-defined.
   refers to the vector space multiplication in $Y$.
   If $X$ and $Y$ are two (right) vector spaces over the same field $\Field$, then we need to
   replace the condition $f(\alpha x)=\alpha f(x)$ with $f(x\alpha)= f(x) \alpha$.
-  Finally,  we let  $\Hom_{\Field}(X,Y)$ denote the set of linear maps from $X$ into $Y$.
+  Finally,  we let  $\Hom_{\Field}(X,Y)$ denote the set of linear mappings from $X$ into $Y$.
 \end{definition}   
 Since any result that holds for left vector spaces over $\Field$ also holds for right vector spaces 
 over $\Field$, we shall in the sequel we shall drop the prefix left (resp.\@ right). Moreover, if
@@ -1149,7 +1268,7 @@ Now, if $X$ is a product space defined as in \eqref{eq:ProdSpace}, then the
 \[ \pi_i \colon X \to X_i \quad\text{are defined as}\quad \pi_i(x):=x_i, \]
 and they are surjective linear mappings, \ie, $\pi_i\in\Hom_{\Field}(X,X_i)$. 
 Now, it is easy to show, see, \eg, Proposition~4, Section~1.5, Chapter~II in \cite{Bo89}, 
-that for any vector space $Y$ over $\Field$ and any finite set of linear maps 
+that for any vector space $Y$ over $\Field$ and any finite set of linear mappings 
 $f_i \in \Hom_{\Field}(Y,X_i)$,  $i=1,\ldots,n$, there exists a unique map 
 $f\in \Hom_{\Field}(Y,X)$ such that 
 \[ \pi_i \circ f = f_i. \]
@@ -1204,7 +1323,7 @@ $\phi \colon X \to \Field^{n}$ as
     \phi^{-1}(\alpha_1,\ldots,\alpha_{n}) = \sum_{i=1}^n \alpha_i v_i.
 \]
 The above map $\phi$ is an vector space isomorphism which we call the \emph{natural 
-isomorphism of $X$ w.r.t.\@ the basis $\{ v_1,\ldots, v_{n} \}$}, so $X$ is isomorphic to $\Field^{n}$.
+isomorphism of $X$ \wrt the basis $\{ v_1,\ldots, v_{n} \}$}, so $X$ is isomorphic to $\Field^{n}$.
 Let us also mention that in order to comply with the notation used in 
 matrix algebra\footnote{Matrix, and more generally, tensor algebra for matrices and tensors with 
 elements in a general field $\Field$ is a straightforward generalization of the matrix and 
@@ -1217,7 +1336,7 @@ in $\Field$, a vector $\alpha\in\Field^{n}$ is written as a column vector of its
 \]
 
 As a final example,  let $X$ be a set and $Y$ a vector space over a field $\Field$. Now, the 
-set $\Map(X,Y)$ of all maps from $X$ into $Y$ has a natural vector space 
+set $\Map(X,Y)$ of all mappings from $X$ into $Y$ has a natural vector space 
 structure. In fact, for $f,g\in \Map(X,Y)$ and $\alpha\in\Field$ we define $f+g$ and $\alpha f$ as 
 \[ (f+g)(x):= f(x)+g(x) \quad\text{and}\quad (\alpha f)(x):=\alpha f(x) \]
 for all $x\in X$. Then, whenever $f+g, \alpha f\in  \Map(X,Y)$, the set $\Map(X,Y)$ becomes
