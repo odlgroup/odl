@@ -57,6 +57,7 @@
 \DeclareMathOperator{\Id}{Id}
 \newcommand{\ip}[2]{\left \langle #1,#2 \right\rangle}
 \DeclareMathOperator{\linspan}{linspan}
+\newcommand*{\FUNCRESTR}[2]{{\ensuremath{\left. \vphantom{g_{g_g}} {#1} \right|_{#2}}}}
 
 \newcommand{\ie}{\textsl{i.e.}\xspace}
 \newcommand{\eg}{\textsl{e.g.}\xspace}
@@ -302,8 +303,9 @@ spaces. Thus, we begin with defining the notion of compatibility of mappings \wr
   \Op{T} \colon \VecSpace{X} \to \VecSpace{Y} \quad\text{and}\quad \DiscOp{T} \colon \Field^{n} \to \Field^{m}.
  \end{equation*}
  %
- \begin{enumerate}
-  \item \emph{$\Op{T}$ and $\DiscOp{T}$ (exactly) correspond to each 
+ \begin{enumerate}[(a)]
+  \item \label{def:operator_compatibility:a_exact}
+  \emph{$\Op{T}$ and $\DiscOp{T}$ (exactly) correspond to each 
   other under the discretizations $\Discr_{n}(\VecSpace{X})$ and  $\Discr_{m}(\VecSpace{Y})$} if 
   the following holds for any $n,m \in \Natural$:
   %
@@ -311,7 +313,8 @@ spaces. Thus, we begin with defining the notion of compatibility of mappings \wr
    \RmY \circ \Op{T} = \DiscOp{T} \circ \RnX  \quad\text{and}\quad  \EmY \circ \DiscOp{T} = \Op{T} \circ \EnX.
   \end{equation*}
 
-  \item \emph{$\Op{T}$ and $\DiscOp{T}$ approximately correspond to each other under the discretizations $\Discr_{n}(\VecSpace{X})$  
+  \item \label{def:operator_compatibility:b_approximately}
+  \emph{$\Op{T}$ and $\DiscOp{T}$ approximately correspond to each other under the discretizations $\Discr_{n}(\VecSpace{X})$  
   and $\Discr_{m}(\VecSpace{Y})$} if the following holds:
   %
   \begin{align*} 
@@ -327,67 +330,87 @@ In the following Lemma, we investigate under which conditions the natural discre
 of the above definition. These conditions can be stated more specifically in special cases, see 
 
 \begin{lemma}
- Let $\DiscOp{T}$ be the natural discretization of an operator $\Op{T}$ as in \Cref{def:operator_discretization} and
+ \label{lemma:nat_op_discr_fulfills_corresp}
+ Let $\DiscOp{T}$ be the natural linear discretization of an operator $\Op{T}$ based on linear space discretizations as in 
+ \Cref{def:operator_discretization}, and let
  %
  \begin{equation*}
   \PnX := \EnX \circ \RnX \quad \text{and} \quad \PmY := \EmY \circ \RmY.
  \end{equation*}
  %
- Let further the \emph{domain of injectivity} of an operator $\Op{T}$ defined on $\VecSpace{X}$ be the set
- %
- \begin{equation*}
-  \VecSpace{I}(\Op{T}) := \bigcup \{A \subset \VecSpace{X}\, |\, \Op{T} \text{ injective on } A \}.
- \end{equation*}
- %
  Then the following holds:
  
- \begin{enumerate}[a)]
-  \item 
+ \begin{enumerate}[(a)]
+  \item \label{lemma:nat_op_discr_fulfills_corresp:a_general}
+  $\Op{T}$ and $\DiscOp{T}$ correspond to each other if $\PnX$ is equal to the identity operator on each
+  injectivity domain of $\RmY \circ \Op{T}$ and $\PmY$ is the identity operator on the range of $\Op{T} \circ \EnX$.
+
+  \item \label{lemma:nat_op_discr_fulfills_corresp:b_hilbert_linear}
+  If $\VecSpace{X}$ is a Hilbert space and $\Op{T}$ and $\RmY$ are linear and bounded, $\Op{T}$ and $\DiscOp{T}$ correspond to each other 
+  if and only if (1) $\PnX$ is equal to the identity operator on $\nullspace(\RmY \circ \Op{T})^\perp$, (2) $\nullspace(\RmY \circ \Op{T})$ 
+  is invariant under $\PnX$ and (3) $\PmY$ is the identity operator on the range of $\Op{T} \circ \EnX$.
+  
+  \item Something about approximate correspondence.
  \end{enumerate}
-
-
- 
 \end{lemma}
 
 
+\begin{proof}
+ \begin{enumerate}[a)]
+  \item Right-composing the discretized operator $\DiscOp{T} = \RmY \circ \Op{T} \circ \EnX$ with $\RnX$ results in
+  %
+  \begin{equation*}
+   \DiscOp{T} \circ \RnX = \RmY \circ \Op{T} \circ \PnX.
+  \end{equation*}
+  %
+  The right hand side is equal to $\RmY \circ \Op{T}$ and thus fulfills the first condition in 
+  \Cref{def:operator_compatibility}~\eqref{def:operator_compatibility:a_exact} if $\PnX$ is the identity operator on each
+  injectivity domain of $\RmY \circ \Op{T}$.\\[1ex]
+  %
+  On the other hand, by left-composing $\DiscOp{T}$ with $\EmY$, we get
+  %
+  \begin{equation*}
+   \EmY \circ \DiscOp{T} = \PmY \circ \Op{T} \circ \EnX.
+  \end{equation*}
+  %
+  The right hand side is equal to $\Op{T} \circ \EnX$ if and only if $\PmY$ is the identity operator on the range of $\Op{T} \circ \EnX$, 
+  thus fulfilling the second equation in \Cref{def:operator_compatibility}~\eqref{def:operator_compatibility:a_exact}.
 
-\begin{remark}
- The condition in the definition of weak correspondence can be read as a definition for the discretization of an operator. Weak 
- correspondence follows from exact correspondence if one of the conditions $\RnX\EnX = \Op{I}$ or $\RmY\EmY = \Op{I}$ hold.
-\end{remark}
+  \item If $\VecSpace{X}$ is a Hilbert space and $\RmY \circ \Op{T}$ linear, each $f \in \VecSpace{X}$ can be uniquely decomposed into 
+  $f = f_0 + \tilde f$ with  $f_0 \in \nullspace(\RmY \circ \Op{T})$ and $\tilde f \in \nullspace(\RmY \circ \Op{T})^\perp$. Hence,
+  %
+  \begin{equation*}
+   \RmY \circ \Op{T} \circ \PnX (f) = \RmY \circ \Op{T} \big( \PnX (f_0) + \PnX(\tilde f) \big).
+  \end{equation*}
+  %
+  It is clear that the ``if'' part of the claim holds since $\PnX (f_0) = h_0 \in \nullspace(\RmY \circ \Op{T})$ and 
+  $\PnX(\tilde f) = \tilde f$. For the ``only if'' part, consider first $\tilde f = 0$. Then 
+  %
+  \begin{equation*}
+   \RmY \circ \Op{T} \big( \PnX (f_0) \big) = \RmY \circ \Op{T} (f_0) = 0
+  \end{equation*}
+  %
+  implies $\PnX (f_0) \in \nullspace(\RmY \circ \Op{T})$, in other words $\nullspace(\RmY \circ \Op{T})$ is invariant under $\PnX$ as 
+  claimed.\\
+  %
+  If $f_0 = 0$, we have
+  %
+  \begin{equation*}
+   \RmY \circ \Op{T} \big( \PnX (\tilde f) \big) = \RmY \circ \Op{T} (\tilde f),
+  \end{equation*}
+  %
+  and since $\RmY \circ \Op{T}$ is injective when restricted to $\nullspace(\RmY \circ \Op{T})^\perp$, this yields immediately 
+  $\PnX (\tilde f) = \tilde f$.\\
+  %
+  The equivalence of the range condition to the second equation in 
+  \Cref{def:operator_compatibility}~\eqref{def:operator_compatibility:a_exact} was already shown in the proof of 
+  \eqref{lemma:nat_op_discr_fulfills_corresp:a_general}, hence the proof of \eqref{lemma:nat_op_discr_fulfills_corresp:b_hilbert_linear} is 
+  complete.
+  
+  \item 
+ \end{enumerate}
+\end{proof}
 
-
-\paragraph{Identity with finite range}
-There are two natural approximations to the identity mappings on $\VecSpace{Y}$ and $\VecSpace{X}$, 
-namely $P^{\VecSpace{Y}}_{m} \colon \VecSpace{Y} \to \VecSpace{Y}$ and 
-$P^{\VecSpace{X}}_{n}\colon \VecSpace{X} \to \VecSpace{X}$ given as 
-\[  P^{\VecSpace{Y}}_{m} := \EmY \circ \RmY
-   \quad\text{and}\quad
-   P^{\VecSpace{X}}_{n} := \EnX \circ \RnX.
-\]   
-Both these operators do in some sense corresponds to the identity mapping but they have a finite-dimensional range.
-
-With these we may re-phrase the conditions for exact correspondence in Definition~\ref{def:operator_compatibility}
-in a way that is sometimes more useful. If $\VecSpace{X}$ is a Hilbert space, then
-\begin{align*}
-  \EmY \circ \DiscOp{T} = \Op{T} \circ \EnX
-    &\quad\iff\quad
-    \Op{T} = P^{\VecSpace{Y}}_{m} \circ \Op{T}
-    \text{ on $\range(\EnX) \subset \VecSpace{X}$} \\
- \RmY \circ \Op{T} = \DiscOp{T} \circ \RnX
-    &\quad\iff\quad
-    \Op{T} = \Op{T} \circ P^{\VecSpace{X}}_{n}
-    \text{ on $\range(\EnX) \subset \VecSpace{X}$}     
-\end{align*}
-
-\[  \Op{T} \circ \EnX = \EmY \circ \DiscOp{T} 
-      = \EmY \circ \RmY \circ \Op{T} \circ \EnX
-\]
-which is equivalent to assuming that 
-\[  \Op{T} = \EmY \circ \RmY \circ \Op{T}
-     \quad\text{on the vector space $\range(\EnX) \subset \VecSpace{X}$.} 
-\]
-In a similar way, 
 
 In the following, we investigate the consequences of the above definition for some rather common operations
 on vector spaces.
