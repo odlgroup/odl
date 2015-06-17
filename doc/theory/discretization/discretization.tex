@@ -21,6 +21,8 @@
 \usepackage{acro}
 \usepackage{extraenv}
 \usepackage{cleveref}
+\usepackage{todonotes}
+
 
 % Specific packages
 \newcommand{\Discr}{\mathfrak{D}}
@@ -151,7 +153,7 @@ as a way of reducing an equation in infinite-dimensional setting to an equation
 Thus, we now formally introduce the notion of discretization in different contexts along with elementary properties.
 
 
-\section{Discretization and compatibility}
+\section{Discretization and corresponding operators}
 \label{sec:discretization_compatibility}
 
 \subsection{Discretization of vector spaces}
@@ -243,24 +245,89 @@ Common special cases of product discretizations are $\VecSpace{X}:=\Field \times
 $\VecSpace{X}_1=\Field$ with the identity discretization.
 
 
-\subsection{Discretization of operators}
+\subsection{Natural discretization of operators}
 
-When given an operator $\Op{T}$ between vector spaces $\VecSpace{X}$ and $\VecSpace{Y}$ with given discretizations, there is a natural way 
-of defining a discretized counterpart $\DiscOp{T}: \Field^n \to \Field^m$ of $\Op{T}$ as follows.
-
+When given an operator $\Op{T}$ between vector spaces $\VecSpace{X}$ and $\VecSpace{Y}$, each with a given discretization, 
+there is a natural discretized counterpart $\DiscOp{T} \colon \Field^n \to \Field^m$ defined as follows:
 \begin{definition}
  \label{def:operator_discretization}
  Let $\Op{T}\colon \VecSpace{X} \to \VecSpace{Y}$ be an operator and $\Discr_n(\VecSpace{X})$ and $\Discr_m(\VecSpace{Y})$ be 
- discretizations of the vector spaces as in Definition~\ref{def:space_discretization}. Then, the \emph{natural operator discretization} 
-$\DiscOp{T}$ of  $\Op{T}$ is defined as
+ discretizations of the vector spaces as in Definition~\ref{def:space_discretization}. The \emph{natural operator discretization 
+ of $\Op{T}$} is defined as $\DiscOp{T} \colon \Field^n \to \Field^m$ given as 
  %
- \begin{equation*}
-  \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX.
- \end{equation*}
+$\DiscOp{T} := \RmY \circ \Op{T} \circ \EnX$.
 \end{definition}
 
-The above defined natural operator discretization immediately induces a discretization of the space of linear operators from $\VecSpace{X}$ 
-to $\VecSpace{Y})$.
+%Let us now turn to discretization of equations in Banach spaces.
+%\begin{definition} 
+%  Let $\VecSpace{X}$ be an infinite-dimensional Banach space with norm $\Vert \cdot \Vert_{\VecSpace{X}}$. 
+%  Assume that for each $n=1,2,\ldots$ we are given an $n$-dimensional  discretization
+%  \[ \Discr_{n} := \{ \VecSpace{X}, \Field^{n}, \RnX,\EnX \}. \]
+%  Then we say that the  sequence $\{ \Discr_{n} \}_{n}$ of $n$-dimensional discretizations 
+%  of $\VecSpace{X}$ is \emph{compatible} whenever
+%  \[ \lim_{n\to \infty} 
+%     \bigl\Vert ( \EnX\circ \RnX)(f)-f \bigr\Vert_{\VecSpace{X}}\to 0
+%    \quad\text{for all $f\in \VecSpace{X}$.}\]
+%\end{definition}
+%Thus, if one has a sequence $\{ \Discr_{n} \}_{n}$ of $n$-dimensional discretizations 
+%of $\VecSpace{X}$, then for large $n$ one can make the approximation that 
+%$\EnX\circ  \RnX$ is the identity operator, \ie,
+%\begin{equation}\label{eq:fApprox}
+%  f \approx \EnX(f_{n}) \quad\text{where}\quad
+%  f_{n}:=\RnX(f).
+%\end{equation}
+%\begin{definition}
+%  Let $\VecSpace{X}$ and $\VecSpace{Y}$ be Hilbert spaces over the field $\Field$ and $\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$. 
+%  Also, let 
+%  \[  \Discr_{n}(\VecSpace{X}):=\bigl\{ \VecSpace{X},\Field^{n},\RnX,\EnX \bigr\} 
+%     \quad\text{and}\quad
+%     \Discr_{m}(\VecSpace{Y}):=\bigl\{ \VecSpace{Y},\Field^{m},R_{m},E_{m} \bigr\}\]
+%  denote $n$- and $m$-dimensional discretizations of $\VecSpace{X}$ and $\VecSpace{Y}$, 
+%  respectively. Then a map $\DiscOp{T} \colon \Field^{n} \to \Field^{m}$ is the
+%  \emph{discretization of $\Op{T}$ \wrt $\Discr_{n}(\VecSpace{X})$ and $\Discr_{m}(\VecSpace{Y})$},  
+%  whenever 
+%  \[ \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX \quad\text{or}\quad
+%    \Op{T} = \EmY \circ \DiscOp{T} \circ \RnX. \]
+%  The problem of  solving the equation
+%   \[  \Op{T}(f)=g \quad\text{for $f\in \VecSpace{X}$ when $g\in \VecSpace{Y}$ is given,} \]
+%  is \emph{discretized} as solving 
+%  \[   \DiscOp{T}(a)=b \quad\text{for $a\in \Field^{n}$ when $b\in \Field^{m}$ is given.} \]
+%\end{definition}  
+%\begin{remark}
+%Note that we do \emph{not require that both  
+%\[ \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX \quad\text{and}\quad
+%    \Op{T} = \EmY \circ \DiscOp{T} \circ \RnX \]
+%holds}. This would imply that  $\RmY$ and $\RnX$ are the inverses of $\EmY$ and 
+%$\EnX$, respectively, which is way to strong. Moreover, note that the requirement that 
+%$\DiscOp{T}$ is a discretization of $\Op{T}$ is stronger than  the requirement that 
+%$\Op{T}$ and $\DiscOp{T}$ correspond to each other.
+%\end{remark}
+%
+%\begin{examp}
+%Let us consider a simple example which is the 
+%Galerkin method in Hilbert space $\VecSpace{X}$. Let $\{ \phi_{i} \}_{i}\subset \VecSpace{X}$ be a 
+%complete orthonormal system in the separable Hilbert space $\VecSpace{X}$ and 
+%$\Op{T} \colon \VecSpace{X} \to \VecSpace{X}$. 
+%Let $\RnX \colon \VecSpace{X} \to \Field^{n}$ be the orthogonal projection operator 
+%from $\VecSpace{X}$ onto $\Field^{n}$, \ie,
+%\[ \RnX(f)= \bigl( \ip{\phi_{1}}{f}_{\VecSpace{X}}, \ldots, \ip{\phi_{n}}{f}_{\VecSpace{X}} \bigr)
+%   \quad\text{for all $f\in \VecSpace{X}$.} \]
+%Moreover, let $\EnX\colon \Field^{n} \to \VecSpace{X}$ be the corresponding embedding operator, so
+%\[ \EnX(\alpha)= \sum_{i?1}^n \alpha_i \phi_{i}
+%   \quad\text{for all $\alpha\in \Field^{n}$.} \]
+%Then, $\RnX(f)\to f$ as $n\to \infty$, so the discretizations of $\VecSpace{X}$ are 
+%compatible. Moreover, the discretization $\DiscOp{T}_{n,n}$ of $\Op{T}$ where 
+%\[ \DiscOp{T}_{n,n}:=\RnX\circ \Op{T} \circ \EnX \]
+%is consistent with the discretization of $\VecSpace{X}$ and the equation
+%$\Op{T}(f)=g$ can be replaced with 
+%\[ \ip{\DiscOp{T}(f_{n})}{\phi_{j}}_{\VecSpace{X}}=\ip{g}{\phi_{j}}_{\VecSpace{X}}
+%   \quad\text{$f_{n}\in \Field^{n}$ and $j=1,\ldots,n$.} \]
+%\end{examp}
+
+
+\subsubsection{Natural discretization of spaces of linear mappings}
+The above notion of a natural operator discretization, we immediately get a natural discretization of the space of linear 
+operators from $\VecSpace{X}$ to $\VecSpace{Y}$.
 
 \begin{definition}
  \label{def:operator_space_discretization}
@@ -275,20 +342,95 @@ to $\VecSpace{Y})$.
  %
  with the operators
  %
- \begin{align*}
-  \REST{m\times n}{\VecSpace{M}}(\Op{T}) &:= \RmY \circ \Op{T} \circ \EnX, \\
-  \EXT{m\times n}{\VecSpace{M}}(\DiscOp{T}) &:= \EmY \circ \DiscOp{T} \circ \RnX.
- \end{align*}
+\[  \REST{m\times n}{\VecSpace{M}}(\Op{T}) := \RmY \circ \Op{T} \circ \EnX
+  \quad\text{and}\quad
+  \EXT{m\times n}{\VecSpace{M}}(\DiscOp{T}) := \EmY \circ \DiscOp{T} \circ \RnX.
+ \]
  %
- In this definition, we identify a linear operator $\DiscOp{T}\colon \Field^n \to \Field^m$ with its matrix representation
- $\mathbb{T} \in \Field^{m\times n}$.
+ We have here identified a linear operators from $\Field^n$ to $\Field^m$ with $\Field^{m\times n}$, the vector space of 
+ $(m \times n)$ matrices with elements on $\Field$.
 \end{definition}
 
+\subsubsection{Natural discretization of the adjoint}
+
+If $\VecSpace{X}$ and $\VecSpace{Y}$ are Hilbert spaces with the same discretizations as in \Cref{def:operator_discretization}, 
+one can consider the unary operator 
+``$\ast$'' mapping a bounded linear operator between $\VecSpace{X}$ and $\VecSpace{Y}$ to its adjoint. We formally write
+\[
+  \Op{A} \colon \VecSpace{L}(\VecSpace{X}, \VecSpace{Y}) \to \VecSpace{L}(\VecSpace{Y}, \VecSpace{X})
+  \quad\text{where}\quad
+   \Op{A}(\Op{T}) := \Op{T}^*.
+\]
+Then, if the operators $E_n^{\VecSpace{X}}$ and $R_m^{\VecSpace{Y}}$ are bounded and linear, the natural discretization of 
+$\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$ implies a natural discretization $\DiscOp{A}$ as follows. If $\Op{T} \in 
+\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$, the adjoint of its discretization $\DiscOp{T}$ is
+\[
+ \DiscOp{T}^* = \big( R_m^{\VecSpace{Y}} \circ \Op{T} \circ E_n^{\VecSpace{X}} \big)^* = \big( R_m^{\VecSpace{Y}} \big)^* \circ \Op{T}^* 
+\circ  \big( E_n^{\VecSpace{X}} \big)^*.
+\]
+Therefore the definition
+\[
+  \DiscOp{A} := \big( R_m^{\VecSpace{Y}} \big)^* \circ \Op{A} \circ \big( E_n^{\VecSpace{X}} \big)^*
+\]
+for the discretized version of the operator taking the adjoint is consistent with the discretization of $\VecSpace{L}(\VecSpace{X}, 
+\VecSpace{Y})$.
+\todo[inline]{Does the above definition of $\DiscOp{A}$ correspond to the natural operator discretizatin of $\Op{A}$ 
+  in the sense of \Cref{def:operator_discretization}?}
+
+\subsubsection{Discretization of the differential}
+
+Similarly to taking adjoints, the discretization of $\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$ implies a discretization of the Fr\'{e}chet 
+derivative of an operator.
+
+\begin{theorem}
+ Let $\VecSpace{X}$ and $\VecSpace{Y}$ be normed vector spaces with discretizations as before. If $E_n^{\VecSpace{X}}$ and 
+ $R_m^{\VecSpace{Y}}$ are bounded and linear, the Fr\'{e}chet derivative
+ \[
+  \partial\DiscOp{T} \colon  \Field^n \to \VecSpace{L}(\Field^n, \Field^m)
+ \]
+ of the discretized operator $\DiscOp{T} := \REST{mn}{\VecSpace{M}} (\Op{T})$ is given by
+ \[
+  \partial\DiscOp{T} = R_m^{\VecSpace{Y}} \circ \partial\Op{T} \circ E_n^{\VecSpace{X}}
+ \quad\text{with}\quad
+ \partial\Op{T} \circ E_n^{\VecSpace{X}}(\valpha)(\vbeta):= \partial\Op{T}\big(E_n^{\VecSpace{X}}(\valpha)\big) 
+ \big(E_n^{\VecSpace{X}}(\vbeta)\big).
+ \] 
+\end{theorem}
+
+\begin{proof}
+ For $\valpha,\vbeta \in \Field^n$, it is
+ %
+ \begin{equation*}
+  \DiscOp{T}(\valpha + \vbeta) = \RmY \circ \Op{T} \circ \EnX (\alpha + \beta).
+ \end{equation*}
+ %
+ From the definition of $\partial \Op{T}$ it follows that
+ %
+ \begin{align*}
+  \Op{T}\big(\EnX(\valpha + \vbeta)\big)
+  &= \Op{T}\big(\EnX(\valpha)\big) + \partial\Op{T}\big(\EnX(\valpha)\big)\big(\EnX(\vbeta)\big) +
+  o\big(\big\Vert \EnX(\vbeta) \big\Vert_{\VecSpace{X}}\big) \\
+  &= \Op{T} \circ \EnX(\valpha) + \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n
+  \big)
+ \end{align*}
+ %
+ for $\Vert \vbeta \Vert_n \to 0$ since $\EnX$ is a bounded operator. By composing from left with the bounded operator $\RmY$, one gets
+ %
+ \begin{align*}
+  \DiscOp{T}(\valpha + \vbeta)
+  &= \RmY \circ \Op{T} \circ \EnX(\valpha) + \RmY \circ \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n \big) \\
+  &= \DiscOp{T}(\alpha) + \RmY \circ \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n \big),
+ \end{align*}
+ %
+ hence $\partial\DiscOp{T}$ is by definition given by the second term.
+\end{proof}
+\todo[inline]{Does the above discretization of the Fréchet derivative correspond to the natural discretizatin of the Fréchet derivative?}
 
 
-\subsection{Compatibility of operators under discretizations}
 
-We proceed by investigating natural conditions that a discretization should fulfill. Often, we need to perform various operatons on 
+\subsection{Correspondence of operators under discretizations}
+
+We proceed by investigating natural conditions that a discretization should fulfill. Often, we need to perform various operations on 
 $\VecSpace{X}$, and there are corresponding natural operations on $\Field^{n}$. It is then important that such operations are compatible 
 \wrt the discretization. In the general setting, most of these operations can be stated as mappings between appropriately chosen vector 
 spaces. Thus, we begin with defining the notion of compatibility of mappings \wrt discretizations. 
@@ -302,20 +444,19 @@ spaces. Thus, we begin with defining the notion of compatibility of mappings \wr
  \begin{equation*}
   \Op{T} \colon \VecSpace{X} \to \VecSpace{Y} \quad\text{and}\quad \DiscOp{T} \colon \Field^{n} \to \Field^{m}.
  \end{equation*}
- %
+ \vspace{-2\baselineskip}
  \begin{enumerate}[(a)]
   \item \label{def:operator_compatibility:a_exact}
-  \emph{$\Op{T}$ and $\DiscOp{T}$ (exactly) correspond to each 
-  other under the discretizations $\Discr_{n}(\VecSpace{X})$ and  $\Discr_{m}(\VecSpace{Y})$} if 
-  the following holds for any $n,m \in \Natural$:
+  \emph{$\DiscOp{T}$ exactly corresponds to $\Op{T}$ under the discretizations $\Discr_{n}(\VecSpace{X})$ and  
+  $\Discr_{m}(\VecSpace{Y})$} if the following holds for any $n,m \in \Natural$:
   %
   \begin{equation*}
    \RmY \circ \Op{T} = \DiscOp{T} \circ \RnX  \quad\text{and}\quad  \EmY \circ \DiscOp{T} = \Op{T} \circ \EnX.
   \end{equation*}
 
   \item \label{def:operator_compatibility:b_approximately}
-  \emph{$\Op{T}$ and $\DiscOp{T}$ approximately correspond to each other under the discretizations $\Discr_{n}(\VecSpace{X})$  
-  and $\Discr_{m}(\VecSpace{Y})$} if the following holds:
+  \emph{$\DiscOp{T}$ approximately corresponds to $\Op{T}$ under the discretizations $\Discr_{n}(\VecSpace{X})$ and 
+  $\Discr_{m}(\VecSpace{Y})$} if the following holds:
   %
   \begin{align*} 
    \lim_{n,m\to \infty} \NORMLR{\RmY \circ \Op{T} - \DiscOp{T} \circ \RnX}_{m} &= 0  \\[0.5em]
@@ -323,7 +464,8 @@ spaces. Thus, we begin with defining the notion of compatibility of mappings \wr
   \end{align*}
   %
  \end{enumerate}  
- If any of the above holds, then we say that $\Op{T}$ and $\DiscOp{T}$ are \emph{compatible}.
+ If any of the above holds, then we say that $\DiscOp{T}$ and $\Op{T}$ \emph{correspond to each other under the 
+ discretizations $\Discr_{n}(\VecSpace{X})$ and $\Discr_{m}(\VecSpace{Y})$}.
 \end{definition}
 
 In the following Lemma, we investigate under which conditions the natural discretization of an operator leads to compatibility in the sense 
@@ -342,15 +484,16 @@ of the above definition. These conditions can be stated more specifically in spe
  
  \begin{enumerate}[(a)]
   \item \label{lemma:nat_op_discr_fulfills_corresp:a_general}
-  $\Op{T}$ and $\DiscOp{T}$ correspond to each other if $\PnX$ is equal to the identity operator on each
+  $\DiscOp{T}$ and $\Op{T}$ correspond to each other if $\PnX$ is equal to the identity operator on each
   injectivity domain of $\RmY \circ \Op{T}$ and $\PmY$ is the identity operator on the range of $\Op{T} \circ \EnX$.
 
   \item \label{lemma:nat_op_discr_fulfills_corresp:b_hilbert_linear}
-  If $\VecSpace{X}$ is a Hilbert space and $\Op{T}$ and $\RmY$ are linear and bounded, $\Op{T}$ and $\DiscOp{T}$ correspond to each other 
-  if and only if (1) $\PnX$ is equal to the identity operator on $\nullspace(\RmY \circ \Op{T})^\perp$, (2) $\nullspace(\RmY \circ \Op{T})$ 
+  If $\VecSpace{X}$ is a Hilbert space and $\Op{T}$ and $\RmY$ are linear and bounded, $\DiscOp{T}$ and $\Op{T}$
+  correspond to each other if and only if (1) $\PnX$ is equal to the identity operator on 
+  $\nullspace(\RmY \circ \Op{T})^\perp$, (2) $\nullspace(\RmY \circ \Op{T})$ 
   is invariant under $\PnX$ and (3) $\PmY$ is the identity operator on the range of $\Op{T} \circ \EnX$.
   
-  \item Something about approximate correspondence.
+%  \item Something about approximate correspondence.
  \end{enumerate}
 \end{lemma}
 
@@ -407,7 +550,7 @@ of the above definition. These conditions can be stated more specifically in spe
   \eqref{lemma:nat_op_discr_fulfills_corresp:a_general}, hence the proof of \eqref{lemma:nat_op_discr_fulfills_corresp:b_hilbert_linear} is 
   complete.
   
-  \item 
+%  \item 
  \end{enumerate}
 \end{proof}
 
@@ -430,8 +573,8 @@ interest to investigate the relation between the vector space operations in $\Ve
 \begin{theorem}
  \label{ThmVecSpaceCorr}
  Let $\VecSpace{X}$ be a vector space over $\Field$ with discretization $\Discr_{n}(\VecSpace{X})$. Then,
- the vector space operations between $\VecSpace{X}$ and $\Field^{n}$ correspond
- to each other in the sense of Definition~\ref{def:operator_compatibility} only when the discretization is linear.
+ the vector space operations on $\Field^{n}$ and $\VecSpace{X}$ correspond to each other (in the 
+ sense of Definition~\ref{def:operator_compatibility}) only when the discretization is linear.
 \end{theorem}
 \begin{proof}
 Let us begin with the  group laws on the vector spaces $\VecSpace{X}$ and $\Field^{n}$ which can be 
@@ -441,15 +584,15 @@ represented by the mappings $\Op{T}$ and $\DiscOp{T}_{2n,n}$ defined as
 and $+$ denotes the group law in $\VecSpace{X}$ and 
 \[ \DiscOp{T}_{2n,n} \colon \Field^{n} \times \Field^{n} \to \Field^{n} 
    \quad\text{where}\quad \DiscOp{T}_{2n,n}(a,b):=a+b \] 
-and $+$ denotes the group law in $\Field^{n}$. Then the group laws on $\VecSpace{X}$ and $\Field^{n}$ 
-correspond to each other whenever $T$ and $\DiscOp{T}_{2n,n}$ correspond,
-in the sense of Definition~\ref{def:operator_compatibility},  under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
+and $+$ denotes the group law in $\Field^{n}$. Then the group laws on $\Field^{n}$ and 
+$\VecSpace{X}$ correspond to each other whenever $\DiscOp{T}_{2n,n}$ and $T$
+correspond to each other under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
 and the product discretization of $\VecSpace{X}\times \VecSpace{X}$, \ie,
 \[ \RnX \circ \Op{T} =  \DiscOp{T}_{2n,n} \circ R_{2n}^{\VecSpace{X}\times \VecSpace{X}} 
    \quad\text{and}\quad 
-   \EnX\circ \DiscOp{T}_{2n,n} = \Op{T} \circ E_{2n}^{\VecSpace{X}\times \VecSpace{X}},
+   \EnX\circ \DiscOp{T}_{2n,n} = \Op{T} \circ E_{2n}^{\VecSpace{X}\times \VecSpace{X}}.
 \]
-which can be rephrased as
+This can be rephrased as
 \[ \RnX(x+y) =  \RnX(x)+\RnX(y) 
    \quad\text{and}\quad 
    \EnX(a+b) = \EnX(a)+\EnX(b).
@@ -462,9 +605,9 @@ and $\cdot$ denotes the vector space multiplication in $\VecSpace{X}$ and
 \[ \DiscOp{T}_{n+1,n} \colon  \Field \times \Field^{n} \to \Field^{n} 
    \quad\text{where}\quad \DiscOp{T}_{n+1,n}(\alpha,a):=\alpha\cdot a  \] 
 and $\cdot$ denotes the vector space multiplication in $\Field^{n}$. Again, 
-the vector space multiplications on $\VecSpace{X}$ and $\Field^{n}$ 
-correspond to each other whenever $\Op{T}$ and $\DiscOp{T}_{n+1,n}$ correspond,
-in the sense of Definition~\ref{def:operator_compatibility}, under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
+the vector space multiplications on $\Field^{n}$ and $\VecSpace{X}$ 
+correspond to each other whenever $\DiscOp{T}_{n+1,n}$ and $\Op{T}$
+corresponds to each other under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
 and the product discretization of  $\Field \times \Field^{n}$, \ie,
 \[ \RnX \circ \Op{T} =  \DiscOp{T}_{n+1,n} \circ R_{n+1}^{\Field \times \VecSpace{X}}
    \quad\text{and}\quad 
@@ -475,8 +618,8 @@ which can be rephrased as
    \quad\text{and}\quad 
    \EnX(\alpha a) = \alpha \EnX(a).
 \]
-Thus, we see that the vector space operations between $\VecSpace{X}$ and $\Field^{n}$ correspond
-to each other only when the discretization $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is linear.
+Thus, we see that the vector space operations on $\Field^{n}$ and $\VecSpace{X}$ 
+correspond to each other only when the discretization $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ is linear.
 \end{proof}
 
 \subsection{Compatibility of norms and inner products}
@@ -486,10 +629,11 @@ $\Field^{n}$, it is natural to consider compatibility of norms and inner product
 \begin{theorem}\label{ThmNormInnerProd}
   Let $\VecSpace{X}$ be a normed vector space over $\Field$ with $n$-dimensional
   discretization $\Discr_{n}(\VecSpace{X}):=\{\VecSpace{X},\Field^{n},\RnX,\EnX\}$. 
-  Then the norm on $\VecSpace{X}$ corresponds to the norm of $\Field^{n}$ 
-  in the sense of Definition~\ref{def:operator_compatibility} only when the discretization is an isometry. 
-  Likewise, if $\VecSpace{X}$ is an inner product space, then its inner product corresponds to the 
-  inner product of $\Field^{n}$ only when the discretization is angle preserving.
+  Then, the norms on $\Field^{n}$ and $\VecSpace{X}$ correspond to each other 
+  (in the sense of Definition~\ref{def:operator_compatibility}) only when the discretization is an isometry. 
+  Likewise, if $\VecSpace{X}$ is an inner product space, then the 
+  inner products on $\Field^{n}$ and $\VecSpace{X}$  
+  correspond to each other only when the discretization is angle preserving.
 \end{theorem}
 \begin{proof}
 Let $\Vert \cdot \Vert_{\VecSpace{X}}$ denote the norm of $\VecSpace{X}$ and $\Vert \cdot \Vert_{n}$ is the 
@@ -499,8 +643,9 @@ defined as
 and 
 \[ \DiscOp{T}_{n,1} \colon \Field^{n} \to [0,\infty[  \quad\text{where}\quad \DiscOp{T}(a):=\Vert a \Vert_{n}. \] 
 Then the norms on $\VecSpace{X}$ and $\Field^{n}$ 
-correspond to each other whenever $\Op{T}$ and $\DiscOp{T}_{n,1}$ correspond,
-in the sense of Definition~\ref{def:operator_compatibility},  under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
+correspond to each other whenever $\Op{T}$ and $\DiscOp{T}_{n,1}$ correspond to each other 
+(in the sense of Definition~\ref{def:operator_compatibility}) 
+under the discretizations $\Discr_{n}(\VecSpace{X})$ of $\VecSpace{X}$ 
 and the identity discretization of  $[0,\infty[$, \ie,
 \[  \Op{T} =  \DiscOp{T}_{n,1} \circ \RnX
    \quad\text{and}\quad 
@@ -522,7 +667,7 @@ defined as
 and 
 \[ \DiscOp{T}_{2n,1} \colon \Field^{n} \times \Field^{n}  \to \Field  \quad\text{where}\quad \DiscOp{T}_{2n,1}(a,b):=\ip{a}{b}_{n}. \] 
 The inner products on $\VecSpace{X}$ and $\Field^{n}$ 
-correspond to each other in the sense of Definition~\ref{def:operator_compatibility} 
+correspond to each other (in the sense of Definition~\ref{def:operator_compatibility})
 whenever $\Op{T}$ and $\DiscOp{T}_{2n,1}$ correspond to each other 
 under the product discretization of $\VecSpace{X}\times \VecSpace{X}$ and the identity discretization of 
 $\Field$, \ie, whenever 
@@ -543,8 +688,8 @@ Finally, we conclude this section by considering standard discretizations of $n$
 \begin{theorem}
   Let $B$ be a basis of the $n$-dimensional inner product space $\VecSpace{X}$ and 
   consider the standard discretization \wrt this basis. 
-   Then, $\VecSpace{X}$ and $\Field^{n}$ have corresponding inner products if and only if $B$ is an 
-   orthonormal basis.
+   Then, the inner products on $\VecSpace{X}$ and $\Field^{n}$ correspond to each other 
+   if and only if $B$ is an orthonormal basis.
 \end{theorem}
 \begin{proof}
 Let $B := \{ v_1, \ldots, v_n \}$ denote the basis of $\VecSpace{X}$ and $\{ \VecSpace{X},\Field^{n},\RnX,\EnX\}$ 
@@ -585,41 +730,24 @@ orthonormal basis $B$, \ie,
 \[ \ip{v_i}{v_j}_{\VecSpace{X}} = \begin{cases} 1 & \text{if $i=j$,} \\ 0 & \text{otherwise.} \end{cases} \]
 \end{proof}
 
-\subsection{Discretization of spaces of linear mappings}
+\subsection{Compatibility of operator norms}
 Let $\VecSpace{X}$ and $\VecSpace{Y}$ denote two vector spaces over $\Field$ with 
 $n$- and $m$-dimensional discretizations 
 $\Discr_{n}(\VecSpace{X}) := \{ \VecSpace{X}, \Field^{n}, \RnX,\EnX \}$
-and
-%    \quad\text{and}\quad
-    $\Discr_{m}(\VecSpace{Y}) := \{ \VecSpace{Y}, \Field^{m}, \RmX, \EmX \}$.
-%\]    
-We now define $\VecSpace{M}:=\VecSpace{L}(\VecSpace{X},\VecSpace{Y})$ as the vector space of linear bounded mappings
-between $\VecSpace{X}$ and $\VecSpace{Y}$. Similarly, we have the vector space $M_{n,m}$
-of linear mappings from $\Field^{n}$ to $\Field^{m}$, which are represented by $(m \times n)$-matrices with elements in 
-$\Field$.
-
-We start off by defining the natural discretization of $\VecSpace{M}$. An element $\Op{T} \in \VecSpace{M}$
-is a map $\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$, so it is natural to define a discretization 
-\[ 
- \Discr_{m n}(\VecSpace{M}) := \{ \VecSpace{M}, \Field^{m n}, R_{m n}^{\VecSpace{M}},E_{m n}^{\VecSpace{M}} \} 
-\]
-where
-\[ 
-R_{m n}^{\VecSpace{M}}(\Op{T}) := \RmY \circ \Op{T} \circ \EnX 
-\quad\text{and}\quad
-E_{m n}^{\VecSpace{M}}(\DiscOp{T}) := \EmY \circ \DiscOp{T} \circ \RnX.
-\]
-Also, the natural norms on $\VecSpace{M}$ and $\Field^{mn}$ are 
+and 
+$\Discr_{m}(\VecSpace{Y}) := \{ \VecSpace{Y}, \Field^{m}, \RmX, \EmX \}$.
+Also, consider the vector space of linear bounded mappings $\VecSpace{M}:=\VecSpace{L}(\VecSpace{X},\VecSpace{Y})$ 
+with its natural discretization given by \Cref{def:operator_space_discretization}.
+The natural norms on $\VecSpace{M}$ and the space $\Field^{m \times n} \simeq \VecSpace{L}(\Field^n,\Field^m)$ 
+of $(m \times n)$ matrices 
+are 
 \[  \Vert \Op{T} \Vert_{\VecSpace{M}} := \sup_{f \neq 0} \frac{\bigl\Vert \Op{T}(f) \bigr\Vert_{\VecSpace{Y}}}{\Vert f 
 \Vert_{\VecSpace{X}}} 
    \quad\text{and}\quad
    \Vert \DiscOp{T} \Vert_{m,n} := \sup_{\valpha \neq \vzero} 
      \frac{\bigl\Vert \DiscOp{T}(\valpha) \bigr\Vert_{m}}{\Vert \valpha \Vert_{n}}. 
 \]
-
-The goal now is to derive conditions on $\Discr_{n}(\VecSpace{X})$ and $\Discr_{n}(\VecSpace{Y})$ so that
-vector space operations on $M_{n,m}$ correspond to those of $\VecSpace{M}$ under the natural discretization of $\VecSpace{M}$.
-Similarly, we investigate the behavior of the operator norms under these discretizations.
+The goal now is to investigate the behavior of the operator norms under these discretizations.
 \begin{theorem}
 Assume $\Discr_{n}(\VecSpace{X})$ and $ \Discr_{m}(\VecSpace{Y})$ are linear discretizations of 
 $\VecSpace{X}$ and $\VecSpace{Y}$. Then the following holds:
@@ -718,7 +846,7 @@ proves the claim in \eqref{IsoIneq2}.
 
 \begin{remark}
 The claim in \eqref{IsoIneq1} states that the norm of the discretized linear operator $\DiscOp{T}=R_{m n}^{\VecSpace{M}}(\Op{T})$ 
-is bounded by the norm than $\Op{T}$. Thus, by computing the matrix norm of the discretized linear operator $\DiscOp{T}$
+is bounded by the norm of $\Op{T}$. Thus, by computing the matrix norm of the discretized linear operator $\DiscOp{T}$
 we get a lower bound of the operator norm of $\Op{T}$. 
 
 Conversely, the claim in \eqref{IsoIneq2} states that the operator norm of the continuous extension 
@@ -726,144 +854,10 @@ $E_{m n}^{\VecSpace{M}}(\DiscOp{T})$ of a discrete linear operator $\DiscOp{T}$ 
 matrix norm of $\DiscOp{T}$. Thus, we can get an upper bound for the continuous extension of a 
 discrete mapping in terms of the matrix norms of the latter.
 \end{remark}
-
-\subsection{The adjoint}
-
-If $\VecSpace{X}$ and $\VecSpace{Y}$ are Hilbert spaces with the same discretizations as above, one can consider the unary operator 
-``$\ast$'' mapping a bounded linear operator between $\VecSpace{X}$ and $\VecSpace{Y}$ to its adjoint. We formally write
-\[
-  \Op{A}: \VecSpace{L}(\VecSpace{X}, \VecSpace{Y}) \to \VecSpace{L}(\VecSpace{Y}, \VecSpace{X}), \quad \Op{A}(\Op{T}) = \Op{T}^*.
-\]
-Then, if the operators $E_n^{\VecSpace{X}}$ and $R_m^{\VecSpace{Y}}$ are bounded and linear, the natural discretization of 
-$\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$ implies a natural discretization $\DiscOp{A}$ as follows. If $\Op{T} \in 
-\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$, the adjoint of its discretization $\DiscOp{T}$ is
-\[
- \DiscOp{T}^* = \big( R_m^{\VecSpace{Y}} \circ \Op{T} \circ E_n^{\VecSpace{X}} \big)^* = \big( R_m^{\VecSpace{Y}} \big)^* \circ \Op{T}^* 
-\circ  \big( E_n^{\VecSpace{X}} \big)^*.
-\]
-Therefore the definition
-\[
-  \DiscOp{A} := \big( R_m^{\VecSpace{Y}} \big)^* \circ \Op{A} \circ \big( E_n^{\VecSpace{X}} \big)^*
-\]
-for the discretized version of the operator taking the adjoint is consistent with the discretization of $\VecSpace{L}(\VecSpace{X}, 
-\VecSpace{Y})$.
+\todo[inline]{What is required from the discretizations $\Discr_{n}(\VecSpace{X})$ and $\Discr_{n}(\VecSpace{Y})$
+  to get correspondence of operator norms on $\VecSpace{M}$ and $\VecSpace{L}(\Field^n,\Field^m)$?}
 
 
-\subsection{Discretization of the differential}
-
-Similarly to taking adjoints, the discretization of $\VecSpace{L}(\VecSpace{X}, \VecSpace{Y})$ implies a discretization of the Fr\'{e}chet 
-derivative of an operator.
-
-\begin{theorem}
- Let $\VecSpace{X}$ and $\VecSpace{Y}$ be normed vector spaces with discretizations as before. If $E_n^{\VecSpace{X}}$ and 
- $R_m^{\VecSpace{Y}}$ are bounded and linear, the Fr\'{e}chet derivative
- \[
-  \partial\DiscOp{T}: \Field^n \to \VecSpace{L}(\Field^n, \Field^m)
- \]
- of the discretized operator $\DiscOp{T} = \REST{mn}{\VecSpace{M}} (\Op{T})$ is given by
- \[
-  \partial\DiscOp{T} = R_m^{\VecSpace{Y}} \circ \partial\Op{T} \circ E_n^{\VecSpace{X}}
- \]
- with $\partial\Op{T} \circ E_n^{\VecSpace{X}}(\valpha)(\vbeta):= \partial\Op{T}\big(E_n^{\VecSpace{X}}(\valpha)\big) 
- \big(E_n^{\VecSpace{X}}(\vbeta)\big)$. 
-\end{theorem}
-
-\begin{proof}
- For $\valpha,\vbeta \in \Field^n$, it is
- %
- \begin{equation*}
-  \DiscOp{T}(\valpha + \vbeta) = \RmY \circ \Op{T} \circ \EnX (\alpha + \beta).
- \end{equation*}
- %
- From the definition of $\partial \Op{T}$ it follows that
- %
- \begin{align*}
-  \Op{T}\big(\EnX(\valpha + \vbeta)\big)
-  &= \Op{T}\big(\EnX(\valpha)\big) + \partial\Op{T}\big(\EnX(\valpha)\big)\big(\EnX(\vbeta)\big) +
-  o\big(\big\Vert \EnX(\vbeta) \big\Vert_{\VecSpace{X}}\big) \\
-  &= \Op{T} \circ \EnX(\valpha) + \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n
-  \big)
- \end{align*}
- %
- for $\Vert \vbeta \Vert_n \to 0$ since $\EnX$ is a bounded operator. By composing from left with the bounded operator $\RmY$, one gets
- %
- \begin{align*}
-  \DiscOp{T}(\valpha + \vbeta)
-  &= \RmY \circ \Op{T} \circ \EnX(\valpha) + \RmY \circ \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n \big) \\
-  &= \DiscOp{T}(\alpha) + \RmY \circ \partial\Op{T}\circ \EnX(\valpha)(\vbeta) + o\big(\Vert \vbeta \Vert_n \big),
- \end{align*}
- %
- hence $\partial\DiscOp{T}$ is by definition given by the second term.
-\end{proof}
-
-
-
-\subsection{Discretization of equations}
-Let us now turn to discretization of equations in Banach spaces.
-\begin{definition} 
-  Let $\VecSpace{X}$ be an infinite-dimensional Banach space with norm $\Vert \cdot \Vert_{\VecSpace{X}}$. 
-  Assume that for each $n=1,2,\ldots$ we are given an $n$-dimensional  discretization
-  \[ \Discr_{n} := \{ \VecSpace{X}, \Field^{n}, \RnX,\EnX \}. \]
-  Then we say that the  sequence $\{ \Discr_{n} \}_{n}$ of $n$-dimensional discretizations 
-  of $\VecSpace{X}$ is \emph{compatible} whenever
-  \[ \lim_{n\to \infty} 
-     \bigl\Vert ( \EnX\circ \RnX)(f)-f \bigr\Vert_{\VecSpace{X}}\to 0
-    \quad\text{for all $f\in \VecSpace{X}$.}\]
-\end{definition}
-Thus, if one has a sequence $\{ \Discr_{n} \}_{n}$ of $n$-dimensional discretizations 
-of $\VecSpace{X}$, then for large $n$ one can make the approximation that 
-$\EnX\circ  \RnX$ is the identity operator, \ie,
-\begin{equation}\label{eq:fApprox}
-  f \approx \EnX(f_{n}) \quad\text{where}\quad
-  f_{n}:=\RnX(f).
-\end{equation}
-\begin{definition}
-  Let $\VecSpace{X}$ and $\VecSpace{Y}$ be Hilbert spaces over the field $\Field$ and $\Op{T} \colon \VecSpace{X} \to \VecSpace{Y}$. 
-  Also, let 
-  \[  \Discr_{n}(\VecSpace{X}):=\bigl\{ \VecSpace{X},\Field^{n},\RnX,\EnX \bigr\} 
-     \quad\text{and}\quad
-     \Discr_{m}(\VecSpace{Y}):=\bigl\{ \VecSpace{Y},\Field^{m},R_{m},E_{m} \bigr\}\]
-  denote $n$- and $m$-dimensional discretizations of $\VecSpace{X}$ and $\VecSpace{Y}$, 
-  respectively. Then a map $\DiscOp{T} \colon \Field^{n} \to \Field^{m}$ is the
-  \emph{discretization of $\Op{T}$ \wrt $\Discr_{n}(\VecSpace{X})$ and $\Discr_{m}(\VecSpace{Y})$},  
-  whenever 
-  \[ \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX \quad\text{or}\quad
-    \Op{T} = \EmY \circ \DiscOp{T} \circ \RnX. \]
-  The problem of  solving the equation
-   \[  \Op{T}(f)=g \quad\text{for $f\in \VecSpace{X}$ when $g\in \VecSpace{Y}$ is given,} \]
-  is \emph{discretized} as solving 
-  \[   \DiscOp{T}(a)=b \quad\text{for $a\in \Field^{n}$ when $b\in \Field^{m}$ is given.} \]
-\end{definition}  
-\begin{remark}
-Note that we do \emph{not require that both  
-\[ \DiscOp{T} = \RmY \circ \Op{T} \circ \EnX \quad\text{and}\quad
-    \Op{T} = \EmY \circ \DiscOp{T} \circ \RnX \]
-holds}. This would imply that  $\RmY$ and $\RnX$ are the inverses of $\EmY$ and 
-$\EnX$, respectively, which is way to strong. Moreover, note that the requirement that 
-$\DiscOp{T}$ is a discretization of $\Op{T}$ is stronger than  the requirement that 
-$\Op{T}$ and $\DiscOp{T}$ correspond to each other.
-\end{remark}
-
-\begin{examp}
-Let us consider a simple example which is the 
-Galerkin method in Hilbert space $\VecSpace{X}$. Let $\{ \phi_{i} \}_{i}\subset \VecSpace{X}$ be a 
-complete orthonormal system in the separable Hilbert space $\VecSpace{X}$ and 
-$\Op{T} \colon \VecSpace{X} \to \VecSpace{X}$. 
-Let $\RnX \colon \VecSpace{X} \to \Field^{n}$ be the orthogonal projection operator 
-from $\VecSpace{X}$ onto $\Field^{n}$, \ie,
-\[ \RnX(f)= \bigl( \ip{\phi_{1}}{f}_{\VecSpace{X}}, \ldots, \ip{\phi_{n}}{f}_{\VecSpace{X}} \bigr)
-   \quad\text{for all $f\in \VecSpace{X}$.} \]
-Moreover, let $\EnX\colon \Field^{n} \to \VecSpace{X}$ be the corresponding embedding operator, so
-\[ \EnX(\alpha)= \sum_{i?1}^n \alpha_i \phi_{i}
-   \quad\text{for all $\alpha\in \Field^{n}$.} \]
-Then, $\RnX(f)\to f$ as $n\to \infty$, so the discretizations of $\VecSpace{X}$ are 
-compatible. Moreover, the discretization $\DiscOp{T}_{n,n}$ of $\Op{T}$ where 
-\[ \DiscOp{T}_{n,n}:=\RnX\circ \Op{T} \circ \EnX \]
-is consistent with the discretization of $\VecSpace{X}$ and the equation
-$\Op{T}(f)=g$ can be replaced with 
-\[ \ip{\DiscOp{T}(f_{n})}{\phi_{j}}_{\VecSpace{X}}=\ip{g}{\phi_{j}}_{\VecSpace{X}}
-   \quad\text{$f_{n}\in \Field^{n}$ and $j=1,\ldots,n$.} \]
-\end{examp}
 
 \section{Specific discretizations}
 \label{sec:specific_discretizations}
@@ -1090,33 +1084,44 @@ $V^m_{\ext}=V^m_{\rest}$, then $\vA=\wt{\vA}^T$.
 \subsection{General considerations}
 %
 \textbf{Discretizations:}
-A discretization is implemented as a discretized linear space $\VecSpace{X}_n = (\VecSpace{X}, \Field^n, \RnX, \EnX)$ as follows:
+A discretization $\Discr_{n}(\VecSpace{X}) = (\VecSpace{X}, \Field^n, \RnX, \EnX)$ is implemented as discretized linear 
+space $X_n$ in the following way:
 %
 \begin{itemize}
- \item $\VecSpace{X}_n$ is a (or derives from) \texttt{LinearSpace}
- \item When initialized, it is provided with \emph{instances} of $\VecSpace{X}$ and $\Field^n$
+ \item $X_n$ is a (or derives from) \texttt{LinearSpace}.
+ \item When initialized, it is provided with \emph{instances} of $\VecSpace{X}$ and $\Field^n$.
  \item It inherits the ``intersection'' of the structure of $\VecSpace{X}$ and $\Field^n$, i.e. if $\VecSpace{X}$ is a 
- \texttt{MetricSpace} and $\Field^n$ a \texttt{HilbertSpace}, $\VecSpace{X}_n$ will be a \texttt{MetricSpace}.
- \item Elements in $\VecSpace{X}_n$ are created by casting $n$-tuples of elements of $\Field$ (given as list, array, \ldots).
- \item $\RnX$ can optionally be provided as a \texttt{LinearOperator}. If in the case of $\VecSpace{X}$ being a \texttt{FunctionSpace}, 
- $\RnX$ is given, an analytically defined function (i.e. a   Python function) can be mapped to an element in $\VecSpace{X}_n$, e.g. by 
- point collocation.
- \item $\EnX$ can optionally be provided as a \texttt{LinearOperator}. If $\EnX$ is given and $\VecSpace{X}$ is a \texttt{FunctionSpace}, 
- a discretized function in $\VecSpace{X}_n$ can be evaluated at any given point, e.g. by interpolation. Hence, this defines a continuous 
- function in $\VecSpace{X}$.
+ \texttt{MetricSpace} and $\Field^n$ a \texttt{HilbertSpace}, $X_n$ will be a \texttt{MetricSpace}.
+ \item Elements in $X_n$ are created by casting $n$-tuples of elements of $\Field$ (given as list, array, \ldots).
+ \item $\RnX \colon \VecSpace{X} \to \Field^n$ 
+   can optionally be provided as a \texttt{LinearOperator}. If $\VecSpace{X}$ is a \texttt{FunctionSpace},
+   then an element $f_n \in X_n$ can be initialized from an analytically defined function $f \in \VecSpace{X}$ 
+   (i.e., a Python function) as $f_n := \RnX(f)$, such as in the case of point collocation.
+ \item $\EnX \colon \Field^n \to \VecSpace{X}$ can optionally be provided as a \texttt{LinearOperator}. 
+   If $\EnX$ is given and $\VecSpace{X}$ is a \texttt{FunctionSpace}, 
+   a discretized function $f_n \in X_n$ can be evaluated at any given point, e.g., by interpolation. 
+   Such an interpolation rule does in this way define a continuous function $f \in \VecSpace{X}$.
 \end{itemize}
 %
 \textbf{Re-discretizations:}
-A re-discretization $\DiscOp{T}_{m,n}$ is a mapping from one discretized space $\VecSpace{X}_n$ to another discretization 
-$\VecSpace{X}_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ of the same space $\VecSpace{X}$ in the following way:
-%
+Consider two different discretizations of a fixed vector space $\VecSpace{X}$ given by 
+\[ \Discr_{n}(\VecSpace{X}) = (\VecSpace{X}, \Field^n, \RnX, \EnX)
+   \quad\text{and}\quad
+  \Discr_{m}(\VecSpace{X}) =(\VecSpace{X}, \Field^m, \RmX, \EmX)
+\]  
+with $X_n$ and $X_m$ as the corresponding discretized linear spaces.
+The re-discreti\-zation of $\Discr_{n}(\VecSpace{X})$ into $\Discr_{m}(\VecSpace{X})$ is the mapping 
+\[  \DiscOp{Id}_{m,n} \colon \Field^m \to \Field^n
+    \quad\text{defined as}\quad
+    \DiscOp{Id}_{m,n} := \RmX \circ \EnX.
+\]   
+It is represented in the software as follows:
 \begin{itemize}
- \item $\DiscOp{T}_{m,n}$ is a \texttt{LinearOperator}\footnote{for now, may be relaxed to \texttt{Operator}} with 
- $\mathtt{domain} = \VecSpace{X}_n$ and $\mathtt{range} = \VecSpace{X}_m$.
- \item Mathematically, it is the linear operator $\RmX \circ \EnX: \Field^n \to \Field^m$.
- \item If $\EnX$ and $\RmX$ are present in $\VecSpace{X}_n$ or $\VecSpace{X}_m$, respectively, $\DiscOp{T}_{m,n}$ is implemented as the 
+ \item $\DiscOp{Id}_{m,n}$ is a \texttt{LinearOperator}\footnote{for now, may be relaxed to \texttt{Operator}} with 
+ $\mathtt{domain} = X_n$ and $\mathtt{range} = X_m$.
+ \item If $\EnX$ and $\RmX$ are present in $X_n$ or $X_m$, respectively, $\DiscOp{Id}_{m,n}$ is implemented as the 
  composition of these operators by default.
- \item A direct (optimized) implementation and can be provided e.g. by an external software package.
+ \item A direct (optimized) implementation and can be provided, e.g., by an external software package.
 \end{itemize}
 
 \subsection{Dictionary-based discretization}
@@ -1125,9 +1130,9 @@ $\VecSpace{X}_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ of the same space $\VecS
 \subsection{Examples}
 
 \begin{example}[Re-interpretation]
- Let $\bar f \in \VecSpace{X}_n = (\VecSpace{X}, \Field^n, \emptyset, \emptyset)$ be represented by $\valpha \in \Field^n$ and 
- $\VecSpace{X}_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ with $m=n$. Then $\bar f$ can be re-interpreted as $\bar f \in \VecSpace{X}_m$ by 
- the identity mapping $\Op{I}: \VecSpace{X}_n \to \VecSpace{X}_m$. Practically, the re-mapped element will be aware of the ``added 
+ Let $\bar f \in X_n = (\VecSpace{X}, \Field^n, \emptyset, \emptyset)$ be represented by $\valpha \in \Field^n$ and 
+ $X_m = (\VecSpace{X}, \Field^m, \RmX, \EmX)$ with $m=n$. Then $\bar f$ can be re-interpreted as $\bar f \in \VecSpace{X}_m$ by 
+ the identity mapping $\Op{I}: X_n \to \VecSpace{X}_m$. Practically, the re-mapped element will be aware of the ``added 
  structure '' $\RmX, \EmX$.
 \end{example}
 
