@@ -13,6 +13,7 @@ from numpy import float64
 
 # RL imports
 from RL.space.space import *
+from RL.space.cuda import *
 from RL.space.set import *
 from RL.utility.utility import errfmt
 from RL.space.euclidean import EuclideanSpace
@@ -32,7 +33,6 @@ class SimpleRN(HilbertSpace, Algebra):
         self._field = RealNumbers()
 
     def _lincomb(self, z, a, x, b, y):
-        # Implement y = a*x + b*y using optimized BLAS rutines
         z.data[:] = a * x.data + b * y.data
 
     def _inner(self, x, y):
@@ -52,10 +52,10 @@ class SimpleRN(HilbertSpace, Algebra):
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(args[0], args[0].shape, (self.n,))))
         else:
-            return self.makeVector(np.array(*args,
+            return self.element(np.array(*args,
                                             **kwargs).astype(float64,
                                                              copy=False))
-        return self.makeVector(np.empty(self._n, dtype=float64))
+        return self.element(np.empty(self._n, dtype=float64))
 
     @property
     def field(self):
@@ -91,6 +91,7 @@ iterations = 10
 
 
 optX = EuclideanSpace(n)
+cuX = CudaRN(n)
 simpleX = SimpleRN(n)
 
 x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
@@ -98,6 +99,8 @@ ox, oy, oz = (optX.element(x.copy()), optX.element(y.copy()),
               optX.element(z.copy()))
 sx, sy, sz = (simpleX.element(x.copy()), simpleX.element(y.copy()),
               simpleX.element(z.copy()))
+cx, cy, cz = (cuX.element(x.copy()), cuX.element(y.copy()),
+              cuX.element(z.copy()))
 
 
 print(" lincomb:")
@@ -111,6 +114,11 @@ with Timer("EuclideanSpace"):
         optX.lincomb(oz, 2.13, ox, 3.14, oy)
 print("result: {}".format(oz[1:5]))
 
+with Timer("CudaRN"):
+    for _ in range(iterations):
+        cuX.lincomb(cz, 2.13, cx, 3.14, cy)
+print("result: {}".format(cz[1:5]))
+
 
 print("\n Norm:")
 with Timer("SimpleRN"):
@@ -123,6 +131,11 @@ with Timer("EuclideanSpace"):
         result = oz.norm()
 print("result: {}".format(result))
 
+with Timer("CudaRN"):
+    for _ in range(iterations):
+        result = cz.norm()
+print("result: {}".format(result))
+
 
 print("\n Inner:")
 with Timer("SimpleRN"):
@@ -133,4 +146,9 @@ print("result: {}".format(result))
 with Timer("EuclideanSpace"):
     for _ in range(iterations):
         result = oz.inner(ox)
+print("result: {}".format(result))
+
+with Timer("CudaRN"):
+    for _ in range(iterations):
+        result = cz.inner(cx)
 print("result: {}".format(result))

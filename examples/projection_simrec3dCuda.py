@@ -128,7 +128,20 @@ projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
 result = projector(phantomVec)
 
 plt.figure()
-for i in range(15):
+for i in range(2):
     plt.subplot(3, 5, i+1)
     plt.imshow(result[i].as_array().T, cmap='bone', origin='lower')
+    plt.axis('off')
+
+
+back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+geo = geometries[0]
+vol = projector.domain.element()
+
+
+back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, result[0].data_ptr, vol.data_ptr)
+
+plt.figure()
+plt.imshow(vol.as_array()[:,:,200], cmap='bone')
+
 plt.show()

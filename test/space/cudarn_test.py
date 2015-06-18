@@ -365,5 +365,13 @@ class TestConvenience(RLTestCase):
         with self.assertRaises(TypeError):
             z = xA-xB
 
+class TestPointer(RLTestCase):
+    def test_get_ptr(self):
+        r3 = CudaRN(3)
+        x = r3.element([1, 2, 3])
+        y = r3.element(RLcpp.PyCuda.vectorFromPointer(x.data_ptr, 3))
+        self.assertAllAlmostEquals(x, y)
+        self.assertEquals(x.data_ptr, y.data_ptr)
+
 if __name__ == '__main__':
     unittest.main(exit=False)

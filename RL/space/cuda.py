@@ -60,7 +60,6 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             raise TypeError('n ({}) has to be a positive integer'.format(np))
         self._n = n
         self._field = sets.RealNumbers()
-        self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
     def element(self, data=None, **kwargs):
         """ Returns a vector of zeros
@@ -128,7 +127,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         if isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
             return self.Vector(self, data)
         elif data is None:
-            return self.element(self.impl.empty())
+            return self.element(RLcpp.PyCuda.empty(self.n))
         elif isinstance(data, np.ndarray):  # Create from numpy array
             if data.shape != (self._n,):
                 raise ValueError(errfmt('''
@@ -173,7 +172,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         20.0
         """
 
-        return self.impl.inner(x.data, y.data)
+        return RLcpp.PyCuda.inner(x.data, y.data)
 
     def _norm(self, x):
         """ Calculates the 2-norm of x
@@ -204,7 +203,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return self.impl.norm(x.data)
+        return RLcpp.PyCuda.norm(x.data)
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -239,7 +238,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         CudaRN(3).element([ 14.,  19.,  24.])
         """
 
-        self.impl.linComb(z.data, a, x.data, b, y.data)
+        RLcpp.PyCuda.linComb(z.data, a, x.data, b, y.data)
 
     def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -271,7 +270,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> y
         CudaRN(3).element([ 5.,  6.,  6.])
         """
-        self.impl.multiply(x.data, y.data)
+        RLcpp.PyCuda.multiply(x.data, y.data)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -293,7 +292,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> y
         CudaRN(3).element([ 0.,  0.,  0.])
         """
-        return self.element(self.impl.zero())
+        return self.element(RLcpp.PyCuda.zero(self.n))
 
     @property
     def field(self):
@@ -385,13 +384,6 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
     def __repr__(self):
         return "CudaRN(" + str(self._n) + ")"
-
-    # These should likely be moved somewhere else!
-    @property
-    def abs(self):
-        return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.abs(inp.data, outp.data),
-            input=(self, self))
 
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         """ A RN-vector represented in CUDA
