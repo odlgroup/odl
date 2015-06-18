@@ -41,6 +41,7 @@
 \newcommand*{\EXT}[2]{\ensuremath{E_{#1}^{#2}}}
 \newcommand*{\REST}[2]{\ensuremath{R_{#1}^{#2}}}
 \newcommand*{\PROJ}[2]{\ensuremath{P_{#1}^{#2}}}
+\newcommand*{\COPROJ}[2]{\ensuremath{Q_{#1}^{#2}}}
 \newcommand*{\RnX}{\ensuremath{\REST{n}{\Spc{X}}}}
 \newcommand*{\RmX}{\ensuremath{\REST{m}{\Spc{X}}}}
 \newcommand*{\RmY}{\ensuremath{\REST{m}{\Spc{Y}}}}
@@ -49,6 +50,8 @@
 \newcommand*{\EmY}{\ensuremath{\EXT{m}{\Spc{Y}}}}
 \newcommand*{\PnX}{\ensuremath{\PROJ{n}{\Spc{X}}}}
 \newcommand*{\PmY}{\ensuremath{\PROJ{m}{\Spc{Y}}}}
+\newcommand*{\QnX}{\ensuremath{\COPROJ{n}{\Spc{X}}}}
+\newcommand*{\QmY}{\ensuremath{\COPROJ{m}{\Spc{Y}}}}
 \DeclareMathOperator{\rest}{\pi}
 \DeclareMathOperator{\extend}{\epsilon}
 \DeclareMathOperator{\range}{Range}
@@ -57,9 +60,15 @@
 \DeclareMathOperator{\Hom}{Hom}
 \DeclareMathOperator{\Map}{\mathcal{M}}
 \DeclareMathOperator{\Id}{Id}
+\DeclareMathOperator{\DIM}{dim}
 \newcommand{\ip}[2]{\left \langle #1,#2 \right\rangle}
 \DeclareMathOperator{\linspan}{linspan}
 \newcommand*{\FUNCRESTR}[2]{{\ensuremath{\left. \vphantom{g_{g_g}} {#1} \right|_{#2}}}}
+\newcommand*{\STACK}[2]{\genfrac{}{}{0pt}{1}{#1}{#2}}
+\newcommand*{\INNER}[2]{\ensuremath{\langle #1,\,#2\rangle}}
+\newcommand*{\INNERbig}[2]{\ensuremath{\big\langle #1,\,#2\big\rangle}}
+\newcommand*{\INNERBig}[2]{\ensuremath{\Big\langle #1,\,#2\Big\rangle}}
+\newcommand*{\INNERLR}[2]{\ensuremath{\left\langle #1,\,#2\right\rangle}}
 
 \newcommand{\ie}{\textsl{i.e.}\xspace}
 \newcommand{\eg}{\textsl{e.g.}\xspace}
@@ -174,10 +183,18 @@ reduction and extension operators.
  \end{equation*}
  %
  where $\RnX \colon \Spc{X} \to \Field^{n}$ and $\EnX \colon \Field^{n} \to \Spc{X}$. The mappings $\RnX$ and $\EnX$ 
-are called 
- the \emph{restriction} and \emph{extension} mappings associated with the discretization. $\Discr_n(\Spc{X})$ is a 
-\emph{linear 
- discretization} whenever both these mappings are linear.
+ are called the \emph{restriction} and \emph{extension} operators associated with the discretization. 
+ $\Discr_n(\Spc{X})$ is a \emph{linear discretization} whenever both these mappings are linear.\\
+ %
+ There are two additional important mappings derived from $\RnX$ and $\EnX$,
+ %
+ \begin{align*}
+  & \PnX \colon \Spc{X} \to \Spc{X} \quad \text{with} \quad \PnX := \RnX \circ \EnX, \\
+  & \QnX \colon \Field^n \to \Field^n \quad \text{with} \quad \QnX := \EnX \circ \RnX,
+ \end{align*}
+ %
+ which we refer to as \emph{projection} operators associated with the discretization (although they are not 
+necessarily  projections in the strict sense).
 \end{definition}
 
 \begin{examp}
@@ -188,31 +205,43 @@ are called
 \end{examp}
 
 \begin{examp}
- Another common discretization for an $n$-dimensional vector space $\Spc{X}$ is to consider a basis $B:=\{ 
-\psi_1,\ldots, \psi_{n}\}$ 
- of $\Spc{X}$. Any element $f \in \Spc{X}$ can then be written as $f = \sum_{i=1}^n \alpha_i \psi_i$ for unique 
- $\valpha = (\alpha_1, \ldots, \alpha_{n})\in\Field^n$,
- so we define
+ Another common discretization for an $n$-dimensional vector space $\Spc{X}$ is to consider a basis 
+ $B:=\{\psi_1,\ldots, \psi_{n}\}$ of $\Spc{X}$. Any element $f \in \Spc{X}$ can then be written as 
+ $f = \sum_{i=1}^n \alpha_i \psi_i$ for unique $\valpha(f) = (\alpha_1, \ldots, \alpha_{n})\in\Field^n$, so we define
  %
- \begin{align*}
-  \RnX(f) &:= \valpha, \\
-  \EnX(\valpha) &:= \sum_{i=1}^n \alpha_i \psi_i. 
- \end{align*}
+ \begin{equation*}
+  \RnX(f) := \valpha(f) \quad \text{and} \quad \EnX(\beta) := \sum_{i=1}^n \beta_i \psi_i. 
+ \end{equation*}
  %
  The resulting discretization $( \Spc{X}, \Field^{n}, \RnX, \EnX )$ is called the \emph{standard discretization \wrt 
-the basis $B$}.
+ the basis $B$}. The projection operators are given by
+ %
+ \begin{equation*}
+  \PnX(f) := \sum_{i=1}^n \valpha_i(f)\, \psi_i \quad \text{and} \quad \QnX(\beta) := \vbeta
+ \end{equation*}
+
 \end{examp}
 
 \begin{examp}
  A common way to discretize a (possibly infinite-dimensional) vector space $\Spc{X}$ is as follows. Let 
- $\psi_1, \ldots, \psi_n \in \Spc{X}$ be linearly independent space elements and $\lambda_1, \ldots, \lambda_n \in 
-\Spc{X}^*$ be 
- linearly independent functionals on $\Spc{X}$. Then, restriction and extension operators can be defined as
+ $\psi_1, \ldots, \psi_n \in \Spc{X}$ be linearly independent space elements and 
+ $\lambda_1, \ldots, \lambda_n \in \Spc{X}^*$ be linearly independent functionals on $\Spc{X}$. Then, restriction and 
+ extension operators can be defined as
  %
- \begin{align*}
-  \RnX(f) &:= \big( \lambda_1(f), \ldots, \lambda_n(f) \big), \\
-  \EnX(\valpha) &:= \sum_{i=1}^n \alpha_i\, \psi_i.
- \end{align*}
+ \begin{equation*}
+  \RnX(f) := \big( \lambda_1(f), \ldots, \lambda_n(f) \big) 
+  \quad \text{and} \quad
+  \EnX(\valpha) := \sum_{i=1}^n \alpha_i\, \psi_i.
+ \end{equation*}
+ %
+ The corresponding projection operators are
+ %
+ \begin{equation*}
+  \PnX(f) := \sum_{i=1}^n \lambda_i(f)\, \psi_i
+  \quad \text{and} \quad
+  \EnX(\valpha) := \bigg( \sum_{j=1}^n \alpha_j\, \lambda_i(\psi_j) \bigg)_{i=1}^n.
+ \end{equation*}
+
 \end{examp}
 
 
@@ -237,7 +266,7 @@ vector space.
  Then the \emph{product discretization of $\Spc{X} := \Spc{X}_1 \times \ldots \times \Spc{X}_k$} is defined as 
  %
  \begin{equation*}
-  \Discr_{N}(\Spc{X}):=\{\Spc{X}, \Field^{n_1} \times \ldots \times \Field^{n_k}, R_{N}^{\Spc{X}}, E_{N}^{\Spc{X}} \}
+  \Discr_{N}(\Spc{X}):=\{\Spc{X}, \Field^N, R_{N}^{\Spc{X}}, E_{N}^{\Spc{X}} \}
  \end{equation*}
  %
  with $N := n_1 + \ldots + n_k$, where
@@ -559,7 +588,7 @@ $\vnu \in \Field^k$,
 \end{proof}
 
 
-\subsection{Correspondence of operators under discretizations}
+\subsection{Compatibility of operators under discretizations}
 
 We proceed by investigating conditions that a discretization should fulfill. Often, we need to perform various 
 operations on $\Spc{X}$, and there are corresponding operations on $\Field^{n}$. It is then important that such 
@@ -606,13 +635,8 @@ see ??
 \begin{lemma}
  \label{lemma:nat_op_discr_fulfills_corresp}
  Let $\DiscOp{T}$ be the natural linear discretization of an operator $\Op{T}$ based on linear space discretizations as 
- in \Cref{def:operator_discretization}, and let
- %
- \begin{equation*}
-  \PnX := \EnX \circ \RnX \quad \text{and} \quad \PmY := \EmY \circ \RmY.
- \end{equation*}
- %
- Then the following holds:
+ in \Cref{def:operator_discretization}, and let $\PnX = \EnX \circ \RnX$ and $\PmY = \EmY \circ \RmY$ as in 
+ \Cref{def:space_discretization}. Then the following holds:
  
  \begin{enumerate}[(a)]
   \item \label{lemma:nat_op_discr_fulfills_corresp:a_general}
@@ -690,291 +714,294 @@ investigate how it relates to the usual linear combination in $\Field^n$ and und
 each other.
 
 \begin{lemma}
- Let $\Spc{X}$ be a vector space over $\Field$ with a linear discretization $\Discr_{n}(\Spc{X})$. The discretization 
-of the 
- linear combination
- %
- \begin{equation*}
-  \Op{T} \colon \Field \times \Field \times \Spc{X} \times \Spc{X} \to \Spc{X}
-  \quad \text{with} \quad
-  \Op{T}(\mu, \lambda, f, g) := \lambda \cdot f + \mu \cdot g
- \end{equation*}
- %
- is the usual linear combination in $\Field^n$ if and only if $\RnX \circ \EnX = \Op{\Id}$. In this case, they 
- correspond to each other.
+ Let $\Spc{X}$ be a vector space over $\Field$ with linear discretization $\Discr_{n}(\Spc{X})$.
+ \begin{enumerate}[(a)]
+  \item The linear combination in $\Field^n$ is the natural discretization of the linear combination in $\Spc{X}$ if 
+  and only if the projection $\QnX = \RnX \circ \EnX$ is the identity.
+  
+  \item The linear combinations in $\Spc{X}$ and $\Field^n$ exactly correspond to each other.
+ \end{enumerate}
 \end{lemma}
 
 \begin{proof}
- The natural discretization of the linear combination $\Op{T}$ is given by
- %
- \begin{equation*}
-  \DiscOp{T} = \RnX \circ \Op{T} \circ (\Op{\Id}, \Op{\Id}, \EnX, \EnX).
- \end{equation*}
- %
- Hence, for $\lambda, \mu \in \Field$ and $\valpha, \vbeta \in \Field^n$, it is
- %
- \begin{align*}
-  \DiscOp{T}(\lambda, \mu, \valpha, \vbeta) 
-  &= \RnX \circ \Op{T} \big( \lambda, \mu, \EnX(\valpha), \EnX(\vbeta) \big) 
-  = \RnX \big( \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta) \big) \\ 
-  &= \RnX \circ \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta).
- \end{align*}
- %
- This expression is equal to $\lambda \cdot \valpha + \mu \cdot \vbeta$ for all $\lambda, \mu \in \Field$ and all 
- $\valpha, \vbeta \in \Field^n$ if and only if $\RnX \circ \EnX = \Op{\Id}$. \\
- %
- The conditions for exact correspondence according to \Cref{def:operator_compatibility} can be rephrased as
- %
- \begin{align*}
-  \RnX(\lambda \cdot f + \mu \cdot g) &= \lambda \cdot \RnX(f) + \mu \cdot \RnX(g), \\
-  \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta) &= \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta)
- \end{align*}
- %
- and are fulfilled due to the linearity of $\RnX$ and $\EnX$.
-\end{proof}
+ \begin{enumerate}[(a)]
+  \item The linear combination in $\Spc{X}$ can be written as an operator 
+  %
+  \begin{equation*}
+   \Op{T} \colon \Field \times \Field \times \Spc{X} \times \Spc{X} \to \Spc{X}
+   \quad \text{with} \quad
+   \Op{T}(\mu, \lambda, f, g) := \lambda \cdot f + \mu \cdot g
+  \end{equation*}
+  %
+  with natural discretization $\DiscOp{T} = \RnX \circ \Op{T} \circ (\Op{\Id}, \Op{\Id}, \EnX, \EnX)$.
+  Hence, for $\lambda, \mu \in \Field$ and $\valpha, \vbeta \in \Field^n$, it is
+  %
+  \begin{align*}
+   \DiscOp{T}(\lambda, \mu, \valpha, \vbeta) 
+   &= \RnX \circ \Op{T} \big( \lambda, \mu, \EnX(\valpha), \EnX(\vbeta) \big)\\
+   &= \RnX \big( \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta) \big) \\ 
+   &= \RnX \circ \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta).
+  \end{align*}
+  %
+  This expression is equal to $\lambda \cdot \valpha + \mu \cdot \vbeta$ for all $\lambda, \mu \in \Field$ and all 
+  $\valpha, \vbeta \in \Field^n$ if and only if $\RnX \circ \EnX = \Op{\Id}$.
 
-
-\subsection{Compatibility of norms and inner products}
-
-We now consider the setting when $\Spc{X}$ be a normed vector space and when $\Spc{X}$ is an inner product space. These 
-
-Since there is a 
-natural norm and inner product on
-$\Field^{n}$, it is natural to consider compatibility of norms and inner products. 
-\begin{theorem}\label{ThmNormInnerProd}
-  Let $\Spc{X}$ be a normed vector space over $\Field$ with $n$-dimensional
-  discretization $\Discr_{n}(\Spc{X}):=\{\Spc{X},\Field^{n},\RnX,\EnX\}$. 
-  Then, the norms on $\Field^{n}$ and $\Spc{X}$ correspond to each other 
-  (in the sense of Definition~\ref{def:operator_compatibility}) only when the discretization is an isometry. 
-  Likewise, if $\Spc{X}$ is an inner product space, then the 
-  inner products on $\Field^{n}$ and $\Spc{X}$  
-  correspond to each other only when the discretization is angle preserving.
-\end{theorem}
-\begin{proof}
-Let $\Vert \cdot \Vert_{\Spc{X}}$ denote the norm of $\Spc{X}$ and $\Vert \cdot \Vert_{n}$ is the 
-norm of $\Field^{n}$. These norms can be represented by the mappings $\Op{T}$ and $\DiscOp{T}_{n,1}$ 
-defined as  
-\[ \Op{T} \colon \Spc{X}  \to [0,\infty[  \quad\text{where}\quad \Op{T}(x):=\Vert x \Vert_{\Spc{X}} \] 
-and 
-\[ \DiscOp{T}_{n,1} \colon \Field^{n} \to [0,\infty[  \quad\text{where}\quad \DiscOp{T}(a):=\Vert a \Vert_{n}. \] 
-Then the norms on $\Spc{X}$ and $\Field^{n}$ 
-correspond to each other whenever $\Op{T}$ and $\DiscOp{T}_{n,1}$ correspond to each other 
-(in the sense of Definition~\ref{def:operator_compatibility}) 
-under the discretizations $\Discr_{n}(\Spc{X})$ of $\Spc{X}$ 
-and the identity discretization of  $[0,\infty[$, \ie,
-\[  \Op{T} =  \DiscOp{T}_{n,1} \circ \RnX
-   \quad\text{and}\quad 
-   \DiscOp{T}_{n,1} =  \Op{T} \circ \EnX,
-\]
-which can be rephrased as
-\[ \Vert x \Vert_{\Spc{X}} = \bigl\Vert \RnX(x) \bigr\Vert_{n}
-    \quad \text{and}\quad
-   \Vert a \Vert_{n} = \bigl\Vert \EnX(a) \bigr\Vert_{\Spc{X}}.
-\]
-Thus, the norms of normed vector spaces $\Spc{X}$ and $\Field^{n}$ correspond
-to each other only when the discretization $\Discr_{n}(\Spc{X})$ of $\Spc{X}$ is an isometry. 
-
-Let us now consider the inner product. Then we assume that $\Spc{X}$ and $\Field^{n}$ are inner 
-product spaces with inner products $\ip{\cdot}{\cdot}_\Spc{X}$ and $\ip{\cdot}{\cdot}_{n}$, 
-respectively. The corresponding mappings $\Op{T}$ and $\DiscOp{T}_{2n,1}$ are 
-defined as  
-\[ \Op{T} \colon \Spc{X} \times \Spc{X}  \to \Field  \quad\text{where}\quad \Op{T}(x,y):=\ip{x}{y}_{\Spc{X}} \] 
-and 
-\[ \DiscOp{T}_{2n,1} \colon \Field^{n} \times \Field^{n}  \to \Field  \quad\text{where}\quad 
-\DiscOp{T}_{2n,1}(a,b):=\ip{a}{b}_{n}. \] 
-The inner products on $\Spc{X}$ and $\Field^{n}$ 
-correspond to each other (in the sense of Definition~\ref{def:operator_compatibility})
-whenever $\Op{T}$ and $\DiscOp{T}_{2n,1}$ correspond to each other 
-under the product discretization of $\Spc{X}\times \Spc{X}$ and the identity discretization of 
-$\Field$, \ie, whenever 
-\[ \Op{T} =  \DiscOp{T}_{2n,1} \circ R_{2n}^{\Spc{X}\times \Spc{X}} 
-   \quad\text{and}\quad 
-   \DiscOp{T}_{2n,1} =  \Op{T} \circ E_{2n}^{\Spc{X}\times \Spc{X}}.
-\]
-This can be rephrased as
-\[ \ip{x}{y}_{\Spc{X}} =  \ip{\RnX(x)}{\RnX(y)}_{n}
-    \quad\text{and}\quad 
-   \ip{a}{b}_{n} = \ip{\EnX(a)}{\EnX(b)}_{\Spc{X}}.
-\]
-Hence, the inner products of $\Spc{X}$ corresponds to the inner product of $\Field^{n}$ 
-only when the discretization $\Discr_{n}(\Spc{X})$ of $\Spc{X}$ is angle preserving.
-\end{proof}
-Finally, we conclude this section by considering standard discretizations of $n$-dimensional vector spaces
-\wrt a fixed basis. 
-\begin{theorem}
-  Let $B$ be a basis of the $n$-dimensional inner product space $\Spc{X}$ and 
-  consider the standard discretization \wrt this basis. 
-   Then, the inner products on $\Spc{X}$ and $\Field^{n}$ correspond to each other 
-   if and only if $B$ is an orthonormal basis.
-\end{theorem}
-\begin{proof}
-Let $B := \{ v_1, \ldots, v_n \}$ denote the basis of $\Spc{X}$ and $\{ \Spc{X},\Field^{n},\RnX,\EnX\}$ 
-is the standard discretization \wrt $B$. This is a linear discretization and for any two elements 
-$x,y \in \Spc{X}$ there are $\alpha,\beta\in\Field^{n}$ such that 
-\[  x = \sum_{i=1}^n \alpha_i v_i \quad\text{and}\quad y = \sum_{j=1}^n \beta_j v_j. \]
-Now, by definition
-\[ 
-   \ip{x}{y}_{\Spc{X}} = \ip{\sum_{i=1}^n \alpha_i v_i }{\sum_{j=1}^n \beta_j v_j}_{\Spc{X}} 
-    =    \sum_{i,j=1}^n \alpha_i\beta_j \ip{v_i}{v_j}_{\Spc{X}}
-\]
-and
-\begin{align*}
-   \ip{\RnX(x)}{\RnX(y)}_{n} &=
-       \ip{\RnX\biggl( \sum_{i=1}^n \alpha_i v_i  \biggr) }
-           {\RnX \biggl( \sum_{j=1}^n \beta_j v_j  \biggr)}_{n} \\
-  &= \sum_{i,j=1}^n \alpha_i \beta_j \ip{\RnX(v_i)}{\RnX(v_j)}_{n} =
-        \sum_{i,j=1}^n \alpha_i \beta_j \ip{\ve_i}{\ve_j}_{n}
-\end{align*}
-where $\ve_i\in\Field^{n}$ is the vector with $1$ at $i$:th position and zeroes otherwise. 
-Hence, we see that $\ip{x}{y}_{\Spc{X}} =  \ip{\RnX(x)}{\RnX(y)}_{n}$ if and only if 
-\[ \ip{v_i}{v_j}_{\Spc{X}}=\ip{\ve_i}{\ve_j}_{n}. \]
-Conversely,
-\[ \ip{\EnX(\alpha)}{\EnX(\beta)}_{\Spc{X}} =
-       \ip{  \sum_{i=1}^n \alpha_i v_i }{ \sum_{j=1}^n \beta_j v_j }_{\Spc{X}} 
-   = \sum_{i,j=1}^n \alpha_i \beta_j \ip{v_i}{v_j}_{\Spc{X}}.
-\]
-so $ \ip{\alpha}{\beta}_{n} = \ip{\EnX(\alpha)}{\EnX(\beta)}_{\Spc{X}}$ if and only if 
-\[  \ip{\alpha}{\beta}_{n} =  \sum_{i,j=1}^n \alpha_i \beta_j \ip{v_i}{v_j}_{\Spc{X}}. \]
-To summarize, $\Spc{X}$ and $\Field^{n}$ have corresponding inner products if and only if 
-\[  \ip{v_i}{v_j}_{\Spc{X}}= \ip{\ve_i}{\ve_j}_{n}
-    \quad\text{and}\quad
-    \ip{\alpha}{\beta}_{n} = \sum_{i,j=1}^n \alpha_i \beta_j \ip{v_i}{v_j}_{\Spc{X}}. \]
-The natural inner product on $\Field^{n}$ is given by 
-$\ip{\alpha}{\beta}_{n} :=\sum_{i=1}^n\alpha_i \beta_i$. With this definition we see that 
-$\Spc{X}$ and $\Field^{n}$ have corresponding inner products if and only if $\Spc{X}$ is equipped with an 
-orthonormal basis $B$, \ie, 
-\[ \ip{v_i}{v_j}_{\Spc{X}} = \begin{cases} 1 & \text{if $i=j$,} \\ 0 & \text{otherwise.} \end{cases} \]
-\end{proof}
-
-\subsection{Compatibility of operator norms}
-Let $\Spc{X}$ and $\Spc{Y}$ denote two vector spaces over $\Field$ with 
-$n$- and $m$-dimensional discretizations 
-$\Discr_{n}(\Spc{X}) := \{ \Spc{X}, \Field^{n}, \RnX,\EnX \}$
-and 
-$\Discr_{m}(\Spc{Y}) := \{ \Spc{Y}, \Field^{m}, \RmX, \EmX \}$.
-Also, consider the vector space of linear bounded mappings $\Spc{M}:=\Spc{L}(\Spc{X},\Spc{Y})$ 
-with its natural discretization given by \Cref{def:operator_space_discretization}.
-The natural norms on $\Spc{M}$ and the space $\Field^{m \times n} \simeq \Spc{L}(\Field^n,\Field^m)$ 
-of $(m \times n)$ matrices 
-are 
-\[  \Vert \Op{T} \Vert_{\Spc{M}} := \sup_{f \neq 0} \frac{\bigl\Vert \Op{T}(f) \bigr\Vert_{\Spc{Y}}}{\Vert f 
-\Vert_{\Spc{X}}} 
-   \quad\text{and}\quad
-   \Vert \DiscOp{T} \Vert_{m,n} := \sup_{\valpha \neq \vzero} 
-     \frac{\bigl\Vert \DiscOp{T}(\valpha) \bigr\Vert_{m}}{\Vert \valpha \Vert_{n}}. 
-\]
-The goal now is to investigate the behavior of the operator norms under these discretizations.
-\begin{theorem}
-Assume $\Discr_{n}(\Spc{X})$ and $ \Discr_{m}(\Spc{Y})$ are linear discretizations of 
-$\Spc{X}$ and $\Spc{Y}$. Then the following holds:
-\begin{enumerate}[(a)]
-\item Vector space operations on $M_{m,n}$ correspond to those on 
-$\Spc{M}$ under the discretization $\Discr_{m n}(\Spc{M})$.
-\item If 
-  $\Vert \EnX \Vert_{\Spc{L}(\Field^n, \Spc{X})} \leq 1$
-  and 
- $\Vert \RmY \Vert_{\Spc{L}(\Spc{Y},\Field^m)} \leq 1$,
- then $\Vert R_{m n}^{\Spc{M}} \Vert_{\Spc{L}(\Spc{M},\Field^{mn})} \leq 1$.%
- \label{IsoIneq1}%
-\item If 
-  $\Vert \EmY \Vert_{\Spc{L}(\Field^m, \Spc{Y})} \leq 1$ 
-  and
-  $\Vert \RnX \Vert_{\Spc{L}(\Spc{X},\Field^n)} \leq 1$, 
-  then $\Vert E_{m n}^{\Spc{M}} \Vert_{\Spc{L}(\Field^{mn}, \Spc{M})} \leq 1$.%
-  \label{IsoIneq2}%
-\end{enumerate}
-In particular, the conditions in \eqref{IsoIneq1} and \eqref{IsoIneq2} hold whenever all restriction and extension 
-mappings 
-are isometries.
-\end{theorem}
-\begin{proof}
-$\Discr_{m n}(\Spc{M})$ is a linear discretization of $\Spc{M}$ since 
-$\Discr_{n}(\Spc{X})$ and $ \Discr_{m}(\Spc{Y})$ are linear discretizations. Hence,
-by Theorem~\ref{ThmVecSpaceCorr}, the vector space operations on $\Field^{m n}$ correspond to those on $\Spc{M}$.
-Since the space operations on $\Field^{m n}$ correspond trivially to those on $M_{n,m}$, we conclude that 
-vector space operations on $M_{m,n}$ correspond to those on $\Spc{M}$.
-
-Next, let us consider the claim in \eqref{IsoIneq1}. By definition,
-\[
-  \bigl\Vert R_{m n}^{\Spc{M}}(\Op{T}) \bigr\Vert_{m,n}
-  = 
-  \sup_{\substack{\valpha \in \Field^n \\ \Vert \valpha \Vert_n \leq 1}}
-    \bigl\Vert R_{m n}^{\Spc{M}}(\Op{T})(\valpha) \bigr\Vert_{m}    
-  =   
-  \sup_{\substack{\valpha \in \Field^n\\ \Vert \valpha \Vert_n\leq1}}
-    \bigl\Vert \RmY \circ \Op{T} \circ \EnX (\valpha) \bigr\Vert_{m}.
-\]
-Now, $\Vert \RmY \Vert_{\Spc{L}(\Spc{Y},\Field^m)} \leq 1$ so
-\[
-  \bigl\Vert R_{m n}^{\Spc{M}}(\Op{T}) \bigr\Vert_{m,n}
-  \leq 
-  \sup_{\substack{\valpha \in \Field^n\\ \Vert \valpha \Vert_n\leq1}}
-    \bigl\Vert \Op{T} \circ \EnX (\valpha) \bigr\Vert_{\Spc{Y}}
-  =
-  \sup_{\substack{f = \EnX\!(\valpha) \\ \Vert \valpha \Vert_n\leq1}}
-    \bigl\Vert \Op{T} \circ \EnX (\valpha) \bigr\Vert_{\Spc{Y}}.
-\]
-Since $\Vert \EnX \Vert_{\Spc{L}(\Field^n, \Spc{X})} \leq 1$,
-we get 
-\[
-  \bigl\Vert R_{m n}^{\Spc{M}}(\Op{T}) \bigr\Vert_{m,n}
-  \leq 
-  \sup_{\substack{f  \in \Spc{X} \\ \Vert f \Vert_{\Spc{X}} \leq1}}
-    \bigl\Vert \Op{T} (f) \bigr\Vert_{\Spc{Y}}
-  =
-    \Vert \Op{T} \Vert_{\Spc{M}}.
-\]
-Hence, $\Vert R_{m n}^{\Spc{M}} \Vert_{\Spc{L}(\Spc{M},\Field^{mn})} \leq 1$ which 
-proves the claim in \eqref{IsoIneq1}.
-
-Let us finally consider the claim in \eqref{IsoIneq2}. By definition,
-\[
-  \bigl\Vert E_{m n}^{\Spc{M}}(\DiscOp{T}) \bigr\Vert_{\Spc{M}}
-  = 
-  \sup_{\substack{f \in \Spc{X} \\ \Vert f \Vert_{\Spc{X}} \leq 1}}
-    \bigl\Vert E_{m n}^{\Spc{M}}(\DiscOp{T})(f) \bigr\Vert_{\Spc{Y}}    
-  =   
-  \sup_{\substack{f \in \Spc{X} \\ \Vert f \Vert_{\Spc{X}} \leq 1}}
-    \bigl\Vert \EmY \circ \DiscOp{T} \circ \RnX(f) \bigr\Vert_{\Spc{Y}}.
-\]
-Now, $\Vert \EmY \Vert_{\Spc{L}(\Field^m, \Spc{Y})} \leq 1$  so
-\[
-  \bigl\Vert E_{m n}^{\Spc{M}}(\DiscOp{T}) \bigr\Vert_{\Spc{M}}
-  \leq 
-  \sup_{\substack{f \in \Spc{X} \\ \Vert f \Vert_{\Spc{X}} \leq 1}}
-    \bigl\Vert \DiscOp{T} \circ \RnX(f) \bigr\Vert_{m}
-  =
-  \sup_{\substack{\valpha = \RnX\!(f) \\ \Vert f \Vert_{\Spc{X}}\leq1}}
-    \bigl\Vert \DiscOp{T}(\valpha) \bigr\Vert_{m}.
-\]
-Since $\Vert \RnX \Vert_{\Spc{L}(\Spc{X},\Field^n)} \leq 1$,
-we get 
-\[
-  \bigl\Vert E_{m n}^{\Spc{M}}(\DiscOp{T}) \bigr\Vert_{\Spc{M}}
-  \leq 
-  \sup_{\substack{ \valpha \in \Field^n \\ \Vert \valpha \Vert_{n} \leq1}}
-    \bigl\Vert \DiscOp{T}(\valpha) \bigr\Vert_{m}
-  =
-    \Vert \DiscOp{T} \Vert_{m,n}.
-\]
-Hence, $\Vert E_{m n}^{\Spc{M}} \Vert_{\Spc{L}(\Field^{mn},\Spc{M})} \leq 1$ which 
-proves the claim in \eqref{IsoIneq2}.
+  \item The conditions for exact correspondence according to \Cref{def:operator_compatibility} can be rephrased as
+  %
+  \begin{align*}
+   \RnX(\lambda \cdot f + \mu \cdot g) &= \lambda \cdot \RnX(f) + \mu \cdot \RnX(g), \\
+   \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta) &= \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta),
+  \end{align*}
+  %
+  and are fulfilled due to the linearity of $\RnX$ and $\EnX$.
+ \end{enumerate}
 \end{proof}
 
 \begin{remark}
-The claim in \eqref{IsoIneq1} states that the norm of the discretized linear operator $\DiscOp{T}=R_{m 
-n}^{\Spc{M}}(\Op{T})$ 
-is bounded by the norm of $\Op{T}$. Thus, by computing the matrix norm of the discretized linear operator $\DiscOp{T}$
-we get a lower bound of the operator norm of $\Op{T}$. 
-
-Conversely, the claim in \eqref{IsoIneq2} states that the operator norm of the continuous extension 
-$E_{m n}^{\Spc{M}}(\DiscOp{T})$ of a discrete linear operator $\DiscOp{T}$ is bounded by the 
-matrix norm of $\DiscOp{T}$. Thus, we can get an upper bound for the continuous extension of a 
-discrete mapping in terms of the matrix norms of the latter.
+ In the vector space $\Spc{M} := \Spc{L}(\Spc{X}, \Spc{Y})$ with given discretizations in $\Spc{X}$ and $\Spc{Y}$, the 
+ natural restriction and extension operators of the discretization $\Discr_{m\times n}(\Spc{M})$ are given by
+ %
+ \begin{equation*}
+  \REST{m\times n}{\Spc{M}}(\Op{T}) = \RmY \circ \Op{T} \circ \EnX
+  \quad\text{and}\quad
+  \EXT{m\times n}{\Spc{M}}(\DiscOp{T}) = \EmY \circ \DiscOp{T} \circ \RnX,
+ \end{equation*}
+ %
+ see \Cref{def:operator_space_discretization}. Hence, the condition that the natural discretization of the linear 
+ combination in $\Spc{M}$ is the linear combination in $\Field^{m\times n}$ reads as
+ %
+ \begin{align*}
+  \DiscOp{T} 
+  &= \REST{m\times n}{\Spc{M}}\big( \EXT{m\times n}{\Spc{M}}(\DiscOp{T}) \big)
+  = \RmY \circ \EXT{m\times n}{\Spc{M}}(\DiscOp{T}) \circ \EnX
+  = \RmY \circ \EmY \circ \DiscOp{T} \circ \RnX \circ \EnX \\
+  &= \QmY \circ \DiscOp{T} \circ \QnX.
+ \end{align*}
+ %
+ Thus, if $\QnX = \Op{\Id}$ and $\QmY = \Op{\Id}$, the operator space discretization $\Discr_{m\times n}(\Spc{M})$ 
+ automatically fulfills the condition $\COPROJ{m\times n}{\Spc{M}} = \Op{\Id}$ needed for the natural discretization of 
+ the linear combination.
 \end{remark}
-\todo[inline]{What is required from the discretizations $\Discr_{n}(\Spc{X})$ and $\Discr_{n}(\Spc{Y})$
-  to get correspondence of operator norms on $\Spc{M}$ and $\Spc{L}(\Field^n,\Field^m)$?}
 
+
+
+\subsection{Compatibility of norms}
+
+We now consider the setting when $\Spc{X}$ is a normed vector space, including the space of bounded linear operators.
+
+\begin{lemma}
+ \label{lemma:norm_compatibility}
+ Let $\Spc{X}$ be a vector space over $\Field$ with norm $\NORM{\cdot}_{\Spc{X}}$ and linear discretization 
+ $\Discr_n(\Spc{X})$. Let further $\NORM{\cdot}_n$ be a norm in $\Field^n$.
+ %
+ \begin{enumerate}[(a)]
+  \item \label{lemma:norm_compatibility:a_natural}
+  $\NORM{\cdot}_n$ is the natural discretization of $\NORM{\cdot}_{\Spc{X}}$ if and only if
+  %
+  \begin{equation*}
+   \EnX \colon (\Field^n, \NORM{\cdot}_n) \to (\Spc{X}, \NORM{\cdot}_{\Spc{X}})
+  \end{equation*}
+  %
+  is an isometry.
+  
+  \item \label{lemma:norm_compatibility:b_correspondence}
+  $\NORM{\cdot}_n$ corresponds to $\NORM{\cdot}_{\Spc{X}}$ if and only if
+  %
+  \begin{equation*}
+   \RnX \colon (\Spc{X}, \NORM{\cdot}_{\Spc{X}}) \to (\Field^n, \NORM{\cdot}_n)
+   \quad \text{and} \quad
+   \EnX \colon (\Field^n, \NORM{\cdot}_n) \to (\Spc{X}, \NORM{\cdot}_{\Spc{X}})
+  \end{equation*}
+  %
+  are isometries.
+ \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+ We write the norm as an operator
+ %
+ \begin{equation*}
+  \Op{T} \colon \Spc{X} \to \Real \quad \text{with} \quad \Op{T}(f) := \NORM{f}_{\Spc{X}}.
+ \end{equation*}
+ %
+ Its natural discretization is given by
+ %
+ \begin{equation*}
+  \DiscOp{T} \colon \Field^n \to \Real \quad \text{with} \quad \DiscOp{T} = \Op{\Id} \circ \Op{T} \circ \EnX,
+ \end{equation*}
+ %
+ \ie, $\DiscOp{T}(\valpha) = \NORM{\EnX(\valpha)}_{\Spc{X}}$. This proves the claim in 
+ \eqref{lemma:norm_compatibility:a_natural}.\\
+ %
+ The conditions for correspondence read as
+ %
+ \begin{equation*}
+  \NORM{\cdot}_{\Spc{X}} = \NORM{\cdot}_n \circ \RnX
+  \quad \text{and} \quad
+  \NORM{\cdot}_n = \NORM{\cdot}_{\Spc{X}} \circ \EnX
+ \end{equation*}
+ %
+ and are equivalent to the isometry conditions in \eqref{lemma:norm_compatibility:b_correspondence}.
+\end{proof}
+
+\begin{remark}
+ The proof additionally shows that the natural norm discretization fulfills
+ $\DiscOp{T}(\valpha) \leq \NORM{\EnX}\, \NORM{\valpha}_n$, i.e. the discretized norm can be bounded from above 
+ with the given norm in $\Field^n$.
+\end{remark}
+
+
+\paragraph{Operator norms}
+
+In a similar way, we can analyze the relation between norms of continuous and discretized linear operators. 
+The norms of operators $\Op{T} \in \Spc{M} := \Spc{L}(\Spc{X}, \Spc{Y})$ and 
+$\DiscOp{T} \in \Spc{L}(\Field^n, \Field^m) \simeq \Field^{m\times n}$ are defined as
+%
+\begin{equation*}
+ \NORM{\Op{T}}_{\Spc{M}} := \sup_{\NORM{f}_{\Spc{X}} \leq 1} \NORM{\Op{T}(f)}_{\Spc{Y}}
+ \quad \text{and} \quad
+ \NORM{\DiscOp{T}}_{m\times n} := \sup_{\NORM{\valpha}_n \leq 1} \NORM{\DiscOp{T}(\valpha)}_m.
+\end{equation*}
+%
+The following Lemma shows how operator and matrix norms relate to each other under discretization.
+
+\begin{lemma}
+ \label{lemma:operator_norm_estimate}
+ Let $\Spc{X}$ and $\Spc{Y}$ be normed vector spaces with linear discretizations $\Discr_n(\Spc{X})$ and 
+ $\Discr_m(\Spc{Y})$, respectively. Let further $\REST{m\times n}{\Spc{M}}(\Op{T})$ and 
+ $\EXT{m\times n}{\Spc{M}}(\DiscOp{T})$ be the natural restriction and extension operators in 
+ $\Discr_{m\times n}(\Spc{M})$ as given in \Cref{def:operator_space_discretization}.
+ %
+ \begin{enumerate}[(a)]
+  \item \label{lemma:operator_norm_estimate:a_rest}
+  If the operator norms of $\RmY$ and $\EnX$ are bounded by 1, then
+  %
+  \begin{equation*}
+   \NORM{R_{m\times n}^{\Spc{M}}}_{\Spc{L}(\Spc{M},\Field^{m\times n})} \leq 1.
+  \end{equation*}
+  %
+  \item \label{lemma:operator_norm_estimate:a_rest}
+  If the operator norms of $\RnX$ and $\EmY$ are bounded by 1, then
+  %
+  \begin{equation*}
+   \NORM{E_{m\times n}^{\Spc{M}}}_{\Spc{L}(\Field^{m\times n}, \Spc{M})} \leq 1.
+  \end{equation*}
+  %
+  Furthermore, if $\RnX$ and $\EmY$ are isometries and $\RnX$ is surjective, $E_{m\times n}^{\Spc{M}}$ is an isometry, 
+  \ie, $\NORM{\cdot}_{m\times n}$ is the natural discretization of $\NORM{\cdot}_{\Spc{M}}$.
+ \end{enumerate}
+\end{lemma}
+
+
+\begin{proof}
+ \begin{enumerate}[(a)]
+  \item For $\Op{T} \in \Spc{M}$ and $\DiscOp{T} = \REST{m\times n}{\Spc{M}}(\Op{T})$ we have
+  %
+  \begin{equation*}
+   \NORMLR{\DiscOp{T}(\valpha)}_m = \NORMLR{\RmY \left( \Op{T}\big( \EnX(\valpha) \big) \right)}_m
+   \leq \NORMLR{\Op{T}\big( \EnX(\valpha) \big)}_{\Spc{Y}}
+  \end{equation*}
+  %
+  since $\NORM{\RmY} \leq 1$. Furthermore, $\EnX$ maps the unit ball in $\Field^n$ to a subset of the unit ball in
+  $\Spc{X}$ since $\NORM{\EnX} \leq 1$. Hence,
+  %
+  \begin{equation*}
+   \sup_{\NORM{\valpha}_n \leq 1} \NORMLR{\Op{T}\big( \EnX(\valpha) \big)}_{\Spc{Y}}
+   = \sup_{\STACK{f=\EnX(\valpha)}{\NORM{\valpha}_n \leq 1}} \NORMLR{\Op{T}(f)}_{\Spc{Y}}
+   \leq \sup_{\NORM{f}_{\Spc{X}} \leq 1} \NORMLR{\Op{T}(f)}_{\Spc{Y}},
+  \end{equation*}
+  %
+  which proves that $\NORMLR{R_{m\times n}^{\Spc{M}}(\Op{T})} \leq \NORM{\Op{T}}$.
+
+  \item Analogously, for $\DiscOp{T} \in \Field^{m\times n}$ and $\Op{T} = \EXT{m\times n}{\Spc{M}}(\DiscOp{T})$ it is
+  %
+  \begin{equation*}
+   \NORMLR{\Op{T}(f)}_{\Spc{Y}} = \NORMLR{\EmY \left( \DiscOp{T}\big( \RnX(f) \big) \right)}_{\Spc{Y}}
+   \leq \NORMLR{\DiscOp{T}\big( \RnX(f) \big)}_m
+  \end{equation*}
+  %
+  since $\NORM{\EmY} \leq 1$. In addition, $\RnX$ maps the unit ball in $\Spc{X}$ to a subset of the unit 
+  ball in $\Field^n$ since $\NORM{\RnX} \leq 1$. Hence,
+  %
+  \begin{equation*}
+   \sup_{\NORM{f}_{\Spc{X}} \leq 1} \NORMLR{\DiscOp{T}\big( \RnX(f) \big)}_m
+   = \sup_{\STACK{\valpha=\RnX(f)}{\NORM{f}_{\Spc{X}} \leq 1}} \NORMLR{\DiscOp{T}(\valpha)}_m
+   \leq \sup_{\NORM{\valpha}_n \leq 1} \NORMLR{\DiscOp{T}(\valpha)}_m,
+  \end{equation*}
+  %
+  \ie, $\NORMLR{E_{m\times n}^{\Spc{M}}(\DiscOp{T})} \leq \NORM{\DiscOp{T}}$.\\[1em]
+  %
+  If $\EmY$ is an isometry, the first inequality becomes an equality, and if $\RnX$ is a surjective isometry, it maps
+  the unit ball in $\Spc{X}$ \emph{onto} the unit ball in $\Field^n$. Thus, also the second inequality becomes an 
+  equality, showing that $\NORMLR{E_{m\times n}^{\Spc{M}}(\DiscOp{T})} = \NORM{\DiscOp{T}}$ for all 
+  $\DiscOp{T} \in \Field^{m\times n}$ in this case.
+ \end{enumerate}
+\end{proof}
+
+
+\begin{remark}
+ An analogous isometry property for $\REST{m\times n}{\Spc{M}}$ can only hold if $\DIM(\Spc{X}) \leq n$ 
+ since it requires the extension map $\EnX \colon \Field^n \to \Spc{X}$ to be surjective. Hence, exact correspondence 
+ of a matrix norm to an operator norm is only possible for certain finite-dimensional spaces $\Spc{X}$.\\
+ %
+ In any case, the inequalities ensure that one can get an estimate for the operator norm of $\Op{T}$ (restricted to the 
+ range of $\EnX$) in terms of the discretized (matrix) norm of $\DiscOp{T}$, which can be very useful in numerical 
+ computations.
+\end{remark}
+
+
+\subsection{Compatibility of inner products}
+
+Now we consider inner product spaces and analyze their behavior under discretization.
+
+\begin{lemma}
+ \label{lemma:inner_prod_compatibility}
+ Let $(\Spc{X}, \INNER{\cdot}{\cdot}_{\Spc{X}})$ be an inner product space with discretization $\Discr_n(\Spc{X})$, and 
+ let $\INNER{\cdot}{\cdot}_n$ be the inner product in $\Field^n$.
+ %
+ \begin{enumerate}[(a)]
+  \item \label{lemma:inner_prod_compatibility:a_natural}
+  $\INNER{\cdot}{\cdot}_n$ is the natural discretization of the inner product $\INNER{\cdot}{\cdot}_{\Spc{X}}$ if and 
+  only if $\EnX$ is unitary.
+  
+  \item \label{lemma:inner_prod_compatibility:b_correspondence}
+  $\INNER{\cdot}{\cdot}_n$ exactly corresponds to $\INNER{\cdot}{\cdot}_{\Spc{X}}$ if and only if both $\RnX$ and 
+  $\EnX$ are unitary.
+ \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+ \begin{enumerate}[(a)]
+  \item We define the inner product as an operator
+  %
+  \begin{equation*}
+   \Op{T} \colon \Spc{X} \times \Spc{X} \to \Field
+   \quad \text{with} \quad
+   \Op{T}(f, g) := \INNER{f}{g}_{\Spc{X}}.
+  \end{equation*}
+  %
+  The natural discretization of this operator is given by $\DiscOp{T} = \Op{\Id} \circ \Op{T} \circ (\EnX, \EnX)$, \ie,
+  %
+  \begin{equation*}
+   \DiscOp{T}(\valpha, \vbeta) 
+   = \Op{T}\big( \EnX(\valpha), \EnX(\vbeta) \big) 
+   = \INNERbig{\EnX(\valpha)}{\EnX(\vbeta)}_{\Spc{X}}
+   = \INNERbig{(\EnX)^* \circ \EnX(\valpha)}{\vbeta}_n.
+  \end{equation*}
+  %
+  Apparently, this expression is equal to $\INNER{\valpha}{\vbeta}_n$ if and only if $\EnX$ is unitary.
+
+  \item The conditions for exact correspondence can be written as
+  %
+  \begin{equation*}
+   \INNER{f}{g}_{\Spc{X}} = \INNERbig{\RnX(f)}{\RnX(g)}_n
+   \quad \text{and} \quad
+   \INNER{\valpha}{\vbeta}_n = \INNERbig{\EnX(\valpha)}{\EnX(\vbeta)}_{\Spc{X}},
+  \end{equation*}
+  %
+  which is equivalent to the conditions in the claim.
+ \end{enumerate}
+\end{proof}
 
 
 \section{Specific discretizations}
