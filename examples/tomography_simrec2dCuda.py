@@ -110,7 +110,7 @@ stepSize = voxelSize.max()
 
 #Define projection geometries
 geometries = []
-for theta in np.linspace(0, 2*pi, nProjection):
+for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
     x0 = np.array([cos(theta), sin(theta)])
     y0 = np.array([-sin(theta), cos(theta)])
 
@@ -149,19 +149,24 @@ recon = projector.T(projections)
 normEst = recon.norm() / phantomVec.norm()
 
 #Define function to plot each result
-plt.figure()
-plt.ion()
-plt.set_cmap('bone')
+from time import time
+
+tstart = time()
+
+#plt.figure()
+#plt.ion()
+#plt.set_cmap('bone')
 def plotResult(x):
-    plt.imshow(x[:].reshape(nVoxels))
-    plt.draw()
-    print((x-phantomVec).norm())
-    plt.pause(0.01)
+    print('Elapsed: {}'.format(time() - tstart))
+    #plt.imshow(x[:].reshape(nVoxels))
+    #plt.draw()
+    #print((x-phantomVec).norm())
+    #plt.pause(0.01)
 
 #Solve using landweber
 x = reconDisc.zero()
-#solvers.landweber(projector, x, projections, 200, omega=0.4/normEst, part_results=solvers.ForEachPartial(plotResult))
-solvers.landweber(projector, x, projections, 10, omega=0.4/normEst, part_results=solvers.PrintIterationPartial())
+solvers.landweber(projector, x, projections, 10, omega=0.4/normEst, part_results=solvers.ForEachPartial(plotResult))
+#solvers.landweber(projector, x, projections, 10, omega=0.4/normEst, part_results=solvers.PrintIterationPartial())
 #solvers.conjugate_gradient(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
 
 plt.imshow(x[:].reshape(nVoxels))

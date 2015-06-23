@@ -61,10 +61,10 @@ class CudaProjector3D(OP.LinearOperator):
 
         #Project all geometries
         
-        with Timer("projecting"):
-            for i in range(len(self.geometries)):
-                geo = self.geometries[i]
+        for i in range(len(self.geometries)):
+            geo = self.geometries[i]
             
+            with Timer("projecting"):
                 self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
 
 
@@ -80,8 +80,8 @@ detectorAxisDistance = 20.0
 
 #Discretization parameters
 nVoxels = np.array([448, 448, 448])
-nPixels = np.array([720, 780])*2
-nProjection = 332
+nPixels = np.array([720, 780])
+nProjection = 5
 
 #Scale factors
 voxelSize = volumeSize/nVoxels
@@ -127,9 +127,7 @@ phantomVec = reconDisc.element(phantom)
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
 
 result = dataDisc.element()
-
-for i in range(100):
-    projector.apply(phantomVec, result)
+projector.apply(phantomVec, result)
 
 for i in range(5):
     plt.figure()

@@ -192,10 +192,10 @@ class TestMethods(RLTestCase):
         correct_norm = math.sqrt(correct_norm_squared)
 
         # Space function
-        self.assertAlmostEquals(r3.norm(xd), correct_norm)
+        self.assertAlmostEquals(r3.norm(xd), correct_norm, places=5)
 
         # Member function
-        self.assertAlmostEquals(xd.norm(), correct_norm)
+        self.assertAlmostEquals(xd.norm(), correct_norm, places=5)
 
     def test_inner(self):
         r3 = CudaRN(3)
@@ -364,6 +364,37 @@ class TestConvenience(RLTestCase):
 
         with self.assertRaises(TypeError):
             z = xA-xB
+
+
+class TestPointer(RLTestCase):
+    def test_modify(self):
+        r3 = CudaRN(3)
+        xd = r3.element([1, 2, 3])
+        yd = r3.element(data_ptr=xd.data_ptr)
+
+        yd[:] = [5, 6, 7]
+
+        self.assertAllAlmostEquals(xd, yd)
+
+    def test_sub_vector(self):
+        r6 = CudaRN(6)
+        r3 = CudaRN(3)
+        xd = r6.element([1, 2, 3, 4, 5, 6])
+
+        yd = r3.element(data_ptr=xd.data_ptr)
+        yd[:] = [7, 8, 9]
+
+        self.assertAllAlmostEquals([7, 8, 9, 4, 5, 6], xd)
+
+    def test_offset_sub_vector(self):
+        r6 = CudaRN(6)
+        r3 = CudaRN(3)
+        xd = r6.element([1, 2, 3, 4, 5, 6])
+
+        yd = r3.element(data_ptr=xd.data_ptr+3*xd.itemsize)
+        yd[:] = [7, 8, 9]
+
+        self.assertAllAlmostEquals([1, 2, 3, 7, 8, 9], xd)
 
 if __name__ == '__main__':
     unittest.main(exit=False)

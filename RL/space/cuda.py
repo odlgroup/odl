@@ -62,7 +62,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         self._field = sets.RealNumbers()
         self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
-    def element(self, data=None, **kwargs):
+    def element(self, data=None, data_ptr=None, **kwargs):
         """ Returns a vector of zeros
 
         CUDA memory is always initialized
@@ -128,7 +128,10 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         if isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
             return self.Vector(self, data)
         elif data is None:
-            return self.element(self.impl.empty())
+            if data_ptr is None:
+                return self.element(self.impl.empty())
+            else:
+                return self.element(RLcpp.PyCuda.vectorFromPointer(data_ptr, self.n))
         elif isinstance(data, np.ndarray):  # Create from numpy array
             if data.shape != (self._n,):
                 raise ValueError(errfmt('''
@@ -386,13 +389,6 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
     def __repr__(self):
         return "CudaRN(" + str(self._n) + ")"
 
-    # These should likely be moved somewhere else!
-    @property
-    def abs(self):
-        return fun.LambdaFunction(
-            lambda inp, outp: RLcpp.PyCuda.abs(inp.data, outp.data),
-            input=(self, self))
-
     class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
         """ A RN-vector represented in CUDA
 
@@ -441,6 +437,21 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                   Pointer to the CUDA data of this vector
             """
             return self._data.dataPtr()
+
+        @property
+        def itemsize(self):
+            """ Get a size (in bytes) of the underlying element type
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            itemsize : Int
+                       Size in bytes of type
+            """
+            return 4 #Currently hardcoded to float
 
         def __str__(self):
             return str(self[:])
