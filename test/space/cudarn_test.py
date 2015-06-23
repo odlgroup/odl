@@ -41,10 +41,12 @@ import numpy as np
 
 standard_library.install_aliases()
 
+
 class TestInit(RLTestCase):
     def test_empty(self):
         r3 = CudaRN(3)
         x = r3.element()
+        self.assertEqual(x, CudaRN(3).element())
         # Nothing to test, simply check that code runs
 
     def test_zero(self):
@@ -70,6 +72,7 @@ class TestInit(RLTestCase):
         x0 = np.array([1, 2, 3], dtype=int)
         x = r3.element(x0)
         self.assertAllAlmostEquals(x, x0)
+
 
 class TestAccessors(RLTestCase):
     def test_getitem(self):
@@ -188,8 +191,9 @@ class TestMethods(RLTestCase):
         r3 = CudaRN(3)
         xd = r3.element([1, 2, 3])
 
-        correct_norm_squared = 1**2 + 2**2 + 3**2
+        correct_norm_squared = 1 ** 2 + 2 ** 2 + 3 ** 2
         correct_norm = math.sqrt(correct_norm_squared)
+        places = 6
 
         # Space function
         self.assertAlmostEquals(r3.norm(xd), correct_norm, places=5)
@@ -202,7 +206,7 @@ class TestMethods(RLTestCase):
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, 3, 9])
 
-        correct_inner = 1*5 + 2*3 + 3*9
+        correct_inner = 1 * 5 + 2 * 3 + 3 * 9
 
         # Space function
         self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
@@ -212,8 +216,9 @@ class TestMethods(RLTestCase):
 
     def vectors(self, rn):
         # Generate numpy arrays
-        x_arr, y_arr, z_arr = (np.random.rand(rn.n), np.random.rand(rn.n),
-                               np.random.rand(rn.n))
+        x_arr = np.random.rand(rn.n)
+        y_arr = np.random.rand(rn.n)
+        z_arr = np.random.rand(rn.n)
 
         # Make rn vectors
         x, y, z = rn.element(x_arr), rn.element(y_arr), rn.element(z_arr)
@@ -280,7 +285,7 @@ class TestMethods(RLTestCase):
         x_device = r3.element(x_host)
 
         # Host side calculation
-        y_host[:] = a*x_host
+        y_host[:] = a * x_host
 
         # Device side calculation
         y_device.lincomb(a, x_device)
@@ -304,7 +309,7 @@ class TestMethods(RLTestCase):
         x_device = r3.element(x_host)
 
         # Host side calculation
-        y_host[:] = x_host*y_host
+        y_host[:] = x_host * y_host
 
         # Device side calculation
         r3.multiply(x_device, y_device)
@@ -324,13 +329,14 @@ class TestMethods(RLTestCase):
         x_device = r3.element(x_host)
 
         # Host side calculation
-        y_host[:] = x_host*y_host
+        y_host[:] = x_host * y_host
 
         # Device side calculation
         y_device.multiply(x_device)
 
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(y_device, y_host, places=5)
+
 
 class TestConvenience(RLTestCase):
     def test_addition(self):
@@ -345,7 +351,7 @@ class TestConvenience(RLTestCase):
         xd = r3.element([1, 2, 3])
         C = 5
 
-        self.assertAllAlmostEquals(C*xd, [5, 10, 15])
+        self.assertAllAlmostEquals(C * xd, [5, 10, 15])
 
     def test_incompatible_operations(self):
         r3 = CudaRN(3)
@@ -360,10 +366,20 @@ class TestConvenience(RLTestCase):
             xA -= xB
 
         with self.assertRaises(TypeError):
-            z = xA+xB
+            z = xA + xB
 
         with self.assertRaises(TypeError):
-            z = xA-xB
+            z = xA - xB
+
+
+class TestPointer(RLTestCase):
+    def test_get_ptr(self):
+        r3 = CudaRN(3)
+        x = r3.element([1, 2, 3])
+        y = r3.element(RLcpp.PyCuda.vectorFromPointer(x.data_ptr, 3))
+        self.assertAllAlmostEquals(x, y)
+        self.assertEquals(x.data_ptr, y.data_ptr)
+
 
 
 class TestPointer(RLTestCase):

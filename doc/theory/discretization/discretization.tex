@@ -1,348 +1,1578 @@
-\documentclass[a4paper]{article}
-\usepackage{amsmath,amsfonts}
+\documentclass[a4paper]{paper}
+\usepackage{amsmath,amsfonts,mathrsfs}
+%\usepackage{tikz-cd}
 \usepackage[matrix,arrow]{xy}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage{paralist}
+\usepackage{hyperref} 
+\hypersetup{%
+    bookmarks=true,         % show bookmarks bar?
+    pdfmenubar=true,       % show Acrobat's menu?
+    pdffitwindow=false,     % window fit to page when opened
+    pdfstartview={FitH},    % fits the width of the page to the window
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=red,          % color of internal links
+    citecolor=red,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=cyan,           % color of external links
+    pdfborder = {0,0,0}
+}
+\usepackage{acro}
 \usepackage{extraenv}
+\usepackage{cleveref}
+\usepackage{todonotes}
+\usepackage{tabulary}
 
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\C}{\mathbb{C}}
-\newcommand{\N}{\mathbb{N}}
-\newcommand{\cX}{\mathcal{F}}
-\newcommand{\Cc}{\mathcal{C}}
-\newcommand{\cH}{\mathcal{H}}
-\newcommand{\loc}{\text{loc}}
-\newcommand{\bxi}{\boldsymbol{\xi}}
-\newcommand{\bx}{\boldsymbol{x}}
-\newcommand{\bb}{\boldsymbol{b}}
-\newcommand{\by}{\boldsymbol{y}}
-\newcommand{\bz}{\boldsymbol{z}}
-\newcommand{\bA}{\boldsymbol{A}}
-\newcommand{\cF}{\mathcal{F}}
-\newcommand{\cL}{\mathcal{L}}
-\newcommand{\K}{\mathbb{K}}
-\newcommand{\veps}{\varepsilon}
-\DeclareMathOperator{\prob}{Prob}
+
+% Specific packages
+\newcommand{\Discr}{\mathfrak{D}}
+\newcommand{\Spc}[1]{\mathscr{#1}}
+\newcommand{\Smooth}{\mathscr{C}}
+\newcommand{\Lebegue}{\mathscr{L}}
+\newcommand{\Soboloev}{\mathscr{W}}
+\newcommand{\Field}{\mathbb{F}}
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Complex}{\mathbb{C}}
+\newcommand{\Natural}{\mathbb{N}}
+\newcommand{\imagedomain}{\Omega}
+\newcommand{\imagerange}{V}
+\newcommand{\Op}[1]{\mathcal{#1}}
+\newcommand{\DiscOp}[1]{\mathsf{#1}}
+\newcommand*{\EXT}[2]{\ensuremath{E_{#1}^{#2}}}
+\newcommand*{\REST}[2]{\ensuremath{R_{#1}^{#2}}}
+\newcommand*{\PROJ}[2]{\ensuremath{P_{#1}^{#2}}}
+\newcommand*{\COPROJ}[2]{\ensuremath{Q_{#1}^{#2}}}
+\newcommand*{\RnX}{\ensuremath{\REST{n}{\Spc{X}}}}
+\newcommand*{\RmX}{\ensuremath{\REST{m}{\Spc{X}}}}
+\newcommand*{\RmY}{\ensuremath{\REST{m}{\Spc{Y}}}}
+\newcommand*{\EnX}{\ensuremath{\EXT{n}{\Spc{X}}}}
+\newcommand*{\EmX}{\ensuremath{\EXT{m}{\Spc{X}}}}
+\newcommand*{\EmY}{\ensuremath{\EXT{m}{\Spc{Y}}}}
+\newcommand*{\PnX}{\ensuremath{\PROJ{n}{\Spc{X}}}}
+\newcommand*{\PmY}{\ensuremath{\PROJ{m}{\Spc{Y}}}}
+\newcommand*{\QnX}{\ensuremath{\COPROJ{n}{\Spc{X}}}}
+\newcommand*{\QmY}{\ensuremath{\COPROJ{m}{\Spc{Y}}}}
+\DeclareMathOperator{\rest}{\pi}
+\DeclareMathOperator{\extend}{\epsilon}
+\DeclareMathOperator{\range}{Range}
+\DeclareMathOperator{\kernel}{Ker}
+\DeclareMathOperator{\nullspace}{N}
+\DeclareMathOperator{\Hom}{Hom}
+\DeclareMathOperator{\Map}{\mathcal{M}}
+\DeclareMathOperator{\Id}{Id}
+\DeclareMathOperator{\DIM}{dim}
+\newcommand{\ip}[2]{\left \langle #1,#2 \right\rangle}
 \DeclareMathOperator{\linspan}{linspan}
-\newcommand{\ent}{\text{ent}}
-\newcommand{\ext}{\text{ext}}
-\newcommand{\true}{\text{true}}
-\newcommand{\rest}{\text{rest}}
-\newcommand{\norm}{\text{norm}}
-\newcommand{\ip}[2]{\langle #1,#2 \rangle}  
-\newcommand{\wt}[1]{\widetilde{#1}}
-\newcommand{\optim}[2]
-  {  \begin{split}
-       & #1  \\
-       & #2
-     \end{split}
-  }
+\newcommand*{\FUNCRESTR}[2]{{\ensuremath{\left. \vphantom{g_{g_g}} {#1} \right|_{#2}}}}
+\newcommand*{\STACK}[2]{\genfrac{}{}{0pt}{1}{#1}{#2}}
+\newcommand*{\INNER}[2]{\ensuremath{\langle #1,\,#2\rangle}}
+\newcommand*{\INNERbig}[2]{\ensuremath{\big\langle #1,\,#2\big\rangle}}
+\newcommand*{\INNERBig}[2]{\ensuremath{\Big\langle #1,\,#2\Big\rangle}}
+\newcommand*{\INNERLR}[2]{\ensuremath{\left\langle #1,\,#2\right\rangle}}
 
-\title{The object classes and the discretization problem}
-\author{Ozan \"Oktem}
+\newcommand{\ie}{\textsl{i.e.}\xspace}
+\newcommand{\cf}{\textsl{cf.}\xspace}
+\newcommand{\eg}{\textsl{e.g.}\xspace}
+\newcommand{\etc}{\textsl{e.t.c.}\xspace}
+\newcommand{\wrt}{{w.r.t.}\@\xspace}
+
+
+\newcommand{\vzero}{\boldsymbol{0}}
+\newcommand{\ve}{\boldsymbol{e}}
+\newcommand{\vf}{\boldsymbol{f}}
+\newcommand{\vg}{\boldsymbol{g}}
+\newcommand{\valpha}{\boldsymbol{\alpha}}
+\newcommand{\vbeta}{\boldsymbol{\beta}}
+\newcommand{\vnu}{\boldsymbol{\nu}}
+\newcommand{\vA}{\boldsymbol{A}}
+
+\newcommand{\cF}{\mathcal{F}}
+
+\newcommand*{\NORMLR}[1]{\ensuremath{\left\lVert #1 \right\rVert}}
+\newcommand*{\NORM}[1]{\ensuremath{\lVert #1 \rVert}}
+\newcommand*{\NOTE}[2][\null]{%
+  \marginpar{\renewcommand{\baselinestretch}{1}\vspace{-1em}\hrule\vspace{3pt}%
+  \scriptsize\raggedright\textsf{#2\ifx#1\null\else\\\hfill---
+  {\em #1}\fi}\vspace{1.5em}}%
+}
+
+\newcommand{\ext}{\text{ext}}
+\newcommand{\wt}[1]{\widetilde{#1}}
+
+\crefname{equation}{}{}
+\Crefname{equation}{}{}
+
+\title{The discretization problem and associated software type system}
+\author{Ozan \"Oktem \and Holger Kohr}
 
 \begin{document}
 \maketitle
 
-I begin with the general mathematical description of 
-the problem, then I give some examples, and finally I pose the software 
-related problems that we face.
 
-\section{The general dicretization problem}
-We will describe the general theory of discretization following 
-\cite[Chapter~34]{ZeIIB85}. Often one deals with mappings between 
-two infinite dimensional spaces. In order to numerically work with such 
-mappings, one must reduce the infinite dimensional spaces to finite 
-dimensional counterparts. This reduction of dimensionality is 
-referred to as a \emph{discretization}. 
 
-More formally, let $H$ be a Hilbert space over a field $\K$. 
-An \emph{$n$-dimensional 
-discretization of $H$} is determined by the tuple
-\[ \bigl\{ H,H_{n},R_{n},E_{n} \bigr\} \]
-where $H_{n}$ is an $n$-dimensional Hilbert space (usually over $\K$) and 
-\[ R_{n} \colon H \to H_{n}
+
+
+\section{Introduction}
+\label{sec:intro}
+%
+In many applications one works with mappings between infinite-dimensional vector spaces.
+To numerically deal with such mappings, one is forced to find a finite-dimensional 
+counterpart. The process of mapping a vector space to a finite-dimensional one is called
+\emph{discretization}. A discretization of a specific space is intimately 
+tied to the numerical methodology that one eventually wishes to use. However, many concepts
+and results about discretizations can be stated in a general mathematical framework.  
+
+Most complex numerical software packages work with several different discretizations, even
+of the same vector space. The general mathematical theory that formalizes the process of
+discretization yields consistency checks and recipes for how to switch between two
+discretizations. Still, most numerical software packages do not utilize such consistency
+checks and, even though changes between two discretizations are explicitly coded, this
+code is often scattered throughout or even repeated in different parts of the software package.  
+
+To minimize software bugs, it is therefore desirable to be able to abstract and isolate those parts 
+of the code that deal with the discretization. To achieve this, the software must be able to represent 
+the abstract process of discretization, and an object oriented framework appears to be most
+suitable. We will in this note describe those parts of the abstract mathematical theory that
+need to be captured by a numerical software package in able to achieve the above stated goals.
+We start by giving the basic mathematical foundations.
+
+In many cases, such as inverse problems arising in applications, one has to deal with 
+the following problem: Let $\Spc{X}$ and $\Spc{Y}$ be infinite-dimensional vector spaces and 
+$\Op{T} \colon \Spc{X} \to \Spc{Y}$. Consider now the following problem:
+%
+\begin{equation}
+ \label{eq:intro:operator_eq}
+ \text{Given $g\in \Spc{Y}$, find $f\in \Spc{X}$ such that}\quad \Op{T}(f)=g. 
+\end{equation}
+%
+The operator $\Op{T}$ can either be given explicitly by a closed form expression, or it can be defined 
+implicitly, \eg, as a solution operator to a differential equation. 
+
+In order to numerically work with \cref{eq:intro:operator_eq} in a software package, one must replace the 
+infinite-dimensional vector spaces $\Spc{X}$ and $\Spc{Y}$ with some finite-dimensional 
+counterparts $\Field^{n}$ and $\Field^{m}$ with $\Field = \Real \text{ or } \Complex$, and the map 
+$\Op{T} \colon \Spc{X} \to \Spc{Y}$ with an appropriate discretized operator 
+$\DiscOp{T}_{m,n}$. This process yields the following system of (linear or nonlinear) equations
+with finitely many unknowns:
+%
+\begin{equation}
+ \label{eq:intro:discr_operator_eq}
+ \text{Given $\vbeta \in \Field^{m}$, find $\valpha \in \Field^{n}$ such that }\quad \DiscOp{T}_{n,m} (\valpha)=\vbeta. 
+\end{equation}
+%
+The above process of replacing \cref{eq:intro:operator_eq} with \cref{eq:intro:discr_operator_eq} is referred to 
+as \emph{discretization} of \cref{eq:intro:operator_eq}. A general theory of discretizations is outlined in 
+\cite[Chapter~34]{ZeIIB85}, see also \cite{Pe93}, but the results are of little use for ill-posed inverse 
+problems since the discretized problem \cref{eq:intro:discr_operator_eq} does not fulfill the requirements.
+\emph{In this note we only consider a discretization of \cref{eq:intro:operator_eq} as a way of reducing an equation in 
+infinite-dimensional setting to an equation \cref{eq:intro:discr_operator_eq} in a finite-dimensional setting.}
+Thus, we now formally introduce the notion of discretization in different contexts along with elementary properties.
+
+
+
+
+
+\section{General definition of discretization}
+\label{sec:discr}
+
+
+
+\subsection{Discretization of vector spaces}
+\label{subsec:discr:space}
+
+We start out by defining the discretization of a (infinite-dimensional) vector space with the help of 
+reduction and extension operators.
+
+\begin{definition}
+ \label{def:discr:space:space_discr}
+ Let $\Spc{X}$ be a vector space over a field $\Field = \Real \text{ or } \Complex$, and $n \in \Natural$.
+ An \emph{$n$-dimensional discretization $\Discr_{n}(\Spc{X})$ of $\Spc{X}$} is the tuple
+ %
+ \begin{equation*}
+  \Discr_{n}(\Spc{X}) := \bigl( \Spc{X}, \Field^{n}, \RnX, \EnX \bigr) 
+ \end{equation*}
+ %
+ where $\RnX \colon \Spc{X} \to \Field^{n}$ and $\EnX \colon \Field^{n} \to \Spc{X}$. The mappings $\RnX$ and $\EnX$ 
+ are called the \emph{restriction} and \emph{extension} operators associated with the discretization. 
+ $\Discr_n(\Spc{X})$ is a \emph{linear discretization} whenever both these mappings are linear.\\
+ %
+ There are two additional important mappings derived from $\RnX$ and $\EnX$,
+ %
+ \begin{align*}
+  & \PnX \colon \Spc{X} \to \Spc{X} \quad \text{with} \quad \PnX := \RnX \circ \EnX, \\
+  & \QnX \colon \Field^n \to \Field^n \quad \text{with} \quad \QnX := \EnX \circ \RnX,
+ \end{align*}
+ %
+ which we refer to as \emph{projection} operators associated with the discretization (although they are not 
+necessarily  projections in the strict sense).
+\end{definition}
+
+\begin{examp}
+ We begin with considering the case where $\Spc{X}$ is an $n$-dimensional vector space over $\Field$. Then $\Spc{X}$ is 
+ isomorphic to $\Field^{n}$, so we may choose $\EnX:=\RnX:=\Id$. The resulting discretization $( \Field^n, \Field^n, 
+\Id, \Id )$ is called 
+ the \emph{identity discretization}. 
+\end{examp}
+
+\begin{examp}
+ Another common discretization for an $n$-dimensional vector space $\Spc{X}$ is to consider a basis 
+ $B:=\{\psi_1,\ldots, \psi_{n}\}$ of $\Spc{X}$. Any element $f \in \Spc{X}$ can then be written as 
+ $f = \sum_{i=1}^n \alpha_i \psi_i$ for unique $\valpha(f) = (\alpha_1, \ldots, \alpha_{n})\in\Field^n$, so we define
+ %
+ \begin{equation*}
+  \RnX(f) := \valpha(f) \quad \text{and} \quad \EnX(\beta) := \sum_{i=1}^n \beta_i \psi_i. 
+ \end{equation*}
+ %
+ The resulting discretization $( \Spc{X}, \Field^{n}, \RnX, \EnX )$ is called the \emph{standard discretization \wrt 
+ the basis $B$}. The projection operators are given by
+ %
+ \begin{equation*}
+  \PnX(f) := \sum_{i=1}^n \valpha_i(f)\, \psi_i \quad \text{and} \quad \QnX(\beta) := \vbeta
+ \end{equation*}
+
+\end{examp}
+
+\begin{examp}
+ A common way to discretize a (possibly infinite-dimensional) vector space $\Spc{X}$ is as follows. Let 
+ $\psi_1, \ldots, \psi_n \in \Spc{X}$ be linearly independent space elements and 
+ $\lambda_1, \ldots, \lambda_n \in \Spc{X}^*$ be linearly independent functionals on $\Spc{X}$. Then, restriction and 
+ extension operators can be defined as
+ %
+ \begin{equation*}
+  \RnX(f) := \big( \lambda_1(f), \ldots, \lambda_n(f) \big) 
+  \quad \text{and} \quad
+  \EnX(\valpha) := \sum_{i=1}^n \alpha_i\, \psi_i.
+ \end{equation*}
+ %
+ The corresponding projection operators are
+ %
+ \begin{equation*}
+  \PnX(f) := \sum_{i=1}^n \lambda_i(f)\, \psi_i
+  \quad \text{and} \quad
+  \EnX(\valpha) := \bigg( \sum_{j=1}^n \alpha_j\, \lambda_i(\psi_j) \bigg)_{i=1}^n.
+ \end{equation*}
+
+\end{examp}
+
+
+\subsubsection{Discretization of product spaces}
+\label{subsubsec:discr:space:prod}
+
+In mathematics it is rather common to construct a new vector space from a collection of vector spaces. If the vector 
+spaces in this collection all have discretizations, then one can use these discretizations to define a natural 
+discretization on the aforementioned new vector space.
+
+\begin{definition}
+ \label{def:discr:space:prod:prod_space_discr}
+ Let $\Spc{X}_i$ for $i=1,\ldots,k$ be vector spaces over $\Field$ with $n_i$-dimensional discretizations 
+ $\Discr_{n_i}(\Spc{X}_i)$ given as
+ %
+ \begin{equation*}
+  \Discr_{n_i}(\Spc{X}_i) := \bigl( \Spc{X}_i, \Field^{n_i}, \REST{n_i}{\Spc{X}_i}, \EXT{n_i}{\Spc{X}_i} \bigr). 
+ \end{equation*}
+ %
+ Then the \emph{product discretization of $\Spc{X} := \Spc{X}_1 \times \ldots \times \Spc{X}_k$} is defined as 
+ %
+ \begin{equation*}
+  \Discr_{N}(\Spc{X}):=\{\Spc{X}, \Field^N, R_{N}^{\Spc{X}}, E_{N}^{\Spc{X}} \}
+ \end{equation*}
+ %
+ with $N := n_1 + \ldots + n_k$, where
+ %
+ \begin{align*}
+  \REST{N}{\Spc{X}}(f_1,\ldots,f_k) &:= \bigl( \REST{n_1}{\Spc{X}_1}(f_1),\ldots,\REST{n_k}{\Spc{X}_k}(f_k) \bigr)
+  \quad\text{for $f_i\in \Spc{X}_i$, $i=1,\ldots,k$} \\
+  \EXT{N}{\Spc{X}}(f_1,\ldots,f_k) &:= \bigl( \EXT{n_1}{\Spc{X}_1}(\valpha_1),\ldots,\EXT{n_k}{\Spc{X}_k}(\valpha_k) 
+  \bigr)
+  \quad\text{for $\valpha_i\in \Field^{n_i}$, $i=1,\ldots,k$.}
+ \end{align*}
+\end{definition}
+
+%
+Common special cases of product discretizations are $\Spc{X}:=\Field \times \Spc{X}_2$, which corresponds to the case 
+$k=2$ and $\Spc{X}_1=\Field$ with the identity discretization.
+
+
+
+\subsection{Natural discretization of operators}
+\label{subsec:discr:operator}
+
+When given an operator $\Op{T}$ between vector spaces $\Spc{X}$ and $\Spc{Y}$, each with a given discretization, 
+there is a natural discretized counterpart $\DiscOp{T} \colon \Field^n \to \Field^m$ defined as follows:
+
+\begin{definition}
+ \label{def:discr:operator:operator_discr}
+ Let $\Op{T}\colon \Spc{X} \to \Spc{Y}$ be an operator and $\Discr_n(\Spc{X})$ and $\Discr_m(\Spc{Y})$ be 
+ discretizations of the vector spaces as in \Cref{def:discr:space:space_discr}. The 
+ \emph{natural operator discretization of $\Op{T}$} is defined as $\DiscOp{T} \colon \Field^n \to \Field^m$ given as 
+ $\DiscOp{T} := \RmY \circ \Op{T} \circ \EnX$.
+\end{definition}
+
+
+\subsubsection{Natural discretization of spaces of linear operators}
+\label{subsubsec:discr:operator:linop_space}
+
+The above notion of a natural operator discretization immediately induces a natural discretization of the space of 
+linear operators from $\Spc{X}$ to $\Spc{Y}$.
+
+\begin{definition}
+ \label{def:discr:operator:linop_space:linop_space_discr}
+ Let $\Spc{X}$ and $\Spc{Y}$ be vector spaces with discretizations $\Discr_n(\Spc{X})$ and $\Discr_m(\Spc{Y})$ 
+ as in \Cref{def:discr:space:space_discr}. Let further $\Spc{L} := L(\Spc{X}, \Spc{Y})$ be the 
+ vector space of linear operators from $\Spc{X}$ to $\Spc{Y}$. The \emph{natural discretization of $\Spc{L}$} is 
+ given by
+ %
+ \begin{equation*}
+  \Discr_{m\times n}(\Spc{L}) = \left( \Spc{L}, \Field^{m\times n}, \REST{m\times n}{\Spc{L}}, \EXT{m\times n}{\Spc{L}}
+  \right)
+ \end{equation*}
+ %
+ with the operators
+ %
+ \begin{equation*}
+  \REST{m\times n}{\Spc{L}}(\Op{T}) := \RmY \circ \Op{T} \circ \EnX
+  \quad\text{and}\quad
+  \EXT{m\times n}{\Spc{L}}(\DiscOp{T}) := \EmY \circ \DiscOp{T} \circ \RnX.
+ \end{equation*}
+ %
+ We have here identified a linear operator from $\Field^n$ to $\Field^m$ with $\Field^{m\times n}$, the vector space 
+ of $(m \times n)$ matrices with elements in $\Field$.
+\end{definition}
+
+\begin{remark}
+ From the above considerations it becomes clear that it only makes sense to apply linear discretizations since 
+ otherwise, the discretization of a linear operator is not necessary linear. \textbf{Hence, from now on, all 
+ discretizations are assumed to be linear.}\\
+ %
+ Furthermore, a direct application of the same technique to the space of general (nonlinear) operators is not possible 
+ since the same operator $\REST{m\times n}{\Spc{L}}$ would produce nonlinear mappings $\Field^n \to \Field^m$, which is 
+ not compatible to our definition of space discretizations, \cf \Cref{def:discr:space:space_discr}.
+\end{remark}
+
+
+\subsubsection{Natural discretization of operator derivatives}
+\label{subsubsec:discr:operator:op_deriv}
+
+For $k \in \Natural$, the $k$'th Fr\'{e}chet derivative of a $k$ times continuously differentiable operator 
+$\Op{T} \colon \Spc{X} \to \Spc{Y}$ is defined as a mapping
+%
+\begin{equation*}
+ \partial^k \Op{T} \colon \Spc{X} \to \Spc{L}^k(\Spc{X}, \Spc{Y}),
+\end{equation*}
+%
+where $\Spc{L}^k$ is recursively defined as 
+%
+\begin{equation*}
+ \Spc{L}^0(\Spc{X}, \Spc{Y}) := \Spc{Y}, \quad 
+ \Spc{L}^k(\Spc{X}, \Spc{Y}) := \Spc{L}\big( \Spc{X}, \Spc{L}^{k-1}(\Spc{X}, \Spc{Y}) \big).
+\end{equation*}
+%
+This recursion can be resolved by setting
+%
+\begin{equation*}
+ \bar\partial^k \Op{T} \colon \Spc{X} \times \Spc{X}^k \to \Spc{Y}
+ \quad \text{with} \quad
+ \bar\partial^k \Op{T}(f; h_1, \ldots, h_k) := \partial^k\Op{T}(f)(h_1)\cdots(h_k).
+\end{equation*}
+%
+By definition, $\bar\partial^k\Op{T}$ is $k$-linear in the last $k$ arguments. We adopt this viewpoint in the following 
+and write $\partial^k$ instead of $\bar\partial^k$.\\
+%
+The natural discretization of a product space as given in \Cref{def:discr:space:prod:prod_space_discr} induces a 
+natural discretization of the $k$'th derivative similar to the natural operator discretization in 
+\Cref{def:discr:operator:operator_discr}.
+
+\begin{definition}
+ \label{def:discr:operator:op_deriv:operator_deriv_discr}
+ Let $\Spc{X}$ and $\Spc{Y}$ be normed vector spaces with discretizations $\Discr_n(\Spc{X})$ and $\Discr_m(\Spc{Y})$, 
+ respectively. Let further $\Op{T} \in \Spc{L}(\Spc{X}, \Spc{Y})$ be a $k$ times continuously Fr\'{e}chet 
+ differentiable operator for some $k \in  \Natural$. The \emph{natural discretization of the $k$'th derivative} 
+ $\partial^k \Op{T} \colon \Spc{X} \times \Spc{X}^k \to \Spc{Y}$ is defined as the mapping
+ %
+ \begin{equation*}
+  \partial^k \DiscOp{T} \colon \Field^n \times \Field^{k\cdot n} \to \Field^m
+  \quad \text{with} \quad
+  \partial^k \DiscOp{T} = \RmY \circ \partial^k \Op{T} \circ (\EnX)^{k+1}.
+ \end{equation*}
+ %
+ The notation $(\EnX)^{k+1}$ stands for the $(k+1)$-tuple $(\EnX, \ldots, \EnX)$, i.e., 
+ %
+ \begin{equation*}
+  \partial^k \Op{T} \circ (\EnX)^{k+1}(\valpha; \vbeta_1, \ldots, \vbeta_k) :=
+ \partial^k \Op{T}\big( \EnX(\valpha); \EnX(\vbeta_1), \ldots, \EnX(\vbeta_k) \big).
+ \end{equation*}
+\end{definition}
+
+
+The following lemma shows that under rather weak conditions on the mappings $E_n^{\Spc{X}}$ and $R_m^{\Spc{Y}}$, the 
+natural discretization of the operator derivative as in \Cref{def:discr:operator:op_deriv:operator_deriv_discr} is in 
+fact the Fr\'{e}chet derivative of the natural operator discretization.
+
+\begin{lemma}
+ \label{lemma:discr:operator:op_deriv:natural_is_deriv}
+ Let $\Spc{X}$ and $\Spc{Y}$ be normed vector spaces with discretizations as before, and let 
+ $\Op{T} \in \Spc{L}(\Spc{X}, \Spc{Y})$ be a $k$ times continuously Fr\'{e}chet differentiable 
+ operator. If $E_n^{\Spc{X}}$ and $R_m^{\Spc{Y}}$ are bounded, the natural discretization $\DiscOp{T}$ of $\Op{T}$ is 
+ $k$ times  continuously Fr\'{e}chet differentiable, and its $k$'th Fr\'{e}chet derivative is the natural 
+ discretization of $\partial^k\Op{T}$.
+\end{lemma}
+
+\begin{proof}
+ We prove the claim for $k=1$ since the statement for $k=0$ is trivial, and higher order derivatives follow by 
+ induction.\\
+ %
+ For $\valpha,\vbeta \in \Field^n$, it is
+ %
+ \begin{equation*}
+  \DiscOp{T}(\valpha + \vbeta) = \RmY \circ \Op{T} \circ \EnX (\alpha + \beta).
+ \end{equation*}
+ %
+ From the definition of $\partial \Op{T}$ it follows that
+ %
+ \begin{align*}
+  \Op{T}\big(\EnX(\valpha + \vbeta)\big)
+  &= \Op{T}\big(\EnX(\valpha)\big) + \partial\Op{T}\big(\EnX(\valpha)\big)\big(\EnX(\vbeta)\big) +
+  o\big(\NORMLR{\EnX(\vbeta)}_{\Spc{X}}\big) \\
+  &= \Op{T} \circ \EnX(\valpha) + \partial\Op{T}\circ (\EnX)^2\,(\valpha; \vbeta) + o\big(\NORM{\vbeta}_n \big)
+ \end{align*}
+ %
+ for $\NORM{\vbeta}_n \to 0$ since $\EnX$ is a bounded operator. By composing from left with the bounded operator 
+ $\RmY$, one gets
+ %
+ \begin{align*}
+  \DiscOp{T}(\valpha + \vbeta)
+  &= \RmY \circ \Op{T} \circ \EnX(\valpha) + \RmY \circ \partial\Op{T}\circ (\EnX)^2\,(\valpha)(\vbeta) +
+  o\big(\NORM{\vbeta}_n \big) 
+  \\
+  &= \DiscOp{T}(\alpha) + \RmY \circ \partial\Op{T}\circ (\EnX)^2\,(\valpha)(\vbeta) + o\big(\NORM{\vbeta}_n \big),
+ \end{align*}
+ %
+ hence $\partial\DiscOp{T}$ is by definition given by the second term.
+\end{proof}
+
+
+\subsubsection{Natural discretization of the adjoint}
+\label{subsubsec:discr:operator:op_adj}
+
+If $\Spc{X}$ and $\Spc{Y}$ are Hilbert spaces over the same field, one can consider the adjoint operator 
+$\Op{T}^* \colon \Spc{Y} \to \Spc{X}$ and its natural discretization. The following lemma clarifies under which 
+conditions this discretization is the adjoint of the operator discretization $\DiscOp{T}$.
+%
+\begin{lemma}
+ \label{lemma:discr:operator:op_adj:natural_is_adj}
+ Let $\Spc{X}$ and $\Spc{Y}$ are Hilbert spaces with linear discretizations as in 
+ \Cref{def:discr:space:space_discr}, and let $\Op{T} \colon \Spc{X} \to \Spc{Y}$ be a bounded linear operator. 
+ Then the natural discretization of $\Op{T}^*$ given by
+ %
+ \begin{equation*}
+  \DiscOp{T}^* \colon \Field^m \to \Field^n
+  \quad \text{with} \quad
+  \DiscOp{T}^* := \RnX \circ \Op{T}^* \circ \EmY
+ \end{equation*}
+ %
+ is the adjoint of the natural discretization $\DiscOp{T} := \RmY \circ \Op{T} \circ \EnX$ of $\Op{T}$ if the operators 
+ $\EnX$ and $\RmY$ are bounded and additionally satisfy
+ %
+ \begin{equation*}
+  \EnX = (\RnX)^* \quad \text{and} \quad \EmY = (\RmY)^*.
+ \end{equation*}
+\end{lemma}
+
+
+\begin{proof}
+ Since $\EnX$ and $\RmY$ are bounded and linear, the same is true for $\DiscOp{T}$. Its adjoint is given by
+ %
+ \begin{equation*}
+  \DiscOp{T}^* = (\RmY \circ \Op{T} \circ \EnX)^* = (\EnX)^* \circ \Op{T}^* \circ (\RmY)^*,
+ \end{equation*}
+ %
+ which is apparently equal to the natural discretization $\RnX \circ \Op{T}^* \circ \EmY$ of $\Op{T}^*$ under the 
+ stated conditions.
+\end{proof}
+
+\begin{remark}
+ This statement can be generalized to densely defined linear operators since a unique adjoint exists also for this 
+ class of operators. Another possible generalization is to dual pairings and instead of Hilbert spaces. The same rules 
+ as above apply for these operators when chained with bounded linear operators from left or right.
+\end{remark}
+
+
+\subsubsection{Natural discretization of compositions}
+\label{subsubsec:discr:operator:op_comp}
+
+Mappings or operators can be chained if their domains and ranges are compatible. We investigate how the natural 
+discretization of an operator composition relates to the composition of the single discretized operators.
+
+\begin{lemma}
+ \label{lemma:discr:operator:op_comp:natural_is_comp}
+ Let $\Spc{X}, \Spc{Y}$ and $\Spc{Z}$ be vector spaces with discretizations $\Discr_n(\Spc{X})$, 
+ $\Discr_m(\Spc{Y})$ and $\Discr_k(\Spc{Z})$, respectively. Let further
+ %
+ \begin{equation*}
+  \Op{T} \colon \Spc{X} \to \Spc{Y} \quad \text{and} \quad \Op{U} \colon \Spc{Y} \to \Spc{Z}
+ \end{equation*}
+ %
+ be given operators. The natural discretization
+ %
+ \begin{equation*}
+  \DiscOp{S} \colon \Field^n \to \Field^k 
+  \quad \text{with} \quad
+  \DiscOp{S} := \REST{k}{\Spc{Z}} \circ \Op{U} \circ \Op{T} \circ \EnX
+ \end{equation*}
+ %
+ of the operator composition $\Op{U} \circ \Op{T}$ is equal to the composition of the discretized operators
+ %
+ \begin{equation*}
+  \DiscOp{T} := \RmY \circ \Op{T} \circ \EnX
+  \quad \text{and} \quad
+  \DiscOp{U} = \REST{k}{\Spc{Z}} \circ \Op{U} \circ \EmY
+ \end{equation*}
+ %
+ if either the operator $\PmY = \EmY \circ \RmY$ is the identity on the range of $\Op{T} \circ \EnX$ or if for each 
+ $\vnu \in \Field^k$, the preimage $(\REST{k}{\Spc{Z}} \circ \Op{U})^{-1}(\{\vnu\})$ is invariant under 
+ $\PmY$.
+\end{lemma}
+
+\begin{proof}
+ Obviously, it is
+ %
+ \begin{equation*}
+  \DiscOp{U} \circ \DiscOp{T} = \REST{k}{\Spc{Z}} \circ \Op{U} \circ \EmY \circ \RmY \circ \Op{T} \circ \EnX,
+ \end{equation*}
+ %
+ which is equal to $\DiscOp{S}$ as defined above if the factor $\PmY = \EmY \circ \RmY$ can be dropped. This is the 
+ case under the given condition as shown in the proof of \Cref{lemma:prop:corresp:natural_op_discr_corresp}.
+\end{proof}
+
+
+
+\subsection{Correspondence principle}
+\label{subsec:discr:corresp}
+
+We proceed by investigating conditions that a discretization should fulfill. Often, we need to perform various 
+operations on $\Spc{X}$, and there are corresponding operations on $\Field^{n}$. It is then important that such 
+operations are compatible \wrt the discretization. In the general setting, most of these operations can be stated as 
+mappings between appropriately chosen vector spaces. Thus, we begin with defining the notion of compatibility of 
+mappings \wrt discretizations. 
+%
+\begin{definition}
+ \label{def:discr:corresp:operator_compat}
+ Let $\Spc{X}$ and $\Spc{Y}$ be vector spaces over $\Field$ with discretizations $\Discr_{n}(\Spc{X})$ and 
+ $\Discr_{m}(\Spc{Y})$, respectively. Now, consider the operators
+ %
+ \begin{equation*}
+  \Op{T} \colon \Spc{X} \to \Spc{Y} \quad\text{and}\quad \DiscOp{T} \colon \Field^{n} \to \Field^{m}.
+ \end{equation*}
+ \vspace{-2\baselineskip}
+ \begin{enumerate}[(a)]
+  \item \label{def:discr:corresp:operator_compat:a_exact}
+  \emph{$\DiscOp{T}$ exactly corresponds to $\Op{T}$ under the discretizations $\Discr_{n}(\Spc{X})$ and  
+  $\Discr_{m}(\Spc{Y})$} if the following holds for any $n,m \in \Natural$:
+  %
+  \begin{equation*}
+   \RmY \circ \Op{T} = \DiscOp{T} \circ \RnX  \quad\text{and}\quad  \EmY \circ \DiscOp{T} = \Op{T} \circ \EnX.
+  \end{equation*}
+
+  \item \label{def:discr:corresp:operator_compat:b_approx}
+  \emph{$\DiscOp{T}$ approximately corresponds to $\Op{T}$ under the discretizations $\Discr_{n}(\Spc{X})$ and 
+  $\Discr_{m}(\Spc{Y})$} if the following holds:
+  %
+  \begin{align*} 
+   \lim_{n,m\to \infty} \NORMLR{\RmY \circ \Op{T} - \DiscOp{T} \circ \RnX}_{m} &= 0  \\[0.5em]
+   \lim_{n,m\to \infty} \NORMLR{\EmY \circ \DiscOp{T} - \Op{T} \circ \EnX}_{\Spc{Y}} &= 0.
+  \end{align*}
+  %
+ \end{enumerate}  
+ If any of the above holds, then we say that $\DiscOp{T}$ and $\Op{T}$ \emph{correspond to each other under the 
+ discretizations $\Discr_{n}(\Spc{X})$ and $\Discr_{m}(\Spc{Y})$}.
+\end{definition}
+
+
+
+\subsection{Summary}
+\label{subsec:discr:summary}
+
+Let $\Field = \Real \text{ or } \Complex$ and $m, n, k \in \Natural$. We investigated various settings of (natural) 
+discretizations as summarized in \Cref{tab:discr:summary:def_summary}.
+%
+\begin{table}[ht]
+ \label{tab:discr:summary:def_summary}
+ \renewcommand{\arraystretch}{1.3}
+ \begin{tabular}{lll}
+  \textbf{Object} & \textbf{(Natural) Discretization} & \textbf{Defined in}                                           \\
+  %
+  %
+  \noalign{\smallskip} \hline\hline \noalign{\smallskip}
+  %
+  %
+  Vector space             & $\Discr_n(\Spc{X}) = (\Spc{X}, \Field^n, \RnX, \EnX)$                                   & 
+  \Cref{def:discr:space:space_discr}                                                                                  \\
+  $\Spc{X}$ over $\Field$  & $\RnX \colon \Spc{X} \to \Field^n$ linear                                               &\\
+                           & $\EnX \colon \Field^n \to \Spc{X}$ linear                                               &\\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Product space            & $\Discr_N(\Spc{X}) = (\Spc{X}, \Field^N, \REST{N}{\Spc{X}}, \EXT{N}{\Spc{X}})$          & 
+  \Cref{def:discr:space:prod:prod_space_discr}                                                                        \\
+  $\Spc{X} = \bigotimes_{i=1}^k \Spc{X}_i$ & $N = \sum_{i=1}^k n_i$                                                  &\\
+                           & $\REST{N}{\Spc{X}} = \big( \REST{n_1}{\Spc{X}_1}, \ldots, \REST{n_k}{\Spc{X}_k} \big)$  &\\
+                           & $\EXT{N}{\Spc{X}} = \big( \EXT{n_1}{\Spc{X}_1}, \ldots, \EXT{n_k}{\Spc{X}_k} \big)$     &\\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Operator $\Op{T} \colon \Spc{X} \to \Spc{Y}$  & $\DiscOp{T} \colon \Field^n \to \Field^m$            
+  & \Cref{def:discr:operator:operator_discr}                                                                          \\
+                           & $\DiscOp{T} = \RmY \circ \Op{T} \circ \EnX$                                             &\\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Vector space of         & $\Discr_{m\times n}(\Spc{L}) = (\Spc{L}, \Field^{m\times n}, \REST{m\times n}{\Spc{L}},
+  \EXT{m\times n}{\Spc{L}})$ & \Cref{def:discr:operator:linop_space:linop_space_discr}                                \\
+  linear operators        & $\Field^{m\times n} \simeq L(\Field^n, \Field^m)$                                        &\\
+  $\Spc{L} = L(\Spc{X}, \Spc{Y})$ & $\REST{m\times n}{\Spc{L}}(\Op{T}) = \RmY \circ \Op{T} \circ \EnX$               &\\
+                          & $\EXT{m\times n}{\Spc{L}}(\DiscOp{T}) = \EmY \circ \DiscOp{T} \circ \RnX$                &\\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Fr\'{e}chet derivative & $\partial^k\DiscOp{T} \colon \Field^n \times \Field^{k\cdot n} \to \Field^m$              & 
+  \Cref{def:discr:operator:op_deriv:operator_deriv_discr}                                                             \\
+  $\partial^k \Op{T} \colon \Spc{X}\times \Spc{X}^k \to \Spc{Y}$ & 
+  $\partial^k\DiscOp{T} = \RmY \circ \partial^k \Op{T} \circ (\EnX)^{k+1}$                                           &\\
+                         & $(\EnX)^{k+1} = (\underbrace{\EnX, \ldots, \EnX}_{k+1 \text{ operators }})$                \\
+  %
+  %
+  \noalign{\smallskip} \hline\hline \noalign{\smallskip}
+  %
+  %
+  Correspondence of & $\RmY \circ \Op{T} = \DiscOp{T} \circ \RnX$ & \Cref{def:discr:corresp:operator_compat} \\
+  $\Op{T} \colon \Spc{X} \to \Spc{Y}$ and & $\EmY \circ \DiscOp{T} = \Op{T} \circ \EnX$                              &\\
+  $\DiscOp{T} \colon \Field^n \to \Field^m$  &  &                                                                     \\
+  %
+  %
+  \noalign{\smallskip} \hline
+ \end{tabular}
+ \caption{Summary of definitions in \Cref{sec:discr}}
+ \renewcommand{\arraystretch}{1.0}
+\end{table}
+
+
+
+
+
+\section{Mathematical properties of discretizations}
+\label{sec:prop}
+
+
+
+\subsection{Correspondence}
+\label{subsec:prop:corresp}
+
+In the following Lemma, we investigate under which conditions the natural discretization of an operator leads to 
+compatibility in the sense of \Cref{def:discr:corresp:operator_compat}. These conditions can be stated more 
+specifically in special cases, see ??
+
+\begin{lemma}
+ \label{lemma:prop:corresp:natural_op_discr_corresp}
+ Let $\DiscOp{T}$ be the natural linear discretization of an operator $\Op{T}$ based on linear space discretizations as 
+ in \Cref{def:discr:space:space_discr}, and let $\PnX = \EnX \circ \RnX$ and $\PmY = \EmY \circ \RmY$ as in 
+ \Cref{def:discr:space:space_discr}. Then the following holds:
+ 
+ \begin{enumerate}[(a)]
+  \item \label{lemma:prop:corresp:natural_op_discr_corresp:a_general}
+  $\DiscOp{T}$ and $\Op{T}$ exactly correspond to each other if and only if (1) for each $\vbeta \in \Field^m$, the 
+  preimage $(\RmY \circ \Op{T})^{-1}(\{\vbeta\})$ is invariant under $\PnX$ and (2) $\PmY$ is the identity operator on 
+  the range of $\Op{T} \circ \EnX$.
+
+  \item \label{lemma:prop:corresp:natural_op_discr_corresp:b_hilbert_linear}
+  If $\Spc{X}$ is a Hilbert space and $\Op{T}$ and $\RmY$ are linear and bounded, the condition on $\PnX$ in 
+  \eqref{lemma:prop:corresp:natural_op_discr_corresp:a_general} can be rephrased as the following: 
+  (1a) $\PnX$ is equal to the identity operator on $\nullspace(\RmY \circ \Op{T})^\perp$ and (1b) 
+  $\nullspace(\RmY \circ \Op{T})$ is invariant under $\PnX$.
+  
+  \todo{Maybe one should say something about approximate correspondence if possible.}
+ \end{enumerate}
+\end{lemma}
+
+
+\begin{proof}
+ \begin{enumerate}[(a)]
+  \item Right-composing the discretized operator $\DiscOp{T} = \RmY \circ \Op{T} \circ \EnX$ with $\RnX$ results in
+  %
+  \begin{equation*}
+   \DiscOp{T} \circ \RnX = \RmY \circ \Op{T} \circ \PnX,
+  \end{equation*}
+  %
+  and by left-composing $\DiscOp{T}$ with $\EmY$, we get
+  %
+  \begin{equation*}
+   \EmY \circ \DiscOp{T} = \PmY \circ \Op{T} \circ \EnX.
+  \end{equation*}
+  %
+  Let now $\vbeta \in \Field^m$ be arbitrary and $A := (\RmY \circ \Op{T})^{-1}(\{\vbeta\})$ be its preimage.
+  To show the ``if'' part, we observe that for each $f \in A$, it is $\PnX(f) \in A$ since $A$ is invariant under 
+  $\PnX$. Hence, $\RmY \circ \Op{T} \big( \PnX(f) \big) = \vbeta$. This shows 
+  $\RmY \circ \Op{T} \circ \PnX = \RmY \circ \Op{T}$, i.e. the first condition 
+  in \Cref{def:discr:corresp:operator_compat}~\eqref{def:discr:corresp:operator_compat:a_exact} is fulfilled.\\
+  %
+  Obviously, if $\PmY$ is the identity on the range of $\Op{T} \circ \EnX$, the right hand side of the second identity 
+  is $\PmY \circ \Op{T} \circ \EnX = \Op{T} \circ \EnX$. This implies the second equation in 
+  \Cref{def:discr:corresp:operator_compat}~\eqref{def:discr:corresp:operator_compat:a_exact} and concludes this part of 
+  the proof.\\
+  %
+  For the ``only if'' part, we assume that there is $f \in A$ with $\PnX(f) \not\in A$. By definition, this means 
+  $\RmY \circ \Op{T} \big( \PnX(f) \big) \neq \vbeta$, which violates the condition
+  $\vbeta = \RmY \circ \Op{T} (f) = \RmY \circ \Op{T} \circ \PnX (f)$. Hence, $A$ must be invariant under $\PnX$.\\
+  %
+  Apparently, $\PmY \circ \Op{T} \circ \EnX = \Op{T} \circ \EnX$ means that for each $g = \Op{T} \circ \EnX(\valpha)$, 
+  it holds $\PmY(g) = g$, i.e. $\PmY$ is the identity on the range of $\Op{T} \circ \EnX$.
+
+  \item To prove \eqref{lemma:prop:corresp:natural_op_discr_corresp:b_hilbert_linear}, we first observe that 
+  $\nullspace(\RmY \circ \Op{T}) = (\RmY \circ \Op{T})^{-1}(\{\vzero\})$. Further, since $\Spc{X}$ is a Hilbert space 
+  and $\RmY \circ \Op{T}$ linear and bounded, each $f \in \Spc{X}$ can be uniquely decomposed into 
+  $f = f_0 + \tilde f$ with  $f_0 \in \nullspace(\RmY \circ \Op{T})$ and 
+  $\tilde f \in \nullspace(\RmY \circ \Op{T})^\perp$. Hence, for each $\vbeta \in \Field^m$,
+  %
+  \begin{equation*}
+   (\RmY \circ \Op{T})^{-1}({\vbeta}) = \tilde f + \nullspace(\RmY \circ \Op{T})
+  \end{equation*}
+  %
+  for a unique $\tilde f \in \nullspace(\RmY \circ \Op{T})^\perp$. Thus, the conditions on $\PnX$ in 
+  \eqref{lemma:prop:corresp:natural_op_discr_corresp:b_hilbert_linear} are equivalent to those in   
+  \eqref{lemma:prop:corresp:natural_op_discr_corresp:a_general}.
+  
+%  \item 
+ \end{enumerate}
+\end{proof}
+
+
+
+\subsection{Compatibility of linear combinations}
+\label{subsec:prop:lincomb}
+
+Let $\Spc{X}$ be a vector space over $\Field$ with its usual discretization. The linear combination in vector spaces 
+can be formally defined as an operator, and as such it implies a natural discretization. In the following, we 
+investigate how it relates to the usual linear combination in $\Field^n$ and under which conditions they correspond to 
+each other.
+
+\begin{lemma}
+ \label{lemma:prop:lincomb:natural_corresp}
+ Let $\Spc{X}$ be a vector space over $\Field$ with linear discretization $\Discr_{n}(\Spc{X})$.
+ \begin{enumerate}[(a)]
+  \item The linear combination in $\Field^n$ is the natural discretization of the linear combination in $\Spc{X}$ if 
+  and only if the projection $\QnX = \RnX \circ \EnX$ is the identity.
+  
+  \item The linear combinations in $\Spc{X}$ and $\Field^n$ exactly correspond to each other.
+ \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+ \begin{enumerate}[(a)]
+  \item The linear combination in $\Spc{X}$ can be written as an operator 
+  %
+  \begin{equation*}
+   \Op{T} \colon \Field \times \Field \times \Spc{X} \times \Spc{X} \to \Spc{X}
+   \quad \text{with} \quad
+   \Op{T}(\mu, \lambda, f, g) := \lambda \cdot f + \mu \cdot g
+  \end{equation*}
+  %
+  with natural discretization $\DiscOp{T} = \RnX \circ \Op{T} \circ (\Op{\Id}, \Op{\Id}, \EnX, \EnX)$.
+  Hence, for $\lambda, \mu \in \Field$ and $\valpha, \vbeta \in \Field^n$, it is
+  %
+  \begin{align*}
+   \DiscOp{T}(\lambda, \mu, \valpha, \vbeta) 
+   &= \RnX \circ \Op{T} \big( \lambda, \mu, \EnX(\valpha), \EnX(\vbeta) \big)\\
+   &= \RnX \big( \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta) \big) \\ 
+   &= \RnX \circ \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta).
+  \end{align*}
+  %
+  This expression is equal to $\lambda \cdot \valpha + \mu \cdot \vbeta$ for all $\lambda, \mu \in \Field$ and all 
+  $\valpha, \vbeta \in \Field^n$ if and only if $\RnX \circ \EnX = \Op{\Id}$.
+
+  \item The conditions for exact correspondence according to \Cref{def:discr:corresp:operator_compat} can be 
+  rephrased as
+  %
+  \begin{align*}
+   \RnX(\lambda \cdot f + \mu \cdot g) &= \lambda \cdot \RnX(f) + \mu \cdot \RnX(g), \\
+   \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta) &= \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta),
+  \end{align*}
+  %
+  and are fulfilled due to the linearity of $\RnX$ and $\EnX$.
+ \end{enumerate}
+\end{proof}
+
+\begin{remark}
+ \label{remark:prop:lincomb:natural_linop_space}
+ In the vector space $\Spc{L} := \Spc{L}(\Spc{X}, \Spc{Y})$ with given discretizations in $\Spc{X}$ and $\Spc{Y}$, the 
+ natural restriction and extension operators of the discretization $\Discr_{m\times n}(\Spc{L})$ are given by
+ %
+ \begin{equation*}
+  \REST{m\times n}{\Spc{L}}(\Op{T}) = \RmY \circ \Op{T} \circ \EnX
+  \quad\text{and}\quad
+  \EXT{m\times n}{\Spc{L}}(\DiscOp{T}) = \EmY \circ \DiscOp{T} \circ \RnX,
+ \end{equation*}
+ %
+ see \Cref{def:discr:operator:linop_space:linop_space_discr}. Hence, the condition that the natural discretization of 
+ the linear combination in $\Spc{L}$ is the linear combination in $\Field^{m\times n}$ reads as
+ %
+ \begin{align*}
+  \DiscOp{T} 
+  &= \REST{m\times n}{\Spc{L}}\big( \EXT{m\times n}{\Spc{L}}(\DiscOp{T}) \big)
+  = \RmY \circ \EXT{m\times n}{\Spc{L}}(\DiscOp{T}) \circ \EnX
+  = \RmY \circ \EmY \circ \DiscOp{T} \circ \RnX \circ \EnX \\
+  &= \QmY \circ \DiscOp{T} \circ \QnX.
+ \end{align*}
+ %
+ Thus, if $\QnX = \Op{\Id}$ and $\QmY = \Op{\Id}$, the operator space discretization $\Discr_{m\times n}(\Spc{L})$ 
+ automatically fulfills the condition $\COPROJ{m\times n}{\Spc{L}} = \Op{\Id}$ needed for the natural discretization of 
+ the linear combination.
+\end{remark}
+
+
+
+\subsection{Compatibility of norms}
+\label{subsec:prop:norm}
+
+We now consider the setting when $\Spc{X}$ is a normed vector space, including the space of bounded linear operators.
+
+\begin{lemma}
+ \label{lemma:prop:norm:natural_corresp}
+ Let $\Spc{X}$ be a vector space over $\Field$ with norm $\NORM{\cdot}_{\Spc{X}}$ and linear discretization 
+ $\Discr_n(\Spc{X})$. Let further $\NORM{\cdot}_n$ be a norm in $\Field^n$.
+ %
+ \begin{enumerate}[(a)]
+  \item \label{lemma:prop:norm:natural_corresp:a_natural}
+  $\NORM{\cdot}_n$ is the natural discretization of $\NORM{\cdot}_{\Spc{X}}$ if and only if
+  %
+  \begin{equation*}
+   \EnX \colon (\Field^n, \NORM{\cdot}_n) \to (\Spc{X}, \NORM{\cdot}_{\Spc{X}})
+  \end{equation*}
+  %
+  is an isometry.
+  
+  \item \label{lemma:prop:norm:natural_corresp:b_corresp}
+  $\NORM{\cdot}_n$ corresponds to $\NORM{\cdot}_{\Spc{X}}$ if and only if
+  %
+  \begin{equation*}
+   \RnX \colon (\Spc{X}, \NORM{\cdot}_{\Spc{X}}) \to (\Field^n, \NORM{\cdot}_n)
+   \quad \text{and} \quad
+   \EnX \colon (\Field^n, \NORM{\cdot}_n) \to (\Spc{X}, \NORM{\cdot}_{\Spc{X}})
+  \end{equation*}
+  %
+  are isometries.
+ \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+ We write the norm as an operator
+ %
+ \begin{equation*}
+  \Op{T} \colon \Spc{X} \to \Real \quad \text{with} \quad \Op{T}(f) := \NORM{f}_{\Spc{X}}.
+ \end{equation*}
+ %
+ Its natural discretization is given by
+ %
+ \begin{equation*}
+  \DiscOp{T} \colon \Field^n \to \Real \quad \text{with} \quad \DiscOp{T} = \Op{\Id} \circ \Op{T} \circ \EnX,
+ \end{equation*}
+ %
+ \ie, $\DiscOp{T}(\valpha) = \NORM{\EnX(\valpha)}_{\Spc{X}}$. This proves the claim in 
+ \eqref{lemma:prop:norm:natural_corresp:a_natural}.\\
+ %
+ The conditions for correspondence read as
+ %
+ \begin{equation*}
+  \NORM{\cdot}_{\Spc{X}} = \NORM{\cdot}_n \circ \RnX
+  \quad \text{and} \quad
+  \NORM{\cdot}_n = \NORM{\cdot}_{\Spc{X}} \circ \EnX
+ \end{equation*}
+ %
+ and are equivalent to the isometry conditions in \eqref{lemma:prop:norm:natural_corresp:b_corresp}.
+\end{proof}
+
+\begin{remark}
+ The proof additionally shows that the natural norm discretization fulfills
+ $\DiscOp{T}(\valpha) \leq \NORM{\EnX}\, \NORM{\valpha}_n$, i.e. the discretized norm can be bounded from above 
+ with the given norm in $\Field^n$.
+\end{remark}
+
+
+\paragraph{Operator norms}
+
+In a similar way, we can analyze the relation between norms of continuous and discretized linear operators. 
+The norms of operators $\Op{T} \in \Spc{L} := \Spc{L}(\Spc{X}, \Spc{Y})$ and 
+$\DiscOp{T} \in \Spc{L}(\Field^n, \Field^m) \simeq \Field^{m\times n}$ are defined as
+%
+\begin{equation*}
+ \NORM{\Op{T}}_{\Spc{L}} := \sup_{\NORM{f}_{\Spc{X}} \leq 1} \NORM{\Op{T}(f)}_{\Spc{Y}}
+ \quad \text{and} \quad
+ \NORM{\DiscOp{T}}_{m\times n} := \sup_{\NORM{\valpha}_n \leq 1} \NORM{\DiscOp{T}(\valpha)}_m.
+\end{equation*}
+%
+The following Lemma shows how operator and matrix norms relate to each other under discretization.
+
+\begin{lemma}
+ \label{lemma:prop:norm:op_norm_est}
+ Let $\Spc{X}$ and $\Spc{Y}$ be normed vector spaces with linear discretizations $\Discr_n(\Spc{X})$ and 
+ $\Discr_m(\Spc{Y})$, respectively. Let further $\REST{m\times n}{\Spc{L}}(\Op{T})$ and 
+ $\EXT{m\times n}{\Spc{L}}(\DiscOp{T})$ be the natural restriction and extension operators in 
+ $\Discr_{m\times n}(\Spc{L})$ as given in \Cref{def:discr:operator:linop_space:linop_space_discr}.
+ %
+ \begin{enumerate}[(a)]
+  \item \label{lemma:prop:norm:op_norm_est:a_rest}
+  If the operator norms of $\RmY$ and $\EnX$ are bounded by 1, then
+  %
+  \begin{equation*}
+   \NORM{R_{m\times n}^{\Spc{L}}}_{\Spc{L}(\Spc{L},\Field^{m\times n})} \leq 1.
+  \end{equation*}
+  %
+  Furthermore, if $\RmY$ and $\EnX$ are isometries and $\RmY$ is surjective, $\EXT{m\times n}{\Spc{L}}$ is an 
+  isometry, \ie, $\NORM{\cdot}_{m\times n}$ is the natural discretization of $\NORM{\cdot}_{\Spc{L}}$.
+  
+  \item \label{lemma:prop:norm:op_norm_est:b_ext}
+  If the operator norms of $\RnX$ and $\EmY$ are bounded by 1, then
+  %
+  \begin{equation*}
+   \NORM{E_{m\times n}^{\Spc{L}}}_{\Spc{L}(\Field^{m\times n}, \Spc{L})} \leq 1.
+  \end{equation*}
+ \end{enumerate}
+\end{lemma}
+
+
+\begin{proof}
+ \begin{enumerate}[(a)]
+  \item For $\Op{T} \in \Spc{L}$ and $\DiscOp{T} = \REST{m\times n}{\Spc{L}}(\Op{T})$ we have
+  %
+  \begin{equation*}
+   \NORMLR{\DiscOp{T}(\valpha)}_m = \NORMLR{\RmY \left( \Op{T}\big( \EnX(\valpha) \big) \right)}_m
+   \leq \NORMLR{\Op{T}\big( \EnX(\valpha) \big)}_{\Spc{Y}}
+  \end{equation*}
+  %
+  since $\NORM{\RmY} \leq 1$. Furthermore, $\EnX$ maps the unit ball in $\Field^n$ to a subset of the unit ball in
+  $\Spc{X}$ since $\NORM{\EnX} \leq 1$. Hence,
+  %
+  \begin{equation*}
+   \sup_{\NORM{\valpha}_n \leq 1} \NORMLR{\Op{T}\big( \EnX(\valpha) \big)}_{\Spc{Y}}
+   = \sup_{\STACK{f=\EnX(\valpha)}{\NORM{\valpha}_n \leq 1}} \NORMLR{\Op{T}(f)}_{\Spc{Y}}
+   \leq \sup_{\NORM{f}_{\Spc{X}} \leq 1} \NORMLR{\Op{T}(f)}_{\Spc{Y}},
+  \end{equation*}
+  %
+  which proves that $\NORMLR{\REST{m\times n}{\Spc{L}}(\Op{T})} \leq \NORM{\Op{T}}$.
+
+  \item Analogously, for $\DiscOp{T} \in \Field^{m\times n}$ and $\Op{T} = \EXT{m\times n}{\Spc{L}}(\DiscOp{T})$ it is
+  %
+  \begin{equation*}
+   \NORMLR{\Op{T}(f)}_{\Spc{Y}} = \NORMLR{\EmY \left( \DiscOp{T}\big( \RnX(f) \big) \right)}_{\Spc{Y}}
+   \leq \NORMLR{\DiscOp{T}\big( \RnX(f) \big)}_m
+  \end{equation*}
+  %
+  since $\NORM{\EmY} \leq 1$. In addition, $\RnX$ maps the unit ball in $\Spc{X}$ to a subset of the unit 
+  ball in $\Field^n$ since $\NORM{\RnX} \leq 1$. Hence,
+  %
+  \begin{equation*}
+   \sup_{\NORM{f}_{\Spc{X}} \leq 1} \NORMLR{\DiscOp{T}\big( \RnX(f) \big)}_m
+   = \sup_{\STACK{\valpha=\RnX(f)}{\NORM{f}_{\Spc{X}} \leq 1}} \NORMLR{\DiscOp{T}(\valpha)}_m
+   \leq \sup_{\NORM{\valpha}_n \leq 1} \NORMLR{\DiscOp{T}(\valpha)}_m,
+  \end{equation*}
+  %
+  \ie, $\NORMLR{E_{m\times n}^{\Spc{L}}(\DiscOp{T})} \leq \NORM{\DiscOp{T}}$.\\[1em]
+  %
+  If $\EmY$ is an isometry, the first inequality becomes an equality, and if $\RnX$ is a surjective isometry, it maps
+  the unit ball in $\Spc{X}$ \emph{onto} the unit ball in $\Field^n$. Thus, also the second inequality becomes an 
+  equality, showing that $\NORMLR{\EXT{m\times n}{\Spc{L}}(\DiscOp{T})} = \NORM{\DiscOp{T}}$ for all 
+  $\DiscOp{T} \in \Field^{m\times n}$ in this case. According to 
+  \Cref{lemma:prop:norm:natural_corresp}~\eqref{lemma:prop:norm:natural_corresp:a_natural}, this means that the natural 
+  operator norm discretization is the matrix norm in $\Field^{m\times n}$.
+ \end{enumerate}
+\end{proof}
+
+
+\begin{remark}
+ \label{remark:prop:norm:op_norm_corresp}
+ An analogous isometry property for $\REST{m\times n}{\Spc{L}}$ can only hold if $\DIM(\Spc{X}) \leq n$ 
+ since it requires the extension map $\EnX \colon \Field^n \to \Spc{X}$ to be surjective. Hence, exact correspondence 
+ of a matrix norm to an operator norm is only possible for certain finite-dimensional spaces $\Spc{X}$.\\
+ %
+ In any case, the inequalities ensure that one can get an estimate for the operator norm of $\Op{T}$ (restricted to the 
+ range of $\EnX$) in terms of the discretized (matrix) norm of $\DiscOp{T}$, which can be very useful in numerical 
+ computations.
+\end{remark}
+
+
+
+\subsection{Compatibility of inner products}
+\label{subsec:prop:inner}
+
+Now we consider inner product spaces and analyze their behavior under discretization.
+
+\begin{lemma}
+ \label{lemma:prop:inner:natural_corresp}
+ Let $(\Spc{X}, \INNER{\cdot}{\cdot}_{\Spc{X}})$ be an inner product space with discretization $\Discr_n(\Spc{X})$, and 
+ let $\INNER{\cdot}{\cdot}_n$ be the inner product in $\Field^n$.
+ %
+ \begin{enumerate}[(a)]
+  \item \label{lemma:prop:inner:natural_corresp:a_natural}
+  $\INNER{\cdot}{\cdot}_n$ is the natural discretization of the inner product $\INNER{\cdot}{\cdot}_{\Spc{X}}$ if and 
+  only if $\EnX$ is unitary.
+  
+  \item \label{lemma:prop:inner:natural_corresp:b_corresp}
+  $\INNER{\cdot}{\cdot}_n$ exactly corresponds to $\INNER{\cdot}{\cdot}_{\Spc{X}}$ if and only if both $\RnX$ and 
+  $\EnX$ are unitary.
+ \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+ \begin{enumerate}[(a)]
+  \item We define the inner product as an operator
+  %
+  \begin{equation*}
+   \Op{T} \colon \Spc{X} \times \Spc{X} \to \Field
+   \quad \text{with} \quad
+   \Op{T}(f, g) := \INNER{f}{g}_{\Spc{X}}.
+  \end{equation*}
+  %
+  The natural discretization of this operator is given by $\DiscOp{T} = \Op{\Id} \circ \Op{T} \circ (\EnX, \EnX)$, \ie,
+  %
+  \begin{equation*}
+   \DiscOp{T}(\valpha, \vbeta) 
+   = \Op{T}\big( \EnX(\valpha), \EnX(\vbeta) \big) 
+   = \INNERbig{\EnX(\valpha)}{\EnX(\vbeta)}_{\Spc{X}}
+   = \INNERbig{(\EnX)^* \circ \EnX(\valpha)}{\vbeta}_n.
+  \end{equation*}
+  %
+  Apparently, this expression is equal to $\INNER{\valpha}{\vbeta}_n$ if and only if $\EnX$ is unitary.
+
+  \item The conditions for exact correspondence can be written as
+  %
+  \begin{equation*}
+   \INNER{f}{g}_{\Spc{X}} = \INNERbig{\RnX(f)}{\RnX(g)}_n
+   \quad \text{and} \quad
+   \INNER{\valpha}{\vbeta}_n = \INNERbig{\EnX(\valpha)}{\EnX(\vbeta)}_{\Spc{X}},
+  \end{equation*}
+  %
+  which is equivalent to the conditions in the claim.
+ \end{enumerate}
+\end{proof}
+
+
+
+\subsection{Summary}
+\label{subsec:prop:summary}
+
+We summarize the properties of linear discretizations along with the corresponding conditions. Recall the definitions of 
+the (projection) operators $\PnX = \EnX \circ \RnX \colon \Spc{X} \to \Spc{X}$ and 
+$\QnX = \RnX \circ \EnX \colon \Field^n \to \Field^n$, see \Cref{def:discr:space:space_discr}. \\
+%
+\begin{table}[ht]
+ \renewcommand{\arraystretch}{1.1}
+ \begin{tabulary}{\textwidth}{LLl}
+  \multicolumn{3}{c}{\textbf{Natural discretization = known operation}} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \\ 
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Fr\'{e}chet derivative &
+  $\EnX, \RmY$ bounded &
+  \Cref{lemma:discr:operator:op_deriv:natural_is_deriv} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Adjoint &
+  $\EnX = \big( \RnX \big)^*$ and $\EmY = \big( \RmY \big)^*$ &
+  \Cref{lemma:discr:operator:op_adj:natural_is_adj} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Operator composition of $\Op{T} \colon \Spc{X} \to \Spc{Y}$ and $\Op{U} \colon \Spc{Y} \to \Spc{Z}$ &
+  Either $\PmY$ identity on $\range(\Op{T} \circ \EnX)$ or single-element preimages of 
+  $\REST{k}{\Spc{Z}} \circ \Op{U}$ invariant under $\PmY$ &
+  \Cref{lemma:discr:operator:op_comp:natural_is_comp} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Linear combination &
+  $\QnX$ identity &
+  \Cref{lemma:prop:lincomb:natural_corresp} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Linear combination in $\Spc{L}(\Spc{X}, \Spc{Y})$ under natural discretization &
+  $\QnX$ and $\QmY$ identity operators &
+  \Cref{remark:prop:lincomb:natural_linop_space} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Norm &
+  $\EnX$ isometry &
+  \Cref{lemma:prop:norm:natural_corresp} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Operator norm under natural discretization &
+  $\RmY, \EnX$ isometries and $\RmY$ surjective &
+  \Cref{lemma:prop:norm:op_norm_est} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Inner product &
+  $\EnX$ unitary &
+  \Cref{lemma:prop:inner:natural_corresp} \\
+  %
+  %
+  \noalign{\smallskip} \hline
+ \end{tabulary}
+ \caption{Summary of the results on natural discretization as given in \Cref{sec:prop}}
+ \renewcommand{\arraystretch}{1.0}
+ \label{tab:prop:summary:natural_summary}
+\end{table}%
+%
+\Cref{tab:prop:summary:natural_summary} shows the results regarding the equality of natural discretizations and known 
+operations in the discretized spaces, and \Cref{tab:prop:summary:exaxt_corresp_summary} is an overview of the results 
+on exact correspondence.
+%
+\begin{table}[ht]
+ \renewcommand{\arraystretch}{1.1}
+ \begin{tabulary}{\textwidth}{LLl}
+  \multicolumn{3}{c}{\textbf{Exact correspondence}} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \\ 
+  %
+  %
+  \noalign{\smallskip} \hline\hline \noalign{\smallskip}
+  %
+  %
+  $\DiscOp{T} = \RmY \circ \Op{T} \circ \EnX$ (natural operator discretization) &
+  (1) Single-element preimages are invariant under $\PnX$ and & 
+  \Cref{lemma:prop:corresp:natural_op_discr_corresp} \\
+  %
+  &
+  (2) $\PmY$ is the identity on $\range(\Op{T} \circ \EnX)$ &
+  \\
+  \noalign{\smallskip}
+  Special case: $\Spc{Y}$ Hilbert space and $\Op{T}$ linear and bounded &
+  (1a) $\PnX$ is identity on $\nullspace(\RmY \circ \Op{T})^\perp$ and &
+  \\
+  &
+  (1b) $\nullspace(\RmY \circ \Op{T})$ invariant under $\PnX$ and (2) as above &
+  \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Linear combination &
+  None beyond linearity &
+  \Cref{lemma:prop:lincomb:natural_corresp} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Norm &
+  $\RnX$ and $\EnX$ isometries &
+  \Cref{lemma:prop:norm:natural_corresp} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Operator norm under natural discretization &
+  $\RnX, \EnX, \RmY, \EmY$ isometries and $\EnX, \RmY$ surjective &
+  \Cref{lemma:prop:norm:op_norm_est} \\
+  &
+  (implies $\DIM(\Spc{X}) \leq n$) &
+  \Cref{remark:prop:norm:op_norm_corresp} \\
+  %
+  %
+  \noalign{\smallskip} \hline \noalign{\smallskip}
+  %
+  %
+  Inner product &
+  $\RnX, \EnX$ unitary &
+  \Cref{lemma:prop:inner:natural_corresp} \\
+  %
+  %
+  \noalign{\smallskip} \hline
+ \end{tabulary}
+ \caption{Summary of the conditions for exact correspondence in different situations as analyzed in \Cref{sec:prop}}
+ \renewcommand{\arraystretch}{1.0}
+ \label{tab:prop:summary:exaxt_corresp_summary}
+\end{table}
+
+
+
+
+
+\section{Specific discretizations}
+\label{sec:specif}
+
+We will now consider various specific discretizations and investigate their properties in the light of the 
+results in \Cref{sec:prop}.
+
+
+
+\subsection{Functionals and function systems}
+\label{subsec:specif:func_base}
+
+Let $\Spc{X}$ be a vector space over $\Field$ and $\lambda_i \colon \Spc{X} \to \Field,\ i=1,\ldots,n$ be 
+continuous\footnote{If $\Spc{X}$ is normed, we can say ``bounded'' and speak of \emph{Functionals}.} linear mappings.
+With those we define the restriction mapping
+%
+\begin{equation*}
+ \RnX \colon \Spc{X} \to \Field^n \quad \text{as} \quad \RnX(f) := \big( \lambda_i(f) \big)_{i=1}^n.
+\end{equation*}
+%
+Let further $\phi_i \in \Spc{X},\ i=1,\ldots,n$ be linearly independent. We then define the extension operator
+%
+\begin{equation*}
+ \EnX \colon \Field^n \to \Spc{X} \quad \text{as} \quad \EnX(\valpha) := \sum_{i=1}^n \alpha_i\, \phi_i.
+\end{equation*}
+
+
+
+
+
+\section{Software implementation}
+\label{sec:soft}
+
+
+
+\subsection{General considerations}
+\label{subsec:soft:general}
+%
+\textbf{Discretizations:}
+A discretization $\Discr_{n}(\Spc{X}) = (\Spc{X}, \Field^n, \RnX, \EnX)$ is implemented as discretized linear 
+space $X_n$ in the following way:
+%
+\begin{itemize}
+ \item $X_n$ is a (or derives from) \texttt{LinearSpace}.
+ \item When initialized, it is provided with \emph{instances} of $\Spc{X}$ and $\Field^n$.
+ \item It inherits the ``intersection'' of the structure of $\Spc{X}$ and $\Field^n$, i.e. if $\Spc{X}$ is a 
+ \texttt{MetricSpace} and $\Field^n$ a \texttt{HilbertSpace}, $X_n$ will be a \texttt{MetricSpace}.
+ \item Elements in $X_n$ are created by casting $n$-tuples of elements of $\Field$ (given as list, array, \ldots).
+ \item $\RnX \colon \Spc{X} \to \Field^n$ 
+   can optionally be provided as a \texttt{LinearOperator}. If $\Spc{X}$ is a \texttt{FunctionSpace},
+   then an element $f_n \in X_n$ can be initialized from an analytically defined function $f \in \Spc{X}$ 
+   (i.e., a Python function) as $f_n := \RnX(f)$, such as in the case of point collocation.
+ \item $\EnX \colon \Field^n \to \Spc{X}$ can optionally be provided as a \texttt{LinearOperator}. 
+   If $\EnX$ is given and $\Spc{X}$ is a \texttt{FunctionSpace}, 
+   a discretized function $f_n \in X_n$ can be evaluated at any given point, e.g., by interpolation. 
+   Such an interpolation rule does in this way define a continuous function $f \in \Spc{X}$.
+\end{itemize}
+%
+\textbf{Re-discretizations:}
+Consider two different discretizations of a fixed vector space $\Spc{X}$ given by 
+\[ \Discr_{n}(\Spc{X}) = (\Spc{X}, \Field^n, \RnX, \EnX)
    \quad\text{and}\quad
-   E_{n} \colon H_{n} \to H. \]
-The maps $R_{n}$ and $E_{n}$ are called the  \emph{restriction} and 
-\emph{extension} maps associated to the discretization. 
-\begin{Def}
-  The sequence of $n$-dimensional discretizations $\bigl\{ 
-  H,H_{n},R_{n},E_{n} \bigr\}_{n}$ of $H$ is \emph{consistent} whenever
-  \[ \lim_{n\to \infty} 
-     \bigl\Vert ( E_{n}\circ R_{n})(f)-f \bigr\Vert_{H}\to 0
-     \quad\text{for all $f\in H$.}\]
-  Let $H$ and $H'$ be Hilbert spaces over the fields $\K$ and $\K'$ 
-  and $T \colon H \to H'$. Also, let 
-  \[ \bigl\{ H,H_{n},R_{n},E_{n} \bigr\} 
-     \quad\text{and}\quad
-     \bigl\{ H',H_{m},R_{m},E_{m} \bigr\}\]
-  denote $n$- and $m$-dimensional discretizations of $H$ and $H'$, 
-  respectively. Then a map $T_{n,m} \colon H_{n} \to H'_{m}$ is 
-  \emph{consistent with the above discretizations of $H$ and $H'$} 
-  whenever the following diagram commutes:
-  \[ \xymatrix{
-      H \ar[rr]_{T} \ar@<0.3ex>[dd]_{E_{n}} & &  
-      H' \ar@<0.3ex>[dd]_{E_{m}} \\
-       & &  \\
-      H_{n} \ar@<0.3ex>[uu]_{R_{n}} \ar[rr]_{T_{n,m}}  & &     
-      H'_{m} \ar@<0.3ex>[uu]_{R_{m}}  }
-  \]
-  In that case we say that $T_{n,m}$ is the \emph{discretization of $T$}.
-\end{Def}  
-Thus, if we have a sequence $\bigl\{ H,H_{n},R_{n},E_{n} \bigr\}_{n}$ 
-of consistent $n$-dimensional discretizations of $H$, 
-then for large $n$ one can make the approximation that $E_{n}\circ 
-R_{n}$ is the identity operator i.e.\@
-\begin{equation}\label{eq:fApprox}
-    f \approx E_{n}(f_{n}) \quad\text{where}\quad
-    f_{n}:=R_{n}(f).
-\end{equation}  
-Also, given $T$ one can construct a natural discretization $T_{n,m}$ 
-by defining $T_{n,m}:= E_{n} \circ T \circ R_{m}$.
-
-We consider a simple example which is the Galerkin method in Hilbert 
-space. Let $\{ \phi_{i} \}_{i}\subset H$ be a 
-complete orthonormal system in the separable Hilbert space $H$. We 
-then set 
-\[ H_{n} := \linspan \{\phi_{1},\ldots,\phi_{n} \}
-   \quad\text{for $n\in\N$.}
-\]
-Let $R_{n} \colon H \to H_{n}$ be the orthogonal projection operator 
-from $H$ onto $H_{n}$, i.e.\@
-\[ R_{n}(f)=\sum_{i=1}^n \ip{\phi_{i}}{f}_{H}\phi_{i}
-   \quad\text{for all $f\in H$.} \]
-Moreover, let $E_{n}\colon H_{n} \to H'_{n}$ be the embedding operator 
-corresponding to $H_{n}\subset H$. Now consider an
-operator $T \colon H \to H$ (so $H':=H$ and $H'_{n}:=H_{n}$). Then 
-$R_{n}(f)\to f$ as $n\to \infty$, so the discretizations of $H$ are 
-compatible. Moreover, the discretization $T_{n,n}$ of $T$ where 
-\[ T_{n,n}:=R_{n}\circ T \circ E_{n} \]
-is consistent with the discretization of $H$ and the equation
-$T(f)=g$ can be replaced with 
-\[ \ip{T(f_{n})}{\phi_{j}}_{H}=\ip{g}{\phi_{j}}_{H}
-   \quad\text{$f_{n}\in H_{n}$ and $j=1,\ldots,n$.} \]
-Also, note that it is not necessary for $H_{n}$ and $H'_{m}$ to be 
-subsets of $H$ and $H'$. In fact in most of the situations this is not the 
-case. 
-
-\paragraph{Discretization of functions spaces.}
-We begin by introducing some useful notation that well be used 
-throughout this section.
-\begin{Not}
-  Let $X$ be a topological space, $\mu$ a fixed 
-  Borel measure, $\K$ a field, and $Z$ a vector space over $\K$. 
-  Then we define $\cL^1_{\loc,\K}(X,Z)$ as the Hilbert space over $\K$ of
-  locally $\mu$-measurable functions 
-  $f\colon X\to Z$. The notation $\cL^1(X)$ simply stands for 
-  $\cL^1_{\loc,\R}(X,\R)$.
-\end{Not}  
-Throughout this section $Z$ and $W$ are vector spaces over the 
-fields $\K$ and $\K'$ and $X, Y$ are topological spaces.
-Also, let
-\[ H:=\cF_{\K}(X,Z)\subset \cL^1_{\loc,\K}(X,Z) \]
-denote a  Hilbert subspace. Below we consider a specific family of 
-discretizations of $H$  containing all the cases we are 
-interested in. 
-\begin{Def}
-  Let $\cH:=\{ \phi_{1},\ldots,\phi_{m} \}\subset H$ be a 
-  fixed finite set of $m$ functions.
-  Then we make the following definitions:
-  \begin{enumerate}
-  \item The \emph{restriction operator $R(\cdot;\cH)$ induced by 
-    $\cH$} is the  mapping  
-    \[ R_{m}(\cdot;\cH) \colon H \to Z^m \]
-    where 
-    \[ R_{m}(f;\cH):=\bigl( r_{1}(f;\cH),\ldots,r_{m}(f;\cH) \bigr) 
-       \quad\text{for all $f\in H$,} \]
-    with $r_{i}(f;\cH)\in Z$ for $i=1,\ldots,m$.
-    We do not further specify how $r_{i}(\cdot;\cH)$ is defined.
-    Simply note that two choices of $r_{i}(\cdot;\cH)$ are common, namely
-    $r_{i}(f;\cH):=f(x_{i})$ where $x_{i}\in X$ is a fixed point (a sample 
-    point) and $r_{i}(f;\cH):=\ip{f}{\phi_{i}}_{H}$ which is natural whenever
-    $\cH$ is a subset of an orthonormal basis in $H$. Also, 
-    $r_{i}(\cdot;\cH)$ is linear in both these cases.
-    In this context the elements in $\cH$ are called the 
-    \emph{sampling functions}.
-  \item The \emph{extension operator $R(\cdot;\cH)$ induced by 
-    $\cH$} is defined as the mapping  
-    \[ E_{m}(\cdot;\cH) \colon Z^m \to H \]
-    where 
-    \[ E_{m}(\bb;\cH):= x\mapsto \sum_{i=1}^m b_{i}\phi_{i}(x)
-       \quad\text{for all $\bb\in Z^m$.} \]
-    In this context the elements in $\cH$ are called the 
-    \emph{extrapolation functions}.       
-  \end{enumerate}
-\end{Def}
-Note that the sets of sampling and extrapolation functions do not 
-need to coincide.  The only requirement is that the number of 
-elements $m$ must be the same. Thus, a pair 
-$(\cH^m_{\rest},\cH^m_{\ext})$ of $m$ 
-sampling and extrapolation functions defines an $m$-dimensional 
-discretization of $H$ by the tuple
-\[ \bigl\{
-     H,Z^m,R_{m}(\cdot;\cH^m_{\rest}),E_{m}(\cdot;\cH^m_{\ext})
-   \bigr\}. \]
-   
-Now, consider two the following two pairs $(\cH^n_{\rest},\cH^n_{\ext})$ and 
-$(\cH^m_{\rest},\cH^m_{\ext})$ of $n$ and $m$ sampling and extrapolation 
-functions:
-\begin{alignat*}{2}
-  \cH^n_{\rest} &:=\{ \phi_{1},\ldots,\phi_{n} \} &\qquad
-  \cH^m_{\rest} &:=\{ \psi_{1},\ldots,\phi_{m} \}  \\
-  \cH^n_{\ext} &:=\{ \wt{\phi}_{1},\ldots,\wt{\phi}_{n} \} &\qquad
-  \cH^m_{\ext} &:=\{ \wt{\psi}_{1},\ldots,\wt{\psi}_{m} \}    
-\end{alignat*}
-Each pair yields a discretization of $\cF_{\K}(X,Z)$ by the tuples
-\[ 
-   \bigl\{
-     \cF_{\K}(X,Z),Z^n,R_{n}(\cdot;\cH^n_{\rest}),E_{n}(\cdot;\cH^n_{\ext})
-   \bigr\} \]
-and
-\[ \bigl\{
-     \cF_{\K}(X,Z),Z^m,R_{m}(\cdot;\cH^m_{\rest}),E_{m}(\cdot;\cH^m_{\ext})
-   \bigr\}. \] 
-What is the relation between these two discretizations? A function 
-$f\in \cF_{\K}(X,Z)$ is represented by the ``vectors'' 
-\[ \bz_{n}:= R_{n}(f;\cH^n_{\rest})\in Z^n \quad\text{and}\quad
-   \bz_{m}:= R_{m}(\cdot;\cH^m_{\rest})\in Z^m \]
-and we seek the relaation between $\bz_{n}$ and $\bz_{m}$. 
-Now making use of the approximation $f\approx 
-E_{n}(\bz_{n};\cH^n_{\ext})$, i.e.\@
-\[ f \approx x \mapsto 
-       \sum_{i=1}^n z_{n,i} \wt{\phi}_{i}(x)
-   \quad\text{in $\cF_{\K}(X,Z)$,} 
-\]
-which implies that
-\begin{align*}
-  \bz_{m} &:=R_{m}(f;\cH^m_{\rest}) =
-    \bigl( r_{1}(f,\cH^m_{\rest}),\ldots,r_{m}(f,\cH^m_{\rest}) \bigr) \\
-    &\approx 
-      \Bigl( r_{1}\bigl(E_{n}(\bz_{n},\cH^n_{\ext}),\cH^m_{\rest}\bigr),
-             \ldots,
-	     r_{m}\bigl(E_{n}(\bz_{n},\cH^n_{\ext}),\cH^m_{\rest}\bigr)
-      \Bigr).
-\end{align*}
-When $r_{k}(\cdot,\cH^m_{\rest})$ are linear, then 
-\[ r_{k}\bigl(E_{n}(\bz_{n},\cH^n_{\ext}),\cH^m_{\rest}\bigr)=
-     r_{k}\biggl(\sum_{i=1}^n 
-       z_{n,i}\wt{\phi}_{i}(\cdot),\cH^m_{\rest}\biggr)=
-     \sum_{i=1}^n z_{n,i} r_{k}(\wt{\phi}_{i},\cH^m_{\rest}).
+  \Discr_{m}(\Spc{X}) =(\Spc{X}, \Field^m, \RmX, \EmX)
+\]  
+with $X_n$ and $X_m$ as the corresponding discretized linear spaces.
+The re-discreti\-zation of $\Discr_{n}(\Spc{X})$ into $\Discr_{m}(\Spc{X})$ is the mapping 
+\[  \DiscOp{Id}_{m,n} \colon \Field^m \to \Field^n
+    \quad\text{defined as}\quad
+    \DiscOp{Id}_{m,n} := \RmX \circ \EnX.
 \]   
-Thus, for $k=1,\ldots,m$
-\[
-  z_{m,k}\approx 
-    \sum_{i=1}^n z_{n,i} r_{k}(\wt{\phi}_{i},\cH^m_{\rest}).
-\]    
-and defining 
-\[ A_{i,k}:= r_{k}(\wt{\phi}_{i},\cH^m_{\rest})
-   \text{ for $i=1,\ldots,n$ and $j=1,\ldots,m$,} \]
-enables us to write
-\[ \bz_{m}=\bz_{n}\cdot\bA
-   \quad\text{where } 
-   \bA:=[ A_{i,k} ]_{\substack{1\leq i \leq n \\ 1\leq k \leq m}}
-   \text{ is an $(n\times m)$-matrix.} \]
-Conversly, defining 
-\[ \wt{A}_{k,i}:=r_{i}(\phi_{k},\cH^n_{\rest})
-   \text{ for $i=1,\ldots,n$ and $k=1,\ldots,m$,} \]
-enables us to write
-\[ \bz_{n}=\bz_{m}\cdot\wt{\bA}
-   \quad\text{where } 
-   \wt{\bA}:=[ \wt{A}_{i,k} ]_{\substack{1\leq k \leq M \\ 
-   1\leq i \leq n}}
-   \text{ is an $(m\times n)$-matrix.} \]
-Finally, if $\cH^n_{\rest}=\cH^n_{\rest}$ and 
-$\cH^m_{\ext}=\cH^m_{\rest}$, then $\bA=\wt{\bA}^T$.   
-
-
-\section{Relation to inverse problems}
-Let $X, Y$ be topological spaces and $T \colon \cF(X,\K) \to 
-\cF(Y,\K')$. The inverse problem we are interested in is to find 
-$f\in H_{X}:=\cF(X,\K)$ that solves the operator equation $T(f)=g$ where 
-$g\in H_{Y}:=\cF(Y,\K')$ is 
-known only on a subset $Y_{0}\subset Y$. In reality $Y_{0}$ is a 
-finite set, so $g$ is known only at a finite number of points in $Y$. 
-
-This enables us to replace the continuous inverse  is given, with a sequence of 
-discrete inverse problems of finding $f_{n}\in H_{n}$ such that 
-$T_{n,m}(f_{n})=R_{m}(g)$.
-
-Finally, note that the dimension of the discretization of  $\cF(Y,W)$ 
-occurring in the inverse problem in subsection~\ref{sec:Inv} is naturally 
-determined by the fact that $T(f_{\true})$ is known (up to measurement 
-errors) on a given set $Y_{0}\subset Y$ with $m$ elements. 
-It is natural to choose an $m$-dimensional discretization of 
-$\cF(Y,W)$ where the choice of the sampling and extrapolation functions are 
-related to the elements in $Y_{0}$.
+It is represented in the software as follows:
+\begin{itemize}
+ \item $\DiscOp{Id}_{m,n}$ is a \texttt{LinearOperator}\footnote{for now, may be relaxed to \texttt{Operator}} with 
+ $\mathtt{domain} = X_n$ and $\mathtt{range} = X_m$.
+ \item If $\EnX$ and $\RmX$ are present in $X_n$ or $X_m$, respectively, $\DiscOp{Id}_{m,n}$ is implemented as the 
+ composition of these operators by default.
+ \item A direct (optimized) implementation and can be provided, e.g., by an external software package.
+\end{itemize}
 
 
 
-   
-\section{The object model}
-What we are looking for is an efficient object structure representing 
-the discretization problem described above. The idea is that given an 
-operator 
-\[ T \colon \cF(X) \to \cF(Y) \]
-the object structure in the code must represent the discretization to 
-the level of accuracy that enables one to change between different
-discretizations $T_{N,M}$ and $T_{N',M'}$ of $T$, at least 
-for different sample based discretizations.
+\subsection{Dictionary-based discretization}
+\label{subsec:soft:dict}
 
-The naive way to model the object structure is to fully replicate the 
-mathematical setting (fields, vector spaces over fields, normed spaces, Hilbert 
-spaces over fields, etc) but this produces a very large object structure 
-that we believe is not feasible nor necessary. The idea that we have 
-played with
-is to have an object structure that is general enough to capture different 
-choices of sample based discretizations and relations in between them 
-without being inefficient. 
-As an example, what possible function spaces $\cF(X)$ do we have? Well, 
-mathematically this depends on $T$ and examples for $X=\R^n$ 
-are $\Cc_{c}(\R^n)$ (continuous functions with compact 
-support), $\Cc^\infty_{c}(\R^n)$ (smooth functions with compact 
-support), and 
-$\mathcal{S}(\R^n)$ (functions in the Schwartz class, i.e.\@ fast 
-decaying smooth functions). When using 
-a sample based discretization it is actually not relevant exactly which 
-Hilbert space that one started with. The only important factor is the 
-underlying field and the inner product (which affects the inner 
-product in the finite dimensional representation) since the same 
-sample based discretization yields the same finite dimensional representation for 
-all Hilbert spaces over the same field with the same inner product structure.
-As an example a fixed sample based discretization can not differ between bounded 
-integrable functions or 
-continuous functions if the inner product that we use is the same. 
-Hence, a Hilbert space may be represented by the underlying field 
-($\R$, $\C$,\ldots), and the inner product structure (or at least its 
-discrete counterpart).
 
-\subsection{Consistency checks}
-It is desirable that the object model can check for consisteny. The 
-first problem is to be able to compare two discretizations and 
-determine if they are the same.
 
-As already noted, in order to describe the discretizations we are using 
-one only needs the following information:
-\begin{enumerate}
-\item Representing the Hilbert space $H$. Since $H$ is of the form
-  \[ H:=\cF_{\K}(X,Z)\subset \cL^1_{\loc,\K}(X,Z) \] 
-  it is a set of functions from the topological space $X$ into the 
-  vector space $Z$ (vector space over the field $\K$), $H$ can be described by 
+\subsection{Examples}
+\label{subsec:soft:examp}
+
+\begin{example}[Re-interpretation]
+ Let $\bar f \in X_n = (\Spc{X}, \Field^n, \emptyset, \emptyset)$ be represented by $\valpha \in \Field^n$ and 
+ $X_m = (\Spc{X}, \Field^m, \RmX, \EmX)$ with $m=n$. Then $\bar f$ can be re-interpreted as $\bar f \in \Spc{X}_m$ by 
+ the identity mapping $\Op{I}: X_n \to \Spc{X}_m$. Practically, the re-mapped element will be aware of the ``added 
+ structure '' $\RmX, \EmX$.
+\end{example}
+
+
+
+
+
+\cleardoublepage
+\appendix
+\section{Basic definitions}
+\subsection{Algebraic structures}
+We begin with the basic definition of the underlying algebraic objects, namely ring and field.
+A field is basically an abstraction of the set $\Real$ of real numbers with the ``usual'' 
+addition and multiplication.
+\begin{definition}[Ring and field]
+  A set $\Field$ is a \emph{ring} if there are two laws of composition
+  $(\alpha,\beta)\mapsto \alpha+\beta$ and $(\alpha,\beta) \mapsto \alpha\cdot \beta$, called 
+  respectively \emph{addition} and \emph{multiplication}, satisfying the following axioms:
   \begin{enumerate}
-  \item The dimension of $H$.
-  \item The underlying field $\K$  as a set, so we do not bother to encode 
-    the field structure, we see $\K$ only as a set.
-  \item The domain $X$ as a set, so we do not bother to encode the
-    topology, we see $X$ only as a set. 
-  \item The range $Z$ which is encoded as a set with an underlying 
-   field $\K$, so we do not bother to encode 
-   the vector space structure of $Z$.
+  \item $\Field$ is a commutative group under addition with zero element $0_{\Field}$, \ie,
+    the following holds for all $\alpha,\beta,\gamma\in \Field$:
+    \begin{enumerate}
+    \item addition is associative, \ie, $\alpha + (\beta+\gamma)=(\alpha+\beta)+\gamma$,
+    \item addition is commutative, \ie, $\alpha + \beta = \beta+\alpha$,
+    \item the zero element is the identity element \wrt the addition so 
+       $\alpha+0_{\Field}=0_{\Field}+\alpha=\alpha$,
+    \item $-\alpha$ denotes the inverse of $\alpha$  \wrt the addition so 
+       $\alpha+(-\alpha)=(-\alpha)+\alpha=0_{\Field}$.
+    \end{enumerate}
+  \item the multiplication is associative and possesses an identity element $1_{\Field}$, \ie,
+    the following holds for all $\alpha,\beta,\gamma\in \Field$:
+    \begin{enumerate}
+    \item multiplication is associative, \ie, 
+      $\alpha\cdot (\beta\cdot \gamma)=(\alpha\cdot \beta)\cdot \gamma$,
+   \item $1_{\Field}$ is the identity element \wrt the multiplication so 
+      $1_{\Field}\cdot \alpha=\alpha \cdot 1_{\Field}=\alpha$, 
   \end{enumerate}
-\item The dimension $n$ of the discretization.
-\item The family $\cH^n_{\rest}$ of sampling functions.
-\end{enumerate}
+  \item the multiplication is distributive with respect to the addition, \ie,
+    for all $\alpha,\beta,\gamma\in \Field$,
+    \[ (\alpha+\beta)\cdot \gamma = \alpha \cdot \gamma+\beta\cdot\gamma 
+       \quad\text{and}\quad
+       \alpha \cdot (\beta + \gamma) = \alpha \cdot \beta+\alpha\cdot\gamma.
+    \]
+  \end{enumerate}
+  A ring $\Field$ is called a \emph{field} if it does not consist only of $0_{\Field}$ and every non-zero 
+  element of $\Field$ has an inverse \wrt the multiplication. Finally, a field is \emph{commutative}
+  if its multiplication is commutative.
+\end{definition}
+When working with fields we will simplify the notational burden by not explicitly writing 
+the multiplication $\cdot$, \ie, $\alpha \beta$ means $\alpha\cdot\beta$ whenever 
+$\alpha,\beta\in\Field$. Moreover, we will write $1$ and $0$ instead of $1_{\Field}$ and $0_{\Field}$.
+Having defined the concept of a field, we are now ready to define the concept of a vector 
+space.
+\begin{definition}[Vector space]
+  Let $\Field$ be a fixed field. Then a set $X$ is a \emph{left vector space over $\Field$} if 
+  $X$ is a commutative group (the group law will be written additively in what follows)
+  together with a map  $(\alpha,x) \mapsto \alpha\cdot x$, called the \emph{vector space 
+  multiplication}, where
+  \begin{enumerate}
+  \item $\alpha \cdot (x+y)=\alpha \cdot x+\alpha \cdot y$
+     for all $\alpha\in \Field$ and $x,y\in X$,
+  \item $(\alpha + \beta) \cdot x= \alpha \cdot x + \beta\cdot x$ 
+     for all $\alpha, \beta\in \Field$ and $x\in X$,\label{MII}
+  \item $\alpha \cdot (\beta \cdot x) = (\alpha\beta)\cdot x$  
+     for all $\alpha, \beta\in \Field$ and $x\in X$,\label{MIII}
+  \item $1\cdot x = x$ for all $x\in X$.
+  \end{enumerate}
+  If \eqref{MIII} above is replaced by the axiom
+  \[ \alpha \cdot (\beta \cdot x) = (\beta \alpha)\cdot x
+        \quad\text{for all $\alpha, \beta\in \Field$ and $x\in X$,}
+  \]
+  then we say that $X$ is a \emph{right vector space over $\Field$}. Elements in the 
+  field $\Field$ are called \emph{scalars} and elements in $X$ are called \emph{vectors}. 
+  Finally,  note that in \eqref{MII} above, the addition $+$ in the left hand side 
+  represents the addition in 
+  the field $\Field$, whereas in the right hand side it represents the group law in $X$.
+\end{definition}  
+We say that a subset $V \subset X$ is a \emph{vector subspace of $X$} if $V$ itself is a vector 
+space over $\Field$ with the same operations as in $X$. This is equivalent to requiring that 
+$0\in V$ and $\alpha x, x+y \in V$ whenever $x,y\in V$ and $\alpha \in \Field$.
 
-\begin{thebibliography}{99}
-\bibitem{ZeIIB85} Zeidler, E., Nonlinear Functional Analysis and its 
-  Applications~II/B, Springer Verlag, 1985
-\end{thebibliography}  
+Often the vector space multiplication $\cdot$ is not written explicitly. In fact, if $X$ is a 
+left (resp.\@ right) vector space over a field $\Field$, then any expression of the type 
+$\alpha x$ where $\alpha\in\Field$ and $x\in X$ means $\alpha \cdot x$. Moreover, we will not 
+notationally distinguish between the addition in $\Field$ and the group law in $X$, so 
+$\alpha + \beta$ refers to the addition in $\Field$ if $\alpha,\beta\in \Field$ and to the group law in 
+$X$ if $\alpha,\beta\in X$. In the same way we do not notationally distinguish between the 
+zero in $X$ and the zero in $\Field$
+
+Having dealt with the notational conventions, let us now proceed by defining concepts such 
+as linear combination, basis, and dimension.
+\begin{definition}[Linear combination and independence]
+   Let $X$ be a right (resp.\@ left) vector space over a field $\Field$. Also, 
+   let $\{ v_1, \ldots, v_{n} \}  \subset X$ be a fixed subset. An element $x\in X$ 
+   is said to be a \emph{linear combination of the elements $\{ v_1, \ldots, v_{n} \}$} if 
+   there exists a subset $\{ \alpha_1,\ldots,\alpha_{n} \} \subset \Field$ such that 
+   \[  x= \alpha_1 v_1 + \ldots +  \alpha_{n} v_{n}. \]
+   The elements $\{ \alpha_1,\ldots,\alpha_{n} \}$ are then called the \emph{coefficients 
+  (or coordinates)  of $x$ \wrt $\{ v_1, \ldots, v_{n} \}$}. Moreover, we say that this finite 
+  set is \emph{linearly independent} if 
+   \[ \alpha_1 v_1 + \ldots + \alpha_{n} v_{n} =0
+      \quad\text{implies that}\quad \alpha_1=\ldots=\alpha_{n}=0. \]
+  Note that the zero in the left hand side is the zero vector in $X$ whereas the zero in the right 
+  hand side is the zero in the field $\Field$.
+\end{definition}
+Using the axiom of choice, one can show, see, \eg, Chapter~II, section~7 in \cite{Bo89}, 
+that every vector space $X$ has a maximal linearly independent subset $B \subset X$ 
+spanning $X$, \ie, every vector $x\in X$ can be written as a finite linear combination 
+of the elements in $B$. Such a maximal subset is called a \emph{(Hamel) basis}. If 
+$B$ denotes a basis of the vector space $X$, then any element $x\in X$ has a 
+unique representation as a linear combination of vectors $v_1,\ldots,v_{n}\in B$, \ie, there 
+exists unique scalars $\alpha_1,\ldots,\alpha_{n}\in\Field$ such that 
+\[ x = \alpha_1 v_1 + \ldots + \alpha_{n} v_{n}. \]
+The scalars $\alpha_1,\ldots,\alpha_{n}$ are then called the  \emph{coordinates/coefficients}
+of $x$ with respect to the basis $B$. The \emph{dimension} of $X$ is defined as the cardinality 
+of its Hamel basis. Since one can show that any two Hamel basis of $X$ 
+have the same cardinality, the concept of dimension is well-defined.
+\begin{definition}[Linear map]
+  Let $X$ and $Y$ be two (left) vector spaces over the same field $\Field$. A map
+  $f \colon X \to Y$ is called a \emph{linear map (homomorphism)} if
+  \[  f(x+y)=f(x)+f(y) \quad\text{and}\quad
+      f(\alpha x)=\alpha f(x)  \]
+  for all $x,y\in X$ and $\alpha\in \Field$.
+  Note that $\alpha x$ refers to the vector space multiplication in $X$, whereas $\alpha f(x)$
+  refers to the vector space multiplication in $Y$.
+  If $X$ and $Y$ are two (right) vector spaces over the same field $\Field$, then we need to
+  replace the condition $f(\alpha x)=\alpha f(x)$ with $f(x\alpha)= f(x) \alpha$.
+  Finally,  we let  $\Hom_{\Field}(X,Y)$ denote the set of linear mappings from $X$ into $Y$.
+\end{definition}   
+Since any result that holds for left vector spaces over $\Field$ also holds for right vector spaces 
+over $\Field$, we shall in the sequel we shall drop the prefix left (resp.\@ right). Moreover, if
+the field is commutative, then there is no difference in the sense that any left vector spaces
+is also a right vector spaces.
+
+An important class of vector spaces are the product spaces. 
+If $X_1, \ldots, \Field^{n}$ are  vector spaces over the same field $\Field$, then we
+define the \emph{product space}
+\begin{equation}\label{eq:ProdSpace}
+   X:= X_1 \times \ldots  \times \Field^{n} 
+\end{equation}
+as the set of elements $(x_1,\ldots,x_{n})$ where $x_i\in X_i$. There is a natural vector 
+space structure on $X$, namely, if $(x_1,\ldots,x_{n}), (y_1,\ldots,y_{n})\in X$ and 
+$\alpha\in\Field$, then 
+\begin{align*}
+   (x_1,\ldots,x_{n})+(y_1,\ldots,y_{n}) &:= (x_1+y_1,\ldots,x_{n}+y_{n}) \\
+   \alpha (x_1,\ldots,x_{n}) &:= (\alpha x_1,\ldots,\alpha x_{n}).
+\end{align*}
+Note that $x_i+y_i$ and $\alpha x_i$ refer to the group law and vector space 
+multiplication in the vector space $X_i$. It is easy to show that with the above definitions, 
+$X$ becomes a vector space over $\Field$. 
+For notational simplicity, in many cases one would like to simplify the notation for
+elements in a product space $X$. 
+%In fact, we will denote such elements by the corresponding 
+%bold face letter, \ie, $(x_1,\ldots,x_{n})$ is denoted 
+%by $\bx$ and $(y_1,\ldots,y_{n})$ by $\by$, \etc Thus, with this notational convention 
+%$\bx_i$ refers to an element in the product space $X$ that is indexed by $i$ and 
+%$x_i$ refers to the corresponding element in $X_i$ of $\bx=(x_1,\ldots,x_{n})$. 
+
+Now, if $X$ is a product space defined as in \eqref{eq:ProdSpace}, then the 
+\emph{natural projections}
+\[ \pi_i \colon X \to X_i \quad\text{are defined as}\quad \pi_i(x):=x_i, \]
+and they are surjective linear mappings, \ie, $\pi_i\in\Hom_{\Field}(X,X_i)$. 
+Now, it is easy to show, see, \eg, Proposition~4, Section~1.5, Chapter~II in \cite{Bo89}, 
+that for any vector space $Y$ over $\Field$ and any finite set of linear mappings 
+$f_i \in \Hom_{\Field}(Y,X_i)$,  $i=1,\ldots,n$, there exists a unique map 
+$f\in \Hom_{\Field}(Y,X)$ such that 
+\[ \pi_i \circ f = f_i. \]
+Conversely, given $f\in \Hom_{\Field}(Y,X)$, we can always define $f_i \in \Hom_{\Field}(Y,X_i)$ by 
+the above relation. 
+%We will use the bold face notation $\vf$ on the elements in $\Hom_{\Field}(Y,X)$
+%\emph{only} when there is an explicit need to refer to the $f_i$:s.
+
+We will finally define the concepts of norm and inner product for vector spaces over $\Real$ 
+or $\Complex$. 
+\begin{definition}[Norm and inner product]
+  Let $\Field$ be a field of real numbers $\Real$ or complex numbers $\Complex$  with the usual 
+  addition and multiplication. Moreover, let $X$ be a vector space over $\Field$. A mapping 
+  \[ \Vert \cdot \Vert \colon X \to [0,\infty[ \]
+  is called a \emph{norm on $X$} if the following holds for all $x,y \in X$ and $\alpha\in\Field$:
+  \begin{enumerate}
+  \item $\Vert \alpha x \Vert = \vert \alpha \vert \, \Vert x \Vert$,
+  \item $\Vert x \Vert \geq 0$ with equality if and only if $x$ is the zero element in $X$,
+  \item $\Vert x+y \Vert \leq \Vert x \Vert+\Vert y \Vert$.
+  \end{enumerate}
+  A mapping 
+  \[ \ip{\cdot}{\cdot} \colon X\times X \to \Field \]
+  is called the \emph{inner product on $X$}
+  if the following holds for all $x,y,z \in X$ and $\alpha\in\Field$:
+  \begin{enumerate}
+  \item $\ip{x}{y}=\overline{\ip{y}{x}}$,
+  \item $\ip{\alpha x}{y}=\overline{\alpha}\ip{x}{y}$ and $\ip{x}{\alpha  y}= \alpha \ip{x}{y}$,
+  \item $\ip{x + y}{z} = \ip{x}{z}  +  \ip{y}{z}$,
+  \item  $\ip{x}{x}\geq 0$ with equality if and only if $x$ is the zero element in $X$.
+  \end{enumerate}
+  A vector space with an inner product is called an \emph{inner product (or pre Hilbert) space}
+  and a vector space with a norm is called a \emph{normed space}.
+\end{definition}
+Let $X$ be an inner product space. Then we say that $x,y \in X$ are \emph{orthogonal} 
+if $\ip{x}{y}=0$. 
+
+
+\paragraph{Examples of vector spaces.}
+The first example is a trivial one, namely that any field $\Field$ is a one-dimensional 
+vector space over itself. The next example is the product space $\Field^{n}$ which is  defined as 
+the $n$ fold product of $\Field$, \ie,
+\[ \Field^{n} := \underbrace{\Field \times \ldots \times \Field}_{\text{$n$ times}}. \]
+Then $\Field^{n}$ is an $n$-dimensional vector space 
+over $\Field$. In this setting, $\Field^1$ is isomorphic to $\Field$, so we will identify $\Field^1$ with $\Field$
+without further notice. The importance of the vector space $\Field^{n}$ originates from the fact 
+that it is the canonical $n$-dimensional vector space. In fact, any $n$-dimensional vector 
+space $X$ can be naturally identified 
+with $\Field^{n}$. Let  $\{ v_1,\ldots, v_{n} \}$ be a basis of $X$ and define the map 
+$\phi \colon X \to \Field^{n}$ as
+\[  \phi\Bigl( \sum_{i=1}^n \alpha_i v_i \Bigr) := (\alpha_1,\ldots,\alpha_{n})\in\Field^{n}
+    \quad\text{so}\quad 
+    \phi^{-1}(\alpha_1,\ldots,\alpha_{n}) = \sum_{i=1}^n \alpha_i v_i.
+\]
+The above map $\phi$ is an vector space isomorphism which we call the \emph{natural 
+isomorphism of $X$ \wrt the basis $\{ v_1,\ldots, v_{n} \}$}, so $X$ is isomorphic to $\Field^{n}$.
+Let us also mention that in order to comply with the notation used in 
+matrix algebra\footnote{Matrix, and more generally, tensor algebra for matrices and tensors with 
+elements in a general field $\Field$ is a straightforward generalization of the matrix and 
+tensor algebra for matrices and tensors with elements in $\Real$. 
+We refer to \cite[Chapter~II, Section~10 and Chapter~III]{Bo89} for the formal details.} 
+in $\Field$, a vector $\alpha\in\Field^{n}$ is written as a column vector of its components, 
+\ie,
+\[ \alpha = \begin{pmatrix} \alpha_1 \\  \vdots \\  \alpha_{n} \end{pmatrix}
+   \quad\text{with $\alpha_j \in \Field $ for $j=1,\ldots,n$.}
+\]
+
+As a final example,  let $X$ be a set and $Y$ a vector space over a field $\Field$. Now, the 
+set $\Map(X,Y)$ of all mappings from $X$ into $Y$ has a natural vector space 
+structure. In fact, for $f,g\in \Map(X,Y)$ and $\alpha\in\Field$ we define $f+g$ and $\alpha f$ as 
+\[ (f+g)(x):= f(x)+g(x) \quad\text{and}\quad (\alpha f)(x):=\alpha f(x) \]
+for all $x\in X$. Then, whenever $f+g, \alpha f\in  \Map(X,Y)$, the set $\Map(X,Y)$ becomes
+a vector space over $\Field$ under the above definitions of the group law and vector space 
+multiplication. An interesting special case is when $X$ is a vector space over $\Field$ and 
+$\Map(X,Y)= \Hom_{\Field}(X,Y)$.
+
+
+%\subsection{Topological structures}
+%Let $\Field$ denote the field of real numbers $\Real$ or complex numbers $\Complex$ with the usual
+%addition and multiplication. 
+
+\bibliographystyle{plain}
+\bibliography{discretization}
 
 \end{document}
