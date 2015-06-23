@@ -45,10 +45,6 @@ standard_library.install_aliases()
 class CudaElementType(object):
     def __init__(self, impl, lincomb=None, inner=None, norm=None, multiply=None):
         self.impl = impl
-        self.lincomb = lincomb
-        self.inner = inner
-        self.norm = norm
-        self.multiply = multiply
 
 CudaElementType.float32 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplFloat)
 CudaElementType.uint8 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplUChar)
@@ -148,10 +144,7 @@ class CudaEN(spaces.LinearSpace):
             if data_ptr is None:
                 return self.element(self._type.impl(self.n))
             else:
-                if self._type == CudaElementType.float32:
-                    return self.element(RLcpp.PyCuda.vectorFromPointer(data_ptr, self.n)) # todo fix
-                else:
-                    raise NotImplementedError("Only implemented for float")
+                self.element(self._type.impl.fromPointer(data_ptr, self.n))
         elif isinstance(data, np.ndarray):  # Create from numpy array
             if data.shape != (self._n,):
                 raise ValueError(errfmt('''
@@ -201,7 +194,7 @@ class CudaEN(spaces.LinearSpace):
         CudaRN(3).element([ 14.,  19.,  24.])
         """
 
-        RLcpp.PyCuda.linComb(z.data, a, x.data, b, y.data)
+        z.data.linComb(a, x.data, b, y.data)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -544,7 +537,7 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         20.0
         """
 
-        return RLcpp.PyCuda.inner(x.data, y.data)
+        return x.data.inner(y.data)
 
     def _norm(self, x):
         """ Calculates the 2-norm of x
@@ -575,7 +568,7 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return RLcpp.PyCuda.norm(x.data)
+        return x.data.norm()
 
     def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -607,7 +600,7 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         >>> y
         CudaRN(3).element([ 5.,  6.,  6.])
         """
-        RLcpp.PyCuda.multiply(x.data, y.data)
+        y.data.multiply(x.data)
 
     @property
     def field(self):
