@@ -209,7 +209,7 @@ class CudaEN(spaces.LinearSpace):
         >>> y
         CudaRN(3).element([ 0.,  0.,  0.])
         """
-        return self.element(self._type.impl(self.n, 0))
+        return self.Vector(self, self._type.impl(self.n, 0))
 
     @property
     def field(self):
@@ -595,50 +595,6 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         CudaRN(3).element([ 5.,  6.,  6.])
         """
         y.data.multiply(x.data)
-
-    @property
-    def field(self):
-        """ The underlying field of RN is the real numbers
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        RealNumbers instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.field
-        RealNumbers()
-        """
-        return self._field
-
-    @property
-    def n(self):
-        """ The dimension of this space
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        Integer
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.n
-        3
-        """
-        return self._n
 
     def equals(self, other):
         """ Verifies that other is a CudaRN instance of dimension `n`
