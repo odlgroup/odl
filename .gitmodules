@@ -1,3 +1,3 @@
 [submodule "RLcpp"]
 	path = RLcpp
-	url = git@gits-14.sys.kth.se:LCR/RLcpp.git
+	url = https://gits-14.sys.kth.se/LCR/RLcpp
