@@ -30,7 +30,6 @@ from future import standard_library
 # External module imports
 import numpy as np
 from math import sqrt
-from numpy import float64
 from numbers import Integral
 
 # RL imports
@@ -43,11 +42,14 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 class CudaElementType(object):
-    def __init__(self, impl, lincomb=None, inner=None, norm=None, multiply=None):
+    def __init__(self, impl, nptype):
         self.impl = impl
+        self.nptype = nptype #todo, make this property of self.impl
 
-CudaElementType.float32 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplFloat)
-CudaElementType.uint8 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplUChar)
+CudaElementType.float32 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplFloat,
+                                          nptype=np.float32)
+CudaElementType.uint8 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplUChar,
+                                        nptype=np.uint8)
 
 class CudaEN(spaces.LinearSpace):
     """The real space E^n, implemented in CUDA
@@ -144,22 +146,13 @@ class CudaEN(spaces.LinearSpace):
             if data_ptr is None:
                 return self.element(self._type.impl(self.n))
             else:
-                self.element(self._type.impl.fromPointer(data_ptr, self.n))
-        elif isinstance(data, np.ndarray):  # Create from numpy array
-            if data.shape != (self._n,):
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(data, data.shape, (self.n,))))
-
-            data = data.astype(np.float64, copy=False)
-
-            # Create result and assign (could be optimized to one call)
+                return self.element(self._type.impl.fromPointer(data_ptr, self.n))
+        else:
+            # Create result and assign 
+            # (could be optimized to one call, this was tried and did not help much)
             elem = self.element()
             elem[:] = data
             return elem
-        else:  # Create from intermediate numpy array
-            as_array = np.array(data, dtype=np.float64, **kwargs)
-            return self.element(as_array)
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -483,12 +476,10 @@ class CudaEN(spaces.LinearSpace):
             """
 
             if isinstance(index, slice):
-                # Convert value to the correct type
-                if not isinstance(value, np.ndarray):
-                    value = np.array(value, dtype=float64)
+                # Convert value to the correct type if needed
+                value = np.asarray(value, dtype=self.space._type.nptype)
 
-                value = value.astype(float64, copy=False)
-
+                # Size checking is performed in c++
                 self.data.setSlice(index, value)
             else:
                 self.data.__setitem__(index, value)
