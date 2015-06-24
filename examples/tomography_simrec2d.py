@@ -143,7 +143,7 @@ reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 #Discretize the reconstruction space
 reconRN = ds.EuclideanSpace(nVoxels.prod())
-reconDisc = dd.pixel_discretization(reconSpace, reconRN, nVoxels[0], nVoxels[1])
+reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels)
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)

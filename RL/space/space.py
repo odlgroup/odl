@@ -264,7 +264,7 @@ class LinearSpace(Set):
         if not self.field.contains(a):
             raise TypeError(errfmt('''
             lincomb failed, a ({}) is not in field ({})
-            '''.format(a, self.field)))
+            '''.format(repr(a), repr(self.field))))
 
         if not self.contains(x):
             raise TypeError(errfmt('''
@@ -282,7 +282,7 @@ class LinearSpace(Set):
             if not self.field.contains(b):
                 raise TypeError(errfmt('''
                 lincomb failed, b ({}) is not in field ({})
-                '''.format(b, self.field)))
+                '''.format(repr(b), repr(self.field))))
             if not self.contains(y):
                 raise TypeError(errfmt('''
                 lincomb failed, y ({}) is not in space ({})

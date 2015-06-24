@@ -78,8 +78,8 @@ class ForwardDiffAdj(LinearOperator):
 
 
 def denoise(x0, la, mu, iterations=1):
-    scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end -
-                                x0.space.parent.domain.begin)
+    scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end[0] -
+                                x0.space.parent.domain.begin[0])
 
     diff = ForwardDiff(x0.space, scale)
 

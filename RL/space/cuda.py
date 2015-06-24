@@ -33,6 +33,7 @@ from math import sqrt
 from numbers import Integral
 
 # RL imports
+import RL.operator.operator as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
@@ -40,9 +41,18 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
+class CudaElementType(object):
+    def __init__(self, impl, nptype):
+        self.impl = impl
+        self.nptype = nptype #todo, make this property of self.impl
 
-class CudaRN(spaces.HilbertSpace, spaces.Algebra):
-    """The real space R^n, implemented in CUDA
+CudaElementType.float32 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplFloat,
+                                          nptype=np.float32)
+CudaElementType.uint8 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplUChar,
+                                        nptype=np.uint8)
+
+class CudaEN(spaces.LinearSpace):
+    """The real space E^n, implemented in CUDA
 
     Requires the compiled RL extension RLcpp.
 
@@ -51,16 +61,23 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
     n : int
         The dimension of the space
+
+    type : CudaElementType
+           The underlying type
     """
 
-    def __init__(self, n):
+    def __init__(self, n, type):
         if not isinstance(n, Integral) or n < 1:
             raise TypeError('n ({}) has to be a positive integer'.format(np))
-        self._dim = n
-        self._field = sets.RealNumbers()
-        self.impl = RLcpp.PyCuda.CudaRNImpl(n)
 
-    def element(self, data=None, **kwargs):
+        if not isinstance(type, CudaElementType):
+            raise TypeError('type ({}) must be a CudaElementType'.format(type))
+
+        self._n = n
+        self._type = type
+        self._field = sets.RealNumbers()
+
+    def element(self, data=None, data_ptr=None, **kwargs):
         """ Returns a vector of zeros
 
         CUDA memory is always initialized
@@ -123,86 +140,19 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         """
 
-        if isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
+        if isinstance(data, self._type.impl):
             return self.Vector(self, data)
         elif data is None:
-            return self.element(self.impl.empty())
-        elif isinstance(data, np.ndarray):  # Create from numpy array
-            if data.shape != (self._dim,):
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(data, data.shape, (self.dim,))))
-
-            data = data.astype(np.float64, copy=False)
-
-            # Create result and assign (could be optimized to one call)
+            if data_ptr is None:
+                return self.Vector(self, self._type.impl(self.n))
+            else:
+                return self.Vector(self, self._type.impl.fromPointer(data_ptr, self.n))
+        else:
+            # Create result and assign 
+            # (could be optimized to one call, this was tried and did not help much)
             elem = self.element()
             elem[:] = data
             return elem
-        else:  # Create from intermediate numpy array
-            as_array = np.array(data, dtype=np.float64, **kwargs)
-            return self.element(as_array)
-
-    def _inner(self, x, y):
-        """ Calculates the inner product of x and y
-
-        Parameters
-        ----------
-        x : CudaRN.Vector
-        y : CudaRN.Vector
-
-        Returns
-        -------
-        inner: float
-            The inner product of x and y
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> x = rn.element([1, 2, 3])
-        >>> y = rn.element([3, 1, 5])
-        >>> rn.inner(x, y)
-        20.0
-
-        Also has member inner
-        >>> x.inner(y)
-        20.0
-        """
-
-        return self.impl.inner(x.data, y.data)
-
-    def _norm(self, x):
-        """ Calculates the 2-norm of x
-
-        This method is implemented separately from `sqrt(inner(x,x))`
-        for efficiency reasons.
-
-        Parameters
-        ----------
-        x : CudaRN.Vector
-
-        Returns
-        -------
-        norm : float
-            The 2-norm of x
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> x = rn.element([2, 3, 6])
-        >>> rn.norm(x)
-        7.0
-
-        Also has member inner
-        >>> x.norm()
-        7.0
-        """
-
-        return sqrt(self.impl.normSq(x.data))
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -237,39 +187,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         CudaRN(3).element([ 14.,  19.,  24.])
         """
 
-        self.impl.linComb(z.data, a, x.data, b, y.data)
-
-    def _multiply(self, x, y):
-        """ Calculates the pointwise product of two vectors and assigns the
-        result to `y`
-
-        This is defined as:
-
-        multiply(x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
-
-        Parameters
-        ----------
-
-        x : CudaRN.Vector
-            read from
-        y : CudaRN.Vector
-            read from and written to
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> x = rn.element([5, 3, 2])
-        >>> y = rn.element([1, 2, 3])
-        >>> rn.multiply(x, y)
-        >>> y
-        CudaRN(3).element([ 5.,  6.,  6.])
-        """
-        self.impl.multiply(x.data, y.data)
+        z.data.linComb(a, x.data, b, y.data)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -291,7 +209,7 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> y
         CudaRN(3).element([ 0.,  0.,  0.])
         """
-        return self.element(self.impl.zero())
+        return self.element(self._type.impl(self.n, 0))
 
     @property
     def field(self):
@@ -309,14 +227,14 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaEN(3, CudaElementType.float32)
         >>> rn.field
         RealNumbers()
         """
         return self._field
 
     @property
-    def dim(self):
+    def n(self):
         """ The dimension of this space
 
         Parameters
@@ -332,10 +250,10 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         --------
 
         >>> rn = CudaRN(3)
-        >>> rn.dim
+        >>> rn.n
         3
         """
-        return self._dim
+        return self._n
 
     def equals(self, other):
         """ Verifies that other is a CudaRN instance of dimension `n`
@@ -376,15 +294,16 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
         >>> r3 != r4
         True
         """
-        return isinstance(other, CudaRN) and self.dim == other.dim
+
+        return isinstance(other, CudaEN) and self.n == other.n and self._type == other._type
 
     def __str__(self):
-        return "CudaRN(" + str(self._dim) + ")"
+        return "CudaEN(" + str(self._n) + ")"
 
     def __repr__(self):
-        return "CudaRN(" + str(self._dim) + ")"
+        return "CudaEN(" + str(self._n) + ")"
 
-    class Vector(spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
+    class Vector(spaces.LinearSpace.Vector):
         """ A RN-vector represented in CUDA
 
         Parameters
@@ -392,13 +311,13 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
 
         space : CudaRN
                 Instance of CudaRN this vector lives in
-        data : RLcpp.PyCuda.CudaRNVectorImpl
+        data : RLcpp.PyCuda.CudaVectorImplFloat
                     Underlying data-representation to be used by this vector
         """
         def __init__(self, space, data):
             super().__init__(space)
-            if not isinstance(data, RLcpp.PyCuda.CudaRNVectorImpl):
-                raise TypeError(errfmt('''
+            if not isinstance(data, self.space._type.impl):
+                return TypeError(errfmt('''
                 'data' ({}) must be a CudaRNVectorImpl instance
                 '''.format(data)))
             self._data = data
@@ -432,6 +351,21 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
                   Pointer to the CUDA data of this vector
             """
             return self._data.dataPtr()
+
+        @property
+        def itemsize(self):
+            """ Get a size (in bytes) of the underlying element type
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            itemsize : Int
+                       Size in bytes of type
+            """
+            return 4 #Currently hardcoded to float
 
         def __str__(self):
             return str(self[:])
@@ -545,15 +479,216 @@ class CudaRN(spaces.HilbertSpace, spaces.Algebra):
             """
 
             if isinstance(index, slice):
-                # Convert value to the correct type
-                if not isinstance(value, np.ndarray):
-                    value = np.array(value, dtype=np.float64)
+                # Convert value to the correct type if needed
+                value = np.asarray(value, dtype=self.space._type.nptype)
 
-                value = value.astype(np.float64, copy=False)
-
+                # Size checking is performed in c++
                 self.data.setSlice(index, value)
             else:
                 self.data.__setitem__(index, value)
+
+
+class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
+    """The real space R^n, implemented in CUDA
+
+    Requires the compiled RL extension RLcpp.
+
+    Parameters
+    ----------
+
+    n : int
+        The dimension of the space
+    """
+
+    def __init__(self, n):
+        super().__init__(n, CudaElementType.float32)
+
+    def _inner(self, x, y):
+        """ Calculates the inner product of x and y
+
+        Parameters
+        ----------
+        x : CudaRN.Vector
+        y : CudaRN.Vector
+
+        Returns
+        -------
+        inner: float
+            The inner product of x and y
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([3, 1, 5])
+        >>> rn.inner(x, y)
+        20.0
+
+        Also has member inner
+        >>> x.inner(y)
+        20.0
+        """
+
+        return x.data.inner(y.data)
+
+    def _norm(self, x):
+        """ Calculates the 2-norm of x
+
+        This method is implemented separately from `sqrt(inner(x,x))`
+        for efficiency reasons.
+
+        Parameters
+        ----------
+        x : CudaRN.Vector
+
+        Returns
+        -------
+        norm : float
+            The 2-norm of x
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> x = rn.element([2, 3, 6])
+        >>> rn.norm(x)
+        7.0
+
+        Also has member inner
+        >>> x.norm()
+        7.0
+        """
+
+        return x.data.norm()
+
+    def _multiply(self, x, y):
+        """ Calculates the pointwise product of two vectors and assigns the
+        result to `y`
+
+        This is defined as:
+
+        multiply(x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
+
+        Parameters
+        ----------
+
+        x : CudaRN.Vector
+            read from
+        y : CudaRN.Vector
+            read from and written to
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
+        >>> rn.multiply(x, y)
+        >>> y
+        CudaRN(3).element([ 5.,  6.,  6.])
+        """
+        y.data.multiply(x.data)
+
+    @property
+    def field(self):
+        """ The underlying field of RN is the real numbers
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        RealNumbers instance
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> rn.field
+        RealNumbers()
+        """
+        return self._field
+
+    @property
+    def n(self):
+        """ The dimension of this space
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        Integer
+
+
+        Examples
+        --------
+
+        >>> rn = CudaRN(3)
+        >>> rn.n
+        3
+        """
+        return self._n
+
+    def equals(self, other):
+        """ Verifies that other is a CudaRN instance of dimension `n`
+
+        Parameters
+        ----------
+        other : any object
+                The object to check for equality
+
+        Returns
+        -------
+        boolean      True if equal, else false
+
+        Examples
+        --------
+
+        Comparing with self
+        >>> r3 = CudaRN(3)
+        >>> r3.equals(r3)
+        True
+
+        Also true when comparing with similar instance
+        >>> r3a, r3b = CudaRN(3), CudaRN(3)
+        >>> r3a.equals(r3b)
+        True
+
+        False when comparing to other dimension RN
+        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3.equals(r4)
+        False
+
+        We also support operators '==' and '!='
+        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3 == r3
+        True
+        >>> r3 == r4
+        False
+        >>> r3 != r4
+        True
+        """
+        return isinstance(other, CudaRN) and self._n == other._n
+
+    def __str__(self):
+        return "CudaRN(" + str(self._n) + ")"
+
+    def __repr__(self):
+        return "CudaRN(" + str(self._n) + ")"
+
+    class Vector(CudaEN.Vector, spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
+        pass
 
 
 #Methods, todo, move

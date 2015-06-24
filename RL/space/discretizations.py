@@ -15,12 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=protected-access
-
-"""
-Default implementations of discretizations of sets using an underlying
-RN representation
-"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -42,95 +36,28 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-def uniform_discretization(parent, rnimpl):
-    """ Creates an UniformDiscretization of space parent using rn as the
-    underlying representation.
-    """
-    rn_type = type(rnimpl)
-    rn_vector_type = rn_type.Vector
-
-    class UniformDiscretization(rn_type):
-        """ Uniform discretization of an interval
-            Represents vectors by RN elements
-            Uses trapezoid method for integration
-        """
-
-        def __init__(self, parent, rn):
-            if not isinstance(parent.domain, sets.Interval):
-                raise NotImplementedError("Can only discretize intervals")
-
-            if not isinstance(rn, space.HilbertSpace):
-                raise NotImplementedError("RN has to be a Hilbert space")
-
-            if not isinstance(rn, space.Algebra):
-                raise NotImplementedError("RN has to be an algebra")
-
-            self.parent = parent
-            self._rn = rn
-            self.scale = (self.parent.domain.length / (self.dim - 1))
-
-        def _inner(self, x, y):
-            return self._rn._inner(x, y) * self.scale
-
-        def _norm(self, vector):
-            return self._rn._norm(vector) * sqrt(self.scale)
-
-        def __eq__(self, other):
-            return (isinstance(other, UniformDiscretization) and
-                    self.parent.equals(other.parent) and
-                    self._rn.equals(other._rn))
-
-        def element(self, data=None, **kwargs):
-            # TODO: 'data' is not a good name here
-            if isinstance(data, FunctionSpace.Vector):
-                tmp = np.array([data(point) for point in self.points()],
-                               **kwargs)
-                return self.element(tmp)
-            else:
-                return super().element(data, **kwargs)
-
-        def integrate(self, vector):
-            return float(self._rn.sum(vector) * self.scale)
-
-        def points(self):
-            return np.linspace(self.parent.domain.begin,
-                               self.parent.domain.end, self.dim)
-
-        def __getattr__(self, name):
-            return getattr(self._rn, name)
-
-        def __str__(self):
-            return "UniformDiscretization(" + str(self._rn) + ")"
-
-        def __repr__(self):
-            return ("UniformDiscretization(" + repr(self.parent) + "," +
-                    repr(self._rn) + ")")
-
-        class Vector(rn_vector_type):
-            pass
-
-    return UniformDiscretization(parent, rnimpl)
-
-
-def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
-    """ Creates an pixel discretization of space parent using rn as the
+def uniform_discretization(parent, rnimpl, shape=None, order='C'):
+    """ Creates an discretization of space parent using rn as the
     underlying representation.
 
     order indicates the order data is stored in, 'C'-order is the default
     numpy order, also called row major.
     """
-    rn_type = type(rnimpl)
-    rn_vector_type = rn_type.Vector
+    RNType = type(rnimpl)
+    RNVectortype = RNType.Vector
 
-    class PixelDiscretization(rn_type):
+    if shape is None:
+        shape = (rnimpl.n,)
+
+    class UniformDiscretization(RNType):
         """ Uniform discretization of an square
             Represents vectors by RN elements
             Uses sum method for integration
         """
 
-        def __init__(self, parent, rn, cols, rows, order):
-            if not isinstance(parent.domain, sets.Rectangle):
-                raise NotImplementedError('Can only discretize Squares')
+        def __init__(self, parent, rn, shape, order):
+            if not isinstance(parent.domain, sets.IntervalProd):
+                raise NotImplementedError('Can only discretize IntervProds')
 
             if not isinstance(rn, space.HilbertSpace):
                 raise NotImplementedError('RN has to be a Hilbert space')
@@ -138,50 +65,51 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
             if not isinstance(rn, space.Algebra):
                 raise NotImplementedError('RN has to be an algebra')
 
-            if not rn.dim == cols*rows:
+            if rn.n != np.prod(shape):
                 raise NotImplementedError(errfmt('''
-                Dimensions do not match, expected {}x{} = {}, got {}
-                '''.format(cols, rows, cols*rows, rn.dim)))
+                Dimensions do not match, expected {}, got {}
+                '''.format(np.prod(rn.n), np.prod(shape))))
 
             self.parent = parent
-            self.cols = cols
-            self.rows = rows
+            self.shape = tuple(shape)
             self.order = order
             self._rn = rn
-            dx = ((self.parent.domain.end[0] - self.parent.domain.begin[0]) /
-                  (self.cols - 1))
-            dy = ((self.parent.domain.end[1] - self.parent.domain.begin[1]) /
-                  (self.rows - 1))
-            self.scale = dx * dy
+            dx = np.array([(self.parent.domain.end[i] - self.parent.domain.begin[i]) /
+                           (self.shape[i] - 1) for i in range(self.parent.domain.dim)])
+            self.scale = float(np.prod(dx))
 
-        def _inner(self, x, y):
-            return self._rn._inner(x, y) * self.scale
+        def _inner(self, v1, v2):
+            return self._rn._inner(v1, v2) * self.scale
 
         def _norm(self, vector):
             return self._rn._norm(vector) * sqrt(self.scale)
 
         def equals(self, other):
-            return (isinstance(other, PixelDiscretization) and
-                    self.cols == other.cols and self.rows == other.rows and
+            return (isinstance(other, UniformDiscretization) and
+                    self.shape == other.shape and
                     self._rn.equals(other._rn))
 
         def element(self, data=None, **kwargs):
             if isinstance(data, FunctionSpace.Vector):
-                tmp = np.array([data([x, y])
-                                for x, y in zip(*self.points())],
-                               **kwargs)
+                if self.parent.domain.dim == 1:
+                    tmp = np.array([data(point)
+                                    for point in self.points()],
+                                   **kwargs)
+                else:
+                    tmp = np.array([data(point)
+                                    for point in zip(*self.points())],
+                                   **kwargs)
                 return self.element(tmp)
-
-            elif isinstance(data, np.ndarray):
-                if data.shape == (self.cols, self.rows):
-                    return self.element(data.flatten(self.order))
-                elif data.shape == (self.dim,):
+            elif data is not None:
+                data = np.asarray(data)
+                if data.shape == (self.n,):
                     return super().element(data)
+                elif data.shape == self.shape:
+                    return self.element(data.flatten(self.order))
                 else:
                     raise ValueError(errfmt('''
                     Input numpy array is of shape {}, expected shape
-                    {} or {}'''.format(data.shape, (self.dim,),
-                                       (self.cols, self.rows))))
+                    {} or {}'''.format(data.shape, (self.n,), self.shape)))
             else:
                 return super().element(data, **kwargs)
 
@@ -189,29 +117,40 @@ def pixel_discretization(parent, rnimpl, cols, rows, order='C'):
             return float(self._rn.sum(vector) * self.scale)
 
         def points(self):
-            x, y = np.meshgrid(np.linspace(self.parent.domain.begin[0],
-                                           self.parent.domain.end[0],
-                                           self.cols),
-                               np.linspace(self.parent.domain.begin[1],
-                                           self.parent.domain.end[1],
-                                           self.rows))
-            return x.flatten(self.order), y.flatten(self.order)
+            if self.parent.domain.dim == 1:
+                return np.linspace(self.parent.domain.begin[0],
+                                   self.parent.domain.end[0],
+                                   self.shape[0])
+            else:
+                oneD = [np.linspace(self.parent.domain.begin[i],
+                        self.parent.domain.end[i],
+                        self.shape[i]) for i in range(self.parent.domain.dim)]
+
+                points = np.meshgrid(*oneD)
+
+                return tuple(point.flatten(self.order) for point in points)
 
         def __getattr__(self, name):
-            return getattr(self._rn, name)
+            if name in self.__dict__:
+                return self.__dict__[name]
+            else:
+                return getattr(self._rn, name)
 
         def __str__(self):
-            return ('PixelDiscretization(' + str(self._rn) + ', ' +
-                    str(self.cols) + 'x' + str(self.rows) + ')')
-
+            if len(self.shape)>1:
+                return ('[' + repr(self.parent) + ', ' + str(self._rn) + ', ' +
+                        'x'.join(str(d) for d in self.shape) + ']')
+            else:
+                return '[' + repr(self.parent) + ', ' + str(self._rn) + ']'
 
         def __repr__(self):
-            return ("PixelDiscretization(" + repr(self.parent) + ", " +
-                    repr(self._rn) + ", " +
-                    str(self.cols) + ', ' +
-                    str(self.rows) + ")")
+            shapestr = ', ' + repr(self.shape) if self.shape != (self._rn.n,) else ''
+            orderstr = ', ' + repr(self.order) if self.order != 'C' else ''
 
-        class Vector(rn_vector_type):
-            pass
+            return "uniform_discretization(" + repr(self.parent) + ", " + repr(self._rn) + shapestr + orderstr + ")"
 
-    return PixelDiscretization(parent, rnimpl, cols, rows, order)
+        class Vector(RNVectortype):
+            def as_array(self):
+                return np.reshape(self[:], self.space.shape, self.space.order)
+
+    return UniformDiscretization(parent, rnimpl, shape, order)

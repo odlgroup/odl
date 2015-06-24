@@ -31,7 +31,7 @@ from builtins import str, super
 # RL imports
 import RL.operator.operator as op
 from RL.space.space import LinearSpace
-from RL.space.set import UniversalSet, CarthesianProduct
+from RL.space.set import UniversalSet
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()

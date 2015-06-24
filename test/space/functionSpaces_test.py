@@ -54,12 +54,12 @@ class L2Test(RLTestCase):
     def test_rectangle(self):
         R = sets.Rectangle((0, 0), (pi, 2*pi))
         l2 = fs.L2(R)
-        l2sin = l2.element(lambda point: np.sin(point[0]) * np.sin(point[1]))
+        l2sin = l2.element(lambda p: np.sin(p[0]) * np.sin(p[1]))
 
         n = 10
         m = 10
         rn = EuclideanSpace(n*m)
-        d = disc.pixel_discretization(l2, rn, n, m)
+        d = disc.uniform_discretization(l2, rn, (n, m))
 
         sind = d.element(l2sin)
 
