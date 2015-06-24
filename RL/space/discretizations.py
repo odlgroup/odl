@@ -100,8 +100,8 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                                     for point in zip(*self.points())],
                                    **kwargs)
                 return self.element(tmp)
-
-            elif isinstance(data, np.ndarray):
+            elif data is not None:
+                data = np.asarray(data)
                 if data.shape == (self.n,):
                     return super().element(data)
                 elif data.shape == self.shape:
