@@ -41,9 +41,6 @@ standard_library.install_aliases()
 
 
 class CudaEn(spaces.LinearSpace):
-    dtypes = {np.float32: RLcpp.PyCuda.CudaVectorImplFloat,
-              np.uint8: RLcpp.PyCuda.CudaVectorImplUChar}
-
     """The real space E^n, implemented in CUDA
 
     Requires the compiled RL extension RLcpp.
@@ -54,9 +51,14 @@ class CudaEn(spaces.LinearSpace):
     dim : int
         The dimension of the space
 
-    dtype : {'numpy.float32', 'numpy.uint8'}
-        Numpy data type mapped to a CudaVector data type
+    dtype : type
+        Numpy data type mapped to a CudaVector data type.
+        Currently supported:
+        float32, uint8
     """
+
+    dtypes = {np.float32: RLcpp.PyCuda.CudaVectorImplFloat,
+              np.uint8: RLcpp.PyCuda.CudaVectorImplUChar}
 
     def __init__(self, dim, dtype=np.float32):
         if not isinstance(dim, Integral) or dim < 1:
