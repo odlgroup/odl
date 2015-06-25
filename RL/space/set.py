@@ -305,16 +305,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-<<<<<<< HEAD
-        >>> rbox1 = IntervProd(0, 0.5)
-        >>> rbox2 = IntervProd(0, 0.1+0.1+0.1+0.1+0.1)
-=======
-
-        >>> b1, e1 = [-1, 0, 2], [-0.5, 0, 3]
-        >>> b2, e2 = [np.sin(-np.pi/2), 0, 2], [-0.5, 0, np.sqrt(3)**2]
-        >>> rbox1 = IntervalProd(b1, e1)
-        >>> rbox2 = IntervalProd(b2, e2)
->>>>>>> 6c5739fc830a5f5b529690bf59ece4d5c2b6a662
+        >>> rbox1 = IntervalProd(0, 0.5)
+        >>> rbox2 = IntervalProd(0, 0.1+0.1+0.1+0.1+0.1)
         >>> rbox1.equals(rbox2)  # Num error
         False
         >>> rbox1 == rbox2  # Equivalent to rbox1.equals(rbox2)

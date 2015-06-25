@@ -31,7 +31,7 @@ from builtins import str, super
 # RL imports
 import RL.operator.operator as op
 from RL.space.space import LinearSpace
-from RL.space.set import UniversalSet
+from RL.space.set import UniversalSet, CartesianProduct
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -233,7 +233,7 @@ class LinCombOperator(op.LinearOperator):
         Scalar to multiply in[1] by
     """
     def __init__(self, space, a, b):
-        self.domain = CarthesianProduct(space, space)
+        self.domain = CartesianProduct(space, space)
         self.range = space
         self.a = a
         self.b = b
@@ -275,7 +275,7 @@ class MultiplyOperator(op.LinearOperator):
             The space the vectors should lie in
     """
     def __init__(self, space):
-        self.domain = CarthesianProduct(space, space)
+        self.domain = CartesianProduct(space, space)
         self.range = space
 
     def _apply(self, input, out):
