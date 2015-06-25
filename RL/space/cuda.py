@@ -29,17 +29,16 @@ from future import standard_library
 
 # External module imports
 import numpy as np
-from math import sqrt
 from numbers import Integral
 
 # RL imports
-import RL.operator.operator as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
+
 
 class CudaEN(spaces.LinearSpace):
     dtypes = {np.float32 : RLcpp.PyCuda.CudaVectorImplFloat, \
@@ -115,8 +114,6 @@ class CudaEN(spaces.LinearSpace):
         elif data is None:
             return self.Vector(self, self._vector_impl.fromPointer(data_ptr, self.n))
         elif data_ptr is None:
-            # Create result and assign 
-            # (could be optimized to one call, this was tried and did not help much)
             elem = self.element()
             elem[:] = data
             return elem
@@ -263,7 +260,9 @@ class CudaEN(spaces.LinearSpace):
         >>> r3 != r4
         True
         """
-        return isinstance(other, CudaEN) and self.n == other.n and self._dtype == other._dtype
+        return (isinstance(other, CudaEN) and 
+                self.n == other.n and 
+                self._dtype == other._dtype)
 
     def __str__(self):
         return "CudaEN(" + str(self._n) + ")"
@@ -287,10 +286,12 @@ class CudaEN(spaces.LinearSpace):
         """
         def __init__(self, space, data):
             super().__init__(space)
+
             if not isinstance(data, self.space._vector_impl):
                 return TypeError(errfmt('''
                 'data' ({}) must be a CudaENVectorImpl instance
                 '''.format(data)))
+
             self._data = data
 
         @property
@@ -336,7 +337,7 @@ class CudaEN(spaces.LinearSpace):
             itemsize : Int
                        Size in bytes of type
             """
-            return 4 #Currently hardcoded to float
+            return 4  # Currently hardcoded to float
 
         def __str__(self):
             return str(self[:])
@@ -426,9 +427,11 @@ class CudaEN(spaces.LinearSpace):
                     The position(s) that should be set
             value : Real or Array-Like
                     The values that should be assigned.
-                    If index is an integer, value should be a Number convertible to float.
-                    If index is a slice, value should be an Array-Like of the same
-                    size as the slice.
+
+                    If index is an integer, value should be a Number
+                    convertible to float.
+                    If index is a slice, value should be array-like of
+                    the same size as the slice.
 
             Returns
             -------
@@ -571,50 +574,6 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         """
         y.data.multiply(x.data)
 
-    @property
-    def field(self):
-        """ The underlying field of RN is the real numbers
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        RealNumbers instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.field
-        RealNumbers()
-        """
-        return self._field
-
-    @property
-    def n(self):
-        """ The dimension of this space
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        Integer
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.n
-        3
-        """
-        return self._n
-
     def equals(self, other):
         """ Verifies that other is a CudaRN instance of dimension `n`
 
@@ -662,28 +621,36 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
     def __repr__(self):
         return "CudaRN(" + str(self._n) + ")"
 
-    class Vector(CudaEN.Vector, spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
+    class Vector(CudaEN.Vector, spaces.HilbertSpace.Vector,
+                 spaces.Algebra.Vector):
         pass
 
 
-#Methods, todo, move
+# Methods
+# TODO: move
 def abs(inp, outp):
     RLcpp.PyCuda.abs(inp.data, outp.data)
+
 
 def sign(inp, outp):
     RLcpp.PyCuda.sign(inp.data, outp.data)
 
-def addScalar(inp, scal, outp):
+
+def add_scalar(inp, scal, outp):
     RLcpp.PyCuda.addScalar(inp.data, scal, outp.data)
 
-def maxVectorScalar(inp, scal, outp):
+
+def max_vector_scalar(inp, scal, outp):
     RLcpp.PyCuda.maxVectorScalar(inp.data, scal, outp.data)
 
-def maxVectorVector(inp1, inp2, outp):
+
+def max_vector_vector(inp1, inp2, outp):
     RLcpp.PyCuda.maxVectorVector(inp1.data, inp2.data, outp.data)
+
 
 def sum(inp):
     return RLcpp.PyCuda.sum(inp.data)
+
 
 if __name__ == '__main__':
     import doctest

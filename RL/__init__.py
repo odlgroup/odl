@@ -16,6 +16,14 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
+"""
+RL is a functional analysis library
+
+RL suppors abstract sets, linear vector spaces defined on such
+and Operators/Functionals defined on these sets. It is intended
+to be used to write general code and faciliate code reuse.
+"""
+
 from __future__ import absolute_import
 
 __version__ = '0.1b0.dev0'

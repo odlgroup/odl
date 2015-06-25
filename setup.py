@@ -15,6 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Setup script for RL
+
+Install usage:
+>>> python setup.py install
+"""
 
 from __future__ import print_function
 from __future__ import absolute_import

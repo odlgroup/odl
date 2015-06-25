@@ -15,10 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Uses nose to find all tests in the 'test' folder and runs them
+"""
 
 import nose
 import sys
 
-arg = sys.argv[:1]
-arg.append('--verbosity=2')
-out = nose.run(defaultTest='./test/.', argv=arg)
+if __name__ == '__main__':
+    arg = sys.argv[:1]
+    arg.append('--verbosity=2')
+    out = nose.run(defaultTest='./test/.', argv=arg)
+
+

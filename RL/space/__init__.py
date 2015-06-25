@@ -14,7 +14,68 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
+"""
+Core Spaces and set support
 
+Core classes, sets
+==========================================================================
+Abstract sets (set)
+==========================================================================
+Set             A mathematical set, has method 'contains'
+ComplexNumbers  The set of complex numbers
+RealNumbers     The set of real numbers
+Integers        The set of integers
+IntervalProd    The carthesian product of n intervals
+Interval        IntervalProd specialization in 1-D
+Rectanggle      IntervalProd specialization in 2-D
+==========================================================================
+
+Contains several abstract space definitions as 'Set' implementations
+==========================================================================
+General Spaces (space)
+==========================================================================
+LinearSpace     Vector space with addition, scalar multiplication
+MetricSpace     A LinearSpace with a metric
+NormedSpace     A MetricSpace where the metric is induced by a norm
+HilbertSpace    A NormedSpace where the norm is induced by a inner product
+==========================================================================
+
+==========================================================================
+Product Spaces (product)
+==========================================================================
+LinearProductSpace      Vector space created by the carthesian product
+                        of other LinearSpaces
+MetricProductSpace      A LinearProductSpace with a metric
+NormedProductSpace      A MetricProductSpace where the metric is induced
+                        by a norm
+HilbertProductSpace     A HilbertProductSpace where the norm is induced by
+                        a inner product
+==========================================================================
+
+Also has a set of concerete implemenation of standard spaces
+==========================================================================
+RN-type spaces (euclidean, cuda)
+==========================================================================
+RN                  Basic space of n-reals, uses numpy.
+NormedRN            RN with some norm
+EuclideanSpace      RN with the usual euclidean norm and inner product
+CudaRN              EuclideanSpace implemented in CUDA
+==========================================================================
+
+==========================================================================
+Function spaces (function)
+==========================================================================
+FunctionSpace       The space of functions over some domain
+L2                  FunctionSpace with the usual L2-norm
+==========================================================================
+
+==========================================================================
+Discretizations of function spaces (discretizations)
+==========================================================================
+uniform_discretization  Discretization of an Interval using some Rn
+pixel_discretization    Discretization of an Rectangle using some Rn
+==========================================================================
+"""
 
 __all__ = ['cuda', 'discretizations', 'euclidean', 'function', 'product',
            'sequence', 'set', 'space']
