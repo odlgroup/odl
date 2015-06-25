@@ -46,7 +46,8 @@ standard_library.install_aliases()
 class TestInit(RLTestCase):
     def test_empty(self):
         r3 = CudaRn(3)
-        r3.element()
+        x = r3.element()
+        self.assertEqual(x, CudaRN(3).element())
         # Nothing to test, simply check that code runs
 
     def test_zero(self):
@@ -191,21 +192,22 @@ class TestMethods(RLTestCase):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
 
-        correct_norm_squared = 1**2 + 2**2 + 3**2
+        correct_norm_squared = 1 ** 2 + 2 ** 2 + 3 ** 2
         correct_norm = math.sqrt(correct_norm_squared)
+        places = 6
 
         # Space function
-        self.assertAlmostEquals(r3.norm(xd), correct_norm)
+        self.assertAlmostEquals(r3.norm(xd), correct_norm, places=5)
 
         # Member function
-        self.assertAlmostEquals(xd.norm(), correct_norm)
+        self.assertAlmostEquals(xd.norm(), correct_norm, places=5)
 
     def test_inner(self):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, 3, 9])
 
-        correct_inner = 1*5 + 2*3 + 3*9
+        correct_inner = 1 * 5 + 2 * 3 + 3 * 9
 
         # Space function
         self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
@@ -215,8 +217,9 @@ class TestMethods(RLTestCase):
 
     def vectors(self, rn):
         # Generate numpy arrays
-        x_arr, y_arr, z_arr = (np.random.rand(rn.dim), np.random.rand(rn.dim),
-                               np.random.rand(rn.dim))
+        x_arr = np.random.rand(rn.n)
+        y_arr = np.random.rand(rn.n)
+        z_arr = np.random.rand(rn.n)
 
         # Make rn vectors
         x, y, z = rn.element(x_arr), rn.element(y_arr), rn.element(z_arr)
@@ -283,7 +286,7 @@ class TestMethods(RLTestCase):
         x_device = r3.element(x_host)
 
         # Host side calculation
-        y_host[:] = a*x_host
+        y_host[:] = a * x_host
 
         # Device side calculation
         y_device.lincomb(a, x_device)
@@ -307,7 +310,7 @@ class TestMethods(RLTestCase):
         x_device = r3.element(x_host)
 
         # Host side calculation
-        y_host[:] = x_host*y_host
+        y_host[:] = x_host * y_host
 
         # Device side calculation
         r3.multiply(x_device, y_device)
@@ -327,7 +330,7 @@ class TestMethods(RLTestCase):
         x_device = r3.element(x_host)
 
         # Host side calculation
-        y_host[:] = x_host*y_host
+        y_host[:] = x_host * y_host
 
         # Device side calculation
         y_device.multiply(x_device)
@@ -349,7 +352,7 @@ class TestConvenience(RLTestCase):
         xd = r3.element([1, 2, 3])
         C = 5
 
-        self.assertAllAlmostEquals(C*xd, [5, 10, 15])
+        self.assertAllAlmostEquals(C * xd, [5, 10, 15])
 
     def test_incompatible_operations(self):
         r3 = CudaRn(3)
@@ -364,10 +367,48 @@ class TestConvenience(RLTestCase):
             xA -= xB
 
         with self.assertRaises(TypeError):
-            xA + xB
+            z = xA + xB
 
         with self.assertRaises(TypeError):
-            xA - xB
+            z = xA - xB
+
+
+class TestPointer(RLTestCase):
+    def test_get_ptr(self):
+        r3 = CudaRn(3)
+        x = r3.element([1, 2, 3])
+        y = r3.element(RLcpp.PyCuda.vectorFromPointer(x.data_ptr, 3))
+        self.assertAllAlmostEquals(x, y)
+        self.assertEquals(x.data_ptr, y.data_ptr)
+
+    def test_modify(self):
+        r3 = CudaRn(3)
+        xd = r3.element([1, 2, 3])
+        yd = r3.element(data_ptr=xd.data_ptr)
+
+        yd[:] = [5, 6, 7]
+
+        self.assertAllAlmostEquals(xd, yd)
+
+    def test_sub_vector(self):
+        r6 = CudaRn(6)
+        r3 = CudaRn(3)
+        xd = r6.element([1, 2, 3, 4, 5, 6])
+
+        yd = r3.element(data_ptr=xd.data_ptr)
+        yd[:] = [7, 8, 9]
+
+        self.assertAllAlmostEquals([7, 8, 9, 4, 5, 6], xd)
+
+    def test_offset_sub_vector(self):
+        r6 = CudaRn(6)
+        r3 = CudaRn(3)
+        xd = r6.element([1, 2, 3, 4, 5, 6])
+
+        yd = r3.element(data_ptr=xd.data_ptr+3*xd.itemsize)
+        yd[:] = [7, 8, 9]
+
+        self.assertAllAlmostEquals([1, 2, 3, 7, 8, 9], xd)
 
 
 if __name__ == '__main__':

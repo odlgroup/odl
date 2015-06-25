@@ -234,6 +234,7 @@ class LinCombOperator(op.LinearOperator):
     b : float
         Scalar to multiply in[1] by
     """
+
     def __init__(self, space, a, b):
         self.domain = CartesianProduct(space, space)
         self.range = space
@@ -257,7 +258,8 @@ class LinCombOperator(op.LinearOperator):
         out.lincomb(self.a, input[0], self.b, input[1])
 
     def __repr__(self):
-        return 'LinCombOperator(' + repr(self.range) + ', ' + repr(self.a) + ', ' + repr(self.b) + ')'
+        return 'LinCombOperator({!r}, {!r}, {!r})'.format(
+            self.range, self.a, self.b)
 
     def __str__(self):
         return "{}*x + {}*y".format(self.a, self.b)
@@ -277,6 +279,7 @@ class MultiplyOperator(op.LinearOperator):
     space : LinearSpace
             The space the vectors should lie in
     """
+
     def __init__(self, space):
         self.domain = CartesianProduct(space, space)
         self.range = space
@@ -299,10 +302,10 @@ class MultiplyOperator(op.LinearOperator):
         out.multiply(input[0])
 
     def __repr__(self):
-        return 'LinCombOperator(' + repr(self.range) + ', ' + repr(self.a) + ', ' + repr(self.b) + ')'
+        return 'MultiplyOperator({!r})'.format(self.range)
 
     def __str__(self):
-        return "{}*x + {}*y".format(self.a, self.b)
+        return "x * y".format(self.a, self.b)
 
 
 def instance_method(function):

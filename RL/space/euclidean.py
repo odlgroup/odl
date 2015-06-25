@@ -32,7 +32,6 @@ from future import standard_library
 # External module imports
 import numpy as np
 from scipy.lib.blas import get_blas_funcs
-from numpy import float64
 from numbers import Integral, Real
 from math import sqrt
 
@@ -126,16 +125,16 @@ class Rn(LinearSpace):
         """
 
         if data is None:
-            data = np.empty(self.dim, dtype=float64)
+            data = np.empty(self.dim, dtype=np.float64)
         else:
-            data = np.array(data, dtype=float64, copy=False)
+            data = np.array(data, dtype=np.float64, copy=False)
 
             if data.shape != (self.dim,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape {}
                 '''.format(data, data.shape, (self.dim,))))
 
-            if data.dtype != float64:
+            if data.dtype != np.float64:
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(data, data.dtype)))
@@ -185,13 +184,13 @@ class Rn(LinearSpace):
             if a != 1:
                 self._scal(a, z.data)
             if b != 0:
-                self._axpy(y.data, z.data, self._dim, b)
+                self._axpy(y.data, z.data, self.dim, b)
         elif z is y:
             # z is aligned with y -> z = a*x + b*z
             if b != 1:
                 self._scal(b, z.data)
             if a != 0:
-                self._axpy(x.data, z.data, self._dim, a)
+                self._axpy(x.data, z.data, self.dim, a)
         else:
             # We have exhausted all alignment options, so x != y != z
             # We now optimize for various values of a and b
@@ -210,12 +209,12 @@ class Rn(LinearSpace):
 
                 elif a == 1:  # No scaling in x -> z = x + b*y
                     self._copy(x.data, z.data)
-                    self._axpy(y.data, z.data, self._dim, b)
+                    self._axpy(y.data, z.data, self.dim, b)
                 else:  # Generic case -> z = a*x + b*y
                     self._copy(y.data, z.data)
                     if b != 1:
                         self._scal(b, z.data)
-                    self._axpy(x.data, z.data, self._dim, a)
+                    self._axpy(x.data, z.data, self.dim, a)
 
     def zero(self):
         """ Create a vector of zeros
@@ -237,7 +236,7 @@ class Rn(LinearSpace):
         Rn(3).element([ 0.,  0.,  0.])
         """
 
-        return self.element(np.zeros(self._dim, dtype=float64))
+        return self.element(np.zeros(self._dim, dtype=np.float64))
 
     @property
     def field(self):
@@ -352,7 +351,7 @@ class Rn(LinearSpace):
                 'data' ({}) must be a numpy.ndarray
                 '''.format(type(data))))
 
-            if data.dtype != float64:
+            if data.dtype != np.float64:
                 raise TypeError(errfmt('''
                 type('data') ({}) must be float64
                 '''.format(data.dtype)))
@@ -853,7 +852,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         """
 
 
-def rnspace(dim, impl='numpy', **kwargs):
+def rn(dim, impl='numpy', **kwargs):
     """ Create an R^n, by default the Euclidean space
 
     TODO: doc

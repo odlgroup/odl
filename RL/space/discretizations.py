@@ -15,12 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=protected-access
-
-"""
-Default implementations of discretizations of sets using an underlying
-R^n representation
-"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -85,8 +79,8 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                            (self.shape[i] - 1) for i in range(self.parent.domain.dim)])
             self.scale = float(np.prod(dx))
 
-        def _inner(self, x, y):
-            return self._rn._inner(x, y) * self.scale
+        def _inner(self, v1, v2):
+            return self._rn._inner(v1, v2) * self.scale
 
         def _norm(self, vector):
             return self._rn._norm(vector) * sqrt(self.scale)
@@ -107,8 +101,8 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                                     for point in zip(*self.points())],
                                    **kwargs)
                 return self.element(tmp)
-
-            elif isinstance(data, np.ndarray):
+            elif data is not None:
+                data = np.asarray(data)
                 if data.shape == (self.dim,):
                     return super().element(data)
                 elif data.shape == self.shape:
@@ -144,8 +138,11 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 return getattr(self._rn, name)
 
         def __str__(self):
-            return ('uniform_discretization(' + str(self._rn) + ', ' +
-                    'x '.join(str(d) for d in self.shape) + ')')
+            if len(self.shape)>1:
+                return ('[' + repr(self.parent) + ', ' + str(self._rn) + ', ' +
+                        'x'.join(str(d) for d in self.shape) + ']')
+            else:
+                return '[' + repr(self.parent) + ', ' + str(self._rn) + ']'
 
         def __repr__(self):
             shapestr = ', ' + repr(self.shape) if self.shape != (self._rn.dim,) else ''
@@ -154,6 +151,7 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
             return "uniform_discretization(" + repr(self.parent) + ", " + repr(self._rn) + shapestr + orderstr + ")"
 
         class Vector(rn_vector_type):
-            pass
+            def as_array(self):
+                return np.reshape(self[:], self.space.shape, self.space.order)
 
     return UniformDiscretization(parent, rnimpl, shape, order)

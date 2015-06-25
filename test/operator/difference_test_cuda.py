@@ -31,13 +31,13 @@ import RL.space.discretizations as dd
 from RL.space.function import *
 import RL.space.set as sets
 from RL.space.product import productspace
-from RL.utility.testutils import RLTestCase
 
-from RL.utility.testutils import RLTestCase, skip_all_tests, Timer
+from RL.utility.testutils import skip_all_tests
 
 try:
     import RL.space.cuda as CS
     import RLcpp
+    from RL.utility.testutils import RLTestCase
 except ImportError:
     RLTestCase = skip_all_tests("Missing RLcpp")
 

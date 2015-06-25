@@ -22,8 +22,8 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import (division, print_function, unicode_literals,
                         absolute_import)
 from future import standard_library
-standard_library.install_aliases()
 from math import sin, cos
+import matplotlib.pyplot as plt
 
 import numpy as np
 import RL.operator.operator as OP
@@ -33,7 +33,7 @@ import RL.space.discretizations as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 
-import matplotlib.pyplot as plt
+standard_library.install_aliases()
 
 
 class Projection(OP.LinearOperator):
