@@ -39,9 +39,9 @@ class MultiplyAndSquareOp(op.Operator):
 
     def __init__(self, matrix, domain=None, range=None):
         self.domain = (EuclideanSpace(matrix.shape[1])
-                        if domain is None else domain)
+                       if domain is None else domain)
         self.range = (EuclideanSpace(matrix.shape[0])
-                       if range is None else range)
+                      if range is None else range)
         self.matrix = matrix
 
     def _apply(self, rhs, out):

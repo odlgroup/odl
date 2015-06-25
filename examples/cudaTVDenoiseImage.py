@@ -127,8 +127,8 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
         CS.sqrt(xdiff[0], xdiff[0])
 
         # c = tmp = max(s - la^-1, 0) / s
-        CS.addScalar(xdiff[0], -1.0/la, tmp)
-        CS.maxVectorScalar(tmp, 0.0, tmp)
+        CS.add_scalar(xdiff[0], -1.0/la, tmp)
+        CS.max_vector_scalar(tmp, 0.0, tmp)
         CS.divideVectorVector(tmp, xdiff[0], tmp)
 
         # d = d * c = d * max(s - la^-1, 0) / s
@@ -178,8 +178,8 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
             CS.abs(d[i], d[i])
-            CS.addScalar(d[i], -1.0/la, d[i])
-            CS.maxVectorScalar(d[i], 0.0, d[i])
+            CS.add_scalar(d[i], -1.0/la, d[i])
+            CS.max_vector_scalar(d[i], 0.0, d[i])
             d[i].multiply(tmp)
 
         # b = b + diff(x) - d
@@ -215,8 +215,8 @@ def TVdenoise2D(x0, la, mu, iterations=1):
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
             CS.abs(d[i], d[i])
-            CS.addScalar(d[i], -1.0/la, d[i])
-            CS.maxVectorScalar(d[i], 0.0, d[i])
+            CS.add_scalar(d[i], -1.0/la, d[i])
+            CS.max_vector_scalar(d[i], 0.0, d[i])
             d[i].multiply(tmp)
 
         b = b + diff(x) - d

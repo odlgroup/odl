@@ -15,5 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Utility library for RL, not intended to be used by external users.
+"""
 
 __all__ = ['testutils', 'utility']

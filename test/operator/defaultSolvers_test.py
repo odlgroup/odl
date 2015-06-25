@@ -110,7 +110,7 @@ class TestMatrixSolve(RLTestCase):
         self.assertAllAlmostEquals(xvec, x, places=2)
 
     def test_gauss_newton(self):
-        n = 100
+        n = 10
 
         # Np as validation
         A = np.random.rand(n, n)

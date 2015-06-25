@@ -15,8 +15,53 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Core Operator support for RL
+============================
+
+================================================================================
+Core operators (operator)
+================================================================================
+Operator                Has method __call__() and/or apply()
+LinearOperator          Operator whose operation is linear.
+SelfAdjointOperator     Linear operator whose adjoint is itself
+================================================================================
+
+================================================================================
+Operator compositions, sums etc (operator)
+================================================================================
+OperatorSum                         A(x) + B(x)
+OperatorComposition                 A(B(x))
+OperatorPointwiseProduct            A(x)*B(x)
+OperatorLeftScalarMultiplication    s*A(x)
+OperatorRightScalarMultiplication   A(s*x)
+================================================================================
+
+================================================================================
+Linear Operator compositions, sums etc (operator)
+================================================================================
+LinearOperatorSum                   A(x) + B(x)
+LinearOperatorComposition           A(B(x))
+LinearOperatorScalarMultiplication  s*A(x)
+================================================================================
+
+================================================================================
+Default (standard) operators (default_operators)
+================================================================================
+ScalingOperator         Scales a vector by a scalar
+IdentityOperator        Identity operator
+================================================================================
+
+================================================================================
+Equation system solvers (solvers)
+================================================================================
+landweber               The landweber method
+conjugate_gradient      The Conjugate gradient Noraml Equations method
+gauss_newton            The Gauss Newton method
+================================================================================
+
+"""
 
 from __future__ import absolute_import
 
-__all__ = ['default_operators', 'function', 'functional', 'operator',
-           'solvers']
+__all__ = ['default_operators', 'operator', 'solvers']

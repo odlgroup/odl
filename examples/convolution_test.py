@@ -30,7 +30,7 @@ import RL.space.euclidean as ds
 import RL.space.set as sets
 import RL.space.discretizations as dd
 import RL.space.function as fs
-from solverExamples import *
+import solverExamples
 
 from RL.utility.testutils import Timer, consume
 
@@ -112,13 +112,13 @@ with Timer("Optimized CG"):
     solvers.conjugate_gradient(conv, d.zero(), rhs, iterations)
 
 with Timer("Base CG"):
-    conjugate_gradient_base(conv, d.zero(), rhs, iterations)
+    solverExamples.conjugate_gradient_base(conv, d.zero(), rhs, iterations)
 
 # Landweber timing
 with Timer("Optimized LW"):
     solvers.landweber(conv, d.zero(), rhs, iterations, omega)
 
 with Timer("Basic LW"):
-    landweberBase(conv, d.zero(), rhs, iterations, omega)
+    solverExamples.landweberBase(conv, d.zero(), rhs, iterations, omega)
 
 plt.show()

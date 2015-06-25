@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=protected-access
+
+"""
+General carthesian products of LinearSpaces with various metrics, norms,
+inner products.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -59,7 +65,7 @@ class LinearProductSpace(LinearSpace):
     'LinearProductSpace'
     """
 
-    def __init__(self, *spaces, **kwargs):
+    def __init__(self, *spaces, **_):
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, LinearSpace)]
@@ -75,10 +81,14 @@ class LinearProductSpace(LinearSpace):
 
     @property
     def field(self):
+        """ Get the underlying field
+        """
         return self._field
 
     @property
     def spaces(self):
+        """ Get a tuple of the underlying spaces
+        """
         return self._spaces
 
     def element(self, *args, **kwargs):
@@ -340,7 +350,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
 
         if prod_norm is not None:
             if callable(prod_norm):
-                self.prod_norm = prod_norm
+                self._prod_norm = prod_norm
             else:
                 raise TypeError(errfmt("'prod_norm' must be callable"))
         else:
@@ -356,18 +366,24 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
                     'spaces' and 'weights' have different lengths ({} != {})
                     '''.format(len(spaces), len(weights))))
 
-                self.prod_norm = lambda x: np.linalg.norm(x*weights, ord=order)
+                def w_norm(x):
+                    return np.linalg.norm(x*weights, ord=order)
+
+                self._prod_norm = w_norm
             else:
-                self.prod_norm = lambda x: np.linalg.norm(x, ord=order)
+                def norm(x):
+                    return np.linalg.norm(x, ord=order)
+
+                self._prod_norm = norm
 
         super().__init__(*spaces, **kwargs)
 
     def _dist(self, x, y):
-        dists = np.fromiter((
-            spc._dist(xp, yp)
-            for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
+        dists = np.fromiter(
+            (spc._dist(xp, yp)
+             for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
             dtype=float64, count=self._nfactors)
-        return self.prod_norm(dists)
+        return self._prod_norm(dists)
 
     def __repr__(self):
         return ('MetricProductSpace(' + ', '.join(
@@ -397,14 +413,16 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
                   Order of the product distance, i.e.
                   dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   Default: 2.0
-              'weights' : array-like, optional, only usable with 'ord' option.
+              'weights' : array-like, optional, only usable with the
+                          'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances
+                  Function that should be applied to the array of
+                  distances.
                   Default: np.linalg.norm(x, ord=ord)
 
     The following float values for `prod_norm` can be specified.
@@ -455,11 +473,11 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
         super().__init__(*spaces, **kwargs)
 
     def _norm(self, x):
-        norms = np.fromiter((
-            spc._norm(xp)
-            for spc, xp in zip(self.spaces, x.parts)),
+        norms = np.fromiter(
+            (spc._norm(xp)
+             for spc, xp in zip(self.spaces, x.parts)),
             dtype=np.float64, count=self._nfactors)
-        return self.prod_norm(norms)
+        return self._prod_norm(norms)
 
     def __repr__(self):
         return ('NormedProductSpace(' + ', '.join(
@@ -487,7 +505,8 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
     spaces : HilbertSpace instances
              The factors of the product space
     kwargs : {'weights'}
-              'weights' : array-like, optional, only usable with 'ord' option.
+              'weights' : array-like, optional, only usable with the
+                          'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive.
                   Default: (1.0,...,1.0)
@@ -517,24 +536,31 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
                 raise ValueError(errfmt('''
                 'spaces' and 'weights' have different lengths ({} != {})
                 '''.format(len(spaces), len(weights))))
-            
-            self.prod_norm = lambda x: np.linalg.norm(x*weights)
-            self.prod_inner = lambda x: np.dotv(x, weights)
+
+            def w_norm(x):
+                return np.linalg.norm(x*weights)
+
+            def w_inner_sum(x):
+                return np.dot(x, weights)
+
+            self._prod_norm = w_norm
+            self._prod_inner_sum = w_inner_sum
         else:
-            self.prod_norm = lambda x: np.linalg.norm(x)
-            self.prod_inner = lambda x: np.sum(x)
+            self._prod_norm = np.linalg.norm
+            self._prod_inner_sum = np.sum
 
         if 'ord' in kwargs or 'prod_norm' in kwargs:
-            raise ValueError('Cannot provide prod_norm or ord for hilbert space')
+            raise ValueError(errfmt('''
+            Cannot provide 'prod_norm' or 'ord' for hilbert space'''))
 
         super().__init__(*spaces, **kwargs)
 
     def _inner(self, x, y):
-        inners = np.fromiter((
-            spc._inner(xp, yp)
-            for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
+        inners = np.fromiter(
+            (spc._inner(xp, yp)
+             for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
             dtype=np.float64, count=self._nfactors)
-        return self.prod_norm(inners)
+        return self._prod_norm(inners)
 
     def __repr__(self):
         return ('HilbertProductSpace(' +
@@ -560,17 +586,19 @@ def productspace(*spaces, **kwargs):
                   Order of the product distance/norm, i.e.
                   dist(x, y) = np.linalg.norm(x-y, ord=ord)
                   norm(x) = np.linalg.norm(x, ord=ord)
-                  If used, forces the space to not be a hilbert space.
+                  If used, forces the space to not be a Hilbert space.
                   Default: 2.0
-              'weights' : array-like, optional, only usable with 'ord' option.
+              'weights' : array-like, optional, only usable with the
+                          'ord' option.
                   Array of weights, same size as number of space
                   components. All weights must be positive. It is
                   multiplied with the tuple of distances before
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances/norms.
-                  If used, forces the space to not be a hilbert space.
+                  Function that should be applied to the array of
+                  distances/norms.
+                  If used, forces the space to not be a Hilbert space.
                   Defaults if applicable:
                       dist = np.linalg.norm(x-y, ord=ord)
                       norm = np.linalg.norm(x, ord=ord)
@@ -585,7 +613,7 @@ def productspace(*spaces, **kwargs):
     Remark
     ------
     productspace(RN(1), RN(1)) is mathematically equivalent to RN(2),
-    however the latter is much more efficient numerically.
+    however the latter is usually more efficient numerically.
 
     See also
     --------
@@ -593,8 +621,8 @@ def productspace(*spaces, **kwargs):
     HilbertProductSpace
     """
 
-    if ('ord' not in kwargs and 'prod_norm' not in kwargs 
-        and all(isinstance(spc, HilbertSpace) for spc in spaces)):
+    if ('ord' not in kwargs and 'prod_norm' not in kwargs and
+            all(isinstance(spc, HilbertSpace) for spc in spaces)):
         return HilbertProductSpace(*spaces, **kwargs)
     elif all(isinstance(spc, NormedSpace) for spc in spaces):
         return NormedProductSpace(*spaces, **kwargs)
@@ -631,7 +659,8 @@ def powerspace(base, power, **kwargs):
                   applying the RN norm or 'prod_norm'.
                   Default: (1.0,...,1.0)
               'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances/norms
+                  Function that should be applied to the array of
+                  distances/norms
                   If used, forces the space to not be a hilbert space.
                   Defaults if applicable:
                       dist = np.linalg.norm(x-y, ord=ord)

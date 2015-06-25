@@ -115,8 +115,8 @@ def denoise(x0, la, mu, iterations=1):
 
         #
         RLcpp.cuda.abs(d.data, d.data)
-        RLcpp.cuda.addScalar(d.data, -1.0/la, d.data)
-        RLcpp.cuda.maxVectorScalar(d.data, 0.0, d.data)
+        RLcpp.cuda.add_scalar(d.data, -1.0/la, d.data)
+        RLcpp.cuda.max_vector_scalar(d.data, 0.0, d.data)
         d *= sign
 
         # b = b - diff(x) + d

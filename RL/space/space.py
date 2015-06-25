@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+General vector spaces with varying amounts of structure such
+as metric, norm, inner product.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import object, str, super
-from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports
@@ -37,7 +40,7 @@ __all__ = ['LinearSpace', 'MetricSpace', 'NormedSpace', 'HilbertSpace',
            'Algebra']
 
 
-class LinearSpace(with_metaclass(ABCMeta, Set)):
+class LinearSpace(Set):
     """ Abstract linear space
 
     Introduction
@@ -288,9 +291,11 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             # Call method
             return self._lincomb(z, a, x, b, y)
 
-    class Vector(with_metaclass(ABCMeta, object)):
+    class Vector(object):
         """ Abstract vector, an element in the linear space
         """
+
+        __metaclass__ = ABCMeta
 
         def __init__(self, space):
             """ Default initializer of vectors, must be called by all
@@ -405,7 +410,7 @@ class LinearSpace(with_metaclass(ABCMeta, Set)):
             return str(self.space) + "::Vector"
 
 
-class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
+class MetricSpace(LinearSpace):
     """ Abstract metric space
     """
 
@@ -440,7 +445,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
 
         return float(self._dist(x, y))
 
-    class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
+    class Vector(LinearSpace.Vector):
         """ Abstract vector in a metric space
         """
 
@@ -523,7 +528,7 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
             return not self.equals(other)
 
 
-class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
+class NormedSpace(MetricSpace):
     """ Abstract normed space
     """
 
@@ -547,7 +552,7 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
         """
         return self._norm(x-y)
 
-    class Vector(with_metaclass(ABCMeta, MetricSpace.Vector)):
+    class Vector(MetricSpace.Vector):
         """ Abstract vector in a normed space
         """
 
@@ -577,7 +582,7 @@ class NormedSpace(with_metaclass(ABCMeta, MetricSpace)):
             return self.space.norm(self)
 
 
-class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
+class HilbertSpace(NormedSpace):
     """ Abstract (pre)-Hilbert space or inner product space
     """
 
@@ -608,7 +613,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
 
         return sqrt(self._inner(x, x))
 
-    class Vector(with_metaclass(ABCMeta, NormedSpace.Vector)):
+    class Vector(NormedSpace.Vector):
         """ Abstract vector in a Hilbert-space
         """
 
@@ -630,7 +635,7 @@ class HilbertSpace(with_metaclass(ABCMeta, NormedSpace)):
             return self.space.inner(self, x)
 
 
-class Algebra(with_metaclass(ABCMeta, LinearSpace)):
+class Algebra(LinearSpace):
     """ Algebras, or Banach Algebras are linear spaces with multiplication
     defined
     """
@@ -653,7 +658,7 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
 
         self._multiply(x, y)
 
-    class Vector(with_metaclass(ABCMeta, LinearSpace.Vector)):
+    class Vector(LinearSpace.Vector):
 
         def __init__(self, space):
             if not isinstance(space, Algebra):

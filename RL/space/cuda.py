@@ -211,7 +211,7 @@ class CudaEN(spaces.LinearSpace):
         >>> y
         CudaEN(3).element([ 0.,  0.,  0.])
         """
-        return self.element(self._type.impl(self.n, 0))
+        return self.Vector(self, self._type.impl(self.n, 0))
 
     @property
     def field(self):
@@ -296,6 +296,7 @@ class CudaEN(spaces.LinearSpace):
         >>> r3 != r4
         True
         """
+
         return (isinstance(other, CudaEN) and
                 self.n == other.n and
                 self._type == other._type)
@@ -320,8 +321,8 @@ class CudaEN(spaces.LinearSpace):
         def __init__(self, space, data):
             super().__init__(space)
             if not isinstance(data, self.space._type.impl):
-                return TypeError(errfmt('''
-                'data' ({}) must be a CudaENVectorImpl instance
+                raise TypeError(errfmt('''
+                'data' ({}) must be a CudaRNVectorImpl instance
                 '''.format(data)))
             self._data = data
 
@@ -452,10 +453,24 @@ class CudaEN(spaces.LinearSpace):
                     The position(s) that should be set
             value : Real or Array-Like
                     The values that should be assigned.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                    If index is an integer,
+                    value should be a Number convertible to float.
+                    If index is a slice,
+                    value should be an Array-Like of the same
+                    size as the slice.
+=======
+>>>>>>> issue-25__pylint
                     If index is an integer, value should be a Number
                     convertible to float.
                     If index is a slice, value should be array-like of
                     the same size as the slice.
+<<<<<<< HEAD
+=======
+>>>>>>> 24b7788... minor formatting fixes
+>>>>>>> issue-25__pylint
 
             Returns
             -------
@@ -598,50 +613,6 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         """
         y.data.multiply(x.data)
 
-    @property
-    def field(self):
-        """ The underlying field of RN is the real numbers
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        RealNumbers instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.field
-        RealNumbers()
-        """
-        return self._field
-
-    @property
-    def n(self):
-        """ The dimension of this space
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        Integer
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.n
-        3
-        """
-        return self._n
-
     def equals(self, other):
         """ Verifies that other is a CudaRN instance of dimension `n`
 
@@ -694,7 +665,8 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         pass
 
 
-# Methods, TODO: move
+# Methods
+# TODO: move
 def abs(inp, outp):
     RLcpp.PyCuda.abs(inp.data, outp.data)
 
@@ -703,20 +675,21 @@ def sign(inp, outp):
     RLcpp.PyCuda.sign(inp.data, outp.data)
 
 
-def addScalar(inp, scal, outp):
+def add_scalar(inp, scal, outp):
     RLcpp.PyCuda.addScalar(inp.data, scal, outp.data)
 
 
-def maxVectorScalar(inp, scal, outp):
+def max_vector_scalar(inp, scal, outp):
     RLcpp.PyCuda.maxVectorScalar(inp.data, scal, outp.data)
 
 
-def maxVectorVector(inp1, inp2, outp):
+def max_vector_vector(inp1, inp2, outp):
     RLcpp.PyCuda.maxVectorVector(inp1.data, inp2.data, outp.data)
 
 
 def sum(inp):
     return RLcpp.PyCuda.sum(inp.data)
+
 
 if __name__ == '__main__':
     import doctest

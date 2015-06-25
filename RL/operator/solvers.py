@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+General and optimized equation system solvers in linear spaces.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (division, print_function, unicode_literals,
@@ -36,6 +39,8 @@ class StorePartial(object):
         self.results = []
 
     def send(self, result):
+        """ append result to results list
+        """
         self.results.append(result.copy())
 
     def __iter__(self):
@@ -49,6 +54,8 @@ class ForEachPartial(object):
         self.function = function
 
     def send(self, result):
+        """ Applies function to result
+        """
         self.function(result)
 
 
@@ -58,7 +65,9 @@ class PrintIterationPartial(object):
     def __init__(self):
         self.iter = 0
 
-    def send(self, result):
+    def send(self, _):
+        """ Print the current iteration
+        """
         print("iter = {}".format(self.iter))
         self.iter += 1
 
@@ -70,6 +79,8 @@ class PrintStatusPartial(object):
         self.iter = 0
 
     def send(self, result):
+        """ Print the current iteration and norm
+        """
         print("iter = {}, norm = {}".format(self.iter, result.norm()))
         self.iter += 1
 
@@ -149,25 +160,27 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
     tmp_ran = operator.range.element()
     v = operator.range.element()
 
-    for m in range(iterations):
+    for _ in range(iterations):
         tm = next(zero_seq)
         deriv = operator.derivative(x)
         deriv_adjoint = deriv.adjoint
 
         # v = rhs - op(x) - deriv(x0-x)
         # u = deriv.T(v)
-        operator.apply(x, tmp_ran)      # eval          op(x)
-        v.lincomb(1, rhs, -1, tmp_ran)  # assign        v = rhs - op(x)
-        tmp_dom.lincomb(1,  x0, -1, x)  # assign temp   tmp_dom = x0 - x
-        deriv.apply(tmp_dom, tmp_ran)   # eval          deriv(x0-x)
-        v -= tmp_ran                    # assign        v = rhs - op(x) - deriv(x0-x)
-        deriv_adjoint.apply(v, u)       # eval/assign   u = deriv.T(v)
+        operator.apply(x, tmp_ran)      # eval        op(x)
+        v.lincomb(1, rhs, -1, tmp_ran)  # assign      v = rhs - op(x)
+        tmp_dom.lincomb(1, x0, -1, x)  # assign temp  tmp_dom = x0 - x
+        deriv.apply(tmp_dom, tmp_ran)   # eval        deriv(x0-x)
+        v -= tmp_ran                    # assign      v = rhs-op(x)-deriv(x0-x)
+        deriv_adjoint.apply(v, u)       # eval/assign u = deriv.T(v)
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx
         A = LinearOperatorSum(LinearOperatorComposition(deriv.T, deriv),
                               tm * I, tmp_dom)
-        conjugate_gradient(A, dx, u, 3)  # TODO allow user to select other method
+
+        # TODO allow user to select other method
+        conjugate_gradient(A, dx, u, 3)
 
         # Update x
         x.lincomb(1, x0, 1, dx)  # x = x0 + dx

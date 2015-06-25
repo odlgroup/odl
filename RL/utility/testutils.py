@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Utilities for use inside the RL project, not for external use.
+"""
 
 # Imports for common Python 2/3 codebase
+
 from __future__ import (print_function, unicode_literals, division,
                         absolute_import)
 from builtins import object, super
-from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports
@@ -38,45 +41,61 @@ class RLTestCase(unittest.TestCase):
                                             **kwargs)
 
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
+        """ Assert thaat all elements in iter1 and iter2 are almost equal.
+
+        The iterators may be nestled lists or warying types
+
+        assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
+        """
         # Sentinel object used to check that both iterators are the same length
-        differentLengthSentinel = object()
+        different_length_sentinel = object()
 
         if iter1 is None and iter2 is None:
             return
 
-        for [i1, i2] in zip_longest(iter1, iter2,
-                                    fillvalue=differentLengthSentinel):
+        for [ip1, ip2] in zip_longest(iter1, iter2,
+                                      fillvalue=different_length_sentinel):
             # Verify that none of the lists has ended (then they are not the
             # same size)
-            self.assertIsNot(i1, differentLengthSentinel)
-            self.assertIsNot(i2, differentLengthSentinel)
+            self.assertIsNot(ip1, different_length_sentinel)
+            self.assertIsNot(ip2, different_length_sentinel)
             try:
-                self.assertAllAlmostEquals(iter(i1), iter(i2), *args, **kwargs)
+                self.assertAllAlmostEquals(iter(ip1), iter(ip2), *args, **kwargs)
             except TypeError:
-                self.assertAlmostEquals(float(i1), float(i2), *args, **kwargs)
+                self.assertAlmostEqual(ip1, ip2, *args, **kwargs)
 
 
 def skip_all_tests(reason=None):
+    """ Creates a TestCase replacement class where all tests are skipped
+    """
     if reason is None:
         reason = ''
 
     class SkipAllTestsMeta(type):
-        def __new__(cls, name, bases, local):
+        def __new__(mcs, name, bases, local):
             for attr in local:
                 value = local[attr]
                 if attr.startswith('test') and callable(value):
                     local[attr] = unittest.skip(reason)(value)
-            return super().__new__(cls, name, bases, local)
+            return super().__new__(mcs, name, bases, local)
 
-    class SkipAllTestCase(with_metaclass(SkipAllTestsMeta, unittest.TestCase)):
-        pass
+    class SkipAllTestCase(unittest.TestCase):
+        __metaclass__ = SkipAllTestsMeta
 
     return SkipAllTestCase
 
 
 class Timer(object):
+    """ A timer to be used as:
+
+    with Timer("name"):
+        Do stuff
+
+    Prints the time stuff took to execute.
+    """
     def __init__(self, name=None):
         self.name = name
+        self.tstart = None
 
     def __enter__(self):
         self.tstart = time()
@@ -85,11 +104,3 @@ class Timer(object):
         if self.name:
             print('[{}] '.format(self.name))
         print('Elapsed: {}'.format(time() - self.tstart))
-
-
-def consume(iterator):
-    """Consumes an iterator and returns the last value
-    """
-    for x in iterator:
-        pass
-    return x
