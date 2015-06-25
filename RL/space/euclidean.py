@@ -118,9 +118,10 @@ class Rn(LinearSpace):
         >>> b = np.array([1, 2, 3])
         >>> x = r3.element(b)
         >>> x
-        Rn(3).element([ 1.,  2.,  3.])
-        >>> x.data is b
-        False
+        Rn(3).element([1.0, 2.0, 3.0])
+        >>> y = rn.element([1, 2, 3])
+        >>> y
+        Rn(3).element([1.0, 2.0, 3.0])
 
         """
 
@@ -169,7 +170,7 @@ class Rn(LinearSpace):
         >>> z = r3.element()
         >>> r3.lincomb(z, 2, x, 3, y)
         >>> z
-        Rn(3).element([ 14.,  19.,  24.])
+        Rn(3).element([14.0, 19.0, 24.0])
 
         """
 
@@ -233,7 +234,7 @@ class Rn(LinearSpace):
         >>> r3 = Rn(3)
         >>> x = r3.zero()
         >>> x
-        Rn(3).element([ 0.,  0.,  0.])
+        Rn(3).element([0.0, 0.0, 0.0])
         """
 
         return self.element(np.zeros(self._dim, dtype=np.float64))
@@ -407,16 +408,22 @@ class Rn(LinearSpace):
 
             >>> arr[0] = 5
             >>> vec
-            Rn(3).element([ 5.,  2.,  3.])
+            Rn(3).element([5.0, 2.0, 3.0])
             """
+
             return self._data.ctypes.data
 
         def __str__(self):
             return str(self.data)
 
         def __repr__(self):
-            val_str = repr(self.data).lstrip('array(').rstrip(')')
-            return '{!r}.element({})'.format(self.space, val_str)
+            if self.space.dim < 7:
+                return '{!r}.element({!r}'.format(self.space,
+                                                  self[:].tolist())
+            else:
+                val_str = (repr(self[:3].tolist()).rstrip(']') + ', ..., ' +
+                           repr(self[-3:].tolist()).lstrip('['))
+                return repr(self.space) + '.element(' + val_str + ')'
 
         def __len__(self):
             """ The dimension of the underlying space
@@ -493,15 +500,13 @@ class Rn(LinearSpace):
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            Rn(3).element([ 5.,  2.,  3.])
+            Rn(3).element([5.0, 2.0, 3.0])
             >>> y[1:3] = [7, 8]
             >>> y
-            Rn(3).element([ 5.,  7.,  8.])
+            Rn(3).element([5.0, 7.0, 8.0])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            Rn(3).element([ 0.,  0.,  0.])
-
-            Broadcasting:
+            Rn(3).element([0.0, 0.0, 0.0])
 
             >>> y[1:3] = -2.
             >>> y
@@ -827,7 +832,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        EuclidRn(3).element([ 5.,  6.,  6.])
+        EuclidRn(3).element([5.0, 6.0, 6.0])
         """
 
         y.data[:] = x.data * y.data

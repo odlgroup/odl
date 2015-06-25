@@ -47,7 +47,7 @@ class TestInit(RLTestCase):
     def test_empty(self):
         r3 = CudaRn(3)
         x = r3.element()
-        self.assertEqual(x, CudaRN(3).element())
+        self.assertEqual(x, CudaRn(3).element())
         # Nothing to test, simply check that code runs
 
     def test_zero(self):
@@ -217,9 +217,9 @@ class TestMethods(RLTestCase):
 
     def vectors(self, rn):
         # Generate numpy arrays
-        x_arr = np.random.rand(rn.n)
-        y_arr = np.random.rand(rn.n)
-        z_arr = np.random.rand(rn.n)
+        x_arr = np.random.rand(rn.dim)
+        y_arr = np.random.rand(rn.dim)
+        z_arr = np.random.rand(rn.dim)
 
         # Make rn vectors
         x, y, z = rn.element(x_arr), rn.element(y_arr), rn.element(z_arr)
@@ -374,13 +374,6 @@ class TestConvenience(RLTestCase):
 
 
 class TestPointer(RLTestCase):
-    def test_get_ptr(self):
-        r3 = CudaRn(3)
-        x = r3.element([1, 2, 3])
-        y = r3.element(RLcpp.PyCuda.vectorFromPointer(x.data_ptr, 3))
-        self.assertAllAlmostEquals(x, y)
-        self.assertEquals(x.data_ptr, y.data_ptr)
-
     def test_modify(self):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])

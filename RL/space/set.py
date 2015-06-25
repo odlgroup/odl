@@ -301,11 +301,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-
-        >>> b1, e1 = [-1, 0, 2], [-0.5, 0, 3]
-        >>> b2, e2 = [np.sin(-np.pi/2), 0, 2], [-0.5, 0, np.sqrt(3)**2]
-        >>> rbox1 = IntervalProd(b1, e1)
-        >>> rbox2 = IntervalProd(b2, e2)
+        >>> rbox1 = IntervalProd(0, 0.5)
+        >>> rbox2 = IntervalProd(0, 0.1+0.1+0.1+0.1+0.1)
         >>> rbox1.equals(rbox2)  # Num error
         False
         >>> rbox1 == rbox2  # Equivalent to rbox1.equals(rbox2)
@@ -420,7 +417,7 @@ class IntervalProd(Set):
         >>> rbox.dist([-5, 3, 2])
         5.0
         >>> rbox.dist([-5, 3, 2], ord=float('inf'))
-        4
+        4.0
         """
 
         # TODO: Apply same principle as in MetricProductSpace?

@@ -260,8 +260,16 @@ class Operator(object):
 
         Example
         -------
-        #TODO
 
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element()
+        >>> Op.apply(x, y)
+        >>> y
+        RN(3).element([1.0, 2.0, 3.0])
         """
 
         if not self.domain.contains(rhs):
@@ -303,7 +311,15 @@ class Operator(object):
         Example
         -------
 
-        >>> from default_operators import operator
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.element([1, 2, 3])
+        >>> Op(x)
+        RN(3).element([1.0, 2.0, 3.0])
+
+        >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> A(3)
         9
@@ -350,7 +366,18 @@ class Operator(object):
         Example
         -------
 
-        >>> from default_operators import operator
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.element([1, 2, 3])
+        >>> Op(x)
+        RN(3).element([1.0, 2.0, 3.0])
+        >>> Scaled = Op * 3
+        >>> Scaled(x)
+        RN(3).element([3.0, 6.0, 9.0])
+
+        >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> Scaled = A*3
         >>> Scaled(5)
@@ -378,7 +405,18 @@ class Operator(object):
         Example
         -------
 
-        >>> from default_operators import operator
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> rn = RN(3)
+        >>> Op = IdentityOperator(rn)
+        >>> x = rn.element([1, 2, 3])
+        >>> Op(x)
+        RN(3).element([1.0, 2.0, 3.0])
+        >>> Scaled = 3 * Op
+        >>> Scaled(x)
+        RN(3).element([3.0, 6.0, 9.0])
+
+        >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> Scaled = 3*A
         >>> Scaled(5)
@@ -448,7 +486,7 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from default_operators import operator
+        >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> B = operator(lambda x: 5*x)
         >>> OperatorSum(A, B)(3)
@@ -481,8 +519,9 @@ class OperatorSum(Operator):
         >>> out = r3.element()
         >>> OperatorSum(op, op).apply(rhs, out)
         >>> out
-        Rn(3).element([ 2.,  4.,  6.])
+        Rn(3).element([2.0, 4.0, 6.0])
         """
+
         tmp = self._tmp if self._tmp is not None else self.range.element()
         self._op1._apply(rhs, out)
         self._op2._apply(rhs, tmp)
@@ -667,8 +706,8 @@ class OperatorLeftScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar):
-        if (isinstance(op.range, LinearSpace)
-            and not op.range.field.contains(scalar)):
+        if (isinstance(op.range, LinearSpace) and
+                scalar not in op.range.field):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of range ({}) of 'op'
             '''.format(scalar, op.range.field)))
@@ -731,7 +770,7 @@ class OperatorRightScalarMultiplication(Operator):
 
     def __init__(self, op, scalar, tmp=None):
         if (isinstance(op.domain, LinearSpace) and
-                not op.domain.field.contains(scalar)):
+                scalar not in op.domain.field):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of domain ({}) of 'op'
             '''.format(scalar, op.domain.field)))

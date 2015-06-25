@@ -82,8 +82,9 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.apply(vec, out)
         >>> out
-        Rn(3).element([ 2.,  4.,  6.])
+        Rn(3).element([2.0, 4.0, 6.0])
         """
+
         out.lincomb(self._scal, input)
 
     def _call(self, input):
@@ -109,7 +110,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> op(vec)
-        Rn(3).element([ 2.,  4.,  6.])
+        Rn(3).element([2.0, 4.0, 6.0])
         """
 
         return self._scal * input
@@ -253,8 +254,9 @@ class LinCombOperator(op.LinearOperator):
         >>> op = LinCombOperator(r3, 1.0, 1.0)
         >>> op.apply([x, y], z)
         >>> z
-        Rn(3).element([ 2.,  4.,  6.])
+        Rn(3).element([2.0, 4.0, 6.0])
         """
+
         out.lincomb(self.a, input[0], self.b, input[1])
 
     def __repr__(self):
@@ -296,8 +298,9 @@ class MultiplyOperator(op.LinearOperator):
         >>> op = MultiplyOperator(r3)
         >>> op.apply([x, y], z)
         >>> z
-        EuclidRn(3).element([ 1.,  4.,  9.])
+        EuclidRn(3).element([1.0, 4.0, 9.0])
         """
+
         out.assign(input[1])
         out.multiply(input[0])
 
