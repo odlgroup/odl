@@ -144,9 +144,9 @@ class CudaEN(spaces.LinearSpace):
             return self.Vector(self, data)
         elif data is None:
             if data_ptr is None:
-                return self.element(self._type.impl(self.n))
+                return self.Vector(self, self._type.impl(self.n))
             else:
-                return self.element(self._type.impl.fromPointer(data_ptr, self.n))
+                return self.Vector(self, self._type.impl.fromPointer(data_ptr, self.n))
         else:
             # Create result and assign 
             # (could be optimized to one call, this was tried and did not help much)
