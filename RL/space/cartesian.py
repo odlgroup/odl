@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Module for R^n, the space of n-tuples of real numbers
+""" Module for n-dimensional Cartesian spaces
 
-This is the default implementation of R^n and the
-corresponding MetricRn, NormedRn and EuclidRn.
+This is the default implementation of R^n and the corresponding MetricRn,
+NormedRn and EuclideanRn.
 
 The data is represented by NumPy arrays.
+
+TODO: add other data types
 """
 
 # Imports for common Python 2/3 codebase
@@ -45,7 +47,7 @@ try:
     try:
         CudaRn(1).element()
     except MemoryError:
-        raise MemoryError("RLcpp seems to be broken.")
+        raise MemoryError("Your GPU seems to be misconfigured.")
     CUDA_AVAILABLE = True
 except ImportError:
     CudaRn = None
@@ -703,14 +705,25 @@ class NormedRn(Rn, NormedSpace):
         """
 
 
-class EuclidRn(Rn, HilbertSpace, Algebra):
-    """The real space R^n with the usual inner (dot) product.
+class EuclideanRn(Rn, HilbertSpace, Algebra):
+    """The real space R^n with the an inner product.
 
     Parameters
     ----------
 
     dim : int
         The dimension of the space
+
+    kwargs : {'inner', 'weights'}
+        'inner' : callable
+            Create a EuclideanRn with this inner product. It must take
+            two Rn vectors as arguments and return a RealNumber.
+        'weights' : array-like or float
+            Create a EuclideanRn with the weighted dot product as inner
+            product, i.e., <x, y> = dot(x, weights*y).
+            'weights' must be broadcastable to shape (n,) and all
+            entries must be positive.
+            Cannot be combined with 'inner'.
     """
 
     def __init__(self, dim, **kwargs):
@@ -748,7 +761,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : EuclidRn.Vector
+        x : EuclideanRn.Vector
 
         Returns
         -------
@@ -758,7 +771,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclidRn(2)
+        >>> rn = EuclideanRn(2)
         >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         5.0
@@ -777,8 +790,8 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : EuclidRn.Vector
-        y : EuclidRn.Vector
+        x : EuclideanRn.Vector
+        y : EuclideanRn.Vector
 
         Returns
         -------
@@ -788,7 +801,7 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclidRn(3)
+        >>> rn = EuclideanRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
         >>> rn.inner(x, y) == 5*1 + 3*2 + 2*3
@@ -815,9 +828,9 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         Parameters
         ----------
 
-        x : EuclidRn.Vector
+        x : EuclideanRn.Vector
             read from
-        y : EuclidRn.Vector
+        y : EuclideanRn.Vector
             read from and written to
 
         Returns
@@ -827,29 +840,29 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         Examples
         --------
 
-        >>> rn = EuclidRn(3)
+        >>> rn = EuclideanRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        EuclidRn(3).element([5.0, 6.0, 6.0])
+        EuclideanRn(3).element([5.0, 6.0, 6.0])
         """
 
         y.data[:] = x.data * y.data
 
     def __repr__(self):
-        return 'EuclidRn({})'.format(self.dim)
+        return 'EuclideanRn({})'.format(self.dim)
 
     def __str__(self):
         return self.__repr__()
 
     class Vector(Rn.Vector, HilbertSpace.Vector, Algebra.Vector):
-        """ A EuclidRn-vector represented using numpy
+        """ A EuclideanRn-vector represented using numpy
 
         Parameters
         ----------
 
-        space : EuclidRn
+        space : EuclideanRn
             Space instance this vector lives in
         data : numpy.ndarray
             Array that will be used as data representation. Its dtype
@@ -857,10 +870,46 @@ class EuclidRn(Rn, HilbertSpace, Algebra):
         """
 
 
-def rn(dim, impl='numpy', **kwargs):
-    """ Create an R^n, by default the Euclidean space
+def cartesian(dim, impl='numpy', **kwargs):
+    """ Create an n-dimensional Cartesian space, by default Euclidean
 
-    TODO: doc
+    Parameters
+    ----------
+
+    dim : int
+        The dimension of the space to be created
+    impl : str, optional
+        'numpy' : Use NumPy as backend for data storage and operations.
+                  This is the default.
+        'cuda' : Use CUDA as backend for data storage and operations
+                 (requires RLcpp).
+    kwargs : {'dist', 'norm', 'norm_p', 'inner', 'weights'}
+        'dist' : callable or False
+            If False, create a plain Rn without further structure.
+            Otherwise, create a MetricRn with this distance function
+        'norm' : callable
+            Create a NormedRn with this norm function.
+            Cannot be combined with 'dist'.
+        'norm_p' : RealNumber
+            Create a NormedRn with the p-norm associated with 'norm_p'.
+            Cannot be combined with 'dist' or 'norm'.
+        'inner' : callable
+            Create a EuclideanRn with this inner product function.
+            Cannot be combined with 'dist', 'norm' or 'norm_p'.
+        'weights' : array-like or float
+            Create a EuclideanRn with the weighted dot product as inner
+            product, i.e., <x, y> = dot(x, weights*y).
+            Cannot be combined with 'dist', 'norm' or 'inner'.
+
+    Returns
+    -------
+
+    rn : instance of Rn, MetricRn, NormedRn or EuclideanRn
+
+    See also
+    --------
+    Rn, MetricRn, NormedRn, EuclideanRn
+
     """
 
     try:
@@ -906,14 +955,14 @@ def rn(dim, impl='numpy', **kwargs):
                 raise ValueError(errfmt('''
                 'norm' or 'norm_p' cannot be combined with 'inner' '''))
 
-            return NormedRn(dim, norm=norm, norm_p=norm_p, weights=weights)
+            return NormedRn(dim, norm=norm, p=norm_p, weights=weights)
         else:
             # neither 'dist' nor 'norm' nor 'norm_p' specified,
             # assuming inner product space
             if inner is not None and weights is not None:
                 raise ValueError(errfmt('''
                 'inner' cannot be combined with 'weights' '''))
-            return EuclidRn(dim, inner=inner, weights=weights)
+            return EuclideanRn(dim, inner=inner, weights=weights)
 
     if impl == 'cuda':
         if not CUDA_AVAILABLE:
