@@ -57,7 +57,7 @@ standard_library.install_aliases()
 
 
 class Rn(LinearSpace):
-    """The real space R^n without any further mathematical structure
+    """The real vector space R^n without further mathematical structure
 
     Parameters
     ----------
@@ -75,14 +75,14 @@ class Rn(LinearSpace):
         self._axpy, self._scal, self._copy = get_blas_funcs(
             ['axpy', 'scal', 'copy'])
 
-    def element(self, data=None, **kwargs):
+    def element(self, data=None):
         """ Create an element in R^n
 
         Parameters
         ----------
         data : array-like, optional
             The array of values to fill the new array with. It must
-            be castable to a numpy.ndarray with dtype=float64 and
+            be broadcastable to a numpy.ndarray with dtype=float64 and
             shape=(n,).
 
         Returns
@@ -665,16 +665,6 @@ class NormedRn(Rn, NormedSpace):
         >>> r2_0.norm(x)
         1.0
 
-        Custom norm:
-
-        >>> from functools import partial
-        >>> norm_0 = partial(np.linalg.norm, ord=0)
-        >>> r2_c = NormedRn(2, norm=norm_0)
-        >>> x = r2_c.element([3, 0])
-        >>> r2_c.norm(x) == r2_0.norm(x)
-        True
-
-        # TODO: weights doctest
         """
 
         if self._custom_norm is not None:
@@ -807,7 +797,6 @@ class EuclideanRn(Rn, HilbertSpace, Algebra):
         >>> rn.inner(x, y) == 5*1 + 3*2 + 2*3
         True
 
-        TODO: weighted / custom
         """
 
         if self._custom_inner is not None:
