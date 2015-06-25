@@ -31,7 +31,7 @@ from builtins import str, super
 # RL imports
 import RL.operator.operator as op
 from RL.space.space import LinearSpace
-from RL.space.set import UniversalSet
+from RL.space.set import UniversalSet, CartesianProduct
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -82,7 +82,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.apply(vec, out)
         >>> out
-        RN(3).element([ 2.,  4.,  6.])
+        RN(3).element([2.0, 4.0, 6.0])
         """
         out.lincomb(self._scal, input)
 
@@ -109,7 +109,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> op(vec)
-        RN(3).element([ 2.,  4.,  6.])
+        RN(3).element([2.0, 4.0, 6.0])
         """
 
         return self._scal * input
@@ -233,7 +233,7 @@ class LinCombOperator(op.LinearOperator):
         Scalar to multiply in[1] by
     """
     def __init__(self, space, a, b):
-        self.domain = CarthesianProduct(space, space)
+        self.domain = CartesianProduct(space, space)
         self.range = space
         self.a = a
         self.b = b
@@ -250,7 +250,7 @@ class LinCombOperator(op.LinearOperator):
         >>> op = LinCombOperator(r3, 1.0, 1.0)
         >>> op.apply([x, y], z)
         >>> z
-        RN(3).element([ 2.,  4.,  6.])
+        RN(3).element([2.0, 4.0, 6.0])
         """
         out.lincomb(self.a, input[0], self.b, input[1])
 
@@ -275,7 +275,7 @@ class MultiplyOperator(op.LinearOperator):
             The space the vectors should lie in
     """
     def __init__(self, space):
-        self.domain = CarthesianProduct(space, space)
+        self.domain = CartesianProduct(space, space)
         self.range = space
 
     def _apply(self, input, out):
@@ -290,7 +290,7 @@ class MultiplyOperator(op.LinearOperator):
         >>> op = MultiplyOperator(r3)
         >>> op.apply([x, y], z)
         >>> z
-        EuclideanSpace(3).element([ 1.,  4.,  9.])
+        EuclideanSpace(3).element([1.0, 4.0, 9.0])
         """
         out.assign(input[1])
         out.multiply(input[0])
