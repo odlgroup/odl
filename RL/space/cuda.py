@@ -486,12 +486,12 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
     Parameters
     ----------
 
-    n : int
+    dim : int
         The dimension of the space
     """
 
-    def __init__(self, n):
-        super().__init__(n, np.float32)
+    def __init__(self, dim):
+        super().__init__(dim, np.float32)
 
     def _inner(self, x, y):
         """ Calculates the inner product of x and y

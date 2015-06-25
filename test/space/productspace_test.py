@@ -26,7 +26,7 @@ import unittest
 
 # RL imports
 from RL.space.space import *
-from RL.space.euclidean import *
+from RL.space.cartesian import *
 from RL.space.function import *
 from RL.space.product import *
 from RL.utility.testutils import RLTestCase
@@ -70,7 +70,7 @@ class ProductTest(RLTestCase):
         self.assertAllAlmostEquals(z, expected)
 
     def test_metric(self):
-        H = EuclidRn(2)
+        H = EuclideanRn(2)
         v11 = H.element([1, 2])
         v12 = H.element([5, 3])
 
@@ -117,7 +117,7 @@ class ProductTest(RLTestCase):
         self.assertAlmostEquals(w1.dist(w2), v11.dist(v21) + v12.dist(v22))
 
     def test_norm(self):
-        H = EuclidRn(2)
+        H = EuclideanRn(2)
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])
 

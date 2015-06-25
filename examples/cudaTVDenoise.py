@@ -19,17 +19,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
 from numpy import float64
 
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.euclidean import *
+from RL.space.cartesian import *
 from RL.space.function import *
 import RL.space.cuda as CS
-import RL.space.discretizations as DS
+import RL.space.discretization as DS
 import RLcpp
 
 import matplotlib.pyplot as plt

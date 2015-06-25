@@ -28,8 +28,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import RL.operator.operator as OP
 import RL.space.function as fs
-import RL.space.euclidean as ds
-import RL.space.discretizations as dd
+import RL.space.cartesian as ds
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 
@@ -92,11 +92,11 @@ pixelDirection = y0 * pixelSize
 
 
 dataSpace = fs.L2(sets.Interval(0, 1))
-dataRn = ds.EuclidRn(nPixels)
+dataRn = ds.EuclideanRn(nPixels)
 dataDisc = dd.uniform_discretization(dataSpace, dataRn)
 
 reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
-reconRn = ds.EuclidRn(nVoxels.prod())
+reconRn = ds.EuclideanRn(nVoxels.prod())
 reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
 # Create a phantom

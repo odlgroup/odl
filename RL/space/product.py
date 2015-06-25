@@ -30,7 +30,6 @@ from future import standard_library
 
 # External
 import numpy as np
-from numpy import float64
 
 # RL imports
 from RL.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
@@ -56,11 +55,11 @@ class LinearProductSpace(LinearSpace):
 
     Examples
     --------
-    >>> from RL.space.euclidean import Rn, EuclidRn
+    >>> from RL.space.cartesian import Rn, EuclideanRn
     >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
     >>> r2x3.__class__.__name__
     'LinearProductSpace'
-    >>> r2x3 = LinearProductSpace(EuclidRn(2), Rn(3))
+    >>> r2x3 = LinearProductSpace(EuclideanRn(2), Rn(3))
     >>> r2x3.__class__.__name__
     'LinearProductSpace'
     """
@@ -124,8 +123,8 @@ class LinearProductSpace(LinearSpace):
 
         Examples
         -------
-        >>> from RL.space.euclidean import EuclidRn
-        >>> r2, r3 = EuclidRn(2), EuclidRn(3)
+        >>> from RL.space.cartesian import EuclideanRn
+        >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> vec_2x3 = r2x3.element()
@@ -135,7 +134,7 @@ class LinearProductSpace(LinearSpace):
         True
 
         Creates an element in the product space
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> prod = LinearProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
@@ -186,8 +185,8 @@ class LinearProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from RL.space.euclidean import EuclidRn
-        >>> r2, r3 = EuclidRn(2), EuclidRn(3)
+        >>> from RL.space.cartesian import EuclideanRn
+        >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
@@ -218,19 +217,19 @@ class LinearProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from RL.space.euclidean import EuclidRn
-        >>> r2, r3 = EuclidRn(2), EuclidRn(3)
-        >>> rn, rm = EuclidRn(2), EuclidRn(3)
+        >>> from RL.space.cartesian import EuclideanRn
+        >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
+        >>> rn, rm = EuclideanRn(2), EuclideanRn(3)
         >>> r2x3, rnxm = LinearProductSpace(r2, r3), LinearProductSpace(rn, rm)
         >>> r2x3.equals(rnxm)
         True
         >>> r3x2 = LinearProductSpace(r3, r2)
         >>> r2x3.equals(r3x2)
         False
-        >>> r5 = LinearProductSpace(*[EuclidRn(1)]*5)
+        >>> r5 = LinearProductSpace(*[EuclideanRn(1)]*5)
         >>> r2x3.equals(r5)
         False
-        >>> r5 = EuclidRn(5)
+        >>> r5 = EuclideanRn(5)
         >>> r2x3.equals(r5)
         False
         """
@@ -322,8 +321,8 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
 
     Examples
     --------
-    >>> from RL.space.euclidean import EuclidRn
-    >>> r2, r3 = EuclidRn(2), EuclidRn(3)
+    >>> from RL.space.cartesian import EuclideanRn
+    >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
     >>> r2x3 = MetricProductSpace(r2, r3, ord='inf')
     >>> x_2 = r2.element([0, 0])
     >>> y_2 = r2.element([3, 4])
@@ -382,7 +381,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         dists = np.fromiter(
             (spc._dist(xp, yp)
              for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
-            dtype=float64, count=self._nfactors)
+            dtype=np.float64, count=self._nfactors)
         return self._prod_norm(dists)
 
     def __repr__(self):
@@ -445,8 +444,8 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
     Examples
     --------
-    >>> from RL.space.euclidean import EuclidRn
-    >>> r2, r3 = EuclidRn(2), EuclidRn(3)
+    >>> from RL.space.cartesian import EuclideanRn
+    >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
     >>> r2x3 = NormedProductSpace(r2, r3, ord='inf')
     >>> x_2 = r2.element([3, 4])
     >>> x_3 = r3.element([2, 2, 1])

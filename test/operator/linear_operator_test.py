@@ -27,7 +27,7 @@ import numpy as np
 
 # RL imports
 import RL.operator.operator as op
-from RL.space.euclidean import EuclidRn
+from RL.space.cartesian import EuclideanRn
 from RL.utility.testutils import RLTestCase
 
 standard_library.install_aliases()
@@ -38,9 +38,9 @@ class MultiplyOp(op.LinearOperator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (EuclidRn(matrix.shape[1])
+        self._domain = (EuclideanRn(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (EuclidRn(matrix.shape[0])
+        self._range = (EuclideanRn(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
@@ -183,8 +183,8 @@ class TestRn(RLTestCase):
         self.assertAllAlmostEquals(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))
 
     def test_type_errors(self):
-        r3 = EuclidRn(3)
-        r4 = EuclidRn(4)
+        r3 = EuclideanRn(3)
+        r4 = EuclideanRn(4)
 
         Aop = MultiplyOp(np.random.rand(3, 3))
         r3Vec1 = r3.zero()

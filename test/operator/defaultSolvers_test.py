@@ -29,7 +29,7 @@ import numpy as np
 import RL.operator.operator as OP
 import RL.operator.solvers as solvers
 from RL.space.space import *
-from RL.space.euclidean import *
+from RL.space.cartesian import *
 from RL.utility.testutils import RLTestCase
 
 standard_library.install_aliases()
@@ -40,9 +40,9 @@ class MultiplyOp(OP.LinearOperator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (EuclidRn(matrix.shape[1])
+        self._domain = (EuclideanRn(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (EuclidRn(matrix.shape[0])
+        self._range = (EuclideanRn(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
@@ -75,7 +75,7 @@ class TestMatrixSolve(RLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = EuclidRn(n)
+        rn = EuclideanRn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -97,7 +97,7 @@ class TestMatrixSolve(RLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = EuclidRn(n)
+        rn = EuclideanRn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -118,7 +118,7 @@ class TestMatrixSolve(RLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = EuclidRn(n)
+        rn = EuclideanRn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 

@@ -27,7 +27,7 @@ import unittest
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.euclidean import *
+from RL.space.cartesian import *
 from RL.space.cuda import *
 from RL.utility.testutils import Timer
 

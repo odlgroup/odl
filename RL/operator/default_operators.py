@@ -75,7 +75,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
@@ -105,7 +105,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
@@ -131,8 +131,8 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import EuclidRn
-        >>> r3 = EuclidRn(3)
+        >>> from RL.space.cartesian import EuclideanRn
+        >>> r3 = EuclideanRn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> inv = op.inverse
@@ -159,7 +159,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.domain
@@ -183,7 +183,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.range
@@ -246,7 +246,7 @@ class LinCombOperator(op.LinearOperator):
         """
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
@@ -290,15 +290,15 @@ class MultiplyOperator(op.LinearOperator):
         """
         Example
         -------
-        >>> from RL.space.euclidean import EuclidRn
-        >>> r3 = EuclidRn(3)
+        >>> from RL.space.cartesian import EuclideanRn
+        >>> r3 = EuclideanRn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
         >>> op.apply([x, y], z)
         >>> z
-        EuclidRn(3).element([1.0, 4.0, 9.0])
+        EuclideanRn(3).element([1.0, 4.0, 9.0])
         """
 
         out.assign(input[1])

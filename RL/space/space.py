@@ -497,7 +497,7 @@ class MetricSpace(LinearSpace):
             Example
             -------
 
-            >>> from RL.space.euclidean import NormedRn
+            >>> from RL.space.cartesian import NormedRn
             >>> X = NormedRn(1)
             >>> x = X.element([0.1])
             >>> x == x

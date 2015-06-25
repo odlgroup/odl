@@ -30,7 +30,7 @@ import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.euclidean as ds
 import RL.space.product as ps
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import RL.operator.solvers as solvers
@@ -143,7 +143,7 @@ for theta in np.linspace(0, 2*pi, nProjection):
 
 # Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRn = ds.EuclidRn(nPixels)
+projectionRn = ds.EuclideanRn(nPixels)
 
 # Discretize projection space
 projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
@@ -156,7 +156,7 @@ dataDisc = ps.powerspace(projectionDisc, nProjection)
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconRn = ds.EuclidRn(nVoxels.prod())
+reconRn = ds.EuclideanRn(nVoxels.prod())
 reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
 # Create a phantom

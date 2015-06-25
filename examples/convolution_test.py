@@ -26,13 +26,13 @@ from future import standard_library
 
 import RL.operator.operator as op
 import RL.operator.solvers as solvers
-import RL.space.euclidean as ds
+import RL.space.cartesian as ds
 import RL.space.set as sets
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.function as fs
 import solverExamples
 
-from RL.utility.testutils import Timer, consume
+from RL.utility.testutils import Timer
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -82,7 +82,7 @@ continuousRhs = continuousSpace.element(lambda x: x**2 *
                                         np.sin(x)**2*(x > 5))
 
 # Discretization
-rn = ds.EuclidRn(500)
+rn = ds.EuclideanRn(500)
 d = dd.uniform_discretization(continuousSpace, rn)
 kernel = d.element(continuousKernel)
 rhs = d.element(continuousRhs)

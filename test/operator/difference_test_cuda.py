@@ -27,7 +27,7 @@ import unittest
 # RL imports
 from RL.operator.operator import *
 from RL.space.space import *
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 from RL.space.function import *
 import RL.space.set as sets
 from RL.space.product import productspace

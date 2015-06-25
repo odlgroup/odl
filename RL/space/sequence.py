@@ -28,7 +28,7 @@ from builtins import super
 import numpy as np
 
 # RL imports
-from RL.space.euclidean import EuclidRn
+from RL.space.cartesian import EuclideanRn
 from RL.space.function import FunctionSpace
 from RL.space.set import Integers
 
@@ -47,7 +47,7 @@ class SequenceSpace(FunctionSpace):
                 super().equals(other))
 
 
-class TruncationDiscretization(EuclidRn):
+class TruncationDiscretization(EuclideanRn):
     """ Truncation discretization of the integers
     Represents vectors by R^n elements
     """
@@ -84,7 +84,7 @@ class TruncationDiscretization(EuclidRn):
     def points(self):
         return np.arange(self.dim)
 
-    class Vector(EuclidRn.Vector):
+    class Vector(EuclideanRn.Vector):
         def __init__(self, space, *args, **kwargs):
             if ((len(args) == 1 and
                  isinstance(args[0], SequenceSpace.Vector) and

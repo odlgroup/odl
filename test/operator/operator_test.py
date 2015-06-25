@@ -27,7 +27,7 @@ import numpy as np
 
 # RL imports
 import RL.operator.operator as op
-from RL.space.euclidean import EuclidRn
+from RL.space.cartesian import EuclideanRn
 from RL.utility.testutils import RLTestCase
 
 standard_library.install_aliases()
@@ -38,9 +38,9 @@ class MultiplyAndSquareOp(op.Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self.domain = (EuclidRn(matrix.shape[1])
+        self.domain = (EuclideanRn(matrix.shape[1])
                        if domain is None else domain)
-        self.range = (EuclidRn(matrix.shape[0])
+        self.range = (EuclideanRn(matrix.shape[0])
                       if range is None else range)
         self.matrix = matrix
 

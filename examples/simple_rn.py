@@ -16,7 +16,7 @@ from RL.space.space import *
 from RL.space.cuda import *
 from RL.space.set import *
 from RL.utility.utility import errfmt
-from RL.space.euclidean import EuclidRn
+from RL.space.cartesian import EuclideanRn
 from RL.utility.testutils import Timer
 
 standard_library.install_aliases()
@@ -90,7 +90,7 @@ n = 10**7
 iterations = 10
 
 
-optX = EuclidRn(n)
+optX = EuclideanRn(n)
 simpleX = SimpleRn(n)
 cuX = CudaRn(n)
 
@@ -109,7 +109,7 @@ with Timer("SimpleRn"):
         simpleX.lincomb(sz, 2.13, sx, 3.14, sy)
 print("result: {}".format(sz[1:5]))
 
-with Timer("EuclidRn"):
+with Timer("EuclideanRn"):
     for _ in range(iterations):
         optX.lincomb(oz, 2.13, ox, 3.14, oy)
 print("result: {}".format(oz[1:5]))
@@ -126,7 +126,7 @@ with Timer("SimpleRn"):
         result = sz.norm()
 print("result: {}".format(result))
 
-with Timer("EuclidRn"):
+with Timer("EuclideanRn"):
     for _ in range(iterations):
         result = oz.norm()
 print("result: {}".format(result))
@@ -143,7 +143,7 @@ with Timer("SimpleRn"):
         result = sz.inner(sx)
 print("result: {}".format(result))
 
-with Timer("EuclidRn"):
+with Timer("EuclideanRn"):
     for _ in range(iterations):
         result = oz.inner(ox)
 print("result: {}".format(result))

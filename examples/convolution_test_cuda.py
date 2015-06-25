@@ -19,13 +19,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
 
 import RL.operator.operator as op
 import RL.operator.solvers as solvers
 import RL.space.set as sets
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.function as fs
 import RL.space.cuda as cs
 import RLcpp

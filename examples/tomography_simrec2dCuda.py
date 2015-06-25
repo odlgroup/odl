@@ -32,7 +32,7 @@ import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.cuda as cs
 import RL.space.product as prod
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import RL.operator.solvers as solvers

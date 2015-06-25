@@ -261,7 +261,7 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -311,7 +311,7 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -366,7 +366,7 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -405,7 +405,7 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -511,7 +511,7 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
@@ -543,7 +543,7 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
@@ -568,7 +568,7 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import Rn
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)

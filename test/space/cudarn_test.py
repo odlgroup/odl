@@ -29,7 +29,7 @@ from numpy import float64
 # RL imports
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.euclidean import Rn
+from RL.space.cartesian import Rn
 from RL.utility.testutils import skip_all_tests
 
 try:
