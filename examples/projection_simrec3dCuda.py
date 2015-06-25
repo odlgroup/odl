@@ -65,7 +65,7 @@ class CudaProjector3D(OP.LinearOperator):
             geo = self.geometries[i]
             
             with Timer("projecting"):
-                    self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
+                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
 
 
 #Set geometry parameters
@@ -127,12 +127,14 @@ phantomVec = reconDisc.element(phantom)
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
 result = projector(phantomVec)
 
+result = dataDisc.element()
+projector.apply(phantomVec, result)
+
 plt.figure()
 for i in range(2):
     plt.subplot(3, 5, i+1)
     plt.imshow(result[i].as_array().T, cmap='bone', origin='lower')
     plt.axis('off')
-
 
 back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 geo = geometries[0]

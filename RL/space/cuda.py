@@ -30,7 +30,6 @@ from future import standard_library
 # External module imports
 import numpy as np
 from math import sqrt
-from numpy import float64
 from numbers import Integral
 
 # RL imports
@@ -43,15 +42,14 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 class CudaElementType(object):
-    def __init__(self, impl, lincomb=None, inner=None, norm=None, multiply=None):
+    def __init__(self, impl, nptype):
         self.impl = impl
-        self.lincomb = lincomb
-        self.inner = inner
-        self.norm = norm
-        self.multiply = multiply
+        self.nptype = nptype #todo, make this property of self.impl
 
-CudaElementType.float32 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplFloat)
-CudaElementType.uint8 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplUChar)
+CudaElementType.float32 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplFloat,
+                                          nptype=np.float32)
+CudaElementType.uint8 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplUChar,
+                                        nptype=np.uint8)
 
 class CudaEN(spaces.LinearSpace):
     """The real space E^n, implemented in CUDA
@@ -79,7 +77,7 @@ class CudaEN(spaces.LinearSpace):
         self._type = type
         self._field = sets.RealNumbers()
 
-    def element(self, data=None, **kwargs):
+    def element(self, data=None, data_ptr=None, **kwargs):
         """ Returns a vector of zeros
 
         CUDA memory is always initialized
@@ -145,22 +143,16 @@ class CudaEN(spaces.LinearSpace):
         if isinstance(data, self._type.impl):
             return self.Vector(self, data)
         elif data is None:
-            return self.element(self._type.impl(self.n))
-        elif isinstance(data, np.ndarray):  # Create from numpy array
-            if data.shape != (self._n,):
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(data, data.shape, (self.n,))))
-
-            data = data.astype(np.float64, copy=False)
-
-            # Create result and assign (could be optimized to one call)
+            if data_ptr is None:
+                return self.element(self._type.impl(self.n))
+            else:
+                return self.element(self._type.impl.fromPointer(data_ptr, self.n))
+        else:
+            # Create result and assign 
+            # (could be optimized to one call, this was tried and did not help much)
             elem = self.element()
             elem[:] = data
             return elem
-        else:  # Create from intermediate numpy array
-            as_array = np.array(data, dtype=np.float64, **kwargs)
-            return self.element(as_array)
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -195,7 +187,7 @@ class CudaEN(spaces.LinearSpace):
         CudaEN(3).element([ 14.,  19.,  24.])
         """
 
-        RLcpp.PyCuda.linComb(z.data, a, x.data, b, y.data)
+        z.data.linComb(a, x.data, b, y.data)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -359,6 +351,21 @@ class CudaEN(spaces.LinearSpace):
             """
             return self._data.dataPtr()
 
+        @property
+        def itemsize(self):
+            """ Get a size (in bytes) of the underlying element type
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            itemsize : Int
+                       Size in bytes of type
+            """
+            return 4 #Currently hardcoded to float
+
         def __str__(self):
             return str(self[:])
 
@@ -469,12 +476,10 @@ class CudaEN(spaces.LinearSpace):
             """
 
             if isinstance(index, slice):
-                # Convert value to the correct type
-                if not isinstance(value, np.ndarray):
-                    value = np.array(value, dtype=float64)
+                # Convert value to the correct type if needed
+                value = np.asarray(value, dtype=self.space._type.nptype)
 
-                value = value.astype(float64, copy=False)
-
+                # Size checking is performed in c++
                 self.data.setSlice(index, value)
             else:
                 self.data.__setitem__(index, value)
@@ -523,7 +528,7 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         20.0
         """
 
-        return RLcpp.PyCuda.inner(x.data, y.data)
+        return x.data.inner(y.data)
 
     def _norm(self, x):
         """ Calculates the 2-norm of x
@@ -554,7 +559,7 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         7.0
         """
 
-        return RLcpp.PyCuda.norm(x.data)
+        return x.data.norm()
 
     def _multiply(self, x, y):
         """ Calculates the pointwise product of two vectors and assigns the
@@ -586,7 +591,7 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         >>> y
         CudaRN(3).element([ 5.,  6.,  6.])
         """
-        RLcpp.PyCuda.multiply(x.data, y.data)
+        y.data.multiply(x.data)
 
     @property
     def field(self):
