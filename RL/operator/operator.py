@@ -256,13 +256,15 @@ class Operator(with_metaclass(OperatorMeta, object)):
         Example
         -------
 
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element()
         >>> Op.apply(x, y)
         >>> y
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
         """
 
         if not self.domain.contains(rhs):
@@ -303,12 +305,14 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         Example
         -------
-
+        
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
         """
 
         if not self.domain.contains(rhs):
@@ -349,15 +353,17 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         Example
         -------
-
+        
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
         >>> Scaled = Op * 3
         >>> Scaled(x)
-        [3.0, 6.0, 9.0]
+        RN(3).element([3.0, 6.0, 9.0])
         """
 
         return OperatorRightScalarMultiplication(self, other)
@@ -380,15 +386,17 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         Example
         -------
-
+        
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
         >>> Scaled = 3 * Op
         >>> Scaled(x)
-        [3.0, 6.0, 9.0]
+        RN(3).element([3.0, 6.0, 9.0])
         """
 
         return OperatorLeftScalarMultiplication(self, other)

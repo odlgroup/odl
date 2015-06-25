@@ -493,14 +493,15 @@ class MetricSpace(with_metaclass(ABCMeta, LinearSpace)):
             Example
             -------
 
-            >>> X = RN(1)
-            >>> x = X.vector([0.1])
+            >>> from RL.space.euclidean import NormedRN
+            >>> X = NormedRN(1)
+            >>> x = X.element([0.1])
             >>> x == x
             True
-            >>> y = X.vector([0.1])
+            >>> y = X.element([0.1])
             >>> x == y
             True
-            >>> z = X.vector([0.3])
+            >>> z = X.element([0.3])
             >>> x+x+x == z
             False
             """
@@ -675,3 +676,7 @@ class Algebra(with_metaclass(ABCMeta, LinearSpace)):
                 return self
             else:
                 return super().__imul__(other)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

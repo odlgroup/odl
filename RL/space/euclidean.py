@@ -119,10 +119,10 @@ class RN(LinearSpace):
         >>> rn = RN(3)
         >>> x = rn.element(np.array([1., 2., 3.]))
         >>> x
-        RN(3).element([ 1.,  2.,  3.])
+        RN(3).element([1.0, 2.0, 3.0])
         >>> y = rn.element([1, 2, 3])
         >>> y
-        RN(3).element([ 1.,  2.,  3.])
+        RN(3).element([1.0, 2.0, 3.0])
 
         """
 
@@ -174,7 +174,7 @@ class RN(LinearSpace):
         >>> z = rn.element()
         >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        RN(3).element([ 14.,  19.,  24.])
+        RN(3).element([14.0, 19.0, 24.0])
 
         """
 
@@ -243,7 +243,7 @@ class RN(LinearSpace):
         >>> rn = RN(3)
         >>> x = rn.zero()
         >>> x
-        RN(3).element([ 0.,  0.,  0.])
+        RN(3).element([0.0, 0.0, 0.0])
         """
         return self.element(np.zeros(self._n, dtype=float64))
 
@@ -376,8 +376,11 @@ class RN(LinearSpace):
             return str(self.data)
 
         def __repr__(self):
-            val_str = repr(self.data).lstrip('array(').rstrip(')')
-            return repr(self.space) + '.element(' + val_str + ')'
+            if self.space.n < 7:
+                return repr(self.space) + '.element(' + repr(self[:].tolist()) + ')'
+            else:
+                val_str = repr(self[:3].tolist()).rstrip(']') + ', ..., ' + repr(self[-3:].tolist()).lstrip('[')
+                return repr(self.space) + '.element(' + val_str + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
@@ -441,13 +444,13 @@ class RN(LinearSpace):
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            RN(3).element([ 5.,  2.,  3.])
+            RN(3).element([5.0, 2.0, 3.0])
             >>> y[1:3] = [7, 8]
             >>> y
-            RN(3).element([ 5.,  7.,  8.])
+            RN(3).element([5.0, 7.0, 8.0])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            RN(3).element([ 0.,  0.,  0.])
+            RN(3).element([0.0, 0.0, 0.0])
 
             """
 
@@ -632,7 +635,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        EuclideanSpace(3).element([ 5.,  6.,  6.])
+        EuclideanSpace(3).element([5.0, 6.0, 6.0])
         """
         y.data[:] = x.data * y.data
 
