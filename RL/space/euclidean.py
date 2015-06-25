@@ -31,13 +31,12 @@ from future import standard_library
 
 # External module imports
 import numpy as np
-from numpy import float64
 from scipy.lib.blas import get_blas_funcs
 from numbers import Integral
 
 # RL imports
-from RL.space.space import *
-from RL.space.set import *
+from RL.space.space import LinearSpace, Algebra, HilbertSpace, NormedSpace
+from RL.space.set import RealNumbers
 from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
@@ -119,27 +118,27 @@ class RN(LinearSpace):
         >>> rn = RN(3)
         >>> x = rn.element(np.array([1., 2., 3.]))
         >>> x
-        RN(3).element([ 1.,  2.,  3.])
+        RN(3).element([1.0, 2.0, 3.0])
         >>> y = rn.element([1, 2, 3])
         >>> y
-        RN(3).element([ 1.,  2.,  3.])
+        RN(3).element([1.0, 2.0, 3.0])
 
         """
 
-        dtype = kwargs.pop('dtype', float64)
+        dtype = kwargs.pop('dtype', np.float64)
 
         if data is None:
-            data = np.empty(self._n, dtype=dtype, **kwargs)
+            data = np.empty(self.n, dtype=dtype, **kwargs)
 
         if not isinstance(data, np.ndarray):
             data = np.array(data, dtype=dtype, **kwargs)
         else:
-            if data.shape != (self._n,):
+            if data.shape != (self.n,):
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of shape {}, expected shape shape {}
                 '''.format(data, data.shape, (self.n,))))
 
-            if data.dtype != float64:
+            if data.dtype != np.float64:
                 raise ValueError(errfmt('''
                 Input numpy array ({}) is of type {}, expected float64
                 '''.format(data, data.dtype)))
@@ -174,7 +173,7 @@ class RN(LinearSpace):
         >>> z = rn.element()
         >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        RN(3).element([ 14.,  19.,  24.])
+        RN(3).element([14.0, 19.0, 24.0])
 
         """
 
@@ -189,13 +188,13 @@ class RN(LinearSpace):
             if a != 1:
                 self._scal(a, z.data)
             if b != 0:
-                self._axpy(y.data, z.data, self._n, b)
+                self._axpy(y.data, z.data, self.n, b)
         elif z is y:
             # If z is aligned with y we have                 z = a*x + b*z
             if b != 1:
                 self._scal(b, z.data)
             if a != 0:
-                self._axpy(x.data, z.data, self._n, a)
+                self._axpy(x.data, z.data, self.n, a)
         else:
             # We have exhausted all alignment options, so x != y != z
             # We now optimize for various values of a and b
@@ -214,12 +213,12 @@ class RN(LinearSpace):
 
                 elif a == 1:                                # z = x + b*y
                     self._copy(x.data, z.data)
-                    self._axpy(y.data, z.data, self._n, b)
+                    self._axpy(y.data, z.data, self.n, b)
                 else:                                       # z = a*x + b*y
                     self._copy(y.data, z.data)
                     if b != 1:
                         self._scal(b, z.data)
-                    self._axpy(x.data, z.data, self._n, a)
+                    self._axpy(x.data, z.data, self.n, a)
 
     def zero(self):
         """ Returns a vector of zeros
@@ -243,9 +242,9 @@ class RN(LinearSpace):
         >>> rn = RN(3)
         >>> x = rn.zero()
         >>> x
-        RN(3).element([ 0.,  0.,  0.])
+        RN(3).element([0.0, 0.0, 0.0])
         """
-        return self.element(np.zeros(self._n, dtype=float64))
+        return self.element(np.zeros(self.n, dtype=np.float64))
 
     @property
     def field(self):
@@ -328,7 +327,7 @@ class RN(LinearSpace):
         >>> r3 != r4
         True
         """
-        return isinstance(other, RN) and self._n == other._n
+        return isinstance(other, RN) and self.n == other.n
 
     def __str__(self):
         return "RN(" + str(self.n) + ")"
@@ -345,9 +344,9 @@ class RN(LinearSpace):
         space : RN
                 Instance of RN this vector lives in
         data : numpy.ndarray
-                 Underlying data-representation to be used by this vector
-                 The dtype of the array must be float64
-                 The shape of the array must be (n,)
+               Underlying data-representation to be used by this vector
+               The dtype of the array must be float64
+               The shape of the array must be (n,)
         """
 
         def __init__(self, space, data):
@@ -356,7 +355,7 @@ class RN(LinearSpace):
                 'data' ({}) must be a numpy.ndarray
                 '''.format(type(data))))
 
-            if data.dtype != float64:
+            if data.dtype != np.float64:
                 raise TypeError(errfmt('''
                 type('data') ({}) must be float64
                 '''.format(data.dtype)))
@@ -366,21 +365,84 @@ class RN(LinearSpace):
 
         @property
         def data(self):
+            """
+            Get the underlying datacontainer, an numpy-array
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            data : Numpy.ndarray
+                   The underlying data representation
+
+            Examples
+            --------
+            >>> vec = RN(3).element([1, 2, 3])
+            >>> vec.data
+            array([ 1.,  2.,  3.])
+            """
             return self._data
 
         @property
         def data_ptr(self):
+            """
+            Get a pointer to the underlying data.
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            data : Numpy.ndarray
+                   The underlying data representation
+
+            Examples
+            --------
+            >>> import ctypes
+            >>> vec = RN(3).element([1, 2, 3])
+            >>> ArrayType = ctypes.c_double*3
+            >>> arr = np.frombuffer(ArrayType.from_address(vec.data_ptr))
+            >>> arr
+            array([ 1.,  2.,  3.])
+
+            Inplace modifications
+
+            >>> arr[0] = 5
+            >>> vec
+            RN(3).element([5.0, 2.0, 3.0])
+            """
             return self._data.ctypes.data
 
         def __str__(self):
             return str(self.data)
 
         def __repr__(self):
-            val_str = repr(self.data).lstrip('array(').rstrip(')')
-            return repr(self.space) + '.element(' + val_str + ')'
+            if self.space.n < 7:
+                return repr(self.space) + '.element(' + repr(self[:].tolist()) + ')'
+            else:
+                val_str = repr(self[:3].tolist()).rstrip(']') + ', ..., ' + repr(self[-3:].tolist()).lstrip('[')
+                return repr(self.space) + '.element(' + val_str + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            len : int
+
+            Examples
+            --------
+            >>> RN(3).element().__len__()
+            3
+            >>> len(RN(3).element())
+            3
             """
             return self.space.n
 
@@ -441,13 +503,13 @@ class RN(LinearSpace):
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            RN(3).element([ 5.,  2.,  3.])
+            RN(3).element([5.0, 2.0, 3.0])
             >>> y[1:3] = [7, 8]
             >>> y
-            RN(3).element([ 5.,  7.,  8.])
+            RN(3).element([5.0, 7.0, 8.0])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            RN(3).element([ 0.,  0.,  0.])
+            RN(3).element([0.0, 0.0, 0.0])
 
             """
 
@@ -524,7 +586,18 @@ class NormedRN(RN, NormedSpace):
         return np.linalg.norm(vector.data, ord=self.ord)
 
     class Vector(RN.Vector, NormedSpace.Vector):
-        pass
+        """ A NormedRN-vector represented using numpy
+
+        Parameters
+        ----------
+
+        space : RN
+                Instance of RN this vector lives in
+        data : numpy.ndarray
+               Underlying data-representation to be used by this vector
+               The dtype of the array must be float64
+               The shape of the array must be (n,)
+        """
 
 
 class EuclideanSpace(RN, HilbertSpace, Algebra):
@@ -568,7 +641,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         5.0
 
         """
-        # TODO: nrm2 seems slow compared to dot
+        # TODO: Possibly change this to 'dot', which is faster
         return float(self._nrm2(x.data))
 
     def _inner(self, x, y):
@@ -632,7 +705,7 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        EuclideanSpace(3).element([ 5.,  6.,  6.])
+        EuclideanSpace(3).element([5.0, 6.0, 6.0])
         """
         y.data[:] = x.data * y.data
 
@@ -640,7 +713,18 @@ class EuclideanSpace(RN, HilbertSpace, Algebra):
         return 'EuclideanSpace(' + str(self.n) + ')'
 
     class Vector(RN.Vector, HilbertSpace.Vector, Algebra.Vector):
-        pass
+        """ A EuclideanSpace-vector represented using numpy
+
+        Parameters
+        ----------
+
+        space : RN
+                Instance of RN this vector lives in
+        data : numpy.ndarray
+               Underlying data-representation to be used by this vector
+               The dtype of the array must be float64
+               The shape of the array must be (n,)
+        """
 
 
 if __name__ == '__main__':

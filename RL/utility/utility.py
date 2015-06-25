@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Utilities for use inside the RL project, not for external use.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (division, unicode_literals, print_function,
@@ -88,20 +91,20 @@ def flat_tuple(seq):
             return tuple(seq)
 
 
-class InputValidationError(ValueError):
-    """A simple exception class for input validation."""
-    def __init__(self, input_, expected, input_name=None):
-        self.got = input_
-        self.expected = expected
-        self.input_name = input_name
+def input_validation_error(input_, expected, input_name=None):
+    self.got = input_
+    self.expected = expected
+    self.input_name = input_name
 
-    def __str__(self):
-        if self.input_name is not None:
-            return errfmt("{}: got {}, expected {}".format(self.input_name,
-                          self.got, self.expected))
-        else:
-            return errfmt("got {}, expected {}".format(self.got,
-                          self.expected))
+    if self.input_name is not None:
+        message = errfmt("{}: got {}, expected {}".format(self.input_name,
+                                                          self.got,
+                                                          self.expected))
+    else:
+        message = errfmt("got {}, expected {}".format(self.got,
+                                                      self.expected))
+
+    return ValueError(message)
 
 
 def euler_matrix(*angles):
@@ -232,8 +235,8 @@ def angles_from_matrix(rot_matrix):
         return (phi, theta, psi)
 
     else:
-        raise InputValidationError(rot_matrix.shape, '(2,2) or (3,3)',
-                                   'rot_matrix.shape')
+        raise input_validation_error(rot_matrix.shape, '(2,2) or (3,3)',
+                                     'rot_matrix.shape')
 
 
 def to_lab_sys(vec_in_local_coords, local_sys):
@@ -248,15 +251,6 @@ def to_local_sys(vec_in_lab_coords, local_sys):
     vec_in_lab_coords = np.array(vec_in_lab_coords)
     trafo_matrix = np.matrix(local_sys)
     return np.dot(trafo_matrix, vec_in_lab_coords)
-
-
-def allEqual(iterator, comp):
-    try:
-        iterator = iter(iterator)
-        first = next(iterator)
-        return all(comp(first, rest) for rest in iterator)
-    except StopIteration:  # True for empty list
-        return True
 
 if __name__ == '__main__':
     import doctest

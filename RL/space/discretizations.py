@@ -56,7 +56,7 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
         """
 
         def __init__(self, parent, rn, shape, order):
-            if not isinstance(parent.domain, sets.IntervProd):
+            if not isinstance(parent.domain, sets.IntervalProd):
                 raise NotImplementedError('Can only discretize IntervProds')
 
             if not isinstance(rn, space.HilbertSpace):

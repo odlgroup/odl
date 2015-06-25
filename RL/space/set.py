@@ -15,18 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+General set structure as well as implementations of the most common sets.
+"""
 
 # Imports for common Python 2/3 codebase
-from __future__ import unicode_literals, print_function, division, absolute_import
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 from builtins import object, super
-from future.utils import with_metaclass
 from future import standard_library
 
 # External module imports
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
-from numpy import float64
 
 # RL imports
 from RL.utility.utility import errfmt
@@ -34,9 +36,11 @@ from RL.utility.utility import errfmt
 standard_library.install_aliases()
 
 
-class Set(with_metaclass(ABCMeta, object)):
+class Set(object):
     """ An arbitrary set
     """
+
+    __metaclass__ = ABCMeta
 
     @abstractmethod
     def equals(self, other):
@@ -48,11 +52,12 @@ class Set(with_metaclass(ABCMeta, object)):
         """ Test if other is a member of self
         """
 
-    def element(self):
+    def element(self, *args, **kwargs):
         """ Return some (arbitrary) element
         """
         raise NotImplementedError("'element' method not implemented")
 
+    # Default implemenations
     def __eq__(self, other):
         return self.equals(other)
 
@@ -66,11 +71,21 @@ class Set(with_metaclass(ABCMeta, object)):
 class EmptySet(Set):
     """ The empty set has no members (None is considered "no element")
     """
+
     def equals(self, other):
+        """ Tests if other is an instance of EmptySet
+        """
         return isinstance(other, EmptySet)
 
     def contains(self, other):
+        """ Tests if other is None
+        """
         return other is None
+
+    def element(self):
+        """ The only element in the empty set, None
+        """
+        return None
 
     def __str__(self):
         return "EmptySet"
@@ -79,15 +94,48 @@ class EmptySet(Set):
         return "EmptySet()"
 
 
+class UniversalSet(Set):
+    """ Every object is a member of the universal set
+
+    Intended to be used in Operators where the user does not
+    want to define a domain or range.
+    """
+
+    def equals(self, other):
+        """ Tests if other is an instance of UniversalSet
+        """
+        return isinstance(other, UniversalSet)
+
+    def contains(self, other):
+        """ Always returns true
+        """
+        return True
+
+    def __str__(self):
+        return "UniversalSet"
+
+    def __repr__(self):
+        return "UniversalSet()"
+
+
 class ComplexNumbers(Set):
     """ The set of complex numbers
     """
 
     def equals(self, other):
+        """ Tests if other is an instance of ComplexNumbers
+        """
         return isinstance(other, ComplexNumbers)
 
     def contains(self, other):
+        """ Tests if other is a complex number
+        """
         return isinstance(other, Complex)
+
+    def element(self):
+        """ A complex number (zero)
+        """
+        return complex(0.0, 0.0)
 
     def __str__(self):
         return "ComplexNumbers"
@@ -101,10 +149,19 @@ class RealNumbers(Set):
     """
 
     def equals(self, other):
+        """ Tests if other is an instance of RealNumbers
+        """
         return isinstance(other, RealNumbers)
 
     def contains(self, other):
+        """ Tests if other is a real number
+        """
         return isinstance(other, Real)
+
+    def element(self):
+        """ A real number (zero)
+        """
+        return 0.0
 
     def __str__(self):
         return "RealNumbers"
@@ -118,10 +175,19 @@ class Integers(Set):
     """
 
     def equals(self, other):
+        """ Tests if other is an instance of Integers
+        """
         return isinstance(other, Integers)
 
     def contains(self, other):
+        """ Tests if other is an Integer
+        """
         return isinstance(other, Integral)
+
+    def element(self):
+        """ An Integer (zero)
+        """
+        return 0
 
     def __str__(self):
         return "Integers"
@@ -130,10 +196,10 @@ class Integers(Set):
         return "Integers()"
 
 
-class IntervProd(Set):
+class IntervalProd(Set):
     """ An N-dimensional rectangular box
 
-    An IntervProd is a Cartesian product of N intervals, i.e. an
+    An IntervalProd is a Cartesian product of N intervals, i.e. an
     N-dimensional rectangular box aligned with the coordinate axes
     as a subset of R^N.
     """
@@ -151,13 +217,13 @@ class IntervProd(Set):
         --------
 
         >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
-        >>> rbox = IntervProd(b, e)
+        >>> rbox = IntervalProd(b, e)
         >>> rbox
-        IntervProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
+        IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
 
-        begin = np.atleast_1d(begin).astype(float64)
-        end = np.atleast_1d(end).astype(float64)
+        begin = np.atleast_1d(begin).astype(np.float64)
+        end = np.atleast_1d(end).astype(np.float64)
 
         if len(begin) != len(end):
             raise ValueError(errfmt('''
@@ -174,36 +240,54 @@ class IntervProd(Set):
         self._end = end
         self._ideg = np.where(self._begin == self._end)[0]
         self._inondeg = np.where(self._begin != self._end)[0]
+        super().__init__()
 
     # Basic properties
     @property
     def begin(self):
+        """ The left interval boundary/boundaries
+
+        If dim == 1, a float is returned, otherwise an array.
+        """
         return self._begin
 
     @property
     def end(self):
+        """ The right interval boundary/boundaries
+
+        If dim == 1, a float is returned, otherwise an array.
+        """
         return self._end
 
     @property
     def dim(self):
+        """ The number of intervals in the product
+        """
         return len(self._begin)
 
     @property
     def truedim(self):
+        """ The number of non-degenerate (zero-length) intervals
+        """
         return len(self._inondeg)
 
     @property
     def volume(self):
+        """ The 'dim'-dimensional volume of this IntervalProd
+        """
         return self.measure(dim=self.dim)
 
     def midpoint(self):
         """ The midpoint of the interval product
 
-        TODO: doc
+        If dim == 1, a float is returned, otherwise an array.
         """
         midp = (self._end - self._begin) / 2.
         midp[self._ideg] = self._begin[self._ideg]
         return midp[0] if self.dim == 1 else midp
+
+    def element(self):
+        return self.midpoint()
 
     # Overrides of the abstract base class methods
     def equals(self, other, tol=0.0):
@@ -221,11 +305,8 @@ class IntervProd(Set):
 
         Examples
         --------
-
-        >>> b1, e1 = [-1, 0, 2], [-0.5, 0, 3]
-        >>> b2, e2 = [np.sin(-np.pi/2), 0, 2], [-0.5, 0, np.sqrt(3)**2]
-        >>> rbox1 = IntervProd(b1, e1)
-        >>> rbox2 = IntervProd(b2, e2)
+        >>> rbox1 = IntervalProd(0, 0.5)
+        >>> rbox2 = IntervalProd(0, 0.1+0.1+0.1+0.1+0.1)
         >>> rbox1.equals(rbox2)  # Num error
         False
         >>> rbox1 == rbox2  # Equivalent to rbox1.equals(rbox2)
@@ -234,7 +315,7 @@ class IntervProd(Set):
         True
         """
 
-        if not isinstance(other, IntervProd):
+        if not isinstance(other, IntervalProd):
             return False
 
         return (np.allclose(self.begin, other.begin, atol=tol) and
@@ -260,7 +341,7 @@ class IntervProd(Set):
 
         >>> from math import sqrt
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervProd(b, e)
+        >>> rbox = IntervalProd(b, e)
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9])  # Num error
         False
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-15)
@@ -281,7 +362,7 @@ class IntervProd(Set):
     # Additional property-like methods
     def measure(self, dim=None):
         """
-        The (Lebesgue) measure of the IntervProd instance
+        The (Lebesgue) measure of the IntervalProd instance
 
         Parameters
         ----------
@@ -293,7 +374,7 @@ class IntervProd(Set):
         --------
 
         >>> b, e = [-1, 2.5, 0], [-0.5, 10, 0]
-        >>> rbox = IntervProd(b, e)
+        >>> rbox = IntervalProd(b, e)
         >>> rbox.measure()
         3.75
         >>> rbox.measure(dim=3)
@@ -336,11 +417,11 @@ class IntervProd(Set):
         --------
 
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervProd(b, e)
+        >>> rbox = IntervalProd(b, e)
         >>> rbox.dist([-5, 3, 2])
         5.0
         >>> rbox.dist([-5, 3, 2], ord=float('inf'))
-        4
+        4.0
         """
 
         # TODO: Apply same principle as in MetricProductSpace?
@@ -353,12 +434,13 @@ class IntervProd(Set):
         i_larger = np.where(point > self._end)
         i_smaller = np.where(point < self._begin)
 
-        #Access [0] since np.where returns tuple.
+        # Access [0] since np.where returns tuple.
         if len(i_larger[0]) == 0 and len(i_smaller[0]) == 0:
             return 0.0
         else:
-            proj = np.concatenate((point[i_larger],point[i_smaller]))
-            border = np.concatenate((self._end[i_larger],self._begin[i_smaller]))
+            proj = np.concatenate((point[i_larger], point[i_smaller]))
+            border = np.concatenate((self._end[i_larger],
+                                     self._begin[i_smaller]))
             return np.linalg.norm(proj - border, ord=ord)
 
     # Manipulation
@@ -379,17 +461,17 @@ class IntervProd(Set):
 
         Returns
         -------
-        The collapsed IntervProd
+        The collapsed IntervalProd
 
         Examples
         --------
 
         >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervProd(b, e)
+        >>> rbox = IntervalProd(b, e)
         >>> rbox.collapse(1, 0)
-        IntervProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
+        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
-        IntervProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
+        IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
         >>> rbox.collapse([1, 2], [0, 3.5])
         Traceback (most recent call last):
             ...
@@ -427,7 +509,7 @@ class IntervProd(Set):
         e_new = self._end.copy()
         e_new[index] = value
 
-        return IntervProd(b_new, e_new)
+        return IntervalProd(b_new, e_new)
 
     def squeeze(self):
         """
@@ -437,56 +519,56 @@ class IntervProd(Set):
 
         Returns
         -------
-        The squeezed IntervProd
+        The squeezed IntervalProd
 
         Examples
         --------
 
         >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervProd(b, e)
+        >>> rbox = IntervalProd(b, e)
         >>> rbox.collapse(1, 0).squeeze()
-        IntervProd([-1.0, 2.0], [-0.5, 3.0])
+        IntervalProd([-1.0, 2.0], [-0.5, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
-        IntervProd([-1.0], [-0.5])
+        IntervalProd([-1.0], [-0.5])
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
-        IntervProd([], [])
+        IntervalProd([], [])
         """
 
         b_new = self._begin[self._inondeg]
         e_new = self._end[self._inondeg]
-        return IntervProd(b_new, e_new)
+        return IntervalProd(b_new, e_new)
 
     def insert(self, other, index):
         """
-        Insert another IntervProd before the given index
+        Insert another IntervalProd before the given index
 
-        The given IntervProd (dim=m) is inserted into the current
+        The given IntervalProd (dim=m) is inserted into the current
         one (dim=n) before the given index, resulting in a new
-        IntervProd of dimension n+m.
+        IntervalProd of dimension n+m.
         Note that no changes are made in-place.
 
         Parameters
         ----------
-        other : IntervProd, float or array-like
-                The IntervProd to be inserted. A float or array a is
-                treated as an IntervProd(a, a).
+        other : IntervalProd, float or array-like
+                The IntervalProd to be inserted. A float or array a is
+                treated as an IntervalProd(a, a).
         index : int
                 The index of the dimension before which 'other' is to
                 be inserted. Must fulfill 0 <= index <= dim.
 
         Returns
         -------
-        The enlarged IntervProd
+        The enlarged IntervalProd
 
         Examples
         --------
 
-        >>> rbox = IntervProd([-1, 2], [-0.5, 3])
-        >>> rbox2 = IntervProd([0, 0], [1, 0])
+        >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
+        >>> rbox2 = IntervalProd([0, 0], [1, 0])
         >>> rbox.insert(rbox2, 1)
-        IntervProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
+        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
         >>> rbox.insert([-1.0, 0.0], 2)
-        IntervProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
         >>> rbox.insert(0, 1).squeeze().equals(rbox)
         True
         """
@@ -494,8 +576,8 @@ class IntervProd(Set):
         if not 0 <= index <= self.dim:
             raise IndexError('Index ({}) out of range'.format(index))
 
-        if not isinstance(other, IntervProd):
-            other = IntervProd(other, other)
+        if not isinstance(other, IntervalProd):
+            other = IntervalProd(other, other)
 
         new_beg = np.empty(self.dim + other.dim)
         new_end = np.empty(self.dim + other.dim)
@@ -508,17 +590,21 @@ class IntervProd(Set):
             new_beg[index+other.dim:] = self._begin[index:]
             new_end[index+other.dim:] = self._end[index:]
 
-        return IntervProd(new_beg, new_end)
+        return IntervalProd(new_beg, new_end)
 
     # Magic methods
-    def __repr__(self):
-        return ('IntervProd({b!r}, {e!r})'.format(b=list(self._begin),
-                                                  e=list(self._end)))
+    def __repr__(self):  # TODO: apply ... format from numpy
+        return ('IntervalProd({b!r}, {e!r})'.format(b=list(self._begin),
+                                                    e=list(self._end)))
 
-    __str__ = __repr__
+    def __str__(self):
+        return self.__repr__()  # TODO: pretty-print
+
+    def __len__(self):
+        return self.dim
 
 
-class Interval(IntervProd):
+class Interval(IntervalProd):
     """ The set of real numbers in the interval [begin, end]
     """
     def __init__(self, begin, end):
@@ -530,13 +616,15 @@ class Interval(IntervProd):
 
     @property
     def length(self):
+        """ The length of this interval
+        """
         return self.end - self.begin
 
     def __repr__(self):
-        return ('Interval({b}, {e})'.format(b=self.begin[0], e=self.end[0]))
+        return 'Interval({b}, {e})'.format(b=self.begin[0], e=self.end[0])
 
 
-class Rectangle(IntervProd):
+class Rectangle(IntervalProd):
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.dim != 2:
@@ -546,6 +634,8 @@ class Rectangle(IntervProd):
 
     @property
     def area(self):
+        """ The area of this triangle
+        """
         return self.volume
 
     def __repr__(self):
@@ -553,7 +643,7 @@ class Rectangle(IntervProd):
                                                  e=list(self._end)))
 
     
-class Cube(IntervProd):
+class Cube(IntervalProd):
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.dim != 3:
@@ -564,6 +654,43 @@ class Cube(IntervProd):
     def __repr__(self):
         return ('Cube({b!r}, {e!r})'.format(b=list(self._begin),
                                             e=list(self._end)))
+
+
+class CartesianProduct(Set):
+    def __init__(self, *sets):
+        if not all(isinstance(set_, Set) for set_ in sets):
+            wrong_set = [set_ for set_ in sets
+                         if not isinstance(set_, Set)]
+            raise TypeError('{} not Set instance(s)'.format(wrong_set))
+
+        self._sets = sets
+
+    @property
+    def sets(self):
+        """ Get a tuple of the underlying sets
+        """
+        return self._sets
+
+    def equals(self, other):
+        return (isinstance(other, CartesianProduct) and
+                len(self) == len(other) and
+                all(x.equals(y) for x, y in zip(self.sets, other.sets)))
+
+    def contains(self, point):
+        return all(set_.contains(p) for set_, p in zip(self.sets, point))
+
+    def __len__(self):
+        return len(self._sets)
+
+    def __getitem__(self, index):
+        return self._sets[index]
+
+    def __str__(self):
+        return ' x '.join(str(set_) for set_ in self.sets)
+
+    def __repr__(self):
+        return ('CartesianProduct(' +
+                ', '.join(repr(set_) for set_ in self.sets) + ')')
 
 
 if __name__ == '__main__':

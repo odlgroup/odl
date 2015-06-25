@@ -15,12 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=protected-access
+"""
+General abstract operators defined on Set's aswell as sums
+and compositions of such.
+
+Also contains LinearOperator specializations for linear operators
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import str, object, super
-from future.utils import with_metaclass
 from future import standard_library
 
 from abc import ABCMeta
@@ -30,14 +36,15 @@ from numbers import Number
 
 # RL imports
 from RL.utility.utility import errfmt
+from RL.space.space import LinearSpace
 
 standard_library.install_aliases()
 
 
-class DefaultCallOperator(object):
+class _DefaultCallOperator(object):
     """ Decorator class that adds a '_call'  method an 'Operator'
 
-    The default implementation assumes that the 'range' of the 
+    The default implementation assumes that the 'range' of the
     operator implements 'element()'.
     """
 
@@ -70,10 +77,10 @@ class DefaultCallOperator(object):
         return out
 
 
-class DefaultApplyOperator(object):
+class _DefaultApplyOperator(object):
     """ Decorator class that adds a '_apply' method to an 'Operator'
 
-    The default implementation assumes that elements in the 'range' of the 
+    The default implementation assumes that elements in the 'range' of the
     operator implements 'assign()'.
     """
     def _apply(self, rhs, out):
@@ -85,12 +92,10 @@ class DefaultApplyOperator(object):
 
         Parameters
         ----------
-
         rhs : element in self.domain
               An object in the domain of this operator.
               This is the point that the operator should be applied in.
 
-              
         out : element in self.range
               An object in the range of this operator.
               The result of an operator evaluation.
@@ -104,24 +109,24 @@ class DefaultApplyOperator(object):
         out.assign(self._call(rhs))
 
 
-class OperatorMeta(ABCMeta):
+class _OperatorMeta(ABCMeta):
     """ Metaclass used by Operator to ensure correct methods
 
     If an '_apply' method or '_call' method does not exist, it
     attempts to add a default implmented version. This only works
     if the range is a `LinearSpace`.
     """
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         if "_call" in attrs and "_apply" in attrs:
-            return super().__new__(cls, name, bases, attrs)
+            return super().__new__(mcs, name, bases, attrs)
         elif "_call" in attrs:
-            return super().__new__(cls, name, (DefaultApplyOperator,) + bases,
+            return super().__new__(mcs, name, (_DefaultApplyOperator,) + bases,
                                    attrs)
         elif "_apply" in attrs:
-            return super().__new__(cls, name, (DefaultCallOperator,) + bases,
+            return super().__new__(mcs, name, (_DefaultCallOperator,) + bases,
                                    attrs)
         else:
-            return super().__new__(cls, name, bases, attrs)
+            return super().__new__(mcs, name, bases, attrs)
 
     def __call__(cls, *args, **kwargs):
         obj = type.__call__(cls, *args, **kwargs)
@@ -139,12 +144,12 @@ class OperatorMeta(ABCMeta):
         return obj
 
 
-class Operator(with_metaclass(OperatorMeta, object)):
+class Operator(object):
     """Abstract operator
 
     An operator is a mapping from a 'Set' to another 'Set'.
     In RL all mappings know their domain and range, and have
-    some method of evaluation. They also provide some convenience 
+    some method of evaluation. They also provide some convenience
     functions and error checking.
 
     Domain and Range
@@ -202,12 +207,12 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
     Notes
     -----
-    
     If the user only provides one of '_apply' or '_call' and
     the underlying range is a 'LinearSpace', a default implementation
     of the other is provided.
-
     """
+
+    __metaclass__ = _OperatorMeta
 
     def derivative(self, point):
         """ Get the derivative operator of this operator at `point`
@@ -216,8 +221,8 @@ class Operator(with_metaclass(OperatorMeta, object)):
         Derivative not implemented for this operator ({})
         '''.format(self)))
 
-
-    def inverse(self, point):
+    @property
+    def inverse(self):
         """ Get the inverse operator of this operator
         """
         raise NotImplementedError(errfmt('''
@@ -256,13 +261,15 @@ class Operator(with_metaclass(OperatorMeta, object)):
         Example
         -------
 
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element()
         >>> Op.apply(x, y)
         >>> y
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
         """
 
         if not self.domain.contains(rhs):
@@ -303,12 +310,21 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         Example
         -------
-
+        
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
+
+        >>> from RL.operator.default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> A(3)
+        9
+        >>> A.__call__(5)
+        15
         """
 
         if not self.domain.contains(rhs):
@@ -349,15 +365,23 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         Example
         -------
-
+        
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
         >>> Scaled = Op * 3
         >>> Scaled(x)
-        [3.0, 6.0, 9.0]
+        RN(3).element([3.0, 6.0, 9.0])
+
+        >>> from RL.operator.default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> Scaled = A*3
+        >>> Scaled(5)
+        45
         """
 
         return OperatorRightScalarMultiplication(self, other)
@@ -380,15 +404,23 @@ class Operator(with_metaclass(OperatorMeta, object)):
 
         Example
         -------
-
+        
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        [1.0, 2.0, 3.0]
+        RN(3).element([1.0, 2.0, 3.0])
         >>> Scaled = 3 * Op
         >>> Scaled(x)
-        [3.0, 6.0, 9.0]
+        RN(3).element([3.0, 6.0, 9.0])
+
+        >>> from RL.operator.default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> Scaled = 3*A
+        >>> Scaled(5)
+        45
         """
 
         return OperatorLeftScalarMultiplication(self, other)
@@ -440,11 +472,55 @@ class OperatorSum(Operator):
         self._tmp = tmp
 
     def _call(self, rhs):
-        tmp = self._op1._call(rhs)
-        tmp += self._op2._call(rhs)
-        return tmp
+        """ Calculates op1(rhs) + op2(rhs)
+
+        Parameters
+        ----------
+        rhs : self.domain element
+              The point to evaluate the sum in
+
+        Returns
+        -------
+        result : self.range element
+                 Result of the evaluation
+
+        Example
+        -------
+        >>> from RL.operator.default_operators import operator
+        >>> A = operator(lambda x: 3*x)
+        >>> B = operator(lambda x: 5*x)
+        >>> OperatorSum(A, B)(3)
+        24
+        """
+        return self._op1._call(rhs) + self._op2._call(rhs)
 
     def _apply(self, rhs, out):
+        """
+        Calculates op1(rhs) + op2(rhs)
+
+        Parameters
+        ----------
+        rhs : self.domain element
+              The point to evaluate the sum in
+        out : self.range element
+              Object to store the result in
+
+        Returns
+        -------
+        None
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> r3 = RN(3)
+        >>> op = IdentityOperator(r3)
+        >>> rhs = r3.element([1, 2, 3])
+        >>> out = r3.element()
+        >>> OperatorSum(op, op).apply(rhs, out)
+        >>> out
+        RN(3).element([2.0, 4.0, 6.0])
+        """
         tmp = self._tmp if self._tmp is not None else self.range.element()
         self._op1._apply(rhs, out)
         self._op2._apply(rhs, tmp)
@@ -452,11 +528,57 @@ class OperatorSum(Operator):
 
     @property
     def domain(self):
+        """
+        Get the domain of this operator
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        domain : Set
+                 The domain of the operator
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> r3 = RN(3)
+        >>> op = IdentityOperator(r3)
+        >>> OperatorSum(op, op).domain
+        RN(3)
+        """
         return self._op1.domain
 
     @property
     def range(self):
+        """
+        Get the range of this operator
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        domain : Set
+                 The domain of the operator
+
+        Example
+        -------
+        >>> from RL.space.euclidean import RN
+        >>> from RL.operator.default_operators import IdentityOperator
+        >>> r3 = RN(3)
+        >>> op = IdentityOperator(r3)
+        >>> OperatorSum(op, op).range
+        RN(3)
+        """
         return self._op1.range
+
+    def derivative(self, point):
+        return LinearOperatorSum(self._op1.derivative(point),
+                                 self._op2.derivative(point))
 
     def __repr__(self):
         return 'OperatorSum( ' + repr(self._op1) + ", " + repr(self._op2) + ')'
@@ -473,10 +595,10 @@ class OperatorComposition(Operator):
     Parameters
     ----------
 
-    op1 : Operator
-          The first operator
-    op2 : Operator
-          Operator with the same domain and range as op1
+    left : Operator
+           The first operator
+    right : Operator
+            Operator with the same domain and range as op1
     tmp : Element in the range of this operator
           Used to avoid the creation of a
           temporary when applying the operator.
@@ -515,6 +637,19 @@ class OperatorComposition(Operator):
     def range(self):
         return self._left.range
 
+    @property
+    def inverse(self):
+        return OperatorComposition(self._right.inverse,
+                                   self._left.inverse,
+                                   self._tmp)
+
+    def derivative(self, point):
+        left_deriv = self._left.derivative(self._right(point))
+        right_deriv = self._right.derivative(point)
+
+        return LinearOperatorComposition(left_deriv,
+                                         right_deriv)
+
     def __repr__(self):
         return ('OperatorComposition( ' + repr(self._left) + ', ' +
                 repr(self._right) + ')')
@@ -545,9 +680,7 @@ class OperatorPointwiseProduct(Operator):
         self._op2 = op2
 
     def _call(self, rhs):
-        tmp = self._op1._call(rhs)
-        tmp *= self._op2._call(rhs)
-        return tmp
+        return self._op1._call(rhs) * self._op2._call(rhs)
 
     def _apply(self, rhs, out):
         tmp = self._op2.range.element()
@@ -572,7 +705,8 @@ class OperatorLeftScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar):
-        if not op.range.field.contains(scalar):
+        if (isinstance(op.range, LinearSpace)
+            and not op.range.field.contains(scalar)):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of range ({}) of 'op'
             '''.format(scalar, op.range.field)))
@@ -581,9 +715,7 @@ class OperatorLeftScalarMultiplication(Operator):
         self._scalar = scalar
 
     def _call(self, rhs):
-        tmp = self._op._call(rhs)
-        tmp *= self._scalar
-        return tmp
+        return self._scalar * self._op._call(rhs)
 
     def _apply(self, rhs, out):
         self._op._apply(rhs, out)
@@ -596,6 +728,15 @@ class OperatorLeftScalarMultiplication(Operator):
     @property
     def range(self):
         return self._op.range
+
+    @property
+    def inverse(self):
+        return OperatorRightScalarMultiplication(self._op.inverse,
+                                                 1.0/self._scalar)
+
+    def derivative(self, point):
+        return LinearOperatorScalarMultiplication(self._op.derivative(point),
+                                                  self._scalar)
 
     def __repr__(self):
         return ('OperatorLeftScalarMultiplication( ' + repr(self._op) +
@@ -618,16 +759,17 @@ class OperatorRightScalarMultiplication(Operator):
     ----------
 
     op : Operator
-         Any operator whose range supports `*= scalar`
+        Any operator whose range supports `*= scalar`
     scalar : Number
-             An element in the field of the domain of op
+        An element in the field of the domain of op
     tmp : Element in the range of this operator
-          Used to avoid the creation of a
-          temporary when applying the operator.
+        Used to avoid the creation of a
+        temporary when applying the operator.
     """
 
     def __init__(self, op, scalar, tmp=None):
-        if not op.domain.field.contains(scalar):
+        if (isinstance(op.domain, LinearSpace) and
+            not op.domain.field.contains(scalar)):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of domain ({}) of 'op'
             '''.format(scalar, op.domain.field)))
@@ -656,6 +798,15 @@ class OperatorRightScalarMultiplication(Operator):
     @property
     def range(self):
         return self._op.range
+
+    @property
+    def inverse(self):
+        return OperatorLeftScalarMultiplication(self._op.inverse,
+                                                1.0/self._scalar)
+
+    def derivative(self, point):
+        return LinearOperatorScalarMultiplication(self._op.derivative(point),
+                                                  self._scalar)
 
     def __repr__(self):
         return ('OperatorRightScalarMultiplication( ' + self._op.__repr__() +
@@ -703,7 +854,8 @@ class LinearOperator(Operator):
         (self + other)(x) = self(x) + other(x)
         """
 
-        if isinstance(other, LinearOperator):  # Special if both are linear
+        if isinstance(other, LinearOperator):
+            # Special if both are linear
             return LinearOperatorSum(self, other)
         else:
             return super().__add__(other)
@@ -837,3 +989,7 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
     def adjoint(self):
         return LinearOperatorScalarMultiplication(self._op.adjoint,
                                                   self._scalar)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

@@ -16,21 +16,11 @@
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""
-RL is a functional analysis library
+import nose
+import sys
 
-RL suppors abstract sets, linear vector spaces defined on such
-and Operators/Functionals defined on these sets. It is intended
-to be used to write general code and faciliate code reuse.
-"""
-
-from __future__ import absolute_import
-
-__version__ = '0.1b0.dev0'
-
-__all__ = ['geometry', 'operator', 'space', 'utility']
-
-import RL.geometry
-import RL.operator
-import RL.space
-import RL.utility
+arg = sys.argv[:1]
+arg.append('--verbosity=2')
+arg.append('--with-coverage')
+arg.append('--with-doctest')
+out = nose.run(defaultTest='./RL/.', argv=arg)

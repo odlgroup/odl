@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
+""" Examples of sequence spaces, function spaces defined on the integers.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -26,9 +28,9 @@ from builtins import super
 import numpy as np
 
 # RL imports
-from RL.space.space import *
-from RL.space.euclidean import *
-from RL.space.function import *
+from RL.space.euclidean import EuclideanSpace
+from RL.space.function import FunctionSpace
+from RL.space.set import Integers
 
 standard_library.install_aliases()
 
@@ -45,7 +47,7 @@ class SequenceSpace(FunctionSpace):
                 super().equals(other))
 
 
-class TruncationDiscretization(EuclideanSpace, Discretization):
+class TruncationDiscretization(EuclideanSpace):
     """ Truncation discretization of the integers
     Represents vectors by RN elements
     """
@@ -61,11 +63,11 @@ class TruncationDiscretization(EuclideanSpace, Discretization):
         return super()._inner(v1, v2)
 
     def zero(self):
-        return self.element(np.zeros(self.n), copy=False)
+        return self.element(np.zeros(self.dim), copy=False)
 
-    def empty(self):
+    def element(self):
         # FIXME: Remove this function
-        return self.element(np.empty(self.n), copy=False)
+        return self.element(np.empty(self.dim), copy=False)
 
     def equals(self, other):
         return (isinstance(other, TruncationDiscretization) and
@@ -80,7 +82,7 @@ class TruncationDiscretization(EuclideanSpace, Discretization):
         return vector.data.sum()
 
     def points(self):
-        return np.arange(self.n)
+        return np.arange(self.dim)
 
     class Vector(EuclideanSpace.Vector):
         def __init__(self, space, *args, **kwargs):
@@ -88,7 +90,7 @@ class TruncationDiscretization(EuclideanSpace, Discretization):
                  isinstance(args[0], SequenceSpace.Vector) and
                  args[0].space == space.parent)):
 
-                data = super().__init__(space, args[0](space.points()),
-                                        copy=False)
+                super().__init__(space, args[0](space.points()),
+                                 copy=False)
             else:
-                data = super().__init__(space, *args, **kwargs)
+                super().__init__(space, *args, **kwargs)

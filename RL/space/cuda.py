@@ -29,11 +29,9 @@ from future import standard_library
 
 # External module imports
 import numpy as np
-from math import sqrt
 from numbers import Integral
 
 # RL imports
-import RL.operator.operator as fun
 import RL.space.space as spaces
 import RL.space.set as sets
 import RLcpp.PyCuda
@@ -41,17 +39,11 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
-class CudaElementType(object):
-    def __init__(self, impl, nptype):
-        self.impl = impl
-        self.nptype = nptype #todo, make this property of self.impl
-
-CudaElementType.float32 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplFloat,
-                                          nptype=np.float32)
-CudaElementType.uint8 = CudaElementType(impl=RLcpp.PyCuda.CudaVectorImplUChar,
-                                        nptype=np.uint8)
 
 class CudaEN(spaces.LinearSpace):
+    dtypes = {np.float32 : RLcpp.PyCuda.CudaVectorImplFloat, \
+              np.uint8 : RLcpp.PyCuda.CudaVectorImplUChar}
+
     """The real space E^n, implemented in CUDA
 
     Requires the compiled RL extension RLcpp.
@@ -66,43 +58,20 @@ class CudaEN(spaces.LinearSpace):
            The underlying type
     """
 
-    def __init__(self, n, type):
+    def __init__(self, n, dtype=np.float32):
         if not isinstance(n, Integral) or n < 1:
-            raise TypeError('n ({}) has to be a positive integer'.format(np))
-
-        if not isinstance(type, CudaElementType):
-            raise TypeError('type ({}) must be a CudaElementType'.format(type))
+            raise TypeError('n ({}) has to be a positive integer'.format(n))
 
         self._n = n
-        self._type = type
+        self._dtype = dtype
+        self._vector_impl = self.dtypes.get(dtype)
         self._field = sets.RealNumbers()
 
+        if self._vector_impl is None:
+            raise TypeError('dtype ({}) must be a valid CudaEN.dtypes'.format(dtype))
+
     def element(self, data=None, data_ptr=None, **kwargs):
-        """ Returns a vector of zeros
-
-        CUDA memory is always initialized
-        TODO: rewrite
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        CudaRN.Vector instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> y = rn.element()
-        >>> y in rn
-        True
-        >>> y.assign(rn.zero())
-        >>> y
-        CudaRN(3).element([ 0.,  0.,  0.])
-
+        """
         Creates an element in CudaRN
 
         Parameters
@@ -124,35 +93,32 @@ class CudaEN(spaces.LinearSpace):
 
         Returns
         -------
-        CudaRN.Vector instance
+        CudaEN.Vector instance
 
 
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaEN(3)
         >>> x = rn.element(np.array([1, 2, 3]))
         >>> x
-        CudaRN(3).element([ 1.,  2.,  3.])
+        CudaEN(3).element([1.0, 2.0, 3.0])
         >>> y = rn.element([1, 2, 3])
         >>> y
-        CudaRN(3).element([ 1.,  2.,  3.])
+        CudaEN(3).element([1.0, 2.0, 3.0])
 
         """
 
-        if isinstance(data, self._type.impl):
-            return self.Vector(self, data)
+        if data is None and data_ptr is None:
+            return self.Vector(self, self._vector_impl(self.n))
         elif data is None:
-            if data_ptr is None:
-                return self.element(self._type.impl(self.n))
-            else:
-                return self.element(self._type.impl.fromPointer(data_ptr, self.n))
-        else:
-            # Create result and assign 
-            # (could be optimized to one call, this was tried and did not help much)
+            return self.Vector(self, self._vector_impl.fromPointer(data_ptr, self.n))
+        elif data_ptr is None:
             elem = self.element()
             elem[:] = data
             return elem
+        else:
+            raise TypeError("Cannot provide both data and data_ptr")
 
     def _lincomb(self, z, a, x, b, y):
         """ Linear combination of x and y
@@ -161,15 +127,15 @@ class CudaEN(spaces.LinearSpace):
 
         Parameters
         ----------
-        z : CudaRN.Vector
+        z : CudaEN.Vector
             The Vector that the result should be written to.
         a : RealNumber
             Scalar to multiply `x` with.
-        x : CudaRN.Vector
+        x : CudaEN.Vector
             The first of the summands
         b : RealNumber
             Scalar to multiply `y` with.
-        y : CudaRN.Vector
+        y : CudaEN.Vector
             The second of the summands
 
         Returns
@@ -178,13 +144,13 @@ class CudaEN(spaces.LinearSpace):
 
         Examples
         --------
-        >>> rn = CudaRN(3)
+        >>> rn = CudaEN(3)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([4, 5, 6])
         >>> z = rn.element()
         >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        CudaRN(3).element([ 14.,  19.,  24.])
+        CudaEN(3).element([14.0, 19.0, 24.0])
         """
 
         z.data.linComb(a, x.data, b, y.data)
@@ -198,18 +164,18 @@ class CudaEN(spaces.LinearSpace):
 
         Returns
         -------
-        CudaRN.Vector instance with all elements set to zero (0.0)
+        CudaEN.Vector instance with all elements set to zero (0.0)
 
 
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaEN(3)
         >>> y = rn.zero()
         >>> y
-        CudaRN(3).element([ 0.,  0.,  0.])
+        CudaEN(3).element([0.0, 0.0, 0.0])
         """
-        return self.element(self._type.impl(self.n, 0))
+        return self.Vector(self, self._vector_impl(self.n, 0))
 
     @property
     def field(self):
@@ -227,7 +193,7 @@ class CudaEN(spaces.LinearSpace):
         Examples
         --------
 
-        >>> rn = CudaEN(3, CudaElementType.float32)
+        >>> rn = CudaEN(3, np.float32)
         >>> rn.field
         RealNumbers()
         """
@@ -249,14 +215,14 @@ class CudaEN(spaces.LinearSpace):
         Examples
         --------
 
-        >>> rn = CudaRN(3)
+        >>> rn = CudaEN(3)
         >>> rn.n
         3
         """
         return self._n
 
     def equals(self, other):
-        """ Verifies that other is a CudaRN instance of dimension `n`
+        """ Verifies that other is a CudaEN instance of dimension `n`
 
         Parameters
         ----------
@@ -271,22 +237,22 @@ class CudaEN(spaces.LinearSpace):
         --------
 
         Comparing with self
-        >>> r3 = CudaRN(3)
+        >>> r3 = CudaEN(3)
         >>> r3.equals(r3)
         True
 
         Also true when comparing with similar instance
-        >>> r3a, r3b = CudaRN(3), CudaRN(3)
+        >>> r3a, r3b = CudaEN(3), CudaEN(3)
         >>> r3a.equals(r3b)
         True
 
         False when comparing to other dimension RN
-        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3, r4 = CudaEN(3), CudaEN(4)
         >>> r3.equals(r4)
         False
 
         We also support operators '==' and '!='
-        >>> r3, r4 = CudaRN(3), CudaRN(4)
+        >>> r3, r4 = CudaEN(3), CudaEN(4)
         >>> r3 == r3
         True
         >>> r3 == r4
@@ -294,13 +260,18 @@ class CudaEN(spaces.LinearSpace):
         >>> r3 != r4
         True
         """
-        return isinstance(other, CudaEN) and self.n == other.n and self._type == other._type
+        return (isinstance(other, CudaEN) and 
+                self.n == other.n and 
+                self._dtype == other._dtype)
 
     def __str__(self):
         return "CudaEN(" + str(self._n) + ")"
 
     def __repr__(self):
-        return "CudaEN(" + str(self._n) + ")"
+        if self._dtype == np.float32:
+            return "CudaEN(" + str(self.n) + ")"
+        else:
+            return "CudaEN(" + str(self.n) +  ', ' + str(self._dtype) + ')'
 
     class Vector(spaces.LinearSpace.Vector):
         """ A RN-vector represented in CUDA
@@ -308,17 +279,19 @@ class CudaEN(spaces.LinearSpace):
         Parameters
         ----------
 
-        space : CudaRN
-                Instance of CudaRN this vector lives in
+        space : CudaEN
+                Instance of CudaEN this vector lives in
         data : RLcpp.PyCuda.CudaVectorImplFloat
                     Underlying data-representation to be used by this vector
         """
         def __init__(self, space, data):
             super().__init__(space)
-            if not isinstance(data, self.space._type.impl):
+
+            if not isinstance(data, self.space._vector_impl):
                 return TypeError(errfmt('''
-                'data' ({}) must be a CudaRNVectorImpl instance
+                'data' ({}) must be a CudaENVectorImpl instance
                 '''.format(data)))
+
             self._data = data
 
         @property
@@ -331,7 +304,7 @@ class CudaEN(spaces.LinearSpace):
 
             Returns
             -------
-            ptr : RLcpp.PyCuda.CudaRNVectorImpl
+            ptr : RLcpp.PyCuda.CudaENVectorImpl
                   Underlying cuda data representation
             """
             return self._data
@@ -364,7 +337,7 @@ class CudaEN(spaces.LinearSpace):
             itemsize : Int
                        Size in bytes of type
             """
-            return 4 #Currently hardcoded to float
+            return 4  # Currently hardcoded to float
 
         def __str__(self):
             return str(self[:])
@@ -384,14 +357,20 @@ class CudaEN(spaces.LinearSpace):
             Examples
             --------
 
-            >>> rn = CudaRN(3)
+            >>> rn = CudaEN(3)
             >>> x = rn.element([1, 2, 3])
             >>> y = eval(repr(x))
             >>> y
-            CudaRN(3).element([ 1.,  2.,  3.])
+            CudaEN(3).element([1.0, 2.0, 3.0])
+            >>> z = CudaEN(8).element([1, 2, 3, 4, 5, 6, 7, 8])
+            >>> z
+            CudaEN(8).element([1.0, 2.0, 3.0, ..., 6.0, 7.0, 8.0])
             """
-            val_str = repr(self[:]).lstrip('array(').rstrip(')')
-            return repr(self.space) + '.element(' + val_str + ')'
+            if self.space.n < 7:
+                return repr(self.space) + '.element(' + repr(self[:].tolist()) + ')'
+            else:
+                val_str = repr(self[:3].tolist()).rstrip(']') + ', ..., ' + repr(self[-3:].tolist()).lstrip('[')
+                return repr(self.space) + '.element(' + val_str + ')'
 
         def __len__(self):
             """ Get the dimension of the underlying space
@@ -422,12 +401,12 @@ class CudaEN(spaces.LinearSpace):
             Examples
             --------
 
-            >>> rn = CudaRN(3)
+            >>> rn = CudaEN(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0]
             1.0
             >>> y[1:2]
-            array([ 2.])
+            array([ 2.], dtype=float32)
 
             """
             if isinstance(index, slice):
@@ -448,9 +427,11 @@ class CudaEN(spaces.LinearSpace):
                     The position(s) that should be set
             value : Real or Array-Like
                     The values that should be assigned.
-                    If index is an integer, value should be a Number convertible to float.
-                    If index is a slice, value should be an Array-Like of the same
-                    size as the slice.
+
+                    If index is an integer, value should be a Number
+                    convertible to float.
+                    If index is a slice, value should be array-like of
+                    the same size as the slice.
 
             Returns
             -------
@@ -461,23 +442,23 @@ class CudaEN(spaces.LinearSpace):
             --------
 
 
-            >>> rn = CudaRN(3)
+            >>> rn = CudaEN(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            CudaRN(3).element([ 5.,  2.,  3.])
+            CudaEN(3).element([5.0, 2.0, 3.0])
             >>> y[1:3] = [7, 8]
             >>> y
-            CudaRN(3).element([ 5.,  7.,  8.])
+            CudaEN(3).element([5.0, 7.0, 8.0])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            CudaRN(3).element([ 0.,  0.,  0.])
+            CudaEN(3).element([0.0, 0.0, 0.0])
 
             """
 
             if isinstance(index, slice):
                 # Convert value to the correct type if needed
-                value = np.asarray(value, dtype=self.space._type.nptype)
+                value = np.asarray(value, dtype=self.space._dtype)
 
                 # Size checking is performed in c++
                 self.data.setSlice(index, value)
@@ -498,7 +479,7 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
     """
 
     def __init__(self, n):
-        super().__init__(n, CudaElementType.float32)
+        super().__init__(n, np.float32)
 
     def _inner(self, x, y):
         """ Calculates the inner product of x and y
@@ -589,53 +570,9 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        CudaRN(3).element([ 5.,  6.,  6.])
+        CudaRN(3).element([5.0, 6.0, 6.0])
         """
         y.data.multiply(x.data)
-
-    @property
-    def field(self):
-        """ The underlying field of RN is the real numbers
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        RealNumbers instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.field
-        RealNumbers()
-        """
-        return self._field
-
-    @property
-    def n(self):
-        """ The dimension of this space
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        Integer
-
-
-        Examples
-        --------
-
-        >>> rn = CudaRN(3)
-        >>> rn.n
-        3
-        """
-        return self._n
 
     def equals(self, other):
         """ Verifies that other is a CudaRN instance of dimension `n`
@@ -684,28 +621,36 @@ class CudaRN(CudaEN, spaces.HilbertSpace, spaces.Algebra):
     def __repr__(self):
         return "CudaRN(" + str(self._n) + ")"
 
-    class Vector(CudaEN.Vector, spaces.HilbertSpace.Vector, spaces.Algebra.Vector):
+    class Vector(CudaEN.Vector, spaces.HilbertSpace.Vector,
+                 spaces.Algebra.Vector):
         pass
 
 
-#Methods, todo, move
+# Methods
+# TODO: move
 def abs(inp, outp):
     RLcpp.PyCuda.abs(inp.data, outp.data)
+
 
 def sign(inp, outp):
     RLcpp.PyCuda.sign(inp.data, outp.data)
 
-def addScalar(inp, scal, outp):
+
+def add_scalar(inp, scal, outp):
     RLcpp.PyCuda.addScalar(inp.data, scal, outp.data)
 
-def maxVectorScalar(inp, scal, outp):
+
+def max_vector_scalar(inp, scal, outp):
     RLcpp.PyCuda.maxVectorScalar(inp.data, scal, outp.data)
 
-def maxVectorVector(inp1, inp2, outp):
+
+def max_vector_vector(inp1, inp2, outp):
     RLcpp.PyCuda.maxVectorVector(inp1.data, inp2.data, outp.data)
+
 
 def sum(inp):
     return RLcpp.PyCuda.sum(inp.data)
+
 
 if __name__ == '__main__':
     import doctest

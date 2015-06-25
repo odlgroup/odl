@@ -23,6 +23,9 @@
 \usepackage{cleveref}
 \usepackage{todonotes}
 \usepackage{tabulary}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{nicefrac}
 
 
 % Specific packages
@@ -62,14 +65,29 @@
 \DeclareMathOperator{\Map}{\mathcal{M}}
 \DeclareMathOperator{\Id}{Id}
 \DeclareMathOperator{\DIM}{dim}
+\DeclareMathOperator{\diag}{diag}
 \newcommand{\ip}[2]{\left \langle #1,#2 \right\rangle}
 \DeclareMathOperator{\linspan}{linspan}
 \newcommand*{\FUNCRESTR}[2]{{\ensuremath{\left. \vphantom{g_{g_g}} {#1} \right|_{#2}}}}
 \newcommand*{\STACK}[2]{\genfrac{}{}{0pt}{1}{#1}{#2}}
+\newcommand*{\ABS}[1]{\ensuremath{\lvert#1\rvert}}
+\newcommand*{\ABSbig}[1]{\ensuremath{\big\lvert#1\rvert}}
+\newcommand*{\ABSBig}[1]{\ensuremath{\Big\lvert#1\rvert}}
+\newcommand*{\ABSbigg}[1]{\ensuremath{\bigg\lvert#1\rvert}}
+\newcommand*{\ABSLR}[1]{\ensuremath{\left\lvert #1 \right\rvert}}
+\newcommand*{\NORM}[1]{\ensuremath{\lVert #1 \rVert}}
+\newcommand*{\NORMbig}[1]{\ensuremath{\big\lVert #1 \big\rVert}}
+\newcommand*{\NORMBig}[1]{\ensuremath{\Big\lVert #1 \Big\rVert}}
+\newcommand*{\NORMbigg}[1]{\ensuremath{\bigg\lVert #1 \bigg\rVert}}
+\newcommand*{\NORMLR}[1]{\ensuremath{\left\lVert #1 \right\rVert}}
 \newcommand*{\INNER}[2]{\ensuremath{\langle #1,\,#2\rangle}}
 \newcommand*{\INNERbig}[2]{\ensuremath{\big\langle #1,\,#2\big\rangle}}
 \newcommand*{\INNERBig}[2]{\ensuremath{\Big\langle #1,\,#2\Big\rangle}}
+\newcommand*{\INNERbigg}[2]{\ensuremath{\bigg\langle #1,\,#2\bigg\rangle}}
 \newcommand*{\INNERLR}[2]{\ensuremath{\left\langle #1,\,#2\right\rangle}}
+\newcommand*{\D}[0]{\ensuremath{\mathrm{d}}}
+\newcommand*{\TRANSP}[1]{{\ensuremath{#1^{\mathrm{T}}}}}
+\newcommand*{\HERM}[1]{{\ensuremath{#1^{\mathrm{H}}}}}
 
 \newcommand{\ie}{\textsl{i.e.}\xspace}
 \newcommand{\cf}{\textsl{cf.}\xspace}
@@ -86,11 +104,16 @@
 \newcommand{\vbeta}{\boldsymbol{\beta}}
 \newcommand{\vnu}{\boldsymbol{\nu}}
 \newcommand{\vA}{\boldsymbol{A}}
+\newcommand{\vB}{\boldsymbol{B}}
+\newcommand{\vD}{\boldsymbol{D}}
+\newcommand{\vG}{\boldsymbol{G}}
+\newcommand{\vI}{\boldsymbol{I}}
+\newcommand{\vU}{\boldsymbol{U}}
+\newcommand{\vV}{\boldsymbol{V}}
+\newcommand{\vSigma}{\boldsymbol{\Sigma}}
 
 \newcommand{\cF}{\mathcal{F}}
 
-\newcommand*{\NORMLR}[1]{\ensuremath{\left\lVert #1 \right\rVert}}
-\newcommand*{\NORM}[1]{\ensuremath{\lVert #1 \rVert}}
 \newcommand*{\NOTE}[2][\null]{%
   \marginpar{\renewcommand{\baselinestretch}{1}\vspace{-1em}\hrule\vspace{3pt}%
   \scriptsize\raggedright\textsf{#2\ifx#1\null\else\\\hfill---
@@ -102,6 +125,8 @@
 
 \crefname{equation}{}{}
 \Crefname{equation}{}{}
+\crefname{item}{}{}
+\Crefname{item}{}{}
 
 \title{The discretization problem and associated software type system}
 \author{Ozan \"Oktem \and Holger Kohr}
@@ -409,6 +434,7 @@ The following lemma shows that under rather weak conditions on the mappings $E_n
 natural discretization of the operator derivative as in \Cref{def:discr:operator:op_deriv:operator_deriv_discr} is in 
 fact the Fr\'{e}chet derivative of the natural operator discretization.
 
+
 \begin{lemma}
  \label{lemma:discr:operator:op_deriv:natural_is_deriv}
  Let $\Spc{X}$ and $\Spc{Y}$ be normed vector spaces with discretizations as before, and let 
@@ -417,6 +443,8 @@ fact the Fr\'{e}chet derivative of the natural operator discretization.
  $k$ times  continuously Fr\'{e}chet differentiable, and its $k$'th Fr\'{e}chet derivative is the natural 
  discretization of $\partial^k\Op{T}$.
 \end{lemma}
+\vspace{1em}
+
 
 \begin{proof}
  We prove the claim for $k=1$ since the statement for $k=0$ is trivial, and higher order derivatives follow by 
@@ -458,7 +486,8 @@ fact the Fr\'{e}chet derivative of the natural operator discretization.
 If $\Spc{X}$ and $\Spc{Y}$ are Hilbert spaces over the same field, one can consider the adjoint operator 
 $\Op{T}^* \colon \Spc{Y} \to \Spc{X}$ and its natural discretization. The following lemma clarifies under which 
 conditions this discretization is the adjoint of the operator discretization $\DiscOp{T}$.
-%
+
+
 \begin{lemma}
  \label{lemma:discr:operator:op_adj:natural_is_adj}
  Let $\Spc{X}$ and $\Spc{Y}$ are Hilbert spaces with linear discretizations as in 
@@ -478,6 +507,7 @@ conditions this discretization is the adjoint of the operator discretization $\D
   \EnX = (\RnX)^* \quad \text{and} \quad \EmY = (\RmY)^*.
  \end{equation*}
 \end{lemma}
+\vspace{1em}
 
 
 \begin{proof}
@@ -503,6 +533,7 @@ conditions this discretization is the adjoint of the operator discretization $\D
 
 Mappings or operators can be chained if their domains and ranges are compatible. We investigate how the natural 
 discretization of an operator composition relates to the composition of the single discretized operators.
+
 
 \begin{lemma}
  \label{lemma:discr:operator:op_comp:natural_is_comp}
@@ -533,6 +564,8 @@ discretization of an operator composition relates to the composition of the sing
  $\vnu \in \Field^k$, the preimage $(\REST{k}{\Spc{Z}} \circ \Op{U})^{-1}(\{\vnu\})$ is invariant under 
  $\PmY$.
 \end{lemma}
+\vspace{1em}
+
 
 \begin{proof}
  Obviously, it is
@@ -678,7 +711,8 @@ discretizations as summarized in \Cref{tab:discr:summary:def_summary}.
 
 In the following Lemma, we investigate under which conditions the natural discretization of an operator leads to 
 compatibility in the sense of \Cref{def:discr:corresp:operator_compat}. These conditions can be stated more 
-specifically in special cases, see ??
+specifically in special cases, see \Cref{sec:specif}.
+
 
 \begin{lemma}
  \label{lemma:prop:corresp:natural_op_discr_corresp}
@@ -701,9 +735,10 @@ specifically in special cases, see ??
   \todo{Maybe one should say something about approximate correspondence if possible.}
  \end{enumerate}
 \end{lemma}
+\vspace{1em}
 
 
-\begin{proof}
+\begin{proof}~
  \begin{enumerate}[(a)]
   \item Right-composing the discretized operator $\DiscOp{T} = \RmY \circ \Op{T} \circ \EnX$ with $\RnX$ results in
   %
@@ -763,6 +798,7 @@ can be formally defined as an operator, and as such it implies a natural discret
 investigate how it relates to the usual linear combination in $\Field^n$ and under which conditions they correspond to 
 each other.
 
+
 \begin{lemma}
  \label{lemma:prop:lincomb:natural_corresp}
  Let $\Spc{X}$ be a vector space over $\Field$ with linear discretization $\Discr_{n}(\Spc{X})$.
@@ -773,8 +809,10 @@ each other.
   \item The linear combinations in $\Spc{X}$ and $\Field^n$ exactly correspond to each other.
  \end{enumerate}
 \end{lemma}
+\vspace{1em}
 
-\begin{proof}
+
+\begin{proof}~
  \begin{enumerate}[(a)]
   \item The linear combination in $\Spc{X}$ can be written as an operator 
   %
@@ -843,6 +881,7 @@ each other.
 
 We now consider the setting when $\Spc{X}$ is a normed vector space, including the space of bounded linear operators.
 
+
 \begin{lemma}
  \label{lemma:prop:norm:natural_corresp}
  Let $\Spc{X}$ be a vector space over $\Field$ with norm $\NORM{\cdot}_{\Spc{X}}$ and linear discretization 
@@ -870,6 +909,8 @@ We now consider the setting when $\Spc{X}$ is a normed vector space, including t
   are isometries.
  \end{enumerate}
 \end{lemma}
+\vspace{1em}
+
 
 \begin{proof}
  We write the norm as an operator
@@ -919,6 +960,7 @@ $\DiscOp{T} \in \Spc{L}(\Field^n, \Field^m) \simeq \Field^{m\times n}$ are defin
 %
 The following Lemma shows how operator and matrix norms relate to each other under discretization.
 
+
 \begin{lemma}
  \label{lemma:prop:norm:op_norm_est}
  Let $\Spc{X}$ and $\Spc{Y}$ be normed vector spaces with linear discretizations $\Discr_n(\Spc{X})$ and 
@@ -945,9 +987,10 @@ The following Lemma shows how operator and matrix norms relate to each other und
   \end{equation*}
  \end{enumerate}
 \end{lemma}
+\vspace{1em}
 
 
-\begin{proof}
+\begin{proof}~
  \begin{enumerate}[(a)]
   \item For $\Op{T} \in \Spc{L}$ and $\DiscOp{T} = \REST{m\times n}{\Spc{L}}(\Op{T})$ we have
   %
@@ -1013,6 +1056,7 @@ The following Lemma shows how operator and matrix norms relate to each other und
 
 Now we consider inner product spaces and analyze their behavior under discretization.
 
+
 \begin{lemma}
  \label{lemma:prop:inner:natural_corresp}
  Let $(\Spc{X}, \INNER{\cdot}{\cdot}_{\Spc{X}})$ be an inner product space with discretization $\Discr_n(\Spc{X})$, and 
@@ -1028,8 +1072,10 @@ Now we consider inner product spaces and analyze their behavior under discretiza
   $\EnX$ are unitary.
  \end{enumerate}
 \end{lemma}
+\vspace{1em}
 
-\begin{proof}
+
+\begin{proof}~
  \begin{enumerate}[(a)]
   \item We define the inner product as an operator
   %
@@ -1041,12 +1087,12 @@ Now we consider inner product spaces and analyze their behavior under discretiza
   %
   The natural discretization of this operator is given by $\DiscOp{T} = \Op{\Id} \circ \Op{T} \circ (\EnX, \EnX)$, \ie,
   %
-  \begin{equation*}
+  \begin{align*}
    \DiscOp{T}(\valpha, \vbeta) 
-   = \Op{T}\big( \EnX(\valpha), \EnX(\vbeta) \big) 
-   = \INNERbig{\EnX(\valpha)}{\EnX(\vbeta)}_{\Spc{X}}
-   = \INNERbig{(\EnX)^* \circ \EnX(\valpha)}{\vbeta}_n.
-  \end{equation*}
+   &= \Op{T}\big( \EnX(\valpha), \EnX(\vbeta) \big) 
+   = \INNERbig{\EnX(\valpha)}{\EnX(\vbeta)}_{\Spc{X}} \\
+   &= \INNERbig{(\EnX)^* \circ \EnX(\valpha)}{\vbeta}_n.
+  \end{align*}
   %
   Apparently, this expression is equal to $\INNER{\valpha}{\vbeta}_n$ if and only if $\EnX$ is unitary.
 
@@ -1068,22 +1114,31 @@ Now we consider inner product spaces and analyze their behavior under discretiza
 \label{subsec:prop:summary}
 
 We summarize the properties of linear discretizations along with the corresponding conditions. Recall the definitions of 
-the (projection) operators $\PnX = \EnX \circ \RnX \colon \Spc{X} \to \Spc{X}$ and 
-$\QnX = \RnX \circ \EnX \colon \Field^n \to \Field^n$, see \Cref{def:discr:space:space_discr}. \\
+the (projection) operators
 %
-\begin{table}[ht]
- \renewcommand{\arraystretch}{1.1}
- \begin{tabulary}{\textwidth}{LLl}
+\begin{equation*}
+ \PnX = \EnX \circ \RnX \colon \Spc{X} \to \Spc{X}
+ \quad \text{and} \quad
+ \QnX = \RnX \circ \EnX \colon \Field^n \to \Field^n,
+\end{equation*}
+%
+see \Cref{def:discr:space:space_discr}.%
+%
+\renewcommand{\arraystretch}{1.1}%
+\begin{longtable}{>{\raggedright}p{0.30\linewidth}<{\raggedright} %
+                  >{\raggedright}p{0.45\linewidth}<{\raggedright} %
+                  p{0.15\linewidth}}
   \multicolumn{3}{c}{\textbf{Natural discretization = known operation}} \\
   %
   %
   \noalign{\smallskip} \hline \noalign{\smallskip}
   %
   %
-  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \\ 
+  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \endfirsthead 
+  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \endhead 
   %
   %
-  \noalign{\smallskip} \hline \noalign{\smallskip}
+  \noalign{\smallskip} \hline\hline \noalign{\smallskip}
   %
   %
   Fr\'{e}chet derivative &
@@ -1148,44 +1203,47 @@ $\QnX = \RnX \circ \EnX \colon \Field^n \to \Field^n$, see \Cref{def:discr:space
   \Cref{lemma:prop:inner:natural_corresp} \\
   %
   %
-  \noalign{\smallskip} \hline
- \end{tabulary}
- \caption{Summary of the results on natural discretization as given in \Cref{sec:prop}}
- \renewcommand{\arraystretch}{1.0}
- \label{tab:prop:summary:natural_summary}
-\end{table}%
+  \noalign{\smallskip} \hline \noalign{\smallskip}%
+ \caption{Summary of the results on natural discretization as given in \Cref{sec:prop}}%
+ \label{tab:prop:summary:natural_summary}%
+\end{longtable}%
+\renewcommand{\arraystretch}{1.0}%
 %
+\noindent
 \Cref{tab:prop:summary:natural_summary} shows the results regarding the equality of natural discretizations and known 
 operations in the discretized spaces, and \Cref{tab:prop:summary:exaxt_corresp_summary} is an overview of the results 
 on exact correspondence.
+\newpage
 %
-\begin{table}[ht]
- \renewcommand{\arraystretch}{1.1}
- \begin{tabulary}{\textwidth}{LLl}
+\renewcommand{\arraystretch}{1.1}
+\begin{longtable}{>{\raggedright}p{0.30\linewidth}<{\raggedright} %
+                  >{\raggedright}p{0.45\linewidth}<{\raggedright} %
+                  p{0.15\linewidth}}
   \multicolumn{3}{c}{\textbf{Exact correspondence}} \\
   %
   %
   \noalign{\smallskip} \hline \noalign{\smallskip}
   %
   %
-  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \\ 
+  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \endfirsthead
+  \textbf{Object} & \textbf{Conditions} & \textbf{Shown in} \endhead
   %
   %
-  \noalign{\smallskip} \hline\hline \noalign{\smallskip}
+  \noalign{\smallskip} \hline\hline \noalign{\smallskip} 
   %
   %
-  $\DiscOp{T} = \RmY \circ \Op{T} \circ \EnX$ (natural operator discretization) &
+  $\DiscOp{T} = \RmY \circ \Op{T} \circ \EnX$ (natural operator &
   (1) Single-element preimages are invariant under $\PnX$ and & 
   \Cref{lemma:prop:corresp:natural_op_discr_corresp} \\
   %
-  &
+  discretization) &
   (2) $\PmY$ is the identity on $\range(\Op{T} \circ \EnX)$ &
   \\
   \noalign{\smallskip}
-  Special case: $\Spc{Y}$ Hilbert space and $\Op{T}$ linear and bounded &
+  Special case: $\Spc{Y}$ Hilbert space and $\Op{T}$ linear and &
   (1a) $\PnX$ is identity on $\nullspace(\RmY \circ \Op{T})^\perp$ and &
   \\
-  &
+  bounded &
   (1b) $\nullspace(\RmY \circ \Op{T})$ invariant under $\PnX$ and (2) as above &
   \\
   %
@@ -1225,12 +1283,11 @@ on exact correspondence.
   \Cref{lemma:prop:inner:natural_corresp} \\
   %
   %
-  \noalign{\smallskip} \hline
- \end{tabulary}
+  \noalign{\smallskip} \hline \noalign{\smallskip}
  \caption{Summary of the conditions for exact correspondence in different situations as analyzed in \Cref{sec:prop}}
- \renewcommand{\arraystretch}{1.0}
  \label{tab:prop:summary:exaxt_corresp_summary}
-\end{table}
+\end{longtable}
+ \renewcommand{\arraystretch}{1.0}
 
 
 
@@ -1245,25 +1302,320 @@ results in \Cref{sec:prop}.
 
 
 \subsection{Functionals and function systems}
-\label{subsec:specif:func_base}
+\label{subsec:specif:funct}
 
-Let $\Spc{X}$ be a vector space over $\Field$ and $\lambda_i \colon \Spc{X} \to \Field,\ i=1,\ldots,n$ be 
-continuous\footnote{If $\Spc{X}$ is normed, we can say ``bounded'' and speak of \emph{Functionals}.} linear mappings.
-With those we define the restriction mapping
+Let $\Spc{X}$ be a vector space over $\Field$ and $\Lambda = \{\lambda_1, \ldots, \lambda_n\}$ a set of linear mappings
+$\lambda_i \colon \Spc{X} \to \Field$. With those we define the restriction mapping
 %
 \begin{equation*}
  \RnX \colon \Spc{X} \to \Field^n \quad \text{as} \quad \RnX(f) := \big( \lambda_i(f) \big)_{i=1}^n.
 \end{equation*}
 %
-Let further $\phi_i \in \Spc{X},\ i=1,\ldots,n$ be linearly independent. We then define the extension operator
+Let further $\Phi=\{\phi_1, \ldots, \phi_n\} \subset \Spc{X}$ be a set of elements in $\Spc{X}$. We define the 
+extension operator
 %
 \begin{equation*}
- \EnX \colon \Field^n \to \Spc{X} \quad \text{as} \quad \EnX(\valpha) := \sum_{i=1}^n \alpha_i\, \phi_i.
+ \EnX \colon \Field^n \to \Spc{X} \quad \text{as} \quad \EnX(\valpha) := \sum_{i=1}^n \overline{\alpha_i}\, \phi_i.
 \end{equation*}
+%
+The corresponding projection operators are then given by
+%
+\begin{equation*}
+ \PnX(f) := \sum_{i=1}^n \overline{\lambda_i(f)}\, \phi_i
+ \quad \text{and} \quad
+ \left[ \QnX \right]_{i,j} := \overline{\lambda_i(\phi_j)},\quad i,j=1,\ldots,n.
+\end{equation*}
+%
+For these specific operators, we can rephrase some of the properties arising as conditions in \Cref{sec:discr,sec:prop} 
+in terms of $\Lambda$ and $\Phi$. We start with the general vector space case and proceed with normed spaces and 
+Hilbert spaces.
 
 
+\begin{lemma}~
+ \label{lemma:specif:funct:op_prop_vecspace}
+ \begin{enumerate}[(a)]
+  \item $\QnX = \vI$ if and only if $\lambda_i(\phi_j) = \delta_{i,j},\ i,j=1,\ldots,n$.
+  
+  \item $\RnX$ is surjective if and only if $\Lambda$ is linearly independent.
+  
+  \item $\EnX$ is surjective if and only if $\Spc{X} = \linspan \Phi$.
+ \end{enumerate}
+\end{lemma}
+\vspace{1em}
 
 
+\begin{proof}
+ Obvious.
+\end{proof}
+
+
+\begin{lemma}
+ \label{lemma:specif:funct:op_prop_normedspace}
+ Let $\Spc{X}$ and $\Field^n$ be normed spaces and let the norm $\NORM{\cdot}_n$ fulfill the norm equivalence
+ %
+ \begin{equation*}
+  c_1 \NORM{\cdot}_n \leq \NORM{\cdot}_{\mathrm{M}} \leq C_1 \NORM{\cdot}_n
+ \end{equation*}
+ %
+ with constants $0 < c_1 \leq C_1$, where $\NORM{\cdot}_{\mathrm{M}}$ is the ``Manhattan''- or 1-norm.
+
+ \begin{enumerate}[(a)]
+  \item $\NORM{\RnX(f)}_n \leq c_1^{-1} \sum_{i=1}^n \ABS{\lambda_i(f)}$, \ie, $\RnX$ is bounded if and only if all 
+  mappings $\lambda_i$ are bounded (\emph{functionals}).
+  %
+  \item $\NORM{\EnX(\valpha)}_{\Spc{X}} \leq C_1\, \max_i \NORM{\phi_i}_{\Spc{X}}\, \NORM{\valpha}_n$, hence $\EnX$ is 
+  bounded.
+ \end{enumerate}
+\end{lemma}
+\vspace{1em}
+
+
+\begin{proof}~
+ \begin{enumerate}[(a)]
+  \item It is
+  %
+  \begin{align*}
+   \NORM{\RnX(f)}_n 
+   &= \NORMLR{\big( \lambda_1(f), \ldots, \lambda_n(f) \big)}_n \\
+   &\leq c_1^{-1} \sum_{i=1}^n \ABS{\lambda_i(f)} \leq n\,c_1^{-1}\, \max_i \ABS{\lambda_i(f)}
+  \end{align*}
+  %
+  according to the norm equivalence. This proves the claim.
+  
+  \item For the operator $\EnX$, we use the triangle inequality and the norm equivalence to get
+  %
+  \begin{align*}
+   \NORM{\EnX(\valpha)}_{\Spc{X}} 
+   &= \NORMBig{\sum_{i=1}^n \alpha_i\, \phi_i}_{\Spc{X}} \leq \sum_{i=1}^n \ABS{\alpha_i}\, \NORM{\phi_i}_{\Spc{X}} \\
+   &\leq \max_i \NORM{\phi_i}_{\Spc{X}}\, \NORM{\valpha}_{\mathrm{M}} \leq C_1\, \max_i \NORM{\phi_i}_{\Spc{X}}\, 
+   \NORM{\valpha}_n.
+  \end{align*}
+ \end{enumerate}
+\end{proof}
+
+
+\begin{lemma}
+ \label{lemma:specif:funct:op_prop_hilbert}
+ Let $\Spc{X}$ and $\Field^n$ be Hilbert spaces. Let further $\vA \in \Field^{n\times n}$ be the Hermitian positive 
+ definite matrix defining the inner product in $\Field^n$, \ie,
+ %
+ \begin{equation*}
+  \INNER{\valpha}{\vbeta}_n =: \HERM{\valpha} \vA \vbeta
+ \end{equation*}
+ %
+ with $\HERM{\valpha} := \TRANSP{\overline{\valpha}}$. The norms in $\Spc{X}$ and $\Field^n$ be defined via 
+ the respective inner products. Let further $\Theta \subset \Spc{X}$ be the Riesz representants of the functionals 
+ $\lambda_i$, \ie,  $\lambda_i = \INNER{\theta_i}{\cdot}_{\Spc{X}},\ i=1,\ldots,n$.
+ %
+ \begin{enumerate}[(a)]
+  \item \label{lemma:specif:funct:op_prop_hilbert:Q_identity}
+  $\QnX$ is the identity if and only if the sets $\Theta$ and $\Phi$ are bi-orthogonal, \ie, 
+  $\INNER{\theta_i}{\phi_j}_{\Spc{X}} = \delta_{i,j}$.
+ 
+  \item \label{lemma:specif:funct:op_prop_hilbert:R_adjoint_repr}
+  The adjoint operators $(\RnX)^*$ and $(\EnX)^*$ have the representations
+  %
+  \begin{equation*}
+   (\RnX)^*(\valpha) = \sum_{i=1}^n (\HERM{\valpha}\vA)_i\, \theta_i
+   \quad \text{and} \quad
+   (\EnX)^(f) = \vA^{-1} \bar f
+  \end{equation*}
+  %
+  with $\bar f = \big( \INNER{\phi_i}{f}_{\Spc{X}} \big)_{i=1,\ldots,n}$.
+  
+  \item \label{lemma:specif:funct:op_prop_hilbert:adjoint_relation}
+  It is $(\RnX)^* = \EnX$ if and only if $\vA$ is the change-of-basis matrix from $\Theta$ to $\Phi$, \ie,
+  %
+  \begin{equation*}
+   \phi_i = \sum_{j=1}^n A_{i,j}\, \theta_j.
+  \end{equation*}
+  %
+  This implies in particular that the linear spans of $\Theta$ and $\Phi$ are identical.
+ 
+  \item  \label{lemma:specif:funct:op_prop_hilbert:E_isometry}
+  $\EnX$ is an isometry if and only if $\Phi$ is linearly independent and $\vA$ is the Gramian matrix $\vG_\Phi$ 
+  defined by $(G_\Phi)_{i,j} := \INNER{\phi_i}{\phi_j}_{\Spc{X}},\ i,j=1,\ldots,n$.
+  
+  \item \label{lemma:specif:funct:op_prop_hilbert:R_isometry}
+  $\RnX$ is an isometry if and only if $\DIM(\Spc{X}) = n$, $\Theta$ is linearly independent and $\vA$ is the 
+  inverse of the Gramian matrix $\vG_\Theta$.
+ \end{enumerate}
+\end{lemma}
+\vspace{1em}
+
+
+\begin{proof}~
+ \begin{enumerate}[(a)]
+  \item This is an immediate consequence of \Cref{lemma:specif:funct:op_prop_vecspace}.
+ 
+  \item To find a representation for the $(\RnX)^*$, we calculate
+  %
+  \begin{align*}
+   \INNERbig{\RnX(f)}{\valpha}_n 
+   &= \HERM{\RnX(f)} \vA \valpha = \sum_{i,j=1}^n \INNER{f}{\theta_i}_{\Spc{X}}\, A_{i,j}\, \alpha_j
+   = \INNERbigg{f}{\sum_{i,j=1}^n \overline{A_{i,j}}\, \overline{\alpha_j}\, \theta_i}_{\Spc{X}} \\
+   &= \INNERbigg{f}{\sum_{i,j=1}^n \overline{\alpha_j}\, A_{j,i}\, \theta_i}_{\Spc{X}} 
+   = \INNERbigg{f}{\sum_{i=1}^n (\HERM{\valpha} \vA)_i\, \theta_i}_{\Spc{X}},
+  \end{align*}
+  %
+  from which the first claim follows. Likewise, it is
+  %
+  \begin{equation*}
+   \INNERbig{\EnX(\valpha)}{f}_{\Spc{X}}
+   = \sum_{i=1}^n \overline{\alpha_i}\, \INNER{\phi_i}{f}_{\Spc{X}}
+   = \HERM{\valpha} \bar f
+   = \INNERbig{\valpha}{\vA^{-1} \bar f}_n,
+  \end{equation*}
+  %
+  and the adjoint of $\EnX$ can be read off this identity.
+
+  \item For each $\valpha \in \Field^n$, we require $\EnX(\valpha) = (\RnX)^*(\valpha)$, \ie,
+  %
+  \begin{equation}
+   \label{eq:funct:op_prop_hilbert:adjoint_relation:cond}
+   \tag{{$\ast$}}
+   \sum_{i=1}^n \overline{\alpha_i}\, \phi_i = \sum_{i,j=1}^n \overline{\alpha_j} A_{j,i}\, \theta_i.
+  \end{equation}
+  %
+  If $\phi_i = \sum_{j=1}^n A_{i,j}\, \theta_j$, we see immediately that
+  %
+  \begin{equation*}
+   \sum_{i=1}^n \overline{\alpha_i}\, \phi_i = \sum_{i,j=1}^n \overline{\alpha_i}\, A_{i,j}\, \theta_j,
+  \end{equation*}
+  %
+  thus the operators are equal as required. Conversely, we now assume $\EnX = (\RnX)^*$ and prove that $\Phi$ and 
+  $\Theta$ fulfill the claimed relation. First, we apply the functionals 
+  $\mu_k := \INNER{\phi_k}{\cdot}_{\Spc{X}},\ k=1,\ldots,n$, to both sides of 
+  \eqref{eq:funct:op_prop_hilbert:adjoint_relation:cond}, yielding
+  %
+  \begin{equation*}
+   \sum_{i=1}^n \alpha_i \INNER{\phi_k}{\phi_i}_{\Spc{X}} = \sum_{i,j=1}^n \alpha_i\, A_{j,i}\, 
+   \INNER{\phi_k}{\theta_j}_{\Spc{X}},
+  \end{equation*}
+  %
+  or equivalently $\vG_{\Phi} = \vG_{\Phi,\Theta} \vA$ with the (Gramian) matrices
+  %
+  \begin{equation*}
+   (\vG_{\Phi})_{i,j} := \INNER{\phi_i}{\phi_j}_{\Spc{X}}
+   \quad \text{and} \quad
+   (\vG_{\Phi, \Theta})_{i,j} := \INNER{\phi_i}{\theta_j}_{\Spc{X}}.
+  \end{equation*}
+  %
+  Likewise, by applying $\nu_k := \INNER{\theta_k}{\cdot}_{\Spc{X}}$ to both sides of 
+  \eqref{eq:funct:op_prop_hilbert:adjoint_relation:cond}, we get
+  %
+  \begin{equation*}
+   \sum_{i=1}^n \alpha_i \INNER{\theta_k}{\phi_i}_{\Spc{X}} = \sum_{i,j=1}^n \alpha_i\, A_{j,i}\, 
+   \INNER{\theta_k}{\theta_j}_{\Spc{X}},
+  \end{equation*}
+  %
+  \ie, $\vG_{\Theta,\Phi} = \vG_\Theta \vA$ with $\vG_{\Theta,\Phi} = \HERM{\vG_{\Phi,\Theta}}$. Combining both matrix 
+  equations results in
+  %
+  \begin{equation*}
+   \vG_{\Phi} = \vG_{\Phi,\Theta} \vA = \HERM{\vA} \HERM{\vG_\Theta} \vA = \vA \vG_\Theta \vA
+  \end{equation*}
+  %
+  since $\vA$ and $\vG_\Theta$ are Hermitian by definition. This transformation equality between the Gramians of the 
+  systems $\Phi$ and $\Theta$ implies the claimed relation.
+  
+  \item It is
+  %
+  \begin{equation*}
+   \NORMLR{\EnX(\valpha)}_{\Spc{X}}^2 = \NORMBig{\sum_{i=1}^n \alpha_i\, \phi_i}_{\Spc{X}}^2 = 
+   \sum_{i,j=1}^n \alpha_i\, \overline{\alpha_j}\, \INNER{\phi_i}{\phi_j}_{\Spc{X}} = \HERM{\valpha} \vG_\Phi \valpha.
+  \end{equation*}
+  %
+  The Gramian matrix $\vG_\Phi$ is nonsingular and thus defines an inner product if and only if $\Phi$ is linearly 
+  independent. Since bilinear forms are uniquely determined by their diagonals, this proves 
+  \eqref{lemma:specif:funct:op_prop_hilbert:E_isometry}.
+  
+  \item As a linear operator with finite-dimensional range, $\RnX$ is compact and thus has a singular value 
+  decomposition
+  %
+  \begin{equation*}
+   \RnX(f) = \sum_{k=1}^n \sigma_k\, \INNER{f}{v_k}_{\Spc{X}}\, u_k
+  \end{equation*}
+  %
+  with singular system $(v_k, u_k; \sigma_k)_{k=1, \ldots, \DIM(\Spc{X})}$, where $\sigma_k = 0$ for $k > n$. Hence, it 
+  is
+  %
+  \begin{equation*}
+   \NORMbig{\RnX(f)}_n^2 = \sum_{k=1}^n \sigma_k^2 \ABSbig{\INNER{f}{v_k}_{\Spc{X}}}^2 
+   = \sum_{k=1}^{\DIM(\Spc{X})} \ABSbig{\INNER{f}{v_k}_{\Spc{X}}}^2 = \NORM{f}_{\Spc{X}}^2
+  \end{equation*}
+  %
+  for all $f\in\Spc{X}$ if and only if $\DIM(\Spc{X}) = n$ and $\sigma_k = 1$ for all $k$. By applying the SVD
+  representation of $\RnX$ to $\theta_j$, we have
+  %
+  \begin{equation*}
+   \big[ \RnX(\theta_j) \big]_i = \INNER{\theta_i}{\theta_j}_{\Spc{X}} = \sum_{k=1}^n \INNER{\theta_j}{v_k}_{\Spc{X}}\, 
+   u_{i,k},
+  \end{equation*}
+  %
+  which reads as $\vG_\Theta = \vU \HERM{\vG_{\Theta,V}}$ with 
+  $(G_{\Theta,V})_{i,j} := \INNER{\theta_i}{v_j}_{\Spc{X}}$. Likewise, applying $\RnX$ to $v_j$ yields
+  %
+  \begin{equation*}
+   \big[ \RnX(v_j) \big]_i = \INNER{\theta_i}{v_j}_{\Spc{X}} = u_{i,j},
+  \end{equation*}
+  %
+  \ie, $\vU = \vG_{\Theta,V}$. On the other hand, the unit norm property of the vectors $u_k$ can be written in matrix 
+  form as $\vU \vA \HERM{\vU} = \HERM{\vU} \vA \vU = \vI$. Combining these properties results in
+  %
+  \begin{equation*}
+   \vG_\Theta \vA \vG_\Theta = \vG_{\Theta,V} \HERM{\vG_{\Theta,V}} \vA \vG_{\Theta,V} \HERM{\vG_{\Theta,V}}
+   = \vG_{\Theta,V} \HERM{\vG_{\Theta,V}} = \vG_\Theta,
+  \end{equation*}
+  %
+  and thus $\vA = \vG_\Theta^{-1}$.
+ \end{enumerate}
+\end{proof}
+
+
+\begin{corollary} 
+ Under the conditions of \Cref{lemma:specif:funct:op_prop_hilbert}, $\EnX$ is equal to $(\RnX)^*$ and 
+ an isometry -- and thereby also $\RnX$ -- only if the systems $\Phi$ and $\Theta$ are bi-orthogonal.
+\end{corollary}
+\vspace{1em}
+
+
+\begin{proof}
+ According to \Cref{lemma:specif:funct:op_prop_hilbert}
+ \eqref{lemma:specif:funct:op_prop_hilbert:adjoint_relation}--\eqref{lemma:specif:funct:op_prop_hilbert:R_isometry},
+ it is $\vA = \vG_\Phi$, \ie,
+ %
+ \begin{equation*}
+  \phi_i = \sum_{i=1}^n \INNER{\phi_i}{\phi_j}_{\Spc{X}}\, \theta_j.
+ \end{equation*}
+ %
+ On the other hand, $\vG_\Phi \vG_\Theta = \vI$, hence by applying $\INNER{\cdot}{\theta_k}_{\Spc{X}}$ to the identity 
+ for $\phi_i$ we get
+ %
+ \begin{equation*}
+  \INNER{\phi_i}{\theta_k}_{\Spc{X}} 
+  = \sum_{i=1}^n \INNER{\phi_i}{\phi_j}_{\Spc{X}}\, \INNER{\theta_j}{\theta_k}_{\Spc{X}}
+  = \delta_{i,k},
+ \end{equation*}
+ %
+ which shows that $\Phi$ and $\Theta$ are bi-orthogonal.
+ \todo{Maybe one can show more?}
+\end{proof}
+
+
+\begin{lemma}
+ \label{lemma:specif:funct:op_prop_hilbert_mapping}
+ Let $\Spc{X}, \Spc{Y}$ and $\Field^n, \Field^m$ be Hilbert spaces, where the inner products in the latter are 
+ associated with Hermitian positive definite matrices $\vA \in \Field^{n\times n}$ and $\vB \in \Field^{m\times m}$, 
+ respectively. The operators $\RmY$ and $\EmY$ be defined in analogy to $\RnX$ and $\EnX$ with the sets 
+ $\Xi := (\xi_1, \ldots, \xi_m) \subset \Spc{Y}$ and $\Psi := (\psi_1, \ldots, \psi_m) \subset \Spc{Y}$, 
+ respectively. Let further $\Op{T}\colon \Spc{X} \to \Spc{Y}$ be a bounded linear operator. 
+ 
+ \begin{enumerate}[(a)]
+  \item 
+ \end{enumerate}
+
+\end{lemma}
 
 \section{Software implementation}
 \label{sec:soft}
