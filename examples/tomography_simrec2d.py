@@ -60,8 +60,9 @@ class Projector(OP.LinearOperator):
 
     def _apply(self, data, out):
         #Create projector
+        print("create")
         forward = SR.SRPyForwardProject.SimpleForwardProjector(data.data.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
-
+        print("done")
         #Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
@@ -119,7 +120,7 @@ stepSize = voxelSize.max()/2.0
 
 #Define projection geometries
 geometries = []
-for theta in np.linspace(0, 2*pi, nProjection):
+for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
     x0 = np.array([cos(theta), sin(theta)])
     y0 = np.array([-sin(theta), cos(theta)])
 
@@ -154,6 +155,9 @@ projector = Projector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geome
 
 #Apply once to find norm estimate
 projections = projector(phantomVec)
+print(projections[0].asarray())
+plt.plot(projections[0].asarray())
+plt.show()
 recon = projector.T(projections)
 normEst = recon.norm() / phantomVec.norm()
 

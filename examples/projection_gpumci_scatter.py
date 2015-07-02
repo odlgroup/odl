@@ -54,7 +54,7 @@ class CudaSimpleMCProjector(OP.Operator):
         self.geometries = geometries
         self.domain = domain
         self.range = range
-        self.forward = gpumci.AbsorbingMC(nVoxels, volumeOrigin, voxelSize, nPixels)
+        self.forward = gpumci.SimpleMC(nVoxels, volumeOrigin, voxelSize, nPixels)
 
     def _apply(self, data, out):
         #Create projector
@@ -67,7 +67,7 @@ class CudaSimpleMCProjector(OP.Operator):
             geo = self.geometries[i]
             
             with Timer("projecting"):
-                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
+                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i][0].data_ptr, out[i][1].data_ptr)
 
 
 #Set geometry parameters
@@ -81,9 +81,9 @@ sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
 #Discretization parameters
-#nVoxels, nPixels = np.array([5, 5, 5]), np.array([5, 5])
+#nVoxels, nPixels = np.array([10 ,10,10]), np.array([10, 10])
 nVoxels, nPixels = np.array([100, 100, 100]), np.array([100, 100])
-nProjection = 4
+nProjection = 9
 
 #Scale factors
 voxelSize = volumeSize / nVoxels
@@ -110,7 +110,7 @@ projectionRN = cs.CudaRN(nPixels.prod())
 projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN, nPixels, 'F')
 
 #Create the data space, which is the Cartesian product of the single projection spaces
-dataDisc = ps.powerspace(projectionDisc, nProjection)
+dataDisc = ps.powerspace(ps.powerspace(projectionDisc,2), nProjection)
 
 #Define the reconstruction space
 reconSpace = fs.L2(sets.Cube([0, 0, 0], volumeSize))
@@ -128,10 +128,15 @@ phantomVec = reconDisc.element(phantom)
 projector = CudaSimpleMCProjector(volumeOrigin, voxelSize, nVoxels, nPixels, geometries, reconDisc, dataDisc)
 result = projector(phantomVec)
 
-fig, axes = plt.subplots(nrows=2, ncols=2)
+nrows, ncols = 3, 3
+fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
 fig.tight_layout()
-for i, ax in enumerate(axes.flat):
-    ax.imshow(result[i].asarray().T, cmap='bone', origin='lower')
+figs, axess = plt.subplots(nrows=nrows, ncols=ncols)
+figs.tight_layout()
+for i, ax, axs in zip(range(nrows*ncols), axes.flat, axess.flat):
+    ax.imshow(result[i][0].asarray().T, cmap='bone', origin='lower')
     ax.axis('off')
+    axs.imshow(result[i][1].asarray().T, cmap='bone', origin='lower')
+    axs.axis('off')
 
 plt.show()
