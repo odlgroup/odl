@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
+"""General vector spaces.
+
 General vector spaces with varying amounts of structure such
 as metric, norm, inner product.
 """
@@ -42,7 +43,8 @@ __all__ = ['LinearSpace', 'MetricSpace', 'NormedSpace', 'HilbertSpace',
 
 
 class LinearSpace(Set):
-    """ Abstract linear space
+
+    """Abstract linear space.
 
     Introduction
     ------------
@@ -135,8 +137,8 @@ class LinearSpace(Set):
     """
 
     @abstractmethod
-    def element(self, *args, **kwargs):
-        """ Create an arbitrary element or an element from given data
+    def element(self, data=None):
+        """Create an arbitrary element or an element from given data.
 
         If called without 'data' argument, an arbitrary element in the
         space is generated without guarantee of its state.
@@ -154,20 +156,22 @@ class LinearSpace(Set):
 
     @abstractmethod
     def _lincomb(self, z, a, x, b, y):
-        """ Calculate z = a*x + b*y. This method is intended to be private,
-        public callers should resort to lincomb which is type checked.
+        """Calculate z = a*x + b*y.
+
+        This method is intended to be private, public callers should
+        resort to lincomb which is type-checked.
         """
 
     @abstractproperty
     def field(self):
-        """ Get the underlying field
-        """
+        """The underlying field of the vector space."""
+        pass
 
     # Also abstract equals(self,other) from set
 
     # Default implemented operators
     def zero(self):
-        """ A zero vector in this space
+        """A zero vector in this space.
 
         The zero vector is defined as the additive unit of a space.
 
@@ -180,14 +184,13 @@ class LinearSpace(Set):
         v : Vector
             The zero vector of this space
         """
-
         # Default implementation using lincomb
         tmp = self.element()
         self._lincomb(tmp, 0, tmp, 0, tmp)
         return tmp
 
     def contains(self, x):
-        """ Check for membership in space
+        """Check for membership in space.
 
         Parameters
         ----------
@@ -211,11 +214,13 @@ class LinearSpace(Set):
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
 
     # Overload for `vec in space` syntax
-    __contains__ = contains
+    def __contains__(self, other):
+        """Implementation of 'x in ...' syntax."""
+        return self.contains(other)
 
     # Error checking variant of methods
     def lincomb(self, z, a, x, b=None, y=None):
-        """ Linear combination of vectors
+        """Linear combination of vectors.
 
         Calculates
 
@@ -256,7 +261,6 @@ class LinearSpace(Set):
 
         x = x * (1 + 2 + 3.14)
         """
-
         if not self.contains(z):
             raise TypeError(errfmt('''
             lincomb failed, z ({}) is not in space ({})
@@ -293,12 +297,13 @@ class LinearSpace(Set):
             return self._lincomb(z, a, x, b, y)
 
     class Vector(with_metaclass(ABCMeta, object)):
-        """ Abstract vector, an element in the linear space
-        """
+
+        """Abstract vector, an element in the linear space."""
 
         def __init__(self, space):
-            """ Default initializer of vectors, must be called by all
-            deriving classes to set space
+            """Default initializer of vectors.
+
+            All deriving classes must call this method to set space.
             """
             if not isinstance(space, LinearSpace):
                 raise TypeError(errfmt('''
@@ -307,111 +312,103 @@ class LinearSpace(Set):
 
         @property
         def space(self):
-            """ Get the space this vector belongs to
-            """
+            """The space this vector belongs to."""
             return self._space
 
         # Convenience functions
         def assign(self, other):
-            """ Assign the values of other to this vector
-            """
+            """Assign the values of other to this vector."""
             self.space.lincomb(self, 1, other)
 
         def copy(self):
-            """ Creates an identical (deep) copy of this vector
-            """
+            """Create an identical (deep) copy of this vector."""
             result = self.space.element()
             result.assign(self)
             return result
 
         def lincomb(self, a, x, b=None, y=None):
-            """ Wrapper for space.lincomb(self, a, x, b, y)
+            """Assign a linear combination to this vector.
+
+            Implemented as space.lincomb(self, a, x, b, y).
             """
             self.space.lincomb(self, a, x, b, y)
 
         def set_zero(self):
-            """ Sets this vector to the zero vector
-            """
+            """Set this vector to the zero vector."""
             self.space.lincomb(self, 0, self, 0, self)
 
         # Convenience operators
         def __iadd__(self, other):
-            """Vector addition (self += other)
-            """
+            """Implementation of 'self += other'."""
             self.space.lincomb(self, 1, self, 1, other)
             return self
 
         def __isub__(self, other):
-            """Vector subtraction (self -= other)
-            """
+            """Implementation of 'self -= other'."""
             self.space.lincomb(self, 1, self, -1, other)
             return self
 
         def __imul__(self, scalar):
-            """Vector multiplication by scalar (self *= scalar)
-            """
+            """Implementation of 'self *= scalar'."""
             self.space.lincomb(self, scalar, self)
             return self
 
         def __itruediv__(self, scalar):
-            """Vector division by scalar (self *= (1/scalar))
-            """
-            return self.__imul__(1./scalar)
+            """Implementation of 'self /= scalar' (true division)."""
+            return self.__imul__(1.0 / scalar)
 
-        __idiv__ = __itruediv__
+        def __idiv__(self, scalar):
+            """Implementation of 'self /= scalar'."""
+            return self.__itruediv__(scalar)
 
         def __add__(self, other):
-            """Vector addition (ret = self + other)
-            """
+            """Implementation of 'self + other'."""
             tmp = self.space.element()
             self.space.lincomb(tmp, 1, self, 1, other)
             return tmp
 
         def __sub__(self, other):
-            """Vector subtraction (ret = self - other)
-            """
+            """Implementation of 'self - other'."""
             tmp = self.space.element()
             self.space.lincomb(tmp, 1, self, -1, other)
             return tmp
 
         def __mul__(self, scalar):
-            """Scalar multiplication (ret = self * scalar)
-            """
+            """Implementation of 'self * other'."""
             tmp = self.space.element()
             self.space.lincomb(tmp, scalar, self)
             return tmp
 
-        __rmul__ = __mul__
+        def __rmul__(self, other):
+            """Implementation of 'other * self'."""
+            return self.__mul__(other)
 
         def __truediv__(self, scalar):
-            """ Scalar division (ret = self / scalar)
-            """
+            """Implementation of 'self / scalar' (true division)."""
             return self.__mul__(1.0 / scalar)
 
-        __div__ = __truediv__
+        def __div__(self, scalar):
+            """Implementation of 'self / scalar'."""
+            return self.__truediv__(scalar)
 
         def __neg__(self):
-            """ Unary negation, used in assignments (ret = -self)
-            """
+            """Implementation of '-self'."""
             tmp = self.space.element()
             self.space.lincomb(tmp, -1.0, self)
             return tmp
 
         def __pos__(self):
-            """ Unary plus (the identity operator), creates a copy of this
-            object
-            """
+            """Implementation of '+self'."""
             return self.copy()
 
         def __str__(self):
-            """ A default representation of the vector
-            """
-            return str(self.space) + "::Vector"
+            """Implementation of str()."""
+            return str(self.space) + ".Vector"
 
 
 class MetricSpace(LinearSpace):
-    """ Abstract metric space
-    """
+
+    """Abstract metric space."""
 
     @abstractmethod
     def _dist(self, x, y):

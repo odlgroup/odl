@@ -34,7 +34,7 @@ standard_library.install_aliases()
 
 
 class MultiplyOp(op.LinearOperator):
-    """Multiply with matrix
+    """Multiply with matrix.
     """
 
     def __init__(self, matrix, domain=None, range=None):

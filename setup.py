@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Setup script for RL
+"""Setup script for RL.
 
 Install usage:
 >>> python setup.py install
@@ -30,6 +30,7 @@ requires = """
 future >= 0.14
 numpy >= 1.8
 scipy >= 0.14
+nose >= 1.3
 """
 
 setup(name='RL',

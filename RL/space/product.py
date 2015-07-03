@@ -17,9 +17,9 @@
 
 # pylint: disable=protected-access
 
-"""
-General Cartesian products of LinearSpaces with various metrics, norms,
-inner products.
+"""Cartesian products of `LinearSpace`s.
+
+TODO: document public interface
 """
 
 # Imports for common Python 2/3 codebase
@@ -39,32 +39,40 @@ standard_library.install_aliases()
 
 
 class LinearProductSpace(LinearSpace):
+
     """The Cartesian product of N linear spaces.
 
     The product X1 x ... x XN is itself a linear space, where the
     linear combination is defined component-wise.
 
-    Parameters
-    ----------
-    spaces : LinearSpace instances
-        The factors of the product space
-
-    Returns
-    -------
-    prodspace : LinearProductSpace instance
-
-    Examples
-    --------
-    >>> from RL.space.cartesian import Rn, EuclideanRn
-    >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
-    >>> r2x3.__class__.__name__
-    'LinearProductSpace'
-    >>> r2x3 = LinearProductSpace(EuclideanRn(2), Rn(3))
-    >>> r2x3.__class__.__name__
-    'LinearProductSpace'
+    TODO: document public interface
     """
 
     def __init__(self, *spaces, **_):
+        """Initialize a new LinearProductSpace.
+
+        The product X1 x ... x XN is itself a linear space, where the
+        linear combination is defined component-wise.
+
+        Parameters
+        ----------
+        spaces : LinearSpace instances
+            The factors of the product space
+
+        Returns
+        -------
+        prodspace : LinearProductSpace instance
+
+        Examples
+        --------
+        >>> from RL.space.cartesian import Rn, EuclideanRn
+        >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
+        >>> r2x3.__class__.__name__
+        'LinearProductSpace'
+        >>> r2x3 = LinearProductSpace(EuclideanRn(2), Rn(3))
+        >>> r2x3.__class__.__name__
+        'LinearProductSpace'
+        """
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, LinearSpace)]
@@ -74,42 +82,34 @@ class LinearProductSpace(LinearSpace):
             raise TypeError('All spaces must have the same field')
 
         self._spaces = spaces
-        self._nfactors = len(self.spaces)
+        self._nfactors = len(spaces)
         self._field = spaces[0].field
         super().__init__()
 
     @property
     def field(self):
-        """ Get the underlying field
-        """
+        """The common underlying field of all factors."""
         return self._field
 
     @property
     def spaces(self):
-        """ Get a tuple of the underlying spaces
-        """
+        """A tuple containing all spaces."""
         return self._spaces
 
     def element(self, *args, **kwargs):
-        """ Create some vector in the product space
-
-        TODO: This docstring combines the old `empty` and `makeVector` ones.
-        Write properly!
-        The main purpose of this function is to allocate memory
-
+        """Create an element in the product space.
 
         Parameters
         ----------
         The method has three call patterns, the first is:
 
         args : None
-            No arguments given, will return a vector by calling all child
-            constructors with no arguments.
+            Create a new vector from scratch.
 
-        The second is to wrap existing vectors
+        The second is to wrap existing vectors:
 
-        args : tuple of LinearSpace.Vector's
-            A tuple of vectors in the underlying space.
+        args : tuple of `LinearSpace.Vector`s
+            A tuple of vectors in the underlying spaces.
             This will simply wrap the Vectors (not copy).
 
         The third pattern is to create a new Vector from scratch, in
@@ -143,7 +143,6 @@ class LinearProductSpace(LinearSpace):
         >>> print(x)
         {[ 1.  2.], [ 1.  2.  3.]}
         """
-
         # If data is given as keyword arg, prefer it over arg list
         data = kwargs.pop('data', None)
         if data is None:
@@ -169,7 +168,7 @@ class LinearProductSpace(LinearSpace):
         return self.__class__.Vector(self, *elements)
 
     def zero(self):
-        """ Create the zero vector of the product space
+        """Create the zero vector of the product space.
 
         The i:th component of the product space zero vector is the
         zero vector of the i:th space in the product.
@@ -202,7 +201,7 @@ class LinearProductSpace(LinearSpace):
             space._lincomb(zp, a, xp, b, yp)
 
     def equals(self, other):
-        """ Test if the product space is equal to another
+        """Check if the `other` is the same product space.
 
         Parameters
         ----------
@@ -212,8 +211,8 @@ class LinearProductSpace(LinearSpace):
         Returns
         -------
         equal : boolean
-            `True` if `other` is a LinearProductSpace instance, has same length
-            and the same factors. `False` otherwise.
+            `True` if `other` is a LinearProductSpace instance, has
+            the same length and the same factors. `False` otherwise.
 
         Example
         -------
@@ -233,21 +232,24 @@ class LinearProductSpace(LinearSpace):
         >>> r2x3.equals(r5)
         False
         """
-
         return (isinstance(other, LinearProductSpace) and
                 len(self) == len(other) and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 
     def __len__(self):
+        """The number of factors."""
         return self._nfactors
 
-    def __getitem__(self, index):
-        return self.spaces[index]
+    def __getitem__(self, index_or_slice):
+        """Implementation of spc[index] and spc[slice]."""
+        return self.spaces[index_or_slice]
 
     def __str__(self):
+        """Implementation of str()."""
         return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
+        """Implementation of repr()."""
         return ('LinearProductSpace(' +
                 ', '.join(str(space) for space in self.spaces) + ')')
 
@@ -272,6 +274,7 @@ class LinearProductSpace(LinearSpace):
 
 
 class MetricProductSpace(LinearProductSpace, MetricSpace):
+
     """The Cartesian product of N metric linear spaces.
 
     The product X1 x ... x XN is itself a metric space, where the
@@ -281,65 +284,72 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
     it is dist(x, y) = Rn(N).norm(z), where
     z = (dist(x1, y1), ..., dist(xN, yN)).
 
-    Parameters
-    ----------
-    spaces : MetricSpace instances
-        The factors of the product space
-    kwargs : {'ord', 'weights', 'prod_norm'}
-              'ord' : float, optional
-                  Order of the product distance, i.e.
-                  dist(x, y) = np.linalg.norm(x-y, ord=ord)
-                  Default: 2.0
-              'weights' : array-like, optional, only usable with 'ord' option.
-                  Array of weights, same size as number of space
-                  components. All weights must be positive. It is
-                  multiplied with the tuple of distances before
-                  applying the Rn norm or 'prod_norm'.
-                  Default: (1.0,...,1.0)
-              'prod_norm' : callable, optional
-                  Function that should be applied to the array of distances
-                  Default: np.linalg.norm(x, ord=ord)
+    TODO: document public interface
 
-    The following float values for `prod_norm` can be specified.
-    Note that any value of ord < 1 only gives a pseudonorm.
-
-    =========  ==========================
-    prod_norm    Distance Definition
-    =========  ==========================
-    'inf'       max(w * z)
-    '-inf'      min(w * z)
-    0           sum(w * z != 0)
-    other       sum(w * z**ord)**(1/ord)
-    =========  ==========================
-
-    Here, z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1])) and
-    w = weights.
-
-    Returns
-    -------
-    prodspace : MetricProductSpace instance
-
-    Examples
-    --------
-    >>> from RL.space.cartesian import EuclideanRn
-    >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
-    >>> r2x3 = MetricProductSpace(r2, r3, ord='inf')
-    >>> x_2 = r2.element([0, 0])
-    >>> y_2 = r2.element([3, 4])
-    >>> x_3 = r3.element([0, 0, 0])
-    >>> y_3 = r3.element([1, 2, 2])
-    >>> x = r2x3.element(x_2, x_3)
-    >>> y = r2x3.element(y_2, y_3)
-    >>> r2x3.dist(x, y)
-    5.0
-    >>> r2x3.dist(x, y) == max((r2.dist(x_2, y_2), r3.dist(x_3, y_3)))
-    True
-    >>> r2x3.dist(x, y) == x.dist(y) == y.dist(x)
-    True
-    >>> # TODO: weights
     """
 
+    # TODO: harmonize notation with Rn
+
     def __init__(self, *spaces, **kwargs):
+        """Initialize a new MetricProductSpace.
+
+        Parameters
+        ----------
+        spaces : MetricSpace instances
+            The factors of the product space
+        kwargs : {'ord', 'weights', 'prod_norm'}
+            'ord' : float, optional
+                Order of the product distance, i.e.
+                dist(x, y) = np.linalg.norm(x-y, ord=ord)
+                Default: 2.0
+            'weights' : array-like, optional, only usable with 'ord' option.
+                Array of weights, same size as number of space
+                components. All weights must be positive. It is
+                multiplied with the tuple of distances before
+                applying the Rn norm or 'prod_norm'.
+                Default: (1.0,...,1.0)
+            'prod_norm' : callable, optional
+                Function that should be applied to the array of distances
+                Default: np.linalg.norm(x, ord=ord)
+
+        The following float values for `prod_norm` can be specified.
+        Note that any value of ord < 1 only gives a pseudonorm.
+
+        =========  ==========================
+        prod_norm    Distance Definition
+        =========  ==========================
+        'inf'       max(w * z)
+        '-inf'      min(w * z)
+        0           sum(w * z != 0)
+        other       sum(w * z**ord)**(1/ord)
+        =========  ==========================
+
+        Here, z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1])) and
+        w = weights.
+
+        Returns
+        -------
+        prodspace : MetricProductSpace instance
+
+        Examples
+        --------
+        >>> from RL.space.cartesian import EuclideanRn
+        >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
+        >>> r2x3 = MetricProductSpace(r2, r3, ord='inf')
+        >>> x_2 = r2.element([0, 0])
+        >>> y_2 = r2.element([3, 4])
+        >>> x_3 = r3.element([0, 0, 0])
+        >>> y_3 = r3.element([1, 2, 2])
+        >>> x = r2x3.element(x_2, x_3)
+        >>> y = r2x3.element(y_2, y_3)
+        >>> r2x3.dist(x, y)
+        5.0
+        >>> r2x3.dist(x, y) == max((r2.dist(x_2, y_2), r3.dist(x_3, y_3)))
+        True
+        >>> r2x3.dist(x, y) == x.dist(y) == y.dist(x)
+        True
+
+        """
         if not all(isinstance(spc, MetricSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, MetricSpace)]
@@ -385,6 +395,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         return self._prod_norm(dists)
 
     def __repr__(self):
+        """Implementation of repr()."""
         return ('MetricProductSpace(' + ', '.join(
             str(space) for space in self.spaces) + ')')
 
