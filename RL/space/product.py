@@ -44,7 +44,7 @@ def _product_space_str(spaces):
     else:
         return ' x '.join(str(space) for space in spaces)
 
-def _product_space_repr(name, spaces):
+def _product_space_repr(spaces):
     if all(spaces[0] == space for space in spaces):
         return 'powerspace(' + str(spaces[0]) + ', ' + str(len(spaces)) + ')'
     else:
