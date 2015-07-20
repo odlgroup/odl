@@ -19,66 +19,58 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import (division, print_function, unicode_literals,
-                        absolute_import)
+from __future__ import division, print_function, unicode_literals, absolute_import
 from future import standard_library
+standard_library.install_aliases()
 from math import sin, cos, pi
-import matplotlib.pyplot as plt
-import numpy as np
 
+import numpy as np
 import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.cuda as cs
 import RL.space.product as ps
-import RL.space.discretization as dd
+import RL.space.discretizations as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import GPUMCIPy as gpumci
+import RL.operator.solvers as solvers
 from RL.utility.testutils import Timer
 
-standard_library.install_aliases()
-
+import matplotlib.pyplot as plt
 
 class ProjectionGeometry3D(object):
     """ Geometry for a specific projection
     """
-    def __init__(self, sourcePosition, detectorOrigin, pixelDirectionU,
-                 pixelDirectionV):
+    def __init__(self, sourcePosition, detectorOrigin, pixelDirectionU, pixelDirectionV):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirectionU = pixelDirectionU
         self.pixelDirectionV = pixelDirectionV
 
-
 class CudaSimpleMCProjector(OP.Operator):
     """ A projector that creates several projections as defined by geometries
     """
-    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, geometries,
-                 domain, range):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, geometries, domain, range):
         self.geometries = geometries
         self.domain = domain
         self.range = range
-        self.forward = gpumci.AbsorbingMC(nVoxels, volumeOrigin, voxelSize,
-                                          nPixels)
+        self.forward = gpumci.SimpleMC(nVoxels, volumeOrigin, voxelSize, nPixels)
 
     def _apply(self, data, out):
-        # Create projector
-        mat = data.asarray() > 0
-        materials = cs.CudaEN(data.space.n, np.uint8).element(
-            mat.flatten(order='F'))
+        #Create projector
+        mat = data.asarray()>0
+        materials = cs.CudaEN(data.space.n, np.uint8).element(mat.flatten(order='F'))
         self.forward.setData(data.data_ptr, materials.data_ptr)
 
-        # Project all geometries
+        #Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-
+            
             with Timer("projecting"):
-                self.forward.project(geo.sourcePosition, geo.detectorOrigin,
-                                     geo.pixelDirectionU, geo.pixelDirectionV,
-                                     out[i].data_ptr)
+                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i][0].data_ptr, out[i][1].data_ptr)
 
 
-# Set geometry parameters
+#Set geometry parameters
 volumeSize = np.array([200.0, 200.0, 200.0])
 volumeOrigin = np.array([-100.0, -100.0, -100.0])
 
@@ -88,16 +80,16 @@ detectorOrigin = np.array([-150.0, -150.0])
 sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
-# Discretization parameters
-# nVoxels, nPixels = np.array([5, 5, 5]), np.array([5, 5])
+#Discretization parameters
+#nVoxels, nPixels = np.array([10 ,10,10]), np.array([10, 10])
 nVoxels, nPixels = np.array([100, 100, 100]), np.array([100, 100])
-nProjection = 4
+nProjection = 9
 
-# Scale factors
+#Scale factors
 voxelSize = volumeSize / nVoxels
 pixelSize = detectorSize / nPixels
 
-# Define projection geometries
+#Define projection geometries
 geometries = []
 for theta in np.linspace(0, pi, nProjection, endpoint=False):
     x0 = np.array([cos(theta), sin(theta), 0.0])
@@ -107,45 +99,44 @@ for theta in np.linspace(0, pi, nProjection, endpoint=False):
     projSourcePosition = -sourceAxisDistance * x0
     projPixelDirectionU = y0 * pixelSize[0]
     projPixelDirectionV = z0 * pixelSize[1]
-    projDetectorOrigin = (detectorAxisDistance * x0 + detectorOrigin[0] * y0 +
-                          detectorOrigin[1] * z0)
-    geometries.append(ProjectionGeometry3D(
-        projSourcePosition, projDetectorOrigin, projPixelDirectionU,
-        projPixelDirectionV))
+    projDetectorOrigin = detectorAxisDistance * x0 + detectorOrigin[0] * y0 + detectorOrigin[1] * z0
+    geometries.append(ProjectionGeometry3D(projSourcePosition, projDetectorOrigin, projPixelDirectionU, projPixelDirectionV))
 
-# Define the space of one projection
-projectionSpace = fs.L2(sets.Rectangle([0, 0], detectorSize))
+#Define the space of one projection
+projectionSpace = fs.L2(sets.Rectangle([0,0], detectorSize))
 projectionRN = cs.CudaRN(nPixels.prod())
 
-# Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN,
-                                           nPixels, 'F')
+#Discretize projection space
+projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN, nPixels, 'F')
 
-# Create the data space, which is the Cartesian product of the
-# single projection spaces
-dataDisc = ps.powerspace(projectionDisc, nProjection)
+#Create the data space, which is the Cartesian product of the single projection spaces
+dataDisc = ps.powerspace(ps.powerspace(projectionDisc,2), nProjection)
 
-# Define the reconstruction space
+#Define the reconstruction space
 reconSpace = fs.L2(sets.Cube([0, 0, 0], volumeSize))
 
-# Discretize the reconstruction space
+#Discretize the reconstruction space
 reconRN = cs.CudaRN(nVoxels.prod())
 reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels, 'F')
 
-# Create a phantom
+#Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])
 phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
 phantomVec = reconDisc.element(phantom)
 
-# Make the operator
-projector = CudaSimpleMCProjector(volumeOrigin, voxelSize, nVoxels, nPixels,
-                                  geometries, reconDisc, dataDisc)
+#Make the operator
+projector = CudaSimpleMCProjector(volumeOrigin, voxelSize, nVoxels, nPixels, geometries, reconDisc, dataDisc)
 result = projector(phantomVec)
 
-fig, axes = plt.subplots(nrows=2, ncols=2)
+nrows, ncols = 3, 3
+fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
 fig.tight_layout()
-for i, ax in enumerate(axes.flat):
-    ax.imshow(result[i].asarray().T, cmap='bone', origin='lower')
+figs, axess = plt.subplots(nrows=nrows, ncols=ncols)
+figs.tight_layout()
+for i, ax, axs in zip(range(nrows*ncols), axes.flat, axess.flat):
+    ax.imshow(result[i][0].asarray().T, cmap='bone', origin='lower')
     ax.axis('off')
+    axs.imshow(result[i][1].asarray().T, cmap='bone', origin='lower')
+    axs.axis('off')
 
 plt.show()

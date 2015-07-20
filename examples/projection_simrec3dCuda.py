@@ -69,10 +69,9 @@ class CudaProjector3D(OP.LinearOperator):
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
 
-            with Timer("projecting"):
-                self.forward.project(geo.sourcePosition, geo.detectorOrigin,
-                                     geo.pixelDirectionU, geo.pixelDirectionV,
-                                     out[i].data_ptr)
+            self.forward.project(geo.sourcePosition, geo.detectorOrigin,
+                                 geo.pixelDirectionU, geo.pixelDirectionV,
+                                 out[i].data_ptr)
 
 
 # Set geometry parameters
@@ -88,7 +87,7 @@ detectorAxisDistance = 210.0
 # Discretization parameters
 nVoxels = np.array([448, 448, 448])
 nPixels = np.array([780, 720])
-nProjection = 15
+nProjection = 332
 
 # Scale factors
 voxelSize = np.array([0.5, 0.5, 0.3])
@@ -141,12 +140,13 @@ projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
 result = projector(phantomVec)
 
 result = dataDisc.element()
-projector.apply(phantomVec, result)
+with Timer("project"):
+    projector.apply(phantomVec, result)
 
 plt.figure()
-for i in range(2):
+for i in range(15):
     plt.subplot(3, 5, i+1)
-    plt.imshow(result[i].as_array().T, cmap='bone', origin='lower')
+    plt.imshow(result[i].asarray().T, cmap='bone', origin='lower')
     plt.axis('off')
 
 back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize,
@@ -159,6 +159,6 @@ back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
                  geo.pixelDirectionV, result[0].data_ptr, vol.data_ptr)
 
 plt.figure()
-plt.imshow(vol.as_array()[:, :, 200], cmap='bone')
+plt.imshow(vol.asarray()[:, :, 200], cmap='bone')
 
 plt.show()

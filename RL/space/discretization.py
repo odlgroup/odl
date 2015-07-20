@@ -61,10 +61,12 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 raise NotImplementedError('Can only discretize IntervProds')
 
             if not isinstance(rn, space.HilbertSpace):
-                raise NotImplementedError("'rn' has to be a Hilbert space")
+                pass
+                # raise NotImplementedError('RN has to be a Hilbert space')
 
             if not isinstance(rn, space.Algebra):
-                raise NotImplementedError("'rn' has to be an algebra")
+                pass
+                # raise NotImplementedError('RN has to be an algebra')
 
             if rn.dim != np.prod(shape):
                 raise NotImplementedError(errfmt('''
@@ -75,8 +77,9 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
             self.shape = tuple(shape)
             self.order = order
             self._rn = rn
-            dx = np.array([(self.parent.domain.end[i] - self.parent.domain.begin[i]) /
-                           (self.shape[i] - 1) for i in range(self.parent.domain.dim)])
+            dx = np.array(
+                [((self.parent.domain.end[i] - self.parent.domain.begin[i]) /
+                 (self.shape[i] - 1)) for i in range(self.parent.domain.dim)])
             self.scale = float(np.prod(dx))
 
         def _inner(self, v1, v2):
@@ -138,20 +141,22 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 return getattr(self._rn, name)
 
         def __str__(self):
-            if len(self.shape)>1:
+            if len(self.shape) > 1:
                 return ('[' + repr(self.parent) + ', ' + str(self._rn) + ', ' +
                         'x'.join(str(d) for d in self.shape) + ']')
             else:
                 return '[' + repr(self.parent) + ', ' + str(self._rn) + ']'
 
         def __repr__(self):
-            shapestr = ', ' + repr(self.shape) if self.shape != (self._rn.dim,) else ''
+            shapestr = (', ' + repr(self.shape)
+                        if self.shape != (self._rn.dim,) else '')
             orderstr = ', ' + repr(self.order) if self.order != 'C' else ''
 
-            return "uniform_discretization(" + repr(self.parent) + ", " + repr(self._rn) + shapestr + orderstr + ")"
+            return ("uniform_discretization(" + repr(self.parent) + ", " +
+                    repr(self._rn) + shapestr + orderstr + ")")
 
         class Vector(rn_vector_type):
-            def as_array(self):
+            def asarray(self):
                 return np.reshape(self[:], self.space.shape, self.space.order)
 
     return UniformDiscretization(parent, rnimpl, shape, order)
