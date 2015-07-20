@@ -22,18 +22,18 @@ along with RL.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import (division, print_function, unicode_literals,
                         absolute_import)
 from future import standard_library
-standard_library.install_aliases()
 from math import sin, cos
+import matplotlib.pyplot as plt
 
 import numpy as np
 import RL.operator.operator as OP
 import RL.space.function as fs
-import RL.space.euclidean as ds
-import RL.space.discretizations as dd
+import RL.space.cartesian as ds
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 
-import matplotlib.pyplot as plt
+standard_library.install_aliases()
 
 
 class Projection(OP.LinearOperator):
@@ -92,12 +92,12 @@ pixelDirection = y0 * pixelSize
 
 
 dataSpace = fs.L2(sets.Interval(0, 1))
-dataRN = ds.EuclideanSpace(nPixels)
-dataDisc = dd.uniform_discretization(dataSpace, dataRN)
+dataRn = ds.EuclideanRn(nPixels)
+dataDisc = dd.uniform_discretization(dataSpace, dataRn)
 
 reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
-reconRN = ds.EuclideanSpace(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels)
+reconRn = ds.EuclideanRn(nVoxels.prod())
+reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)

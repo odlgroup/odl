@@ -4,23 +4,23 @@ from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
-from RL.space.euclidean import RN
+from RL.space.cartesian import Rn
 from RL.operator.operator import Operator
 
-""" An example of a very simple operator on RN
+""" An example of a very simple operator on Rn
 """
 
 class addOp(Operator):
     def __init__(self, n, x):
         self.x = x
-        self.range = RN(n)
-        self.domain = RN(n)
+        self.range = Rn(n)
+        self.domain = Rn(n)
 
     def _apply(self, rhs, out):
         out.data[:] = rhs.data[:] + self.x
 
 n = 3
-rn = RN(n)
+rn = Rn(n)
 x = rn.element([1, 2, 3])
 
 op = addOp(n, 10)

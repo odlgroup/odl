@@ -19,22 +19,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
-standard_library.install_aliases()
-from math import sin,cos,pi
+from math import sin, cos, pi
+import matplotlib.pyplot as plt
 
 import numpy as np
 import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.euclidean as ds
 import RL.space.product as ps
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import RL.operator.solvers as solvers
 
-import matplotlib.pyplot as plt
+standard_library.install_aliases()
+
 
 class ProjectionGeometry(object):
     """ Geometry for a specific projection
@@ -44,10 +46,12 @@ class ProjectionGeometry(object):
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
 
+
 class Projector(OP.LinearOperator):
     """ A projector that creates several projections as defined by geometries
     """
-    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
+                 geometries, domain, range):
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
         self.nVoxels = nVoxels
@@ -56,17 +60,22 @@ class Projector(OP.LinearOperator):
         self.geometries = geometries
         self.domain = domain
         self.range = range
-        self._adjoint = BackProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, range, domain)
+        self._adjoint = BackProjector(volumeOrigin, voxelSize, nVoxels,
+                                      nPixels, stepSize, geometries,
+                                      range, domain)
 
     def _apply(self, data, out):
-        #Create projector
+        # Create projector
         print("create")
-        forward = SR.SRPyForwardProject.SimpleForwardProjector(data.data.reshape(self.nVoxels),self.volumeOrigin,self.voxelSize,self.nPixels,self.stepSize)
+        forward = SR.SRPyForwardProject.SimpleForwardProjector(
+            data.data.reshape(self.nVoxels), self.volumeOrigin,
+            self.voxelSize, self.nPixels, self.stepSize)
         print("done")
-        #Project all geometries
+        # Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            result = forward.project(geo.sourcePosition,geo.detectorOrigin,geo.pixelDirection)
+            result = forward.project(geo.sourcePosition, geo.detectorOrigin,
+                                     geo.pixelDirection)
             out[i][:] = result.transpose()
 
     @property
@@ -75,7 +84,8 @@ class Projector(OP.LinearOperator):
 
 
 class BackProjector(OP.LinearOperator):
-    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
+                 geometries, domain, range):
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
         self.nVoxels = nVoxels
@@ -86,20 +96,22 @@ class BackProjector(OP.LinearOperator):
         self.range = range
 
     def _apply(self, projections, out):
-        #Create backprojector
-        back = SR.SRPyReconstruction.BackProjector(self.nVoxels,self.volumeOrigin,self.voxelSize)
+        # Create backprojector
+        back = SR.SRPyReconstruction.BackProjector(
+            self.nVoxels, self.volumeOrigin, self.voxelSize)
 
-        #Append all projections
+        # Append all projections
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            back.append(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection, projections[i].data)
+            back.append(geo.sourcePosition, geo.detectorOrigin,
+                        geo.pixelDirection, projections[i].data)
 
-        #Perform back projection
+        # Perform back projection
         out.data[:] = back.finalize().flatten() * (51770422.4687/16720.1875882)
 
 
-#Set geometry parameters
-volumeSize = np.array([20.0,20.0])
+# Set geometry parameters
+volumeSize = np.array([20.0, 20.0])
 volumeOrigin = -volumeSize/2.0
 
 detectorSize = 50.0
@@ -108,17 +120,17 @@ detectorOrigin = -detectorSize/2.0
 sourceAxisDistance = 600.0
 detectorAxisDistance = 20.0
 
-#Discretization parameters
+# Discretization parameters
 nVoxels = np.array([500, 400])
 nPixels = 400
 nProjection = 200
 
-#Scale factors
+# Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
 stepSize = voxelSize.max()/2.0
 
-#Define projection geometries
+# Define projection geometries
 geometries = []
 for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
     x0 = np.array([cos(theta), sin(theta)])
@@ -127,33 +139,36 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
     projSourcePosition = -sourceAxisDistance * x0
     projDetectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
     projPixelDirection = y0 * pixelSize
-    geometries.append(ProjectionGeometry(projSourcePosition, projDetectorOrigin, projPixelDirection))
+    geometries.append(ProjectionGeometry(
+        projSourcePosition, projDetectorOrigin, projPixelDirection))
 
-#Define the space of one projection
+# Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRN = ds.EuclideanSpace(nPixels)
+projectionRn = ds.EuclideanRn(nPixels)
 
-#Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN)
+# Discretize projection space
+projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
 
-#Create the data space, which is the Cartesian product of the single projection spaces
+# Create the data space, which is the Cartesian product of the
+# single projection spaces
 dataDisc = ps.powerspace(projectionDisc, nProjection)
 
-#Define the reconstruction space
+# Define the reconstruction space
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
-#Discretize the reconstruction space
-reconRN = ds.EuclideanSpace(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels)
+# Discretize the reconstruction space
+reconRn = ds.EuclideanRn(nVoxels.prod())
+reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
-#Create a phantom
+# Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
 phantomVec = reconDisc.element(phantom)
 
-#Make the operator
-projector = Projector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
+# Make the operator
+projector = Projector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
+                      geometries, reconDisc, dataDisc)
 
-#Apply once to find norm estimate
+# Apply once to find norm estimate
 projections = projector(phantomVec)
 print(projections[0].asarray())
 plt.plot(projections[0].asarray())
@@ -161,10 +176,12 @@ plt.show()
 recon = projector.T(projections)
 normEst = recon.norm() / phantomVec.norm()
 
-#Define function to plot each result
+# Define function to plot each result
 plt.figure()
 plt.ion()
 plt.set_cmap('bone')
+
+
 def plotResult(x):
     plt.imshow(x.data.reshape(nVoxels))
     plt.draw()
@@ -175,10 +192,13 @@ x = phantomVec
 y = projections
 print(x.inner(projector.T(y)), projector(x).inner(y))
 
-#Solve using landweber
+# Solve using some predefined method
 x = reconDisc.zero()
-#solvers.landweber(projector, x, projections, 20, omega=0.6/normEst, part_results=solvers.ForEachPartial(plotResult))
-solvers.conjugate_gradient(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
-#solvers.gauss_newton(projector, x, projections, 20, part_results=solvers.ForEachPartial(plotResult))
+# solvers.landweber(projector, x, projections, 20, omega=0.6/normEst,
+#                   part_results=solvers.ForEachPartial(plotResult))
+solvers.conjugate_gradient(projector, x, projections, 20,
+                           part_results=solvers.ForEachPartial(plotResult))
+# solvers.gauss_newton(projector, x, projections, 20,
+#                      part_results=solvers.ForEachPartial(plotResult))
 
-#plt.show()
+# plt.show()

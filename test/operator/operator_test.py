@@ -27,7 +27,7 @@ import numpy as np
 
 # RL imports
 import RL.operator.operator as op
-from RL.space.euclidean import EuclideanSpace
+from RL.space.cartesian import EuclideanRn
 from RL.utility.testutils import RLTestCase
 
 standard_library.install_aliases()
@@ -38,9 +38,9 @@ class MultiplyAndSquareOp(op.Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self.domain = (EuclideanSpace(matrix.shape[1])
+        self.domain = (EuclideanRn(matrix.shape[1])
                        if domain is None else domain)
-        self.range = (EuclideanSpace(matrix.shape[0])
+        self.range = (EuclideanRn(matrix.shape[0])
                       if range is None else range)
         self.matrix = matrix
 
@@ -57,7 +57,7 @@ def mult_sq_np(A, x):
     return np.dot(A, x)**2
 
 
-class TestRN(RLTestCase):
+class TestRn(RLTestCase):
     def test_mult_sq_op(self):
         # Verify that the operator does indeed work as expected
         A = np.random.rand(4, 3)

@@ -261,7 +261,7 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -310,8 +310,8 @@ class Operator(object):
 
         Example
         -------
-        
-        >>> from RL.space.euclidean import RN
+
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -365,8 +365,8 @@ class Operator(object):
 
         Example
         -------
-        
-        >>> from RL.space.euclidean import RN
+
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -404,8 +404,8 @@ class Operator(object):
 
         Example
         -------
-        
-        >>> from RL.space.euclidean import RN
+
+        >>> from RL.space.cartesian import RN
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = RN(3)
         >>> Op = IdentityOperator(rn)
@@ -511,16 +511,17 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> r3 = RN(3)
+        >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> rhs = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> OperatorSum(op, op).apply(rhs, out)
         >>> out
-        RN(3).element([2.0, 4.0, 6.0])
+        Rn(3).element([2.0, 4.0, 6.0])
         """
+
         tmp = self._tmp if self._tmp is not None else self.range.element()
         self._op1._apply(rhs, out)
         self._op2._apply(rhs, tmp)
@@ -542,12 +543,12 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> r3 = RN(3)
+        >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).domain
-        RN(3)
+        Rn(3)
         """
         return self._op1.domain
 
@@ -567,12 +568,12 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.euclidean import RN
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> r3 = RN(3)
+        >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).range
-        RN(3)
+        Rn(3)
         """
         return self._op1.range
 
@@ -705,8 +706,8 @@ class OperatorLeftScalarMultiplication(Operator):
     """
 
     def __init__(self, op, scalar):
-        if (isinstance(op.range, LinearSpace)
-            and not op.range.field.contains(scalar)):
+        if (isinstance(op.range, LinearSpace) and
+                scalar not in op.range.field):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of range ({}) of 'op'
             '''.format(scalar, op.range.field)))
@@ -769,7 +770,7 @@ class OperatorRightScalarMultiplication(Operator):
 
     def __init__(self, op, scalar, tmp=None):
         if (isinstance(op.domain, LinearSpace) and
-            not op.domain.field.contains(scalar)):
+                scalar not in op.domain.field):
             raise TypeError(errfmt('''
             'scalar' ({}) not compatible with field of domain ({}) of 'op'
             '''.format(scalar, op.domain.field)))

@@ -19,17 +19,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
 from numpy import float64
 
 import numpy as np
 from RL.operator.operator import *
 from RL.space.space import *
-from RL.space.euclidean import *
+from RL.space.cartesian import *
 from RL.space.function import *
 import RL.space.cuda as CS
-import RL.space.discretizations as DS
+import RL.space.discretization as DS
 import RLcpp
 
 import matplotlib.pyplot as plt
@@ -42,8 +43,8 @@ class ForwardDiff(LinearOperator):
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space, CS.CudaRN):
-            raise TypeError("space must be CudaRN")
+        if not isinstance(space, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
         self.scale = scale
@@ -62,8 +63,8 @@ class ForwardDiffAdj(LinearOperator):
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space, CS.CudaRN):
-            raise TypeError("space must be CudaRN")
+        if not isinstance(space, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
         self.scale = scale
@@ -134,7 +135,7 @@ space = L2(I)
 n = 1000
 
 # Discretization
-rn = CS.CudaRN(n)
+rn = CS.CudaRn(n)
 d = DS.uniform_discretization(space, rn)
 x = d.points()
 fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))

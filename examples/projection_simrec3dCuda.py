@@ -19,57 +19,64 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
-standard_library.install_aliases()
 from math import sin, cos, pi
-
+import matplotlib.pyplot as plt
 import numpy as np
+
 import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.cuda as cs
 import RL.space.product as ps
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
-import RL.operator.solvers as solvers
 from RL.utility.testutils import Timer
 
-import matplotlib.pyplot as plt
+standard_library.install_aliases()
+
 
 class ProjectionGeometry3D(object):
     """ Geometry for a specific projection
     """
-    def __init__(self, sourcePosition, detectorOrigin, pixelDirectionU, pixelDirectionV):
+    def __init__(self, sourcePosition, detectorOrigin, pixelDirectionU,
+                 pixelDirectionV):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirectionU = pixelDirectionU
         self.pixelDirectionV = pixelDirectionV
 
+
 class CudaProjector3D(OP.LinearOperator):
     """ A projector that creates several projections as defined by geometries
     """
-    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, domain, range):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
+                 geometries, domain, range):
         self.geometries = geometries
         self.domain = domain
         self.range = range
-        self.forward = SR.SRPyCuda.CudaForwardProjector3D(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+        self.forward = SR.SRPyCuda.CudaForwardProjector3D(
+            nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
     def _apply(self, data, out):
-        #Create projector
+        # Create projector
         self.forward.setData(data.data_ptr)
 
-        #Project all geometries
-        
+        # Project all geometries
+
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            
-            self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i].data_ptr)
+
+            self.forward.project(geo.sourcePosition, geo.detectorOrigin,
+                                 geo.pixelDirectionU, geo.pixelDirectionV,
+                                 out[i].data_ptr)
 
 
-#Set geometry parameters
-volumeSize = np.array([224.0,224.0,224.0])
-volumeOrigin = np.array([-112.0,-112.0,10.0]) #-volumeSize/2.0
+# Set geometry parameters
+volumeSize = np.array([224.0, 224.0, 224.0])
+volumeOrigin = np.array([-112.0, -112.0, 10.0])  # -volumeSize/2.0
 
 detectorSize = np.array([287.04, 264.94])
 detectorOrigin = np.array([-143.52, 0.0])
@@ -77,17 +84,17 @@ detectorOrigin = np.array([-143.52, 0.0])
 sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
-#Discretization parameters
+# Discretization parameters
 nVoxels = np.array([448, 448, 448])
 nPixels = np.array([780, 720])
 nProjection = 332
 
-#Scale factors
+# Scale factors
 voxelSize = np.array([0.5, 0.5, 0.3])
-pixelSize = np.array([0.368, 0.368]) #detectorSize/nPixels
+pixelSize = np.array([0.368, 0.368])  # detectorSize/nPixels
 stepSize = voxelSize.max()
 
-#Define projection geometries
+# Define projection geometries
 geometries = []
 for theta in np.linspace(0, pi, nProjection, endpoint=False):
     x0 = np.array([cos(theta), sin(theta), 0.0])
@@ -97,33 +104,39 @@ for theta in np.linspace(0, pi, nProjection, endpoint=False):
     projSourcePosition = -sourceAxisDistance * x0
     projPixelDirectionU = y0 * pixelSize[0]
     projPixelDirectionV = z0 * pixelSize[1]
-    projDetectorOrigin = detectorAxisDistance * x0 + detectorOrigin[0] * y0 + detectorOrigin[1] * z0
-    geometries.append(ProjectionGeometry3D(projSourcePosition, projDetectorOrigin, projPixelDirectionU, projPixelDirectionV))
+    projDetectorOrigin = (detectorAxisDistance * x0 + detectorOrigin[0] * y0 +
+                          detectorOrigin[1] * z0)
+    geometries.append(ProjectionGeometry3D(
+        projSourcePosition, projDetectorOrigin, projPixelDirectionU,
+        projPixelDirectionV))
 
-#Define the space of one projection
-projectionSpace = fs.L2(sets.Rectangle([0,0], detectorSize))
+# Define the space of one projection
+projectionSpace = fs.L2(sets.Rectangle([0, 0], detectorSize))
 projectionRN = cs.CudaRN(nPixels.prod())
 
-#Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN, nPixels, 'F')
+# Discretize projection space
+projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN,
+                                           nPixels, 'F')
 
-#Create the data space, which is the Cartesian product of the single projection spaces
+# Create the data space, which is the Cartesian product of the
+# single projection spaces
 dataDisc = ps.powerspace(projectionDisc, nProjection)
 
-#Define the reconstruction space
+# Define the reconstruction space
 reconSpace = fs.L2(sets.Cube([0, 0, 0], volumeSize))
 
-#Discretize the reconstruction space
+# Discretize the reconstruction space
 reconRN = cs.CudaRN(nVoxels.prod())
 reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels, 'F')
 
-#Create a phantom
+# Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])
 phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
 phantomVec = reconDisc.element(phantom)
 
-#Make the operator
-projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries, reconDisc, dataDisc)
+# Make the operator
+projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
+                            stepSize, geometries, reconDisc, dataDisc)
 result = projector(phantomVec)
 
 result = dataDisc.element()
@@ -136,14 +149,16 @@ for i in range(15):
     plt.imshow(result[i].asarray().T, cmap='bone', origin='lower')
     plt.axis('off')
 
-back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize,
+                                       nPixels, stepSize)
 geo = geometries[0]
 vol = projector.domain.element()
 
 
-back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, result[0].data_ptr, vol.data_ptr)
+back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
+                 geo.pixelDirectionV, result[0].data_ptr, vol.data_ptr)
 
 plt.figure()
-plt.imshow(vol.asarray()[:,:,200], cmap='bone')
+plt.imshow(vol.asarray()[:, :, 200], cmap='bone')
 
 plt.show()

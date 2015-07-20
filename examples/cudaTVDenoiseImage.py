@@ -19,24 +19,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
 
 import numpy as np
+import matplotlib.pyplot as plt
+
 from RL.operator.operator import *
 from RL.space.space import *
 from RL.space.product import powerspace
-from RL.space.euclidean import *
+from RL.space.cartesian import *
 from RL.space.function import *
 import RL.space.cuda as CS
-import RL.space.discretizations as DS
+import RL.space.discretization as DS
 import RLcpp
-
-from pooled import makePooledSpace
-
 from RL.utility.testutils import Timer
 
-import matplotlib.pyplot as plt
+from pooled import makePooledSpace
 
 standard_library.install_aliases()
 
@@ -44,12 +44,13 @@ standard_library.install_aliases()
 class RegularizationType(object):
     Anisotropic, Isotropic = range(2)
 
+
 class ForwardDiff2D(LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
+        if not isinstance(space, CS.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = space
@@ -69,7 +70,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRN):
+        if not isinstance(space, CS.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = powerspace(space, 2)
@@ -231,8 +232,8 @@ space = L2(I)
 n = 2000
 m = 2000
 
-# Underlying RN space
-rn = CS.CudaRN(n*m)
+# Underlying Rn space
+rn = CS.CudaRn(n*m)
 # Example of using an vector pool to reduce allocation overhead
 rnpooled = makePooledSpace(rn, maxPoolSize=5)
 

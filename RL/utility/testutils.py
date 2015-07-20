@@ -43,7 +43,7 @@ class RLTestCase(unittest.TestCase):
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
         """ Assert thaat all elements in iter1 and iter2 are almost equal.
 
-        The iterators may be nestled lists or warying types
+        The iterators may be nestled lists or varying types
 
         assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
         """

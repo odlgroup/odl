@@ -19,13 +19,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RL.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import (division, print_function, unicode_literals,
+                        absolute_import)
 from future import standard_library
 
 import RL.operator.operator as op
 import RL.operator.solvers as solvers
 import RL.space.set as sets
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.function as fs
 import RL.space.cuda as cs
 import RLcpp
@@ -44,8 +45,8 @@ class CudaConvolution(op.LinearOperator):
     """
 
     def __init__(self, kernel, adjointkernel=None):
-        if not isinstance(kernel.space, cs.CudaRN):
-            raise TypeError("Kernel must be CudaRN vector")
+        if not isinstance(kernel.space, cs.CudaRn):
+            raise TypeError("Kernel must be CudaRn vector")
 
         self.space = kernel.space
         self.kernel = kernel
@@ -73,15 +74,15 @@ class CudaConvolution(op.LinearOperator):
 
 
 
-#Continuous definition of problem
+# Continuous definition of problem
 continuousSpace = fs.L2(sets.Interval(0, 10))
 
-#Complicated functions to check performance
+# Complicated functions to check performance
 continuousKernel = continuousSpace.element(lambda x: np.exp(x/2)*np.cos(x*1.172))
 continuousRhs = continuousSpace.element(lambda x: x**2*np.sin(x)**2*(x > 5))
 
 #Discretization
-rn = cs.CudaRN(5000)
+rn = cs.CudaRn(5000)
 d = dd.uniform_discretization(continuousSpace, rn)
 kernel = d.element(continuousKernel)
 rhs = d.element(continuousRhs)

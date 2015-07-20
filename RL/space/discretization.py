@@ -43,15 +43,16 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
     order indicates the order data is stored in, 'C'-order is the default
     numpy order, also called row major.
     """
-    RNType = type(rnimpl)
-    RNVectortype = RNType.Vector
+
+    rn_type = type(rnimpl)
+    rn_vector_type = rn_type.Vector
 
     if shape is None:
-        shape = (rnimpl.n,)
+        shape = (rnimpl.dim,)
 
-    class UniformDiscretization(RNType):
+    class UniformDiscretization(rn_type):
         """ Uniform discretization of an square
-            Represents vectors by RN elements
+            Represents vectors by R^n elements
             Uses sum method for integration
         """
 
@@ -60,22 +61,25 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 raise NotImplementedError('Can only discretize IntervProds')
 
             if not isinstance(rn, space.HilbertSpace):
-                pass #raise NotImplementedError('RN has to be a Hilbert space')
+                pass
+                # raise NotImplementedError('RN has to be a Hilbert space')
 
             if not isinstance(rn, space.Algebra):
-                pass #raise NotImplementedError('RN has to be an algebra')
+                pass
+                # raise NotImplementedError('RN has to be an algebra')
 
-            if rn.n != np.prod(shape):
+            if rn.dim != np.prod(shape):
                 raise NotImplementedError(errfmt('''
                 Dimensions do not match, expected {}, got {}
-                '''.format(np.prod(rn.n), np.prod(shape))))
+                '''.format(np.prod(rn.dim), np.prod(shape))))
 
             self.parent = parent
             self.shape = tuple(shape)
             self.order = order
             self._rn = rn
-            dx = np.array([(self.parent.domain.end[i] - self.parent.domain.begin[i]) /
-                           (self.shape[i] - 1) for i in range(self.parent.domain.dim)])
+            dx = np.array(
+                [((self.parent.domain.end[i] - self.parent.domain.begin[i]) /
+                 (self.shape[i] - 1)) for i in range(self.parent.domain.dim)])
             self.scale = float(np.prod(dx))
 
         def _inner(self, v1, v2):
@@ -102,14 +106,14 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 return self.element(tmp)
             elif data is not None:
                 data = np.asarray(data)
-                if data.shape == (self.n,):
+                if data.shape == (self.dim,):
                     return super().element(data)
                 elif data.shape == self.shape:
                     return self.element(data.flatten(self.order))
                 else:
                     raise ValueError(errfmt('''
                     Input numpy array is of shape {}, expected shape
-                    {} or {}'''.format(data.shape, (self.n,), self.shape)))
+                    {} or {}'''.format(data.shape, (self.dim,), self.shape)))
             else:
                 return super().element(data, **kwargs)
 
@@ -137,19 +141,21 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 return getattr(self._rn, name)
 
         def __str__(self):
-            if len(self.shape)>1:
+            if len(self.shape) > 1:
                 return ('[' + repr(self.parent) + ', ' + str(self._rn) + ', ' +
                         'x'.join(str(d) for d in self.shape) + ']')
             else:
                 return '[' + repr(self.parent) + ', ' + str(self._rn) + ']'
 
         def __repr__(self):
-            shapestr = ', ' + repr(self.shape) if self.shape != (self._rn.n,) else ''
+            shapestr = (', ' + repr(self.shape)
+                        if self.shape != (self._rn.dim,) else '')
             orderstr = ', ' + repr(self.order) if self.order != 'C' else ''
 
-            return "uniform_discretization(" + repr(self.parent) + ", " + repr(self._rn) + shapestr + orderstr + ")"
+            return ("uniform_discretization(" + repr(self.parent) + ", " +
+                    repr(self._rn) + shapestr + orderstr + ")")
 
-        class Vector(RNVectortype):
+        class Vector(rn_vector_type):
             def asarray(self):
                 return np.reshape(self[:], self.space.shape, self.space.order)
 

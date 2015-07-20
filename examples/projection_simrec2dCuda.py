@@ -28,7 +28,7 @@ import numpy as np
 import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.cuda as cs
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import matplotlib.pyplot as plt
@@ -47,7 +47,9 @@ class CudaProjection(OP.LinearOperator):
         self.range = range_
         self.forward = SR.SRPyCuda.CudaForwardProjector(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-        self._adjoint = CudaBackProjector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, sourcePosition, detectorOrigin, pixelDirection, range_, domain)
+        self._adjoint = CudaBackProjector(
+            volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
+            sourcePosition, detectorOrigin, pixelDirection, range_, domain)
 
     def _apply(self, data, out):
         self.forward.setData(data.data_ptr)
@@ -60,16 +62,21 @@ class CudaProjection(OP.LinearOperator):
 
 
 class CudaBackProjector(OP.LinearOperator):
-    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, sourcePosition, detectorOrigin, pixelDirection, domain, range):
+    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
+                 sourcePosition, detectorOrigin, pixelDirection,
+                 domain, range):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
         self.domain = domain
         self.range = range
-        self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+        self.back = SR.SRPyCuda.CudaBackProjector(
+            nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
     def _apply(self, projection, out):
-        self.back.backProject(self.sourcePosition, self.detectorOrigin, self.pixelDirection, projection.data_ptr, out.data_ptr)
+        self.back.backProject(self.sourcePosition, self.detectorOrigin,
+                              self.pixelDirection, projection.data_ptr,
+                              out.data_ptr)
 
 
 # Set geometry parameters
@@ -102,12 +109,12 @@ detectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
 pixelDirection = y0 * pixelSize
 
 dataSpace = fs.L2(sets.Interval(0, 1))
-dataRN = cs.CudaRN(nPixels)
-dataDisc = dd.uniform_discretization(dataSpace, dataRN)
+dataRn = cs.CudaRn(nPixels)
+dataDisc = dd.uniform_discretization(dataSpace, dataRn)
 
 reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
-reconRN = cs.CudaRN(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels)
+reconRn = cs.CudaRn(nVoxels.prod())
+reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
@@ -125,7 +132,7 @@ plt.figure()
 plt.plot(result[:])
 
 backprojected = reconDisc.element()
-projector.adjoint.apply(result,backprojected)
+projector.adjoint.apply(result, backprojected)
 
 plt.figure()
 plt.imshow(backprojected[:].reshape(nVoxels))

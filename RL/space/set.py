@@ -246,16 +246,12 @@ class IntervalProd(Set):
     @property
     def begin(self):
         """ The left interval boundary/boundaries
-
-        If dim == 1, a float is returned, otherwise an array.
         """
         return self._begin
 
     @property
     def end(self):
         """ The right interval boundary/boundaries
-
-        If dim == 1, a float is returned, otherwise an array.
         """
         return self._end
 
@@ -642,7 +638,7 @@ class Rectangle(IntervalProd):
         return ('Rectangle({b!r}, {e!r})'.format(b=list(self._begin),
                                                  e=list(self._end)))
 
-    
+
 class Cube(IntervalProd):
     def __init__(self, begin, end):
         super().__init__(begin, end)

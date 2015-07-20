@@ -20,7 +20,6 @@
 from __future__ import division, print_function, unicode_literals
 from __future__ import absolute_import
 from future import standard_library
-from builtins import range
 
 # External module imports
 import unittest
@@ -29,8 +28,8 @@ import numpy as np
 
 # RL imports
 from RL.operator.operator import *
-from RL.space.euclidean import EuclideanSpace
-import RL.space.discretizations as disc
+from RL.space.cartesian import EuclideanRn
+import RL.space.discretization as disc
 import RL.space.function as fs
 import RL.space.set as sets
 from RL.utility.testutils import RLTestCase
@@ -44,7 +43,7 @@ class L2Test(RLTestCase):
         l2 = fs.L2(I)
         l2sin = l2.element(np.sin)
 
-        rn = EuclideanSpace(10)
+        rn = EuclideanRn(10)
         d = disc.uniform_discretization(l2, rn)
 
         sind = d.element(l2sin)
@@ -58,7 +57,7 @@ class L2Test(RLTestCase):
 
         n = 10
         m = 10
-        rn = EuclideanSpace(n*m)
+        rn = EuclideanRn(n*m)
         d = disc.uniform_discretization(l2, rn, (n, m))
 
         sind = d.element(l2sin)
