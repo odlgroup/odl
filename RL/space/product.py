@@ -38,6 +38,18 @@ from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
+def _product_space_str(spaces):
+    if all(spaces[0] == space for space in spaces):
+        return '{' + str(spaces[0]) + '}^' + str(len(spaces))
+    else:
+        return ' x '.join(str(space) for space in spaces)
+
+def _product_space_repr(spaces):
+    if all(spaces[0] == space for space in spaces):
+        return 'powerspace(' + str(spaces[0]) + ', ' + str(len(spaces)) + ')'
+    else:
+        return ('productspace(' +
+                ', '.join(repr(space) for space in spaces) + ')')
 
 class LinearProductSpace(LinearSpace):
     """The Cartesian product of N linear spaces.
@@ -246,11 +258,10 @@ class LinearProductSpace(LinearSpace):
         return self.spaces[index]
 
     def __str__(self):
-        return ' x '.join(str(space) for space in self.spaces)
+        return _product_space_str(self.spaces)
 
     def __repr__(self):
-        return ('LinearProductSpace(' +
-                ', '.join(str(space) for space in self.spaces) + ')')
+        return _product_space_repr(self.spaces)
 
     class Vector(LinearSpace.Vector):
         def __init__(self, space, *args):
@@ -385,10 +396,6 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
             dtype=float64, count=self._nfactors)
         return self._prod_norm(dists)
 
-    def __repr__(self):
-        return ('MetricProductSpace(' + ', '.join(
-            str(space) for space in self.spaces) + ')')
-
     class Vector(LinearProductSpace.Vector, MetricSpace.Vector):
         pass
 
@@ -479,10 +486,6 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
             dtype=np.float64, count=self._nfactors)
         return self._prod_norm(norms)
 
-    def __repr__(self):
-        return ('NormedProductSpace(' + ', '.join(
-            str(space) for space in self.spaces) + ')')
-
     class Vector(MetricProductSpace.Vector, NormedSpace.Vector):
         pass
 
@@ -561,10 +564,6 @@ class HilbertProductSpace(NormedProductSpace, HilbertSpace):
              for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
             dtype=np.float64, count=self._nfactors)
         return self._prod_norm(inners)
-
-    def __repr__(self):
-        return ('HilbertProductSpace(' +
-                ', '.join(str(space) for space in self.spaces) + ')')
 
     class Vector(NormedProductSpace.Vector, HilbertSpace.Vector):
         pass

@@ -60,10 +60,10 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                 raise NotImplementedError('Can only discretize IntervProds')
 
             if not isinstance(rn, space.HilbertSpace):
-                raise NotImplementedError('RN has to be a Hilbert space')
+                pass #raise NotImplementedError('RN has to be a Hilbert space')
 
             if not isinstance(rn, space.Algebra):
-                raise NotImplementedError('RN has to be an algebra')
+                pass #raise NotImplementedError('RN has to be an algebra')
 
             if rn.n != np.prod(shape):
                 raise NotImplementedError(errfmt('''
