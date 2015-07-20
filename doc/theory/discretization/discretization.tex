@@ -1504,7 +1504,7 @@ Hilbert spaces.
  %
  \begin{enumerate}[(a)]
   \item \label{lemma:specif:funct:op_prop_hilbert:Q_identity}
-  $\QnX$ is the identity if and only if the sets $\Theta$ and $\Phi$ are bi-orthonormal, \ie, 
+  $\QnX$ is the identity if and only if the sets $\Theta$ and $\Phi$ are bi-orthogonal, \ie, 
   $\INNERINX{\phi_i}{\theta_j} = \delta_{i,j}$.
  
   \item \label{lemma:specif:funct:op_prop_hilbert:R_adjoint_repr}
@@ -1637,7 +1637,7 @@ properties   results in
  \label{coroll:specif:funct:op_prop_hilbert_R_E_adjoint_relation}
  If the conditions of \Cref{lemma:specif:funct:op_prop_hilbert} hold and $\BDG_\Phi$ is a real matrix, $\EnX$ is equal 
  to $(\RnX)^*$ and an isometry -- and thereby also $\RnX$ -- if and only if $\TRANSP{\BDA} = \BDG_\Phi$ with 
- bi-orthonormal dictionaries  $\Phi$ and $\Theta$ which span the same space.
+ bi-orthogonal dictionaries  $\Phi$ and $\Theta$ which span the same space.
 \end{corollary}
 \vspace{1em}
 
@@ -1659,9 +1659,9 @@ properties   results in
   = \sum_{i=1}^n \INNERINX{\phi_j}{\phi_i}\, \INNERINX{\theta_i}{\theta_k} = \delta_{j,k},
  \end{equation*}
  %
- which shows that $\Phi$ and $\Theta$ are bi-orthonormal.\\
+ which shows that $\Phi$ and $\Theta$ are bi-orthogonal.\\
  %
- Conversely, for the ``if'' part, we assume that $\Theta$ and $\Phi$ are bi-orthonormal and span the same space. Then, 
+ Conversely, for the ``if'' part, we assume that $\Theta$ and $\Phi$ are bi-orthogonal and span the same space. Then, 
  we can write
  %
  \begin{equation*}
@@ -1707,7 +1707,7 @@ with linearly independent systems $\Xi$ and $\Psi$.
    \item \label{lemma:specif:funct:op_prop_hilbert_mapping:PmY:1_range}
    $\SPCY_n = \SPAN(\Xi_{m_0}) = \SPAN(\Psi_{m_0})$ and
    \item \label{lemma:specif:funct:op_prop_hilbert_mapping:PmY:2_biorth}
-   $\Xi_{m_0}$ and $\Psi_{m_0}$ are bi-orthonormal
+   $\Xi_{m_0}$ and $\Psi_{m_0}$ are bi-orthogonal
   \end{enumerate}
   %
   where $\Xi_{m_0} \DEFEQ  \{ \xi_j\, |\, j\leq m_0 \}$ and $\Psi_{m_0}$ analogously. This implies the block 
@@ -1859,7 +1859,7 @@ terms of the element collections or functionals.
   \Cref{lemma:specif:funct:op_prop_vecspace}~\eqref{lemma:specif:funct:op_prop_hilbert:Q_identity} \\[0.5em]
   %
   (Hilbert space) &
-  $\Theta$, $\Phi$ bi-orthonormal &
+  $\Theta$, $\Phi$ bi-orthogonal &
   \Cref{lemma:specif:funct:op_prop_hilbert}~\eqref{lemma:specif:funct:op_prop_hilbert:Q_identity}\\
   %
   %
@@ -1911,7 +1911,7 @@ terms of the element collections or functionals.
   \Cref{lemma:specif:funct:op_prop_hilbert}~\eqref{lemma:specif:funct:op_prop_hilbert:R_E_adjoint_relation} \\[0.5em]
   %
   &
-  $\Theta$, $\Phi$ bi-orthonormal with identical spans and $\TRANSP{\BDA} = \BDG_\Phi$ &
+  $\Theta$, $\Phi$ bi-orthogonal with identical spans and $\TRANSP{\BDA} = \BDG_\Phi$ &
   \Cref{coroll:specif:funct:op_prop_hilbert_R_E_adjoint_relation} \\
   %
   %
@@ -1936,7 +1936,7 @@ terms of the element collections or functionals.
   %
   $\PmY$ identity on $\SPCY_n$ ($\SPCY_n = \RANGE(\OPT \circ \EnX)$) &
   (1) $\SPCY_n = \SPAN(\Xi_{m_0}) = \SPAN(\Psi_{m_0})$
-  (2) $\Xi_{m_0}$ and $\Psi_{m_0}$ bi-orthonormal
+  (2) $\Xi_{m_0}$ and $\Psi_{m_0}$ bi-orthogonal
   $m_0 = \RANK(\OPT) = \DIM(\SPCY_n)$ &
   \Cref{lemma:specif:funct:op_prop_hilbert_mapping}~\eqref{lemma:specif:funct:op_prop_hilbert_mapping:PmY} \\
   %
@@ -1946,7 +1946,7 @@ terms of the element collections or functionals.
   %
   $\PnX$ identity on $\SPCX_m$ ($\SPCX_m = \NULL(\RmY \circ \OPT)^\perp$) &
   (1) $\SPCX_m = \SPAN(\Theta_{n_0}) = \SPAN(\Phi_{n_0})$
-  (2) $\Theta_{n_0}$ and $\Phi_{n_0}$ bi-orthonormal
+  (2) $\Theta_{n_0}$ and $\Phi_{n_0}$ bi-orthogonal
   $n_0 = \DIM(\SPCX_m)$  &
   \Cref{lemma:specif:funct:op_prop_hilbert_mapping}~\eqref{lemma:specif:funct:op_prop_hilbert_mapping:PnX} \\
   %
@@ -1965,7 +1965,7 @@ terms of the element collections or functionals.
 \label{subsec:specif:interp}
 
 We now consider the special cases where the dictionary $\Phi$ of the extension operator $\EnX$ corresponds to 
-interpolation of a certain order. We derive corresponding bi-orthonormal dictionaries $\Theta$ and give approximation 
+interpolation of a certain order. We derive corresponding bi-orthogonal dictionaries $\Theta$ and give approximation 
 formulas for the restriction operator $\RnX$. Orthogonality is established with respect to the $L^2$ scalar product
 %
 \begin{equation*}
@@ -2042,7 +2042,7 @@ Hence, $\BDG_\Phi = \DIAG\big( \bar h_i \big)_{i=1,\dots,n}$, and the dictionary
  \theta_i \DEFEQ \big( \bar h_i \big)^{-1}\, \phi_i
 \end{equation*}
 %
-is the unique dictionary bi-orthonormal to $\Phi$ with the same linear span. The functional 
+is the unique dictionary bi-orthogonal to $\Phi$ with the same linear span. The functional 
 $\INNERIN{L^2}{}{\theta_i}$ is approximated as
 %
 \begin{align*}
@@ -2129,7 +2129,7 @@ As far as the operator $\RnX$ is concerned, we write
  &\hspace{10pt} \sum_{j=2}^{n-1} \bar h_j \theta_i(x_j) f(x_j).
 \end{align*}
 %
-The function values $\theta_i(x_j)$ for a bi-orthonormal dictionary $\Theta$ can be calculated with the 
+The function values $\theta_i(x_j)$ for a bi-orthogonal dictionary $\Theta$ can be calculated with the 
 relation
 %
 \begin{equation*}
@@ -2225,7 +2225,7 @@ The Gramian is the tridiagonal matrix $\BDG_\Phi = h/70\cdot\TRIDIAG(9, 52, 9)$.
 \subsubsection{Sinc dictionary}
 \label{subsubsec:specif:interp:sinc}
 
-Let $\SPCX$ be the space of $a/2$-bandlimited functions with $a > 0$, \ie, 
+Let $\SPCX$ be the space of $a$-bandlimited functions with $a > 0$, \ie, 
 %
 \begin{equation*}
  \SPCX \DEFEQ L^2_a(\RR) \DEFEQ \SET[\big]{f \in L^2(\RR) \GIVEN \SUPP(\FT(f)) \subset \CINTERV{-a}{a}}.
