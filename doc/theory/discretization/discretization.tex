@@ -24,8 +24,8 @@
 }
 
 \usepackage{acro}
-\usepackage{extraenv}
 \usepackage{cleveref}
+\usepackage{extraenv}
 \usepackage{todonotes}
 \usepackage{float}
 \usepackage{tabularx}
@@ -46,8 +46,9 @@
 
 \newcommand*{\LINOP}[2]{{L(#1, #2)}}
 \newcommand*{\BLINOP}[2]{{\SPCL(#1, #2)}}
+\newcommand*{\LEBES}[2]{\ensuremath{L^{#1}\left( #2 \right)}}
 
-\newcommand{\FIELD}{{\ensuremath{\mathbb{F}}}}
+\newcommand*{\FIELD}{{\ensuremath{\mathbb{F}}}}
 \newcommand*{\Fn}{{\ensuremath{\FIELD^n}}}
 \newcommand*{\Fm}{{\ensuremath{\FIELD^m}}}
 \newcommand*{\Fk}{{\ensuremath{\FIELD^k}}}
@@ -63,6 +64,7 @@
 
 % Operators
 \newcommand*{\OP}[1]{{\ensuremath{\mathcal{#1}}}}
+\newcommand*{\OPM}{\OP{M}}
 \newcommand*{\OPP}{\OP{P}}
 \newcommand*{\OPT}{\OP{T}}
 \newcommand*{\OPU}{\OP{U}}
@@ -79,22 +81,25 @@
 \newcommand*{\COPROJ}[2]{\ensuremath{Q_{#1}^{#2}}}
 \newcommand*{\RnX}{{\ensuremath{\REST{n}{\SPC{X}}}}}
 \newcommand*{\RmX}{{\ensuremath{\REST{m}{\SPC{X}}}}}
+\newcommand*{\RnY}{{\ensuremath{\REST{n}{\SPC{Y}}}}}
 \newcommand*{\RmY}{{\ensuremath{\REST{m}{\SPC{Y}}}}}
 \newcommand*{\EnX}{{\ensuremath{\EXT{n}{\SPC{X}}}}}
 \newcommand*{\EmX}{{\ensuremath{\EXT{m}{\SPC{X}}}}}
+\newcommand*{\EnY}{{\ensuremath{\EXT{n}{\SPC{Y}}}}}
 \newcommand*{\EmY}{{\ensuremath{\EXT{m}{\SPC{Y}}}}}
 \newcommand*{\PnX}{{\ensuremath{\PROJ{n}{\SPCX}}}}
 \newcommand*{\PmY}{{\ensuremath{\PROJ{m}{\SPCY}}}}
 \newcommand*{\QnX}{{\ensuremath{\COPROJ{n}{\SPCX}}}}
 \newcommand*{\QmY}{{\ensuremath{\COPROJ{m}{\SPCY}}}}
+\newcommand*{\FT}{\OP{F}}
 
 
 
 % Discretization
-\newcommand*{\DISCR}[2]{{\ensuremath{\mathfrak{D}_{#2}(#1)}}}
-\newcommand*{\DISCRnX}{\DISCR{X}{n}}
-\newcommand*{\DISCRmY}{\DISCR{Y}{m}}
-\newcommand*{\DISCRkZ}{\DISCR{Z}{k}}
+\newcommand*{\DISCR}[2]{{\ensuremath{\mathfrak{D}_{#1}(#2)}}}
+\newcommand*{\DISCRnX}{\DISCR{n}{X}}
+\newcommand*{\DISCRmY}{\DISCR{m}{Y}}
+\newcommand*{\DISCRkZ}{\DISCR{k}{Z}}
 
 
 % Useful math delimiter macros using mathtools
@@ -109,6 +114,13 @@
 % can be useful to refer to this outside \SET
 \newcommand{\SETSYMBOL}[1][]{\nonscript\:#1\vert\nonscript\:\mathopen{}\allowbreak}
 \DeclarePairedDelimiterX{\SET}[1]{\lbrace}{\rbrace}{\renewcommand \GIVEN{\SETSYMBOL[\delimsize]} #1 }
+
+% INTERVALS: (C)losed, (O)pen, (R)ight-open or (L)eft-open
+\DeclarePairedDelimiterX{\CINTERV}[2]{[}{]}{{#1},{#2}}
+\DeclarePairedDelimiterX{\OINTERV}[2]{(}{)}{{#1},{#2}}
+\DeclarePairedDelimiterX{\RINTERV}[2]{[}{)}{{#1},{#2}}
+\DeclarePairedDelimiterX{\LINTERV}[2]{(}{]}{{#1},{#2}}
+
 
 % ABS, NORM, INNER etc.
 % Empty arguments are replaced with \cdot, i.e., \NORM{} is equivalent to \NORM{\:\cdot\:}
@@ -148,55 +160,58 @@
 
 
 % Sets and properties
-\DeclareMathOperator{\RANK}{rank}
-\DeclareMathOperator{\RANGE}{range}
-\DeclareMathOperator{\NULL}{N}
-\DeclareMathOperator{\SPAN}{span}
-\DeclareMathOperator{\DIM}{dim}
-\DeclareMathOperator{\DIAG}{diag}
+\DeclareMathOperator{\RANK}{{rank}}
+\DeclareMathOperator{\RANGE}{{ran}}
+\DeclareMathOperator{\DOMAIN}{{dom}}
+\DeclareMathOperator{\NULL}{{N}}
+\DeclareMathOperator{\SPAN}{{span}}
+\DeclareMathOperator{\SUPP}{{supp}}
+\DeclareMathOperator{\SINC}{{sinc}}
+\DeclareMathOperator{\DIM}{{dim}}
+\DeclareMathOperator{\DIAG}{{diag}}
+\DeclareMathOperator{\TRIDIAG}{{tridiag}}
 \DeclareMathOperator{\SHOULDEQ}{{\,\stackrel{!}{=}\,}}
 \DeclareMathOperator{\DEFEQ}{{\coloneqq}}
 \DeclareMathOperator{\EQDEF}{{\eqqcolon}}
 
 
 % Misc useful stuff
+\newcommand*{\CCONJ}[1]{{\ensuremath{\overline{#1}}}}
 \DeclareMathOperator{\ID}{Id}
 \newcommand*{\FUNCRESTR}[2]{{\ensuremath{\left. \vphantom{g_{g_g}} {#1} \right|_{#2}}}}
-\newcommand*{\STACK}[2]{\genfrac{}{}{0pt}{1}{#1}{#2}}
-\newcommand*{\INNERbig}[2]{\ensuremath{\big\langle #1,\,#2\big\rangle}}
-\newcommand*{\INNERBig}[2]{\ensuremath{\Big\langle #1,\,#2\Big\rangle}}
-\newcommand*{\INNERbigg}[2]{\ensuremath{\bigg\langle #1,\,#2\bigg\rangle}}
-\newcommand*{\INNERLR}[2]{\ensuremath{\left\langle #1,\,#2\right\rangle}}
-\newcommand*{\D}[0]{\ensuremath{\mathrm{d}}}
 \newcommand*{\TRANSP}[1]{{\ensuremath{#1^{\mathrm{T}}}}}
 \newcommand*{\HERM}[1]{{\ensuremath{#1^{\mathrm{H}}}}}
-\newcommand*{\IDX}[2]{{\ensuremath{{#2}^{(#1)}}}}
+\newcommand*{\I}{\ensuremath{\mathit{i}}}
+\newcommand*{\STACK}[2]{{\ensuremath{\genfrac{}{}{0pt}{0}{#1}{#2}}}}
+\newcommand*{\STACKSS}[2]{{\ensuremath{\genfrac{}{}{0pt}{1}{#1}{#2}}}}
+\newcommand*{\STACKSSS}[2]{{\ensuremath{\genfrac{}{}{0pt}{2}{#1}{#2}}}}
+\newcommand*{\D}{{\ensuremath{\mathrm{d}}}}
 
 
-\newcommand{\ie}{\textsl{i.e.}\xspace}
-\newcommand{\cf}{\textsl{cf.}\xspace}
-\newcommand{\eg}{\textsl{e.g.}\xspace}
-\newcommand{\etc}{\textsl{e.t.c.}\xspace}
-\newcommand{\wrt}{{w.r.t.}\@\xspace}
+\newcommand*{\ie}{\textsl{i.e.}\xspace}
+\newcommand*{\cf}{\textsl{cf.}\xspace}
+\newcommand*{\eg}{\textsl{e.g.}\xspace}
+\newcommand*{\etc}{\textsl{e.t.c.}\xspace}
+\newcommand*{\wrt}{{w.r.t.}\@\xspace}
 
 
-\newcommand{\vzero}{\boldsymbol{0}}
-\newcommand{\ve}{\boldsymbol{e}}
-\newcommand{\vf}{\boldsymbol{f}}
-\newcommand{\vg}{\boldsymbol{g}}
-\newcommand{\valpha}{\boldsymbol{\alpha}}
-\newcommand{\vbeta}{\boldsymbol{\beta}}
-\newcommand{\vnu}{\boldsymbol{\nu}}
-\newcommand{\vA}{\boldsymbol{A}}
-\newcommand{\vB}{\boldsymbol{B}}
-\newcommand{\vD}{\boldsymbol{D}}
-\newcommand{\vG}{\boldsymbol{G}}
-\newcommand{\vI}{\boldsymbol{I}}
-\newcommand{\vU}{\boldsymbol{U}}
-\newcommand{\vV}{\boldsymbol{V}}
-\newcommand{\vSigma}{\boldsymbol{\Sigma}}
+\newcommand*{\BDZERO}{\boldsymbol{0}}
+\newcommand*{\BDe}{\boldsymbol{e}}
+\newcommand*{\BDf}{\boldsymbol{f}}
+\newcommand*{\BDg}{\boldsymbol{g}}
+\newcommand*{\BDalpha}{\boldsymbol{\alpha}}
+\newcommand*{\BDbeta}{\boldsymbol{\beta}}
+\newcommand*{\BDnu}{\boldsymbol{\nu}}
+\newcommand*{\BDA}{\boldsymbol{A}}
+\newcommand*{\BDB}{\boldsymbol{B}}
+\newcommand*{\BDD}{\boldsymbol{D}}
+\newcommand*{\BDF}{\boldsymbol{F}}
+\newcommand*{\BDG}{\boldsymbol{G}}
+\newcommand*{\BDI}{\boldsymbol{I}}
+\newcommand*{\BDU}{\boldsymbol{U}}
+\newcommand*{\BDV}{\boldsymbol{V}}
+\newcommand*{\BDSigma}{\boldsymbol{\Sigma}}
 
-\newcommand{\cF}{\mathcal{F}}
 
 \newcommand*{\NOTE}[2][\null]{%
   \marginpar{\renewcommand{\baselinestretch}{1}\vspace{-1em}\hrule\vspace{3pt}%
@@ -204,8 +219,6 @@
   {\em #1}\fi}\vspace{1.5em}}%
 }
 
-\newcommand{\ext}{\text{ext}}
-\newcommand{\wt}[1]{\widetilde{#1}}
 
 \crefname{equation}{}{}
 \Crefname{equation}{}{}
@@ -267,7 +280,7 @@ with finitely many unknowns:
 %
 \begin{equation}
  \label{eq:intro:discr_operator_eq}
- \text{Given $\vbeta \in \Fm$, find $\valpha \in \Fn$ such that }\quad \DISCOPT_{n,m} (\valpha)=\vbeta. 
+ \text{Given $\BDbeta \in \Fm$, find $\BDalpha \in \Fn$ such that }\quad \DISCOPT_{n,m} (\BDalpha)=\BDbeta. 
 \end{equation}
 %
 The above process of replacing \cref{eq:intro:operator_eq} with \cref{eq:intro:discr_operator_eq} is referred to 
@@ -317,6 +330,7 @@ reduction and extension operators.
 necessarily  projections in the strict sense).
 \end{definition}
 
+
 \begin{examp}
  We begin with considering the case where $\SPCX$ is an $n$-dimensional vector space over $\FIELD$. Then $\SPCX$ is 
  isomorphic to $\Fn$, so we may choose $\EnX \DEFEQ \RnX\DEFEQ \OPID$. The resulting discretization 
@@ -324,23 +338,6 @@ necessarily  projections in the strict sense).
  the \emph{identity discretization}. 
 \end{examp}
 
-\begin{examp}
- Another common discretization for an $n$-dimensional vector space $\SPCX$ is to consider a basis 
- $B\DEFEQ \SET{\psi_1,\dots, \psi_{n}}$ of $\SPCX$. Any element $f \in \SPCX$ can then be written as 
- $f = \sum_{i=1}^n \alpha_i \psi_i$ for unique $\valpha(f) = (\alpha_1, \dots, \alpha_{n})\in\Fn$, so we define
- %
- \begin{equation*}
-  \RnX(f) \DEFEQ  \valpha(f) \quad \text{and} \quad \EnX(\beta) \DEFEQ  \sum_{i=1}^n \beta_i \psi_i. 
- \end{equation*}
- %
- The resulting discretization $( \SPCX, \Fn, \RnX, \EnX )$ is called the \emph{standard discretization \wrt 
- the basis $B$}. The projection operators are given by
- %
- \begin{equation*}
-  \PnX(f) \DEFEQ  \sum_{i=1}^n \valpha_i(f)\, \psi_i \quad \text{and} \quad \QnX(\beta) \DEFEQ  \vbeta
- \end{equation*}
-
-\end{examp}
 
 \begin{examp}
  A common way to discretize a (possibly infinite-dimensional) vector space $\SPCX$ is as follows. Let 
@@ -351,7 +348,7 @@ necessarily  projections in the strict sense).
  \begin{equation*}
   \RnX(f) \DEFEQ  \big( \lambda_1(f), \dots, \lambda_n(f) \big) 
   \quad \text{and} \quad
-  \EnX(\valpha) \DEFEQ  \sum_{i=1}^n \alpha_i\, \psi_i.
+  \EnX(\BDalpha) \DEFEQ  \sum_{i=1}^n \alpha_i\, \psi_i.
  \end{equation*}
  %
  The corresponding projection operators are
@@ -359,7 +356,7 @@ necessarily  projections in the strict sense).
  \begin{equation*}
   \PnX(f) \DEFEQ  \sum_{i=1}^n \lambda_i(f)\, \psi_i
   \quad \text{and} \quad
-  \EnX(\valpha) \DEFEQ  \bigg( \sum_{j=1}^n \alpha_j\, \lambda_i(\psi_j) \bigg)_{i=1}^n.
+  \EnX(\BDalpha) \DEFEQ  \bigg( \sum_{j=1}^n \alpha_j\, \lambda_i(\psi_j) \bigg)_{i=1}^n.
  \end{equation*}
 
 \end{examp}
@@ -375,16 +372,16 @@ discretization on the aforementioned new vector space.
 \begin{definition}
  \label{def:discr:space:prod:prod_space_discr}
  Let $\SPCX_i$ for $i=1,\dots,k$ be vector spaces over $\FIELD$ with $n_i$-dimensional discretizations 
- $\DISCR{\SPCX_i}{n_i}$ given as
+ $\DISCR{n_i}{\SPCX_i}$ given as
  %
  \begin{equation*}
-  \DISCR{\SPCX_i}{n_i} \DEFEQ  \bigl( \SPCX_i, \FIELD^{n_i}, \REST{n_i}{\SPCX_i}, \EXT{n_i}{\SPCX_i} \bigr). 
+  \DISCR{n_i}{\SPCX_i} \DEFEQ  \bigl( \SPCX_i, \FIELD^{n_i}, \REST{n_i}{\SPCX_i}, \EXT{n_i}{\SPCX_i} \bigr). 
  \end{equation*}
  %
  Then the \emph{product discretization of $\SPCX \DEFEQ  \SPCX_1 \times \dots \times \SPCX_k$} is defined as 
  %
  \begin{equation*}
-  \DISCR{\SPCX}{N} \DEFEQ \{\SPCX, \FIELD^N, \REST{N}{\SPCX}, \EXT{N}{\SPCX} \}
+  \DISCR{N}{\SPCX} \DEFEQ \{\SPCX, \FIELD^N, \REST{N}{\SPCX}, \EXT{N}{\SPCX} \}
  \end{equation*}
  %
  with $N \DEFEQ  n_1 + \dots + n_k$, where
@@ -392,9 +389,9 @@ discretization on the aforementioned new vector space.
  \begin{align*}
   \REST{N}{\SPCX}(f_1,\dots,f_k) &\DEFEQ  \bigl( \REST{n_1}{\SPCX_1}(f_1),\dots,\REST{n_k}{\SPCX_k}(f_k) \bigr)
   \quad\text{for $f_i\in \SPCX_i$, $i=1,\dots,k$} \\
-  \EXT{N}{\SPCX}(f_1,\dots,f_k) &\DEFEQ  \bigl( \EXT{n_1}{\SPCX_1}(\valpha_1),\dots,\EXT{n_k}{\SPCX_k}(\valpha_k) 
+  \EXT{N}{\SPCX}(f_1,\dots,f_k) &\DEFEQ  \bigl( \EXT{n_1}{\SPCX_1}(\BDalpha_1),\dots,\EXT{n_k}{\SPCX_k}(\BDalpha_k) 
   \bigr)
-  \quad\text{for $\valpha_i\in \FIELD^{n_i}$, $i=1,\dots,k$.}
+  \quad\text{for $\BDalpha_i\in \FIELD^{n_i}$, $i=1,\dots,k$.}
  \end{align*}
 \end{definition}
 
@@ -434,7 +431,7 @@ linear operators from $\SPCX$ to $\SPCY$.
  given by
  %
  \begin{equation*}
-  \DISCR{\SPCL}{m\times n} = \left( \SPCL, \Fmxn, \REST{m\times n}{\SPCL}, \EXT{m\times n}{\SPCL}
+  \DISCR{m\times n}{\SPCL} = \left( \SPCL, \Fmxn, \REST{m\times n}{\SPCL}, \EXT{m\times n}{\SPCL}
   \right)
  \end{equation*}
  %
@@ -509,8 +506,8 @@ natural discretization of the $k$'th derivative similar to the natural operator 
  The notation $(\EnX)^{k+1}$ stands for the $(k+1)$-tuple $(\EnX, \dots, \EnX)$, i.e., 
  %
  \begin{equation*}
-  \partial^k \OPT \circ (\EnX)^{k+1}(\valpha; \vbeta_1, \dots, \vbeta_k) \DEFEQ 
- \partial^k \OPT\big( \EnX(\valpha); \EnX(\vbeta_1), \dots, \EnX(\vbeta_k) \big).
+  \partial^k \OPT \circ (\EnX)^{k+1}(\BDalpha; \BDbeta_1, \dots, \BDbeta_k) \DEFEQ 
+ \partial^k \OPT\big( \EnX(\BDalpha); \EnX(\BDbeta_1), \dots, \EnX(\BDbeta_k) \big).
  \end{equation*}
 \end{definition}
 
@@ -535,30 +532,30 @@ fact the Fr\'{e}chet derivative of the natural operator discretization.
  We prove the claim for $k=1$ since the statement for $k=0$ is trivial, and higher order derivatives follow by 
  induction.\\
  %
- For $\valpha,\vbeta \in \Fn$, it is
+ For $\BDalpha,\BDbeta \in \Fn$, it is
  %
  \begin{equation*}
-  \DISCOPT(\valpha + \vbeta) = \RmY \circ \OPT \circ \EnX (\alpha + \beta).
+  \DISCOPT(\BDalpha + \BDbeta) = \RmY \circ \OPT \circ \EnX (\alpha + \beta).
  \end{equation*}
  %
  From the definition of $\partial \OPT$ it follows that
  %
  \begin{align*}
-  \OPT\big(\EnX(\valpha + \vbeta)\big)
-  &= \OPT\big(\EnX(\valpha)\big) + \partial\OPT\big(\EnX(\valpha)\big)\big(\EnX(\vbeta)\big) +
-  o\big(\NORMINX[\big]{\EnX(\vbeta)}\big) \\
-  &= \OPT \circ \EnX(\valpha) + \partial\OPT\circ (\EnX)^2\,(\valpha; \vbeta) + o\big(\NORMINFn{\vbeta} \big)
+  \OPT\big(\EnX(\BDalpha + \BDbeta)\big)
+  &= \OPT\big(\EnX(\BDalpha)\big) + \partial\OPT\big(\EnX(\BDalpha)\big)\big(\EnX(\BDbeta)\big) +
+  o\big(\NORMINX[\big]{\EnX(\BDbeta)}\big) \\
+  &= \OPT \circ \EnX(\BDalpha) + \partial\OPT\circ (\EnX)^2\,(\BDalpha; \BDbeta) + o\big(\NORMINFn{\BDbeta} \big)
  \end{align*}
  %
- for $\NORMINFn{\vbeta} \to 0$ since $\EnX$ is a bounded operator. By composing from left with the bounded operator 
+ for $\NORMINFn{\BDbeta} \to 0$ since $\EnX$ is a bounded operator. By composing from left with the bounded operator 
  $\RmY$, one gets
  %
  \begin{align*}
-  \DISCOPT(\valpha + \vbeta)
-  &= \RmY \circ \OPT \circ \EnX(\valpha) + \RmY \circ \partial\OPT\circ (\EnX)^2\,(\valpha)(\vbeta) +
-  o\big(\NORMINFn{\vbeta} \big) 
+  \DISCOPT(\BDalpha + \BDbeta)
+  &= \RmY \circ \OPT \circ \EnX(\BDalpha) + \RmY \circ \partial\OPT\circ (\EnX)^2\,(\BDalpha)(\BDbeta) +
+  o\big(\NORMINFn{\BDbeta} \big) 
   \\
-  &= \DISCOPT(\alpha) + \RmY \circ \partial\OPT\circ (\EnX)^2\,(\valpha)(\vbeta) + o\big(\NORMINFn{\vbeta} \big),
+  &= \DISCOPT(\alpha) + \RmY \circ \partial\OPT\circ (\EnX)^2\,(\BDalpha)(\BDbeta) + o\big(\NORMINFn{\BDbeta} \big),
  \end{align*}
  %
  hence $\partial\DISCOPT$ is by definition given by the second term.
@@ -647,7 +644,7 @@ discretization of an operator composition relates to the composition of the sing
  \end{equation*}
  %
  if either the operator $\PmY = \EmY \circ \RmY$ is the identity on the range of $\OPT \circ \EnX$ or if for each 
- $\vnu \in \Fk$, the preimage $(\REST{k}{\SPCZ} \circ \OPU)^{-1}(\{\vnu\})$ is invariant under 
+ $\BDnu \in \Fk$, the preimage $(\REST{k}{\SPCZ} \circ \OPU)^{-1}(\{\BDnu\})$ is invariant under 
  $\PmY$.
 \end{lemma}
 \vspace{1em}
@@ -734,7 +731,7 @@ discretizations as summarized in \Cref{tab:discr:summary:def_summary}.
   \noalign{\smallskip} \hline \noalign{\smallskip}
   %
   %
-  Product space            & $\DISCR{\SPCX}{N} = (\SPCX, \FIELD^N, \REST{N}{\SPCX}, \EXT{N}{\SPCX})$          & 
+  Product space            & $\DISCR{N}{\SPCX} = (\SPCX, \FIELD^N, \REST{N}{\SPCX}, \EXT{N}{\SPCX})$          & 
   \Cref{def:discr:space:prod:prod_space_discr}                                                                        \\
   $\SPCX = \bigotimes_{i=1}^k \SPCX_i$ & $N = \sum_{i=1}^k n_i$                                                  &\\
                            & $\REST{N}{\SPCX} = \big( \REST{n_1}{\SPCX_1}, \dots, \REST{n_k}{\SPCX_k} \big)$  &\\
@@ -752,7 +749,7 @@ discretizations as summarized in \Cref{tab:discr:summary:def_summary}.
   \noalign{\smallskip} \hline \noalign{\smallskip}
   %
   %
-  Vector space of         & $\DISCR{\SPCL}{m\times n} = (\SPCL, \Fmxn, \REST{m\times n}{\SPCL},
+  Vector space of         & $\DISCR{m\times n}{\SPCL} = (\SPCL, \Fmxn, \REST{m\times n}{\SPCL},
   \EXT{m\times n}{\SPCL})$ & \Cref{def:discr:operator:linop_space:linop_space_discr}                                \\
   linear operators        & $\Fmxn \simeq L(\Fn, \Fm)$                                        &\\
   $\SPCL = \LINOP{\SPCX}{\SPCY}$ & $\REST{m\times n}{\SPCL}(\OPT) = \RmY \circ \OPT \circ \EnX$               &\\
@@ -808,8 +805,8 @@ specifically in special cases, see \Cref{sec:specif}.
  
  \begin{enumerate}[(a)]
   \item \label{lemma:prop:corresp:natural_op_discr_corresp:a_general}
-  $\DISCOPT$ and $\OPT$ exactly correspond to each other if and only if (1) for each $\vbeta \in \Fm$, the 
-  preimage $(\RmY \circ \OPT)^{-1}(\{\vbeta\})$ is invariant under $\PnX$ and (2) $\PmY$ is the identity operator on 
+  $\DISCOPT$ and $\OPT$ exactly correspond to each other if and only if (1) for each $\BDbeta \in \Fm$, the 
+  preimage $(\RmY \circ \OPT)^{-1}(\{\BDbeta\})$ is invariant under $\PnX$ and (2) $\PmY$ is the identity operator on 
   the range of $\OPT \circ \EnX$.
 
   \item \label{lemma:prop:corresp:natural_op_discr_corresp:b_hilbert_linear}
@@ -838,9 +835,9 @@ specifically in special cases, see \Cref{sec:specif}.
    \EmY \circ \DISCOPT = \PmY \circ \OPT \circ \EnX.
   \end{equation*}
   %
-  Let now $\vbeta \in \Fm$ be arbitrary and $A \DEFEQ  (\RmY \circ \OPT)^{-1}(\{\vbeta\})$ be its preimage.
+  Let now $\BDbeta \in \Fm$ be arbitrary and $A \DEFEQ  (\RmY \circ \OPT)^{-1}(\{\BDbeta\})$ be its preimage.
   To show the ``if'' part, we observe that for each $f \in A$, it is $\PnX(f) \in A$ since $A$ is invariant under 
-  $\PnX$. Hence, $\RmY \circ \OPT \big( \PnX(f) \big) = \vbeta$. This shows 
+  $\PnX$. Hence, $\RmY \circ \OPT \big( \PnX(f) \big) = \BDbeta$. This shows 
   $\RmY \circ \OPT \circ \PnX = \RmY \circ \OPT$, i.e. the first condition 
   in \Cref{def:discr:corresp:operator_compat}~\eqref{def:discr:corresp:operator_compat:a_exact} is fulfilled.\\
   %
@@ -850,20 +847,20 @@ specifically in special cases, see \Cref{sec:specif}.
   the proof.\\
   %
   For the ``only if'' part, we assume that there is $f \in A$ with $\PnX(f) \not\in A$. By definition, this means 
-  $\RmY \circ \OPT \big( \PnX(f) \big) \neq \vbeta$, which violates the condition
-  $\vbeta = \RmY \circ \OPT (f) = \RmY \circ \OPT \circ \PnX (f)$. Hence, $A$ must be invariant under $\PnX$.\\
+  $\RmY \circ \OPT \big( \PnX(f) \big) \neq \BDbeta$, which violates the condition
+  $\BDbeta = \RmY \circ \OPT (f) = \RmY \circ \OPT \circ \PnX (f)$. Hence, $A$ must be invariant under $\PnX$.\\
   %
-  Apparently, $\PmY \circ \OPT \circ \EnX = \OPT \circ \EnX$ means that for each $g = \OPT \circ \EnX(\valpha)$, 
+  Apparently, $\PmY \circ \OPT \circ \EnX = \OPT \circ \EnX$ means that for each $g = \OPT \circ \EnX(\BDalpha)$, 
   it holds $\PmY(g) = g$, i.e. $\PmY$ is the identity on the range of $\OPT \circ \EnX$.
 
   \item To prove \eqref{lemma:prop:corresp:natural_op_discr_corresp:b_hilbert_linear}, we first observe that 
-  $\NULL(\RmY \circ \OPT) = (\RmY \circ \OPT)^{-1}(\{\vzero\})$. Further, since $\SPCX$ is a Hilbert space 
+  $\NULL(\RmY \circ \OPT) = (\RmY \circ \OPT)^{-1}(\{\BDZERO\})$. Further, since $\SPCX$ is a Hilbert space 
   and $\RmY \circ \OPT$ linear and bounded, each $f \in \SPCX$ can be uniquely decomposed into 
   $f = f_0 + \tilde f$ with  $f_0 \in \NULL(\RmY \circ \OPT)$ and 
-  $\tilde f \in \NULL(\RmY \circ \OPT)^\perp$. Hence, for each $\vbeta \in \Fm$,
+  $\tilde f \in \NULL(\RmY \circ \OPT)^\perp$. Hence, for each $\BDbeta \in \Fm$,
   %
   \begin{equation*}
-   (\RmY \circ \OPT)^{-1}({\vbeta}) = \tilde f + \NULL(\RmY \circ \OPT)
+   (\RmY \circ \OPT)^{-1}({\BDbeta}) = \tilde f + \NULL(\RmY \circ \OPT)
   \end{equation*}
   %
   for a unique $\tilde f \in \NULL(\RmY \circ \OPT)^\perp$. Thus, the conditions on $\PnX$ in 
@@ -909,24 +906,24 @@ each other.
   \end{equation*}
   %
   with natural discretization $\DISCOPT = \RnX \circ \OPT \circ (\OPID, \OPID, \EnX, \EnX)$.
-  Hence, for $\lambda, \mu \in \FIELD$ and $\valpha, \vbeta \in \Fn$, it is
+  Hence, for $\lambda, \mu \in \FIELD$ and $\BDalpha, \BDbeta \in \Fn$, it is
   %
   \begin{align*}
-   \DISCOPT(\lambda, \mu, \valpha, \vbeta) 
-   &= \RnX \circ \OPT \big( \lambda, \mu, \EnX(\valpha), \EnX(\vbeta) \big)\\
-   &= \RnX \big( \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta) \big) \\ 
-   &= \RnX \circ \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta).
+   \DISCOPT(\lambda, \mu, \BDalpha, \BDbeta) 
+   &= \RnX \circ \OPT \big( \lambda, \mu, \EnX(\BDalpha), \EnX(\BDbeta) \big)\\
+   &= \RnX \big( \lambda \cdot \EnX(\BDalpha) + \mu \cdot \EnX(\BDbeta) \big) \\ 
+   &= \RnX \circ \EnX(\lambda \cdot \BDalpha + \mu \cdot \BDbeta).
   \end{align*}
   %
-  This expression is equal to $\lambda \cdot \valpha + \mu \cdot \vbeta$ for all $\lambda, \mu \in \FIELD$ and all 
-  $\valpha, \vbeta \in \Fn$ if and only if $\RnX \circ \EnX = \OPID$.
+  This expression is equal to $\lambda \cdot \BDalpha + \mu \cdot \BDbeta$ for all $\lambda, \mu \in \FIELD$ and all 
+  $\BDalpha, \BDbeta \in \Fn$ if and only if $\RnX \circ \EnX = \OPID$.
 
   \item The conditions for exact correspondence according to \Cref{def:discr:corresp:operator_compat} can be 
   rephrased as
   %
   \begin{align*}
    \RnX(\lambda \cdot f + \mu \cdot g) &= \lambda \cdot \RnX(f) + \mu \cdot \RnX(g), \\
-   \EnX(\lambda \cdot \valpha + \mu \cdot \vbeta) &= \lambda \cdot \EnX(\valpha) + \mu \cdot \EnX(\vbeta),
+   \EnX(\lambda \cdot \BDalpha + \mu \cdot \BDbeta) &= \lambda \cdot \EnX(\BDalpha) + \mu \cdot \EnX(\BDbeta),
   \end{align*}
   %
   and are fulfilled due to the linearity of $\RnX$ and $\EnX$.
@@ -936,7 +933,7 @@ each other.
 \begin{remark}
  \label{remark:prop:lincomb:natural_linop_space}
  In the vector space $\SPCL \DEFEQ  \BLINOP{\SPCX}{\SPCY}$ with given discretizations in $\SPCX$ and $\SPCY$, the 
- natural restriction and extension operators of the discretization $\DISCR{\SPCL}{m\times n}$ are given by
+ natural restriction and extension operators of the discretization $\DISCR{m\times n}{\SPCL}$ are given by
  %
  \begin{equation*}
   \REST{m\times n}{\SPCL}(\OPT) = \RmY \circ \OPT \circ \EnX
@@ -955,7 +952,7 @@ each other.
   &= \QmY \circ \DISCOPT \circ \QnX.
  \end{align*}
  %
- Thus, if $\QnX = \OPID$ and $\QmY = \OPID$, the operator space discretization $\DISCR{\SPCL}{m\times n}$ 
+ Thus, if $\QnX = \OPID$ and $\QmY = \OPID$, the operator space discretization $\DISCR{m\times n}{\SPCL}$ 
  automatically fulfills the condition $\COPROJ{m\times n}{\SPCL} = \OPID$ needed for the natural discretization of 
  the linear combination.
 \end{remark}
@@ -1011,7 +1008,7 @@ We now consider the setting when $\SPCX$ is a normed vector space, including the
   \DISCOPT \colon \Fn \to \RR \quad \text{with} \quad \DISCOPT = \OPID \circ \OPT \circ \EnX,
  \end{equation*}
  %
- \ie, $\DISCOPT(\valpha) = \NORMINX*{\EnX(\valpha)}$. This proves the claim in 
+ \ie, $\DISCOPT(\BDalpha) = \NORMINX*{\EnX(\BDalpha)}$. This proves the claim in 
  \eqref{lemma:prop:norm:natural_corresp:a_natural}.\\
  %
  The conditions for correspondence read as
@@ -1027,7 +1024,7 @@ We now consider the setting when $\SPCX$ is a normed vector space, including the
 
 \begin{remark}
  The proof additionally shows that the natural norm discretization fulfills
- $\DISCOPT(\valpha) \leq \NORM{\EnX}\, \NORMINFn{\valpha}$, i.e. the discretized norm can be bounded from above 
+ $\DISCOPT(\BDalpha) \leq \NORM{\EnX}\, \NORMINFn{\BDalpha}$, i.e. the discretized norm can be bounded from above 
  with the given norm in $\Fn$.
 \end{remark}
 
@@ -1041,7 +1038,7 @@ $\DISCOPT \in \SPCL(\Fn, \Fm) \simeq \Fmxn$ are defined as
 \begin{equation*}
  \NORMIN{\SPCL}{\OPT} \DEFEQ  \sup_{\NORMINX{f} \leq 1} \NORMINY*{\OPT(f)}
  \quad \text{and} \quad
- \NORMIN{m\times n}{\DISCOPT} \DEFEQ  \sup_{\NORMINFn{\valpha} \leq 1} \NORMINFn*{\DISCOPT(\valpha)}.
+ \NORMIN{m\times n}{\DISCOPT} \DEFEQ  \sup_{\NORMINFn{\BDalpha} \leq 1} \NORMINFn*{\DISCOPT(\BDalpha)}.
 \end{equation*}
 %
 The following Lemma shows how operator and matrix norms relate to each other under discretization.
@@ -1052,7 +1049,7 @@ The following Lemma shows how operator and matrix norms relate to each other und
  Let $\SPCX$ and $\SPCY$ be normed vector spaces with linear discretizations $\DISCRnX$ and 
  $\DISCRmY$, respectively. Let further $\REST{m\times n}{\SPCL}(\OPT)$ and 
  $\EXT{m\times n}{\SPCL}(\DISCOPT)$ be the natural restriction and extension operators in 
- $\DISCR{\SPCL}{m\times n}$ as given in \Cref{def:discr:operator:linop_space:linop_space_discr}.
+ $\DISCR{m\times n}{\SPCL}$ as given in \Cref{def:discr:operator:linop_space:linop_space_discr}.
  %
  \begin{enumerate}[(a)]
   \item \label{lemma:prop:norm:op_norm_est:a_rest}
@@ -1081,16 +1078,16 @@ The following Lemma shows how operator and matrix norms relate to each other und
   \item For $\OPT \in \SPCL$ and $\DISCOPT = \REST{m\times n}{\SPCL}(\OPT)$ we have
   %
   \begin{equation*}
-   \NORMINFm*{\DISCOPT(\valpha)} = \NORMINFm*{\RmY \left( \OPT\big( \EnX(\valpha) \big) \right)}
-   \leq \NORMINY*{\OPT\big( \EnX(\valpha) \big)}
+   \NORMINFm*{\DISCOPT(\BDalpha)} = \NORMINFm*{\RmY \left( \OPT\big( \EnX(\BDalpha) \big) \right)}
+   \leq \NORMINY*{\OPT\big( \EnX(\BDalpha) \big)}
   \end{equation*}
   %
   since $\NORM{\RmY} \leq 1$. Furthermore, $\EnX$ maps the unit ball in $\Fn$ to a subset of the unit ball in
   $\SPCX$ since $\NORM{\EnX} \leq 1$. Hence,
   %
   \begin{equation*}
-   \sup_{\NORMINFn{\valpha} \leq 1} \NORMINY*{\OPT\big( \EnX(\valpha) \big)}
-   = \sup_{\substack{f=\EnX(\valpha)\\ \NORMINFn{\valpha} \leq 1}} \NORMINY*{\OPT(f)}
+   \sup_{\NORMINFn{\BDalpha} \leq 1} \NORMINY*{\OPT\big( \EnX(\BDalpha) \big)}
+   = \sup_{\substack{f=\EnX(\BDalpha)\\ \NORMINFn{\BDalpha} \leq 1}} \NORMINY*{\OPT(f)}
    \leq \sup_{\NORMINX{f} \leq 1} \NORMINY*{\OPT(f)},
   \end{equation*}
   %
@@ -1108,8 +1105,8 @@ The following Lemma shows how operator and matrix norms relate to each other und
   %
   \begin{equation*}
    \sup_{\NORMINX{f} \leq 1} \NORMINFm{\DISCOPT\big( \RnX(f) \big)}
-   = \sup_{\STACK{\valpha=\RnX(f)}{\NORMINX{f} \leq 1}} \NORMINFm{\DISCOPT(\valpha)}
-   \leq \sup_{\NORMINFn{\valpha} \leq 1} \NORMINFm{\DISCOPT(\valpha)},
+   = \sup_{\STACKSS{\BDalpha=\RnX(f)}{\NORMINX{f} \leq 1}} \NORMINFm{\DISCOPT(\BDalpha)}
+   \leq \sup_{\NORMINFn{\BDalpha} \leq 1} \NORMINFm{\DISCOPT(\BDalpha)},
   \end{equation*}
   %
   \ie, $\NORM*{E_{m\times n}^{\SPCL}(\DISCOPT)} \leq \NORM{\DISCOPT}$.\\[1em]
@@ -1174,20 +1171,20 @@ Now we consider inner product spaces and analyze their behavior under discretiza
   The natural discretization of this operator is given by $\DISCOPT = \OPID \circ \OPT \circ (\EnX, \EnX)$, \ie,
   %
   \begin{align*}
-   \DISCOPT(\valpha, \vbeta) 
-   &= \OPT\big( \EnX(\valpha), \EnX(\vbeta) \big) 
-   = \INNERINX[\big]{\EnX(\valpha)}{\EnX(\vbeta)} \\
-   &= \INNERINFn[\big]{(\EnX)^* \circ \EnX(\valpha)}{\vbeta}.
+   \DISCOPT(\BDalpha, \BDbeta) 
+   &= \OPT\big( \EnX(\BDalpha), \EnX(\BDbeta) \big) 
+   = \INNERINX[\big]{\EnX(\BDalpha)}{\EnX(\BDbeta)} \\
+   &= \INNERINFn[\big]{(\EnX)^* \circ \EnX(\BDalpha)}{\BDbeta}.
   \end{align*}
   %
-  Apparently, this expression is equal to $\INNERINFn{\valpha}{\vbeta}$ if and only if $\EnX$ is unitary.
+  Apparently, this expression is equal to $\INNERINFn{\BDalpha}{\BDbeta}$ if and only if $\EnX$ is unitary.
 
   \item The conditions for exact correspondence can be written as
   %
   \begin{equation*}
    \INNERINX{f}{g} = \INNERINFn[\big]{\RnX(f)}{\RnX(g)}
    \quad \text{and} \quad
-   \INNERINFn{\valpha}{\vbeta} = \INNERINX[\big]{\EnX(\valpha)}{\EnX(\vbeta)},
+   \INNERINFn{\BDalpha}{\BDbeta} = \INNERINX[\big]{\EnX(\BDalpha)}{\EnX(\BDbeta)},
   \end{equation*}
   %
   which is equivalent to the conditions in the claim.
@@ -1298,7 +1295,7 @@ see \Cref{def:discr:space:space_discr}.%
 %
 \noindent
 \Cref{tab:prop:summary:natural_summary} shows the results regarding the equality of natural discretizations and known 
-operations in the discretized spaces, and \Cref{tab:prop:summary:exaxt_corresp_summary} is an overview of the results 
+operations in the discretized spaces, and \Cref{tab:prop:summary:exact_corresp_summary} is an overview of the results 
 on exact correspondence.
 \newpage
 %
@@ -1372,7 +1369,7 @@ on exact correspondence.
   %
   \noalign{\smallskip} \hline \noalign{\smallskip}
  \caption{Summary of the conditions for exact correspondence in different situations as analyzed in \Cref{sec:prop}}
- \label{tab:prop:summary:exaxt_corresp_summary}
+ \label{tab:prop:summary:exact_corresp_summary}
 \end{longtable}
 \renewcommand{\arraystretch}{1.0}
 
@@ -1398,19 +1395,21 @@ $\lambda_i \colon \SPCX \to \FIELD$. With those we define the restriction mappin
  \RnX \colon \SPCX \to \Fn \quad \text{as} \quad \RnX(f) \DEFEQ  \big( \lambda_i(f) \big)_{i=1}^n.
 \end{equation*}
 %
-Let further $\Phi=\{\phi_1, \dots, \phi_n\} \subset \SPCX$ be a set of elements (a \emph{dictionary}) in $\SPCX$. We 
+Let further $\Phi=\SET{\phi_1, \dots, \phi_n} \subset \SPCX$ be a set of elements (a \emph{dictionary}) 
+in 
+$\SPCX$. We 
 define the extension operator
 %
 \begin{equation*}
- \EnX \colon \Fn \to \SPCX \quad \text{as} \quad \EnX(\valpha) \DEFEQ  \sum_{i=1}^n \overline{\alpha_i}\, \phi_i.
+ \EnX \colon \Fn \to \SPCX \quad \text{as} \quad \EnX(\BDalpha) \DEFEQ  \sum_{i=1}^n \alpha_i\, \phi_i.
 \end{equation*}
 %
 The corresponding projection operators are then given by
 %
 \begin{equation*}
- \PnX(f) \DEFEQ  \sum_{i=1}^n \overline{\lambda_i(f)}\, \phi_i
+ \PnX(f) \DEFEQ  \sum_{i=1}^n \lambda_i(f)\, \phi_i
  \quad \text{and} \quad
- \left[ \QnX \right]_{i,j} \DEFEQ  \overline{\lambda_i(\phi_j)},\quad i,j=1,\dots,n.
+ \left[ \QnX \right]_{i,j} \DEFEQ  \lambda_i(\phi_j),\quad i,j=1,\dots,n.
 \end{equation*}
 %
 For these specific operators, we can rephrase some of the properties arising as conditions in \Cref{sec:discr,sec:prop} 
@@ -1422,7 +1421,7 @@ Hilbert spaces.
  \label{lemma:specif:funct:op_prop_vecspace}
  \begin{enumerate}[(a)]
   \item \label{lemma:specif:funct:op_prop_vecspace:Q_identity}
-  $\QnX = \vI$ if and only if $\lambda_i(\phi_j) = \delta_{i,j},\ i,j=1,\dots,n$.
+  $\QnX = \BDI$ if and only if $\lambda_i(\phi_j) = \delta_{i,j},\ i,j=1,\dots,n$.
   
   \item \label{lemma:specif:funct:op_prop_vecspace:R_surjective}
   $\RnX$ is surjective if and only if $\Lambda$ is linearly independent.
@@ -1455,7 +1454,7 @@ Hilbert spaces.
   mappings $\lambda_i$ are bounded (\emph{functionals}).
   %
   \item \label{lemma:specif:funct:op_prop_normedspace:E_bounded}
-  $\NORMINX*{\EnX(\valpha)} \leq C_1\, \max_i \NORMINX{\phi_i}\, \NORMINFn{\valpha}$, hence $\EnX$ is bounded.
+  $\NORMINX*{\EnX(\BDalpha)} \leq C_1\, \max_i \NORMINX{\phi_i}\, \NORMINFn{\BDalpha}$, hence $\EnX$ is bounded.
  \end{enumerate}
 \end{lemma}
 \vspace{1em}
@@ -1476,60 +1475,65 @@ Hilbert spaces.
   \item For the operator $\EnX$, we use the triangle inequality and the norm equivalence to get
   %
   \begin{align*}
-   \NORMINX{\EnX(\valpha)} 
-   &= \NORMINX[\bigg]{\sum_{i=1}^n \alpha_i\, \phi_i} \leq \sum_{i=1}^n \ABS{\alpha_i}\, \NORMINX{\phi_i} \\
-   &\leq \max_i \NORMINX{\phi_i}\, \NORMIN{\mathrm{M}}{\valpha} \leq C_1\, \max_i \NORMINX{\phi_i}\, 
-   \NORMINFn{\valpha}.
+   \NORMINX{\EnX(\BDalpha)} 
+   &= \NORMINX[\bigg]{\sum_{i=1}^n \alpha_i\, \phi_i} \leq \sum_{i=1}^n \ABS{\alpha_i}\, \NORMINX{\phi_i} 
+\\
+   &\leq \max_i \NORMINX{\phi_i}\, \NORMIN{\mathrm{M}}{\BDalpha} \leq C_1\, \max_i \NORMINX{\phi_i}\, 
+   \NORMINFn{\BDalpha}.
   \end{align*}
  \end{enumerate}
 \end{proof}
 
-
 \begin{lemma}
  \label{lemma:specif:funct:op_prop_hilbert}
- Let $\SPCX$ and $\Fn$ be Hilbert spaces. Let further $\vA \in \Fnxn$ be the Hermitian positive 
+ Let $\SPCX$ and $\Fn$ be Hilbert spaces. Let further $\BDA \in \Fnxn$ be the Hermitian positive 
  definite matrix defining the inner product in $\Fn$, \ie,
  %
  \begin{equation*}
-  \INNERINFn{\valpha}{\vbeta} \EQDEF \HERM{\valpha} \vA \vbeta
+  \INNERINFn{\BDalpha}{\BDbeta} \EQDEF \HERM{\BDbeta} \BDA \BDalpha
  \end{equation*}
  %
- with $\HERM{\valpha} \DEFEQ  \TRANSP{\overline{\valpha}}$. The norms in $\SPCX$ and $\Fn$ be defined via 
+ with $\HERM{\BDalpha} \DEFEQ  \TRANSP{\CCONJ{\BDalpha}}$. The norms in $\SPCX$ and $\Fn$ be defined via 
  the respective inner products. Let further $\Theta \subset \SPCX$ be the Riesz representants of the functionals 
- $\lambda_i$ in the sense that $\lambda_i = \INNERINX{\theta_i}{},\ i=1,\dots,n$.
+ $\lambda_i$ in the sense that
+ \begin{equation*}
+  \lambda_i = \INNERINX{}{\theta_i}
+  \quad \text{for} \quad 
+  i=1,\dots,n.
+ \end{equation*}
  %
  \begin{enumerate}[(a)]
   \item \label{lemma:specif:funct:op_prop_hilbert:Q_identity}
   $\QnX$ is the identity if and only if the sets $\Theta$ and $\Phi$ are bi-orthonormal, \ie, 
-  $\INNERINX{\theta_i}{\phi_j} = \delta_{i,j}$.
+  $\INNERINX{\phi_i}{\theta_j} = \delta_{i,j}$.
  
   \item \label{lemma:specif:funct:op_prop_hilbert:R_adjoint_repr}
   The adjoint operators $(\RnX)^*$ and $(\EnX)^*$ have the representations
   %
   \begin{equation*}
-   (\RnX)^*(\valpha) = \sum_{i=1}^n (\HERM{\valpha}\vA)_i\, \theta_i
+   (\RnX)^*(\BDalpha) = \sum_{i=1}^n (\BDA \BDalpha)_i\, \theta_i
    \quad \text{and} \quad
-   (\EnX)^(f) = \vA^{-1} \bar f
+   (\EnX)^*(f) = \BDA^{-1} \BDbeta(f)
   \end{equation*}
   %
-  with $\bar f = \big( \INNERINX{\phi_i}{f} \big)_{i=1,\dots,n}$.
+  with $\BDbeta(f) \DEFEQ \big( \INNERINX{f}{\phi_i} \big)_{i=1,\dots,n}$.
   
   \item \label{lemma:specif:funct:op_prop_hilbert:R_E_adjoint_relation}
-  It is $(\RnX)^* = \EnX$ if and only if $\vA$ is the change-of-basis matrix from $\Theta$ to $\Phi$, \ie,
+  It is $(\RnX)^* = \EnX$ if and only if $\TRANSP{\BDA}$ is the change-of-basis matrix from $\Theta$ to $\Phi$, \ie,
   %
   \begin{equation*}
-   \phi_i = \sum_{j=1}^n A_{i,j}\, \theta_j.
+   \phi_j = \sum_{i=1}^n A_{i,j}\, \theta_i, \quad j=1,\dots,n.
   \end{equation*}
   %
   This implies in particular that the linear spans of $\Theta$ and $\Phi$ are identical.
  
   \item  \label{lemma:specif:funct:op_prop_hilbert:E_isometry}
-  $\EnX$ is an isometry if and only if $\Phi$ is linearly independent and $\vA$ is the Gramian matrix $\vG_\Phi$ 
-  defined by $(G_\Phi)_{i,j} \DEFEQ  \INNERINX{\phi_i}{\phi_j},\ i,j=1,\dots,n$.
+  $\EnX$ is an isometry if and only if $\Phi$ is linearly independent and $\TRANSP{\BDA}$ is the Gramian matrix 
+  $\BDG_\Phi$ defined by $(G_\Phi)_{i,j} \DEFEQ  \INNERINX{\phi_i}{\phi_j}$.
   
   \item \label{lemma:specif:funct:op_prop_hilbert:R_isometry}
-  $\RnX$ is an isometry if and only if $\DIM(\SPCX) = n$, $\Theta$ is linearly independent and $\vA$ is the 
-  inverse of the Gramian matrix $\vG_\Theta$.
+  $\RnX$ is an isometry if and only if $\DIM(\SPCX) = n$, $\Theta$ is linearly independent and $\BDA$ is the 
+  inverse of the Gramian matrix $\BDG_\Theta$.
  \end{enumerate}
 \end{lemma}
 \vspace{1em}
@@ -1542,82 +1546,45 @@ Hilbert spaces.
   \item To find a representation for the $(\RnX)^*$, we calculate
   %
   \begin{align*}
-   \INNERINFn[\big]{\RnX(f)}{\valpha} 
-   &= \HERM{\RnX(f)} \vA \valpha = \sum_{i,j=1}^n \INNERINX{f}{\theta_i}\, A_{i,j}\, \alpha_j
-   = \INNERINX[\bigg]{f}{\sum_{i,j=1}^n \overline{A_{i,j}}\, \overline{\alpha_j}\, \theta_i} \\
-   &= \INNERINX[\bigg]{f}{\sum_{i,j=1}^n \overline{\alpha_j}\, A_{j,i}\, \theta_i} 
-   = \INNERINX[\bigg]{f}{\sum_{i=1}^n (\HERM{\valpha} \vA)_i\, \theta_i},
+   \INNERINFn[\big]{\RnX(f)}{\BDalpha} 
+   &= \HERM{\BDalpha} \BDA \RnX(f)
+   = \sum_{i,j=1}^n \CCONJ{\alpha_i}\, A_{i,j}\, \INNERINX{f}{\theta_j} 
+   = \INNERINX[\bigg]{f}{\sum_{i,j=1}^n A_{j,i}\, \alpha_i\, \theta_j} \\
+   &= \INNERINX[\bigg]{f}{\sum_{j=1}^n (\BDA \BDalpha)_j\, \theta_j},
   \end{align*}
   %
   from which the first claim follows. Likewise, it is
   %
   \begin{equation*}
-   \INNERINX[\big]{\EnX(\valpha)}{f}
-   = \sum_{i=1}^n \overline{\alpha_i}\, \INNERINX{\phi_i}{f}
-   = \HERM{\valpha} \bar f
-   = \INNERINFn[\big]{\valpha}{\vA^{-1} \bar f},
+   \INNERINX[\big]{\EnX(\BDalpha)}{f}
+   = \sum_{i=1}^n \alpha_i\, \INNERINX{\phi_i}{f}
+   = \HERM{\BDbeta(f)} \BDalpha
+   = \INNERINFn[\big]{\BDalpha}{\BDA^{-1} \BDbeta(f)},
   \end{equation*}
   %
   and the adjoint of $\EnX$ can be read off this identity.
 
-  \item For each $\valpha \in \Fn$, we require $\EnX(\valpha) = (\RnX)^*(\valpha)$, \ie,
-  %
-  \begin{equation}
-   \label{eq:funct:op_prop_hilbert:adjoint_relation:cond}
-   \tag{{$\ast$}}
-   \sum_{i=1}^n \overline{\alpha_i}\, \phi_i = \sum_{i,j=1}^n \overline{\alpha_j} A_{j,i}\, \theta_i.
-  \end{equation}
-  %
-  If $\phi_i = \sum_{j=1}^n A_{i,j}\, \theta_j$, we see immediately that
+  \item For each $f \in \SPCX$, we require $\RnX(f) = (\EnX)^*(f)$, \ie,
   %
   \begin{equation*}
-   \sum_{i=1}^n \overline{\alpha_i}\, \phi_i = \sum_{i,j=1}^n \overline{\alpha_i}\, A_{i,j}\, \theta_j,
+   \BDbeta(f) = \BDA \RnX(f) 
+   \quad \Leftrightarrow \quad
+   \INNERINX{f}{\phi_i} = \sum_{j=1}^n A_{i,j}\, \INNERINX{f}{\theta_j}
+   = \INNERINX[\bigg]{f}{\sum_{j=1}^n A_{j,i} \theta_j},
   \end{equation*}
   %
-  thus the operators are equal as required. To prove the converse, we now assume $\EnX = (\RnX)^*$ and show that 
-  $\Phi$ and $\Theta$ fulfill the claimed relation. First, we apply the functionals 
-  $\mu_k \DEFEQ  \INNERINX{\phi_k}{},\ k=1,\dots,n$, to both sides of 
-  \eqref{eq:funct:op_prop_hilbert:adjoint_relation:cond}, yielding
-  %
-  \begin{equation*}
-   \sum_{i=1}^n \alpha_i \INNERINX{\phi_k}{\phi_i} = \sum_{i,j=1}^n \alpha_i\, A_{j,i}\, \INNERINX{\phi_k}{\theta_j},
-  \end{equation*}
-  %
-  or equivalently $\vG_{\Phi} = \vG_{\Phi,\Theta} \vA$ with the (Gramian) matrices
-  %
-  \begin{equation*}
-   (\vG_{\Phi})_{i,j} \DEFEQ  \INNERINX{\phi_i}{\phi_j}
-   \quad \text{and} \quad
-   (\vG_{\Phi, \Theta})_{i,j} \DEFEQ  \INNERINX{\phi_i}{\theta_j}.
-  \end{equation*}
-  %
-  Likewise, by applying $\nu_k \DEFEQ  \INNERINX{\theta_k}{}$ to both sides of 
-  \eqref{eq:funct:op_prop_hilbert:adjoint_relation:cond}, we get
-  %
-  \begin{equation*}
-   \sum_{i=1}^n \alpha_i \INNERINX{\theta_k}{\phi_i} = \sum_{i,j=1}^n \alpha_i\, A_{j,i}\, 
-   \INNERINX{\theta_k}{\theta_j},
-  \end{equation*}
-  %
-  \ie, $\vG_{\Theta,\Phi} = \vG_\Theta \vA$ with $\vG_{\Theta,\Phi} = \HERM{\vG_{\Phi,\Theta}}$. Combining both matrix 
-  equations results in
-  %
-  \begin{equation*}
-   \vG_{\Phi} = \vG_{\Phi,\Theta} \vA = \HERM{\vA} \HERM{\vG_\Theta} \vA = \vA \vG_\Theta \vA
-  \end{equation*}
-  %
-  since $\vA$ and $\vG_\Theta$ are Hermitian by definition. This transformation equality between the Gramians of the 
-  systems $\Phi$ and $\Theta$ implies the claimed relation.
+  which implies the claimed relation.
   
   \item It is
   %
   \begin{equation*}
-   \NORMINX*{\EnX(\valpha)}^2 = \NORMINX[\Big]{\sum_{i=1}^n \alpha_i\, \phi_i}^2 = 
-   \sum_{i,j=1}^n \alpha_i\, \overline{\alpha_j}\, \INNERINX{\phi_i}{\phi_j} = \HERM{\valpha} \vG_\Phi \valpha.
+   \NORMINX*{\EnX(\BDalpha)}^2 = \NORMINX[\Big]{\sum_{i=1}^n \alpha_i\, \phi_i}^2 = 
+   \sum_{i,j=1}^n \alpha_i\, \CCONJ{\alpha_j}\, \INNERINX{\phi_i}{\phi_j} 
+   = \HERM{\BDalpha} \TRANSP{\BDG_\Phi} \BDalpha.
   \end{equation*}
   %
-  The Gramian matrix $\vG_\Phi$ is nonsingular and thus defines an inner product if and only if $\Phi$ is linearly 
-  independent. Since bilinear forms are uniquely determined by their diagonals, this proves 
+  The Gramian matrix transpose $\TRANSP{\BDG_\Phi}$ is nonsingular and thus defines an inner product if and only if 
+  $\Phi$ is linearly independent. Since bilinear forms are uniquely determined by their diagonals, this proves 
   \eqref{lemma:specif:funct:op_prop_hilbert:E_isometry}.
   
   \item As a linear operator with finite-dimensional range, $\RnX$ is compact and thus has a singular value 
@@ -1639,35 +1606,38 @@ Hilbert spaces.
   representation of $\RnX$ to $\theta_j$, we have
   %
   \begin{equation*}
-   \big[ \RnX(\theta_j) \big]_i = \INNERINX{\theta_i}{\theta_j} = \sum_{k=1}^n \INNERINX{\theta_j}{v_k}\, 
-   u_{i,k},
+   \big[ \RnX(\theta_i) \big]_j = \INNERINX{\theta_i}{\theta_j} = \sum_{k=1}^n 
+   \INNERINX{\theta_i}{v_k}\, u_{k,j},
   \end{equation*}
   %
-  which reads as $\vG_\Theta = \vU \HERM{\vG_{\Theta,V}}$ with 
-  $(G_{\Theta,V})_{i,j} \DEFEQ  \INNERINX{\theta_i}{v_j}$. Likewise, applying $\RnX$ to $v_j$ yields
+  which reads as $\BDG_\Theta = \BDG_{\Theta,V} \BDU$ with 
+  $(G_{\Theta,V})_{i,j} \DEFEQ  \INNERINX{\theta_i}{v_j}$ and the matrix $\BDU$ consisting of the singular   
+  vectors $u_k$ as rows. Likewise, applying $\RnX$ to $v_i$ yields
   %
   \begin{equation*}
-   \big[ \RnX(v_j) \big]_i = \INNERINX{\theta_i}{v_j} = u_{i,j},
+   \big[ \RnX(v_i) \big]_j = \INNERINX{v_i}{\theta_j} = u_{i,j},
   \end{equation*}
   %
-  \ie, $\vU = \vG_{\Theta,V}$. On the other hand, the unit norm property of the vectors $u_k$ can be written in matrix 
-  form as $\vU \vA \HERM{\vU} = \HERM{\vU} \vA \vU = \vI$. Combining these properties results in
+  \ie, $\BDU = \BDG_{V,\Theta}$. On the other hand, the unit norm 
+  property of the vectors $u_k$ can be written in matrix form as $\BDU \BDA \HERM{\BDU} = \BDI$. Combining these 
+properties   results in
   %
   \begin{equation*}
-   \vG_\Theta \vA \vG_\Theta = \vG_{\Theta,V} \HERM{\vG_{\Theta,V}} \vA \vG_{\Theta,V} \HERM{\vG_{\Theta,V}}
-   = \vG_{\Theta,V} \HERM{\vG_{\Theta,V}} = \vG_\Theta,
+   \BDG_{\Theta,V} = \BDG_{\Theta,V} \BDU \BDA \HERM{\BDU} = \BDG_\Theta \BDA \HERM{\BDU}
+   = \BDG_\Theta \BDA \HERM{\BDG_{V,\Theta}} = \BDG_\Theta \BDA \BDG_{\Theta, V},
   \end{equation*}
   %
-  and thus $\vA = \vG_\Theta^{-1}$.
+  which shows that $\BDA = \BDG_\Theta^{-1}$ since $\BDG_{\Theta,V}$ is non-singular.
+  \todo{Check if this is correct! Actually one would expect $\TRANSP{\BDA}$.}
  \end{enumerate}
 \end{proof}
 
 
 \begin{corollary}
  \label{coroll:specif:funct:op_prop_hilbert_R_E_adjoint_relation}
- Under the conditions of \Cref{lemma:specif:funct:op_prop_hilbert}, $\EnX$ is equal to $(\RnX)^*$ and 
- an isometry -- and thereby also $\RnX$ -- if and only if $\vA = \vG_\Phi$ with bi-orthonormal dictionaries $\Phi$ and 
- $\Theta$ which span the same space.
+ If the conditions of \Cref{lemma:specif:funct:op_prop_hilbert} hold and $\BDG_\Phi$ is a real matrix, $\EnX$ is equal 
+ to $(\RnX)^*$ and an isometry -- and thereby also $\RnX$ -- if and only if $\TRANSP{\BDA} = \BDG_\Phi$ with 
+ bi-orthonormal dictionaries  $\Phi$ and $\Theta$ which span the same space.
 \end{corollary}
 \vspace{1em}
 
@@ -1675,18 +1645,18 @@ Hilbert spaces.
 \begin{proof}
  For the ``only if'' part, we apply \Cref{lemma:specif:funct:op_prop_hilbert}
  \eqref{lemma:specif:funct:op_prop_hilbert:R_E_adjoint_relation}--\eqref{lemma:specif:funct:op_prop_hilbert:R_isometry},
- to see that $\vA = \vG_\Phi$, \ie,
+ to see that $\BDA = \TRANSP{\BDA} = \BDG_\Phi$, \ie,
  %
  \begin{equation*}
-  \phi_i = \sum_{i=1}^n \INNERINX{\phi_i}{\phi_j}\, \theta_j.
+  \phi_j = \sum_{i=1}^n \INNERINX{\phi_j}{\phi_i}\, \theta_i.
  \end{equation*}
  %
- On the other hand, $\vG_\Phi \vG_\Theta = \vI$, hence by applying $\INNERINX{}{\theta_k}$ to the identity 
- for $\phi_i$ we get
+ On the other hand, $\BDG_\Phi \BDG_\Theta = \BDI$, hence by applying $\INNERINX{}{\theta_k}$ to the identity 
+ for $\phi_j$ we get
  %
  \begin{equation*}
-  \INNERINX{\phi_i}{\theta_k} 
-  = \sum_{i=1}^n \INNERINX{\phi_i}{\phi_j}\, \INNERINX{\theta_j}{\theta_k} = \delta_{i,k},
+  \INNERINX{\phi_j}{\theta_k} 
+  = \sum_{i=1}^n \INNERINX{\phi_j}{\phi_i}\, \INNERINX{\theta_i}{\theta_k} = \delta_{j,k},
  \end{equation*}
  %
  which shows that $\Phi$ and $\Theta$ are bi-orthonormal.\\
@@ -1701,24 +1671,25 @@ Hilbert spaces.
  with coefficients $\alpha_{i,j} \in \FIELD$. Applying the functional $\INNERINX{}{\theta_k}$ yields
  %
  \begin{equation*}
-  \delta_{i,k} = \INNERINX{\phi_i}{\theta_k} = \sum_{j=1}^n \alpha_{i,j}\, \INNERINX{\theta_j}{\theta_k},
+  \delta_{i,k} = \INNERINX{\phi_i}{\theta_k} = \sum_{j=1}^n \alpha_{i,j}\, 
+\INNERINX{\theta_j}{\theta_k},
  \end{equation*}
  %
- which shows that the $\vG_\Theta^{-1} = \vG_\Phi$ is the change-of-basis matrix from $\Theta$ to $\Phi$. Thus, the
+ which shows that the $\BDG_\Theta^{-1} = \BDG_\Phi$ is the change-of-basis matrix from $\Theta$ to $\Phi$. Thus, the
  proof is complete.
 \end{proof}
 
 
 Now we investigate the conditions for the compatibility of operator discretizations. Let $\SPCX, \SPCY$ be Hilbert 
 spaces with discretizations $\DISCRnX$ and $\DISCRmY$, respectively. The inner products in 
-$\Fn$ and $\Fm$ be represented by Hermitian positive definite matrices $\vA \in \Fnxn$ and $\vB 
+$\Fn$ and $\Fm$ be represented by Hermitian positive definite matrices $\BDA \in \Fnxn$ and $\BDB 
 \in \Fmxm$, respectively. 
 Let further the operators $\RnX$ and $\EnX$ be defined as above, and let
 %
 \begin{equation*}
  \RmY(g) \DEFEQ  \big( \INNERINY{\xi_j}{g} \big)_{j=1}^m
  \quad \text{and} \quad
- \EmY(\vbeta) \DEFEQ  \sum_{j=1}^m \overline{\beta_j}\, \psi_j
+ \EmY(\BDbeta) \DEFEQ  \sum_{j=1}^m \CCONJ{\beta_j}\, \psi_j
 \end{equation*}
 %
 with linearly independent systems $\Xi$ and $\Psi$.
@@ -1744,43 +1715,43 @@ with linearly independent systems $\Xi$ and $\Psi$.
   %
   \renewcommand{\arraystretch}{1.1}
   \begin{equation*}
-   \vG_{\Xi, \Psi} =
+   \BDG_{\Xi, \Psi} =
    %
    \left(
    \begin{array}{c|c}
-    \vI_{m_0} & \vzero \\[2pt]
+    \BDI_{m_0} & \BDZERO \\[2pt]
     \hline
-    \vzero & \boldsymbol{\ast}
+    \BDZERO & \boldsymbol{\ast}
    \end{array}
    \right),
    %
    \quad
    %
-   \vG_\Xi =
+   \BDG_\Xi =
    %
    \left(
    \begin{array}{c|c}
-    \vG_{\Xi_{m_0}} & \vzero \\[2pt]
+    \BDG_{\Xi_{m_0}} & \BDZERO \\[2pt]
     \hline
-    \vzero & \boldsymbol{\ast}
+    \BDZERO & \boldsymbol{\ast}
    \end{array}
    \right),
    %
    \quad
    %
-   \vG_\Psi =
+   \BDG_\Psi =
    %
    \left(
    \begin{array}{c|c}
-    \vG_{\Psi_{m_0}} & \vzero \\[2pt]
+    \BDG_{\Psi_{m_0}} & \BDZERO \\[2pt]
     \hline
-    \vzero & \boldsymbol{\ast}
+    \BDZERO & \boldsymbol{\ast}
    \end{array}
    \right)
   \end{equation*}
   \renewcommand{\arraystretch}{1.0}
   %
-  for the Gramian matrices, where additionally $\vG_{\Xi_{m_0}} = \vG_{\Psi_{m_0}}^{-1}$. 
+  for the Gramian matrices, where additionally $\BDG_{\Xi_{m_0}} = \BDG_{\Psi_{m_0}}^{-1}$. 
 
   \item \label{lemma:specif:funct:op_prop_hilbert_mapping:PnX}
   Let $\SPCX_m \DEFEQ  \NULL(\RmY \circ \OPT)^\perp$ and $n_0 \DEFEQ  \DIM(\SPCX_m)$. $\PnX$ is the identity on   
@@ -1829,11 +1800,13 @@ with linearly independent systems $\Xi$ and $\Psi$.
    \SPAN\SET{ \xi_j \GIVEN j\leq m_0 } = \SPAN\SET{ \psi_j \GIVEN j\leq m_0 } = \SPCY_n.
   \end{equation*}
   %
-  This implies that $\SET{ \xi_j \GIVEN j > m_0 }$ and $\SET{ \psi_j \GIVEN j > m_0 }$ are perpendicular to the sets 
+  This implies that $\SET{ \xi_j \GIVEN j > m_0 }$ and $\SET{ \psi_j \GIVEN j > m_0 }$ are perpendicular 
+to the sets 
   above, \ie,
   %
   \begin{equation*}
-   \INNERINY{\xi_j}{\xi_k} = \INNERINY{\psi_j}{\psi_k} = \INNERINY{\xi_j}{\psi_k} = 0
+   \INNERINY{\xi_j}{\xi_k} = \INNERINY{\psi_j}{\psi_k} = 
+\INNERINY{\xi_j}{\psi_k} = 0
   \end{equation*}
   %
   for $k \leq m_0 < j$ or $j \leq m_0 < k$. On the other hand, by applying $\INNERINY{}{\xi_k}$ to 
@@ -1843,12 +1816,14 @@ with linearly independent systems $\Xi$ and $\Psi$.
   \begin{equation*}
    \INNERINY{\OPT(\phi_i)}{\xi_k}
    = \sum_{j=1}^m \INNERINY[\big]{\OPT(\phi_i)}{\xi_j}\, \INNERINY{\psi_j}{\xi_k}
-   = \INNERINY[\bigg]{\OPT(\phi_i)}{\underbrace{\sum_{j=1}^{m_0} \INNERINY{\xi_k}{\psi_j}\, \xi_j}_{\in \SPCY_n}},
+   = \INNERINY[\bigg]{\OPT(\phi_i)}{\underbrace{\sum_{j=1}^{m_0} \INNERINY{\xi_k}{\psi_j}\, 
+\xi_j}_{\in \SPCY_n}},
   \end{equation*}
   %
   and thus $\xi_k = \sum_{j=1}^{m_0} \, \xi_j$. The linear independence of $\Xi$ 
   immediately yields $\INNERINY{\xi_k}{\psi_j} = \delta_{k,j}$ for $k,j \leq m_0$. If we now apply
-  $\INNERINY{}{\psi_k}$ to \eqref{lemma:specif:funct:op_prop_hilbert_mapping:PmY:proof_ident}, it follows analogously 
+  $\INNERINY{}{\psi_k}$ to \eqref{lemma:specif:funct:op_prop_hilbert_mapping:PmY:proof_ident}, it follows 
+analogously 
   that
   %
   \begin{equation*}
@@ -1932,11 +1907,11 @@ terms of the element collections or functionals.
   %
   %
   $(\RnX)^* = \EnX$ &
-  $\vA$ change-of-basis matrix from $\Theta$ to $\Phi$, equivalently: &
+  $\TRANSP{\BDA}$ change-of-basis matrix from $\Theta$ to $\Phi$, equivalently: &
   \Cref{lemma:specif:funct:op_prop_hilbert}~\eqref{lemma:specif:funct:op_prop_hilbert:R_E_adjoint_relation} \\[0.5em]
   %
   &
-  $\Theta$, $\Phi$ bi-orthonormal with identical spans and $\vA = \vG_\Phi$ &
+  $\Theta$, $\Phi$ bi-orthonormal with identical spans and $\TRANSP{\BDA} = \BDG_\Phi$ &
   \Cref{coroll:specif:funct:op_prop_hilbert_R_E_adjoint_relation} \\
   %
   %
@@ -1944,7 +1919,7 @@ terms of the element collections or functionals.
   %
   %
   $\EnX$ isometry &
-  $\Phi$ linearly independent and $\vA = \vG_\Phi$  &
+  $\Phi$ linearly independent and $\TRANSP{\BDA} = \BDG_\Phi$  &
   \Cref{lemma:specif:funct:op_prop_hilbert}~\eqref{lemma:specif:funct:op_prop_hilbert:E_isometry} \\
   %
   %
@@ -1952,7 +1927,7 @@ terms of the element collections or functionals.
   %
   %
   $\RnX$ isometry &
-  $\DIM(\SPCX) = n$,  $\Theta$ linearly independent and $\vA = \vG_\Theta^{-1}$  &
+  $\DIM(\SPCX) = n$,  $\Theta$ linearly independent and $\BDA = \BDG_\Theta^{-1}$  &
   \Cref{lemma:specif:funct:op_prop_hilbert}~\eqref{lemma:specif:funct:op_prop_hilbert:R_isometry} \\
   %
   %
@@ -1978,7 +1953,7 @@ terms of the element collections or functionals.
   %
   \noalign{\smallskip} \hline \noalign{\smallskip}%
  \caption{Summary of the results operator properties in \Cref{subsec:specif:funct}}%
- \label{tab:prop:summary:natural_summary}%
+ \label{tab:prop:summary:operator_summary}%
 \end{longtable}%
 \renewcommand{\arraystretch}{1.0}%
 
@@ -1994,25 +1969,48 @@ interpolation of a certain order. We derive corresponding bi-orthonormal diction
 formulas for the restriction operator $\RnX$. Orthogonality is established with respect to the $L^2$ scalar product
 %
 \begin{equation*}
- \INNERIN{L^2}{f}{g} \DEFEQ \int_\RR f(x)\, \overline{g(x)}\, \D x,
+ \INNERIN{L^2}{f}{g} \DEFEQ \int_\RR f(x)\, \CCONJ{g(x)}\, \D x,
 \end{equation*}
 %
 however, the results which make sense in Banach spaces can as be generalized to $L^p$ spaces with $p \neq 2$, where 
-$\INNERIN{L^2}{f}{}$ is a functional for certain $f$. The cases covered here, nearest-neighbor and linear interpolation, 
-can be written as tensor products of one-dimensional interpolation in higher dimensions. Therefore, we cover only the 1D 
+$\INNERIN{L^2}{f}{}$ is a functional for certain $f$. The cases covered here, nearest-neighbor and linear 
+interpolation, 
+can be written as tensor products of one-dimensional interpolation in higher dimensions. Therefore, we cover only the 
+1D 
 case. \\
 %
-Let $\IDX{1}{x} < \IDX{2}{x} < \dots < \IDX{n}{x}$ be a set of nodes in $\RR$. We define the help nodes $\IDX{0}{x}$ 
-and $\IDX{n+1}{x}$ by symmetric continuation, \ie,
+Let $x_1 < x_2 < \dots < x_n$ be a set of nodes in $\RR$. We define the help nodes $x_0$ 
+and $x_{n+1}$ by symmetric continuation, \ie,
 %
 \begin{equation*}
- \IDX{0}{x} \DEFEQ \IDX{1}{x} - (\IDX{2}{x} - \IDX{1}{x}) = 2 \IDX{1}{x} - \IDX{2}{x}
+ x_0 \DEFEQ x_1 - (x_2 - x_1) = 2 x_1 - x_2
  \quad \text{and} \quad
- \IDX{n+1}{x} \DEFEQ  2 \IDX{n}{x} - \IDX{n-1}{x}.
+ x_{n+1} \DEFEQ  2 x_n - x_{n-1}.
 \end{equation*}
 %
-For notational reasons, we further define the distances $\IDX{i}{h} \DEFEQ \IDX{i+1}{x} - \IDX{i}{x}$ for 
-$i=0,\dots,n$.
+For notational reasons, we further define the forward and central distances
+%
+\begin{equation*}
+ h_i \DEFEQ x_{i+1} - x_i
+ \quad\text{and}\quad
+ \bar h_i \DEFEQ \frac{x_{i+1} - x_{i-1}}{2}
+\end{equation*}
+%
+for $i=0,\dots,n$.
+
+\paragraph{Regular grid}
+
+We also give formulas for the special case of a regular grid with spacing $h>0$. For a more convenient notation, we 
+center the grid around a value $x^*\in\RR$ by defining
+%
+\begin{equation*}
+ x_i \DEFEQ x^* + ih,\ i = -\frac{n-1}{2}, \dots, \frac{n-1}{2}.
+\end{equation*}
+%
+Note that for even $n$, the indices are half-integers and $x^*$ is not a node. The forward and central distances are 
+obviously constant and equal to $h$ in this case. A further very common specialization is to center the grid around the 
+origin, \ie, $x^*=0$.
+
 
 
 \subsubsection{Nearest-neighbor interpolation}
@@ -2021,43 +2019,60 @@ $i=0,\dots,n$.
 This type of interpolation is defined by a piecewise constant interpolation basis:
 %
 \begin{equation*}
- \IDX{i}{\phi}(x) \DEFEQ 
+ \phi_i(x) \DEFEQ 
  \begin{cases}
-  1 & \text{if } \IDX{i}{x} - \frac{\IDX{i-1}{h}}{2} \leq x < \IDX{i}{x} + \frac{\IDX{i}{h}}{2}, \\
+  1 & \text{if } x - x_i \in \RINTERV[\big]{- \tfrac{h_{i-1}}{2}}{\frac{h_i}{2}}, \\
   0 & \text{else}.
  \end{cases}
 \end{equation*}
 %
-It is clear that $\INNERIN{L^2}{\IDX{i}{\phi}}{\IDX{j}{\phi}} = 0$ if $i \neq j$ since the supports do not overlap. For 
+It is clear that $\INNERIN{L^2}{\phi_i}{\phi_j} = 0$ if $i \neq j$ since the supports do not overlap. For 
 the diagonal terms, we calculate
 %
 \begin{equation*}
- \int_\RR \ABS*{\IDX{i}{\phi}(x)}^2\, \D x 
- = \int_{\IDX{i}{x} - \frac{\IDX{i-1}{h}}{2}}^{\IDX{i}{x} + \frac{\IDX{i}{h}}{2}} 1\, \D x
- = \frac{\IDX{i-1}{h} + \IDX{i}{h}}{2} = \frac{\IDX{i+1}{x} - \IDX{i-1}{x}}{2}
- \EQDEF \IDX{i}{\bar h}
+ \int_\RR \ABS*{\phi_i(x)}^2\, \D x 
+ = \int_{x_i - \frac{h_{i-1}}{2}}^{x_i + \frac{h_i}{2}} 1\, \D x
+ = \frac{h_{i-1} + h_i}{2} = \frac{x_{i+1} - x_{i-1}}{2}
+ \EQDEF \bar h_i
 \end{equation*}
 %
-Hence, $\vG_\Phi = \DIAG\big( \IDX{i}{\bar h} \big)_{i=1,\dots,n}$, and the dictionary $\Theta$ with
+Hence, $\BDG_\Phi = \DIAG\big( \bar h_i \big)_{i=1,\dots,n}$, and the dictionary $\Theta$ with
 %
 \begin{equation*}
- \IDX{i}{\theta} \DEFEQ \big( \IDX{i}{\bar h} \big)^{-1}\, \IDX{i}{\phi}
+ \theta_i \DEFEQ \big( \bar h_i \big)^{-1}\, \phi_i
 \end{equation*}
 %
 is the unique dictionary bi-orthonormal to $\Phi$ with the same linear span. The functional 
-$\INNERIN{L^2}{\IDX{i}{\theta}}{}$ is approximated as
+$\INNERIN{L^2}{}{\theta_i}$ is approximated as
 %
 \begin{align*}
- \INNERIN{L^2}{\IDX{i}{\theta}}{f}
- &= \big( \IDX{i}{\bar h} \big)^{-1} \int_{\IDX{i}{x} - \frac{\IDX{i-1}{h}}{2}}^{\IDX{i}{x} + 
- \frac{\IDX{i}{h}}{2}} \overline{f(x)}\, \D x \\
- &\approx  \frac{2}{\IDX{i+1}{x} - \IDX{i-1}{x}} \overline{f\big( \IDX{i}{x} \big)} \frac{\IDX{i-1}{h} + \IDX{i}{h}}{2} 
+ \INNERIN{L^2}{f}{\theta_i}
+ &= \big( \bar h_i \big)^{-1} \int_{x_i - \frac{h_{i-1}}{2}}^{x_i + 
+ \frac{h_i}{2}} f(x)\, \D x \\
+ &\approx  \frac{2}{x_{i+1} - x_{i-1}} f\big( x_i \big) \frac{h_{i-1} + h_i}{2} 
  \\
- &= \overline{f\big( \IDX{i}{x} \big)}
+ &= f\big( x_i \big)
 \end{align*}
 %
-by the rectangular (midpoint) integration rule. Thus, the collocation operator at the nodes $\IDX{i}{x}$, applied to 
+by the rectangular (midpoint) integration rule. Thus, the collocation operator at the nodes $x_i$, applied to 
 $\bar f$, is an approximation to the restriction operator $\RnX$.
+
+\paragraph{Regular grid}
+
+For $x_i = x^* + i h$, the functions $\phi_i$ are
+%
+\begin{equation*}
+ \phi_i(x) = \phi\big( h^{-1}(x-x_i) \big)
+ \quad \text{with} \quad
+ \phi(x) \DEFEQ
+ \begin{cases}
+  1 & \text{if } x \in \CINTERV*{-\tfrac{1}{2}}{\tfrac{1}{2}}, \\
+  0 & \text{else},
+ \end{cases}
+\end{equation*}
+%
+and the Gramian simplifies to $\BDG_\Phi = h \BDI$. The bi-orthogonal dictionary is simply $\Theta = h^{-1}\Phi$.
+
 
 
 \subsubsection{Linear interpolation}
@@ -2066,72 +2081,73 @@ $\bar f$, is an approximation to the restriction operator $\RnX$.
 This continuous interpolation type is defined by the piecewise linear functions 
 %
 \begin{equation*}
- \IDX{i}{\phi}(x) \DEFEQ
+ \phi_i(x) \DEFEQ
  \begin{dcases}
-  \frac{x - \IDX{i-1}{x}}{\IDX{i}{x} - \IDX{i-1}{x}} & \text{if } \IDX{i-1}{x} \leq x \leq \IDX{i}{x}, \\
-  \frac{\IDX{i+1}{x} - x}{\IDX{i+1}{x} - \IDX{i}{x}} & \text{if } \IDX{i}{x} \leq x \leq \IDX{i+1}{x}, \\
+  \frac{x - x_{i-1}}{x_i - x_{i-1}} & \text{if } x \in \CINTERV{x_{i-1}}{x_i}, \\
+  \frac{x_{i+1} - x}{x_{i+1} - x_i} & \text{if } x \in \CINTERV{x_i}{x_{i+1}}, \\
   0 & \text{else}.
  \end{dcases}
 \end{equation*}
 %
 To calculate the mutual inner products of the dictionary elements, we observe that 
-$\INNERIN{L^2}{\IDX{i}{\phi}}{\IDX{j}{\phi}} = 0$ if $\ABS{i-j} > 1$. For $j=i+1$, the overlap of the supports is the 
-interval ${[\IDX{i}{x}, \IDX{i+1}{x}]}$, and thus
+$\INNERIN{L^2}{\phi_i}{\phi_j} = 0$ if $\ABS{i-j} > 1$. For $j=i+1$, the overlap of the supports is the 
+interval ${[x_i, x_{i+1}]}$, and thus
 %
 \begin{equation*}
- \INNERIN{L^2}{\IDX{i}{\phi}}{\IDX{i+1}{\phi}}
- = \int_\IDX{i}{x}^\IDX{i+1}{x} \frac{\IDX{i+1}{x} - x}{\IDX{i}{h}} \cdot \frac{x - \IDX{i}{x}}{\IDX{i}{h}}\, \D x
- = \frac{\IDX{i}{h}}{6}.
+ \INNERIN{L^2}{\phi_i}{\phi_{i+1}}
+ = \int_{x_i}^{x_{i+1}} \frac{x_{i+1} - x}{h_i} \cdot \frac{x - x_i}{h_i}\, \D x
+ = \frac{h_i}{6}.
 \end{equation*}
 %
 For $j=i$, we calculate
 %
 \begin{align*}
- \INNERIN{L^2}{\IDX{i}{\phi}}{\IDX{i}{\phi}}
- &= \int_\IDX{i-1}{x}^\IDX{i}{x} \left( \frac{x - \IDX{i-1}{x}}{\IDX{i-1}{h}} \right)^2\, \D x +
- \int_\IDX{i}{x}^\IDX{i+1}{x} \left( \frac{\IDX{i+1}{x} - x}{\IDX{i}{h}} \right)^2\, \D x \\
- &= \frac{\IDX{i-1}{h}}{3} + \frac{\IDX{i}{h}}{3} 
- = \frac{\IDX{i+1}{x} - \IDX{i-1}{x}}{3}
- = \frac{2}{3}\, \IDX{i}{\bar h}.
+ \INNERIN{L^2}{\phi_i}{\phi_i}
+ &= \int_{x_{i-1}}^{x_i} \left( \frac{x - x_{i-1}}{h_{i-1}} \right)^2\, \D x +
+ \int_{x_i}^{x_{i+1}} \left( \frac{x_{i+1} - x}{h_i} \right)^2\, \D x \\
+ &= \frac{h_{i-1}}{3} + \frac{h_i}{3} 
+ = \frac{x_{i+1} - x_{i-1}}{3}
+ = \frac{2}{3}\, \bar h_i.
 \end{align*}
 %
-Hence, $\vG_\Phi$ is a symmetric real tri-diagonal matrix with
+Hence, $\BDG_\Phi$ is a symmetric real tri-diagonal matrix with
 %
 \begin{equation*}
- \INNERIN{L^2}{\IDX{i}{\phi}}{\IDX{i}{\phi}} = \frac{2}{3}\, \IDX{i}{\bar h}
+ \INNERIN{L^2}{\phi_i}{\phi_i} = \frac{2}{3}\, \bar h_i
  \quad \text{and} \quad
- \INNERIN{L^2}{\IDX{i}{\phi}}{\IDX{i+1}{\phi}} = \frac{\IDX{i}{h}}{6}.
+ \INNERIN{L^2}{\phi_i}{\phi_{i+1}} = \frac{h_i}{6}.
 \end{equation*}
 %
 As far as the operator $\RnX$ is concerned, we write
 %
 \begin{align*}
- \INNERIN{L^2}{\IDX{i}{\theta}}{\bar f}
- &= \int_\RR \IDX{i}{\theta}(x)\, f(x)\, \D x \\
+ \INNERIN{L^2}{f}{\theta_i}
+ &= \int_\RR f(x)\, \theta_i(x)\, \D x \\
  & \approx \frac{1}{2}\left(
- \IDX{1}{h} \IDX{i}{\theta}(\IDX{1}{x}) f(\IDX{1}{x}) + \IDX{n}{h} \IDX{i}{\theta}(\IDX{n}{x}) f(\IDX{n}{x})  
+ h_1 \theta_i(x_1) f(x_1) + h_n \theta_i(x_n) f(x_n)  
  \right) + \phantom{x} \\
- &\hspace{10pt} \sum_{j=2}^{n-1} \IDX{j}{\bar h} \IDX{i}{\theta}(\IDX{j}{x}) f(\IDX{j}{x}).
+ &\hspace{10pt} \sum_{j=2}^{n-1} \bar h_j \theta_i(x_j) f(x_j).
 \end{align*}
 %
-The function values $\IDX{i}{\theta}(\IDX{j}{x})$ for a bi-orthonormal dictionary $\Theta$ can be calculated with the 
+The function values $\theta_i(x_j)$ for a bi-orthonormal dictionary $\Theta$ can be calculated with the 
 relation
 %
 \begin{equation*}
- \IDX{i}{\theta}(\IDX{j}{x}) 
- = \sum_{k=1}^n \INNERIN{L^2}{\IDX{i}{\theta}}{\IDX{k}{\theta}}\, \IDX{k}{\phi}(\IDX{j}{x})
- = \INNERIN{L^2}{\IDX{i}{\theta}}{\IDX{j}{\theta}}
+ \theta_i(x_j) 
+ = \sum_{k=1}^n \INNERIN{L^2}{\theta_k}{\theta_j}\, \phi_k(x_j)
+ = \INNERIN{L^2}{\theta_i}{\theta_j}
 \end{equation*}
 %
-since $\IDX{k}{\phi}(\IDX{j}{x}) = \delta_{k,j}$ by construction. Hence, it is the matrix $\vG_\Theta = \vG_\Phi^{-1}$ 
-that contains the coefficients $g_{i,j} = \INNERIN{L^2}{\IDX{i}{\theta}}{\IDX{j}{\theta}}$ in the approximation formula
+since $\phi_k(x_j) = \delta_{k,j}$ by construction. Hence, it is the matrix $\BDG_\Theta = 
+\BDG_\Phi^{-1}$ 
+that contains the coefficients $g_{i,j} = \INNERIN{L^2}{\theta_i}{\theta_j}$ in the approximation formula
 %
 \begin{align*}
- \INNERIN{L^2}{\IDX{i}{\theta}}{\bar f}
+ \INNERIN{L^2}{f}{\theta_i}
  & \approx \frac{1}{2}\left(
- \IDX{1}{h} g_{i,1} f(\IDX{1}{x}) + \IDX{n-1}{h} g_{i,n} f(\IDX{n}{x})  
+ h_1 g_{i,1} f(x_1) + h_{n-1} g_{i,n} f(x_n)  
  \right) + \phantom{x} \\
- &\hspace{10pt} \sum_{j=2}^{n-1} \IDX{j}{\bar h} g_{i,j} f(\IDX{j}{x}).
+ &\hspace{10pt} \sum_{j=2}^{n-1} \bar h_j g_{i,j} f(x_j).
 \end{align*}
 
 \begin{remark}
@@ -2140,14 +2156,630 @@ that contains the coefficients $g_{i,j} = \INNERIN{L^2}{\IDX{i}{\theta}}{\IDX{j}
  approximation formula is rather a theoretical result explaining the relation between the operators $\RnX$ and $\EnX$.
 \end{remark}
 
+\paragraph{Regular grid}
 
-\subsubsection{Higher-order interpolation}
-\label{subsubsec:specif:interp:higher}
+It is
+%
+\begin{equation*}
+ \phi_i(x) = \phi\big( h^{-1}(x-x_i) \big)
+ \quad \text{with} \quad
+ \phi(x) \DEFEQ
+ \begin{dcases}
+  1 + x & \text{if } x \in \CINTERV{-1}{0}, \\
+  1-x & \text{if } x \in \CINTERV{0}{1}, \\
+  0 & \text{else},
+ \end{dcases}
+\end{equation*}
+%
+and the Gramian matrix is given by $\BDG_\Phi = h/6\cdot \TRIDIAG(1,4,1)$.
+%
 
 
 
-\subsection{Phase shift dictionary}
-\label{subsec:specif:phase}
+\subsubsection{Cubic spline interpolation}
+\label{subsubsec:specif:interp:cubic}
+
+We use piecewise third order polynomials which are continuous with value 1 at the middle glue point and vanishing first 
+derivative at all glue points. These functions can be shown to be given as
+%
+\begin{equation*}
+ \phi_i(x) \DEFEQ
+ \begin{dcases}
+  -2\left( \frac{x - x_{i-1}}{x_i - x_{i-1}} \right)^3 + 
+  3 \left( \frac{x - x_{i-1}}{x_i - x_{i-1}} \right)^2 & \text{ if }
+  x \in \CINTERV{x_{i-1}}{x_i}, \\
+  -2\left( \frac{x_{i+1} - x}{x_{i+1} - x_i} \right)^3 + 
+  3 \left( \frac{x_{i+1} - x}{x_{i+1} - x_i} \right)^2 & \text{ if } 
+  x \in \CINTERV{x_i}{x_{i+1}}, \\
+  0 & \text{else}.
+ \end{dcases}
+\end{equation*}
+%
+As for linear interpolation, one can show that the sum of two neighboring functions at the overlap interval is always 
+equal to one. For the Gramian matrix, we get
+%
+\begin{equation*}
+ \INNERIN{L^2}{\phi_i}{\phi_i} = \frac{26}{35}\, \bar h_i, 
+ \quad
+ \INNERIN{L^2}{\phi_i}{\phi_{i+1}} = \frac{9}{70}\, h_i,
+\end{equation*}
+%
+and the inner products $\INNERIN{L^2}{\phi_i}{\phi_j}$ with $\ABS{i-j} > 1$ are zero.
+
+\paragraph{Regular grid}
+
+Here, the functions $\phi_i$ are given by $\phi_i(x) = \phi\big( h^{-1}(x-x_i) \big)$ with
+%
+\begin{equation*}
+ \phi(x) \DEFEQ
+ \begin{dcases}
+  -2(1+x)^3 + 3(1+x)^2 & \text{if } x \in \CINTERV{-1}{0}, \\
+  -2(1-x)^3 + 3(1-x)^2 & \text{if } x \in \CINTERV{0}{1}, \\
+  0 & \text{else}.
+ \end{dcases}
+\end{equation*}
+%
+The Gramian is the tridiagonal matrix $\BDG_\Phi = h/70\cdot\TRIDIAG(9, 52, 9)$.
+
+
+\subsubsection{Sinc dictionary}
+\label{subsubsec:specif:interp:sinc}
+
+Let $\SPCX$ be the space of $a/2$-bandlimited functions with $a > 0$, \ie, 
+%
+\begin{equation*}
+ \SPCX \DEFEQ L^2_a(\RR) \DEFEQ \SET[\big]{f \in L^2(\RR) \GIVEN \SUPP(\FT(f)) \subset \CINTERV{-a}{a}}.
+\end{equation*}
+%
+$\SPCX$ is a reproducing kernel Hilbert space with kernel
+%
+\begin{equation*}
+ K(x,y) \DEFEQ \frac{a}{\pi}\, \SINC\big( a(x-y) \big),
+\end{equation*}
+%
+\ie, it is $f(x) = \INNERIN{L^2}{f}{K(x, \cdot)}$ for each $x\in \RR$. Hence, for a collection of sampling points $x_1, 
+\dots, x_n$, we can define
+%
+\begin{equation*}
+ \theta_j \DEFEQ K(x_j, \cdot),
+\end{equation*}
+%
+and the Gramian matrix entries are immediately given by 
+%
+\begin{equation*}
+ \INNERIN{L^2}{\theta_j}{\theta_k} = \theta_j(x_k) 
+ = \frac{a}{\pi}\, \SINC\big( a(x_j - x_k) \big).
+\end{equation*}
+%
+The bi-orthogonal dictionary $\Phi$ can be constructed with the relation
+%
+\begin{equation*}
+ \phi_j = \sum_{k=1}^n \INNERIN{L^2}{\phi_k}{\phi_j}\, \theta_k,
+\end{equation*}
+%
+where the inner products are the entries of the transpose of $\BDG_\Phi = \BDG_\Theta^{-1}$ and can hence be calculated 
+by matrix inversion. This shows that the usage of the sinc dictionary is inconvenient for non-equidistant samples. 
+In the following, it is therefore only considered for regular grids as defined below.
+
+\paragraph{Regular Nyquist grid}
+
+In the special case of equidistant samples $x_k = x_0 + k\pi/a$, the argument of the 
+sinc function in the identity for the Gramian matrix entries is equal to $a(x_j - x_k) = (j-k)\pi$. Thus, 
+$\BDG_\Theta$ is diagonal, and the bi-orthogonal dictionary $\Phi$ can immediately be calculated as
+%
+\begin{equation*}
+ \phi_j = \SINC( j\pi - a\cdot\phantom{x}\!\!).
+\end{equation*}
+
+
+
+
+
+\subsection{Re-discretization}
+\label{subsec:specif:rediscr}
+
+The transition operator from one discretization $\DISCRnX = (\SPCX, \Fn, \RnX, \EnX)$ to another one,
+$\DISCR{m}{X} = (\SPCX, \Fm, \RmX, \EmX)$, is given by $\RmY \circ \EnX$ as outlined earlier. In the case of 
+dictionary-based discretizations with $\Theta, \Phi$ for the first one and $\Xi, \Psi$ for the second one, this 
+operator can be written as
+%
+\begin{equation*}
+ \RmY \circ \EnX(\BDalpha) 
+ = \sum_{i=1}^n \alpha_i \RmY(\phi_i)
+ = \sum_{i=1}^n \alpha_i (\INNERINX{\phi_i}{\xi_j})_{j=1,\dots,m}
+ = \BDG_{\Phi,\Xi} \BDalpha,
+\end{equation*}
+%
+\ie, it is represented by the matrix
+%
+\begin{equation*}
+ \BDG_{\Phi,\Xi} = \BDG_{\Phi,\Psi}\, \BDG_\Psi^{-\mathrm{T}}.
+\end{equation*}
+%
+Therefore, by knowledge of the cross-Gramian matrix $\BDG_{\Phi,\Psi}$ of the known function systems it is possible 
+to calculate the matrix representation of the transition operator $\RmY \circ \EnX$.
+
+
+\subsubsection{Nearest neighbor to linear}
+\label{subsubsec:specif:rediscr:nn2lin}
+
+Let $\Phi$ be the piecewise constant dictionary and $\Psi$ the piecewise linear dictionary for the same nodes. It is
+%
+\begin{equation*}
+ \INNERIN{L^2}{\phi_i}{\psi_i} 
+ = \int_{x_i - h_{i-1}/2}^{x_i} \frac{x-x_{i-1}}{h_{i-1}}\, \D x +
+ \int_{x_i}^{x_i + h_i/2} \frac{x_{i+1} - x}{h_i}\, \D x
+ = \frac{3}{4}\, \bar h_i
+\end{equation*}
+%
+and
+%
+\begin{equation*}
+ \INNERIN{L^2}{\phi_i}{\psi_{i+1}} 
+ = \int_{x_i}^{x_i + h_i/2} \frac{x - x_i}{h_i}\, \D x
+ = \frac{1}{8}\, h_i
+\end{equation*}
+%
+as well as $\INNERIN{L^2}{\phi_i}{\psi_{i-1}} = h_{i-1}/8$ due to symmetry. Matrix entries outside the 
+three center diagonals are zero.
+
+\paragraph{Regular grid}
+
+Here, the transition matrix is $\BDG_{\Phi, \Psi} = h/8\cdot\TRIDIAG(1, 6, 1)$.
+
+
+\subsubsection{Nearest neighbor to cubic}
+\label{subsubsec:specif:rediscr:nn2cub}
+
+Let now $\Psi$ the piecewise cubic dictionary. We calculate
+%
+\begin{align*}
+ \INNERIN{L^2}{\phi_i}{\psi_i} 
+ &= \int_{x_i - h_{i-1}/2}^{x_i} 
+ \left[ -2\left( \frac{x-x_{i-1}}{h_{i-1}} \right)^3 + 3 \left( \frac{x-x_{i-1}}{h_{i-1}} \right)^2 
+ \right]\, \D x + \phantom{x} \\
+ &\hspace{16pt} \int_{x_i}^{x_i + h_i/2} 
+ \left[ -2\left( \frac{x_{i+1}-x}{h_i} \right)^3 + 3\left( \frac{x_{i+1}-x}{h_i} \right)^2 
+ \right]\, \D x \\
+ &= \frac{13}{16}\, \bar h_i
+\end{align*}
+%
+and
+%
+\begin{equation*}
+ \INNERIN{L^2}{\phi_i}{\psi_{i+1}} 
+ = \int_{x_i}^{x_i + h_i/2} 
+ \left[ -2\left( \frac{x-x_i}{h_i} \right)^3 + 3 \left( \frac{x-x_i}{h_i} \right)^2 
+ \right]\, \D x 
+ = \frac{3}{32}\, h_i
+\end{equation*}
+%
+as well as $\INNERIN{L^2}{\phi_i}{\psi_{i-1}} = 3h_{i-1}/32$ for symmetry reasons. Other matrix 
+entries are again zero.
+
+\paragraph{Regular grid}
+
+The transition Gramian is given by $\BDG_{\Phi, \Psi} = h/32\cdot\TRIDIAG(3, 26, 3)$.
+
+\subsubsection{Any to sinc / sinc to any}
+\label{subsubsec:specif:rediscr:any2sinc}
+
+In the sinc dictionary case, we can directly approximate the matrix elements of $\BDG_{\Phi, \Xi}$ since it is the 
+dictionary $\Xi$ which is explicitly given. With the reproducing kernel property of the functions $\xi_j$, we 
+can directly calculate
+%
+\begin{equation*}
+ \INNERIN{L^2}{\phi_i}{\xi_j} \approx \phi_i(x_j) = \delta_{i,j}.
+\end{equation*}
+%
+The last approximate identity is not exact since the elements of the other interpolation dictionaries are not 
+bandlimited.
+
+\paragraph{Regular Nyquist grid}
+
+For the transition from the sinc dictionary $\Phi$ to another dictionary $\Psi$, we can calculate
+%
+\begin{equation*}
+ \INNERIN{L^2}{\phi_i}{\psi_j} \approx \frac{\pi}{a}\, \psi_j(x_i) = \frac{\pi}{a}\, \delta_{i,j},
+\end{equation*}
+%
+hence the transition matrix is approximated by ${\pi}/{a}\, \BDG_\Psi^{-\mathrm{T}}$.
+
+
+
+\subsubsection{Linear to cubic}
+\label{subsubsec:specif:rediscr:lin2cub}
+
+For the piecewise cubic dictionary $\Psi$, we get
+%
+\begin{equation*}
+ \INNERIN{L^2}{\phi_i}{\psi_i} = \frac{7}{10}\, \bar h_i
+ \quad \text{and} \quad
+ \INNERIN{L^2}{\phi_i}{\psi_{i+1}} = \frac{3}{20}\, h_i
+\end{equation*}
+%
+and, by symmetry, $\INNERIN{L^2}{\phi_i}{\psi_{i-1}} = \frac{3}{20}\, h_{i-1}$.
+
+\paragraph{Regular grid}
+
+It is $\BDG_{\Phi, \Psi} = h/20\cdot\TRIDIAG(3, 14, 3)$.
+
+
+\subsection{Fourier transform discretization}
+\label{subsec:specif:fourier}
+
+In general, operator discretizations have the form $\DISCOP{T} = \RmY \circ \OPT \circ \EnX$, \ie, for dictionary 
+cases, one can write
+%
+\begin{equation*}
+ \OPT\big( \EnX(\BDalpha) \big) = \sum_{j=1}^n \alpha_j \OPT(\phi_j).
+\end{equation*}
+%
+Hence, the crucial step is to evaluate the operator in question, $\OPT$, on the dictionary $\Phi$. For the Fourier 
+transform $\FT$, most examples produce a complex exponential factor $e^{-\I x_j \xi}$. Thus, the expression 
+$\sum_{j=1}^n \alpha_j \FT(\phi_j)(\xi)$ takes the form of a discrete Fourier transform if $\RmX$ is the collocation 
+operator at nodes $\xi_j$. 
+
+
+
+\subsubsection{Nearest neighbor interpolation}
+\label{subsubsec:specif:fourier:nn}
+
+We get
+%
+\begin{align*}
+ \sqrt{2\pi}\, \FT(\phi_j)(\xi)
+ &= \int_{x_j - h_{j-1}/2}^{x_j + h_j/2} e^{-\I x\xi}\, \D x
+ = \frac{1}{-\I\xi} e^{-\I x_j \xi} (e^{-\I h_j\xi/2} - e^{\I h_{j-1}\xi/2}) \\
+ &= e^{-\I x_j \xi}\, u_j^{\mathrm{nn}}(\xi),
+\end{align*}
+%
+with
+%
+\begin{equation*}
+ u_j^{\mathrm{nn}}(\xi) \DEFEQ \frac{1}{\I\xi} (e^{\I h_{j-1}\xi/2} - e^{-\I h_j\xi/2}).
+\end{equation*}
+
+\paragraph{Regular grid} 
+
+The function $u_j^{\mathrm{nn}}$ simplifies to
+%
+\begin{equation*}
+ u_j^{\mathrm{nn}}(\xi) = \frac{2}{2\I\xi}(e^{\I h\xi/2} - e^{-\I h\xi/2}) = h\, \SINC(h\xi/2).
+\end{equation*}
+
+
+\subsubsection{Linear interpolation}
+\label{subsubsec:specif:fourier:linear}
+
+It is
+%
+\begin{align*}
+ \sqrt{2\pi}\, \FT(\phi_j)(\xi)
+ &= \frac{e^{-\I x_{j-1} \xi}}{h_{j-1}} \int_0^{h_{j-1}} x\, e^{-\I x\xi}\, \D x +
+ \frac{e^{-\I x_{j+1} \xi}}{h_j} \int_0^{h_j} x\, e^{\I x\xi}\, \D x \\
+ &= e^{-\I x_j \xi}\, u_j^{\mathrm{lin}}(\xi)
+\end{align*}
+%
+with
+%
+\begin{equation*}
+ u_j^{\mathrm{lin}}(\xi) \DEFEQ \frac{1 + \I h_{j-1}\xi - e^{\I h_{j-1}\xi}}{h_{j-1} \xi^2} +
+ \frac{1 - \I h_j\xi - e^{-\I h_j\xi}}{h_j \xi^2}.
+\end{equation*}
+
+\paragraph{Regular grid} 
+
+$u_j^{\mathrm{lin}}$ can be simplified to
+%
+\begin{equation*}
+ u_j^{\mathrm{lin}}(\xi) = \frac{2\big( 1-\cos(h\xi) \big)}{h\xi^2} = h \SINC^2(h\xi/2).
+\end{equation*}
+
+
+
+\subsubsection{Cubic spline interpolation}
+\label{subsubsec:specif:fourier:cubic}
+
+We calculate
+%
+\begin{align*}
+ \sqrt{2\pi}\, \FT(\phi_j)(\xi)
+ &= \frac{-2 e^{-\I x_{j-1} \xi}}{h_{j-1}^3} \int_0^{h_{j-1}} x^3\, e^{-\I x\xi}\, \D x +
+ \frac{3 e^{-\I x_{j-1} \xi}}{h_{j-1}^2} \int_0^{h_{j-1}} x^2\, e^{-\I x\xi}\, \D x + \phantom{x} \\
+ &\hspace{12pt} \frac{-2 e^{-\I x_{j+1} \xi}}{h_j^3} \int_0^{h_j} x^3\, e^{-\I x\xi}\, \D x +
+ \frac{3 e^{-\I x_{j+1} \xi}}{h_j^2} \int_0^{h_j} x^2\, e^{-\I x\xi}\, \D x \\
+ &= e^{-\I x_j \xi}\, u_j^{\mathrm{cub}}(\xi),
+\end{align*}
+%
+where
+%
+\begin{align*}
+ u_j^{\mathrm{cub}}(\xi) &\DEFEQ 
+ \frac{12 + 6\I h_{j-1}\xi + \I h_{j-1}^3\xi^3 + e^{\I h_{j-1}\xi} (6\I h_{j-1}\xi - 12)}{h_{j-1}^3 \xi^4} + 
+ \phantom{x}\\
+ &\hspace{15pt} 
+ \frac{12 - 6\I h_j\xi - \I h_j^3\xi^3 + e^{-\I h_j\xi} (- 6\I h_j\xi - 12)}{h_j^3 \xi^4}.
+\end{align*}
+
+\paragraph{Regular grid} 
+
+The function $u_j^{\mathrm{cub}}$ simplifies to
+%
+\begin{align*}
+ u_j^{\mathrm{cub}}(\xi) 
+ &= 6\, \frac{4 - 2(e^{\I h \xi} + e^{-\I h \xi}) + \I h \xi(e^{\I h \xi} - e^{-\I h \xi})}{h^3\xi^4} \\
+ &= h\cdot 12\, \frac{2 - 2\cos(h\xi) - h \xi \sin(h\xi)}{(h\xi)^4} \\
+\end{align*}
+
+\subsubsection{Sinc interpolation}
+\label{subsubsec:specif:fourier:sinc}
+
+In this case, it is
+%
+\begin{align*}
+ \FT(\phi_j)(\xi) 
+ &= \sum_{k=1}^n \INNERIN{L^2}{\phi_k}{\phi_j} \FT(\theta_k)(\xi)
+ = \sum_{k=1}^n \INNERIN{L^2}{\phi_k}{\phi_j} e^{\I x_k \xi}\, \sqrt{2\pi}\, \chi_{[-a,a]}(\xi)\\
+ &= \sqrt{2\pi}\, \chi_{[-a,a]}(\xi)\, (\TRANSP{\BDG_\Phi} \BDF(\xi))_j,
+\end{align*}
+%
+where $\BDF(\xi) = (e^{\I x_k \xi})_{k=1,\dots,n}$ is the vector of Fourier kernels.\\[1em]
+
+\paragraph{Regular Nyquist grid} 
+
+We have $\sqrt{2\pi} \FT(\phi_j)(\xi) = 2\pi \chi_{[-a,a]}(\xi)\, e^{\I x_j \xi}$ in this case since $\BDG_\Phi = \BDI$.
+\todo{Check if factors are correct}
+
+
+
+\subsection{Convolution discretization}
+\label{subsec:specif:conv}
+
+There are two ways to define a convolution on a discretized space. The first one is to apply an analytically given 
+kernel to the dictionary, the second is to convolve with a discrete kernel interpreted in the same. For a closed form 
+kernel, there are again two possibilities: either the convolution with the dictionary is known explicitly or it is 
+reduced to the discrete case by discretizing the kernel. Since the implementation of the first case is obvious, we 
+concentrate on the discrete setting where the discretization of the bi-linear convolution operator is given by
+%
+\begin{equation*}
+ \DISCOP{C}(\BDalpha, \BDbeta) \DEFEQ \sum_{i,j=1}^n \alpha_i\, \beta_j\, \RmY(\phi_i \ast \phi_j).
+\end{equation*}
+
+If the sampling grid is regular, the interpolation dictionaries have the form 
+$\phi_i(x) = \phi\big( h^{-1}(x-x_i) \big) = \phi_h(x-x_i)$, which allows to simplify the convolutions according to to
+%
+\begin{equation*}
+ \phi_i \ast \phi_j(x) = \phi_h \ast \phi_h\big( x - (x_i + x_j) \big)
+\end{equation*}
+%
+and
+%
+\begin{equation*}
+ \phi_h \ast \phi_h(x) = h\, \phi \ast \phi(h^{-1} x)
+\end{equation*}
+%
+with analogous expressions if a different function $\psi_j$ of the same structure is used as second operand instead of 
+$\phi_j$.\\
+%
+If the subsequent restriction operator is given by the collocation at the same regular nodes $x_k$, the discretization 
+$\DISCOP{C}$ of the convolution is contains the summands
+%
+\begin{equation*}
+ h\, \phi \ast \phi\big( h^{-1}(x_k - x_i - x_j) \big) = h\, \phi( -x_0/h + k - i - j).
+\end{equation*}
+
+
+\subsubsection{Nearest neighbor interpolation}
+\label{subsubsec:specif:conv:nn}
+
+The convolution of two basis functions $\phi_i$ and $\phi_j$ is given by
+%
+\begin{align*}
+ \phi_i \ast \phi_j(x) 
+ &= \int_{x_j-h_{j-1}/2}^{x_j+h_j/2} \phi_i(x-y)\, \D y 
+ = \int_{x-x_j-h_j/2}^{x-x_j+h_{j-1}/2} \phi_i(y)\, \D y \\
+ &= \ABS[\big]{\CINTERV{x_i-h_{i-1}/2}{x_i+h_i/2} \cap \CINTERV{x-x_j-h_j/2}{x-x_j+h_{j-1}/2}}
+\end{align*}
+%
+After tedious calculations, one can show that this intersection and thus the value of the convolution is given by
+$\phi_i \ast \phi_j(x) = \phi_{i,j}\big( x - (x_i + x_j) \big)$ with
+%
+\begin{equation*}
+ \phi_{i,j}(x) \DEFEQ
+ \begin{dcases}
+  \frac{h_{i-1} + h_{j-1}}{2} + x & \text{if } x \in \CINTERV*{-\frac{h_{i-1} + h_{j-1}}{2}}{m_{i,j}}, \\
+  \min\SET*{\bar h_i, \bar h_j} & \text{if } x \in \CINTERV{m_{i,j}}{M_{i,j}}, \\
+  \frac{h_i + h_j}{2} - x & \text{if } x \in \CINTERV*{M_{i,j}}{\frac{h_i + h_j}{2}}, \\
+  0 & \text{else},
+ \end{dcases}
+\end{equation*}
+%
+where
+%
+\begin{equation*}
+ m_{i,j} \DEFEQ \min\SET*{\frac{h_i - h_{j-1}}{2}, \frac{h_j - h_{i-1}}{2}}
+ \ \ \text{and}\ \ 
+ M_{i,j} \DEFEQ \max\SET*{\frac{h_i - h_{j-1}}{2}, \frac{h_j - h_{i-1}}{2}}.
+\end{equation*}
+
+
+\paragraph{Regular grid}
+
+The autoconvolution of the function $\phi = \chi_{\CINTERV{-\nicefrac{1}{2}}{\nicefrac{1}{2}}}$ is given by the linear 
+interpolation kernel
+%
+\begin{equation*}
+ \phi \ast \phi(x) = 
+ \begin{cases}
+  1 + x & \text{if } x \in \CINTERV{-1}{0}, \\
+  1 - x & \text{if } x \in \CINTERV{0}{1}, \\
+  0 & \text{else.}
+ \end{cases}
+\end{equation*}
+
+
+\subsubsection{Linear interpolation}
+\label{subsubsec:specif:conv:linear}
+
+TODO
+
+\paragraph{Regular grid}
+
+For the autoconvolution of the kernel corresponding linear interpolation, we get
+%
+\begin{align*}
+ \phi \ast \phi(x) 
+ &= \int_x^{x+1} \phi(y)\, (1+x-y)\, \D y + \int_{x-1}^x \phi(y)\, (1-x+y)\, \D y \\
+ &= \frac{1}{6}\cdot 
+ \begin{cases}
+  (2+x)^3 & \text{if } x \in \CINTERV{-2}{-1} \\
+  (4 - 6x^2 - 3x^3) & \text{if } x \in \CINTERV{-1}{0} \\
+  (4 - 6x^2 + 3x^3) & \text{if } x \in \CINTERV{0}{1} \\
+  (2-x)^3 & \text{if } x \in \CINTERV{1}{2} \\
+  0 & \text{else}.
+ \end{cases}
+\end{align*}
+
+
+\subsubsection{Cubic interpolation}
+\label{subsubsec:specif:conv:cubic}
+
+TODO
+
+\paragraph{Regular grid}
+
+The autoconvolution of the cubic interpolation kernel is 
+%
+\begin{equation*}
+ \phi \ast \phi(x) = \frac{1}{70} \cdot
+ \begin{cases}
+  (2+x)^5 (1-6x+2x^2) & \text{if } x \in \CINTERV{-2}{-1} \\
+  (52 - 84x^2 + 70x^4 + 21x^5 -14x^6 - 6x^7) & \text{if } x \in \CINTERV{-1}{0} \\
+  (52 - 84x^2 + 70x^4 - 21x^5 -14x^6 + 6x^7) & \text{if } x \in \CINTERV{0}{1} \\
+  (2+x)^5 (1+6x+2x^2) & \text{if } x \in \CINTERV{1}{2} \\
+  0 & \text{else}.
+ \end{cases}
+\end{equation*}
+
+
+\subsubsection{Sinc interpolation, regular Nyquist grid}
+\label{subsubsec:specif:conv:sinc}
+
+The sinc kernel autoconvolution is given by
+%
+\begin{equation*}
+ \phi \ast \phi = \FT^{-1}\left( \sqrt{2\pi}\, \FT(\phi)^2 \right) 
+ = \FT^{-1}\left( (2\pi)^{-\nicefrac{1}{2}} \chi_{\CINTERV{-1}{1}} \right) = \phi
+\end{equation*}
+%
+since $\FT(\phi) = \FT^{-1}(\phi) = (2\pi)^{-\nicefrac{1}{2}} \chi_{\CINTERV{-1}{1}}$.
+
+
+
+\subsection{Monomial moment operator discretization}
+\label{subsec:specif:moments}
+
+We consider the moment operators
+%
+\begin{equation*}
+ \OPM_k \colon L^2(\RR) \supset \DOMAIN(\OPM_k) \to \FIELD
+ \quad\text{with}\quad
+ \OPM_k(f) \DEFEQ \int_\RR x^k\, f(x)\, \D x
+\end{equation*}
+%
+which are defined on a dense subset of $L^2(\RR)$ (the functions which decay faster than $\ABS{x}^{-1-k}$ for 
+$k \to \infty$). In this case, the operator discretization is given by
+%
+\begin{equation*}
+ \DISCOP{M}_k(\BDalpha) \DEFEQ \OPM_k\big( \EnX(\BDalpha) \big) = \sum_{j=1}^n \alpha_j\, \OPM_k(\phi_j).
+\end{equation*}
+%
+We give especially the formulas for the cases $k=0,1,2$ and for regular grids.
+
+
+\subsubsection{Nearest neighbor interpolation}
+\label{subsubsec:specif:moments:nn}
+
+\begin{align*}
+ \OPM_k(\phi_j) 
+ &= \int_{x_j-h_{j-1}/2}^{x_j+h_j/2} x^k\, \D x 
+ = \frac{1}{k+1}\, \left[ \left(x_j + \frac{h_j}{2}\right)^{k+1} - \left(x_j - \frac{h_{j-1}}{2}\right)^{k+1} \right], 
+ \\
+ \OPM_0(\phi_j) &= \frac{h_j + h_{j-1}}{2} = \bar h_j, \\
+ \OPM_1(\phi_j) &= \bar h_j x_j + \frac{h_j^2 - h_{j-1}^2}{8}, \\
+ \OPM_2(\phi_j) &= \bar h_j x_j^2 + x_j\, \frac{h_j^2 - h_{j-1}^2}{4} +  \frac{h_j^3 + h_{j-1}^3}{8}.
+\end{align*}
+
+\paragraph{Regular grid}
+
+\begin{align*}
+ \OPM_0(\phi_j) &= h, \\
+ \OPM_1(\phi_j) &= h x_j, \\
+ \OPM_2(\phi_j) &= h x_j^2 +  \frac{h^3}{4}.
+\end{align*}
+
+
+\subsubsection{Linear interpolation}
+\label{subsubsec:specif:moments:linear}
+
+\begin{align*}
+ \OPM_k(\phi_j) 
+ &= \int_{x_{j-1}}^{x_j} x^k\, \frac{x-x_{j-1}}{h_{j-1}}\, \D x + \int_{x_j}^{x_{j+1}} x^k\, \frac{x_{j+1}-x}{h_j}\, 
+ \D x \\  
+ &= \frac{h_{j-1} x_{j+1}^{k+2} - 2\bar h_j x_j^{k+2} + h_j x_{j-1}^{k+2}}{(k+1)(k+1) h_{j-1} h_j},
+ \\
+ \OPM_0(\phi_j) & = \bar h_j, \\
+ \OPM_1(\phi_j) &= \bar h_j\, \frac{x_{j+1} + x_j + x_{j-1}}{3}, \\
+ \OPM_2(\phi_j) &= \bar h_j\, \frac{x_{j+1}^2 + x_{j+1}x_j + x_{j+1}x_{j-1} + x_j^2 + x_jx_{j-1} + x_{j-1}^2}{6}.
+\end{align*}
+
+\paragraph{Regular grid}
+
+\begin{align*}
+ \OPM_0(\phi_j) &= h, \\
+ \OPM_1(\phi_j) &= h x_j, \\
+ \OPM_2(\phi_j) &= h x_j^2 +  \frac{h^3}{6}.
+\end{align*}
+
+
+\subsubsection{Cubic interpolation}
+\label{subsubsec:specif:moments:cubic}
+
+\begin{align*}
+ \OPM_0(\phi_j) &= \bar h_j, \\
+ \OPM_1(\phi_j) &= \bar h_j\, \frac{3x_{j+1} + 4x_j + 3x_{j-1}}{10}, \\
+ \OPM_2(\phi_j) &= \bar h_j\, \frac{2x_{j+1}^2 + 3x_{j+1}x_j + 2x_{j+1}x_{j-1} + 3x_j^2 + 3x_jx_{j-1} + 2x_{j-1}^2}{15}.
+\end{align*}
+
+\paragraph{Regular grid}
+
+\begin{align*}
+ \OPM_0(\phi_j) &= h, \\
+ \OPM_1(\phi_j) &= h x_j, \\
+ \OPM_2(\phi_j) &= h x_j^2 +  \frac{2h^3}{15}.
+\end{align*}
+
+
+\subsubsection{Sinc interpolation, Nyquist grid}
+\label{subsubsec:specif:moments:sinc}
+
+Formally, we can calculate
+%
+\begin{align*}
+ \int_\RR x^k\, \phi_j(x)\, \D x 
+ &= h^{k+1} \int_\RR x^k\, \phi(x-j)\, \D x 
+ = h^{k+1}\, \I^k\, \frac{\D^k}{\D\xi^k} \FUNCRESTR{\int_\RR \phi(x-j-x_0/h)\, e^{-\I x \xi} \D x}{\xi=0} \\
+ &= h^{k+1}\, \I^k\, \frac{\D^k}{\D\xi^k} \FUNCRESTR{\Big( e^{-\I (x_0/h + j) \xi} \cdot \chi_{\CINTERV{-1}{1}}(\xi) 
+ \Big)}{\xi=0}
+ = h^{k+1} (x_0/h + j)^k \\
+ &= h\, x_j^k
+\end{align*}
+%
+since all derivatives of $\chi_{\CINTERV{-1}{1}}$ at $\xi=0$ vanish. However, integrability is only given in the case 
+$k=0$, and only then the exchange of integration and differentiation can be justified.
+
+
 
 
 
@@ -2207,11 +2839,12 @@ It is represented in the software as follows:
 
 
 
+
 \subsection{Examples}
 \label{subsec:soft:examp}
 
 \begin{example}[Re-interpretation]
- Let $\bar f \in X_n = (\SPCX, \Fn, \emptyset, \emptyset)$ be represented by $\valpha \in \Fn$ and 
+ Let $\bar f \in X_n = (\SPCX, \Fn, \emptyset, \emptyset)$ be represented by $\BDalpha \in \Fn$ and 
  $X_m = (\SPCX, \Fm, \RmX, \EmX)$ with $m=n$. Then $\bar f$ can be re-interpreted as $\bar f \in \SPCX_m$ by 
  the identity mapping $\OPID \colon X_n \to \SPCX_m$. Practically, the re-mapped element will be aware of the ``added 
  structure '' $\RmX, \EmX$.
@@ -2383,7 +3016,7 @@ It is represented in the software as follows:
 % \[ \pi_i \circ f = f_i. \]
 % Conversely, given $f\in \Hom_{\FIELD}(Y,X)$, we can always define $f_i \in \Hom_{\FIELD}(Y,X_i)$ by 
 % the above relation. 
-% %We will use the bold face notation $\vf$ on the elements in $\Hom_{\FIELD}(Y,X)$
+% %We will use the bold face notation $\BDf$ on the elements in $\Hom_{\FIELD}(Y,X)$
 % %\emph{only} when there is an explicit need to refer to the $f_i$:s.
 % 
 % We will finally define the concepts of norm and inner product for vector spaces over $\RR$ 
@@ -2403,8 +3036,8 @@ It is represented in the software as follows:
 %   is called the \emph{inner product on $X$}
 %   if the following holds for all $x,y,z \in X$ and $\alpha\in\FIELD$:
 %   \begin{enumerate}
-%   \item $\ip{x}{y}=\overline{\ip{y}{x}}$,
-%   \item $\ip{\alpha x}{y}=\overline{\alpha}\ip{x}{y}$ and $\ip{x}{\alpha  y}= \alpha \ip{x}{y}$,
+%   \item $\ip{x}{y}=\CCONJ{\ip{y}{x}}$,
+%   \item $\ip{\alpha x}{y}=\CCONJ{\alpha}\ip{x}{y}$ and $\ip{x}{\alpha  y}= \alpha \ip{x}{y}$,
 %   \item $\ip{x + y}{z} = \ip{x}{z}  +  \ip{y}{z}$,
 %   \item  $\ip{x}{x}\geq 0$ with equality if and only if $x$ is the zero element in $X$.
 %   \end{enumerate}
