@@ -30,13 +30,11 @@ from future import standard_library
 
 # External module imports
 import numpy as np
-from scipy.lib.blas import get_blas_funcs
 from numbers import Integral, Real
-from math import sqrt
 
 # RL imports
 from RL.space.set import Set
-from RL.utility.utility import errfmt
+from RL.utility.utility import errfmt, array1d_repr
 
 standard_library.install_aliases()
 
@@ -163,26 +161,60 @@ class TensorGrid(Set):
         """Vector containing the maximal coordinate per axis."""
         return np.array([vec[-1] for vec in self.coord_vectors])
 
-    def equals(self, other):
+    def equals(self, other, tol=0.0):
         """Test if this grid is equal to another grid.
 
-        Return True if all coordinate vectors are equal, otherwise
-        False.
+        Return True if all coordinate vectors are equal (up to the
+        given tolerance), otherwise False.
+
+        Parameters
+        ----------
+
+        tol : float
+            Allow deviations up to this number in absolute value
+            per vector entry.
         """
         return (isinstance(other, TensorGrid) and
                 self.dim == other.dim and
-                all(np.all(vec_s == vec_o) for (vec_s, vec_o) in zip(
-                    self.coord_vectors, other.coord_vectors)))
+                self.shape == other.shape and
+                all(np.allclose(vec_s, vec_o, atol=tol)
+                    for (vec_s, vec_o) in zip(self.coord_vectors,
+                                              other.coord_vectors)))
 
-    def contains(self, point):
-        """Test if this grid contains the given point.
+    def contains(self, point, tol=0.0):
+        """Test if a point belongs to the grid.
 
-        Be aware that rounding errors may lead to misleading results.
+        Parameters
+        ----------
+
+        tol : float
+            Allow deviations up to this number in absolute value
+            per vector entry.
         """
         point = np.atleast_1d(point)
         return (point.shape == (self.dim,) and
-                all(point[i] in self.coord_vectors[i]
-                    for i in range(self.dim)))
+                all(np.any(np.isclose(vector, coord, atol=tol))
+                    for vector, coord in zip(self.coord_vectors, point)))
+
+    def is_subgrid(self, other, tol=0.0):
+        """Test if this grid is contained in another grid.
+
+        Parameters
+        ----------
+
+        tol : float
+            Allow deviations up to this number in absolute value
+            per coordinate vector entry.
+        """
+        # TODO: this is quite inefficient, think of a better solution!
+        # This version tests each coordinate for fuzzy membership in
+        # the corresponding other coordinate vector -> O(n^2)
+        return(isinstance(other, TensorGrid) and
+               np.all(self.shape <= other.shape) and
+               all(np.any(np.isclose(vector_o, coord, atol=tol))
+                   for vector_o, vector_s in zip(other.coord_vectors,
+                                                 self.coord_vectors)
+                   for coord in vector_s))
 
     def points(self, order='C'):
         """All grid points in a single array.
@@ -272,10 +304,57 @@ class TensorGrid(Set):
         return tuple(np.meshgrid(*self.coord_vectors, indexing='ij',
                                  sparse=sparse, copy=True))
 
+    def __getitem__(self, slc):
+        """self[slc] implementation.
+
+        Parameters
+        ----------
+
+        slc : int or slice
+            Negative indices are not supported.
+        """
+        slc_list = list(np.s_[slc])
+
+        if Ellipsis in slc_list:
+            if slc_list.count(Ellipsis) > 1:
+                raise ValueError("Cannot use more than one ellipsis.")
+            if len(slc_list) == self.dim + 1:
+                ellipsis_idx = self.dim
+                num_after_ellipsis = 0
+            else:
+                ellipsis_idx = slc_list.index(Ellipsis)
+                num_after_ellipsis = len(slc_list) - ellipsis_idx - 1
+            slc_list.remove(Ellipsis)
+
+        else:
+            if len(slc_list) < self.dim:
+                raise IndexError(errfmt('''
+                Too few axes ({} < {}).'''.format(len(slc_list, self.dim))))
+            ellipsis_idx = self.dim
+            num_after_ellipsis = 0
+
+        if len(slc_list) > self.dim:
+            raise IndexError(errfmt('''
+            Too many axes ({} > {}).'''.format(len(slc_list, self.dim))))
+
+        new_vecs = []
+        for i in range(ellipsis_idx):
+            new_vecs.append(self.coord_vectors[i][slc_list[i]])
+        for i in range(ellipsis_idx, self.dim - num_after_ellipsis):
+            new_vecs.append(self.coord_vectors[i])
+        for i in reversed(range(1, num_after_ellipsis + 1)):
+            new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
+
+        return TensorGrid(*new_vecs)
+
     def __repr__(self):
-        """repr(self) implementation"""
-        return 'TensorGrid(' + ', '.join([repr(tuple(vec))
-                                         for vec in self.coord_vectors]) + ')'
+        """repr(self) implementation."""
+        return 'TensorGrid(' + ', '.join(
+            array1d_repr(vec) for vec in self.coord_vectors) + ')'
+
+    def __str__(self):
+        """str(self) implementation."""
+        return ' x '.join(array1d_repr(vec) for vec in self.coord_vectors)
 
 if __name__ == '__main__':
     import doctest

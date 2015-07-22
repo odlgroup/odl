@@ -162,6 +162,20 @@ class TensorGridTestMethods(RLTestCase):
         self.assertFalse(grid2 == (vec1, vec2))
         self.assertTrue(grid2_rev != (vec1, vec2))
 
+        # Fuzzy check
+        grid1 = TensorGrid(vec1, vec2)
+        grid2 = TensorGrid(vec1 + (0.1, 0.05, 0, -0.1),
+                           vec2 + (0.1, 0.05, 0, -0.1, -0.1))
+        self.assertTrue(grid1.equals(grid2, tol=0.1))
+        self.assertTrue(grid2.equals(grid1, tol=0.1))
+
+        grid2 = TensorGrid(vec1 + (0.11, 0.05, 0, -0.1),
+                           vec2 + (0.1, 0.05, 0, -0.1, -0.1))
+        self.assertFalse(grid1.equals(grid2, tol=0.1))
+        grid2 = TensorGrid(vec1 + (0.1, 0.05, 0, -0.1),
+                           vec2 + (0.1, 0.05, 0, -0.11, -0.1))
+        self.assertFalse(grid1.equals(grid2, tol=0.1))
+
     def test_contains(self):
         vec1 = np.arange(2, 6)
         vec2 = np.arange(-4, 5, 2)
@@ -180,6 +194,57 @@ class TensorGridTestMethods(RLTestCase):
         self.assertFalse((0, 0) in grid)
         self.assertTrue((0, 0) not in grid)
         self.assertTrue((2, 0, 0) not in grid)
+
+        # Fuzzy check
+        self.assertTrue(grid.contains((2.1, -2.1), tol=0.1))
+        self.assertFalse(grid.contains((2.2, -2.1), tol=0.1))
+
+        # 1d points
+        grid = TensorGrid(vec1)
+        self.assertTrue(3 in grid)
+        self.assertFalse(7 in grid)
+
+    def test_is_subgrid(self):
+        vec1 = np.arange(2, 6)
+        vec1_sup = np.arange(2, 8)
+        vec2 = np.arange(-4, 5, 2)
+        vec2_sup = np.arange(-6, 7, 2)
+        vec2_sub = np.arange(-4, 3, 2)
+        scalar = 0.5
+
+        grid = TensorGrid(vec1, vec2)
+        self.assertTrue(grid.is_subgrid(grid))
+
+        sup_grid = TensorGrid(vec1_sup, vec2_sup)
+        self.assertTrue(grid.is_subgrid(sup_grid))
+        self.assertFalse(sup_grid.is_subgrid(grid))
+
+        not_sup_grid = TensorGrid(vec1_sup, vec2_sub)
+        self.assertFalse(grid.is_subgrid(not_sup_grid))
+        self.assertFalse(not_sup_grid.is_subgrid(grid))
+
+        # Fuzzy check
+        fuzzy_vec1_sup = vec1_sup + (0.1, 0.05, 0, -0.1, 0, 0.1)
+        fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.1, 0.05)
+        fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.1))
+
+        fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.11, 0.05)
+        fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
+        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.1))
+
+        # Changes in the non-overlapping part don't matter
+        fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.05, 0.11)
+        fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.1))
+
+        # With degenerate axis
+        grid = TensorGrid(vec1, scalar, vec2)
+        sup_grid = TensorGrid(vec1_sup, scalar, vec2_sup)
+        self.assertTrue(grid.is_subgrid(sup_grid))
+
+        fuzzy_sup_grid = TensorGrid(vec1, scalar+0.1, vec2)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.1))
 
     def test_points(self):
         vec1 = np.arange(2, 6)
@@ -340,6 +405,35 @@ class TensorGridTestMethods(RLTestCase):
         self.assertAllAlmostEquals(mgz, zz, delta=0)
 
         self.assertTupleEqual(xx.shape, (2, 3, 4))
+
+    def test_getitem(self):
+        vec1 = (0, 1)
+        vec2 = (-1, 0, 1)
+        vec3 = (2, 3, 4, 5)
+        vec4 = (1, 3)
+        vec1_sub = (1,)
+        vec2_sub = (-1,)
+        vec3_sub = (3, 4)
+        vec4_sub = (1,)
+
+        grid = TensorGrid(vec1, vec2, vec3, vec4)
+        sub_grid = TensorGrid(vec1_sub, vec2_sub, vec3_sub, vec4_sub)
+        self.assertEquals(grid[1, 0, 1:3, 0], sub_grid)
+        self.assertEquals(grid[-1, :1, 1:3, :1], sub_grid)
+        self.assertEquals(grid[1, 0, ..., 1:3, 0], sub_grid)
+
+        sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4)
+        self.assertEquals(grid[1, :, :, :], sub_grid)
+        self.assertEquals(grid[1, ...], sub_grid)
+
+        sub_grid = TensorGrid(vec1, vec2, vec3, vec4_sub)
+        self.assertEquals(grid[:, :, :, 0], sub_grid)
+        self.assertEquals(grid[..., 0], sub_grid)
+
+        sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4_sub)
+        self.assertEquals(grid[1, :, :, 0], sub_grid)
+        self.assertEquals(grid[1, ..., 0], sub_grid)
+        self.assertEquals(grid[1, :, :, ..., 0], sub_grid)
 
 if __name__ == '__main__':
     unittest.main(exit=False)
