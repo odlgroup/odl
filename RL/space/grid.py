@@ -40,7 +40,6 @@ standard_library.install_aliases()
 
 
 class TensorGrid(Set):
-
     """An n-dimensional tensor grid.
 
     This is a sparse representation of a collection of n-dimensional points
@@ -71,20 +70,21 @@ class TensorGrid(Set):
     Methods
     -------
 
-    ===================== ======================== ===========
-    Signature             Return type              Description
-    ===================== ======================== ===========
-    equals(other)         boolean                  Equality test,\
-    equivalent to 'self == other'
-    contains(point)       boolean                  Membership test,\
-    equivalent to 'point in self'
-    points(order='C')     numpy.ndarray            All grid points as\
-    a single array
-    corners(order='C')    tuple of numpy.ndarray's The corner points\
-    of the grid
-    meshgrid(sparse=True) tuple of numpy.ndarray's Efficient grid\
+    ========================== ======================== ===========
+    Signature                  Return type              Description
+    ========================== ======================== ===========
+    equals(other, tol=0.0)     boolean                  Equality test,\
+    equivalent to 'self == other' for 'tol'==0.0
+    contains(point, tol=0.0)   boolean                  Membership\
+    test, equivalent to 'point in self' for 'tol'==0
+    is_subgrid(other, tol=0.0) boolean                  Subgrid test
+    points(order='C')          numpy.ndarray            All grid\
+    points as a single array
+    corners(order='C')         tuple of numpy.ndarray's The corner\
+    points of the grid
+    meshgrid(sparse=True)      tuple of numpy.ndarray's Efficient grid\
     for function evaluation (see numpy.meshgrid)
-    ===================== ======================== ===========
+    ========================== ======================== ===========
     """
 
     def __init__(self, *coord_vectors):
@@ -131,6 +131,7 @@ class TensorGrid(Set):
 
         self._coord_vectors = vecs
 
+    # Attributes
     @property
     def coord_vectors(self):
         """The coordinate vectors of the grid."""
@@ -161,6 +162,7 @@ class TensorGrid(Set):
         """Vector containing the maximal coordinate per axis."""
         return np.array([vec[-1] for vec in self.coord_vectors])
 
+    # Methods
     def equals(self, other, tol=0.0):
         """Test if this grid is equal to another grid.
 
@@ -211,6 +213,8 @@ class TensorGrid(Set):
         # the corresponding other coordinate vector -> O(n^2)
         return(isinstance(other, TensorGrid) and
                np.all(self.shape <= other.shape) and
+               np.all(self.min >= other.min - tol) and
+               np.all(self.max <= other.max + tol) and
                all(np.any(np.isclose(vector_o, coord, atol=tol))
                    for vector_o, vector_s in zip(other.coord_vectors,
                                                  self.coord_vectors)
@@ -355,6 +359,139 @@ class TensorGrid(Set):
     def __str__(self):
         """str(self) implementation."""
         return ' x '.join(array1d_repr(vec) for vec in self.coord_vectors)
+
+
+class RegularGrid(TensorGrid):
+    """An n-dimensional tensor grid with equidistant coordinates.
+
+    This is a sparse representation of an n-dimensional grid defined
+    as the tensor product of n coordinate vectors with equidistant
+    nodes. The grid points are calculated according to the rule
+
+    x_j = center + (j - (shape-1)/2 * stride)
+
+    with elementwise addition and multiplication. Note that the
+    division is a true division (no rounding), thus if there is an
+    axis with an even number of nodes, the center is not a grid point.
+
+    Attributes
+    ----------
+
+    ============= ======================= ===========
+    Name          Type                    Description
+    ============= ======================= ===========
+    coord_vectors list of numpy.ndarray's Vectors containing\
+    the grid point coordinates along each axis
+    dim           int                     Grid dimension
+    shape         tuple of int's          Number of grid points per\
+    axis
+    ntotal        int                     Total number of grid points
+    min           numpy.ndarray           Grid point with minimal\
+    coordinates
+    max           numpy.ndarray           Grid point with maximal\
+    coordinates
+    ============= ======================= ===========
+
+    Methods
+    -------
+
+    ========================== ======================== ===========
+    Signature                  Return type              Description
+    ========================== ======================== ===========
+    equals(other, tol=0.0)     boolean                  Equality test,\
+    equivalent to 'self == other' for 'tol'==0.0
+    contains(point, tol=0.0)   boolean                  Membership\
+    test, equivalent to 'point in self' for 'tol'==0
+    is_subgrid(other, tol=0.0) boolean                  Subgrid test
+    points(order='C')          numpy.ndarray            All grid\
+    points as a single array
+    corners(order='C')         tuple of numpy.ndarray's The corner\
+    points of the grid
+    meshgrid(sparse=True)      tuple of numpy.ndarray's Efficient grid\
+    for function evaluation (see numpy.meshgrid)
+    ========================== ======================== ===========
+    """
+
+    def __init__(self, shape, center=None, stride=None):
+        """
+        Parameters
+        ----------
+
+        shape : array-like or int
+            The number of grid points per axis. For 1D grids, a single
+            integer may be given.
+        center : array-like or float, optional
+            The center of the grid (may not be a grid point). For 1D
+            grids, a single float may be given.
+            Default: (0.0,...,0.0)
+        stride : array-like or float, optional
+            Vector pointing from x_j to x_(j+1). For 1D grids, a single
+            float may be given.
+            Default: (1.0,...,1.0)
+        """
+        shape = np.atleast_1d(shape, dtype=int)
+        if not np.all(shape > 0):
+            raise ValueError("'shape' may only have positive entries.")
+
+        if center is None:
+            center = np.zeros_like(shape, dtype=float)
+        else:
+            center = np.atleast_1d(center, dtype=float)
+            if len(center) != len(shape):
+                raise ValueError(errfmt('''
+                'center' ({}) must have the same length as 'shape' ({}).
+                '''.format(len(center), len(shape))))
+
+        if stride is None:
+            stride = np.ones_like(shape, dtype=float)
+        else:
+            stride = np.atleast_1d(stride, dtype=float)
+            if len(stride) != len(shape):
+                raise ValueError(errfmt('''
+                'stride' ({}) must have the same length as 'shape' ({}).
+                '''.format(len(stride), len(shape))))
+        if not np.all(stride > 0):
+            raise ValueError("'stride' may only have positive entries.")
+
+        coord_vecs = [ct + (shape-1)/2 * st for ct, st in zip(center, stride)]
+        super().__init__(*coord_vecs)
+
+        self._center = center
+        self._stride = stride
+
+    @property
+    def center(self):
+        """The center of the grid. Not necessarily a grid point."""
+        return self._center
+
+    @property
+    def stride(self):
+        """The step per axis between two neighboring grid points."""
+        return self._stride
+
+    def is_subgrid(self, other, tol=0.0):
+        """Test if this grid is contained in another grid.
+
+        Parameters
+        ----------
+
+        tol : float
+            Allow deviations up to this number in absolute value
+            per coordinate vector entry.
+        """
+        # Optimize one more common case
+        if isinstance(other, RegularGrid):
+            if self.stride >= other.stride + 2*tol:
+                return False
+        return(isinstance(other, TensorGrid) and
+               np.all(self.shape <= other.shape) and
+               np.all(self.min >= other.min - tol) and
+               np.all(self.max <= other.max + tol) and
+               all(np.any(np.isclose(vector_o, coord, atol=tol))
+                   for vector_o, vector_s in zip(other.coord_vectors,
+                                                 self.coord_vectors)
+                   for coord in vector_s))
+
 
 if __name__ == '__main__':
     import doctest
