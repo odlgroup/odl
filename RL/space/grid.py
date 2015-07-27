@@ -25,12 +25,11 @@ Includes TensorGrid, RegularGrid, UniformGrid.
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import str, super
+from builtins import super
 from future import standard_library
 
 # External module imports
 import numpy as np
-from numbers import Integral, Real
 
 # RL imports
 from RL.space.set import Set
@@ -481,7 +480,8 @@ class RegularGrid(TensorGrid):
         """
         # Optimize one more common case
         if isinstance(other, RegularGrid):
-            if self.stride >= other.stride + 2*tol:
+            idcs = np.where(self.shape > 2)
+            if np.any(self.stride[idcs] > other.stride[idcs] + tol):
                 return False
         return(isinstance(other, TensorGrid) and
                np.all(self.shape <= other.shape) and
