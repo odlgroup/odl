@@ -65,7 +65,7 @@ class CudaSimpleMCProjector(OP.Operator):
         #Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            
+
             with Timer("projecting"):
                 self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i][0].data_ptr, out[i][1].data_ptr)
 
@@ -104,7 +104,7 @@ for theta in np.linspace(0, pi, nProjection, endpoint=False):
 
 #Define the space of one projection
 projectionSpace = fs.L2(sets.Rectangle([0,0], detectorSize))
-projectionRN = cs.CudaRN(nPixels.prod())
+projectionRN = cs.CudaRn(nPixels.prod())
 
 #Discretize projection space
 projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN, nPixels, 'F')
@@ -116,7 +116,7 @@ dataDisc = ps.powerspace(ps.powerspace(projectionDisc,2), nProjection)
 reconSpace = fs.L2(sets.Cube([0, 0, 0], volumeSize))
 
 #Discretize the reconstruction space
-reconRN = cs.CudaRN(nVoxels.prod())
+reconRN = cs.CudaRn(nVoxels.prod())
 reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels, 'F')
 
 #Create a phantom

@@ -22,7 +22,6 @@ Utilities for use inside the RL project, not for external use.
 # Imports for common Python 2/3 codebase
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
-from builtins import next, range
 from future import standard_library
 
 # External module imports
@@ -31,7 +30,19 @@ from textwrap import dedent, fill
 
 standard_library.install_aliases()
 
-SQRT_2PI = 2.5066282746310002
+SQRT_2PI = np.sqrt(2*np.pi)
+
+
+def errfmt(errstr):
+    return fill(dedent(errstr)).lstrip()
+
+
+def array1d_repr(array):
+    if len(array) < 7:
+        return repr(tuple(array[:].tolist()))
+    else:
+        return ('(' + repr(array[:3].tolist()).strip('[]]') + ', ..., ' +
+                repr(array[-3:].tolist()).strip('[]') + ')')
 
 
 def plot3d_scatter(arr, figsize=None, savefig=None):
@@ -49,36 +60,7 @@ def plot3d_scatter(arr, figsize=None, savefig=None):
         fig.savefig(savefig)
 
 
-def vec_list_from_arg(arg):
-    """Turn argument into a vector tuple. The argument can be a single vector,
-    a list or an array containing the vectors as columns."""
-
-    if len(arg) > 1:  # a number of vectors was passed
-        vecs = list(arg)
-        for i in range(len(vecs)):
-            vecs[i] = np.asarray(vecs[i])
-
-    else:  # an array, a vector or a vector list was passed
-        arg = arg[0]  # unwrap the tuple
-        try:
-            vecs = [arg[:, axis]
-                    for axis in range(arg.shape[1])]  # array
-        except AttributeError:  # list of vectors or single vector
-            try:
-                len(arg[0])  # list of vectors
-                vecs = [np.asarray(arg[axis])
-                        for axis in range(len(arg))]
-            except TypeError:  # single vector
-                vecs = [np.asarray(arg)]
-
-    return vecs
-
-
-def errfmt(errstr):
-    return fill(dedent(errstr)).lstrip()
-
-
-def flat_tuple(seq):
+def flattened_tuple(seq):
     try:
         iter(seq)
     except TypeError:

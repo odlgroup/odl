@@ -114,7 +114,7 @@ with Timer("EuclideanRn"):
         optX.lincomb(oz, 2.13, ox, 3.14, oy)
 print("result: {}".format(oz[1:5]))
 
-with Timer("CudaRN"):
+with Timer("CudaRn"):
     for _ in range(iterations):
         cuX.lincomb(cz, 2.13, cx, 3.14, cy)
 print("result: {}".format(cz[1:5]))
