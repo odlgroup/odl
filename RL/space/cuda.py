@@ -107,12 +107,12 @@ class CudaEn(spaces.LinearSpace):
         --------
 
         >>> rn = CudaEn(3)
-        >>> x = rn.element(np.array((1, 2, 3)))
+        >>> x = rn.element(np.array([1, 2, 3]))
         >>> x
-        CudaEn(3).element((1.0, 2.0, 3.0))
-        >>> y = rn.element((1, 2, 3))
+        CudaEn(3).element([1.0, 2.0, 3.0])
+        >>> y = rn.element([1, 2, 3])
         >>> y
-        CudaEn(3).element((1.0, 2.0, 3.0))
+        CudaEn(3).element([1.0, 2.0, 3.0])
 
         """
         if data is None and data_ptr is None:
@@ -152,12 +152,12 @@ class CudaEn(spaces.LinearSpace):
         Examples
         --------
         >>> rn = CudaEn(3)
-        >>> x = rn.element((1, 2, 3))
-        >>> y = rn.element((4, 5, 6))
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([4, 5, 6])
         >>> z = rn.element()
         >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        CudaEn(3).element((14.0, 19.0, 24.0))
+        CudaEn(3).element([14.0, 19.0, 24.0])
         """
         z.data.linComb(a, x.data, b, y.data)
 
@@ -179,7 +179,7 @@ class CudaEn(spaces.LinearSpace):
         >>> rn = CudaEn(3)
         >>> y = rn.zero()
         >>> y
-        CudaEn(3).element((0.0, 0.0, 0.0))
+        CudaEn(3).element([0.0, 0.0, 0.0])
         """
         return self.Vector(self, self._vector_impl(self.dim, 0))
 
@@ -364,13 +364,13 @@ class CudaEn(spaces.LinearSpace):
             --------
 
             >>> rn = CudaEn(3)
-            >>> x = rn.element((1, 2, 3))
+            >>> x = rn.element([1, 2, 3])
             >>> y = eval(repr(x))
             >>> y
-            CudaEn(3).element((1.0, 2.0, 3.0))
-            >>> z = CudaEn(8).element((1, 2, 3, 4, 5, 6, 7, 8))
+            CudaEn(3).element([1.0, 2.0, 3.0])
+            >>> z = CudaEn(8).element([1, 2, 3, 4, 5, 6, 7, 8])
             >>> z
-            CudaEn(8).element((1.0, 2.0, 3.0, ..., 6.0, 7.0, 8.0))
+            CudaEn(8).element([1.0, 2.0, 3.0, ..., 6.0, 7.0, 8.0])
             """
             return '{!r}.element({})'.format(self.space, array1d_repr(self))
 
@@ -446,13 +446,13 @@ class CudaEn(spaces.LinearSpace):
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            CudaEn(3).element((5.0, 2.0, 3.0))
+            CudaEn(3).element([5.0, 2.0, 3.0])
             >>> y[1:3] = [7, 8]
             >>> y
-            CudaEn(3).element((5.0, 7.0, 8.0))
+            CudaEn(3).element([5.0, 7.0, 8.0])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            CudaEn(3).element((0.0, 0.0, 0.0))
+            CudaEn(3).element([0.0, 0.0, 0.0])
 
             """
             if isinstance(index, slice):
@@ -503,8 +503,8 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         --------
 
         >>> rn = CudaRn(3)
-        >>> x = rn.element((1, 2, 3))
-        >>> y = rn.element((3, 1, 5))
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([3, 1, 5])
         >>> rn.inner(x, y)
         20.0
 
@@ -534,7 +534,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         --------
 
         >>> rn = CudaRn(3)
-        >>> x = rn.element((2, 3, 6))
+        >>> x = rn.element([2, 3, 6])
         >>> rn.norm(x)
         7.0
 
@@ -567,11 +567,11 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         --------
 
         >>> rn = CudaRn(3)
-        >>> x = rn.element((5, 3, 2))
-        >>> y = rn.element((1, 2, 3))
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        CudaRn(3).element((5.0, 6.0, 6.0))
+        CudaRn(3).element([5.0, 6.0, 6.0])
         """
         y.data.multiply(x.data)
 
@@ -660,8 +660,7 @@ try:
 except MemoryError:
     print(errfmt("""
     Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
-    modules.
-    """))
+    modules."""))
     raise ImportError
 
 

@@ -39,10 +39,10 @@ def errfmt(errstr):
 
 def array1d_repr(array):
     if len(array) < 7:
-        return repr(tuple(array[:].tolist()))
+        return repr(array[:].tolist())
     else:
-        return ('(' + repr(array[:3].tolist()).strip('[]]') + ', ..., ' +
-                repr(array[-3:].tolist()).strip('[]') + ')')
+        return (repr(array[:3].tolist()).rstrip(']') + ', ..., ' +
+                repr(array[-3:].tolist()).strip('['))
 
 
 def plot3d_scatter(arr, figsize=None, savefig=None):

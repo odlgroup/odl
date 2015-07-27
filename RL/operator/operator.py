@@ -265,11 +265,11 @@ class Operator(object):
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.element((1, 2, 3))
+        >>> x = rn.element([1, 2, 3])
         >>> y = rn.element()
         >>> Op.apply(x, y)
         >>> y
-        Rn(3).element((1.0, 2.0, 3.0))
+        Rn(3).element([1.0, 2.0, 3.0])
         """
 
         if not self.domain.contains(rhs):
@@ -315,9 +315,9 @@ class Operator(object):
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.element((1, 2, 3))
+        >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        Rn(3).element((1.0, 2.0, 3.0))
+        Rn(3).element([1.0, 2.0, 3.0])
 
         >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
@@ -370,12 +370,12 @@ class Operator(object):
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.element((1, 2, 3))
+        >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        Rn(3).element((1.0, 2.0, 3.0))
+        Rn(3).element([1.0, 2.0, 3.0])
         >>> Scaled = Op * 3
         >>> Scaled(x)
-        Rn(3).element((3.0, 6.0, 9.0))
+        Rn(3).element([3.0, 6.0, 9.0])
 
         >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
@@ -409,12 +409,12 @@ class Operator(object):
         >>> from RL.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
-        >>> x = rn.element((1, 2, 3))
+        >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        Rn(3).element((1.0, 2.0, 3.0))
+        Rn(3).element([1.0, 2.0, 3.0])
         >>> Scaled = 3 * Op
         >>> Scaled(x)
-        Rn(3).element((3.0, 6.0, 9.0))
+        Rn(3).element([3.0, 6.0, 9.0])
 
         >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
@@ -515,11 +515,11 @@ class OperatorSum(Operator):
         >>> from RL.operator.default_operators import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
-        >>> rhs = r3.element((1, 2, 3))
+        >>> rhs = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> OperatorSum(op, op).apply(rhs, out)
         >>> out
-        Rn(3).element((2.0, 4.0, 6.0))
+        Rn(3).element([2.0, 4.0, 6.0])
         """
 
         tmp = self._tmp if self._tmp is not None else self.range.element()
@@ -992,5 +992,5 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
                                                   self._scalar)
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

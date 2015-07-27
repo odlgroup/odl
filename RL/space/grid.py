@@ -223,7 +223,7 @@ class TensorGrid(Set):
         False
         >>> g1 == g2  # equivalent
         False
-        >>> g1.equals(g2, tol=0.1)
+        >>> g1.equals(g2, tol=0.15)
         True
         """
         return (isinstance(other, TensorGrid) and

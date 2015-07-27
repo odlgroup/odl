@@ -77,12 +77,12 @@ class ScalingOperator(op.SelfAdjointOperator):
         -------
         >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
-        >>> vec = r3.element((1, 2, 3))
+        >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.apply(vec, out)
         >>> out
-        Rn(3).element((2.0, 4.0, 6.0))
+        Rn(3).element([2.0, 4.0, 6.0])
         """
 
         out.lincomb(self._scal, input)
@@ -107,10 +107,10 @@ class ScalingOperator(op.SelfAdjointOperator):
         -------
         >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
-        >>> vec = r3.element((1, 2, 3))
+        >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> op(vec)
-        Rn(3).element((2.0, 4.0, 6.0))
+        Rn(3).element([2.0, 4.0, 6.0])
         """
 
         return self._scal * input
@@ -133,7 +133,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         -------
         >>> from RL.space.cartesian import EuclideanRn
         >>> r3 = EuclideanRn(3)
-        >>> vec = r3.element((1, 2, 3))
+        >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> inv = op.inverse
         >>> inv(op(vec)) == vec
@@ -248,13 +248,13 @@ class LinCombOperator(op.LinearOperator):
         -------
         >>> from RL.space.cartesian import Rn
         >>> r3 = Rn(3)
-        >>> x = r3.element((1, 2, 3))
-        >>> y = r3.element((1, 2, 3))
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = LinCombOperator(r3, 1.0, 1.0)
         >>> op.apply([x, y], z)
         >>> z
-        Rn(3).element((2.0, 4.0, 6.0))
+        Rn(3).element([2.0, 4.0, 6.0])
         """
 
         out.lincomb(self.a, input[0], self.b, input[1])
@@ -292,13 +292,13 @@ class MultiplyOperator(op.LinearOperator):
         -------
         >>> from RL.space.cartesian import EuclideanRn
         >>> r3 = EuclideanRn(3)
-        >>> x = r3.element((1, 2, 3))
-        >>> y = r3.element((1, 2, 3))
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
         >>> op.apply([x, y], z)
         >>> z
-        EuclideanRn(3).element((1.0, 4.0, 9.0))
+        EuclideanRn(3).element([1.0, 4.0, 9.0])
         """
 
         out.assign(input[1])

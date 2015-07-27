@@ -48,8 +48,7 @@ try:
     except MemoryError:
         print(errfmt("""
         Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
-        modules.
-        """))
+        modules."""))
         CUDA_AVAILABLE = False
     else:
         CUDA_AVAILABLE = True
@@ -114,27 +113,27 @@ class Rn(LinearSpace):
         >>> x in r3
         True
 
-        >>> x = r3.element((1, 2, 3))
+        >>> x = r3.element([1, 2, 3])
         >>> x
-        Rn(3).element((1.0, 2.0, 3.0))
+        Rn(3).element([1.0, 2.0, 3.0])
 
         Existing NumPy arrays are wrapped instead of copied if their
         dtype is float64:
 
-        >>> a = np.array((1., 2., 3.))
+        >>> a = np.array([1., 2., 3.])
         >>> x = r3.element(a)
         >>> x
-        Rn(3).element((1.0, 2.0, 3.0))
+        Rn(3).element([1.0, 2.0, 3.0])
         >>> x.data is a
         True
 
-        >>> b = np.array((1, 2, 3))
+        >>> b = np.array([1, 2, 3])
         >>> x = r3.element(b)
         >>> x
-        Rn(3).element((1.0, 2.0, 3.0))
-        >>> y = r3.element((1, 2, 3))
+        Rn(3).element([1.0, 2.0, 3.0])
+        >>> y = r3.element([1, 2, 3])
         >>> y
-        Rn(3).element((1.0, 2.0, 3.0))
+        Rn(3).element([1.0, 2.0, 3.0])
 
         """
         if data is None:
@@ -179,12 +178,12 @@ class Rn(LinearSpace):
         Examples
         --------
         >>> r3 = Rn(3)
-        >>> x = r3.element((1, 2, 3))
-        >>> y = r3.element((4, 5, 6))
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([4, 5, 6])
         >>> z = r3.element()
         >>> r3.lincomb(z, 2, x, 3, y)
         >>> z
-        Rn(3).element((14.0, 19.0, 24.0))
+        Rn(3).element([14.0, 19.0, 24.0])
 
         """
         if x is y and b != 0:
@@ -247,7 +246,7 @@ class Rn(LinearSpace):
         >>> r3 = Rn(3)
         >>> x = r3.zero()
         >>> x
-        Rn(3).element((0.0, 0.0, 0.0))
+        Rn(3).element([0.0, 0.0, 0.0])
         """
         return self.element(np.zeros(self._dim, dtype=np.float64))
 
@@ -387,7 +386,7 @@ class Rn(LinearSpace):
 
             Examples
             --------
-            >>> vec = Rn(3).element((1, 2, 3))
+            >>> vec = Rn(3).element([1, 2, 3])
             >>> vec.data
             array([ 1.,  2.,  3.])
             """
@@ -409,7 +408,7 @@ class Rn(LinearSpace):
             Examples
             --------
             >>> import ctypes
-            >>> vec = Rn(3).element((1, 2, 3))
+            >>> vec = Rn(3).element([1, 2, 3])
             >>> arr_type = ctypes.c_double*3
             >>> arr = np.frombuffer(arr_type.from_address(vec.data_ptr))
             >>> arr
@@ -419,7 +418,7 @@ class Rn(LinearSpace):
 
             >>> arr[0] = 5
             >>> vec
-            Rn(3).element((5.0, 2.0, 3.0))
+            Rn(3).element([5.0, 2.0, 3.0])
             """
             return self._data.ctypes.data
 
@@ -468,7 +467,7 @@ class Rn(LinearSpace):
             --------
 
             >>> rn = Rn(3)
-            >>> y = rn.element((1, 2, 3))
+            >>> y = rn.element([1, 2, 3])
             >>> y[0]
             1.0
             >>> y[1:3]
@@ -501,20 +500,20 @@ class Rn(LinearSpace):
             --------
 
             >>> rn = Rn(3)
-            >>> y = rn.element((1, 2, 3))
+            >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            Rn(3).element((5.0, 2.0, 3.0))
+            Rn(3).element([5.0, 2.0, 3.0])
             >>> y[1:3] = [7, 8]
             >>> y
-            Rn(3).element((5.0, 7.0, 8.0))
-            >>> y[:] = np.array((0, 0, 0))
+            Rn(3).element([5.0, 7.0, 8.0])
+            >>> y[:] = np.array([0, 0, 0])
             >>> y
-            Rn(3).element((0.0, 0.0, 0.0))
+            Rn(3).element([0.0, 0.0, 0.0])
 
             >>> y[1:3] = -2.
             >>> y
-            Rn(3).element((0.0, -2.0, -2.0))
+            Rn(3).element([0.0, -2.0, -2.0])
             """
             return self.data.__setitem__(index, value)
 
@@ -665,17 +664,17 @@ class NormedRn(Rn, NormedSpace):
         --------
 
         >>> r2_2 = NormedRn(2, p=2)
-        >>> x = r2_2.element((3, 4))
+        >>> x = r2_2.element([3, 4])
         >>> r2_2.norm(x)
         5.0
 
         >>> r2_1 = NormedRn(2, p=1)
-        >>> x = r2_1.element((3, 4))
+        >>> x = r2_1.element([3, 4])
         >>> r2_1.norm(x)
         7.0
 
         >>> r2_0 = NormedRn(2, p=0)
-        >>> x = r2_0.element((3, 0))
+        >>> x = r2_0.element([3, 0])
         >>> r2_0.norm(x)
         1.0
 
@@ -783,7 +782,7 @@ class EuclideanRn(Rn, HilbertSpace, Algebra):
         --------
 
         >>> rn = EuclideanRn(2)
-        >>> x = rn.element((3, 4))
+        >>> x = rn.element([3, 4])
         >>> rn.norm(x)
         5.0
 
@@ -812,8 +811,8 @@ class EuclideanRn(Rn, HilbertSpace, Algebra):
         --------
 
         >>> rn = EuclideanRn(3)
-        >>> x = rn.element((5, 3, 2))
-        >>> y = rn.element((1, 2, 3))
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
         >>> rn.inner(x, y) == 5*1 + 3*2 + 2*3
         True
 
@@ -848,11 +847,11 @@ class EuclideanRn(Rn, HilbertSpace, Algebra):
         --------
 
         >>> rn = EuclideanRn(3)
-        >>> x = rn.element((5, 3, 2))
-        >>> y = rn.element((1, 2, 3))
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        EuclideanRn(3).element((5.0, 6.0, 6.0))
+        EuclideanRn(3).element([5.0, 6.0, 6.0])
         """
         y.data[:] = x.data * y.data
 
@@ -1003,5 +1002,5 @@ def cartesian(dim, impl='numpy', **kwargs):
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

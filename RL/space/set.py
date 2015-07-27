@@ -216,10 +216,10 @@ class IntervalProd(Set):
         Examples
         --------
 
-        >>> b, e = (-1, 2.5, 70), (-0.5, 10, 75)
+        >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
         >>> rbox = IntervalProd(b, e)
         >>> rbox
-        IntervalProd((-1.0, 2.5, 70.0), (-0.5, 10.0, 75.0))
+        IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
         begin = np.atleast_1d(begin).astype(np.float64)
         end = np.atleast_1d(end).astype(np.float64)
@@ -336,7 +336,7 @@ class IntervalProd(Set):
         --------
 
         >>> from math import sqrt
-        >>> b, e = (-1, 0, 2), (-0.5, 0, 3)
+        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9])  # Num error
         False
@@ -369,7 +369,7 @@ class IntervalProd(Set):
         Examples
         --------
 
-        >>> b, e = (-1, 2.5, 0), (-0.5, 10, 0)
+        >>> b, e = [-1, 2.5, 0], [-0.5, 10, 0]
         >>> rbox = IntervalProd(b, e)
         >>> rbox.measure()
         3.75
@@ -412,11 +412,11 @@ class IntervalProd(Set):
         Examples
         --------
 
-        >>> b, e = (-1, 0, 2), (-0.5, 0, 3)
+        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
-        >>> rbox.dist((-5, 3, 2))
+        >>> rbox.dist([-5, 3, 2])
         5.0
-        >>> rbox.dist((-5, 3, 2), ord=float('inf'))
+        >>> rbox.dist([-5, 3, 2], ord=float('inf'))
         4.0
         """
         point = np.atleast_1d(point)
@@ -460,17 +460,17 @@ class IntervalProd(Set):
         Examples
         --------
 
-        >>> b, e = (-1, 0, 2), (-0.5, 1, 3)
+        >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(b, e)
         >>> rbox.collapse(1, 0)
-        IntervalProd((-1.0, 0.0, 2.0), (-0.5, 0.0, 3.0))
-        >>> rbox.collapse((1, 2), (0, 2.5))
-        IntervalProd((-1.0, 0.0, 2.5), (-0.5, 0.0, 2.5))
-        >>> rbox.collapse((1, 2), (0, 3.5))
+        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
+        >>> rbox.collapse([1, 2], [0, 2.5])
+        IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
+        >>> rbox.collapse([1, 2], [0, 3.5])
         Traceback (most recent call last):
             ...
-        ValueError: 'value' not within interval boundaries ((3.5,) > \
-(3.0,))
+        ValueError: 'value' not within interval boundaries ([3.5] > \
+[3.0])
         """
         index = np.atleast_1d(index)
         value = np.atleast_1d(value)
@@ -482,21 +482,21 @@ class IntervalProd(Set):
         if np.any(index < 0) or np.any(index >= self.dim):
             raise IndexError(errfmt('''
             'index'({!r}) out of range (max {})
-            '''.format(tuple(index), self.dim)))
+            '''.format(list(index), self.dim)))
 
         if np.any(value < self._begin[index]):
             i_smaller = np.where(value < self._begin[index])
             raise ValueError(errfmt('''
             'value' not within interval boundaries ({!r} < {!r})
-            '''.format(tuple(value[i_smaller]),
-                       tuple((self._begin[index])[i_smaller]))))
+            '''.format(list(value[i_smaller]),
+                       list((self._begin[index])[i_smaller]))))
 
         if np.any(value > self._end[index]):
             i_larger = np.where(value > self._end[index])
             raise ValueError(errfmt('''
             'value' not within interval boundaries ({!r} > {!r})
-            '''.format(tuple(value[i_larger]),
-                       tuple((self._end[index])[i_larger]))))
+            '''.format(list(value[i_larger]),
+                       list((self._end[index])[i_larger]))))
 
         b_new = self._begin.copy()
         b_new[index] = value
@@ -518,14 +518,14 @@ class IntervalProd(Set):
         Examples
         --------
 
-        >>> b, e = (-1, 0, 2), (-0.5, 1, 3)
+        >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(b, e)
         >>> rbox.collapse(1, 0).squeeze()
-        IntervalProd((-1.0, 2.0), (-0.5, 3.0))
-        >>> rbox.collapse((1, 2), (0, 2.5)).squeeze()
-        IntervalProd((-1.0,), (-0.5,))
-        >>> rbox.collapse((0, 1, 2), (-1, 0, 2.5)).squeeze()
-        IntervalProd((), ())
+        IntervalProd([-1.0, 2.0], [-0.5, 3.0])
+        >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
+        IntervalProd([-1.0], [-0.5])
+        >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
+        IntervalProd([], [])
         """
         b_new = self._begin[self._inondeg]
         e_new = self._end[self._inondeg]
@@ -556,12 +556,12 @@ class IntervalProd(Set):
         Examples
         --------
 
-        >>> rbox = IntervalProd((-1, 2), (-0.5, 3))
-        >>> rbox2 = IntervalProd((0, 0), (1, 0))
+        >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
+        >>> rbox2 = IntervalProd([0, 0], [1, 0])
         >>> rbox.insert(rbox2, 1)
-        IntervalProd((-1.0, 0.0, 0.0, 2.0), (-0.5, 1.0, 0.0, 3.0))
-        >>> rbox.insert((-1.0, 0.0), 2)
-        IntervalProd((-1.0, 2.0, -1.0, 0.0), (-0.5, 3.0, -1.0, 0.0))
+        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
+        >>> rbox.insert([-1.0, 0.0], 2)
+        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
         >>> rbox.insert(0, 1).squeeze().equals(rbox)
         True
         """
