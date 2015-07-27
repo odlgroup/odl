@@ -17,9 +17,12 @@
 
 """Efficient implementation of n-dimensional sampling grids.
 
-Includes TensorGrid, RegularGrid, UniformGrid.
-
-# TODO: document public interface
+=========== ===========
+Class name  Description
+=========== ===========
+TensorGrid  Tensor product of coordinate vectors, possibly non-uniform
+RegularGrid Tensor product of vectors with regularly spaced coordinates
+=========== ===========
 """
 
 # Imports for common Python 2/3 codebase
@@ -56,12 +59,17 @@ class TensorGrid(Set):
     ============= ======================= ===========
     coord_vectors list of numpy.ndarray's Vectors containing\
     the grid point coordinates along each axis
+
     dim           int                     Grid dimension
+
     shape         tuple of int's          Number of grid points per\
     axis
+
     ntotal        int                     Total number of grid points
+
     min           numpy.ndarray           Grid point with minimal\
     coordinates
+
     max           numpy.ndarray           Grid point with maximal\
     coordinates
     ============= ======================= ===========
@@ -95,6 +103,21 @@ class TensorGrid(Set):
             The coordinate vectors defining the grid points. They must be
             sorted in ascending order and may not contain duplicates.
             Empty vectors are not allowed.
+
+        Examples
+        --------
+
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g
+        TensorGrid([1.0, 2.0, 5.0], [-2.0, 1.5, 2.0])
+        >>> print(g)
+        [1.0, 2.0, 5.0] x [-2.0, 1.5, 2.0]
+        >>> g.dim  # dimension = number of axes
+        2
+        >>> g.shape  # points per axis
+        (3, 3)
+        >>> g.ntotal  # total number of points
+        9
         """
         if not coord_vectors:
             raise ValueError('No coordinate vectors given.')
@@ -153,12 +176,28 @@ class TensorGrid(Set):
 
     @property
     def min(self):
-        """Vector containing the minimal coordinate per axis."""
+        """Vector containing the minimal coordinate per axis.
+
+        Example
+        -------
+
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g.min
+        array([ 1., -2.])
+        """
         return np.array([vec[0] for vec in self.coord_vectors])
 
     @property
     def max(self):
-        """Vector containing the maximal coordinate per axis."""
+        """Vector containing the maximal coordinate per axis.
+
+        Example
+        -------
+
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g.max
+        array([ 5., 2.])
+        """
         return np.array([vec[-1] for vec in self.coord_vectors])
 
     # Methods
@@ -174,6 +213,18 @@ class TensorGrid(Set):
         tol : float
             Allow deviations up to this number in absolute value
             per vector entry.
+
+        Examples
+        --------
+
+        >>> g1 = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g2 = TensorGrid([-0.1, 1.1], [-1, 0.1, 2])
+        >>> g1.equals(g2)
+        False
+        >>> g1 == g2  # equivalent
+        False
+        >>> g1.equals(g2, tol=0.1)
+        True
         """
         return (isinstance(other, TensorGrid) and
                 self.dim == other.dim and
@@ -494,5 +545,5 @@ class RegularGrid(TensorGrid):
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)
