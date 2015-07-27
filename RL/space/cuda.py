@@ -253,7 +253,7 @@ class CudaEn(spaces.LinearSpace):
         >>> r3a.equals(r3b)
         True
 
-        False when comparing to other dimension RN
+        False when comparing to other dimension Rn
         >>> r3, r4 = CudaEn(3), CudaEn(4)
         >>> r3.equals(r4)
         False
@@ -577,7 +577,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        CudaRN(3).element([5.0, 6.0, 6.0])
+        CudaRn(3).element([5.0, 6.0, 6.0])
         """
         y.data.multiply(x.data)
 
@@ -606,7 +606,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         >>> r3a.equals(r3b)
         True
 
-        False when comparing to other dimension RN
+        False when comparing to other dimension Rn
         >>> r3, r4 = CudaRn(3), CudaRn(4)
         >>> r3.equals(r4)
         False
