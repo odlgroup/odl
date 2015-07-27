@@ -56,13 +56,18 @@ class TensorGrid(Set):
     ============= ======================= ===========
     coord_vectors list of numpy.ndarray's Vectors containing\
     the grid point coordinates along each axis
+
     dim           int                     Grid dimension
+
     shape         tuple of int's          Number of grid points per\
     axis
+
     ntotal        int                     Total number of grid points
-    min           numpy.ndarray           Grid point with minimal\
+
+    min           numpy.ndarray           Grid point with minimal \
     coordinates
-    max           numpy.ndarray           Grid point with maximal\
+
+    max           numpy.ndarray           Grid point with maximal \
     coordinates
     ============= ======================= ===========
 
