@@ -178,7 +178,7 @@ class TensorGrid(Set):
         return (isinstance(other, TensorGrid) and
                 self.dim == other.dim and
                 self.shape == other.shape and
-                all(np.allclose(vec_s, vec_o, atol=tol)
+                all(np.allclose(vec_s, vec_o, atol=tol, rtol=0.0)
                     for (vec_s, vec_o) in zip(self.coord_vectors,
                                               other.coord_vectors)))
 
@@ -194,7 +194,7 @@ class TensorGrid(Set):
         """
         point = np.atleast_1d(point)
         return (point.shape == (self.dim,) and
-                all(np.any(np.isclose(vector, coord, atol=tol))
+                all(np.any(np.isclose(vector, coord, atol=tol, rtol=0.0))
                     for vector, coord in zip(self.coord_vectors, point)))
 
     def is_subgrid(self, other, tol=0.0):
@@ -214,7 +214,7 @@ class TensorGrid(Set):
                np.all(self.shape <= other.shape) and
                np.all(self.min >= other.min - tol) and
                np.all(self.max <= other.max + tol) and
-               all(np.any(np.isclose(vector_o, coord, atol=tol))
+               all(np.any(np.isclose(vector_o, coord, atol=tol, rtol=0.0))
                    for vector_o, vector_s in zip(other.coord_vectors,
                                                  self.coord_vectors)
                    for coord in vector_s))
@@ -487,7 +487,7 @@ class RegularGrid(TensorGrid):
                np.all(self.shape <= other.shape) and
                np.all(self.min >= other.min - tol) and
                np.all(self.max <= other.max + tol) and
-               all(np.any(np.isclose(vector_o, coord, atol=tol))
+               all(np.any(np.isclose(vector_o, coord, atol=tol, rtol=0.0))
                    for vector_o, vector_s in zip(other.coord_vectors,
                                                  self.coord_vectors)
                    for coord in vector_s))
