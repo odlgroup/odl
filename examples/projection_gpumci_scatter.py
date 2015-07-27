@@ -29,11 +29,10 @@ import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.cuda as cs
 import RL.space.product as ps
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import GPUMCIPy as gpumci
-import RL.operator.solvers as solvers
 from RL.utility.testutils import Timer
 
 import matplotlib.pyplot as plt
@@ -65,7 +64,7 @@ class CudaSimpleMCProjector(OP.Operator):
         #Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
-            
+
             with Timer("projecting"):
                 self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i][0].data_ptr, out[i][1].data_ptr)
 
