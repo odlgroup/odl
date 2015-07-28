@@ -27,6 +27,7 @@ import numpy as np
 
 # RL imports
 from RL.space.grid import TensorGrid
+from RL.space.set import IntervalProd
 from RL.utility.testutils import RLTestCase
 
 standard_library.install_aliases()
@@ -166,8 +167,8 @@ class TensorGridTestMethods(RLTestCase):
         grid1 = TensorGrid(vec1, vec2)
         grid2 = TensorGrid(vec1 + (0.1, 0.05, 0, -0.1),
                            vec2 + (0.1, 0.05, 0, -0.1, -0.1))
-        self.assertTrue(grid1.equals(grid2, tol=0.1))
-        self.assertTrue(grid2.equals(grid1, tol=0.1))
+        self.assertTrue(grid1.equals(grid2, tol=0.15))
+        self.assertTrue(grid2.equals(grid1, tol=0.15))
 
         grid2 = TensorGrid(vec1 + (0.11, 0.05, 0, -0.1),
                            vec2 + (0.1, 0.05, 0, -0.1, -0.1))
@@ -196,8 +197,8 @@ class TensorGridTestMethods(RLTestCase):
         self.assertTrue((2, 0, 0) not in grid)
 
         # Fuzzy check
-        self.assertTrue(grid.contains((2.1, -2.1), tol=0.1))
-        self.assertFalse(grid.contains((2.2, -2.1), tol=0.1))
+        self.assertTrue(grid.contains((2.1, -2.1), tol=0.15))
+        self.assertFalse(grid.contains((2.2, -2.1), tol=0.15))
 
         # 1d points
         grid = TensorGrid(vec1)
@@ -227,7 +228,7 @@ class TensorGridTestMethods(RLTestCase):
         fuzzy_vec1_sup = vec1_sup + (0.1, 0.05, 0, -0.1, 0, 0.1)
         fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.1, 0.05)
         fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
-        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.1))
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.15))
 
         fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.11, 0.05)
         fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
@@ -236,7 +237,7 @@ class TensorGridTestMethods(RLTestCase):
         # Changes in the non-overlapping part don't matter
         fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.05, 0.11)
         fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
-        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.1))
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.15))
 
         # With degenerate axis
         grid = TensorGrid(vec1, scalar, vec2)
@@ -244,7 +245,7 @@ class TensorGridTestMethods(RLTestCase):
         self.assertTrue(grid.is_subgrid(sup_grid))
 
         fuzzy_sup_grid = TensorGrid(vec1, scalar+0.1, vec2)
-        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.1))
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.15))
 
     def test_points(self):
         vec1 = np.arange(2, 6)
@@ -272,7 +273,7 @@ class TensorGridTestMethods(RLTestCase):
         grid = TensorGrid(vec1, vec2)
         self.assertAllAlmostEquals(points, grid.points(order='F'), delta=0)
 
-        # Degenerated axis 1
+        # Degenerate axis 1
         points = []
         for x1 in vec1:
             for x2 in vec2:
@@ -281,7 +282,7 @@ class TensorGridTestMethods(RLTestCase):
         grid = TensorGrid(scalar, vec1, vec2)
         self.assertAllAlmostEquals(points, grid.points(), delta=0)
 
-        # Degenerated axis 2
+        # Degenerate axis 2
         points = []
         for x1 in vec1:
             for x2 in vec2:
@@ -290,7 +291,7 @@ class TensorGridTestMethods(RLTestCase):
         grid = TensorGrid(vec1, scalar, vec2)
         self.assertAllAlmostEquals(points, grid.points(), delta=0)
 
-        # Degenerated axis 3
+        # Degenerate axis 3
         points = []
         for x1 in vec1:
             for x2 in vec2:
@@ -333,7 +334,7 @@ class TensorGridTestMethods(RLTestCase):
 
         self.assertAllAlmostEquals(corners, grid.corners(order='F'), delta=0)
 
-        # Degenerated axis 1
+        # Degenerate axis 1
         corners = []
         for x2 in minmax2:
             for x3 in minmax3:
@@ -342,7 +343,7 @@ class TensorGridTestMethods(RLTestCase):
         grid = TensorGrid(scalar, vec2, vec3)
         self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
 
-        # Degenerated axis 2
+        # Degenerate axis 2
         corners = []
         for x1 in minmax1:
             for x3 in minmax3:
@@ -351,7 +352,7 @@ class TensorGridTestMethods(RLTestCase):
         grid = TensorGrid(vec1, scalar, vec3)
         self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
 
-        # Degenerated axis 3
+        # Degenerate axis 3
         corners = []
         for x1 in minmax1:
             for x2 in minmax2:
@@ -360,7 +361,7 @@ class TensorGridTestMethods(RLTestCase):
         grid = TensorGrid(vec1, vec2, scalar)
         self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
 
-        # All degenerated
+        # All degenerate
         corners = [(scalar, scalar)]
         grid = TensorGrid(scalar, scalar)
         self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
@@ -417,6 +418,12 @@ class TensorGridTestMethods(RLTestCase):
         vec4_sub = (1,)
 
         grid = TensorGrid(vec1, vec2, vec3, vec4)
+
+        # Single indices yield points as an array
+        self.assertAllAlmostEquals(grid[1, 0, 1, 0], (1.0, -1.0, 3.0, 1.0),
+                                   delta=0)
+
+        # Slices return new TensorGrid's
         sub_grid = TensorGrid(vec1_sub, vec2_sub, vec3_sub, vec4_sub)
         self.assertEquals(grid[1, 0, 1:3, 0], sub_grid)
         self.assertEquals(grid[-1, :1, 1:3, :1], sub_grid)
@@ -434,6 +441,26 @@ class TensorGridTestMethods(RLTestCase):
         self.assertEquals(grid[1, :, :, 0], sub_grid)
         self.assertEquals(grid[1, ..., 0], sub_grid)
         self.assertEquals(grid[1, :, :, ..., 0], sub_grid)
+
+    def test_convex_hull(self):
+        vec1 = (0, 1)
+        vec2 = (-1, 0, 1)
+        vec3 = (2, 3, 4, 5)
+        scalar = 0.5
+
+        grid = TensorGrid(vec1, vec2, vec3)
+        begin = (vec1[0], vec2[0], vec3[0])
+        end = (vec1[-1], vec2[-1], vec3[-1])
+        chull = IntervalProd(begin, end)
+        self.assertEquals(grid.convex_hull(), chull)
+
+        # With degenerate axis
+        grid = TensorGrid(vec1, vec2, scalar)
+        begin = (vec1[0], vec2[0], scalar)
+        end = (vec1[-1], vec2[-1], scalar)
+        chull = IntervalProd(begin, end)
+        self.assertEquals(grid.convex_hull(), chull)
+
 
 if __name__ == '__main__':
     unittest.main(exit=False)

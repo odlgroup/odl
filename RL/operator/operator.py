@@ -17,7 +17,7 @@
 
 # pylint: disable=protected-access
 """
-General abstract operators defined on Set's aswell as sums
+General abstract operators defined on Set's as well as sums
 and compositions of such.
 
 Also contains LinearOperator specializations for linear operators
@@ -261,15 +261,15 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import RN
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element()
         >>> Op.apply(x, y)
         >>> y
-        RN(3).element([1.0, 2.0, 3.0])
+        Rn(3).element([1.0, 2.0, 3.0])
         """
 
         if not self.domain.contains(rhs):
@@ -311,13 +311,13 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import RN
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        RN(3).element([1.0, 2.0, 3.0])
+        Rn(3).element([1.0, 2.0, 3.0])
 
         >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
@@ -366,16 +366,16 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import RN
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        RN(3).element([1.0, 2.0, 3.0])
+        Rn(3).element([1.0, 2.0, 3.0])
         >>> Scaled = Op * 3
         >>> Scaled(x)
-        RN(3).element([3.0, 6.0, 9.0])
+        Rn(3).element([3.0, 6.0, 9.0])
 
         >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
@@ -405,16 +405,16 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import RN
+        >>> from RL.space.cartesian import Rn
         >>> from RL.operator.default_operators import IdentityOperator
-        >>> rn = RN(3)
+        >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
-        RN(3).element([1.0, 2.0, 3.0])
+        Rn(3).element([1.0, 2.0, 3.0])
         >>> Scaled = 3 * Op
         >>> Scaled(x)
-        RN(3).element([3.0, 6.0, 9.0])
+        Rn(3).element([3.0, 6.0, 9.0])
 
         >>> from RL.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
@@ -992,5 +992,5 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
                                                   self._scalar)
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

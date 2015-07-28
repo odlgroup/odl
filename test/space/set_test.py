@@ -111,7 +111,7 @@ class IntervalProdTest(RLTestCase):
         self.assertEquals(set_.truedim, 0)
 
         set_ = IntervalProd(0, np.inf)
-        self.assertEquals(set_.dim, 1)
+        self.assertEquals(set_.truedim, 1)
 
         set_ = IntervalProd([1], [2])
         self.assertEquals(set_.truedim, 1)
@@ -121,6 +121,25 @@ class IntervalProdTest(RLTestCase):
 
         set_ = IntervalProd([1, 2, 3], [1, 6, 7])
         self.assertEquals(set_.truedim, 2)
+
+    def test_size(self):
+        set_ = IntervalProd(1, 2)
+        self.assertEquals(set_.size, 1)
+
+        set_ = IntervalProd(1, 1)
+        self.assertEquals(set_.size, 0)
+
+        set_ = IntervalProd(0, np.inf)
+        self.assertEquals(set_.size, np.inf)
+
+        set_ = IntervalProd(-np.inf, 0)
+        self.assertEquals(set_.size, np.inf)
+
+        set_ = IntervalProd(-np.inf, np.inf)
+        self.assertEquals(set_.size, np.inf)
+
+        set_ = IntervalProd([1, 2, 3], [5, 6, 7])
+        self.assertAllAlmostEquals(set_.size, [4, 4, 4], delta=0)
 
     def test_volume(self):
         set_ = IntervalProd(1, 2)

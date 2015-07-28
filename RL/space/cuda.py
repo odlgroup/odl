@@ -33,8 +33,8 @@ from numbers import Integral
 # RL imports
 import RL.space.space as spaces
 import RL.space.set as sets
+from RL.utility.utility import errfmt, array1d_repr
 import RLcpp.PyCuda
-from RL.utility.utility import errfmt
 
 standard_library.install_aliases()
 
@@ -253,7 +253,7 @@ class CudaEn(spaces.LinearSpace):
         >>> r3a.equals(r3b)
         True
 
-        False when comparing to other dimension RN
+        False when comparing to other dimension Rn
         >>> r3, r4 = CudaEn(3), CudaEn(4)
         >>> r3.equals(r4)
         False
@@ -372,13 +372,7 @@ class CudaEn(spaces.LinearSpace):
             >>> z
             CudaEn(8).element([1.0, 2.0, 3.0, ..., 6.0, 7.0, 8.0])
             """
-            if self.space.dim < 7:
-                return '{!r}.element({!r})'.format(self.space,
-                                                   self[:].tolist())
-            else:
-                val_str = (repr(self[:3].tolist()).rstrip(']') + ', ..., ' +
-                           repr(self[-3:].tolist()).lstrip('['))
-                return repr(self.space) + '.element(' + val_str + ')'
+            return '{!r}.element({})'.format(self.space, array1d_repr(self))
 
         def __len__(self):
             """The dimension of the underlying space."""
@@ -577,7 +571,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         >>> y = rn.element([1, 2, 3])
         >>> rn.multiply(x, y)
         >>> y
-        CudaRN(3).element([5.0, 6.0, 6.0])
+        CudaRn(3).element([5.0, 6.0, 6.0])
         """
         y.data.multiply(x.data)
 
@@ -606,7 +600,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         >>> r3a.equals(r3b)
         True
 
-        False when comparing to other dimension RN
+        False when comparing to other dimension Rn
         >>> r3, r4 = CudaRn(3), CudaRn(4)
         >>> r3.equals(r4)
         False
@@ -661,6 +655,15 @@ def sum(inp):
     return RLcpp.PyCuda.sum(inp.data)
 
 
+try:
+    CudaRn(1).element()
+except MemoryError:
+    print(errfmt("""
+    Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
+    modules."""))
+    raise ImportError
+
+
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)
