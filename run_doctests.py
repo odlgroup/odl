@@ -24,4 +24,9 @@ arg = sys.argv[:1]
 arg.append('--verbosity=2')
 arg.append('--with-coverage')
 arg.append('--with-doctest')
+arg.append('--doctest-options=+NORMALIZE_WHITESPACE')
+try:
+    import RL.space.cuda
+except ImportError:
+    arg.append('--ignore-files=cuda.py')
 out = nose.run(defaultTest='./RL/.', argv=arg)
