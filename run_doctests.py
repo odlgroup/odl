@@ -23,6 +23,7 @@ import sys
 arg = sys.argv[:1]
 arg.append('--verbosity=2')
 arg.append('--with-coverage')
+arg.append('--cover-package=RL')
 arg.append('--with-doctest')
 arg.append('--doctest-options=+NORMALIZE_WHITESPACE')
 try:
