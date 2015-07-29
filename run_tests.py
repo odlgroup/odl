@@ -23,4 +23,6 @@ import sys
 if __name__ == '__main__':
     arg = sys.argv[:1]
     arg.append('--verbosity=2')
+    arg.append('--with-coverage')
+    arg.append('--cover-package=RL')
     out = nose.run(defaultTest='./test/.', argv=arg)

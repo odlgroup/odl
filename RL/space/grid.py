@@ -15,13 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with RL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Efficient implementation of n-dimensional sampling grids.
+"""Efficient implementations of n-dimensional sampling grids.
+
+Sampling grids are collections of points in an n-dimensional coordinate
+space with a certain structure which is exploited to minimize storage.
 
 =========== ===========
 Class name  Description
 =========== ===========
-TensorGrid  Tensor product of coordinate vectors, possibly non-uniform
-RegularGrid Tensor product of vectors with regularly spaced coordinates
+TensorGrid  The points are given as the tensor product of n coordinate \
+vectors, i.e. all possible n-tuples where the i-th coordinate is from \
+the i-th coordinate vector.
+RegularGrid A variant of a tensor grid where the entries of each \
+coordinate vector are equispaced. This type of grid can be represented \
+by three n-dimensional vectors.
 =========== ===========
 """
 
@@ -513,7 +520,7 @@ of the grid
         ----------
 
         slc : int or slice
-            Negative indices are not supported.
+            Negative indices and 'None' (new axis) are not supported.
 
         Examples
         --------
@@ -525,19 +532,31 @@ of the grid
         TensorGrid([-1.0, 0.0, 3.0], [2.0], [5.0], [2.0])
         >>> g[0, ..., 1:]
         TensorGrid([-1.0], [2.0, 4.0], [5.0], [4.0, 7.0])
+        >>> g[::2, ..., ::2]
+        TensorGrid([-1.0, 3.0], [2.0, 4.0], [5.0], [2.0, 7.0])
         """
-        slc_list = list(np.s_[slc])
+        slc_list = list(np.atleast_1d(np.s_[slc]))
+        if None in slc_list:
+            raise IndexError('Creation of new axes not supported.')
+
         try:
-            idx = np.array(slc_list, dtype=int)
-            return np.array([v[idx[i]]
-                             for i, v in enumerate(self.coord_vectors)])
+            idx = np.array(slc_list, dtype=int)  # All single indices
+            if len(idx) < self.dim:
+                raise IndexError(errfmt('''
+                Too few indices ({} < {}).'''.format(len(idx), self.dim)))
+            elif len(idx) > self.dim:
+                raise IndexError(errfmt('''
+                Too many indices ({} > {}).'''.format(len(idx), self.dim)))
+
+            return np.array([v[i] for i, v in zip(idx, self.coord_vectors)])
+
         except TypeError:
             pass
 
         if Ellipsis in slc_list:
             if slc_list.count(Ellipsis) > 1:
-                raise ValueError("Cannot use more than one ellipsis.")
-            if len(slc_list) == self.dim + 1:
+                raise IndexError("Cannot use more than one ellipsis.")
+            if len(slc_list) == self.dim + 1:  # Ellipsis without effect
                 ellipsis_idx = self.dim
                 num_after_ellipsis = 0
             else:
@@ -548,13 +567,17 @@ of the grid
         else:
             if len(slc_list) < self.dim:
                 raise IndexError(errfmt('''
-                Too few axes ({} < {}).'''.format(len(slc_list, self.dim))))
+                Too few axes ({} < {}).'''.format(len(slc_list), self.dim)))
             ellipsis_idx = self.dim
             num_after_ellipsis = 0
 
+        if any(s.start == s.stop and s.start is not None
+               for s in slc_list if isinstance(s, slice)):
+            raise IndexError('Slices with empty axes not allowed.')
+
         if len(slc_list) > self.dim:
             raise IndexError(errfmt('''
-            Too many axes ({} > {}).'''.format(len(slc_list, self.dim))))
+            Too many axes ({} > {}).'''.format(len(slc_list), self.dim)))
 
         new_vecs = []
         for i in range(ellipsis_idx):
@@ -766,13 +789,14 @@ of the grid
         >>> rg_sub.is_subgrid(rg, tol=0.02)
         True
         """
-        # Optimize one more common case
+        # Optimize some more common cases
         if isinstance(other, RegularGrid):
             idcs = np.where(self.shape > 2)
             if np.any(self.stride[idcs] < other.stride[idcs] - tol):
                 return False
 
         # Same as for TensorGrid
+        # TODO: How can this be reliably optimized for RegularGrid's?
         if not (isinstance(other, TensorGrid) and
                 np.all(self.shape <= other.shape) and
                 np.all(self.min >= other.min - tol) and
@@ -787,7 +811,105 @@ of the grid
 
         return True
 
-        return True
+    def __getitem__(self, slc):
+        """self[slc] implementation.
+
+        Parameters
+        ----------
+
+        slc : int or slice
+            Negative indices and 'None' (new axis) are not supported.
+
+        Examples
+        --------
+
+        >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
+        >>> g[0, 0, 0, 0]
+        array([-1., 2., 5., 2.])
+        >>> g[:, 0, 0, 0]
+        TensorGrid([-1.0, 0.0, 3.0], [2.0], [5.0], [2.0])
+        >>> g[0, ..., 1:]
+        TensorGrid([-1.0], [2.0, 4.0], [5.0], [4.0, 7.0])
+        >>> g[::2, ..., ::2]
+        TensorGrid([-1.0, 3.0], [2.0, 4.0], [5.0], [2.0, 7.0])
+        """
+        from math import ceil
+
+        slc_list = list(np.atleast_1d(np.s_[slc]))
+        if None in slc_list:
+            raise IndexError('Creation of new axes not supported.')
+
+        try:
+            idx = np.array(slc_list, dtype=int)  # All single indices
+            if len(idx) < self.dim:
+                raise IndexError(errfmt('''
+                Too few indices ({} < {}).'''.format(len(idx), self.dim)))
+            elif len(idx) > self.dim:
+                raise IndexError(errfmt('''
+                Too many indices ({} > {}).'''.format(len(idx), self.dim)))
+
+            return np.array([v[i] for i, v in zip(idx, self.coord_vectors)])
+
+        except TypeError:
+            pass
+
+        if Ellipsis in slc_list:
+            if slc_list.count(Ellipsis) > 1:
+                raise IndexError("Cannot use more than one ellipsis.")
+            if len(slc_list) == self.dim + 1:  # Ellipsis without effect
+                ellipsis_idx = self.dim
+                num_after_ellipsis = 0
+            else:
+                ellipsis_idx = slc_list.index(Ellipsis)
+                num_after_ellipsis = len(slc_list) - ellipsis_idx - 1
+            slc_list.remove(Ellipsis)
+
+        else:
+            if len(slc_list) < self.dim:
+                raise IndexError(errfmt('''
+                Too few axes ({} < {}).'''.format(len(slc_list), self.dim)))
+            ellipsis_idx = self.dim
+            num_after_ellipsis = 0
+
+        if any(s.start == s.stop and s.start is not None
+               for s in slc_list if isinstance(s, slice)):
+            raise IndexError('Slices with empty axes not allowed.')
+
+        if len(slc_list) > self.dim:
+            raise IndexError(errfmt('''
+            Too many axes ({} > {}).'''.format(len(slc_list), self.dim)))
+
+        new_shape, new_center, new_stride = -np.ones((3, self.dim))
+
+        # Copy axes corresponding to ellipsis
+        ell_idcs = np.arange(ellipsis_idx, self.dim - num_after_ellipsis)
+        new_shape[ell_idcs] = np.array(self.shape)[ell_idcs]
+        new_center[ell_idcs] = self.center[ell_idcs]
+        new_stride[ell_idcs] = self.stride[ell_idcs]
+
+        # The other indices
+        for i in range(ellipsis_idx):
+            if isinstance(slc_list[i], slice):
+                istart, istop, istep = slc_list[i].indices(self.shape[i])
+            else:
+                istart, istop, istep = slc_list[i], slc_list[i]+1, 1
+            new_shape[i] = ceil((istop - istart) / istep)
+            new_stride[i] = istep * self.stride[i]
+            new_center[i] = (self.min[i] + istart * self.stride[i] +
+                             (new_shape[i]-1)/2 * new_stride[i])
+
+        for i in range(1, num_after_ellipsis + 1):
+            i = -i
+            if isinstance(slc_list[i], slice):
+                istart, istop, istep = slc_list[i].indices(self.shape[i])
+            else:
+                istart, istop, istep = slc_list[i], slc_list[i]+1, 1
+            new_shape[i] = ceil((istop - istart) / istep)
+            new_stride[i] = istep * self.stride[i]
+            new_center[i] = (self.min[i] + istart * self.stride[i] +
+                             (new_shape[i]-1)/2 * new_stride[i])
+
+        return RegularGrid(new_shape, new_center, new_stride)
 
     def __repr__(self):
         """repr(self) implementation."""
