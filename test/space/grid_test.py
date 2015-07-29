@@ -136,6 +136,14 @@ class TensorGridTestAttributes(RLTestCase):
 
 
 class TensorGridTestMethods(RLTestCase):
+    def test_element(self):
+        vec1 = np.arange(2, 6)
+        vec2 = np.arange(-4, 5, 2)
+
+        grid = TensorGrid(vec1, vec2)
+        some_pt = grid.element()
+        self.assertIn(some_pt, grid)
+
     def test_equals(self):
         vec1 = np.arange(2, 6)
         vec2 = np.arange(-4, 5, 2)
@@ -630,12 +638,13 @@ class RegularGridTestAttributes(RLTestCase):
 
 
 class RegularGridTestMethods(RLTestCase):
-    def test_is_subgrid(self):  # TODO:
+    def test_is_subgrid(self):
         center = (1, 0, -2)
         shape = (2, 1, 3)
         stride = (0.5, 1, 3)
 
         grid = RegularGrid(shape, center, stride)
+        self.assertTrue(grid.is_subgrid(grid))
 
         center_sup = (1.125, -1, -2)
         shape_sup = (6, 2, 5)
@@ -644,6 +653,10 @@ class RegularGridTestMethods(RLTestCase):
         sup_grid = RegularGrid(shape_sup, center_sup, stride_sup)
         self.assertTrue(grid.is_subgrid(sup_grid))
         self.assertFalse(sup_grid.is_subgrid(grid))
+
+        center_sup = (1.375, -1, -2)
+        sup_grid = RegularGrid(shape_sup, center_sup, stride_sup)
+        self.assertTrue(grid.is_subgrid(sup_grid))
 
         center_not_sup = (1.25, -1, -8)
         shape_not_sup = (1, 2, 5)
@@ -674,7 +687,27 @@ class RegularGridTestMethods(RLTestCase):
                                          vec3_not_sup)
         self.assertFalse(grid.is_subgrid(tensor_not_sup_grid))
 
-        # TODO: Fuzzy checks
+        # Fuzzy check
+        # TODO: one more to be sure(r)
+        center_sup = (1.125, -1, -2)
+        shape_sup = (6, 2, 5)
+        stride_sup = (0.25, 2, 3)
+        center_fuzzy_sup = (1.35, -1.02, 0.975)  # tol <= 0.025
+        stride_fuzzy_sup = (0.225, 2, 3.01)  # tol <= 0.025
+
+        fuzzy_sup_grid = RegularGrid(shape_sup, center_fuzzy_sup, stride_sup)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.03))
+        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.02))
+
+        # Stride error builds up at the grid ends
+        fuzzy_sup_grid = RegularGrid(shape_sup, center_sup, stride_fuzzy_sup)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.04))
+        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.03))
+
+        fuzzy_sup_grid = RegularGrid(shape_sup, center_fuzzy_sup,
+                                     stride_fuzzy_sup)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.05))
+        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.04))
 
     def test_getitem(self):
         center = (1, 0, -2, 0.5)
@@ -736,6 +769,15 @@ class RegularGridTestMethods(RLTestCase):
                                    tensor_grid[test_slice].coord_vectors)
         self.assertAllAlmostEquals(grid[..., 2::2, :].coord_vectors,
                                    tensor_grid[test_slice].coord_vectors)
+
+        test_slice = np.s_[..., 1, :]
+        self.assertAllAlmostEquals(grid[test_slice].coord_vectors,
+                                   tensor_grid[test_slice].coord_vectors)
+        self.assertAllAlmostEquals(grid[:, :, 1, :].coord_vectors,
+                                   tensor_grid[test_slice].coord_vectors)
+
+        with self.assertRaises(IndexError):
+            grid[1:1, :, 0, 0]
 
         with self.assertRaises(IndexError):
             grid[1, ..., ..., 0]

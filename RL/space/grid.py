@@ -789,26 +789,69 @@ of the grid
         >>> rg_sub.is_subgrid(rg, tol=0.02)
         True
         """
-        # Optimize some more common cases
-        if isinstance(other, RegularGrid):
-            idcs = np.where(self.shape > 2)
-            if np.any(self.stride[idcs] < other.stride[idcs] - tol):
-                return False
-
-        # Same as for TensorGrid
-        # TODO: How can this be reliably optimized for RegularGrid's?
+        # Optimize some common cases
         if not (isinstance(other, TensorGrid) and
                 np.all(self.shape <= other.shape) and
                 np.all(self.min >= other.min - tol) and
                 np.all(self.max <= other.max + tol)):
+            print('shape/min/max condition violated')
             return False
 
-        for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
-            vec_o_mg, vec_s_mg = np.meshgrid(vec_o, vec_s, sparse=True,
-                                             copy=True, indexing='ij')
-            if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol, axis=0)):
+        if isinstance(other, RegularGrid):
+            # Test corners, here the error is largest
+            corners = self.corners()
+            if not all(other.contains(c, tol=tol) for c in corners):
+                print('corner condition violated')
                 return False
 
+            # Further checks are restricted to axes with more than 2 points
+            idcs = np.where(self.shape > 2)
+            print('indcs: ', idcs)
+
+            # stride must be an integer multiple of other's stride
+            # TODO: fix this check!
+            stride_mult = np.around(self.stride[idcs] / other.stride[idcs])
+            print('self.stride: ', self.stride[idcs])
+            print('other.stride: ', other.stride[idcs])
+            print('stride_mult: ', stride_mult)
+            if not np.allclose(
+                    self.stride[idcs] - stride_mult*other.stride[idcs], 0,
+                    rtol=0, atol=tol):
+                print('stride condition violated:')
+                print('{} > {}'.format(
+                    self.stride[idcs] - stride_mult*other.stride[idcs], tol))
+                return False
+
+            # Center shift has to be multiple of other's stride
+            # plus half a stride if the shape difference parity
+            # is the same as the stride multiple parity (see above)
+            cshift = other.center[idcs] - self.center[idcs]
+            print('cshift: ', cshift)
+            stride_mult_par = stride_mult % 2
+            shape_diff_par = (np.array(other.shape)[idcs] -
+                              np.array(self.shape)[idcs]) % 2
+            par_corr = np.zeros_like(idcs, dtype=np.float64)
+            par_corr[stride_mult_par == shape_diff_par] = 0.5
+            print('self.shape: ', np.array(self.shape)[idcs])
+            print('other.shape: ', np.array(other.shape)[idcs])
+            print('par_corr: ', par_corr)
+            cshift_mult = np.around(cshift / other.stride[idcs] - par_corr)
+            print('cshift_mult: ', cshift_mult)
+            if not np.allclose(
+                    cshift - (par_corr + cshift_mult)*other.stride[idcs], 0,
+                    rtol=0, atol=tol):
+                print('cshift condition violated')
+                return False
+
+        elif isinstance(other, TensorGrid):
+            # other is a TensorGrid, we need to fall back to full check
+            for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
+                vec_o_mg, vec_s_mg = np.meshgrid(vec_o, vec_s, sparse=True,
+                                                 copy=True, indexing='ij')
+                if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol,
+                                     axis=0)):
+                    return False
+        print('all OK')
         return True
 
     def __getitem__(self, slc):
@@ -823,15 +866,20 @@ of the grid
         Examples
         --------
 
-        >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
-        >>> g[0, 0, 0, 0]
-        array([-1., 2., 5., 2.])
-        >>> g[:, 0, 0, 0]
-        TensorGrid([-1.0, 0.0, 3.0], [2.0], [5.0], [2.0])
-        >>> g[0, ..., 1:]
-        TensorGrid([-1.0], [2.0, 4.0], [5.0], [4.0, 7.0])
-        >>> g[::2, ..., ::2]
-        TensorGrid([-1.0, 3.0], [2.0, 4.0], [5.0], [2.0, 7.0])
+        >>> g = RegularGrid([3, 1, 9], stride=[0.5, 2, 3])
+        >>> g[0, 0, 0]
+        array([ -0.5,   0. , -12. ])
+        >>> g[:, 0, 0]
+        RegularGrid([3, 1, 1], [0.0, 0.0, -12.0], [0.5, 2.0, 3.0])
+        >>> g[:, 0, 0].coord_vectors
+        (array([-0.5,  0. ,  0.5]), array([ 0.]), array([-12.]))
+
+        Ellipsis can be used, too:
+
+        >>> g[1:, ..., ::3]
+        RegularGrid([2, 1, 3], [0.25, 0.0, -3.0], [0.5, 2.0, 9.0])
+        >>> g[1:, ..., ::3].coord_vectors
+        (array([ 0. ,  0.5]), array([ 0.]), array([-12.,  -3.,   6.]))
         """
         from math import ceil
 
