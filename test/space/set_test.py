@@ -139,7 +139,7 @@ class IntervalProdTest(RLTestCase):
         self.assertEquals(set_.size, np.inf)
 
         set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-        self.assertAllAlmostEquals(set_.size, [4, 4, 4], delta=0)
+        self.assertAllEquals(set_.size, [4, 4, 4])
 
     def test_volume(self):
         set_ = IntervalProd(1, 2)

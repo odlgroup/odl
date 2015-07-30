@@ -127,12 +127,12 @@ class TensorGridTestAttributes(RLTestCase):
         scalar = 0.5
 
         grid = TensorGrid(vec1, vec2, vec3)
-        self.assertAllAlmostEquals(grid.min, (2, -4, -1), delta=0)
-        self.assertAllAlmostEquals(grid.max, (5, 4, 0), delta=0)
+        self.assertAllEquals(grid.min, (2, -4, -1))
+        self.assertAllEquals(grid.max, (5, 4, 0))
 
         grid = TensorGrid(vec1, scalar, vec2, scalar)
-        self.assertAllAlmostEquals(grid.min, (2, 0.5, -4, 0.5), delta=0)
-        self.assertAllAlmostEquals(grid.max, (5, 0.5, 4, 0.5), delta=0)
+        self.assertAllEquals(grid.min, (2, 0.5, -4, 0.5))
+        self.assertAllEquals(grid.max, (5, 0.5, 4, 0.5))
 
 
 class TensorGridTestMethods(RLTestCase):
@@ -268,10 +268,10 @@ class TensorGridTestMethods(RLTestCase):
                 points.append(np.array((x1, x2), dtype=float))
 
         grid = TensorGrid(vec1, vec2)
-        self.assertAllAlmostEquals(points, grid.points(), delta=0)
-        self.assertAllAlmostEquals(points, grid.points(order='C'), delta=0)
-        self.assertAllAlmostEquals(grid.min, grid.points()[0], delta=0)
-        self.assertAllAlmostEquals(grid.max, grid.points()[-1], delta=0)
+        self.assertAllEquals(points, grid.points())
+        self.assertAllEquals(points, grid.points(order='C'))
+        self.assertAllEquals(grid.min, grid.points()[0])
+        self.assertAllEquals(grid.max, grid.points()[-1])
 
         # F ordering
         points = []
@@ -280,7 +280,7 @@ class TensorGridTestMethods(RLTestCase):
                 points.append(np.array((x1, x2), dtype=float))
 
         grid = TensorGrid(vec1, vec2)
-        self.assertAllAlmostEquals(points, grid.points(order='F'), delta=0)
+        self.assertAllEquals(points, grid.points(order='F'))
 
         # Degenerate axis 1
         points = []
@@ -289,7 +289,7 @@ class TensorGridTestMethods(RLTestCase):
                 points.append(np.array((scalar, x1, x2), dtype=float))
 
         grid = TensorGrid(scalar, vec1, vec2)
-        self.assertAllAlmostEquals(points, grid.points(), delta=0)
+        self.assertAllEquals(points, grid.points())
 
         # Degenerate axis 2
         points = []
@@ -298,7 +298,7 @@ class TensorGridTestMethods(RLTestCase):
                 points.append(np.array((x1, scalar, x2), dtype=float))
 
         grid = TensorGrid(vec1, scalar, vec2)
-        self.assertAllAlmostEquals(points, grid.points(), delta=0)
+        self.assertAllEquals(points, grid.points())
 
         # Degenerate axis 3
         points = []
@@ -307,7 +307,7 @@ class TensorGridTestMethods(RLTestCase):
                 points.append(np.array((x1, x2, scalar), dtype=float))
 
         grid = TensorGrid(vec1, vec2, scalar)
-        self.assertAllAlmostEquals(points, grid.points(), delta=0)
+        self.assertAllEquals(points, grid.points())
 
     def test_corners(self):
         vec1 = np.arange(2, 6)
@@ -327,12 +327,12 @@ class TensorGridTestMethods(RLTestCase):
                     corners.append(np.array((x1, x2, x3), dtype=float))
 
         grid = TensorGrid(vec1, vec2, vec3)
-        self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
-        self.assertAllAlmostEquals(corners, grid.corners(order='C'), delta=0)
+        self.assertAllEquals(corners, grid.corners())
+        self.assertAllEquals(corners, grid.corners(order='C'))
 
         # Min and max should appear at the beginning and the end, resp.
-        self.assertAllAlmostEquals(grid.min, grid.corners()[0], delta=0)
-        self.assertAllAlmostEquals(grid.max, grid.corners()[-1], delta=0)
+        self.assertAllEquals(grid.min, grid.corners()[0])
+        self.assertAllEquals(grid.max, grid.corners()[-1])
 
         # F ordering
         corners = []
@@ -341,7 +341,7 @@ class TensorGridTestMethods(RLTestCase):
                 for x1 in minmax1:
                     corners.append(np.array((x1, x2, x3), dtype=float))
 
-        self.assertAllAlmostEquals(corners, grid.corners(order='F'), delta=0)
+        self.assertAllEquals(corners, grid.corners(order='F'))
 
         # Degenerate axis 1
         corners = []
@@ -350,7 +350,7 @@ class TensorGridTestMethods(RLTestCase):
                 corners.append(np.array((scalar, x2, x3), dtype=float))
 
         grid = TensorGrid(scalar, vec2, vec3)
-        self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
+        self.assertAllEquals(corners, grid.corners())
 
         # Degenerate axis 2
         corners = []
@@ -359,7 +359,7 @@ class TensorGridTestMethods(RLTestCase):
                 corners.append(np.array((x1, scalar, x3), dtype=float))
 
         grid = TensorGrid(vec1, scalar, vec3)
-        self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
+        self.assertAllEquals(corners, grid.corners())
 
         # Degenerate axis 3
         corners = []
@@ -368,12 +368,12 @@ class TensorGridTestMethods(RLTestCase):
                 corners.append(np.array((x1, x2, scalar), dtype=float))
 
         grid = TensorGrid(vec1, vec2, scalar)
-        self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
+        self.assertAllEquals(corners, grid.corners())
 
         # All degenerate
         corners = [(scalar, scalar)]
         grid = TensorGrid(scalar, scalar)
-        self.assertAllAlmostEquals(corners, grid.corners(), delta=0)
+        self.assertAllEquals(corners, grid.corners())
 
     def test_meshgrid(self):
         vec1 = (0, 1)
@@ -387,14 +387,14 @@ class TensorGridTestMethods(RLTestCase):
 
         grid = TensorGrid(vec1, vec2, vec3)
         xx, yy, zz = grid.meshgrid()
-        self.assertAllAlmostEquals(mgx, xx, delta=0)
-        self.assertAllAlmostEquals(mgy, yy, delta=0)
-        self.assertAllAlmostEquals(mgz, zz, delta=0)
+        self.assertAllEquals(mgx, xx)
+        self.assertAllEquals(mgy, yy)
+        self.assertAllEquals(mgz, zz)
 
         xx, yy, zz = grid.meshgrid(sparse=True)
-        self.assertAllAlmostEquals(mgx, xx, delta=0)
-        self.assertAllAlmostEquals(mgy, yy, delta=0)
-        self.assertAllAlmostEquals(mgz, zz, delta=0)
+        self.assertAllEquals(mgx, xx)
+        self.assertAllEquals(mgy, yy)
+        self.assertAllEquals(mgz, zz)
 
         # Dense meshgrid
         mgx = np.empty((2, 3, 4))
@@ -410,9 +410,9 @@ class TensorGridTestMethods(RLTestCase):
             mgz[:, :, i] = vec3[i]
 
         xx, yy, zz = grid.meshgrid(sparse=False)
-        self.assertAllAlmostEquals(mgx, xx, delta=0)
-        self.assertAllAlmostEquals(mgy, yy, delta=0)
-        self.assertAllAlmostEquals(mgz, zz, delta=0)
+        self.assertAllEquals(mgx, xx)
+        self.assertAllEquals(mgy, yy)
+        self.assertAllEquals(mgz, zz)
 
         self.assertTupleEqual(xx.shape, (2, 3, 4))
 
@@ -429,8 +429,7 @@ class TensorGridTestMethods(RLTestCase):
         grid = TensorGrid(vec1, vec2, vec3, vec4)
 
         # Single indices yield points as an array
-        self.assertAllAlmostEquals(grid[1, 0, 1, 0], (1.0, -1.0, 3.0, 1.0),
-                                   delta=0)
+        self.assertAllEquals(grid[1, 0, 1, 0], (1.0, -1.0, 3.0, 1.0))
 
         with self.assertRaises(IndexError):
             grid[1, 0, 1]
@@ -555,8 +554,7 @@ class RegularGridTestInit(RLTestCase):
         vec1 = (0.75, 1.25)
         vec2 = (0,)
         vec3 = (-5, -2, 1)
-        self.assertAllAlmostEquals(grid.coord_vectors, (vec1, vec2, vec3),
-                                   delta=0)
+        self.assertAllEquals(grid.coord_vectors, (vec1, vec2, vec3))
 
         # Check different error scenarios
         nonpos_shape1 = (2, 0, 3)
@@ -620,10 +618,10 @@ class RegularGridTestAttributes(RLTestCase):
         stride = (0.5, 2, 3)
 
         grid = RegularGrid(shape, center, stride)
-        self.assertAllAlmostEquals(grid.center, center, delta=0)
+        self.assertAllEquals(grid.center, center)
 
         grid = RegularGrid(shape, stride=stride)
-        self.assertAllAlmostEquals(grid.center, (0, 0, 0), delta=0)
+        self.assertAllEquals(grid.center, (0, 0, 0))
 
     def test_stride(self):
         center = (1, 0, -2)
@@ -631,10 +629,10 @@ class RegularGridTestAttributes(RLTestCase):
         stride = (0.5, 2, 3)
 
         grid = RegularGrid(shape, center, stride)
-        self.assertAllAlmostEquals(grid.stride, stride, delta=0)
+        self.assertAllEquals(grid.stride, stride)
 
         grid = RegularGrid(shape, center)
-        self.assertAllAlmostEquals(grid.stride, (1, 1, 1), delta=0)
+        self.assertAllEquals(grid.stride, (1, 1, 1))
 
 
 class RegularGridTestMethods(RLTestCase):
@@ -688,7 +686,6 @@ class RegularGridTestMethods(RLTestCase):
         self.assertFalse(grid.is_subgrid(tensor_not_sup_grid))
 
         # Fuzzy check
-        # TODO: one more to be sure(r)
         center_sup = (1.125, -1, -2)
         shape_sup = (6, 2, 5)
         stride_sup = (0.25, 2, 3)
@@ -709,6 +706,34 @@ class RegularGridTestMethods(RLTestCase):
         self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.05))
         self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.04))
 
+        # Some more randomized tests
+        for _ in range(50):
+            tol = 0.01
+            center_fuzzy_sup = center + tol * np.random.uniform(-1, 1, size=3)
+            shape_fuzzy_sup = (6, 2, 5)
+            # Approximately same stride
+            stride1_fuzzy_sup = stride + tol * np.random.uniform(-1, 1, size=3)
+            # Approximately 1/3 stride
+            stride2_fuzzy_sup = (stride +
+                                 3*tol * np.random.uniform(-1, 1, size=3)) / 3
+
+            fuzzy_sup_grid1 = RegularGrid(shape_fuzzy_sup, center_fuzzy_sup,
+                                          stride1_fuzzy_sup)
+            fuzzy_sup_grid2 = RegularGrid(shape_fuzzy_sup, center_fuzzy_sup,
+                                          stride2_fuzzy_sup)
+            fuzzy_sup_tensor_grid1 = TensorGrid(*fuzzy_sup_grid1.coord_vectors)
+            fuzzy_sup_tensor_grid2 = TensorGrid(*fuzzy_sup_grid2.coord_vectors)
+
+            # Test against element-by-element comparison for various levels
+            # of tolerance (includes ridiculously large tolerance)
+            for fac in range(1, 51, 2):
+                self.assertEquals(
+                    grid.is_subgrid(fuzzy_sup_grid1, tol=fac*tol),
+                    grid.is_subgrid(fuzzy_sup_tensor_grid1, tol=fac*tol))
+                self.assertEquals(
+                    grid.is_subgrid(fuzzy_sup_grid2, tol=fac*tol),
+                    grid.is_subgrid(fuzzy_sup_tensor_grid2, tol=fac*tol))
+
     def test_getitem(self):
         center = (1, 0, -2, 0.5)
         shape = (3, 1, 9, 6)
@@ -717,8 +742,7 @@ class RegularGridTestMethods(RLTestCase):
         grid = RegularGrid(shape, center, stride)
 
         # Single indices yield points as an array
-        self.assertAllAlmostEquals(grid[1, 0, 6, 5], (1.0, 0.0, 4.0, 4.25),
-                                   delta=0)
+        self.assertAllEquals(grid[1, 0, 6, 5], (1.0, 0.0, 4.0, 4.25))
 
         with self.assertRaises(IndexError):
             grid[1, 0, 6]
@@ -739,42 +763,42 @@ class RegularGridTestMethods(RLTestCase):
         tensor_grid = TensorGrid(*grid.coord_vectors)
 
         test_slice = np.s_[1, :, ::2, ::3]
-        self.assertAllAlmostEquals(grid[test_slice].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[1:2, :, ::2, ::3].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[1:2, :, ::2, ..., ::3].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[test_slice].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[1:2, :, ::2, ::3].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[1:2, :, ::2, ..., ::3].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
 
         test_slice = np.s_[0:2, :, :, 4:6]
-        self.assertAllAlmostEquals(grid[test_slice].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[:2, :, :, 4:].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[:-1, ..., 4:].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[test_slice].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[:2, :, :, 4:].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[:-1, ..., 4:].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
 
         test_slice = np.s_[:, 0, :, :]
-        self.assertAllAlmostEquals(grid[test_slice].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[:, 0, ...].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[0:3, :, ...].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[...].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[test_slice].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[:, 0, ...].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[0:3, :, ...].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[...].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
 
         test_slice = np.s_[:, :, 2::2, :]
-        self.assertAllAlmostEquals(grid[test_slice].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[..., 2::2, :].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[test_slice].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[..., 2::2, :].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
 
         test_slice = np.s_[..., 1, :]
-        self.assertAllAlmostEquals(grid[test_slice].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
-        self.assertAllAlmostEquals(grid[:, :, 1, :].coord_vectors,
-                                   tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[test_slice].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
+        self.assertAllEquals(grid[:, :, 1, :].coord_vectors,
+                             tensor_grid[test_slice].coord_vectors)
 
         with self.assertRaises(IndexError):
             grid[1:1, :, 0, 0]

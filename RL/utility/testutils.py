@@ -64,6 +64,14 @@ class RLTestCase(unittest.TestCase):
             except TypeError:
                 self.assertAlmostEqual(ip1, ip2, *args, **kwargs)
 
+    def assertAllEquals(self, iter1, iter2, *args, **kwargs):
+        """ Assert thaat all elements in iter1 and iter2 are equal.
+
+        The iterators may be nested lists or varying types
+        """
+        kwargs['delta'] = 0
+        self.assertAllAlmostEquals(iter1, iter2, *args, **kwargs)
+
 
 def skip_all_tests(reason=None):
     """ Creates a TestCase replacement class where all tests are skipped

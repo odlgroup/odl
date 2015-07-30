@@ -149,12 +149,9 @@ of the grid
             if len(vec) == 0:
                 raise ValueError('Vector {} has zero length.'.format(i+1))
 
-            if np.nan in vec:
+            if not np.all(np.isfinite(vec)):
                 raise ValueError(errfmt('''
-                Vector {} contains NaNs or garbage entries'''.format(i+1)))
-
-            if np.inf in vec or -np.inf in vec:
-                raise ValueError('Vector {} contains +-inf'.format(i+1))
+                Vector {} contains invalid entries'''.format(i+1)))
 
             if vec.ndim != 1:
                 raise ValueError(errfmt('''
@@ -711,6 +708,9 @@ of the grid
                 'center' ({}) must have the same length as 'shape' ({}).
                 '''.format(len(center), len(shape))))
 
+        if not np.all(np.isfinite(center)):
+            raise ValueError("'center' has invalid entries.")
+
         if stride is None:
             stride = np.ones_like(shape, dtype=np.float64)
         else:
@@ -719,6 +719,9 @@ of the grid
                 raise ValueError(errfmt('''
                 'stride' ({}) must have the same length as 'shape' ({}).
                 '''.format(len(stride), len(shape))))
+
+        if not np.all(np.isfinite(stride)):
+            raise ValueError("'stride' has invalid entries.")
         if not np.all(stride > 0):
             raise ValueError("'stride' may only have positive entries.")
 
@@ -794,54 +797,48 @@ of the grid
                 np.all(self.shape <= other.shape) and
                 np.all(self.min >= other.min - tol) and
                 np.all(self.max <= other.max + tol)):
-            print('shape/min/max condition violated')
             return False
 
         if isinstance(other, RegularGrid):
-            # Test corners, here the error is largest
-            corners = self.corners()
-            if not all(other.contains(c, tol=tol) for c in corners):
-                print('corner condition violated')
-                return False
+            # Do a full check for axes with less than 3 points since
+            # errors can cancel out
+            idcs = np.where(np.array(self.shape) <= 3)[0]
+            if idcs.tolist():
+                self_tg = TensorGrid(*[self.coord_vectors[i] for i in idcs])
+                other_tg = TensorGrid(*[other.coord_vectors[i] for i in idcs])
+                if not self_tg.is_subgrid(other_tg, tol=tol):
+                    return False
 
-            # Further checks are restricted to axes with more than 2 points
-            idcs = np.where(self.shape > 2)
-            print('indcs: ', idcs)
+            # Further checks are restricted to axes with more than 3 points
+            idcs = np.where(np.array(self.shape) > 3)[0]
+            if idcs.tolist():
+                # Test corners, here the error is largest
+                corners = self.corners()[idcs]
+                if not all(other.contains(c, tol=tol) for c in corners):
+                    return False
 
-            # stride must be an integer multiple of other's stride
-            # TODO: fix this check!
-            stride_mult = np.around(self.stride[idcs] / other.stride[idcs])
-            print('self.stride: ', self.stride[idcs])
-            print('other.stride: ', other.stride[idcs])
-            print('stride_mult: ', stride_mult)
-            if not np.allclose(
-                    self.stride[idcs] - stride_mult*other.stride[idcs], 0,
-                    rtol=0, atol=tol):
-                print('stride condition violated:')
-                print('{} > {}'.format(
-                    self.stride[idcs] - stride_mult*other.stride[idcs], tol))
-                return False
+                # stride must be an integer multiple of other's stride
+                stride_mult = np.around(self.stride[idcs] / other.stride[idcs])
+                if not np.allclose(
+                        self.stride[idcs] - stride_mult*other.stride[idcs], 0,
+                        rtol=0, atol=tol):
+                    return False
 
-            # Center shift has to be multiple of other's stride
-            # plus half a stride if the shape difference parity
-            # is the same as the stride multiple parity (see above)
-            cshift = other.center[idcs] - self.center[idcs]
-            print('cshift: ', cshift)
-            stride_mult_par = stride_mult % 2
-            shape_diff_par = (np.array(other.shape)[idcs] -
-                              np.array(self.shape)[idcs]) % 2
-            par_corr = np.zeros_like(idcs, dtype=np.float64)
-            par_corr[stride_mult_par == shape_diff_par] = 0.5
-            print('self.shape: ', np.array(self.shape)[idcs])
-            print('other.shape: ', np.array(other.shape)[idcs])
-            print('par_corr: ', par_corr)
-            cshift_mult = np.around(cshift / other.stride[idcs] - par_corr)
-            print('cshift_mult: ', cshift_mult)
-            if not np.allclose(
-                    cshift - (par_corr + cshift_mult)*other.stride[idcs], 0,
-                    rtol=0, atol=tol):
-                print('cshift condition violated')
-                return False
+                # Center shift has to be multiple of other's stride
+                # plus half a stride if the shape difference parity
+                # is the same as the stride multiple parity (see above)
+                cshift = other.center[idcs] - self.center[idcs]
+                stride_mult_par = stride_mult % 2
+                shape_diff_par = (np.array(other.shape)[idcs] -
+                                  np.array(self.shape)[idcs]) % 2
+                par_corr = np.zeros_like(idcs, dtype=np.float64)
+                par_corr[stride_mult_par == shape_diff_par] = 0.5
+                cshift_mult = np.around(
+                    cshift / other.stride[idcs] - par_corr)
+                if not np.allclose(
+                        cshift - (par_corr + cshift_mult)*other.stride[idcs],
+                        0, rtol=0, atol=tol):
+                    return False
 
         elif isinstance(other, TensorGrid):
             # other is a TensorGrid, we need to fall back to full check
@@ -851,7 +848,6 @@ of the grid
                 if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol,
                                      axis=0)):
                     return False
-        print('all OK')
         return True
 
     def __getitem__(self, slc):

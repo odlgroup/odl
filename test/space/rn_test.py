@@ -224,7 +224,7 @@ class CpuFactoryTest(RLTestCase):
         arr = np.random.rand(r3.dim)
         x = r3.element(arr)
         x_fac = r3_fac.element(arr)
-        self.assertAllAlmostEquals(x, x_fac, delta=0)
+        self.assertAllEquals(x, x_fac)
 
     @staticmethod
     def _dist(x, y):
