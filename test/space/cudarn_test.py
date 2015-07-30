@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
 # Imports for common Python 2/3 codebase
@@ -26,24 +26,24 @@ import unittest
 import math
 from numpy import float64
 
-# RL imports
-from RL.operator.operator import *
-from RL.space.space import *
-from RL.space.cartesian import Rn
-from RL.utility.testutils import skip_all_tests
+# ODL imports
+from odl.operator.operator import *
+from odl.space.space import *
+from odl.space.cartesian import Rn
+from odl.utility.testutils import skip_all_tests
 
 try:
-    from RL.utility.testutils import RLTestCase
-    from RL.space.cuda import *
+    from odl.utility.testutils import ODLTestCase
+    from odl.space.cuda import *
 except ImportError:
-    RLTestCase = skip_all_tests("Missing RLcpp")
+    ODLTestCase = skip_all_tests("Missing RLcpp")
 
 import numpy as np
 
 standard_library.install_aliases()
 
 
-class TestInit(RLTestCase):
+class TestInit(ODLTestCase):
     def test_empty(self):
         r3 = CudaRn(3)
         x = r3.element()
@@ -75,7 +75,7 @@ class TestInit(RLTestCase):
         self.assertAllAlmostEquals(x, x0)
 
 
-class TestAccessors(RLTestCase):
+class TestAccessors(ODLTestCase):
     def test_getitem(self):
         r3 = CudaRn(3)
         y = [1, 2, 3]
@@ -187,7 +187,7 @@ class TestAccessors(RLTestCase):
             xd[:] = [1, 2, 3, 4]
 
 
-class TestMethods(RLTestCase):
+class TestMethods(ODLTestCase):
     def test_norm(self):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
@@ -339,7 +339,7 @@ class TestMethods(RLTestCase):
         self.assertAllAlmostEquals(y_device, y_host, places=5)
 
 
-class TestConvenience(RLTestCase):
+class TestConvenience(ODLTestCase):
     def test_addition(self):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])
@@ -373,7 +373,7 @@ class TestConvenience(RLTestCase):
             z = xA - xB
 
 
-class TestPointer(RLTestCase):
+class TestPointer(ODLTestCase):
     def test_modify(self):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])

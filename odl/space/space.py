@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """General vector spaces.
 
@@ -32,9 +32,9 @@ from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
 from math import sqrt
 
-# RL imports
-from RL.space.set import Set
-from RL.utility.utility import errfmt
+# ODL imports
+from odl.space.set import Set
+from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 
@@ -56,9 +56,9 @@ class LinearSpace(Set):
     The set is closed under these operations (the result still belongs
     to the set).
 
-    Linear Spaces in RL
+    Linear Spaces in ODL
     -------------------
-    In RL the two operations are supplied using the fused "lincomb"
+    In ODL the two operations are supplied using the fused "lincomb"
     method, inspired from RVL (Rice Vector Library).
 
     What follows is a short introduction of the methods that each space
@@ -75,7 +75,7 @@ class LinearSpace(Set):
     where `x`, `y` and `z` are vectors in the space, and `a` and `b`
     are scalars.
 
-    RL allows `x`, `y` and `z` to be aliased, i.e. they may be the same
+    ODL allows `x`, `y` and `z` to be aliased, i.e. they may be the same
     vector.
 
     Using this many of the usual vector arithmetic operations can be
@@ -90,7 +90,7 @@ class LinearSpace(Set):
     | z = 3*z      | lincomb(z,  3, z, 0, z) |
 
     To aid in rapid prototyping, an implementer needs only implement
-    lincomb, and RL then provides all of the standard mathematical
+    lincomb, and ODL then provides all of the standard mathematical
     operators
 
     `+`, `*`, `-`, `/`
@@ -101,11 +101,11 @@ class LinearSpace(Set):
 
     Constructing Elements
     ~~~~~~~~~~~~~~~~~~~~~
-    RL also requires the existence of an `element()` method. This method
+    ODL also requires the existence of an `element()` method. This method
     can be used to construct a vector in the space, which may be
     assigned to.
 
-    Using this method RL provides some auxiliary methods, such as
+    Using this method ODL provides some auxiliary methods, such as
     `zero()`, which returns a zero vector in the space.
 
     ``
@@ -120,7 +120,7 @@ class LinearSpace(Set):
     Field of a space
     ~~~~~~~~~~~~~~~~
     Each space also needs to provide access to its underlying field.
-    This field is an instance of `RL.space.set.AbstractSet` and allows
+    This field is an instance of `odl.space.set.AbstractSet` and allows
     space to test scalars for validity. For example, in a real space,
     trying to multiply a vector by a complex number will yield an
     error.
@@ -494,7 +494,7 @@ class MetricSpace(LinearSpace):
             Example
             -------
 
-            >>> from RL.space.cartesian import NormedRn
+            >>> from odl.space.cartesian import NormedRn
             >>> X = NormedRn(1)
             >>> x = X.element([0.1])
             >>> x == x

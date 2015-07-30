@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # pylint: disable=protected-access
 
@@ -31,9 +31,9 @@ from future import standard_library
 # External
 import numpy as np
 
-# RL imports
-from RL.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
-from RL.utility.utility import errfmt
+# ODL imports
+from odl.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
+from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 
@@ -80,7 +80,7 @@ class LinearProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from RL.space.cartesian import Rn, EuclideanRn
+        >>> from odl.space.cartesian import Rn, EuclideanRn
         >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
         >>> r2x3.__class__.__name__
         'LinearProductSpace'
@@ -138,7 +138,7 @@ class LinearProductSpace(LinearSpace):
 
         Examples
         -------
-        >>> from RL.space.cartesian import EuclideanRn
+        >>> from odl.space.cartesian import EuclideanRn
         >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
         >>> r2x3 = LinearProductSpace(r2, r3)
@@ -149,7 +149,7 @@ class LinearProductSpace(LinearSpace):
         True
 
         Creates an element in the product space
-        >>> from RL.space.cartesian import Rn
+        >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> prod = LinearProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
@@ -199,7 +199,7 @@ class LinearProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from RL.space.cartesian import EuclideanRn
+        >>> from odl.space.cartesian import EuclideanRn
         >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = LinearProductSpace(r2, r3)
@@ -231,7 +231,7 @@ class LinearProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from RL.space.cartesian import EuclideanRn
+        >>> from odl.space.cartesian import EuclideanRn
         >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
         >>> rn, rm = EuclideanRn(2), EuclideanRn(3)
         >>> r2x3, rnxm = LinearProductSpace(r2, r3), LinearProductSpace(rn, rm)
@@ -345,7 +345,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
 
         Examples
         --------
-        >>> from RL.space.cartesian import EuclideanRn
+        >>> from odl.space.cartesian import EuclideanRn
         >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
         >>> r2x3 = MetricProductSpace(r2, r3, ord='inf')
         >>> x_2 = r2.element([0, 0])
@@ -462,7 +462,7 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
 
     Examples
     --------
-    >>> from RL.space.cartesian import EuclideanRn
+    >>> from odl.space.cartesian import EuclideanRn
     >>> r2, r3 = EuclideanRn(2), EuclideanRn(3)
     >>> r2x3 = NormedProductSpace(r2, r3, ord='inf')
     >>> x_2 = r2.element([3, 4])

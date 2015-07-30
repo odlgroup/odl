@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
 # Imports for common Python 2/3 codebase
@@ -26,18 +26,18 @@ import unittest
 from math import pi, sqrt
 import numpy as np
 
-# RL imports
-from RL.operator.operator import *
-from RL.space.cartesian import EuclideanRn
-import RL.space.discretization as disc
-import RL.space.function as fs
-import RL.space.set as sets
-from RL.utility.testutils import RLTestCase
+# ODL imports
+from odl.operator.operator import *
+from odl.space.cartesian import EuclideanRn
+import odl.space.discretization as disc
+import odl.space.function as fs
+import odl.space.set as sets
+from odl.utility.testutils import ODLTestCase
 
 standard_library.install_aliases()
 
 
-class L2Test(RLTestCase):
+class L2Test(ODLTestCase):
     def test_interval(self):
         I = sets.Interval(0, pi)
         l2 = fs.L2(I)

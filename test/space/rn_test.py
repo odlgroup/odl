@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
 # Imports for common Python 2/3 codebase
@@ -26,14 +26,14 @@ import unittest
 import numpy as np
 from math import sqrt
 
-# RL imports
-# import RL.operator.operator as op
-# import RL.space.space as space
-from RL.space.cartesian import Rn, MetricRn, NormedRn, EuclideanRn, cartesian
-from RL.utility.testutils import RLTestCase, skip_all_tests
+# ODL imports
+# import odl.operator.operator as op
+# import odl.space.space as space
+from odl.space.cartesian import Rn, MetricRn, NormedRn, EuclideanRn, cartesian
+from odl.utility.testutils import ODLTestCase, skip_all_tests
 
 try:
-    from RL.space.cuda import *
+    from odl.space.cuda import *
     CUDA_AVAILABLE = True
 except ImportError:
     CUDA_AVAILABLE = False
@@ -41,7 +41,7 @@ except ImportError:
 standard_library.install_aliases()
 
 
-class RnTest(RLTestCase):
+class RnTest(ODLTestCase):
     @staticmethod
     def _vectors(rn):
         # Generate numpy vectors
@@ -101,7 +101,7 @@ class RnTest(RLTestCase):
                 self._test_lincomb(a, b)
 
 
-class OperatorOverloadTest(RLTestCase):
+class OperatorOverloadTest(ODLTestCase):
     def _test_unary_operator(self, function, n=10):
         """ Verifies that the statement y=function(x) gives equivalent
         results to Numpy.
@@ -185,7 +185,7 @@ class OperatorOverloadTest(RLTestCase):
         self._test_unary_operator(lambda x: x - x)
 
 
-class MethodTest(RLTestCase):
+class MethodTest(ODLTestCase):
     def test_norm(self):
         r3 = EuclideanRn(3)
         xd = r3.element([1, 2, 3])
@@ -212,7 +212,7 @@ class MethodTest(RLTestCase):
         self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
 
-class CpuFactoryTest(RLTestCase):
+class CpuFactoryTest(ODLTestCase):
     def test_plain(self):
         r3 = Rn(3)
         r3_fac = cartesian(3, dist=False)
@@ -340,10 +340,10 @@ class CpuFactoryTest(RLTestCase):
 
 
 if not CUDA_AVAILABLE:
-    RLTestCase = skip_all_tests("Missing RLcpp")
+    ODLTestCase = skip_all_tests("Missing RLcpp")
 
 
-class GpuFactoryTest(RLTestCase):
+class GpuFactoryTest(ODLTestCase):
     def test_inner(self):
         r3 = CudaRn(3)
         r3_fac = cartesian(3, impl='cuda')

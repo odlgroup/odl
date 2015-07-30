@@ -1,19 +1,19 @@
 # Copyright 2014, 2015 Jonas Adler
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 Default operators defined on any space
@@ -28,11 +28,11 @@ from __future__ import (division, print_function, absolute_import)
 from future import standard_library
 from builtins import str, super
 
-# RL imports
-import RL.operator.operator as op
-from RL.space.space import LinearSpace
-from RL.space.set import UniversalSet, CartesianProduct
-from RL.utility.utility import errfmt
+# ODL imports
+import odl.operator.operator as op
+from odl.space.space import LinearSpace
+from odl.space.set import UniversalSet, CartesianProduct
+from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 
@@ -75,7 +75,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.cartesian import Rn
+        >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
@@ -105,7 +105,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.cartesian import Rn
+        >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
@@ -131,7 +131,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.cartesian import EuclideanRn
+        >>> from odl.space.cartesian import EuclideanRn
         >>> r3 = EuclideanRn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
@@ -159,7 +159,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.cartesian import Rn
+        >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.domain
@@ -183,7 +183,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Example
         -------
-        >>> from RL.space.cartesian import Rn
+        >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.range
@@ -246,7 +246,7 @@ class LinCombOperator(op.LinearOperator):
         """
         Example
         -------
-        >>> from RL.space.cartesian import Rn
+        >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
@@ -290,7 +290,7 @@ class MultiplyOperator(op.LinearOperator):
         """
         Example
         -------
-        >>> from RL.space.cartesian import EuclideanRn
+        >>> from odl.space.cartesian import EuclideanRn
         >>> r3 = EuclideanRn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])

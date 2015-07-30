@@ -4,8 +4,8 @@ from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
-from RL.space.cartesian import Rn
-from RL.operator.operator import Operator
+from odl.space.cartesian import Rn
+from odl.operator.operator import Operator
 
 """ An example of a very simple operator on Rn
 """
