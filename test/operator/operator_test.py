@@ -27,11 +27,11 @@ import numpy as np
 
 # ODL imports
 from odl.operator.operator import Operator, LinearOperator
-from odl.operator.operator import OperatorSum, OperatorComposition
-from odl.operator.operator import OperatorLeftScalarMultiplication
-from odl.operator.operator import OperatorRightScalarMultiplication
-from odl.operator.operator import LinearOperatorSum, LinearOperatorComposition
-from odl.operator.operator import LinearOperatorScalarMultiplication
+from odl.operator.operator import OperatorSum, OperatorComp
+from odl.operator.operator import OperatorLeftScalarMult
+from odl.operator.operator import OperatorRightScalarMult
+from odl.operator.operator import LinearOperatorSum, LinearOperatorComp
+from odl.operator.operator import LinearOperatorScalarMult
 from odl.space.cartesian import EuclideanRn
 from odl.utility.testutils import ODLTestCase
 
@@ -109,8 +109,8 @@ class TestOperator(ODLTestCase):
         # optimizations for (-1, 0, 1)).
         scalars = [-1.432, -1, 0, 1, 3.14]
         for scale in scalars:
-            lscaled = OperatorLeftScalarMultiplication(Aop, scale)
-            rscaled = OperatorRightScalarMultiplication(Aop, scale)
+            lscaled = OperatorLeftScalarMult(Aop, scale)
+            rscaled = OperatorRightScalarMult(Aop, scale)
 
             self.assertAllAlmostEquals(lscaled(xvec),
                                        scale * mult_sq_np(A, x))
@@ -127,10 +127,10 @@ class TestOperator(ODLTestCase):
         nonscalars = [1j, [1, 2], Aop]
         for nonscalar in nonscalars:
             with self.assertRaises(TypeError):
-                C = OperatorLeftScalarMultiplication(Aop, nonscalar)
+                C = OperatorLeftScalarMult(Aop, nonscalar)
 
             with self.assertRaises(TypeError):
-                C = OperatorRightScalarMultiplication(Aop, nonscalar)
+                C = OperatorRightScalarMult(Aop, nonscalar)
 
             with self.assertRaises(TypeError):
                 C = Aop * nonscalar
@@ -147,13 +147,13 @@ class TestOperator(ODLTestCase):
         Bop = MultiplyAndSquareOp(B)
         xvec = Bop.domain.element(x)
 
-        C = OperatorComposition(Aop, Bop)
+        C = OperatorComp(Aop, Bop)
 
         self.assertAllAlmostEquals(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
 
         # Verify that incorrect order fails
         with self.assertRaises(TypeError):
-            C = OperatorComposition(Bop, Aop)
+            C = OperatorComp(Bop, Aop)
 
 
 class MultiplyOp(LinearOperator):
@@ -274,7 +274,7 @@ class TestLinearOperator(ODLTestCase):
         # optimizations for (-1, 0, 1).
         scalars = [-1.432, -1, 0, 1, 3.14]
         for scale in scalars:
-            C = LinearOperatorScalarMultiplication(Aop, scale)
+            C = LinearOperatorScalarMult(Aop, scale)
 
             self.assertAllAlmostEquals(C(xvec), scale * np.dot(A, x))
             self.assertAllAlmostEquals(C.T(yvec), scale * np.dot(A.T, y))
@@ -300,7 +300,7 @@ class TestLinearOperator(ODLTestCase):
         xvec = Bop.domain.element(x)
         yvec = Aop.range.element(y)
 
-        C = LinearOperatorComposition(Aop, Bop)
+        C = LinearOperatorComp(Aop, Bop)
 
         self.assertAllAlmostEquals(C(xvec), np.dot(A, np.dot(B, x)))
         self.assertAllAlmostEquals(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))

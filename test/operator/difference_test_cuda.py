@@ -73,7 +73,7 @@ class ForwardDiffAdjoint(LinearOperator):
         self.domain = self.range = space
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diffAdj(rhs.data, out.data)
+        odlpp.cuda.forward_diff_adj(rhs.data, out.data)
 
     @property
     def adjoint(self):
