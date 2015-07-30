@@ -58,15 +58,15 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
 
         def __init__(self, parent, rn, shape, order):
             if not isinstance(parent.domain, sets.IntervalProd):
-                raise NotImplementedError('Can only discretize IntervProds')
+                raise NotImplementedError('Can only discretize IntervalProds')
 
             if not isinstance(rn, space.HilbertSpace):
                 pass
-                # raise NotImplementedError('RN has to be a Hilbert space')
+                # raise NotImplementedError('Rn has to be a Hilbert space')
 
             if not isinstance(rn, space.Algebra):
                 pass
-                # raise NotImplementedError('RN has to be an algebra')
+                # raise NotImplementedError('Rn has to be an algebra')
 
             if rn.dim != np.prod(shape):
                 raise NotImplementedError(errfmt('''

@@ -29,11 +29,10 @@ import RL.operator.operator as OP
 import RL.space.function as fs
 import RL.space.cuda as cs
 import RL.space.product as ps
-import RL.space.discretizations as dd
+import RL.space.discretization as dd
 import RL.space.set as sets
 import SimRec2DPy as SR
 import GPUMCIPy as gpumci
-import RL.operator.solvers as solvers
 from RL.utility.testutils import Timer
 
 import matplotlib.pyplot as plt
@@ -104,10 +103,10 @@ for theta in np.linspace(0, pi, nProjection, endpoint=False):
 
 #Define the space of one projection
 projectionSpace = fs.L2(sets.Rectangle([0,0], detectorSize))
-projectionRN = cs.CudaRn(nPixels.prod())
+projectionRn = cs.CudaRn(nPixels.prod())
 
 #Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRN, nPixels, 'F')
+projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn, nPixels, 'F')
 
 #Create the data space, which is the Cartesian product of the single projection spaces
 dataDisc = ps.powerspace(ps.powerspace(projectionDisc,2), nProjection)
@@ -116,8 +115,8 @@ dataDisc = ps.powerspace(ps.powerspace(projectionDisc,2), nProjection)
 reconSpace = fs.L2(sets.Cube([0, 0, 0], volumeSize))
 
 #Discretize the reconstruction space
-reconRN = cs.CudaRn(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRN, nVoxels, 'F')
+reconRn = cs.CudaRn(nVoxels.prod())
+reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels, 'F')
 
 #Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])

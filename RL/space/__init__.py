@@ -70,10 +70,9 @@ L2                  FunctionSpace with the usual L2-norm
 ==========================================================================
 
 ==========================================================================
-Discretizations of function spaces (discretizations)
+Discretizations of function spaces (discretization)
 ==========================================================================
-uniform_discretization  Discretization of an Interval using some Rn
-pixel_discretization    Discretization of an Rectangle using some Rn
+uniform_discretization  Discretization of an IntervalProd using some Rn
 ==========================================================================
 """
 
