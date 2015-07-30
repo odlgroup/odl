@@ -31,18 +31,18 @@ SelfAdjointOperator     Linear operator whose adjoint is itself
 Operator compositions, sums etc (operator)
 ================================================================================
 OperatorSum                         A(x) + B(x)
-OperatorComposition                 A(B(x))
+OperatorComp                        A(B(x))
 OperatorPointwiseProduct            A(x)*B(x)
-OperatorLeftScalarMultiplication    s*A(x)
-OperatorRightScalarMultiplication   A(s*x)
+OperatorLeftScalarMult              s*A(x)
+OperatorRightScalarMult             A(s*x)
 ================================================================================
 
 ================================================================================
 Linear Operator compositions, sums etc (operator)
 ================================================================================
 LinearOperatorSum                   A(x) + B(x)
-LinearOperatorComposition           A(B(x))
-LinearOperatorScalarMultiplication  s*A(x)
+LinearOperatorComp                  A(B(x))
+LinearOperatorScalarMult            s*A(x)
 ================================================================================
 
 ================================================================================

@@ -26,7 +26,7 @@ from builtins import object, next, range
 from future import standard_library
 
 # ODL imports
-from odl.operator.operator import LinearOperatorComposition, LinearOperatorSum
+from odl.operator.operator import LinearOperatorComp, LinearOperatorSum
 from odl.operator.default import IdentityOperator
 
 standard_library.install_aliases()
@@ -176,7 +176,7 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx
-        A = LinearOperatorSum(LinearOperatorComposition(deriv.T, deriv),
+        A = LinearOperatorSum(LinearOperatorComp(deriv.T, deriv),
                               tm * I, tmp_dom)
 
         # TODO allow user to select other method
