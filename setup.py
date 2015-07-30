@@ -42,6 +42,6 @@ setup(name='odl',
       license='GPLv3',
       packages=find_packages(exclude=['*test*']),
       install_requires=[requires],
-      # packages=['odl', 'odl.geometry', 'odl.operator', 'odl.space',
-      #           'odl.utility'],
+      # packages=['odl', 'odl.discr', 'odl.geometry', 'odl.operator',
+      #           'odl.space', 'odl.utility'],
       package_dir={'odl': 'odl'})

@@ -29,7 +29,7 @@ import numpy as np
 import odl.operator.operator as OP
 import odl.space.function as fs
 import odl.space.cartesian as ds
-import odl.space.discretization as dd
+import odl.discr.discretization as dd
 import odl.space.set as sets
 import SimRec2DPy as SR
 

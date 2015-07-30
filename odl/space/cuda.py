@@ -34,7 +34,7 @@ from numbers import Integral
 import odl.space.space as spaces
 import odl.space.set as sets
 from odl.utility.utility import errfmt, array1d_repr
-import RLcpp.PyCuda
+import odlpp.cuda
 
 standard_library.install_aliases()
 
@@ -43,13 +43,13 @@ class CudaEn(spaces.LinearSpace):
 
     """The real space E^n, implemented in CUDA.
 
-    Requires the compiled ODL extension RLcpp.
+    Requires the compiled ODL extension odlpp.
 
     # TODO: document public interface
     """
 
-    dtypes = {np.float32: RLcpp.PyCuda.CudaVectorImplFloat,
-              np.uint8: RLcpp.PyCuda.CudaVectorImplUChar}
+    dtypes = {np.float32: odlpp.cuda.CudaVectorFloat,
+              np.uint8: odlpp.cuda.CudaVectorUchar}
 
     def __init__(self, dim, dtype=np.float32):
         """Initialize a new CudaEn.
@@ -297,7 +297,7 @@ class CudaEn(spaces.LinearSpace):
 
             space : CudaEn
                 Instance of CudaEn this vector lives in
-            data : RLcpp.PyCuda.CudaVectorImplFloat
+            data : odlpp.cuda.CudaVectorFloat
                 Underlying data-representation to be used by this vector
             """
             super().__init__(space)
@@ -319,7 +319,7 @@ class CudaEn(spaces.LinearSpace):
 
             Returns
             -------
-            ptr : RLcpp.PyCuda.CudaEnVectorImpl
+            ptr : odlpp.cuda.CudaEnVectorImpl
                 Underlying cuda data representation
             """
             return self._data
@@ -337,7 +337,7 @@ class CudaEn(spaces.LinearSpace):
             ptr : Int
                 Pointer to the CUDA data of this vector
             """
-            return self._data.dataPtr()
+            return self._data.data_ptr()
 
         @property
         def itemsize(self):
@@ -411,7 +411,7 @@ class CudaEn(spaces.LinearSpace):
 
             """
             if isinstance(index, slice):
-                return self.data.getSlice(index)
+                return self.data.getslice(index)
             else:
                 return self.data.__getitem__(index)
 
@@ -460,7 +460,7 @@ class CudaEn(spaces.LinearSpace):
                 value = np.asarray(value, dtype=self.space._dtype)
 
                 # Size checking is performed in c++
-                self.data.setSlice(index, value)
+                self.data.setslice(index, value)
             else:
                 self.data.__setitem__(index, value)
 
@@ -469,7 +469,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
 
     """The real space R^n, implemented in CUDA.
 
-    Requires the compiled ODL extension RLcpp.
+    Requires the compiled ODL extension odlpp.
 
     # TODO: document public interface
     """
@@ -632,27 +632,27 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
 # Methods
 # TODO: move
 def abs(inp, outp):
-    RLcpp.PyCuda.abs(inp.data, outp.data)
+    odlpp.cuda.abs(inp.data, outp.data)
 
 
 def sign(inp, outp):
-    RLcpp.PyCuda.sign(inp.data, outp.data)
+    odlpp.cuda.sign(inp.data, outp.data)
 
 
 def add_scalar(inp, scal, outp):
-    RLcpp.PyCuda.addScalar(inp.data, scal, outp.data)
+    odlpp.cuda.add_scalar(inp.data, scal, outp.data)
 
 
 def max_vector_scalar(inp, scal, outp):
-    RLcpp.PyCuda.maxVectorScalar(inp.data, scal, outp.data)
+    odlpp.cuda.max_vector_scalar(inp.data, scal, outp.data)
 
 
 def max_vector_vector(inp1, inp2, outp):
-    RLcpp.PyCuda.maxVectorVector(inp1.data, inp2.data, outp.data)
+    odlpp.cuda.max_vector_vector(inp1.data, inp2.data, outp.data)
 
 
 def sum(inp):
-    return RLcpp.PyCuda.sum(inp.data)
+    return odlpp.cuda.sum(inp.data)
 
 
 try:

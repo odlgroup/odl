@@ -890,7 +890,7 @@ def cartesian(dim, impl='numpy', **kwargs):
         'numpy' : Use NumPy as backend for data storage and operations.
                   This is the default.
         'cuda' : Use CUDA as backend for data storage and operations
-                 (requires RLcpp).
+                 (requires odlpp).
     kwargs : {'dist', 'norm', 'norm_p', 'inner', 'weights'}
         'dist' : callable or False
             If False, create a plain Rn without further structure.

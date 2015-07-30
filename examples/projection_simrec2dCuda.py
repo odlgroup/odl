@@ -28,7 +28,7 @@ import numpy as np
 import odl.operator.operator as OP
 import odl.space.function as fs
 import odl.space.cuda as cs
-import odl.space.discretization as dd
+import odl.discr.discretization as dd
 import odl.space.set as sets
 import SimRec2DPy as SR
 import matplotlib.pyplot as plt

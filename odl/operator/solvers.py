@@ -27,7 +27,7 @@ from future import standard_library
 
 # ODL imports
 from odl.operator.operator import LinearOperatorComposition, LinearOperatorSum
-from odl.operator.default_operators import IdentityOperator
+from odl.operator.default import IdentityOperator
 
 standard_library.install_aliases()
 

@@ -28,7 +28,7 @@ import odl.operator.operator as op
 import odl.operator.solvers as solvers
 import odl.space.cartesian as ds
 import odl.space.set as sets
-import odl.space.discretization as dd
+import odl.discr.discretization as dd
 import odl.space.function as fs
 import solverExamples
 

@@ -46,7 +46,7 @@ LinearOperatorScalarMultiplication  s*A(x)
 ================================================================================
 
 ================================================================================
-Default (standard) operators (default_operators)
+Default (standard) operators (default)
 ================================================================================
 ScalingOperator         Scales a vector by a scalar
 IdentityOperator        Identity operator
@@ -64,4 +64,4 @@ gauss_newton            The Gauss Newton method
 
 from __future__ import absolute_import
 
-__all__ = ['default_operators', 'operator', 'solvers']
+__all__ = ['default', 'operator', 'solvers']

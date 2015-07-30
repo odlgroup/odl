@@ -68,13 +68,7 @@ Function spaces (function)
 FunctionSpace       The space of functions over some domain
 L2                  FunctionSpace with the usual L2-norm
 ==========================================================================
-
-==========================================================================
-Discretizations of function spaces (discretization)
-==========================================================================
-uniform_discretization  Discretization of an IntervalProd using some Rn
-==========================================================================
 """
 
-__all__ = ['cuda', 'discretization', 'cartesian', 'function', 'product',
+__all__ = ['cuda', 'cartesian', 'function', 'product',
            'sequence', 'set', 'space']
