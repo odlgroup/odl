@@ -40,14 +40,18 @@ from math import sqrt
 from RL.space.space import (LinearSpace, MetricSpace, NormedSpace,
                             HilbertSpace, Algebra)
 from RL.space.set import RealNumbers
-from RL.utility.utility import errfmt
+from RL.utility.utility import errfmt, array1d_repr
 try:
     from RL.space.cuda import CudaRn
     try:
         CudaRn(1).element()
     except MemoryError:
-        raise MemoryError("Your GPU seems to be misconfigured.")
-    CUDA_AVAILABLE = True
+        print(errfmt("""
+        Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
+        modules."""))
+        CUDA_AVAILABLE = False
+    else:
+        CUDA_AVAILABLE = True
 except ImportError:
     CudaRn = None
     CUDA_AVAILABLE = False
@@ -111,7 +115,7 @@ class Rn(LinearSpace):
 
         >>> x = r3.element([1, 2, 3])
         >>> x
-        Rn(3).element([ 1.,  2.,  3.])
+        Rn(3).element([1.0, 2.0, 3.0])
 
         Existing NumPy arrays are wrapped instead of copied if their
         dtype is float64:
@@ -119,7 +123,7 @@ class Rn(LinearSpace):
         >>> a = np.array([1., 2., 3.])
         >>> x = r3.element(a)
         >>> x
-        Rn(3).element([ 1.,  2.,  3.])
+        Rn(3).element([1.0, 2.0, 3.0])
         >>> x.data is a
         True
 
@@ -127,7 +131,7 @@ class Rn(LinearSpace):
         >>> x = r3.element(b)
         >>> x
         Rn(3).element([1.0, 2.0, 3.0])
-        >>> y = rn.element([1, 2, 3])
+        >>> y = r3.element([1, 2, 3])
         >>> y
         Rn(3).element([1.0, 2.0, 3.0])
 
@@ -424,13 +428,7 @@ class Rn(LinearSpace):
 
         def __repr__(self):
             """repr() implementation."""
-            if self.space.dim < 7:
-                return '{!r}.element({!r}'.format(self.space,
-                                                  self[:].tolist())
-            else:
-                val_str = (repr(self[:3].tolist()).rstrip(']') + ', ..., ' +
-                           repr(self[-3:].tolist()).lstrip('['))
-                return repr(self.space) + '.element(' + val_str + ')'
+            return '{!r}.element({})'.format(self.space, array1d_repr(self))
 
         def __len__(self):
             """The dimension of the underlying space.
@@ -515,7 +513,7 @@ class Rn(LinearSpace):
 
             >>> y[1:3] = -2.
             >>> y
-            Rn(3).element([ 0., -2., -2.])
+            Rn(3).element([0.0, -2.0, -2.0])
             """
             return self.data.__setitem__(index, value)
 
@@ -1004,5 +1002,5 @@ def cartesian(dim, impl='numpy', **kwargs):
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

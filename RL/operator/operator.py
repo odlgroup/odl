@@ -17,7 +17,7 @@
 
 # pylint: disable=protected-access
 """
-General abstract operators defined on Set's aswell as sums
+General abstract operators defined on Set's as well as sums
 and compositions of such.
 
 Also contains LinearOperator specializations for linear operators
@@ -992,5 +992,5 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
                                                   self._scalar)
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)
