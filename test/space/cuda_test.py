@@ -36,7 +36,7 @@ try:
     from odl.utility.testutils import ODLTestCase
     from odl.space.cuda import *
 except ImportError:
-    ODLTestCase = skip_all_tests("Missing RLcpp")
+    ODLTestCase = skip_all_tests("Missing odlpp")
 
 import numpy as np
 
