@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
 # Imports for common Python 2/3 codebase
@@ -25,9 +25,9 @@ from future import standard_library
 import unittest
 import numpy as np
 
-# RL imports
-from RL.space.set import IntervalProd, Interval, Rectangle
-from RL.utility.testutils import RLTestCase
+# ODL imports
+from odl.space.set import IntervalProd, Interval, Rectangle
+from odl.utility.testutils import ODLTestCase
 
 standard_library.install_aliases()
 
@@ -39,7 +39,7 @@ def random_point(set_):
         raise NotImplementedError("unknown type")
 
 
-class IntervalProdTest(RLTestCase):
+class IntervalProdTest(ODLTestCase):
     def test_init(self):
         set_ = IntervalProd(1, 2)
         set_ = IntervalProd(-np.inf, 2)
@@ -210,7 +210,7 @@ class IntervalProdTest(RLTestCase):
         self.assertFalse(positive_reals.contains(-1))
 
 
-class IntervalTest(RLTestCase):
+class IntervalTest(ODLTestCase):
     def test_init(self):
         set_ = Interval(1, 2)
         set_ = Interval([1], [2])
@@ -224,7 +224,7 @@ class IntervalTest(RLTestCase):
         self.assertEquals(set_.length, 1)
 
 
-class RectangleTest(RLTestCase):
+class RectangleTest(ODLTestCase):
     def test_init(self):
         set_ = Rectangle([1, 2], [2, 3])
 

@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
 # Imports for common Python 2/3 codebase
@@ -27,11 +27,11 @@ from math import sqrt
 # External module imports
 import numpy as np
 
-# RL imports
-import RL.space.set as sets
-import RL.space.space as space
-from RL.space.function import FunctionSpace
-from RL.utility.utility import errfmt
+# ODL imports
+import odl.space.set as sets
+import odl.space.space as space
+from odl.space.function import FunctionSpace
+from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 

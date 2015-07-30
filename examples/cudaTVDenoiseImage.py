@@ -4,20 +4,20 @@ simple_test_astra.py -- a simple test script
 
 Copyright 2014, 2015 Holger Kohr
 
-This file is part of RL.
+This file is part of ODL.
 
-RL is free software: you can redistribute it and/or modify
+ODL is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-RL is distributed in the hope that it will be useful,
+ODL is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with RL.  If not, see <http://www.gnu.org/licenses/>.
+along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import (division, print_function, unicode_literals,
                         absolute_import)
@@ -26,15 +26,15 @@ from future import standard_library
 import numpy as np
 import matplotlib.pyplot as plt
 
-from RL.operator.operator import *
-from RL.space.space import *
-from RL.space.product import powerspace
-from RL.space.cartesian import *
-from RL.space.function import *
-import RL.space.cuda as CS
-import RL.space.discretization as DS
+from odl.operator.operator import *
+from odl.space.space import *
+from odl.space.product import powerspace
+from odl.space.cartesian import *
+from odl.space.function import *
+import odl.space.cuda as CS
+import odl.space.discretization as DS
 import RLcpp
-from RL.utility.testutils import Timer
+from odl.utility.testutils import Timer
 
 from pooled import makePooledSpace
 

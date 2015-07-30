@@ -4,7 +4,7 @@ from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
-from RL.space.space import HilbertSpace, Algebra
+from odl.space.space import HilbertSpace, Algebra
 
 """ An example of a very simple space, the space Rn
 """

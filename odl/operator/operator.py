@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # pylint: disable=protected-access
 """
@@ -34,9 +34,9 @@ from abc import ABCMeta
 # External module imports
 from numbers import Number
 
-# RL imports
-from RL.utility.utility import errfmt
-from RL.space.space import LinearSpace
+# ODL imports
+from odl.utility.utility import errfmt
+from odl.space.space import LinearSpace
 
 standard_library.install_aliases()
 
@@ -148,7 +148,7 @@ class Operator(object):
     """Abstract operator
 
     An operator is a mapping from a 'Set' to another 'Set'.
-    In RL all mappings know their domain and range, and have
+    In ODL all mappings know their domain and range, and have
     some method of evaluation. They also provide some convenience
     functions and error checking.
 
@@ -261,8 +261,8 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import Rn
-        >>> from RL.operator.default_operators import IdentityOperator
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -311,15 +311,15 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import Rn
-        >>> from RL.operator.default_operators import IdentityOperator
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
         Rn(3).element([1.0, 2.0, 3.0])
 
-        >>> from RL.operator.default_operators import operator
+        >>> from odl.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> A(3)
         9
@@ -366,8 +366,8 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import Rn
-        >>> from RL.operator.default_operators import IdentityOperator
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -377,7 +377,7 @@ class Operator(object):
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
 
-        >>> from RL.operator.default_operators import operator
+        >>> from odl.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> Scaled = A*3
         >>> Scaled(5)
@@ -405,8 +405,8 @@ class Operator(object):
         Example
         -------
 
-        >>> from RL.space.cartesian import Rn
-        >>> from RL.operator.default_operators import IdentityOperator
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default_operators import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -416,7 +416,7 @@ class Operator(object):
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
 
-        >>> from RL.operator.default_operators import operator
+        >>> from odl.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> Scaled = 3*A
         >>> Scaled(5)
@@ -486,7 +486,7 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.operator.default_operators import operator
+        >>> from odl.operator.default_operators import operator
         >>> A = operator(lambda x: 3*x)
         >>> B = operator(lambda x: 5*x)
         >>> OperatorSum(A, B)(3)
@@ -511,8 +511,8 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.cartesian import Rn
-        >>> from RL.operator.default_operators import IdentityOperator
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default_operators import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> rhs = r3.element([1, 2, 3])
@@ -543,8 +543,8 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.cartesian import Rn
-        >>> from RL.operator.default_operators import IdentityOperator
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default_operators import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).domain
@@ -568,8 +568,8 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from RL.space.cartesian import Rn
-        >>> from RL.operator.default_operators import IdentityOperator
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default_operators import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).range

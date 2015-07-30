@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
 # Imports for common Python 2/3 codebase
@@ -25,15 +25,15 @@ from future import standard_library
 import unittest
 import numpy as np
 
-# RL imports
-from RL.space.grid import TensorGrid, RegularGrid
-from RL.space.set import IntervalProd
-from RL.utility.testutils import RLTestCase
+# ODL imports
+from odl.space.grid import TensorGrid, RegularGrid
+from odl.space.set import IntervalProd
+from odl.utility.testutils import ODLTestCase
 
 standard_library.install_aliases()
 
 
-class TensorGridTestInit(RLTestCase):
+class TensorGridTestInit(ODLTestCase):
     def test_init(self):
         sorted1 = np.arange(2, 6)
         sorted2 = np.arange(-4, 5, 2)
@@ -82,7 +82,7 @@ class TensorGridTestInit(RLTestCase):
             grid = TensorGrid(sorted1, empty, sorted2)
 
 
-class TensorGridTestAttributes(RLTestCase):
+class TensorGridTestAttributes(ODLTestCase):
     def test_dim(self):
         vec1 = np.arange(2, 6)
         vec2 = np.arange(-4, 5, 2)
@@ -135,7 +135,7 @@ class TensorGridTestAttributes(RLTestCase):
         self.assertAllEquals(grid.max, (5, 0.5, 4, 0.5))
 
 
-class TensorGridTestMethods(RLTestCase):
+class TensorGridTestMethods(ODLTestCase):
     def test_element(self):
         vec1 = np.arange(2, 6)
         vec2 = np.arange(-4, 5, 2)
@@ -528,7 +528,7 @@ class TensorGridTestMethods(RLTestCase):
         self.assertEquals(str(grid), grid_string)
 
 
-class RegularGridTestInit(RLTestCase):
+class RegularGridTestInit(ODLTestCase):
     def test_init(self):
         center = (1, 0, -2)
         shape = (2, 1, 3)
@@ -611,7 +611,7 @@ class RegularGridTestInit(RLTestCase):
             grid = RegularGrid(shape, center, too_long_stride)
 
 
-class RegularGridTestAttributes(RLTestCase):
+class RegularGridTestAttributes(ODLTestCase):
     def test_center(self):
         center = (1, 0, -2)
         shape = (2, 1, 3)
@@ -635,7 +635,7 @@ class RegularGridTestAttributes(RLTestCase):
         self.assertAllEquals(grid.stride, (1, 1, 1))
 
 
-class RegularGridTestMethods(RLTestCase):
+class RegularGridTestMethods(ODLTestCase):
     def test_is_subgrid(self):
         center = (1, 0, -2)
         shape = (2, 1, 3)

@@ -11,13 +11,13 @@ from future import standard_library
 # External module imports
 import numpy as np
 
-# RL imports
-from RL.space.space import *
-from RL.space.cuda import *
-from RL.space.set import *
-from RL.utility.utility import errfmt
-from RL.space.cartesian import EuclideanRn
-from RL.utility.testutils import Timer
+# ODL imports
+from odl.space.space import *
+from odl.space.cuda import *
+from odl.space.set import *
+from odl.utility.utility import errfmt
+from odl.space.cartesian import EuclideanRn
+from odl.utility.testutils import Timer
 
 standard_library.install_aliases()
 

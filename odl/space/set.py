@@ -1,19 +1,19 @@
-# Copyright 2014, 2015 Holger Kohr, Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
-# This file is part of RL.
+# This file is part of ODL.
 #
-# RL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# RL is distributed in the hope that it will be useful,
+# ODL is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with RL.  If not, see <http://www.gnu.org/licenses/>.
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 General set structure as well as implementations of the most common sets.
@@ -30,8 +30,8 @@ from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
 
-# RL imports
-from RL.utility.utility import errfmt, array1d_repr
+# ODL imports
+from odl.utility.utility import errfmt, array1d_repr
 
 standard_library.install_aliases()
 
@@ -659,7 +659,7 @@ sampling
                [-1. ,  3. ,  0.5],
                [-0.5,  3. ,  0.5]])
         """
-        from RL.space.grid import TensorGrid
+        from odl.space.grid import TensorGrid
         if order not in ('C', 'F'):
             raise ValueError(errfmt('''
             Value of 'order' ({}) must be 'C' or 'F'.'''.format(order)))
@@ -706,7 +706,7 @@ sampling
         >>> grid.coord_vectors
         (array([-0.875, -0.625]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
         """
-        from RL.space.grid import RegularGrid
+        from odl.space.grid import RegularGrid
         num_nodes = np.atleast_1d(num_nodes).astype(np.int64)
 
         if np.any(np.isinf(self._begin)) or np.any(np.isinf(self._end)):

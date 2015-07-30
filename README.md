@@ -1,7 +1,7 @@
-RL
-=====
+ODL
+===
 
-Regularization Library
+Operator Discretization Library
 
 TODO: Update information!
 
@@ -21,3 +21,8 @@ Requirements
 - pyFFTW (https://pypi.python.org/pypi/pyFFTW) for uniform FFT
 - pyNFFT (https://pypi.python.org/pypi/pyNFFT/) for non-uniform FFT
 - numexpr (https://pypi.python.org/pypi/numexpr) for faster numerical expressions
+
+License
+-------
+
+GPL Version 3. See LICENSE file.
