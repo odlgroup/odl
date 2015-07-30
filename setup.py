@@ -33,7 +33,7 @@ scipy >= 0.14
 nose >= 1.3
 """
 
-setup(name='ODL',
+setup(name='odl',
       version='0.1b0.dev0',
       author='Holger Kohr, Jonas Adler',
       author_email='kohr@kth.se, jonasadl@kth.se',
