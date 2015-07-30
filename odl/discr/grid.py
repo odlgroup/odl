@@ -26,6 +26,7 @@ Class name  Description
 TensorGrid  The points are given as the tensor product of n coordinate \
 vectors, i.e. all possible n-tuples where the i-th coordinate is from \
 the i-th coordinate vector.
+
 RegularGrid A variant of a tensor grid where the entries of each \
 coordinate vector are equispaced. This type of grid can be represented \
 by three n-dimensional vectors.
