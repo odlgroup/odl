@@ -29,7 +29,7 @@ import numpy as np
 # ODL imports
 from odl.operator.operator import *
 from odl.space.cartesian import EuclideanRn
-import odl.space.discretization as disc
+import odl.discr.discretization as disc
 import odl.space.function as fs
 import odl.space.set as sets
 from odl.utility.testutils import ODLTestCase

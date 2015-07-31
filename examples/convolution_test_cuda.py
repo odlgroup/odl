@@ -26,10 +26,10 @@ from future import standard_library
 import odl.operator.operator as op
 import odl.operator.solvers as solvers
 import odl.space.set as sets
-import odl.space.discretization as dd
+import odl.discr.discretization as dd
 import odl.space.function as fs
 import odl.space.cuda as cs
-import RLcpp
+import odlpp
 import solverExamples
 
 from odl.utility.testutils import Timer
@@ -55,7 +55,7 @@ class CudaConvolution(op.LinearOperator):
         self.norm = float(sum(abs(self.kernel[:])))  # eval at host
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.conv(rhs.data, self.kernel.data, out.data)
+        odlpp.cuda.conv(rhs.data, self.kernel.data, out.data)
 
     @property
     def adjoint(self):

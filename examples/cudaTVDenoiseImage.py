@@ -32,8 +32,8 @@ from odl.space.product import powerspace
 from odl.space.cartesian import *
 from odl.space.function import *
 import odl.space.cuda as CS
-import odl.space.discretization as DS
-import RLcpp
+import odl.discr.discretization as DS
+import odlpp
 from odl.utility.testutils import Timer
 
 from pooled import makePooledSpace
@@ -57,7 +57,7 @@ class ForwardDiff2D(LinearOperator):
         self.range = powerspace(space, 2)
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
+        odlpp.cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
                                  self.domain.shape[0], self.domain.shape[1])
 
     @property
@@ -77,7 +77,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
         self.range = space
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
+        odlpp.cuda.forward_diff_2d_adj(rhs[0].data, rhs[1].data, out.data,
                                     self.range.shape[0], self.range.shape[1])
 
     @property
@@ -130,7 +130,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
         # c = tmp = max(s - la^-1, 0) / s
         CS.add_scalar(xdiff[0], -1.0/la, tmp)
         CS.max_vector_scalar(tmp, 0.0, tmp)
-        CS.divideVectorVector(tmp, xdiff[0], tmp)
+        CS.divide_vector_vector(tmp, xdiff[0], tmp)
 
         # d = d * c = d * max(s - la^-1, 0) / s
         for i in range(dimension):
@@ -240,7 +240,7 @@ rnpooled = makePooledSpace(rn, maxPoolSize=5)
 # Discretize
 d = DS.uniform_discretization(space, rnpooled, (n, m))
 x, y = d.points()
-data = RLcpp.utils.phantom([n, m])
+data = odlpp.utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5
 fun = d.element(data)
 

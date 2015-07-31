@@ -15,33 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Setup script for ODL.
+"""Discretizations in ODL.
 
-Install usage:
->>> python setup.py install
+============== ===========
+Module name    Description
+============== ===========
+discretization Discretizations of vector spaces and more general sets
+
+grid           Sparse representations of sampling grids
+============== ===========
 """
 
-from __future__ import print_function
 from __future__ import absolute_import
 
-from setuptools import setup, find_packages
-
-requires = """
-future >= 0.14
-numpy >= 1.8
-scipy >= 0.14
-nose >= 1.3
-"""
-
-setup(name='odl',
-      version='0.1b0.dev0',
-      author='Holger Kohr, Jonas Adler',
-      author_email='kohr@kth.se, jonasadl@kth.se',
-      url='https://gits-14.sys.kth.se/LCR/ODL',
-      description='Regularization Library',
-      license='GPLv3',
-      packages=find_packages(exclude=['*test*']),
-      install_requires=[requires],
-      # packages=['odl', 'odl.discr', 'odl.geometry', 'odl.operator',
-      #           'odl.space', 'odl.utility'],
-      package_dir={'odl': 'odl'})
+__all__ = ['discretization', 'grid']

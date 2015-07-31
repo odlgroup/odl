@@ -262,7 +262,7 @@ class Operator(object):
         -------
 
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_operators import IdentityOperator
+        >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -312,14 +312,14 @@ class Operator(object):
         -------
 
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_operators import IdentityOperator
+        >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> Op(x)
         Rn(3).element([1.0, 2.0, 3.0])
 
-        >>> from odl.operator.default_operators import operator
+        >>> from odl.operator.default import operator
         >>> A = operator(lambda x: 3*x)
         >>> A(3)
         9
@@ -361,13 +361,13 @@ class Operator(object):
 
         Returns
         -------
-        OperatorRightScalarMultiplication instance
+        OperatorRightScalarMult instance
 
         Example
         -------
 
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_operators import IdentityOperator
+        >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -377,14 +377,14 @@ class Operator(object):
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
 
-        >>> from odl.operator.default_operators import operator
+        >>> from odl.operator.default import operator
         >>> A = operator(lambda x: 3*x)
         >>> Scaled = A*3
         >>> Scaled(5)
         45
         """
 
-        return OperatorRightScalarMultiplication(self, other)
+        return OperatorRightScalarMult(self, other)
 
     def __rmul__(self, other):
         """ Left multiplication of operators with scalars
@@ -400,13 +400,13 @@ class Operator(object):
 
         Returns
         -------
-        OperatorLeftScalarMultiplication instance
+        OperatorLeftScalarMult instance
 
         Example
         -------
 
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_operators import IdentityOperator
+        >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
         >>> Op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -416,14 +416,14 @@ class Operator(object):
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
 
-        >>> from odl.operator.default_operators import operator
+        >>> from odl.operator.default import operator
         >>> A = operator(lambda x: 3*x)
         >>> Scaled = 3*A
         >>> Scaled(5)
         45
         """
 
-        return OperatorLeftScalarMultiplication(self, other)
+        return OperatorLeftScalarMult(self, other)
 
     def __str__(self):
         return self.__class__.__name__
@@ -486,7 +486,7 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from odl.operator.default_operators import operator
+        >>> from odl.operator.default import operator
         >>> A = operator(lambda x: 3*x)
         >>> B = operator(lambda x: 5*x)
         >>> OperatorSum(A, B)(3)
@@ -512,7 +512,7 @@ class OperatorSum(Operator):
         Example
         -------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_operators import IdentityOperator
+        >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> rhs = r3.element([1, 2, 3])
@@ -544,7 +544,7 @@ class OperatorSum(Operator):
         Example
         -------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_operators import IdentityOperator
+        >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).domain
@@ -569,7 +569,7 @@ class OperatorSum(Operator):
         Example
         -------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_operators import IdentityOperator
+        >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).range
@@ -588,10 +588,10 @@ class OperatorSum(Operator):
         return '(' + str(self._op1) + ' + ' + str(self._op2) + ')'
 
 
-class OperatorComposition(Operator):
+class OperatorComp(Operator):
     """Expression type for the composition of operators
 
-    OperatorComposition(left, right)(x) = left(right(x))
+    OperatorComp(left, right)(x) = left(right(x))
 
     Parameters
     ----------
@@ -640,19 +640,16 @@ class OperatorComposition(Operator):
 
     @property
     def inverse(self):
-        return OperatorComposition(self._right.inverse,
-                                   self._left.inverse,
-                                   self._tmp)
+        return OperatorComp(self._right.inverse, self._left.inverse, self._tmp)
 
     def derivative(self, point):
         left_deriv = self._left.derivative(self._right(point))
         right_deriv = self._right.derivative(point)
 
-        return LinearOperatorComposition(left_deriv,
-                                         right_deriv)
+        return LinearOperatorComp(left_deriv, right_deriv)
 
     def __repr__(self):
-        return ('OperatorComposition( ' + repr(self._left) + ', ' +
+        return ('OperatorComp( ' + repr(self._left) + ', ' +
                 repr(self._right) + ')')
 
     def __str__(self):
@@ -698,11 +695,11 @@ class OperatorPointwiseProduct(Operator):
         return self._op1.range
 
 
-class OperatorLeftScalarMultiplication(Operator):
+class OperatorLeftScalarMult(Operator):
     """Expression type for the left multiplication of operators with
     scalars
 
-    OperatorLeftScalarMultiplication(op, scalar)(x) = scalar * op(x)
+    OperatorLeftScalarMult(op, scalar)(x) = scalar * op(x)
     """
 
     def __init__(self, op, scalar):
@@ -732,26 +729,25 @@ class OperatorLeftScalarMultiplication(Operator):
 
     @property
     def inverse(self):
-        return OperatorRightScalarMultiplication(self._op.inverse,
-                                                 1.0/self._scalar)
+        return OperatorRightScalarMult(self._op.inverse, 1.0/self._scalar)
 
     def derivative(self, point):
-        return LinearOperatorScalarMultiplication(self._op.derivative(point),
-                                                  self._scalar)
+        return LinearOperatorScalarMult(self._op.derivative(point),
+                                        self._scalar)
 
     def __repr__(self):
-        return ('OperatorLeftScalarMultiplication( ' + repr(self._op) +
+        return ('OperatorLeftScalarMult( ' + repr(self._op) +
                 ', ' + repr(self._scalar) + ')')
 
     def __str__(self):
         return str(self._scalar) + " * " + str(self._op)
 
 
-class OperatorRightScalarMultiplication(Operator):
+class OperatorRightScalarMult(Operator):
     """Expression type for the right multiplication of operators with
     scalars.
 
-    OperatorRightScalarMultiplication(op, scalar)(x) = op(scalar * x)
+    OperatorRightScalarMult(op, scalar)(x) = op(scalar * x)
 
     Typically slower than left multiplication since this requires a
     copy.
@@ -802,15 +798,14 @@ class OperatorRightScalarMultiplication(Operator):
 
     @property
     def inverse(self):
-        return OperatorLeftScalarMultiplication(self._op.inverse,
-                                                1.0/self._scalar)
+        return OperatorLeftScalarMult(self._op.inverse, 1.0/self._scalar)
 
     def derivative(self, point):
-        return LinearOperatorScalarMultiplication(self._op.derivative(point),
-                                                  self._scalar)
+        return LinearOperatorScalarMult(self._op.derivative(point),
+                                        self._scalar)
 
     def __repr__(self):
-        return ('OperatorRightScalarMultiplication( ' + self._op.__repr__() +
+        return ('OperatorRightScalarMult( ' + self._op.__repr__() +
                 ', ' + repr(self._scalar) + ')')
 
     def __str__(self):
@@ -869,7 +864,7 @@ class LinearOperator(Operator):
         """
 
         if isinstance(other, Number):
-            return LinearOperatorScalarMultiplication(self, other)
+            return LinearOperatorScalarMult(self, other)
         else:
             raise TypeError('Expected an operator or a scalar')
 
@@ -926,17 +921,17 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
                                  self._tmp_dom, self._tmp)
 
 
-class LinearOperatorComposition(OperatorComposition, LinearOperator):
+class LinearOperatorComp(OperatorComp, LinearOperator):
     """Expression type for the composition of linear operators
     """
 
     def __init__(self, left, right, tmp=None):
         """ Create the abstract operator composition defined by:
 
-        LinearOperatorComposition(left, right)(x) = left(right(x))
+        LinearOperatorComp(left, right)(x) = left(right(x))
 
         With adjoint defined by
-        LinearOperatorComposition(left, right).T(y) = right.T(left.T(y))
+        LinearOperatorComp(left, right).T(y) = right.T(left.T(y))
 
         Args:
             LinearOperator  `left`      The first operator
@@ -948,30 +943,30 @@ class LinearOperatorComposition(OperatorComposition, LinearOperator):
 
         if not isinstance(left, LinearOperator):
             raise TypeError(errfmt('''
-            left ({}) is not a LinearOperator. LinearOperatorComposition is
+            left ({}) is not a LinearOperator. LinearOperatorComp is
             only defined for LinearOperators'''.format(left)))
         if not isinstance(right, LinearOperator):
             raise TypeError(errfmt('''
-            right ({}) is not a LinearOperator. LinearOperatorComposition is
+            right ({}) is not a LinearOperator. LinearOperatorComp is
             only defined for LinearOperators'''.format(right)))
 
         super().__init__(left, right, tmp)
 
     @property
     def adjoint(self):
-        return LinearOperatorComposition(self._right.adjoint,
-                                         self._left.adjoint, self._tmp)
+        return LinearOperatorComp(self._right.adjoint, self._left.adjoint,
+                                  self._tmp)
 
 
-class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
+class LinearOperatorScalarMult(OperatorLeftScalarMult,
                                          LinearOperator):
     """Expression type for the multiplication of operators with scalars
     """
 
     def __init__(self, op, scalar):
-        """ Create the LinearOperatorScalarMultiplication defined by
+        """ Create the LinearOperatorScalarMult defined by
 
-        LinearOperatorScalarMultiplication(op, scalar)(x) = scalar * op(x)
+        LinearOperatorScalarMult(op, scalar)(x) = scalar * op(x)
 
         Args:
             Operator    `op`        Any operator
@@ -981,15 +976,14 @@ class LinearOperatorScalarMultiplication(OperatorLeftScalarMultiplication,
         if not isinstance(op, LinearOperator):
             raise TypeError(errfmt('''
             op ({}) is not a LinearOperator.
-            LinearOperatorScalarMultiplication is only defined for
+            LinearOperatorScalarMult is only defined for
             LinearOperators'''.format(op)))
 
         super().__init__(op, scalar)
 
     @property
     def adjoint(self):
-        return LinearOperatorScalarMultiplication(self._op.adjoint,
-                                                  self._scalar)
+        return LinearOperatorScalarMult(self._op.adjoint, self._scalar)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

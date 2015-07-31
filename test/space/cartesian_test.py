@@ -340,7 +340,7 @@ class CpuFactoryTest(ODLTestCase):
 
 
 if not CUDA_AVAILABLE:
-    ODLTestCase = skip_all_tests("Missing RLcpp")
+    ODLTestCase = skip_all_tests("Missing odlpp")
 
 
 class GpuFactoryTest(ODLTestCase):

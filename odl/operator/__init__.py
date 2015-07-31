@@ -31,22 +31,22 @@ SelfAdjointOperator     Linear operator whose adjoint is itself
 Operator compositions, sums etc (operator)
 ================================================================================
 OperatorSum                         A(x) + B(x)
-OperatorComposition                 A(B(x))
+OperatorComp                        A(B(x))
 OperatorPointwiseProduct            A(x)*B(x)
-OperatorLeftScalarMultiplication    s*A(x)
-OperatorRightScalarMultiplication   A(s*x)
+OperatorLeftScalarMult              s*A(x)
+OperatorRightScalarMult             A(s*x)
 ================================================================================
 
 ================================================================================
 Linear Operator compositions, sums etc (operator)
 ================================================================================
 LinearOperatorSum                   A(x) + B(x)
-LinearOperatorComposition           A(B(x))
-LinearOperatorScalarMultiplication  s*A(x)
+LinearOperatorComp                  A(B(x))
+LinearOperatorScalarMult            s*A(x)
 ================================================================================
 
 ================================================================================
-Default (standard) operators (default_operators)
+Default (standard) operators (default)
 ================================================================================
 ScalingOperator         Scales a vector by a scalar
 IdentityOperator        Identity operator
@@ -64,4 +64,4 @@ gauss_newton            The Gauss Newton method
 
 from __future__ import absolute_import
 
-__all__ = ['default_operators', 'operator', 'solvers']
+__all__ = ['default', 'operator', 'solvers']

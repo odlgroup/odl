@@ -27,7 +27,7 @@ import unittest
 # ODL imports
 from odl.operator.operator import *
 from odl.space.space import *
-import odl.space.discretization as dd
+import odl.discr.discretization as dd
 from odl.space.function import *
 import odl.space.set as sets
 from odl.space.product import productspace
@@ -36,10 +36,10 @@ from odl.utility.testutils import skip_all_tests
 
 try:
     import odl.space.cuda as CS
-    import RLcpp
+    import odlpp
     from odl.utility.testutils import ODLTestCase
 except ImportError:
-    ODLTestCase = skip_all_tests("Missing RLcpp")
+    ODLTestCase = skip_all_tests("Missing odlpp")
 
 standard_library.install_aliases()
 
@@ -55,7 +55,7 @@ class ForwardDiff(LinearOperator):
         self.domain = self.range = space
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff(rhs.data, out.data)
+        odlpp.cuda.forward_diff(rhs.data, out.data)
 
     @property
     def adjoint(self):
@@ -73,7 +73,7 @@ class ForwardDiffAdjoint(LinearOperator):
         self.domain = self.range = space
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
+        odlpp.cuda.forward_diff_adj(rhs.data, out.data)
 
     @property
     def adjoint(self):
@@ -92,8 +92,8 @@ class ForwardDiff2D(LinearOperator):
         self.range = productspace(space, space)
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2D(rhs.data, out[0].data, out[1].data,
-                                 self.domain.shape[0], self.domain.shape[1])
+        odlpp.cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
+                                   self.domain.shape[0], self.domain.shape[1])
 
     @property
     def adjoint(self):
@@ -112,8 +112,9 @@ class ForwardDiff2DAdjoint(LinearOperator):
         self.range = space
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff2DAdj(rhs[0].data, rhs[1].data, out.data,
-                                    self.range.shape[0], self.range.shape[1])
+        odlpp.cuda.forward_diff_2d_adj(
+            rhs[0].data, rhs[1].data, out.data, self.range.shape[0],
+            self.range.shape[1])
 
     @property
     def adjoint(self):

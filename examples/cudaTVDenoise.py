@@ -30,8 +30,8 @@ from odl.space.space import *
 from odl.space.cartesian import *
 from odl.space.function import *
 import odl.space.cuda as CS
-import odl.space.discretization as DS
-import RLcpp
+import odl.discr.discretization as DS
+import odlpp
 
 import matplotlib.pyplot as plt
 
@@ -50,7 +50,7 @@ class ForwardDiff(LinearOperator):
         self.scale = scale
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiff(rhs.data, out.data)
+        odlpp.cuda.forward_diff(rhs.data, out.data)
         out *= self.scale
 
     @property
@@ -70,7 +70,7 @@ class ForwardDiffAdj(LinearOperator):
         self.scale = scale
 
     def _apply(self, rhs, out):
-        RLcpp.cuda.forwardDiffAdj(rhs.data, out.data)
+        odlpp.cuda.forward_diff_adj(rhs.data, out.data)
         out *= self.scale
 
     @property
@@ -112,12 +112,12 @@ def denoise(x0, la, mu, iterations=1):
         d -= b
 
         # sign = d/abs(d)
-        RLcpp.cuda.sign(d.data, sign.data)
+        odlpp.cuda.sign(d.data, sign.data)
 
         #
-        RLcpp.cuda.abs(d.data, d.data)
-        RLcpp.cuda.add_scalar(d.data, -1.0/la, d.data)
-        RLcpp.cuda.max_vector_scalar(d.data, 0.0, d.data)
+        odlpp.cuda.abs(d.data, d.data)
+        odlpp.cuda.add_scalar(d.data, -1.0/la, d.data)
+        odlpp.cuda.max_vector_scalar(d.data, 0.0, d.data)
         d *= sign
 
         # b = b - diff(x) + d

@@ -26,7 +26,7 @@ import unittest
 import numpy as np
 
 # ODL imports
-from odl.space.grid import TensorGrid, RegularGrid
+from odl.discr.grid import TensorGrid, RegularGrid
 from odl.space.set import IntervalProd
 from odl.utility.testutils import ODLTestCase
 
