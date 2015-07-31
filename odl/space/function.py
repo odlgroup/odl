@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=protected-access
-
 """
 Support for functionspaces, such as L2.
 """
@@ -53,22 +51,25 @@ class FunctionSpace(Algebra):
 
     def __init__(self, domain, field=RealNumbers()):
         if not isinstance(domain, Set):
-            raise TypeError("domain ({!r}) is not a Set instance".format(domain))
+            raise TypeError(errfmt('''
+            domain ({!r}) is not a Set instance'''.format(domain)))
 
         if not isinstance(field, (RealNumbers, ComplexNumbers)):
-            raise TypeError("field ({!r}) is not a RealNumbers or ComplexNumbers".format(field))
+            raise TypeError(errfmt('''
+            field ({!r}) is not a RealNumbers or ComplexNumbers.
+            '''.format(field)))
 
         self.domain = domain
         self._field = field
 
-    def element(self, function=None):
+    def element(self, funct=None):
         """ Creates an element in FunctionSpace
 
         Parameters
         ----------
-        function : Function from self.domain to self.field
-                   The function that should be converted/reinterpreted
-                   as a vector.
+        funct : Function from self.domain to self.field
+            The function that should be converted/reinterpreted
+            as a vector.
 
         Returns
         -------
@@ -87,12 +88,13 @@ class FunctionSpace(Algebra):
         9.0
         """
 
-        if function is None:
+        if funct is None:
             def function(*_):
                 """ A function that always returns zero
                 """
                 return 0
-        return FunctionSpace.Vector(self, function)
+            funct = function
+        return FunctionSpace.Vector(self, funct)
 
     def _lincomb(self, z, a, x, b, y):
         """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
@@ -101,6 +103,7 @@ class FunctionSpace(Algebra):
         and should only be used for testing purposes.
         """
         # Use operator overloading
+        # pylint: disable=protected-access
         z._function = lambda *args: a*x._function(*args) + b*y._function(*args)
 
     def _multiply(self, x, y):
@@ -109,6 +112,7 @@ class FunctionSpace(Algebra):
         The created object is rather slow,
         and should only be used for testing purposes.
         """
+        # pylint: disable=protected-access
         tmp = y._function
         y._function = lambda *args: x._function(*args)*tmp._function(*args)
 

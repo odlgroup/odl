@@ -101,6 +101,7 @@ class UniversalSet(Set):
     want to define a domain or range.
     """
 
+    # pylint: disable=abstract-method
     def equals(self, other):
         """ Tests if other is an instance of UniversalSet
         """
@@ -354,6 +355,7 @@ sampling
         >>> rbox1.equals(rbox2, tol=1e-15)
         True
         """
+        # pylint: disable=arguments-differ
         if not isinstance(other, IntervalProd):
             return False
 
@@ -385,6 +387,7 @@ sampling
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-15)
         True
         """
+        # pylint: disable=arguments-differ
         point = np.atleast_1d(point)
 
         if len(point) != self.dim:
@@ -659,7 +662,7 @@ sampling
                [-1. ,  3. ,  0.5],
                [-0.5,  3. ,  0.5]])
         """
-        from odl.space.grid import TensorGrid
+        from odl.discr.grid import TensorGrid
         if order not in ('C', 'F'):
             raise ValueError(errfmt('''
             Value of 'order' ({}) must be 'C' or 'F'.'''.format(order)))
@@ -706,7 +709,7 @@ sampling
         >>> grid.coord_vectors
         (array([-0.875, -0.625]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
         """
-        from odl.space.grid import RegularGrid
+        from odl.discr.grid import RegularGrid
         num_nodes = np.atleast_1d(num_nodes).astype(np.int64)
 
         if np.any(np.isinf(self._begin)) or np.any(np.isinf(self._end)):
@@ -798,6 +801,7 @@ class Cube(IntervalProd):
 
 
 class CartesianProduct(Set):
+    # pylint: disable=abstract-method
     def __init__(self, *sets):
         if not all(isinstance(set_, Set) for set_ in sets):
             wrong_set = [set_ for set_ in sets

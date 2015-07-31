@@ -248,6 +248,7 @@ of the grid
         >>> g1.equals(g2, tol=0.15)
         True
         """
+        # pylint: disable=arguments-differ
         return (isinstance(other, TensorGrid) and
                 self.dim == other.dim and
                 self.shape == other.shape and
@@ -278,6 +279,7 @@ of the grid
         >>> g.contains([0.1, -0.1], tol=0.15)
         True
         """
+        # pylint: disable=arguments-differ
         point = np.atleast_1d(point)
         return (point.shape == (self.dim,) and
                 all(np.any(np.isclose(vector, coord, atol=tol, rtol=0.0))
@@ -316,6 +318,7 @@ of the grid
         # Array version of the fuzzy subgrid test, about 3 times faster
         # than the loop version.
         for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
+            # pylint: disable=unbalanced-tuple-unpacking
             vec_o_mg, vec_s_mg = np.meshgrid(vec_o, vec_s, sparse=True,
                                              copy=True, indexing='ij')
             if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol, axis=0)):
@@ -843,6 +846,7 @@ of the grid
 
         elif isinstance(other, TensorGrid):
             # other is a TensorGrid, we need to fall back to full check
+            # pylint: disable=unbalanced-tuple-unpacking
             for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
                 vec_o_mg, vec_s_mg = np.meshgrid(vec_o, vec_s, sparse=True,
                                                  copy=True, indexing='ij')

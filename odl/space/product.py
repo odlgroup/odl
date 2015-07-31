@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=protected-access
-
 """Cartesian products of `LinearSpace`s.
 
 TODO: document public interface
@@ -212,6 +210,7 @@ class LinearProductSpace(LinearSpace):
         return self.element(data=[space.zero() for space in self.spaces])
 
     def _lincomb(self, z, a, x, b, y):
+        # pylint: disable=protected-access
         for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
             space._lincomb(zp, a, xp, b, yp)
 

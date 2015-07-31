@@ -48,6 +48,7 @@ class _DefaultCallOperator(object):
     operator implements 'element()'.
     """
 
+    # pylint: disable=too-few-public-methods
     def _call(self, rhs):
         """ Default '_call' implementation using '_apply'.
 
@@ -83,6 +84,8 @@ class _DefaultApplyOperator(object):
     The default implementation assumes that elements in the 'range' of the
     operator implements 'assign()'.
     """
+
+    # pylint: disable=too-few-public-methods
     def _apply(self, rhs, out):
         """ Default '_apply' implementation using '_call'.
 
@@ -449,6 +452,7 @@ class OperatorSum(Operator):
           Used to avoid the creation of a
           temporary when applying the operator.
     """
+    # pylint: disable=abstract-method
     def __init__(self, op1, op2, tmp=None):
         if op1.range != op2.range:
             raise TypeError(errfmt('''
@@ -663,6 +667,7 @@ class OperatorPointwiseProduct(Operator):
     OperatorPointwiseProduct(op1, op2)(x) = op1(x) * op2(x)
     """
 
+    # pylint: disable=abstract-method
     def __init__(self, op1, op2):
         if op1.range != op2.range:
             raise TypeError(errfmt('''
@@ -875,6 +880,7 @@ class SelfAdjointOperator(LinearOperator):
     """ Special case of self adjoint operators where A(x) = A.T(x)
     """
 
+    # pylint: disable=abstract-method
     @property
     def adjoint(self):
         return self
@@ -887,6 +893,8 @@ class SelfAdjointOperator(LinearOperator):
 class LinearOperatorSum(OperatorSum, LinearOperator):
     """Expression type for the sum of linear operators
     """
+
+    # pylint: disable=abstract-method
     def __init__(self, op1, op2, tmp_ran=None, tmp_dom=None):
         """Create the abstract operator sum defined by:
 
@@ -959,7 +967,7 @@ class LinearOperatorComp(OperatorComp, LinearOperator):
 
 
 class LinearOperatorScalarMult(OperatorLeftScalarMult,
-                                         LinearOperator):
+                               LinearOperator):
     """Expression type for the multiplication of operators with scalars
     """
 

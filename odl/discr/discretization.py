@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=abstract-method
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -79,11 +80,11 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
             self._rn = rn
             dx = np.array(
                 [((self.parent.domain.end[i] - self.parent.domain.begin[i]) /
-                 (self.shape[i] - 1)) for i in range(self.parent.domain.dim)])
+                  (self.shape[i] - 1)) for i in range(self.parent.domain.dim)])
             self.scale = float(np.prod(dx))
 
-        def _inner(self, v1, v2):
-            return self._rn._inner(v1, v2) * self.scale
+        def _inner(self, vec1, vec2):
+            return self._rn._inner(vec1, vec2) * self.scale
 
         def _norm(self, vector):
             return self._rn._norm(vector) * sqrt(self.scale)
@@ -126,11 +127,12 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
                                    self.parent.domain.end[0],
                                    self.shape[0])
             else:
-                oneD = [np.linspace(self.parent.domain.begin[i],
-                        self.parent.domain.end[i],
-                        self.shape[i]) for i in range(self.parent.domain.dim)]
+                oned = [np.linspace(self.parent.domain.begin[i],
+                                    self.parent.domain.end[i],
+                                    self.shape[i])
+                        for i in range(self.parent.domain.dim)]
 
-                points = np.meshgrid(*oneD)
+                points = np.meshgrid(*oned)
 
                 return tuple(point.flatten(self.order) for point in points)
 

@@ -38,7 +38,7 @@ from math import sqrt
 
 # ODL imports
 from odl.space.space import (LinearSpace, MetricSpace, NormedSpace,
-                            HilbertSpace, Algebra)
+                             HilbertSpace, Algebra)
 from odl.space.set import RealNumbers
 from odl.utility.utility import errfmt, array1d_repr
 try:

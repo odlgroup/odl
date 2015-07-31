@@ -25,6 +25,7 @@ arg.append('--verbosity=2')
 arg.append('--with-doctest')
 arg.append('--doctest-options=+NORMALIZE_WHITESPACE')
 try:
+    # pylint: disable=unused-import
     import odl.space.cuda
 except ImportError:
     arg.append('--ignore-files=cuda.py')

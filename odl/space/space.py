@@ -153,6 +153,7 @@ class LinearSpace(Set):
         v : Vector
             A vector in this space
         """
+        # pylint: disable=arguments-differ
 
     @abstractmethod
     def _lincomb(self, z, a, x, b, y):

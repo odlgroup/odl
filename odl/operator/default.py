@@ -21,7 +21,6 @@ Default operators defined on any space
 Scale vector by scalar, Identity operation
 """
 
-
 # Imports for common Python 2/3 codebase
 from __future__ import (division, print_function, absolute_import)
 
@@ -58,13 +57,13 @@ class ScalingOperator(op.SelfAdjointOperator):
         self._space = space
         self._scal = float(scalar)
 
-    def _apply(self, input, out):
+    def _apply(self, inp, outp):
         """
         Scales a vector and stores the result in another
 
         Parameters
         ----------
-        input : self.domain element
+        inp : self.domain element
                 An element in the domain of this operator
         scalar : self.range element
                  An element in the range of this operator
@@ -78,22 +77,22 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
-        >>> out = r3.element()
+        >>> outp = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
-        >>> op.apply(vec, out)
-        >>> out
+        >>> op.apply(vec, outp)
+        >>> outp
         Rn(3).element([2.0, 4.0, 6.0])
         """
 
-        out.lincomb(self._scal, input)
+        outp.lincomb(self._scal, inp)
 
-    def _call(self, input):
+    def _call(self, inp):
         """
         Scales a vector
 
         Parameters
         ----------
-        input : self.domain element
+        inp : self.domain element
                 An element in the domain of this operator
 
 
@@ -101,7 +100,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         -------
         scaled : self.range element
                  An element in the range of this operator,
-                 input * self.scale
+                 inp * self.scale
 
         Example
         -------
@@ -113,7 +112,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         Rn(3).element([2.0, 4.0, 6.0])
         """
 
-        return self._scal * input
+        return self._scal * inp
 
     @property
     def inverse(self):
@@ -223,7 +222,7 @@ class LinCombOperator(op.LinearOperator):
     """
     The lincomb operator calculates:
 
-    out = a*in[0] + b*in[1]
+    outp = a*inp[0] + b*inp[1]
 
     Parameters
     ----------
@@ -231,18 +230,19 @@ class LinCombOperator(op.LinearOperator):
     space : LinearSpace
             The space the vectors should lie in
     a : float
-        Scalar to multiply in[0] by
+        Scalar to multiply inp[0] by
     b : float
-        Scalar to multiply in[1] by
+        Scalar to multiply inp[1] by
     """
 
+    # pylint: disable=abstract-method
     def __init__(self, space, a, b):
         self.domain = CartesianProduct(space, space)
         self.range = space
         self.a = a
         self.b = b
 
-    def _apply(self, input, out):
+    def _apply(self, inp, outp):
         """
         Example
         -------
@@ -257,7 +257,7 @@ class LinCombOperator(op.LinearOperator):
         Rn(3).element([2.0, 4.0, 6.0])
         """
 
-        out.lincomb(self.a, input[0], self.b, input[1])
+        outp.lincomb(self.a, inp[0], self.b, inp[1])
 
     def __repr__(self):
         return 'LinCombOperator({!r}, {!r}, {!r})'.format(
@@ -268,10 +268,9 @@ class LinCombOperator(op.LinearOperator):
 
 
 class MultiplyOperator(op.LinearOperator):
-    """
-    The multiply operator calculates:
+    """The multiply operator calculates:
 
-    out = in[0] * in[1]
+    outp = inp[0] * inp[1]
 
     This is only applicable in Algebras
 
@@ -282,11 +281,12 @@ class MultiplyOperator(op.LinearOperator):
             The space the vectors should lie in
     """
 
+    # pylint: disable=abstract-method
     def __init__(self, space):
         self.domain = CartesianProduct(space, space)
         self.range = space
 
-    def _apply(self, input, out):
+    def _apply(self, inp, outp):
         """
         Example
         -------
@@ -301,14 +301,14 @@ class MultiplyOperator(op.LinearOperator):
         EuclideanRn(3).element([1.0, 4.0, 9.0])
         """
 
-        out.assign(input[1])
-        out.multiply(input[0])
+        outp.assign(inp[1])
+        outp.multiply(inp[0])
 
     def __repr__(self):
         return 'MultiplyOperator({!r})'.format(self.range)
 
     def __str__(self):
-        return "x * y".format(self.a, self.b)
+        return "x * y"
 
 
 def instance_method(function):
@@ -324,7 +324,7 @@ def instance_method(function):
 
 
 def operator(call=None, apply=None, inv=None, deriv=None,
-             domain=UniversalSet(), range=UniversalSet()):
+             dom=UniversalSet(), ran=UniversalSet()):
     """ Creates a simple operator.
 
     Mostly intended for testing.
@@ -333,7 +333,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     ----------
     call : Function taking one argument (rhs) returns result
            The operators _call method
-    apply : Function taking two arguments (rhs, out) returns None
+    apply : Function taking two arguments (rhs, outp) returns None
             The operators _apply method
     inv : Operator, optional
           The inverse operator
@@ -341,10 +341,10 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     deriv : LinearOperator, optional
             The derivative operator
             Default: None
-    domain : Set, optional
+    dom : Set, optional
              The domain of the operator
              Default: UniversalSet
-    range : Set, optional
+    ran : Set, optional
             The range of the operator
             Default: UniversalSet
 
@@ -365,20 +365,20 @@ def operator(call=None, apply=None, inv=None, deriv=None,
 
     metaclass = op.Operator.__metaclass__
 
-    SimpleOperator = metaclass('SimpleOperator',
-                               (op.Operator,),
-                               {'_call': instance_method(call),
-                                '_apply': instance_method(apply),
-                                'inverse': inv,
-                                'derivative': deriv,
-                                'domain': domain,
-                                'range': range})
+    simple_operator = metaclass('SimpleOperator',
+                                (op.Operator,),
+                                {'_call': instance_method(call),
+                                 '_apply': instance_method(apply),
+                                 'inverse': inv,
+                                 'derivative': deriv,
+                                 'domain': dom,
+                                 'range': ran})
 
-    return SimpleOperator()
+    return simple_operator()
 
 
 def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
-                    domain=UniversalSet(), range=UniversalSet()):
+                    dom=UniversalSet(), ran=UniversalSet()):
     """ Creates a simple operator.
 
     Mostly intended for testing.
@@ -387,7 +387,7 @@ def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
     ----------
     call : Function taking one argument (rhs) returns result
            The operators _call method
-    apply : Function taking two arguments (rhs, out) returns None
+    apply : Function taking two arguments (rhs, outp) returns None
             The operators _apply method
     inv : Operator, optional
           The inverse operator
@@ -398,10 +398,10 @@ def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
     adj : LinearOperator, optional
           The adjoint of the operator
           Defualt: None
-    domain : Set, optional
+    dom : Set, optional
              The domain of the operator
              Default: UniversalSet
-    range : Set, optional
+    ran : Set, optional
             The range of the operator
             Default: UniversalSet
 
@@ -422,17 +422,17 @@ def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
 
     metaclass = op.LinearOperator.__metaclass__
 
-    SimpleLinearOperator = metaclass('SimpleOperator',
-                                     (op.LinearOperator,),
-                                     {'_call': instance_method(call),
-                                      '_apply': instance_method(apply),
-                                      'inverse': inv,
-                                      'derivative': deriv,
-                                      'adjoint': adj,
-                                      'domain': domain,
-                                      'range': range})
+    simple_linear_operator = metaclass('SimpleOperator',
+                                       (op.LinearOperator,),
+                                       {'_call': instance_method(call),
+                                        '_apply': instance_method(apply),
+                                        'inverse': inv,
+                                        'derivative': deriv,
+                                        'adjoint': adj,
+                                        'domain': dom,
+                                        'range': ran})
 
-    return SimpleLinearOperator()
+    return simple_linear_operator()
 
 
 if __name__ == '__main__':

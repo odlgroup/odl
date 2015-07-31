@@ -25,21 +25,25 @@ from __future__ import (print_function, unicode_literals, division,
                         absolute_import)
 from builtins import object, super
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
+# pylint: disable=no-name-in-module
 from itertools import zip_longest
 import unittest
 from time import time
+from future.utils import with_metaclass
 
-standard_library.install_aliases()
 
-
-# Todo move
+# TODO: move
 class ODLTestCase(unittest.TestCase):
+    # Use names compatible with unittest
+    # pylint: disable=invalid-name
     def assertAlmostEqual(self, f1, f2, *args, **kwargs):
         unittest.TestCase.assertAlmostEqual(self, float(f1), float(f2), *args,
                                             **kwargs)
 
+    # pylint: disable=invalid-name
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
         """ Assert thaat all elements in iter1 and iter2 are almost equal.
 
@@ -60,7 +64,8 @@ class ODLTestCase(unittest.TestCase):
             self.assertIsNot(ip1, different_length_sentinel)
             self.assertIsNot(ip2, different_length_sentinel)
             try:
-                self.assertAllAlmostEquals(iter(ip1), iter(ip2), *args, **kwargs)
+                self.assertAllAlmostEquals(iter(ip1), iter(ip2), *args,
+                                           **kwargs)
             except TypeError:
                 self.assertAlmostEqual(ip1, ip2, *args, **kwargs)
 
@@ -87,8 +92,8 @@ def skip_all_tests(reason=None):
                     local[attr] = unittest.skip(reason)(value)
             return super().__new__(mcs, name, bases, local)
 
-    class SkipAllTestCase(unittest.TestCase):
-        __metaclass__ = SkipAllTestsMeta
+    class SkipAllTestCase(with_metaclass(SkipAllTestsMeta, unittest.TestCase)):
+        pass
 
     return SkipAllTestCase
 
@@ -109,6 +114,6 @@ class Timer(object):
         self.tstart = time()
 
     def __exit__(self, type, value, traceback):
-        if self.name:
+        if self.name is not None:
             print('[{}] '.format(self.name))
         print('Elapsed: {}'.format(time() - self.tstart))
