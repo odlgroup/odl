@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Efficient implementations of n-dimensional sampling grids.
+"""Sparse implementations of n-dimensional sampling grids.
 
 Sampling grids are collections of points in an n-dimensional coordinate
 space with a certain structure which is exploited to minimize storage.
@@ -36,8 +36,9 @@ by three n-dimensional vectors.
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import super
 from future import standard_library
+standard_library.install_aliases()
+from builtins import super
 
 # External module imports
 import numpy as np
@@ -46,10 +47,9 @@ import numpy as np
 from odl.space.set import Set
 from odl.utility.utility import errfmt, array1d_repr
 
-standard_library.install_aliases()
-
 
 class TensorGrid(Set):
+
     """An n-dimensional tensor grid.
 
     This is a sparse representation of a collection of n-dimensional points
@@ -63,20 +63,25 @@ class TensorGrid(Set):
     Attributes
     ----------
 
-    ============= ======================= ===========
-    Name          Type                    Description
-    ============= ======================= ===========
-    coord_vectors list of numpy.ndarray's Vectors containing \
-the grid point coordinates along each axis
-    dim           int                     Number of axes
-    shape         tuple of int's          Number of grid points per \
-axis
-    ntotal        int                     Total number of grid points
-    min           numpy.ndarray           Grid point with minimal \
-coordinates
-    max           numpy.ndarray           Grid point with maximal \
-coordinates
-    ============= ======================= ===========
+    ============= ======================== ===========
+    Name          Type                     Description
+    ============= ======================== ===========
+    coord_vectors tuple of numpy.ndarray's Vectors containing \
+    the grid point coordinates along each axis
+
+    dim           int                      Number of axes
+
+    shape         tuple of int's           Number of grid points per \
+    axis
+
+    ntotal        int                      Total number of grid points
+
+    min           numpy.ndarray            Grid point with minimal \
+    coordinates
+
+    max           numpy.ndarray            Grid point with maximal \
+    coordinates
+    ============= ======================== ===========
 
 
     Methods
@@ -86,23 +91,30 @@ coordinates
     Signature                  Return type              Description
     ========================== ======================== ===========
     equals(other, tol=0.0)     boolean                  Equality test,\
-equivalent to 'self == other' for 'tol'==0.0
+    equivalent to 'self == other' for 'tol'==0.0
+
     contains(point, tol=0.0)   boolean                  Membership \
-test, equivalent to 'point in self' for 'tol'==0
+    test, equivalent to 'point in self' for 'tol'==0
+
     is_subgrid(other, tol=0.0) boolean                  Subgrid test
+
     points(order='C')          numpy.ndarray            All grid \
-points as a single array
+    points as a single array
+
     corners(order='C')         numpy.ndarray            The corner \
-points as an array
+    points as an array
+
     meshgrid(sparse=True)      tuple of numpy.ndarray's Efficient grid \
-for function evaluation (see numpy.meshgrid)
+    for function evaluation (see numpy.meshgrid)
+
     convex_hull()              set.IntervalProd         The "inner" \
-of the grid
+    of the grid
     ========================== ======================== ===========
     """
 
     def __init__(self, *coord_vectors):
-        """
+        """Initialize a TensorGrid instance.
+
         Parameters
         ----------
 
@@ -601,6 +613,7 @@ of the grid
 
 
 class RegularGrid(TensorGrid):
+
     """An n-dimensional tensor grid with equidistant coordinates.
 
     This is a sparse representation of an n-dimensional grid defined
@@ -616,24 +629,31 @@ class RegularGrid(TensorGrid):
     Attributes
     ----------
 
-    ============= ======================= ===========
-    Name          Type                    Description
-    ============= ======================= ===========
-    coord_vectors list of numpy.ndarray's Vectors containing \
-the grid point coordinates along each axis
-    dim           int                     Number of axes
-    shape         tuple of int's          Number of grid points per \
-axis
-    center        tuple of float's        The grid's symmetry center \
-(not necessarily a grid point)
-    stride        tuple of float's        Vector pointing from x_j to \
-x_(j + [1,...1])
-    ntotal        int                     Total number of grid points
-    min           numpy.ndarray           Grid point with minimal \
-coordinates
-    max           numpy.ndarray           Grid point with maximal \
-coordinates
-    ============= ======================= ===========
+    ============= ======================== ===========
+    Name          Type                     Description
+    ============= ======================== ===========
+    coord_vectors tuple of numpy.ndarray's Vectors containing \
+    the grid point coordinates along each axis
+
+    dim           int                      Number of axes
+
+    shape         tuple of int's           Number of grid points per \
+    axis
+
+    center        tuple of float's         The grid's symmetry center \
+    (not necessarily a grid point)
+
+    stride        tuple of float's         Vector pointing from x_j to\
+    x_(j + [1,...1])
+
+    ntotal        int                      Total number of grid points
+
+    min           numpy.ndarray            Grid point with minimal \
+    coordinates
+
+    max           numpy.ndarray            Grid point with maximal \
+    coordinates
+    ============= ======================== ===========
 
     Methods
     -------
@@ -642,23 +662,30 @@ coordinates
     Signature                  Return type              Description
     ========================== ======================== ===========
     equals(other, tol=0.0)     boolean                  Equality test, \
-equivalent to 'self == other' for 'tol'==0.0
+    equivalent to 'self == other' for 'tol'==0.0
+
     contains(point, tol=0.0)   boolean                  Membership \
-test, equivalent to 'point in self' for 'tol'==0
+    test, equivalent to 'point in self' for 'tol'==0
+
     is_subgrid(other, tol=0.0) boolean                  Subgrid test
+
     points(order='C')          numpy.ndarray            All grid \
-points as a single array
+    points as a single array
+
     corners(order='C')         numpy.ndarray            The corner \
-points as an array
+    points as an array
+
     meshgrid(sparse=True)      tuple of numpy.ndarray's Efficient \
-grid for function evaluation (see numpy.meshgrid)
+    grid for function evaluation (see numpy.meshgrid)
+
     convex_hull()              set.IntervalProd         The "inner" \
-of the grid
+    of the grid
     ========================== ======================== ===========
     """
 
     def __init__(self, shape, center=None, stride=None):
-        """
+        """Initialize a RegularGrid instance.
+
         Parameters
         ----------
 

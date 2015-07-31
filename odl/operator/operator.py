@@ -26,10 +26,10 @@ Also contains LinearOperator specializations for linear operators
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import str, object, super
-from future.utils import with_metaclass
 from future import standard_library
 standard_library.install_aliases()
+from builtins import str, object, super
+from future.utils import with_metaclass
 
 # External module imports
 from abc import ABCMeta
@@ -38,6 +38,7 @@ from numbers import Number
 # ODL imports
 from odl.utility.utility import errfmt
 from odl.space.space import LinearSpace
+from odl.space.set import UniversalSet
 
 
 class _DefaultCallOperator(object):
@@ -991,6 +992,131 @@ class LinearOperatorScalarMult(OperatorLeftScalarMult,
     @property
     def adjoint(self):
         return LinearOperatorScalarMult(self._op.adjoint, self._scalar)
+
+
+def _instance_method(function):
+    """ Adds a self argument to a function
+    such that it may be used as a instance method
+    """
+    def method(_, *args, **kwargs):
+        """  Calls function with *args, **kwargs
+        """
+        return function(*args, **kwargs)
+
+    return method
+
+
+def operator(call=None, apply=None, inv=None, deriv=None,
+             dom=UniversalSet(), ran=UniversalSet()):
+    """ Creates a simple operator.
+
+    Mostly intended for testing.
+
+    Parameters
+    ----------
+    call : Function taking one argument (rhs) returns result
+           The operators _call method
+    apply : Function taking two arguments (rhs, outp) returns None
+            The operators _apply method
+    inv : Operator, optional
+          The inverse operator
+          Default: None
+    deriv : LinearOperator, optional
+            The derivative operator
+            Default: None
+    dom : Set, optional
+             The domain of the operator
+             Default: UniversalSet
+    ran : Set, optional
+            The range of the operator
+            Default: UniversalSet
+
+    Returns
+    -------
+    operator : Operator
+               An operator with the required properties
+
+    Example
+    -------
+    >>> A = operator(lambda x: 3*x)
+    >>> A(5)
+    15
+    """
+
+    if call is None and apply is None:
+        raise ValueError("Need to supply at least one of call or apply")
+
+    metaclass = Operator.__metaclass__
+
+    simple_operator = metaclass('SimpleOperator',
+                                (Operator,),
+                                {'_call': _instance_method(call),
+                                 '_apply': _instance_method(apply),
+                                 'inverse': inv,
+                                 'derivative': deriv,
+                                 'domain': dom,
+                                 'range': ran})
+
+    return simple_operator()
+
+
+def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
+                    dom=UniversalSet(), ran=UniversalSet()):
+    """ Creates a simple operator.
+
+    Mostly intended for testing.
+
+    Parameters
+    ----------
+    call : Function taking one argument (rhs) returns result
+           The operators _call method
+    apply : Function taking two arguments (rhs, outp) returns None
+            The operators _apply method
+    inv : Operator, optional
+          The inverse operator
+          Default: None
+    deriv : LinearOperator, optional
+            The derivative operator
+            Default: None
+    adj : LinearOperator, optional
+          The adjoint of the operator
+          Defualt: None
+    dom : Set, optional
+             The domain of the operator
+             Default: UniversalSet
+    ran : Set, optional
+            The range of the operator
+            Default: UniversalSet
+
+    Returns
+    -------
+    operator : LinearOperator
+               An operator with the required properties
+
+    Example
+    -------
+    >>> A = linear_operator(lambda x: 3*x)
+    >>> A(5)
+    15
+    """
+
+    if call is None and apply is None:
+        raise ValueError("Need to supply at least one of call or apply")
+
+    metaclass = LinearOperator.__metaclass__
+
+    simple_linear_operator = metaclass('SimpleOperator',
+                                       (LinearOperator,),
+                                       {'_call': _instance_method(call),
+                                        '_apply': _instance_method(apply),
+                                        'inverse': inv,
+                                        'derivative': deriv,
+                                        'adjoint': adj,
+                                        'domain': dom,
+                                        'range': ran})
+
+    return simple_linear_operator()
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

@@ -15,40 +15,55 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Default operators defined on any space
+"""Default operators defined on any space of a certain kind.
+
+================  ===========
+Class name        Description
+================  ===========
+ScalingOperator   Self-adjoint operator scaling an element with a \
+real number.
+ZeroOperator      ScalingOperator with factor equal to 0
+IdentityOperator  ScalingOperator with factor equal to 1
+LinCombOperator   Linear operator mapping two space elements to \
+the linear combination with two fixed scalars.
+MultiplyOperator  Operator of multiplying two space elements. The \
+space needs to be an algebra for the multiplication to be well-defined.
+================  ===========
 
 Scale vector by scalar, Identity operation
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (division, print_function, absolute_import)
-
+# Imports for common Python 2/3 codebase
+from __future__ import (unicode_literals, print_function, division,
+                        absolute_import)
 from future import standard_library
-from builtins import str, super
-
-# ODL imports
-import odl.operator.operator as op
-from odl.space.space import LinearSpace
-from odl.space.set import UniversalSet, CartesianProduct
-from odl.utility.utility import errfmt
-
 standard_library.install_aliases()
 
+from builtins import super
 
-class ScalingOperator(op.SelfAdjointOperator):
-    """
-    Operator that scales a vector by a scalar
+# ODL imports
+from odl.operator.operator import LinearOperator, SelfAdjointOperator
+from odl.space.space import LinearSpace
+from odl.space.set import CartesianProduct
+from odl.utility.utility import errfmt
 
-    Parameters
-    ----------
-    space : LinearSpace
-            The space the vectors should lie in
-    scalar : space.field element
-             An element in the field of the space that
-             the vectors should be scaled by
-    """
+
+class ScalingOperator(SelfAdjointOperator):
+
+    """Operator of multiplication with a scalar."""
+
     def __init__(self, space, scalar):
+        """Initialize a ScalingOperator instance.
+
+        Parameters
+        ----------
+        space : LinearSpace
+            The space of elements which the operator is acting on
+        scalar : space.field element
+            An element in the field of the space that the vectors are
+            scaled with
+        """
         if not isinstance(space, LinearSpace):
             raise TypeError(errfmt('''
             'space' ({}) must be a LinearSpace instance
@@ -58,15 +73,14 @@ class ScalingOperator(op.SelfAdjointOperator):
         self._scal = float(scalar)
 
     def _apply(self, inp, outp):
-        """
-        Scales a vector and stores the result in another
+        """Scale input and write to output.
 
         Parameters
         ----------
         inp : self.domain element
-                An element in the domain of this operator
-        scalar : self.range element
-                 An element in the range of this operator
+            An element in the operator domain
+        outp : self.range element
+            An element in the operator range
 
         Returns
         -------
@@ -83,18 +97,15 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> outp
         Rn(3).element([2.0, 4.0, 6.0])
         """
-
         outp.lincomb(self._scal, inp)
 
     def _call(self, inp):
-        """
-        Scales a vector
+        """Return the scaled element.
 
         Parameters
         ----------
         inp : self.domain element
                 An element in the domain of this operator
-
 
         Returns
         -------
@@ -111,13 +122,11 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> op(vec)
         Rn(3).element([2.0, 4.0, 6.0])
         """
-
         return self._scal * inp
 
     @property
     def inverse(self):
-        """
-        The inverse of a scaling is scaling by 1/self.scale
+        """Return the inverse operator.
 
         Parameters
         ----------
@@ -125,8 +134,8 @@ class ScalingOperator(op.SelfAdjointOperator):
 
         Returns
         -------
-        inverse : ScalingOperator
-                  Scaling by 1/self.scale
+        inv : ScalingOperator
+            Scaling by 1/scale
 
         Example
         -------
@@ -140,12 +149,14 @@ class ScalingOperator(op.SelfAdjointOperator):
         >>> op(inv(vec)) == vec
         True
         """
+        if self._scal == 0.0:
+            raise ZeroDivisionError(errfmt('''
+            Scaling operator not invertible for scalar=0'''))
         return ScalingOperator(self._space, 1.0/self._scal)
 
     @property
     def domain(self):
-        """
-        Get the domain of this operator
+        """Return the operator domain.
 
         Parameters
         ----------
@@ -154,7 +165,7 @@ class ScalingOperator(op.SelfAdjointOperator):
         Returns
         -------
         domain : LinearSpace
-                 The domain of the operator
+            The domain of the operator
 
         Example
         -------
@@ -168,8 +179,7 @@ class ScalingOperator(op.SelfAdjointOperator):
 
     @property
     def range(self):
-        """
-        Get the range of this operator
+        """Return the operator range.
 
         Parameters
         ----------
@@ -191,59 +201,101 @@ class ScalingOperator(op.SelfAdjointOperator):
         return self._space
 
     def __repr__(self):
-        return ('LinCombOperator(' + repr(self._space) + ", " +
-                repr(self._scal) + ')')
+        """repr(self) implementation."""
+        return 'LinCombOperator({!r}, {!r})'.format(self._space, self._scal)
 
     def __str__(self):
-        return str(self._scal) + "*I"
+        """str(self) implementation."""
+        return '{} * I'.format(self._scal)
+
+
+class ZeroOperator(ScalingOperator):
+
+    """Operator mapping each element to the zero element."""
+
+    def __init__(self, space):
+        """Initialize a ZeroOperator instance.
+
+        Parameters
+        ----------
+
+        space : LinearSpace
+            The space of elements which the operator is acting on
+        """
+        super().__init__(space, 0)
+
+    def __repr__(self):
+        """repr(self) implementation."""
+        return 'ZeroOperator({!r})'.format(self._space)
+
+    def __str__(self):
+        """str(self) implementation."""
+        return '0'
 
 
 class IdentityOperator(ScalingOperator):
-    """
-    The identity operator on a space, copies a vector into another
 
-    Parameters
-    ----------
+    """Operator mapping each element to itself."""
 
-    space : LinearSpace
-            The space the vectors should lie in
-    """
     def __init__(self, space):
+        """Initialize an IdentityOperator instance.
+
+        Parameters
+        ----------
+
+        space : LinearSpace
+            The space of elements which the operator is acting on
+        """
         super().__init__(space, 1)
 
     def __repr__(self):
-        return 'IdentityOperator(' + repr(self._space) + ')'
+        """repr(self) implementation."""
+        return 'IdentityOperator({!r})'.format(self._space)
 
     def __str__(self):
+        """str(self) implementation."""
         return "I"
 
 
-class LinCombOperator(op.LinearOperator):
-    """
-    The lincomb operator calculates:
+class LinCombOperator(LinearOperator):
+
+    """Operator mapping two space elements to a linear combination.
+
+    This opertor calculates:
 
     outp = a*inp[0] + b*inp[1]
-
-    Parameters
-    ----------
-
-    space : LinearSpace
-            The space the vectors should lie in
-    a : float
-        Scalar to multiply inp[0] by
-    b : float
-        Scalar to multiply inp[1] by
     """
 
     # pylint: disable=abstract-method
     def __init__(self, space, a, b):
+        """Initialize a LinCombOperator instance.
+
+        Parameters
+        ----------
+
+        space : LinearSpace
+            The space of elements which the operator is acting on
+        a : float
+            Scalar to multiply inp[0] with
+        b : float
+            Scalar to multiply inp[1] with
+        """
         self.domain = CartesianProduct(space, space)
         self.range = space
         self.a = a
         self.b = b
 
     def _apply(self, inp, outp):
-        """
+        """Linearly combine the input and write to output.
+
+        Parameters
+        ----------
+        inp : self.domain element
+            An element in the operator domain (2-tuple of space
+            elements)
+        outp : self.range.element
+            An element in the operator range.
+
         Example
         -------
         >>> from odl.space.cartesian import Rn
@@ -256,38 +308,45 @@ class LinCombOperator(op.LinearOperator):
         >>> z
         Rn(3).element([2.0, 4.0, 6.0])
         """
-
         outp.lincomb(self.a, inp[0], self.b, inp[1])
 
     def __repr__(self):
+        """repr(self) implementation."""
         return 'LinCombOperator({!r}, {!r}, {!r})'.format(
             self.range, self.a, self.b)
 
     def __str__(self):
+        """repr(self) implementation."""
         return "{}*x + {}*y".format(self.a, self.b)
 
 
-class MultiplyOperator(op.LinearOperator):
-    """The multiply operator calculates:
+class MultiplyOperator(LinearOperator):
+
+    """Operator multiplying two elements.
+
+    The multiply operator calculates:
 
     outp = inp[0] * inp[1]
 
-    This is only applicable in Algebras
-
-    Parameters
-    ----------
-
-    space : LinearSpace
-            The space the vectors should lie in
+    This is only applicable in Algebras.
     """
 
     # pylint: disable=abstract-method
     def __init__(self, space):
+        """Initialize a MultiplyOperator instance.
+
+        Parameters
+        ----------
+
+        space : LinearSpace
+            The space of elements which the operator is acting on
+        """
         self.domain = CartesianProduct(space, space)
         self.range = space
 
     def _apply(self, inp, outp):
-        """
+        """Multiply the input and write to output.
+
         Example
         -------
         >>> from odl.space.cartesian import EuclideanRn
@@ -300,139 +359,16 @@ class MultiplyOperator(op.LinearOperator):
         >>> z
         EuclideanRn(3).element([1.0, 4.0, 9.0])
         """
-
         outp.assign(inp[1])
         outp.multiply(inp[0])
 
     def __repr__(self):
+        """repr(self) implementation."""
         return 'MultiplyOperator({!r})'.format(self.range)
 
     def __str__(self):
+        """str(self) implementation."""
         return "x * y"
-
-
-def instance_method(function):
-    """ Adds a self argument to a function
-    such that it may be used as a instance method
-    """
-    def method(_, *args, **kwargs):
-        """  Calls function with *args, **kwargs
-        """
-        return function(*args, **kwargs)
-
-    return method
-
-
-def operator(call=None, apply=None, inv=None, deriv=None,
-             dom=UniversalSet(), ran=UniversalSet()):
-    """ Creates a simple operator.
-
-    Mostly intended for testing.
-
-    Parameters
-    ----------
-    call : Function taking one argument (rhs) returns result
-           The operators _call method
-    apply : Function taking two arguments (rhs, outp) returns None
-            The operators _apply method
-    inv : Operator, optional
-          The inverse operator
-          Default: None
-    deriv : LinearOperator, optional
-            The derivative operator
-            Default: None
-    dom : Set, optional
-             The domain of the operator
-             Default: UniversalSet
-    ran : Set, optional
-            The range of the operator
-            Default: UniversalSet
-
-    Returns
-    -------
-    operator : Operator
-               An operator with the required properties
-
-    Example
-    -------
-    >>> A = operator(lambda x: 3*x)
-    >>> A(5)
-    15
-    """
-
-    if call is None and apply is None:
-        raise ValueError("Need to supply at least one of call or apply")
-
-    metaclass = op.Operator.__metaclass__
-
-    simple_operator = metaclass('SimpleOperator',
-                                (op.Operator,),
-                                {'_call': instance_method(call),
-                                 '_apply': instance_method(apply),
-                                 'inverse': inv,
-                                 'derivative': deriv,
-                                 'domain': dom,
-                                 'range': ran})
-
-    return simple_operator()
-
-
-def linear_operator(call=None, apply=None, inv=None, deriv=None, adj=None,
-                    dom=UniversalSet(), ran=UniversalSet()):
-    """ Creates a simple operator.
-
-    Mostly intended for testing.
-
-    Parameters
-    ----------
-    call : Function taking one argument (rhs) returns result
-           The operators _call method
-    apply : Function taking two arguments (rhs, outp) returns None
-            The operators _apply method
-    inv : Operator, optional
-          The inverse operator
-          Default: None
-    deriv : LinearOperator, optional
-            The derivative operator
-            Default: None
-    adj : LinearOperator, optional
-          The adjoint of the operator
-          Defualt: None
-    dom : Set, optional
-             The domain of the operator
-             Default: UniversalSet
-    ran : Set, optional
-            The range of the operator
-            Default: UniversalSet
-
-    Returns
-    -------
-    operator : LinearOperator
-               An operator with the required properties
-
-    Example
-    -------
-    >>> A = linear_operator(lambda x: 3*x)
-    >>> A(5)
-    15
-    """
-
-    if call is None and apply is None:
-        raise ValueError("Need to supply at least one of call or apply")
-
-    metaclass = op.LinearOperator.__metaclass__
-
-    simple_linear_operator = metaclass('SimpleOperator',
-                                       (op.LinearOperator,),
-                                       {'_call': instance_method(call),
-                                        '_apply': instance_method(apply),
-                                        'inverse': inv,
-                                        'derivative': deriv,
-                                        'adjoint': adj,
-                                        'domain': dom,
-                                        'range': ran})
-
-    return simple_linear_operator()
 
 
 if __name__ == '__main__':
