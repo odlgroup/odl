@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Utility library for ODL, not intended to be used by external users.
-"""
+"""Utility library for ODL, only for internal use."""
 
-__all__ = ['testutils', 'utility']
+__all__ = ('testutils', 'utility')

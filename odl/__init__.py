@@ -16,7 +16,7 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""ODL is a functional analysis library with a focus on discretizations.
+"""ODL is a functional analysis library with a focus on discretization.
 
 ODL suppors abstract sets, linear vector spaces defined on such
 and Operators/Functionals defined on these sets. It is intended
@@ -27,7 +27,7 @@ from __future__ import absolute_import
 
 __version__ = '0.1b0.dev0'
 
-__all__ = ['geometry', 'operator', 'space', 'utility']
+__all__ = ('geometry', 'operator', 'space', 'utility')
 
 import odl.geometry
 import odl.operator

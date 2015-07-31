@@ -21,11 +21,10 @@
 Module name    Description
 ============== ===========
 discretization Discretizations of vector spaces and more general sets
-
 grid           Sparse representations of sampling grids
 ============== ===========
 """
 
 from __future__ import absolute_import
 
-__all__ = ['discretization', 'grid']
+__all__ = ('discretization', 'grid')

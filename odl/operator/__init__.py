@@ -16,52 +16,70 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Core Operator support for ODL
+Core Operator support for ODL.
+
+Operators (module `operator`)
 =============================
 
-================================================================================
-Core operators (operator)
-================================================================================
-Operator                Has method __call__() and/or apply()
-LinearOperator          Operator whose operation is linear.
-SelfAdjointOperator     Linear operator whose adjoint is itself
-================================================================================
+Core operators
+--------------
 
-================================================================================
-Operator compositions, sums etc (operator)
-================================================================================
-OperatorSum                         A(x) + B(x)
-OperatorComp                        A(B(x))
-OperatorPointwiseProduct            A(x)*B(x)
-OperatorLeftScalarMult              s*A(x)
-OperatorRightScalarMult             A(s*x)
-================================================================================
+=================== ===========
+Name                Description
+=================== ===========
+Operator            Basic operator class
+LinearOperator      Basic linear operator class
+SelfAdjointOperator Class of linear operators whose adjoint is itself
+=================== ===========
 
-================================================================================
-Linear Operator compositions, sums etc (operator)
-================================================================================
-LinearOperatorSum                   A(x) + B(x)
-LinearOperatorComp                  A(B(x))
-LinearOperatorScalarMult            s*A(x)
-================================================================================
 
-================================================================================
-Default (standard) operators (default)
-================================================================================
-ScalingOperator         Scales a vector by a scalar
-IdentityOperator        Identity operator
-================================================================================
+Operator compositions, sums etc.
+--------------------------------
 
-================================================================================
-Equation system solvers (solvers)
-================================================================================
-landweber               The landweber method
-conjugate_gradient      The Conjugate gradient Noraml Equations method
-gauss_newton            The Gauss Newton method
-================================================================================
+======================== ===========
+Name                     Description
+======================== ===========
+OperatorSum              x --> A(x) + B(x)
+OperatorComp             x --> A(B(x))
+OperatorPointwiseProduct x --> A(x) * B(x)
+OperatorLeftScalarMult   x --> scalar * A(x)
+OperatorRightScalarMult  x --> A(scalar * x)
+======================== ===========
 
+
+Linear Operator compositions, sums etc.
+---------------------------------------
+
+======================== ===========
+Name                     Description
+======================== ===========
+LinearOperatorSum        x --> A(x) + B(x)
+LinearOperatorComp       x --> A(B(x))
+LinearOperatorScalarMult x --> scalar * A(x)
+======================== ===========
+
+Default (standard) operators (modlule 'default')
+================================================
+
+=================== ===========
+Name                Description
+=================== ===========
+ScalingOperator     x --> scalar * x
+IdentityOperator    x --> x
+=================== ===========
+
+Equation system solvers (module 'solvers')
+==========================================
+
+=================== ===========
+Name                Description
+=================== ===========
+landweber           Landweber's method
+conjugate_gradient  Conjugate gradient method for the normal equation
+gauss_newton        Gauss-Newton method
+=================== ===========
 """
 
 from __future__ import absolute_import
 
-__all__ = ['default', 'operator', 'solvers']
+__all__ = ('default', 'operator', 'solvers')

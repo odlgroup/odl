@@ -27,18 +27,17 @@ Also contains LinearOperator specializations for linear operators
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import str, object, super
+from future.utils import with_metaclass
 from future import standard_library
-
-from abc import ABCMeta
+standard_library.install_aliases()
 
 # External module imports
+from abc import ABCMeta
 from numbers import Number
 
 # ODL imports
 from odl.utility.utility import errfmt
 from odl.space.space import LinearSpace
-
-standard_library.install_aliases()
 
 
 class _DefaultCallOperator(object):
@@ -147,8 +146,8 @@ class _OperatorMeta(ABCMeta):
         return obj
 
 
-class Operator(object):
-    """Abstract operator
+class Operator(with_metaclass(_OperatorMeta, object)):
+    """Abstract operator.
 
     An operator is a mapping from a 'Set' to another 'Set'.
     In ODL all mappings know their domain and range, and have
