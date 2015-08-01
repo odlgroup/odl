@@ -17,44 +17,54 @@
 
 """Abstract mathematical (linear) operators.
 
-Operators are in the most general sense mappings from one set ('Set')
+Operators are in the most general sense mappings from one set (`Set`)
 to another. More common and useful are operators mapping a vector
-space ('LinearSpace') into another. Many of those are linear, and
+space (`LinearSpace`) into another. Many of those are linear, and
 as such, they have additional properties. See the class documentation
 for further details.
 In addition, this module defines classes for sums, compositions and
 further combinations of operators of operators.
 
-======================== ===========
-Class name               Description
-======================== ===========
-Operator                 Basic operator class
-
-OperatorSum              Sum of two operators S = A + B defined by \
-x --> (A + B)(x) = A(x) + B(x)
-
-OperatorComp             Composition of two operators C = A o B \
-defined by y --> (A o B)(x) = A(B(x))
-
-OperatorPointwiseProduct Product of two operators P = A * B defined \
-by x --> (A * B)(x) = A(x) * B(x). The operators need to be mappings \
-to an algebra for the multiplication to be well-defined.
-
-OperatorLeftScalarMult   Multiplication of an operator from left with \
-a scalar L = c * A, defined by y --> (c * A)(x) = c * A(x)
-
-OperatorRightScalarMult  Multiplication of an operator from right \
-with a scalar S = A * c, defined by y --> (A * c)(x) =  A(c * x)
-
-LinearOperator           Basic linear operator class
-SelfAdjointOperator      Basic class for linear operators between \
-Hilbert spaces which are self-adjoint
-LinearOperatorSum        Sum of two linear operators, again a linear \
-operator (see OperatorSum for the definition)
-LinearOperatorScalarMult Multiplication of a linear operator with a \
-scalar. Left and right multiplications are equivalent (see \
-OperatorLeftScalarMult for the definition)
-======================== ===========
++--------------------------+------------------------------------------+
+|Class name                |Description                               |
++==========================+==========================================+
+|`Operator`                |Basic operator class                      |
++--------------------------+------------------------------------------+
+|`OperatorSum`             |Sum of two operators, `S = A + B`, defined|
+|                          |by `x` --> `(A + B)(x) = A(x) + B(x)`     |
++--------------------------+------------------------------------------+
+|`OperatorComp`            |Composition of two operators, `C = A o B`,|
+|                          |defined by `x` --> `(A o B)(x) = A(B(x))` |
++--------------------------+------------------------------------------+
+|`OperatorPointwiseProduct`|Product of two operators,`P = A * B`,     |
+|                          |defined by                                |
+|                          |`x --> (A * B)(x) = A(x) * B(x)`. The     |
+|                          |operators need to be mappings to an       |
+|                          |algebra for the multiplication to be      |
+|                          |well-defined.                             |
++--------------------------+------------------------------------------+
+|`OperatorLeftScalarMult`  |Multiplication of an operator from left   |
+|                          |with a scalar, `L = c * A`, defined by    |
+|                          |`x --> (c * A)(x) = c * A(x)`             |
++--------------------------+------------------------------------------+
+|`OperatorRightScalarMult` |Multiplication of an operator from right  |
+|                          |with a scalar, `S = A * c`, defined by    |
+|                          |`x --> (A * c)(x) =  A(c * x)`            |
++--------------------------+------------------------------------------+
+|`LinearOperator`          |Basic linear operator class               |
++--------------------------+------------------------------------------+
+|`SelfAdjointOperator`     |Basic class for linear operators between  |
+|                          |Hilbert spaces which are self-adjoint     |
++--------------------------+------------------------------------------+
+|`LinearOperatorSum`       |Sum of two linear operators, again a      |
+|                          |linear operator (see `OperatorSum` for the|
+|                          |definition)                               |
++--------------------------+------------------------------------------+
+|`LinearOperatorScalarMult`|Multiplication of a linear operator with a|
+|                          |scalar. Left and right multiplications are|
+|                          |equivalent (see `OperatorLeftScalarMult`  |
+|                          |for the definition)                       |
++--------------------------+------------------------------------------+
 """
 
 # Imports for common Python 2/3 codebase
@@ -77,34 +87,34 @@ from odl.space.set import UniversalSet
 
 class _DefaultCallOperator(object):
 
-    """Decorator class that adds a '_call'  method to an 'Operator'.
+    """Decorator class that adds a `_call`  method to an `Operator`.
 
     This default implementation assumes that the operator implements
-    '_apply()' and that the 'range' of the operator implements
-    'element()'. The latter is true for all vector spaces.
+    `_apply()` and that the `range` of the operator implements
+    `element()`. The latter is true for all vector spaces.
     """
 
     # pylint: disable=too-few-public-methods
     def _call(self, inp):
-        """Apply the operator out-of-place using _apply().
+        """Apply the operator out-of-place using `_apply()`.
 
         Implemented as:
 
-        outp = self.range.element()
-        self._apply(inp, outp)
-        return outp
+        `outp = self.range.element()`
+        `self._apply(inp, outp)`
+        `return outp`
 
         Parameters
         ----------
 
-        inp : element of self.domain
+        inp : element of `domain`
             An object in the operator domain. The operator is applied
             to it.
 
         Returns
         -------
 
-        out : element in self.range
+        out : element of `range`
             An object in the operator range. The result of an operator
             evaluation.
         """
@@ -115,20 +125,20 @@ class _DefaultCallOperator(object):
 
 class _DefaultApplyOperator(object):
 
-    """Decorator class that adds a '_apply' method to 'Operator'.
+    """Decorator class that adds an `_apply` method to `Operator`.
 
     The default implementation assumes that the operator implements
-    '_call()' and that elements in the 'range' of the operator
-    implement 'assign()'.
+    `_call()` and that elements in the `range` of the operator
+    implement `assign()`.
     """
 
     # pylint: disable=too-few-public-methods
     def _apply(self, inp, out):
-        """Apply the operator in-place using _call().
+        """Apply the operator in-place using `_call()`.
 
         Implemented as:
 
-        out.assign(self._call(inp))
+        `out.assign(self._call(inp))`
 
         inp : element of self.domain
             An object in the operator domain. The operator is applied
@@ -149,13 +159,13 @@ class _OperatorMeta(ABCMeta):
 
     """Metaclass used by Operator to ensure correct methods.
 
-    If either '_apply' or '_call' does not exist in the class to be
+    If either `_apply` or `_call` does not exist in the class to be
     created, this metaclass attempts to add a default implmentation.
-    This only works if the 'range' is a 'LinearSpace'.
+    This only works if the `range` is a `LinearSpace`.
     """
 
     def __new__(mcs, name, bases, attrs):
-        """Create a new _OperatorMeta instance."""
+        """Create a new `_OperatorMeta` instance."""
         if "_call" in attrs and "_apply" in attrs:
             return super().__new__(mcs, name, bases, attrs)
         elif "_call" in attrs:
@@ -168,18 +178,18 @@ class _OperatorMeta(ABCMeta):
             return super().__new__(mcs, name, bases, attrs)
 
     def __call__(cls, *args, **kwargs):
-        """Create a new class 'cls' from given arguments."""
+        """Create a new class `cls` from given arguments."""
         obj = type.__call__(cls, *args, **kwargs)
         if not hasattr(obj, 'domain'):
             raise NotImplementedError(errfmt('''
-            'Operator' instances must have a 'domain' attribute.'''))
+            `Operator` instances must have a `domain` attribute.'''))
         if not hasattr(obj, 'range'):
             raise NotImplementedError(errfmt('''
-            'Operator' instances must have a 'range' attribute.'''))
+            `Operator` instances must have a `range` attribute.'''))
         if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
             raise NotImplementedError(errfmt('''
-            'Operator' instances must have at least one of '_call'
-            and '_apply' as attribute.'''))
+            `Operator` instances must either have `_call` or `_apply`
+            as attribute.'''))
 
         return obj
 
@@ -188,114 +198,153 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     """Abstract operator.
 
-    An operator is a mapping from a 'Set' to another 'Set'.
-    In ODL, all mappings know their domain and range, and have
-    some method of evaluation. They also provide some convenience
-    functions and error checking.
+    Abstract attributes and methods
+    ===============================
 
-    Domain and Range
-    ================
+    `Operator` is an **abstract** class, i.e. it can only be
+    subclassed, not used directly.
 
-    A subclass of this has to have the following attributes:
+    **Any subclass of `Operator` must have the following attributes:**
 
-    domain : Set
+    domain : `Set`
         The set of elements this operator can be applied to
 
-    range : Set
+    range : `Set`
         The set this operator maps to
 
-    Evaluation
-    ==========
+    In addition, **any subclass needs to implement at least one of the
+    methods `_call()` and `_apply()`.**
+    These are explained in the following.
 
-    It also needs to implement a method for operator evaluation.
-    There are two ways to do this, and any implementation needs
-    to provide *at least one* of them.
-
-    Out-of-place evaluation
-    -----------------------
+    Out-of-place evaluation: `_call()`
+    ----------------------------------
 
     Out-of-place evaluation means that the operator is applied,
     and the result is written to a new element which is returned.
     In this case, a subclass has to implement the method
 
-    _call(self, inp)     <==>     outp = operator(inp)
+    `_call(self, inp)`     <==>     `operator(inp)`
 
-    Its arguments are:
+    **Parameters:**
 
-    inp : element of self.domain
-        An object in the operator domain. The operator is applied
-        to it.
+    inp : element of `domain`
+        An object in the operator domain to which the operator is
+        applied.
 
-    It returns:
+    **Returns:**
 
-    outp : element of self.range
-        An object in the operator range. The result of an operator
+    outp : element of `range`
+        An object in the operator range, the result of the operator
         evaluation.
 
-    In-place evaluation
-    -------------------
-
+    In-place evaluation: `_apply()`
+    -------------------------------
     In-place evaluation means that the operator is applied, and the
     result is written to an existing element provided as an additional
     argument. In this case, a subclass has to implement the method
 
-    _apply(self, inp, outp)     <==>     outp <-- operator(inp)
+    `_apply(self, inp, outp)`     <==>     `outp <-- operator(inp)`
 
-    Its arguments are
+    **Parameters:**
 
     inp : element of self.domain
-        An object in the operator domain. The operator is applied
-        to it.
+        An object in the operator domain to which the operator is
+        applied.
 
     outp : element of self.range
-        An object in the operator range. The result of the operator
-        is written to it.
+        An object in the operator range to which the result of the
+        operator evaluation is written.
 
-    It does not return anything.
+    **Returns:**
+
+    None
 
     Notes
     -----
-    If the user only provides one of '_apply' or '_call' and the
-    'range' is a 'LinearSpace', a default implementation of the other
-    is provided.
+    If not both `_apply()` and `_call()` are implemented and the
+    `range` is a `LinearSpace`, a default implementation of the
+    respective other is provided.
+
+    Attributes
+    ----------
+
+    +------------+----------------+-----------------------------------+
+    |Name        |Type            |Description                        |
+    +============+================+===================================+
+    |`domain`    |`Set`           |Elements to which the operator can |
+    |            |                |be applied                         |
+    +------------+----------------+-----------------------------------+
+    |`range`     |`Set`           |Results of operator application are|
+    |            |                |elements of this set.              |
+    +------------+----------------+-----------------------------------+
+    |`inverse`   |`Operator`      |The inverse operator. Raises       |
+    |(short:`I`) |                |`NotImplementedError` by default.  |
+    +------------+----------------+-----------------------------------+
+
+    Methods
+    -------
+    +---------------+----------------+--------------------------------+
+    |Signature      |Return type     |Description                     |
+    +===============+================+================================+
+    |`apply(inp,    |`None`          |Apply the operator to `inp` and |
+    |outp)`         |                |write to `outp`. In addition to |
+    |               |                |the private method `_apply()`,  |
+    |               |                |error checks are performed.     |
+    +---------------+----------------+--------------------------------+
+    |`__call__(inp)`|element of      |Implements the call pattern     |
+    |               |`range`         |`op(inp)`. In addition to the   |
+    |               |                |private method `_call()`, error |
+    |               |                |checks are performed.           |
+    +---------------+----------------+--------------------------------+
+    |`derivative    |`LinearOperator`|The operator derivative at      |
+    |(point)`       |                |`point`. Raises                 |
+    |               |                |`NotImplementedError` by        |
+    |               |                |default.                        |
+    +---------------+----------------+--------+-----------------------+
+    |`__add__(op2)` |`OperatorSum`            |Implements `op + op2`. |
+    +---------------+-------------------------+-----------------------+
+    |`__mul__(s)`   |`OperatorLeftScalarMult` |Implements `s * op`,   |
+    |               |                         |with a scalar `s`.     |
+    +---------------+-------------------------+-----------------------+
+    |`__rmul__(s)`  |`OperatorRightScalarMult`|Implements `op * s`.   |
+    +---------------+-------------------------+-----------------------+
     """
 
     def derivative(self, point):
-        """Return the operator derivative at 'point'."""
+        """Return the operator derivative at `point`."""
         raise NotImplementedError(errfmt('''
-        Derivative not implemented for this operator ({})
-        '''.format(self)))
+        `derivative` not implemented for operator {!r}'''.format(self)))
 
     @property
     def inverse(self):
         """Return the operator inverse."""
         raise NotImplementedError(errfmt('''
-        Inverse not implemented for this operator ({})
-        '''.format(self)))
+        `inverse` not implemented for operator {!r}.'''.format(self)))
 
     @property
     def I(self):
-        """Shorthand for inverse()'."""
+        """Shorthand for `inverse`."""
         return self.inverse
 
     # Implicitly defined operators
-    def apply(self, inp, out):
-        """ Apply this operator in place.   Informally: out = f(inp)
+    def apply(self, inp, outp):
+        """`op.apply(inp, outp) <==> outp <-- op(inp)`.
 
-        Calls the underlying implementation '_apply' with error checking.
+        Implementation of in-place operator evaluation with the private
+        `_apply()` method and added error checking.
 
         Parameters
         ----------
 
-        inp : element in self.domain
-              An object in the operator domain. This object is
-              "constant", and will not be modified.
-              This is the point that the operator should be applied in.
+        inp : element of `self.domain`
+            An object in the operator domain to which the operator is
+            applied. The object is treated as immutable, hence it is
+            not modified during evaluation.
 
-        out : element in self.range
-              An object in the operator range. This object is
-              "mutable", the result will be written to it. The result
-              is independent of the state of this element.
+        outp : element of `self.range`
+            An object in the operator range to which the result of the
+            operator evaluation is written. The result is independent
+            of the initial state of this object.
 
         Returns
         -------
@@ -307,49 +356,49 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
-        >>> Op = IdentityOperator(rn)
+        >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element()
-        >>> Op.apply(x, y)
+        >>> op.apply(x, y)
         >>> y
         Rn(3).element([1.0, 2.0, 3.0])
         """
-
         if not self.domain.contains(inp):
             raise TypeError(errfmt('''
             inp ({}) is not in the operator domain ({})
             '''.format(repr(inp), repr(self))))
 
-        if not self.range.contains(out):
+        if not self.range.contains(outp):
             raise TypeError(errfmt('''
-            out ({}) is not in the operator range ({})
-            '''.format(repr(out), repr(self))))
+            outp ({}) is not in the operator range ({})
+            '''.format(repr(outp), repr(self))))
 
-        if inp is out:
+        if inp is outp:
             raise ValueError(errfmt('''
-            inp ({}) is the same as out ({}) operators do not permit
+            inp ({}) is the same as outp ({}) operators do not permit
             aliased arguments
-            '''.format(repr(inp), repr(out))))
+            '''.format(repr(inp), repr(outp))))
 
-        self._apply(inp, out)
+        self._apply(inp, outp)
 
     def __call__(self, inp):
-        """ Evaluates the operator. The output element is allocated
-        dynamically.
+        """`op.__call__(inp) <==> op(inp)`.
 
-        Calls the underlying implementation '_call' with error checking.
+        Implementation of the call pattern `op(inp)` with the private
+        `_call()` method and added error checking.
 
         Parameters
         ----------
-        inp : element in self.domain
-              An object in the operator domain. This object is
-              "constant", and will not be modified.
-              This is the point that the operator should be applied in.
+        inp : element of `self.domain`
+            An object in the operator domain to which the operator is
+            applied. The object is treated as immutable, hence it is
+            not modified during evaluation.
 
         Returns
         -------
-        element in self.range
-            The result of evaluating the operator.
+        element of `self.range`
+            An object in the operator range, the result of the operator
+            evaluation.
 
         Example
         -------
@@ -357,9 +406,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
-        >>> Op = IdentityOperator(rn)
+        >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
-        >>> Op(x)
+        >>> op(x)
         Rn(3).element([1.0, 2.0, 3.0])
 
         >>> from odl.operator.default import operator
@@ -369,7 +418,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> A.__call__(5)
         15
         """
-
         if not self.domain.contains(inp):
             raise TypeError(errfmt('''
             inp ({}) is not in the operator domain ({})
@@ -385,26 +433,26 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         return result
 
     def __add__(self, other):
-        """ Operator addition (A+B)(x) = A(x) + B(x)
-        """
-
+        """`op1.__add__(op2) <==> op1 + op2`."""
         return OperatorSum(self, other)
 
     def __mul__(self, other):
-        """Right multiplication of operators with scalars
-        (A*a)(x) = A(a*x)
+        """`op.__mul__(s) <==> op * s`.
 
-        Note that left and right multiplication of operators is
-        different.
+        This corresponds to right multiplication of scalars with
+        operators: `(A * s)(x) = A(s * x)`.
+
+        Note that left and right multiplications are usually different.
 
         Parameters
         ----------
-        other : Operator
-                Operator with same domain and range as this operator
+        other : scalar
+            If `self.domain` is a `LinearSpace`, `scalar` must be an
+            element of `self.domain.field`.
 
         Returns
         -------
-        OperatorRightScalarMult instance
+        mul : `OperatorRightScalarMult`
 
         Example
         -------
@@ -412,11 +460,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
-        >>> Op = IdentityOperator(rn)
+        >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
-        >>> Op(x)
+        >>> op(x)
         Rn(3).element([1.0, 2.0, 3.0])
-        >>> Scaled = Op * 3
+        >>> Scaled = op * 3
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
 
@@ -426,24 +474,25 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> Scaled(5)
         45
         """
-
         return OperatorRightScalarMult(self, other)
 
     def __rmul__(self, other):
-        """ Left multiplication of operators with scalars
-        (a*A)(x) = a*A(x)
+        """`op.__rmul__(s) <==> s * op`.
 
-        Note that left and right multiplication of operators is
-        different.
+        This corresponds to left multiplication of scalars with
+        operators: `(s * A)(x) = s * A(x)`.
+
+        Note that left and right multiplications are usually different.
 
         Parameters
         ----------
-        other : Operator
-                Operator with same domain and range as this operator
+        other : scalar
+            If `self.range` is a `LinearSpace`, `scalar` must be an
+            element of `self.range.field`.
 
         Returns
         -------
-        OperatorLeftScalarMult instance
+        mul : `OperatorLeftScalarMult`
 
         Example
         -------
@@ -451,11 +500,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
-        >>> Op = IdentityOperator(rn)
+        >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
-        >>> Op(x)
+        >>> op(x)
         Rn(3).element([1.0, 2.0, 3.0])
-        >>> Scaled = 3 * Op
+        >>> Scaled = 3 * op
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
 
@@ -465,7 +514,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> Scaled(5)
         45
         """
-
         return OperatorLeftScalarMult(self, other)
 
     def __str__(self):
@@ -539,7 +587,7 @@ class OperatorSum(Operator):
         # pylint: disable=protected-access
         return self._op1._call(inp) + self._op2._call(inp)
 
-    def _apply(self, inp, out):
+    def _apply(self, inp, outp):
         """
         Calculates op1(inp) + op2(inp)
 
@@ -547,7 +595,7 @@ class OperatorSum(Operator):
         ----------
         inp : self.domain element
               The point to evaluate the sum in
-        out : self.range element
+        outp : self.range element
               Object to store the result in
 
         Returns
@@ -561,16 +609,16 @@ class OperatorSum(Operator):
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> inp = r3.element([1, 2, 3])
-        >>> out = r3.element()
-        >>> OperatorSum(op, op).apply(inp, out)
-        >>> out
+        >>> outp = r3.element()
+        >>> OperatorSum(op, op).apply(inp, outp)
+        >>> outp
         Rn(3).element([2.0, 4.0, 6.0])
         """
         # pylint: disable=protected-access
         tmp = self._tmp if self._tmp is not None else self.range.element()
-        self._op1._apply(inp, out)
+        self._op1._apply(inp, outp)
         self._op2._apply(inp, tmp)
-        out += tmp
+        outp += tmp
 
     @property
     def domain(self):
@@ -670,12 +718,12 @@ class OperatorComp(Operator):
         # pylint: disable=protected-access
         return self._left._call(self._right._call(inp))
 
-    def _apply(self, inp, out):
+    def _apply(self, inp, outp):
         # pylint: disable=protected-access
         tmp = (self._tmp if self._tmp is not None
                else self._right.range.element())
         self._right._apply(inp, tmp)
-        self._left._apply(tmp, out)
+        self._left._apply(tmp, outp)
 
     @property
     def domain(self):
@@ -729,12 +777,12 @@ class OperatorPointwiseProduct(Operator):
         # pylint: disable=protected-access
         return self._op1._call(inp) * self._op2._call(inp)
 
-    def _apply(self, inp, out):
+    def _apply(self, inp, outp):
         # pylint: disable=protected-access
         tmp = self._op2.range.element()
-        self._op1._apply(inp, out)
+        self._op1._apply(inp, outp)
         self._op2._apply(inp, tmp)
-        out *= tmp
+        outp *= tmp
 
     @property
     def domain(self):
@@ -766,10 +814,10 @@ class OperatorLeftScalarMult(Operator):
         # pylint: disable=protected-access
         return self._scalar * self._op._call(inp)
 
-    def _apply(self, inp, out):
+    def _apply(self, inp, outp):
         # pylint: disable=protected-access
-        self._op._apply(inp, out)
-        out *= self._scalar
+        self._op._apply(inp, outp)
+        outp *= self._scalar
 
     @property
     def domain(self):
@@ -836,11 +884,11 @@ class OperatorRightScalarMult(Operator):
         # pylint: disable=protected-access
         return self._op._call(self._scalar * inp)
 
-    def _apply(self, inp, out):
+    def _apply(self, inp, outp):
         # pylint: disable=protected-access
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, inp)
-        self._op._apply(tmp, out)
+        self._op._apply(tmp, outp)
 
     @property
     def domain(self):
@@ -878,9 +926,9 @@ class LinearOperator(Operator):
         """Get the adjoint of the operator. Abstract, should be
         implemented by subclasses.
 
-        op.T.apply(inp, out) = op.adjoint.apply(inp,out)
+        op.T.apply(inp, outp) = op.adjoint.apply(inp,outp)
         and
-        op.T.adjoint.apply(inp, out) = op.apply(inp,out)
+        op.T.adjoint.apply(inp, outp) = op.apply(inp,outp)
         """
         raise NotImplementedError(errfmt('''
         Adjoint not implemented for this operator ({})
