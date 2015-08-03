@@ -525,9 +525,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
 
 class OperatorSum(Operator):
-    """ Expression type for the sum of operators.
 
-    Sum is only well defined for Operators between LinearSpace:s
+    """Expression type for the sum of operators.
+
+    The sum is only well defined for Operators whose `range`s are
+    `LinearSpace`s.
 
     Parameters
     ----------
@@ -540,6 +542,7 @@ class OperatorSum(Operator):
           Used to avoid the creation of a
           temporary when applying the operator.
     """
+
     # pylint: disable=abstract-method
     def __init__(self, op1, op2, tmp=None):
         if op1.range != op2.range:
