@@ -322,13 +322,22 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     |(point)`       |                |`point`. Raises                 |
     |               |                |`NotImplementedError` by        |
     |               |                |default.                        |
-    +---------------+----------------+--------+-----------------------+
-    |`__add__(op2)` |`OperatorSum`            |Implements `op + op2`. |
+    +---------------+----------------+--------------------------------+
+    |`__add__(op2)` |`OperatorSum`   |Implements `op + op2`.          |
     +---------------+-------------------------+-----------------------+
-    |`__mul__(s)`   |`OperatorLeftScalarMult` |Implements `s * op`,   |
-    |               |                         |with a scalar `s`.     |
+    |`__mul__`      |depends         |Implements `other * op`. If     |
+    |(other)        |                |`other is a scalar, an          |
+    |               |                |`OperatorLeftScalarMult` is     |
+    |               |                |created. If `other` is an       |
+    |               |                |`Operator`, the result is an    |
+    |               |                |`OperatorPointwiseProduct`.     |
     +---------------+-------------------------+-----------------------+
-    |`__rmul__(s)`  |`OperatorRightScalarMult`|Implements `op * s`.   |
+    |`__rmul__`     |depends         |Implements `op * other`. If     |
+    |(other)        |                |`other is a scalar, an          |
+    |               |                |`OperatorRightScalarMult` is    |
+    |               |                |created. If `other` is an       |
+    |               |                |`Operator`, the result is an    |
+    |               |                |`OperatorPointwiseProduct`.     |
     +---------------+-------------------------+-----------------------+
     """
 
@@ -1509,11 +1518,11 @@ def operator(call=None, apply=None, inv=None, deriv=None,
 
     Parameters
     ----------
-    call : function
+    call : callable
         A function taking one argument and returning the result.
         It will be used for the operator call pattern
         `outp = op(inp)`.
-    apply : function
+    apply : callable
         A function taking two arguments.
         It will be used for the operator apply pattern
         `op.apply(inp, outp) <==> outp <-- op(inp)`. Return value
@@ -1581,11 +1590,11 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
 
     Parameters
     ----------
-    call : function
+    call : callable
         A function taking one argument and returning the result.
         It will be used for the operator call pattern
         `outp = op(inp)`.
-    apply : function
+    apply : callable
         A function taking two arguments.
         It will be used for the operator apply pattern
         `op.apply(inp, outp) <==> outp <-- op(inp)`. Return value
