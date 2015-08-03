@@ -20,17 +20,18 @@
 Sampling grids are collections of points in an n-dimensional coordinate
 space with a certain structure which is exploited to minimize storage.
 
-=========== ===========
-Class name  Description
-=========== ===========
-TensorGrid  The points are given as the tensor product of n coordinate \
-vectors, i.e. all possible n-tuples where the i-th coordinate is from \
-the i-th coordinate vector.
-
-RegularGrid A variant of a tensor grid where the entries of each \
-coordinate vector are equispaced. This type of grid can be represented \
-by three n-dimensional vectors.
-=========== ===========
++-------------+-------------------------------------------------------+
+|Class name   |Description                                            |
++=============+=======================================================+
+|`TensorGrid` |The points are given as the tensor product of n        |
+|             |coordinate vectors, i.e. all possible n-tuples where   |
+|             |the i-th coordinate is from the i-th coordinate vector.|
++-------------+-------------------------------------------------------+
+|`RegularGrid`|A variant of a tensor grid where the entries of each   |
+|             |coordinate vector are equispaced. This type of grid can|
+|             |be represented by three n-dimensional vectors `shape`, |
+|             |`center` and `stride`.                                 |
++-------------+-------------------------------------------------------+
 """
 
 # Imports for common Python 2/3 codebase
@@ -63,53 +64,61 @@ class TensorGrid(Set):
     Attributes
     ----------
 
-    ============= ======================== ===========
-    Name          Type                     Description
-    ============= ======================== ===========
-    coord_vectors tuple of numpy.ndarray's Vectors containing \
-    the grid point coordinates along each axis
-
-    dim           int                      Number of axes
-
-    shape         tuple of int's           Number of grid points per \
-    axis
-
-    ntotal        int                      Total number of grid points
-
-    min           numpy.ndarray            Grid point with minimal \
-    coordinates
-
-    max           numpy.ndarray            Grid point with maximal \
-    coordinates
-    ============= ======================== ===========
+    +---------------+----------------+--------------------------------+
+    |Name           |Type            |Description                     |
+    +===============+================+================================+
+    |`coord_vectors`|`numpy.ndarray` |Vectors containing the grid     |
+    |               |tuple           |point coordinates per axis      |
+    +---------------+----------------+--------------------------------+
+    |`dim`          |`int`           |Number of axes                  |
+    +---------------+----------------+--------------------------------+
+    |`shape`        |`int` tuple     |Number of grid points per axis  |
+    +---------------+----------------+--------------------------------+
+    |`ntotal`       |`int`           |Total number of grid points     |
+    +---------------+----------------+--------------------------------+
+    |`min`          |`numpy.ndarray` |Grid point with minimal         |
+    |               |                |coordinates in each axis        |
+    +---------------+----------------+--------------------------------+
+    |`max`          |`numpy.ndarray` |Grid point with maximal         |
+    |               |                |coordinates in each axis        |
+    +---------------+----------------+--------------------------------+
 
 
     Methods
     -------
 
-    ========================== ======================== ===========
-    Signature                  Return type              Description
-    ========================== ======================== ===========
-    equals(other, tol=0.0)     boolean                  Equality test,\
-    equivalent to 'self == other' for 'tol'==0.0
-
-    contains(point, tol=0.0)   boolean                  Membership \
-    test, equivalent to 'point in self' for 'tol'==0
-
-    is_subgrid(other, tol=0.0) boolean                  Subgrid test
-
-    points(order='C')          numpy.ndarray            All grid \
-    points as a single array
-
-    corners(order='C')         numpy.ndarray            The corner \
-    points as an array
-
-    meshgrid(sparse=True)      tuple of numpy.ndarray's Efficient grid \
-    for function evaluation (see numpy.meshgrid)
-
-    convex_hull()              set.IntervalProd         The "inner" \
-    of the grid
-    ========================== ======================== ===========
+    +-------------------+---------------+-----------------------------+
+    |Signature          |Return type    |Description                  |
+    +===================+===============+=============================+
+    |`equals(other,     |boolean        |Test if `other` is a grid    |
+    |tol=0.0)`          |               |with the same points up to   |
+    |                   |               |a tolerance of `tol` per     |
+    |                   |               |point. Equivalent to         |
+    |                   |               |`self == other` for          |
+    |                   |               |`tol==0.0`.                  |
+    +-------------------+---------------+-----------------------------+
+    |`contains(point,   |boolean        |Test if `point` is a grid    |
+    |tol=0.0)`          |               |point with tolerance `tol`.  |
+    |                   |               |Equivalent to `point in self`|
+    |                   |               |for `tol==0`.                |
+    +-------------------+---------------+-----------------------------+
+    |`is_subgrid(other, |boolean        |Test if `other` is contained |
+    |tol=0.0)`          |               |with tolerance `tol` per     |
+    |                   |               |point.                       |
+    +-------------------+---------------+-----------------------------+
+    |`points(order='C')`|`numpy.ndarray`|All grid points in a single  |
+    |                   |               |array                        |
+    +-------------------+---------------+-----------------------------+
+    |`corners           |`numpy.ndarray`|The corner points in a single|
+    |(order='C')`       |               |array                        |
+    +-------------------+---------------+-----------------------------+
+    |`meshgrid          |`numpy.ndarray`|Efficient grid for function  |
+    |(sparse=True)`     |tuple          |evaluation (see              |
+    |                   |               |numpy.meshgrid)              |
+    +-------------------+---------------+-----------------------------+
+    |`convex_hull()`    |`IntervalProd` |The "inner" of the grid,     |
+    |                   |               |a rectangular box.           |
+    +-------------------+---------------+-----------------------------+
     """
 
     def __init__(self, *coord_vectors):
@@ -629,58 +638,66 @@ class RegularGrid(TensorGrid):
     Attributes
     ----------
 
-    ============= ======================== ===========
-    Name          Type                     Description
-    ============= ======================== ===========
-    coord_vectors tuple of numpy.ndarray's Vectors containing \
-    the grid point coordinates along each axis
-
-    dim           int                      Number of axes
-
-    shape         tuple of int's           Number of grid points per \
-    axis
-
-    center        tuple of float's         The grid's symmetry center \
-    (not necessarily a grid point)
-
-    stride        tuple of float's         Vector pointing from x_j to\
-    x_(j + [1,...1])
-
-    ntotal        int                      Total number of grid points
-
-    min           numpy.ndarray            Grid point with minimal \
-    coordinates
-
-    max           numpy.ndarray            Grid point with maximal \
-    coordinates
-    ============= ======================== ===========
+    +---------------+----------------+--------------------------------+
+    |Name           |Type            |Description                     |
+    +===============+================+================================+
+    |`coord_vectors`|`numpy.ndarray` |Vectors containing the grid     |
+    |               |tuple           |point coordinates per axis      |
+    +---------------+----------------+--------------------------------+
+    |`dim`          |`int`           |Number of axes                  |
+    +---------------+----------------+--------------------------------+
+    |`shape`        |`int` tuple     |Number of grid points per axis  |
+    +---------------+----------------+--------------------------------+
+    |`center`       |`numpy.ndarray` |The grid's symmetry center (not |
+    |               |                |necessarily a grid point)       |
+    +---------------+----------------+--------------------------------+
+    |`stride`       |`numpy.ndarray` |Vector pointing from `x[j]` to  |
+    |               |                |`x[j + (1,...,1)]`              |
+    +---------------+----------------+--------------------------------+
+    |`ntotal`       |`int`           |Total number of grid points     |
+    +---------------+----------------+--------------------------------+
+    |`min`          |`numpy.ndarray` |Grid point with minimal         |
+    |               |                |coordinates in each axis        |
+    +---------------+----------------+--------------------------------+
+    |`max`          |`numpy.ndarray` |Grid point with maximal         |
+    |               |                |coordinates in each axis        |
+    +---------------+----------------+--------------------------------+
 
     Methods
     -------
 
-    ========================== ======================== ===========
-    Signature                  Return type              Description
-    ========================== ======================== ===========
-    equals(other, tol=0.0)     boolean                  Equality test, \
-    equivalent to 'self == other' for 'tol'==0.0
-
-    contains(point, tol=0.0)   boolean                  Membership \
-    test, equivalent to 'point in self' for 'tol'==0
-
-    is_subgrid(other, tol=0.0) boolean                  Subgrid test
-
-    points(order='C')          numpy.ndarray            All grid \
-    points as a single array
-
-    corners(order='C')         numpy.ndarray            The corner \
-    points as an array
-
-    meshgrid(sparse=True)      tuple of numpy.ndarray's Efficient \
-    grid for function evaluation (see numpy.meshgrid)
-
-    convex_hull()              set.IntervalProd         The "inner" \
-    of the grid
-    ========================== ======================== ===========
+    +-------------------+---------------+-----------------------------+
+    |Signature          |Return type    |Description                  |
+    +===================+===============+=============================+
+    |`equals(other,     |boolean        |Test if `other` is a grid    |
+    |tol=0.0)`          |               |with the same points up to   |
+    |                   |               |a tolerance of `tol` per     |
+    |                   |               |point. Equivalent to         |
+    |                   |               |`self == other` for          |
+    |                   |               |`tol==0.0`.                  |
+    +-------------------+---------------+-----------------------------+
+    |`contains(point,   |boolean        |Test if `point` is a grid    |
+    |tol=0.0)`          |               |point with tolerance `tol`.  |
+    |                   |               |Equivalent to `point in self`|
+    |                   |               |for `tol==0`.                |
+    +-------------------+---------------+-----------------------------+
+    |`is_subgrid(other, |boolean        |Test if `other` is contained |
+    |tol=0.0)`          |               |with tolerance `tol` per     |
+    |                   |               |point.                       |
+    +-------------------+---------------+-----------------------------+
+    |`points(order='C')`|`numpy.ndarray`|All grid points in a single  |
+    |                   |               |array                        |
+    +-------------------+---------------+-----------------------------+
+    |`corners           |`numpy.ndarray`|The corner points in a single|
+    |(order='C')`       |               |array                        |
+    +-------------------+---------------+-----------------------------+
+    |`meshgrid          |`numpy.ndarray`|Efficient grid for function  |
+    |(sparse=True)`     |tuple          |evaluation (see              |
+    |                   |               |numpy.meshgrid)              |
+    +-------------------+---------------+-----------------------------+
+    |`convex_hull()`    |`IntervalProd` |The "inner" of the grid,     |
+    |                   |               |a rectangular box.           |
+    +-------------------+---------------+-----------------------------+
     """
 
     def __init__(self, shape, center=None, stride=None):

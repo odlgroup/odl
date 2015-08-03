@@ -17,23 +17,25 @@
 
 """Default operators defined on any space of a certain kind.
 
-================  ===========
-Class name        Description
-================  ===========
-ScalingOperator   Self-adjoint operator scaling an element with a \
-real number.
-ZeroOperator      ScalingOperator with factor equal to 0
-IdentityOperator  ScalingOperator with factor equal to 1
-LinCombOperator   Linear operator mapping two space elements to \
-the linear combination with two fixed scalars.
-MultiplyOperator  Operator of multiplying two space elements. The \
-space needs to be an algebra for the multiplication to be well-defined.
-================  ===========
-
-Scale vector by scalar, Identity operation
++------------------+--------------------------------------------------+
+|Class name        |Description                                       |
++==================+==================================================+
+|`ScalingOperator` |`SelfAdjointOperator` scaling an element with a   |
+|                  |real number.                                      |
++------------------+--------------------------------------------------+
+|`ZeroOperator`    |`ScalingOperator` with `scalar` equal to 0        |
++------------------+--------------------------------------------------+
+|`IdentityOperator`|`ScalingOperator` with `scalar` equal to 1        |
++------------------+--------------------------------------------------+
+|`LinCombOperator` |`LinearOperator` mapping two space elements to the|
+|                  |linear combination with two fixed scalars.        |
++------------------+--------------------------------------------------+
+|`MultiplyOperator`|`Operator` of multiplying two space elements. The |
+|                  |`range` needs to be an `Algebra` for the          |
+|                  |multiplication to be well-defined.                |
++------------------+--------------------------------------------------+
 """
 
-# Imports for common Python 2/3 codebase
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
