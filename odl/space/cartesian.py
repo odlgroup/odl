@@ -15,14 +15,40 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""NumPy implementation of n-dimensional Cartesian spaces.
+"""CPU implementations of n-dimensional Cartesian spaces.
 
 This is a default implementation of R^n and the corresponding MetricRn,
 NormedRn and EuclideanRn. The data is represented by NumPy arrays.
 
-# TODO: document public interface
-# TODO: add other data types
++-------------+-------------------------------------------------------+
+|Class name   |Description                                            |
++=============+=======================================================+
+|`Rn`         |Basic class for spaces of `n`-tuples of real numbers   |
++-------------+-------------------------------------------------------+
+|`MetricRn`   |`Rn` with a metric, i.e. a function to measure distance|
++-------------+-------------------------------------------------------+
+|`NormedRn`   |`MetricRn` with a norm. The metric is derived from the |
+|             |norm by the distance function                          |
+|             |`dist(x, y) = norm(x - y)`                             |
++-------------+-------------------------------------------------------+
+|`EuclideanRn`|`NormedRn` with an inner product. The norm is derived  |
+|             |from the inner product according to the relation       |
+|             |`norm(x) = sqrt(inner(x, x))`                          |
++-------------+-------------------------------------------------------+
+
+In addition, a factory function for simple creation of Cartesian spaces
+is provided:
+
++-------------------+-------------------------------------------------+
+|Signature          |Description                                      |
++===================+=================================================+
+|`cartesian(dim,    |Create a Cartesian space of R^n type. By default,|
+|impl='numpy',      |the standard Euclidean space with the 2-norm and |
+|**kwargs)`         |NumPy backend is created. See the function doc   |
+|                   |for further options.                             |
++-------------------+-------------------------------------------------+
 """
+# TODO: add other data types
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -61,49 +87,81 @@ standard_library.install_aliases()
 
 class Rn(LinearSpace):
 
-    """
-    The real vector space R^n without further mathematical structure.
+    """The real vector space R^n without further structure.
 
-    TODO: document public interface
+    Its elements are represented as instances of the inner `Rn.Vector`
+    class.
+
+    Attributes
+    ----------
+
+    +--------+-------------+------------------------------------------+
+    |Name    |Type         |Description                               |
+    +========+=============+==========================================+
+    |`dim`   |`int`        |The dimension `n` of the space R^n        |
+    +--------+-------------+------------------------------------------+
+    |`field` |`RealNumbers`|The type of scalars upon which the space  |
+    |        |             |is built                                  |
+    +--------+-------------+------------------------------------------+
+
+    Methods
+    -------
+
+    +-----------------+-----------+-----------------------------------+
+    |Signature        |Return type|Description                        |
+    +=================+===========+===================================+
+    |`element         |`Rn.Vector`|Create an element in `Rn`. If      |
+    |(data=None)`     |           |`data` is `None`, merely memory is |
+    |                 |           |allocated. Otherwise, the element  |
+    |                 |           |is created from `data`.            |
+    +-----------------+-----------+-----------------------------------+
+    |`zero()`         |`Rn.Vector`|Create the zero element, i.e., the |
+    |                 |           |element where each entry is 0.     |
+    +-----------------+-----------+-----------------------------------+
+    |`equals(other)`  |`boolean`  |Implements `self == other`.        |
+    +-----------------+-----------+-----------------------------------+
+    |`contains(other)`|`boolean`  |Implements `other in self`.        |
+    +-----------------+-----------+-----------------------------------+
+    |`lincomb(z, a, x,|`None`     |Linear combination `a * x + b * y`,|
+    |b=None, y=None)` |           |stored in `z`.                     |
+    +-----------------+-----------+-----------------------------------+
     """
 
     def __init__(self, dim):
-        """Initialize a new Rn instance.
+        """Initialize a new `Rn` instance.
 
         Parameters
         ----------
-
         dim : int
             The dimension of the space
-
         """
         if not isinstance(dim, Integral) or dim < 1:
             raise TypeError(errfmt('''
-            'dim' ({}) has to be a positive integer'''.format(np)))
+            `dim` {} is not a positive integer.'''.format(dim)))
         self._dim = dim
         self._field = RealNumbers()
         self._axpy, self._scal, self._copy = get_blas_funcs(
             ['axpy', 'scal', 'copy'])
 
     def element(self, data=None):
-        """Create an element in R^n.
+        """Create an `Rn` element.
 
         Parameters
         ----------
-        data : array-like, optional
+        data : `array-like`, optional
             The array of values to fill the new array with. It must
-            be broadcastable to a numpy.ndarray with dtype=float64 and
-            shape=(n,).
+            be broadcastable to a `numpy.ndarray` with `dtype=float64`
+            and `shape=(dim,)`.
 
         Returns
         -------
-        element : Rn.Vector instance
+        element : `Rn.Vector`
 
         Note
         ----
         If called without arguments, the values of the returned vector
-        may be _anything_ including inf and NaN. Thus, operations such
-        as element() * 0 need not result in the zero vector.
+        may be _anything_ including `inf` and `NaN`. Thus, operations
+        such as `element() * 0` need not result in the zero vector.
 
         Examples
         --------
