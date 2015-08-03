@@ -124,7 +124,7 @@ class TestOperator(ODLTestCase):
                                        mult_sq_np(A, scale*x))
 
         # Fail when scaling by wrong scalar type (A complex number)
-        nonscalars = [1j, [1, 2], Aop]
+        nonscalars = [1j, [1, 2]]
         for nonscalar in nonscalars:
             with self.assertRaises(TypeError):
                 C = OperatorLeftScalarMult(Aop, nonscalar)
