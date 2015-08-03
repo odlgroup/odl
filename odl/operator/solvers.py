@@ -15,21 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-General and optimized equation system solvers in linear spaces.
-"""
+"""General and optimized equation system solvers in linear spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import (division, print_function, unicode_literals,
                         absolute_import)
 from builtins import object, next, range
 from future import standard_library
+standard_library.install_aliases()
 
 # ODL imports
 from odl.operator.operator import LinearOperatorComp, LinearOperatorSum
 from odl.operator.default import IdentityOperator
-
-standard_library.install_aliases()
 
 
 class StorePartial(object):
@@ -85,38 +82,38 @@ class PrintStatusPartial(object):
         self.iter += 1
 
 
-def landweber(operator, x, rhs, iterations=1, omega=1, part_results=None):
+def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     """ General and efficient implementation of Landweber iteration
 
     x <- x - omega * (A')^* (Ax - rhs)
     """
 
     # Reusable temporaries
-    tmp_ran = operator.range.element()
-    tmp_dom = operator.domain.element()
+    tmp_ran = op.range.element()
+    tmp_dom = op.domain.element()
 
-    for _ in range(iterations):
-        operator.apply(x, tmp_ran)
+    for _ in range(niter):
+        op.apply(x, tmp_ran)
         tmp_ran -= rhs
-        operator.derivative(x).adjoint.apply(tmp_ran, tmp_dom)
+        op.derivative(x).adjoint.apply(tmp_ran, tmp_dom)
         x.lincomb(1, x, -omega, tmp_dom)
 
-        if part_results is not None:
-            part_results.send(x)
+        if partial is not None:
+            partial.send(x)
 
 
-def conjugate_gradient(operator, x, rhs, iterations=1, part_results=None):
+def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     """ Optimized version of CGN, uses no temporaries etc.
     """
-    d = operator(x)
+    d = op(x)
     d.lincomb(1, rhs, -1, d)       # d = rhs - A x
-    p = operator.T(d)
+    p = op.T(d)
     s = p.copy()
-    q = operator.range.element()
+    q = op.range.element()
     norms_old = s.norm()**2           # Only recalculate norm after update
 
-    for _ in range(iterations):
-        operator.apply(p, q)                        # q = A p
+    for _ in range(niter):
+        op.apply(p, q)                        # q = A p
         qnorm = q.norm()**2
         if qnorm == 0.0:  # Return if residual is 0
             return
@@ -124,7 +121,7 @@ def conjugate_gradient(operator, x, rhs, iterations=1, part_results=None):
         a = norms_old / qnorm
         x.lincomb(1, x, a, p)                       # x = x + a*p
         d.lincomb(1, d, -a, q)                      # d = d - a*q
-        operator.derivative(p).adjoint.apply(d, s)  # s = A^T d
+        op.derivative(p).adjoint.apply(d, s)  # s = A^T d
 
         norms_new = s.norm()**2
         b = norms_new/norms_old
@@ -132,8 +129,8 @@ def conjugate_gradient(operator, x, rhs, iterations=1, part_results=None):
 
         p.lincomb(1, s, b, p)                       # p = s + b * p
 
-        if part_results is not None:
-            part_results.send(x)
+        if partial is not None:
+            partial.send(x)
 
 
 def exp_zero_seq(scale):
@@ -146,28 +143,28 @@ def exp_zero_seq(scale):
         yield value
 
 
-def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
-                 part_results=None):
+def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
+                 partial=None):
     """ Solves op(x) = rhs using the gauss newton method. The inner-solver
     uses conjugate gradient.
     """
     x0 = x.copy()
-    I = IdentityOperator(operator.domain)
+    I = IdentityOperator(op.domain)
     dx = x.space.zero()
 
-    tmp_dom = operator.domain.element()
-    u = operator.domain.element()
-    tmp_ran = operator.range.element()
-    v = operator.range.element()
+    tmp_dom = op.domain.element()
+    u = op.domain.element()
+    tmp_ran = op.range.element()
+    v = op.range.element()
 
-    for _ in range(iterations):
+    for _ in range(niter):
         tm = next(zero_seq)
-        deriv = operator.derivative(x)
+        deriv = op.derivative(x)
         deriv_adjoint = deriv.adjoint
 
         # v = rhs - op(x) - deriv(x0-x)
         # u = deriv.T(v)
-        operator.apply(x, tmp_ran)      # eval        op(x)
+        op.apply(x, tmp_ran)      # eval        op(x)
         v.lincomb(1, rhs, -1, tmp_ran)  # assign      v = rhs - op(x)
         tmp_dom.lincomb(1, x0, -1, x)  # assign temp  tmp_dom = x0 - x
         deriv.apply(tmp_dom, tmp_ran)   # eval        deriv(x0-x)
@@ -185,5 +182,5 @@ def gauss_newton(operator, x, rhs, iterations=1, zero_seq=exp_zero_seq(2.0),
         # Update x
         x.lincomb(1, x0, 1, dx)  # x = x0 + dx
 
-        if part_results is not None:
-            part_results.send(x)
+        if partial is not None:
+            partial.send(x)

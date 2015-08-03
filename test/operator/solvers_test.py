@@ -84,7 +84,7 @@ class TestMatrixSolve(ODLTestCase):
         Aop = MultiplyOp(A)
 
         # Solve using landweber
-        solvers.landweber(Aop, xvec, bvec, iterations=n*50, omega=1/norm**2)
+        solvers.landweber(Aop, xvec, bvec, niter=n*50, omega=1/norm**2)
 
         self.assertAllAlmostEquals(xvec, x, places=2)
 
@@ -105,7 +105,7 @@ class TestMatrixSolve(ODLTestCase):
         Aop = MultiplyOp(A)
 
         # Solve using conjugate gradient
-        solvers.conjugate_gradient(Aop, xvec, bvec, iterations=n)
+        solvers.conjugate_gradient(Aop, xvec, bvec, niter=n)
 
         self.assertAllAlmostEquals(xvec, x, places=2)
 
@@ -126,7 +126,7 @@ class TestMatrixSolve(ODLTestCase):
         Aop = MultiplyOp(A)
 
         # Solve using conjugate gradient
-        solvers.gauss_newton(Aop, xvec, bvec, iterations=n)
+        solvers.gauss_newton(Aop, xvec, bvec, niter=n)
 
         self.assertAllAlmostEquals(xvec, x, places=2)
 
