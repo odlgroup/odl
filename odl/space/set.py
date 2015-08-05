@@ -23,7 +23,9 @@ General set structure as well as implementations of the most common sets.
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import object, super
+from future.utils import with_metaclass
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 from abc import ABCMeta, abstractmethod
@@ -33,14 +35,10 @@ import numpy as np
 # ODL imports
 from odl.utility.utility import errfmt, array1d_repr
 
-standard_library.install_aliases()
 
-
-class Set(object):
+class Set(with_metaclass(ABCMeta, object)):
     """ An arbitrary set
     """
-
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def equals(self, other):

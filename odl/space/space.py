@@ -15,10 +15,62 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""General vector spaces.
+"""Abstract vector spaces.
 
-General vector spaces with varying amounts of structure such
-as metric, norm, inner product.
+The classes in this module represent abstract mathematical concepts
+of vector spaces. They cannot be used directly but are rather intended
+to be subclassed by concrete space implementations. The spaces
+provide default implementations of the most important vector space
+operations. See the documentation of the respective classes for more
+details.
+
+Class descriptions
+------------------
+
++--------------+-------------+----------------------------------------+
+|Class name    |Direct       |Description                             |
+|              |ancestors    |                                        |
++==============+=============+========================================+
+|`LinearSpace` |`Set`        |**Abstract class.** A vector space over |
+|              |             |a field (real or complex numbers)       |
+|              |             |defining a vector-vector addition and a |
+|              |             |scalar-vector multiplication with       |
+|              |             |certain properties. See the article     |
+|              |             |`Vector space`_ on Wikipedia for further|
+|              |             |information.                            |
++--------------+-------------+----------------------------------------+
+|`MetricSpace` |`LinearSpace`|**Abstract class.** A vector space with |
+|              |             |a metric, i.e. a `dist` function        |
+|              |             |measuring the distance between two      |
+|              |             |vectors.                                |
++--------------+-------------+----------------------------------------+
+|`NormedSpace` |`MetricSpace`|**Abstract class.** A metric space with |
+|              |             |a `norm` function measuring the length  |
+|              |             |a vector. The `dist` function is induced|
+|              |             |by the norm as                          |
+|              |             |`dist(x, y) = norm(x - y)`.             |
++--------------+-------------+----------------------------------------+
+|`HilbertSpace`|`NormedSpace`|**Abstract class.** A normed space with |
+|              |             |an inner product measuring angles       |
+|              |             |between vectors with unit length. The   |
+|              |             |`norm` function is induced by the inner |
+|              |             |product by the according to             |
+|              |             |`norm(x) = inner(x, x)`.                |
++--------------+-------------+----------------------------------------+
+|`Algebra`     |`LinearSpace`|**Abstract class.** A linear space with |
+|              |             |a vector-vector multiplication under    |
+|              |             |which the space is closed. See the      |
+|              |             |Algebra_ article on Wikipedia for       |
+|              |             |further information. (Note that we      |
+|              |             |assume commutativity and unitality.)    |
++--------------+-------------+----------------------------------------+
+
+See also
+--------
+The `Set` class is defined in `odl.space.set`.
+
+.. _Vector space: https://en.wikipedia.org/wiki/Vector_space#Definition
+.. _Algebra: https://en.wikipedia.org/wiki/Associative_algebra
 """
 
 # Imports for common Python 2/3 codebase
@@ -38,102 +90,140 @@ from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 
-__all__ = ['LinearSpace', 'MetricSpace', 'NormedSpace', 'HilbertSpace',
-           'Algebra']
+__all__ = ('LinearSpace', 'MetricSpace', 'NormedSpace', 'HilbertSpace',
+           'Algebra')
 
 
 class LinearSpace(Set):
 
-    """Abstract linear space.
+    """Abstract linear vector space.
 
-    Introduction
-    ------------
-    A linear space is a set with two operations:
+    Its elements are represented as instances of the inner
+    `LinearSpace.Vector` class.
 
-    Addition, `+`
-    Scalar multiplication `*`
+    The concept of linear vector spaces in ODL is largely inspired by
+    the `Rice Vector Library`_ (RVL).
 
-    The set is closed under these operations (the result still belongs
-    to the set).
+    The abstract `LinearSpace` class is intended for quick prototyping.
+    It has a number of abstract methods which must be overridden by a
+    subclass. On the other hand, it provides automatic error checking
+    and numerous attributes and methods for convenience.
 
-    Linear Spaces in ODL
-    -------------------
-    In ODL the two operations are supplied using the fused "lincomb"
-    method, inspired from RVL (Rice Vector Library).
+    In the following, the abstract methods are explained in detail.
 
-    What follows is a short introduction of the methods that each space
-    has to implement.
+    Abstract methods
+    ----------------
 
-    Linear Combination
-    ~~~~~~~~~~~~~~~~~~
-    The method `lincomb` is defined as:
+    `element(data=None)`
+    ~~~~~~~~~~~~~~~~~~~~
+    This public method is the factory for the inner
+    `LinearSpace.Vector` class. It creates a new element of the space,
+    either from scratch or from an existing data container. In the
+    simplest possible case, it just delegates the construction to the
+    `Vector` class.
 
-    ``
-    lincomb(z, a, x, b, y)    < == >    z = a*x + b*y
-    ``
+    If no data is provided, the new element is **merely allocated, not
+    initialized**, thus it can contain *any* value.
 
-    where `x`, `y` and `z` are vectors in the space, and `a` and `b`
-    are scalars.
+    **Parameters:**
+        `data` : `object`, optional
+            A container for values for the element initialization
 
-    ODL allows `x`, `y` and `z` to be aliased, i.e. they may be the same
-    vector.
+    **Returns:**
+        `element` : `LinearSpace.Vector`
+            The new vector.
 
-    Using this many of the usual vector arithmetic operations can be
-    performed, for example
+    `_lincomb(z, a, x, b, y)`
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    This private method is the raw implementation (i.e. no error
+    checking) of the linear combination `z <-- a * x + b * y`.
+    `_lincomb` and its public counterpart `lincomb` are used to cover
+    a range of convenience functions, see below.
 
-    | Mathematical | Linear combination      |
-    |--------------|-------------------------|
-    | z = 0        | lincomb(z,  0, z, 0, z) |
-    | z = x        | lincomb(z,  1, x, 0, x) |
-    | z = -x       | lincomb(z, -1, x, 0, x) |
-    | z = x + y    | lincomb(z,  1, x, 1, y) |
-    | z = 3*z      | lincomb(z,  3, z, 0, z) |
+    **Parameters:**
+        `z` : `LinearSpace.Vector`
+            Element to which the result of the computation is written
+        `a` : `LinearSpace.field` element
+            Multiplicative scalar factor for input vector `x`
+        `x` : `LinearSpace.Vector`
+            First input vector
+        `b` : `LinearSpace.field` element
+            Multiplicative scalar factor for input vector `y`
+        `y` : `LinearSpace.Vector`
+            Second input vector
 
-    To aid in rapid prototyping, an implementer needs only implement
-    lincomb, and ODL then provides all of the standard mathematical
-    operators
+    **Returns:** `None`
 
-    `+`, `*`, `-`, `/`
+    **Requirements:**
+     * Aliasing of `x`, `y` and `z` **must** be allowed.
+     * The input vectors `x` and `y` **must not** be modified.
+     * The initial state of the output vector `z` **must not**
+       influence the result.
 
-    as well as their in-place counterparts
+    `field`
+    ~~~~~~~
+    The public attribute determining the type of scalars which
+    underlie the space. Can be either `RealNumbers` or
+    `ComplexNumbers` (see `odl.space.set`).
 
-    `+=`, `*`, `-`, `/`
+    Best implemented as a `@property` to make it immutable.
 
-    Constructing Elements
-    ~~~~~~~~~~~~~~~~~~~~~
-    ODL also requires the existence of an `element()` method. This method
-    can be used to construct a vector in the space, which may be
-    assigned to.
+    `equals(other)`
+    ~~~~~~~~~~~~~~~
+    `LinearSpace` inherits this abstract method from `Set`. Its
+    purpose is to check two `LinearSpace` instances for equality.
 
-    Using this method ODL provides some auxiliary methods, such as
-    `zero()`, which returns a zero vector in the space.
+    **Parameters:**
+        `other` : `object`
+            The object to compare to.
 
-    ``
-    x = space.zero()
+    **Returns:**
+        `equals` : `boolean`
+            `True` if `other` is the same `LinearSpace`, `False`
+            otherwise.
 
-    Is the same as
+    Default convenience methods
+    ---------------------------
+    `LinearSpace` provides several default methods for convenience
+    which use the abstract methods above. A subclass may override
+    them with own implementations.
 
-    x = space.element()
-    space.lincomb(x, 0, x, 0, x)
-    ``
+    +--------------+--------------------+-----------------------------+
+    |Signature     |Return type         |Description                  |
+    +==============+====================+=============================+
+    |`lincomb(z, a,|`None`              |Linear combination           |
+    |x, b, y)`     |                    |`z <-- a * x + b * y`. Like  |
+    |              |                    |`_lincomb()`, but with type  |
+    |              |                    |checks.                      |
+    +--------------+--------------------+-----------------------------+
+    |`zero()`      |`LinearSpace.Vector`|Create a zero vector by first|
+    |              |                    |issuing `x = element()` and  |
+    |              |                    |then                         |
+    |              |                    |`_lincomb(x, 0, x, 0, x)`    |
+    +--------------+--------------------+-----------------------------+
 
-    Field of a space
-    ~~~~~~~~~~~~~~~~
-    Each space also needs to provide access to its underlying field.
-    This field is an instance of `odl.space.set.AbstractSet` and allows
-    space to test scalars for validity. For example, in a real space,
-    trying to multiply a vector by a complex number will yield an
-    error.
+    Magic methods
+    -------------
 
-    Modifying other methods
-    -----------------------
-    LinearSpace provides several other methods which have default
-    implementations provided using the above mentioned methods.
+    +----------------------+----------------+--------------------+
+    |Signature             |Provides syntax |Implementation      |
+    +======================+================+====================+
+    |`__eq__(other)`       |`self == other` |`equals(other)`     |
+    +----------------------+----------------+--------------------+
+    |`__ne__(other)`       |`self != other` |`not equals(other)` |
+    +----------------------+----------------+--------------------+
+    |`__contains__(other)` |`other in self` |`contains(other)`   |
+    +----------------------+----------------+--------------------+
 
-    A subclass may want to modify these for performance reasons.
-    However, be advised that modification should be done in a
-    consistent manner. For example, if a space modifies `+`, it should
-    also modify `+=`, `-` and `-=`.
+    See also
+    --------
+    See Wikipedia's `Vector space`_ article for a mathematical
+    overview.
+
+    .. _`Rice Vector Library`:
+       http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/
+    .. _`Vector space`:
+       https://en.wikipedia.org/wiki/Vector_space
     """
 
     @abstractmethod
@@ -168,9 +258,7 @@ class LinearSpace(Set):
         """The underlying field of the vector space."""
         pass
 
-    # Also abstract equals(self,other) from set
-
-    # Default implemented operators
+    # Default methods
     def zero(self):
         """A zero vector in this space.
 
@@ -211,13 +299,7 @@ class LinearSpace(Set):
         If X is a subclass of Y, then `Y.contains(X.vector(...))`
         returns True.
         """
-
         return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
-
-    # Overload for `vec in space` syntax
-    def __contains__(self, other):
-        """Implementation of 'x in ...' syntax."""
-        return self.contains(other)
 
     # Error checking variant of methods
     def lincomb(self, z, a, x, b=None, y=None):
@@ -299,7 +381,88 @@ class LinearSpace(Set):
 
     class Vector(with_metaclass(ABCMeta, object)):
 
-        """Abstract vector, an element in the linear space."""
+        """Abstract `LinearSpace` element.
+
+        Not intended for creation of vectors, use the space's
+        `element()` method instead.
+
+        Attributes
+        ----------
+
+        +-------+-------------+---------------------------------------+
+        |Name   |Type         |Description                            |
+        +=======+=============+=======================================+
+        |`space`|`LinearSpace`|The space to which this vector belongs |
+        +-------+-------------+---------------------------------------+
+
+        Methods
+        -------
+
+        +----------------+--------------------+-----------------------+
+        |Signature       |Return type         |Description            |
+        +================+====================+=======================+
+        |`assign(other)` |`None`              |Copy the values of     |
+        |                |                    |`other` to this vector.|
+        +----------------+--------------------+-----------------------+
+        |`copy()`        |`LinearSpace.Vector`|Create a (deep) copy of|
+        |                |                    |this vector.           |
+        +----------------+--------------------+-----------------------+
+        |`lincomb(a, x,  |`None`              |Linear combination     |
+        |b=None, y=None)`|                    |`a * x + b * y`, stored|
+        |                |                    |in this vector.        |
+        +----------------+--------------------+-----------------------+
+        |`set_zero()`    |`None`              |Multiply this vector   |
+        |                |                    |by zero.               |
+        +----------------+--------------------+-----------------------+
+
+        Magic methods
+        -------------
+
+        +------------------+----------------+-------------------------+
+        |Signature         |Provides syntax |Implementation           |
+        +==================+================+=========================+
+        |`__iadd__(other)` |`self += other` |`lincomb(self, 1, self,  |
+        |                  |                |1, other)`               |
+        +------------------+----------------+-------------------------+
+        |`__isub__(other)` |`self -= other` |`lincomb(self, 1, self,  |
+        |                  |                |-1, other)`              |
+        +------------------+----------------+-------------------------+
+        |`__imul__(scalar)`|`self *= scalar`|`lincomb(self, scalar,   |
+        |                  |                |self)`                   |
+        +------------------+----------------+-------------------------+
+        |`__itruediv__     |`self /= scalar`|`__imul__(1.0 / scalar)` |
+        |(scalar)`         |                |                         |
+        +------------------+----------------+-------------------------+
+        |`__idiv__(scalar)`|`self /= scalar`|same as `__itruediv__`   |
+        +------------------+----------------+-------------------------+
+        |`__add__(other)`  |`self + other`  |`x = element()`;         |
+        |                  |                |`lincomb(x, 1, self, 1,  |
+        |                  |                |other)`                  |
+        +------------------+----------------+-------------------------+
+        |`__sub__(other)`  |`self - other`  |`x = element()`;         |
+        |                  |                |`lincomb(x, 1, self, -1, |
+        |                  |                |other)`                  |
+        +------------------+----------------+-------------------------+
+        |`__mul__(scalar)` |`self * scalar` |`x = element()`;         |
+        |                  |                |`lincomb(x, scalar,      |
+        |                  |                |self)`                   |
+        +------------------+----------------+-------------------------+
+        |`__rmul__(scalar)`|`scalar * self` |`__mul__(scalar)`        |
+        +------------------+----------------+-------------------------+
+        |`__truediv__      |`self /= scalar`|`__mul__(1.0 / scalar)`  |
+        |(scalar)`         |                |                         |
+        +------------------+----------------+-------------------------+
+        |`__div__(scalar)` |`self /= scalar`|same as `__truediv__`    |
+        +------------------+----------------+-------------------------+
+        |`__pos__()`       |`+self`         |`copy()`                 |
+        +------------------+----------------+-------------------------+
+        |`__neg__()`       |`-self`         |`x = element()`;         |
+        |                  |                |`lincomb(x, -1, self)`   |
+        +------------------+----------------+-------------------------+
+
+        Note that `lincomb` and `element` refer to `LinearSpace`
+        methods.
+        """
 
         def __init__(self, space):
             """Default initializer of vectors.
@@ -409,70 +572,153 @@ class LinearSpace(Set):
 
 class MetricSpace(LinearSpace):
 
-    """Abstract metric space."""
+    """Abstract metric space.
+
+    Its elements are represented as instances of the inner
+    `MetricSpace.Vector` class.
+
+    In addition to `LinearSpace`, `MetricSpace` has the following
+    abstract method:
+
+    `_dist(x, y)`
+    ~~~~~~~~~~~~~
+    A raw (not type-checking) private method measuring the distance
+    between two vectors `x` and `y`.
+
+    **Parameters:**
+        `x` : `object`
+            The first vector
+        `y` : `object`
+            The second vector
+
+    **Returns:**
+        `distance` : `RealNumber`
+            The distance between `x` and `y`, measured in the space's
+            metric
+
+    **Requirements:**
+     * `_dist(x, y) == _dist(y, x)`
+     * `_dist(x, y) <= _dist(x, z) + _dist(z, y)`
+     * `_dist(x, y) >= 0`
+     * `_dist(x, y) == 0` (approx.) if and only if `x == y` (approx.)
+
+    Differences to `LinearSpace`
+    ----------------------------
+
+    +------------+------------+----------------------------------------+
+    |Signature   |Return type |Description                             |
+    +============+============+========================================+
+    |`dist(x, y)`|`float`     |Distance between two space elements.    |
+    |            |            |Like `_dist()`, but with type checks.   |
+    +------------+------------+----------------------------------------+
+
+    See also
+    --------
+    See `LinearSpace` for a list of additional attributes and methods
+    as well as further help.
+
+    See Wikipedia's `Metric space`_ article for a mathematical
+    overview.
+
+    .. _`Metric space`:
+       https://en.wikipedia.org/wiki/Metric_space
+    """
 
     @abstractmethod
     def _dist(self, x, y):
-        """ implementation of distance
-        """
+        """Calculate the distance between two vectors."""
 
     # Default implemented methods
     def dist(self, x, y):
-        """
-        Calculate the distance between two vectors
+        """Calculate the distance between two vectors.
 
         Parameters
         ----------
         x : MetricSpace.Vector
-            Vector in this space.
+            The first element
 
         y : MetricSpace.Vector
-            Vector in this space.
+            The second element
 
         Returns
         -------
-        dist : float
+        dist : RealNumber
                Distance between vectors
         """
-        if not self.contains(x):
-            raise TypeError('x ({}) is not in space ({})'.format(x, self))
+        if x not in self:
+            raise TypeError('`x` {} not in space {}'.format(x, self))
 
-        if not self.contains(y):
-            raise TypeError('y ({}) is not in space ({})'.format(y, self))
+        if y not in self:
+            raise TypeError('`y` {} not in space {}'.format(y, self))
 
         return float(self._dist(x, y))
 
     class Vector(LinearSpace.Vector):
-        """ Abstract vector in a metric space
+
+        """Abstract `MetricSpace` element.
+
+        Not intended for creation of vectors, use the space's
+        `element()` method instead.
+
+        Differences to `LinearSpace.Vector`
+        -----------------------------------
+
+        Methods
+        -------
+
+        +---------------+-----------+---------------------------------+
+        |Signature      |Return type|Description                      |
+        +===============+===========+=================================+
+        |`dist(other)`  |`float`    |Distance of this vector to       |
+        |               |           |`other`. Implemented as          |
+        |               |           |`space.dist(self, other)`.       |
+        +---------------+-----------+---------------------------------+
+        |`equals(other)`|`boolean`  |Test if `other` is equal to this |
+        |               |           |vector. Implemented as           |
+        |               |           |`dist(other) == 0`.              |
+        +---------------+-----------+---------------------------------+
+
+        Magic methods
+        -------------
+
+        +------------------+----------------+-------------------------+
+        |Signature         |Provides syntax |Implementation           |
+        +==================+================+=========================+
+        |`__eq__(ohter)`   |`self == other` |`equals(other)`          |
+        +------------------+----------------+-------------------------+
+        |`__ne__(other)`   |`self != other` |`not equals(other)`      |
+        +------------------+----------------+-------------------------+
+
+        See also
+        --------
+        See `LinearSpace.Vector` for a list of additional attributes
+        and methods as well as further help.
         """
 
         def __init__(self, space):
             if not isinstance(space, MetricSpace):
                 raise TypeError(errfmt('''
-                'space' ({}) is not a MetricSpace instance'''.format(space)))
+                `space` {} not a MetricSpace.'''.format(space)))
             super().__init__(space)
 
         def dist(self, other):
-            """
-            Calculates the distance to another vector.
+            """Calculate the distance to another vector.
 
             Shortcut for self.space.dist(self, other)
 
             Parameters
             ----------
-            None
+            `other` : `MetricSpace.Vector`
 
             Returns
             -------
             dist : float
                    Distance to other.
             """
-
             return self.space.dist(self, other)
 
         def equals(self, other):
-            """
-            Test two vectors for equality.
+            """Test two vectors for equality.
 
             Two vectors are equal if their distance is 0
 
@@ -507,7 +753,6 @@ class MetricSpace(LinearSpace):
             >>> x+x+x == z
             False
             """
-
             if (not isinstance(other, LinearSpace.Vector) or
                     other.space != self.space):
                 # Cannot use (if other not in self.space) since this is not
@@ -527,18 +772,72 @@ class MetricSpace(LinearSpace):
 
 
 class NormedSpace(MetricSpace):
-    """ Abstract normed space
+
+    """Abstract normed space.
+
+    Its elements are represented as instances of the inner
+    `NormedSpace.Vector` class.
+
+    In addition to `LinearSpace`, `NormedSpace` has the following
+    abstract method:
+
+    `_norm(x)`
+    ~~~~~~~~~~
+    A raw (not type-checking) private method measuring the length of a
+    space element `x`.
+
+    **Parameters:**
+        `x` : `object`
+            The vector to measure
+
+    **Returns:**
+        `norm` : `RealNumber`
+            The length of `x` as measured in the space's metric
+
+    **Requirements:**
+     * `_norm(s * x) = |s| * _norm(x)` for any scalar `s`
+     * `_norm(x + y) <= _norm(x) + _norm(y)`
+     * `_norm(x) >= 0`
+     * `_norm(x) == 0` (approx.) if and only if `x == 0` (approx.)
+
+    Note
+    ----
+    A `NormedSpace` is a `MetricSpace` with the distance function
+    `_dist(x, y) = _norm(x - y)`.
+
+    Differences to `LinearSpace`
+    ----------------------------
+
+    +-------------+------------+--------------------------------------+
+    |Signature    |Return type |Description                           |
+    +=============+============+======================================+
+    |`norm(x)`    |`float`     |Length of a space element. Like       |
+    |             |            |`_norm()`, but with type checks.      |
+    +-------------+------------+--------------------------------------+
+    |`dist(x, y)` |`float`     |Distance between two space elements.  |
+    |             |            |Implemented as `_norm(x - y)` with    |
+    |             |            |type checks.                          |
+    +-------------+------------+--------------------------------------+
+
+    See also
+    --------
+    See `LinearSpace` for a list of additional attributes and methods
+    as well as further help.
+
+    See Wikipedia's `Normed vector space`_ article for a mathematical
+    overview.
+
+    .. _`Normed vector space`:
+       https://en.wikipedia.org/wiki/Normed_vector_space
     """
 
     @abstractmethod
     def _norm(self, vector):
-        """ implementation of norm
-        """
+        """Implementation of norm."""
 
     # Default implemented methods
     def norm(self, vector):
-        """ Calculate the norm of a vector
-        """
+        """Calculate the norm of a vector."""
         if not self.contains(vector):
             raise TypeError('x ({}) is not in space ({})'.format(vector, self))
 
@@ -548,10 +847,41 @@ class NormedSpace(MetricSpace):
     def _dist(self, x, y):
         """ The distance in Normed spaces is implicitly defined by the norm
         """
-        return self._norm(x-y)
+        return self._norm(x - y)
 
     class Vector(MetricSpace.Vector):
-        """ Abstract vector in a normed space
+
+        """Abstract `NormedSpace` element.
+
+        Not intended for creation of vectors, use the space's
+        `element()` method instead.
+
+        Differences to `LinearSpace.Vector`
+        -----------------------------------
+
+        Methods
+        -------
+
+        +---------------+-----------+---------------------------------+
+        |Signature      |Return type|Description                      |
+        +===============+===========+=================================+
+        |`norm()`       |`float`    |Length of this vector.           |
+        |               |           |Implemented as                   |
+        |               |           |`space.norm(self)`.              |
+        +---------------+-----------+---------------------------------+
+        |`dist(other)`  |`float`    |Distance of this vector to       |
+        |               |           |`other`. Implemented as          |
+        |               |           |`space.norm(self - other)`.      |
+        +---------------+-----------+---------------------------------+
+        |`equals(other)`|`boolean`  |Test if `other` is equal to this |
+        |               |           |vector. Implemented as           |
+        |               |           |`dist(other) == 0`.              |
+        +---------------+-----------+---------------------------------+
+
+        See also
+        --------
+        See `LinearSpace.Vector` for a list of additional attributes
+        and methods as well as further help.
         """
 
         def __init__(self, space):
@@ -576,12 +906,76 @@ class NormedSpace(MetricSpace):
                    Norm of the vector.
 
             """
-
             return self.space.norm(self)
 
 
 class HilbertSpace(NormedSpace):
-    """ Abstract (pre)-Hilbert space or inner product space
+
+    """Abstract (pre)-Hilbert space or inner product space.
+
+    Its elements are represented as instances of the inner
+    `HilbertSpace.Vector` class.
+
+    In addition to `LinearSpace`, `HilbertSpace` has the following
+    abstract method:
+
+    `_inner(x, y)`
+    ~~~~~~~~~~~~~~
+    A raw (not type-checking) private method calculating the inner
+    product of two space elements `x` and `y`.
+
+    **Parameters:**
+        `x` : `object`
+            The first vector
+        `y` : `object`
+            The second vector
+
+    **Returns:**
+        `inner` : `space.field` element
+            The inner product of `x` and `y`
+
+    **Requirements:**
+     * `_inner(x, y) == _inner(y, x)^*` with '*' = complex conjugation
+     * `_inner(s * x, y) == s * _inner(x, y)` for `s` scalar
+     * `_inner(x + z, y) <= _inner(x, y) + _inner(z, y)`
+     * `_inner(x, x) == 0` (approx.) if and only if `x == 0` (approx.)
+
+    Note
+    ----
+    A `HilbertSpace` is a `NormedSpace` with the norm function
+    `_norm(x) = sqrt(_inner(x, x))`, and in consequence also a
+    `MetricSpace` with the distance function
+    `_dist(x, y) = _norm(x - y)`.
+
+    Differences to `LinearSpace`
+    ----------------------------
+
+    +-------------+------------+--------------------------------------+
+    |Signature    |Return type |Description                           |
+    +=============+============+======================================+
+    |`inner(x, y)`|`field`     |Inner product of two space elements.  |
+    |             |element     |Like `_inner()`, but with type        |
+    |             |            |checks.                               |
+    +-------------+------------+--------------------------------------+
+    |`norm(x)`    |`float`     |Length of a space element. Implemented|
+    |             |            |as `sqrt(_inner(x, x))` with type     |
+    |             |            |checks.                               |
+    +-------------+------------+--------------------------------------+
+    |`dist(x, y)` |`float`     |Distance between two space elements.  |
+    |             |            |Implemented as `_norm(x - y)` with    |
+    |             |            |type checks.                          |
+    +-------------+------------+--------------------------------------+
+
+    See also
+    --------
+    See `LinearSpace` for a list of additional attributes and methods
+    as well as further help.
+
+    See Wikipedia's `Inner product space`_ article for a mathematical
+    overview.
+
+    .. _`Inner product space`:
+       https://en.wikipedia.org/wiki/Inner_product_space
     """
 
     @abstractmethod
@@ -612,7 +1006,42 @@ class HilbertSpace(NormedSpace):
         return sqrt(self._inner(x, x))
 
     class Vector(NormedSpace.Vector):
-        """ Abstract vector in a Hilbert-space
+
+        """Abstract `HilbertSpace` element.
+
+        Not intended for creation of vectors, use the space's
+        `element()` method instead.
+
+        Differences to `LinearSpace.Vector`
+        -----------------------------------
+
+        Methods
+        -------
+
+        +---------------+-------------+-------------------------------+
+        |Signature      |Return type  |Description                    |
+        +===============+=============+===============================+
+        |`inner(other)` |`space.field`|Inner product of this vector   |
+        |               |element      |with `other`. Implemented as   |
+        |               |             |`space.inner(self, other)`.    |
+        +---------------+-------------+-------------------------------+
+        |`norm()`       |`float`      |Length of this vector.         |
+        |               |             |Implemented as                 |
+        |               |             |`inner(self, self)`.           |
+        +---------------+-------------+-------------------------------+
+        |`dist(other)`  |`float`      |Distance of this vector to     |
+        |               |             |`other`. Implemented as        |
+        |               |             |`space.norm(self - other)`.    |
+        +---------------+-------------+-------------------------------+
+        |`equals(other)`|`boolean`    |Test if `other` is equal to    |
+        |               |             |this vector. Implemented as    |
+        |               |             |`dist(other) == 0`.            |
+        +---------------+-------------+-------------------------------+
+
+        See also
+        --------
+        See `LinearSpace.Vector` for a list of additional attributes
+        and methods as well as further help.
         """
 
         def __init__(self, space):
@@ -634,8 +1063,63 @@ class HilbertSpace(NormedSpace):
 
 
 class Algebra(LinearSpace):
-    """ Algebras, or Banach Algebras are linear spaces with multiplication
-    defined
+
+    """Abstract (Banach) algebra with multiplication.
+
+    Its elements are represented as instances of the inner
+    `Algebra.Vector` class.
+
+    In addition to `LinearSpace`, `Algebra` has the following
+    abstract method:
+
+    `_multiply(x, y)`
+    ~~~~~~~~~~~~~~~~~
+    A raw (not type-checking) private method multiplying two vectors
+    `x` and `y`.
+
+    **Parameters:**
+        `x` : `object`
+            The first vector
+        `y` : `object`
+            The second vector
+
+    **Returns:**
+        `prod` : `Algebra.Vector`
+            The (pointwise) product of `x` and `y`
+
+    **Requirements:**
+     * `_multiply(x, y) == _multiply(y, x)`
+     * `s * _multiply(x, y) == _multiply(s * x, y) ==
+       _multiply(x, s * y)` for `s` scalar
+     * There is a space element `one` with
+       `_multiply(one, x) == x == _multiply(x, one)`.
+
+    Note
+    ----
+    The above conditions on the multiplication make `Algebra` a
+    *unital commutative algebra* in the mathematical sense.
+
+    Differences to `LinearSpace`
+    ----------------------------
+
+    +-------------+----------------+----------------------------------+
+    |Signature    |Return type     |Description                       |
+    +=============+================+==================================+
+    |`multiply(x, |`Algebra.Vector`|Multiplication of two space       |
+    |y)`          |                |elements. Like `_multiply()`, but |
+    |             |                |with type checks.                 |
+    +-------------+----------------+----------------------------------+
+
+    See also
+    --------
+    See `LinearSpace` for a list of additional attributes and methods
+    as well as further help.
+
+    See Wikipedia's `Associative algebra`_ article for a mathematical
+    overview.
+
+    .. _`Associative algebra`:
+       https://en.wikipedia.org/wiki/Associative_algebra
     """
 
     @abstractmethod

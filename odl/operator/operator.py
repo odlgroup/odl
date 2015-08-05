@@ -90,8 +90,7 @@ prototyping:
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
+from __future__ import (print_function, division, absolute_import)
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object, super
@@ -188,12 +187,12 @@ class _OperatorMeta(ABCMeta):
 
     def __new__(mcs, name, bases, attrs):
         """Create a new `_OperatorMeta` instance."""
-        if "_call" in attrs and "_apply" in attrs:
+        if '_call' in attrs and '_apply' in attrs:
             return super().__new__(mcs, name, bases, attrs)
-        elif "_call" in attrs:
+        elif '_call' in attrs:
             return super().__new__(mcs, name, (_DefaultApplyOperator,) + bases,
                                    attrs)
-        elif "_apply" in attrs:
+        elif '_apply' in attrs:
             return super().__new__(mcs, name, (_DefaultCallOperator,) + bases,
                                    attrs)
         else:
@@ -441,7 +440,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> op(x)
         Rn(3).element([1.0, 2.0, 3.0])
 
-        >>> from odl.operator.default import operator
+        >>> from odl.operator.operator import operator
         >>> A = operator(lambda x: 3*x)
         >>> A(3)
         9
@@ -508,12 +507,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> Scaled = op * 3
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
-
-        >>> from odl.operator.default import operator
-        >>> A = operator(lambda x: 3*x)
-        >>> Scaled = A*3
-        >>> Scaled(5)
-        45
         """
         if isinstance(other, Operator):
             return OperatorPointwiseProduct(self, other)
@@ -566,12 +559,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> Scaled = 3 * op
         >>> Scaled(x)
         Rn(3).element([3.0, 6.0, 9.0])
-
-        >>> from odl.operator.default import operator
-        >>> A = operator(lambda x: 3*x)
-        >>> Scaled = 3*A
-        >>> Scaled(5)
-        45
         """
         if isinstance(other, Operator):
             return OperatorPointwiseProduct(self, other)
@@ -688,11 +675,14 @@ class OperatorSum(Operator):
 
         Example
         -------
-        >>> from odl.operator.default import operator
-        >>> A = operator(lambda x: 3*x)
-        >>> B = operator(lambda x: 5*x)
-        >>> OperatorSum(A, B)(3)
-        24
+        >>> from odl.space.cartesian import Rn
+        >>> from odl.operator.default import ScalingOperator
+        >>> r3 = Rn(3)
+        >>> A = ScalingOperator(r3, 3.0)
+        >>> B = ScalingOperator(r3, -1.0)
+        >>> C = OperatorSum(A, B)
+        >>> C(r3.element([1, 2, 3]))
+        Rn(3).element([2.0, 4.0, 6.0])
         """
         # pylint: disable=protected-access
         return self._op1._call(inp) + self._op2._call(inp)
@@ -1568,16 +1558,10 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         raise ValueError(errfmt('''
         At least one argument `call` or `apply` must be given.'''))
 
-    metaclass = Operator.__metaclass__
-
-    simple_operator = metaclass('SimpleOperator',
-                                (Operator,),
-                                {'_call': _bound_method(call),
-                                 '_apply': _bound_method(apply),
-                                 'inverse': inv,
-                                 'derivative': deriv,
-                                 'domain': dom,
-                                 'range': ran})
+    simple_operator = _OperatorMeta(
+        'SimpleOperator', (Operator,),
+        {'_call': _bound_method(call), '_apply': _bound_method(apply),
+         'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran})
 
     return simple_operator()
 
@@ -1642,16 +1626,10 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
     if call is None and apply is None:
         raise ValueError("Need to supply at least one of call or apply")
 
-    metaclass = LinearOperator.__metaclass__
-
-    simple_linear_operator = metaclass('SimpleOperator',
-                                       (LinearOperator,),
-                                       {'_call': _bound_method(call),
-                                        '_apply': _bound_method(apply),
-                                        'inverse': inv,
-                                        'adjoint': adj,
-                                        'domain': dom,
-                                        'range': ran})
+    simple_linear_operator = _OperatorMeta(
+        'SimpleLinearOperator', (LinearOperator,),
+        {'_call': _bound_method(call), '_apply': _bound_method(apply),
+         'inverse': inv, 'adjoint': adj, 'domain': dom, 'range': ran})
 
     return simple_linear_operator()
 

@@ -204,7 +204,7 @@ class ScalingOperator(SelfAdjointOperator):
 
     def __repr__(self):
         """repr(self) implementation."""
-        return 'LinCombOperator({!r}, {!r})'.format(self._space, self._scal)
+        return 'ScalingOperator({!r}, {!r})'.format(self._space, self._scal)
 
     def __str__(self):
         """str(self) implementation."""
