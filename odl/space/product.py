@@ -154,7 +154,7 @@ class LinearProductSpace(LinearSpace):
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element(x2, x3)
         >>> print(x)
-        {[ 1.  2.], [ 1.  2.  3.]}
+        {[1.0, 2.0], [1.0, 2.0, 3.0]}
         """
         # If data is given as keyword arg, prefer it over arg list
         data = kwargs.pop('data', None)
