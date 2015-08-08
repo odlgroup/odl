@@ -22,6 +22,7 @@ from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import str, zip, super
 from future import standard_library
+standard_library.install_aliases()
 
 from math import sqrt
 
@@ -29,12 +30,55 @@ from math import sqrt
 import numpy as np
 
 # ODL imports
-import odl.space.set as sets
-import odl.space.space as space
+from odl.space.set import Set, IntervalProd
+from odl.space.space import HilbertSpace, Algebra
 from odl.space.function import FunctionSpace
+from odl.operator.operator import Operator
 from odl.utility.utility import errfmt
 
-standard_library.install_aliases()
+
+class Discretization(Set):
+
+    """General discretization class.
+
+    A discretization in ODL is a way to encode the transition from
+    an arbitrary set to a set of `n`-tuples explicitly representable
+    in a computer. The most common use case is the discretization of
+    an infinite-dimensional vector space of functions by means of
+    storing coefficients in a finite basis.
+
+    The minimal information required to create a discretization is
+    the set to be discretized and a backend for storage and processing
+    of the `n`-tuples.
+
+    As additional information, two mappings can be provided.
+    The first one is an explicit way to map an (abstract) element from
+    the source set to an `n`-tuple. This mapping is called
+    **restriction** in ODL.
+    The second one encodes the converse way of mapping an `n`-tuple to
+    an element of the original set. This mapping is called
+    **extension**.
+    """
+
+    def __init__(self, set_, ntuples, restr=None, ext=None):
+        """Initialize a new `Discretization` instance."""
+        if not isinstance(set_, Set):
+            raise TypeError(errfmt('''
+            `set_` {} not a `Set` instance.'''.format(set_)))
+
+        if not isinstance(ntuples, Ntuples):
+            raise TypeError(errfmt('''
+            `ntuples` {} not a `Ntuples` instance.'''.format(ntuples)))
+
+        if restr is not None:
+            if not isinstance(restr, Operator):
+                raise TypeError(errfmt('''
+                `restr` {} not an `Operator` instance.'''.format(restr)))
+
+        if ext is not None:
+            if not isinstance(ext, Operator):
+                raise TypeError(errfmt('''
+                `ext` {} not an `Operator` instance.'''.format(ext)))
 
 
 def uniform_discretization(parent, rnimpl, shape=None, order='C'):
@@ -58,14 +102,14 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
         """
 
         def __init__(self, parent, rn, shape, order):
-            if not isinstance(parent.domain, sets.IntervalProd):
+            if not isinstance(parent.domain, IntervalProd):
                 raise NotImplementedError('Can only discretize IntervalProds')
 
-            if not isinstance(rn, space.HilbertSpace):
+            if not isinstance(rn, HilbertSpace):
                 pass
                 # raise NotImplementedError('Rn has to be a Hilbert space')
 
-            if not isinstance(rn, space.Algebra):
+            if not isinstance(rn, Algebra):
                 pass
                 # raise NotImplementedError('Rn has to be an algebra')
 
