@@ -33,6 +33,7 @@ import numpy as np
 from odl.space.set import Set, IntervalProd
 from odl.space.space import HilbertSpace, Algebra
 from odl.space.function import FunctionSpace
+from odl.space.cartesian import Ntuples
 from odl.operator.operator import Operator
 from odl.utility.utility import errfmt
 
@@ -75,10 +76,55 @@ class Discretization(Set):
                 raise TypeError(errfmt('''
                 `restr` {} not an `Operator` instance.'''.format(restr)))
 
+            if restr.domain != set_:
+                raise ValueError(errfmt('''
+                `domain` attribute {} of `restr` not equal to `set_`.
+                '''.format(restr.domain)))
+
+            if restr.range != ntuples:
+                raise ValueError(errfmt('''
+                `range` attribute {} of `restr` not equal to `ntuples`.
+                '''.format(restr.range)))
+
         if ext is not None:
             if not isinstance(ext, Operator):
                 raise TypeError(errfmt('''
                 `ext` {} not an `Operator` instance.'''.format(ext)))
+
+            if restr.domain != ntuples:
+                raise ValueError(errfmt('''
+                `domain` attribute {} of `restr` not equal to `ntuples`.
+                '''.format(restr.domain)))
+
+            if restr.range != set_:
+                raise ValueError(errfmt('''
+                `range` attribute {} of `restr` not equal to `set_`.
+                '''.format(restr.range)))
+
+        self._set = set_
+        self._ntuples = ntuples
+        self._restr = restr
+        self.__ext = ext
+
+    @property
+    def set(self):
+        """Return `set` attribute."""
+        return self._set
+
+    @property
+    def ntuples(self):
+        """Return `ntuples` attribute."""
+        return self._ntuples
+
+    @property
+    def restr(self):
+        """Return `restr` attribute."""
+        return self._restr
+
+    @property
+    def ext(self):
+        """Return `restr` attribute."""
+        return self._ext
 
 
 def uniform_discretization(parent, rnimpl, shape=None, order='C'):

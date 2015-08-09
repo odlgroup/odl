@@ -23,15 +23,198 @@ Support for functionspaces, such as L2.
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from future import standard_library
+standard_library.install_aliases()
 from builtins import super
 
 # ODL imports
 import odl.operator.operator as fun
 from odl.space.space import HilbertSpace, Algebra
-from odl.space.set import RealNumbers, ComplexNumbers, Set
+from odl.space.set import RealNumbers, ComplexNumbers, Set, IntervalProd
 from odl.utility.utility import errfmt
 
-standard_library.install_aliases()
+
+class FunctionSet(Set):
+
+    """A general set of functions with common domain and range."""
+
+    def __init__(self, dom, ran):
+        """Initialize a new `FunctionSet` instance.
+
+        Parameters
+        ----------
+        dom : `Set`
+            The domain of the functions.
+        ran : `Set`
+            The range of the functions.
+        """
+        if not isinstance(dom, Set):
+            raise TypeError(errfmt('''
+            `dom` {} not a `Set` instance.'''.format(dom)))
+
+        if not isinstance(ran, Set):
+            raise TypeError(errfmt('''
+            `ran` {} not a `Set` instance.'''.format(dom)))
+
+        self._range = ran
+        self._domain = dom
+
+    @property
+    def range(self):
+        """Return `range` attribute."""
+        return self._range
+
+    @property
+    def domain(self):
+        """Return `domain` attribute."""
+        return self._domain
+
+    def element(self, func):
+        """Create a `FunctionSet` element.
+
+        Parameters
+        ----------
+        func : callable
+            The actual instruction executed when evaluating
+            this element
+
+        Returns
+        -------
+        element : `FunctionSet.Vector`
+            The new element created from `func`
+        """
+        return self.Vector(self, func)
+
+    def equals(self, other):
+        """Test if `other` is equal to this set.
+
+        Paramters
+        ---------
+        other : `object`
+            The object to test for equality.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `FunctionSet` with same `domain`
+            and `range`, `False` otherwise.
+        """
+        return (isinstance(other, FunctionSet) and
+                self.domain == other.domain and
+                self.range == other.range)
+
+    def contains(self, other):
+        """Test if `other` is contained in this set.
+
+        Paramters
+        ---------
+        other : `object`
+            The object to test for membership.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `FunctionSet.Vector` whose `space`
+            attribute equals this space, `False` otherwise.
+        """
+        return (isinstance(other, FunctionSet.Vector) and
+                self == other.space)
+
+    def __repr__(self):
+        """`s.__repr__() <==> repr(s)`."""
+        return 'FunctionSet({!r}, {!r})'.format(self.domain, self.range)
+
+    def __str__(self):
+        """`s.__str__() <==> str(s)`."""
+        return 'FunctionSet({}, {})'.format(self.domain, self.range)
+
+    class Vector(object):
+
+        """Representation of a `FunctionSet` element."""
+
+        def __init__(self, func_set, function):
+            """Initialize a new `FunctionSet.Vector`.
+
+            Parameters
+            ----------
+            func_set : `FunctionSet`
+                The set of functions this element lives in
+            function : callable
+                The actual instruction executed when evaluating
+                this element
+            """
+            if not isinstance(func_set, FunctionSet):
+                raise TypeError(errfmt('''
+                `func_set` {} not a `FunctionSet` instance.
+                '''.format(func_set)))
+
+            if not callable(function):
+                raise TypeError(errfmt('''
+                `function` {} is not callable.'''.format(function)))
+
+            self._space = func_set
+            self._function = function
+
+        @property
+        def space(self):
+            """Return `space` attribute."""
+            return self._space
+
+        @property
+        def function(self):
+            """Return `function` attribute."""
+            return self._function
+
+        @property
+        def domain(self):
+            """The function domain."""
+            return self.space.domain
+
+        @property
+        def range(self):
+            """The function range."""
+            return self.space.range
+
+        def equals(self, other):
+            """Test `other` for equality."""
+            return (isinstance(other, FunctionSet.Vector) and
+                    self.space == other.space and
+                    self.function == other.function)
+
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`"""
+            return self.equals(other)
+
+        def __ne__(self, other):
+            """`vec.__ne__(other) <==> vec != other`"""
+            return not self.equals(other)
+
+        # TODO: continue here!
+
+
+class IntervalProdFunctionSet(FunctionSet):
+
+    """Set of functions defined on an `IntervalProd`."""
+
+    def __init__(self, intv_prod, ran):
+        """Initialize a new `IntervalProdFunctionSet` instance.
+
+        Parameters
+        ----------
+        intv_prod : `IntervalProd`
+            The domain of the functions.
+        ran : `Set`
+            The range of the functions.
+        """
+        if not isinstance(intv_prod, IntervalProd):
+            raise TypeError(errfmt('''
+            `intv_prod` {} not an `IntervalProd` instance.
+            '''.format(intv_prod)))
+
+        super().__init__(dom=intv_prod, ran=ran)
+
+    class Vector(FunctionSet.Vector):
+
+        """Representation of a `IntervalProdFunctionSet` element."""
 
 
 # Example of a space:
