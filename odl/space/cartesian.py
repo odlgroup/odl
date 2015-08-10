@@ -179,6 +179,14 @@ class Ntuples(Set):
 
         Examples
         --------
+        >>> strings3 = Ntuples(3, dtype='S1')  # 1-char strings
+        >>> x = strings_3.element(['w', 'b', 'w'])
+        >>> x
+        Ntuples(3, dtype('S1')).element(['w', 'b', 'w'])
+        >>> y = strings3.element()
+        >>> y.assign(x)
+        >>> y == x
+        True
         """
         if data is None:
             data = np.empty(self.dim, dtype=self.dtype)
