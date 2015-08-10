@@ -223,7 +223,10 @@ class NNInterpolation(Operator):
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
         """
-        func = partial(interpn(points=self.grid.coord_vectors,
-                               values=inp.data,
-                               method='nearest'))
+        def func(x):
+            return interpn(points=self.grid.coord_vectors,
+                           values=inp.data.reshape(self.grid.shape),
+                           method='nearest',
+                           xi=x)
+
         return self.range.element(func)
