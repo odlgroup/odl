@@ -26,38 +26,48 @@ standard_library.install_aliases()
 # External imports
 import numpy as np
 from scipy.interpolate import interpn
-from functools import partial
 
 # ODL imports
 from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator
 from odl.space.cartesian import Ntuples
-from odl.space.function import IntervalProdFunctionSet
+from odl.space.function import FunctionSet
+from odl.space.set import IntervalProd
 from odl.utility.utility import errfmt
 
 
-class PointCollocation(Operator):
+class GridCollocation(Operator):
 
-    """Function evaluation at selected points."""
+    """Function evaluation at grid points.
+
+    This is the default 'restriction' operator used by all core
+    discretization classes.
+    """
 
     def __init__(self, ip_funcset, grid, ntuples):
-        """Initialize a new `NNInterpolation` instance.
+        """Initialize a new `PointCollocation` instance.
 
         Parameters
         ----------
-        ip_funcset : `IntervalProdFunctionSet`
-            Set of functions on an `IntervalProd`. The operator range.
+        ip_funcset : `FunctionSet`
+            Set of functions, the operator range. Its `domain` must
+            be an `IntervalProduct`.
         grid : `TensorGrid`
-            The grid on which to interpolate. Must be contained in
+            The grid on which to evaluate. Must be contained in
             `ip_funcset.domain`.
         ntuples : `Ntuples`
-            An implementation of n-tuples. The operator domain.
+            Implementation of n-tuples, the operator domain. Its
+            dimension must be equal to `grid.ntotal`.
         """
-
-        if not isinstance(ip_funcset, IntervalProdFunctionSet):
+        if not isinstance(ip_funcset, FunctionSet):
             raise TypeError(errfmt('''
-            `ip_funcset` {} not an `IntervalProdFunctionSet` instance.
+            `ip_funcset` {} not an `FunctionSet` instance.
             '''.format(ip_funcset)))
+
+        if not isinstance(ip_funcset.domain, IntervalProd):
+            raise TypeError(errfmt('''
+            `domain` {} of `ip_funcset` not an `IntervalProd` instance.
+            '''.format(ip_funcset.domain)))
 
         if not isinstance(grid, TensorGrid):
             raise TypeError(errfmt('''
@@ -67,6 +77,11 @@ class PointCollocation(Operator):
         if not isinstance(ntuples, Ntuples):
             raise TypeError(errfmt('''
             `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
+
+        if ntuples.dim != grid.ntotal:
+            raise ValueError(errfmt('''
+            dimension {} of `ntuples` not equal to total number {} of
+            grid points.'''.format(ntuples.dim, grid.ntotal)))
 
         # TODO: make this an `IntervalProd` method (or add to `contains()`)
         if not (np.all(grid.min >= ip_funcset.domain.begin) and
@@ -99,7 +114,7 @@ class PointCollocation(Operator):
 
         Parameters
         ----------
-        inp : `IntervalProdFunctionSet.Vector`
+        inp : `FunctionSet.Vector`
             The function to be evaluated. It must accept point
             coordinates in list form (`f(x, y, z)` rather than
             `f(point)`) and return either a NumPy array of the correct
@@ -127,17 +142,56 @@ class PointCollocation(Operator):
         See also
         --------
         See the `meshgrid` method of `TensorGrid` in `odl.discr.grid`
-        and the `numpy.meshgrid` function for an explanation of
+        or the `numpy.meshgrid` function for an explanation of
         meshgrids.
 
         Examples
         --------
+        Define the grid:
+
         >>> from odl.discr.grid import TensorGrid
-        >>> g = TensorGrid([1, 2], [3, 4, 5])
-        >>> x, y = g.meshgrid()
-        >>> x.shape, y.shape  # Not 'fleshed out' by default
-        ((2, 1), (1, 3))
-        >>>
+        >>> grid = TensorGrid([1, 2], [3, 4, 5])
+
+        The `ntuples` backend is `Rn`:
+
+        >>> from odl.space.cartesian import Rn
+        >>> rn = Rn(grid.ntotal)
+
+        Define a set of functions from the convex hull of the grid
+        to the real numbers:
+
+        >>> from odl.space.function import FunctionSet
+        >>> from odl.space.set import RealNumbers
+        >>> funcset = FunctionSet(grid.convex_hull(), RealNumbers())
+
+        Finally create the operator:
+
+        >>> coll_op = GridCollocation(funcset, grid, rn)
+        >>> func_elem = funcset.element(lambda x, y: x - y)
+        >>> coll_op(func_elem)
+        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+
+        Use all free variables in functions you supply, otherwise
+        the automatic broadcasting will yield a wrong shape:
+
+        >>> func_elem = funcset.element(lambda x, y: 2 * x)
+        >>> coll_op(func_elem)
+        Traceback (most recent call last):
+        ...
+        ValueError: `data` shape (2,) not broadcastable to shape (6).
+
+        Do this instead:
+
+        >>> func_elem = funcset.element(lambda x, y: 2 * x + 0 * y)
+        >>> coll_op(func_elem)
+        Rn(6).element([2.0, 2.0, 2.0, 4.0, 4.0, 4.0])
+
+        This is what happens internally:
+
+        >>> xx, yy = grid.meshgrid()
+        >>> vals = 2 * xx
+        >>> vals.shape  # Not possible to assign to an Rn(6) vector
+        (2, 1)
         """
         # TODO: 'C'-ordering is hard-coded now. Allow 'F' also?
         try:
@@ -151,28 +205,34 @@ class PointCollocation(Operator):
         return self.range.element(values)
 
 
-class NNInterpolation(Operator):
+class NearestInterpolation(Operator):
 
     """Nearest neighbor interpolation as an operator."""
 
     def __init__(self, ip_funcset, grid, ntuples):
-        """Initialize a new `NNInterpolation` instance.
+        """Initialize a new `NearestInterpolation` instance.
 
         Parameters
         ----------
-        ip_funcset : `IntervalProdFunctionSet`
-            Set of functions on an `IntervalProd`. The operator range.
+        ip_funcset : `FunctionSet`
+            Set of functions, the operator domain. Its `domain` must
+            be an `IntervalProduct`.
         grid : `TensorGrid`
             The grid on which to interpolate. Must be contained in
             `ip_funcset.domain`.
         ntuples : `Ntuples`
-            An implementation of n-tuples. The operator domain.
+            Implementation of n-tuples, the operator domain. Its
+            dimension must be equal to `grid.ntotal`.
         """
-
-        if not isinstance(ip_funcset, IntervalProdFunctionSet):
+        if not isinstance(ip_funcset, FunctionSet):
             raise TypeError(errfmt('''
-            `ip_funcset` {} not an `IntervalProdFunctionSet` instance.
+            `ip_funcset` {} not an `FunctionSet` instance.
             '''.format(ip_funcset)))
+
+        if not isinstance(ip_funcset.domain, IntervalProd):
+            raise TypeError(errfmt('''
+            `domain` {} of `ip_funcset` not an `IntervalProd` instance.
+            '''.format(ip_funcset.domain)))
 
         if not isinstance(grid, TensorGrid):
             raise TypeError(errfmt('''
@@ -182,6 +242,11 @@ class NNInterpolation(Operator):
         if not isinstance(ntuples, Ntuples):
             raise TypeError(errfmt('''
             `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
+
+        if ntuples.dim != grid.ntotal:
+            raise ValueError(errfmt('''
+            dimension {} of `ntuples` not equal to total number {} of
+            grid points.'''.format(ntuples.dim, grid.ntotal)))
 
         # TODO: make this an `IntervalProd` method (or add to `contains()`)
         if not (np.all(grid.min >= ip_funcset.domain.begin) and
