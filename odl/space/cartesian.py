@@ -179,6 +179,14 @@ class Ntuples(Set):
 
         Examples
         --------
+        >>> strings3 = Ntuples(3, dtype='S1')  # 1-char strings
+        >>> x = strings3.element(['w', 'b', 'w'])
+        >>> x
+        Ntuples(3, dtype('S1')).element(['w', 'b', 'w'])
+        >>> y = strings3.element()
+        >>> y.assign(x)
+        >>> y == x
+        True
         """
         if data is None:
             data = np.empty(self.dim, dtype=self.dtype)
@@ -204,7 +212,6 @@ class Ntuples(Set):
 
         Examples
         --------
-
         >>> int_3 = Ntuples(3, dtype=int)
         >>> int_3.dtype
         dtype('int64')
@@ -217,7 +224,6 @@ class Ntuples(Set):
 
         Examples
         --------
-
         >>> int_3 = Ntuples(3, dtype=int)
         >>> int_3.dim
         3
@@ -240,7 +246,6 @@ class Ntuples(Set):
 
         Examples
         --------
-
         >>> int_3 = Ntuples(3, dtype=int)
         >>> int_3.equals(int_3)
         True
@@ -405,7 +410,7 @@ class Ntuples(Set):
             >>> arr
             array([1, 2, 3])
 
-            In-place modification:
+            In-place modification via pointer:
 
             >>> arr[0] = 5
             >>> vec
@@ -426,6 +431,21 @@ class Ntuples(Set):
             `equals` : `boolean`
                 `True` if `other` is an element of this vector's
                 space with equal entries, `False` otherwise.
+
+            Examples
+            --------
+            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
+            >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
+            >>> vec1.equals(vec2)
+            False
+            >>> vec2 = Ntuples(3, int).element([1, 2, 3])
+            >>> vec1.equals(vec2)
+            True
+
+            Equivalently, the `==` operator can be used:
+
+            >>> vec1 == vec2
+            True
             """
             return other in self.space and np.all(self.data == other.data)
 
