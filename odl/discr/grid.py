@@ -127,7 +127,6 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-
         v1,...,vn : array-like
             The coordinate vectors defining the grid points. They must be
             sorted in ascending order and may not contain duplicates.
@@ -135,7 +134,6 @@ class TensorGrid(Set):
 
         Examples
         --------
-
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g
         TensorGrid([1.0, 2.0, 5.0], [-2.0, 1.5, 2.0])
@@ -216,11 +214,10 @@ class TensorGrid(Set):
 
     @property
     def min(self):
-        """Vector containing the minimal coordinate per axis.
+        """Vector containing the minimal coordinates per axis.
 
         Example
         -------
-
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.min
         array([ 1., -2.])
@@ -229,11 +226,10 @@ class TensorGrid(Set):
 
     @property
     def max(self):
-        """Vector containing the maximal coordinate per axis.
+        """Vector containing the maximal coordinates per axis.
 
         Example
         -------
-
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max
         array([ 5., 2.])
@@ -253,14 +249,12 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-
         tol : float
             Allow deviations up to this number in absolute value
             per vector entry.
 
         Examples
         --------
-
         >>> g1 = TensorGrid([0, 1], [-1, 0, 2])
         >>> g2 = TensorGrid([-0.1, 1.1], [-1, 0.1, 2])
         >>> g1.equals(g2)
@@ -278,19 +272,19 @@ class TensorGrid(Set):
                     for (vec_s, vec_o) in zip(self.coord_vectors,
                                               other.coord_vectors)))
 
-    def contains(self, point, tol=0.0):
-        """Test if a point belongs to the grid.
+    def contains(self, other, tol=0.0):
+        """Test if `other` belongs to this grid.
 
         Parameters
         ----------
-
+        other : array-like or `float`
+            The object to test for membership in this grid
         tol : float
             Allow deviations up to this number in absolute value
             per vector entry.
 
         Examples
         --------
-
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
         >>> g.contains([0, 0])
         True
@@ -302,24 +296,24 @@ class TensorGrid(Set):
         True
         """
         # pylint: disable=arguments-differ
-        point = np.atleast_1d(point)
-        return (point.shape == (self.dim,) and
+        other = np.atleast_1d(other)
+        return (other.shape == (self.dim,) and
                 all(np.any(np.isclose(vector, coord, atol=tol, rtol=0.0))
-                    for vector, coord in zip(self.coord_vectors, point)))
+                    for vector, coord in zip(self.coord_vectors, other)))
 
     def is_subgrid(self, other, tol=0.0):
         """Test if this grid is contained in another grid.
 
         Parameters
         ----------
-
+        other : `TensorGrid`
+            The other grid which is supposed to contain this grid
         tol : float
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
         Examples
         --------
-
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
         >>> g_sub = TensorGrid([0], [-1, 2])
         >>> g_sub.is_subgrid(g)
@@ -353,21 +347,18 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-
         order : 'C' or 'F'
             The ordering of the axes in which the points appear in
             the output.
 
         Returns
         -------
-
         points : numpy.ndarray
             The size of the array is ntotal x dim, i.e. the points are
             stored as rows.
 
         Examples
         --------
-
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
         >>> g.points()
         array([[ 0., -1.],

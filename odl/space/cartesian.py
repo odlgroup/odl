@@ -106,7 +106,7 @@ class Ntuples(Set):
     +------------+----------------+-----------------------------------+
     |Signature   |Return type     |Description                        |
     +============+================+===================================+
-    |`element    |`Ntuples.Vector`|Create an element in `Ntuples`. If |
+    |`element    |`Ntuples.Vector`|Create an `Ntuples` element. If    |
     |(data=None)`|                |`data` is `None`, merely memory is |
     |            |                |allocated. Otherwise, the element  |
     |            |                |is created from `data`.            |
@@ -598,9 +598,9 @@ class Ntuples(Set):
                                              array1d_repr(self.data))
 
 
-class Rn(Ntuples, LinearSpace):
+class Rn(Ntuples, Algebra):
 
-    """The real vector space R^n without further structure.
+    """The real vector space R^n with vector multiplication only.
 
     Its elements are represented as instances of the inner `Rn.Vector`
     class.
@@ -634,6 +634,10 @@ class Rn(Ntuples, LinearSpace):
     +-----------------+-----------+-----------------------------------+
     |`zero()`         |`Rn.Vector`|Create the zero element, i.e., the |
     |                 |           |element where each entry is 0.     |
+    +-----------------+-----------+-----------------------------------+
+    |`multiply(x, y)` |`None`     |Calculate the entry-wise product of|
+    |                 |           |`x` and `y` and assign the result  |
+    |                 |           |to `y`.                            |
     +-----------------+-----------+-----------------------------------+
 
     See also
@@ -843,6 +847,31 @@ class Rn(Ntuples, LinearSpace):
         return (isinstance(other, Rn) and
                 self.dim == other.dim and
                 self.dtype == other.dtype)
+
+    def _multiply(self, x, y):
+        """The entry-wise product of two vectors, assigned to `y`.
+
+        Parameters
+        ----------
+        x : `Rn.Vector`
+            First factor
+        y : `Rn.Vector`
+            Second factor, used to store the result
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> rn = Rn(3)
+        >>> x = rn.element([5, 3, 2])
+        >>> y = rn.element([1, 2, 3])
+        >>> rn.multiply(x, y)
+        >>> y
+        Rn(3).element([5.0, 6.0, 6.0])
+        """
+        y.data[:] = x.data * y.data
 
     def __repr__(self):
         """repr() implementation."""
@@ -1207,7 +1236,7 @@ class NormedRn(Rn, NormedSpace):
         """
 
 
-class EuclideanRn(Rn, HilbertSpace, Algebra):
+class EuclideanRn(Rn, HilbertSpace):
 
     """The real space R^n with the an inner product.
 
@@ -1320,37 +1349,6 @@ class EuclideanRn(Rn, HilbertSpace, Algebra):
             return float(self._dot(x.data, y.data))
         else:
             return float(self._dot(x.data, self._weights * y.data))
-
-    def _multiply(self, x, y):
-        """The pointwise product of two vectors, assigned to `y`.
-
-        This is defined as:
-
-        multiply(x,y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
-
-        Parameters
-        ----------
-
-        x : EuclideanRn.Vector
-            read from
-        y : EuclideanRn.Vector
-            read from and written to
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-
-        >>> rn = EuclideanRn(3)
-        >>> x = rn.element([5, 3, 2])
-        >>> y = rn.element([1, 2, 3])
-        >>> rn.multiply(x, y)
-        >>> y
-        EuclideanRn(3).element([5.0, 6.0, 6.0])
-        """
-        y.data[:] = x.data * y.data
 
     def __repr__(self):
         """repr() implementation."""
