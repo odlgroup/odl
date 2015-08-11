@@ -37,8 +37,8 @@ from odl.utility.utility import errfmt, array1d_repr
 
 
 class Set(with_metaclass(ABCMeta, object)):
-    """ An arbitrary set
-    """
+
+    """An abstract set."""
 
     @abstractmethod
     def equals(self, other):
@@ -50,9 +50,8 @@ class Set(with_metaclass(ABCMeta, object)):
         """ Test if other is a member of self
         """
 
-    def element(self, *args, **kwargs):
-        """ Return some (arbitrary) element
-        """
+    def element(self, inp=None):
+        """Return an element from `inp` or from scratch."""
         raise NotImplementedError("'element' method not implemented")
 
     # Default implemenations
@@ -67,23 +66,24 @@ class Set(with_metaclass(ABCMeta, object)):
 
 
 class EmptySet(Set):
-    """ The empty set has no members (None is considered "no element")
-    """
+
+    """The empty set."""
 
     def equals(self, other):
-        """ Tests if other is an instance of EmptySet
-        """
+        """Test if `other` is an `EmptySet` instance."""
         return isinstance(other, EmptySet)
 
     def contains(self, other):
-        """ Tests if other is None
-        """
+        """Test if `other` is None."""
         return other is None
 
-    def element(self):
-        """ The only element in the empty set, None
-        """
-        return None
+    def element(self, inp=None):
+        """Return an element, only possible if `inp` is `None`."""
+        if inp is None:
+            return None
+        else:
+            raise ValueError(errfmt('''
+            Cannot create an `EmptySet` element from {}.'''.format(inp)))
 
     def __str__(self):
         return "EmptySet"
@@ -93,21 +93,19 @@ class EmptySet(Set):
 
 
 class UniversalSet(Set):
-    """ Every object is a member of the universal set
 
-    Intended to be used in Operators where the user does not
-    want to define a domain or range.
+    """The set of all sets.
+
+    Forget about set theory for a moment :-)
     """
 
     # pylint: disable=abstract-method
     def equals(self, other):
-        """ Tests if other is an instance of UniversalSet
-        """
+        """Test if `other` is a `UniversalSet` instance."""
         return isinstance(other, UniversalSet)
 
     def contains(self, other):
-        """ Always returns true
-        """
+        """Return `True`."""
         return True
 
     def __str__(self):
@@ -118,23 +116,27 @@ class UniversalSet(Set):
 
 
 class ComplexNumbers(Set):
-    """ The set of complex numbers
-    """
+
+    """The set of complex numbers."""
 
     def equals(self, other):
-        """ Tests if other is an instance of ComplexNumbers
-        """
+        """Tests if `other` is a `ComplexNumbers` instance."""
         return isinstance(other, ComplexNumbers)
 
     def contains(self, other):
-        """ Tests if other is a complex number
-        """
+        """Test if `other` is a complex number."""
         return isinstance(other, Complex)
 
-    def element(self):
-        """ A complex number (zero)
-        """
-        return complex(0.0, 0.0)
+    def element(self, inp=None):
+        """Return a complex number from `inp` or from scratch."""
+        if inp is not None:
+            try:
+                return complex(inp)
+            except ValueError:
+                raise ValueError(errfmt('''
+                Cannot create a complex number from {}.'''.format(inp)))
+        else:
+            return complex(0.0, 0.0)
 
     def __str__(self):
         return "ComplexNumbers"
@@ -144,23 +146,27 @@ class ComplexNumbers(Set):
 
 
 class RealNumbers(Set):
-    """ The set of real numbers
-    """
+
+    """The set of real numbers."""
 
     def equals(self, other):
-        """ Tests if other is an instance of RealNumbers
-        """
+        """Tests if `other` is a `RealNumbers` instance."""
         return isinstance(other, RealNumbers)
 
     def contains(self, other):
-        """ Tests if other is a real number
-        """
+        """Test if `other` is a real number."""
         return isinstance(other, Real)
 
-    def element(self):
-        """ A real number (zero)
-        """
-        return 0.0
+    def element(self, inp=None):
+        """Return a real number from `inp` or from scratch."""
+        if inp is not None:
+            try:
+                return float(inp)
+            except ValueError:
+                raise ValueError(errfmt('''
+                Cannot create a real number from {}.'''.format(inp)))
+        else:
+            return 0.0
 
     def __str__(self):
         return "RealNumbers"
@@ -170,23 +176,26 @@ class RealNumbers(Set):
 
 
 class Integers(Set):
-    """ The set of all integers
-    """
+    """The set of integers."""
 
     def equals(self, other):
-        """ Tests if other is an instance of Integers
-        """
+        """Tests if `other` is an `Integers` instance."""
         return isinstance(other, Integers)
 
     def contains(self, other):
-        """ Tests if other is an Integer
-        """
+        """Test if `other` is an integer."""
         return isinstance(other, Integral)
 
-    def element(self):
-        """ An Integer (zero)
-        """
-        return 0
+    def element(self, inp=None):
+        """Return an integer from `inp` or from scratch."""
+        if inp is not None:
+            try:
+                return int(inp)
+            except ValueError:
+                raise ValueError(errfmt('''
+                Cannot create an integer from {}.'''.format(inp)))
+        else:
+            return 0
 
     def __str__(self):
         return "Integers"
@@ -196,6 +205,7 @@ class Integers(Set):
 
 
 class IntervalProd(Set):
+
     """An n-dimensional rectangular box.
 
     An IntervalProd is a Cartesian product of N intervals, i.e. an
@@ -205,59 +215,86 @@ class IntervalProd(Set):
     Attributes
     ----------
 
-    ============= ======================= ===========
-    Name          Type                    Description
-    ============= ======================= ===========
-    begin         numpy.ndarray or float  Leftmost interval point(s)
-    begin         numpy.ndarray or float  Rightmost interval point(s)
-    dim           int                     Number of axes
-    truedim       int                     Number of non-degenerate \
-axes
-    size          numpy.ndarray           Vector of interval lengths
-    volume        float                   The n-dimensional measure
-    midpoint      numpy.ndarray           Vector of interval midpoints
-    ============= ======================= ===========
-
+    +----------+---------------+--------------------------------------+
+    |Name      |Type           |Description                           |
+    +==========+===============+======================================+
+    |`begin`   |`numpy.ndarray`|(Vector of) leftmost interval point(s)|
+    |          |or `float`     |                                      |
+    +----------+---------------+--------------------------------------+
+    |`end`     |`numpy.ndarray`|(Vector of) rightmost interval        |
+    |          |or `float`     |point(s)                              |
+    +----------+---------------+--------------------------------------+
+    |`dim`     |`int`          |Number of axes                        |
+    +----------+---------------+--------------------------------------+
+    |`truedim` |`int`          |Number of non-degenerate axes, i.e.   |
+    |          |               |where `begin != end`                  |
+    +----------+---------------+--------------------------------------+
+    |`sizes`   |`numpy.ndarray`|(Vector of) interval length(s)        |
+    |          |or `float`     |                                      |
+    +----------+---------------+--------------------------------------+
+    |`volume`  |`float`        |`dim`-dimensional measure             |
+    +----------+---------------+--------------------------------------+
+    |`midpoint`|`numpy.ndarray`|Vector of interval midpoint(s)        |
+    |          |or `float`     |                                      |
+    +----------+---------------+--------------------------------------+
 
     Methods
     -------
 
-    ================================== ================ ===========
-    Signature                          Return type      Description
-    ================================== ================ ===========
-    equals(other, tol=0.0)             boolean          Equality test,\
- equivalent to 'self == other' for 'tol'==0.0
-    contains(point, tol=0.0)           boolean          Membership \
-test, equivalent to 'point in self' for 'tol'==0
-    measure(dim=truedim)               float            The 'dim'-\
-dimensional measure
-    dist(point, ord=2.0)               float            Distance to \
-'point' in 'ord'-norm
-    collapse(indcs, values)            IntervalProd     Reduce \
-intervals at the given indices to single numbers given in 'value'
-    squeeze()                          IntervalProd     Remove \
-degenerate axes
-    insert(other, index)               IntervalProd     Insert 'other'\
- (float, array or IntervalProd) before 'index'
-    corners(order='C')                 numpy.ndarray    The corner \
-points in a single array
-    uniform_sampling(n, as_midp=False) grid.RegularGrid Equidistant \
-sampling
-    ================================== ================ ===========
+    +--------------------+---------------+----------------------------+
+    |Signature           |Return type    |Description                 |
+    +====================+===============+============================+
+    |`equals(other,      |`boolean`      |Test if `other` is equal to |
+    |tol=0.0)`           |               |this interval product.      |
+    +--------------------+---------------+----------------------------+
+    |`contains(other,    |`boolean`      |Test if `other` is contained|
+    |tol=0.0)`           |               |in this interval product.   |
+    +--------------------+---------------+----------------------------+
+    |`measure(dim=None)` |`float`        |Return the `dim`-dimensional|
+    |                    |               |measure of this interval    |
+    |                    |               |product.                    |
+    +--------------------+---------------+----------------------------+
+    |`dist(point,        |`float`        |Return the distance in      |
+    |ord=2.0)`           |               |`ord`-norm between `point`  |
+    |                    |               |and this interval product.  |
+    +--------------------+---------------+----------------------------+
+    |`collapse(indcs,    |`IntervalProd` |Return the interval product |
+    |vals)`              |               |where the intervals at      |
+    |                    |               |`indcs` are collapsed to    |
+    |                    |               |single values `vals`.       |
+    +--------------------+---------------+----------------------------+
+    |`insert(other,      |`IntervalProd` |Return the interval product |
+    |index)`             |               |wher `other` has been       |
+    |                    |               |before `index`.             |
+    +--------------------+---------------+----------------------------+
+    |`corners(order='C')`|`numpy.ndarray`|Return the corner points    |
+    |                    |               |of this interval product    |
+    |                    |               |in a single array.          |
+    +--------------------+---------------+----------------------------+
+    |`uniform_sampling(  |`RegularGrid`  |Create a regular grid by    |
+    |num_nodes,          |               |sampling this interval      |
+    |as_midp=False)`     |               |product at `num_nodes`      |
+    |                    |               |equidistant nodes (per      |
+    |                    |               |axis).                      |
+    +--------------------+---------------+----------------------------+
+
+    See also
+    --------
+    `RegularGrid` is defined in `odl.discr.grid`.
     """
 
     def __init__(self, begin, end):
-        """
+        """Initialize a new `IntervalProd` instance.
+
         Parameters
         ----------
         begin : array-like or float
-            The lower ends of the intervals in the product
+            The left ends of the intervals in the product
         end : array-like or float
-            The upper ends of the intervals in the product
+            The right ends of the intervals in the product
 
         Examples
         --------
-
         >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
         >>> rbox = IntervalProd(b, e)
         >>> rbox
@@ -376,10 +413,8 @@ sampling
 
         Examples
         --------
-
         >>> from math import sqrt
-        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> rbox = IntervalProd([-1, 0, 2], [-0.5, 0, 3])
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9])  # Num error
         False
         >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-15)
@@ -396,6 +431,41 @@ sampling
         if self.dist(point, ord=np.inf) > tol:
             return False
         return True
+
+    def contains_grid(self, grid, tol=0.0):
+        """Test if a grid is contained.
+
+        Parameters
+        ----------
+        grid : `TensorGrid`
+            The grid to be tested
+        tol : float, optional
+            The maximum allowed distance in 'inf'-norm between the
+            grid points and the set.
+            Default: 0.0
+
+        Examples
+        --------
+        >>> from odl.discr.grid import TensorGrid
+        >>> rbox = IntervalProd([-1, 0], [-0.5, 0])
+        >>> grid = TensorGrid([-1, -0.8, -0.5], [0])
+        >>> rbox.contains_grid(grid)
+        True
+        >>> grid = TensorGrid([-1, -0.8, -0.5], [0, 1])
+        >>> rbox.contains_grid(grid)
+        False
+        >>> grid = TensorGrid([-1, -0.8, -0.4], [0])
+        >>> rbox.contains_grid(grid)
+        False
+        >>> rbox.contains_grid(grid, tol=0.1)
+        True
+        """
+        from odl.discr.grid import TensorGrid
+        if not isinstance(grid, TensorGrid):
+            return False
+
+        return (self.dist(grid.min, ord=float('inf')) <= tol and
+                self.dist(grid.max, ord=float('inf')) <= tol)
 
     # Additional property-like methods
     def measure(self, dim=None):
