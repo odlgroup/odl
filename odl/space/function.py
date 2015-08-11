@@ -27,15 +27,57 @@ standard_library.install_aliases()
 from builtins import super
 
 # ODL imports
-import odl.operator.operator as fun
+from odl.operator.operator import Operator
+from odl.space.set import RealNumbers, ComplexNumbers, Set
 from odl.space.space import HilbertSpace, Algebra
-from odl.space.set import RealNumbers, ComplexNumbers, Set, IntervalProd
 from odl.utility.utility import errfmt
 
 
 class FunctionSet(Set):
 
-    """A general set of functions with common domain and range."""
+    """A general set of functions with common domain and range.
+
+    Attributes
+    ----------
+
+    +----------+-----------+------------------------------------------+
+    |Name      |Type       |Description                               |
+    +==========+===========+==========================================+
+    |`domain`  |`Set`      |The domain of all functions in this set   |
+    +----------+-----------+------------------------------------------+
+    |`range`   |`Set`      |The range of all functions in this set    |
+    +----------+-----------+------------------------------------------+
+
+    Methods
+    -------
+
+    +-----------------+--------------------+--------------------------+
+    |Signature        |Return type         |Description               |
+    +=================+====================+==========================+
+    |`element(func)`  |`FunctionSet.Vector`|Create an element in this |
+    |                 |                    |`FunctionSet`.            |
+    +-----------------+--------------------+--------------------------+
+    |`equals(other)`  |`boolean`           |Test if `other` is equal  |
+    |                 |                    |to this `FunctionSet`.    |
+    +-----------------+--------------------+--------------------------+
+    |`contains(other)`|`boolean`           |Test if `other` is        |
+    |                 |                    |contained in this         |
+    |                 |                    |`FunctionSet`.            |
+    +-----------------+--------------------+--------------------------+
+
+    Magic methods
+    -------------
+
+    +----------------------+----------------+--------------------+
+    |Signature             |Provides syntax |Implementation      |
+    +======================+================+====================+
+    |`__eq__(other)`       |`self == other` |`equals(other)`     |
+    +----------------------+----------------+--------------------+
+    |`__ne__(other)`       |`self != other` |`not equals(other)` |
+    +----------------------+----------------+--------------------+
+    |`__contains__(other)` |`other in self` |`contains(other)`   |
+    +----------------------+----------------+--------------------+
+    """
 
     def __init__(self, dom, ran):
         """Initialize a new `FunctionSet` instance.
@@ -55,34 +97,37 @@ class FunctionSet(Set):
             raise TypeError(errfmt('''
             `ran` {} not a `Set` instance.'''.format(dom)))
 
-        self._range = ran
         self._domain = dom
-
-    @property
-    def range(self):
-        """Return `range` attribute."""
-        return self._range
+        self._range = ran
 
     @property
     def domain(self):
         """Return `domain` attribute."""
         return self._domain
 
+    @property
+    def range(self):
+        """Return `range` attribute."""
+        return self._range
+
     def element(self, func):
         """Create a `FunctionSet` element.
 
         Parameters
         ----------
-        func : callable
+        `func` : callable
             The actual instruction executed when evaluating
             this element
 
         Returns
         -------
-        element : `FunctionSet.Vector`
+        `element` : `FunctionSet.Vector`
             The new element created from `func`
         """
-        return self.Vector(self, func)
+        if isinstance(func, self.Vector):  # no double wrapping
+            return self.element(func.function)
+        else:
+            return self.Vector(self, func)
 
     def equals(self, other):
         """Test if `other` is equal to this set.
@@ -127,7 +172,7 @@ class FunctionSet(Set):
         """`s.__str__() <==> str(s)`."""
         return 'FunctionSet({}, {})'.format(self.domain, self.range)
 
-    class Vector(object):
+    class Vector(Operator):
 
         """Representation of a `FunctionSet` element."""
 
@@ -166,13 +211,28 @@ class FunctionSet(Set):
 
         @property
         def domain(self):
-            """The function domain."""
+            """The function domain (abstract in `Operator`)."""
             return self.space.domain
 
         @property
         def range(self):
-            """The function range."""
+            """The function range (abstract in `Operator`)."""
             return self.space.range
+
+        def _call(self, inp):
+            """The raw `call` method for out-of-place evaluation.
+
+            Parameters
+            ----------
+            inp : `domain` element
+                The point at which to evaluate the function
+
+            Returns
+            -------
+            outp : `range` element
+                The function value at the point
+            """
+            return self.function(inp)
 
         def equals(self, other):
             """Test `other` for equality."""
@@ -188,198 +248,177 @@ class FunctionSet(Set):
             """`vec.__ne__(other) <==> vec != other`"""
             return not self.equals(other)
 
-        # TODO: continue here!
 
+class FunctionSpace(FunctionSet, Algebra):
 
-class IntervalProdFunctionSet(FunctionSet):
+    """A vector space of functions."""
 
-    """Set of functions defined on an `IntervalProd`."""
-
-    def __init__(self, intv_prod, ran):
-        """Initialize a new `IntervalProdFunctionSet` instance.
+    def __init__(self, dom, field):
+        """Initialize a new `FunctionSpace` instance.
 
         Parameters
         ----------
-        intv_prod : `IntervalProd`
+        dom : `Set`
             The domain of the functions.
-        ran : `Set`
+        field : `RealNumbers` or `ComplexNumbers` instance
             The range of the functions.
         """
-        if not isinstance(intv_prod, IntervalProd):
+        if not isinstance(dom, Set):
             raise TypeError(errfmt('''
-            `intv_prod` {} not an `IntervalProd` instance.
-            '''.format(intv_prod)))
+            `dom` {} not a `Set` instance.'''.format(dom)))
 
-        super().__init__(dom=intv_prod, ran=ran)
-
-    class Vector(FunctionSet.Vector):
-
-        """Representation of a `IntervalProdFunctionSet` element."""
-
-
-# Example of a space:
-class FunctionSpace(Algebra):
-    """ The space of scalar valued functions on some domain
-
-    Parameters
-    ----------
-
-    domain : Set
-             The set the functions take values from
-    field : {RealNumbers, ComplexNumbers}, optional
-            The field that the functions map values into.
-            Since FunctionSpace is a LinearSpace, this is also
-            the set of scalars for this space.
-    """
-
-    def __init__(self, domain, field=RealNumbers()):
-        if not isinstance(domain, Set):
+        if not (isinstance(field, RealNumbers) or
+                isinstance(field, ComplexNumbers)):
             raise TypeError(errfmt('''
-            domain ({!r}) is not a Set instance'''.format(domain)))
-
-        if not isinstance(field, (RealNumbers, ComplexNumbers)):
-            raise TypeError(errfmt('''
-            field ({!r}) is not a RealNumbers or ComplexNumbers.
+            `field` {} not a `RealNumbers` or `ComplexNumbers` instance.
             '''.format(field)))
 
-        self.domain = domain
+        super().__init__(dom, field)
         self._field = field
-
-    def element(self, funct=None):
-        """ Creates an element in FunctionSpace
-
-        Parameters
-        ----------
-        funct : Function from self.domain to self.field
-            The function that should be converted/reinterpreted
-            as a vector.
-
-        Returns
-        -------
-        FunctionSpace.Vector instance
-
-
-        Examples
-        --------
-
-        >>> R = RealNumbers()
-        >>> space = FunctionSpace(R, R)
-        >>> x = space.element(lambda t: t**2)
-        >>> x(1)
-        1.0
-        >>> x(3)
-        9.0
-        """
-
-        if funct is None:
-            def function(*_):
-                """ A function that always returns zero
-                """
-                return 0
-            funct = function
-        return FunctionSpace.Vector(self, funct)
-
-    def _lincomb(self, z, a, x, b, y):
-        """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
-
-        The created object is rather slow,
-        and should only be used for testing purposes.
-        """
-        # Use operator overloading
-        # pylint: disable=protected-access
-        z._function = lambda *args: a*x._function(*args) + b*y._function(*args)
-
-    def _multiply(self, x, y):
-        """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
-
-        The created object is rather slow,
-        and should only be used for testing purposes.
-        """
-        # pylint: disable=protected-access
-        tmp = y._function
-        y._function = lambda *args: x._function(*args)*tmp._function(*args)
 
     @property
     def field(self):
-        """ The field that the functions map values into.
-
-        Since FunctionSpace is a LinearSpace, this is also
-        the set of scalars for this space.
-        """
+        """Return `field` attribute."""
         return self._field
 
-    def equals(self, other):
-        """ Verify that other is a FunctionSpace with the same domain and field
-        """
-        return (isinstance(other, FunctionSpace) and
-                self.domain == other.domain and
-                self.field == other.field)
-
-    def zero(self):
-        """ Returns the zero function
-        The function which maps any value to zero
-        """
-        return self.element(lambda *args: 0)
-
-    def __str__(self):
-        if isinstance(self.field, RealNumbers):
-            return "FunctionSpace(" + str(self.domain) + ")"
-        else:
-            return ("FunctionSpace(" + str(self.domain) + ", " +
-                    str(self.field) + ")")
-
-    def __repr__(self):
-        if isinstance(self.field, RealNumbers):
-            return "FunctionSpace(" + repr(self.domain) + ")"
-        else:
-            return ("FunctionSpace(" + repr(self.domain) + ", " +
-                    repr(self.field) + ")")
-
-    class Vector(Algebra.Vector, fun.Operator):
-        """ A Vector in a FunctionSpace
-
-        FunctionSpace-Vectors are themselves also Functionals, and inherit
-        a large set of features from them.
+    def element(self, func=None):
+        """Create a `FunctionSet` element.
 
         Parameters
         ----------
+        `func` : callable, optional
+            The actual instruction executed when evaluating
+            this element.
+            Default: zero function
 
-        space : FunctionSpace
-            Instance of FunctionSpace this vector lives in
-        function : Function from space.domain to space.field
-            The function that should be converted/reinterpreted as a vector.
+        Returns
+        -------
+        `element` : `FunctionSpace.Vector`
+            The new element created from `func`
         """
+        if func is None:
+            return self.zero()
+        else:
+            return self.Vector(self, func)
+
+    def _lincomb(self, z, a, x, b, y):
+        """Linear combination of `x` and `y`.
+
+        Set z = a*x + b*y in the sense of pointwise arithmetics.
+
+        Parameters
+        ----------
+        z : `FunctionSpace.Vector`
+            The Vector that the result is written to.
+        a : element of `field`
+            Scalar to multiply `x` with.
+        x : `FunctionSpace.Vector`
+            The first of the summands
+        b : element of `field`
+            Scalar to multiply `y` with.
+        y : `FunctionSpace.Vector`
+            The second of the summands
+
+        Returns
+        -------
+        None
+
+        Note
+        ----
+        The additions and multiplications are implemented via a simple
+        Python function, so the resulting function is probably slow.
+        """
+        # Store to allow aliasing
+        x_old = x._function
+        y_old = y._function
+
+        def lincomb_function(arg):
+            """The function calculating the linear combination."""
+            return a * x_old(arg) + b * y_old(arg)
+
+        z._function = lincomb_function
+
+    def zero(self):
+        """The function mapping everything to zero.
+
+        Since `lincomb` is slow, we implement this function directly.
+        """
+        def zero_(*_):
+            """The zero function."""
+            return self.field.element(0.0)
+        return self.element(zero_)
+
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Paramters
+        ---------
+        other : `object`
+            The object to test for equality.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `FunctionSpace` with same `domain`
+            and `range`, `False` otherwise.
+        """
+        # TODO: this more strict equality notion is not in line with the
+        # current hierarchy of Cartesian spaces. Make a choice!
+        return (isinstance(other, FunctionSpace) and
+                self.domain == other.domain and
+                self.range == other.range)
+
+    def _multiply(x, y):
+        """Raw pointwise multiplication of two functions.
+
+        Parameters
+        ----------
+        x : `FunctionSpace.Vector`
+            First factor
+        y : `FunctionSpace.Vector`
+            Second factor, used to store the result
+
+        Returns
+        -------
+        `None`
+
+        Note
+        ----
+        The multiplication is implemented with a simple Python
+        function, so the resulting function object is probably slow.
+        """
+        x_old = x.function
+        y_old = y.function
+
+        def product(arg):
+            """The actual product function."""
+            return x_old(arg) * y_old(arg)
+        y._function = product
+
+    class Vector(FunctionSet.Vector, Algebra.Vector):
+
+        """Representation of a `FunctionSpace` element."""
 
         def __init__(self, space, function):
-            super().__init__(space)
+            """Initialize a new `FunctionSet.Vector`.
+
+            Parameters
+            ----------
+            space : `FunctionSpace`
+                The space of functions this element lives in
+            function : callable
+                The actual instruction executed when evaluating
+                this element
+            """
+            if not isinstance(space, FunctionSpace):
+                raise TypeError(errfmt('''
+                `space` {} not a `FunctionSpace` instance.'''.format(space)))
+
             if not callable(function):
-                raise TypeError("'function' is not callable")
-            self._function = function
+                raise TypeError(errfmt('''
+                `function` {} is not callable.'''.format(function)))
 
-        def _call(self, rhs):
-            """ Apply the functional in some point
-            """
-            return float(self._function(rhs))
-
-        @property
-        def domain(self):
-            """ The range of this Vector (when viewed as a functional)
-            """
-            return self.space.domain
-
-        @property
-        def range(self):
-            """ The range of this Vector (when viewed as a functional)
-
-            The range is the same as the field of the vectors space
-            """
-            return self.space.field
-
-        def __str__(self):
-            return str(self._function)
-
-        def __repr__(self):
-            return repr(self.space) + '.element(' + repr(self._function) + ')'
+            super().__init__(space, function)
 
 
 class L2(FunctionSpace, HilbertSpace):
