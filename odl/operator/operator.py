@@ -220,8 +220,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     """Abstract operator.
 
     Abstract attributes and methods
-    ===============================
-
+    -------------------------------
     `Operator` is an **abstract** class, i.e. it can only be
     subclassed, not used directly.
 
@@ -239,7 +238,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     Out-of-place evaluation: `_call()`
     ----------------------------------
-
     Out-of-place evaluation means that the operator is applied,
     and the result is written to a new element which is returned.
     In this case, a subclass has to implement the method

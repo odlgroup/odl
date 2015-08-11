@@ -1079,20 +1079,19 @@ class Algebra(LinearSpace):
 
     **Parameters:**
         `x` : `object`
-            The first vector
+            First vector
         `y` : `object`
-            The second vector
+            Second vector, stores the final result
 
-    **Returns:**
-        `prod` : `Algebra.Vector`
-            The (pointwise) product of `x` and `y`
+    **Returns:** `None`
 
     **Requirements:**
-     * `_multiply(x, y) == _multiply(y, x)`
-     * `s * _multiply(x, y) == _multiply(s * x, y) ==
-       _multiply(x, s * y)` for `s` scalar
+     * `y` after `_multiply(x, y)` equals `x` after `_multiply(y, x)`
+     * `_multiply(s * x, y) <==> y *= s; _multiply(x, y)  <==>
+        _multiply(x, y); y *= s` for `s` scalar
      * There is a space element `one` with
-       `_multiply(one, x) == x == _multiply(x, one)`.
+       `x` after `_multiply(one, x)` equals `x` equals `one`
+       after `_multiply(x, one)`.
 
     Note
     ----
@@ -1102,13 +1101,13 @@ class Algebra(LinearSpace):
     Differences to `LinearSpace`
     ----------------------------
 
-    +-------------+----------------+----------------------------------+
-    |Signature    |Return type     |Description                       |
-    +=============+================+==================================+
-    |`multiply(x, |`Algebra.Vector`|Multiplication of two space       |
-    |y)`          |                |elements. Like `_multiply()`, but |
-    |             |                |with type checks.                 |
-    +-------------+----------------+----------------------------------+
+    +----------------+-----------+------------------------------------+
+    |Signature       |Return type|Description                         |
+    +================+===========+====================================+
+    |`multiply(x, y)`|`None`     |Multiplication of two space         |
+    |                |           |elements. Like `_multiply()`, but   |
+    |                |           |with type checks.                   |
+    +----------------+-----------+------------------------------------+
 
     See also
     --------
