@@ -62,7 +62,23 @@ class Discretization(Set):
     """
 
     def __init__(self, set_, ntuples, restr=None, ext=None):
-        """Initialize a new `Discretization` instance."""
+        """Initialize a new `Discretization` instance.
+
+        Parameters
+        ----------
+        `set_` : `Set`
+            The (abstract) set to be discretized
+        `ntuples` : `Ntuples`
+            Data structure holding the values of a discretized object
+        `restr` : `Operator`, optional
+            Mapping from a element of `set_` to an element of
+            `ntuples`. Must satisfy `restr.domain == set_` and
+            `restr.range == ntuples`.
+        `ext` : `Operator`, optional
+            Mapping from a element of `ntuples` to an element of
+            `set_`. Must satisfy `ext.domain == ntuples` and
+            `ext.range == set_`.
+        """
         if not isinstance(set_, Set):
             raise TypeError(errfmt('''
             `set_` {} not a `Set` instance.'''.format(set_)))
@@ -103,8 +119,8 @@ class Discretization(Set):
 
         self._set = set_
         self._ntuples = ntuples
-        self._restr = restr
-        self.__ext = ext
+        self._restriction = restr
+        self._extension = ext
 
     @property
     def set(self):
@@ -117,14 +133,14 @@ class Discretization(Set):
         return self._ntuples
 
     @property
-    def restr(self):
-        """Return `restr` attribute."""
-        return self._restr
+    def restriction(self):
+        """Return `restriction` attribute."""
+        return self._restriction
 
     @property
-    def ext(self):
-        """Return `restr` attribute."""
-        return self._ext
+    def extension(self):
+        """Return `extension` attribute."""
+        return self._extension
 
 
 def uniform_discretization(parent, rnimpl, shape=None, order='C'):

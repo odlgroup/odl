@@ -25,8 +25,44 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.discr.discretization import Discretization
-from odl.space.function import IntervalProdFunctionSet
+from odl.discr.grid import TensorGrid
+from odl.discr.operators import GridCollocation, NearestInterpolation
+from odl.space.cartesian import Ntuples
+from odl.space.function import FunctionSet
+from odl.utility.utility import errfmt
 
-class NNInterpolationDiscretization(Discretization):
 
-    """"""
+class NearestInterpDiscretization(Discretization):
+
+    """Discretization based on nearest neighbor interpolation."""
+
+    def __init__(self, ip_funcset, grid, ntuples):
+        """Initialize a new `NearestInterpDiscretization` instance.
+
+        Parameters
+        ----------
+        ip_funcset : `FunctionSet`
+            Set of functions on an `IntervalProd`. The operator range.
+        grid : `TensorGrid`
+            The grid on which to interpolate. Must be contained in
+            `ip_funcset.domain`.
+        ntuples : `Ntuples`
+            An implementation of n-tuples. The operator domain.
+        """
+        if not isinstance(ip_funcset, FunctionSet):
+            raise TypeError(errfmt('''
+            `ip_funcset` {} not an `FunctionSet` instance.
+            '''.format(ip_funcset)))
+
+        if not isinstance(grid, TensorGrid):
+            raise TypeError(errfmt('''
+            `grid` {} not a `TensorGrid` instance.
+            '''.format(grid)))
+
+        if not isinstance(ntuples, Ntuples):
+            raise TypeError(errfmt('''
+            `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
+
+        restr = GridCollocation(ip_funcset, grid, ntuples)
+        ext = NearestInterpolation(ip_funcset, grid, ntuples)
+        super().__init__(ip_funcset, ntuples, restr, ext)
