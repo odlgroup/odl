@@ -421,52 +421,6 @@ class FunctionSpace(FunctionSet, Algebra):
             super().__init__(space, function)
 
 
-class L2(FunctionSpace, HilbertSpace):
-    """The space of square integrable functions on some domain
-    """
-
-    def __init__(self, domain, field=RealNumbers()):
-        super().__init__(domain, field)
-
-    def _inner(self, v1, v2):
-        """ TODO: remove?
-        """
-        raise NotImplementedError(errfmt('''
-        You cannot calculate inner products in non-discretized spaces'''))
-
-    def equals(self, other):
-        """ Verify that other is equal to this space as a FunctionSpace
-        and also a L2 space.
-        """
-        return isinstance(other, L2) and FunctionSpace.equals(self, other)
-
-    def __str__(self):
-        if isinstance(self.field, RealNumbers):
-            return "L2(" + str(self.domain) + ")"
-        else:
-            return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
-
-    def __repr__(self):
-        if isinstance(self.field, RealNumbers):
-            return "L2(" + repr(self.domain) + ")"
-        else:
-            return "L2(" + repr(self.domain) + ", " + repr(self.field) + ")"
-
-    class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
-        """ A Vector in a L2-space
-
-        FunctionSpace-Vectors are themselves also Functionals, and inherit
-        a large set of features from them.
-
-        Parameters
-        ----------
-
-        space : FunctionSpace
-            Instance of FunctionSpace this vector lives in
-        function : Function from space.domain to space.field
-            The function that should be converted/reinterpreted as a vector.
-        """
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

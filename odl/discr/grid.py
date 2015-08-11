@@ -45,6 +45,7 @@ from builtins import super
 import numpy as np
 
 # ODL imports
+from odl.space.domain import IntervalProd
 from odl.space.set import Set
 from odl.utility.utility import errfmt, array1d_repr
 
@@ -527,7 +528,6 @@ class TensorGrid(Set):
         >>> ch.end
         array([ 3.,  4.,  5.,  7.])
         """
-        from odl.space.set import IntervalProd
         beg, end = [], []
         for axis in range(self.dim):
             beg.append(self.coord_vectors[axis][0])

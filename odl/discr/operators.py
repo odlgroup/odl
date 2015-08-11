@@ -32,7 +32,7 @@ from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator
 from odl.space.cartesian import Ntuples
 from odl.space.function import FunctionSet
-from odl.space.set import IntervalProd
+from odl.space.domain import IntervalProd
 from odl.utility.utility import errfmt
 
 

@@ -30,7 +30,8 @@ from math import sqrt
 import numpy as np
 
 # ODL imports
-from odl.space.set import Set, IntervalProd
+from odl.space.domain import IntervalProd
+from odl.space.set import Set
 from odl.space.space import HilbertSpace, Algebra
 from odl.space.function import FunctionSpace
 from odl.space.cartesian import Ntuples

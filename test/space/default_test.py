@@ -27,11 +27,10 @@ from math import pi, sqrt
 import numpy as np
 
 # ODL imports
-from odl.operator.operator import *
+from odl.discr.discretization import uniform_discretization
 from odl.space.cartesian import EuclideanRn
-import odl.discr.discretization as disc
-import odl.space.function as fs
-import odl.space.set as sets
+from odl.space.default import L2
+from odl.space.domain import Interval, Rectangle
 from odl.utility.testutils import ODLTestCase
 
 standard_library.install_aliases()
@@ -39,26 +38,26 @@ standard_library.install_aliases()
 
 class L2Test(ODLTestCase):
     def test_interval(self):
-        I = sets.Interval(0, pi)
-        l2 = fs.L2(I)
+        I = Interval(0, pi)
+        l2 = L2(I)
         l2sin = l2.element(np.sin)
 
         rn = EuclideanRn(10)
-        d = disc.uniform_discretization(l2, rn)
+        d = uniform_discretization(l2, rn)
 
         sind = d.element(l2sin)
 
         self.assertAlmostEqual(sind.norm(), sqrt(pi/2))
 
     def test_rectangle(self):
-        R = sets.Rectangle((0, 0), (pi, 2*pi))
-        l2 = fs.L2(R)
+        R = Rectangle((0, 0), (pi, 2*pi))
+        l2 = L2(R)
         l2sin = l2.element(lambda p: np.sin(p[0]) * np.sin(p[1]))
 
         n = 10
         m = 10
         rn = EuclideanRn(n*m)
-        d = disc.uniform_discretization(l2, rn, (n, m))
+        d = uniform_discretization(l2, rn, (n, m))
 
         sind = d.element(l2sin)
 
