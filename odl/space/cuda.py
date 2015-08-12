@@ -34,7 +34,8 @@ from numbers import Integral
 import odl.space.space as spaces
 import odl.space.set as sets
 from odl.utility.utility import errfmt, array1d_repr
-import odlpp.cuda
+import odlpp.odlpp_cuda as cuda
+from odlpp.odlpp_cuda import CudaVectorUchar, CudaVectorFloat
 
 standard_library.install_aliases()
 
@@ -48,8 +49,8 @@ class CudaEn(spaces.LinearSpace):
     # TODO: document public interface
     """
 
-    dtypes = {np.float32: odlpp.cuda.CudaVectorFloat,
-              np.uint8: odlpp.cuda.CudaVectorUchar}
+    dtypes = {np.float32: CudaVectorFloat,
+              np.uint8: CudaVectorUchar}
 
     def __init__(self, dim, dtype=np.float32):
         """Initialize a new CudaEn.
@@ -78,11 +79,15 @@ class CudaEn(spaces.LinearSpace):
             raise TypeError(errfmt('''
             dtype ({}) must be a valid CudaEn.dtype'''.format(dtype)))
 
-    def element(self, data=None, data_ptr=None, **kwargs):
-        """Create an element in CudaEn.
+    def element(self, inp=None, data_ptr=None):
+        """Create an element from given data or from scratch.
+
+        TODO: write up properly
 
         Parameters
         ----------
+        inp : array-like, optional
+
         The method has two call patterns, the first is:
 
         *args : numpy.ndarray
@@ -115,17 +120,17 @@ class CudaEn(spaces.LinearSpace):
         CudaEn(3).element([1.0, 2.0, 3.0])
 
         """
-        if data is None and data_ptr is None:
+        if inp is None and data_ptr is None:
             return self.Vector(self, self._vector_impl(self.dim))
-        elif data is None:
+        elif inp is None:
             return self.Vector(
-                self, self._vector_impl.fromPointer(data_ptr, self.dim))
+                self, self._vector_impl.from_pointer(data_ptr, self.dim))
         elif data_ptr is None:
             elem = self.element()
-            elem[:] = data
+            elem[:] = inp
             return elem
         else:
-            raise TypeError("Cannot provide both data and data_ptr")
+            raise TypeError("Cannot provide both inp and data_ptr")
 
     def _lincomb(self, z, a, x, b, y):
         """Linear combination of `x` and `y`.
@@ -297,7 +302,7 @@ class CudaEn(spaces.LinearSpace):
 
             space : CudaEn
                 Instance of CudaEn this vector lives in
-            data : odlpp.cuda.CudaVectorFloat
+            data : CudaVectorFloat
                 Underlying data-representation to be used by this vector
             """
             super().__init__(space)
@@ -319,7 +324,7 @@ class CudaEn(spaces.LinearSpace):
 
             Returns
             -------
-            ptr : odlpp.cuda.CudaEnVectorImpl
+            ptr : CudaEnVectorImpl
                 Underlying cuda data representation
             """
             return self._data
@@ -632,27 +637,27 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
 # Methods
 # TODO: move
 def abs(inp, outp):
-    odlpp.cuda.abs(inp.data, outp.data)
+    cuda.abs(inp.data, outp.data)
 
 
 def sign(inp, outp):
-    odlpp.cuda.sign(inp.data, outp.data)
+    cuda.sign(inp.data, outp.data)
 
 
 def add_scalar(inp, scal, outp):
-    odlpp.cuda.add_scalar(inp.data, scal, outp.data)
+    cuda.add_scalar(inp.data, scal, outp.data)
 
 
 def max_vector_scalar(inp, scal, outp):
-    odlpp.cuda.max_vector_scalar(inp.data, scal, outp.data)
+    cuda.max_vector_scalar(inp.data, scal, outp.data)
 
 
 def max_vector_vector(inp1, inp2, outp):
-    odlpp.cuda.max_vector_vector(inp1.data, inp2.data, outp.data)
+    cuda.max_vector_vector(inp1.data, inp2.data, outp.data)
 
 
 def sum(inp):
-    return odlpp.cuda.sum(inp.data)
+    return cuda.sum(inp.data)
 
 
 try:

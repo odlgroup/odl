@@ -146,12 +146,12 @@ class Ntuples(Set):
         self._dim = dim
         self._dtype = np.dtype(dtype)
 
-    def element(self, data=None):
+    def element(self, inp=None):
         """Create an `Ntuples` element.
 
         Parameters
         ----------
-        data : array-like or `Ntuples.Vector`, optional
+        inp : array-like or `Ntuples.Vector`, optional
             The value(s) to fill the new array with.
 
             If an array is provided, it must have a shape of either
@@ -189,23 +189,23 @@ class Ntuples(Set):
         >>> y == x
         True
         """
-        if data is None:
-            data = np.empty(self.dim, dtype=self.dtype)
-        elif isinstance(data, Ntuples.Vector):
-            return self.element(data.data)
+        if inp is None:
+            inp = np.empty(self.dim, dtype=self.dtype)
+        elif isinstance(inp, Ntuples.Vector):
+            return self.element(inp.data)
         else:
-            data = np.atleast_1d(data).astype(self.dtype, copy=False)
+            inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
 
-            if data.shape == (1,):
-                data = np.repeat(data, self.dim)
-            elif data.shape == (self.dim,):
+            if inp.shape == (1,):
+                inp = np.repeat(inp, self.dim)
+            elif inp.shape == (self.dim,):
                 pass
             else:
                 raise ValueError(errfmt('''
-                `data` shape {} not broadcastable to shape ({}).
-                '''.format(data.shape, self.dim)))
+                `inp` shape {} not broadcastable to shape ({}).
+                '''.format(inp.shape, self.dim)))
 
-        return self.Vector(self, data)
+        return self.Vector(self, inp)
 
     @property
     def dtype(self):

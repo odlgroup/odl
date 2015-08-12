@@ -227,23 +227,22 @@ class LinearSpace(Set):
     """
 
     @abstractmethod
-    def element(self, data=None):
-        """Create an arbitrary element or an element from given data.
+    def element(self, inp=None):
+        """Create an element from `inp` or from scratch.
 
-        If called without 'data' argument, an arbitrary element in the
+        If called without `inp` argument, an arbitrary element in the
         space is generated without guarantee of its state.
 
         Parameters
         ----------
-        data : object, optional
-            The data from which to create the element
+        inp : `object`, optional
+            The input data from which to create the element
 
         Returns
         -------
-        v : Vector
+        element : `LinearSpace.Vector`
             A vector in this space
         """
-        # pylint: disable=arguments-differ
 
     @abstractmethod
     def _lincomb(self, z, a, x, b, y):
