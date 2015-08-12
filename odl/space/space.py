@@ -114,7 +114,7 @@ class LinearSpace(Set):
     Abstract methods
     ----------------
 
-    `element(data=None)`
+    `element(inp=None)`
     ~~~~~~~~~~~~~~~~~~~~
     This public method is the factory for the inner
     `LinearSpace.Vector` class. It creates a new element of the space,
@@ -126,7 +126,7 @@ class LinearSpace(Set):
     initialized**, thus it can contain *any* value.
 
     **Parameters:**
-        `data` : `object`, optional
+        `inp` : `object`, optional
             A container for values for the element initialization
 
     **Returns:**
@@ -166,7 +166,7 @@ class LinearSpace(Set):
     underlie the space. Can be either `RealNumbers` or
     `ComplexNumbers` (see `odl.space.set`).
 
-    Best implemented as a `@property` to make it immutable.
+    Must be implemented as a `@property` to make it immutable.
 
     `equals(other)`
     ~~~~~~~~~~~~~~~
@@ -254,8 +254,7 @@ class LinearSpace(Set):
 
     @abstractproperty
     def field(self):
-        """The underlying field of the vector space."""
-        pass
+        """The field of the vector space."""
 
     # Default methods
     def zero(self):
@@ -343,37 +342,34 @@ class LinearSpace(Set):
 
         x = x * (1 + 2 + 3.14)
         """
-        if not self.contains(z):
+        if z not in self:
             raise TypeError(errfmt('''
-            lincomb failed, z ({}) is not in space ({})
-            '''.format(repr(z), repr(self))))
+            `z` {!r} not in space {!r}.'''.format(z, self)))
 
-        if not self.field.contains(a):
+        if a not in self.field:
             raise TypeError(errfmt('''
-            lincomb failed, a ({}) is not in field ({})
-            '''.format(repr(a), repr(self.field))))
+            `a` {!r} not in `field` {!r} of space {!r}.
+            '''.format(a, self.field, self)))
 
-        if not self.contains(x):
+        if x not in self:
             raise TypeError(errfmt('''
-            lincomb failed, x ({}) is not in space ({})
-            '''.format(repr(x), repr(self))))
+            `x` {!r} not in space {!r}.'''.format(x, self)))
 
         if b is None:  # Single argument
             if y is not None:
-                raise ValueError(errfmt('''
-                lincomb failed, y ({}) provided but not b'''.format(repr(y))))
+                raise ValueError('`y` provided but not `b`.')
 
             # Call method
             return self._lincomb(z, a, x, 0, x)
         else:  # Two arguments
-            if not self.field.contains(b):
+            if b not in self.field:
                 raise TypeError(errfmt('''
-                lincomb failed, b ({}) is not in field ({})
-                '''.format(repr(b), repr(self.field))))
-            if not self.contains(y):
+                `b` {!r} not in `field` {!r} of space {!r}.
+                '''.format(b, self.field, self)))
+
+            if y not in self:
                 raise TypeError(errfmt('''
-                lincomb failed, y ({}) is not in space ({})
-                '''.format(repr(y), repr(self))))
+                `y` {!r} not in space {!r}.'''.format(y, self)))
 
             # Call method
             return self._lincomb(z, a, x, b, y)
@@ -492,7 +488,7 @@ class LinearSpace(Set):
         def lincomb(self, a, x, b=None, y=None):
             """Assign a linear combination to this vector.
 
-            Implemented as space.lincomb(self, a, x, b, y).
+            Implemented as `space.lincomb(self, a, x, b, y)`.
             """
             self.space.lincomb(self, a, x, b, y)
 
@@ -511,18 +507,18 @@ class LinearSpace(Set):
             self.space.lincomb(self, 1, self, -1, other)
             return self
 
-        def __imul__(self, scalar):
-            """Implementation of 'self *= scalar'."""
-            self.space.lincomb(self, scalar, self)
+        def __imul__(self, other):
+            """Implementation of 'self *= other'."""
+            self.space.lincomb(self, other, self)
             return self
 
-        def __itruediv__(self, scalar):
-            """Implementation of 'self /= scalar' (true division)."""
-            return self.__imul__(1.0 / scalar)
+        def __itruediv__(self, other):
+            """Implementation of 'self /= other' (true division)."""
+            return self.__imul__(1.0 / other)
 
-        def __idiv__(self, scalar):
-            """Implementation of 'self /= scalar'."""
-            return self.__itruediv__(scalar)
+        def __idiv__(self, other):
+            """Implementation of 'self /= other'."""
+            return self.__itruediv__(other)
 
         def __add__(self, other):
             """Implementation of 'self + other'."""
@@ -536,23 +532,23 @@ class LinearSpace(Set):
             self.space.lincomb(tmp, 1, self, -1, other)
             return tmp
 
-        def __mul__(self, scalar):
+        def __mul__(self, other):
             """Implementation of 'self * other'."""
             tmp = self.space.element()
-            self.space.lincomb(tmp, scalar, self)
+            self.space.lincomb(tmp, other, self)
             return tmp
 
         def __rmul__(self, other):
             """Implementation of 'other * self'."""
             return self.__mul__(other)
 
-        def __truediv__(self, scalar):
-            """Implementation of 'self / scalar' (true division)."""
-            return self.__mul__(1.0 / scalar)
+        def __truediv__(self, other):
+            """Implementation of 'self / other' (true division)."""
+            return self.__mul__(1.0 / other)
 
-        def __div__(self, scalar):
+        def __div__(self, other):
             """Implementation of 'self / scalar'."""
-            return self.__truediv__(scalar)
+            return self.__truediv__(other)
 
         def __neg__(self):
             """Implementation of '-self'."""
