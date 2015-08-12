@@ -64,7 +64,7 @@ from numbers import Integral, Real
 from math import sqrt
 
 # ODL imports
-from odl.space.set import Set, RealNumbers
+from odl.space.set import Set, RealNumbers, ComplexNumbers
 from odl.space.space import (LinearSpace, MetricSpace, NormedSpace,
                              HilbertSpace, Algebra)
 from odl.utility.utility import errfmt, array1d_repr
@@ -629,9 +629,9 @@ class Rn(Ntuples, Algebra):
     |Signature        |Return type|Description                        |
     +=================+===========+===================================+
     |`element         |`Rn.Vector`|Create an element in `Rn`. If      |
-    |(data=None)`     |           |`data` is `None`, merely memory is |
+    |(inp=None)`      |           |`inp` is `None`, merely memory is  |
     |                 |           |allocated. Otherwise, the element  |
-    |                 |           |is created from `data`.            |
+    |                 |           |is created from `inp`.             |
     +-----------------+-----------+-----------------------------------+
     |`zero()`         |`Rn.Vector`|Create the zero element, i.e., the |
     |                 |           |element where each entry is 0.     |
@@ -673,12 +673,17 @@ class Rn(Ntuples, Algebra):
             `dtype` {} not a real floating-point type.'''.format(dtype)))
 
         def fallback_axpy(a, x, y):
-            """Fallback axpy implementation."""
-            return a * x + y
+            """Fallback axpy implementation avoiding copy."""
+            if a != 0:
+                y /= a
+                y += x
+                y *= a
+            return y
 
         def fallback_scal(a, x):
             """Fallback scal implementation."""
-            return a * x
+            x *= a
+            return x
 
         def fallback_copy(x, y):
             """Fallback copy implementation."""
@@ -691,6 +696,7 @@ class Rn(Ntuples, Algebra):
         self._dim = dim
         self._field = RealNumbers()
         self._dtype = dtype_
+
         if dtype_ in (np.float32, np.float64):
             self._axpy = blas_axpy
             self._scal = blas_scal
@@ -699,6 +705,10 @@ class Rn(Ntuples, Algebra):
             self._axpy = fallback_axpy
             self._scal = fallback_scal
             self._copy = fallback_copy
+
+        self._fallback_axpy = fallback_axpy
+        self._fallback_scal = fallback_scal
+        self._fallback_copy = fallback_copy
 
     def _lincomb(self, z, a, x, b, y):
         """Linear combination of `x` and `y`.
@@ -732,48 +742,56 @@ class Rn(Ntuples, Algebra):
         >>> z
         Rn(3).element([14.0, 19.0, 24.0])
         """
+        # If any array is non-contiguous, the BLAS routines do not
+        # modify in-place. In that case, we must use fallback functions.
+        if not all(a.flags.contiguous for a in (x.data, y.data, z.data)):
+            axpy, scal, copy = (self._fallback_axpy, self._fallback_scal,
+                                self._fallback_copy)
+        else:
+            axpy, scal, copy = (self._axpy, self._scal, self._copy)
+
         if x is y and b != 0:
             # x is aligned with y -> z = (a+b)*x
             self._lincomb(z, a+b, x, 0, x)
         elif z is x and z is y:
             # All the vectors are aligned -> z = (a+b)*z
-            self._scal(a+b, z.data)
+            scal(a+b, z.data)
         elif z is x:
             # z is aligned with x -> z = a*z + b*y
             if a != 1:
-                self._scal(a, z.data)
+                scal(a, z.data)
             if b != 0:
-                self._axpy(y.data, z.data, self.dim, b)
+                axpy(y.data, z.data, self.dim, b)
         elif z is y:
             # z is aligned with y -> z = a*x + b*z
             if b != 1:
-                self._scal(b, z.data)
+                scal(b, z.data)
             if a != 0:
-                self._axpy(x.data, z.data, self.dim, a)
+                axpy(x.data, z.data, self.dim, a)
         else:
             # We have exhausted all alignment options, so x != y != z
             # We now optimize for various values of a and b
             if b == 0:
                 if a == 0:  # Zero assignment -> z = 0
-                    z.data[:] = 0
+                    z._data[:] = 0
                 else:  # Scaled copy -> z = a*x
-                    self._copy(x.data, z.data)
+                    copy(x.data, z.data)
                     if a != 1:
-                        self._scal(a, z.data)
+                        scal(a, z.data)
             else:
                 if a == 0:  # Scaled copy -> z = b*y
-                    self._copy(y.data, z.data)
+                    copy(y.data, z.data)
                     if b != 1:
                         self._scal(b, z.data)
 
                 elif a == 1:  # No scaling in x -> z = x + b*y
-                    self._copy(x.data, z.data)
-                    self._axpy(y.data, z.data, self.dim, b)
+                    copy(x.data, z.data)
+                    axpy(y.data, z.data, self.dim, b)
                 else:  # Generic case -> z = a*x + b*y
-                    self._copy(y.data, z.data)
+                    copy(y.data, z.data)
                     if b != 1:
                         self._scal(b, z.data)
-                    self._axpy(x.data, z.data, self.dim, a)
+                    axpy(x.data, z.data, self.dim, a)
 
     def zero(self):
         """Create a vector of zeros.
@@ -946,14 +964,6 @@ class Rn(Ntuples, Algebra):
 
             super().__init__(space, data)
 
-        def __str__(self):
-            """str() implementation."""
-            return array1d_repr(self.data)
-
-        def __repr__(self):
-            """repr() implementation."""
-            return '{!r}.element({})'.format(self.space, array1d_repr(self))
-
 
 class MetricRn(Rn, MetricSpace):
 
@@ -981,9 +991,9 @@ class MetricRn(Rn, MetricSpace):
     |Signature        |Return type|Description                        |
     +=================+===========+===================================+
     |`element         |`Rn.Vector`|Create an element in `Rn`. If      |
-    |(data=None)`     |           |`data` is `None`, merely memory is |
+    |(inp=None)`      |           |`inp` is `None`, merely memory is  |
     |                 |           |allocated. Otherwise, the element  |
-    |                 |           |is created from `data`.            |
+    |                 |           |is created from `inp`.             |
     +-----------------+-----------+-----------------------------------+
     |`zero()`         |`Rn.Vector`|Create the zero element, i.e., the |
     |                 |           |element where each entry is 0.     |
@@ -1366,7 +1376,6 @@ class EuclideanRn(Rn, HilbertSpace):
 
         Parameters
         ----------
-
         space : EuclideanRn
             Space instance this vector lives in
         data : numpy.ndarray
@@ -1375,6 +1384,447 @@ class EuclideanRn(Rn, HilbertSpace):
         """
 
 
+class Cn(Ntuples, Algebra):
+
+    """The complex vector space :math:`C^n` with vector multiplication.
+
+    Its elements are represented as instances of the inner `Cn.Vector`
+    class.
+
+    Differences to `LinearSpace`
+    ----------------------------
+
+    Attributes
+    ----------
+
+    +--------+-------------+------------------------------------------+
+    |Name    |Type         |Description                               |
+    +========+=============+==========================================+
+    |`dim`   |`int`        |The dimension `n` of the space :math:`C^n`|
+    +--------+-------------+------------------------------------------+
+    |`field` |             |`ComplexNumbers()`                        |
+    +--------+-------------+------------------------------------------+
+    |`dtype` |`type`       |The data dype of each vector entry        |
+    +--------+-------------+------------------------------------------+
+
+    Methods
+    -------
+
+    +-----------------+-----------+-----------------------------------+
+    |Signature        |Return type|Description                        |
+    +=================+===========+===================================+
+    |`element         |`Cn.Vector`|Create an element in `Cn`. If      |
+    |(inp=None)`      |           |`inp` is `None`, merely memory is  |
+    |                 |           |allocated. Otherwise, the element  |
+    |                 |           |is created from `inp`.             |
+    +-----------------+-----------+-----------------------------------+
+    |`zero()`         |`Cn.Vector`|Create the zero element, i.e., the |
+    |                 |           |element where each entry is 0.     |
+    +-----------------+-----------+-----------------------------------+
+    |`multiply(x, y)` |`None`     |Calculate the entry-wise product of|
+    |                 |           |`x` and `y` and assign the result  |
+    |                 |           |to `y`.                            |
+    +-----------------+-----------+-----------------------------------+
+
+    See also
+    --------
+    See `LinearSpace` for a list of additional attributes and methods
+    as well as further help.
+    """
+
+    def __init__(self, dim, dtype=complex):
+        """Initialize a new `Cn` instance.
+
+        Parameters
+        ----------
+        `dim` : `int`
+            The dimension of the space
+        `dtype` : `type`, optional  (Default: `complex`)
+            The data type of the storage array. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only complex floating-point data types are allowed.
+        """
+        # pylint: disable=unbalanced-tuple-unpacking
+        if not isinstance(dim, Integral) or dim < 1:
+            raise TypeError(errfmt('''
+            `dim` {} is not a positive integer.'''.format(dim)))
+
+        # TODO: support separate storage of real and imag parts?
+        dtype_ = np.dtype(dtype)
+        if dtype_ not in (np.complex64, np.complex128, np.complex256):
+            raise TypeError(errfmt('''
+            `dtype` {} not a complex floating-point type.
+            '''.format(dtype)))
+
+        def fallback_axpy(a, x, y):
+            """Fallback axpy implementation."""
+            y += a * x
+            return y
+
+        def fallback_scal(a, x):
+            """Fallback scal implementation."""
+            x *= a
+            return x
+
+        def fallback_copy(x, y):
+            """Fallback copy implementation."""
+            y[...] = x[...]
+            return y
+
+        blas_axpy, blas_scal, blas_copy = get_blas_funcs(
+            ['axpy', 'scal', 'copy'], dtype=dtype_)
+
+        self._dim = dim
+        self._field = ComplexNumbers()
+        self._dtype = dtype_
+
+        if dtype_ in (np.complex64, np.complex128):
+            self._axpy = blas_axpy
+            self._scal = blas_scal
+            self._copy = blas_copy
+        else:
+            self._axpy = fallback_axpy
+            self._scal = fallback_scal
+            self._copy = fallback_copy
+
+    def _lincomb(self, z, a, x, b, y):
+        """Linear combination of `x` and `y`.
+
+        Calculate z = a * x + b * y using optimized BLAS routines.
+
+        Parameters
+        ----------
+        z : `Cn.Vector`
+            The Vector that the result is written to.
+        a, b : `ComplexNumber`
+            Scalar to multiply `x` and `y` with.
+        x, y : `Cn.Vector`
+            The summands
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.element([1+1j, 2-1j, 3])
+        >>> y = c3.element([4+0j, 5, 6+0.5j])
+        >>> z = c3.element()
+        >>> c3.lincomb(z, 2j, x, 3-1j, y)
+        >>> z
+        Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
+        """
+        if x is y and b != 0:
+            # x is aligned with y -> z = (a+b)*x
+            self._lincomb(z, a+b, x, 0, x)
+        elif z is x and z is y:
+            # All the vectors are aligned -> z = (a+b)*z
+            self._scal(a+b, z.data)
+        elif z is x:
+            # z is aligned with x -> z = a*z + b*y
+            if a != 1:
+                self._scal(a, z.data)
+            if b != 0:
+                self._axpy(y.data, z.data, self.dim, b)
+        elif z is y:
+            # z is aligned with y -> z = a*x + b*z
+            if b != 1:
+                self._scal(b, z.data)
+            if a != 0:
+                self._axpy(x.data, z.data, self.dim, a)
+        else:
+            # We have exhausted all alignment options, so x != y != z
+            # We now optimize for various values of a and b
+            if b == 0:
+                if a == 0:  # Zero assignment -> z = 0
+                    z.data[:] = 0
+                else:  # Scaled copy -> z = a*x
+                    self._copy(x.data, z.data)
+                    if a != 1:
+                        self._scal(a, z.data)
+            else:
+                if a == 0:  # Scaled copy -> z = b*y
+                    self._copy(y.data, z.data)
+                    if b != 1:
+                        self._scal(b, z.data)
+
+                elif a == 1:  # No scaling in x -> z = x + b*y
+                    self._copy(x.data, z.data)
+                    self._axpy(y.data, z.data, self.dim, b)
+                else:  # Generic case -> z = a*x + b*y
+                    self._copy(y.data, z.data)
+                    if b != 1:
+                        self._scal(b, z.data)
+                    self._axpy(x.data, z.data, self.dim, a)
+
+    def zero(self):
+        """Create a vector of zeros.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.zero()
+        >>> x
+        Cn(3).element([0j, 0j, 0j])
+        """
+        return self.element(np.zeros(self.dim, dtype=self.dtype))
+
+    @property
+    def field(self):
+        """The field of :math:`C^n`, i.e. the complex numbers.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> c3.field
+        ComplexNumbers()
+        """
+        return self._field
+
+    def equals(self, other):
+        """Check if `other` is a Cn instance of the same dimension.
+
+        Parameters
+        ----------
+        other : any object
+            The object to check for equality
+
+        Returns
+        -------
+        equals : boolean
+
+        Examples
+        --------
+
+        >>> c3 = Cn(3)
+        >>> c3.equals(c3)
+        True
+
+        Equality is not identity:
+
+        >>> c3a, c3b = Cn(3), Cn(3)
+        >>> c3a.equals(c3b)
+        True
+        >>> c3a is c3b
+        False
+
+        >>> c3, c4 = Cn(3), Cn(4)
+        >>> c3.equals(c4)
+        False
+        >>> c3_double, c3_single = Cn(3), Cn(3, dtype='csingle')
+        >>> c3_double.equals(c3_single)
+        False
+
+        Equality can also be checked with "==":
+
+        >>> c3, c4 = Cn(3), Cn(4)
+        >>> c3 == c3
+        True
+        >>> c3 == c4
+        False
+        >>> c3 != c4
+        True
+        """
+        return (isinstance(other, Cn) and
+                self.dim == other.dim and
+                self.dtype == other.dtype)
+
+    def _multiply(self, x, y):
+        """The entry-wise product of two vectors, assigned to `y`.
+
+        Parameters
+        ----------
+        x : `Rn.Vector`
+            First factor
+        y : `Rn.Vector`
+            Second factor, used to store the result
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> y = c3.element([1, 2+1j, 3-1j])
+        >>> c3.multiply(x, y)
+        >>> y
+        Cn(3).element([(5+1j), (6+3j), (4-8j)])
+        """
+        y.data[:] *= x.data
+
+    def __repr__(self):
+        """repr() implementation."""
+        if self.dtype == np.complex128:
+            return 'Cn({})'.format(self.dim)
+        else:
+            return 'Cn({}, {!r})'.format(self.dim, self.dtype)
+
+    def __str__(self):
+        """str() implementation."""
+        if self.dtype == np.complex128:
+            return 'Cn({})'.format(self.dim)
+        else:
+            return 'Cn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(Ntuples.Vector, LinearSpace.Vector):
+
+        """A `Cn` vector represented with a NumPy array.
+
+        Differences to `LinearSpace.Vector`
+        -----------------------------------
+
+        Attributes
+        ----------
+
+        +-----------+---------------+---------------------------------+
+        |Name       |Type           |Description                      |
+        +===========+===============+=================================+
+        |`data`     |`numpy.ndarray`|The container for the vector     |
+        |           |               |entries                          |
+        +-----------+---------------+---------------------------------+
+        |`data_ptr` |`int`          |A raw memory pointer to the data |
+        |           |               |container. Can be processed with |
+        |           |               |the `ctypes` module in Python.   |
+        +-----------+---------------+---------------------------------+
+
+        Methods
+        -------
+
+        +----------------+--------------------+-----------------------+
+        |Signature       |Return type         |Description            |
+        +================+====================+=======================+
+        |`equals(other)` |`boolean`           |Test if `other` is     |
+        |                |                    |equal to this vector.  |
+        +----------------+--------------------+-----------------------+
+
+        See also
+        --------
+        See `LinearSpace.Vector` for a list of further attributes and
+        methods.
+
+        ---------------------------------------------------------------
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new `Cn.Vector` instance.
+
+            Parameters
+            ----------
+            space : `Cn`
+                Space instance this vector lives in
+            data : `numpy.ndarray`
+                Array that will be used as data representation. Its
+                dtype must be equal to `space.dtype`, and its shape
+                must be `(space.dim,)`.
+            """
+            if not isinstance(space, Cn):
+                raise TypeError(errfmt('''
+                `space` type {} is not `Cn`.
+                '''.format(type(space))))
+
+            super().__init__(space, data)
+
+        @property
+        def real(self):
+            """The real part of this vector.
+
+            Returns
+            -------
+            real : `Rn.Vector` view
+                The real part this vector as a vector in `Rn`
+
+            Examples
+            --------
+            >>> c3 = Cn(3)
+            >>> x = c3.element([5+1j, 3, 2-2j])
+            >>> x.real
+            Rn(3).element([5.0, 3.0, 2.0])
+
+            The `Rn` vector is really a view, so changes affect
+            the original array:
+
+            >>> x.real *= 2
+            >>> x
+            Cn(3).element([(10+1j), (6+0j), (4-2j)])
+            """
+            return Rn(self.space.dim).element(self.data.real)
+
+        @real.setter
+        def real(self, other):
+            """The setter for the real part.
+
+            This method is invoked by `vec.real = other`. It is
+            implemented as `vec.real.assign(other)`.
+
+            See also
+            --------
+            Check `Ntuples.Vector.assign` for allowed input types.
+
+            Examples
+            --------
+            >>> c3 = Cn(3)
+            >>> x = c3.element([5+1j, 3, 2-2j])
+            >>> a = Rn(3).element([0, 0, 0])
+            >>> x.real = a
+            >>> x
+            Cn(3).element([1j, 0j, -2j])
+            """
+            self.real.assign(other)
+
+        @property
+        def imag(self):
+            """The imaginary part of this vector.
+
+            Returns
+            -------
+            imag : `Rn.Vector`
+                The imaginary part this vector as a vector in `Rn`
+
+            Examples
+            --------
+            >>> c3 = Cn(3)
+            >>> x = c3.element([5+1j, 3, 2-2j])
+            >>> x.imag
+            Rn(3).element([1.0, 0.0, -2.0])
+
+            The `Rn` vector is really a view, so changes affect
+            the original array:
+
+            >>> x.imag *= 2
+            >>> x
+            Cn(3).element([(5+2j), (3+0j), (2-4j)])
+            """
+            return Rn(self.space.dim).element(self.data.imag)
+
+        @imag.setter
+        def imag(self, other):
+            """The setter for the imaginary part.
+
+            This method is invoked by `vec.imag = other`. It is
+            implemented as `vec.imag.assign(other)`.
+
+            See also
+            --------
+            Check `Ntuples.Vector.assign` for allowed input types.
+
+            Examples
+            --------
+            >>> c3 = Cn(3)
+            >>> x = c3.element([5+1j, 3, 2-2j])
+            >>> a = Rn(3).element([0, 0, 0])
+            >>> x.imag = a
+            >>> x
+            Cn(3).element([(5+0j), (3+0j), (2+0j)])
+            """
+            self.imag.assign(other)
+
+
+# TODO: move - the requirement of CUDA for this module is bad!
 def cartesian(dim, impl='numpy', **kwargs):
     """Create an n-dimensional Cartesian space, by default Euclidean.
 
