@@ -34,9 +34,9 @@ class IntervalProd(Set):
 
     """An n-dimensional rectangular box.
 
-    An IntervalProd is a Cartesian product of N intervals, i.e. an
-    N-dimensional rectangular box aligned with the coordinate axes
-    as a subset of R^n.
+    An IntervalProd is a Cartesian product of `n` intervals, i.e. an
+    `n`-dimensional rectangular box aligned with the coordinate axes
+    as a subset of :math:`R^n`.
 
     Attributes
     ----------
