@@ -36,6 +36,8 @@ arrays.
 |             |from the inner product according to the relation       |
 |             |`norm(x) = sqrt(inner(x, x))`                          |
 +-------------+-------------------------------------------------------+
+|`Cn`         |Basic class for spaces of `n`-tuples of complex numbers|
++-------------+-------------------------------------------------------+
 
 In addition, a factory function for simple creation of Cartesian spaces
 is provided:
@@ -49,7 +51,6 @@ is provided:
 |                   |function doc for further options.                |
 +-------------------+-------------------------------------------------+
 """
-# TODO: add C^n
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -499,7 +500,7 @@ class Ntuples(Set):
             >>> vec1 is vec2
             False
             """
-            return self.space.element(self.data[:])
+            return self.space.element(self.data.copy())
 
         def __len__(self):
             """The dimension of the underlying space.
@@ -511,18 +512,18 @@ class Ntuples(Set):
             """
             return self.space.dim
 
-        def __getitem__(self, index):
+        def __getitem__(self, indices):
             """Access values of this vector.
 
             Parameters
             ----------
 
-            `index` : `int` or `slice`
+            `indices` : `int` or `slice`
                 The position(s) that should be accessed
 
             Returns
             -------
-            `value`: `space.dtype` or `numpy.ndarray`
+            `value`: `space.dtype` or `space.Vector`
                 The value(s) at the index (indices)
 
 
@@ -534,22 +535,27 @@ class Ntuples(Set):
             >>> x[0]
             'a'
             >>> x[1:3]
-            array(['Hello!', '0'], dtype='|S6')
+            Ntuples(2, dtype('S6')).element(['Hello!', '0'])
             """
-            return self.data.__getitem__(index)
+            try:
+                return self.data[int(indices)]  # single index
+            except TypeError:
+                arr = self.data[indices]
+                return Ntuples(len(arr), self.space.dtype).element(arr)
 
-        def __setitem__(self, index, value):
+        def __setitem__(self, indices, values):
             """Set values of this vector.
 
             Parameters
             ----------
-
-            `index` : `int` or `slice`
+            indices : `int` or `slice`
                 The position(s) that should be set
-            `value` : `space.dtype` or array-like
+            values : {`space.dtype`, array-like, `Ntuples.Vector`}
                 The value(s) that are to be assigned.
+
                 If `index` is an `int`, `value` must be single value
                 of type `space.dtype`.
+
                 If `index` is a `slice`, `value` must be broadcastable
                 to the size of the slice (same size, shape (1,)
                 or single value).
@@ -560,15 +566,22 @@ class Ntuples(Set):
 
             Examples
             --------
-
             >>> int_3 = Ntuples(3, int)
             >>> x = int_3.element([1, 2, 3])
             >>> x[0] = 5
             >>> x
             Ntuples(3, dtype('int64')).element([5, 2, 3])
+
+            Assignment from array-like structures or another
+            vector:
+
+            >>> y = Ntuples(2, 'short').element([-1, 2])
+            >>> x[:2] = y
+            >>> x
+            Ntuples(3, dtype('int64')).element([-1, 2, 3])
             >>> x[1:3] = [7, 8]
             >>> x
-            Ntuples(3, dtype('int64')).element([5, 7, 8])
+            Ntuples(3, dtype('int64')).element([-1, 7, 8])
             >>> x[:] = np.array([0, 0, 0])
             >>> x
             Ntuples(3, dtype('int64')).element([0, 0, 0])
@@ -578,8 +591,20 @@ class Ntuples(Set):
             >>> x[1:3] = -2.
             >>> x
             Ntuples(3, dtype('int64')).element([0, -2, -2])
+
+            Be aware of unsafe casts and over-/underflows, there
+            will be warnings at maximum.
+
+            >>> x = Ntuples(2, 'int8').element([0, 0])
+            >>> maxval = 127  # maximum signed 8-bit int
+            >>> x[0] = maxval + 1
+            >>> x
+            Ntuples(2, dtype('int8')).element([-128, 0])
+            >>> x[:] = np.arange(2, dtype='int64')
+            >>> x
+            Ntuples(2, dtype('int8')).element([0, 1])
             """
-            return self.data.__setitem__(index, value)
+            self.data[indices] = values
 
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`."""
@@ -597,6 +622,81 @@ class Ntuples(Set):
             """repr() implementation."""
             return '{!r}.element({})'.format(self.space,
                                              array1d_repr(self.data))
+
+
+def _lincomb(z, a, x, b, y, dtype):
+    """Raw linear combination depending on data type."""
+
+    def fallback_axpy(a, x, y):
+        """Fallback axpy implementation avoiding copy."""
+        if a != 0:
+            y /= a
+            y += x
+            y *= a
+        return y
+
+    def fallback_scal(a, x):
+        """Fallback scal implementation."""
+        x *= a
+        return x
+
+    def fallback_copy(x, y):
+        """Fallback copy implementation."""
+        y[...] = x[...]
+        return y
+
+    # pylint: disable=unbalanced-tuple-unpacking
+    blas_axpy, blas_scal, blas_copy = get_blas_funcs(
+        ['axpy', 'scal', 'copy'], dtype=dtype)
+
+    if (dtype in (np.float32, np.float64, np.complex64, np.complex128) and
+            all(a.flags.contiguous for a in (x.data, y.data, z.data))):
+        axpy, scal, copy = (blas_axpy, blas_scal, blas_copy)
+    else:
+        axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
+
+    if x is y and b != 0:
+        # x is aligned with y -> z = (a+b)*x
+        _lincomb(z, a+b, x, 0, x, dtype)
+    elif z is x and z is y:
+        # All the vectors are aligned -> z = (a+b)*z
+        scal(a+b, z.data)
+    elif z is x:
+        # z is aligned with x -> z = a*z + b*y
+        if a != 1:
+            scal(a, z.data)
+        if b != 0:
+            axpy(y.data, z.data, len(z), b)
+    elif z is y:
+        # z is aligned with y -> z = a*x + b*z
+        if b != 1:
+            scal(b, z.data)
+        if a != 0:
+            axpy(x.data, z.data, len(z), a)
+    else:
+        # We have exhausted all alignment options, so x != y != z
+        # We now optimize for various values of a and b
+        if b == 0:
+            if a == 0:  # Zero assignment -> z = 0
+                z.data[:] = 0
+            else:  # Scaled copy -> z = a*x
+                copy(x.data, z.data)
+                if a != 1:
+                    scal(a, z.data)
+        else:
+            if a == 0:  # Scaled copy -> z = b*y
+                copy(y.data, z.data)
+                if b != 1:
+                    scal(b, z.data)
+
+            elif a == 1:  # No scaling in x -> z = x + b*y
+                copy(x.data, z.data)
+                axpy(y.data, z.data, len(z), b)
+            else:  # Generic case -> z = a*x + b*y
+                copy(y.data, z.data)
+                if b != 1:
+                    scal(b, z.data)
+                axpy(x.data, z.data, len(z), a)
 
 
 class Rn(Ntuples, Algebra):
@@ -660,9 +760,7 @@ class Rn(Ntuples, Algebra):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
             Only real floating-point types are allowed.
-
         """
-        # pylint: disable=unbalanced-tuple-unpacking
         if not isinstance(dim, Integral) or dim < 1:
             raise TypeError(errfmt('''
             `dim` {} is not a positive integer.'''.format(dim)))
@@ -672,61 +770,23 @@ class Rn(Ntuples, Algebra):
             raise TypeError(errfmt('''
             `dtype` {} not a real floating-point type.'''.format(dtype)))
 
-        def fallback_axpy(a, x, y):
-            """Fallback axpy implementation avoiding copy."""
-            if a != 0:
-                y /= a
-                y += x
-                y *= a
-            return y
-
-        def fallback_scal(a, x):
-            """Fallback scal implementation."""
-            x *= a
-            return x
-
-        def fallback_copy(x, y):
-            """Fallback copy implementation."""
-            y[...] = x[...]
-            return y
-
-        blas_axpy, blas_scal, blas_copy = get_blas_funcs(
-            ['axpy', 'scal', 'copy'], dtype=dtype_)
-
-        self._dim = dim
+        super().__init__(dim, dtype_)
         self._field = RealNumbers()
-        self._dtype = dtype_
-
-        if dtype_ in (np.float32, np.float64):
-            self._axpy = blas_axpy
-            self._scal = blas_scal
-            self._copy = blas_copy
-        else:
-            self._axpy = fallback_axpy
-            self._scal = fallback_scal
-            self._copy = fallback_copy
-
-        self._fallback_axpy = fallback_axpy
-        self._fallback_scal = fallback_scal
-        self._fallback_copy = fallback_copy
 
     def _lincomb(self, z, a, x, b, y):
         """Linear combination of `x` and `y`.
 
-        Calculate z = a*x + b*y using optimized BLAS routines.
+        Calculate z = a * x + b * y using optimized BLAS routines
+        if possible.
 
         Parameters
         ----------
-        z : Rn.Vector
-            The Vector that the result is written to.
-        a : RealNumber
-            Scalar to multiply `x` with.
-        x : Rn.Vector
-            The first of the summands
-        b : RealNumber
-            Scalar to multiply `y` with.
-        y : Rn.Vector
-            The second of the summands
+        z : `Rn.Vector`
+            The Vector to which the result is written.
+        a, b : `RealNumber`
+            Scalars to multiply `x` and `y` with.
+        x, y : `Rn.Vector`
+            The summands
 
         Returns
         -------
@@ -742,63 +802,13 @@ class Rn(Ntuples, Algebra):
         >>> z
         Rn(3).element([14.0, 19.0, 24.0])
         """
-        # If any array is non-contiguous, the BLAS routines do not
-        # modify in-place. In that case, we must use fallback functions.
-        if not all(a.flags.contiguous for a in (x.data, y.data, z.data)):
-            axpy, scal, copy = (self._fallback_axpy, self._fallback_scal,
-                                self._fallback_copy)
-        else:
-            axpy, scal, copy = (self._axpy, self._scal, self._copy)
-
-        if x is y and b != 0:
-            # x is aligned with y -> z = (a+b)*x
-            self._lincomb(z, a+b, x, 0, x)
-        elif z is x and z is y:
-            # All the vectors are aligned -> z = (a+b)*z
-            scal(a+b, z.data)
-        elif z is x:
-            # z is aligned with x -> z = a*z + b*y
-            if a != 1:
-                scal(a, z.data)
-            if b != 0:
-                axpy(y.data, z.data, self.dim, b)
-        elif z is y:
-            # z is aligned with y -> z = a*x + b*z
-            if b != 1:
-                scal(b, z.data)
-            if a != 0:
-                axpy(x.data, z.data, self.dim, a)
-        else:
-            # We have exhausted all alignment options, so x != y != z
-            # We now optimize for various values of a and b
-            if b == 0:
-                if a == 0:  # Zero assignment -> z = 0
-                    z._data[:] = 0
-                else:  # Scaled copy -> z = a*x
-                    copy(x.data, z.data)
-                    if a != 1:
-                        scal(a, z.data)
-            else:
-                if a == 0:  # Scaled copy -> z = b*y
-                    copy(y.data, z.data)
-                    if b != 1:
-                        self._scal(b, z.data)
-
-                elif a == 1:  # No scaling in x -> z = x + b*y
-                    copy(x.data, z.data)
-                    axpy(y.data, z.data, self.dim, b)
-                else:  # Generic case -> z = a*x + b*y
-                    copy(y.data, z.data)
-                    if b != 1:
-                        self._scal(b, z.data)
-                    axpy(x.data, z.data, self.dim, a)
+        _lincomb(z, a, x, b, y, self.dtype)
 
     def zero(self):
         """Create a vector of zeros.
 
         Examples
         --------
-
         >>> r3 = Rn(3)
         >>> x = r3.zero()
         >>> x
@@ -812,7 +822,6 @@ class Rn(Ntuples, Algebra):
 
         Examples
         --------
-
         >>> r3 = Rn(3)
         >>> r3.field
         RealNumbers()
@@ -824,12 +833,12 @@ class Rn(Ntuples, Algebra):
 
         Parameters
         ----------
-        other : any object
+        other : `object`
             The object to check for equality
 
         Returns
         -------
-        equals : boolean
+        equals : `boolean`
 
         Examples
         --------
@@ -906,7 +915,7 @@ class Rn(Ntuples, Algebra):
         else:
             return 'Rn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(Ntuples.Vector, LinearSpace.Vector):
+    class Vector(Ntuples.Vector, Algebra.Vector):
 
         """An `Rn` vector represented with a NumPy array.
 
@@ -930,12 +939,15 @@ class Rn(Ntuples, Algebra):
         Methods
         -------
 
-        +----------------+--------------------+-----------------------+
-        |Signature       |Return type         |Description            |
-        +================+====================+=======================+
-        |`equals(other)` |`boolean`           |Test if `other` is     |
-        |                |                    |equal to this vector.  |
-        +----------------+--------------------+-----------------------+
+        +-----------------+-------------------+-----------------------+
+        |Signature        |Return type        |Description            |
+        +=================+===================+=======================+
+        |`equals(other)`  |`boolean`          |Test if `other` is     |
+        |                 |                   |equal to this vector.  |
+        +-----------------+-------------------+-----------------------+
+        |`multiply(other)`|`None`             |Multiply `other` to    |
+        |                 |                   |this vector.           |
+        +-----------------+-------------------+-----------------------+
 
         See also
         --------
@@ -1239,7 +1251,6 @@ class NormedRn(Rn, NormedSpace):
 
         Parameters
         ----------
-
         space : NormedRn
             Space instance this vector lives in
         data : numpy.ndarray
@@ -1430,6 +1441,8 @@ class Cn(Ntuples, Algebra):
     --------
     See `LinearSpace` for a list of additional attributes and methods
     as well as further help.
+
+    -------------------------------------------------------------------
     """
 
     def __init__(self, dim, dtype=complex):
@@ -1446,7 +1459,6 @@ class Cn(Ntuples, Algebra):
             objects or as string.
             Only complex floating-point data types are allowed.
         """
-        # pylint: disable=unbalanced-tuple-unpacking
         if not isinstance(dim, Integral) or dim < 1:
             raise TypeError(errfmt('''
             `dim` {} is not a positive integer.'''.format(dim)))
@@ -1458,36 +1470,8 @@ class Cn(Ntuples, Algebra):
             `dtype` {} not a complex floating-point type.
             '''.format(dtype)))
 
-        def fallback_axpy(a, x, y):
-            """Fallback axpy implementation."""
-            y += a * x
-            return y
-
-        def fallback_scal(a, x):
-            """Fallback scal implementation."""
-            x *= a
-            return x
-
-        def fallback_copy(x, y):
-            """Fallback copy implementation."""
-            y[...] = x[...]
-            return y
-
-        blas_axpy, blas_scal, blas_copy = get_blas_funcs(
-            ['axpy', 'scal', 'copy'], dtype=dtype_)
-
-        self._dim = dim
+        super().__init__(dim, dtype_)
         self._field = ComplexNumbers()
-        self._dtype = dtype_
-
-        if dtype_ in (np.complex64, np.complex128):
-            self._axpy = blas_axpy
-            self._scal = blas_scal
-            self._copy = blas_copy
-        else:
-            self._axpy = fallback_axpy
-            self._scal = fallback_scal
-            self._copy = fallback_copy
 
     def _lincomb(self, z, a, x, b, y):
         """Linear combination of `x` and `y`.
@@ -1517,48 +1501,7 @@ class Cn(Ntuples, Algebra):
         >>> z
         Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         """
-        if x is y and b != 0:
-            # x is aligned with y -> z = (a+b)*x
-            self._lincomb(z, a+b, x, 0, x)
-        elif z is x and z is y:
-            # All the vectors are aligned -> z = (a+b)*z
-            self._scal(a+b, z.data)
-        elif z is x:
-            # z is aligned with x -> z = a*z + b*y
-            if a != 1:
-                self._scal(a, z.data)
-            if b != 0:
-                self._axpy(y.data, z.data, self.dim, b)
-        elif z is y:
-            # z is aligned with y -> z = a*x + b*z
-            if b != 1:
-                self._scal(b, z.data)
-            if a != 0:
-                self._axpy(x.data, z.data, self.dim, a)
-        else:
-            # We have exhausted all alignment options, so x != y != z
-            # We now optimize for various values of a and b
-            if b == 0:
-                if a == 0:  # Zero assignment -> z = 0
-                    z.data[:] = 0
-                else:  # Scaled copy -> z = a*x
-                    self._copy(x.data, z.data)
-                    if a != 1:
-                        self._scal(a, z.data)
-            else:
-                if a == 0:  # Scaled copy -> z = b*y
-                    self._copy(y.data, z.data)
-                    if b != 1:
-                        self._scal(b, z.data)
-
-                elif a == 1:  # No scaling in x -> z = x + b*y
-                    self._copy(x.data, z.data)
-                    self._axpy(y.data, z.data, self.dim, b)
-                else:  # Generic case -> z = a*x + b*y
-                    self._copy(y.data, z.data)
-                    if b != 1:
-                        self._scal(b, z.data)
-                    self._axpy(x.data, z.data, self.dim, a)
+        _lincomb(z, a, x, b, y, self.dtype)
 
     def zero(self):
         """Create a vector of zeros.
@@ -1691,6 +1634,14 @@ class Cn(Ntuples, Algebra):
         |           |               |container. Can be processed with |
         |           |               |the `ctypes` module in Python.   |
         +-----------+---------------+---------------------------------+
+        |`real`     |`Rn.Vector`    |Real part of this vector as an   |
+        |           |(view)         |`Rn` vector view. This attribute |
+        |           |               |is writable.                     |
+        +-----------+---------------+---------------------------------+
+        |`imag`     |`Rn.Vector`    |Imaginary part of this vector as |
+        |           |(view)         |an `Rn` vector view. This        |
+        |           |               |attribute is writable.           |
+        +-----------+---------------+---------------------------------+
 
         Methods
         -------
@@ -1755,15 +1706,15 @@ class Cn(Ntuples, Algebra):
             return Rn(self.space.dim).element(self.data.real)
 
         @real.setter
-        def real(self, other):
+        def real(self, newreal):
             """The setter for the real part.
 
-            This method is invoked by `vec.real = other`. It is
-            implemented as `vec.real.assign(other)`.
+            This method is invoked by `vec.real = other`.
 
-            See also
-            --------
-            Check `Ntuples.Vector.assign` for allowed input types.
+            Parameters
+            ----------
+            newreal : array-like or scalar
+                The new real part for this vector.
 
             Examples
             --------
@@ -1773,8 +1724,17 @@ class Cn(Ntuples, Algebra):
             >>> x.real = a
             >>> x
             Cn(3).element([1j, 0j, -2j])
+
+            Other array-like types and broadcasting:
+
+            >>> x.real = 1.0
+            >>> x
+            Cn(3).element([(1+1j), (1+0j), (1-2j)])
+            >>> x.real = [0, 2, -1]
+            >>> x
+            Cn(3).element([1j, (2+0j), (-1-2j)])
             """
-            self.real.assign(other)
+            self.real.data[:] = newreal
 
         @property
         def imag(self):
@@ -1802,26 +1762,31 @@ class Cn(Ntuples, Algebra):
             return Rn(self.space.dim).element(self.data.imag)
 
         @imag.setter
-        def imag(self, other):
+        def imag(self, newimag):
             """The setter for the imaginary part.
 
-            This method is invoked by `vec.imag = other`. It is
-            implemented as `vec.imag.assign(other)`.
+            This method is invoked by `vec.imag = other`.
 
-            See also
-            --------
-            Check `Ntuples.Vector.assign` for allowed input types.
+            Parameters
+            ----------
+            newreal : array-like or scalar
+                The new imaginary part for this vector.
 
             Examples
             --------
-            >>> c3 = Cn(3)
-            >>> x = c3.element([5+1j, 3, 2-2j])
+            >>> x = Cn(3).element([5+1j, 3, 2-2j])
             >>> a = Rn(3).element([0, 0, 0])
-            >>> x.imag = a
-            >>> x
-            Cn(3).element([(5+0j), (3+0j), (2+0j)])
+            >>> x.imag = a; print(x)
+            [(5+0j), (3+0j), (2+0j)]
+
+            Other array-like types and broadcasting:
+
+            >>> x.imag = 1.0; print(x)
+            [(5+1j), (3+1j), (2+1j)]
+            >>> x.imag = [0, 2, -1]; print(x)
+            [(5+0j), (3+2j), (2-1j)]
             """
-            self.imag.assign(other)
+            self.imag.data[:] = newimag
 
 
 # TODO: move - the requirement of CUDA for this module is bad!
