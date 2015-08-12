@@ -467,7 +467,7 @@ class CudaEn(spaces.LinearSpace):
 
 class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
 
-    """The real space R^n, implemented in CUDA.
+    """The real space :math:`R^n`, implemented in CUDA.
 
     Requires the compiled ODL extension odlpp.
 
