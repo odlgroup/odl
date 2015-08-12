@@ -25,18 +25,17 @@ from future import standard_library
 import unittest
 
 # ODL imports
-from odl.operator.operator import *
-from odl.space.space import *
-import odl.discr.discretization as dd
-from odl.space.function import *
-import odl.space.set as sets
+from odl.discr.discretization import uniform_discretization
+from odl.operator.operator import LinearOperator
+from odl.space.function import L2
+from odl.space.set import Interval, Rectangle
 from odl.space.product import productspace
 
 from odl.utility.testutils import skip_all_tests
 
 try:
-    import odl.space.cuda as CS
-    import odlpp
+    from odl.space.cuda import CudaRn
+    import odlpp.odlpp_cuda as cuda
     from odl.utility.testutils import ODLTestCase
 except ImportError:
     ODLTestCase = skip_all_tests("Missing odlpp")
@@ -49,13 +48,13 @@ class ForwardDiff(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRn):
+        if not isinstance(space, CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff(rhs.data, out.data)
+        cuda.forward_diff(rhs.data, out.data)
 
     @property
     def adjoint(self):
@@ -67,13 +66,13 @@ class ForwardDiffAdjoint(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRn):
+        if not isinstance(space, CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff_adj(rhs.data, out.data)
+        cuda.forward_diff_adj(rhs.data, out.data)
 
     @property
     def adjoint(self):
@@ -85,15 +84,15 @@ class ForwardDiff2D(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRn):
+        if not isinstance(space, CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = space
         self.range = productspace(space, space)
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
-                                   self.domain.shape[0], self.domain.shape[1])
+        cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
+                             self.domain.shape[0], self.domain.shape[1])
 
     @property
     def adjoint(self):
@@ -105,16 +104,15 @@ class ForwardDiff2DAdjoint(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRn):
+        if not isinstance(space, CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = productspace(space, space)
         self.range = space
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff_2d_adj(
-            rhs[0].data, rhs[1].data, out.data, self.range.shape[0],
-            self.range.shape[1])
+        cuda.forward_diff_2d_adj(rhs[0].data, rhs[1].data, out.data,
+                                 self.range.shape[0], self.range.shape[1])
 
     @property
     def adjoint(self):
@@ -124,13 +122,13 @@ class ForwardDiff2DAdjoint(LinearOperator):
 class TestCudaForwardDifference(ODLTestCase):
     def test_fwd_diff(self):
         # Continuous definition of problem
-        I = sets.Interval(0, 1)
+        I = Interval(0, 1)
         space = L2(I)
 
         # Discretization
         n = 6
-        rn = CS.CudaRn(n)
-        d = dd.uniform_discretization(space, rn)
+        rn = CudaRn(n)
+        d = uniform_discretization(space, rn)
         fun = d.element([1, 2, 5, 3, 2, 1])
 
         # Create operator
@@ -144,14 +142,14 @@ class TestCudaForwardDifference(ODLTestCase):
 class TestCudaForwardDifference2D(ODLTestCase):
     def test_square(self):
         # Continuous definition of problem
-        I = sets.Rectangle([0, 0], [1, 1])
+        I = Rectangle([0, 0], [1, 1])
         space = L2(I)
 
         # Discretization
         n = 5
         m = 5
-        rn = CS.CudaRn(n*m)
-        d = dd.uniform_discretization(space, rn, (n, m))
+        rn = CudaRn(n*m)
+        d = uniform_discretization(space, rn, (n, m))
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0],
@@ -187,7 +185,7 @@ class TestCudaForwardDifference2D(ODLTestCase):
 
     def test_rectangle(self):
         # Continuous definition of problem
-        I = sets.Rectangle([0, 0], [1, 1])
+        I = Rectangle([0, 0], [1, 1])
         space = L2(I)
 
         # Complicated functions to check performance
@@ -195,8 +193,8 @@ class TestCudaForwardDifference2D(ODLTestCase):
         m = 7
 
         # Discretization
-        rn = CS.CudaRn(n*m)
-        d = dd.uniform_discretization(space, rn, (n, m))
+        rn = CudaRn(n*m)
+        d = uniform_discretization(space, rn, (n, m))
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0],

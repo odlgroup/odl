@@ -302,7 +302,7 @@ class CudaEn(spaces.LinearSpace):
 
             space : CudaEn
                 Instance of CudaEn this vector lives in
-            data : odlpp.cuda.CudaVectorFloat
+            data : CudaVectorFloat
                 Underlying data-representation to be used by this vector
             """
             super().__init__(space)
@@ -324,7 +324,7 @@ class CudaEn(spaces.LinearSpace):
 
             Returns
             -------
-            ptr : odlpp.cuda.CudaEnVectorImpl
+            ptr : CudaEnVectorImpl
                 Underlying cuda data representation
             """
             return self._data

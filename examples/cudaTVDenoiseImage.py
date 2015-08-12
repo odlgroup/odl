@@ -33,7 +33,7 @@ from odl.space.cartesian import *
 from odl.space.function import *
 import odl.space.cuda as CS
 import odl.discr.discretization as DS
-import odlpp
+import odlpp.odlpp_cuda as cuda
 from odl.utility.testutils import Timer
 
 from pooled import makePooledSpace
@@ -57,7 +57,7 @@ class ForwardDiff2D(LinearOperator):
         self.range = powerspace(space, 2)
 
     def _apply(self, rhs, out):
-        odlpp.odlpp_cuda.forward_diff_2d(
+        cuda.forward_diff_2d(
             rhs.data, out[0].data, out[1].data,
             self.domain.shape[0], self.domain.shape[1])
 
@@ -78,7 +78,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
         self.range = space
 
     def _apply(self, rhs, out):
-        odlpp.odlpp_cuda.forward_diff_2d_adj(
+        cuda.forward_diff_2d_adj(
             rhs[0].data, rhs[1].data, out.data,
             self.range.shape[0], self.range.shape[1])
 
