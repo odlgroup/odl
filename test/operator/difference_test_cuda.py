@@ -27,8 +27,8 @@ import unittest
 # ODL imports
 from odl.discr.discretization import uniform_discretization
 from odl.operator.operator import LinearOperator
-from odl.space.function import L2
-from odl.space.set import Interval, Rectangle
+from odl.space.default import L2
+from odl.space.domain import Interval, Rectangle
 from odl.space.product import productspace
 
 from odl.utility.testutils import skip_all_tests
