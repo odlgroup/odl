@@ -1381,7 +1381,7 @@ class EuclideanRn(Rn, HilbertSpace):
         """str() implementation."""
         return self.__repr__()
 
-    class Vector(Rn.Vector, HilbertSpace.Vector, Algebra.Vector):
+    class Vector(Rn.Vector, HilbertSpace.Vector):
 
         """A EuclideanRn-vector represented using numpy.
 
@@ -1614,7 +1614,7 @@ class Cn(Ntuples, Algebra):
         else:
             return 'Cn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(Ntuples.Vector, LinearSpace.Vector):
+    class Vector(Ntuples.Vector, Algebra.Vector):
 
         """A `Cn` vector represented with a NumPy array.
 
