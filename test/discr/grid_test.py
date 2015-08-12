@@ -27,7 +27,7 @@ import numpy as np
 
 # ODL imports
 from odl.discr.grid import TensorGrid, RegularGrid
-from odl.space.set import IntervalProd
+from odl.space.domain import IntervalProd
 from odl.utility.testutils import ODLTestCase
 
 standard_library.install_aliases()
