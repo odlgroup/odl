@@ -50,7 +50,7 @@ class ForwardDiff(LinearOperator):
         self.scale = scale
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff(rhs.data, out.data)
+        odlpp.odlpp_cuda.forward_diff(rhs.data, out.data)
         out *= self.scale
 
     @property
@@ -70,7 +70,7 @@ class ForwardDiffAdj(LinearOperator):
         self.scale = scale
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff_adj(rhs.data, out.data)
+        odlpp.odlpp_cuda.forward_diff_adj(rhs.data, out.data)
         out *= self.scale
 
     @property
@@ -112,12 +112,12 @@ def denoise(x0, la, mu, iterations=1):
         d -= b
 
         # sign = d/abs(d)
-        odlpp.cuda.sign(d.data, sign.data)
+        odlpp.odlpp_cuda.sign(d.data, sign.data)
 
         #
-        odlpp.cuda.abs(d.data, d.data)
-        odlpp.cuda.add_scalar(d.data, -1.0/la, d.data)
-        odlpp.cuda.max_vector_scalar(d.data, 0.0, d.data)
+        odlpp.odlpp_cuda.abs(d.data, d.data)
+        odlpp.odlpp_cuda.add_scalar(d.data, -1.0/la, d.data)
+        odlpp.odlpp_cuda.max_vector_scalar(d.data, 0.0, d.data)
         d *= sign
 
         # b = b - diff(x) + d

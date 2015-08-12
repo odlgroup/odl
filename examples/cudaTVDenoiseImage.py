@@ -57,8 +57,9 @@ class ForwardDiff2D(LinearOperator):
         self.range = powerspace(space, 2)
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
-                                 self.domain.shape[0], self.domain.shape[1])
+        odlpp.odlpp_cuda.forward_diff_2d(
+            rhs.data, out[0].data, out[1].data,
+            self.domain.shape[0], self.domain.shape[1])
 
     @property
     def adjoint(self):
@@ -77,8 +78,9 @@ class ForwardDiff2DAdjoint(LinearOperator):
         self.range = space
 
     def _apply(self, rhs, out):
-        odlpp.cuda.forward_diff_2d_adj(rhs[0].data, rhs[1].data, out.data,
-                                    self.range.shape[0], self.range.shape[1])
+        odlpp.odlpp_cuda.forward_diff_2d_adj(
+            rhs[0].data, rhs[1].data, out.data,
+            self.range.shape[0], self.range.shape[1])
 
     @property
     def adjoint(self):

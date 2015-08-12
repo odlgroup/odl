@@ -55,7 +55,7 @@ class CudaConvolution(op.LinearOperator):
         self.norm = float(sum(abs(self.kernel[:])))  # eval at host
 
     def _apply(self, rhs, out):
-        odlpp.cuda.conv(rhs.data, self.kernel.data, out.data)
+        odlpp.odlpp_cuda.conv(rhs.data, self.kernel.data, out.data)
 
     @property
     def adjoint(self):
