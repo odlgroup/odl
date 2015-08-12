@@ -178,7 +178,7 @@ class GridCollocation(Operator):
         >>> coll_op(func_elem)
         Traceback (most recent call last):
         ...
-        ValueError: `data` shape (2,) not broadcastable to shape (6).
+        ValueError: `inp` shape (2,) not broadcastable to shape (6).
 
         Do this instead:
 

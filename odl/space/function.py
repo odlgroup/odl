@@ -29,7 +29,7 @@ from builtins import super
 # ODL imports
 from odl.operator.operator import Operator
 from odl.space.set import RealNumbers, ComplexNumbers, Set
-from odl.space.space import HilbertSpace, Algebra
+from odl.space.space import Algebra
 from odl.utility.utility import errfmt
 
 
@@ -282,14 +282,13 @@ class FunctionSpace(FunctionSet, Algebra):
         return self._field
 
     def element(self, func=None):
-        """Create a `FunctionSet` element.
+        """Create an element from `func` or from scratch.
 
         Parameters
         ----------
         `func` : callable, optional
             The actual instruction executed when evaluating
             this element.
-            Default: zero function
 
         Returns
         -------
