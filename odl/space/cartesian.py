@@ -17,8 +17,9 @@
 
 """CPU implementations of n-dimensional Cartesian spaces.
 
-This is a default implementation of R^n and the corresponding MetricRn,
-NormedRn and EuclideanRn. The data is represented by NumPy arrays.
+This is a default implementation of :math:`R^n` and the corresponding
+MetricRn, NormedRn and EuclideanRn. The data is represented by NumPy
+arrays.
 
 +-------------+-------------------------------------------------------+
 |Class name   |Description                                            |
@@ -42,13 +43,13 @@ is provided:
 +-------------------+-------------------------------------------------+
 |Signature          |Description                                      |
 +===================+=================================================+
-|`cartesian(dim,    |Create a Cartesian space of R^n type. By default,|
-|impl='numpy',      |the standard Euclidean space with the 2-norm and |
-|**kwargs)`         |NumPy backend is created. See the function doc   |
-|                   |for further options.                             |
+|`cartesian(dim,    |Create a Cartesian space of :math:`R^n` type. By |
+|impl='numpy',      |default, the standard Euclidean space with the   |
+|**kwargs)`         |2-norm and NumPy backend is created. See the     |
+|                   |function doc for further options.                |
 +-------------------+-------------------------------------------------+
 """
-# TODO: add other data types
+# TODO: add C^n
 
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
@@ -600,7 +601,7 @@ class Ntuples(Set):
 
 class Rn(Ntuples, Algebra):
 
-    """The real vector space R^n with vector multiplication only.
+    """The real vector space :math:`R^n` with vector multiplication.
 
     Its elements are represented as instances of the inner `Rn.Vector`
     class.
@@ -614,7 +615,7 @@ class Rn(Ntuples, Algebra):
     +--------+-------------+------------------------------------------+
     |Name    |Type         |Description                               |
     +========+=============+==========================================+
-    |`dim`   |`int`        |The dimension `n` of the space R^n        |
+    |`dim`   |`int`        |The dimension `n` of the space :math:`R^n`|
     +--------+-------------+------------------------------------------+
     |`field` |             |Equal to `RealNumbers`                    |
     +--------+-------------+------------------------------------------+
@@ -789,7 +790,7 @@ class Rn(Ntuples, Algebra):
 
     @property
     def field(self):
-        """The field of R^n, i.e. the real numbers.
+        """The field of :math:`R^n`, i.e. the real numbers.
 
         Examples
         --------
@@ -956,7 +957,7 @@ class Rn(Ntuples, Algebra):
 
 class MetricRn(Rn, MetricSpace):
 
-    """The real space R^n as a metric space without norm.
+    """The real space :math:`R^n` as a metric space without norm.
 
     Its elements are represented as instances of the inner `Rn.Vector`
     class.
@@ -967,7 +968,7 @@ class MetricRn(Rn, MetricSpace):
     +--------+-------------+------------------------------------------+
     |Name    |Type         |Description                               |
     +========+=============+==========================================+
-    |`dim`   |`int`        |The dimension `n` of the space R^n        |
+    |`dim`   |`int`        |The dimension `n` of the space :math:`R^n`|
     +--------+-------------+------------------------------------------+
     |`field` |`RealNumbers`|The type of scalars upon which the space  |
     |        |             |is built                                  |
@@ -1007,8 +1008,9 @@ class MetricRn(Rn, MetricSpace):
         dim : int
             The dimension of the space
         dist : callable
-            The distance function defining a metric on R^n. It must accept
-            two array arguments and fulfill the following conditions:
+            The distance function defining a metric on :math:`R^n`. It
+            must accept two array arguments and fulfill the following
+            conditions:
 
             - `dist(x, y) = dist(y, x)`
             - `dist(x, y) >= 0`
@@ -1098,7 +1100,7 @@ class MetricRn(Rn, MetricSpace):
 
 class NormedRn(Rn, NormedSpace):
 
-    """The real space R^n with the p-norm or a custom norm.
+    """The real space :math:`R^n` with the p-norm or a custom norm.
 
     # TODO: document public interface
     """
@@ -1238,7 +1240,7 @@ class NormedRn(Rn, NormedSpace):
 
 class EuclideanRn(Rn, HilbertSpace):
 
-    """The real space R^n with the an inner product.
+    """The real space :math:`R^n` with the an inner product.
 
     # TODO: document public interface
     """
