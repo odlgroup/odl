@@ -20,27 +20,30 @@
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import str, zip, super
+from builtins import super, zip
 from future import standard_library
 standard_library.install_aliases()
+from future.utils import with_metaclass
 
 from math import sqrt
 
 # External module imports
-from abc import abstractproperty
+from abc import ABCMeta
 import numpy as np
 
 # ODL imports
+from odl.operator.operator import Operator, LinearOperator
+from odl.space.cartesian import (Ntuples, Rn, Cn, MetricRn, MetricCn,
+                                 NormedRn, NormedCn, HilbertRn, HilbertCn)
 from odl.space.domain import IntervalProd
+from odl.space.function import FunctionSpace
 from odl.space.set import Set
 from odl.space.space import (LinearSpace, NormedSpace, MetricSpace,
                              HilbertSpace, Algebra)
-from odl.space.function import FunctionSpace
-from odl.space.cartesian import Ntuples
 from odl.utility.utility import errfmt
 
 
-class Discretization(Set):
+class Discretization(with_metaclass(ABCMeta, Set)):
 
     """Abstract discretization class.
 
@@ -62,28 +65,25 @@ class Discretization(Set):
     an element of the original set. This mapping is called
     **extension**.
 
-    Abstract properties
-    -------------------
+    Attributes
+    ----------
 
-    `set`
-    ~~~~~
-    The set to be discretized. Must be a `Set` instance.
-
-    `ntuples`
-    ~~~~~~~~~
-    Data structure holding the values of a discretized object. Must
-    be an `Ntuples` instance.
-
-    optional: `restriction`
-    ~~~~~~~~~~~~~~~~~~~~~~~
-    `Operator` mapping a `set` element to an `ntuples` element. Must
-    satisfy `restriction.domain == set` and
-    `restriction.range == ntuples`.
-
-    optional: `extension`
-    ~~~~~~~~~~~~~~~~~~~~~
-    `Operator` mapping an `ntuples` element to a `set` element. Must
-    satisfy `extension.domain == ntuples` and `extension.range == set`.
+    +-------------+----------------+----------------------------------+
+    |Name         |Type            |Description                       |
+    +=============+================+==================================+
+    |`set`        |`Set`           |The set to be discretized         |
+    +-------------+----------------+----------------------------------+
+    |`ntuples`    |`Ntuples`       |Data structure holding the values |
+    |             |                |of a discretized object           |
+    +-------------+----------------+----------------------------------+
+    |`restriction`|`Operator`      |Operator mapping a `set` element  |
+    |             |                |to an `ntuples` element. Raises   |
+    |             |                |`NotImplementedError` by default. |
+    +-------------+----------------+----------------------------------+
+    |`extension`  |`Operator`      |Operator mapping an `ntuples`     |
+    |             |                |element to a `set` element. Raises|
+    |             |                |`NotImplementedError` by default. |
+    +-------------+----------------+----------------------------------+
 
     Methods
     -------
@@ -100,21 +100,91 @@ class Discretization(Set):
     +-----------+----------------+------------------------------------+
     """
 
-    @abstractproperty
-    def set(self):
-        """The set to be discretized."""
+    def __init__(self, set_, ntuples, restr=None, ext=None):
+        """Abstract initialization method.
 
-    @abstractproperty
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
+
+        Parameters
+        ----------
+        `set_` : `Set`
+            The (abstract) set to be discretized
+        `ntuples` : `Ntuples`
+            Data structure holding the values of a discretized object
+        `restr` : `Operator`, optional
+            Operator mapping a `set` element to an `ntuples` element.
+            Must satisfy `restr.domain == set_` and
+            `restr.range == ntuples`.
+        `ext` : `Operator`, optional
+            Operator mapping an `ntuples` element to a `set` element.
+            Must satisfy `ext.domain == ntuples` and
+            `ext.range == set_`.
+        """
+        if not isinstance(set_, Set):
+            raise TypeError(errfmt('''
+            `set_` {} not a `Set` instance.'''.format(set_)))
+
+        if not isinstance(ntuples, Ntuples):
+            raise TypeError(errfmt('''
+            `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
+
+        if restr is not None:
+            if not isinstance(restr, Operator):
+                raise TypeError(errfmt('''
+                `restr` {} not an `Operator` instance.'''.format(restr)))
+
+            if restr.domain != set_:
+                raise ValueError(errfmt('''
+                `restr.domain` {} not equal to `set_` {}.
+                '''.format(restr.domain, set_)))
+
+            if restr.range != ntuples:
+                raise ValueError(errfmt('''
+                `restr.range` {} not equal to `ntuples` {}.
+                '''.format(restr.range, ntuples)))
+
+        if ext is not None:
+            if not isinstance(ext, Operator):
+                raise TypeError(errfmt('''
+                `ext` {} not an `Operator` instance.'''.format(ext)))
+
+            if ext.domain != ntuples:
+                raise ValueError(errfmt('''
+                `ext.domain` {} not equal to `ntuples {}`.
+                '''.format(ext.domain, ntuples)))
+
+            if ext.range != set_:
+                raise ValueError(errfmt('''
+                `ext.range` {} not equal to `set_` {}.
+                '''.format(ext.range, set_)))
+
+        self._set = set_
+        self._ntuples = ntuples
+        self._restriction = restr
+        self._extension = ext
+
+    def set(self):
+        """Return the `set` attribute."""
+        return self._set
+
     def ntuples(self):
-        """The data structure for the values of discretized elements."""
+        """Return the `ntuples` attribute."""
+        return self._ntuples
 
     def restriction(self):
         """The operator mapping a `set` element to an `n`-tuple."""
-        raise NotImplementedError('no `restriction` provided.')
+        if self._restriction is not None:
+            return self._restriction
+        else:
+            raise NotImplementedError('no `restriction` provided.')
 
     def extension(self):
         """The operator mapping an `n`-tuple to a `set` element."""
-        raise NotImplementedError('no `extension` provided.')
+        if self._extension is not None:
+            return self._extension
+        else:
+            raise NotImplementedError('no `extension` provided.')
 
     def element(self, inp=None):
         """Create an element from `inp` or from scratch.
@@ -144,9 +214,10 @@ class Discretization(Set):
         """Representation of a `Discretization` element."""
 
 
-class LinearSpaceDiscretization(Discretization, LinearSpace):
+class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
+                                               LinearSpace)):
 
-    """Discretization of a linear vector space.
+    """Abstract class for discretizations of linear vector spaces.
 
     This variant of `Discretization` adds linear structure to all
     its members. The `set` is a linear space, the `ntuples`
@@ -154,35 +225,79 @@ class LinearSpaceDiscretization(Discretization, LinearSpace):
     :math:`R^n` or :math:`C^n`, and both `restriction` and
     `extension` are linear operators.
 
-    Abstract properties
-    -------------------
-
-    `set`
-    ~~~~~
-    The space to be discretized. Must be a `LinearSpace` instance.
-
-    `ntuples`
-    ~~~~~~~~~
-    Data structure holding the values of a discretized object. Must
-    be an instance or either `Rn` or `Cn`.
-
-    optional: `restriction`
-    ~~~~~~~~~~~~~~~~~~~~~~~
-    `LinearOperator` mapping a `set` element to an `ntuples` element.
-    Must satisfy `restriction.domain == set` and
-    `restriction.range == ntuples`.
-
-    optional: `extension`
-    ~~~~~~~~~~~~~~~~~~~~~
-    `LinearOperator` mapping an `ntuples` element to a `set` element.
-    Must satisfy `extension.domain == ntuples` and
-    `extension.range == set`.
     """
+
+    def __init__(self, space, ntuples, restr=None, ext=None):
+        """Abstract initialization method.
+
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
+
+        Parameters
+        ----------
+        `space` : `LinearSpace`
+            The (abstract) space to be discretized
+        `ntuples` : `Rn` or `Cn`
+            Data structure holding the values of a discretized object.
+            Its `field` attribute must be the same as `space.field`.
+        `restr` : `LinearOperator`, optional
+            Operator mapping a `set` element to an `ntuples` element.
+            Must satisfy `restr.domain == set_` and
+            `restr.range == ntuples`.
+        `ext` : `LinearOperator`, optional
+            Operator mapping an `ntuples` element to a `set` element.
+            Must satisfy `ext.domain == ntuples` and
+            `ext.range == set_`.
+        """
+        if not isinstance(space, LinearSpace):
+            raise TypeError(errfmt('''
+            `space` {} not a `LinearSpace` instance.'''.format(space)))
+
+        if not isinstance(ntuples, (Rn, Cn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not an `Rn` or `Cn` instance.'''.format(ntuples)))
+
+        if space.field != ntuples.field:
+            raise ValueError(errfmt('''
+            `space.field` {} not equal to `ntuples.field` {}.
+            '''.format(space.field, ntuples.field)))
+
+        if restr is not None:
+            if not isinstance(restr, LinearOperator):
+                raise TypeError(errfmt('''
+                `restr` {} not a `LinearOperator` instance.'''.format(restr)))
+
+            if restr.domain != space:
+                raise ValueError(errfmt('''
+                `restr.domain` {} not equal to `space` {}.
+                '''.format(restr.domain, space)))
+
+            if restr.range != ntuples:
+                raise ValueError(errfmt('''
+                `restr.range` {} not equal to `ntuples` {}.
+                '''.format(restr.range, ntuples)))
+
+        if ext is not None:
+            if not isinstance(ext, LinearOperator):
+                raise TypeError(errfmt('''
+                `ext` {} not a `LinearOperator` instance.'''.format(ext)))
+
+            if ext.domain != ntuples:
+                raise ValueError(errfmt('''
+                `ext.domain` {} not equal to `ntuples {}`.
+                '''.format(ext.domain, ntuples)))
+
+            if ext.range != space:
+                raise ValueError(errfmt('''
+                `ext.range` {} not equal to `space` {}.
+                '''.format(ext.range, space)))
+
+        super().__init__(space, ntuples, restr, ext)
 
     @property
     def space(self):
         """Another name for `set`"""
-        return self.set
+        return self._set
 
     def _lincomb(self, z, a, x, b, y):
         """Raw linear combination."""
@@ -193,86 +308,197 @@ class LinearSpaceDiscretization(Discretization, LinearSpace):
         """Representation of a `LinearSpaceDiscretization` element."""
 
 
-#    def __init__(self, set_, ntuples, restr=None, ext=None):
-#        """Initialize a new `Discretization` instance.
-#
-#        Parameters
-#        ----------
-#        `set_` : `Set`
-#            The (abstract) set to be discretized
-#        `ntuples` : `Ntuples`
-#            Data structure holding the values of a discretized object
-#        `restr` : `Operator`, optional
-#            Mapping from a element of `set_` to an element of
-#            `ntuples`. Must satisfy `restr.domain == set_` and
-#            `restr.range == ntuples`.
-#        `ext` : `Operator`, optional
-#            Mapping from a element of `ntuples` to an element of
-#            `set_`. Must satisfy `ext.domain == ntuples` and
-#            `ext.range == set_`.
-#        """
-#        if not isinstance(set_, Set):
-#            raise TypeError(errfmt('''
-#            `set_` {} not a `Set` instance.'''.format(set_)))
-#
-#        if not isinstance(ntuples, Ntuples):
-#            raise TypeError(errfmt('''
-#            `ntuples` {} not a `Ntuples` instance.'''.format(ntuples)))
-#
-#        if restr is not None:
-#            if not isinstance(restr, Operator):
-#                raise TypeError(errfmt('''
-#                `restr` {} not an `Operator` instance.'''.format(restr)))
-#
-#            if restr.domain != set_:
-#                raise ValueError(errfmt('''
-#                `domain` attribute {} of `restr` not equal to `set_`.
-#                '''.format(restr.domain)))
-#
-#            if restr.range != ntuples:
-#                raise ValueError(errfmt('''
-#                `range` attribute {} of `restr` not equal to `ntuples`.
-#                '''.format(restr.range)))
-#
-#        if ext is not None:
-#            if not isinstance(ext, Operator):
-#                raise TypeError(errfmt('''
-#                `ext` {} not an `Operator` instance.'''.format(ext)))
-#
-#            if restr.domain != ntuples:
-#                raise ValueError(errfmt('''
-#                `domain` attribute {} of `restr` not equal to `ntuples`.
-#                '''.format(restr.domain)))
-#
-#            if restr.range != set_:
-#                raise ValueError(errfmt('''
-#                `range` attribute {} of `restr` not equal to `set_`.
-#                '''.format(restr.range)))
-#
-#        self._set = set_
-#        self._ntuples = ntuples
-#        self._restriction = restr
-#        self._extension = ext
-#
-#    @property
-#    def set(self):
-#        """Return `set` attribute."""
-#        return self._set
-#
-#    @property
-#    def ntuples(self):
-#        """Return `ntuples` attribute."""
-#        return self._ntuples
-#
-#    @property
-#    def restriction(self):
-#        """Return `restriction` attribute."""
-#        return self._restriction
-#
-#    @property
-#    def extension(self):
-#        """Return `extension` attribute."""
-#        return self._extension
+class MetricSpaceDiscretization(with_metaclass(ABCMeta,
+                                               LinearSpaceDiscretization,
+                                               MetricSpace)):
+
+    """Abstract class for discretizations of metric spaces."""
+
+    def __init__(self, space, ntuples, restr=None, ext=None):
+        """Abstract initialization method.
+
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
+
+        Parameters
+        ----------
+        `space` : `MetricSpace`
+            The (abstract) space to be discretized
+        `ntuples` : `MetricRn` or `MetricCn`
+            Data structure holding the values of a discretized object.
+            Its `field` attribute must be the same as `space.field`.
+        `restr` : `LinearOperator`, optional
+            Operator mapping a `set` element to an `ntuples` element.
+            Must satisfy `restr.domain == set_` and
+            `restr.range == ntuples`.
+        `ext` : `LinearOperator`, optional
+            Operator mapping an `ntuples` element to a `set` element.
+            Must satisfy `ext.domain == ntuples` and
+            `ext.range == set_`.
+        """
+        if not isinstance(space, MetricSpace):
+            raise TypeError(errfmt('''
+            `space` {} not a `MetricSpace` instance.'''.format(space)))
+
+        if not isinstance(ntuples, (MetricRn, MetricCn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not a `MetricRn` or `MetricCn` instance.
+            '''.format(ntuples)))
+
+        super().__init__(space, ntuples, restr, ext)
+
+    def _dist(self, x, y):
+        """Raw distance implementation."""
+        return self.ntuples._dist(x, y)
+
+    class Vector(LinearSpaceDiscretization.Vector, MetricSpace.Vector):
+
+        """Representation of a `MetricSpaceDiscretization` element."""
+
+
+class NormedSpaceDiscretization(with_metaclass(ABCMeta,
+                                               MetricSpaceDiscretization,
+                                               NormedSpace)):
+
+    """Abstract class for discretizations of normed spaces."""
+
+    def __init__(self, space, ntuples, restr=None, ext=None):
+        """Abstract initialization method.
+
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
+
+        Parameters
+        ----------
+        `space` : `NormedSpace`
+            The (abstract) space to be discretized
+        `ntuples` : `NormedRn` or `NormedCn`
+            Data structure holding the values of a discretized object.
+            Its `field` attribute must be the same as `space.field`.
+        `restr` : `LinearOperator`, optional
+            Operator mapping a `set` element to an `ntuples` element.
+            Must satisfy `restr.domain == set_` and
+            `restr.range == ntuples`.
+        `ext` : `LinearOperator`, optional
+            Operator mapping an `ntuples` element to a `set` element.
+            Must satisfy `ext.domain == ntuples` and
+            `ext.range == set_`.
+        """
+        if not isinstance(space, NormedSpace):
+            raise TypeError(errfmt('''
+            `space` {} not a `NormedSpace` instance.'''.format(space)))
+
+        if not isinstance(ntuples, (NormedRn, NormedCn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not a `NormedRn` or `NormedCn` instance.
+            '''.format(ntuples)))
+
+        super().__init__(space, ntuples, restr, ext)
+
+    def _norm(self, x):
+        """Raw norm implementation."""
+        return self.ntuples._norm(x)
+
+    class Vector(MetricSpaceDiscretization.Vector, NormedSpace.Vector):
+
+        """Representation of a `NormedSpaceDiscretization` element."""
+
+
+class HilbertSpaceDiscretization(with_metaclass(ABCMeta,
+                                                NormedSpaceDiscretization,
+                                                HilbertSpace)):
+
+    """Abstract class for discretizations of Hilbert spaces."""
+
+    def __init__(self, space, ntuples, restr=None, ext=None):
+        """Abstract initialization method.
+
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
+
+        Parameters
+        ----------
+        `space` : `HilbertSpace`
+            The (abstract) space to be discretized
+        `ntuples` : `HilbertRn` or `HilbertCn`
+            Data structure holding the values of a discretized object.
+            Its `field` attribute must be the same as `space.field`.
+        `restr` : `LinearOperator`, optional
+            Operator mapping a `set` element to an `ntuples` element.
+            Must satisfy `restr.domain == set_` and
+            `restr.range == ntuples`.
+        `ext` : `LinearOperator`, optional
+            Operator mapping an `ntuples` element to a `set` element.
+            Must satisfy `ext.domain == ntuples` and
+            `ext.range == set_`.
+        """
+        if not isinstance(space, HilbertSpace):
+            raise TypeError(errfmt('''
+            `space` {} not a `HilbertSpace` instance.'''.format(space)))
+
+        if not isinstance(ntuples, (HilbertRn, HilbertCn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not a `HilbertRn` or `HilbertCn` instance.
+            '''.format(ntuples)))
+
+        super().__init__(space, ntuples, restr, ext)
+
+    def _inner(self, x, y):
+        """Raw inner product implementation."""
+        return self.ntuples._inner(x, y)
+
+    class Vector(NormedSpaceDiscretization.Vector, HilbertSpace.Vector):
+
+        """Representation of a `HilbertSpaceDiscretization` element."""
+
+
+class AlgebraDiscretization(with_metaclass(ABCMeta,
+                                           LinearSpaceDiscretization,
+                                           Algebra)):
+
+    """Abstract class for discretizations of algebras."""
+
+    def __init__(self, space, ntuples, restr=None, ext=None):
+        """Abstract initialization method.
+
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
+
+        Parameters
+        ----------
+        `space` : `Algebra`
+            The (abstract) space to be discretized
+        `ntuples` : `Rn` or `Cn`
+            Data structure holding the values of a discretized object.
+            Its `field` attribute must be the same as `space.field`.
+        `restr` : `LinearOperator`, optional
+            Operator mapping a `set` element to an `ntuples` element.
+            Must satisfy `restr.domain == set_` and
+            `restr.range == ntuples`.
+        `ext` : `LinearOperator`, optional
+            Operator mapping an `ntuples` element to a `set` element.
+            Must satisfy `ext.domain == ntuples` and
+            `ext.range == set_`.
+        """
+        if not isinstance(space, Algebra):
+            raise TypeError(errfmt('''
+            `space` {} not a `HilbertSpace` instance.'''.format(space)))
+
+        if not isinstance(ntuples, (Rn, Cn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not an `Rn` or `Cn` instance.
+            '''.format(ntuples)))
+
+        super().__init__(space, ntuples, restr, ext)
+
+    def _multiply(self, x, y):
+        """Raw multiply implementation."""
+        return self.ntuples._multiply(x, y)
+
+    class Vector(LinearSpaceDiscretization.Vector, Algebra.Vector):
+
+        """Representation of an `AlgebraDiscretization` element."""
+
 
 def uniform_discretization(parent, rnimpl, shape=None, order='C'):
     """ Creates an discretization of space parent using rn as the

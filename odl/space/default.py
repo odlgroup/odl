@@ -30,8 +30,7 @@ from odl.utility.utility import errfmt
 
 
 class L2(FunctionSpace, HilbertSpace):
-    """The space of square integrable functions on some domain
-    """
+    """The space of square integrable functions on some domain."""
 
     def __init__(self, domain, field=RealNumbers()):
         super().__init__(domain, field)
