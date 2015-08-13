@@ -48,7 +48,7 @@ List of classes
 |             |              |the relation                            |
 |             |              |`norm(x) = sqrt(inner(x, x))`           |
 +-------------+--------------+----------------------------------------+
-|`EuclideanRn`|`HilbertRn`   |`HilbertRn` with the standard inner     |
+|`En`         |`HilbertRn`   |`HilbertRn` with the standard inner     |
 |             |              |(dot) product                           |
 +-------------+--------------+----------------------------------------+
 |`Cn`         |`Ntuples`,    |`n`-tuples of complex numbers with      |
@@ -70,13 +70,14 @@ List of classes
 |             |              |(dot) product (with complex conjugation)|
 +-------------+--------------+----------------------------------------+
 
+
 Space attributes and methods
 ----------------------------
 The following tables summarize all attributes and methods of spaces in
 this module. Each table reflects the *added* features for the
 respective class.
 
-**`Ntuples` and subclasses**
+**`Ntuples` and subclasses:**
 
 Attributes:
 
@@ -90,17 +91,90 @@ Attributes:
 
 Methods:
 
-+-----------+---------------------+-----------------------------------+
-|Signature  |Return type          |Description                        |
-+===========+=====================+===================================+
-|`element   |`<space type>.Vector`|Create a space element. If `inp` is|
-|(inp=None)`|                     |`None`, merely memory is allocated.|
-|           |                     |Otherwise, the element is created  |
-|           |                     |from `inp`.                        |
-+-----------+---------------------+-----------------------------------+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`contains(other)`|`bool`         |Test if `other` is an element of   |
+|                 |               |this space.                        |
++-----------------+---------------+-----------------------------------+
+|`element         |`<space        |Create a space element. If `inp` is|
+|(inp=None)`      |type>.Vector`  |`None`, merely memory is allocated.|
+|                 |               |Otherwise, the element is created  |
+|                 |               |from `inp`.                        |
++-----------------+---------------+-----------------------------------+
+|`equals (other)` |`bool`         |Create a space element. If `inp` is|
+|                 |               |`None`, merely memory is allocated.|
+|                 |               |Otherwise, the element is created  |
+|                 |               |from `inp`.                        |
++-----------------+---------------+-----------------------------------+
 
 Magic methods:
 
++------------------------+---------------------+----------------------+
+|Signature               |Provides syntax      |Implementation        |
++========================+=====================+======================+
+|`s.__eq__(other)`       |`s == other`         |`equals(other)`       |
++------------------------+---------------------+----------------------+
+|`s.__ne__(other)`       |`s != other`         |`not equals(other)`   |
++------------------------+---------------------+----------------------+
+|`s.__contains__(other)` |`other in s`         |`contains(other)`     |
++------------------------+---------------------+----------------------+
+
+**`Rn`/`Cn` and subclasses:**
+
+Attributes:
+
++-----------+----------------+----------------------------------------+
+|Name       |Type            |Description                             |
++===========+================+========================================+
+|`field`    |`RealNumbers` or|The field over which the space is       |
+|           |`ComplexNumbers`|defined                                 |
++-----------+----------------+----------------------------------------+
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`lincomb(z, a, x,|`None`         |Calculate the linear combination   |
+|b, y)`           |               |`z <-- a * x + b * y`.             |
++-----------------+---------------+-----------------------------------+
+|`multiply(x, y)` |`None`         |Calculate the pointwise            |
+|                 |               |multiplication `y <-- x * y`.      |
++-----------------+---------------+-----------------------------------+
+|`zero()`         |`<space        |Create a vector of zeros.          |
+|                 |type>.Vector`  |                                   |
++-----------------+---------------+-----------------------------------+
+
+**`MetricRn` / `MetricCn` and subclasses:**
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`dist(x, y)`     |`float`        |Distance between two space elements|
++-----------------+---------------+-----------------------------------+
+
+**`NormedRn` / `NormedCn` and subclasses:**
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`norm(x)`        |`float`        |Length of a space element          |
++-----------------+---------------+-----------------------------------+
+
+**`HilbertRn` / `HilbertCn` and subclasses:**
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`inner(x, y)`    |`float`        |Inner product of two space elements|
++-----------------+---------------+-----------------------------------+
 
 
 Vector attributes and methods
@@ -108,18 +182,155 @@ Vector attributes and methods
 Similarly, the following tables incrementally summarize all attributes
 and methods of vectors in this module.
 
-**`Ntuples.Vector` and subclasses**
+**`Ntuples.Vector` and subclasses:**
 
-+----------+-------------+------------------------------------------+
-|Name      |Type         |Description                               |
-+==========+=============+==========================================+
-|`data`    |`type`       |The data dype of each tuple entry         |
-+----------+-------------+------------------------------------------+
-|`data_ptr`|`type`       |The data dype of each tuple entry         |
-+----------+-------------+------------------------------------------+
+Attributes:
 
-TODO: continue here
++-----------+---------------+---------------------------------+
+|Name       |Type           |Description                      |
++===========+===============+=================================+
+|`data`     |`numpy.ndarray`|The container for the vector     |
+|           |               |entries                          |
++-----------+---------------+---------------------------------+
+|`data_ptr` |`int`          |A raw memory pointer to the data |
+|           |               |container. Can be processed with |
+|           |               |the `ctypes` module in Python.   |
++-----------+---------------+---------------------------------+
+|`space`    |`Set`          |The space to which this vector   |
+|           |               |belongs                          |
++-----------+---------------+---------------------------------+
 
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`equals(other)`  |`bool`         |Test if `other` is equal to this   |
+|                 |               |vector.                            |
++-----------------+---------------+-----------------------------------+
+|`assign(other)`  |`None`         |Copy the values of `other` to this |
+|                 |               |vector.                            |
++-----------------+---------------+-----------------------------------+
+|`copy()`         |`<space        |Create a (deep) copy of this       |
+|                 |type>.Vector`  |vector.                            |
++-----------------+---------------+-----------------------------------+
+
+Magic methods:
+
++------------------------+---------------------+----------------------+
+|Signature               |Provides syntax      |Implementation        |
++========================+=====================+======================+
+|`v.__eq__(other)`       |`v == other`         |`equals(other)`       |
++------------------------+---------------------+----------------------+
+|`v.__ne__(other)`       |`v != other`         |`not equals(other)`   |
++------------------------+---------------------+----------------------+
+|`v.__getitem__(indices)`|`v[indices]`         |by NumPy's            |
+|                        |                     |`__getitem__` method  |
++------------------------+---------------------+----------------------+
+|`v.__setitem__(indices, |`v[indices] = values`|by NumPy's            |
+|values)`                |                     |`__setitem__` method  |
++------------------------+---------------------+----------------------+
+
+**`Rn.Vector`/`Cn.Vector` and subclasses:**
+
+Attributes:
+
++-----------+----------------+----------------------------------------+
+|Name       |Type            |Description                             |
++===========+================+========================================+
+|`real`     |`Rn.Vector`     |Real part of this vector as view        |
+|[`Cn` only]|                |(modifications affect the original      |
+|           |                |vector)                                 |
++-----------+----------------+----------------------------------------+
+|`imag`     |`Rn.Vector`     |Imaginary part of this vector as view   |
+|[`Cn` only]|                |(modifications affect the original      |
+|           |                |vector)                                 |
++-----------+----------------+----------------------------------------+
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`set_zero()`     |`None`         |Set this vector's values to zero   |
++-----------------+---------------+-----------------------------------+
+
+Magic methods:
+
++------------------------+---------------------+----------------------+
+|Signature               |Provides syntax      |Implementation        |
++========================+=====================+======================+
+|`v.__add__(other)`      |`v + other`          |`x = element()`;      |
+|                        |                     |`lincomb(x, 1, v, 1,  |
+|                        |                     |other)`               |
++------------------------+---------------------+----------------------+
+|`v.__sub__(other)`      |`v - other`          |`x = element()`;      |
+|                        |                     |`lincomb(x, 1, v, -1, |
+|                        |                     |other)`               |
++------------------------+---------------------+----------------------+
+|`v.__mul__(other)`      |`v * other`          |`x = element()`;      |
+|                        |                     |`lincomb(x, other, v)`|
+|                        |                     |**or**                |
+|                        |                     |`x = v.copy();        |
+|                        |                     |multiply(other, x)`   |
++------------------------+---------------------+----------------------+
+|`v.__rmul__(other)`     |`other * v`          |`__mul__(other)`      |
++------------------------+---------------------+----------------------+
+|`v.__truediv__(other)`  |`v / other`          |`__mul__(1.0/other)`  |
++------------------------+---------------------+----------------------+
+|`v.__div__(other)`      |`v / other`          |same as `__truediv__` |
++------------------------+---------------------+----------------------+
+|`v.__iadd__(other)`     |`v += other`         |`lincomb(v, 1, v, 1,  |
+|                        |                     |other)`               |
++------------------------+---------------------+----------------------+
+|`v.__isub__(other)`     |`v -= other`         |`lincomb(v, 1, v, -1, |
+|                        |                     |other)`               |
++------------------------+---------------------+----------------------+
+|`v.__imul__(other)`     |`v *= other`         |`lincomb(v, other, v)`|
+|                        |                     |**or**                |
+|                        |                     |`multiply(other, v)`  |
++------------------------+---------------------+----------------------+
+|`v.__itruediv__(other)` |`v /= other`         |`__imul__(1.0/other)` |
++------------------------+---------------------+----------------------+
+|`v.__idiv__(other)`     |`v /= other`         |same as `__itruediv__`|
++------------------------+---------------------+----------------------+
+|`v.__pos__()`           |`+v`                 |`copy()`              |
++------------------------+---------------------+----------------------+
+|`v.__neg__()`           |`-v`                 |`x = element()`;      |
+|                        |                     |`lincomb(x, -1, v)`   |
++------------------------+---------------------+----------------------+
+
+**`MetricRn.Vector` / `MetricCn.Vector` and subclasses:**
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`dist(other)`    |`float`        |Distance between this vector and   |
+|                 |               |`other`                            |
++-----------------+---------------+-----------------------------------+
+
+**`NormedRn.Vector` / `NormedCn.Vector` and subclasses:**
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`norm()`         |`float`        |Length of this vector and          |
++-----------------+---------------+-----------------------------------+
+
+**`HilbertRn.Vector` / `HilbertCn.Vector` and subclasses:**
+
+Methods:
+
++-----------------+---------------+-----------------------------------+
+|Signature        |Return type    |Description                        |
++=================+===============+===================================+
+|`inner(other)`   |`float`        |Inner product of this vector with  |
+|                 |               |`other`                            |
++-----------------+---------------+-----------------------------------+
 """
 
 # Imports for common Python 2/3 codebase
@@ -127,10 +338,11 @@ from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import super
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import numpy as np
-import scipy as sp
+from scipy.linalg.blas import get_blas_funcs
 from numbers import Integral
 from math import sqrt
 
@@ -138,48 +350,15 @@ from math import sqrt
 from odl.space.set import Set, RealNumbers, ComplexNumbers
 from odl.space.space import MetricSpace, NormedSpace, HilbertSpace, Algebra
 from odl.utility.utility import errfmt, array1d_repr
-try:
-    from odl.space.cuda import CudaRn
-    try:
-        CudaRn(1).element()
-    except MemoryError:
-        print(errfmt("""
-        Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
-        modules."""))
-        CUDA_AVAILABLE = False
-    else:
-        CUDA_AVAILABLE = True
-except ImportError:
-    CudaRn = None
-    CUDA_AVAILABLE = False
-
-standard_library.install_aliases()
 
 
 class Ntuples(Set):
 
     """The set of `n`-tuples of arbitrary type.
 
-    Attributes
-    ----------
-
-
-    Methods
-    -------
-
-
-    Magic methods
-    -------------
-
-    +----------------------+----------------+--------------------+
-    |Signature             |Provides syntax |Implementation      |
-    +======================+================+====================+
-    |`__eq__(other)`       |`self == other` |`equals(other)`     |
-    +----------------------+----------------+--------------------+
-    |`__ne__(other)`       |`self != other` |`not equals(other)` |
-    +----------------------+----------------+--------------------+
-    |`__contains__(other)` |`other in self` |`contains(other)`   |
-    +----------------------+----------------+--------------------+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
     """
 
     def __init__(self, dim, dtype):
@@ -372,7 +551,7 @@ class Ntuples(Set):
         >>> int_vec in float_3  # Unsafe cast
         False
         """
-        return (isinstance(other, type(self).Vector) and
+        return (isinstance(other, Ntuples.Vector) and
                 len(other) == self.dim and
                 np.can_cast(other.space.dtype, self.dtype))
 
@@ -388,50 +567,9 @@ class Ntuples(Set):
 
         """Representation of an `Ntuples` element.
 
-        Attributes
-        ----------
-
-        +-----------+---------------+---------------------------------+
-        |Name       |Type           |Description                      |
-        +===========+===============+=================================+
-        |`space`    |`Set`          |The set to which this vector     |
-        |           |               |belongs                          |
-        +-----------+---------------+---------------------------------+
-        |`data`     |`numpy.ndarray`|The container for the vector     |
-        |           |               |entries                          |
-        +-----------+---------------+---------------------------------+
-        |`data_ptr` |`int`          |A raw memory pointer to the data |
-        |           |               |container. Can be processed with |
-        |           |               |the `ctypes` module in Python.   |
-        +-----------+---------------+---------------------------------+
-
-        Methods
-        -------
-
-        +----------------+--------------------+-----------------------+
-        |Signature       |Return type         |Description            |
-        +================+====================+=======================+
-        |`equals(other)` |`boolean`           |Test if `other` is     |
-        |                |                    |equal to this vector.  |
-        +----------------+--------------------+-----------------------+
-        |`assign(other)` |`None`              |Copy the values of     |
-        |                |                    |`other` to this vector.|
-        +----------------+--------------------+-----------------------+
-        |`copy()`        |`LinearSpace.Vector`|Create a (deep) copy of|
-        |                |                    |this vector.           |
-        +----------------+--------------------+-----------------------+
-
-        Magic methods
-        -------------
-
-        +------------------+----------------+-------------------------+
-        |Signature         |Provides syntax |Implementation           |
-        +==================+================+=========================+
-        |`__eq__(other)`   |`self == other` |`equals(other)`          |
-        +------------------+----------------+-------------------------+
-        |`__ne__(other)`   |`self != other` |`not equals(other)`      |
-        +------------------+----------------+-------------------------+
-
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
         """
 
         def __init__(self, space, data):
@@ -539,6 +677,10 @@ class Ntuples(Set):
             >>> vec1.equals(vec2) or vec2.equals(vec1)
             False
             """
+            if other is self:
+                return True
+
+            # TODO: probably check only values
             return (hasattr(other, 'space') and
                     (other in self.space or self in other.space) and
                     np.all(self.data == other.data))
@@ -734,7 +876,7 @@ def _lincomb(z, a, x, b, y, dtype):
         return y
 
     # pylint: disable=unbalanced-tuple-unpacking
-    blas_axpy, blas_scal, blas_copy = sp.linalg.blas.get_blas_funcs(
+    blas_axpy, blas_scal, blas_copy = get_blas_funcs(
         ['axpy', 'scal', 'copy'], dtype=dtype)
 
     if (dtype in (np.float32, np.float64, np.complex64, np.complex128) and
@@ -796,8 +938,7 @@ class Rn(Ntuples, Algebra):
 
     See also
     --------
-    See `Ntuples`, `Algebra` and `LinearSpace` for attributes and
-    methods as well as further help.
+    See the module documentation for attributes, methods etc.
     """
 
     def __init__(self, dim, dtype=float):
@@ -926,8 +1067,7 @@ class Rn(Ntuples, Algebra):
 
         See also
         --------
-        See `Ntuples.Vector`, `Algebra.Vector` and
-        `LinearSpace.Vector` for attributes and methods.
+        See the module documentation for attributes, methods etc.
         """
 
         def __init__(self, space, data):
@@ -949,8 +1089,7 @@ class MetricRn(Rn, MetricSpace):
 
     See also
     --------
-    See `Ntuples`, `Algebra`, `LinearSpace` and `MetricSpace` for
-    attributes and methods as well as further help.
+    See the module documentation for attributes, methods etc.
     """
 
     def __init__(self, dim, dist, dtype=float):
@@ -1006,53 +1145,9 @@ class MetricRn(Rn, MetricSpace):
 
         """A MetricRn vector represented by a NumPy array.
 
-        Attributes
-        ----------
-
-        +-----------+---------------+---------------------------------+
-        |Name       |Type           |Description                      |
-        +===========+===============+=================================+
-        |`data`     |`numpy.ndarray`|The container for the vector     |
-        |           |               |entries                          |
-        +-----------+---------------+---------------------------------+
-        |`data_ptr` |`int`          |A raw memory pointer to the data |
-        |           |               |container. Can be processed with |
-        |           |               |the `ctypes` module in Python.   |
-        +-----------+---------------+---------------------------------+
-        |`space`    |`Rn`           |The `LinearSpace` the vector     |
-        |           |               |lives in                         |
-        +-----------+---------------+---------------------------------+
-
-        Methods
-        -------
-
-        +----------------+-----------+--------------------------------+
-        |Signature       |Return type|Description                     |
-        +================+===========+================================+
-        |`assign(other)` |`None`     |Copy the values of `other` to   |
-        |                |           |this vector.                    |
-        +----------------+-----------+--------------------------------+
-        |`copy()`        |`Rn.Vector`|Create a new vector and fill it |
-        |                |           |with this vector's values.      |
-        +----------------+-----------+--------------------------------+
-        |`set_zero()`    |`None`     |Set all entries to 0.           |
-        +----------------+-----------+--------------------------------+
-        |`lincomb(a, x,  |`None`     |Assign the values of the linear |
-        |b=None, y=None)`|           |combination `a * x + b * y` to  |
-        |                |           |this vector.                    |
-        +----------------+-----------+--------------------------------+
-        |`equals(other)` |`boolean`  |Test if all entries of this     |
-        |                |           |vector and `other` are equal.   |
-        +----------------+-----------+--------------------------------+
-        |`dist(y)`       |`float`    |The distance of this vector to  |
-        |                |           |`y` as measured in the space    |
-        |                |           |metric.                         |
-        +----------------+-----------+--------------------------------+
-
         See also
         --------
-        See `LinearSpace.Vector` and `MetricSpace.Vector` for a full
-        list of attributes and methods.
+        See the module documentation for attributes, methods etc.
         """
 
         def __init__(self, space, data):
@@ -1069,7 +1164,9 @@ class NormedRn(MetricRn, NormedSpace):
 
     """The real space :math:`R^n` with the p-norm or a custom norm.
 
-    # TODO: document public interface
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
     """
 
     def __init__(self, dim, norm, dtype=float):
@@ -1169,7 +1266,12 @@ class NormedRn(MetricRn, NormedSpace):
 
     class Vector(MetricRn.Vector, NormedSpace.Vector):
 
-        """Representation of a `NormedRn` element."""
+        """Representation of a `NormedRn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
 
         def __init__(self, space, data):
             """Initialize a new instance."""
@@ -1185,7 +1287,9 @@ class HilbertRn(NormedRn, HilbertSpace):
 
     """The real space :math:`R^n` with an inner product.
 
-    # TODO: document public interface
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
     """
 
     def __init__(self, dim, inner, dtype=float):
@@ -1280,7 +1384,12 @@ class HilbertRn(NormedRn, HilbertSpace):
 
     class Vector(NormedRn.Vector, HilbertSpace.Vector):
 
-        """Representation of a `HilbertRn` element."""
+        """Representation of a `HilbertRn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
 
         def __init__(self, space, data):
             """Initialize a new instance."""
@@ -1292,12 +1401,17 @@ class HilbertRn(NormedRn, HilbertSpace):
             super().__init__(space, data)
 
 
-class EuclideanRn(HilbertRn):
+class En(HilbertRn):
 
-    """The `n`-dimensional standard Euclidean space."""
+    """The `n`-dimensional standard Euclidean space.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
 
     def __init__(self, dim, dtype=float):
-        """Initialize a new `EuclideanRn` instance.
+        """Initialize a new `En` instance.
 
         Parameters
         ----------
@@ -1313,7 +1427,7 @@ class EuclideanRn(HilbertRn):
 
         Examples
         --------
-        >>> r3 = EuclideanRn(3)
+        >>> r3 = En(3)
         >>> x = r3.element([5, 3, 2])
         >>> y = r3.element([1, 2, 3])
         >>> r3.inner(x, y) == 5*1 + 3*2 + 2*3
@@ -1324,26 +1438,31 @@ class EuclideanRn(HilbertRn):
     def __repr__(self):
         """`rn.__repr__() <==> repr(rn)`."""
         if self.dtype == np.float64:
-            return 'EuclideanRn({})'.format(self.dim)
+            return 'En({})'.format(self.dim)
         else:
-            return 'EuclideanRn({}, {!r})'.format(self.dim, self.dtype)
+            return 'En({}, {!r})'.format(self.dim, self.dtype)
 
     def __str__(self):
         """`rn.__str__() <==> str(rn)`."""
         if self.dtype == np.float64:
-            return 'EuclideanRn({})'.format(self.dim)
+            return 'En({})'.format(self.dim)
         else:
-            return 'EuclideanRn({}, {})'.format(self.dim, self.dtype)
+            return 'En({}, {})'.format(self.dim, self.dtype)
 
     class Vector(HilbertRn.Vector):
 
-        """Representation of a `EuclideanRn` element."""
+        """Representation of an `En` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            if not isinstance(space, EuclideanRn):
+            if not isinstance(space, En):
                 raise TypeError(errfmt('''
-                `space` {!r} not an instance of `EuclideanRn`.
+                `space` {!r} not an instance of `En`.
                 '''.format(space)))
 
             super().__init__(space, data)
@@ -1356,47 +1475,9 @@ class Cn(Ntuples, Algebra):
     Its elements are represented as instances of the inner `Cn.Vector`
     class.
 
-    Differences to `LinearSpace`
-    ----------------------------
-
-    Attributes
-    ----------
-
-    +--------+-------------+------------------------------------------+
-    |Name    |Type         |Description                               |
-    +========+=============+==========================================+
-    |`dim`   |`int`        |The dimension `n` of the space :math:`C^n`|
-    +--------+-------------+------------------------------------------+
-    |`field` |             |`ComplexNumbers()`                        |
-    +--------+-------------+------------------------------------------+
-    |`dtype` |`type`       |The data dype of each vector entry        |
-    +--------+-------------+------------------------------------------+
-
-    Methods
-    -------
-
-    +-----------------+-----------+-----------------------------------+
-    |Signature        |Return type|Description                        |
-    +=================+===========+===================================+
-    |`element         |`Cn.Vector`|Create an element in `Cn`. If      |
-    |(inp=None)`      |           |`inp` is `None`, merely memory is  |
-    |                 |           |allocated. Otherwise, the element  |
-    |                 |           |is created from `inp`.             |
-    +-----------------+-----------+-----------------------------------+
-    |`zero()`         |`Cn.Vector`|Create the zero element, i.e., the |
-    |                 |           |element where each entry is 0.     |
-    +-----------------+-----------+-----------------------------------+
-    |`multiply(x, y)` |`None`     |Calculate the entry-wise product of|
-    |                 |           |`x` and `y` and assign the result  |
-    |                 |           |to `y`.                            |
-    +-----------------+-----------+-----------------------------------+
-
     See also
     --------
-    See `LinearSpace` for a list of additional attributes and methods
-    as well as further help.
-
-    -------------------------------------------------------------------
+    See the module documentation for attributes, methods etc.
     """
 
     def __init__(self, dim, dtype=complex):
@@ -1481,54 +1562,6 @@ class Cn(Ntuples, Algebra):
         """
         return self._field
 
-    def equals(self, other):
-        """Check if `other` is a Cn instance of the same dimension.
-
-        Parameters
-        ----------
-        other : any object
-            The object to check for equality
-
-        Returns
-        -------
-        equals : boolean
-
-        Examples
-        --------
-
-        >>> c3 = Cn(3)
-        >>> c3.equals(c3)
-        True
-
-        Equality is not identity:
-
-        >>> c3a, c3b = Cn(3), Cn(3)
-        >>> c3a.equals(c3b)
-        True
-        >>> c3a is c3b
-        False
-
-        >>> c3, c4 = Cn(3), Cn(4)
-        >>> c3.equals(c4)
-        False
-        >>> c3_double, c3_single = Cn(3), Cn(3, dtype='csingle')
-        >>> c3_double.equals(c3_single)
-        False
-
-        Equality can also be checked with "==":
-
-        >>> c3, c4 = Cn(3), Cn(4)
-        >>> c3 == c3
-        True
-        >>> c3 == c4
-        False
-        >>> c3 != c4
-        True
-        """
-        return (isinstance(other, Cn) and
-                self.dim == other.dim and
-                self.dtype == other.dtype)
-
     def _multiply(self, x, y):
         """The entry-wise product of two vectors, assigned to `y`.
 
@@ -1570,49 +1603,11 @@ class Cn(Ntuples, Algebra):
 
     class Vector(Ntuples.Vector, Algebra.Vector):
 
-        """A `Cn` vector represented with a NumPy array.
-
-        Differences to `LinearSpace.Vector`
-        -----------------------------------
-
-        Attributes
-        ----------
-
-        +-----------+---------------+---------------------------------+
-        |Name       |Type           |Description                      |
-        +===========+===============+=================================+
-        |`data`     |`numpy.ndarray`|The container for the vector     |
-        |           |               |entries                          |
-        +-----------+---------------+---------------------------------+
-        |`data_ptr` |`int`          |A raw memory pointer to the data |
-        |           |               |container. Can be processed with |
-        |           |               |the `ctypes` module in Python.   |
-        +-----------+---------------+---------------------------------+
-        |`real`     |`Rn.Vector`    |Real part of this vector as an   |
-        |           |(view)         |`Rn` vector view. This attribute |
-        |           |               |is writable.                     |
-        +-----------+---------------+---------------------------------+
-        |`imag`     |`Rn.Vector`    |Imaginary part of this vector as |
-        |           |(view)         |an `Rn` vector view. This        |
-        |           |               |attribute is writable.           |
-        +-----------+---------------+---------------------------------+
-
-        Methods
-        -------
-
-        +----------------+--------------------+-----------------------+
-        |Signature       |Return type         |Description            |
-        +================+====================+=======================+
-        |`equals(other)` |`boolean`           |Test if `other` is     |
-        |                |                    |equal to this vector.  |
-        +----------------+--------------------+-----------------------+
+        """Representation of a `Cn` element.
 
         See also
         --------
-        See `LinearSpace.Vector` for a list of further attributes and
-        methods.
-
-        ---------------------------------------------------------------
+        See the module documentation for attributes, methods etc.
         """
 
         def __init__(self, space, data):
@@ -1657,7 +1652,11 @@ class Cn(Ntuples, Algebra):
             >>> x
             Cn(3).element([(10+1j), (6+0j), (4-2j)])
             """
-            return Rn(self.space.dim).element(self.data.real)
+            real_types = {np.dtype(np.complex64): np.float32,
+                          np.dtype(np.complex128): np.float64,
+                          np.dtype(np.complex256): np.float128}
+            rn = Rn(self.space.dim, real_types[self.space.dtype])
+            return rn.element(self.data.real)
 
         @real.setter
         def real(self, newreal):
@@ -1713,7 +1712,11 @@ class Cn(Ntuples, Algebra):
             >>> x
             Cn(3).element([(5+2j), (3+0j), (2-4j)])
             """
-            return Rn(self.space.dim).element(self.data.imag)
+            real_types = {np.dtype(np.complex64): np.float32,
+                          np.dtype(np.complex128): np.float64,
+                          np.dtype(np.complex256): np.float128}
+            rn = Rn(self.space.dim, real_types[self.space.dtype])
+            return rn.element(self.data.imag)
 
         @imag.setter
         def imag(self, newimag):
@@ -1742,6 +1745,18 @@ class Cn(Ntuples, Algebra):
             """
             self.imag.data[:] = newimag
 
+
+class MetricCn(Cn, MetricSpace):
+    pass
+
+class NormedCn(MetricCn, NormedSpace):
+    pass
+
+class HilbertCn(NormedCn, HilbertSpace):
+    pass
+
+class EuclideanCn(HilbertCn):
+    pass
 
 # TODO: move - the requirement of CUDA for this module is bad!
 #def cartesian(dim, impl='numpy', **kwargs):
