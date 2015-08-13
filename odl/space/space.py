@@ -276,28 +276,26 @@ class LinearSpace(Set):
         self._lincomb(tmp, 0, tmp, 0, tmp)
         return tmp
 
-    def contains(self, x):
-        """Check for membership in space.
+    def contains(self, other):
+        """Test an object for membership in space.
 
         Parameters
         ----------
-        x : object
-            Any object
+        other : `object`
+            The object to test for membership
 
         Returns
         -------
-        result : Boolean
-                 True if x is a member of this space.
+        contains : `bool`
+            True if `other` is a `LinearSpace.Vector` instance and
+            `other.space` is equal to this space.
 
         Notes
         -----
-
-        Subclasses
-        ~~~~~~~~~~
-        If X is a subclass of Y, then `Y.contains(X.vector(...))`
-        returns True.
+        This is the strict default where spaces must be equal.
+        Subclasses may choose to implement a less strict check.
         """
-        return isinstance(x, LinearSpace.Vector) and x.space.equals(self)
+        return isinstance(other, LinearSpace.Vector) and other.space == self
 
     # Error checking variant of methods
     def lincomb(self, z, a, x, b=None, y=None):
@@ -737,7 +735,8 @@ class MetricSpace(LinearSpace):
             -------
 
             >>> from odl.space.cartesian import NormedRn
-            >>> X = NormedRn(1)
+            >>> import numpy as np
+            >>> X = NormedRn(1, norm=np.linalg.norm)
             >>> x = X.element([0.1])
             >>> x == x
             True
@@ -932,7 +931,7 @@ class HilbertSpace(NormedSpace):
     **Requirements:**
      * `_inner(x, y) == _inner(y, x)^*` with '*' = complex conjugation
      * `_inner(s * x, y) == s * _inner(x, y)` for `s` scalar
-     * `_inner(x + z, y) <= _inner(x, y) + _inner(z, y)`
+     * `_inner(x + z, y) == _inner(x, y) + _inner(z, y)`
      * `_inner(x, x) == 0` (approx.) if and only if `x == 0` (approx.)
 
     Note
