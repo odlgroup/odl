@@ -144,7 +144,7 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
 
 # Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRn = ds.EuclideanRn(nPixels)
+projectionRn = ds.En(nPixels)
 
 # Discretize projection space
 projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
@@ -157,7 +157,7 @@ dataDisc = ps.powerspace(projectionDisc, nProjection)
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconRn = ds.EuclideanRn(nVoxels.prod())
+reconRn = ds.En(nVoxels.prod())
 reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
 # Create a phantom

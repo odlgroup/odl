@@ -29,7 +29,7 @@ from math import sqrt
 # ODL imports
 # import odl.operator.operator as op
 # import odl.space.space as space
-from odl.space.cartesian import Rn, MetricRn, NormedRn, EuclideanRn, cartesian
+from odl.space.cartesian import Rn, MetricRn, NormedRn, En, cartesian
 from odl.utility.testutils import ODLTestCase, skip_all_tests
 
 try:
@@ -187,7 +187,7 @@ class OperatorOverloadTest(ODLTestCase):
 
 class MethodTest(ODLTestCase):
     def test_norm(self):
-        r3 = EuclideanRn(3)
+        r3 = En(3)
         xd = r3.element([1, 2, 3])
 
         correct_norm = sqrt(1**2 + 2**2 + 3**2)
@@ -199,7 +199,7 @@ class MethodTest(ODLTestCase):
         self.assertAlmostEquals(xd.norm(), correct_norm)
 
     def test_inner(self):
-        r3 = EuclideanRn(3)
+        r3 = En(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, -3, 9])
 
@@ -286,7 +286,7 @@ class CpuFactoryTest(ODLTestCase):
         return np.sum(np.dot(x, w*y))
 
     def test_inner(self):
-        r3 = EuclideanRn(3, inner=self._inner)
+        r3 = En(3, inner=self._inner)
         r3_fac = cartesian(3, inner=self._inner)
 
         # Space type
@@ -321,7 +321,7 @@ class CpuFactoryTest(ODLTestCase):
         self.assertEqual(x.norm(), x_fac.norm())
 
         # Inner product space
-        r3i = EuclideanRn(3, weights=w)
+        r3i = En(3, weights=w)
         r3i_fac = cartesian(3, weights=w)
 
         # Space type

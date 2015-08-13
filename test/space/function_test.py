@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 from odl.operator.operator import *
-from odl.space.cartesian import EuclideanRn
+from odl.space.cartesian import En
 import odl.discr.discretization as disc
 import odl.space.function as fs
 import odl.space.set as sets
@@ -43,7 +43,7 @@ class L2Test(ODLTestCase):
         l2 = fs.L2(I)
         l2sin = l2.element(np.sin)
 
-        rn = EuclideanRn(10)
+        rn = En(10)
         d = disc.uniform_discretization(l2, rn)
 
         sind = d.element(l2sin)
@@ -57,7 +57,7 @@ class L2Test(ODLTestCase):
 
         n = 10
         m = 10
-        rn = EuclideanRn(n*m)
+        rn = En(n*m)
         d = disc.uniform_discretization(l2, rn, (n, m))
 
         sind = d.element(l2sin)

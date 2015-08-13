@@ -69,7 +69,7 @@ Name         Description
 ===========  ===========
 Rn           Basic space of n-tuples of real numbers, uses NumPy
 NormedRn     R^n with a norm
-EuclideanRn  R^n with an inner product
+En  R^n with an inner product
 ===========  ===========
 
 R^n type spaces, CUDA implementation (module 'cuda')
@@ -80,7 +80,7 @@ Requires the compiled extension 'odlpp'
 ===========  ===========
 Name         Description
 ===========  ===========
-CudaRn       EuclideanRn implemented in CUDA
+CudaRn       En implemented in CUDA
 ===========  ===========
 
 Function spaces (module 'function')

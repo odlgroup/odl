@@ -1146,11 +1146,22 @@ class Algebra(LinearSpace):
             """
             self.space.multiply(other, self)
 
+        def __mul__(self, other):
+            """ Overloads the * operator to mean pointwise multiplication if
+            the other object is a vector
+            """
+            if other in self.space:
+                newvec = self.copy()
+                newvec.multiply(other)
+                return newvec
+            else:
+                return super().__mul__(other)
+
         def __imul__(self, other):
             """ Overloads the *= operator to mean pointwise multiplication if
             the other object is a vector
             """
-            if isinstance(other, Algebra.Vector):
+            if other in self.space:
                 self.multiply(other)
                 return self
             else:
