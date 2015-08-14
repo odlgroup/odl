@@ -20,31 +20,25 @@
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import super, zip
+from builtins import super
 from future import standard_library
 standard_library.install_aliases()
 from future.utils import with_metaclass
 
-from math import sqrt
-
 # External module imports
 from abc import ABCMeta
-import numpy as np
 
 # ODL imports
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import (Ntuples, Rn, Cn, MetricRn, MetricCn,
                                  NormedRn, NormedCn, HilbertRn, HilbertCn)
-from odl.space.domain import IntervalProd
-from odl.space.function import FunctionSpace
 from odl.space.set import Set
 from odl.space.space import (LinearSpace, NormedSpace, MetricSpace,
                              HilbertSpace, Algebra)
 from odl.utility.utility import errfmt
 
 
-# TODO: wrap or subclass `Ntuples`?
-class Discretization(with_metaclass(ABCMeta, Ntuples)):
+class Discretization(with_metaclass(ABCMeta, Set)):
 
     """Abstract discretization class.
 
@@ -160,7 +154,6 @@ class Discretization(with_metaclass(ABCMeta, Ntuples)):
                 `ext.range` {} not equal to `set_` {}.
                 '''.format(ext.range, set_)))
 
-        super().__init__(ntuples.dim, ntuples.dtype)
         self._set = set_
         self._ntuples = ntuples
         self._restriction = restr
@@ -216,16 +209,12 @@ class Discretization(with_metaclass(ABCMeta, Ntuples)):
         return self.Vector(self, elem.data)
 
     def contains(self, other):
-        """Test if `other` is a member of this set."""
-        return other in self.ntuples
+        """Test if `other` is a member of this discretization."""
+        return (isinstance(other, Discretization.Vector) and
+                other.space == self)
 
     def equals(self, other):
-        """Test if `other` is equal to this set.
-
-        Parameters
-        ----------
-        other : `object`
-            The object to test for equality
+        """Test if `other` is equal to this discretization.
 
         Returns
         -------
@@ -241,9 +230,47 @@ class Discretization(with_metaclass(ABCMeta, Ntuples)):
                 other.restriction == self.restriction and
                 other.extension == self.extension)
 
+    # Pass-through attributes of the wrapped `ntuples`
+    @property
+    def dim(self):
+        """The dimension of this discretization.
+
+        Equals the dimension of the `ntuples` attribute, i.e. the
+        number of values representing a discretized element.
+        """
+        return self.ntuples.dim
+
+    @property
+    def dtype(self):
+        """The data type of this discretization.
+
+        Equals the data type of the `ntuples` attribute.
+        """
+        return self.ntuples.dtype
+
     class Vector(Ntuples.Vector):
 
         """Representation of a `Discretization` element."""
+
+        def __init__(self, space, data):
+            """Initialize a new instance.
+
+            Since `Discretization` does not subclass `Ntuples`,
+            we must work around the error raised by the
+            `Ntuples.Vector` initializer.
+            """
+            super().__init__(space.ntuples, data)
+
+        def equals(self, other):
+            """Test if `other` is equal to this vector.
+
+            Returns
+            -------
+            equals: `bool`
+                `True` if `other` belongs to this vector's space
+                and their values are all equal.
+            """
+            return other in self.space and other.data == self.data
 
 
 class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
@@ -256,7 +283,6 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
     for the data representation is an implementation of either
     :math:`R^n` or :math:`C^n`, and both `restriction` and
     `extension` are linear operators.
-
     """
 
     def __init__(self, space, ntuples, restr=None, ext=None):
@@ -335,7 +361,13 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
         """Raw linear combination."""
         return self.ntuples._lincomb(z, a, x, b, y)
 
-    class Vector(Cn.Vector):
+    # Pass-through attributes of the wrapped `ntuples`
+    @property
+    def field(self):
+        """The field of this discretization."""
+        return self.ntuples.field
+
+    class Vector(Discretization.Vector, Cn.Vector):
 
         """Representation of a `LinearSpaceDiscretization` element."""
 
