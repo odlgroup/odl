@@ -20,6 +20,7 @@
 from __future__ import division, print_function, unicode_literals
 from __future__ import absolute_import
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import unittest
@@ -29,16 +30,15 @@ from math import sqrt
 # ODL imports
 # import odl.operator.operator as op
 # import odl.space.space as space
-from odl.space.cartesian import Rn, MetricRn, NormedRn, EuclideanRn, cartesian
-from odl.utility.testutils import ODLTestCase, skip_all_tests
+from odl.space.cartesian import *
+from odl.utility.testutils import ODLTestCase
 
-try:
-    from odl.space.cuda import *
-    CUDA_AVAILABLE = True
-except ImportError:
-    CUDA_AVAILABLE = False
-
-standard_library.install_aliases()
+# TODO: add tests for:
+# * Ntuples (different data types)
+# * metric, normed, Hilbert space variants
+# * Cn
+# * Rn, Cn with non-standard data types
+# * vector multiplication
 
 
 class RnTest(ODLTestCase):
@@ -187,7 +187,7 @@ class OperatorOverloadTest(ODLTestCase):
 
 class MethodTest(ODLTestCase):
     def test_norm(self):
-        r3 = EuclideanRn(3)
+        r3 = En(3)
         xd = r3.element([1, 2, 3])
 
         correct_norm = sqrt(1**2 + 2**2 + 3**2)
@@ -199,7 +199,7 @@ class MethodTest(ODLTestCase):
         self.assertAlmostEquals(xd.norm(), correct_norm)
 
     def test_inner(self):
-        r3 = EuclideanRn(3)
+        r3 = En(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, -3, 9])
 
@@ -212,155 +212,155 @@ class MethodTest(ODLTestCase):
         self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
 
-class CpuFactoryTest(ODLTestCase):
-    def test_plain(self):
-        r3 = Rn(3)
-        r3_fac = cartesian(3, dist=False)
-
-        # Space type
-        self.assertEqual(r3, r3_fac)
-
-        # Elements
-        arr = np.random.rand(r3.dim)
-        x = r3.element(arr)
-        x_fac = r3_fac.element(arr)
-        self.assertAllEquals(x, x_fac)
-
-    @staticmethod
-    def _dist(x, y):
-        return np.sum(np.abs(x - y))
-
-    def test_metric(self):
-        r3 = MetricRn(3, dist=self._dist)
-        r3_fac = cartesian(3, dist=self._dist)
-
-        # Space type
-        self.assertEqual(r3, r3_fac)
-
-        # Distance function
-        arr_x = np.random.rand(r3.dim)
-        x = r3.element(arr_x)
-        x_fac = r3_fac.element(arr_x)
-        arr_y = np.random.rand(r3.dim)
-        y = r3.element(arr_y)
-        y_fac = r3_fac.element(arr_y)
-
-        self.assertEqual(x.dist(y), x_fac.dist(y_fac))
-        self.assertEqual(x.dist(y_fac), x_fac.dist(y))
-
-    @staticmethod
-    def _norm(x):
-        return np.sum(np.abs(x))
-
-    def test_norm(self):
-        r3 = NormedRn(3, norm=self._norm)
-        r3_fac = cartesian(3, norm=self._norm)
-
-        # Space type
-        self.assertEqual(r3, r3_fac)
-
-        # Norm function
-        arr = np.random.rand(r3.dim)
-        x = r3.element(arr)
-        x_fac = r3_fac.element(arr)
-
-        self.assertEqual(x.norm(), x_fac.norm())
-
-    def test_p_norm(self):
-        r3 = NormedRn(3, p=1.5)
-        r3_fac = cartesian(3, norm_p=1.5)
-
-        # Space type
-        self.assertEqual(r3, r3_fac)
-
-        # Norm function
-        arr = np.random.rand(r3.dim)
-        x = r3.element(arr)
-        x_fac = r3_fac.element(arr)
-
-        self.assertEqual(x.norm(), x_fac.norm())
-
-    @staticmethod
-    def _inner(x, y):
-        w = np.arange(1, len(x)+1, dtype=np.float64) / float(len(x))
-        return np.sum(np.dot(x, w*y))
-
-    def test_inner(self):
-        r3 = EuclideanRn(3, inner=self._inner)
-        r3_fac = cartesian(3, inner=self._inner)
-
-        # Space type
-        self.assertEqual(r3, r3_fac)
-
-        # Inner product function
-        arr_x = np.random.rand(r3.dim)
-        x = r3.element(arr_x)
-        x_fac = r3_fac.element(arr_x)
-        arr_y = np.random.rand(r3.dim)
-        y = r3.element(arr_y)
-        y_fac = r3_fac.element(arr_y)
-
-        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
-        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
-
-    def test_weights(self):
-        w = np.arange(1, 4, dtype=np.float64) / 3.0
-
-        # Normed space
-        r3n = NormedRn(3, p=1.5, weights=w)
-        r3n_fac = cartesian(3, norm_p=1.5, weights=w)
-
-        # Space type
-        self.assertEqual(r3n, r3n_fac)
-
-        # Norm function
-        arr = np.random.rand(r3n.dim)
-        x = r3n.element(arr)
-        x_fac = r3n_fac.element(arr)
-
-        self.assertEqual(x.norm(), x_fac.norm())
-
-        # Inner product space
-        r3i = EuclideanRn(3, weights=w)
-        r3i_fac = cartesian(3, weights=w)
-
-        # Space type
-        self.assertEqual(r3i, r3i_fac)
-
-        # Inner product function
-        arr_x = np.random.rand(r3i.dim)
-        x = r3i.element(arr_x)
-        x_fac = r3i_fac.element(arr_x)
-        arr_y = np.random.rand(r3i.dim)
-        y = r3i.element(arr_y)
-        y_fac = r3i_fac.element(arr_y)
-
-        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
-        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
-
-
-if not CUDA_AVAILABLE:
-    ODLTestCase = skip_all_tests("Missing odlpp")
+#class CpuFactoryTest(ODLTestCase):
+#    def test_plain(self):
+#        r3 = Rn(3)
+#        r3_fac = cartesian(3, dist=False)
+#
+#        # Space type
+#        self.assertEqual(r3, r3_fac)
+#
+#        # Elements
+#        arr = np.random.rand(r3.dim)
+#        x = r3.element(arr)
+#        x_fac = r3_fac.element(arr)
+#        self.assertAllEquals(x, x_fac)
+#
+#    @staticmethod
+#    def _dist(x, y):
+#        return np.sum(np.abs(x - y))
+#
+#    def test_metric(self):
+#        r3 = MetricRn(3, dist=self._dist)
+#        r3_fac = cartesian(3, dist=self._dist)
+#
+#        # Space type
+#        self.assertEqual(r3, r3_fac)
+#
+#        # Distance function
+#        arr_x = np.random.rand(r3.dim)
+#        x = r3.element(arr_x)
+#        x_fac = r3_fac.element(arr_x)
+#        arr_y = np.random.rand(r3.dim)
+#        y = r3.element(arr_y)
+#        y_fac = r3_fac.element(arr_y)
+#
+#        self.assertEqual(x.dist(y), x_fac.dist(y_fac))
+#        self.assertEqual(x.dist(y_fac), x_fac.dist(y))
+#
+#    @staticmethod
+#    def _norm(x):
+#        return np.sum(np.abs(x))
+#
+#    def test_norm(self):
+#        r3 = NormedRn(3, norm=self._norm)
+#        r3_fac = cartesian(3, norm=self._norm)
+#
+#        # Space type
+#        self.assertEqual(r3, r3_fac)
+#
+#        # Norm function
+#        arr = np.random.rand(r3.dim)
+#        x = r3.element(arr)
+#        x_fac = r3_fac.element(arr)
+#
+#        self.assertEqual(x.norm(), x_fac.norm())
+#
+#    def test_p_norm(self):
+#        r3 = NormedRn(3, p=1.5)
+#        r3_fac = cartesian(3, norm_p=1.5)
+#
+#        # Space type
+#        self.assertEqual(r3, r3_fac)
+#
+#        # Norm function
+#        arr = np.random.rand(r3.dim)
+#        x = r3.element(arr)
+#        x_fac = r3_fac.element(arr)
+#
+#        self.assertEqual(x.norm(), x_fac.norm())
+#
+#    @staticmethod
+#    def _inner(x, y):
+#        w = np.arange(1, len(x)+1, dtype=np.float64) / float(len(x))
+#        return np.sum(np.dot(x, w*y))
+#
+#    def test_inner(self):
+#        r3 = En(3, inner=self._inner)
+#        r3_fac = cartesian(3, inner=self._inner)
+#
+#        # Space type
+#        self.assertEqual(r3, r3_fac)
+#
+#        # Inner product function
+#        arr_x = np.random.rand(r3.dim)
+#        x = r3.element(arr_x)
+#        x_fac = r3_fac.element(arr_x)
+#        arr_y = np.random.rand(r3.dim)
+#        y = r3.element(arr_y)
+#        y_fac = r3_fac.element(arr_y)
+#
+#        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
+#        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
+#
+#    def test_weights(self):
+#        w = np.arange(1, 4, dtype=np.float64) / 3.0
+#
+#        # Normed space
+#        r3n = NormedRn(3, p=1.5, weights=w)
+#        r3n_fac = cartesian(3, norm_p=1.5, weights=w)
+#
+#        # Space type
+#        self.assertEqual(r3n, r3n_fac)
+#
+#        # Norm function
+#        arr = np.random.rand(r3n.dim)
+#        x = r3n.element(arr)
+#        x_fac = r3n_fac.element(arr)
+#
+#        self.assertEqual(x.norm(), x_fac.norm())
+#
+#        # Inner product space
+#        r3i = En(3, weights=w)
+#        r3i_fac = cartesian(3, weights=w)
+#
+#        # Space type
+#        self.assertEqual(r3i, r3i_fac)
+#
+#        # Inner product function
+#        arr_x = np.random.rand(r3i.dim)
+#        x = r3i.element(arr_x)
+#        x_fac = r3i_fac.element(arr_x)
+#        arr_y = np.random.rand(r3i.dim)
+#        y = r3i.element(arr_y)
+#        y_fac = r3i_fac.element(arr_y)
+#
+#        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
+#        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
 
 
-class GpuFactoryTest(ODLTestCase):
-    def test_inner(self):
-        r3 = CudaRn(3)
-        r3_fac = cartesian(3, impl='cuda')
-
-        # Space type
-        self.assertEqual(r3, r3_fac)
-
-        # Inner product function
-        arr_x = np.random.rand(r3.dim)
-        x = r3.element(arr_x)
-        x_fac = r3_fac.element(arr_x)
-        arr_y = np.random.rand(r3.dim)
-        y = r3.element(arr_y)
-        y_fac = r3_fac.element(arr_y)
-
-        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
-        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
+#if not CUDA_AVAILABLE:
+#    ODLTestCase = skip_all("Missing odlpp")
+#
+#
+#class GpuFactoryTest(ODLTestCase):
+#    def test_inner(self):
+#        r3 = CudaRn(3)
+#        r3_fac = cartesian(3, impl='cuda')
+#
+#        # Space type
+#        self.assertEqual(r3, r3_fac)
+#
+#        # Inner product function
+#        arr_x = np.random.rand(r3.dim)
+#        x = r3.element(arr_x)
+#        x_fac = r3_fac.element(arr_x)
+#        arr_y = np.random.rand(r3.dim)
+#        y = r3.element(arr_y)
+#        y_fac = r3_fac.element(arr_y)
+#
+#        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
+#        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
 
 
 if __name__ == '__main__':

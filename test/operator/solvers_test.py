@@ -40,9 +40,9 @@ class MultiplyOp(OP.LinearOperator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (EuclideanRn(matrix.shape[1])
+        self._domain = (En(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (EuclideanRn(matrix.shape[0])
+        self._range = (En(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
@@ -75,7 +75,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = EuclideanRn(n)
+        rn = En(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -97,7 +97,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = EuclideanRn(n)
+        rn = En(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -118,7 +118,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = EuclideanRn(n)
+        rn = En(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 

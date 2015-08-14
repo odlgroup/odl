@@ -32,7 +32,7 @@ from odl.operator.operator import OperatorLeftScalarMult
 from odl.operator.operator import OperatorRightScalarMult
 from odl.operator.operator import LinearOperatorSum, LinearOperatorComp
 from odl.operator.operator import LinearOperatorScalarMult
-from odl.space.cartesian import EuclideanRn
+from odl.space.cartesian import En
 from odl.utility.testutils import ODLTestCase
 
 standard_library.install_aliases()
@@ -43,9 +43,9 @@ class MultiplyAndSquareOp(Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self.domain = (EuclideanRn(matrix.shape[1])
+        self.domain = (En(matrix.shape[1])
                        if domain is None else domain)
-        self.range = (EuclideanRn(matrix.shape[0])
+        self.range = (En(matrix.shape[0])
                       if range is None else range)
         self.matrix = matrix
 
@@ -161,9 +161,9 @@ class MultiplyOp(LinearOperator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (EuclideanRn(matrix.shape[1])
+        self._domain = (En(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (EuclideanRn(matrix.shape[0])
+        self._range = (En(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
@@ -306,8 +306,8 @@ class TestLinearOperator(ODLTestCase):
         self.assertAllAlmostEquals(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))
 
     def test_type_errors(self):
-        r3 = EuclideanRn(3)
-        r4 = EuclideanRn(4)
+        r3 = En(3)
+        r4 = En(4)
 
         Aop = MultiplyOp(np.random.rand(3, 3))
         r3Vec1 = r3.zero()

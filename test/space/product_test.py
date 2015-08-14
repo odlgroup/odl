@@ -70,7 +70,7 @@ class ProductTest(ODLTestCase):
         self.assertAllAlmostEquals(z, expected)
 
     def test_metric(self):
-        H = EuclideanRn(2)
+        H = En(2)
         v11 = H.element([1, 2])
         v12 = H.element([5, 3])
 
@@ -117,7 +117,7 @@ class ProductTest(ODLTestCase):
         self.assertAlmostEquals(w1.dist(w2), v11.dist(v21) + v12.dist(v22))
 
     def test_norm(self):
-        H = EuclideanRn(2)
+        H = En(2)
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])
 

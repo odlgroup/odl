@@ -141,8 +141,8 @@ class ScalingOperator(SelfAdjointOperator):
 
         Example
         -------
-        >>> from odl.space.cartesian import EuclideanRn
-        >>> r3 = EuclideanRn(3)
+        >>> from odl.space.cartesian import En
+        >>> r3 = En(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> inv = op.inverse
@@ -351,15 +351,15 @@ class MultiplyOperator(LinearOperator):
 
         Example
         -------
-        >>> from odl.space.cartesian import EuclideanRn
-        >>> r3 = EuclideanRn(3)
+        >>> from odl.space.cartesian import En
+        >>> r3 = En(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
         >>> op.apply([x, y], z)
         >>> z
-        EuclideanRn(3).element([1.0, 4.0, 9.0])
+        En(3).element([1.0, 4.0, 9.0])
         """
         outp.assign(inp[1])
         outp.multiply(inp[0])
