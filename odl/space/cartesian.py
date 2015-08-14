@@ -33,32 +33,24 @@ List of classes
 |`Ntuples`    |`Set`         |Basic class of `n`-tuples where each    |
 |             |              |entry is of the same type               |
 +-------------+--------------+----------------------------------------+
-|`Rn`         |`Ntuples`,    |`n`-tuples of real numbers with         |
-|             |`Algebra`     |vector-vector multiplication            |
-+-------------+--------------+----------------------------------------+
-|`MetricRn`   |`Rn`,         |`Rn` with a metric, i.e. a function to  |
-|             |`MetricSpace` |measure the distance between elements   |
-+-------------+--------------+----------------------------------------+
-|`NormedRn`   |`MetricRn`,   |`MetricRn` with a norm. The metric is   |
-|             |`NormedSpace` |induced by the via the relation         |
-|             |              |`dist(x, y) = norm(x - y)`              |
-+-------------+--------------+----------------------------------------+
-|`HilbertRn`  |`NormedRn`,   |`NormedRn` with an inner product. The   |
-|             |`HilbertSpace`|norm is induced by the inner product via|
-|             |              |the relation                            |
-|             |              |`norm(x) = sqrt(inner(x, x))`           |
-+-------------+--------------+----------------------------------------+
-|`En`         |`HilbertRn`   |`HilbertRn` with the standard inner     |
-|             |              |(dot) product                           |
-+-------------+--------------+----------------------------------------+
 |`Cn`         |`Ntuples`,    |`n`-tuples of complex numbers with      |
 |             |`Algebra`     |vector-vector multiplication            |
++-------------+--------------+----------------------------------------+
+|`Rn`         |`Cn`          |`n`-tuples of real numbers with         |
+|             |              |vector-vector multiplication            |
 +-------------+--------------+----------------------------------------+
 |`MetricCn`   |`Cn`,         |`Cn` with a metric, i.e. a function to  |
 |             |`MetricSpace` |measure the distance between elements   |
 +-------------+--------------+----------------------------------------+
+|`MetricRn`   |`MetricCn`    |`Rn` with a metric, i.e. a function to  |
+|             |              |measure the distance between elements   |
++-------------+--------------+----------------------------------------+
 |`NormedCn`   |`MetricCn`,   |`MetricCn` with a norm. The metric is   |
 |             |`NormedSpace` |induced by the via the relation         |
+|             |              |`dist(x, y) = norm(x - y)`              |
++-------------+--------------+----------------------------------------+
+|`NormedRn`   |`NormedCn`,   |`MetricRn` with a norm. The metric is   |
+|             |              |induced by the via the relation         |
 |             |              |`dist(x, y) = norm(x - y)`              |
 +-------------+--------------+----------------------------------------+
 |`HilbertCn`  |`NormedCn`,   |`NormedCn` with an inner product. The   |
@@ -66,8 +58,16 @@ List of classes
 |             |              |the relation                            |
 |             |              |`norm(x) = sqrt(inner(x, x))`           |
 +-------------+--------------+----------------------------------------+
-|`EuclideanCn`|`HilbertCn`   |`HilbertRn` with the standard inner     |
+|`HilbertRn`  |`NormedCn`,   |`NormedRn` with an inner product. The   |
+|             |              |norm is induced by the inner product via|
+|             |              |the relation                            |
+|             |              |`norm(x) = sqrt(inner(x, x))`           |
++-------------+--------------+----------------------------------------+
+|`EuclideanCn`|`HilbertCn`   |`HilbertCn` with the standard inner     |
 |             |              |(dot) product (with complex conjugation)|
++-------------+--------------+----------------------------------------+
+|`En`         |`EuclideanCn` |`HilbertRn` with the standard inner     |
+|             |              |(dot) product                           |
 +-------------+--------------+----------------------------------------+
 
 
@@ -239,11 +239,11 @@ Attributes:
 |Name       |Type            |Description                             |
 +===========+================+========================================+
 |`real`     |`Rn.Vector`     |Real part of this vector as view        |
-|[`Cn` only]|                |(modifications affect the original      |
+|           |                |(modifications affect the original      |
 |           |                |vector)                                 |
 +-----------+----------------+----------------------------------------+
 |`imag`     |`Rn.Vector`     |Imaginary part of this vector as view   |
-|[`Cn` only]|                |(modifications affect the original      |
+|           |                |(modifications affect the original      |
 |           |                |vector)                                 |
 +-----------+----------------+----------------------------------------+
 
@@ -350,6 +350,17 @@ from math import sqrt
 from odl.space.set import Set, RealNumbers, ComplexNumbers
 from odl.space.space import MetricSpace, NormedSpace, HilbertSpace, Algebra
 from odl.utility.utility import errfmt, array1d_repr
+
+
+__all__ = ('Ntuples', 'Cn', 'Rn', 'MetricCn', 'MetricRn',
+           'NormedCn', 'NormedRn', 'HilbertCn', 'HilbertRn',
+           'EuclideanCn', 'En')
+
+_type_map_r2c = {np.dtype('float32'): np.dtype('complex64'),
+                 np.dtype('float64'): np.dtype('complex128'),
+                 np.dtype('float128'): np.dtype('complex256')}
+
+_type_map_c2r = {v: k for k, v in _type_map_r2c.items()}
 
 
 class Ntuples(Set):
@@ -647,13 +658,13 @@ class Ntuples(Set):
             Returns
             -------
             equals : `boolean`
-                `True` if `other` is an element of this vector's
-                space with equal entries, `False` otherwise.
+                `True` if all entries of `other` are equal to this
+                vector's entries, `False` otherwise.
 
-            See also
-            --------
-            Check the `contains()` documentation for rules of space
-            membership.
+            Note
+            ----
+            Space membership is not checked, hence vectors from
+            different spaces can be equal.
 
             Examples
             --------
@@ -667,23 +678,16 @@ class Ntuples(Set):
             >>> vec1 == vec2  # equivalent
             True
 
-            Equality can hold for different data types as long as
-            casts are safe in at least one direction:
+            Equality can hold across spaces:
 
             >>> vec2 = Ntuples(3, float).element([1, 2, 3])
             >>> vec1.equals(vec2) and vec2.equals(vec1)
             True
-            >>> vec2 = Ntuples(3, 'float32').element([1, 2, 3])
-            >>> vec1.equals(vec2) or vec2.equals(vec1)
-            False
             """
             if other is self:
                 return True
 
-            # TODO: probably check only values
-            return (hasattr(other, 'space') and
-                    (other in self.space or self in other.space) and
-                    np.all(self.data == other.data))
+            return np.all(self.data == other.data)
 
         # Convenience functions
         def assign(self, other):
@@ -929,545 +933,6 @@ def _lincomb(z, a, x, b, y, dtype):
                 axpy(x.data, z.data, len(z), a)
 
 
-class Rn(Ntuples, Algebra):
-
-    """The real vector space :math:`R^n` with vector multiplication.
-
-    Its elements are represented as instances of the inner `Rn.Vector`
-    class.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
-
-    def __init__(self, dim, dtype=float):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        `dim` : `int`
-            The dimension of the space
-        `dtype` : `object`, optional  (Default: `float`)
-            The data type for each vector entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only real floating-point types are allowed.
-        """
-        if not isinstance(dim, Integral) or dim < 1:
-            raise TypeError(errfmt('''
-            `dim` {} is not a positive integer.'''.format(dim)))
-
-        dtype_ = np.dtype(dtype)
-        if dtype_ not in (np.float16, np.float32, np.float64, np.float128):
-            raise TypeError(errfmt('''
-            `dtype` {} not a real floating-point type.'''.format(dtype)))
-
-        super().__init__(dim, dtype_)
-        self._field = RealNumbers()
-
-    def _lincomb(self, z, a, x, b, y):
-        """Linear combination of `x` and `y`.
-
-        Calculate z = a * x + b * y using optimized BLAS routines
-        if possible.
-
-        Parameters
-        ----------
-        z : `Rn.Vector`
-            The Vector to which the result is written.
-        a, b : `RealNumber`
-            Scalars to multiply `x` and `y` with.
-        x, y : `Rn.Vector`
-            The summands
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> y = r3.element([4, 5, 6])
-        >>> z = r3.element()
-        >>> r3.lincomb(z, 2, x, 3, y)
-        >>> z
-        Rn(3).element([14.0, 19.0, 24.0])
-        """
-        _lincomb(z, a, x, b, y, self.dtype)
-
-    def zero(self):
-        """Create a vector of zeros.
-
-        Examples
-        --------
-        >>> r3 = Rn(3)
-        >>> x = r3.zero()
-        >>> x
-        Rn(3).element([0.0, 0.0, 0.0])
-        """
-        return self.element(np.zeros(self.dim, dtype=self.dtype))
-
-    @property
-    def field(self):
-        """The field of :math:`R^n`, i.e. the real numbers.
-
-        Examples
-        --------
-        >>> r3 = Rn(3)
-        >>> r3.field
-        RealNumbers()
-        """
-        return self._field
-
-    def _multiply(self, x, y):
-        """The entry-wise product of two vectors, assigned to `y`.
-
-        Parameters
-        ----------
-        x : `Rn.Vector`
-            First factor
-        y : `Rn.Vector`
-            Second factor, used to store the result
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> rn = Rn(3)
-        >>> x = rn.element([5, 3, 2])
-        >>> y = rn.element([1, 2, 3])
-        >>> rn.multiply(x, y)
-        >>> y
-        Rn(3).element([5.0, 6.0, 6.0])
-        """
-        y.data[:] = x.data * y.data
-
-    def __repr__(self):
-        """`rn.__repr__() <==> repr(rn)`."""
-        if self.dtype == np.float64:
-            return 'Rn({})'.format(self.dim)
-        else:
-            return 'Rn({}, {!r})'.format(self.dim, self.dtype)
-
-    def __str__(self):
-        """`rn.__str__() <==> str(rn)`."""
-        if self.dtype == np.float64:
-            return 'Rn({})'.format(self.dim)
-        else:
-            return 'Rn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(Ntuples.Vector, Algebra.Vector):
-
-        """Representation of an `Rn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, Rn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `Rn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
-
-class MetricRn(Rn, MetricSpace):
-
-    """The real space :math:`R^n` as a metric space.
-
-    Its elements are represented as instances of the inner `Rn.Vector`
-    class.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
-
-    def __init__(self, dim, dist, dtype=float):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        dim : int
-            The dimension of the space
-        dist : callable
-            The distance function defining a metric on :math:`R^n`. It
-            must accept two array arguments and fulfill the following
-            conditions for any vectors `x`, `y` and `z`:
-
-            - `dist(x, y) == dist(y, x)`
-            - `dist(x, y) >= 0`
-            - `dist(x, y) == 0` (approx.) if and only if `x == y`
-              (approx.)
-            - `dist(x, y) <= dist(x, z) + dist(z, y)`
-
-        dtype : `object`, optional
-            The data type for each vector entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only real floating-point types are allowed.
-        """
-        if not callable(dist):
-            raise TypeError('`dist` {!r} not callable.'.format(dist))
-
-        self._custom_dist = dist
-        super().__init__(dim, dtype)
-
-    def _dist(self, x, y):
-        return self._custom_dist(x, y)
-
-    def __repr__(self):
-        """`rn.__repr__() <==> repr(rn)`."""
-        if self.dtype == np.float64:
-            return 'MetricRn({}, {!r})'.format(self.dim, self._dist)
-        else:
-            return 'MetricRn({}, {!r}, {!r})'.format(self.dim, self._dist,
-                                                     self.dtype)
-
-    def __str__(self):
-        """`rn.__str__() <==> str(rn)`."""
-        if self.dtype == np.float64:
-            return 'MetricRn({})'.format(self.dim)
-        else:
-            return 'MetricRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(Rn.Vector, MetricSpace.Vector):
-
-        """A MetricRn vector represented by a NumPy array.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, MetricRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `MetricRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
-
-class NormedRn(MetricRn, NormedSpace):
-
-    """The real space :math:`R^n` with the p-norm or a custom norm.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
-
-    def __init__(self, dim, norm, dtype=float):
-        """Create a new NormedRn instance.
-
-        Parameters
-        ----------
-
-        dim : `int`
-            The dimension of the space
-        norm : callable
-            The norm implementation. It must accept an array-like
-            argument, return a `RealNumber` and satisfy the following
-            properties:
-
-            - `norm(x) >= 0`
-            - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
-            - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
-            - `norm(x + y) <= norm(x) + norm(y)`
-
-        dtype : `object`, optional
-            The data type for each vector entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only real floating-point types are allowed.
-        """
-        if not callable(norm):
-            raise TypeError('`norm` {} is not callable.'.format(norm))
-
-        def induced_dist(x, y):
-            """The distance induced by the norm.
-
-            Examples
-            --------
-            >>> import numpy as np
-            >>> from functools import partial
-            >>> r2 = NormedRn(2, norm=partial(np.linalg.norm, ord=1))
-            >>> x = r2.element([3, 4])
-            >>> y = r2.element([-1, 2])
-            >>> r2.dist(x, y)
-            6.0
-            """
-            return float(norm(x - y))
-
-        super().__init__(dim, induced_dist, dtype)
-        self._norm_impl = norm
-
-    def _norm(self, x):
-        """Calculate the norm of a vector.
-
-        Parameters
-        ----------
-        x : `NormedRn.Vector`
-            The vector whose norm is calculated
-
-        Returns
-        -------
-        norm : `float`
-            Norm of the vector
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> r2_2 = NormedRn(2, norm=np.linalg.norm)  # 2-norm
-        >>> x = r2_2.element([3, 4])
-        >>> r2_2.norm(x)
-        5.0
-
-        >>> from functools import partial
-        >>> r2_1 = NormedRn(2, partial(np.linalg.norm, ord=1))
-        >>> x = r2_1.element([3, 4])
-        >>> r2_1.norm(x)
-        7.0
-
-        >>> r2_0 = NormedRn(2, partial(np.linalg.norm, ord=0))
-        >>> x = r2_0.element([3, 0])
-        >>> r2_0.norm(x)
-        1.0
-        """
-        return float(self._norm_impl(x))
-
-    def __repr__(self):
-        """`rn.__repr__() <==> repr(rn)`."""
-        if self.dtype == np.float64:
-            return 'NormedRn({}, {!r})'.format(self.dim, self._norm)
-        else:
-            return 'NormedRn({}, {!r}, {!r})'.format(self.dim, self._norm,
-                                                     self.dtype)
-
-    def __str__(self):
-        """`rn.__str__() <==> str(rn)`."""
-        if self.dtype == np.float64:
-            return 'NormedRn({})'.format(self.dim)
-        else:
-            return 'NormedRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(MetricRn.Vector, NormedSpace.Vector):
-
-        """Representation of a `NormedRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, NormedRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `NormedRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
-
-class HilbertRn(NormedRn, HilbertSpace):
-
-    """The real space :math:`R^n` with an inner product.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
-
-    def __init__(self, dim, inner, dtype=float):
-        """Initialize a new `HilbertRn` instance.
-
-        Parameters
-        ----------
-
-        dim : `int`
-            The dimension of the space
-        inner : callable
-            Create a HilbertRn with this inner product. It must take
-            two `Rn` vectors as arguments, return a `RealNumber` and
-            satisfy the following conditions for all vectors `x`, `y`
-            and `z` and scalars `s`:
-
-             - `inner(x, y) == inner(y, x)`
-             - `inner(s * x, y) == s * inner(x, y)`
-             - `inner(x + z, y) == inner(x, y) + inner(z, y)`
-             - `inner(x, x) == 0` (approx.) only if `x == 0` (approx.)
-
-        dtype : `object`, optional
-            The data type for each vector entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only real floating-point types are allowed.
-        """
-        if not callable(inner):
-            raise TypeError(errfmt('''
-            `inner` {} not callable.'''.format(inner)))
-
-        def induced_norm(x):
-            """The norm induced by the inner product.
-
-            Examples
-            --------
-            >>> import numpy as np
-            >>> r2 = HilbertRn(2, inner=np.vdot)
-            >>> x = r2.element([3, 4])
-            >>> r2.norm(x)
-            5.0
-            """
-            return sqrt(float(inner(x, x)))
-
-        super().__init__(dim, induced_norm, dtype)
-        self._innerprod = inner
-
-    def _inner(self, x, y):
-        """Raw inner product of two vectors.
-
-        Parameters
-        ----------
-
-        x, y : `HilbertRn.Vector`
-            The vectors whose inner product is calculated
-
-        Returns
-        -------
-        inner : `float`
-            Inner product of `x` and `y`.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> r3 = HilbertRn(3, inner=np.vdot)
-        >>> x = r3.element([5, 3, 2])
-        >>> y = r3.element([1, 2, 3])
-        >>> r3.inner(x, y) == 5*1 + 3*2 + 2*3
-        True
-        >>> weights = np.array([1., 2., 1.])
-        >>> r3w = HilbertRn(3, lambda x, y: np.vdot(weights * x, y))
-        >>> r3w.inner(x, y) == 1*5*1 + 2*3*2 + 1*2*3
-        True
-        """
-        return float(self._innerprod(x, y))
-
-    def __repr__(self):
-        """`rn.__repr__() <==> repr(rn)`."""
-        if self.dtype == np.float64:
-            return 'HilbertRn({}, {!r})'.format(self.dim, self._inner)
-        else:
-            return 'HilbertRn({}, {!r}, {!r})'.format(self.dim, self._inner,
-                                                      self.dtype)
-
-    def __str__(self):
-        """`rn.__str__() <==> str(rn)`."""
-        if self.dtype == np.float64:
-            return 'HilbertRn({})'.format(self.dim)
-        else:
-            return 'HilbertRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(NormedRn.Vector, HilbertSpace.Vector):
-
-        """Representation of a `HilbertRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, HilbertRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `HilbertRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
-
-class En(HilbertRn):
-
-    """The `n`-dimensional standard Euclidean space.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
-
-    def __init__(self, dim, dtype=float):
-        """Initialize a new `En` instance.
-
-        Parameters
-        ----------
-
-        dim : `int`
-            The dimension of the space
-        dtype : `object`, optional
-            The data type for each vector entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only real floating-point types are allowed.
-
-        Examples
-        --------
-        >>> r3 = En(3)
-        >>> x = r3.element([5, 3, 2])
-        >>> y = r3.element([1, 2, 3])
-        >>> r3.inner(x, y) == 5*1 + 3*2 + 2*3
-        True
-        """
-        super().__init__(dim, inner=np.vdot, dtype=dtype)
-
-    def __repr__(self):
-        """`rn.__repr__() <==> repr(rn)`."""
-        if self.dtype == np.float64:
-            return 'En({})'.format(self.dim)
-        else:
-            return 'En({}, {!r})'.format(self.dim, self.dtype)
-
-    def __str__(self):
-        """`rn.__str__() <==> str(rn)`."""
-        if self.dtype == np.float64:
-            return 'En({})'.format(self.dim)
-        else:
-            return 'En({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(HilbertRn.Vector):
-
-        """Representation of an `En` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, En):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `En`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
-
 class Cn(Ntuples, Algebra):
 
     """The complex vector space :math:`C^n` with vector multiplication.
@@ -1481,7 +946,7 @@ class Cn(Ntuples, Algebra):
     """
 
     def __init__(self, dim, dtype=complex):
-        """Initialize a new `Cn` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -1499,13 +964,15 @@ class Cn(Ntuples, Algebra):
             `dim` {} is not a positive integer.'''.format(dim)))
 
         # TODO: support separate storage of real and imag parts?
-        dtype_ = np.dtype(dtype)
-        if dtype_ not in (np.complex64, np.complex128, np.complex256):
+        complex_dtype = np.dtype(dtype)
+        if complex_dtype not in _type_map_c2r.keys():
             raise TypeError(errfmt('''
             `dtype` {} not a complex floating-point type.
             '''.format(dtype)))
 
-        super().__init__(dim, dtype_)
+        super().__init__(dim, complex_dtype)
+        self._real_dtype = _type_map_c2r[complex_dtype]
+        self._complex_dtype = complex_dtype
         self._field = ComplexNumbers()
 
     def _lincomb(self, z, a, x, b, y):
@@ -1567,9 +1034,9 @@ class Cn(Ntuples, Algebra):
 
         Parameters
         ----------
-        x : `Rn.Vector`
+        x : `Cn.Vector`
             First factor
-        y : `Rn.Vector`
+        y : `Cn.Vector`
             Second factor, used to store the result
 
         Returns
@@ -1611,7 +1078,7 @@ class Cn(Ntuples, Algebra):
         """
 
         def __init__(self, space, data):
-            """Initialize a new `Cn.Vector` instance.
+            """Initialize a new instance.
 
             Parameters
             ----------
@@ -1652,10 +1119,7 @@ class Cn(Ntuples, Algebra):
             >>> x
             Cn(3).element([(10+1j), (6+0j), (4-2j)])
             """
-            real_types = {np.dtype(np.complex64): np.float32,
-                          np.dtype(np.complex128): np.float64,
-                          np.dtype(np.complex256): np.float128}
-            rn = Rn(self.space.dim, real_types[self.space.dtype])
+            rn = Rn(self.space.dim, self.space._real_dtype)
             return rn.element(self.data.real)
 
         @real.setter
@@ -1712,10 +1176,7 @@ class Cn(Ntuples, Algebra):
             >>> x
             Cn(3).element([(5+2j), (3+0j), (2-4j)])
             """
-            real_types = {np.dtype(np.complex64): np.float32,
-                          np.dtype(np.complex128): np.float64,
-                          np.dtype(np.complex256): np.float128}
-            rn = Rn(self.space.dim, real_types[self.space.dtype])
+            rn = Rn(self.space.dim, self.space._real_dtype)
             return rn.element(self.data.imag)
 
         @imag.setter
@@ -1746,17 +1207,840 @@ class Cn(Ntuples, Algebra):
             self.imag.data[:] = newimag
 
 
+class Rn(Cn):
+
+    """The real vector space :math:`R^n` with vector multiplication.
+
+    Its elements are represented as instances of the inner `Rn.Vector`
+    class.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, dtype=float):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        `dim` : `int`
+            The dimension of the space
+        `dtype` : `object`, optional  (Default: `float`)
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only real floating-point types are allowed.
+        """
+        real_dtype = np.dtype(dtype)
+        if real_dtype not in _type_map_r2c.keys():
+            raise TypeError(errfmt('''
+            `dtype` {} not a real floating-point type.'''.format(dtype)))
+
+        super().__init__(dim, _type_map_r2c[real_dtype])
+        self._dtype = real_dtype
+        self._real_dtype = real_dtype
+        self._field = RealNumbers()
+
+    def __repr__(self):
+        """`rn.__repr__() <==> repr(rn)`."""
+        if self.dtype == np.float64:
+            return 'Rn({})'.format(self.dim)
+        else:
+            return 'Rn({}, {!r})'.format(self.dim, self.dtype)
+
+    def __str__(self):
+        """`rn.__str__() <==> str(rn)`."""
+        if self.dtype == np.float64:
+            return 'Rn({})'.format(self.dim)
+        else:
+            return 'Rn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(Cn.Vector):
+
+        """Representation of an `Rn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, Rn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `Rn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
+
 class MetricCn(Cn, MetricSpace):
-    pass
+
+    """The complex space :math:`C^n` as a metric space.
+
+    Its elements are represented as instances of the inner
+    `MetricCn.Vector` class.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, dist, dtype=complex):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dim : int
+            The dimension of the space
+        dist : callable
+            The distance function defining a metric on :math:`C^n`. It
+            must accept two array arguments and fulfill the following
+            conditions for any vectors `x`, `y` and `z`:
+
+            - `dist(x, y) == dist(y, x)`
+            - `dist(x, y) >= 0`
+            - `dist(x, y) == 0` (approx.) if and only if `x == y`
+              (approx.)
+            - `dist(x, y) <= dist(x, z) + dist(z, y)`
+
+        dtype : `object`, optional
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only complex floating-point types are allowed.
+        """
+        if not callable(dist):
+            raise TypeError('`dist` {!r} not callable.'.format(dist))
+
+        self._dist_impl = dist
+        super().__init__(dim, dtype)
+
+    def _dist(self, x, y):
+        """Calculate the distance between two vectors.
+
+        Parameters
+        ----------
+        x, y : `NormedCn.Vector`
+            The vectors whose mutual distance is calculated
+
+        Returns
+        -------
+        dist : `float`
+            Distance between the vectors
+
+        Examples
+        --------
+        >>> from numpy.linalg import norm
+        >>> c2_2 = MetricCn(2, dist=lambda x, y: norm(x - y, ord=2))
+        >>> x = c2_2.element([3+1j, 4])
+        >>> y = c2_2.element([1j, 4-4j])
+        >>> c2_2.dist(x, y)
+        5.0
+
+        >>> c2_2 = MetricCn(2, dist=lambda x, y: norm(x - y, ord=1))
+        >>> x = c2_2.element([3+1j, 4])
+        >>> y = c2_2.element([1j, 4-4j])
+        >>> c2_2.dist(x, y)
+        7.0
+        """
+        return float(self._dist_impl(x, y))
+
+    def __repr__(self):
+        """`cn.__repr__() <==> repr(cn)`."""
+        if self.dtype == np.complex128:
+            return 'MetricCn({}, {!r})'.format(self.dim, self._dist_impl)
+        else:
+            return 'MetricCn({}, {!r}, {!r})'.format(self.dim, self._dist_impl,
+                                                     self.dtype)
+
+    def __str__(self):
+        """`cn.__str__() <==> str(cn)`."""
+        if self.dtype == np.complex128:
+            return 'MetricCn({})'.format(self.dim)
+        else:
+            return 'MetricCn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(Cn.Vector, MetricSpace.Vector):
+
+        """Representation of a `MetricCn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, MetricCn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `MetricCn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
+
+class MetricRn(MetricCn):
+
+    """The real space :math:`R^n` as a metric space.
+
+    Its elements are represented as instances of the inner
+    `MetricRn.Vector` class.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, dist, dtype=float):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        `dim` : `int`
+            The dimension of the space
+        dist : callable
+            The distance function defining a metric on :math:`R^n`. It
+            must accept two array arguments and fulfill the following
+            conditions for any vectors `x`, `y` and `z`:
+
+            - `dist(x, y) == dist(y, x)`
+            - `dist(x, y) >= 0`
+            - `dist(x, y) == 0` (approx.) if and only if `x == y`
+              (approx.)
+            - `dist(x, y) <= dist(x, z) + dist(z, y)`
+
+        `dtype` : `object`, optional  (Default: `float`)
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only real floating-point types are allowed.
+        """
+        real_dtype = np.dtype(dtype)
+        if real_dtype not in _type_map_r2c.keys():
+            raise TypeError(errfmt('''
+            `dtype` {} not a real floating-point type.'''.format(dtype)))
+
+        super().__init__(dim, dist, _type_map_r2c[real_dtype])
+        self._dtype = real_dtype
+        self._real_dtype = real_dtype
+        self._field = RealNumbers()
+
+    def __repr__(self):
+        """`rn.__repr__() <==> repr(rn)`."""
+        if self.dtype == np.float64:
+            return 'MetricRn({}, {!r})'.format(self.dim, self._dist_impl)
+        else:
+            return 'MetricRn({}, {!r}, {!r})'.format(self.dim, self._dist_impl,
+                                                     self.dtype)
+
+    def __str__(self):
+        """`rn.__str__() <==> str(rn)`."""
+        if self.dtype == np.float64:
+            return 'MetricRn({})'.format(self.dim)
+        else:
+            return 'MetricRn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(Cn.Vector, MetricSpace.Vector):
+
+        """Representation of a `MetricRn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, MetricRn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `MetricRn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
 
 class NormedCn(MetricCn, NormedSpace):
-    pass
+
+    """The complex space :math:`C^n` with a norm.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, norm, dtype=complex):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+
+        dim : `int`
+            The dimension of the space
+        norm : callable
+            The norm implementation. It must accept an array-like
+            argument, return a `RealNumber` and satisfy the following
+            properties:
+
+            - `norm(x) >= 0`
+            - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
+            - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
+            - `norm(x + y) <= norm(x) + norm(y)`
+
+        dtype : `object`, optional
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only real floating-point types are allowed.
+        """
+        if not callable(norm):
+            raise TypeError('`norm` {} is not callable.'.format(norm))
+
+        def induced_dist(x, y):
+            """The distance induced by the norm.
+
+            Examples
+            --------
+            >>> import numpy as np
+            >>> from functools import partial
+            >>> c2 = NormedCn(2, norm=partial(np.linalg.norm, ord=1))
+            >>> x = c2.element([3+1j, 4])
+            >>> y = c2.element([-1+4j, 2-2j])
+            >>> c2.dist(x, y)
+            6.0
+            """
+            return float(norm(x - y))
+
+        super().__init__(dim, induced_dist, dtype)
+        self._norm_impl = norm
+
+    def _norm(self, x):
+        """Calculate the norm of a vector.
+
+        Parameters
+        ----------
+        x : `NormedCn.Vector`
+            The vector whose norm is calculated
+
+        Returns
+        -------
+        norm : `float`
+            Norm of the vector
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> c2_2 = NormedCn(2, norm=np.linalg.norm)  # 2-norm
+        >>> x = c2_2.element([3+1j, 1-5j])
+        >>> c2_2.norm(x)
+        6.0
+
+        >>> from functools import partial
+        >>> c2_1 = NormedCn(2, partial(np.linalg.norm, ord=1))
+        >>> x = c2_1.element([3-4j, 12+5j])
+        >>> c2_1.norm(x)
+        18.0
+        """
+        return float(self._norm_impl(x))
+
+    def __repr__(self):
+        """`cn.__repr__() <==> repr(cn)`."""
+        if self.dtype == np.complex128:
+            return 'NormedCn({}, {!r})'.format(self.dim, self._norm_impl)
+        else:
+            return 'NormedCn({}, {!r}, {!r})'.format(self.dim, self._norm_impl,
+                                                     self.dtype)
+
+    def __str__(self):
+        """`cn.__str__() <==> str(cn)`."""
+        if self.dtype == np.complex128:
+            return 'NormedCn({})'.format(self.dim)
+        else:
+            return 'NormedCn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(MetricCn.Vector, NormedSpace.Vector):
+
+        """Representation of a `NormedCn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, NormedCn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `NormedCn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
+
+class NormedRn(NormedCn):
+
+    """The real space :math:`R^n` with a norm.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, norm, dtype=float):
+        """Create a new NormedRn instance.
+
+        Parameters
+        ----------
+
+        dim : `int`
+            The dimension of the space
+        norm : callable
+            The norm implementation. It must accept an array-like
+            argument, return a `RealNumber` and satisfy the following
+            properties:
+
+            - `norm(x) >= 0`
+            - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
+            - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
+            - `norm(x + y) <= norm(x) + norm(y)`
+
+        dtype : `object`, optional
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only real floating-point types are allowed.
+        """
+        real_dtype = np.dtype(dtype)
+        if real_dtype not in _type_map_r2c.keys():
+            raise TypeError(errfmt('''
+            `dtype` {} not a real floating-point type.'''.format(dtype)))
+
+        super().__init__(dim, norm, _type_map_r2c[real_dtype])
+        self._dtype = real_dtype
+        self._real_dtype = real_dtype
+        self._field = RealNumbers()
+
+    def __repr__(self):
+        """`rn.__repr__() <==> repr(rn)`."""
+        if self.dtype == np.float64:
+            return 'NormedRn({}, {!r})'.format(self.dim, self._norm_impl)
+        else:
+            return 'NormedRn({}, {!r}, {!r})'.format(self.dim, self._norm_impl,
+                                                     self.dtype)
+
+    def __str__(self):
+        """`rn.__str__() <==> str(rn)`."""
+        if self.dtype == np.float64:
+            return 'NormedRn({})'.format(self.dim)
+        else:
+            return 'NormedRn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(NormedCn.Vector):
+
+        """Representation of a `NormedRn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, NormedRn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `NormedRn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
 
 class HilbertCn(NormedCn, HilbertSpace):
-    pass
+
+    """The complex space :math:`C^n` with an inner product.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, inner, dtype=complex):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+
+        dim : `int`
+            The dimension of the space
+        inner : callable
+            The inner product implementation. It must accept two
+            array-like arguments, return a complex number and satisfy
+            the following conditions for all vectors `x`, `y` and `z`
+            and scalars `s`:
+
+             - `inner(x, y) == conjugate(inner(y, x))`
+             - `inner(s * x, y) == s * inner(x, y)`
+             - `inner(x + z, y) == inner(x, y) + inner(z, y)`
+             - `inner(x, x) == 0` (approx.) only if `x == 0` (approx.)
+
+        dtype : `object`, optional
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only complex floating-point types are allowed.
+        """
+        if not callable(inner):
+            raise TypeError(errfmt('''
+            `inner` {} not callable.'''.format(inner)))
+
+        def induced_norm(x):
+            """The norm induced by the inner product.
+
+            Examples
+            --------
+            >>> import numpy as np
+            >>> c2 = HilbertCn(2, inner=np.vdot)
+            >>> x = c2.element([3+1j, 1-5j])
+            >>> c2.norm(x)
+            6.0
+            """
+            return sqrt(float(inner(x, x).real))
+
+        super().__init__(dim, induced_norm, dtype)
+        self._inner_impl = inner
+
+    def _inner(self, x, y):
+        """Raw inner product of two vectors.
+
+        Parameters
+        ----------
+
+        x, y : `HilbertCn.Vector`
+            The vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : `complex`
+            Inner product of `x` and `y`.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> c3 = HilbertCn(2, inner=lambda x, y: np.vdot(y, x))
+        >>> x = c3.element([5+1j, -2j])
+        >>> y = c3.element([1, 1+1j])
+        >>> c3.inner(x, y) == (5+1j)*1 + (-2j)*(1-1j)
+        True
+        >>> weights = np.array([1., 2.])
+        >>> c3w = HilbertCn(2, lambda x, y: np.vdot(weights * y, x))
+        >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
+        True
+        """
+        return complex(self._inner_impl(x, y))
+
+    def __repr__(self):
+        """`cn.__repr__() <==> repr(cn)`."""
+        if self.dtype == np.complex128:
+            return 'HilbertCn({}, {!r})'.format(self.dim, self._inner_impl)
+        else:
+            return 'HilbertCn({}, {!r}, {!r})'.format(self.dim,
+                                                      self._inner_impl,
+                                                      self.dtype)
+
+    def __str__(self):
+        """`cn.__str__() <==> str(cn)`."""
+        if self.dtype == np.complex128:
+            return 'HilbertCn({})'.format(self.dim)
+        else:
+            return 'HilbertCn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(NormedCn.Vector, HilbertSpace.Vector):
+
+        """Representation of a `HilbertCn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, HilbertCn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `HilbertCn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
+
+class HilbertRn(HilbertCn):
+
+    """The real space :math:`R^n` with an inner product.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, inner, dtype=float):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+
+        dim : `int`
+            The dimension of the space
+        inner : callable
+            The inner product implementation. It must accept two
+            array-like arguments, return a complex number and satisfy
+            the following conditions for all vectors `x`, `y` and `z`
+            and scalars `s`:
+
+             - `inner(x, y) == inner(y, x)`
+             - `inner(s * x, y) == s * inner(x, y)`
+             - `inner(x + z, y) == inner(x, y) + inner(z, y)`
+             - `inner(x, x) == 0` (approx.) only if `x == 0` (approx.)
+
+        dtype : `object`, optional
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only real floating-point types are allowed.
+        """
+        real_dtype = np.dtype(dtype)
+        if real_dtype not in _type_map_r2c.keys():
+            raise TypeError(errfmt('''
+            `dtype` {} not a real floating-point type.'''.format(dtype)))
+
+        super().__init__(dim, inner, _type_map_r2c[real_dtype])
+        self._dtype = real_dtype
+        self._real_dtype = real_dtype
+        self._field = RealNumbers()
+
+    def _inner(self, x, y):
+        """Raw inner product of two vectors.
+
+        Parameters
+        ----------
+
+        x, y : `HilbertRn.Vector`
+            The vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : `float`
+            Inner product of `x` and `y`.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> r3 = HilbertRn(3, inner=np.vdot)
+        >>> x = r3.element([5, 3, 2])
+        >>> y = r3.element([1, 2, 3])
+        >>> r3.inner(x, y) == 5*1 + 3*2 + 2*3
+        True
+        >>> weights = np.array([1., 2., 1.])
+        >>> r3w = HilbertRn(3, lambda x, y: np.vdot(weights * x, y))
+        >>> r3w.inner(x, y) == 1*5*1 + 2*3*2 + 1*2*3
+        True
+        """
+        return float(self._inner_impl(x, y))
+
+    def __repr__(self):
+        """`rn.__repr__() <==> repr(rn)`."""
+        if self.dtype == np.float64:
+            return 'HilbertRn({}, {!r})'.format(self.dim, self._inner_impl)
+        else:
+            return 'HilbertRn({}, {!r}, {!r})'.format(self.dim,
+                                                      self._inner_impl,
+                                                      self.dtype)
+
+    def __str__(self):
+        """`rn.__str__() <==> str(rn)`."""
+        if self.dtype == np.float64:
+            return 'HilbertRn({})'.format(self.dim)
+        else:
+            return 'HilbertRn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(HilbertCn.Vector):
+
+        """Representation of a `HilbertRn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, HilbertRn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `HilbertRn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
 
 class EuclideanCn(HilbertCn):
-    pass
+
+    """The `n`-dimensional standard Euclidean space.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, dtype=complex):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+
+        dim : `int`
+            The dimension of the space
+        dtype : `object`, optional
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only real floating-point types are allowed.
+
+        Examples
+        --------
+        >>> c3 = EuclideanCn(2)
+        >>> x = c3.element([5+1j, -2j])
+        >>> y = c3.element([1, 1+1j])
+        >>> c3.inner(x, y) == (5+1j)*1 + (-2j)*(1-1j)
+        True
+        """
+        def inner(x, y):
+            """Default inner product.
+
+            Since `numpy.vdot` conjugates the first argument, we need
+            to switch `x` and `y`.
+            """
+            return np.vdot(y, x)
+
+        super().__init__(dim, inner=inner, dtype=dtype)
+
+    def __repr__(self):
+        """`cn.__repr__() <==> repr(cn)`."""
+        if self.dtype == np.complex128:
+            return 'EuclideanCn({})'.format(self.dim)
+        else:
+            return 'EuclideanCn({}, {!r})'.format(self.dim, self.dtype)
+
+    def __str__(self):
+        """`rn.__str__() <==> str(rn)`."""
+        if self.dtype == np.complex128:
+            return 'EuclideanCn({})'.format(self.dim)
+        else:
+            return 'EuclideanCn({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(HilbertCn.Vector):
+
+        """Representation of a `EuclideanCn` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, EuclideanCn):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `EuclideanCn`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
+
+class En(EuclideanCn):
+
+    """The `n`-dimensional standard Euclidean space.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def __init__(self, dim, dtype=float):
+        """Initialize a new `En` instance.
+
+        Parameters
+        ----------
+
+        dim : `int`
+            The dimension of the space
+        dtype : `object`, optional
+            The data type for each vector entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only real floating-point types are allowed.
+
+        Examples
+        --------
+        >>> e3 = En(3)
+        >>> x = e3.element([5, 3, 2])
+        >>> y = e3.element([1, 2, 3])
+        >>> e3.inner(x, y) == 5*1 + 3*2 + 2*3
+        True
+        """
+        real_dtype = np.dtype(dtype)
+        if real_dtype not in _type_map_r2c.keys():
+            raise TypeError(errfmt('''
+            `dtype` {} not a real floating-point type.'''.format(dtype)))
+
+        super().__init__(dim, _type_map_r2c[real_dtype])
+        self._dtype = real_dtype
+        self._real_dtype = real_dtype
+        self._field = RealNumbers()
+
+    def _inner(self, x, y):
+        """Raw inner product of two vectors."""
+        return float(self._inner_impl(x, y))
+
+    def __repr__(self):
+        """`rn.__repr__() <==> repr(rn)`."""
+        if self.dtype == np.float64:
+            return 'En({})'.format(self.dim)
+        else:
+            return 'En({}, {!r})'.format(self.dim, self.dtype)
+
+    def __str__(self):
+        """`rn.__str__() <==> str(rn)`."""
+        if self.dtype == np.float64:
+            return 'En({})'.format(self.dim)
+        else:
+            return 'En({}, {})'.format(self.dim, self.dtype)
+
+    class Vector(EuclideanCn.Vector):
+
+        """Representation of an `En` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, En):
+                raise TypeError(errfmt('''
+                `space` {!r} not an instance of `En`.
+                '''.format(space)))
+
+            super().__init__(space, data)
+
 
 # TODO: move - the requirement of CUDA for this module is bad!
 #def cartesian(dim, impl='numpy', **kwargs):
