@@ -29,29 +29,29 @@ from scipy.interpolate import interpn
 
 # ODL imports
 from odl.discr.grid import TensorGrid
-from odl.operator.operator import Operator
-from odl.space.cartesian import Ntuples
-from odl.space.function import FunctionSet
+from odl.operator.operator import Operator, LinearOperator
+from odl.space.cartesian import Ntuples, Rn, Cn
+from odl.space.function import FunctionSet, FunctionSpace
 from odl.space.domain import IntervalProd
 from odl.utility.utility import errfmt
 
 
-class GridCollocation(Operator):
+class RawGridCollocation(Operator):
 
     """Function evaluation at grid points.
 
-    This is the default 'restriction' operator used by all core
-    discretization classes.
+    This is the raw `Operator` version of the default 'restriction'
+    used by all core discretization classes.
     """
 
     def __init__(self, ip_funcset, grid, ntuples):
-        """Initialize a new `PointCollocation` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
         ip_funcset : `FunctionSet`
             Set of functions, the operator range. Its `domain` must
-            be an `IntervalProduct`.
+            be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             `ip_funcset.domain`.
@@ -166,7 +166,7 @@ class GridCollocation(Operator):
 
         Finally create the operator:
 
-        >>> coll_op = GridCollocation(funcset, grid, rn)
+        >>> coll_op = RawGridCollocation(funcset, grid, rn)
         >>> func_elem = funcset.element(lambda x, y: x - y)
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
@@ -205,7 +205,63 @@ class GridCollocation(Operator):
         return self.range.element(values)
 
 
-class NearestInterpolation(Operator):
+class GridCollocation(LinearOperator):
+
+    """Function evaluation at grid points.
+
+    This is the `LinearOperator` version of the default 'restriction'
+    used by all core discretization classes.
+    """
+
+    def __init__(self, ip_funcspace, grid, ntuples):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        ip_funcspace : `FunctionSet`
+            Space of functions, the operator range. Its `domain` must
+            be an `IntervalProd`.
+        grid : `TensorGrid`
+            The grid on which to evaluate. Must be contained in
+            `ip_funcspace.domain`.
+        ntuples : `Rn` or `Cn`
+            Implementation of n-tuples, the operator domain. Its
+            dimension must be equal to `grid.ntotal`.
+        """
+        if not isinstance(ip_funcspace, FunctionSpace):
+            raise TypeError(errfmt('''
+            `ip_funcspace` {} not an instance of `FunctionSpace`.
+            '''.format(ip_funcspace)))
+
+        if not isinstance(ip_funcspace.domain, IntervalProd):
+            raise TypeError(errfmt('''
+            `domain` {} of `ip_funcspace` not an instance of
+            `IntervalProd`.'''.format(ip_funcspace.domain)))
+
+        if not isinstance(grid, TensorGrid):
+            raise TypeError(errfmt('''
+            `grid` {} not a `TensorGrid` instance.
+            '''.format(grid)))
+
+        if not isinstance(ntuples, (Rn, Cn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not an instance of `Rn` or `Cn`.
+            '''.format(ntuples)))
+
+        if ntuples.dim != grid.ntotal:
+            raise ValueError(errfmt('''
+            dimension {} of `ntuples` not equal to total number {} of
+            grid points.'''.format(ntuples.dim, grid.ntotal)))
+
+        if ip_funcspace.field != ntuples.field:
+            raise ValueError(errfmt('''
+            `field` {} of `ip_funcspace` not equal to `field` {}
+            of `ntuples`.'''.format(ip_funcspace.field, ntuples.field)))
+
+        super().__init__(ip_funcspace, grid, ntuples)
+
+
+class RawNearestInterpolation(Operator):
 
     """Nearest neighbor interpolation as an operator."""
 
@@ -216,7 +272,7 @@ class NearestInterpolation(Operator):
         ----------
         ip_funcset : `FunctionSet`
             Set of functions, the operator domain. Its `domain` must
-            be an `IntervalProduct`.
+            be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to interpolate. Must be contained in
             `ip_funcset.domain`.
@@ -287,6 +343,10 @@ class NearestInterpolation(Operator):
         outp : `IntervalProdFunctionSet.Vector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
+
+        Examples
+        --------
+        TODO:
         """
         def func(x):
             return interpn(points=self.grid.coord_vectors,

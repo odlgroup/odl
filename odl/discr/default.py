@@ -32,12 +32,12 @@ from odl.space.function import FunctionSet
 from odl.utility.utility import errfmt
 
 
-class NearestInterpDiscretization(Discretization):
+class RawNearestInterpDiscretization(Discretization):
 
     """Discretization based on nearest neighbor interpolation."""
 
     def __init__(self, ip_funcset, grid, ntuples):
-        """Initialize a new `NearestInterpDiscretization` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -62,6 +62,11 @@ class NearestInterpDiscretization(Discretization):
         if not isinstance(ntuples, Ntuples):
             raise TypeError(errfmt('''
             `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
+
+        if grid.ntotal != ntuples.dim:
+            raise ValueError(errfmt('''
+            total number {} of grid points not equal to `ntuples.dim`
+            {}.'''.format(grid.ntotal, ntuples.dim)))
 
         restr = GridCollocation(ip_funcset, grid, ntuples)
         ext = NearestInterpolation(ip_funcset, grid, ntuples)
