@@ -43,7 +43,8 @@ from odl.space.space import (LinearSpace, NormedSpace, MetricSpace,
 from odl.utility.utility import errfmt
 
 
-class Discretization(with_metaclass(ABCMeta, Set)):
+# TODO: wrap or subclass `Ntuples`?
+class Discretization(with_metaclass(ABCMeta, Ntuples)):
 
     """Abstract discretization class.
 
@@ -159,19 +160,23 @@ class Discretization(with_metaclass(ABCMeta, Set)):
                 `ext.range` {} not equal to `set_` {}.
                 '''.format(ext.range, set_)))
 
+        super().__init__(ntuples.dim, ntuples.dtype)
         self._set = set_
         self._ntuples = ntuples
         self._restriction = restr
         self._extension = ext
 
+    @property
     def set(self):
         """Return the `set` attribute."""
         return self._set
 
+    @property
     def ntuples(self):
         """Return the `ntuples` attribute."""
         return self._ntuples
 
+    @property
     def restriction(self):
         """The operator mapping a `set` element to an `n`-tuple."""
         if self._restriction is not None:
@@ -179,6 +184,7 @@ class Discretization(with_metaclass(ABCMeta, Set)):
         else:
             raise NotImplementedError('no `restriction` provided.')
 
+    @property
     def extension(self):
         """The operator mapping an `n`-tuple to a `set` element."""
         if self._extension is not None:
@@ -207,7 +213,33 @@ class Discretization(with_metaclass(ABCMeta, Set)):
             elem = self.ntuples.element(inp)
         except TypeError:
             elem = self.restriction(self.set.element(inp))
-        return self.Vector(self, elem)
+        return self.Vector(self, elem.data)
+
+    def contains(self, other):
+        """Test if `other` is a member of this set."""
+        return other in self.ntuples
+
+    def equals(self, other):
+        """Test if `other` is equal to this set.
+
+        Parameters
+        ----------
+        other : `object`
+            The object to test for equality
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is a `Discretization` instance and
+            all attributes `set`, `ntuples`, `restriction` and
+            `extension` of `other` and this discretization are equal,
+            `False` otherwise.
+        """
+        return (isinstance(other, Discretization) and
+                other.set == self.set and
+                other.ntuples == self.ntuples and
+                other.restriction == self.restriction and
+                other.extension == self.extension)
 
     class Vector(Ntuples.Vector):
 
@@ -303,7 +335,7 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
         """Raw linear combination."""
         return self.ntuples._lincomb(z, a, x, b, y)
 
-    class Vector(Discretization.Vector, LinearSpace.Vector):
+    class Vector(Cn.Vector):
 
         """Representation of a `LinearSpaceDiscretization` element."""
 
@@ -351,10 +383,6 @@ class MetricSpaceDiscretization(with_metaclass(ABCMeta,
         """Raw distance implementation."""
         return self.ntuples._dist(x, y)
 
-    class Vector(LinearSpaceDiscretization.Vector, MetricSpace.Vector):
-
-        """Representation of a `MetricSpaceDiscretization` element."""
-
 
 class NormedSpaceDiscretization(with_metaclass(ABCMeta,
                                                MetricSpaceDiscretization,
@@ -398,10 +426,6 @@ class NormedSpaceDiscretization(with_metaclass(ABCMeta,
     def _norm(self, x):
         """Raw norm implementation."""
         return self.ntuples._norm(x)
-
-    class Vector(MetricSpaceDiscretization.Vector, NormedSpace.Vector):
-
-        """Representation of a `NormedSpaceDiscretization` element."""
 
 
 class HilbertSpaceDiscretization(with_metaclass(ABCMeta,
@@ -447,10 +471,6 @@ class HilbertSpaceDiscretization(with_metaclass(ABCMeta,
         """Raw inner product implementation."""
         return self.ntuples._inner(x, y)
 
-    class Vector(NormedSpaceDiscretization.Vector, HilbertSpace.Vector):
-
-        """Representation of a `HilbertSpaceDiscretization` element."""
-
 
 class AlgebraDiscretization(with_metaclass(ABCMeta,
                                            LinearSpaceDiscretization,
@@ -495,133 +515,129 @@ class AlgebraDiscretization(with_metaclass(ABCMeta,
         """Raw multiply implementation."""
         return self.ntuples._multiply(x, y)
 
-    class Vector(LinearSpaceDiscretization.Vector, Algebra.Vector):
 
-        """Representation of an `AlgebraDiscretization` element."""
-
-
-def uniform_discretization(parent, rnimpl, shape=None, order='C'):
-    """ Creates an discretization of space parent using rn as the
-    underlying representation.
-
-    order indicates the order data is stored in, 'C'-order is the default
-    numpy order, also called row major.
-    """
-
-    rn_type = type(rnimpl)
-    rn_vector_type = rn_type.Vector
-
-    if shape is None:
-        shape = (rnimpl.dim,)
-
-    class UniformDiscretization(rn_type):
-        """ Uniform discretization of an square
-            Represents vectors by R^n elements
-            Uses sum method for integration
-        """
-
-        def __init__(self, parent, rn, shape, order):
-            if not isinstance(parent.domain, IntervalProd):
-                raise NotImplementedError('Can only discretize IntervalProds')
-
-            if not isinstance(rn, HilbertSpace):
-                pass
-                # raise NotImplementedError('Rn has to be a Hilbert space')
-
-            if not isinstance(rn, Algebra):
-                pass
-                # raise NotImplementedError('Rn has to be an algebra')
-
-            if rn.dim != np.prod(shape):
-                raise NotImplementedError(errfmt('''
-                Dimensions do not match, expected {}, got {}
-                '''.format(np.prod(rn.dim), np.prod(shape))))
-
-            self.parent = parent
-            self.shape = tuple(shape)
-            self.order = order
-            self._rn = rn
-            dx = np.array(
-                [((self.parent.domain.end[i] - self.parent.domain.begin[i]) /
-                  (self.shape[i] - 1)) for i in range(self.parent.domain.dim)])
-            self.scale = float(np.prod(dx))
-
-        def _inner(self, vec1, vec2):
-            return self._rn._inner(vec1, vec2) * self.scale
-
-        def _norm(self, vector):
-            return self._rn._norm(vector) * sqrt(self.scale)
-
-        def equals(self, other):
-            return (isinstance(other, UniformDiscretization) and
-                    self.shape == other.shape and
-                    self._rn.equals(other._rn))
-
-        def element(self, data=None, **kwargs):
-            if isinstance(data, FunctionSpace.Vector):
-                if self.parent.domain.dim == 1:
-                    tmp = np.array([data(point)
-                                    for point in self.points()],
-                                   **kwargs)
-                else:
-                    tmp = np.array([data(point)
-                                    for point in zip(*self.points())],
-                                   **kwargs)
-                return self.element(tmp)
-            elif data is not None:
-                data = np.asarray(data)
-                if data.shape == (self.dim,):
-                    return super().element(data)
-                elif data.shape == self.shape:
-                    return self.element(data.flatten(self.order))
-                else:
-                    raise ValueError(errfmt('''
-                    Input numpy array is of shape {}, expected shape
-                    {} or {}'''.format(data.shape, (self.dim,), self.shape)))
-            else:
-                return super().element(data, **kwargs)
-
-        def integrate(self, vector):
-            return float(self._rn.sum(vector) * self.scale)
-
-        def points(self):
-            if self.parent.domain.dim == 1:
-                return np.linspace(self.parent.domain.begin[0],
-                                   self.parent.domain.end[0],
-                                   self.shape[0])
-            else:
-                oned = [np.linspace(self.parent.domain.begin[i],
-                                    self.parent.domain.end[i],
-                                    self.shape[i])
-                        for i in range(self.parent.domain.dim)]
-
-                points = np.meshgrid(*oned)
-
-                return tuple(point.flatten(self.order) for point in points)
-
-        def __getattr__(self, name):
-            if name in self.__dict__:
-                return self.__dict__[name]
-            else:
-                return getattr(self._rn, name)
-
-        def __str__(self):
-            if len(self.shape) > 1:
-                return ('[' + repr(self.parent) + ', ' + str(self._rn) + ', ' +
-                        'x'.join(str(d) for d in self.shape) + ']')
-            else:
-                return '[' + repr(self.parent) + ', ' + str(self._rn) + ']'
-
-        def __repr__(self):
-            shapestr = (', ' + repr(self.shape)
-                        if self.shape != (self._rn.dim,) else '')
-            orderstr = ', ' + repr(self.order) if self.order != 'C' else ''
-
-            return ("uniform_discretization(" + repr(self.parent) + ", " +
-                    repr(self._rn) + shapestr + orderstr + ")")
-
-        class Vector(rn_vector_type):
-            def asarray(self):
-                return np.reshape(self[:], self.space.shape, self.space.order)
-
-    return UniformDiscretization(parent, rnimpl, shape, order)
+#def uniform_discretization(parent, rnimpl, shape=None, order='C'):
+#    """ Creates an discretization of space parent using rn as the
+#    underlying representation.
+#
+#    order indicates the order data is stored in, 'C'-order is the default
+#    numpy order, also called row major.
+#    """
+#
+#    rn_type = type(rnimpl)
+#    rn_vector_type = rn_type.Vector
+#
+#    if shape is None:
+#        shape = (rnimpl.dim,)
+#
+#    class UniformDiscretization(rn_type):
+#        """ Uniform discretization of an square
+#            Represents vectors by R^n elements
+#            Uses sum method for integration
+#        """
+#
+#        def __init__(self, parent, rn, shape, order):
+#            if not isinstance(parent.domain, IntervalProd):
+#                raise NotImplementedError('Can only discretize IntervalProds')
+#
+#            if not isinstance(rn, HilbertSpace):
+#                pass
+#                # raise NotImplementedError('Rn has to be a Hilbert space')
+#
+#            if not isinstance(rn, Algebra):
+#                pass
+#                # raise NotImplementedError('Rn has to be an algebra')
+#
+#            if rn.dim != np.prod(shape):
+#                raise NotImplementedError(errfmt('''
+#                Dimensions do not match, expected {}, got {}
+#                '''.format(np.prod(rn.dim), np.prod(shape))))
+#
+#            self.parent = parent
+#            self.shape = tuple(shape)
+#            self.order = order
+#            self._rn = rn
+#            dx = np.array(
+#                [((self.parent.domain.end[i] - self.parent.domain.begin[i]) /
+#                  (self.shape[i] - 1)) for i in range(self.parent.domain.dim)])
+#            self.scale = float(np.prod(dx))
+#
+#        def _inner(self, vec1, vec2):
+#            return self._rn._inner(vec1, vec2) * self.scale
+#
+#        def _norm(self, vector):
+#            return self._rn._norm(vector) * sqrt(self.scale)
+#
+#        def equals(self, other):
+#            return (isinstance(other, UniformDiscretization) and
+#                    self.shape == other.shape and
+#                    self._rn.equals(other._rn))
+#
+#        def element(self, data=None, **kwargs):
+#            if isinstance(data, FunctionSpace.Vector):
+#                if self.parent.domain.dim == 1:
+#                    tmp = np.array([data(point)
+#                                    for point in self.points()],
+#                                   **kwargs)
+#                else:
+#                    tmp = np.array([data(point)
+#                                    for point in zip(*self.points())],
+#                                   **kwargs)
+#                return self.element(tmp)
+#            elif data is not None:
+#                data = np.asarray(data)
+#                if data.shape == (self.dim,):
+#                    return super().element(data)
+#                elif data.shape == self.shape:
+#                    return self.element(data.flatten(self.order))
+#                else:
+#                    raise ValueError(errfmt('''
+#                    Input numpy array is of shape {}, expected shape
+#                    {} or {}'''.format(data.shape, (self.dim,), self.shape)))
+#            else:
+#                return super().element(data, **kwargs)
+#
+#        def integrate(self, vector):
+#            return float(self._rn.sum(vector) * self.scale)
+#
+#        def points(self):
+#            if self.parent.domain.dim == 1:
+#                return np.linspace(self.parent.domain.begin[0],
+#                                   self.parent.domain.end[0],
+#                                   self.shape[0])
+#            else:
+#                oned = [np.linspace(self.parent.domain.begin[i],
+#                                    self.parent.domain.end[i],
+#                                    self.shape[i])
+#                        for i in range(self.parent.domain.dim)]
+#
+#                points = np.meshgrid(*oned)
+#
+#                return tuple(point.flatten(self.order) for point in points)
+#
+#        def __getattr__(self, name):
+#            if name in self.__dict__:
+#                return self.__dict__[name]
+#            else:
+#                return getattr(self._rn, name)
+#
+#        def __str__(self):
+#            if len(self.shape) > 1:
+#                return ('[' + repr(self.parent) + ', ' + str(self._rn) + ', ' +
+#                        'x'.join(str(d) for d in self.shape) + ']')
+#            else:
+#                return '[' + repr(self.parent) + ', ' + str(self._rn) + ']'
+#
+#        def __repr__(self):
+#            shapestr = (', ' + repr(self.shape)
+#                        if self.shape != (self._rn.dim,) else '')
+#            orderstr = ', ' + repr(self.order) if self.order != 'C' else ''
+#
+#            return ("uniform_discretization(" + repr(self.parent) + ", " +
+#                    repr(self._rn) + shapestr + orderstr + ")")
+#
+#        class Vector(rn_vector_type):
+#            def asarray(self):
+#                return np.reshape(self[:], self.space.shape, self.space.order)
+#
+#    return UniformDiscretization(parent, rnimpl, shape, order)
