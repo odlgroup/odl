@@ -989,7 +989,7 @@ class HilbertSpace(NormedSpace):
         if not self.contains(y):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
-        return float(self._inner(x, y))
+        return self.field.element(self._inner(x, y))
 
     # Default implmentation
     def _norm(self, x):
