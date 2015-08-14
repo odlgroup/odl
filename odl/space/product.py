@@ -357,7 +357,7 @@ class MetricProductSpace(LinearProductSpace, MetricSpace):
         5.0
         >>> r2x3.dist(x, y) == max((r2.dist(x_2, y_2), r3.dist(x_3, y_3)))
         True
-        >>> r2x3.dist(x, y) == x.dist(y) == y.dist(x)
+        >>> r2x3.dist(x, y) == r2x3.dist(y, x)
         True
 
         """
@@ -470,8 +470,6 @@ class NormedProductSpace(MetricProductSpace, NormedSpace):
     >>> r2x3.norm(x)
     5.0
     >>> r2x3.norm(x) == max((r2.norm(x_2), r3.norm(x_3)))
-    True
-    >>> r2x3.norm(x) == x.norm()
     True
     >>> w2x3 = NormedProductSpace(r2, r3, ord=1, weights=[0.2, 1])
     >>> w2x3.norm(x)

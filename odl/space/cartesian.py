@@ -1257,24 +1257,6 @@ class Rn(Cn):
         else:
             return 'Rn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(Cn.Vector):
-
-        """Representation of an `Rn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, Rn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `Rn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
 
 class MetricCn(Cn, MetricSpace):
 
@@ -1364,24 +1346,6 @@ class MetricCn(Cn, MetricSpace):
         else:
             return 'MetricCn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(Cn.Vector, MetricSpace.Vector):
-
-        """Representation of a `MetricCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, MetricCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `MetricCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
 
 class MetricRn(MetricCn):
 
@@ -1444,24 +1408,6 @@ class MetricRn(MetricCn):
             return 'MetricRn({})'.format(self.dim)
         else:
             return 'MetricRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(Cn.Vector, MetricSpace.Vector):
-
-        """Representation of a `MetricRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, MetricRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `MetricRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class NormedCn(MetricCn, NormedSpace):
@@ -1563,24 +1509,6 @@ class NormedCn(MetricCn, NormedSpace):
         else:
             return 'NormedCn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(MetricCn.Vector, NormedSpace.Vector):
-
-        """Representation of a `NormedCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, NormedCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `NormedCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
 
 class NormedRn(NormedCn):
 
@@ -1640,24 +1568,6 @@ class NormedRn(NormedCn):
             return 'NormedRn({})'.format(self.dim)
         else:
             return 'NormedRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(NormedCn.Vector):
-
-        """Representation of a `NormedRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, NormedRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `NormedRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class HilbertCn(NormedCn, HilbertSpace):
@@ -1760,24 +1670,6 @@ class HilbertCn(NormedCn, HilbertSpace):
         else:
             return 'HilbertCn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(NormedCn.Vector, HilbertSpace.Vector):
-
-        """Representation of a `HilbertCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, HilbertCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `HilbertCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
 
 class HilbertRn(HilbertCn):
 
@@ -1869,24 +1761,6 @@ class HilbertRn(HilbertCn):
         else:
             return 'HilbertRn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(HilbertCn.Vector):
-
-        """Representation of a `HilbertRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, HilbertRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `HilbertRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
 
 class EuclideanCn(HilbertCn):
 
@@ -1943,24 +1817,6 @@ class EuclideanCn(HilbertCn):
             return 'EuclideanCn({})'.format(self.dim)
         else:
             return 'EuclideanCn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(HilbertCn.Vector):
-
-        """Representation of a `EuclideanCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, EuclideanCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `EuclideanCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class En(EuclideanCn):
@@ -2022,24 +1878,6 @@ class En(EuclideanCn):
             return 'En({})'.format(self.dim)
         else:
             return 'En({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(EuclideanCn.Vector):
-
-        """Representation of an `En` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, En):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `En`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 # TODO: move - the requirement of CUDA for this module is bad!
