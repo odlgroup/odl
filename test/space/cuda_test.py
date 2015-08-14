@@ -30,13 +30,13 @@ from numpy import float64
 from odl.operator.operator import *
 from odl.space.space import *
 from odl.space.cartesian import Rn
-from odl.utility.testutils import skip_all_tests
+from odl.utility.testutils import skip_all
 
 try:
     from odl.utility.testutils import ODLTestCase
     from odl.space.cuda import *
 except ImportError:
-    ODLTestCase = skip_all_tests("Missing odlpp")
+    ODLTestCase = skip_all("Missing odlpp")
 
 import numpy as np
 

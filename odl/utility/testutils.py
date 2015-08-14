@@ -78,8 +78,8 @@ class ODLTestCase(unittest.TestCase):
         self.assertAllAlmostEquals(iter1, iter2, *args, **kwargs)
 
 
-def skip_all_tests(reason=None):
-    """ Creates a TestCase replacement class where all tests are skipped
+def skip_all(reason=None):
+    """ Create a TestCase replacement class where all tests are skipped
     """
     if reason is None:
         reason = ''

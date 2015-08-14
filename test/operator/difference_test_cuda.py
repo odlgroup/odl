@@ -31,14 +31,14 @@ from odl.space.function import L2
 from odl.space.set import Interval, Rectangle
 from odl.space.product import productspace
 
-from odl.utility.testutils import skip_all_tests
+from odl.utility.testutils import skip_all
 
 try:
     from odl.space.cuda import CudaRn
     import odlpp.odlpp_cuda as cuda
     from odl.utility.testutils import ODLTestCase
 except ImportError:
-    ODLTestCase = skip_all_tests("Missing odlpp")
+    ODLTestCase = skip_all("Missing odlpp")
 
 standard_library.install_aliases()
 
