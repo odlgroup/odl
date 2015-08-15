@@ -489,11 +489,6 @@ class Ntuples(Set):
     def equals(self, other):
         """Test if `other` is equal to this space.
 
-        Parameters
-        ----------
-        `other` : `object`
-            The object to check for equality
-
         Returns
         -------
         equals : boolean
@@ -842,10 +837,13 @@ class Ntuples(Set):
             Ntuples(2, dtype('int8')).element([0, 1])
             """
             # TODO: do a real compatibility check
-            try:
+            if isinstance(values, Ntuples.Vector):
                 return self.data.__setitem__(
                     indices, values.data.__getitem__(indices))
-            except AttributeError:
+            elif isinstance(values, np.ndarray):
+                return self.data.__setitem__(
+                    indices, values.__getitem__(indices))
+            else:
                 return self.data.__setitem__(indices, values)
 
         def __eq__(self, other):
@@ -1338,6 +1336,52 @@ class MetricCn(Cn, MetricSpace):
         """
         return float(self._dist_impl(x, y))
 
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : boolean
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, and **identical**
+            distance function, otherwise `False`.
+
+        Examples
+        --------
+        >>> from numpy.linalg import norm
+        >>> def dist(x, y, ord):
+        ...     return norm(x - y, ord)
+
+        >>> from functools import partial
+        >>> dist2 = partial(dist, ord=2)
+        >>> c3 = MetricCn(3, dist=dist2)
+        >>> c3_same = MetricCn(3, dist=dist2)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+
+        Different `dist` functions result in different spaces:
+
+        >>> dist1 = partial(dist, ord=1)
+        >>> c3_1 = MetricCn(3, dist=dist1)
+        >>> c3_2 = MetricCn(3, dist=dist2)
+        >>> c3_1.equals(c3_2)
+        False
+
+        Be careful with Lambdas - they result in non-identical function
+        objects:
+
+        >>> c3_lambda1 = MetricCn(3, lambda x, y: norm(x-y, ord=1))
+        >>> c3_lambda2 = MetricCn(3, lambda x, y: norm(x-y, ord=1))
+        >>> c3_lambda1.equals(c3_lambda2)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
+                self._dist_impl == other._dist_impl)
+
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
@@ -1501,6 +1545,49 @@ class NormedCn(MetricCn, NormedSpace):
         """
         return float(self._norm_impl(x))
 
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : boolean
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, and **identical**
+            norm function, otherwise `False`.
+
+        Examples
+        --------
+        >>> from numpy.linalg import norm
+        >>> from functools import partial
+        >>> norm2 = partial(norm, ord=2)
+        >>> c3 = NormedCn(3, norm=norm2)
+        >>> c3_same = NormedCn(3, norm=norm2)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+
+        Different `norm` functions result in different spaces:
+
+        >>> norm1 = partial(norm, ord=1)
+        >>> c3_1 = NormedCn(3, norm=norm1)
+        >>> c3_2 = NormedCn(3, norm=norm2)
+        >>> c3_1.equals(c3_2)
+        False
+
+        Be careful with Lambdas - they result in non-identical function
+        objects:
+
+        >>> c3_lambda1 = NormedCn(3, lambda x: norm(x, ord=1))
+        >>> c3_lambda2 = NormedCn(3, lambda x: norm(x, ord=1))
+        >>> c3_lambda1.equals(c3_lambda2)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
+                self._norm_impl == other._norm_impl)
+
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
@@ -1661,6 +1748,51 @@ class HilbertCn(NormedCn, HilbertSpace):
         """
         return complex(self._inner_impl(x, y))
 
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : boolean
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, and **identical**
+            inner product function, otherwise `False`.
+
+        Examples
+        --------
+        >>> from numpy import vdot
+        >>> def std_inner(x, y):
+        ...     return vdot(y, x)
+        >>> c3 = HilbertCn(3, inner=std_inner)
+        >>> c3_same = HilbertCn(3, inner=std_inner)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+
+        Different `inner` functions result in different spaces:
+
+        >>> def weighted_inner(x, y):
+        ...     weight = np.array([1., 2., 1.])
+        ...     return vdot(y, weight * x)
+        >>> c3 = HilbertCn(3, inner=std_inner)
+        >>> c3_w = HilbertCn(3, inner=weighted_inner)
+        >>> c3.equals(c3_w)
+        False
+
+        Be careful with Lambdas - they result in non-identical function
+        objects:
+
+        >>> c3_lambda1 = HilbertCn(3, lambda x, y: vdot(y, x))
+        >>> c3_lambda2 = HilbertCn(3, lambda x, y: vdot(y, x))
+        >>> c3_lambda1.equals(c3_lambda2)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
+                self._inner_impl == other._inner_impl)
+
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
@@ -1810,6 +1942,37 @@ class EuclideanCn(HilbertCn):
             return np.vdot(y, x)
 
         super().__init__(dim, inner=inner, dtype=dtype)
+
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : boolean
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, otherwise `False`.
+
+        Examples
+        --------
+        >>> c3 = EuclideanCn(3)
+        >>> c3_same = EuclideanCn(3)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+        >>> c4 = EuclideanCn(4)
+        >>> c3 == c4
+        False
+
+        Different data types result in different spaces:
+
+        >>> c3_csingle = EuclideanCn(3, dtype='csingle')
+        >>> c3.equals(c3_csingle)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype)
 
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
