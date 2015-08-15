@@ -841,7 +841,12 @@ class Ntuples(Set):
             >>> x
             Ntuples(2, dtype('int8')).element([0, 1])
             """
-            self.data[indices] = values
+            # TODO: do a real compatibility check
+            try:
+                return self.data.__setitem__(
+                    indices, values.data.__getitem__(indices))
+            except AttributeError:
+                return self.data.__setitem__(indices, values)
 
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`."""
