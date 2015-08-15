@@ -26,7 +26,7 @@ standard_library.install_aliases()
 
 from odl.discr.discretization import Discretization
 from odl.discr.grid import TensorGrid
-from odl.discr.operators import GridCollocation, NearestInterpolation
+from odl.discr.operators import RawGridCollocation, RawNearestInterpolation
 from odl.space.cartesian import Ntuples
 from odl.space.function import FunctionSet
 from odl.utility.utility import errfmt
@@ -68,6 +68,11 @@ class RawNearestInterpDiscretization(Discretization):
             total number {} of grid points not equal to `ntuples.dim`
             {}.'''.format(grid.ntotal, ntuples.dim)))
 
-        restr = GridCollocation(ip_funcset, grid, ntuples)
-        ext = NearestInterpolation(ip_funcset, grid, ntuples)
+        @property
+        def grid(self):
+            """Return the interpolation grid."""
+            return self.restr.grid
+
+        restr = RawGridCollocation(ip_funcset, grid, ntuples)
+        ext = RawNearestInterpolation(ip_funcset, grid, ntuples)
         super().__init__(ip_funcset, ntuples, restr, ext)
