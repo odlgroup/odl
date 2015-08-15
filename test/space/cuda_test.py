@@ -194,13 +194,9 @@ class TestMethods(ODLTestCase):
 
         correct_norm_squared = 1 ** 2 + 2 ** 2 + 3 ** 2
         correct_norm = math.sqrt(correct_norm_squared)
-        places = 6
 
         # Space function
         self.assertAlmostEquals(r3.norm(xd), correct_norm, places=5)
-
-        # Member function
-        self.assertAlmostEquals(xd.norm(), correct_norm, places=5)
 
     def test_inner(self):
         r3 = CudaRn(3)
@@ -211,9 +207,6 @@ class TestMethods(ODLTestCase):
 
         # Space function
         self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
-
-        # Member function
-        self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
     def vectors(self, rn):
         # Generate numpy arrays
@@ -333,7 +326,7 @@ class TestMethods(ODLTestCase):
         y_host[:] = x_host * y_host
 
         # Device side calculation
-        y_device.multiply(x_device)
+        y_device *= x_device
 
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(y_device, y_host, places=5)

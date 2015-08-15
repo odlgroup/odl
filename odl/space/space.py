@@ -740,7 +740,7 @@ class MetricSpace(LinearSpace):
                 # Optimization for the most common case
                 return True
             else:
-                return self.dist(other) == 0
+                return self.space.dist(self, other) == 0
 
         def __eq__(self, other):
             return self.equals(other)

@@ -512,10 +512,6 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         >>> y = rn.element([3, 1, 5])
         >>> rn.inner(x, y)
         20.0
-
-        Also has member inner
-        >>> x.inner(y)
-        20.0
         """
         return x.data.inner(y.data)
 
@@ -541,10 +537,6 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         >>> rn = CudaRn(3)
         >>> x = rn.element([2, 3, 6])
         >>> rn.norm(x)
-        7.0
-
-        Also has member inner
-        >>> x.norm()
         7.0
         """
         return x.data.norm()
