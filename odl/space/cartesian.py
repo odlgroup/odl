@@ -357,8 +357,10 @@ __all__ = ('Ntuples', 'Cn', 'Rn', 'MetricCn', 'MetricRn',
            'EuclideanCn', 'En')
 
 _type_map_r2c = {np.dtype('float32'): np.dtype('complex64'),
-                 np.dtype('float64'): np.dtype('complex128'),
-                 np.dtype('float128'): np.dtype('complex256')}
+                 np.dtype('float64'): np.dtype('complex128')}
+
+# complex256 not supported on all platforms
+#                 np.dtype('float128'): np.dtype('complex256')}
 
 _type_map_c2r = {v: k for k, v in _type_map_r2c.items()}
 
