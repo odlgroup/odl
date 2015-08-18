@@ -84,7 +84,7 @@ class FunctionSet(Set):
     """
 
     def __init__(self, dom, ran):
-        """Initialize a new `FunctionSet` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -119,7 +119,7 @@ class FunctionSet(Set):
 
         Parameters
         ----------
-        `func` : callable
+        func : callable
             The actual instruction executed when evaluating
             this element
 
@@ -171,7 +171,7 @@ class FunctionSet(Set):
         """Representation of a `FunctionSet` element."""
 
         def __init__(self, func_set, function):
-            """Initialize a new `FunctionSet.Vector`.
+            """Initialize a new instance.
 
             Parameters
             ----------
@@ -257,7 +257,7 @@ class VectorizedFunctionSet(FunctionSet):
         """Representation of a `VectorizedFunctionSet` element."""
 
         def __init__(self, space, function):
-            """Initialize a new `FunctionSet.Vector`.
+            """Initialize a new instance.
 
             Parameters
             ----------
@@ -352,7 +352,7 @@ class FunctionSpace(FunctionSet, Algebra):
     """A vector space of functions."""
 
     def __init__(self, dom, field):
-        """Initialize a new `FunctionSpace` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -384,7 +384,7 @@ class FunctionSpace(FunctionSet, Algebra):
 
         Parameters
         ----------
-        `func` : callable, optional
+        func : callable, optional
             The actual instruction executed when evaluating
             this element.
 
@@ -399,26 +399,7 @@ class FunctionSpace(FunctionSet, Algebra):
             return self.Vector(self, func)
 
     def _lincomb(self, z, a, x, b, y):
-        """Linear combination of `x` and `y`.
-
-        Set z = a*x + b*y in the sense of pointwise arithmetics.
-
-        Parameters
-        ----------
-        z : `FunctionSpace.Vector`
-            The Vector that the result is written to.
-        a : element of `field`
-            Scalar to multiply `x` with.
-        x : `FunctionSpace.Vector`
-            The first of the summands
-        b : element of `field`
-            Scalar to multiply `y` with.
-        y : `FunctionSpace.Vector`
-            The second of the summands
-
-        Returns
-        -------
-        None
+        """Raw linear combination of `x` and `y`.
 
         Note
         ----
@@ -448,11 +429,6 @@ class FunctionSpace(FunctionSet, Algebra):
     def equals(self, other):
         """Test if `other` is equal to this space.
 
-        Paramters
-        ---------
-        other : `object`
-            The object to test for equality.
-
         Returns
         -------
         equals : `boolean`
@@ -467,17 +443,6 @@ class FunctionSpace(FunctionSet, Algebra):
 
     def _multiply(x, y):
         """Raw pointwise multiplication of two functions.
-
-        Parameters
-        ----------
-        x : `FunctionSpace.Vector`
-            First factor
-        y : `FunctionSpace.Vector`
-            Second factor, used to store the result
-
-        Returns
-        -------
-        `None`
 
         Note
         ----
@@ -497,7 +462,7 @@ class FunctionSpace(FunctionSet, Algebra):
         """Representation of a `FunctionSpace` element."""
 
         def __init__(self, space, function):
-            """Initialize a new `FunctionSet.Vector`.
+            """Initialize a new instance.
 
             Parameters
             ----------
