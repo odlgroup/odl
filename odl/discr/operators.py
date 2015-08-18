@@ -44,30 +44,34 @@ class RawGridCollocation(Operator):
     used by all core discretization classes.
     """
 
-    def __init__(self, ip_funcset, grid, ntuples):
+    def __init__(self, ip_fset, grid, ntuples, order='C'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ip_funcset : `FunctionSet`
+        ip_fset : `FunctionSet`
             Set of functions, the operator range. Its `domain` must
             be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
-            `ip_funcset.domain`.
+            `ip_fset.domain`.
         ntuples : `Ntuples`
             Implementation of n-tuples, the operator domain. Its
             dimension must be equal to `grid.ntotal`.
+        order : 'C' or 'F', optional
+            Ordering of the values in the flat `ntuples` array. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
         """
-        if not isinstance(ip_funcset, FunctionSet):
+        if not isinstance(ip_fset, FunctionSet):
             raise TypeError(errfmt('''
-            `ip_funcset` {} not an `FunctionSet` instance.
-            '''.format(ip_funcset)))
+            `ip_fset` {} not an `FunctionSet` instance.
+            '''.format(ip_fset)))
 
-        if not isinstance(ip_funcset.domain, IntervalProd):
+        if not isinstance(ip_fset.domain, IntervalProd):
             raise TypeError(errfmt('''
-            `domain` {} of `ip_funcset` not an `IntervalProd` instance.
-            '''.format(ip_funcset.domain)))
+            `domain` {} of `ip_fset` not an `IntervalProd` instance.
+            '''.format(ip_fset.domain)))
 
         if not isinstance(grid, TensorGrid):
             raise TypeError(errfmt('''
@@ -84,15 +88,19 @@ class RawGridCollocation(Operator):
             grid points.'''.format(ntuples.dim, grid.ntotal)))
 
         # TODO: make this an `IntervalProd` method (or add to `contains()`)
-        if not (np.all(grid.min >= ip_funcset.domain.begin) and
-                np.all(grid.max <= ip_funcset.domain.end)):
+        if not (np.all(grid.min >= ip_fset.domain.begin) and
+                np.all(grid.max <= ip_fset.domain.end)):
             raise ValueError(errfmt('''
-            `grid` {} not contained in the `domain` {} of `ip_funcset`.
-            '''.format(grid, ip_funcset.domain)))
+            `grid` {} not contained in the `domain` {} of `ip_fset`.
+            '''.format(grid, ip_fset.domain)))
 
-        self._domain = ip_funcset
+        if order not in ('C', 'F'):
+            raise ValueError('`order` {} not understood.'.format(order))
+
+        self._domain = ip_fset
         self._range = ntuples
         self._grid = grid
+        self._order = order
 
     @property
     def domain(self):
@@ -108,6 +116,11 @@ class RawGridCollocation(Operator):
     def grid(self):
         """Return the `grid` attribute."""
         return self._grid
+
+    @property
+    def order(self):
+        """The axis ordering."""
+        return self._order
 
     def _call(self, inp):
         """The raw `call` method for out-of-place evaluation.
@@ -171,6 +184,12 @@ class RawGridCollocation(Operator):
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
+        Or, if we want Fortran ordering:
+
+        >>> coll_op = RawGridCollocation(funcset, grid, rn, order='F')
+        >>> coll_op(func_elem)
+        Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
+
         Use all free variables in functions you supply, otherwise
         the automatic broadcasting will yield a wrong shape:
 
@@ -193,19 +212,18 @@ class RawGridCollocation(Operator):
         >>> vals.shape  # Not possible to assign to an Rn(6) vector
         (2, 1)
         """
-        # TODO: 'C'-ordering is hard-coded now. Allow 'F' also?
         try:
-            mg_tuple = self.grid.meshgrid()
-            values = inp.function(*mg_tuple).flatten()
+            mg_tuple = self.grid.meshgrid(order=self.order)
+            values = inp.function(*mg_tuple).flatten(order=self.order)
         except TypeError:
-            points = self.grid.points()
+            points = self.grid.points(order=self.order)
             values = np.empty(points.shape[0], dtype=self.range.dtype)
             for i, point in enumerate(points):
                 values[i] = inp.function(*point)
         return self.range.element(values)
 
 
-class GridCollocation(LinearOperator):
+class GridCollocation(RawGridCollocation, LinearOperator):
 
     """Function evaluation at grid points.
 
@@ -213,30 +231,34 @@ class GridCollocation(LinearOperator):
     used by all core discretization classes.
     """
 
-    def __init__(self, ip_funcspace, grid, ntuples):
+    def __init__(self, ip_fspace, grid, ntuples, order='C'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ip_funcspace : `FunctionSet`
+        ip_fspace : `FunctionSet`
             Space of functions, the operator range. Its `domain` must
             be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
-            `ip_funcspace.domain`.
+            `ip_fspace.domain`.
         ntuples : `Rn` or `Cn`
             Implementation of n-tuples, the operator domain. Its
             dimension must be equal to `grid.ntotal`.
+        order : 'C' or 'F', optional
+            Ordering of the values in the flat `ntuples` array. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
         """
-        if not isinstance(ip_funcspace, FunctionSpace):
+        if not isinstance(ip_fspace, FunctionSpace):
             raise TypeError(errfmt('''
-            `ip_funcspace` {} not an instance of `FunctionSpace`.
-            '''.format(ip_funcspace)))
+            `ip_fspace` {} not an instance of `FunctionSpace`.
+            '''.format(ip_fspace)))
 
-        if not isinstance(ip_funcspace.domain, IntervalProd):
+        if not isinstance(ip_fspace.domain, IntervalProd):
             raise TypeError(errfmt('''
-            `domain` {} of `ip_funcspace` not an instance of
-            `IntervalProd`.'''.format(ip_funcspace.domain)))
+            `domain` {} of `ip_fspace` not an instance of
+            `IntervalProd`.'''.format(ip_fspace.domain)))
 
         if not isinstance(grid, TensorGrid):
             raise TypeError(errfmt('''
@@ -253,42 +275,46 @@ class GridCollocation(LinearOperator):
             dimension {} of `ntuples` not equal to total number {} of
             grid points.'''.format(ntuples.dim, grid.ntotal)))
 
-        if ip_funcspace.field != ntuples.field:
+        if ip_fspace.field != ntuples.field:
             raise ValueError(errfmt('''
-            `field` {} of `ip_funcspace` not equal to `field` {}
-            of `ntuples`.'''.format(ip_funcspace.field, ntuples.field)))
+            `field` {} of `ip_fspace` not equal to `field` {}
+            of `ntuples`.'''.format(ip_fspace.field, ntuples.field)))
 
-        super().__init__(ip_funcspace, grid, ntuples)
+        super().__init__(ip_fspace, grid, ntuples, order)
 
 
 class RawNearestInterpolation(Operator):
 
-    """Nearest neighbor interpolation as an operator."""
+    """Nearest neighbor interpolation as a raw `Operator`."""
 
-    def __init__(self, ip_funcset, grid, ntuples):
+    def __init__(self, ip_fset, grid, ntuples, order='C'):
         """Initialize a new `NearestInterpolation` instance.
 
         Parameters
         ----------
-        ip_funcset : `FunctionSet`
+        ip_fset : `FunctionSet`
             Set of functions, the operator domain. Its `domain` must
             be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to interpolate. Must be contained in
-            `ip_funcset.domain`.
+            `ip_fset.domain`.
         ntuples : `Ntuples`
             Implementation of n-tuples, the operator domain. Its
             dimension must be equal to `grid.ntotal`.
+        order : 'C' or 'F', optional
+            Ordering of the values in the flat `ntuples` array. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
         """
-        if not isinstance(ip_funcset, FunctionSet):
+        if not isinstance(ip_fset, FunctionSet):
             raise TypeError(errfmt('''
-            `ip_funcset` {} not an `FunctionSet` instance.
-            '''.format(ip_funcset)))
+            `ip_fset` {} not an `FunctionSet` instance.
+            '''.format(ip_fset)))
 
-        if not isinstance(ip_funcset.domain, IntervalProd):
+        if not isinstance(ip_fset.domain, IntervalProd):
             raise TypeError(errfmt('''
-            `domain` {} of `ip_funcset` not an `IntervalProd` instance.
-            '''.format(ip_funcset.domain)))
+            `domain` {} of `ip_fset` not an `IntervalProd` instance.
+            '''.format(ip_fset.domain)))
 
         if not isinstance(grid, TensorGrid):
             raise TypeError(errfmt('''
@@ -305,15 +331,19 @@ class RawNearestInterpolation(Operator):
             grid points.'''.format(ntuples.dim, grid.ntotal)))
 
         # TODO: make this an `IntervalProd` method (or add to `contains()`)
-        if not (np.all(grid.min >= ip_funcset.domain.begin) and
-                np.all(grid.max <= ip_funcset.domain.end)):
+        if not (np.all(grid.min >= ip_fset.domain.begin) and
+                np.all(grid.max <= ip_fset.domain.end)):
             raise ValueError(errfmt('''
-            `grid` {} not contained in the `domain` {} of `ip_funcset`.
-            '''.format(grid, ip_funcset.domain)))
+            `grid` {} not contained in the `domain` {} of `ip_fset`.
+            '''.format(grid, ip_fset.domain)))
+
+        if order not in ('C', 'F'):
+            raise ValueError('`order` {} not understood.'.format(order))
 
         self._domain = ntuples
-        self._range = ip_funcset
+        self._range = ip_fset
         self._grid = grid
+        self._order = order
 
     @property
     def domain(self):
@@ -330,6 +360,11 @@ class RawNearestInterpolation(Operator):
         """Return the `grid` attribute."""
         return self._grid
 
+    @property
+    def order(self):
+        """The axis ordering."""
+        return self._order
+
     def _call(self, inp):
         """The raw `call` method for out-of-place evaluation.
 
@@ -340,18 +375,257 @@ class RawNearestInterpolation(Operator):
 
         Returns
         -------
-        outp : `IntervalProdFunctionSet.Vector`
+        outp : `FunctionSet.Vector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 
         Examples
         --------
-        TODO:
+        Let's define the complex function space :math:`L^2` on a
+        rectangle:
+
+        >>> from odl.space.domain import Rectangle
+        >>> from odl.space.default import L2
+        >>> from odl.space.set import ComplexNumbers
+        >>> from odl.space.cartesian import Cn
+
+        >>> rect = Rectangle([0, 0], [1, 1])
+        >>> space = L2(rect, field=ComplexNumbers())
+
+        The grid is defined by uniform sampling (`as_midp` indicates
+        that the points will be cell midpoints instead of corners).
+
+        >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
+        >>> grid.coord_vectors
+        (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
+        >>> ntuples = Cn(grid.ntotal)
+
+        Now initialize the operator:
+
+        >>> interp_op = RawNearestInterpolation(space, grid, ntuples,
+        ...                                     order='C')
+
+        We test some simple values:
+
+        >>> import numpy as np
+        >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
+        >>> values = ntuples.element(val_arr)
+        >>> function = interp_op(values)
+        >>> function([0.3, 0.6])  # closest to index (1, 1) -> 5
+
         """
         def func(x):
             return interpn(points=self.grid.coord_vectors,
-                           values=inp.data.reshape(self.grid.shape),
+                           values=inp.data.reshape(self.grid.shape,
+                                                   order=self.order),
                            method='nearest',
-                           xi=x)
+                           xi=x,
+                           fill_value=None)  # Allow points outside
+
+        return self.range.element(func)
+
+
+class NearestInterpolation(RawNearestInterpolation, LinearOperator):
+
+    """Nearest neighbor interpolation as a `LinearOperator`."""
+
+    def __init__(self, ip_fspace, grid, ntuples, order='C'):
+        """Initialize a new `NearestInterpolation` instance.
+
+        Parameters
+        ----------
+        ip_fspace : `FunctionSpace`
+            Space of functions, the operator domain. Its `domain` must
+            be an `IntervalProd`.
+        grid : `TensorGrid`
+            The grid on which to interpolate. Must be contained in
+            `ip_fset.domain`.
+        ntuples : `Rn` or `Cn`
+            Implementation of n-tuples, the operator domain. Its
+            dimension must be equal to `grid.ntotal`.
+        order : 'C' or 'F', optional
+            Ordering of the values in the flat `ntuples` array. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
+        """
+        if not isinstance(ip_fspace, FunctionSpace):
+            raise TypeError(errfmt('''
+            `ip_fspace` {} not an instance of `FunctionSpace`.
+            '''.format(ip_fspace)))
+
+        if not isinstance(ip_fspace.domain, IntervalProd):
+            raise TypeError(errfmt('''
+            `domain` {} of `ip_fspace` not an instance of
+            `IntervalProd`.'''.format(ip_fspace.domain)))
+
+        if not isinstance(grid, TensorGrid):
+            raise TypeError(errfmt('''
+            `grid` {} not a `TensorGrid` instance.
+            '''.format(grid)))
+
+        if not isinstance(ntuples, (Rn, Cn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not an instance of `Rn` or `Cn`.
+            '''.format(ntuples)))
+
+        if ntuples.dim != grid.ntotal:
+            raise ValueError(errfmt('''
+            dimension {} of `ntuples` not equal to total number {} of
+            grid points.'''.format(ntuples.dim, grid.ntotal)))
+
+        if ip_fspace.field != ntuples.field:
+            raise ValueError(errfmt('''
+            `field` {} of `ip_fspace` not equal to `field` {}
+            of `ntuples`.'''.format(ip_fspace.field, ntuples.field)))
+
+        super().__init__(ip_fspace, grid, ntuples)
+
+
+class LinearInterpolation(LinearOperator):
+
+    """Linear interpolation interpolation as a `LinearOperator`."""
+
+    def __init__(self, ip_fspace, grid, ntuples, order='C'):
+        """Initialize a new `NearestInterpolation` instance.
+
+        Parameters
+        ----------
+        ip_fspace : `FunctionSpace`
+            Space of functions, the operator domain. Its `domain` must
+            be an `IntervalProd`.
+        grid : `TensorGrid`
+            The grid on which to interpolate. Must be contained in
+            `ip_fset.domain`.
+        ntuples : `Rn` or `Cn`
+            Implementation of n-tuples, the operator domain. Its
+            dimension must be equal to `grid.ntotal`.
+        order : 'C' or 'F', optional
+            Ordering of the values in the flat `ntuples` array. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
+        """
+        if not isinstance(ip_fspace, FunctionSpace):
+            raise TypeError(errfmt('''
+            `ip_fspace` {} not an instance of `FunctionSpace`.
+            '''.format(ip_fspace)))
+
+        if not isinstance(ip_fspace.domain, IntervalProd):
+            raise TypeError(errfmt('''
+            `domain` {} of `ip_fspace` not an instance of
+            `IntervalProd`.'''.format(ip_fspace.domain)))
+
+        if not isinstance(grid, TensorGrid):
+            raise TypeError(errfmt('''
+            `grid` {} not a `TensorGrid` instance.
+            '''.format(grid)))
+
+        if not isinstance(ntuples, (Rn, Cn)):
+            raise TypeError(errfmt('''
+            `ntuples` {} not an instance of `Rn` or `Cn`.
+            '''.format(ntuples)))
+
+        if ntuples.dim != grid.ntotal:
+            raise ValueError(errfmt('''
+            dimension {} of `ntuples` not equal to total number {} of
+            grid points.'''.format(ntuples.dim, grid.ntotal)))
+
+        if ip_fspace.field != ntuples.field:
+            raise ValueError(errfmt('''
+            `field` {} of `ip_fspace` not equal to `field` {}
+            of `ntuples`.'''.format(ip_fspace.field, ntuples.field)))
+
+        # TODO: make this an `IntervalProd` method (or add to `contains()`)
+        if not (np.all(grid.min >= ip_fspace.domain.begin) and
+                np.all(grid.max <= ip_fspace.domain.end)):
+            raise ValueError(errfmt('''
+            `grid` {} not contained in the `domain` {} of `ip_fspace`.
+            '''.format(grid, ip_fspace.domain)))
+
+        if order not in ('C', 'F'):
+            raise ValueError('`order` {} not understood.'.format(order))
+
+        self._domain = ntuples
+        self._range = ip_fspace
+        self._grid = grid
+        self._order = order
+
+    @property
+    def domain(self):
+        """Return the `domain` attribute."""
+        return self._domain
+
+    @property
+    def range(self):
+        """Return the `range` attribute."""
+        return self._range
+
+    @property
+    def grid(self):
+        """Return the `grid` attribute."""
+        return self._grid
+
+    @property
+    def order(self):
+        """The axis ordering."""
+        return self._order
+
+    def _call(self, inp):
+        """The raw `call` method for out-of-place evaluation.
+
+        Parameters
+        ----------
+        inp : `Ntuples.Vector`
+            The array of numbers to be interpolated
+
+        Returns
+        -------
+        outp : `FunctionSet.Vector`
+            A function (nearest-neighbor) interpolating at a given
+            point or array of points.
+
+        Examples
+        --------
+        Let's define the complex function space :math:`L^2` on a
+        rectangle:
+
+        >>> from odl.space.domain import Rectangle
+        >>> from odl.space.default import L2
+        >>> from odl.space.set import ComplexNumbers
+        >>> from odl.space.cartesian import Cn
+
+        >>> rect = Rectangle([0, 0], [1, 1])
+        >>> space = L2(rect, field=ComplexNumbers())
+
+        The grid is defined by uniform sampling (`as_midp` indicates
+        that the points will be cell midpoints instead of corners).
+
+        >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
+        >>> grid.coord_vectors
+        (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
+        >>> ntuples = Cn(grid.ntotal)
+
+        Now initialize the operator:
+
+        TODO: implement an example!
+
+        >>> interp_op = RawNearestInterpolation(space, grid, ntuples,
+        ...                                     order='C')
+
+        We test some simple values:
+
+        >>> import numpy as np
+        >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
+        >>> values = ntuples.element(val_arr)
+        >>> function = interp_op(values)
+        >>> function([0.3, 0.6])  # closest to index (1, 1) -> 5
+
+        """
+        def func(x):
+            return interpn(points=self.grid.coord_vectors,
+                           values=inp.data.reshape(self.grid.shape,
+                                                   order=self.order),
+                           method='linear',
+                           xi=x,
+                           fill_value=None)  # Allow points outside
 
         return self.range.element(func)
