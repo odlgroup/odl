@@ -26,8 +26,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+# External imports
+import numpy as np
+
 # ODL imports
 from odl.operator.operator import Operator
+from odl.space.domain import IntervalProd
 from odl.space.set import RealNumbers, ComplexNumbers, Set
 from odl.space.space import Algebra
 from odl.utility.utility import errfmt
@@ -132,11 +136,6 @@ class FunctionSet(Set):
     def equals(self, other):
         """Test if `other` is equal to this set.
 
-        Paramters
-        ---------
-        other : `object`
-            The object to test for equality.
-
         Returns
         -------
         equals : `boolean`
@@ -149,11 +148,6 @@ class FunctionSet(Set):
 
     def contains(self, other):
         """Test if `other` is contained in this set.
-
-        Paramters
-        ---------
-        other : `object`
-            The object to test for membership.
 
         Returns
         -------
@@ -247,6 +241,110 @@ class FunctionSet(Set):
         def __ne__(self, other):
             """`vec.__ne__(other) <==> vec != other`"""
             return not self.equals(other)
+
+
+class VectorizedFunctionSet(FunctionSet):
+
+    """A set of vectorized functions.
+
+    Vectorized functions are functions which accept arrays of
+    domain elements and return arrays of range elements, which is
+    important for efficiency.
+    """
+
+    class Vector(FunctionSet.Vector):
+
+        """Representation of a `VectorizedFunctionSet` element."""
+
+        def __init__(self, space, function):
+            """Initialize a new `FunctionSet.Vector`.
+
+            Parameters
+            ----------
+            space : `VectorizedFunctionSet`
+                The space of functions this element lives in
+            function : callable
+                The actual instruction executed when evaluating
+                this element
+            """
+            if not isinstance(space, VectorizedFunctionSet):
+                raise TypeError(errfmt('''
+                `space` {} not a `VectorizedFunctionSet` instance.
+                '''.format(space)))
+
+            if not callable(function):
+                raise TypeError(errfmt('''
+                `function` {} is not callable.'''.format(function)))
+
+            super().__init__(space, function)
+
+        def __call__(self, inp):
+            """Vectorized version of the call pattern.
+
+            Besides `domain` elements, accept also arrays as input,
+            and besides `range` elements, accept arrays as result.
+
+            Parameters
+            ----------
+            inp : `domain` element or array of elements
+                Object to which the function is applied. The object
+                is not modified during evaluation.
+
+            Returns
+            -------
+            outp : `range` element or array of elements
+                Result of the function evaluation.
+
+            Raises
+            ------
+            If `inp` is not a `domain` element or an array of such,
+            a `TypeError` is raised.
+            If the result of the function call is not a `range`
+            element or an array of such, a `TypeError` is raised.
+
+            If `inp` is an array, `outp` must also be an array,
+            otherwise a `TypeError` is raised. If
+            `inp.shape[:-1] != outp.shape`, a `ValueError` is raised.
+            """
+            # Vectorized call pattern
+            if isinstance(inp. np.ndarray):
+                if inp[0] not in self.domain:
+                    raise TypeError(errfmt('''
+                    `inp` {} not an array of elements of `domain`
+                    {}.'''.format(inp, self.domain)))
+
+                result = self._call(inp)
+
+                if not isinstance(result, np.ndarray):
+                    raise TypeError(errfmt('''
+                    vectorized return value type is {} instead
+                    `of numpy.ndarray`.'''.format(type(result))))
+
+                if result[0] not in self.range:
+                    raise TypeError(errfmt('''
+                    `result` {} not an array of elements of `range`
+                    {}.'''.format(result, self.range)))
+
+                if result.shape != inp.shape[:-1]:
+                    raise ValueError(errfmt('''
+                    output shape {} not equal to {}, the shape of
+                    `inp` up to the penultimate dimension.
+                    '''.format(result.shape, inp.shape[:-1])))
+
+            # Usual single-value call
+            elif inp not in self.domain:
+                raise TypeError(errfmt('''
+                `inp` {!r} is not in the operator `domain` {}.
+                '''.format(inp, self.domain)))
+
+                result = self._call(inp)
+
+                if result not in self.range:
+                    raise TypeError(errfmt('''
+                    `result` {!r} is not in the operator `range` {}.
+                    '''.format(result, self.range)))
+
+            return result
 
 
 class FunctionSpace(FunctionSet, Algebra):
@@ -419,6 +517,127 @@ class FunctionSpace(FunctionSet, Algebra):
 
             super().__init__(space, function)
 
+
+class VectorizedFunctionSpace(FunctionSpace, VectorizedFunctionSet):
+
+    """A vector space of vectorized functions.
+
+    Vectorized functions are functions which accept arrays of
+    domain elements and return arrays of range elements, which is
+    important for efficiency.
+
+    The function domain is required to be an `IntervalProd`.
+    """
+
+    def __init__(self, dom, field):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dom : `IntervalProd`
+            The domain of the functions.
+        field : `RealNumbers` or `ComplexNumbers` instance
+            The range of the functions.
+        """
+        if not isinstance(dom, IntervalProd):
+            raise TypeError(errfmt('''
+            `dom` {} not an `IntervalProd` instance.'''.format(dom)))
+
+        super().__init__(dom, field)
+
+    class Vector(VectorizedFunctionSet.Vector, FunctionSpace.Vector):
+
+        """Representation of a `VectorizedFunctionSpace` element."""
+
+        def __init__(self, space, function):
+            """Initialize a new instance."""
+            if not isinstance(space, VectorizedFunctionSpace):
+                raise TypeError(errfmt('''
+                `space` {} not a `VectorizedFunctionSpace` instance.
+                '''.format(space)))
+
+            if not callable(function):
+                raise TypeError(errfmt('''
+                `function` {} is not callable.'''.format(function)))
+
+            super().__init__(space, function)
+
+        def __call__(self, inp):
+            """Vectorized version of the call pattern.
+
+            Besides `domain` elements, accept also arrays as input,
+            and besides `range` elements, accept arrays as result.
+
+            Parameters
+            ----------
+            inp : `domain` element or array of elements
+                Object to which the function is applied. The object
+                is not modified during evaluation.
+
+            Returns
+            -------
+            outp : `range` element or array of elements
+                Result of the function evaluation.
+
+            Raises
+            ------
+            If `inp` is not a `domain` element or an array of such,
+            a `TypeError` is raised.
+            If the result of the function call is not a `range`
+            element or an array of such, a `TypeError` is raised.
+
+            If `inp` is an array, `outp` must also be an array,
+            otherwise a `TypeError` is raised. If
+            `outp.shape not in(inp.shape, inp.shape[:-1])`, a
+            `ValueError` is raised.
+            """
+            # Vectorized call pattern
+            if isinstance(inp. np.ndarray):
+                if inp[0] not in self.domain:
+                    raise TypeError(errfmt('''
+                    `inp` {} not an array of elements of `domain`
+                    {}.'''.format(inp, self.domain)))
+
+                result = self._call(inp)
+
+                if not isinstance(result, np.ndarray):
+                    raise TypeError(errfmt('''
+                    vectorized return value type is {} instead
+                    `of numpy.ndarray`.'''.format(type(result))))
+
+                if result[0] not in self.range:
+                    raise TypeError(errfmt('''
+                    `result` {} not an array of elements of `range`
+                    {}.'''.format(result, self.range)))
+
+                # Allow shape (...) instead of (..., 1) input shape for
+                # one-dimensional input
+                if self.domain.dim == 1:
+                    if result.shape not in (inp.shape, inp.shape[:-1]):
+                        raise ValueError(errfmt('''
+                        output shape {} not equal to {} or {}, the shape of
+                        `inp` up to the penultimate dimension.
+                        '''.format(result.shape, inp.shape, inp.shape[:-1])))
+                elif result.shape != inp.shape[:-1]:
+                    raise ValueError(errfmt('''
+                    output shape {} not equal to {}, the shape of
+                    `inp` up to the penultimate dimension.
+                    '''.format(result.shape, inp.shape[:-1])))
+
+            # Usual single-value call
+            elif inp not in self.domain:
+                raise TypeError(errfmt('''
+                `inp` {!r} is not in the operator `domain` {}.
+                '''.format(inp, self.domain)))
+
+                result = self._call(inp)
+
+                if result not in self.range:
+                    raise TypeError(errfmt('''
+                    `result` {!r} is not in the operator `range` {}.
+                    '''.format(result, self.range)))
+
+            return result
 
 if __name__ == '__main__':
     import doctest
