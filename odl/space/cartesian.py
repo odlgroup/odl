@@ -357,8 +357,10 @@ __all__ = ('Ntuples', 'Cn', 'Rn', 'MetricCn', 'MetricRn',
            'EuclideanCn', 'En')
 
 _type_map_r2c = {np.dtype('float32'): np.dtype('complex64'),
-                 np.dtype('float64'): np.dtype('complex128'),
-                 np.dtype('float128'): np.dtype('complex256')}
+                 np.dtype('float64'): np.dtype('complex128')}
+
+# complex256 not supported on all platforms
+#                 np.dtype('float128'): np.dtype('complex256')}
 
 _type_map_c2r = {v: k for k, v in _type_map_r2c.items()}
 
@@ -487,14 +489,9 @@ class Ntuples(Set):
     def equals(self, other):
         """Test if `other` is equal to this space.
 
-        Parameters
-        ----------
-        `other` : `object`
-            The object to check for equality
-
         Returns
         -------
-        equals : boolean
+        equals : `bool`
             `True` if `other` is an instance of this space's type
             with the same `dim` and `dtype`, otherwise `False`.
 
@@ -536,35 +533,23 @@ class Ntuples(Set):
     def contains(self, other):
         """Test if `other` is contained in this space.
 
-        Parameters
-        ----------
-        other : `object`
-            The object to be tested for membership
-
         Returns
         -------
         contains : `bool`
-            `True` if `other` is an instance of the same `Vector`
-            class, `other.space.dim` equals this space's `dim` and
-            `other.space.dtype` can be safely cast to this space's
-            data type. `False` otherwise.
+            `True` if `other` is an `Ntuples.Vector` instance of and
+            `other.space` is equal to this space. `False` otherwise.
 
         Examples
         --------
         >>> long_3 = Ntuples(3, dtype='int64')
-        >>> double_3 = Ntuples(3, dtype='float64')
-        >>> long_vec = long_3.element([1, 2, 3])
-        >>> long_vec in double_3
+        >>> long_3.element() in long_3
         True
-        >>> int_3 = Ntuples(3, dtype='int32')
-        >>> float_3 = Ntuples(3, dtype='float32')
-        >>> int_vec = int_3.element([1, 2, 3])
-        >>> int_vec in float_3  # Unsafe cast
+        >>> long_3.element() in Ntuples(3, dtype='int32')
+        False
+        >>> long_3.element() in Ntuples(3, dtype='float64')
         False
         """
-        return (isinstance(other, Ntuples.Vector) and
-                len(other) == self.dim and
-                np.can_cast(other.space.dtype, self.dtype))
+        return isinstance(other, Ntuples.Vector) and other.space == self
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
@@ -650,14 +635,9 @@ class Ntuples(Set):
         def equals(self, other):
             """Test if `other` is equal to this vector.
 
-            Parameters
-            ----------
-            other : `object`
-                Object to compare to this vector
-
             Returns
             -------
-            equals : `boolean`
+            equals :  `bool`
                 `True` if all entries of `other` are equal to this
                 vector's entries, `False` otherwise.
 
@@ -719,13 +699,10 @@ class Ntuples(Set):
         def copy(self):
             """Create an identical (deep) copy of this vector.
 
-            Parameters
-            ----------
-            None
-
             Returns
             -------
             copy : `Ntuples.Vector`
+                The deep copy
 
             Examples
             --------
@@ -839,7 +816,14 @@ class Ntuples(Set):
             >>> x
             Ntuples(2, dtype('int8')).element([0, 1])
             """
-            self.data[indices] = values
+            if isinstance(values, Ntuples.Vector):
+                return self.data.__setitem__(
+                    indices, values.data.__getitem__(indices))
+            elif isinstance(values, np.ndarray):
+                return self.data.__setitem__(
+                    indices, values.__getitem__(indices))
+            else:
+                return self.data.__setitem__(indices, values)
 
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`."""
@@ -1005,6 +989,7 @@ class Cn(Ntuples, Algebra):
         """
         _lincomb(z, a, x, b, y, self.dtype)
 
+
     def zero(self):
         """Create a vector of zeros.
 
@@ -1095,6 +1080,30 @@ class Cn(Ntuples, Algebra):
                 '''.format(type(space))))
 
             super().__init__(space, data)
+
+        # Use the standard `LinearSpace.Vector` method again
+        def assign(self, other):
+            """Assign the values of `other` to this vector.
+
+            Parameters
+            ----------
+            other : `Cn.Vector`
+                The values to be copied to this vector. `other`
+                must be an element of this vector's space.
+
+            Returns
+            -------
+            `None`
+
+            Examples
+            --------
+            >>> vec1 = Cn(3).element([1+1j, 2, 3-2j])
+            >>> vec2 = Cn(3).element([0, 0, 0])
+            >>> vec2.assign(vec1)
+            >>> vec2
+            Cn(3).element([(1+1j), (2+0j), (3-2j)])
+            """
+            self.space.lincomb(self, 1, other)
 
         @property
         def real(self):
@@ -1257,24 +1266,6 @@ class Rn(Cn):
         else:
             return 'Rn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(Cn.Vector):
-
-        """Representation of an `Rn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, Rn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `Rn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
-
 
 class MetricCn(Cn, MetricSpace):
 
@@ -1349,6 +1340,52 @@ class MetricCn(Cn, MetricSpace):
         """
         return float(self._dist_impl(x, y))
 
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, and **identical**
+            distance function, otherwise `False`.
+
+        Examples
+        --------
+        >>> from numpy.linalg import norm
+        >>> def dist(x, y, ord):
+        ...     return norm(x - y, ord)
+
+        >>> from functools import partial
+        >>> dist2 = partial(dist, ord=2)
+        >>> c3 = MetricCn(3, dist=dist2)
+        >>> c3_same = MetricCn(3, dist=dist2)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+
+        Different `dist` functions result in different spaces:
+
+        >>> dist1 = partial(dist, ord=1)
+        >>> c3_1 = MetricCn(3, dist=dist1)
+        >>> c3_2 = MetricCn(3, dist=dist2)
+        >>> c3_1.equals(c3_2)
+        False
+
+        Be careful with Lambdas - they result in non-identical function
+        objects:
+
+        >>> c3_lambda1 = MetricCn(3, lambda x, y: norm(x-y, ord=1))
+        >>> c3_lambda2 = MetricCn(3, lambda x, y: norm(x-y, ord=1))
+        >>> c3_lambda1.equals(c3_lambda2)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
+                self._dist_impl == other._dist_impl)
+
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
@@ -1363,24 +1400,6 @@ class MetricCn(Cn, MetricSpace):
             return 'MetricCn({})'.format(self.dim)
         else:
             return 'MetricCn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(Cn.Vector, MetricSpace.Vector):
-
-        """Representation of a `MetricCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, MetricCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `MetricCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class MetricRn(MetricCn):
@@ -1400,7 +1419,7 @@ class MetricRn(MetricCn):
 
         Parameters
         ----------
-        `dim` : `int`
+        dim : `int`
             The dimension of the space
         dist : callable
             The distance function defining a metric on :math:`R^n`. It
@@ -1444,24 +1463,6 @@ class MetricRn(MetricCn):
             return 'MetricRn({})'.format(self.dim)
         else:
             return 'MetricRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(Cn.Vector, MetricSpace.Vector):
-
-        """Representation of a `MetricRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, MetricRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `MetricRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class NormedCn(MetricCn, NormedSpace):
@@ -1548,6 +1549,49 @@ class NormedCn(MetricCn, NormedSpace):
         """
         return float(self._norm_impl(x))
 
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, and **identical**
+            norm function, otherwise `False`.
+
+        Examples
+        --------
+        >>> from numpy.linalg import norm
+        >>> from functools import partial
+        >>> norm2 = partial(norm, ord=2)
+        >>> c3 = NormedCn(3, norm=norm2)
+        >>> c3_same = NormedCn(3, norm=norm2)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+
+        Different `norm` functions result in different spaces:
+
+        >>> norm1 = partial(norm, ord=1)
+        >>> c3_1 = NormedCn(3, norm=norm1)
+        >>> c3_2 = NormedCn(3, norm=norm2)
+        >>> c3_1.equals(c3_2)
+        False
+
+        Be careful with Lambdas - they result in non-identical function
+        objects:
+
+        >>> c3_lambda1 = NormedCn(3, lambda x: norm(x, ord=1))
+        >>> c3_lambda2 = NormedCn(3, lambda x: norm(x, ord=1))
+        >>> c3_lambda1.equals(c3_lambda2)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
+                self._norm_impl == other._norm_impl)
+
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
@@ -1562,24 +1606,6 @@ class NormedCn(MetricCn, NormedSpace):
             return 'NormedCn({})'.format(self.dim)
         else:
             return 'NormedCn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(MetricCn.Vector, NormedSpace.Vector):
-
-        """Representation of a `NormedCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, NormedCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `NormedCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class NormedRn(NormedCn):
@@ -1640,24 +1666,6 @@ class NormedRn(NormedCn):
             return 'NormedRn({})'.format(self.dim)
         else:
             return 'NormedRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(NormedCn.Vector):
-
-        """Representation of a `NormedRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, NormedRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `NormedRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class HilbertCn(NormedCn, HilbertSpace):
@@ -1739,10 +1747,57 @@ class HilbertCn(NormedCn, HilbertSpace):
         True
         >>> weights = np.array([1., 2.])
         >>> c3w = HilbertCn(2, lambda x, y: np.vdot(weights * y, x))
+        >>> x = c3w.element(x)  # elements must be cast (no copy)
+        >>> y = c3w.element(y)
         >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
         True
         """
         return complex(self._inner_impl(x, y))
+
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, and **identical**
+            inner product function, otherwise `False`.
+
+        Examples
+        --------
+        >>> from numpy import vdot
+        >>> def std_inner(x, y):
+        ...     return vdot(y, x)
+        >>> c3 = HilbertCn(3, inner=std_inner)
+        >>> c3_same = HilbertCn(3, inner=std_inner)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+
+        Different `inner` functions result in different spaces:
+
+        >>> def weighted_inner(x, y):
+        ...     weight = np.array([1., 2., 1.])
+        ...     return vdot(y, weight * x)
+        >>> c3 = HilbertCn(3, inner=std_inner)
+        >>> c3_w = HilbertCn(3, inner=weighted_inner)
+        >>> c3.equals(c3_w)
+        False
+
+        Be careful with Lambdas - they result in non-identical function
+        objects:
+
+        >>> c3_lambda1 = HilbertCn(3, lambda x, y: vdot(y, x))
+        >>> c3_lambda2 = HilbertCn(3, lambda x, y: vdot(y, x))
+        >>> c3_lambda1.equals(c3_lambda2)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
+                self._inner_impl == other._inner_impl)
 
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
@@ -1759,24 +1814,6 @@ class HilbertCn(NormedCn, HilbertSpace):
             return 'HilbertCn({})'.format(self.dim)
         else:
             return 'HilbertCn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(NormedCn.Vector, HilbertSpace.Vector):
-
-        """Representation of a `HilbertCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, HilbertCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `HilbertCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class HilbertRn(HilbertCn):
@@ -1848,6 +1885,8 @@ class HilbertRn(HilbertCn):
         True
         >>> weights = np.array([1., 2., 1.])
         >>> r3w = HilbertRn(3, lambda x, y: np.vdot(weights * x, y))
+        >>> x = r3w.element(x)  # elements must be cast (no copy)
+        >>> y = r3w.element(y)
         >>> r3w.inner(x, y) == 1*5*1 + 2*3*2 + 1*2*3
         True
         """
@@ -1868,24 +1907,6 @@ class HilbertRn(HilbertCn):
             return 'HilbertRn({})'.format(self.dim)
         else:
             return 'HilbertRn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(HilbertCn.Vector):
-
-        """Representation of a `HilbertRn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, HilbertRn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `HilbertRn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class EuclideanCn(HilbertCn):
@@ -1930,6 +1951,37 @@ class EuclideanCn(HilbertCn):
 
         super().__init__(dim, inner=inner, dtype=dtype)
 
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, otherwise `False`.
+
+        Examples
+        --------
+        >>> c3 = EuclideanCn(3)
+        >>> c3_same = EuclideanCn(3)
+        >>> c3.equals(c3_same)
+        True
+        >>> c3 == c3_same  # equivalent
+        True
+        >>> c4 = EuclideanCn(4)
+        >>> c3 == c4
+        False
+
+        Different data types result in different spaces:
+
+        >>> c3_csingle = EuclideanCn(3, dtype='csingle')
+        >>> c3.equals(c3_csingle)
+        False
+        """
+        return (isinstance(other, type(self)) and
+                self.dim == other.dim and
+                self.dtype == other.dtype)
+
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
@@ -1943,24 +1995,6 @@ class EuclideanCn(HilbertCn):
             return 'EuclideanCn({})'.format(self.dim)
         else:
             return 'EuclideanCn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(HilbertCn.Vector):
-
-        """Representation of a `EuclideanCn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, EuclideanCn):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `EuclideanCn`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 class En(EuclideanCn):
@@ -2022,24 +2056,6 @@ class En(EuclideanCn):
             return 'En({})'.format(self.dim)
         else:
             return 'En({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(EuclideanCn.Vector):
-
-        """Representation of an `En` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, En):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `En`.
-                '''.format(space)))
-
-            super().__init__(space, data)
 
 
 # TODO: move - the requirement of CUDA for this module is bad!

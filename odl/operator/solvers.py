@@ -110,22 +110,22 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     p = op.T(d)
     s = p.copy()
     q = op.range.element()
-    norms_old = s.norm()**2           # Only recalculate norm after update
+    sqnorm_s_old = op.domain.norm(s)**2  # Only recalculate norm after update
 
     for _ in range(niter):
         op.apply(p, q)                        # q = A p
-        qnorm = q.norm()**2
-        if qnorm == 0.0:  # Return if residual is 0
+        sqnorm_q = op.range.norm(q)**2
+        if sqnorm_q == 0.0:  # Return if residual is 0
             return
 
-        a = norms_old / qnorm
+        a = sqnorm_s_old / sqnorm_q
         x.lincomb(1, x, a, p)                       # x = x + a*p
         d.lincomb(1, d, -a, q)                      # d = d - a*q
         op.derivative(p).adjoint.apply(d, s)  # s = A^T d
 
-        norms_new = s.norm()**2
-        b = norms_new/norms_old
-        norms_old = norms_new
+        sqnorm_s_new = op.domain.norm(s)**2
+        b = sqnorm_s_new / sqnorm_s_old
+        sqnorm_s_old = sqnorm_s_new
 
         p.lincomb(1, s, b, p)                       # p = s + b * p
 

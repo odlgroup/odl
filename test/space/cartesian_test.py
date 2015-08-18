@@ -191,12 +191,7 @@ class MethodTest(ODLTestCase):
         xd = r3.element([1, 2, 3])
 
         correct_norm = sqrt(1**2 + 2**2 + 3**2)
-
-        # Space function
         self.assertAlmostEquals(r3.norm(xd), correct_norm)
-
-        # Member function
-        self.assertAlmostEquals(xd.norm(), correct_norm)
 
     def test_inner(self):
         r3 = En(3)
@@ -204,12 +199,7 @@ class MethodTest(ODLTestCase):
         yd = r3.element([5, -3, 9])
 
         correct_inner = 1*5 + 2*(-3) + 3*9
-
-        # Space function
         self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
-
-        # Member function
-        self.assertAlmostEquals(xd.inner(yd), correct_inner)
 
 
 #class CpuFactoryTest(ODLTestCase):
