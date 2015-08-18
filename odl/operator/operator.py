@@ -445,17 +445,17 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> A.__call__(5)
         15
         """
-        if not self.domain.contains(inp):
+        if inp not in self.domain:
             raise TypeError(errfmt('''
-            inp ({}) is not in the operator domain ({})
-            '''.format(repr(inp), repr(self))))
+            `inp` {!r} is not in the operator `domain` {}.
+            '''.format(inp, self.domain)))
 
         result = self._call(inp)
 
-        if not self.range.contains(result):
+        if result not in self.range:
             raise TypeError(errfmt('''
-            result ({}) is not in the operator domain ({})
-            '''.format(repr(result), repr(self))))
+            `result` {!r} is not in the operator `range` {}.
+            '''.format(result, self.range)))
 
         return result
 
