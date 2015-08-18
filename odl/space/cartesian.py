@@ -491,7 +491,7 @@ class Ntuples(Set):
 
         Returns
         -------
-        equals : boolean
+        equals : `bool`
             `True` if `other` is an instance of this space's type
             with the same `dim` and `dtype`, otherwise `False`.
 
@@ -533,35 +533,23 @@ class Ntuples(Set):
     def contains(self, other):
         """Test if `other` is contained in this space.
 
-        Parameters
-        ----------
-        other : `object`
-            The object to be tested for membership
-
         Returns
         -------
         contains : `bool`
-            `True` if `other` is an instance of the same `Vector`
-            class, `other.space.dim` equals this space's `dim` and
-            `other.space.dtype` can be safely cast to this space's
-            data type. `False` otherwise.
+            `True` if `other` is an `Ntuples.Vector` instance of and
+            `other.space` is equal to this space. `False` otherwise.
 
         Examples
         --------
         >>> long_3 = Ntuples(3, dtype='int64')
-        >>> double_3 = Ntuples(3, dtype='float64')
-        >>> long_vec = long_3.element([1, 2, 3])
-        >>> long_vec in double_3
+        >>> long_3.element() in long_3
         True
-        >>> int_3 = Ntuples(3, dtype='int32')
-        >>> float_3 = Ntuples(3, dtype='float32')
-        >>> int_vec = int_3.element([1, 2, 3])
-        >>> int_vec in float_3  # Unsafe cast
+        >>> long_3.element() in Ntuples(3, dtype='int32')
+        False
+        >>> long_3.element() in Ntuples(3, dtype='float64')
         False
         """
-        return (isinstance(other, Ntuples.Vector) and
-                len(other) == self.dim and
-                np.can_cast(other.space.dtype, self.dtype))
+        return isinstance(other, Ntuples.Vector) and other.space == self
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
@@ -647,14 +635,9 @@ class Ntuples(Set):
         def equals(self, other):
             """Test if `other` is equal to this vector.
 
-            Parameters
-            ----------
-            other : `object`
-                Object to compare to this vector
-
             Returns
             -------
-            equals : `boolean`
+            equals :  `bool`
                 `True` if all entries of `other` are equal to this
                 vector's entries, `False` otherwise.
 
@@ -716,13 +699,10 @@ class Ntuples(Set):
         def copy(self):
             """Create an identical (deep) copy of this vector.
 
-            Parameters
-            ----------
-            None
-
             Returns
             -------
             copy : `Ntuples.Vector`
+                The deep copy
 
             Examples
             --------
@@ -836,7 +816,6 @@ class Ntuples(Set):
             >>> x
             Ntuples(2, dtype('int8')).element([0, 1])
             """
-            # TODO: do a real compatibility check
             if isinstance(values, Ntuples.Vector):
                 return self.data.__setitem__(
                     indices, values.data.__getitem__(indices))
@@ -1010,6 +989,7 @@ class Cn(Ntuples, Algebra):
         """
         _lincomb(z, a, x, b, y, self.dtype)
 
+
     def zero(self):
         """Create a vector of zeros.
 
@@ -1100,6 +1080,30 @@ class Cn(Ntuples, Algebra):
                 '''.format(type(space))))
 
             super().__init__(space, data)
+
+        # Use the standard `LinearSpace.Vector` method again
+        def assign(self, other):
+            """Assign the values of `other` to this vector.
+
+            Parameters
+            ----------
+            other : `Cn.Vector`
+                The values to be copied to this vector. `other`
+                must be an element of this vector's space.
+
+            Returns
+            -------
+            `None`
+
+            Examples
+            --------
+            >>> vec1 = Cn(3).element([1+1j, 2, 3-2j])
+            >>> vec2 = Cn(3).element([0, 0, 0])
+            >>> vec2.assign(vec1)
+            >>> vec2
+            Cn(3).element([(1+1j), (2+0j), (3-2j)])
+            """
+            self.space.lincomb(self, 1, other)
 
         @property
         def real(self):
@@ -1341,7 +1345,7 @@ class MetricCn(Cn, MetricSpace):
 
         Returns
         -------
-        equals : boolean
+        equals : `bool`
             `True` if `other` is an instance of this space's type
             with the same `dim` and `dtype`, and **identical**
             distance function, otherwise `False`.
@@ -1415,7 +1419,7 @@ class MetricRn(MetricCn):
 
         Parameters
         ----------
-        `dim` : `int`
+        dim : `int`
             The dimension of the space
         dist : callable
             The distance function defining a metric on :math:`R^n`. It
@@ -1550,7 +1554,7 @@ class NormedCn(MetricCn, NormedSpace):
 
         Returns
         -------
-        equals : boolean
+        equals : `bool`
             `True` if `other` is an instance of this space's type
             with the same `dim` and `dtype`, and **identical**
             norm function, otherwise `False`.
@@ -1743,6 +1747,8 @@ class HilbertCn(NormedCn, HilbertSpace):
         True
         >>> weights = np.array([1., 2.])
         >>> c3w = HilbertCn(2, lambda x, y: np.vdot(weights * y, x))
+        >>> x = c3w.element(x)  # elements must be cast (no copy)
+        >>> y = c3w.element(y)
         >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
         True
         """
@@ -1753,7 +1759,7 @@ class HilbertCn(NormedCn, HilbertSpace):
 
         Returns
         -------
-        equals : boolean
+        equals : `bool`
             `True` if `other` is an instance of this space's type
             with the same `dim` and `dtype`, and **identical**
             inner product function, otherwise `False`.
@@ -1879,6 +1885,8 @@ class HilbertRn(HilbertCn):
         True
         >>> weights = np.array([1., 2., 1.])
         >>> r3w = HilbertRn(3, lambda x, y: np.vdot(weights * x, y))
+        >>> x = r3w.element(x)  # elements must be cast (no copy)
+        >>> y = r3w.element(y)
         >>> r3w.inner(x, y) == 1*5*1 + 2*3*2 + 1*2*3
         True
         """
@@ -1948,7 +1956,7 @@ class EuclideanCn(HilbertCn):
 
         Returns
         -------
-        equals : boolean
+        equals : `bool`
             `True` if `other` is an instance of this space's type
             with the same `dim` and `dtype`, otherwise `False`.
 
