@@ -103,15 +103,15 @@ class Discretization(with_metaclass(ABCMeta, Set)):
 
         Parameters
         ----------
-        `set_` : `Set`
+        set_ : `Set`
             The (abstract) set to be discretized
-        `ntuples` : `Ntuples`
+        ntuples : `Ntuples`
             Data structure holding the values of a discretized object
-        `restr` : `Operator`, optional
+        restr : `Operator`, optional
             Operator mapping a `set` element to an `ntuples` element.
             Must satisfy `restr.domain == set_` and
             `restr.range == ntuples`.
-        `ext` : `Operator`, optional
+        ext : `Operator`, optional
             Operator mapping an `ntuples` element to a `set` element.
             Must satisfy `ext.domain == ntuples` and
             `ext.range == set_`.
@@ -293,16 +293,16 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
 
         Parameters
         ----------
-        `space` : `LinearSpace`
+        space : `LinearSpace`
             The (abstract) space to be discretized
-        `ntuples` : `Rn` or `Cn`
+        ntuples : `Rn` or `Cn`
             Data structure holding the values of a discretized object.
             Its `field` attribute must be the same as `space.field`.
-        `restr` : `LinearOperator`, optional
+        restr : `LinearOperator`, optional
             Operator mapping a `set` element to an `ntuples` element.
             Must satisfy `restr.domain == set_` and
             `restr.range == ntuples`.
-        `ext` : `LinearOperator`, optional
+        ext : `LinearOperator`, optional
             Operator mapping an `ntuples` element to a `set` element.
             Must satisfy `ext.domain == ntuples` and
             `ext.range == set_`.
@@ -357,11 +357,11 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
         """Another name for `set`"""
         return self._set
 
+    # Pass-through attributes of the wrapped `ntuples`
     def _lincomb(self, z, a, x, b, y):
         """Raw linear combination."""
         return self.ntuples._lincomb(z, a, x, b, y)
 
-    # Pass-through attributes of the wrapped `ntuples`
     @property
     def field(self):
         """The field of this discretization."""
@@ -386,16 +386,16 @@ class MetricSpaceDiscretization(with_metaclass(ABCMeta,
 
         Parameters
         ----------
-        `space` : `MetricSpace`
+        space : `MetricSpace`
             The (abstract) space to be discretized
-        `ntuples` : `MetricRn` or `MetricCn`
+        ntuples : `MetricRn` or `MetricCn`
             Data structure holding the values of a discretized object.
             Its `field` attribute must be the same as `space.field`.
-        `restr` : `LinearOperator`, optional
+        restr : `LinearOperator`, optional
             Operator mapping a `set` element to an `ntuples` element.
             Must satisfy `restr.domain == set_` and
             `restr.range == ntuples`.
-        `ext` : `LinearOperator`, optional
+        ext : `LinearOperator`, optional
             Operator mapping an `ntuples` element to a `set` element.
             Must satisfy `ext.domain == ntuples` and
             `ext.range == set_`.
