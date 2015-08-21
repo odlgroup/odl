@@ -35,7 +35,6 @@ from odl.utility.testutils import ODLTestCase
 
 standard_library.install_aliases()
 
-
 #class L2Test(ODLTestCase):
 #    def test_interval(self):
 #        I = Interval(0, pi)
