@@ -25,7 +25,8 @@ standard_library.install_aliases()
 
 # External imports
 import numpy as np
-from scipy.interpolate import interpn
+from scipy.interpolate import interpn, RegularGridInterpolator
+from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 
 # ODL imports
 from odl.discr.grid import TensorGrid
@@ -197,13 +198,13 @@ class RawGridCollocation(Operator):
         >>> coll_op(func_elem)
         Traceback (most recent call last):
         ...
-        ValueError: `inp` shape (2,) not broadcastable to shape (6).
+        ValueError: `inp` shape (2,) not broadcastable to shape (6,).
 
         Do this instead:
 
         >>> func_elem = funcset.element(lambda x, y: 2 * x + 0 * y)
         >>> coll_op(func_elem)
-        Rn(6).element([2.0, 2.0, 2.0, 4.0, 4.0, 4.0])
+        Rn(6).element([2.0, 4.0, 2.0, 4.0, 2.0, 4.0])
 
         This is what happens internally:
 
@@ -213,13 +214,13 @@ class RawGridCollocation(Operator):
         (2, 1)
         """
         try:
-            mg_tuple = self.grid.meshgrid(order=self.order)
-            values = inp.function(*mg_tuple).flatten(order=self.order)
+            mg_tuple = self.grid.meshgrid()
+            values = inp(*mg_tuple).flatten(order=self.order)
         except TypeError:
             points = self.grid.points(order=self.order)
             values = np.empty(points.shape[0], dtype=self.range.dtype)
             for i, point in enumerate(points):
-                values[i] = inp.function(*point)
+                values[i] = inp(*point)
         return self.range.element(values)
 
 
@@ -411,16 +412,16 @@ class RawNearestInterpolation(Operator):
         >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
         >>> values = ntuples.element(val_arr)
         >>> function = interp_op(values)
-        >>> function([0.3, 0.6])  # closest to index (1, 1) -> 5
+        >>> function(0.3, 0.6)  # closest to index (1, 1) -> 5
 
         """
-        def func(x):
-            return interpn(points=self.grid.coord_vectors,
-                           values=inp.data.reshape(self.grid.shape,
-                                                   order=self.order),
-                           method='nearest',
-                           xi=x,
-                           fill_value=None)  # Allow points outside
+        def func(*x):
+            x = np.atleast_1d(x).squeeze()
+            interp = _NearestInterpolator(
+                self.grid.coord_vectors, inp.data.reshape(self.grid.shape,
+                                                          order=self.order))
+            values = interp(x)
+            return values[0] if values.shape == (1,) else values
 
         return self.range.element(func)
 
@@ -608,24 +609,97 @@ class LinearInterpolation(LinearOperator):
 
         TODO: implement an example!
 
-        >>> interp_op = RawNearestInterpolation(space, grid, ntuples,
-        ...                                     order='C')
-
-        We test some simple values:
-
-        >>> import numpy as np
-        >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
-        >>> values = ntuples.element(val_arr)
-        >>> function = interp_op(values)
-        >>> function([0.3, 0.6])  # closest to index (1, 1) -> 5
-
         """
-        def func(x):
-            return interpn(points=self.grid.coord_vectors,
-                           values=inp.data.reshape(self.grid.shape,
-                                                   order=self.order),
-                           method='linear',
-                           xi=x,
-                           fill_value=None)  # Allow points outside
+        def func(*x):
+            x = np.atleast_1d(x).squeeze()
+            values = interpn(points=self.grid.coord_vectors,
+                             values=inp.data.reshape(self.grid.shape,
+                                                     order=self.order),
+                             method='nearest',
+                             xi=x,
+                             fill_value=None)  # Allow points outside
+            return values[0] if values.shape == (1,) else values
 
         return self.range.element(func)
+
+
+class _NearestInterpolator(RegularGridInterpolator):
+
+    """Own version of NumPy's grid interpolator class.
+
+    We want to support non-numerical values for nearest neighbor
+    interpolation and in-place evaluation.
+    """
+
+    def __init__(self, coord_vecs, values):
+        """Initialize a new instance."""
+
+        # Provide values for some attributes
+        self.method = 'nearest'
+        self.bounds_error = False
+        self.fill_value = None
+
+        if not hasattr(values, 'ndim'):
+            # allow reasonable duck-typed values
+            values = np.asarray(values)
+
+        if len(coord_vecs) > values.ndim:
+            raise ValueError('There are {} point arrays, but `values` has {} '
+                             'dimensions.'.format(len(coord_vecs),
+                                                  values.ndim))
+
+        # Cast to floating point was removed here
+
+        for i, p in enumerate(coord_vecs):
+            if not np.all(np.diff(p) > 0.):
+                raise ValueError('The points in dimension {} must be strictly '
+                                 'ascending'.format(i))
+            if not np.asarray(p).ndim == 1:
+                raise ValueError('The points in dimension {} must be '
+                                 '1-dimensional'.format(i))
+            if not values.shape[i] == len(p):
+                raise ValueError('There are {} points and {} values in '
+                                 'dimension {}'.format(len(p),
+                                                       values.shape[i], i))
+        self.grid = tuple([np.asarray(p) for p in coord_vecs])
+        self.values = values
+
+    def __call__(self, xi, outp=None):
+        """Do the interpolation. Modified for in-place support."""
+        ntotal = np.prod([len(v) for v in self.grid])
+        if outp is not None:
+            if not isinstance(outp, np.ndarray):
+                raise TypeError('`outp` {!r} not a `numpy.ndarray` '
+                                'instance.'.format(outp))
+            if outp.shape != (ntotal,):
+                raise ValueError('Output shape {} not equal to (n,), where '
+                                 'n={} is the total number of grid '
+                                 'points.'.format(outp.shape, ntotal))
+
+        ndim = len(self.grid)
+        xi = _ndim_coords_from_arrays(xi, ndim=ndim)
+        if xi.shape[-1] != ndim:
+            raise ValueError('The requested sample points xi have dimension '
+                             '{}, but this _NearestInterpolator has '
+                             'dimension {}.'.format(xi.shape[-1], ndim))
+
+        xi_shape = xi.shape
+        xi = xi.reshape(-1, xi_shape[-1])
+        indices, norm_distances, out_of_bounds = self._find_indices(xi.T)
+
+        outp = self._evaluate_nearest(indices, norm_distances, out_of_bounds,
+                                      outp)
+
+        return outp  # Do not reshape
+
+    def _evaluate_nearest(self, indices, norm_distances, out_of_bounds,
+                          outp=None):
+            """Evaluate nearest interpolation. Modified for in-place."""
+            idx_res = []
+            for i, yi in zip(indices, norm_distances):
+                idx_res.append(np.where(yi <= .5, i, i + 1))
+            if outp is not None:
+                outp[:] = self.values[idx_res]
+                return outp
+            else:
+                return self.values[idx_res]
