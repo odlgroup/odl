@@ -23,7 +23,7 @@ import sys
 arg = sys.argv[:1]
 arg.append('--verbosity=2')
 arg.append('--with-doctest')
-arg.append('--doctest-options=+NORMALIZE_WHITESPACE')
+arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS')
 try:
     # pylint: disable=unused-import
     import odl.space.cuda
