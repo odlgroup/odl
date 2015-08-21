@@ -455,7 +455,7 @@ class Ntuples(Set):
                 pass
             else:
                 raise ValueError(errfmt('''
-                `inp` shape {} not broadcastable to shape ({}).
+                `inp` shape {} not broadcastable to shape ({},).
                 '''.format(inp.shape, self.dim)))
 
         return self.Vector(self, inp)
