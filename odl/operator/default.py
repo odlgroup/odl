@@ -362,7 +362,7 @@ class MultiplyOperator(LinearOperator):
         En(3).element([1.0, 4.0, 9.0])
         """
         outp.assign(inp[1])
-        outp.multiply(inp[0])
+        outp.space.multiply(inp[0], outp)
 
     def __repr__(self):
         """repr(self) implementation."""

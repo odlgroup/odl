@@ -694,22 +694,6 @@ class MetricSpace(LinearSpace):
                 `space` {} not a MetricSpace.'''.format(space)))
             super().__init__(space)
 
-        def dist(self, other):
-            """Calculate the distance to another vector.
-
-            Shortcut for self.space.dist(self, other)
-
-            Parameters
-            ----------
-            `other` : `MetricSpace.Vector`
-
-            Returns
-            -------
-            dist : float
-                   Distance to other.
-            """
-            return self.space.dist(self, other)
-
         def equals(self, other):
             """Test two vectors for equality.
 
@@ -756,7 +740,7 @@ class MetricSpace(LinearSpace):
                 # Optimization for the most common case
                 return True
             else:
-                return self.dist(other) == 0
+                return self.space.dist(self, other) == 0
 
         def __eq__(self, other):
             return self.equals(other)
@@ -883,24 +867,6 @@ class NormedSpace(MetricSpace):
                 raise TypeError(errfmt('''
                 'space' ({}) is not a NormedSpace instance'''.format(space)))
             super().__init__(space)
-
-        def norm(self):
-            """
-            Calculates the norm of this Vector
-
-            Shortcut for self.space.norm(self)
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            norm : float
-                   Norm of the vector.
-
-            """
-            return self.space.norm(self)
 
 
 class HilbertSpace(NormedSpace):
@@ -1044,17 +1010,6 @@ class HilbertSpace(NormedSpace):
                 'space' ({}) is not a HilbertSpace instance'''.format(space)))
             super().__init__(space)
 
-        def inner(self, x):
-            """ Calculate the inner product of this and another vector
-
-            Shortcut for self.space.inner(self, x)
-
-            Args:
-                x:  Vector in same space as self
-            """
-
-            return self.space.inner(self, x)
-
 
 class Algebra(LinearSpace):
 
@@ -1141,28 +1096,12 @@ class Algebra(LinearSpace):
                 'space' ({}) is not an Algebra instance'''.format(space)))
             super().__init__(space)
 
-        def multiply(self, other):
-            """ Shortcut for space.multiply(self, other)
-            """
-            self.space.multiply(other, self)
-
-        def __mul__(self, other):
-            """ Overloads the * operator to mean pointwise multiplication if
-            the other object is a vector
-            """
-            if other in self.space:
-                newvec = self.copy()
-                newvec.multiply(other)
-                return newvec
-            else:
-                return super().__mul__(other)
-
         def __imul__(self, other):
             """ Overloads the *= operator to mean pointwise multiplication if
             the other object is a vector
             """
             if other in self.space:
-                self.multiply(other)
+                self.space.multiply(other, self)
                 return self
             else:
                 return super().__imul__(other)
