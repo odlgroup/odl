@@ -412,14 +412,27 @@ class RawNearestInterpolation(Operator):
         >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
         >>> values = ntuples.element(val_arr)
         >>> function = interp_op(values)
-        >>> function(0.3, 0.6)  # closest to index (1, 1) -> 5
-
+        >>> function(0.3, 0.6)  # closest to index (1, 1) -> 3
+        (3+4j)
         """
         def func(*x):
-            x = np.atleast_1d(x).squeeze()
-            interp = _NearestInterpolator(
-                self.grid.coord_vectors, inp.data.reshape(self.grid.shape,
-                                                          order=self.order))
+            if (len(x) == self.grid.dim and
+                    hasattr(x[0], 'ndim') and
+                    x[0].ndim == self.grid.dim):
+                # meshgrid vectors
+                interpolator = _NearestMeshgridInterpolator
+            elif len(x) == 1:
+                # list or array of points
+                x = np.atleast_2d(x[0])
+                interpolator = _NearestPointwiseInterpolator
+            else:
+                # single point as list of coordinates
+                x = np.atleast_2d(x)
+                interpolator = _NearestPointwiseInterpolator
+
+            interp = interpolator(self.grid.coord_vectors,
+                                  inp.data.reshape(self.grid.shape,
+                                                   order=self.order))
             values = interp(x)
             return values[0] if values.shape == (1,) else values
 
@@ -623,9 +636,9 @@ class LinearInterpolation(LinearOperator):
         return self.range.element(func)
 
 
-class _NearestInterpolator(RegularGridInterpolator):
+class _NearestPointwiseInterpolator(RegularGridInterpolator):
 
-    """Own version of NumPy's grid interpolator class.
+    """Own version of SciPy's grid interpolator by point.
 
     We want to support non-numerical values for nearest neighbor
     interpolation and in-place evaluation.
@@ -665,41 +678,108 @@ class _NearestInterpolator(RegularGridInterpolator):
         self.values = values
 
     def __call__(self, xi, outp=None):
-        """Do the interpolation. Modified for in-place support."""
-        ntotal = np.prod([len(v) for v in self.grid])
+        """Do the interpolation.
+
+        Modified for in-place evaluation support and without method
+        choice. Evaluation points are to be given as an array with
+        shape (n, dim), where n is the number of points..
+        """
+        ndim = len(self.grid)
+        if xi.ndim != 2:
+            raise ValueError('`xi` has {} axes instead of 2.'.format(xi.ndim))
+
+        if xi.shape[1] != ndim:
+            raise ValueError('`xi` has axis 1 with length {} instead '
+                             'of the grid dimension {}.'.format(xi.shape[1],
+                                                                ndim))
         if outp is not None:
             if not isinstance(outp, np.ndarray):
                 raise TypeError('`outp` {!r} not a `numpy.ndarray` '
                                 'instance.'.format(outp))
-            if outp.shape != (ntotal,):
+            if outp.shape != (xi.shape[0],):
                 raise ValueError('Output shape {} not equal to (n,), where '
-                                 'n={} is the total number of grid '
-                                 'points.'.format(outp.shape, ntotal))
+                                 'n={} is the total number of evaluation '
+                                 'points.'.format(outp.shape, xi.shape[0]))
 
-        ndim = len(self.grid)
         xi = _ndim_coords_from_arrays(xi, ndim=ndim)
         if xi.shape[-1] != ndim:
             raise ValueError('The requested sample points xi have dimension '
                              '{}, but this _NearestInterpolator has '
                              'dimension {}.'.format(xi.shape[-1], ndim))
 
-        xi_shape = xi.shape
-        xi = xi.reshape(-1, xi_shape[-1])
-        indices, norm_distances, out_of_bounds = self._find_indices(xi.T)
+        indices, norm_distances = self._find_indices(xi.T)
+        return self._evaluate_nearest(indices, norm_distances, outp)
 
-        outp = self._evaluate_nearest(indices, norm_distances, out_of_bounds,
-                                      outp)
+    def _evaluate_nearest(self, indices, norm_distances, outp=None):
+        """Evaluate nearest interpolation. Modified for in-place."""
+        idx_res = []
+        for i, yi in zip(indices, norm_distances):
+            idx_res.append(np.where(yi <= .5, i, i + 1))
+        if outp is not None:
+            outp[:] = self.values[idx_res]
+            return outp
+        else:
+            return self.values[idx_res]
 
-        return outp  # Do not reshape
+    def _find_indices(self, xi):
+        """Modified version without out-of-bounds check."""
+        # find relevant edges between which xi are situated
+        indices = []
+        # compute distance to lower edge in unity units
+        norm_distances = []
+        # iterate through dimensions
+        for x, grid in zip(xi, self.grid):
+            i = np.searchsorted(grid, x) - 1
+            i[i < 0] = 0
+            i[i > grid.size - 2] = grid.size - 2
+            indices.append(i)
+            norm_distances.append((x - grid[i]) /
+                                  (grid[i + 1] - grid[i]))
+        return indices, norm_distances
 
-    def _evaluate_nearest(self, indices, norm_distances, out_of_bounds,
-                          outp=None):
-            """Evaluate nearest interpolation. Modified for in-place."""
-            idx_res = []
-            for i, yi in zip(indices, norm_distances):
-                idx_res.append(np.where(yi <= .5, i, i + 1))
-            if outp is not None:
-                outp[:] = self.values[idx_res]
-                return outp
-            else:
-                return self.values[idx_res]
+
+class _NearestMeshgridInterpolator(_NearestPointwiseInterpolator):
+
+    """Own version of SciPy's grid interpolator for meshgrids.
+
+    We want to support non-numerical values for nearest neighbor
+    interpolation and in-place evaluation.
+    """
+
+    def __call__(self, xi, outp=None):
+        """Do the interpolation.
+
+        Modified for in-place evaluation support and without method
+        choice. Evaluation points are to be given as a list of arrays
+        which can be broadcast against each other.
+        """
+        if len(xi) != len(self.grid):
+            raise ValueError('number of vectors in `xi` is {} instead of {}, '
+                             'the grid dimension.'.format(xi.shape[1],
+                                                          len(self.grid)))
+        ntotal = np.prod(np.broadcast_arrays(*xi)[0].shape)
+        if outp is not None:
+            if not isinstance(outp, np.ndarray):
+                raise TypeError('`outp` {!r} not a `numpy.ndarray` '
+                                'instance.'.format(outp))
+            if outp.shape != (ntotal,):
+                raise ValueError('Output shape {} not equal to (n,), where '
+                                 'n={} is the total number of evaluation '
+                                 'points.'.format(outp.shape, ntotal))
+
+        indices, norm_distances = self._find_indices(xi)
+        return self._evaluate_nearest(indices, norm_distances, outp)
+
+    def _evaluate_nearest(self, indices, norm_distances, outp=None):
+        """Evaluate nearest interpolation.
+
+        Modified for in-place and with flattened result.
+        """
+        idx_res = []
+        for i, yi in zip(indices, norm_distances):
+            idx_res.append(np.where(yi <= .5, i, i + 1))
+        if outp is not None:
+            outp[:] = self.values[idx_res].flat
+            return outp
+        else:
+            return self.values[idx_res].flatten()
