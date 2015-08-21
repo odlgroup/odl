@@ -211,6 +211,61 @@ class UniversalSet(Set):
         return "UniversalSet()"
 
 
+class Strings(Set):
+
+    """The set of fixed-length (unicode) strings."""
+
+    def __init__(self, length):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        length : `int`
+            The fixed length of the strings in this set. Must be
+            positive.
+        """
+        if length not in Integers():
+            raise TypeError('`length` {} is not an integer.'.format(length))
+        if length <= 0:
+            raise ValueError('`length` {} is not positive.'.format(length))
+        self._length = length
+
+    @property
+    def length(self):
+        """The `length` attribute."""
+        return self._length
+
+    def contains(self, other):
+        """Test if `other` is a string."""
+        return isinstance(other, str) and len(other) <= self.length
+
+    def equals(self, other):
+        """Test if `other` is a `Strings` instance of equal length."""
+        return isinstance(other, Strings) and other.length == self.length
+
+    def element(self, inp=None):
+        """Return an integer from `inp` or from scratch."""
+        if inp is not None:
+            try:
+                s = str(inp)
+                if len(s > self.length):
+                    raise ValueError
+                return str(inp)
+            except ValueError:
+                raise ValueError('Cannot create a string of length {} '
+                                 'from {}.'.format(self.length, inp))
+        else:
+            return ''
+
+    def __str__(self):
+        """s.__str__() <==> str(s)."""
+        return 'Strings({})'.format(self.length)
+
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        return 'Strings({})'.format(self.length)
+
+
 class Integers(Set):
 
     """The set of integers."""
