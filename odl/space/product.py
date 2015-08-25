@@ -25,6 +25,7 @@ from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import str, zip, super
 from future import standard_library
+standard_library.install_aliases()
 
 # External
 import numpy as np
@@ -33,8 +34,8 @@ import numpy as np
 from odl.space.space import HilbertSpace, NormedSpace, MetricSpace, LinearSpace
 from odl.utility.utility import errfmt
 
-standard_library.install_aliases()
 
+# TODO: adapt product spaces to support function spaces
 
 def _product_space_str(spaces):
     if all(spaces[0] == space for space in spaces):
@@ -156,6 +157,8 @@ class LinearProductSpace(LinearSpace):
         >>> print(x)
         {[1.0, 2.0], [1.0, 2.0, 3.0]}
         """
+        # TODO: update this function!
+
         # If data is given as keyword arg, prefer it over arg list
         data = kwargs.pop('data', None)
         if data is None:
