@@ -260,6 +260,25 @@ class IntervalProd(Set):
             return False
         return True
 
+    def contains_set(self, other, tol=0.0):
+        """Test if another set is contained.
+
+        Parameters
+        ----------
+        other : `Set`
+            The set to be tested. It must implement a `min()` and a
+            `max()` method, otherwise a `TypeError` is raised.
+        tol : float, optional
+            The maximum allowed distance in 'inf'-norm between the
+            other set and this interval product.
+            Default: 0.0
+        """
+        if not (hasattr(other, 'min') and hasattr(other, 'max')):
+            raise TypeError('cannot test `other` {} without `min` and `max`'
+                            'attributes.'.format(other))
+
+        return self.contains(other.min, tol) and self.contains(other.max, tol)
+
     # Additional property-like methods
     def measure(self, dim=None):
         """The (Lebesgue) measure of the IntervalProd instance.

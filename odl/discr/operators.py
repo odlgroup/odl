@@ -65,9 +65,8 @@ class RawGridCollocation(Operator):
             slowly, 'F' vice versa.
         """
         if not isinstance(ip_fset, FunctionSet):
-            raise TypeError(errfmt('''
-            `ip_fset` {} not an `FunctionSet` instance.
-            '''.format(ip_fset)))
+            raise TypeError('`ip_fset` {} not a `FunctionSet` '
+                            'instance.'.format(ip_fset))
 
         if not isinstance(ip_fset.domain, IntervalProd):
             raise TypeError(errfmt('''
@@ -88,11 +87,9 @@ class RawGridCollocation(Operator):
             dimension {} of `ntuples` not equal to total number {} of
             grid points.'''.format(ntuples.dim, grid.ntotal)))
 
-        # TODO: make this an `IntervalProd` method (or add to `contains()`)
-        if not (np.all(grid.min >= ip_fset.domain.begin) and
-                np.all(grid.max <= ip_fset.domain.end)):
+        if not ip_fset.domain.contains_set(grid):
             raise ValueError(errfmt('''
-            `grid` {} not contained in the `domain` {} of `ip_fset`.
+            `grid` {} not contained in the domain {} of `ip_fset`.
             '''.format(grid, ip_fset.domain)))
 
         if order not in ('C', 'F'):
@@ -213,9 +210,10 @@ class RawGridCollocation(Operator):
         >>> vals.shape  # Not possible to assign to an Rn(6) vector
         (2, 1)
         """
+        # TODO: update after vectorization issue is sorted out
         try:
             mg_tuple = self.grid.meshgrid()
-            values = inp(*mg_tuple).flatten(order=self.order)
+            values = inp(*mg_tuple).reshape(-1, order=self.order)
         except TypeError:
             points = self.grid.points(order=self.order)
             values = np.empty(points.shape[0], dtype=self.range.dtype)
@@ -331,11 +329,9 @@ class RawNearestInterpolation(Operator):
             dimension {} of `ntuples` not equal to total number {} of
             grid points.'''.format(ntuples.dim, grid.ntotal)))
 
-        # TODO: make this an `IntervalProd` method (or add to `contains()`)
-        if not (np.all(grid.min >= ip_fset.domain.begin) and
-                np.all(grid.max <= ip_fset.domain.end)):
+        if not ip_fset.domain.contains_set(grid):
             raise ValueError(errfmt('''
-            `grid` {} not contained in the `domain` {} of `ip_fset`.
+            `grid` {} not contained in the domain {} of `ip_fset`.
             '''.format(grid, ip_fset.domain)))
 
         if order not in ('C', 'F'):
@@ -365,6 +361,8 @@ class RawNearestInterpolation(Operator):
     def order(self):
         """The axis ordering."""
         return self._order
+
+    # TODO: Implement _apply()
 
     def _call(self, inp):
         """The raw `call` method for out-of-place evaluation.
@@ -416,6 +414,7 @@ class RawNearestInterpolation(Operator):
         (3+4j)
         """
         def func(*x):
+            """The actual interpolating function."""
             if (len(x) == self.grid.dim and
                     hasattr(x[0], 'ndim') and
                     x[0].ndim == self.grid.dim):
@@ -433,7 +432,7 @@ class RawNearestInterpolation(Operator):
             interp = interpolator(self.grid.coord_vectors,
                                   inp.data.reshape(self.grid.shape,
                                                    order=self.order))
-            values = interp(x)
+            values = interp(x).reshape(-1, order=self.order)
             return values[0] if values.shape == (1,) else values
 
         return self.range.element(func)
@@ -548,11 +547,9 @@ class LinearInterpolation(LinearOperator):
             `field` {} of `ip_fspace` not equal to `field` {}
             of `ntuples`.'''.format(ip_fspace.field, ntuples.field)))
 
-        # TODO: make this an `IntervalProd` method (or add to `contains()`)
-        if not (np.all(grid.min >= ip_fspace.domain.begin) and
-                np.all(grid.max <= ip_fspace.domain.end)):
+        if not ip_fspace.domain.contains_set(grid):
             raise ValueError(errfmt('''
-            `grid` {} not contained in the `domain` {} of `ip_fspace`.
+            `grid` {} not contained in the domain {} of `ip_fspace`.
             '''.format(grid, ip_fspace.domain)))
 
         if order not in ('C', 'F'):
@@ -601,24 +598,6 @@ class LinearInterpolation(LinearOperator):
         --------
         Let's define the complex function space :math:`L^2` on a
         rectangle:
-
-        >>> from odl.space.domain import Rectangle
-        >>> from odl.space.default import L2
-        >>> from odl.space.set import ComplexNumbers
-        >>> from odl.space.cartesian import Cn
-
-        >>> rect = Rectangle([0, 0], [1, 1])
-        >>> space = L2(rect, field=ComplexNumbers())
-
-        The grid is defined by uniform sampling (`as_midp` indicates
-        that the points will be cell midpoints instead of corners).
-
-        >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
-        >>> grid.coord_vectors
-        (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
-        >>> ntuples = Cn(grid.ntotal)
-
-        Now initialize the operator:
 
         TODO: implement an example!
 
@@ -773,13 +752,13 @@ class _NearestMeshgridInterpolator(_NearestPointwiseInterpolator):
     def _evaluate_nearest(self, indices, norm_distances, outp=None):
         """Evaluate nearest interpolation.
 
-        Modified for in-place and with flattened result.
+        Modified for in-place evaluation.
         """
         idx_res = []
         for i, yi in zip(indices, norm_distances):
             idx_res.append(np.where(yi <= .5, i, i + 1))
         if outp is not None:
-            outp[:] = self.values[idx_res].flat
+            outp[:] = self.values[idx_res]
             return outp
         else:
-            return self.values[idx_res].flatten()
+            return self.values[idx_res]
