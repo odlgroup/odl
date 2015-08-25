@@ -439,6 +439,47 @@ class TensorGrid(Set):
         minmax_grid = TensorGrid(*minmax_vecs)
         return minmax_grid.points(order=order)
 
+    def cell_sizes(self, as_midp=False):
+        """The grid cell sizes as coordinate vectors.
+
+        Parameters
+        ----------
+        as_midp : `bool`
+            Interpret sampling points as cell midpoints if `True`,
+            otherwise as cell corners.
+
+        Returns
+        -------
+        csizes : `numpy.ndarray` tuple
+            The cell sizes per axis. The length of the vectors will be
+            one less than `coord_vectors` if `as_midp == False`,
+            otherwise they will have the same length.
+            For axes with 1 grid point, cell size is set to 0.
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g.cell_sizes()
+        (array([ 1.]), array([ 1.,  2.]))
+        >>> g.cell_sizes(as_midp=True)
+        (array([ 1.,  1.]), array([ 1. ,  1.5,  2. ]))
+        """
+        csizes = []
+        for vec in self.coord_vectors:
+            if len(vec) == 1:
+                csizes.append(np.array([0.0]))
+            else:
+                if as_midp:
+                    csize = np.empty_like(vec)
+                    csize[1:-1] = (vec[2:] - vec[:-2]) / 2.0
+                    csize[0] = vec[1] - vec[0]
+                    csize[-1] = vec[-1] - vec[-2]
+                else:
+                    csize = vec[1:] - vec[:-1]
+                csizes.append(csize)
+
+        return tuple(csizes)
+
     def meshgrid(self, sparse=True):
         """A grid suitable for function evaluation.
 
