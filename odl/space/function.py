@@ -214,8 +214,7 @@ class FunctionSet(Set):
                 '''.format(fset)))
 
             if fcall is None and fapply is None:
-                raise ValueError(errfmt('''
-                `fcall` and `fapply` cannot both be `None`.'''))
+                raise ValueError('`fcall` and `fapply` cannot both be `None`.')
 
             if fcall is not None and not callable(fcall):
                 raise TypeError(errfmt('''
@@ -280,6 +279,37 @@ class FunctionSet(Set):
             If `outp` is not a `range` element or a `numpy.ndarray`
             with `outp[0] in range`, a `TypeError` is raised.
             """
+            if inp in self.domain:
+                # single value list: f(0, 1, 2)
+                pass
+            elif inp[0] in self.domain:
+                # single array: f([0, 1, 2])
+                pass
+            elif isinstance(self.domain, IntervalProd):
+                # Vectorization only allowed in this case
+
+                # First case: (N, d) array of points, where d = dimension
+                if (isinstance(inp[0], np.ndarray) and
+                        inp[0].ndim == 2 and
+                        inp[0].shape[1] == self.domain.dim):
+                    min_coords = np.min(inp[0], axis=0)
+                    max_coords = np.max(inp[0], axis=0)
+
+                # Second case: d meshgrid type arrays
+                elif (len(inp) == self.domain.dim and
+                      all(isinstance(vec, np.ndarray) for vec in inp)):
+                    min_coords = [np.min(vec) for vec in inp]
+                    max_coords = [np.max(vec) for vec in inp]
+
+                if (min_coords not in self.domain or
+                        max_coords not in self.domain):
+                    raise ValueError('`inp` contains points outside '
+                                     '`domain` {}.'.format(self.domain))
+            else:
+                raise TypeError('`inp` is neither an element of the function '
+                                'domain {} nor an array or meshgrid-type '
+                                'coordinate list.'.format(self.domain))
+
             outp = self._call(*inp)
 
             if not (outp in self.range or
@@ -436,6 +466,7 @@ class FunctionSpace(FunctionSet, Algebra):
 
         def lincomb_apply(outp, *inp):
             """Linear combination, apply version."""
+            # TODO: allow also CudaRn-like container types
             if not isinstance(outp, np.ndarray):
                 raise TypeError(errfmt('''
                 in-place evaluation only possible if `outp` is a
