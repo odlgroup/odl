@@ -527,6 +527,7 @@ class Ntuples(Set):
         True
         """
         return (isinstance(other, type(self)) and
+                isinstance(self, type(other)) and
                 self.dim == other.dim and
                 self.dtype == other.dtype)
 
