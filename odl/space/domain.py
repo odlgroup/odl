@@ -90,7 +90,7 @@ class IntervalProd(Set):
     |                    |               |single values `vals`.       |
     +--------------------+---------------+----------------------------+
     |`insert(other,      |`IntervalProd` |Return the interval product |
-    |index)`             |               |wher `other` has been       |
+    |index)`             |               |where `other` has been      |
     |                    |               |before `index`.             |
     +--------------------+---------------+----------------------------+
     |`corners(order='C')`|`numpy.ndarray`|Return the corner points    |
