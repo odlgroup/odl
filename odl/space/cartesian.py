@@ -526,8 +526,7 @@ class Ntuples(Set):
         >>> int_3 != int_4
         True
         """
-        return (isinstance(other, type(self)) and
-                isinstance(self, type(other)) and
+        return (type(self) == type(other) and
                 self.dim == other.dim and
                 self.dtype == other.dtype)
 
