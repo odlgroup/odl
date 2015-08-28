@@ -42,6 +42,7 @@ standard_library.install_aliases()
 from builtins import super
 
 # External module imports
+from numbers import Integral
 import numpy as np
 
 # ODL imports
@@ -90,6 +91,17 @@ class TensorGrid(Set):
     +-------------------+---------------+-----------------------------+
     |Signature          |Return type    |Description                  |
     +===================+===============+=============================+
+    |`contains(point,   |boolean        |Test if `point` is a grid    |
+    |tol=0.0)`          |               |point with tolerance `tol`.  |
+    |                   |               |Equivalent to `point in self`|
+    |                   |               |for `tol==0`.                |
+    +-------------------+---------------+-----------------------------+
+    |`convex_hull()`    |`IntervalProd` |The "inner" of the grid,     |
+    |                   |               |a rectangular box.           |
+    +-------------------+---------------+-----------------------------+
+    |`corners           |`numpy.ndarray`|The corner points in a single|
+    |(order='C')`       |               |array                        |
+    +-------------------+---------------+-----------------------------+
     |`equals(other,     |boolean        |Test if `other` is a grid    |
     |tol=0.0)`          |               |with the same points up to   |
     |                   |               |a tolerance of `tol` per     |
@@ -97,27 +109,19 @@ class TensorGrid(Set):
     |                   |               |`self == other` for          |
     |                   |               |`tol==0.0`.                  |
     +-------------------+---------------+-----------------------------+
-    |`contains(point,   |boolean        |Test if `point` is a grid    |
-    |tol=0.0)`          |               |point with tolerance `tol`.  |
-    |                   |               |Equivalent to `point in self`|
-    |                   |               |for `tol==0`.                |
+    |`insert(other,     |`TensorGrid`   |Insert `other` before        |
+    |index)`            |               |`index`.                     |
     +-------------------+---------------+-----------------------------+
     |`is_subgrid(other, |boolean        |Test if `other` is contained |
     |tol=0.0)`          |               |with tolerance `tol` per     |
     |                   |               |point.                       |
     +-------------------+---------------+-----------------------------+
-    |`points(order='C')`|`numpy.ndarray`|All grid points in a single  |
-    |                   |               |array                        |
-    +-------------------+---------------+-----------------------------+
-    |`corners           |`numpy.ndarray`|The corner points in a single|
-    |(order='C')`       |               |array                        |
-    +-------------------+---------------+-----------------------------+
     |`meshgrid          |`numpy.ndarray`|Efficient grid for function  |
     |(sparse=True)`     |tuple          |evaluation (see              |
     |                   |               |numpy.meshgrid)              |
     +-------------------+---------------+-----------------------------+
-    |`convex_hull()`    |`IntervalProd` |The "inner" of the grid,     |
-    |                   |               |a rectangular box.           |
+    |`points(order='C')`|`numpy.ndarray`|All grid points in a single  |
+    |                   |               |array                        |
     +-------------------+---------------+-----------------------------+
     """
 
@@ -340,6 +344,49 @@ class TensorGrid(Set):
                 return False
 
         return True
+
+    def insert(self, other, index):
+        """Insert another grid before the given index.
+
+        The given grid (dimension `m`) is inserted into the current
+        one (dimension `n`) before the given index, resulting in a new
+        `TensorGrid` of dimension `n + m`.
+        Note that no changes are made in-place.
+
+        Parameters
+        ----------
+        other : `TensorGrid`, float or array-like
+            The grid to be inserted. A float or array `a` is treated as
+            `TensorGrid(a)`.
+        index : `Integral`
+            The index of the dimension before which `grid` is to
+            be inserted. Must fulfill 0 <= index <= dim.
+
+        Returns
+        -------
+        newgrid : `TensorGrid`
+            The enlarged grid
+
+        Examples
+        --------
+
+        >>> g1 = TensorGrid([0, 1], [-1, 2])
+        >>> g2 = TensorGrid([1], [-0.1, 1.1])
+        >>> g1.insert(g2, 1)
+        TensorGrid([0.0, 1.0], [1.0], [-0.1, 1.1], [-1.0, 2.0])
+        """
+        if not isinstance(index, Integral):
+            raise TypeError('{} is not an integer.'.format(index))
+        if not 0 <= index <= self.dim:
+            raise IndexError('index {} out of valid range 0 -> {}.'
+                             ''.format(index, self.dim))
+
+        if not isinstance(other, TensorGrid):
+            other = TensorGrid(other)
+
+        new_vecs = (self.coord_vectors[:index] + other.coord_vectors +
+                    self.coord_vectors[index:])
+        return TensorGrid(*new_vecs)
 
     def points(self, order='C'):
         """All grid points in a single array.
@@ -676,6 +723,9 @@ class RegularGrid(TensorGrid):
     |tol=0.0)`          |               |with tolerance `tol` per     |
     |                   |               |point.                       |
     +-------------------+---------------+-----------------------------+
+    |`insert(grid,      |`RegularGrid`  |Insert `grid` before `index`.|
+    |index)`            |               |                             |
+    +-------------------+---------------+-----------------------------+
     |`points(order='C')`|`numpy.ndarray`|All grid points in a single  |
     |                   |               |array                        |
     +-------------------+---------------+-----------------------------+
@@ -889,6 +939,51 @@ class RegularGrid(TensorGrid):
                                      axis=0)):
                     return False
         return True
+
+    def insert(self, grid, index):
+        """Insert another regular grid before the given index.
+
+        The given grid (dimension `m`) is inserted into the current
+        one (dimension `n`) before the given index, resulting in a new
+        `RegularGrid` of dimension `n + m`.
+        Note that no changes are made in-place.
+
+        Parameters
+        ----------
+        grid : `RegularGrid`
+            The grid to be inserted.
+        index : `Integral`
+            The index of the dimension before which `grid` is to
+            be inserted. Must fulfill 0 <= index <= dim.
+
+        Returns
+        -------
+        newgrid : `RegularGrid`
+            The enlarged grid
+
+        Examples
+        --------
+
+        >>> rg1 = RegularGrid((1, 3), [-1, 0], [2, 0.5])
+        >>> rg2 = RegularGrid(7, -3, 6)
+        >>> rg1.insert(rg2, 1)
+        RegularGrid([1, 7, 3], [-1.0, -3.0, 0.0], [2.0, 6.0, 0.5])
+        """
+        if not isinstance(index, Integral):
+            raise TypeError('{} is not an integer.'.format(index))
+        if not 0 <= index <= self.dim:
+            raise IndexError('index {} out of valid range 0 -> {}.'
+                             ''.format(index, self.dim))
+
+        if not isinstance(grid, RegularGrid):
+            raise TypeError('{} is not a regular grid.'.format(grid))
+
+        new_shape = self.shape[:index] + grid.shape + self.shape[index:]
+        new_center = (self.center[:index].tolist() + grid.center.tolist() +
+                      self.center[index:].tolist())
+        new_stride = (self.stride[:index].tolist() + grid.stride.tolist() +
+                      self.stride[index:].tolist())
+        return RegularGrid(new_shape, new_center, new_stride)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
