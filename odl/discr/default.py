@@ -49,6 +49,9 @@ class DiscreteL2(LinearSpaceDiscretization):
             The space of elements used for data storage. If `l2space`
             is a complex space, a `Cn` space must be given, and
             analogously a `Rn` space if `l2space` is real.
+        grid : `TensorGrid`
+            The sampling grid for the discretization. Must be contained
+            in `l2space.domain`.
         interp : `string`, optional  (Default: 'nearest')
             The interpolation type to be used for discretization
         kwargs : {'order'}
