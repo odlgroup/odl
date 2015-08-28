@@ -308,22 +308,21 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
             `ext.range == set_`.
         """
         if not isinstance(space, LinearSpace):
-            raise TypeError(errfmt('''
-            `space` {} not a `LinearSpace` instance.'''.format(space)))
+            raise TypeError('{} is not a linear space.'.format(space))
 
+        # TODO: replace with a check allowing other implementations of
+        # Rn or Cn type spaces
         if not isinstance(ntuples, (Rn, Cn)):
-            raise TypeError(errfmt('''
-            `ntuples` {} not an `Rn` or `Cn` instance.'''.format(ntuples)))
+            raise TypeError('{} not an `Rn` or `Cn` type space.'
+                            ''.format(ntuples))
 
         if space.field != ntuples.field:
-            raise ValueError(errfmt('''
-            `space.field` {} not equal to `ntuples.field` {}.
-            '''.format(space.field, ntuples.field)))
+            raise ValueError('fields of {} and {} are not equal.'
+                             ''.format(space.field, ntuples.field))
 
         if restr is not None:
             if not isinstance(restr, LinearOperator):
-                raise TypeError(errfmt('''
-                `restr` {} not a `LinearOperator` instance.'''.format(restr)))
+                raise TypeError('{} is not a linear operator.'.format(restr))
 
             if restr.domain != space:
                 raise ValueError(errfmt('''

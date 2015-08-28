@@ -26,18 +26,19 @@ standard_library.install_aliases()
 
 from odl.discr.discretization import LinearSpaceDiscretization
 from odl.discr.grid import TensorGrid
-from odl.discr.operators import RawGridCollocation, RawNearestInterpolation
+from odl.discr.operators import GridCollocation, NearestInterpolation
 from odl.space.cartesian import Ntuples, Rn, Cn
 from odl.space.default import L2
 from odl.space.function import FunctionSet
-from odl.utility.utility import errfmt
 
+
+_supported_interp = ('nearest')
 
 class DiscreteL2(LinearSpaceDiscretization):
 
     """Discretization of an :math:`L^2` space."""
 
-    def __init__(self, l2space, rn_or_cn, interp='nearest'):
+    def __init__(self, l2space, grid, rn_or_cn, interp='nearest', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -50,17 +51,23 @@ class DiscreteL2(LinearSpaceDiscretization):
             analogously a `Rn` space if `l2space` is real.
         interp : `string`, optional  (Default: 'nearest')
             The interpolation type to be used for discretization
+        kwargs : {'order'}
+            'order' : 'C' or 'F'  (Default: 'C')
+                The axis ordering in the data storage
         """
         if not isinstance(l2space, L2):
             raise TypeError('{} is not an `L2` type space.'.format(l2space))
 
-        # TODO: replace with a check allowing other implementations of
-        # Rn or Cn type spaces
-        if not isinstance(rn_or_cn, (Rn, Cn)):
-            raise TypeError('{} is not an `Rn` or `Cn` type space.'
-                            ''.format(l2space))
-
         interp = str(interp)
-        if interp not in ('nearest', 'linear'):
-            raise ValueError('{} is not a supported interpolation type.'
-                             ''.format(interp))
+        if interp not in _supported_interp:
+            raise ValueError('{} is not among the supported interpolation'
+                             'types {}.'.format(interp, _supported_interp))
+
+        order = kwargs.pop('order', 'C')
+        restriction = GridCollocation(l2space, grid, rn_or_cn, order=order)
+        if interp == 'nearest':
+            extension = NearestInterpolation(l2space, grid, rn_or_cn,
+                                             order=order)
+        else:
+            raise NotImplementedError
+        super().__init__(l2space, rn_or_cn, restriction, extension)
