@@ -27,7 +27,6 @@ from math import pi, sqrt
 import numpy as np
 
 # ODL imports
-from odl.discr.discretization import uniform_discretization
 from odl.space.cartesian import En
 from odl.space.default import L2
 from odl.space.domain import Interval, Rectangle
