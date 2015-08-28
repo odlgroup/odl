@@ -171,7 +171,7 @@ class Discretization(with_metaclass(ABCMeta, Set)):
 
     @property
     def restriction(self):
-        """The operator mapping a `set` element to an `n`-tuple."""
+        """The operator mapping a `set` element to an n-tuple."""
         if self._restriction is not None:
             return self._restriction
         else:
@@ -179,7 +179,7 @@ class Discretization(with_metaclass(ABCMeta, Set)):
 
     @property
     def extension(self):
-        """The operator mapping an `n`-tuple to a `set` element."""
+        """The operator mapping an n-tuple to a `set` element."""
         if self._extension is not None:
             return self._extension
         else:

@@ -20,59 +20,47 @@
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import super
+from builtins import super, str
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.discr.discretization import Discretization
+from odl.discr.discretization import LinearSpaceDiscretization
 from odl.discr.grid import TensorGrid
 from odl.discr.operators import RawGridCollocation, RawNearestInterpolation
-from odl.space.cartesian import Ntuples
+from odl.space.cartesian import Ntuples, Rn, Cn
+from odl.space.default import L2
 from odl.space.function import FunctionSet
 from odl.utility.utility import errfmt
 
 
-class RawNearestInterpDiscretization(Discretization):
+class DiscreteL2(LinearSpaceDiscretization):
 
-    """Discretization based on nearest neighbor interpolation."""
+    """Discretization of an :math:`L^2` space."""
 
-    def __init__(self, ip_funcset, grid, ntuples):
+    def __init__(self, l2space, rn_or_cn, interp='nearest'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ip_funcset : `FunctionSet`
-            Set of functions on an `IntervalProd`. The operator range.
-        grid : `TensorGrid`
-            The grid on which to interpolate. Must be contained in
-            `ip_funcset.domain`.
-        ntuples : `Ntuples`
-            An implementation of n-tuples. The operator domain.
+        l2space : `L2`
+            The continuous space to be discretized
+        rn_or_cn : `Rn` or `Cn`, same `field` as `l2space`
+            The space of elements used for data storage. If `l2space`
+            is a complex space, a `Cn` space must be given, and
+            analogously a `Rn` space if `l2space` is real.
+        interp : `string`, optional  (Default: 'nearest')
+            The interpolation type to be used for discretization
         """
-        if not isinstance(ip_funcset, FunctionSet):
-            raise TypeError(errfmt('''
-            `ip_funcset` {} not an `FunctionSet` instance.
-            '''.format(ip_funcset)))
+        if not isinstance(l2space, L2):
+            raise TypeError('{} is not an `L2` type space.'.format(l2space))
 
-        if not isinstance(grid, TensorGrid):
-            raise TypeError(errfmt('''
-            `grid` {} not a `TensorGrid` instance.
-            '''.format(grid)))
+        # TODO: replace with a check allowing other implementations of
+        # Rn or Cn type spaces
+        if not isinstance(rn_or_cn, (Rn, Cn)):
+            raise TypeError('{} is not an `Rn` or `Cn` type space.'
+                            ''.format(l2space))
 
-        if not isinstance(ntuples, Ntuples):
-            raise TypeError(errfmt('''
-            `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
-
-        if grid.ntotal != ntuples.dim:
-            raise ValueError(errfmt('''
-            total number {} of grid points not equal to `ntuples.dim`
-            {}.'''.format(grid.ntotal, ntuples.dim)))
-
-        @property
-        def grid(self):
-            """Return the interpolation grid."""
-            return self.restr.grid
-
-        restr = RawGridCollocation(ip_funcset, grid, ntuples)
-        ext = RawNearestInterpolation(ip_funcset, grid, ntuples)
-        super().__init__(ip_funcset, ntuples, restr, ext)
+        interp = str(interp)
+        if interp not in ('nearest', 'linear'):
+            raise ValueError('{} is not a supported interpolation type.'
+                             ''.format(interp))
