@@ -271,7 +271,6 @@ standard_library.install_aliases()
 import numpy as np
 from scipy.linalg.blas import get_blas_funcs
 from numbers import Integral
-from math import sqrt
 
 # ODL imports
 from odl.space.set import Set, RealNumbers, ComplexNumbers
@@ -850,26 +849,33 @@ def _lincomb(z, a, x, b, y, dtype):
                     scal(b, z.data)
                 axpy(x.data, z.data, len(z), a)
 
+
 def _dist(x, y):
-    #Todo optimize
+    # TODO: optimize
     return np.linalg.norm(x.data-y.data)
 
+
 def _norm(x):
-    #Todo optimize
+    # TODO: optimize
     return np.linalg.norm(x.data)
 
+
 def _inner(x, y):
-    #Todo optimize
+    # TODO: optimize
     return np.inner(x.data, y.data)
+
 
 def _dist_default(x, y):
     return (x-y).norm()
 
+
 def _norm_default(x):
     return np.sqrt(x.inner(x))
 
+
 def _inner_default(x, y):
     raise NotImplementedError("Inner not implemented in this space")
+
 
 class Fn(Ntuples, LinearSpace):
 
@@ -930,7 +936,7 @@ class Fn(Ntuples, LinearSpace):
         if not isinstance(dim, Integral) or dim < 1:
             raise TypeError(errfmt('''
             `dim` {} is not a positive integer.'''.format(dim)))
-        
+
         dist = kwargs.get('dist', _dist_default)
         if not callable(dist):
             raise TypeError('`dist` {!r} not callable.'.format(dist))
@@ -945,7 +951,7 @@ class Fn(Ntuples, LinearSpace):
         if not callable(inner):
             raise TypeError('`inner` {!r} not callable.'.format(dist))
         self._inner_impl = inner
-        
+
         dtype = np.dtype(dtype)
 
         self.real_dtype = _type_map_c2r[dtype]
@@ -987,7 +993,7 @@ class Fn(Ntuples, LinearSpace):
         Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         """
         _lincomb(z, a, x, b, y, self.dtype)
-  
+
     def _dist(self, x, y):
         """Calculate the distance between two vectors.
 
@@ -1238,13 +1244,14 @@ class Cn(Fn):
         if dtype not in _complex_dtypes:
             raise TypeError(errfmt('''
             `dtype` {} not a complex floating-point type.'''.format(dtype)))
-        
-        #TODO remove inner if norm or dist is provided
+
+        # TODO: remove inner if norm or dist is provided
         dist = kwargs.pop('dist', _dist)
         norm = kwargs.pop('norm', _norm)
         inner = kwargs.pop('inner', _inner)
 
-        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner, **kwargs)
+        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
+                         **kwargs)
 
     def __repr__(self):
         """`rn.__repr__() <==> repr(rn)`."""
@@ -1378,6 +1385,7 @@ class Cn(Fn):
             """
             self.imag.data[:] = newimag
 
+
 class Rn(Fn):
 
     """The real vector space :math:`R^n` with vector multiplication.
@@ -1409,12 +1417,13 @@ class Rn(Fn):
             raise TypeError(errfmt('''
             `dtype` {} not a real floating-point type.'''.format(dtype)))
 
-        #TODO remove inner if norm or dist is provided
+        # TODO: remove inner if norm or dist is provided
         dist = kwargs.pop('dist', _dist)
         norm = kwargs.pop('norm', _norm)
         inner = kwargs.pop('inner', _inner)
 
-        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner, **kwargs)
+        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
+                         **kwargs)
 
     def __repr__(self):
         """`rn.__repr__() <==> repr(rn)`."""
