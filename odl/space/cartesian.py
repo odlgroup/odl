@@ -266,8 +266,10 @@ from __future__ import (unicode_literals, print_function, division,
 from builtins import super
 from future import standard_library
 standard_library.install_aliases()
+from future.utils import with_metaclass
 
 # External module imports
+from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 from scipy.linalg.blas import get_blas_funcs
 from numbers import Integral
@@ -278,7 +280,7 @@ from odl.space.space import LinearSpace
 from odl.utility.utility import errfmt, array1d_repr
 
 
-__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn')
+__all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn')
 
 
 _type_map_c2r = {np.dtype('float32'): np.dtype('float32'),
@@ -293,21 +295,16 @@ _real_dtypes = [np.dtype('float32'), np.dtype('float64')]
 _complex_dtypes = [np.dtype('complex64'), np.dtype('complex128')]
 
 
-class Ntuples(Set):
+class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
-    """The set of `n`-tuples of arbitrary type.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
+    """Base class for sets of n-tuples independent of implementation."""
 
     def __init__(self, dim, dtype):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dim : `int`
+        dim : `Integral`
             The number entries per tuple
         dtype : `object`
             The data type for each tuple entry. Can be provided in any
@@ -318,101 +315,39 @@ class Ntuples(Set):
         if not isinstance(dim, Integral) or dim < 1:
             raise TypeError(errfmt('''
             `dim` {} is not a positive integer.'''.format(dim)))
-        self._dim = dim
+        self._dim = int(dim)
         self._dtype = np.dtype(dtype)
-
-    def element(self, inp=None):
-        """Create a new element.
-
-        Parameters
-        ----------
-        inp : array-like or scalar, optional
-            Input to initialize the new element.
-
-            If `inp` is `None`, an empty element is created with no
-            guarantee of its state (memory allocation only).
-
-            If `inp` is a `numpy.ndarray` of shape `(dim,)` and the
-            same data type as this space, the array is wrapped, not
-            copied.
-            Other array-like objects are copied (with broadcasting
-            if necessary).
-
-            If a single value is given, it is copied to all entries.
-
-        Returns
-        -------
-        element : `Ntuples.Vector`
-            The new element created (from `inp`).
-
-        Note
-        ----
-        This method preserves "array views" of correct size and type,
-        see the examples below.
-
-        Examples
-        --------
-        >>> strings3 = Ntuples(3, dtype='S1')  # 1-char strings
-        >>> x = strings3.element(['w', 'b', 'w'])
-        >>> x
-        Ntuples(3, dtype('S1')).element(['w', 'b', 'w'])
-        >>> y = strings3.element()
-        >>> y.assign(x)
-        >>> y == x
-        True
-        >>> y = strings3.element('b'); print(y)
-        ['b', 'b', 'b']
-
-        Array views are preserved:
-
-        >>> strings2 = Ntuples(2, dtype='S1')  # 1-char strings
-        >>> x = strings3.element(['w', 'b', 'w'])
-        >>> y = strings2.element(x[::2])  # view into x
-        >>> y[:] = 'x'
-        >>> print(x)
-        ['x', 'b', 'x']
-        """
-        if inp is None:
-            inp = np.empty(self.dim, dtype=self.dtype)
-        elif isinstance(inp, Ntuples.Vector):
-            return self.element(inp.data)
-        else:
-            inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
-
-            if inp.shape == (1,):
-                inp = np.repeat(inp, self.dim)
-            elif inp.shape == (self.dim,):
-                pass
-            else:
-                raise ValueError(errfmt('''
-                `inp` shape {} not broadcastable to shape ({},).
-                '''.format(inp.shape, self.dim)))
-
-        return self.Vector(self, inp)
 
     @property
     def dtype(self):
-        """The data type of each entry.
-
-        Examples
-        --------
-        >>> int_3 = Ntuples(3, dtype='int64')
-        >>> int_3.dtype
-        dtype('int64')
-        """
+        """The data type of each entry."""
         return self._dtype
 
     @property
     def dim(self):
-        """The dimension of this space.
+        """The dimension of this space."""
+        return self._dim
+
+    def contains(self, other):
+        """Test if `other` is contained in this space.
+
+        Returns
+        -------
+        contains : `bool`
+            `True` if `other` is an `NtuplesBase.Vector` instance and
+            `other.space` is equal to this space, `False` otherwise.
 
         Examples
         --------
-        >>> int_3 = Ntuples(3, dtype=int)
-        >>> int_3.dim
-        3
+        >>> long_3 = Ntuples(3, dtype='int64')
+        >>> long_3.element() in long_3
+        True
+        >>> long_3.element() in Ntuples(3, dtype='int32')
+        False
+        >>> long_3.element() in Ntuples(3, dtype='float64')
+        False
         """
-        return self._dim
+        return isinstance(other, NtuplesBase.Vector) and other.space == self
 
     def equals(self, other):
         """Test if `other` is equal to this space.
@@ -458,61 +393,37 @@ class Ntuples(Set):
                 self.dim == other.dim and
                 self.dtype == other.dtype)
 
-    def contains(self, other):
-        """Test if `other` is contained in this space.
-
-        Returns
-        -------
-        contains : `bool`
-            `True` if `other` is an `Ntuples.Vector` instance of and
-            `other.space` is equal to this space. `False` otherwise.
-
-        Examples
-        --------
-        >>> long_3 = Ntuples(3, dtype='int64')
-        >>> long_3.element() in long_3
-        True
-        >>> long_3.element() in Ntuples(3, dtype='int32')
-        False
-        >>> long_3.element() in Ntuples(3, dtype='float64')
-        False
-        """
-        return isinstance(other, Ntuples.Vector) and other.space == self
-
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        if self.dtype == np.dtype('int'):
+        if self.dtype == np.dtype(int):
             dtype_string = 'int'
         else:
             dtype_string = '{!r}'.format(self.dtype)
-
-        return 'Ntuples({}, {})'.format(self.dim, dtype_string)
+        return '{}({}, {})'.format(self.__class__.__name__, self.dim,
+                                   dtype_string)
 
     def __str__(self):
         """s.__str__() <==> str(s)."""
-        return 'Ntuples({}, {})'.format(self.dim, self.dtype)
+        if self.dtype == np.dtype(int):
+            dtype_string = 'int'
+        else:
+            dtype_string = '{}'.format(self.dtype)
+        return '{}({}, {})'.format(self.__class__.__name__, self.dim,
+                                   dtype_string)
 
-    class Vector(object):
+    class Vector(with_metaclass(ABCMeta, object)):
 
-        """Representation of an `Ntuples` element.
+        """Abstract class for representation of n-tuples.
 
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
+        Defines abstract attributes and concrete ones which are
+        independent of data representation.
+
+        TODO: make concrete as many attributes as possible (unify
+        behavior of subclasses)
         """
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            if not isinstance(space, Ntuples):
-                raise TypeError(errfmt('''
-                `space` {!r} not an instance of `Ntuples`.
-                '''.format(space)))
-
-            if not isinstance(data, np.ndarray):
-                raise TypeError(errfmt('''
-                `data` {!r} not an instance of `numpy.ndarray`.
-                '''.format(data)))
-
             if data.dtype != space.dtype:
                 raise TypeError(errfmt('''
                 `data.dtype` {} not equal to `space.dtype` {}.
@@ -533,15 +444,186 @@ class Ntuples(Set):
 
         @property
         def data(self):
-            """The vector's data representation, a `numpy.ndarray`.
-
-            Examples
-            --------
-            >>> vec = Ntuples(3, int).element([1, 2, 3])
-            >>> vec.data
-            array([1, 2, 3])
-            """
+            """The vector's data representation."""
             return self._data
+
+        def __len__(self):
+            """v.__len__() <==> len(v).
+
+            Return the space dimension.
+            """
+            return self.space.dim
+
+        @abstractproperty
+        def data_ptr(self):
+            """A raw pointer to the data container."""
+
+        @abstractmethod
+        def equals(self, other):
+            """Test if `other` is equal to this vector.
+
+            Returns
+            -------
+            equals : `bool`
+                `True` if all entries of `other` are equal to this
+                vector's entries, `False` otherwise.
+            """
+
+        # TODO: this could be concrete
+        @abstractmethod
+        def copy(self):
+            """Create an identical (deep) copy of this vector.
+
+            Returns
+            -------
+            copy : `NtuplesBase.Vector`
+                The deep copy
+            """
+
+        # TODO: this could be concrete
+        @abstractmethod
+        def __getitem__(self, indices):
+            """Access values of this vector.
+
+            Parameters
+            ----------
+            indices : `int` or `slice`
+                The position(s) that should be accessed
+
+            Returns
+            -------
+            values : `space.dtype` or `space.Vector`
+                The value(s) at the index (indices)
+            """
+
+        # TODO: this could be concrete
+        @abstractmethod
+        def __setitem__(self, indices, values):
+            """Set values of this vector.
+
+            Parameters
+            ----------
+            indices : `int` or `slice`
+                The position(s) that should be set
+            values : {scalar, array-like, `Ntuples.Vector`}
+                The value(s) that are to be assigned.
+
+                If `index` is an `int`, `value` must be single value.
+
+                If `index` is a `slice`, `value` must be broadcastable
+                to the size of the slice (same size, shape (1,)
+                or single value).
+            """
+
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`."""
+            return self.equals(other)
+
+        def __ne__(self, other):
+            """`vec.__ne__(other) <==> vec != other`."""
+            return not self.equals(other)
+
+        def __str__(self):
+            """`vec.__str__() <==> str(vec)`."""
+            return array1d_repr(self.data)
+
+        def __repr__(self):
+            """`vec.__repr__() <==> repr(vec)`."""
+            return '{!r}.element({})'.format(self.space,
+                                             array1d_repr(self.data))
+
+
+class Ntuples(NtuplesBase):
+
+    """The set of `n`-tuples of arbitrary type.
+
+    See also
+    --------
+    See the module documentation for attributes, methods etc.
+    """
+
+    def element(self, inp=None):
+        """Create a new element.
+
+        Parameters
+        ----------
+        inp : array-like or scalar, optional
+            Input to initialize the new element.
+
+            If `inp` is `None`, an empty element is created with no
+            guarantee of its state (memory allocation only).
+
+            If `inp` is a `numpy.ndarray` of shape `(dim,)` and the
+            same data type as this space, the array is wrapped, not
+            copied.
+            Other array-like objects are copied (with broadcasting
+            if necessary).
+
+            If a single value is given, it is copied to all entries.
+
+        Returns
+        -------
+        element : `Ntuples.Vector`
+            The new element created (from `inp`).
+
+        Note
+        ----
+        This method preserves "array views" of correct size and type,
+        see the examples below.
+
+        Examples
+        --------
+        >>> strings3 = Ntuples(3, dtype='S1')  # 1-char strings
+        >>> x = strings3.element(['w', 'b', 'w'])
+        >>> x
+        Ntuples(3, dtype('S1')).element(['w', 'b', 'w'])
+
+        Array views are preserved:
+
+        >>> strings2 = Ntuples(2, dtype='S1')  # 1-char strings
+        >>> x = strings3.element(['w', 'b', 'w'])
+        >>> y = strings2.element(x[::2])  # view into x
+        >>> y[:] = 'x'
+        >>> print(x)
+        ['x', 'b', 'x']
+        """
+        if inp is None:
+            outp = np.empty(self.dim, dtype=self.dtype)
+        elif isinstance(inp, Ntuples.Vector):
+            return self.element(inp.data)
+        else:
+            inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
+
+            if inp.shape == (1,):
+                outp = np.empty(self.dim, dtype=self.dtype)
+                outp[:] = inp
+            elif inp.shape == (self.dim,):
+                outp = inp
+            else:
+                raise ValueError('input shape {} not broadcastable to '
+                                 'shape ({},).'.format(inp.shape, self.dim))
+
+        return self.Vector(self, outp)
+
+    class Vector(NtuplesBase.Vector):
+
+        """Representation of an `Ntuples` element.
+
+        See also
+        --------
+        See the module documentation for attributes, methods etc.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if not isinstance(space, Ntuples):
+                raise TypeError('{!r} not an `Ntuples` instance.'
+                                ''.format(space))
+
+            if not isinstance(data, np.ndarray):
+                raise TypeError('data {!r} not a `numpy.ndarray` instance.'
+                                ''.format(data))
+            super().__init__(space, data)
 
         @property
         def data_ptr(self):
@@ -553,15 +635,15 @@ class Ntuples(Set):
             >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
             >>> arr_type = ctypes.c_int32 * 3
             >>> buffer = arr_type.from_address(vec.data_ptr)
-            >>> arr = np.frombuffer(buffer, dtype=int)
-            >>> arr
-            array([1, 2, 3])
+            >>> arr = np.frombuffer(buffer, dtype='int32')
+            >>> print(arr)
+            [1 2 3]
 
             In-place modification via pointer:
 
             >>> arr[0] = 5
-            >>> vec
-            Ntuples(3, int).element([5, 2, 3])
+            >>> print(vec)
+            [5, 2, 3]
             """
             return self._data.ctypes.data
 
@@ -591,43 +673,18 @@ class Ntuples(Set):
             >>> vec1 == vec2  # equivalent
             True
 
-            Equality can hold across spaces:
+            Space membership matters:
 
             >>> vec2 = Ntuples(3, float).element([1, 2, 3])
             >>> vec1.equals(vec2) and vec2.equals(vec1)
-            True
+            False
             """
             if other is self:
                 return True
+            elif other not in self.space:
+                return False
 
             return np.all(self.data == other.data)
-
-        # Convenience functions
-        def assign(self, other):
-            """Assign the values of `other` to this vector.
-
-            Parameters
-            ----------
-            other : `Ntuples.Vector`
-                The values to be copied to this vector. `other`
-                must be an element of this vector's space.
-
-            Returns
-            -------
-            `None`
-
-            Examples
-            --------
-            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
-            >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
-            >>> vec1.assign(vec2)
-            >>> vec1
-            Ntuples(3, int).element([-1, 2, 0])
-            """
-            if other not in self.space:
-                raise TypeError(errfmt('''
-                `other` {!r} not in `space` {}'''.format(other, self.space)))
-            self.data[:] = other.data
 
         def copy(self):
             """Create an identical (deep) copy of this vector.
@@ -649,16 +706,6 @@ class Ntuples(Set):
             False
             """
             return self.space.element(self.data.copy())
-
-        def __len__(self):
-            """The dimension this vector's space.
-
-            Examples
-            --------
-            >>> len(Ntuples(3, int).element())
-            3
-            """
-            return self.space.dim
 
         def __getitem__(self, indices):
             """Access values of this vector.
@@ -758,22 +805,105 @@ class Ntuples(Set):
             else:
                 return self.data.__setitem__(indices, values)
 
-        def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`."""
-            return self.equals(other)
 
-        def __ne__(self, other):
-            """`vec.__ne__(other) <==> vec != other`."""
-            return not self.equals(other)
+class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
 
-        def __str__(self):
-            """`vec.__str__() <==> str(vec)`."""
-            return array1d_repr(self.data)
+    """Base class for :math:`F^n` independent of implementation."""
 
-        def __repr__(self):
-            """`vec.__repr__() <==> repr(vec)`."""
-            return '{!r}.element({})'.format(self.space,
-                                             array1d_repr(self.data))
+    def __init__(self, dim, dtype):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dim : `int`
+            The dimension of the space
+        dtype : `type`
+            The data type of the storage array. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+        """
+        super().__init__(dim, dtype)
+        self._real_dtype = _type_map_c2r[self._dtype]
+        if self._dtype in _real_dtypes:
+            self._field = RealNumbers()
+        elif self._dtype in _complex_dtypes:
+            self._field = ComplexNumbers()
+        else:
+            raise TypeError('dtype {!r} not real or complex'.format(dtype))
+
+    @property
+    def real_dtype(self):
+        """Real data type corresponding to this space's complex dtype."""
+        return self._real_dtype
+
+    @abstractmethod
+    def zero(self):
+        """Create a vector of zeros."""
+
+    @property
+    def field(self):
+        """The field of this space."""
+        return self._field
+
+    def _multiply(self, x, y):
+        """The entry-wise product of two vectors, assigned to `y`.
+
+        Parameters
+        ----------
+        x : `CnBase.Vector`
+            First factor
+        y : `CnBase.Vector`
+            Second factor, used to store the result
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> y = c3.element([1, 2+1j, 3-1j])
+        >>> c3.multiply(x, y)
+        >>> y
+        Cn(3).element([(5+1j), (6+3j), (4-8j)])
+        """
+        y.data[:] *= x.data
+
+    class Vector(with_metaclass(ABCMeta, NtuplesBase.Vector,
+                                LinearSpace.Vector)):
+
+        """Abstract class for representation of :math:`C^n` vectors.
+
+        Defines abstract attributes and concrete ones which are
+        independent of data representation.
+        """
+
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            if data.dtype != space.dtype:
+                raise TypeError(errfmt('''
+                `data.dtype` {} not equal to `space.dtype` {}.
+                '''.format(data.dtype, space.dtype)))
+
+            if data.shape != (space.dim,):
+                raise ValueError(errfmt('''
+                `data.shape` {} not equal to `(space.dim,)` {}.
+                '''.format(data.shape, (space.dim,))))
+
+            self._space = space
+            self._data = data
+
+        @property
+        def space(self):
+            """The space this vector belongs to."""
+            return self._space
+
+        @property
+        def data(self):
+            """The vector's data representation."""
+            return self._data
 
 
 def _lincomb(z, a, x, b, y, dtype):
@@ -877,11 +1007,14 @@ def _inner_default(x, y):
     raise NotImplementedError("Inner not implemented in this space")
 
 
-class Fn(Ntuples, LinearSpace):
+class Fn(FnBase, Ntuples):
 
-    """The complex vector space :math:`E^n` with vector multiplication.
+    """The vector space :math:`F^n` with vector multiplication.
 
-    Its elements are represented as instances of the inner `Cn.Vector`
+    This space implements n-tuples of elements from a field :math:`F`,
+    which can be the real or the complex numbers.
+
+    Its elements are represented as instances of the inner `Fn.Vector`
     class.
 
     See also
@@ -894,16 +1027,16 @@ class Fn(Ntuples, LinearSpace):
 
         Parameters
         ----------
-        `dim` : `int`
+        dim : `int`
             The dimension of the space
-        `dtype` : `type`
+        dtype : `type`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         kwargs : {'dist', 'norm', 'inner'}
             `dist` : `callable`, optional (Default: `norm(x-y)`)
-                The distance function defining a metric on :math:`C^n`. It
+                The distance function defining a metric on :math:`F^n`. It
                 must accept two array arguments and fulfill the following
                 conditions for any vectors `x`, `y` and `z`:
 
@@ -912,6 +1045,7 @@ class Fn(Ntuples, LinearSpace):
                 - `dist(x, y) == 0` (approx.) if and only if `x == y`
                   (approx.)
                 - `dist(x, y) <= dist(x, z) + dist(z, y)`
+
             `norm` : `callable`, optional (Default: `sqrt(inner(x,y))`)
                 The norm implementation. It must accept an array-like
                 argument, return a `RealNumber` and satisfy the following
@@ -921,6 +1055,7 @@ class Fn(Ntuples, LinearSpace):
                 - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
                 - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
                 - `norm(x + y) <= norm(x) + norm(y)`
+
             `inner` : `callable`, optional
                 The inner product implementation. It must accept two
                 array-like arguments, return a complex number and satisfy
@@ -931,51 +1066,39 @@ class Fn(Ntuples, LinearSpace):
                  - `inner(s * x, y) == s * inner(x, y)`
                  - `inner(x + z, y) == inner(x, y) + inner(z, y)`
                  - `inner(x, x) == 0` (approx.) only if `x == 0` (approx.)
-
         """
-        if not isinstance(dim, Integral) or dim < 1:
-            raise TypeError(errfmt('''
-            `dim` {} is not a positive integer.'''.format(dim)))
+        super().__init__(dim, dtype)
 
         dist = kwargs.get('dist', _dist_default)
         if not callable(dist):
-            raise TypeError('`dist` {!r} not callable.'.format(dist))
+            raise TypeError('distance function {!r} not callable.'
+                            ''.format(dist))
         self._dist_impl = dist
 
         norm = kwargs.get('norm', _norm_default)
         if not callable(norm):
-            raise TypeError('`norm` {!r} not callable.'.format(dist))
+            raise TypeError('norm function {!r} not callable.'.format(norm))
         self._norm_impl = norm
 
         inner = kwargs.get('inner', _inner_default)
         if not callable(inner):
-            raise TypeError('`inner` {!r} not callable.'.format(dist))
+            raise TypeError('inner product function {!r} not callable.'
+                            ''.format(inner))
         self._inner_impl = inner
-
-        dtype = np.dtype(dtype)
-
-        self.real_dtype = _type_map_c2r[dtype]
-        if dtype in _real_dtypes:
-            self._field = RealNumbers()
-        elif dtype in _complex_dtypes:
-            self._field = ComplexNumbers()
-        else:
-            raise TypeError('dtype {!r} not real or complex'.format(dtype))
-
-        super().__init__(dim, dtype)
 
     def _lincomb(self, z, a, x, b, y):
         """Linear combination of `x` and `y`.
 
-        Calculate z = a * x + b * y using optimized BLAS routines.
+        Calculate `z = a * x + b * y` using optimized BLAS routines if
+        possible.
 
         Parameters
         ----------
-        z : `Cn.Vector`
+        z : `Fn.Vector`
             The Vector that the result is written to.
-        a, b : `ComplexNumber`
+        a, b : `field` element
             Scalar to multiply `x` and `y` with.
-        x, y : `Cn.Vector`
+        x, y : `Fn.Vector`
             The summands
 
         Returns
@@ -999,7 +1122,7 @@ class Fn(Ntuples, LinearSpace):
 
         Parameters
         ----------
-        x, y : `Cn.Vector`
+        x, y : `Fn.Vector`
             The vectors whose mutual distance is calculated
 
         Returns
@@ -1029,7 +1152,7 @@ class Fn(Ntuples, LinearSpace):
 
         Parameters
         ----------
-        x : `Cn.Vector`
+        x : `Fn.Vector`
             The vector whose norm is calculated
 
         Returns
@@ -1137,62 +1260,14 @@ class Fn(Ntuples, LinearSpace):
         >>> c3_lambda1.equals(c3_lambda2)
         False
         """
-        return (type(other) == type(self) and
-                self.dim == other.dim and
-                self.dtype == other.dtype and
+        return (super().equals(other) and
                 self._dist_impl == other._dist_impl and
                 self._norm_impl == other._norm_impl and
                 self._inner_impl == other._inner_impl)
 
-    @property
-    def field(self):
-        """The field of :math:`C^n`, i.e. the complex numbers.
+    class Vector(FnBase.Vector, Ntuples.Vector):
 
-        Examples
-        --------
-        >>> c3 = Cn(3)
-        >>> c3.field
-        ComplexNumbers()
-        """
-        return self._field
-
-    def _multiply(self, x, y):
-        """The entry-wise product of two vectors, assigned to `y`.
-
-        Parameters
-        ----------
-        x : `Cn.Vector`
-            First factor
-        y : `Cn.Vector`
-            Second factor, used to store the result
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
-        >>> y = c3.element([1, 2+1j, 3-1j])
-        >>> c3.multiply(x, y)
-        >>> y
-        Cn(3).element([(5+1j), (6+3j), (4-8j)])
-        """
-        y.data[:] *= x.data
-
-    def __repr__(self):
-        """repr() implementation."""
-        #TODO print dist, norm, inner
-        return 'Fn({}, {!r})'.format(self.dim, self.dtype)
-
-    def __str__(self):
-        """str() implementation."""
-        return 'Fn({}, {})'.format(self.dim, self.dtype)
-
-    class Vector(Ntuples.Vector, LinearSpace.Vector):
-
-        """Representation of a `Fn` element.
+        """Representation of an `Fn` element.
 
         See also
         --------
@@ -1200,25 +1275,22 @@ class Fn(Ntuples, LinearSpace):
         """
 
         def __init__(self, space, data):
-            """Initialize a new instance.
+            """Initialize a new instance."""
+            if not isinstance(space, Fn):
+                raise TypeError('{!r} not an `Fn` instance.'
+                                ''.format(space))
 
-            Parameters
-            ----------
-            space : `Fn`
-                Space instance this vector lives in
-            data : `numpy.ndarray`
-                Array that will be used as data representation. Its
-                dtype must be equal to `space.dtype`, and its shape
-                must be `(space.dim,)`.
-            """
+            if not isinstance(data, np.ndarray):
+                raise TypeError('data {!r} not a `numpy.ndarray` instance.'
+                                ''.format(data))
             super().__init__(space, data)
 
 
 class Cn(Fn):
 
-    """The real vector space :math:`R^n` with vector multiplication.
+    """The complex vector space :math:`C^n` with vector multiplication.
 
-    Its elements are represented as instances of the inner `Rn.Vector`
+    Its elements are represented as instances of the inner `Fn.Vector`
     class.
 
     See also
@@ -1229,39 +1301,28 @@ class Cn(Fn):
     def __init__(self, dim, dtype=np.complex128, **kwargs):
         """Initialize a new instance.
 
-        Parameters
-        ----------
-        `dim` : `int`
-            The dimension of the space
-        `dtype` : `object`, optional  (Default: `np.complex128`)
-            The data type for each vector entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only real floating-point types are allowed.
+        Only complex floating-point data types are allowed.
         """
-        dtype = np.dtype(dtype)
-        if dtype not in _complex_dtypes:
-            raise TypeError(errfmt('''
-            `dtype` {} not a complex floating-point type.'''.format(dtype)))
-
         # TODO: remove inner if norm or dist is provided
         dist = kwargs.pop('dist', _dist)
         norm = kwargs.pop('norm', _norm)
         inner = kwargs.pop('inner', _inner)
-
         super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
+        if self._dtype not in _complex_dtypes:
+            raise TypeError('data type {} not a complex floating-point type.'
+                            ''.format(dtype))
+
     def __repr__(self):
-        """`rn.__repr__() <==> repr(rn)`."""
+        """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
             return 'Cn({})'.format(self.dim)
         else:
             return 'Cn({}, {!r})'.format(self.dim, self.dtype)
 
     def __str__(self):
-        """`rn.__str__() <==> str(rn)`."""
+        """`cn.__str__() <==> str(cn)`."""
         if self.dtype == np.complex128:
             return 'Cn({})'.format(self.dim)
         else:
@@ -1401,29 +1462,18 @@ class Rn(Fn):
     def __init__(self, dim, dtype=np.float64, **kwargs):
         """Initialize a new instance.
 
-        Parameters
-        ----------
-        `dim` : `int`
-            The dimension of the space
-        `dtype` : `object`, optional  (Default: `np.float64`)
-            The data type for each vector entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only real floating-point types are allowed.
+        Only real floating-point types are allowed.
         """
-        dtype = np.dtype(dtype)
-        if dtype not in _real_dtypes:
-            raise TypeError(errfmt('''
-            `dtype` {} not a real floating-point type.'''.format(dtype)))
-
         # TODO: remove inner if norm or dist is provided
         dist = kwargs.pop('dist', _dist)
         norm = kwargs.pop('norm', _norm)
         inner = kwargs.pop('inner', _inner)
-
         super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
+
+        if self._dtype not in _real_dtypes:
+            raise TypeError('data type {} is not a real floating-point type.'
+                            ''.format(dtype))
 
     def __repr__(self):
         """`rn.__repr__() <==> repr(rn)`."""
