@@ -348,7 +348,7 @@ from math import sqrt
 
 # ODL imports
 from odl.space.set import Set, RealNumbers, ComplexNumbers
-from odl.space.space import MetricSpace, NormedSpace, HilbertSpace, Algebra
+from odl.space.space import LinearSpace
 from odl.utility.utility import errfmt, array1d_repr
 
 
@@ -694,7 +694,7 @@ class Ntuples(Set):
             if other not in self.space:
                 raise TypeError(errfmt('''
                 `other` {!r} not in `space` {}'''.format(other, self.space)))
-            self.data[:] = other.data[:]
+            self.data[:] = other.data
 
         def copy(self):
             """Create an identical (deep) copy of this vector.
@@ -917,7 +917,7 @@ def _lincomb(z, a, x, b, y, dtype):
                 axpy(x.data, z.data, len(z), a)
 
 
-class Cn(Ntuples, Algebra):
+class Cn(Ntuples):
 
     """The complex vector space :math:`C^n` with vector multiplication.
 
@@ -1053,7 +1053,7 @@ class Cn(Ntuples, Algebra):
         else:
             return 'Cn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(Ntuples.Vector, Algebra.Vector):
+    class Vector(Ntuples.Vector):
 
         """Representation of a `Cn` element.
 
@@ -1267,7 +1267,7 @@ class Rn(Cn):
             return 'Rn({}, {})'.format(self.dim, self.dtype)
 
 
-class MetricCn(Cn, MetricSpace):
+class MetricCn(Cn):
 
     """The complex space :math:`C^n` as a metric space.
 

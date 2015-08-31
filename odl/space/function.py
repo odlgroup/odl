@@ -27,7 +27,7 @@ from builtins import super
 
 # ODL imports
 import odl.operator.operator as fun
-from odl.space.space import HilbertSpace, Algebra
+from odl.space.space import LinearSpace
 from odl.space.set import RealNumbers, ComplexNumbers, Set
 from odl.utility.utility import errfmt
 
@@ -35,7 +35,7 @@ standard_library.install_aliases()
 
 
 # Example of a space:
-class FunctionSpace(Algebra):
+class FunctionSpace(LinearSpace):
     """ The space of scalar valued functions on some domain
 
     Parameters
@@ -152,7 +152,7 @@ class FunctionSpace(Algebra):
             return ("FunctionSpace(" + repr(self.domain) + ", " +
                     repr(self.field) + ")")
 
-    class Vector(Algebra.Vector, fun.Operator):
+    class Vector(LinearSpace.Vector, fun.Operator):
         """ A Vector in a FunctionSpace
 
         FunctionSpace-Vectors are themselves also Functionals, and inherit
@@ -199,7 +199,7 @@ class FunctionSpace(Algebra):
             return repr(self.space) + '.element(' + repr(self._function) + ')'
 
 
-class L2(FunctionSpace, HilbertSpace):
+class L2(FunctionSpace):
     """The space of square integrable functions on some domain
     """
 
@@ -230,7 +230,7 @@ class L2(FunctionSpace, HilbertSpace):
         else:
             return "L2(" + repr(self.domain) + ", " + repr(self.field) + ")"
 
-    class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
+    class Vector(FunctionSpace.Vector):
         """ A Vector in a L2-space
 
         FunctionSpace-Vectors are themselves also Functionals, and inherit

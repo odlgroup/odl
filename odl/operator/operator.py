@@ -102,7 +102,7 @@ from numbers import Number
 
 # ODL imports
 from odl.utility.utility import errfmt
-from odl.space.space import LinearSpace, Algebra
+from odl.space.space import LinearSpace
 from odl.space.set import UniversalSet
 
 

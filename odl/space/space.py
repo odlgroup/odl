@@ -90,8 +90,7 @@ from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 
-__all__ = ('LinearSpace', 'MetricSpace', 'NormedSpace', 'HilbertSpace',
-           'Algebra')
+__all__ = ('LinearSpace')
 
 
 class LinearSpace(Set):
