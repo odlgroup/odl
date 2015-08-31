@@ -90,7 +90,7 @@ from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 
-__all__ = ('LinearSpace')
+#__all__ = ('LinearSpace')
 
 
 class LinearSpace(Set):
@@ -860,3 +860,13 @@ class LinearSpace(Set):
         def __str__(self):
             """Implementation of str()."""
             return str(self.space) + ".Vector"
+
+        #TODO: DECIDE ON THESE + DOCUMENT
+        def norm(self):
+            return self.space.norm(self)
+
+        def dist(self, other):
+            return self.space.dist(self, other)
+
+        def inner(self, other):
+            return self.space.inner(self, other)

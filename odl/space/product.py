@@ -65,7 +65,7 @@ class ProductSpace(LinearSpace):
     TODO: document public interface
     """
 
-    def __init__(self, *spaces, **_):
+    def __init__(self, *spaces, **kwargs):
         """Initialize a new LinearProductSpace.
 
         The product X1 x ... x XN is itself a linear space, where the
@@ -346,7 +346,7 @@ class ProductSpace(LinearSpace):
         >>> r2x3.equals(r5)
         False
         """
-        return (isinstance(other, LinearProductSpace) and
+        return (type(self) == type(other) and
                 len(self) == len(other) and
                 all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 

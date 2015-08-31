@@ -40,9 +40,9 @@ class MultiplyOp(OP.LinearOperator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (En(matrix.shape[1])
+        self._domain = (Rn(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (En(matrix.shape[0])
+        self._range = (Rn(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
