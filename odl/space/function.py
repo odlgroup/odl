@@ -128,7 +128,7 @@ class FunctionSpace(LinearSpace):
     def equals(self, other):
         """ Verify that other is a FunctionSpace with the same domain and field
         """
-        return (isinstance(other, FunctionSpace) and
+        return (type(self) == type(other) and
                 self.domain == other.domain and
                 self.field == other.field)
 
@@ -211,12 +211,6 @@ class L2(FunctionSpace):
         """
         raise NotImplementedError(errfmt('''
         You cannot calculate inner products in non-discretized spaces'''))
-
-    def equals(self, other):
-        """ Verify that other is equal to this space as a FunctionSpace
-        and also a L2 space.
-        """
-        return isinstance(other, L2) and FunctionSpace.equals(self, other)
 
     def __str__(self):
         if isinstance(self.field, RealNumbers):

@@ -4,12 +4,12 @@ from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.space.space import HilbertSpace, Algebra
+from odl.space.space import LinearSpace
 
 """ An example of a very simple space, the space Rn
 """
 
-class Reals(HilbertSpace, Algebra):
+class Reals(LinearSpace):
     """The real numbers
     """
 

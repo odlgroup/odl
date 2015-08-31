@@ -88,7 +88,7 @@ def uniform_discretization(parent, rnimpl, shape=None, order='C'):
             return self._rn._norm(vector) * sqrt(self.scale)
 
         def equals(self, other):
-            return (isinstance(other, UniformDiscretization) and
+            return (type(self) == type(other) and
                     self.shape == other.shape and
                     self._rn.equals(other._rn))
 

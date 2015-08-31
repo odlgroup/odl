@@ -42,10 +42,6 @@ class SequenceSpace(FunctionSpace):
     def __init__(self):
         FunctionSpace.__init__(self, Integers())
 
-    def equals(self, other):
-        return (isinstance(other, SequenceSpace) and
-                super().equals(other))
-
 
 class TruncationDiscretization(Rn):
     """ Truncation discretization of the integers
@@ -68,10 +64,6 @@ class TruncationDiscretization(Rn):
     def element(self):
         # FIXME: Remove this function
         return self.element(np.empty(self.dim), copy=False)
-
-    def equals(self, other):
-        return (isinstance(other, TruncationDiscretization) and
-                super().equals(other))
 
     def element(self, *args, **kwargs):
         # FIXME: This is incomplete and does not fully implement the new
