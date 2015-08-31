@@ -272,7 +272,7 @@ class CudaEn(spaces.LinearSpace):
         >>> r3 != r4
         True
         """
-        return (isinstance(other, CudaEn) and
+        return (type(self) == type(other) and
                 self.dim == other.dim and
                 self._dtype == other._dtype)
 
@@ -470,7 +470,7 @@ class CudaEn(spaces.LinearSpace):
                 self.data.__setitem__(index, value)
 
 
-class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
+class CudaRn(CudaEn):
 
     """The real space :math:`R^n`, implemented in CUDA.
 
@@ -572,47 +572,6 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         """
         y.data.multiply(x.data)
 
-    def equals(self, other):
-        """Check if `other` is a CudaRn instance of the same dimension.
-
-        Parameters
-        ----------
-        other : any object
-                The object to check for equality
-
-        Returns
-        -------
-        boolean      True if equal, else false
-
-        Examples
-        --------
-
-        Comparing with self
-        >>> r3 = CudaRn(3)
-        >>> r3.equals(r3)
-        True
-
-        Also true when comparing with similar instance
-        >>> r3a, r3b = CudaRn(3), CudaRn(3)
-        >>> r3a.equals(r3b)
-        True
-
-        False when comparing to other dimension Rn
-        >>> r3, r4 = CudaRn(3), CudaRn(4)
-        >>> r3.equals(r4)
-        False
-
-        We also support operators '==' and '!='
-        >>> r3, r4 = CudaRn(3), CudaRn(4)
-        >>> r3 == r3
-        True
-        >>> r3 == r4
-        False
-        >>> r3 != r4
-        True
-        """
-        return isinstance(other, CudaRn) and self.dim == other.dim
-
     def __str__(self):
         """str() implementation."""
         return "CudaRn(" + str(self.dim) + ")"
@@ -621,8 +580,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         """repr() implementation."""
         return "CudaRn(" + str(self.dim) + ")"
 
-    class Vector(CudaEn.Vector, spaces.HilbertSpace.Vector,
-                 spaces.Algebra.Vector):
+    class Vector(CudaEn.Vector):
         pass
 
 

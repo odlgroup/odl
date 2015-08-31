@@ -200,7 +200,6 @@ class _OperatorMeta(ABCMeta):
 
     def __call__(cls, *args, **kwargs):
         """Create a new class `cls` from given arguments."""
-        print(args,kwargs)
         obj = ABCMeta.__call__(cls, *args, **kwargs)
         if not hasattr(obj, 'domain'):
             raise NotImplementedError(errfmt('''

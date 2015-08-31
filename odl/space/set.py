@@ -161,7 +161,6 @@ class RealNumbers(Set):
         """Return a real number from `inp` or from scratch."""
         if inp is not None:
             try:
-                print(inp)
                 return float(inp)
             except ValueError:
                 raise ValueError(errfmt('''

@@ -66,7 +66,7 @@ class ProductSpace(LinearSpace):
     """
 
     def __init__(self, *spaces, **kwargs):
-        """Initialize a new LinearProductSpace.
+        """Initialize a new ProductSpace.
 
         The product X1 x ... x XN is itself a linear space, where the
         linear combination is defined component-wise.
@@ -109,17 +109,17 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        prodspace : LinearProductSpace instance
+        prodspace : ProductSpace instance
 
         Examples
         --------
         >>> from odl.space.cartesian import Rn, Rn
-        >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
+        >>> r2x3 = ProductSpace(Rn(2), Rn(3))
         >>> r2x3.__class__.__name__
-        'LinearProductSpace'
-        >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
+        'ProductSpace'
+        >>> r2x3 = ProductSpace(Rn(2), Rn(3))
         >>> r2x3.__class__.__name__
-        'LinearProductSpace'
+        'ProductSpace'
         """
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
@@ -211,14 +211,14 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        LinearProductSpace.Vector instance
+        ProductSpace.Vector instance
 
         Examples
         -------
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
-        >>> r2x3 = LinearProductSpace(r2, r3)
+        >>> r2x3 = ProductSpace(r2, r3)
         >>> vec_2x3 = r2x3.element()
         >>> vec_2.space == vec_2x3[0].space
         True
@@ -228,7 +228,7 @@ class ProductSpace(LinearSpace):
         Creates an element in the product space
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
-        >>> prod = LinearProductSpace(r2, r3)
+        >>> prod = ProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element(x2, x3)
@@ -279,7 +279,7 @@ class ProductSpace(LinearSpace):
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
-        >>> r2x3 = LinearProductSpace(r2, r3)
+        >>> r2x3 = ProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
         >>> zero_2 == zero_2x3[0]
         True
@@ -325,7 +325,7 @@ class ProductSpace(LinearSpace):
         Returns
         -------
         equal : boolean
-            `True` if `other` is a LinearProductSpace instance, has
+            `True` if `other` is a ProductSpace instance, has
             the same length and the same factors. `False` otherwise.
 
         Example
@@ -333,13 +333,13 @@ class ProductSpace(LinearSpace):
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> rn, rm = Rn(2), Rn(3)
-        >>> r2x3, rnxm = LinearProductSpace(r2, r3), LinearProductSpace(rn, rm)
+        >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
         >>> r2x3.equals(rnxm)
         True
-        >>> r3x2 = LinearProductSpace(r3, r2)
+        >>> r3x2 = ProductSpace(r3, r2)
         >>> r2x3.equals(r3x2)
         False
-        >>> r5 = LinearProductSpace(*[Rn(1)]*5)
+        >>> r5 = ProductSpace(*[Rn(1)]*5)
         >>> r2x3.equals(r5)
         False
         >>> r5 = Rn(5)
@@ -431,7 +431,7 @@ def productspace(*spaces, **kwargs):
 
     See also
     --------
-    LinearProductSpace, MetricProductSpace, NormedProductSpace,
+    ProductSpace, MetricProductSpace, NormedProductSpace,
     HilbertProductSpace
     """
 
@@ -484,8 +484,7 @@ def powerspace(base, power, **kwargs):
 
     See also
     --------
-    LinearProductSpace, MetricProductSpace, NormedProductSpace,
-    HilbertProductSpace
+    ProductSpace
     """
 
     return productspace(*([base] * power), **kwargs)

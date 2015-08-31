@@ -397,7 +397,7 @@ class Ntuples(Set):
 
         Examples
         --------
-        >>> int_3 = Ntuples(3, dtype=int)
+        >>> int_3 = Ntuples(3, dtype='int64')
         >>> int_3.dtype
         dtype('int64')
         """
@@ -482,7 +482,12 @@ class Ntuples(Set):
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        return 'Ntuples({}, {!r})'.format(self.dim, self.dtype)
+        if self.dtype == np.dtype('int'):
+            dtype_string = 'int'
+        else:
+            dtype_string = '{!r}'.format(self.dtype)
+
+        return 'Ntuples({}, {})'.format(self.dim, dtype_string)
 
     def __str__(self):
         """s.__str__() <==> str(s)."""
@@ -546,8 +551,8 @@ class Ntuples(Set):
             Examples
             --------
             >>> import ctypes
-            >>> vec = Ntuples(3, int).element([1, 2, 3])
-            >>> arr_type = ctypes.c_int64 * 3
+            >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
+            >>> arr_type = ctypes.c_int32 * 3
             >>> buffer = arr_type.from_address(vec.data_ptr)
             >>> arr = np.frombuffer(buffer, dtype=int)
             >>> arr
@@ -557,7 +562,7 @@ class Ntuples(Set):
 
             >>> arr[0] = 5
             >>> vec
-            Ntuples(3, dtype('int64')).element([5, 2, 3])
+            Ntuples(3, int).element([5, 2, 3])
             """
             return self._data.ctypes.data
 
@@ -618,7 +623,7 @@ class Ntuples(Set):
             >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
             >>> vec1.assign(vec2)
             >>> vec1
-            Ntuples(3, dtype('int64')).element([-1, 2, 0])
+            Ntuples(3, int).element([-1, 2, 0])
             """
             if other not in self.space:
                 raise TypeError(errfmt('''
@@ -638,7 +643,7 @@ class Ntuples(Set):
             >>> vec1 = Ntuples(3, int).element([1, 2, 3])
             >>> vec2 = vec1.copy()
             >>> vec2
-            Ntuples(3, dtype('int64')).element([1, 2, 3])
+            Ntuples(3, int).element([1, 2, 3])
             >>> vec1 == vec2
             True
             >>> vec1 is vec2
@@ -711,7 +716,7 @@ class Ntuples(Set):
             >>> x = int_3.element([1, 2, 3])
             >>> x[0] = 5
             >>> x
-            Ntuples(3, dtype('int64')).element([5, 2, 3])
+            Ntuples(3, int).element([5, 2, 3])
 
             Assignment from array-like structures or another
             vector:
@@ -719,19 +724,19 @@ class Ntuples(Set):
             >>> y = Ntuples(2, 'short').element([-1, 2])
             >>> x[:2] = y
             >>> x
-            Ntuples(3, dtype('int64')).element([-1, 2, 3])
+            Ntuples(3, int).element([-1, 2, 3])
             >>> x[1:3] = [7, 8]
             >>> x
-            Ntuples(3, dtype('int64')).element([-1, 7, 8])
+            Ntuples(3, int).element([-1, 7, 8])
             >>> x[:] = np.array([0, 0, 0])
             >>> x
-            Ntuples(3, dtype('int64')).element([0, 0, 0])
+            Ntuples(3, int).element([0, 0, 0])
 
             Broadcasting is also supported:
 
             >>> x[1:3] = -2.
             >>> x
-            Ntuples(3, dtype('int64')).element([0, -2, -2])
+            Ntuples(3, int).element([0, -2, -2])
 
             Be aware of unsafe casts and over-/underflows, there
             will be warnings at maximum.
@@ -845,7 +850,12 @@ def _lincomb(z, a, x, b, y, dtype):
                     scal(b, z.data)
                 axpy(x.data, z.data, len(z), a)
 
+def _dist(x, y):
+    #Todo optimize
+    return np.linalg.norm(x.data-y.data)
+
 def _norm(x):
+    #Todo optimize
     return np.linalg.norm(x.data)
 
 def _inner(x, y):
@@ -983,7 +993,7 @@ class En(Ntuples, LinearSpace):
 
         Parameters
         ----------
-        x, y : `NormedCn.Vector`
+        x, y : `Cn.Vector`
             The vectors whose mutual distance is calculated
 
         Returns
@@ -994,13 +1004,13 @@ class En(Ntuples, LinearSpace):
         Examples
         --------
         >>> from numpy.linalg import norm
-        >>> c2_2 = MetricCn(2, dist=lambda x, y: norm(x - y, ord=2))
+        >>> c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=2))
         >>> x = c2_2.element([3+1j, 4])
         >>> y = c2_2.element([1j, 4-4j])
         >>> c2_2.dist(x, y)
         5.0
 
-        >>> c2_2 = MetricCn(2, dist=lambda x, y: norm(x - y, ord=1))
+        >>> c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=1))
         >>> x = c2_2.element([3+1j, 4])
         >>> y = c2_2.element([1j, 4-4j])
         >>> c2_2.dist(x, y)
@@ -1013,7 +1023,7 @@ class En(Ntuples, LinearSpace):
 
         Parameters
         ----------
-        x : `NormedCn.Vector`
+        x : `Cn.Vector`
             The vector whose norm is calculated
 
         Returns
@@ -1024,13 +1034,13 @@ class En(Ntuples, LinearSpace):
         Examples
         --------
         >>> import numpy as np
-        >>> c2_2 = NormedCn(2, norm=np.linalg.norm)  # 2-norm
+        >>> c2_2 = Cn(2, norm=np.linalg.norm)  # 2-norm
         >>> x = c2_2.element([3+1j, 1-5j])
         >>> c2_2.norm(x)
         6.0
 
         >>> from functools import partial
-        >>> c2_1 = NormedCn(2, partial(np.linalg.norm, ord=1))
+        >>> c2_1 = Cn(2, norm=partial(np.linalg.norm, ord=1))
         >>> x = c2_1.element([3-4j, 12+5j])
         >>> c2_1.norm(x)
         18.0
@@ -1043,7 +1053,7 @@ class En(Ntuples, LinearSpace):
         Parameters
         ----------
 
-        x, y : `HilbertCn.Vector`
+        x, y : `Cn.Vector`
             The vectors whose inner product is calculated
 
         Returns
@@ -1054,13 +1064,13 @@ class En(Ntuples, LinearSpace):
         Examples
         --------
         >>> import numpy as np
-        >>> c3 = HilbertCn(2, inner=lambda x, y: np.vdot(y, x))
+        >>> c3 = Cn(2, inner=lambda x, y: np.vdot(y, x))
         >>> x = c3.element([5+1j, -2j])
         >>> y = c3.element([1, 1+1j])
         >>> c3.inner(x, y) == (5+1j)*1 + (-2j)*(1-1j)
         True
         >>> weights = np.array([1., 2.])
-        >>> c3w = HilbertCn(2, lambda x, y: np.vdot(weights * y, x))
+        >>> c3w = Cn(2, inner=lambda x, y: np.vdot(weights * y, x))
         >>> x = c3w.element(x)  # elements must be cast (no copy)
         >>> y = c3w.element(y)
         >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
@@ -1098,8 +1108,8 @@ class En(Ntuples, LinearSpace):
 
         >>> from functools import partial
         >>> dist2 = partial(dist, ord=2)
-        >>> c3 = MetricCn(3, dist=dist2)
-        >>> c3_same = MetricCn(3, dist=dist2)
+        >>> c3 = Cn(3, dist=dist2)
+        >>> c3_same = Cn(3, dist=dist2)
         >>> c3.equals(c3_same)
         True
         >>> c3 == c3_same  # equivalent
@@ -1108,16 +1118,16 @@ class En(Ntuples, LinearSpace):
         Different `dist` functions result in different spaces:
 
         >>> dist1 = partial(dist, ord=1)
-        >>> c3_1 = MetricCn(3, dist=dist1)
-        >>> c3_2 = MetricCn(3, dist=dist2)
+        >>> c3_1 = Cn(3, dist=dist1)
+        >>> c3_2 = Cn(3, dist=dist2)
         >>> c3_1.equals(c3_2)
         False
 
         Be careful with Lambdas - they result in non-identical function
         objects:
 
-        >>> c3_lambda1 = MetricCn(3, lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda2 = MetricCn(3, lambda x, y: norm(x-y, ord=1))
+        >>> c3_lambda1 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
+        >>> c3_lambda2 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
         >>> c3_lambda1.equals(c3_lambda2)
         False
         """
@@ -1210,7 +1220,7 @@ class Cn(En):
     See the module documentation for attributes, methods etc.
     """
 
-    def __init__(self, dim, dtype=np.complex128):
+    def __init__(self, dim, dtype=np.complex128, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -1228,8 +1238,13 @@ class Cn(En):
         if dtype not in _complex_dtypes:
             raise TypeError(errfmt('''
             `dtype` {} not a complex floating-point type.'''.format(dtype)))
+        
+        #TODO remove inner if norm or dist is provided
+        dist = kwargs.pop('dist', _dist)
+        norm = kwargs.pop('norm', _norm)
+        inner = kwargs.pop('inner', _inner)
 
-        super().__init__(dim, dtype, norm=_norm, inner=_inner)
+        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner, **kwargs)
 
     def __repr__(self):
         """`rn.__repr__() <==> repr(rn)`."""
@@ -1375,7 +1390,7 @@ class Rn(En):
     See the module documentation for attributes, methods etc.
     """
 
-    def __init__(self, dim, dtype=np.float64):
+    def __init__(self, dim, dtype=np.float64, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -1394,7 +1409,12 @@ class Rn(En):
             raise TypeError(errfmt('''
             `dtype` {} not a real floating-point type.'''.format(dtype)))
 
-        super().__init__(dim, dtype, norm=_norm, inner=_inner)
+        #TODO remove inner if norm or dist is provided
+        dist = kwargs.pop('dist', _dist)
+        norm = kwargs.pop('norm', _norm)
+        inner = kwargs.pop('inner', _inner)
+
+        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner, **kwargs)
 
     def __repr__(self):
         """`rn.__repr__() <==> repr(rn)`."""
