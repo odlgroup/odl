@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 from odl.operator.operator import *
-from odl.space.cartesian import En
+from odl.space.cartesian import Fn
 import odl.discr.discretization as disc
 import odl.space.function as fs
 import odl.space.set as sets
@@ -43,7 +43,7 @@ standard_library.install_aliases()
 #        l2 = fs.L2(I)
 #        l2sin = l2.element(np.sin)
 #
-#        rn = En(10)
+#        rn =Rn10)
 #        d = disc.uniform_discretization(l2, rn)
 #
 #        sind = d.element(l2sin)
@@ -57,7 +57,7 @@ standard_library.install_aliases()
 #
 #        n = 10
 #        m = 10
-#        rn = En(n*m)
+#        rn =Rnn*m)
 #        d = disc.uniform_discretization(l2, rn, (n, m))
 #
 #        sind = d.element(l2sin)

@@ -28,12 +28,14 @@ import matplotlib.pyplot as plt
 
 from odl.operator.operator import *
 from odl.space.space import *
+from odl.space.set import Rectangle
 from odl.space.product import powerspace
 from odl.space.cartesian import *
 from odl.space.function import *
 import odl.space.cuda as CS
 import odl.discr.discretization as DS
 import odlpp.odlpp_cuda as cuda
+import odlpp.odlpp_utils as utils
 from odl.utility.testutils import Timer
 
 from pooled import makePooledSpace
@@ -242,7 +244,7 @@ rnpooled = makePooledSpace(rn, maxPoolSize=5)
 # Discretize
 d = DS.uniform_discretization(space, rnpooled, (n, m))
 x, y = d.points()
-data = odlpp.utils.phantom([n, m])
+data = utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5
 fun = d.element(data)
 

@@ -69,7 +69,7 @@ Name         Description
 ===========  ===========
 Rn           Basic space of n-tuples of real numbers, uses NumPy
 NormedRn     R^n with a norm
-En  R^n with an inner product
+Fn  R^n with an inner product
 ===========  ===========
 
 R^n type spaces, CUDA implementation (module 'cuda')

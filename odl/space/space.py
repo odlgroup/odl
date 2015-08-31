@@ -90,8 +90,7 @@ from odl.utility.utility import errfmt
 
 standard_library.install_aliases()
 
-__all__ = ('LinearSpace', 'MetricSpace', 'NormedSpace', 'HilbertSpace',
-           'Algebra')
+#__all__ = ('LinearSpace')
 
 
 class LinearSpace(Set):
@@ -182,6 +181,116 @@ class LinearSpace(Set):
             `True` if `other` is the same `LinearSpace`, `False`
             otherwise.
 
+    Optional methods
+    ----------------
+
+    `_dist(x, y)`
+    ~~~~~~~~~~~~~
+    A raw (not type-checking) private method measuring the distance
+    between two vectors `x` and `y`.
+
+    A space with a distance is called a Metric Space.
+
+    **Parameters:**
+        `x` : `object`
+            The first vector
+        `y` : `object`
+            The second vector
+
+    **Returns:**
+        `distance` : `RealNumber`
+            The distance between `x` and `y`, measured in the space's
+            metric
+
+    **Requirements:**
+        * `_dist(x, y) == _dist(y, x)`
+        * `_dist(x, y) <= _dist(x, z) + _dist(z, y)`
+        * `_dist(x, y) >= 0`
+        * `_dist(x, y) == 0` (approx.) if and only if `x == y` (approx.)
+
+    `_norm(x)`
+    ~~~~~~~~~~
+    A raw (not type-checking) private method measuring the length of a
+    space element `x`.
+
+    A space with a norm is called a `Normed Space`.
+
+    **Parameters:**
+        `x` : `object`
+            The vector to measure
+
+    **Returns:**
+        `norm` : `RealNumber`
+            The length of `x` as measured in the space's metric
+
+    **Requirements:**
+     * `_norm(s * x) = |s| * _norm(x)` for any scalar `s`
+     * `_norm(x + y) <= _norm(x) + _norm(y)`
+     * `_norm(x) >= 0`
+     * `_norm(x) == 0` (approx.) if and only if `x == 0` (approx.)
+
+    Note
+    ----
+    A `Normed Space` is a `Metric Space` with the distance function
+    `_dist(x, y) = _norm(x - y)`.
+
+
+    `_inner(x, y)`
+    ~~~~~~~~~~~~~~
+    A raw (not type-checking) private method calculating the inner
+    product of two space elements `x` and `y`.
+
+    **Parameters:**
+        `x` : `object`
+            The first vector
+        `y` : `object`
+            The second vector
+
+    **Returns:**
+        `inner` : `space.field` element
+            The inner product of `x` and `y`
+
+    **Requirements:**
+     * `_inner(x, y) == _inner(y, x)^*` with '*' = complex conjugation
+     * `_inner(s * x, y) == s * _inner(x, y)` for `s` scalar
+     * `_inner(x + z, y) == _inner(x, y) + _inner(z, y)`
+     * `_inner(x, x) == 0` (approx.) if and only if `x == 0` (approx.)
+
+    Note
+    ----
+    A `HilbertSpace` is a `NormedSpace` with the norm function
+    `_norm(x) = sqrt(_inner(x, x))`, and in consequence also a
+    `MetricSpace` with the distance function
+    `_dist(x, y) = _norm(x - y)`.
+
+
+    `_multiply(x, y)`
+    ~~~~~~~~~~~~~~~~~
+    A raw (not type-checking) private method multiplying two vectors
+    `x` and `y`.
+
+    **Parameters:**
+        `x` : `object`
+            First vector
+        `y` : `object`
+            Second vector, stores the final result
+
+    **Returns:** `None`
+
+    **Requirements:**
+     * `y` after `_multiply(x, y)` equals `x` after `_multiply(y, x)`
+     * `_multiply(s * x, y) <==> y *= s; _multiply(x, y)  <==>
+        _multiply(x, y); y *= s` for `s` scalar
+     * There is a space element `one` with
+       `x` after `_multiply(one, x)` equals `x` equals `one`
+       after `_multiply(x, one)`.
+
+    Note
+    ----
+    The above conditions on the multiplication make `Algebra` a
+    *unital commutative algebra* in the mathematical sense.
+
+
     Default convenience methods
     ---------------------------
     `LinearSpace` provides several default methods for convenience
@@ -200,7 +309,29 @@ class LinearSpace(Set):
     |              |                    |issuing `x = element()` and  |
     |              |                    |then                         |
     |              |                    |`_lincomb(x, 0, x, 0, x)`    |
-    +--------------+--------------------+-----------------------------+
+    +--------------+--------------------+-----------------------------+    
+    |Metric Space methods                                             |
+    +--------------+--------------------+-----------------------------+    
+    |`dist(x, y)`|`float`     |Distance between two space elements.   |
+    |            |            |Like `_dist()`, but with type checks.  |
+    +------------+------------+---------------------------------------+
+    |Normed Space methods                                             |
+    +-------------+------------+--------------------------------------+
+    |`norm(x)`    |`float`     |Length of a space element. Like       |
+    |             |            |`_norm()`, but with type checks.      |
+    +-------------+------------+--------------------------------------+
+    |Hilbert Space methods                                            |
+    +-------------+------------+--------------------------------------+
+    |`inner(x, y)`|`field`     |Inner product of two space elements.  |
+    |             |element     |Like `_inner()`, but with type        |
+    |             |            |checks.                               |
+    +-------------+------------+--------------------------------------+
+    |Algebra       methods                                            |
+    +----------------+-----------+------------------------------------+
+    |`multiply(x, y)`|`None`     |Multiplication of two space         |
+    |                |           |elements. Like `_multiply()`, but   |
+    |                |           |with type checks.                   |
+    +----------------+-----------+------------------------------------+
 
     Magic methods
     -------------
@@ -251,6 +382,43 @@ class LinearSpace(Set):
         This method is intended to be private, public callers should
         resort to lincomb which is type-checked.
         """
+
+    def _dist(self, x, y):
+        """Calculate the distance between x and y.
+
+        This method is intended to be private, public callers should
+        resort to dist which is type-checked.
+        """
+        #default implementation
+        return self.norm(x-y)
+
+    
+    def _norm(self, x):
+        """Calculate the norm of x
+
+        This method is intended to be private, public callers should
+        resort to dist which is type-checked.
+        """
+        #default implementation
+        return math.sqrt(self.inner(x,x))
+
+    def _inner(self, x, y):
+        """ Calculate the inner product of x and y
+
+        This method is intended to be private, public callers should
+        resort to dist which is type-checked.
+        """
+        #No default implementation possible
+        raise NotImplementedError("Inner product not implemented")
+
+    def _multiply(self, x, y):
+        """ Calculate the multiplication of y = x * y
+
+        This method is intended to be private, public callers should
+        resort to dist which is type-checked.
+        """
+        #No default implementation possible
+        raise NotImplementedError("Multiplication not implemented")
 
     @abstractproperty
     def field(self):
@@ -372,6 +540,63 @@ class LinearSpace(Set):
             # Call method
             return self._lincomb(z, a, x, b, y)
 
+    def dist(self, x, y):
+        """Calculate the distance between two vectors.
+
+        Parameters
+        ----------
+        x : MetricSpace.Vector
+            The first element
+
+        y : MetricSpace.Vector
+            The second element
+
+        Returns
+        -------
+        dist : RealNumber
+               Distance between vectors
+        """
+        if x not in self:
+            raise TypeError('`x` {} not in space {}'.format(x, self))
+
+        if y not in self:
+            raise TypeError('`y` {} not in space {}'.format(y, self))
+
+        return float(self._dist(x, y))
+
+    def norm(self, vector):
+        """Calculate the norm of a vector."""
+        if not self.contains(vector):
+            raise TypeError('x ({}) is not in space ({})'.format(vector, self))
+
+        return float(self._norm(vector))
+
+    def inner(self, x, y):
+        """ Calculates the inner product of the vectors x and y
+        """
+
+        # Check spaces
+        if not self.contains(x):
+            raise TypeError('x ({}) is not in space ({})'.format(x, self))
+
+        if not self.contains(y):
+            raise TypeError('y ({}) is not in space ({})'.format(y, self))
+
+        return self.field.element(self._inner(x, y))
+    
+    def multiply(self, x, y):
+        """ Calculates the pointwise product of x and y and assigns it to y
+        y = x * y
+        """
+        # Check spaces
+        if not self.contains(x):
+            raise TypeError('x ({}) is in wrong space'.format(x))
+
+        if not self.contains(y):
+            raise TypeError('y ({}) is in wrong space'.format(y))
+
+        self._multiply(x, y)
+
     class Vector(with_metaclass(ABCMeta, object)):
 
         """Abstract `LinearSpace` element.
@@ -407,6 +632,12 @@ class LinearSpace(Set):
         |`set_zero()`    |`None`              |Multiply this vector   |
         |                |                    |by zero.               |
         +----------------+--------------------+-----------------------+
+        |Metric space methods                                         |
+        +---------------+-----------+---------------------------------+
+        |`equals(other)`|`boolean`  |Test if `other` is equal to this |
+        |               |           |vector. Implemented as           |
+        |               |           |`dist(other) == 0`.              |
+        +---------------+-----------+---------------------------------+
 
         Magic methods
         -------------
@@ -451,6 +682,12 @@ class LinearSpace(Set):
         +------------------+----------------+-------------------------+
         |`__neg__()`       |`-self`         |`x = element()`;         |
         |                  |                |`lincomb(x, -1, self)`   |
+        +------------------+----------------+-------------------------+
+        |Metric space methods                                         |
+        +------------------+----------------+-------------------------+
+        |`__eq__(other)`   |`self == other` |`equals(other)`          |
+        +------------------+----------------+-------------------------+
+        |`__ne__(other)`   |`self != other` |`not equals(other)`      |
         +------------------+----------------+-------------------------+
 
         Note that `lincomb` and `element` refer to `LinearSpace`
@@ -507,7 +744,10 @@ class LinearSpace(Set):
 
         def __imul__(self, other):
             """Implementation of 'self *= other'."""
-            self.space.lincomb(self, other, self)
+            if other in self.space:
+                self.space.multiply(other, self)
+            else:
+                self.space.lincomb(self, other, self)
             return self
 
         def __itruediv__(self, other):
@@ -533,7 +773,11 @@ class LinearSpace(Set):
         def __mul__(self, other):
             """Implementation of 'self * other'."""
             tmp = self.space.element()
-            self.space.lincomb(tmp, other, self)
+            if other in self.space:
+                tmp.assign(self)
+                self.space.multiply(other, tmp)
+            else:
+                self.space.lincomb(tmp, other, self)
             return tmp
 
         def __rmul__(self, other):
@@ -558,142 +802,7 @@ class LinearSpace(Set):
             """Implementation of '+self'."""
             return self.copy()
 
-        def __str__(self):
-            """Implementation of str()."""
-            return str(self.space) + ".Vector"
-
-
-class MetricSpace(LinearSpace):
-
-    """Abstract metric space.
-
-    Its elements are represented as instances of the inner
-    `MetricSpace.Vector` class.
-
-    In addition to `LinearSpace`, `MetricSpace` has the following
-    abstract method:
-
-    `_dist(x, y)`
-    ~~~~~~~~~~~~~
-    A raw (not type-checking) private method measuring the distance
-    between two vectors `x` and `y`.
-
-    **Parameters:**
-        `x` : `object`
-            The first vector
-        `y` : `object`
-            The second vector
-
-    **Returns:**
-        `distance` : `RealNumber`
-            The distance between `x` and `y`, measured in the space's
-            metric
-
-    **Requirements:**
-     * `_dist(x, y) == _dist(y, x)`
-     * `_dist(x, y) <= _dist(x, z) + _dist(z, y)`
-     * `_dist(x, y) >= 0`
-     * `_dist(x, y) == 0` (approx.) if and only if `x == y` (approx.)
-
-    Differences to `LinearSpace`
-    ----------------------------
-
-    +------------+------------+----------------------------------------+
-    |Signature   |Return type |Description                             |
-    +============+============+========================================+
-    |`dist(x, y)`|`float`     |Distance between two space elements.    |
-    |            |            |Like `_dist()`, but with type checks.   |
-    +------------+------------+----------------------------------------+
-
-    See also
-    --------
-    See `LinearSpace` for a list of additional attributes and methods
-    as well as further help.
-
-    See Wikipedia's `Metric space`_ article for a mathematical
-    overview.
-
-    .. _`Metric space`:
-       https://en.wikipedia.org/wiki/Metric_space
-    """
-
-    @abstractmethod
-    def _dist(self, x, y):
-        """Calculate the distance between two vectors."""
-
-    # Default implemented methods
-    def dist(self, x, y):
-        """Calculate the distance between two vectors.
-
-        Parameters
-        ----------
-        x : MetricSpace.Vector
-            The first element
-
-        y : MetricSpace.Vector
-            The second element
-
-        Returns
-        -------
-        dist : RealNumber
-               Distance between vectors
-        """
-        if x not in self:
-            raise TypeError('`x` {} not in space {}'.format(x, self))
-
-        if y not in self:
-            raise TypeError('`y` {} not in space {}'.format(y, self))
-
-        return float(self._dist(x, y))
-
-    class Vector(LinearSpace.Vector):
-
-        """Abstract `MetricSpace` element.
-
-        Not intended for creation of vectors, use the space's
-        `element()` method instead.
-
-        Differences to `LinearSpace.Vector`
-        -----------------------------------
-
-        Methods
-        -------
-
-        +---------------+-----------+---------------------------------+
-        |Signature      |Return type|Description                      |
-        +===============+===========+=================================+
-        |`dist(other)`  |`float`    |Distance of this vector to       |
-        |               |           |`other`. Implemented as          |
-        |               |           |`space.dist(self, other)`.       |
-        +---------------+-----------+---------------------------------+
-        |`equals(other)`|`boolean`  |Test if `other` is equal to this |
-        |               |           |vector. Implemented as           |
-        |               |           |`dist(other) == 0`.              |
-        +---------------+-----------+---------------------------------+
-
-        Magic methods
-        -------------
-
-        +------------------+----------------+-------------------------+
-        |Signature         |Provides syntax |Implementation           |
-        +==================+================+=========================+
-        |`__eq__(ohter)`   |`self == other` |`equals(other)`          |
-        +------------------+----------------+-------------------------+
-        |`__ne__(other)`   |`self != other` |`not equals(other)`      |
-        +------------------+----------------+-------------------------+
-
-        See also
-        --------
-        See `LinearSpace.Vector` for a list of additional attributes
-        and methods as well as further help.
-        """
-
-        def __init__(self, space):
-            if not isinstance(space, MetricSpace):
-                raise TypeError(errfmt('''
-                `space` {} not a MetricSpace.'''.format(space)))
-            super().__init__(space)
-
+        # Metric space method
         def equals(self, other):
             """Test two vectors for equality.
 
@@ -718,9 +827,9 @@ class MetricSpace(LinearSpace):
             Example
             -------
 
-            >>> from odl.space.cartesian import NormedRn
+            >>> from odl.space.cartesian import Rn
             >>> import numpy as np
-            >>> X = NormedRn(1, norm=np.linalg.norm)
+            >>> X = Rn(1, norm=np.linalg.norm)
             >>> x = X.element([0.1])
             >>> x == x
             True
@@ -748,364 +857,19 @@ class MetricSpace(LinearSpace):
         def __ne__(self, other):
             return not self.equals(other)
 
+        def __str__(self):
+            """Implementation of str()."""
+            return str(self.space) + ".Vector"
 
-class NormedSpace(MetricSpace):
+        #TODO: DECIDE ON THESE + DOCUMENT
+        def norm(self):
+            return self.space.norm(self)
 
-    """Abstract normed space.
+        def dist(self, other):
+            return self.space.dist(self, other)
 
-    Its elements are represented as instances of the inner
-    `NormedSpace.Vector` class.
+        def inner(self, other):
+            return self.space.inner(self, other)
 
-    In addition to `LinearSpace`, `NormedSpace` has the following
-    abstract method:
-
-    `_norm(x)`
-    ~~~~~~~~~~
-    A raw (not type-checking) private method measuring the length of a
-    space element `x`.
-
-    **Parameters:**
-        `x` : `object`
-            The vector to measure
-
-    **Returns:**
-        `norm` : `RealNumber`
-            The length of `x` as measured in the space's metric
-
-    **Requirements:**
-     * `_norm(s * x) = |s| * _norm(x)` for any scalar `s`
-     * `_norm(x + y) <= _norm(x) + _norm(y)`
-     * `_norm(x) >= 0`
-     * `_norm(x) == 0` (approx.) if and only if `x == 0` (approx.)
-
-    Note
-    ----
-    A `NormedSpace` is a `MetricSpace` with the distance function
-    `_dist(x, y) = _norm(x - y)`.
-
-    Differences to `LinearSpace`
-    ----------------------------
-
-    +-------------+------------+--------------------------------------+
-    |Signature    |Return type |Description                           |
-    +=============+============+======================================+
-    |`norm(x)`    |`float`     |Length of a space element. Like       |
-    |             |            |`_norm()`, but with type checks.      |
-    +-------------+------------+--------------------------------------+
-    |`dist(x, y)` |`float`     |Distance between two space elements.  |
-    |             |            |Implemented as `_norm(x - y)` with    |
-    |             |            |type checks.                          |
-    +-------------+------------+--------------------------------------+
-
-    See also
-    --------
-    See `LinearSpace` for a list of additional attributes and methods
-    as well as further help.
-
-    See Wikipedia's `Normed vector space`_ article for a mathematical
-    overview.
-
-    .. _`Normed vector space`:
-       https://en.wikipedia.org/wiki/Normed_vector_space
-    """
-
-    @abstractmethod
-    def _norm(self, vector):
-        """Implementation of norm."""
-
-    # Default implemented methods
-    def norm(self, vector):
-        """Calculate the norm of a vector."""
-        if not self.contains(vector):
-            raise TypeError('x ({}) is not in space ({})'.format(vector, self))
-
-        return float(self._norm(vector))
-
-    # Default implmentation
-    def _dist(self, x, y):
-        """ The distance in Normed spaces is implicitly defined by the norm
-        """
-        return self._norm(x - y)
-
-    class Vector(MetricSpace.Vector):
-
-        """Abstract `NormedSpace` element.
-
-        Not intended for creation of vectors, use the space's
-        `element()` method instead.
-
-        Differences to `LinearSpace.Vector`
-        -----------------------------------
-
-        Methods
-        -------
-
-        +---------------+-----------+---------------------------------+
-        |Signature      |Return type|Description                      |
-        +===============+===========+=================================+
-        |`norm()`       |`float`    |Length of this vector.           |
-        |               |           |Implemented as                   |
-        |               |           |`space.norm(self)`.              |
-        +---------------+-----------+---------------------------------+
-        |`dist(other)`  |`float`    |Distance of this vector to       |
-        |               |           |`other`. Implemented as          |
-        |               |           |`space.norm(self - other)`.      |
-        +---------------+-----------+---------------------------------+
-        |`equals(other)`|`boolean`  |Test if `other` is equal to this |
-        |               |           |vector. Implemented as           |
-        |               |           |`dist(other) == 0`.              |
-        +---------------+-----------+---------------------------------+
-
-        See also
-        --------
-        See `LinearSpace.Vector` for a list of additional attributes
-        and methods as well as further help.
-        """
-
-        def __init__(self, space):
-            if not isinstance(space, NormedSpace):
-                raise TypeError(errfmt('''
-                'space' ({}) is not a NormedSpace instance'''.format(space)))
-            super().__init__(space)
-
-
-class HilbertSpace(NormedSpace):
-
-    """Abstract (pre)-Hilbert space or inner product space.
-
-    Its elements are represented as instances of the inner
-    `HilbertSpace.Vector` class.
-
-    In addition to `LinearSpace`, `HilbertSpace` has the following
-    abstract method:
-
-    `_inner(x, y)`
-    ~~~~~~~~~~~~~~
-    A raw (not type-checking) private method calculating the inner
-    product of two space elements `x` and `y`.
-
-    **Parameters:**
-        `x` : `object`
-            The first vector
-        `y` : `object`
-            The second vector
-
-    **Returns:**
-        `inner` : `space.field` element
-            The inner product of `x` and `y`
-
-    **Requirements:**
-     * `_inner(x, y) == _inner(y, x)^*` with '*' = complex conjugation
-     * `_inner(s * x, y) == s * _inner(x, y)` for `s` scalar
-     * `_inner(x + z, y) == _inner(x, y) + _inner(z, y)`
-     * `_inner(x, x) == 0` (approx.) if and only if `x == 0` (approx.)
-
-    Note
-    ----
-    A `HilbertSpace` is a `NormedSpace` with the norm function
-    `_norm(x) = sqrt(_inner(x, x))`, and in consequence also a
-    `MetricSpace` with the distance function
-    `_dist(x, y) = _norm(x - y)`.
-
-    Differences to `LinearSpace`
-    ----------------------------
-
-    +-------------+------------+--------------------------------------+
-    |Signature    |Return type |Description                           |
-    +=============+============+======================================+
-    |`inner(x, y)`|`field`     |Inner product of two space elements.  |
-    |             |element     |Like `_inner()`, but with type        |
-    |             |            |checks.                               |
-    +-------------+------------+--------------------------------------+
-    |`norm(x)`    |`float`     |Length of a space element. Implemented|
-    |             |            |as `sqrt(_inner(x, x))` with type     |
-    |             |            |checks.                               |
-    +-------------+------------+--------------------------------------+
-    |`dist(x, y)` |`float`     |Distance between two space elements.  |
-    |             |            |Implemented as `_norm(x - y)` with    |
-    |             |            |type checks.                          |
-    +-------------+------------+--------------------------------------+
-
-    See also
-    --------
-    See `LinearSpace` for a list of additional attributes and methods
-    as well as further help.
-
-    See Wikipedia's `Inner product space`_ article for a mathematical
-    overview.
-
-    .. _`Inner product space`:
-       https://en.wikipedia.org/wiki/Inner_product_space
-    """
-
-    @abstractmethod
-    def _inner(self, x, y):
-        """ Implementation of inner
-        """
-
-    # Default implemented methods
-    def inner(self, x, y):
-        """ Calculates the inner product of the vectors x and y
-        """
-
-        # Check spaces
-        if not self.contains(x):
-            raise TypeError('x ({}) is not in space ({})'.format(x, self))
-
-        if not self.contains(y):
-            raise TypeError('y ({}) is not in space ({})'.format(y, self))
-
-        return self.field.element(self._inner(x, y))
-
-    # Default implmentation
-    def _norm(self, x):
-        """ The norm in Hilbert spaces is implicitly defined by the inner
-        product
-        """
-
-        return sqrt(self._inner(x, x))
-
-    class Vector(NormedSpace.Vector):
-
-        """Abstract `HilbertSpace` element.
-
-        Not intended for creation of vectors, use the space's
-        `element()` method instead.
-
-        Differences to `LinearSpace.Vector`
-        -----------------------------------
-
-        Methods
-        -------
-
-        +---------------+-------------+-------------------------------+
-        |Signature      |Return type  |Description                    |
-        +===============+=============+===============================+
-        |`inner(other)` |`space.field`|Inner product of this vector   |
-        |               |element      |with `other`. Implemented as   |
-        |               |             |`space.inner(self, other)`.    |
-        +---------------+-------------+-------------------------------+
-        |`norm()`       |`float`      |Length of this vector.         |
-        |               |             |Implemented as                 |
-        |               |             |`inner(self, self)`.           |
-        +---------------+-------------+-------------------------------+
-        |`dist(other)`  |`float`      |Distance of this vector to     |
-        |               |             |`other`. Implemented as        |
-        |               |             |`space.norm(self - other)`.    |
-        +---------------+-------------+-------------------------------+
-        |`equals(other)`|`boolean`    |Test if `other` is equal to    |
-        |               |             |this vector. Implemented as    |
-        |               |             |`dist(other) == 0`.            |
-        +---------------+-------------+-------------------------------+
-
-        See also
-        --------
-        See `LinearSpace.Vector` for a list of additional attributes
-        and methods as well as further help.
-        """
-
-        def __init__(self, space):
-            if not isinstance(space, HilbertSpace):
-                raise TypeError(errfmt('''
-                'space' ({}) is not a HilbertSpace instance'''.format(space)))
-            super().__init__(space)
-
-
-class Algebra(LinearSpace):
-
-    """Abstract (Banach) algebra with multiplication.
-
-    Its elements are represented as instances of the inner
-    `Algebra.Vector` class.
-
-    In addition to `LinearSpace`, `Algebra` has the following
-    abstract method:
-
-    `_multiply(x, y)`
-    ~~~~~~~~~~~~~~~~~
-    A raw (not type-checking) private method multiplying two vectors
-    `x` and `y`.
-
-    **Parameters:**
-        `x` : `object`
-            First vector
-        `y` : `object`
-            Second vector, stores the final result
-
-    **Returns:** `None`
-
-    **Requirements:**
-     * `y` after `_multiply(x, y)` equals `x` after `_multiply(y, x)`
-     * `_multiply(s * x, y) <==> y *= s; _multiply(x, y)  <==>
-        _multiply(x, y); y *= s` for `s` scalar
-     * There is a space element `one` with
-       `x` after `_multiply(one, x)` equals `x` equals `one`
-       after `_multiply(x, one)`.
-
-    Note
-    ----
-    The above conditions on the multiplication make `Algebra` a
-    *unital commutative algebra* in the mathematical sense.
-
-    Differences to `LinearSpace`
-    ----------------------------
-
-    +----------------+-----------+------------------------------------+
-    |Signature       |Return type|Description                         |
-    +================+===========+====================================+
-    |`multiply(x, y)`|`None`     |Multiplication of two space         |
-    |                |           |elements. Like `_multiply()`, but   |
-    |                |           |with type checks.                   |
-    +----------------+-----------+------------------------------------+
-
-    See also
-    --------
-    See `LinearSpace` for a list of additional attributes and methods
-    as well as further help.
-
-    See Wikipedia's `Associative algebra`_ article for a mathematical
-    overview.
-
-    .. _`Associative algebra`:
-       https://en.wikipedia.org/wiki/Associative_algebra
-    """
-
-    @abstractmethod
-    def _multiply(self, x, y):
-        """ Implementation of multiply
-        """
-
-    def multiply(self, x, y):
-        """ Calculates the pointwise product of x and y and assigns it to y
-        y = x * y
-        """
-        # Check spaces
-        if not self.contains(x):
-            raise TypeError('x ({}) is in wrong space'.format(x))
-
-        if not self.contains(y):
-            raise TypeError('y ({}) is in wrong space'.format(y))
-
-        self._multiply(x, y)
-
-    class Vector(LinearSpace.Vector):
-
-        def __init__(self, space):
-            if not isinstance(space, Algebra):
-                raise TypeError(errfmt('''
-                'space' ({}) is not an Algebra instance'''.format(space)))
-            super().__init__(space)
-
-        def __imul__(self, other):
-            """ Overloads the *= operator to mean pointwise multiplication if
-            the other object is a vector
-            """
-            if other in self.space:
-                self.space.multiply(other, self)
-                return self
-            else:
-                return super().__imul__(other)
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+        def multiply(self, other):
+            return self.space.multiply(other, self)

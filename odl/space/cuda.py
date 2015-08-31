@@ -40,7 +40,7 @@ from odlpp.odlpp_cuda import CudaVectorUchar, CudaVectorFloat
 standard_library.install_aliases()
 
 
-class CudaEn(spaces.LinearSpace):
+class CudaFn(spaces.LinearSpace):
 
     """The real space E^n, implemented in CUDA.
 
@@ -53,7 +53,7 @@ class CudaEn(spaces.LinearSpace):
               np.uint8: CudaVectorUchar}
 
     def __init__(self, dim, dtype=np.float32):
-        """Initialize a new CudaEn.
+        """Initialize a new CudaFn.
 
         Parameters
         ----------
@@ -77,7 +77,7 @@ class CudaEn(spaces.LinearSpace):
 
         if self._vector_impl is None:
             raise TypeError(errfmt('''
-            dtype ({}) must be a valid CudaEn.dtype'''.format(dtype)))
+            dtype ({}) must be a valid CudaFn.dtype'''.format(dtype)))
 
     def element(self, inp=None, data_ptr=None):
         """Create an element from given data or from scratch.
@@ -105,19 +105,19 @@ class CudaEn(spaces.LinearSpace):
 
         Returns
         -------
-        CudaEn.Vector instance
+        CudaFn.Vector instance
 
 
         Examples
         --------
 
-        >>> rn = CudaEn(3)
+        >>> rn = CudaFn(3)
         >>> x = rn.element(np.array([1, 2, 3]))
         >>> x
-        CudaEn(3).element([1.0, 2.0, 3.0])
+        CudaFn(3).element([1.0, 2.0, 3.0])
         >>> y = rn.element([1, 2, 3])
         >>> y
-        CudaEn(3).element([1.0, 2.0, 3.0])
+        CudaFn(3).element([1.0, 2.0, 3.0])
 
         """
         if inp is None and data_ptr is None:
@@ -139,15 +139,15 @@ class CudaEn(spaces.LinearSpace):
 
         Parameters
         ----------
-        z : CudaEn.Vector
+        z : CudaFn.Vector
             The Vector that the result should be written to.
         a : RealNumber
             Scalar to multiply `x` with.
-        x : CudaEn.Vector
+        x : CudaFn.Vector
             The first summand
         b : RealNumber
             Scalar to multiply `y` with.
-        y : CudaEn.Vector
+        y : CudaFn.Vector
             The second summand
 
         Returns
@@ -156,13 +156,13 @@ class CudaEn(spaces.LinearSpace):
 
         Examples
         --------
-        >>> rn = CudaEn(3)
+        >>> rn = CudaFn(3)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([4, 5, 6])
         >>> z = rn.element()
         >>> rn.lincomb(z, 2, x, 3, y)
         >>> z
-        CudaEn(3).element([14.0, 19.0, 24.0])
+        CudaFn(3).element([14.0, 19.0, 24.0])
         """
         z.data.linComb(a, x.data, b, y.data)
 
@@ -175,16 +175,16 @@ class CudaEn(spaces.LinearSpace):
 
         Returns
         -------
-        CudaEn.Vector instance with all elements set to zero (0.0)
+        CudaFn.Vector instance with all elements set to zero (0.0)
 
 
         Examples
         --------
 
-        >>> rn = CudaEn(3)
+        >>> rn = CudaFn(3)
         >>> y = rn.zero()
         >>> y
-        CudaEn(3).element([0.0, 0.0, 0.0])
+        CudaFn(3).element([0.0, 0.0, 0.0])
         """
         return self.Vector(self, self._vector_impl(self.dim, 0))
 
@@ -204,7 +204,7 @@ class CudaEn(spaces.LinearSpace):
         Examples
         --------
 
-        >>> rn = CudaEn(3, np.float32)
+        >>> rn = CudaFn(3, np.float32)
         >>> rn.field
         RealNumbers()
         """
@@ -226,14 +226,14 @@ class CudaEn(spaces.LinearSpace):
         Examples
         --------
 
-        >>> rn = CudaEn(3)
+        >>> rn = CudaFn(3)
         >>> rn.dim
         3
         """
         return self._dim
 
     def equals(self, other):
-        """Check if `other` is a CudaEn instance of the same dimension.
+        """Check if `other` is a CudaFn instance of the same dimension.
 
         Parameters
         ----------
@@ -249,22 +249,22 @@ class CudaEn(spaces.LinearSpace):
         --------
 
         Comparing with self
-        >>> r3 = CudaEn(3)
+        >>> r3 = CudaFn(3)
         >>> r3.equals(r3)
         True
 
         Also true when comparing with similar instance
-        >>> r3a, r3b = CudaEn(3), CudaEn(3)
+        >>> r3a, r3b = CudaFn(3), CudaFn(3)
         >>> r3a.equals(r3b)
         True
 
         False when comparing to other dimension Rn
-        >>> r3, r4 = CudaEn(3), CudaEn(4)
+        >>> r3, r4 = CudaFn(3), CudaFn(4)
         >>> r3.equals(r4)
         False
 
         We also support operators '==' and '!='
-        >>> r3, r4 = CudaEn(3), CudaEn(4)
+        >>> r3, r4 = CudaFn(3), CudaFn(4)
         >>> r3 == r3
         True
         >>> r3 == r4
@@ -272,20 +272,20 @@ class CudaEn(spaces.LinearSpace):
         >>> r3 != r4
         True
         """
-        return (isinstance(other, CudaEn) and
+        return (type(self) == type(other) and
                 self.dim == other.dim and
                 self._dtype == other._dtype)
 
     def __str__(self):
         """str() implementation."""
-        return "CudaEn(" + str(self.dim) + ")"
+        return "CudaFn(" + str(self.dim) + ")"
 
     def __repr__(self):
         """repr() implementation."""
         if self._dtype == np.float32:
-            return "CudaEn(" + str(self.dim) + ")"
+            return "CudaFn(" + str(self.dim) + ")"
         else:
-            return "CudaEn(" + str(self.dim) + ', ' + str(self._dtype) + ')'
+            return "CudaFn(" + str(self.dim) + ', ' + str(self._dtype) + ')'
 
     class Vector(spaces.LinearSpace.Vector):
 
@@ -295,13 +295,13 @@ class CudaEn(spaces.LinearSpace):
         """
 
         def __init__(self, space, data):
-            """Initialize a new CudaEn vector.
+            """Initialize a new CudaFn vector.
 
             Parameters
             ----------
 
-            space : CudaEn
-                Instance of CudaEn this vector lives in
+            space : CudaFn
+                Instance of CudaFn this vector lives in
             data : CudaVectorFloat
                 Underlying data-representation to be used by this vector
             """
@@ -309,7 +309,7 @@ class CudaEn(spaces.LinearSpace):
 
             if not isinstance(data, self.space._vector_impl):
                 return TypeError(errfmt('''
-                'data' ({}) must be a CudaEnVectorImpl instance
+                'data' ({}) must be a CudaFnVectorImpl instance
                 '''.format(data)))
 
             self._data = data
@@ -324,7 +324,7 @@ class CudaEn(spaces.LinearSpace):
 
             Returns
             -------
-            ptr : CudaEnVectorImpl
+            ptr : CudaFnVectorImpl
                 Underlying cuda data representation
             """
             return self._data
@@ -368,14 +368,14 @@ class CudaEn(spaces.LinearSpace):
             Examples
             --------
 
-            >>> rn = CudaEn(3)
+            >>> rn = CudaFn(3)
             >>> x = rn.element([1, 2, 3])
             >>> y = eval(repr(x))
             >>> y
-            CudaEn(3).element([1.0, 2.0, 3.0])
-            >>> z = CudaEn(8).element([1, 2, 3, 4, 5, 6, 7, 8])
+            CudaFn(3).element([1.0, 2.0, 3.0])
+            >>> z = CudaFn(8).element([1, 2, 3, 4, 5, 6, 7, 8])
             >>> z
-            CudaEn(8).element([1.0, 2.0, 3.0, ..., 6.0, 7.0, 8.0])
+            CudaFn(8).element([1.0, 2.0, 3.0, ..., 6.0, 7.0, 8.0])
             """
             return '{!r}.element({})'.format(self.space, array1d_repr(self))
 
@@ -407,7 +407,7 @@ class CudaEn(spaces.LinearSpace):
             Examples
             --------
 
-            >>> rn = CudaEn(3)
+            >>> rn = CudaFn(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0]
             1.0
@@ -447,17 +447,17 @@ class CudaEn(spaces.LinearSpace):
             Examples
             --------
 
-            >>> rn = CudaEn(3)
+            >>> rn = CudaFn(3)
             >>> y = rn.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            CudaEn(3).element([5.0, 2.0, 3.0])
+            CudaFn(3).element([5.0, 2.0, 3.0])
             >>> y[1:3] = [7, 8]
             >>> y
-            CudaEn(3).element([5.0, 7.0, 8.0])
+            CudaFn(3).element([5.0, 7.0, 8.0])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            CudaEn(3).element([0.0, 0.0, 0.0])
+            CudaFn(3).element([0.0, 0.0, 0.0])
 
             """
             if isinstance(index, slice):
@@ -470,7 +470,7 @@ class CudaEn(spaces.LinearSpace):
                 self.data.__setitem__(index, value)
 
 
-class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
+class CudaRn(CudaFn):
 
     """The real space :math:`R^n`, implemented in CUDA.
 
@@ -572,47 +572,6 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         """
         y.data.multiply(x.data)
 
-    def equals(self, other):
-        """Check if `other` is a CudaRn instance of the same dimension.
-
-        Parameters
-        ----------
-        other : any object
-                The object to check for equality
-
-        Returns
-        -------
-        boolean      True if equal, else false
-
-        Examples
-        --------
-
-        Comparing with self
-        >>> r3 = CudaRn(3)
-        >>> r3.equals(r3)
-        True
-
-        Also true when comparing with similar instance
-        >>> r3a, r3b = CudaRn(3), CudaRn(3)
-        >>> r3a.equals(r3b)
-        True
-
-        False when comparing to other dimension Rn
-        >>> r3, r4 = CudaRn(3), CudaRn(4)
-        >>> r3.equals(r4)
-        False
-
-        We also support operators '==' and '!='
-        >>> r3, r4 = CudaRn(3), CudaRn(4)
-        >>> r3 == r3
-        True
-        >>> r3 == r4
-        False
-        >>> r3 != r4
-        True
-        """
-        return isinstance(other, CudaRn) and self.dim == other.dim
-
     def __str__(self):
         """str() implementation."""
         return "CudaRn(" + str(self.dim) + ")"
@@ -621,8 +580,7 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         """repr() implementation."""
         return "CudaRn(" + str(self.dim) + ")"
 
-    class Vector(CudaEn.Vector, spaces.HilbertSpace.Vector,
-                 spaces.Algebra.Vector):
+    class Vector(CudaFn.Vector):
         pass
 
 

@@ -102,7 +102,7 @@ from numbers import Number
 
 # ODL imports
 from odl.utility.utility import errfmt
-from odl.space.space import LinearSpace, Algebra
+from odl.space.space import LinearSpace
 from odl.space.set import UniversalSet
 
 
@@ -200,7 +200,7 @@ class _OperatorMeta(ABCMeta):
 
     def __call__(cls, *args, **kwargs):
         """Create a new class `cls` from given arguments."""
-        obj = type.__call__(cls, *args, **kwargs)
+        obj = ABCMeta.__call__(cls, *args, **kwargs)
         if not hasattr(obj, 'domain'):
             raise NotImplementedError(errfmt('''
             `Operator` instances must have a `domain` attribute.'''))

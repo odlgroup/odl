@@ -28,7 +28,7 @@ from builtins import super
 import numpy as np
 
 # ODL imports
-from odl.space.cartesian import En
+from odl.space.cartesian import Rn
 from odl.space.function import FunctionSpace
 from odl.space.set import Integers
 
@@ -47,7 +47,7 @@ class SequenceSpace(FunctionSpace):
                 super().equals(other))
 
 
-class TruncationDiscretization(En):
+class TruncationDiscretization(Rn):
     """ Truncation discretization of the integers
     Represents vectors by R^n elements
     """
@@ -84,7 +84,7 @@ class TruncationDiscretization(En):
     def points(self):
         return np.arange(self.dim)
 
-    class Vector(En.Vector):
+    class Vector(Rn.Vector):
         def __init__(self, space, *args, **kwargs):
             if ((len(args) == 1 and
                  isinstance(args[0], SequenceSpace.Vector) and
