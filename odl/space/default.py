@@ -23,10 +23,12 @@ from future import standard_library
 standard_library.install_aliases()
 
 # ODL imports
+from odl.discr.default import DiscreteL2
+from odl.discr.grid import TensorGrid
+from odl.space.cartesian import En, EuclideanCn
 from odl.space.function import FunctionSpace
-from odl.space.set import RealNumbers
+from odl.space.set import RealNumbers, ComplexNumbers
 from odl.space.space import HilbertSpace
-from odl.utility.utility import errfmt
 
 
 class L2(FunctionSpace, HilbertSpace):
@@ -36,40 +38,74 @@ class L2(FunctionSpace, HilbertSpace):
         super().__init__(domain, field)
 
     def _inner(self, v1, v2):
-        """ TODO: remove?
-        """
-        raise NotImplementedError(errfmt('''
-        You cannot calculate inner products in non-discretized spaces'''))
+        """Inner product, not computable in continuous spaces."""
+        raise NotImplementedError('inner product not computable in the'
+                                  'non-discretized space {}.'.format(self))
 
     def equals(self, other):
-        """ Verify that other is equal to this space as a FunctionSpace
-        and also a L2 space.
-        """
-        return isinstance(other, L2) and FunctionSpace.equals(self, other)
+        """Test if `other` is equal to this space."""
+        return isinstance(other, L2) and super().equals(other)
 
-    def __str__(self):
-        if isinstance(self.field, RealNumbers):
-            return "L2(" + str(self.domain) + ")"
-        else:
-            return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
-
-    def __repr__(self):
-        if isinstance(self.field, RealNumbers):
-            return "L2(" + repr(self.domain) + ")"
-        else:
-            return "L2(" + repr(self.domain) + ", " + repr(self.field) + ")"
-
-    class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
-        """ A Vector in a L2-space
-
-        FunctionSpace-Vectors are themselves also Functionals, and inherit
-        a large set of features from them.
+    def discretize(self, grid, interp='nearest', **kwargs):
+        """Discretize the space with an interpolation dictionary.
 
         Parameters
         ----------
+        grid : `TensorGrid`
+            Sampling grid underlying the discretization. Must be
+            contained in this space's domain.
+        interp : `string`, optional
+            The interpolation type to be used for discretization.
 
-        space : FunctionSpace
-            Instance of FunctionSpace this vector lives in
-        function : Function from space.domain to space.field
-            The function that should be converted/reinterpreted as a vector.
+            'nearest' : use nearest-neighbor interpolation (default)
+
+            'linear' : use linear interpolation
+
+        kwargs : {'impl', 'order'}
+            'impl' : 'numpy' or 'cuda'  (Default: 'numpy')
+                The implementation of the data storage arrays
+            'order' : 'C' or 'F'  (Default: 'C')
+                The axis ordering in the data storage
+
+        Returns
+        -------
+        l2discr : `DiscreteL2`
+            The discretized space
         """
+        if not isinstance(grid, TensorGrid):
+            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
+        if not self.domain.contains_set(grid):
+            raise ValueError('{} is not contained in the domain {} of the '
+                             'space {}'.format(grid, self.domain, self))
+
+        impl = kwargs.pop('impl', 'numpy')
+        # TODO: change to Hilbert... classes and use the consistent inner
+        # products instead of the standard ones
+        if self.field == RealNumbers():
+            if impl == 'numpy':
+                ntuples_type = En
+            elif impl == 'cuda':
+                ntuples_type = CudaEn
+        elif self.field == ComplexNumbers():
+            if impl == 'numpy':
+                ntuples_type = EuclideanCn
+            elif impl == 'cuda':
+                raise NotImplementedError
+                # ntuples_type = CudaEuclideanCn
+        return DiscreteL2(self, grid, ntuples_type(grid.ntotal), interp,
+                          **kwargs)
+
+    def __str__(self):
+        if isinstance(self.field, RealNumbers):
+            return 'L2({})'.format(self.domain)
+        else:
+            return 'L2({}, {})'.format(self.domain, self.field)
+
+    def __repr__(self):
+        if isinstance(self.field, RealNumbers):
+            return 'L2({!r})'.format(self.domain)
+        else:
+            return 'L2({!r}, {!r})'.format(self.domain, self.field)
+
+    class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
+        """Representation of an `L2` element."""

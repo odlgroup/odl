@@ -25,14 +25,12 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.discr.discretization import LinearSpaceDiscretization
-from odl.discr.grid import TensorGrid
 from odl.discr.operators import GridCollocation, NearestInterpolation
-from odl.space.cartesian import Ntuples, Rn, Cn
 from odl.space.default import L2
-from odl.space.function import FunctionSet
 
 
 _supported_interp = ('nearest')
+
 
 class DiscreteL2(LinearSpaceDiscretization):
 
@@ -52,8 +50,13 @@ class DiscreteL2(LinearSpaceDiscretization):
         grid : `TensorGrid`
             The sampling grid for the discretization. Must be contained
             in `l2space.domain`.
-        interp : `string`, optional  (Default: 'nearest')
-            The interpolation type to be used for discretization
+        interp : `string`, optional
+            The interpolation type to be used for discretization.
+
+            'nearest' : use nearest-neighbor interpolation (default)
+
+            'linear' : use linear interpolation
+
         kwargs : {'order'}
             'order' : 'C' or 'F'  (Default: 'C')
                 The axis ordering in the data storage
@@ -73,4 +76,5 @@ class DiscreteL2(LinearSpaceDiscretization):
                                              order=order)
         else:
             raise NotImplementedError
+
         super().__init__(l2space, rn_or_cn, restriction, extension)

@@ -35,7 +35,6 @@ from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import Ntuples, Rn, Cn
 from odl.space.function import FunctionSet, FunctionSpace
 from odl.space.domain import IntervalProd
-from odl.utility.utility import errfmt
 
 
 class RawGridCollocation(Operator):
@@ -66,35 +65,35 @@ class RawGridCollocation(Operator):
             slowly, 'F' vice versa.
         """
         if not isinstance(ip_fset, FunctionSet):
-            raise TypeError('`ip_fset` {} not a `FunctionSet` '
-                            'instance.'.format(ip_fset))
+            raise TypeError('{} is not a `FunctionSet` instance.'
+                            ''.format(ip_fset))
 
+        # TODO: remove this requirement depending on the vectorization
+        # solution
         if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError(errfmt('''
-            `domain` {} of `ip_fset` not an `IntervalProd` instance.
-            '''.format(ip_fset.domain)))
+            raise TypeError('domain {} of the function set is not an'
+                            '`IntervalProd` instance.'.format(ip_fset.domain))
 
         if not isinstance(grid, TensorGrid):
-            raise TypeError(errfmt('''
-            `grid` {} not a `TensorGrid` instance.
-            '''.format(grid)))
+            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
 
+        # TODO: base classes
         if not isinstance(ntuples, Ntuples):
-            raise TypeError(errfmt('''
-            `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
+            raise TypeError('{} is not an `Ntuples` instance.'.format(ntuples))
 
         if ntuples.dim != grid.ntotal:
-            raise ValueError(errfmt('''
-            dimension {} of `ntuples` not equal to total number {} of
-            grid points.'''.format(ntuples.dim, grid.ntotal)))
+            raise ValueError('dimension {} of the n-tuples set {} not equal '
+                             'to the total number {} of grid points.'
+                             ''.format(ntuples.dim, ntuples, grid.ntotal))
 
+        # TODO: this method is expected to exist, which is the case for
+        # interval products. It could be a general optional `Set` method
         if not ip_fset.domain.contains_set(grid):
-            raise ValueError(errfmt('''
-            `grid` {} not contained in the domain {} of `ip_fset`.
-            '''.format(grid, ip_fset.domain)))
+            raise ValueError('{} not contained in the domain {} of the '
+                             'function set.'.format(grid, ip_fset.domain))
 
         if order not in ('C', 'F'):
-            raise ValueError('`order` {} not understood.'.format(order))
+            raise ValueError('ordering {!r} not understood.'.format(order))
 
         self._domain = ip_fset
         self._range = ntuples
@@ -236,7 +235,7 @@ class GridCollocation(RawGridCollocation, LinearOperator):
 
         Parameters
         ----------
-        ip_fspace : `FunctionSet`
+        ip_fspace : `FunctionSpace`
             Space of functions, the operator range. Its `domain` must
             be an `IntervalProd`.
         grid : `TensorGrid`
@@ -251,34 +250,18 @@ class GridCollocation(RawGridCollocation, LinearOperator):
             slowly, 'F' vice versa.
         """
         if not isinstance(ip_fspace, FunctionSpace):
-            raise TypeError(errfmt('''
-            `ip_fspace` {} not an instance of `FunctionSpace`.
-            '''.format(ip_fspace)))
+            raise TypeError('{} is not a `FunctionSpace` instance.'
+                            ''.format(ip_fspace))
 
-        if not isinstance(ip_fspace.domain, IntervalProd):
-            raise TypeError(errfmt('''
-            `domain` {} of `ip_fspace` not an instance of
-            `IntervalProd`.'''.format(ip_fspace.domain)))
-
-        if not isinstance(grid, TensorGrid):
-            raise TypeError(errfmt('''
-            `grid` {} not a `TensorGrid` instance.
-            '''.format(grid)))
-
+        # TODO: base classes
         if not isinstance(ntuples, (Rn, Cn)):
-            raise TypeError(errfmt('''
-            `ntuples` {} not an instance of `Rn` or `Cn`.
-            '''.format(ntuples)))
-
-        if ntuples.dim != grid.ntotal:
-            raise ValueError(errfmt('''
-            dimension {} of `ntuples` not equal to total number {} of
-            grid points.'''.format(ntuples.dim, grid.ntotal)))
+            raise TypeError('{} is not an instance of `Rn` or `Cn`.'
+                            ''.format(ntuples))
 
         if ip_fspace.field != ntuples.field:
-            raise ValueError(errfmt('''
-            `field` {} of `ip_fspace` not equal to `field` {}
-            of `ntuples`.'''.format(ip_fspace.field, ntuples.field)))
+            raise ValueError('field {} of the function space and field {} of '
+                             'the n-tuples set are not equal.'
+                             ''.format(ip_fspace.field, ntuples.field))
 
         super().__init__(ip_fspace, grid, ntuples, order)
 
@@ -307,36 +290,35 @@ class RawNearestInterpolation(Operator):
             slowly, 'F' vice versa.
         """
         if not isinstance(ip_fset, FunctionSet):
-            raise TypeError(errfmt('''
-            `ip_fset` {} not an `FunctionSet` instance.
-            '''.format(ip_fset)))
+            raise TypeError('{} is not a `FunctionSet` instance.'
+                            ''.format(ip_fset))
 
+        # TODO: remove this requirement depending on the vectorization
+        # solution
         if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError(errfmt('''
-            `domain` {} of `ip_fset` not an `IntervalProd` instance.
-            '''.format(ip_fset.domain)))
+            raise TypeError('domain {} of the function set is not an'
+                            '`IntervalProd` instance.'.format(ip_fset.domain))
 
         if not isinstance(grid, TensorGrid):
-            raise TypeError(errfmt('''
-            `grid` {} not a `TensorGrid` instance.
-            '''.format(grid)))
+            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
 
+        # TODO: base classes
         if not isinstance(ntuples, Ntuples):
-            raise TypeError(errfmt('''
-            `ntuples` {} not an `Ntuples` instance.'''.format(ntuples)))
+            raise TypeError('{} is not an `Ntuples` instance.'.format(ntuples))
 
         if ntuples.dim != grid.ntotal:
-            raise ValueError(errfmt('''
-            dimension {} of `ntuples` not equal to total number {} of
-            grid points.'''.format(ntuples.dim, grid.ntotal)))
+            raise ValueError('dimension {} of the n-tuples set {} not equal '
+                             'to the total number {} of grid points.'
+                             ''.format(ntuples.dim, ntuples, grid.ntotal))
 
+        # TODO: this method is expected to exist, which is the case for
+        # interval products. It could be a general optional `Set` method
         if not ip_fset.domain.contains_set(grid):
-            raise ValueError(errfmt('''
-            `grid` {} not contained in the domain {} of `ip_fset`.
-            '''.format(grid, ip_fset.domain)))
+            raise ValueError('{} not contained in the domain {} of the '
+                             'function set.'.format(grid, ip_fset.domain))
 
         if order not in ('C', 'F'):
-            raise ValueError('`order` {} not understood.'.format(order))
+            raise ValueError('ordering {!r} not understood.'.format(order))
 
         self._domain = ntuples
         self._range = ip_fset
@@ -463,34 +445,18 @@ class NearestInterpolation(RawNearestInterpolation, LinearOperator):
             slowly, 'F' vice versa.
         """
         if not isinstance(ip_fspace, FunctionSpace):
-            raise TypeError(errfmt('''
-            `ip_fspace` {} not an instance of `FunctionSpace`.
-            '''.format(ip_fspace)))
+            raise TypeError('{} is not a `FunctionSpace` instance.'
+                            ''.format(ip_fspace))
 
-        if not isinstance(ip_fspace.domain, IntervalProd):
-            raise TypeError(errfmt('''
-            `domain` {} of `ip_fspace` not an instance of
-            `IntervalProd`.'''.format(ip_fspace.domain)))
-
-        if not isinstance(grid, TensorGrid):
-            raise TypeError(errfmt('''
-            `grid` {} not a `TensorGrid` instance.
-            '''.format(grid)))
-
+        # TODO: base classes
         if not isinstance(ntuples, (Rn, Cn)):
-            raise TypeError(errfmt('''
-            `ntuples` {} not an instance of `Rn` or `Cn`.
-            '''.format(ntuples)))
-
-        if ntuples.dim != grid.ntotal:
-            raise ValueError(errfmt('''
-            dimension {} of `ntuples` not equal to total number {} of
-            grid points.'''.format(ntuples.dim, grid.ntotal)))
+            raise TypeError('{} is not an instance of `Rn` or `Cn`.'
+                            ''.format(ntuples))
 
         if ip_fspace.field != ntuples.field:
-            raise ValueError(errfmt('''
-            `field` {} of `ip_fspace` not equal to `field` {}
-            of `ntuples`.'''.format(ip_fspace.field, ntuples.field)))
+            raise ValueError('field {} of the function space and field {} of '
+                             'the n-tuples set are not equal.'
+                             ''.format(ip_fspace.field, ntuples.field))
 
         super().__init__(ip_fspace, grid, ntuples)
 
@@ -518,43 +484,43 @@ class LinearInterpolation(LinearOperator):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        if not isinstance(ip_fspace, FunctionSpace):
-            raise TypeError(errfmt('''
-            `ip_fspace` {} not an instance of `FunctionSpace`.
-            '''.format(ip_fspace)))
+        if not isinstance(ip_fspace, FunctionSet):
+            raise TypeError('{} is not a `FunctionSpace` instance.'
+                            ''.format(ip_fspace))
 
+        # TODO: remove this requirement depending on the vectorization
+        # solution
         if not isinstance(ip_fspace.domain, IntervalProd):
-            raise TypeError(errfmt('''
-            `domain` {} of `ip_fspace` not an instance of
-            `IntervalProd`.'''.format(ip_fspace.domain)))
+            raise TypeError('domain {} of the function space is not an '
+                            '`IntervalProd` instance.'
+                            ''.format(ip_fspace.domain))
 
         if not isinstance(grid, TensorGrid):
-            raise TypeError(errfmt('''
-            `grid` {} not a `TensorGrid` instance.
-            '''.format(grid)))
+            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
 
+        # TODO: base classes
         if not isinstance(ntuples, (Rn, Cn)):
-            raise TypeError(errfmt('''
-            `ntuples` {} not an instance of `Rn` or `Cn`.
-            '''.format(ntuples)))
-
-        if ntuples.dim != grid.ntotal:
-            raise ValueError(errfmt('''
-            dimension {} of `ntuples` not equal to total number {} of
-            grid points.'''.format(ntuples.dim, grid.ntotal)))
+            raise TypeError('{} is not an instance of `Rn` or `Cn`.'
+                            ''.format(ntuples))
 
         if ip_fspace.field != ntuples.field:
-            raise ValueError(errfmt('''
-            `field` {} of `ip_fspace` not equal to `field` {}
-            of `ntuples`.'''.format(ip_fspace.field, ntuples.field)))
+            raise ValueError('field {} of the function space and field {} of '
+                             'the n-tuples set are not equal.'
+                             ''.format(ip_fspace.field, ntuples.field))
 
+        if ntuples.dim != grid.ntotal:
+            raise ValueError('dimension {} of the n-tuples set {} not equal '
+                             'to the total number {} of grid points.'
+                             ''.format(ntuples.dim, ntuples, grid.ntotal))
+
+        # TODO: this method is expected to exist, which is the case for
+        # interval products. It could be a general optional `Set` method
         if not ip_fspace.domain.contains_set(grid):
-            raise ValueError(errfmt('''
-            `grid` {} not contained in the domain {} of `ip_fspace`.
-            '''.format(grid, ip_fspace.domain)))
+            raise ValueError('{} not contained in the domain {} of the '
+                             'function space.'.format(grid, ip_fspace.domain))
 
         if order not in ('C', 'F'):
-            raise ValueError('`order` {} not understood.'.format(order))
+            raise ValueError('ordering {!r} not understood.'.format(order))
 
         self._domain = ntuples
         self._range = ip_fspace
@@ -580,6 +546,8 @@ class LinearInterpolation(LinearOperator):
     def order(self):
         """The axis ordering."""
         return self._order
+
+    # TODO: Implement _apply()
 
     def _call(self, inp):
         """The raw `call` method for out-of-place evaluation.
@@ -662,7 +630,7 @@ class _NearestPointwiseInterpolator(RegularGridInterpolator):
 
         Modified for in-place evaluation support and without method
         choice. Evaluation points are to be given as an array with
-        shape (n, dim), where n is the number of points..
+        shape (n, dim), where n is the number of points.
         """
         ndim = len(self.grid)
         if xi.ndim != 2:
