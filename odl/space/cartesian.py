@@ -33,7 +33,7 @@ List of classes
 |`Ntuples`    |`Set`         |Basic class of `n`-tuples where each    |
 |             |              |entry is of the same type               |
 +-------------+--------------+----------------------------------------+
-|`En`         |`EuclideanCn` |`HilbertRn` with the standard inner     |
+|`Fn`         |`EuclideanCn` |`HilbertRn` with the standard inner     |
 |             |              |(dot) product                           |
 +-------------+--------------+----------------------------------------+
 |`Cn`         |`Ntuples`,    |`n`-tuples of complex numbers with      |
@@ -279,7 +279,7 @@ from odl.space.space import LinearSpace
 from odl.utility.utility import errfmt, array1d_repr
 
 
-__all__ = ('Ntuples', 'En', 'Cn', 'Rn')
+__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn')
 
 
 _type_map_c2r = {np.dtype('float32'): np.dtype('float32'),
@@ -871,7 +871,7 @@ def _norm_default(x):
 def _inner_default(x, y):
     raise NotImplementedError("Inner not implemented in this space")
 
-class En(Ntuples, LinearSpace):
+class Fn(Ntuples, LinearSpace):
 
     """The complex vector space :math:`E^n` with vector multiplication.
 
@@ -1178,15 +1178,15 @@ class En(Ntuples, LinearSpace):
     def __repr__(self):
         """repr() implementation."""
         #TODO print dist, norm, inner
-        return 'En({}, {!r})'.format(self.dim, self.dtype)
+        return 'Fn({}, {!r})'.format(self.dim, self.dtype)
 
     def __str__(self):
         """str() implementation."""
-        return 'En({}, {})'.format(self.dim, self.dtype)
+        return 'Fn({}, {})'.format(self.dim, self.dtype)
 
     class Vector(Ntuples.Vector, LinearSpace.Vector):
 
-        """Representation of a `En` element.
+        """Representation of a `Fn` element.
 
         See also
         --------
@@ -1198,7 +1198,7 @@ class En(Ntuples, LinearSpace):
 
             Parameters
             ----------
-            space : `En`
+            space : `Fn`
                 Space instance this vector lives in
             data : `numpy.ndarray`
                 Array that will be used as data representation. Its
@@ -1208,7 +1208,7 @@ class En(Ntuples, LinearSpace):
             super().__init__(space, data)
 
 
-class Cn(En):
+class Cn(Fn):
 
     """The real vector space :math:`R^n` with vector multiplication.
 
@@ -1260,7 +1260,7 @@ class Cn(En):
         else:
             return 'Cn({}, {})'.format(self.dim, self.dtype)
 
-    class Vector(En.Vector):
+    class Vector(Fn.Vector):
         """Representation of a `Cn` element.
 
         See also
@@ -1378,7 +1378,7 @@ class Cn(En):
             """
             self.imag.data[:] = newimag
 
-class Rn(En):
+class Rn(Fn):
 
     """The real vector space :math:`R^n` with vector multiplication.
 

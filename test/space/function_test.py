@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 from odl.operator.operator import *
-from odl.space.cartesian import En
+from odl.space.cartesian import Fn
 import odl.discr.discretization as disc
 import odl.space.function as fs
 import odl.space.set as sets
