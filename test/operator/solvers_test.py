@@ -75,7 +75,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = En(n)
+        rn = Rn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -97,7 +97,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = En(n)
+        rn = Rn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -118,7 +118,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = En(n)
+        rn = Rn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 

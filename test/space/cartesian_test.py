@@ -187,14 +187,14 @@ class OperatorOverloadTest(ODLTestCase):
 
 class MethodTest(ODLTestCase):
     def test_norm(self):
-        r3 = En(3)
+        r3 = Rn(3)
         xd = r3.element([1, 2, 3])
 
         correct_norm = sqrt(1**2 + 2**2 + 3**2)
         self.assertAlmostEquals(r3.norm(xd), correct_norm)
 
     def test_inner(self):
-        r3 = En(3)
+        r3 = Rn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, -3, 9])
 
@@ -276,7 +276,7 @@ class MethodTest(ODLTestCase):
 #        return np.sum(np.dot(x, w*y))
 #
 #    def test_inner(self):
-#        r3 = En(3, inner=self._inner)
+#        r3 =Rn3, inner=self._inner)
 #        r3_fac = cartesian(3, inner=self._inner)
 #
 #        # Space type
@@ -311,7 +311,7 @@ class MethodTest(ODLTestCase):
 #        self.assertEqual(x.norm(), x_fac.norm())
 #
 #        # Inner product space
-#        r3i = En(3, weights=w)
+#        r3i =Rn3, weights=w)
 #        r3i_fac = cartesian(3, weights=w)
 #
 #        # Space type

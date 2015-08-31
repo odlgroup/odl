@@ -113,11 +113,11 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn, En
+        >>> from odl.space.cartesian import Rn, Rn
         >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
         >>> r2x3.__class__.__name__
         'LinearProductSpace'
-        >>> r2x3 = LinearProductSpace(En(2), Rn(3))
+        >>> r2x3 = LinearProductSpace(Rn(2), Rn(3))
         >>> r2x3.__class__.__name__
         'LinearProductSpace'
         """
@@ -215,8 +215,8 @@ class ProductSpace(LinearSpace):
 
         Examples
         -------
-        >>> from odl.space.cartesian import En
-        >>> r2, r3 = En(2), En(3)
+        >>> from odl.space.cartesian import Rn
+        >>> r2, r3 = Rn(2), Rn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> vec_2x3 = r2x3.element()
@@ -276,8 +276,8 @@ class ProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from odl.space.cartesian import En
-        >>> r2, r3 = En(2), En(3)
+        >>> from odl.space.cartesian import Rn
+        >>> r2, r3 = Rn(2), Rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = LinearProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
@@ -330,19 +330,19 @@ class ProductSpace(LinearSpace):
 
         Example
         -------
-        >>> from odl.space.cartesian import En
-        >>> r2, r3 = En(2), En(3)
-        >>> rn, rm = En(2), En(3)
+        >>> from odl.space.cartesian import Rn
+        >>> r2, r3 = Rn(2), Rn(3)
+        >>> rn, rm = Rn(2), Rn(3)
         >>> r2x3, rnxm = LinearProductSpace(r2, r3), LinearProductSpace(rn, rm)
         >>> r2x3.equals(rnxm)
         True
         >>> r3x2 = LinearProductSpace(r3, r2)
         >>> r2x3.equals(r3x2)
         False
-        >>> r5 = LinearProductSpace(*[En(1)]*5)
+        >>> r5 = LinearProductSpace(*[Rn(1)]*5)
         >>> r2x3.equals(r5)
         False
-        >>> r5 = En(5)
+        >>> r5 = Rn(5)
         >>> r2x3.equals(r5)
         False
         """
