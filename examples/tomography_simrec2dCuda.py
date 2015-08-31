@@ -180,11 +180,11 @@ def plotResult(x):
 # Solve using landweber
 x = reconDisc.zero()
 solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
-                  part_results=solvers.ForEachPartial(plotResult))
+                  partial=solvers.ForEachPartial(plotResult))
 # solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
-#                   part_results=solvers.PrintIterationPartial())
+#                   partial=solvers.PrintIterationPartial())
 # solvers.conjugate_gradient(projector, x, projections, 20,
-#                            part_results=solvers.ForEachPartial(plotResult))
+#                            partial=solvers.ForEachPartial(plotResult))
 
 plt.imshow(x[:].reshape(nVoxels))
 plt.show()

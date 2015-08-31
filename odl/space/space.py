@@ -870,3 +870,6 @@ class LinearSpace(Set):
 
         def inner(self, other):
             return self.space.inner(self, other)
+
+        def multiply(self, other):
+            return self.space.multiply(other, self)

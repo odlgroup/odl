@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import odl.operator.operator as OP
 import odl.space.function as fs
-import odl.space.euclidean as ds
+import odl.space.cartesian as ds
 import odl.space.product as ps
 import odl.discr.discretization as dd
 import odl.space.set as sets
@@ -197,7 +197,7 @@ x = reconDisc.zero()
 # solvers.landweber(projector, x, projections, 20, omega=0.6/normEst,
 #                   part_results=solvers.ForEachPartial(plotResult))
 solvers.conjugate_gradient(projector, x, projections, 20,
-                           part_results=solvers.ForEachPartial(plotResult))
+                           partial=solvers.ForEachPartial(plotResult))
 # solvers.gauss_newton(projector, x, projections, 20,
 #                      part_results=solvers.ForEachPartial(plotResult))
 

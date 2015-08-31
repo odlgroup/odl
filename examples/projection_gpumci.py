@@ -64,7 +64,7 @@ class CudaSimpleMCProjector(OP.Operator):
     def _apply(self, data, out):
         # Create projector
         mat = data.asarray() > 0
-        materials = cs.CudaEN(data.space.n, np.uint8).element(
+        materials = cs.CudaEn(data.space.dim, np.uint8).element(
             mat.flatten(order='F'))
         self.forward.setData(data.data_ptr, materials.data_ptr)
 

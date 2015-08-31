@@ -27,6 +27,7 @@ from numpy import float64
 import numpy as np
 from odl.operator.operator import *
 from odl.space.space import *
+from odl.space.set import *
 from odl.space.cartesian import *
 from odl.space.function import *
 import odl.space.cuda as CS
@@ -79,7 +80,7 @@ class ForwardDiffAdj(LinearOperator):
 
 
 def denoise(x0, la, mu, iterations=1):
-    scale = (x0.space.n - 1.0)/(x0.space.parent.domain.end[0] -
+    scale = (x0.space.dim - 1.0)/(x0.space.parent.domain.end[0] -
                                 x0.space.parent.domain.begin[0])
 
     diff = ForwardDiff(x0.space, scale)
