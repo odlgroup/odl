@@ -201,156 +201,83 @@ class MethodTest(ODLTestCase):
         correct_inner = 1*5 + 2*(-3) + 3*9
         self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
 
+class GetSetTest(ODLTestCase):
+    def test_setitem(self):
+        r3 = Rn(3)
+        x = r3.element([42, 42, 42])
 
-#class CpuFactoryTest(ODLTestCase):
-#    def test_plain(self):
-#        r3 = Rn(3)
-#        r3_fac = cartesian(3, dist=False)
-#
-#        # Space type
-#        self.assertEqual(r3, r3_fac)
-#
-#        # Elements
-#        arr = np.random.rand(r3.dim)
-#        x = r3.element(arr)
-#        x_fac = r3_fac.element(arr)
-#        self.assertAllEquals(x, x_fac)
-#
-#    @staticmethod
-#    def _dist(x, y):
-#        return np.sum(np.abs(x - y))
-#
-#    def test_metric(self):
-#        r3 = MetricRn(3, dist=self._dist)
-#        r3_fac = cartesian(3, dist=self._dist)
-#
-#        # Space type
-#        self.assertEqual(r3, r3_fac)
-#
-#        # Distance function
-#        arr_x = np.random.rand(r3.dim)
-#        x = r3.element(arr_x)
-#        x_fac = r3_fac.element(arr_x)
-#        arr_y = np.random.rand(r3.dim)
-#        y = r3.element(arr_y)
-#        y_fac = r3_fac.element(arr_y)
-#
-#        self.assertEqual(x.dist(y), x_fac.dist(y_fac))
-#        self.assertEqual(x.dist(y_fac), x_fac.dist(y))
-#
-#    @staticmethod
-#    def _norm(x):
-#        return np.sum(np.abs(x))
-#
-#    def test_norm(self):
-#        r3 = NormedRn(3, norm=self._norm)
-#        r3_fac = cartesian(3, norm=self._norm)
-#
-#        # Space type
-#        self.assertEqual(r3, r3_fac)
-#
-#        # Norm function
-#        arr = np.random.rand(r3.dim)
-#        x = r3.element(arr)
-#        x_fac = r3_fac.element(arr)
-#
-#        self.assertEqual(x.norm(), x_fac.norm())
-#
-#    def test_p_norm(self):
-#        r3 = NormedRn(3, p=1.5)
-#        r3_fac = cartesian(3, norm_p=1.5)
-#
-#        # Space type
-#        self.assertEqual(r3, r3_fac)
-#
-#        # Norm function
-#        arr = np.random.rand(r3.dim)
-#        x = r3.element(arr)
-#        x_fac = r3_fac.element(arr)
-#
-#        self.assertEqual(x.norm(), x_fac.norm())
-#
-#    @staticmethod
-#    def _inner(x, y):
-#        w = np.arange(1, len(x)+1, dtype=np.float64) / float(len(x))
-#        return np.sum(np.dot(x, w*y))
-#
-#    def test_inner(self):
-#        r3 =Rn3, inner=self._inner)
-#        r3_fac = cartesian(3, inner=self._inner)
-#
-#        # Space type
-#        self.assertEqual(r3, r3_fac)
-#
-#        # Inner product function
-#        arr_x = np.random.rand(r3.dim)
-#        x = r3.element(arr_x)
-#        x_fac = r3_fac.element(arr_x)
-#        arr_y = np.random.rand(r3.dim)
-#        y = r3.element(arr_y)
-#        y_fac = r3_fac.element(arr_y)
-#
-#        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
-#        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
-#
-#    def test_weights(self):
-#        w = np.arange(1, 4, dtype=np.float64) / 3.0
-#
-#        # Normed space
-#        r3n = NormedRn(3, p=1.5, weights=w)
-#        r3n_fac = cartesian(3, norm_p=1.5, weights=w)
-#
-#        # Space type
-#        self.assertEqual(r3n, r3n_fac)
-#
-#        # Norm function
-#        arr = np.random.rand(r3n.dim)
-#        x = r3n.element(arr)
-#        x_fac = r3n_fac.element(arr)
-#
-#        self.assertEqual(x.norm(), x_fac.norm())
-#
-#        # Inner product space
-#        r3i =Rn3, weights=w)
-#        r3i_fac = cartesian(3, weights=w)
-#
-#        # Space type
-#        self.assertEqual(r3i, r3i_fac)
-#
-#        # Inner product function
-#        arr_x = np.random.rand(r3i.dim)
-#        x = r3i.element(arr_x)
-#        x_fac = r3i_fac.element(arr_x)
-#        arr_y = np.random.rand(r3i.dim)
-#        y = r3i.element(arr_y)
-#        y_fac = r3i_fac.element(arr_y)
-#
-#        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
-#        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
+        for index in [0, 1, 2, -1, -2, -3]:
+            x[index] = index
+            self.assertAlmostEquals(x[index], index)
 
+    def test_setitem_index_error(self):
+        r3 = Rn(3)
+        x = r3.element([1, 2, 3])
 
-#if not CUDA_AVAILABLE:
-#    ODLTestCase = skip_all("Missing odlpp")
-#
-#
-#class GpuFactoryTest(ODLTestCase):
-#    def test_inner(self):
-#        r3 = CudaRn(3)
-#        r3_fac = cartesian(3, impl='cuda')
-#
-#        # Space type
-#        self.assertEqual(r3, r3_fac)
-#
-#        # Inner product function
-#        arr_x = np.random.rand(r3.dim)
-#        x = r3.element(arr_x)
-#        x_fac = r3_fac.element(arr_x)
-#        arr_y = np.random.rand(r3.dim)
-#        y = r3.element(arr_y)
-#        y_fac = r3_fac.element(arr_y)
-#
-#        self.assertEqual(x.inner(y), x_fac.inner(y_fac))
-#        self.assertEqual(x.inner(y_fac), x_fac.inner(y))
+        with self.assertRaises(IndexError):
+            x[-4] = 0
+
+        with self.assertRaises(IndexError):
+            x[3] = 0
+
+    def _test_getslice(self, slice):
+        # Validate get against python list behaviour
+        r6 = Rn(6)
+        y = [0, 1, 2, 3, 4, 5]
+        x = r6.element(y)
+
+        self.assertAllAlmostEquals(x[slice].data, y[slice])
+
+    def test_getslice(self):
+        # Tests getting all combinations of slices
+        steps = [None, -2, -1, 1, 2]
+        starts = [None, -1, -3, 0, 2, 5]
+        ends = [None, -1, -3, 0, 2, 5]
+
+        for start in starts:
+            for end in ends:
+                for step in steps:
+                    self._test_getslice(slice(start, end, step))
+
+    def _test_setslice(self, slice):
+        # Validate set against python list behaviour
+        r6 = Rn(6)
+        z = [7, 8, 9, 10, 11, 10]
+        y = [0, 1, 2, 3, 4, 5]
+        x = r6.element(y)
+
+        x[slice] = z[slice]
+        y[slice] = z[slice]
+        self.assertAllAlmostEquals(x, y)
+
+    def test_setslice(self):
+        # Tests a range of combination of slices
+        steps = [None, -2, -1, 1, 2]
+        starts = [None, -1, -3, 0, 2, 5, 10]
+        ends = [None, -1, -3, 0, 2, 5, 10]
+
+        for start in starts:
+            for end in ends:
+                for step in steps:
+                    self._test_setslice(slice(start, end, step))
+
+    def test_setslice_index_error(self):
+        r3 = Rn(3)
+        xd = r3.element([1, 2, 3])
+
+        # Bad slice
+        with self.assertRaises(ValueError):
+            xd[10:13] = [1, 2, 3]
+
+        # Bad size of rhs
+        with self.assertRaises(ValueError):
+            xd[:] = []
+
+        with self.assertRaises(ValueError):
+            xd[:] = [1, 2]
+
+        with self.assertRaises(ValueError):
+            xd[:] = [1, 2, 3, 4]
 
 
 if __name__ == '__main__':

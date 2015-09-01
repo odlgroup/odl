@@ -316,9 +316,9 @@ class Ntuples(Set):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
-        if not isinstance(dim, Integral) or dim < 0:
+        if not isinstance(dim, Integral) or dim < 1:
             raise TypeError(errfmt('''
-            `dim` {} is not a non-negative integer.'''.format(dim)))
+            `dim` {} is not a positive integer.'''.format(dim)))
         self._dim = dim
         self._dtype = np.dtype(dtype)
 
@@ -748,6 +748,8 @@ class Ntuples(Set):
             """
             if isinstance(values, Ntuples.Vector):
                 return self.data.__setitem__(indices, values.data)
+            elif isinstance(values, np.ndarray):
+                return self.data.__setitem__(indices, values.__getitem__(indices))
             else:
                 return self.data.__setitem__(indices, values)
 
