@@ -275,7 +275,7 @@ from numbers import Integral
 # ODL imports
 from odl.space.set import Set, RealNumbers, ComplexNumbers
 from odl.space.space import LinearSpace
-from odl.utility.utility import errfmt, array1d_repr
+from odl.utility.utility import errfmt, array1d_repr, dtype_repr
 
 
 __all__ = ('Ntuples', 'Fn', 'Cn', 'Rn')
@@ -481,12 +481,8 @@ class Ntuples(Set):
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        if self.dtype == np.dtype('int'):
-            dtype_string = 'int'
-        else:
-            dtype_string = '{!r}'.format(self.dtype)
 
-        return 'Ntuples({}, {})'.format(self.dim, dtype_string)
+        return 'Ntuples({}, {})'.format(self.dim,  dtype_repr(self.dtype))
 
     def __str__(self):
         """s.__str__() <==> str(s)."""

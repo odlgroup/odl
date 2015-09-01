@@ -33,11 +33,18 @@ from numbers import Integral
 # ODL imports
 import odl.space.space as spaces
 import odl.space.set as sets
-from odl.utility.utility import errfmt, array1d_repr
+from odl.utility.utility import errfmt, array1d_repr, dtype_repr
 import odlpp.odlpp_cuda as cuda
 
 standard_library.install_aliases()
 
+def _get_int_type():
+    if np.dtype(np.int).itemsize == 4:
+        return cuda.CudaVectorInt32
+    elif np.dtype(np.int).itemsize == 8:
+        return cuda.CudaVectorInt64
+    else:
+        raise NotImplementedError("int size not implemented")
 
 class CudaFn(spaces.LinearSpace):
 
@@ -48,16 +55,19 @@ class CudaFn(spaces.LinearSpace):
     # TODO: document public interface
     """
 
-    dtypes = {np.float32: cuda.CudaVectorFloat,
-              np.float64: cuda.CudaVectorDouble,
-              np.uint8: cuda.CudaVectorUInt8,
-              np.uint16: cuda.CudaVectorUInt16,
-              np.uint32: cuda.CudaVectorUInt32,
-              np.uint64: cuda.CudaVectorUInt64,
-              np.int8: cuda.CudaVectorInt8,
-              np.int16: cuda.CudaVectorInt16,
-              np.int32: cuda.CudaVectorInt32,
-              np.int64: cuda.CudaVectorInt64}
+    dtypes = {np.dtype(np.float): cuda.CudaVectorFloat64,
+              np.dtype(np.float32): cuda.CudaVectorFloat32,
+              np.dtype(np.float64): cuda.CudaVectorFloat64,
+              np.dtype(np.int): _get_int_type(),
+              np.dtype(np.int8): cuda.CudaVectorInt8,
+              np.dtype(np.int16): cuda.CudaVectorInt16,
+              np.dtype(np.int32): cuda.CudaVectorInt32,
+              np.dtype(np.int64): cuda.CudaVectorInt64,
+              np.dtype(np.uint8): cuda.CudaVectorUInt8,
+              np.dtype(np.uint16): cuda.CudaVectorUInt16,
+              np.dtype(np.uint32): cuda.CudaVectorUInt32,
+              np.dtype(np.uint64): cuda.CudaVectorUInt64}
+
 
     def __init__(self, dim, dtype=np.float32):
         """Initialize a new CudaFn.
@@ -76,12 +86,11 @@ class CudaFn(spaces.LinearSpace):
         if not isinstance(dim, Integral) or dim < 1:
             raise TypeError(errfmt('''
             dim ({}) has to be a positive integer'''.format(dim)))
-
-        self._dim = dim
-        self._dtype = dtype
-        self._vector_impl = self.dtypes.get(dtype)
+        
         self._field = sets.RealNumbers()
-
+        self._dim = dim
+        self._dtype = np.dtype(dtype)
+        self._vector_impl = self.dtypes.get(self._dtype)
         if self._vector_impl is None:
             raise TypeError(errfmt('''
             dtype ({}) must be a valid CudaFn.dtype'''.format(dtype)))
@@ -292,7 +301,7 @@ class CudaFn(spaces.LinearSpace):
         if self._dtype == np.float32:
             return "CudaFn(" + str(self.dim) + ")"
         else:
-            return "CudaFn(" + str(self.dim) + ', ' + str(self._dtype) + ')'
+            return "CudaFn(" + str(self.dim) + ', ' + dtype_repr(self._dtype) + ')'
 
     class Vector(spaces.LinearSpace.Vector):
 
@@ -360,7 +369,7 @@ class CudaFn(spaces.LinearSpace):
             >>> x = Zn.element([1, 2, 3])
             >>> x
             CudaFn(3, int).element([1, 2, 3])
-            >>> y = Zn.element(ptr=x.data_ptr)
+            >>> y = Zn.element(data_ptr=x.data_ptr)
             >>> y
             CudaFn(3, int).element([1, 2, 3])
 
@@ -385,7 +394,7 @@ class CudaFn(spaces.LinearSpace):
             itemsize : Int
                 Size in bytes of type
             """
-            return 4  # Currently hardcoded to float
+            return self.space._dtype.itemsize  # Currently hardcoded to float
 
         def __str__(self):
             return str(self[:])
@@ -641,10 +650,9 @@ def sum(inp):
 try:
     CudaRn(1).element()
 except MemoryError:
-    print(errfmt("""
-    Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
-    modules."""))
-    raise ImportError
+    raise ImportError(errfmt("""
+                             Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
+                             modules."""))
 
 
 if __name__ == '__main__':
