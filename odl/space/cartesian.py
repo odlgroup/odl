@@ -113,8 +113,9 @@ Methods:
 |`lincomb(z, a, x,|`None`         |Calculate the linear combination   |
 |b, y)`           |               |`z <-- a * x + b * y`.             |
 +-----------------+---------------+-----------------------------------+
-|`multiply(x, y)` |`None`         |Calculate the pointwise            |
-|                 |               |multiplication `y <-- x * y`.      |
+|`multiply(z, x,  |               |
+|             y)` |`None`         |Calculate the pointwise            |
+|                 |               |multiplication `z <-- x * y`.      |
 +-----------------+---------------+-----------------------------------+
 |`zero()`         |`<space        |Create a vector of zeros.          |
 |                 |type>.Vector`  |                                   |
@@ -1152,11 +1153,13 @@ class Fn(Ntuples, LinearSpace):
         """
         return self._field
 
-    def _multiply(self, x, y):
-        """The entry-wise product of two vectors, assigned to `y`.
+    def _multiply(self, z, x, y):
+        """The entry-wise product of two vectors, assigned to `z`.
 
         Parameters
         ----------
+        z : `Cn.Vector`
+            The result vector
         x : `Cn.Vector`
             First factor
         y : `Cn.Vector`
@@ -1171,11 +1174,20 @@ class Fn(Ntuples, LinearSpace):
         >>> c3 = Cn(3)
         >>> x = c3.element([5+1j, 3, 2-2j])
         >>> y = c3.element([1, 2+1j, 3-1j])
-        >>> c3.multiply(x, y)
-        >>> y
+        >>> z = c3.element()
+        >>> c3.multiply(z, x, y)
+        >>> z
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
-        y.data[:] *= x.data
+        if z is x and z is y: # z = z*z
+            z.data[:] *= z.data
+        elif z is x: # z = z*y
+            z.data[:] *= y.data
+        elif z is y: # z = z*x
+            z.data[:] *= x.data
+        else: # z = x*y
+            z.data[:] = x.data
+            z.data[:] *= y.data
 
     def __repr__(self):
         """repr() implementation."""

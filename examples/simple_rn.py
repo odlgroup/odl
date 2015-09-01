@@ -39,8 +39,8 @@ class SimpleRn(LinearSpace):
     def _inner(self, x, y):
         return float(np.vdot(x.data, y.data))
 
-    def _multiply(self, x, y):
-        y.data[:] = x.data * y.data
+    def _multiply(self, z, x, y):
+        z.data[:] = x.data * y.data
 
     def element(self, *args, **kwargs):
         if not args and not kwargs:

@@ -295,21 +295,41 @@ class TestMethods(ODLTestCase):
     def test_multiply(self):
         # Validates multiply against the result on host with randomized data
         n = 100
-        y_host = np.random.rand(n)
         x_host = np.random.rand(n)
+        y_host = np.random.rand(n)
+        z_host = np.empty(n)
 
         r3 = CudaRn(n)
-        y_device = r3.element(y_host)
         x_device = r3.element(x_host)
+        y_device = r3.element(y_host)
+        z_device = r3.element()
 
         # Host side calculation
-        y_host[:] = x_host * y_host
+        z_host[:] = x_host * y_host
 
         # Device side calculation
-        r3.multiply(x_device, y_device)
+        r3.multiply(z_device, x_device, y_device)
 
         # Cuda only uses floats, so require 5 places
+        self.assertAllAlmostEquals(z_device, z_host, places=5)
+
+        # Assert input was not modified
+        self.assertAllAlmostEquals(x_device, x_host, places=5)
         self.assertAllAlmostEquals(y_device, y_host, places=5)
+
+        # Aliased
+        z_host[:] = z_host * x_host
+        r3.multiply(z_device, z_device, x_device)
+
+        # Cuda only uses floats, so require 5 places
+        self.assertAllAlmostEquals(z_device, z_host, places=5)
+
+        # Aliased
+        z_host[:] = z_host * z_host
+        r3.multiply(z_device, z_device, z_device)
+
+        # Cuda only uses floats, so require 5 places
+        self.assertAllAlmostEquals(z_device, z_host, places=5)
 
     def test_member_multiply(self):
         # Validates vector member multiply against the result on host

@@ -578,20 +578,22 @@ class CudaRn(CudaFn):
         """
         return x.data.norm()
 
-    def _multiply(self, x, y):
+    def _multiply(self, z, x, y):
         """The pointwise product of two vectors, assigned to `y`.
 
         This is defined as:
 
-        multiply(x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
+        multiply(z, x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
 
         Parameters
         ----------
 
+        z : CudaRn.Vector
+            Write to
         x : CudaRn.Vector
-            read from
+            Read from
         y : CudaRn.Vector
-            read from and written to
+            Read from
 
         Returns
         -------
@@ -603,11 +605,12 @@ class CudaRn(CudaFn):
         >>> rn = CudaRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
-        >>> rn.multiply(x, y)
-        >>> y
+        >>> z = rn.element()
+        >>> rn.multiply(z, x, y)
+        >>> z
         CudaRn(3).element([5.0, 6.0, 6.0])
         """
-        y.data.multiply(x.data)
+        z.data.multiply(x.data, y.data)
 
     def __str__(self):
         """str() implementation."""

@@ -22,8 +22,8 @@ class Reals(LinearSpace):
     def _lincomb(self, z, a, x, b, y):
         z.__val__ = a*x.__val__ + b*y.__val__
 
-    def _multiply(self, x, y):
-        y.__val__ *= x.__val__
+    def _multiply(self, z, x, y):
+        z.__val__ = y.__val__ * x.__val__
 
     @property
     def field(self):
