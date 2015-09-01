@@ -35,7 +35,6 @@ import odl.space.space as spaces
 import odl.space.set as sets
 from odl.utility.utility import errfmt, array1d_repr
 import odlpp.odlpp_cuda as cuda
-from odlpp.odlpp_cuda import CudaVectorUchar, CudaVectorFloat
 
 standard_library.install_aliases()
 
@@ -49,8 +48,16 @@ class CudaFn(spaces.LinearSpace):
     # TODO: document public interface
     """
 
-    dtypes = {np.float32: CudaVectorFloat,
-              np.uint8: CudaVectorUchar}
+    dtypes = {np.float32: cuda.CudaVectorFloat,
+              np.float64: cuda.CudaVectorDouble,
+              np.uint8: cuda.CudaVectorUInt8,
+              np.uint16: cuda.CudaVectorUInt16,
+              np.uint32: cuda.CudaVectorUInt32,
+              np.uint64: cuda.CudaVectorUInt64,
+              np.int8: cuda.CudaVectorInt8,
+              np.int16: cuda.CudaVectorInt16,
+              np.int32: cuda.CudaVectorInt32,
+              np.int64: cuda.CudaVectorInt64}
 
     def __init__(self, dim, dtype=np.float32):
         """Initialize a new CudaFn.
@@ -326,6 +333,9 @@ class CudaFn(spaces.LinearSpace):
             -------
             ptr : CudaFnVectorImpl
                 Underlying cuda data representation
+
+            Example
+            -------
             """
             return self._data
 
@@ -341,6 +351,24 @@ class CudaFn(spaces.LinearSpace):
             -------
             ptr : Int
                 Pointer to the CUDA data of this vector
+
+
+            Examples
+            --------
+
+            >>> Zn = CudaFn(3, int)
+            >>> x = Zn.element([1, 2, 3])
+            >>> x
+            CudaFn(3, int).element([1, 2, 3])
+            >>> y = Zn.element(ptr=x.data_ptr)
+            >>> y
+            CudaFn(3, int).element([1, 2, 3])
+
+            In-place modification via pointer:
+
+            >>> y[0] = 5
+            >>> x
+            CudaFn(3, int).element([5, 2, 3])
             """
             return self._data.data_ptr()
 
@@ -458,7 +486,7 @@ class CudaFn(spaces.LinearSpace):
             >>> y[:] = np.array([0, 0, 0])
             >>> y
             CudaFn(3).element([0.0, 0.0, 0.0])
-
+            
             """
             if isinstance(index, slice):
                 # Convert value to the correct type if needed

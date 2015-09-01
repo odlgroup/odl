@@ -35,8 +35,8 @@ from odl.utility.testutils import skip_all
 try:
     from odl.utility.testutils import ODLTestCase
     from odl.space.cuda import *
-except ImportError:
-    ODLTestCase = skip_all("Missing odlpp")
+except ImportError as e:
+    ODLTestCase = skip_all("Missing odlpp: {}".format(e))
 
 import numpy as np
 
