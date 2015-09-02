@@ -273,6 +273,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 from scipy.linalg.blas import get_blas_funcs
 from numbers import Integral
+import platform
 
 # ODL imports
 from odl.space.set import Set, RealNumbers, ComplexNumbers
@@ -291,8 +292,10 @@ _type_map_c2r = {np.dtype('float32'): np.dtype('float32'),
 _type_map_r2c = {np.dtype('float32'): np.dtype('complex64'),
                  np.dtype('float64'): np.dtype('complex128')}
 
-_real_dtypes = [np.dtype('float32'), np.dtype('float64')]
-_complex_dtypes = [np.dtype('complex64'), np.dtype('complex128')]
+if platform.system() == 'Linux':
+    _type_map_c2r.update({np.dtype('float128'): np.dtype('float128'),
+                          np.dtype('complex256'): np.dtype('float128')})
+    _type_map_r2c.update({np.dtype('float128'): np.dtype('complex256')})
 
 
 class NtuplesBase(with_metaclass(ABCMeta, Set)):
@@ -424,15 +427,17 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            if data.dtype != space.dtype:
-                raise TypeError(errfmt('''
-                `data.dtype` {} not equal to `space.dtype` {}.
-                '''.format(data.dtype, space.dtype)))
+            # TODO: the following checks kills CUDA since the CudaRnVector
+            # has no dtype or shape attributes
+#            if data.dtype != space.dtype:
+#                raise TypeError(errfmt('''
+#                `data.dtype` {} not equal to `space.dtype` {}.
+#                '''.format(data.dtype, space.dtype)))
 
-            if data.shape != (space.dim,):
-                raise ValueError(errfmt('''
-                `data.shape` {} not equal to `(space.dim,)` {}.
-                '''.format(data.shape, (space.dim,))))
+#            if data.shape != (space.dim,):
+#                raise ValueError(errfmt('''
+#                `data.shape` {} not equal to `(space.dim,)` {}.
+#                '''.format(data.shape, (space.dim,))))
 
             self._space = space
             self._data = data
@@ -797,11 +802,7 @@ class Ntuples(NtuplesBase):
             Ntuples(2, dtype('int8')).element([0, 1])
             """
             if isinstance(values, Ntuples.Vector):
-                return self.data.__setitem__(
-                    indices, values.data.__getitem__(indices))
-            elif isinstance(values, np.ndarray):
-                return self.data.__setitem__(
-                    indices, values.__getitem__(indices))
+                return self.data.__setitem__(indices, values.data)
             else:
                 return self.data.__setitem__(indices, values)
 
@@ -822,20 +823,17 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
+            Only scalar data types (numbers) are allowed.
         """
         super().__init__(dim, dtype)
-        self._real_dtype = _type_map_c2r[self._dtype]
-        if self._dtype in _real_dtypes:
-            self._field = RealNumbers()
-        elif self._dtype in _complex_dtypes:
-            self._field = ComplexNumbers()
-        else:
-            raise TypeError('dtype {!r} not real or complex'.format(dtype))
+        if not np.issubsctype(self._dtype, np.number):
+            raise TypeError('{} not a scalar data type.'.format(dtype))
 
-    @property
-    def real_dtype(self):
-        """Real data type corresponding to this space's complex dtype."""
-        return self._real_dtype
+        dummy = np.empty(0, dtype=self._dtype)
+        if np.isrealobj(dummy):
+            self._field = RealNumbers()
+        else:
+            self._field = ComplexNumbers()
 
     @abstractmethod
     def zero(self):
@@ -880,21 +878,6 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
         independent of data representation.
         """
 
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if data.dtype != space.dtype:
-                raise TypeError(errfmt('''
-                `data.dtype` {} not equal to `space.dtype` {}.
-                '''.format(data.dtype, space.dtype)))
-
-            if data.shape != (space.dim,):
-                raise ValueError(errfmt('''
-                `data.shape` {} not equal to `(space.dim,)` {}.
-                '''.format(data.shape, (space.dim,))))
-
-            self._space = space
-            self._data = data
-
         @property
         def space(self):
             """The space this vector belongs to."""
@@ -906,9 +889,10 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
             return self._data
 
 
+# TODO: adapt for "dangerous" data types
 def _lincomb(z, a, x, b, y, dtype):
     """Raw linear combination depending on data type."""
-    def fallback_axpy(a, x, y):
+    def fallback_axpy(x, y, n, a):
         """Fallback axpy implementation avoiding copy."""
         if a != 0:
             y /= a
@@ -916,12 +900,12 @@ def _lincomb(z, a, x, b, y, dtype):
             y *= a
         return y
 
-    def fallback_scal(a, x):
+    def fallback_scal(a, x, n):
         """Fallback scal implementation."""
         x *= a
         return x
 
-    def fallback_copy(x, y):
+    def fallback_copy(x, y, n):
         """Fallback copy implementation."""
         y[...] = x[...]
         return y
@@ -941,17 +925,17 @@ def _lincomb(z, a, x, b, y, dtype):
         _lincomb(z, a+b, x, 0, x, dtype)
     elif z is x and z is y:
         # All the vectors are aligned -> z = (a+b)*z
-        scal(a+b, z.data)
+        scal(a+b, z.data, len(z))
     elif z is x:
         # z is aligned with x -> z = a*z + b*y
         if a != 1:
-            scal(a, z.data)
+            scal(a, z.data, len(z))
         if b != 0:
             axpy(y.data, z.data, len(z), b)
     elif z is y:
         # z is aligned with y -> z = a*x + b*z
         if b != 1:
-            scal(b, z.data)
+            scal(b, z.data, len(z))
         if a != 0:
             axpy(x.data, z.data, len(z), a)
     else:
@@ -961,22 +945,22 @@ def _lincomb(z, a, x, b, y, dtype):
             if a == 0:  # Zero assignment -> z = 0
                 z.data[:] = 0
             else:  # Scaled copy -> z = a*x
-                copy(x.data, z.data)
+                copy(x.data, z.data, len(z))
                 if a != 1:
-                    scal(a, z.data)
+                    scal(a, z.data, len(z))
         else:
             if a == 0:  # Scaled copy -> z = b*y
-                copy(y.data, z.data)
+                copy(y.data, z.data, len(z))
                 if b != 1:
-                    scal(b, z.data)
+                    scal(b, z.data, len(z))
 
             elif a == 1:  # No scaling in x -> z = x + b*y
-                copy(x.data, z.data)
+                copy(x.data, z.data, len(z))
                 axpy(y.data, z.data, len(z), b)
             else:  # Generic case -> z = a*x + b*y
-                copy(y.data, z.data)
+                copy(y.data, z.data, len(z))
                 if b != 1:
-                    scal(b, z.data)
+                    scal(b, z.data, len(z))
                 axpy(x.data, z.data, len(z), a)
 
 
@@ -1034,6 +1018,8 @@ class Fn(FnBase, Ntuples):
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
+            Only scalar data types are allowed.
+
         kwargs : {'dist', 'norm', 'inner'}
             `dist` : `callable`, optional (Default: `norm(x-y)`)
                 The distance function defining a metric on :math:`F^n`. It
@@ -1310,9 +1296,15 @@ class Cn(Fn):
         super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
-        if self._dtype not in _complex_dtypes:
+        if not np.iscomplexobj(np.empty(0, dtype=self._dtype)):
             raise TypeError('data type {} not a complex floating-point type.'
                             ''.format(dtype))
+        self._real_dtype = _type_map_c2r[self._dtype]
+
+    @property
+    def real_dtype(self):
+        """The corresponding real data type of this space."""
+        return self._real_dtype
 
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
@@ -1471,8 +1463,8 @@ class Rn(Fn):
         super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
-        if self._dtype not in _real_dtypes:
-            raise TypeError('data type {} is not a real floating-point type.'
+        if not np.isrealobj(np.empty(0, dtype=self._dtype)):
+            raise TypeError('data type {} not a real floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
