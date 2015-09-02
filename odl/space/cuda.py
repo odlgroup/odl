@@ -25,30 +25,42 @@ from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from builtins import str, super
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import numpy as np
 
 # ODL imports
 from odl.space.cartesian import NtuplesBase, FnBase
+from odl.utility.utility import array1d_repr, dtype_repr
 import odlpp.odlpp_cuda as cuda
-from odlpp.odlpp_cuda import CudaVectorUchar, CudaVectorFloat
-
-standard_library.install_aliases()
 
 
-_type_map_npy2cuda = {np.dtype('float32'): CudaVectorFloat,
-                      np.dtype('uint8'): CudaVectorUchar}
+def _get_int_type():
+    if np.dtype(np.int).itemsize == 4:
+        return cuda.CudaVectorInt32
+    elif np.dtype(np.int).itemsize == 8:
+        return cuda.CudaVectorInt64
+    else:
+        raise NotImplementedError("int size not implemented")
+
+_type_map_npy2cuda = {np.dtype(np.float): cuda.CudaVectorFloat64,
+                      np.dtype(np.float32): cuda.CudaVectorFloat32,
+                      np.dtype(np.float64): cuda.CudaVectorFloat64,
+                      np.dtype(np.int): _get_int_type(),
+                      np.dtype(np.int8): cuda.CudaVectorInt8,
+                      np.dtype(np.int16): cuda.CudaVectorInt16,
+                      np.dtype(np.int32): cuda.CudaVectorInt32,
+                      np.dtype(np.int64): cuda.CudaVectorInt64,
+                      np.dtype(np.uint8): cuda.CudaVectorUInt8,
+                      np.dtype(np.uint16): cuda.CudaVectorUInt16,
+                      np.dtype(np.uint32): cuda.CudaVectorUInt32,
+                      np.dtype(np.uint64): cuda.CudaVectorUInt64}
 
 
 class CudaNtuples(NtuplesBase):
 
-    """The set of `n`-tuples of arbitrary type, implemented in CUDA.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
+    """The set of `n`-tuples of arbitrary type, implemented in CUDA."""
 
     def __init__(self, dim, dtype):
         """Initialize a new instance.
@@ -67,7 +79,7 @@ class CudaNtuples(NtuplesBase):
         """
         super().__init__(dim, dtype)
         if self._dtype not in _type_map_npy2cuda.keys():
-            raise TypeError('data type {} not supported in '.format(dtype))
+            raise TypeError('data type {} not supported in CUDA'.format(dtype))
 
         self._vector_impl = _type_map_npy2cuda[self._dtype]
 
@@ -137,12 +149,7 @@ class CudaNtuples(NtuplesBase):
 
     class Vector(NtuplesBase.Vector):
 
-        """Representation of a `CudaNtuples` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
+        """Representation of a `CudaNtuples` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""
@@ -164,8 +171,7 @@ class CudaNtuples(NtuplesBase):
         @property
         def itemsize(self):
             """The size in bytes of the data type."""
-            # TODO: Currently hardcoded to float, change this
-            return 4
+            return self.space._dtype.itemsize
 
         def equals(self, other):
             """Test if `other` is equal to this vector."""
@@ -263,8 +269,6 @@ class CudaFn(FnBase, CudaNtuples):
     """The space F^n, implemented in CUDA.
 
     Requires the compiled ODL extension odlpp.
-
-    # TODO: document public interface
     """
 
     def __init__(self, dim, dtype):
@@ -322,22 +326,20 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x : CudaRn.Vector
-        y : CudaRn.Vector
+        x, y : `CudaFn.Vector`
 
         Returns
         -------
-        inner: float
+        inner: `float` or `complex`
             The inner product of x and y
 
 
         Examples
         --------
-
-        >>> rn = CudaRn(3)
-        >>> x = rn.element([1, 2, 3])
-        >>> y = rn.element([3, 1, 5])
-        >>> rn.inner(x, y)
+        >>> uc3 = CudaFn(3, 'uint8')
+        >>> x = uc3.element([1, 2, 3])
+        >>> y = uc3.element([3, 1, 5])
+        >>> uc3.inner(x, y)
         20.0
         """
         return x.data.inner(y.data)
@@ -350,38 +352,39 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x : CudaRn.Vector
+        x : `CudaFn.Vector`
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The 2-norm of x
 
 
         Examples
         --------
-
-        >>> rn = CudaRn(3)
-        >>> x = rn.element([2, 3, 6])
-        >>> rn.norm(x)
+        >>> uc3 = CudaFn(3, 'uint8')
+        >>> x = uc3.element([2, 3, 6])
+        >>> uc3.norm(x)
         7.0
         """
         return x.data.norm()
 
-    def _multiply(self, x, y):
+    def _multiply(self, z, x, y):
         """The pointwise product of two vectors, assigned to `y`.
 
         This is defined as:
 
-        multiply(x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
+        multiply(z, x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
 
         Parameters
         ----------
 
+        z : CudaRn.Vector
+            Write to
         x : CudaRn.Vector
-            read from
+            Read from
         y : CudaRn.Vector
-            read from and written to
+            Read from
 
         Returns
         -------
@@ -393,11 +396,12 @@ class CudaFn(FnBase, CudaNtuples):
         >>> rn = CudaRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
-        >>> rn.multiply(x, y)
-        >>> y
+        >>> z = rn.element()
+        >>> rn.multiply(z, x, y)
+        >>> z
         CudaRn(3).element([5.0, 6.0, 6.0])
         """
-        y.data.multiply(x.data)
+        z.data.multiply(x.data, y.data)
 
     def zero(self):
         """Create a vector of zeros."""
@@ -471,9 +475,8 @@ def sum(inp):
 try:
     CudaRn(1).element()
 except MemoryError:
-    print('Warning: Your GPU seems to be misconfigured. Skipping '
-          'CUDA-dependent modules.')
-    raise ImportError
+    raise ImportError('Warning: Your GPU seems to be misconfigured. Skipping '
+                      'CUDA-dependent modules.')
 
 
 if __name__ == '__main__':

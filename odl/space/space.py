@@ -411,8 +411,8 @@ class LinearSpace(Set):
         #No default implementation possible
         raise NotImplementedError("Inner product not implemented")
 
-    def _multiply(self, x, y):
-        """ Calculate the multiplication of y = x * y
+    def _multiply(self, z, x, y):
+        """ Calculate the multiplication of z = x * y
 
         This method is intended to be private, public callers should
         resort to dist which is type-checked.
@@ -584,9 +584,9 @@ class LinearSpace(Set):
 
         return self.field.element(self._inner(x, y))
     
-    def multiply(self, x, y):
+    def multiply(self, z, x, y):
         """ Calculates the pointwise product of x and y and assigns it to y
-        y = x * y
+        z = x * y
         """
         # Check spaces
         if not self.contains(x):
@@ -595,7 +595,7 @@ class LinearSpace(Set):
         if not self.contains(y):
             raise TypeError('y ({}) is in wrong space'.format(y))
 
-        self._multiply(x, y)
+        self._multiply(z, x, y)
 
     class Vector(with_metaclass(ABCMeta, object)):
 
@@ -745,7 +745,7 @@ class LinearSpace(Set):
         def __imul__(self, other):
             """Implementation of 'self *= other'."""
             if other in self.space:
-                self.space.multiply(other, self)
+                self.space.multiply(self, other, self)
             else:
                 self.space.lincomb(self, other, self)
             return self
@@ -774,8 +774,7 @@ class LinearSpace(Set):
             """Implementation of 'self * other'."""
             tmp = self.space.element()
             if other in self.space:
-                tmp.assign(self)
-                self.space.multiply(other, tmp)
+                self.space.multiply(tmp, other, self)
             else:
                 self.space.lincomb(tmp, other, self)
             return tmp
@@ -871,5 +870,5 @@ class LinearSpace(Set):
         def inner(self, other):
             return self.space.inner(self, other)
 
-        def multiply(self, other):
-            return self.space.multiply(other, self)
+        def multiply(self, x, y):
+            return self.space.multiply(other, x, y)

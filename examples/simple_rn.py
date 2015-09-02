@@ -22,7 +22,7 @@ from odl.utility.testutils import Timer
 standard_library.install_aliases()
 
 
-class SimpleRn(HilbertSpace, Algebra):
+class SimpleRn(LinearSpace):
     """The real space R^n, unoptimized implmentation
     """
 
@@ -39,8 +39,8 @@ class SimpleRn(HilbertSpace, Algebra):
     def _inner(self, x, y):
         return float(np.vdot(x.data, y.data))
 
-    def _multiply(self, x, y):
-        y.data[:] = x.data * y.data
+    def _multiply(self, z, x, y):
+        z.data[:] = x.data * y.data
 
     def element(self, *args, **kwargs):
         if not args and not kwargs:
@@ -68,7 +68,7 @@ class SimpleRn(HilbertSpace, Algebra):
         return self._dim
 
     def equals(self, other):
-        return isinstance(other, SimpleRn) and self.dim == other.dim
+        return type(self) == type(other) and self.dim == other.dim
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, data):

@@ -93,7 +93,6 @@ class EmptySet(Set):
 
 
 class UniversalSet(Set):
-
     """The set of all sets.
 
     Forget about set theory for a moment :-)
@@ -121,7 +120,7 @@ class ComplexNumbers(Set):
 
     def equals(self, other):
         """Tests if `other` is a `ComplexNumbers` instance."""
-        return isinstance(other, ComplexNumbers)
+        return type(self) == type(other)
 
     def contains(self, other):
         """Test if `other` is a complex number."""
@@ -130,11 +129,7 @@ class ComplexNumbers(Set):
     def element(self, inp=None):
         """Return a complex number from `inp` or from scratch."""
         if inp is not None:
-            try:
-                return complex(inp)
-            except ValueError:
-                raise ValueError(errfmt('''
-                Cannot create a complex number from {}.'''.format(inp)))
+            return complex(inp)
         else:
             return complex(0.0, 0.0)
 
@@ -151,7 +146,7 @@ class RealNumbers(Set):
 
     def equals(self, other):
         """Tests if `other` is a `RealNumbers` instance."""
-        return isinstance(other, RealNumbers)
+        return type(self) == type(other)
 
     def contains(self, other):
         """Test if `other` is a real number."""
@@ -160,11 +155,7 @@ class RealNumbers(Set):
     def element(self, inp=None):
         """Return a real number from `inp` or from scratch."""
         if inp is not None:
-            try:
-                return float(inp)
-            except ValueError:
-                raise ValueError(errfmt('''
-                Cannot create a real number from {}.'''.format(inp)))
+            return float(inp)
         else:
             return 0.0
 
@@ -180,7 +171,7 @@ class Integers(Set):
 
     def equals(self, other):
         """Tests if `other` is an `Integers` instance."""
-        return isinstance(other, Integers)
+        return type(self) == type(other)
 
     def contains(self, other):
         """Test if `other` is an integer."""
@@ -189,11 +180,7 @@ class Integers(Set):
     def element(self, inp=None):
         """Return an integer from `inp` or from scratch."""
         if inp is not None:
-            try:
-                return int(inp)
-            except ValueError:
-                raise ValueError(errfmt('''
-                Cannot create an integer from {}.'''.format(inp)))
+            return int(inp)
         else:
             return 0
 
@@ -884,7 +871,7 @@ class CartesianProduct(Set):
         return self._sets
 
     def equals(self, other):
-        return (isinstance(other, CartesianProduct) and
+        return (type(self) == type(other) and
                 len(self) == len(other) and
                 all(x.equals(y) for x, y in zip(self.sets, other.sets)))
 

@@ -113,8 +113,9 @@ Methods:
 |`lincomb(z, a, x,|`None`         |Calculate the linear combination   |
 |b, y)`           |               |`z <-- a * x + b * y`.             |
 +-----------------+---------------+-----------------------------------+
-|`multiply(x, y)` |`None`         |Calculate the pointwise            |
-|                 |               |multiplication `y <-- x * y`.      |
+|`multiply(z, x,  |               |
+|             y)` |`None`         |Calculate the pointwise            |
+|                 |               |multiplication `z <-- x * y`.      |
 +-----------------+---------------+-----------------------------------+
 |`zero()`         |`<space        |Create a vector of zeros.          |
 |                 |type>.Vector`  |                                   |
@@ -278,7 +279,7 @@ import platform
 # ODL imports
 from odl.space.set import Set, RealNumbers, ComplexNumbers
 from odl.space.space import LinearSpace
-from odl.utility.utility import errfmt, array1d_repr
+from odl.utility.utility import errfmt, array1d_repr, dtype_repr
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn')
@@ -315,9 +316,9 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
-        if not isinstance(dim, Integral) or dim < 1:
+        if not isinstance(dim, Integral) or dim < 0:
             raise TypeError(errfmt('''
-            `dim` {} is not a positive integer.'''.format(dim)))
+            `dim` {} is not a non-negative integer.'''.format(dim)))
         self._dim = int(dim)
         self._dtype = np.dtype(dtype)
 
@@ -398,21 +399,13 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        if self.dtype == np.dtype(int):
-            dtype_string = 'int'
-        else:
-            dtype_string = '{!r}'.format(self.dtype)
         return '{}({}, {})'.format(self.__class__.__name__, self.dim,
-                                   dtype_string)
+                                   dtype_repr(self.dtype))
 
     def __str__(self):
         """s.__str__() <==> str(s)."""
-        if self.dtype == np.dtype(int):
-            dtype_string = 'int'
-        else:
-            dtype_string = '{}'.format(self.dtype)
         return '{}({}, {})'.format(self.__class__.__name__, self.dim,
-                                   dtype_string)
+                                   dtype_repr(self.dtype))
 
     class Vector(with_metaclass(ABCMeta, object)):
 
@@ -844,14 +837,16 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
         """The field of this space."""
         return self._field
 
-    def _multiply(self, x, y):
-        """The entry-wise product of two vectors, assigned to `y`.
+    def _multiply(self, z, x, y):
+        """The entry-wise product of two vectors, assigned to `z`.
 
         Parameters
         ----------
-        x : `CnBase.Vector`
+        z : `Cn.Vector`
+            The result vector
+        x : `Cn.Vector`
             First factor
-        y : `CnBase.Vector`
+        y : `Cn.Vector`
             Second factor, used to store the result
 
         Returns
@@ -863,11 +858,20 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
         >>> c3 = Cn(3)
         >>> x = c3.element([5+1j, 3, 2-2j])
         >>> y = c3.element([1, 2+1j, 3-1j])
-        >>> c3.multiply(x, y)
-        >>> y
+        >>> z = c3.element()
+        >>> c3.multiply(z, x, y)
+        >>> z
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
-        y.data[:] *= x.data
+        if z is x and z is y:  # z = z*z
+            z.data[:] *= z.data
+        elif z is x:  # z = z*y
+            z.data[:] *= y.data
+        elif z is y:  # z = z*x
+            z.data[:] *= x.data
+        else:  # z = x*y
+            z.data[:] = x.data
+            z.data[:] *= y.data
 
     class Vector(with_metaclass(ABCMeta, NtuplesBase.Vector,
                                 LinearSpace.Vector)):
@@ -889,7 +893,6 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
             return self._data
 
 
-# TODO: adapt for "dangerous" data types
 def _lincomb(z, a, x, b, y, dtype):
     """Raw linear combination depending on data type."""
     def fallback_axpy(x, y, n, a):

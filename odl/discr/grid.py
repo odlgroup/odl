@@ -268,7 +268,7 @@ class TensorGrid(Set):
         True
         """
         # pylint: disable=arguments-differ
-        return (isinstance(other, TensorGrid) and
+        return (type(self) == type(other) and
                 self.dim == other.dim and
                 self.shape == other.shape and
                 all(np.allclose(vec_s, vec_o, atol=tol, rtol=0.0)

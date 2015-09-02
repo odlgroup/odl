@@ -361,8 +361,7 @@ class MultiplyOperator(LinearOperator):
         >>> z
         Rn(3).element([1.0, 4.0, 9.0])
         """
-        outp.assign(inp[1])
-        outp.space.multiply(inp[0], outp)
+        outp.space.multiply(outp, inp[0], inp[1])
 
     def __repr__(self):
         """repr(self) implementation."""

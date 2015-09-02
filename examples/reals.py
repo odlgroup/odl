@@ -4,12 +4,12 @@ from future.builtins import object, zip
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.space.space import HilbertSpace, Algebra
+from odl.space.space import LinearSpace
 
 """ An example of a very simple space, the space Rn
 """
 
-class Reals(HilbertSpace, Algebra):
+class Reals(LinearSpace):
     """The real numbers
     """
 
@@ -22,8 +22,8 @@ class Reals(HilbertSpace, Algebra):
     def _lincomb(self, z, a, x, b, y):
         z.__val__ = a*x.__val__ + b*y.__val__
 
-    def _multiply(self, x, y):
-        y.__val__ *= x.__val__
+    def _multiply(self, z, x, y):
+        z.__val__ = y.__val__ * x.__val__
 
     @property
     def field(self):

@@ -124,7 +124,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
 
         # s = xdiff[0] = sqrt(dx^2+dy^2)
         for i in range(dimension):
-            xdiff[i].multiply(xdiff[i])
+            xdiff[i].multiply(xdiff[i], xdiff[i])
 
         for i in range(1, dimension):
             xdiff[0].lincomb(1, xdiff[i])
@@ -138,7 +138,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
 
         # d = d * c = d * max(s - la^-1, 0) / s
         for i in range(dimension):
-            d[i].multiply(tmp)
+            d[i].multiply(d[i], tmp)
 
         # b = b + diff(x) - d
         diff.apply(x, xdiff)
@@ -185,7 +185,7 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
             CS.abs(d[i], d[i])
             CS.add_scalar(d[i], -1.0/la, d[i])
             CS.max_vector_scalar(d[i], 0.0, d[i])
-            d[i].multiply(tmp)
+            d[i].multiply(d[i], tmp)
 
         # b = b + diff(x) - d
         diff.apply(x, xdiff)
@@ -222,7 +222,7 @@ def TVdenoise2D(x0, la, mu, iterations=1):
             CS.abs(d[i], d[i])
             CS.add_scalar(d[i], -1.0/la, d[i])
             CS.max_vector_scalar(d[i], 0.0, d[i])
-            d[i].multiply(tmp)
+            d[i].multiply(d[i], tmp)
 
         b = b + diff(x) - d
 
