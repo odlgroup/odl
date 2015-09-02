@@ -550,15 +550,15 @@ class Ntuples(Set):
             >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
             >>> arr_type = ctypes.c_int32 * 3
             >>> buffer = arr_type.from_address(vec.data_ptr)
-            >>> arr = np.frombuffer(buffer, dtype=int)
+            >>> arr = np.frombuffer(buffer, dtype='int32')
             >>> arr
-            array([1, 2, 3])
+            array([1, 2, 3], dtype=int32)
 
             In-place modification via pointer:
 
             >>> arr[0] = 5
             >>> vec
-            Ntuples(3, int).element([5, 2, 3])
+            Ntuples(3, dtype('int32')).element([5, 2, 3])
             """
             return self._data.ctypes.data
 
