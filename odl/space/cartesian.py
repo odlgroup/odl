@@ -523,12 +523,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         def __str__(self):
             """`vec.__str__() <==> str(vec)`."""
-            return array1d_repr(self.data)
+            return array1d_repr(self)
 
         def __repr__(self):
             """`vec.__repr__() <==> repr(vec)`."""
             return '{!r}.element({})'.format(self.space,
-                                             array1d_repr(self.data))
+                                             array1d_repr(self))
 
 
 class Ntuples(NtuplesBase):
@@ -574,7 +574,7 @@ class Ntuples(NtuplesBase):
         >>> strings3 = Ntuples(3, dtype='S1')  # 1-char strings
         >>> x = strings3.element(['w', 'b', 'w'])
         >>> x
-        Ntuples(3, dtype('S1')).element(['w', 'b', 'w'])
+        Ntuples(3, '|S1').element(['w', 'b', 'w'])
 
         Array views are preserved:
 
@@ -681,8 +681,8 @@ class Ntuples(NtuplesBase):
                 return True
             elif other not in self.space:
                 return False
-
-            return np.all(self.data == other.data)
+            else:
+                return np.all(self.data == other.data)
 
         def copy(self):
             """Create an identical (deep) copy of this vector.
@@ -726,7 +726,7 @@ class Ntuples(NtuplesBase):
             >>> x[0]
             'a'
             >>> x[1:3]
-            Ntuples(2, dtype('S6')).element(['Hello!', '0'])
+            Ntuples(2, '|S6').element(['Hello!', '0'])
             """
             try:
                 return self.data[int(indices)]  # single index
@@ -789,10 +789,10 @@ class Ntuples(NtuplesBase):
             >>> maxval = 127  # maximum signed 8-bit int
             >>> x[0] = maxval + 1
             >>> x
-            Ntuples(2, dtype('int8')).element([-128, 0])
+            Ntuples(2, 'int8').element([-128, 0])
             >>> x[:] = np.arange(2, dtype='int64')
             >>> x
-            Ntuples(2, dtype('int8')).element([0, 1])
+            Ntuples(2, 'int8').element([0, 1])
             """
             if isinstance(values, Ntuples.Vector):
                 return self.data.__setitem__(indices, values.data)

@@ -23,7 +23,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import str, super
+from builtins import super
 from future import standard_library
 standard_library.install_aliases()
 
@@ -32,7 +32,6 @@ import numpy as np
 
 # ODL imports
 from odl.space.cartesian import NtuplesBase, FnBase
-from odl.utility.utility import array1d_repr, dtype_repr
 import odlpp.odlpp_cuda as cuda
 
 
@@ -128,10 +127,10 @@ class CudaNtuples(NtuplesBase):
         >>> uc3 = CudaNtuples(3, 'uint8')
         >>> x = uc3.element(np.array([1, 2, 3], dtype='uint8'))
         >>> x
-
+        CudaNtuples(3, 'uint8').element([1, 2, 3])
         >>> y = uc3.element([1, 2, 3])
         >>> y
-
+        CudaNtuples(3, 'uint8').element([1, 2, 3])
         """
         if inp is None and data_ptr is None:
             return self.Vector(self, self._vector_impl(self.dim))
@@ -174,8 +173,37 @@ class CudaNtuples(NtuplesBase):
             return self.space._dtype.itemsize
 
         def equals(self, other):
-            """Test if `other` is equal to this vector."""
-            raise NotImplementedError
+            """Test if `other` is equal to this vector.
+
+            Returns
+            -------
+            equals : ``bool``
+                `True` if all elements of `other` are equal to this
+                vector's elements, `False` otherwise
+
+            Examples
+            --------
+            >>> r3 = CudaNtuples(3, 'float32')
+            >>> x = r3.element([1, 2, 3])
+            >>> x.equals(x)
+            True
+            >>> y = r3.element([1, 2, 3])
+            >>> x == y
+            True
+            >>> y = r3.element([0, 0, 0])
+            >>> x == y
+            False
+            >>> r3_2 = CudaNtuples(3, 'float64')
+            >>> z = r3_2.element([1, 2, 3])
+            >>> x != z
+            True
+            """
+            if other is self:
+                return True
+            elif other not in self.space:
+                return False
+            else:
+                return self.data.equals(other.data)
 
         def copy(self):
             """Create an identical (deep) copy of this vector."""
@@ -242,24 +270,24 @@ class CudaNtuples(NtuplesBase):
             >>> y = uc3.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-
+            CudaNtuples(3, 'uint8').element([5, 2, 3])
             >>> y[1:3] = [7, 8]
             >>> y
-
+            CudaNtuples(3, 'uint8').element([5, 7, 8])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-
+            CudaNtuples(3, 'uint8').element([0, 0, 0])
             """
             if isinstance(values, CudaNtuples.Vector):
                 raise NotImplementedError
                 # TODO: implement
                 # return self.data.__setitem__(indices, values.data)
             else:
-                # Convert value to the correct type if needed
-                values = np.asarray(values, dtype=self.space._dtype)
                 try:
-                    return self.data.__setitem__(int(indices), values[0])
+                    return self.data.__setitem__(int(indices), values)
                 except TypeError:
+                    # Convert value to the correct type if needed
+                    values = np.asarray(values, dtype=self.space._dtype)
                     # Size checking is performed in c++
                     return self.data.setslice(indices, values)
 
@@ -317,9 +345,9 @@ class CudaFn(FnBase, CudaNtuples):
         >>> z = r3.element()
         >>> r3.lincomb(z, 2, x, 3, y)
         >>> z
-
+        CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
         """
-        z.data.linComb(a, x.data, b, y.data)
+        z.data.lincomb(a, x.data, b, y.data)
 
     def _inner(self, x, y):
         """Calculate the inner product of x and y.
@@ -343,6 +371,29 @@ class CudaFn(FnBase, CudaNtuples):
         20.0
         """
         return x.data.inner(y.data)
+
+    def _dist(self, x, y):
+        """Calculate the distance between two vectors.
+
+        Parameters
+        ----------
+        x, y : `CudaFn.Vector`
+            The vectors whose mutual distance is calculated
+
+        Returns
+        -------
+        dist : `float`
+            Distance between the vectors
+
+        Examples
+        --------
+        >>> r2 = CudaRn(2)
+        >>> x = r2.element([3, 8])
+        >>> y = r2.element([0, 4])
+        >>> r2.dist(x, y)
+        5.0
+        """
+        return x.data.dist(y.data)
 
     def _norm(self, x):
         """Calculate the 2-norm of x.
@@ -399,7 +450,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> z = rn.element()
         >>> rn.multiply(z, x, y)
         >>> z
-        CudaRn(3).element([5.0, 6.0, 6.0])
+        CudaRn(3, 'float32').element([5.0, 6.0, 6.0])
         """
         z.data.multiply(x.data, y.data)
 

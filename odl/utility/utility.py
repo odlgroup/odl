@@ -37,10 +37,10 @@ def errfmt(errstr):
 
 def array1d_repr(array):
     if len(array) < 7:
-        return repr(array[:].tolist())
+        return repr(list(array[:]))
     else:
-        return (repr(array[:3].tolist()).rstrip(']') + ', ..., ' +
-                repr(array[-3:].tolist()).strip('['))
+        return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
+                repr(list(array[-3:])).strip('['))
 
 
 def dtype_repr(dtype):
@@ -49,7 +49,7 @@ def dtype_repr(dtype):
     elif dtype == np.dtype(float):
         return 'float'
     else:
-        return repr(dtype)
+        return "'{}'".format(dtype)
 
 if __name__ == '__main__':
     import doctest

@@ -371,9 +371,9 @@ class TensorGrid(Set):
         --------
 
         >>> g1 = TensorGrid([0, 1], [-1, 2])
-        >>> g2 = TensorGrid([1], [-0.1, 1.1])
+        >>> g2 = TensorGrid([1], [-6, 15])
         >>> g1.insert(g2, 1)
-        TensorGrid([0.0, 1.0], [1.0], [-0.1, 1.1], [-1.0, 2.0])
+        TensorGrid([0.0, 1.0], [1.0], [-6.0, 15.0], [-1.0, 2.0])
         """
         if not isinstance(index, Integral):
             raise TypeError('{} is not an integer.'.format(index))
