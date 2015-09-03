@@ -216,11 +216,11 @@ class LinearSpace(Set):
     A space with a norm is called a `Normed Space`.
 
     **Parameters:**
-        `x` : `object`
+        `x` : ``object``
             The vector to measure
 
     **Returns:**
-        `norm` : `RealNumber`
+        `norm` : ``RealNumber``
             The length of `x` as measured in the space's metric
 
     **Requirements:**
