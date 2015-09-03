@@ -206,9 +206,19 @@ class CudaNtuples(NtuplesBase):
                 return self.data.equals(other.data)
 
         def copy(self):
-            """Create an identical (deep) copy of this vector."""
-            # TODO: implement
-            raise NotImplementedError
+            """Create an identical (deep) copy of this vector.
+
+            Examples
+            --------
+            >>> r3 = CudaNtuples(3, 'float32')
+            >>> x = r3.element([1, 2, 3])
+            >>> y = x.copy()
+            >>> y
+            CudaNtuples(3, 'float32').element([1.0, 2.0, 3.0])
+            >>> y is x
+            False
+            """
+            return self.space.element(self.data.copy())
 
         def __getitem__(self, indices):
             """Access values of this vector.
