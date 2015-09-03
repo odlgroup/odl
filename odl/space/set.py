@@ -267,7 +267,7 @@ class IntervalProd(Set):
 
     See also
     --------
-    `RegularGrid` is defined in `odl.discr.grid`.
+    RegularGrid: regular grids
     """
 
     def __init__(self, begin, end):
