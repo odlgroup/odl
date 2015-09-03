@@ -420,17 +420,15 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            # TODO: the following checks kills CUDA since the CudaRnVector
-            # has no dtype or shape attributes
-#            if data.dtype != space.dtype:
-#                raise TypeError(errfmt('''
-#                `data.dtype` {} not equal to `space.dtype` {}.
-#                '''.format(data.dtype, space.dtype)))
+            if data.dtype != space.dtype:
+                raise TypeError(errfmt('''
+                `data.dtype` {} not equal to `space.dtype` {}.
+                '''.format(data.dtype, space.dtype)))
 
-#            if data.shape != (space.dim,):
-#                raise ValueError(errfmt('''
-#                `data.shape` {} not equal to `(space.dim,)` {}.
-#                '''.format(data.shape, (space.dim,))))
+            if data.shape != (space.dim,):
+                raise ValueError(errfmt('''
+                `data.shape` {} not equal to `(space.dim,)` {}.
+                '''.format(data.shape, (space.dim,))))
 
             self._space = space
             self._data = data
@@ -444,6 +442,27 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         def data(self):
             """The vector's data representation."""
             return self._data
+
+        def copy(self):
+            """Create an identical (deep) copy of this vector.
+
+            Returns
+            -------
+            copy : `Ntuples.Vector`
+                The deep copy
+
+            Examples
+            --------
+            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
+            >>> vec2 = vec1.copy()
+            >>> vec2
+            Ntuples(3, int).element([1, 2, 3])
+            >>> vec1 == vec2
+            True
+            >>> vec1 is vec2
+            False
+            """
+            return self.space.element(self.data.copy())
 
         def __len__(self):
             """v.__len__() <==> len(v).
@@ -465,17 +484,6 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             equals : `bool`
                 `True` if all entries of `other` are equal to this
                 vector's entries, `False` otherwise.
-            """
-
-        # TODO: this could be concrete
-        @abstractmethod
-        def copy(self):
-            """Create an identical (deep) copy of this vector.
-
-            Returns
-            -------
-            copy : `NtuplesBase.Vector`
-                The deep copy
             """
 
         # TODO: this could be concrete
@@ -683,27 +691,6 @@ class Ntuples(NtuplesBase):
                 return False
             else:
                 return np.all(self.data == other.data)
-
-        def copy(self):
-            """Create an identical (deep) copy of this vector.
-
-            Returns
-            -------
-            copy : `Ntuples.Vector`
-                The deep copy
-
-            Examples
-            --------
-            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
-            >>> vec2 = vec1.copy()
-            >>> vec2
-            Ntuples(3, int).element([1, 2, 3])
-            >>> vec1 == vec2
-            True
-            >>> vec1 is vec2
-            False
-            """
-            return self.space.element(self.data.copy())
 
         def __getitem__(self, indices):
             """Access values of this vector.
