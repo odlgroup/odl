@@ -101,7 +101,8 @@ class LinearSpace(Set):
     `LinearSpace.Vector` class.
 
     The concept of linear vector spaces in ODL is largely inspired by
-    the `Rice Vector Library`_ (RVL).
+    the `Rice Vector Library
+    <http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/>`_ (RVL).
 
     The abstract `LinearSpace` class is intended for quick prototyping.
     It has a number of abstract methods which must be overridden by a
@@ -309,9 +310,9 @@ class LinearSpace(Set):
     |              |                    |issuing `x = element()` and  |
     |              |                    |then                         |
     |              |                    |`_lincomb(x, 0, x, 0, x)`    |
-    +--------------+--------------------+-----------------------------+    
+    +--------------+--------------------+-----------------------------+
     |Metric Space methods                                             |
-    +--------------+--------------------+-----------------------------+    
+    +--------------+--------------------+-----------------------------+
     |`dist(x, y)`|`float`     |Distance between two space elements.   |
     |            |            |Like `_dist()`, but with type checks.  |
     +------------+------------+---------------------------------------+
@@ -346,15 +347,11 @@ class LinearSpace(Set):
     |`__contains__(other)` |`other in self` |`contains(other)`   |
     +----------------------+----------------+--------------------+
 
-    See also
-    --------
-    See Wikipedia's `Vector space`_ article for a mathematical
-    overview.
-
-    .. _`Rice Vector Library`:
-       http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/
-    .. _`Vector space`:
-       https://en.wikipedia.org/wiki/Vector_space
+    Notes
+    -----
+    See Wikipedia's `Vector space
+    <https://en.wikipedia.org/wiki/Vector_space>`_ mathematical
+    overview article
     """
 
     @abstractmethod
@@ -392,7 +389,7 @@ class LinearSpace(Set):
         #default implementation
         return self.norm(x-y)
 
-    
+
     def _norm(self, x):
         """Calculate the norm of x
 
@@ -583,7 +580,7 @@ class LinearSpace(Set):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
         return self.field.element(self._inner(x, y))
-    
+
     def multiply(self, z, x, y):
         """ Calculates the pointwise product of x and y and assigns it to y
         z = x * y
