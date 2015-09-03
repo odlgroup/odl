@@ -1,0 +1,467 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>odl.operator.default &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for odl.operator.default</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 Jonas Adler</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="sd">&quot;&quot;&quot;Default operators defined on any space of a certain kind.</span>
+
+<span class="sd">+------------------+--------------------------------------------------+</span>
+<span class="sd">|Class name        |Description                                       |</span>
+<span class="sd">+==================+==================================================+</span>
+<span class="sd">|`ScalingOperator` |`SelfAdjointOperator` scaling an element with a   |</span>
+<span class="sd">|                  |real number.                                      |</span>
+<span class="sd">+------------------+--------------------------------------------------+</span>
+<span class="sd">|`ZeroOperator`    |`ScalingOperator` with `scalar` equal to 0        |</span>
+<span class="sd">+------------------+--------------------------------------------------+</span>
+<span class="sd">|`IdentityOperator`|`ScalingOperator` with `scalar` equal to 1        |</span>
+<span class="sd">+------------------+--------------------------------------------------+</span>
+<span class="sd">|`LinCombOperator` |`LinearOperator` mapping two space elements to the|</span>
+<span class="sd">|                  |linear combination with two fixed scalars.        |</span>
+<span class="sd">+------------------+--------------------------------------------------+</span>
+<span class="sd">|`MultiplyOperator`|`Operator` of multiplying two space elements. The |</span>
+<span class="sd">|                  |`range` needs to be an `Algebra` for the          |</span>
+<span class="sd">|                  |multiplication to be well-defined.                |</span>
+<span class="sd">+------------------+--------------------------------------------------+</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unicode_literals</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span>
+                        <span class="n">absolute_import</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">super</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">SelfAdjointOperator</span>
+<span class="kn">from</span> <span class="nn">odl.space.space</span> <span class="kn">import</span> <span class="n">LinearSpace</span>
+<span class="kn">from</span> <span class="nn">odl.space.set</span> <span class="kn">import</span> <span class="n">CartesianProduct</span>
+<span class="kn">from</span> <span class="nn">odl.utility.utility</span> <span class="kn">import</span> <span class="n">errfmt</span>
+
+
+<div class="viewcode-block" id="ScalingOperator"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.default.ScalingOperator">[docs]</a><span class="k">class</span> <span class="nc">ScalingOperator</span><span class="p">(</span><span class="n">SelfAdjointOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator of multiplication with a scalar.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">scalar</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a ScalingOperator instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        space : LinearSpace</span>
+<span class="sd">            The space of elements which the operator is acting on</span>
+<span class="sd">        scalar : space.field element</span>
+<span class="sd">            An element in the field of the space that the vectors are</span>
+<span class="sd">            scaled with</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">LinearSpace</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            &#39;space&#39; ({}) must be a LinearSpace instance</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="o">=</span> <span class="n">space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scal</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">outp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scale input and write to output.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : self.domain element</span>
+<span class="sd">            An element in the operator domain</span>
+<span class="sd">        outp : self.range element</span>
+<span class="sd">            An element in the operator range</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; from odl.space.cartesian import Rn</span>
+<span class="sd">        &gt;&gt;&gt; r3 = Rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; vec = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; outp = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; op.apply(vec, outp)</span>
+<span class="sd">        &gt;&gt;&gt; outp</span>
+<span class="sd">        Rn(3).element([2.0, 4.0, 6.0])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outp</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scal</span><span class="p">,</span> <span class="n">inp</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the scaled element.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : self.domain element</span>
+<span class="sd">                An element in the domain of this operator</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        scaled : self.range element</span>
+<span class="sd">                 An element in the range of this operator,</span>
+<span class="sd">                 inp * self.scale</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; from odl.space.cartesian import Rn</span>
+<span class="sd">        &gt;&gt;&gt; r3 = Rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; vec = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; op(vec)</span>
+<span class="sd">        Rn(3).element([2.0, 4.0, 6.0])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scal</span> <span class="o">*</span> <span class="n">inp</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the inverse operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        inv : ScalingOperator</span>
+<span class="sd">            Scaling by 1/scale</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; from odl.space.cartesian import Rn</span>
+<span class="sd">        &gt;&gt;&gt; r3 = Rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; vec = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; inv = op.inverse</span>
+<span class="sd">        &gt;&gt;&gt; inv(op(vec)) == vec</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; op(inv(vec)) == vec</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scal</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Scaling operator not invertible for scalar=0&#39;&#39;&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ScalingOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_scal</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the operator domain.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        domain : LinearSpace</span>
+<span class="sd">            The domain of the operator</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from odl.space.cartesian import Rn</span>
+<span class="sd">        &gt;&gt;&gt; r3 = Rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; op.domain</span>
+<span class="sd">        Rn(3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the operator range.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        domain : LinearSpace</span>
+<span class="sd">                 The domain of the operator</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from odl.space.cartesian import Rn</span>
+<span class="sd">        &gt;&gt;&gt; r3 = Rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; op = ScalingOperator(r3, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; op.range</span>
+<span class="sd">        Rn(3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;repr(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;ScalingOperator({!r}, {!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scal</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;str(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;{} * I&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scal</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ZeroOperator"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.default.ZeroOperator">[docs]</a><span class="k">class</span> <span class="nc">ZeroOperator</span><span class="p">(</span><span class="n">ScalingOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator mapping each element to the zero element.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a ZeroOperator instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        space : LinearSpace</span>
+<span class="sd">            The space of elements which the operator is acting on</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;repr(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;ZeroOperator({!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;str(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;0&#39;</span>
+
+</div>
+<div class="viewcode-block" id="IdentityOperator"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.default.IdentityOperator">[docs]</a><span class="k">class</span> <span class="nc">IdentityOperator</span><span class="p">(</span><span class="n">ScalingOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator mapping each element to itself.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize an IdentityOperator instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        space : LinearSpace</span>
+<span class="sd">            The space of elements which the operator is acting on</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;repr(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;IdentityOperator({!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;str(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;I&quot;</span>
+
+</div>
+<div class="viewcode-block" id="LinCombOperator"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.default.LinCombOperator">[docs]</a><span class="k">class</span> <span class="nc">LinCombOperator</span><span class="p">(</span><span class="n">LinearOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator mapping two space elements to a linear combination.</span>
+
+<span class="sd">    This opertor calculates:</span>
+
+<span class="sd">    outp = a*inp[0] + b*inp[1]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># pylint: disable=abstract-method</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a LinCombOperator instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        space : LinearSpace</span>
+<span class="sd">            The space of elements which the operator is acting on</span>
+<span class="sd">        a : float</span>
+<span class="sd">            Scalar to multiply inp[0] with</span>
+<span class="sd">        b : float</span>
+<span class="sd">            Scalar to multiply inp[1] with</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="n">CartesianProduct</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">range</span> <span class="o">=</span> <span class="n">space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">outp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Linearly combine the input and write to output.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : self.domain element</span>
+<span class="sd">            An element in the operator domain (2-tuple of space</span>
+<span class="sd">            elements)</span>
+<span class="sd">        outp : self.range.element</span>
+<span class="sd">            An element in the operator range.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from odl.space.cartesian import Rn</span>
+<span class="sd">        &gt;&gt;&gt; r3 = Rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; z = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op = LinCombOperator(r3, 1.0, 1.0)</span>
+<span class="sd">        &gt;&gt;&gt; op.apply([x, y], z)</span>
+<span class="sd">        &gt;&gt;&gt; z</span>
+<span class="sd">        Rn(3).element([2.0, 4.0, 6.0])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outp</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;repr(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;LinCombOperator({!r}, {!r}, {!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;repr(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;{}*x + {}*y&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="MultiplyOperator"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.default.MultiplyOperator">[docs]</a><span class="k">class</span> <span class="nc">MultiplyOperator</span><span class="p">(</span><span class="n">LinearOperator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Operator multiplying two elements.</span>
+
+<span class="sd">    The multiply operator calculates:</span>
+
+<span class="sd">    outp = inp[0] * inp[1]</span>
+
+<span class="sd">    This is only applicable in Algebras.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># pylint: disable=abstract-method</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a MultiplyOperator instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        space : LinearSpace</span>
+<span class="sd">            The space of elements which the operator is acting on</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="n">CartesianProduct</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">range</span> <span class="o">=</span> <span class="n">space</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">outp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Multiply the input and write to output.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; from odl.space.cartesian import Rn</span>
+<span class="sd">        &gt;&gt;&gt; r3 = Rn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = r3.element([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; z = r3.element()</span>
+<span class="sd">        &gt;&gt;&gt; op = MultiplyOperator(r3)</span>
+<span class="sd">        &gt;&gt;&gt; op.apply([x, y], z)</span>
+<span class="sd">        &gt;&gt;&gt; z</span>
+<span class="sd">        Rn(3).element([1.0, 4.0, 9.0])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outp</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">outp</span><span class="p">,</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;repr(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;MultiplyOperator({!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;str(self) implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;x * y&quot;</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

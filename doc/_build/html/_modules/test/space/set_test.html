@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test.space.set_test &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test.space.set_test</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+
+<span class="c"># External module imports</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.space.set</span> <span class="kn">import</span> <span class="n">IntervalProd</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">Rectangle</span>
+<span class="kn">from</span> <span class="nn">odl.utility.testutils</span> <span class="kn">import</span> <span class="n">ODLTestCase</span>
+
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="random_point"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.random_point">[docs]</a><span class="k">def</span> <span class="nf">random_point</span><span class="p">(</span><span class="n">set_</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">set_</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">set_</span><span class="o">.</span><span class="n">begin</span><span class="p">)</span> <span class="o">+</span> <span class="n">set_</span><span class="o">.</span><span class="n">begin</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;unknown type&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="IntervalProdTest"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest">[docs]</a><span class="k">class</span> <span class="nc">IntervalProdTest</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalProdTest.test_init"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_init">[docs]</a>    <span class="k">def</span> <span class="nf">test_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">((</span><span class="mi">1</span><span class="p">,),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,))</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_begin"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_begin">[docs]</a>    <span class="k">def</span> <span class="nf">test_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_end"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_end">[docs]</a>    <span class="k">def</span> <span class="nf">test_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_dim"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_dim">[docs]</a>    <span class="k">def</span> <span class="nf">test_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_truedim"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_truedim">[docs]</a>    <span class="k">def</span> <span class="nf">test_truedim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">truedim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">truedim</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">truedim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">truedim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">truedim</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">truedim</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_size"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_size">[docs]</a>    <span class="k">def</span> <span class="nf">test_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_volume"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_volume">[docs]</a>    <span class="k">def</span> <span class="nf">test_volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">volume</span><span class="p">,</span> <span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">volume</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">volume</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">6</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">7</span><span class="o">-</span><span class="mi">3</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_equals"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_equals">[docs]</a>    <span class="k">def</span> <span class="nf">test_equals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">interval1</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">interval2</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">interval3</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">interval4</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">rectangle1</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">rectangle2</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">rectangle3</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">interval1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">interval2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">interval3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">interval4</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">rectangle1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">rectangle1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">rectangle1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">rectangle2</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">rectangle2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">rectangle1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">rectangle3</span><span class="p">))</span>
+
+        <span class="c"># Test operators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interval1</span> <span class="o">==</span> <span class="n">interval1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">interval1</span> <span class="o">!=</span> <span class="n">interval1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">interval1</span> <span class="o">==</span> <span class="n">interval4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interval1</span> <span class="o">!=</span> <span class="n">interval4</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">interval1</span> <span class="o">==</span> <span class="n">rectangle1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interval1</span> <span class="o">!=</span> <span class="n">rectangle1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">rectangle1</span> <span class="o">==</span> <span class="n">rectangle1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">rectangle1</span> <span class="o">!=</span> <span class="n">rectangle1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">rectangle1</span> <span class="o">==</span> <span class="n">rectangle3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">rectangle1</span> <span class="o">!=</span> <span class="n">rectangle3</span><span class="p">)</span>
+
+        <span class="n">r1_1</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">r1_2</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">positive_reals</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">r1_1</span> <span class="o">==</span> <span class="n">r1_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">r1_1</span> <span class="o">==</span> <span class="n">r1_2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">positive_reals</span> <span class="o">==</span> <span class="n">positive_reals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">positive_reals</span> <span class="o">!=</span> <span class="n">r1_1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntervalProdTest.test_contains"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalProdTest.test_contains">[docs]</a>    <span class="k">def</span> <span class="nf">test_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="mf">1.5</span> <span class="ow">in</span> <span class="n">set_</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="mi">3</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">set_</span><span class="p">)</span>
+
+        <span class="n">positive_reals</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">positive_reals</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">positive_reals</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">positive_reals</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="IntervalTest"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalTest">[docs]</a><span class="k">class</span> <span class="nc">IntervalTest</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalTest.test_init"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalTest.test_init">[docs]</a>    <span class="k">def</span> <span class="nf">test_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">set_</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="IntervalTest.test_length"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.IntervalTest.test_length">[docs]</a>    <span class="k">def</span> <span class="nf">test_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="n">set_</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="RectangleTest"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.RectangleTest">[docs]</a><span class="k">class</span> <span class="nc">RectangleTest</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="RectangleTest.test_init"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.RectangleTest.test_init">[docs]</a>    <span class="k">def</span> <span class="nf">test_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">set_</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">set_</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="RectangleTest.test_area"><a class="viewcode-back" href="../../../test.space.html#test.space.set_test.RectangleTest.test_area">[docs]</a>    <span class="k">def</span> <span class="nf">test_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">set_</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">area</span><span class="p">,</span> <span class="n">set_</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">area</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">4</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="nb">exit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,926 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test.discr.grid_test &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test.discr.grid_test</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+
+<span class="c"># External module imports</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.discr.grid</span> <span class="kn">import</span> <span class="n">TensorGrid</span><span class="p">,</span> <span class="n">RegularGrid</span>
+<span class="kn">from</span> <span class="nn">odl.space.set</span> <span class="kn">import</span> <span class="n">IntervalProd</span>
+<span class="kn">from</span> <span class="nn">odl.utility.testutils</span> <span class="kn">import</span> <span class="n">ODLTestCase</span>
+
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="TensorGridTestInit"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestInit">[docs]</a><span class="k">class</span> <span class="nc">TensorGridTestInit</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorGridTestInit.test_init"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestInit.test_init">[docs]</a>    <span class="k">def</span> <span class="nf">test_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sorted1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">sorted2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">sorted3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="c"># Just test if the code runs</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">sorted1</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">,</span> <span class="n">sorted3</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted2</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">sorted1</span><span class="p">)</span>
+
+        <span class="c"># Check different error scenarios</span>
+        <span class="n">unsorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">unsorted</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">with_dups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">with_dups</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">unsorted_with_dups</span> <span class="o">=</span> <span class="n">unsorted</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">unsorted_with_dups</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">with_nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">with_nan</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">with_inf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">with_inf</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">empty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">unsorted</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">with_dups</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">unsorted_with_dups</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">with_nan</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">with_inf</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">sorted1</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">sorted2</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TensorGridTestAttributes"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestAttributes">[docs]</a><span class="k">class</span> <span class="nc">TensorGridTestAttributes</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorGridTestAttributes.test_dim"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestAttributes.test_dim">[docs]</a>    <span class="k">def</span> <span class="nf">test_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">vec3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+
+        <span class="n">grid1</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestAttributes.test_shape"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestAttributes.test_shape">[docs]</a>    <span class="k">def</span> <span class="nf">test_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">grid1</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">grid3</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid3</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestAttributes.test_ntotal"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestAttributes.test_ntotal">[docs]</a>    <span class="k">def</span> <span class="nf">test_ntotal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">grid1</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">grid3</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">ntotal</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">ntotal</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid3</span><span class="o">.</span><span class="n">ntotal</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestAttributes.test_min_max"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestAttributes.test_min_max">[docs]</a>    <span class="k">def</span> <span class="nf">test_min_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">vec3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">scalar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="TensorGridTestMethods"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods">[docs]</a><span class="k">class</span> <span class="nc">TensorGridTestMethods</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorGridTestMethods.test_element"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_element">[docs]</a>    <span class="k">def</span> <span class="nf">test_element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">some_pt</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">some_pt</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_equals"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_equals">[docs]</a>    <span class="k">def</span> <span class="nf">test_equals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">grid1</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">grid2_again</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">grid2_rev</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid2_again</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid2_rev</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">equals</span><span class="p">((</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)))</span>
+
+        <span class="c"># Test operators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid1</span> <span class="o">==</span> <span class="n">grid1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid1</span> <span class="o">!=</span> <span class="n">grid1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid2</span> <span class="o">==</span> <span class="n">grid2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid2</span> <span class="o">!=</span> <span class="n">grid2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid2</span> <span class="o">==</span> <span class="n">grid2_again</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid2_again</span> <span class="o">!=</span> <span class="n">grid2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid2</span> <span class="o">==</span> <span class="n">grid2_rev</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid2_rev</span> <span class="o">!=</span> <span class="n">grid2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid2</span> <span class="o">==</span> <span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid2_rev</span> <span class="o">!=</span> <span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">))</span>
+
+        <span class="c"># Fuzzy check</span>
+        <span class="n">grid1</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+                           <span class="n">vec2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid2</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid2</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
+
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.11</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+                           <span class="n">vec2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid2</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+                           <span class="n">vec2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.11</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">grid2</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_contains"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_contains">[docs]</a>    <span class="k">def</span> <span class="nf">test_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+
+        <span class="n">point_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vec1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">vec2</span><span class="p">:</span>
+                <span class="n">point_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">point_list</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">p</span> <span class="ow">in</span> <span class="n">grid</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">point_list</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">contains</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">)</span>
+
+        <span class="c"># Fuzzy check</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">contains</span><span class="p">((</span><span class="mf">2.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.1</span><span class="p">),</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">contains</span><span class="p">((</span><span class="mf">2.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.1</span><span class="p">),</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
+
+        <span class="c"># 1d points</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="mi">3</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="mi">7</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_is_subgrid"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_is_subgrid">[docs]</a>    <span class="k">def</span> <span class="nf">test_is_subgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec1_sup</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">vec2_sup</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">vec2_sub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">))</span>
+
+        <span class="n">sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_sup</span><span class="p">,</span> <span class="n">vec2_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">sup_grid</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">sup_grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">))</span>
+
+        <span class="n">not_sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_sup</span><span class="p">,</span> <span class="n">vec2_sub</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">not_sup_grid</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">not_sup_grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">))</span>
+
+        <span class="c"># Fuzzy check</span>
+        <span class="n">fuzzy_vec1_sup</span> <span class="o">=</span> <span class="n">vec1_sup</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">fuzzy_vec2_sup</span> <span class="o">=</span> <span class="n">vec2_sup</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+        <span class="n">fuzzy_sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">fuzzy_vec1_sup</span><span class="p">,</span> <span class="n">fuzzy_vec2_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
+
+        <span class="n">fuzzy_vec2_sup</span> <span class="o">=</span> <span class="n">vec2_sup</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.11</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+        <span class="n">fuzzy_sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">fuzzy_vec1_sup</span><span class="p">,</span> <span class="n">fuzzy_vec2_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+
+        <span class="c"># Changes in the non-overlapping part don&#39;t matter</span>
+        <span class="n">fuzzy_vec2_sup</span> <span class="o">=</span> <span class="n">vec2_sup</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.11</span><span class="p">)</span>
+        <span class="n">fuzzy_sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">fuzzy_vec1_sup</span><span class="p">,</span> <span class="n">fuzzy_vec2_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
+
+        <span class="c"># With degenerate axis</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_sup</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">vec2_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">sup_grid</span><span class="p">))</span>
+
+        <span class="n">fuzzy_sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">scalar</span><span class="o">+</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_points"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_points">[docs]</a>    <span class="k">def</span> <span class="nf">test_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="c"># C ordering</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">vec1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">vec2</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c"># F ordering</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">vec2</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">vec1</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">))</span>
+
+        <span class="c"># Degenerate axis 1</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">vec1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">vec2</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">scalar</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">())</span>
+
+        <span class="c"># Degenerate axis 2</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">vec1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">vec2</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">x2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">())</span>
+
+        <span class="c"># Degenerate axis 3</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">vec1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">vec2</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">scalar</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">scalar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">points</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_corners"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_corners">[docs]</a>    <span class="k">def</span> <span class="nf">test_corners</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">vec3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">minmax1</span> <span class="o">=</span> <span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vec1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">minmax2</span> <span class="o">=</span> <span class="p">(</span><span class="n">vec2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vec2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">minmax3</span> <span class="o">=</span> <span class="p">(</span><span class="n">vec3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vec3</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c"># C ordering</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">minmax1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">minmax2</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">x3</span> <span class="ow">in</span> <span class="n">minmax3</span><span class="p">:</span>
+                    <span class="n">corners</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">x3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">))</span>
+
+        <span class="c"># Min and max should appear at the beginning and the end, resp.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c"># F ordering</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x3</span> <span class="ow">in</span> <span class="n">minmax3</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">minmax2</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">minmax1</span><span class="p">:</span>
+                    <span class="n">corners</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">x3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">))</span>
+
+        <span class="c"># Degenerate axis 1</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">minmax2</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x3</span> <span class="ow">in</span> <span class="n">minmax3</span><span class="p">:</span>
+                <span class="n">corners</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">scalar</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">x3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">())</span>
+
+        <span class="c"># Degenerate axis 2</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">minmax1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x3</span> <span class="ow">in</span> <span class="n">minmax3</span><span class="p">:</span>
+                <span class="n">corners</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">x3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">vec3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">())</span>
+
+        <span class="c"># Degenerate axis 3</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">minmax1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">minmax2</span><span class="p">:</span>
+                <span class="n">corners</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">scalar</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">scalar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">())</span>
+
+        <span class="c"># All degenerate</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="p">[(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">scalar</span><span class="p">)]</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">scalar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">corners</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_meshgrid"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_meshgrid">[docs]</a>    <span class="k">def</span> <span class="nf">test_meshgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec3</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+        <span class="c"># Sparse meshgrid</span>
+        <span class="n">mgx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vec1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">mgy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vec2</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">mgz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vec3</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">)</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgx</span><span class="p">,</span> <span class="n">xx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgy</span><span class="p">,</span> <span class="n">yy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgz</span><span class="p">,</span> <span class="n">zz</span><span class="p">)</span>
+
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgx</span><span class="p">,</span> <span class="n">xx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgy</span><span class="p">,</span> <span class="n">yy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgz</span><span class="p">,</span> <span class="n">zz</span><span class="p">)</span>
+
+        <span class="c"># Dense meshgrid</span>
+        <span class="n">mgx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">mgx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">vec1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">mgy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">mgy</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">mgz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">mgz</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vec3</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgx</span><span class="p">,</span> <span class="n">xx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgy</span><span class="p">,</span> <span class="n">yy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">mgz</span><span class="p">,</span> <span class="n">zz</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTupleEqual</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_getitem"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_getitem">[docs]</a>    <span class="k">def</span> <span class="nf">test_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec3</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">vec4</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">vec1_sub</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+        <span class="n">vec2_sub</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span>
+        <span class="n">vec3_sub</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">vec4_sub</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">,</span> <span class="n">vec4</span><span class="p">)</span>
+
+        <span class="c"># Single indices yield points as an array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># Slices return new TensorGrid&#39;s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+
+        <span class="n">sub_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_sub</span><span class="p">,</span> <span class="n">vec2_sub</span><span class="p">,</span> <span class="n">vec3_sub</span><span class="p">,</span> <span class="n">vec4_sub</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">1</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+
+        <span class="n">sub_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_sub</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">,</span> <span class="n">vec4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">sub_grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+
+        <span class="n">sub_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">,</span> <span class="n">vec4_sub</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+
+        <span class="n">sub_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_sub</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">,</span> <span class="n">vec4_sub</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># One-dimensional grid</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+
+        <span class="n">sub_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec3_sub</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_convex_hull"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_convex_hull">[docs]</a>    <span class="k">def</span> <span class="nf">test_convex_hull</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec3</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">)</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vec2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vec3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">vec2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">vec3</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">chull</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">convex_hull</span><span class="p">(),</span> <span class="n">chull</span><span class="p">)</span>
+
+        <span class="c"># With degenerate axis</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">scalar</span><span class="p">)</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vec2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scalar</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">vec2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scalar</span><span class="p">)</span>
+        <span class="n">chull</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">convex_hull</span><span class="p">(),</span> <span class="n">chull</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_repr"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_repr">[docs]</a>    <span class="k">def</span> <span class="nf">test_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">long_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">repr_string</span> <span class="o">=</span> <span class="s">&#39;TensorGrid([0.0, 1.0], [0.5], [-1.0, 0.0, 2.0])&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span> <span class="n">repr_string</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">long_vec</span><span class="p">)</span>
+        <span class="n">repr_string</span> <span class="o">=</span> <span class="s">&#39;TensorGrid([0.5], [0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0])&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span> <span class="n">repr_string</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TensorGridTestMethods.test_str"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.TensorGridTestMethods.test_str">[docs]</a>    <span class="k">def</span> <span class="nf">test_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">long_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">scalar</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">grid_string</span> <span class="o">=</span> <span class="s">&#39;[0.0, 1.0] x [0.5] x [-1.0, 0.0, 2.0]&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span> <span class="n">grid_string</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">long_vec</span><span class="p">)</span>
+        <span class="n">grid_string</span> <span class="o">=</span> <span class="s">&#39;[0.5] x [0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span> <span class="n">grid_string</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="RegularGridTestInit"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestInit">[docs]</a><span class="k">class</span> <span class="nc">RegularGridTestInit</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="RegularGridTestInit.test_init"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestInit.test_init">[docs]</a>    <span class="k">def</span> <span class="nf">test_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="c"># Just test if the code runs</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c"># Defaults</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">)</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid2</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">)</span>
+        <span class="n">grid2</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid2</span><span class="p">)</span>
+
+        <span class="c"># Correct initialization of coord_vectors</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+        <span class="n">vec1</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">)</span>
+        <span class="n">vec2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+        <span class="n">vec3</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span> <span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">))</span>
+
+        <span class="c"># Check different error scenarios</span>
+        <span class="n">nonpos_shape1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">nonpos_shape2</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">nonpos_shape1</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">nonpos_shape2</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="n">center_with_nan</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="n">center_with_inf</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center_with_nan</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center_with_inf</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="n">nonpos_stride1</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">nonpos_stride2</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">stride_with_nan</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">stride_with_inf</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">nonpos_stride1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">nonpos_stride2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride_with_nan</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride_with_inf</span><span class="p">)</span>
+
+        <span class="n">too_short_center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">too_long_center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">too_short_center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">too_long_center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="n">too_short_stride</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">too_long_stride</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">too_short_stride</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">too_long_stride</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="RegularGridTestAttributes"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestAttributes">[docs]</a><span class="k">class</span> <span class="nc">RegularGridTestAttributes</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="RegularGridTestAttributes.test_center"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestAttributes.test_center">[docs]</a>    <span class="k">def</span> <span class="nf">test_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">center</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">center</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="RegularGridTestAttributes.test_stride"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestAttributes.test_stride">[docs]</a>    <span class="k">def</span> <span class="nf">test_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="RegularGridTestMethods"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestMethods">[docs]</a><span class="k">class</span> <span class="nc">RegularGridTestMethods</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="RegularGridTestMethods.test_is_subgrid"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestMethods.test_is_subgrid">[docs]</a>    <span class="k">def</span> <span class="nf">test_is_subgrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">))</span>
+
+        <span class="n">center_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.125</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">shape_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">stride_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_sup</span><span class="p">,</span> <span class="n">center_sup</span><span class="p">,</span> <span class="n">stride_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">sup_grid</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">sup_grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">))</span>
+
+        <span class="n">center_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.375</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_sup</span><span class="p">,</span> <span class="n">center_sup</span><span class="p">,</span> <span class="n">stride_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">sup_grid</span><span class="p">))</span>
+
+        <span class="n">center_not_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.25</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">shape_not_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">stride_not_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">not_sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_not_sup</span><span class="p">,</span> <span class="n">center_sup</span><span class="p">,</span> <span class="n">stride_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">not_sup_grid</span><span class="p">))</span>
+
+        <span class="n">not_sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_sup</span><span class="p">,</span> <span class="n">center_not_sup</span><span class="p">,</span> <span class="n">stride_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">not_sup_grid</span><span class="p">))</span>
+
+        <span class="n">not_sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_sup</span><span class="p">,</span> <span class="n">center_sup</span><span class="p">,</span> <span class="n">stride_not_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">not_sup_grid</span><span class="p">))</span>
+
+        <span class="c"># Should also work for TensorGrid&#39;s</span>
+        <span class="n">vec1_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="n">vec2_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+        <span class="n">vec3_sup</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">tensor_sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_sup</span><span class="p">,</span> <span class="n">vec2_sup</span><span class="p">,</span> <span class="n">vec3_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">tensor_sup_grid</span><span class="p">))</span>
+
+        <span class="n">vec1_not_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="n">vec2_not_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+        <span class="n">vec3_not_sup</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">tensor_not_sup_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="n">vec1_not_sup</span><span class="p">,</span> <span class="n">vec2_not_sup</span><span class="p">,</span>
+                                         <span class="n">vec3_not_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">tensor_not_sup_grid</span><span class="p">))</span>
+
+        <span class="c"># Fuzzy check</span>
+        <span class="n">center_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.125</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">shape_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">stride_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">center_fuzzy_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.35</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.02</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">)</span>  <span class="c"># tol &lt;= 0.025</span>
+        <span class="n">stride_fuzzy_sup</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.225</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">3.01</span><span class="p">)</span>  <span class="c"># tol &lt;= 0.025</span>
+
+        <span class="n">fuzzy_sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_sup</span><span class="p">,</span> <span class="n">center_fuzzy_sup</span><span class="p">,</span> <span class="n">stride_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.03</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.02</span><span class="p">))</span>
+
+        <span class="c"># Stride error builds up at the grid ends</span>
+        <span class="n">fuzzy_sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_sup</span><span class="p">,</span> <span class="n">center_sup</span><span class="p">,</span> <span class="n">stride_fuzzy_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.04</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.03</span><span class="p">))</span>
+
+        <span class="n">fuzzy_sup_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape_sup</span><span class="p">,</span> <span class="n">center_fuzzy_sup</span><span class="p">,</span>
+                                     <span class="n">stride_fuzzy_sup</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.05</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">is_subgrid</span><span class="p">(</span><span class="n">fuzzy_sup_grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.04</span><span class="p">))</span>
+
+        <span class="c"># TODO: make modules for automated randomized tests</span>
+        <span class="c"># Some more randomized tests</span>
+<span class="c">#        for _ in range(50):</span>
+<span class="c">#            tol = 0.01</span>
+<span class="c">#            center_fuzzy_sup = center + tol * np.random.uniform(-1, 1, size=3)</span>
+<span class="c">#            shape_fuzzy_sup = (6, 2, 5)</span>
+<span class="c">#            # Approximately same stride</span>
+<span class="c">#            stride1_fuzzy_sup = stride + tol * np.random.uniform(-1, 1, size=3)</span>
+<span class="c">#            # Approximately 1/3 stride</span>
+<span class="c">#            stride2_fuzzy_sup = (stride +</span>
+<span class="c">#                                 3*tol * np.random.uniform(-1, 1, size=3)) / 3</span>
+<span class="c">#</span>
+<span class="c">#            fuzzy_sup_grid1 = RegularGrid(shape_fuzzy_sup, center_fuzzy_sup,</span>
+<span class="c">#                                          stride1_fuzzy_sup)</span>
+<span class="c">#            fuzzy_sup_grid2 = RegularGrid(shape_fuzzy_sup, center_fuzzy_sup,</span>
+<span class="c">#                                          stride2_fuzzy_sup)</span>
+<span class="c">#            fuzzy_sup_tensor_grid1 = TensorGrid(*fuzzy_sup_grid1.coord_vectors)</span>
+<span class="c">#            fuzzy_sup_tensor_grid2 = TensorGrid(*fuzzy_sup_grid2.coord_vectors)</span>
+<span class="c">#</span>
+<span class="c">#            # Test against element-by-element comparison for various levels</span>
+<span class="c">#            # of tolerance (includes ridiculously large tolerance)</span>
+<span class="c">#            for fac in range(1, 51, 2):</span>
+<span class="c">#                self.assertEquals(</span>
+<span class="c">#                    grid.is_subgrid(fuzzy_sup_grid1, tol=fac*tol),</span>
+<span class="c">#                    grid.is_subgrid(fuzzy_sup_tensor_grid1, tol=fac*tol))</span>
+<span class="c">#                self.assertEquals(</span>
+<span class="c">#                    grid.is_subgrid(fuzzy_sup_grid2, tol=fac*tol),</span>
+<span class="c">#                    grid.is_subgrid(fuzzy_sup_tensor_grid2, tol=fac*tol))</span>
+</div>
+<div class="viewcode-block" id="RegularGridTestMethods.test_getitem"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestMethods.test_getitem">[docs]</a>    <span class="k">def</span> <span class="nf">test_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+        <span class="c"># Single indices yield points as an array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.25</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+
+        <span class="c"># Slices return new RegularGrid&#39;s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+
+        <span class="c"># Use TensorGrid implementation as reference here</span>
+        <span class="n">tensor_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="o">*</span><span class="n">grid</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+        <span class="n">test_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+        <span class="n">test_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+        <span class="n">test_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:,</span> <span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+        <span class="n">test_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+        <span class="n">test_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">,</span>
+                             <span class="n">tensor_grid</span><span class="p">[</span><span class="n">test_slice</span><span class="p">]</span><span class="o">.</span><span class="n">coord_vectors</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># One-dimensional grid</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+
+        <span class="n">sub_grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">grid</span><span class="p">[::</span><span class="mi">2</span><span class="p">],</span> <span class="n">sub_grid</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RegularGridTestMethods.test_repr"><a class="viewcode-back" href="../../../test.discr.html#test.discr.grid_test.RegularGridTestMethods.test_repr">[docs]</a>    <span class="k">def</span> <span class="nf">test_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+        <span class="n">repr_string</span> <span class="o">=</span> <span class="s">&#39;RegularGrid([2, 3], [1.0, -2.0], [0.5, 3.0])&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span> <span class="n">repr_string</span><span class="p">)</span>
+
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="nb">exit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

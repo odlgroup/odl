@@ -60,7 +60,7 @@ further combinations of operators of operators.
 |                          |linear operator (see `OperatorSum` for the|
 |                          |definition)                               |
 +--------------------------+------------------------------------------+
-|`LinearOperatorScalarMult`|Multiplication of a linear operator with a|
+|``LinearOperatorScalarMult``|Multiplication of a linear operator with a|
 |                          |scalar. Left and right multiplications are|
 |                          |equivalent (see `OperatorLeftScalarMult`  |
 |                          |for the definition)                       |
@@ -377,8 +377,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         -------
         None
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
@@ -427,8 +427,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             An object in the operator range, the result of the operator
             evaluation.
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
@@ -492,8 +492,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         -------
         mul : `OperatorPointwiseProduct` or `OperatorRightScalarMult`
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
@@ -544,8 +544,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         -------
         mul : `OperatorPointwiseProduct` or `OperatorLeftScalarMult`
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
@@ -646,8 +646,9 @@ class OperatorSum(Operator):
         --------
         See `Operator` for an explanation of the method.
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
@@ -671,8 +672,9 @@ class OperatorSum(Operator):
         --------
         See `Operator` for an explanation of the method.
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import ScalingOperator
         >>> r3 = Rn(3)
@@ -689,8 +691,9 @@ class OperatorSum(Operator):
     def domain(self):
         """The operator `domain`.
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
@@ -704,8 +707,9 @@ class OperatorSum(Operator):
     def range(self):
         """The operator `range`.
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
@@ -1029,7 +1033,7 @@ class OperatorLeftScalarMult(Operator):
 
         See also
         --------
-        `LinearOperatorScalarMult`
+        ``LinearOperatorScalarMult``
         """
         return LinearOperatorScalarMult(self._op.derivative(point),
                                         self._scalar)
@@ -1148,7 +1152,7 @@ class OperatorRightScalarMult(Operator):
 
         See also
         --------
-        `LinearOperatorScalarMult`
+        ``LinearOperatorScalarMult``
         """
         return LinearOperatorScalarMult(
             self._op.derivative(self._scalar * point), self._scalar)
@@ -1176,8 +1180,9 @@ class LinearOperator(Operator):
     can only be defined if `domain` and `range` are both `LinearSpace`
     instances.
 
-    Differences to `Operator`
-    -------------------------
+    Notes
+    -----
+    `LinearOperator` differs from `Operator` in the following ways
 
     +----------------+----------------+-------------------------------+
     |Attribute/Method|(Return) type   |Description                    |
@@ -1203,11 +1208,11 @@ class LinearOperator(Operator):
     +----------------+----------------+-------------------------------+
     |`__mul__(other)`|depends         |If `other` is a scalar, the    |
     |                |                |product is a                   |
-    |                |                |`LinearOperatorScalarMult`     |
+    |                |                |``LinearOperatorScalarMult``   |
     +----------------+----------------+-------------------------------+
     |`__rmul__       |depends         |If `other` is a scalar, the    |
     |(other)`        |                |product is a                   |
-    |                |                |`LinearOperatorScalarMult`     |
+    |                |                |``LinearOperatorScalarMult``   |
     +----------------+----------------+-------------------------------+
 
     See also
@@ -1534,8 +1539,8 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         An operator with the provided attributes and methods.
         `SimpleOperator` is a subclass of `Operator`.
 
-    Remark
-    ------
+    Notes
+    -----
     It suffices to supply one of the functions `call` and `apply`.
     If `dom` is a `LinearSpace`, a default implementation of the
     respective other method is automatically provided; if not, a
@@ -1546,8 +1551,8 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     See `Operator` for a list of public attributes and methods as well
     as further help.
 
-    Example
-    -------
+    Examples
+    --------
     >>> A = operator(lambda x: 3*x)
     >>> A(5)
     15
@@ -1600,8 +1605,8 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
         An operator with the provided attributes and methods.
         `SimpleLinearOperator` is a subclass of `LinearOperator`.
 
-    Remark
-    ------
+    Notes
+    -----
     It suffices to supply one of the functions `call` and `apply`.
     If `dom` is a `LinearSpace`, a default implementation of the
     respective other method is automatically provided; if not, a
@@ -1612,8 +1617,8 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
     See `LinearOperator` and `Operator` for a list of public attributes
     and methods as well as further help.
 
-    Example
-    -------
+    Examples
+    --------
     >>> A = linear_operator(lambda x: 3*x)
     >>> A(5)
     15

@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>odl.operator.solvers &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for odl.operator.solvers</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="sd">&quot;&quot;&quot;General and optimized equation system solvers in linear spaces.&quot;&quot;&quot;</span>
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">,</span>
+                        <span class="n">absolute_import</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">next</span><span class="p">,</span> <span class="nb">range</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">LinearOperatorComp</span><span class="p">,</span> <span class="n">LinearOperatorSum</span>
+<span class="kn">from</span> <span class="nn">odl.operator.default</span> <span class="kn">import</span> <span class="n">IdentityOperator</span>
+
+
+<div class="viewcode-block" id="StorePartial"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.StorePartial">[docs]</a><span class="k">class</span> <span class="nc">StorePartial</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Simple object for storing all partial results of the solvers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="StorePartial.send"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.StorePartial.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; append result to results list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+</div>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="ForEachPartial"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.ForEachPartial">[docs]</a><span class="k">class</span> <span class="nc">ForEachPartial</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Simple object for applying a function to each iterate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
+
+<div class="viewcode-block" id="ForEachPartial.send"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.ForEachPartial.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Applies function to result</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="PrintIterationPartial"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.PrintIterationPartial">[docs]</a><span class="k">class</span> <span class="nc">PrintIterationPartial</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Prints the interation count</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="PrintIterationPartial.send"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.PrintIterationPartial.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Print the current iteration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;iter = {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+</div></div>
+<div class="viewcode-block" id="PrintStatusPartial"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.PrintStatusPartial">[docs]</a><span class="k">class</span> <span class="nc">PrintStatusPartial</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Prints the interation count and current norm of each iterate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="PrintStatusPartial.send"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.PrintStatusPartial.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Print the current iteration and norm</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;iter = {}, norm = {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">norm</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+</div></div>
+<div class="viewcode-block" id="landweber"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.landweber">[docs]</a><span class="k">def</span> <span class="nf">landweber</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">partial</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; General and efficient implementation of Landweber iteration</span>
+
+<span class="sd">    x &lt;- x - omega * (A&#39;)^* (Ax - rhs)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Reusable temporaries</span>
+    <span class="n">tmp_ran</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="n">tmp_dom</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tmp_ran</span><span class="p">)</span>
+        <span class="n">tmp_ran</span> <span class="o">-=</span> <span class="n">rhs</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">tmp_ran</span><span class="p">,</span> <span class="n">tmp_dom</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">omega</span><span class="p">,</span> <span class="n">tmp_dom</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">partial</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">partial</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="conjugate_gradient"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.conjugate_gradient">[docs]</a><span class="k">def</span> <span class="nf">conjugate_gradient</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">partial</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Optimized version of CGN, uses no temporaries etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">op</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>       <span class="c"># d = rhs - A x</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="n">sqnorm_s_old</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>  <span class="c"># Only recalculate norm after update</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>                        <span class="c"># q = A p</span>
+        <span class="n">sqnorm_q</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">if</span> <span class="n">sqnorm_q</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>  <span class="c"># Return if residual is 0</span>
+            <span class="k">return</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="n">sqnorm_s_old</span> <span class="o">/</span> <span class="n">sqnorm_q</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>                       <span class="c"># x = x + a*p</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>                      <span class="c"># d = d - a*q</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>  <span class="c"># s = A^T d</span>
+
+        <span class="n">sqnorm_s_new</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">sqnorm_s_new</span> <span class="o">/</span> <span class="n">sqnorm_s_old</span>
+        <span class="n">sqnorm_s_old</span> <span class="o">=</span> <span class="n">sqnorm_s_new</span>
+
+        <span class="n">p</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>                       <span class="c"># p = s + b * p</span>
+
+        <span class="k">if</span> <span class="n">partial</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">partial</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="exp_zero_seq"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.exp_zero_seq">[docs]</a><span class="k">def</span> <span class="nf">exp_zero_seq</span><span class="p">(</span><span class="n">scale</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The default zero sequence given by:</span>
+<span class="sd">        t_m = scale ^ (-m-1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">/=</span> <span class="n">scale</span>
+        <span class="k">yield</span> <span class="n">value</span>
+
+</div>
+<div class="viewcode-block" id="gauss_newton"><a class="viewcode-back" href="../../../odl.operator.html#odl.operator.solvers.gauss_newton">[docs]</a><span class="k">def</span> <span class="nf">gauss_newton</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">zero_seq</span><span class="o">=</span><span class="n">exp_zero_seq</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span>
+                 <span class="n">partial</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Solves op(x) = rhs using the gauss newton method. The inner-solver</span>
+<span class="sd">    uses conjugate gradient.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+    <span class="n">tmp_dom</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="n">tmp_ran</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="n">tm</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">zero_seq</span><span class="p">)</span>
+        <span class="n">deriv</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">deriv_adjoint</span> <span class="o">=</span> <span class="n">deriv</span><span class="o">.</span><span class="n">adjoint</span>
+
+        <span class="c"># v = rhs - op(x) - deriv(x0-x)</span>
+        <span class="c"># u = deriv.T(v)</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tmp_ran</span><span class="p">)</span>      <span class="c"># eval        op(x)</span>
+        <span class="n">v</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">tmp_ran</span><span class="p">)</span>  <span class="c"># assign      v = rhs - op(x)</span>
+        <span class="n">tmp_dom</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c"># assign temp  tmp_dom = x0 - x</span>
+        <span class="n">deriv</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">tmp_dom</span><span class="p">,</span> <span class="n">tmp_ran</span><span class="p">)</span>   <span class="c"># eval        deriv(x0-x)</span>
+        <span class="n">v</span> <span class="o">-=</span> <span class="n">tmp_ran</span>                    <span class="c"># assign      v = rhs-op(x)-deriv(x0-x)</span>
+        <span class="n">deriv_adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>       <span class="c"># eval/assign u = deriv.T(v)</span>
+
+        <span class="c"># Solve equation system</span>
+        <span class="c"># (deriv.T o deriv + tm * I)^-1 u = dx</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">LinearOperatorSum</span><span class="p">(</span><span class="n">LinearOperatorComp</span><span class="p">(</span><span class="n">deriv</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">deriv</span><span class="p">),</span>
+                              <span class="n">tm</span> <span class="o">*</span> <span class="n">I</span><span class="p">,</span> <span class="n">tmp_dom</span><span class="p">)</span>
+
+        <span class="c"># TODO: allow user to select other method</span>
+        <span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="c"># Update x</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span>  <span class="c"># x = x0 + dx</span>
+
+        <span class="k">if</span> <span class="n">partial</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">partial</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

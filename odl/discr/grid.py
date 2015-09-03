@@ -219,8 +219,8 @@ class TensorGrid(Set):
     def min(self):
         """Vector containing the minimal coordinates per axis.
 
-        Example
-        -------
+        Examples
+        --------
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.min
         array([ 1., -2.])
@@ -231,8 +231,8 @@ class TensorGrid(Set):
     def max(self):
         """Vector containing the maximal coordinates per axis.
 
-        Example
-        -------
+        Examples
+        --------
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max
         array([ 5., 2.])
@@ -825,8 +825,8 @@ class RegularGrid(TensorGrid):
     def center(self):
         """The center of the grid. Not necessarily a grid point.
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> rg = RegularGrid((2, 3), [-1, 1], [1, 2])
         >>> rg.center
@@ -838,8 +838,8 @@ class RegularGrid(TensorGrid):
     def stride(self):
         """The step per axis between two neighboring grid points.
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> rg = RegularGrid((2, 3), [-1, 1], [1, 2])
         >>> rg.stride

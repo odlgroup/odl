@@ -1,0 +1,983 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>odl.space.set &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for odl.space.set</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">General set structure as well as implementations of the most common sets.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unicode_literals</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span>
+                        <span class="n">absolute_import</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">super</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+<span class="c"># External module imports</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Integral</span><span class="p">,</span> <span class="n">Real</span><span class="p">,</span> <span class="n">Complex</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.utility.utility</span> <span class="kn">import</span> <span class="n">errfmt</span><span class="p">,</span> <span class="n">array1d_repr</span>
+
+
+<div class="viewcode-block" id="Set"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Set">[docs]</a><span class="k">class</span> <span class="nc">Set</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="nb">object</span><span class="p">)):</span>
+
+    <span class="sd">&quot;&quot;&quot;An abstract set.&quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Set.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Set.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test two sets for equality</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+</div>
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Set.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Set.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Test if other is a member of self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="Set.element"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Set.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an element from `inp` or from scratch.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;&#39;element&#39; method not implemented&quot;</span><span class="p">)</span>
+
+    <span class="c"># Default implemenations</span></div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="EmptySet"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.EmptySet">[docs]</a><span class="k">class</span> <span class="nc">EmptySet</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The empty set.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EmptySet.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.EmptySet.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is an `EmptySet` instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">EmptySet</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EmptySet.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.EmptySet.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is None.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="EmptySet.element"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.EmptySet.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an element, only possible if `inp` is `None`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Cannot create an `EmptySet` element from {}.&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inp</span><span class="p">)))</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;EmptySet&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;EmptySet()&quot;</span>
+
+</div>
+<div class="viewcode-block" id="UniversalSet"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.UniversalSet">[docs]</a><span class="k">class</span> <span class="nc">UniversalSet</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The set of all sets.</span>
+
+<span class="sd">    Forget about set theory for a moment :-)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># pylint: disable=abstract-method</span>
+<div class="viewcode-block" id="UniversalSet.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.UniversalSet.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is a `UniversalSet` instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">UniversalSet</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="UniversalSet.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.UniversalSet.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return `True`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;UniversalSet&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;UniversalSet()&quot;</span>
+
+</div>
+<div class="viewcode-block" id="ComplexNumbers"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.ComplexNumbers">[docs]</a><span class="k">class</span> <span class="nc">ComplexNumbers</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The set of complex numbers.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ComplexNumbers.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.ComplexNumbers.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests if `other` is a `ComplexNumbers` instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ComplexNumbers.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.ComplexNumbers.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is a complex number.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Complex</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ComplexNumbers.element"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.ComplexNumbers.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a complex number from `inp` or from scratch.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;ComplexNumbers&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;ComplexNumbers()&quot;</span>
+
+</div>
+<div class="viewcode-block" id="RealNumbers"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.RealNumbers">[docs]</a><span class="k">class</span> <span class="nc">RealNumbers</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The set of real numbers.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RealNumbers.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.RealNumbers.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests if `other` is a `RealNumbers` instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RealNumbers.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.RealNumbers.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is a real number.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RealNumbers.element"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.RealNumbers.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a real number from `inp` or from scratch.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;RealNumbers&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;RealNumbers()&quot;</span>
+
+</div>
+<div class="viewcode-block" id="Integers"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Integers">[docs]</a><span class="k">class</span> <span class="nc">Integers</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The set of integers.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Integers.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Integers.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests if `other` is an `Integers` instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Integers.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Integers.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is an integer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Integral</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Integers.element"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Integers.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an integer from `inp` or from scratch.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Integers&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Integers()&quot;</span>
+
+</div>
+<div class="viewcode-block" id="IntervalProd"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd">[docs]</a><span class="k">class</span> <span class="nc">IntervalProd</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;An n-dimensional rectangular box.</span>
+
+<span class="sd">    An IntervalProd is a Cartesian product of N intervals, i.e. an</span>
+<span class="sd">    N-dimensional rectangular box aligned with the coordinate axes</span>
+<span class="sd">    as a subset of R^n.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+<span class="sd">    |Name      |Type           |Description                           |</span>
+<span class="sd">    +==========+===============+======================================+</span>
+<span class="sd">    |`begin`   |`numpy.ndarray`|(Vector of) leftmost interval point(s)|</span>
+<span class="sd">    |          |or `float`     |                                      |</span>
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+<span class="sd">    |`end`     |`numpy.ndarray`|(Vector of) rightmost interval        |</span>
+<span class="sd">    |          |or `float`     |point(s)                              |</span>
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+<span class="sd">    |`dim`     |`int`          |Number of axes                        |</span>
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+<span class="sd">    |`truedim` |`int`          |Number of non-degenerate axes, i.e.   |</span>
+<span class="sd">    |          |               |where `begin != end`                  |</span>
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+<span class="sd">    |`sizes`   |`numpy.ndarray`|(Vector of) interval length(s)        |</span>
+<span class="sd">    |          |or `float`     |                                      |</span>
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+<span class="sd">    |`volume`  |`float`        |`dim`-dimensional measure             |</span>
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+<span class="sd">    |`midpoint`|`numpy.ndarray`|Vector of interval midpoint(s)        |</span>
+<span class="sd">    |          |or `float`     |                                      |</span>
+<span class="sd">    +----------+---------------+--------------------------------------+</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |Signature           |Return type    |Description                 |</span>
+<span class="sd">    +====================+===============+============================+</span>
+<span class="sd">    |`equals(other,      |`boolean`      |Test if `other` is equal to |</span>
+<span class="sd">    |tol=0.0)`           |               |this interval product.      |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |`contains(other,    |`boolean`      |Test if `other` is contained|</span>
+<span class="sd">    |tol=0.0)`           |               |in this interval product.   |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |`measure(dim=None)` |`float`        |Return the `dim`-dimensional|</span>
+<span class="sd">    |                    |               |measure of this interval    |</span>
+<span class="sd">    |                    |               |product.                    |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |`dist(point,        |`float`        |Return the distance in      |</span>
+<span class="sd">    |ord=2.0)`           |               |`ord`-norm between `point`  |</span>
+<span class="sd">    |                    |               |and this interval product.  |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |`collapse(indcs,    |`IntervalProd` |Return the interval product |</span>
+<span class="sd">    |vals)`              |               |where the intervals at      |</span>
+<span class="sd">    |                    |               |`indcs` are collapsed to    |</span>
+<span class="sd">    |                    |               |single values `vals`.       |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |`insert(other,      |`IntervalProd` |Return the interval product |</span>
+<span class="sd">    |index)`             |               |wher `other` has been       |</span>
+<span class="sd">    |                    |               |before `index`.             |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |`corners(order=&#39;C&#39;)`|`numpy.ndarray`|Return the corner points    |</span>
+<span class="sd">    |                    |               |of this interval product    |</span>
+<span class="sd">    |                    |               |in a single array.          |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+<span class="sd">    |`uniform_sampling(  |`RegularGrid`  |Create a regular grid by    |</span>
+<span class="sd">    |num_nodes,          |               |sampling this interval      |</span>
+<span class="sd">    |as_midp=False)`     |               |product at `num_nodes`      |</span>
+<span class="sd">    |                    |               |equidistant nodes (per      |</span>
+<span class="sd">    |                    |               |axis).                      |</span>
+<span class="sd">    +--------------------+---------------+----------------------------+</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    `RegularGrid` is defined in `odl.discr.grid`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new `IntervalProd` instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        begin : array-like or float</span>
+<span class="sd">            The left ends of the intervals in the product</span>
+<span class="sd">        end : array-like or float</span>
+<span class="sd">            The right ends of the intervals in the product</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; b, e = [-1, 2.5, 70], [-0.5, 10, 75]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(b, e)</span>
+<span class="sd">        &gt;&gt;&gt; rbox</span>
+<span class="sd">        IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">begin</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">end</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">begin</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">end</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Lengths of &#39;begin&#39; ({}) and &#39;end&#39; ({}) do not match.</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">begin</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">end</span><span class="p">))))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">begin</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">):</span>
+            <span class="n">i_wrong</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">begin</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Entries of &#39;begin&#39; exceed those of &#39;end&#39; ({!r} &gt; {!r})</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">begin</span><span class="p">[</span><span class="n">i_wrong</span><span class="p">]),</span> <span class="nb">list</span><span class="p">(</span><span class="n">end</span><span class="p">[</span><span class="n">i_wrong</span><span class="p">]))))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span> <span class="o">=</span> <span class="n">begin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">=</span> <span class="n">end</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ideg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inondeg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="c"># Basic properties</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">begin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The left interval boundary/boundaries.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The right interval boundary/boundaries.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The number of intervals in the product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">truedim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The number of non-degenerate (zero-length) intervals.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inondeg</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The interval length per axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The &#39;dim&#39;-dimensional volume of this IntervalProd.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">midpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The midpoint of the interval product.</span>
+
+<span class="sd">        If dim == 1, a float is returned, otherwise an array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">midp</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="n">midp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ideg</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ideg</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">midp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">midp</span>
+
+<div class="viewcode-block" id="IntervalProd.element"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An arbitrary element, the midpoint.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">midpoint</span>
+
+    <span class="c"># Overrides of the abstract base class methods</span></div>
+<div class="viewcode-block" id="IntervalProd.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if another set is equal to the current one.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : object</span>
+<span class="sd">            The object to be tested.</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">            The maximum allowed difference in &#39;inf&#39;-norm between the</span>
+<span class="sd">            interval endpoints.</span>
+<span class="sd">            Default: 0.0</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from math import sqrt</span>
+<span class="sd">        &gt;&gt;&gt; rbox1 = IntervalProd(0, 0.5)</span>
+<span class="sd">        &gt;&gt;&gt; rbox2 = IntervalProd(0, sqrt(0.5)**2)</span>
+<span class="sd">        &gt;&gt;&gt; rbox1.equals(rbox2)  # Num error</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; rbox1 == rbox2  # Equivalent to rbox1.equals(rbox2)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; rbox1.equals(rbox2, tol=1e-15)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># pylint: disable=arguments-differ</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="IntervalProd.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if a point is contained.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : array-like or float</span>
+<span class="sd">            The point to be tested. Its length must be equal</span>
+<span class="sd">            to the set&#39;s dimension. In the 1d case, &#39;point&#39;</span>
+<span class="sd">            can be given as a float.</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">            The maximum allowed distance in &#39;inf&#39;-norm between the</span>
+<span class="sd">            point and the set.</span>
+<span class="sd">            Default: 0.0</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from math import sqrt</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd([-1, 0, 2], [-0.5, 0, 3])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9])  # Num error</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-15)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># pylint: disable=arguments-differ</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">RealNumbers</span><span class="p">()</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="IntervalProd.contains_grid"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.contains_grid">[docs]</a>    <span class="k">def</span> <span class="nf">contains_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if a grid is contained.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid : `TensorGrid`</span>
+<span class="sd">            The grid to be tested</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">            The maximum allowed distance in &#39;inf&#39;-norm between the</span>
+<span class="sd">            grid points and the set.</span>
+<span class="sd">            Default: 0.0</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from odl.discr.grid import TensorGrid</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd([-1, 0], [-0.5, 0])</span>
+<span class="sd">        &gt;&gt;&gt; grid = TensorGrid([-1, -0.8, -0.5], [0])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains_grid(grid)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; grid = TensorGrid([-1, -0.8, -0.5], [0, 1])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains_grid(grid)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; grid = TensorGrid([-1, -0.8, -0.4], [0])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains_grid(grid)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; rbox.contains_grid(grid, tol=0.1)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">odl.discr.grid</span> <span class="kn">import</span> <span class="n">TensorGrid</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">TensorGrid</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s">&#39;inf&#39;</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">tol</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s">&#39;inf&#39;</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">)</span>
+
+    <span class="c"># Additional property-like methods</span></div>
+<div class="viewcode-block" id="IntervalProd.measure"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.measure">[docs]</a>    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The (Lebesgue) measure of the IntervalProd instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dim : int, optional</span>
+<span class="sd">              The dimension of the measure to apply.</span>
+<span class="sd">              Default: truedim</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; b, e = [-1, 2.5, 0], [-0.5, 10, 0]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(b, e)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure()</span>
+<span class="sd">        3.75</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure(dim=3)</span>
+<span class="sd">        0.0</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure(dim=3) == rbox.volume</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure(dim=1)</span>
+<span class="sd">        inf</span>
+<span class="sd">        &gt;&gt;&gt; rbox.measure() == rbox.squeeze().volume</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">truedim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">truedim</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">dim</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">truedim</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">elif</span> <span class="n">dim</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">truedim</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">)[</span><span class="bp">self</span><span class="o">.</span><span class="n">_inondeg</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="IntervalProd.dist"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.dist">[docs]</a>    <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mf">2.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the distance to a point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        point : array-like or float</span>
+<span class="sd">                The point. Its length must be equal to the set&#39;s</span>
+<span class="sd">                dimension. In the 1d case, &#39;point&#39; can be given as a</span>
+<span class="sd">                float.</span>
+<span class="sd">        ord : non-zero int or float(&#39;inf&#39;), optional</span>
+<span class="sd">              The order of the norm (see numpy.linalg.norm).</span>
+<span class="sd">              Default: 2.0</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; b, e = [-1, 0, 2], [-0.5, 0, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(b, e)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.dist([-5, 3, 2])</span>
+<span class="sd">        5.0</span>
+<span class="sd">        &gt;&gt;&gt; rbox.dist([-5, 3, 2], ord=float(&#39;inf&#39;))</span>
+<span class="sd">        4.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            &#39;point&#39; dimension ({}) different from set dimension ({}).</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">point</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)))</span>
+
+        <span class="n">i_larger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">point</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)</span>
+        <span class="n">i_smaller</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">point</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">)</span>
+
+        <span class="c"># Access [0] since np.where returns tuple.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_larger</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_smaller</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">proj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">point</span><span class="p">[</span><span class="n">i_larger</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="n">i_smaller</span><span class="p">]))</span>
+            <span class="n">border</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[</span><span class="n">i_larger</span><span class="p">],</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="n">i_smaller</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">proj</span> <span class="o">-</span> <span class="n">border</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="nb">ord</span><span class="p">)</span>
+
+    <span class="c"># Manipulation</span></div>
+<div class="viewcode-block" id="IntervalProd.collapse"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.collapse">[docs]</a>    <span class="k">def</span> <span class="nf">collapse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indcs</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Partly collapse the interval product to single values.</span>
+
+<span class="sd">        Note that no changes are made in-place.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indcs : int or tuple of ints</span>
+<span class="sd">            The indices of the dimensions along which to collapse</span>
+<span class="sd">        values : float or array-like</span>
+<span class="sd">            The values to which to collapse. Must have the same</span>
+<span class="sd">            lenght as &#39;indcs&#39;. Values must lie within the interval</span>
+<span class="sd">            boundaries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The collapsed IntervalProd</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; b, e = [-1, 0, 2], [-0.5, 1, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(b, e)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse(1, 0)</span>
+<span class="sd">        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse([1, 2], [0, 2.5])</span>
+<span class="sd">        IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse([1, 2], [0, 3.5])</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        ValueError: &#39;values&#39; not within interval boundaries ([3.5] &gt;</span>
+<span class="sd">        [3.0])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indcs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">indcs</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indcs</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            lengths of &#39;indcs&#39; ({}) and &#39;values&#39; ({}) do not match</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indcs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">))))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indcs</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indcs</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            &#39;indcs&#39;({!r}) out of range (max {})</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">indcs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="n">indcs</span><span class="p">]):</span>
+            <span class="n">i_smaller</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="n">indcs</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            &#39;values&#39; not within interval boundaries ({!r} &lt; {!r})</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">i_smaller</span><span class="p">]),</span>
+                       <span class="nb">list</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="n">indcs</span><span class="p">])[</span><span class="n">i_smaller</span><span class="p">]))))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[</span><span class="n">indcs</span><span class="p">]):</span>
+            <span class="n">i_larger</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">values</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[</span><span class="n">indcs</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            &#39;values&#39; not within interval boundaries ({!r} &gt; {!r})</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">i_larger</span><span class="p">]),</span>
+                       <span class="nb">list</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[</span><span class="n">indcs</span><span class="p">])[</span><span class="n">i_larger</span><span class="p">]))))</span>
+
+        <span class="n">b_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">b_new</span><span class="p">[</span><span class="n">indcs</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+        <span class="n">e_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">e_new</span><span class="p">[</span><span class="n">indcs</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+
+        <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">b_new</span><span class="p">,</span> <span class="n">e_new</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntervalProd.squeeze"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.squeeze">[docs]</a>    <span class="k">def</span> <span class="nf">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove the degenerate dimensions.</span>
+
+<span class="sd">        Note that no changes are made in-place.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The squeezed IntervalProd</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; b, e = [-1, 0, 2], [-0.5, 1, 3]</span>
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd(b, e)</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse(1, 0).squeeze()</span>
+<span class="sd">        IntervalProd([-1.0, 2.0], [-0.5, 3.0])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse([1, 2], [0, 2.5]).squeeze()</span>
+<span class="sd">        IntervalProd([-1.0], [-0.5])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()</span>
+<span class="sd">        IntervalProd([], [])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_inondeg</span><span class="p">]</span>
+        <span class="n">e_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_inondeg</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">b_new</span><span class="p">,</span> <span class="n">e_new</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntervalProd.insert"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Insert another IntervalProd before the given index.</span>
+
+<span class="sd">        The given IntervalProd (dim=m) is inserted into the current</span>
+<span class="sd">        one (dim=n) before the given index, resulting in a new</span>
+<span class="sd">        IntervalProd of dimension n+m.</span>
+<span class="sd">        Note that no changes are made in-place.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : IntervalProd, float or array-like</span>
+<span class="sd">            The IntervalProd to be inserted. A float or array a is</span>
+<span class="sd">            treated as an IntervalProd(a, a).</span>
+<span class="sd">        index : int</span>
+<span class="sd">            The index of the dimension before which &#39;other&#39; is to</span>
+<span class="sd">            be inserted. Must fulfill 0 &lt;= index &lt;= dim.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The enlarged IntervalProd</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd([-1, 2], [-0.5, 3])</span>
+<span class="sd">        &gt;&gt;&gt; rbox2 = IntervalProd([0, 0], [1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.insert(rbox2, 1)</span>
+<span class="sd">        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.insert([-1.0, 0.0], 2)</span>
+<span class="sd">        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.insert(0, 1).squeeze().equals(rbox)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&#39;Index ({}) out of range&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">IntervalProd</span><span class="p">):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+        <span class="n">new_beg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">new_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="n">new_beg</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span>
+        <span class="n">new_end</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[:</span> <span class="n">index</span><span class="p">]</span>
+        <span class="n">new_beg</span><span class="p">[</span><span class="n">index</span><span class="p">:</span> <span class="n">index</span><span class="o">+</span><span class="n">other</span><span class="o">.</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">begin</span>
+        <span class="n">new_end</span><span class="p">[</span><span class="n">index</span><span class="p">:</span> <span class="n">index</span><span class="o">+</span><span class="n">other</span><span class="o">.</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">:</span>  <span class="c"># Avoid IndexError</span>
+            <span class="n">new_beg</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="n">other</span><span class="o">.</span><span class="n">dim</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span>
+            <span class="n">new_end</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="n">other</span><span class="o">.</span><span class="n">dim</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">IntervalProd</span><span class="p">(</span><span class="n">new_beg</span><span class="p">,</span> <span class="n">new_end</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntervalProd.corners"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.corners">[docs]</a>    <span class="k">def</span> <span class="nf">corners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The corner points in a single array.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        order : &#39;C&#39; or &#39;F&#39;</span>
+<span class="sd">            The ordering of the axes in which the corners appear in</span>
+<span class="sd">            the output.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        out : numpy.ndarray</span>
+<span class="sd">            The size of the array is 2^m x dim, where m is the number of</span>
+<span class="sd">            non-degenerate axes, i.e. the corners are stored as rows.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.corners()</span>
+<span class="sd">        array([[-1. ,  2. ,  0. ],</span>
+<span class="sd">               [-1. ,  2. ,  0.5],</span>
+<span class="sd">               [-1. ,  3. ,  0. ],</span>
+<span class="sd">               [-1. ,  3. ,  0.5],</span>
+<span class="sd">               [-0.5,  2. ,  0. ],</span>
+<span class="sd">               [-0.5,  2. ,  0.5],</span>
+<span class="sd">               [-0.5,  3. ,  0. ],</span>
+<span class="sd">               [-0.5,  3. ,  0.5]])</span>
+<span class="sd">        &gt;&gt;&gt; rbox.corners(order=&#39;F&#39;)</span>
+<span class="sd">        array([[-1. ,  2. ,  0. ],</span>
+<span class="sd">               [-0.5,  2. ,  0. ],</span>
+<span class="sd">               [-1. ,  3. ,  0. ],</span>
+<span class="sd">               [-0.5,  3. ,  0. ],</span>
+<span class="sd">               [-1. ,  2. ,  0.5],</span>
+<span class="sd">               [-0.5,  2. ,  0.5],</span>
+<span class="sd">               [-1. ,  3. ,  0.5],</span>
+<span class="sd">               [-0.5,  3. ,  0.5]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">odl.discr.grid</span> <span class="kn">import</span> <span class="n">TensorGrid</span>
+        <span class="k">if</span> <span class="n">order</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;F&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Value of &#39;order&#39; ({}) must be &#39;C&#39; or &#39;F&#39;.&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">order</span><span class="p">)))</span>
+
+        <span class="n">minmax_vecs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ideg</span><span class="p">:</span>
+            <span class="n">minmax_vecs</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inondeg</span><span class="p">:</span>
+            <span class="n">minmax_vecs</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
+
+        <span class="n">minmax_grid</span> <span class="o">=</span> <span class="n">TensorGrid</span><span class="p">(</span><span class="o">*</span><span class="n">minmax_vecs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">minmax_grid</span><span class="o">.</span><span class="n">points</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntervalProd.uniform_sampling"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.IntervalProd.uniform_sampling">[docs]</a>    <span class="k">def</span> <span class="nf">uniform_sampling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_nodes</span><span class="p">,</span> <span class="n">as_midp</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Produce equispaced nodes, a RegularGrid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        num_nodes : int or tuple of int&#39;s</span>
+<span class="sd">            The number of nodes per axis. For dim=1, a single int may</span>
+<span class="sd">            be given. All entries must be positive. Entries</span>
+<span class="sd">            corresponding to degenerate axes must be equal to 1.</span>
+<span class="sd">        as_midp : boolean, optional</span>
+<span class="sd">            If True, the midpoints of an interval partition will be</span>
+<span class="sd">            returned, which excludes the endpoints. Otherwise,</span>
+<span class="sd">            equispaced nodes including the endpoints are generated.</span>
+<span class="sd">            Note that the resulting strides are different.</span>
+<span class="sd">            Default: False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        sampling : grid.RegularGrid</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; rbox = IntervalProd([-1, 2], [-0.5, 3])</span>
+<span class="sd">        &gt;&gt;&gt; grid = rbox.uniform_sampling([2, 5])</span>
+<span class="sd">        &gt;&gt;&gt; grid.coord_vectors</span>
+<span class="sd">        (array([-1. , -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))</span>
+<span class="sd">        &gt;&gt;&gt; grid = rbox.uniform_sampling([2, 5], as_midp=True)</span>
+<span class="sd">        &gt;&gt;&gt; grid.coord_vectors</span>
+<span class="sd">        (array([-0.875, -0.625]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">odl.discr.grid</span> <span class="kn">import</span> <span class="n">RegularGrid</span>
+        <span class="n">num_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">num_nodes</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Uniform sampling undefined for infinite domains.&#39;&#39;&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">num_nodes</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            &#39;num_nodes&#39; ({}) must have shape ({},).</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_nodes</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">num_nodes</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            All entries of &#39;num_nodes&#39; must be positive.&#39;&#39;&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">num_nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ideg</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Degenerate axes {} cannot be sampled with more than one</span>
+<span class="s">            node.&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ideg</span><span class="p">))))</span>
+
+        <span class="n">center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">midpoint</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">/</span> <span class="n">num_nodes</span> <span class="k">if</span> <span class="n">as_midp</span> <span class="k">else</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_nodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">RegularGrid</span><span class="p">(</span><span class="n">num_nodes</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+
+    <span class="c"># Magic methods</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;IntervalProd({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">array1d_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">),</span> <span class="n">array1d_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39; x &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;[{}, {}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span>
+
+</div>
+<div class="viewcode-block" id="Interval"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Interval">[docs]</a><span class="k">class</span> <span class="nc">Interval</span><span class="p">(</span><span class="n">IntervalProd</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The set of real numbers in the interval [begin, end]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            &#39;begin&#39; and &#39;end&#39; must scalar or have length 1 (got {}).</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The length of this interval</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Interval({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="Rectangle"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Rectangle">[docs]</a><span class="k">class</span> <span class="nc">Rectangle</span><span class="p">(</span><span class="n">IntervalProd</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Lengths of &#39;begin&#39; and &#39;end&#39; must be equal to 2 (got {}).</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The area of this triangle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;Rectangle({!r}, {!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">),</span>
+                                               <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="Cube"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.Cube">[docs]</a><span class="k">class</span> <span class="nc">Cube</span><span class="p">(</span><span class="n">IntervalProd</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            Lengths of &#39;begin&#39; and &#39;end&#39; must be equal to 3 (got {}).</span>
+<span class="s">            &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;Cube({!r}, {!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_begin</span><span class="p">),</span>
+                                          <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="CartesianProduct"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.CartesianProduct">[docs]</a><span class="k">class</span> <span class="nc">CartesianProduct</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+    <span class="c"># pylint: disable=abstract-method</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">sets</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">set_</span><span class="p">,</span> <span class="n">Set</span><span class="p">)</span> <span class="k">for</span> <span class="n">set_</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">):</span>
+            <span class="n">wrong_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">set_</span> <span class="k">for</span> <span class="n">set_</span> <span class="ow">in</span> <span class="n">sets</span>
+                         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">set_</span><span class="p">,</span> <span class="n">Set</span><span class="p">)]</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;{} not Set instance(s)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wrong_set</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sets</span> <span class="o">=</span> <span class="n">sets</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The factors (sets) as a tuple.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sets</span>
+
+<div class="viewcode-block" id="CartesianProduct.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.CartesianProduct.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">sets</span><span class="p">)))</span>
+</div>
+<div class="viewcode-block" id="CartesianProduct.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.set.CartesianProduct.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">set_</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">set_</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">,</span> <span class="n">point</span><span class="p">))</span>
+</div>
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sets</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39; x &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">set_</span><span class="p">)</span> <span class="k">for</span> <span class="n">set_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;CartesianProduct(&#39;</span> <span class="o">+</span>
+                <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">set_</span><span class="p">)</span> <span class="k">for</span> <span class="n">set_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;)&#39;</span><span class="p">)</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">doctest</span> <span class="kn">import</span> <span class="n">testmod</span><span class="p">,</span> <span class="n">NORMALIZE_WHITESPACE</span>
+    <span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">NORMALIZE_WHITESPACE</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

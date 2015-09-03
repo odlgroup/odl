@@ -1,0 +1,442 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test.operator.operator_test &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test.operator.operator_test</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">,</span>
+                        <span class="n">absolute_import</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+
+<span class="c"># External module imports</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">LinearOperator</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">OperatorSum</span><span class="p">,</span> <span class="n">OperatorComp</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">OperatorLeftScalarMult</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">OperatorRightScalarMult</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">LinearOperatorSum</span><span class="p">,</span> <span class="n">LinearOperatorComp</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="n">LinearOperatorScalarMult</span>
+<span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="kn">from</span> <span class="nn">odl.utility.testutils</span> <span class="kn">import</span> <span class="n">ODLTestCase</span>
+
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="MultiplyAndSquareOp"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.MultiplyAndSquareOp">[docs]</a><span class="k">class</span> <span class="nc">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Example of a nonlinear operator, Calculates (A*x)**2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rn</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                       <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">domain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">range</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rn</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                      <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="nb">range</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">rhs</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">**=</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;MaS: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;**2&quot;</span>
+
+</div>
+<div class="viewcode-block" id="mult_sq_np"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.mult_sq_np">[docs]</a><span class="k">def</span> <span class="nf">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="c"># The same as MultiplyAndSquareOp but only using numpy</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+</div>
+<div class="viewcode-block" id="TestOperator"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestOperator">[docs]</a><span class="k">class</span> <span class="nc">TestOperator</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestOperator.test_mult_sq_op"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestOperator.test_mult_sq_op">[docs]</a>    <span class="k">def</span> <span class="nf">test_mult_sq_op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Verify that the operator does indeed work as expected</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">Aop</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestOperator.test_addition"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestOperator.test_addition">[docs]</a>    <span class="k">def</span> <span class="nf">test_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Test operator addition</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">Bop</span> <span class="o">=</span> <span class="n">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c"># Explicit instantiation</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">OperatorSum</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">Bop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span>
+                                   <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c"># Using operator overloading</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">Aop</span> <span class="o">+</span> <span class="n">Bop</span><span class="p">)(</span><span class="n">xvec</span><span class="p">),</span>
+                                   <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c"># Verify that unmatched operators domains fail</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">Cop</span> <span class="o">=</span> <span class="n">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">OperatorSum</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">Cop</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestOperator.test_scale"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestOperator.test_scale">[docs]</a>    <span class="k">def</span> <span class="nf">test_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c"># Test a range of scalars (scalar multiplication could implement</span>
+        <span class="c"># optimizations for (-1, 0, 1)).</span>
+        <span class="n">scalars</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.432</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">3.14</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">scale</span> <span class="ow">in</span> <span class="n">scalars</span><span class="p">:</span>
+            <span class="n">lscaled</span> <span class="o">=</span> <span class="n">OperatorLeftScalarMult</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+            <span class="n">rscaled</span> <span class="o">=</span> <span class="n">OperatorRightScalarMult</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">lscaled</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span>
+                                       <span class="n">scale</span> <span class="o">*</span> <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">rscaled</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span>
+                                       <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">scale</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+
+            <span class="c"># Using operator overloading</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">scale</span> <span class="o">*</span> <span class="n">Aop</span><span class="p">)(</span><span class="n">xvec</span><span class="p">),</span>
+                                       <span class="n">scale</span> <span class="o">*</span> <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">Aop</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)(</span><span class="n">xvec</span><span class="p">),</span>
+                                       <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">scale</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+
+        <span class="c"># Fail when scaling by wrong scalar type (A complex number)</span>
+        <span class="n">nonscalars</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1j</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">nonscalar</span> <span class="ow">in</span> <span class="n">nonscalars</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">OperatorLeftScalarMult</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">nonscalar</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">OperatorRightScalarMult</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">nonscalar</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">Aop</span> <span class="o">*</span> <span class="n">nonscalar</span>
+
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">nonscalar</span> <span class="o">*</span> <span class="n">Aop</span>
+</div>
+<div class="viewcode-block" id="TestOperator.test_composition"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestOperator.test_composition">[docs]</a>    <span class="k">def</span> <span class="nf">test_composition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">Bop</span> <span class="o">=</span> <span class="n">MultiplyAndSquareOp</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Bop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">C</span> <span class="o">=</span> <span class="n">OperatorComp</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">Bop</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">mult_sq_np</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">)))</span>
+
+        <span class="c"># Verify that incorrect order fails</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">OperatorComp</span><span class="p">(</span><span class="n">Bop</span><span class="p">,</span> <span class="n">Aop</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="MultiplyOp"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.MultiplyOp">[docs]</a><span class="k">class</span> <span class="nc">MultiplyOp</span><span class="p">(</span><span class="n">LinearOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Multiply with matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_domain</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rn</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">domain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rn</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                       <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="nb">range</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">rhs</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_domain</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_range</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TestLinearOperator"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator">[docs]</a><span class="k">class</span> <span class="nc">TestLinearOperator</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestLinearOperator.test_MultiplyOp"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator.test_MultiplyOp">[docs]</a>    <span class="k">def</span> <span class="nf">test_MultiplyOp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Verify that the multiply op does indeed work as expected</span>
+
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">outvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+        <span class="c"># Using apply</span>
+        <span class="n">Aop</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">xvec</span><span class="p">,</span> <span class="n">outvec</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">outvec</span><span class="p">)</span>
+
+        <span class="c"># Using __call__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">Aop</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestLinearOperator.test_MultiplyOp_nonsquare"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator.test_MultiplyOp_nonsquare">[docs]</a>    <span class="k">def</span> <span class="nf">test_MultiplyOp_nonsquare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Verify that the multiply op does indeed work as expected</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">outvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+        <span class="c"># Using apply</span>
+        <span class="n">Aop</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">xvec</span><span class="p">,</span> <span class="n">outvec</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">outvec</span><span class="p">)</span>
+
+        <span class="c"># Using __call__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">Aop</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestLinearOperator.test_adjoint"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator.test_adjoint">[docs]</a>    <span class="k">def</span> <span class="nf">test_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">outvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+        <span class="c"># Using adjoint.apply</span>
+        <span class="n">Aop</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">xvec</span><span class="p">,</span> <span class="n">outvec</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">outvec</span><span class="p">)</span>
+
+        <span class="c"># Using T method and __call__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">Aop</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestLinearOperator.test_addition"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator.test_addition">[docs]</a>    <span class="k">def</span> <span class="nf">test_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">Bop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">yvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c"># Explicit instantiation</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">LinearOperatorSum</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">Bop</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">yvec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+
+        <span class="c"># Using operator overloading</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">Aop</span> <span class="o">+</span> <span class="n">Bop</span><span class="p">)(</span><span class="n">xvec</span><span class="p">),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">Aop</span> <span class="o">+</span> <span class="n">Bop</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">yvec</span><span class="p">),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestLinearOperator.test_scale"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator.test_scale">[docs]</a>    <span class="k">def</span> <span class="nf">test_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">yvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c"># Test a range of scalars (scalar multiplication could implement</span>
+        <span class="c"># optimizations for (-1, 0, 1).</span>
+        <span class="n">scalars</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.432</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">3.14</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">scale</span> <span class="ow">in</span> <span class="n">scalars</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">LinearOperatorScalarMult</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">yvec</span><span class="p">),</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+
+            <span class="c"># Using operator overloading</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">scale</span> <span class="o">*</span> <span class="n">Aop</span><span class="p">)(</span><span class="n">xvec</span><span class="p">),</span>
+                                       <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">Aop</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)(</span><span class="n">xvec</span><span class="p">),</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">scale</span> <span class="o">*</span> <span class="n">Aop</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">yvec</span><span class="p">),</span>
+                                       <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">((</span><span class="n">Aop</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">yvec</span><span class="p">),</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">y</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestLinearOperator.test_composition"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator.test_composition">[docs]</a>    <span class="k">def</span> <span class="nf">test_composition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">Bop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">Bop</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">yvec</span> <span class="o">=</span> <span class="n">Aop</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">C</span> <span class="o">=</span> <span class="n">LinearOperatorComp</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">Bop</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="p">(</span><span class="n">xvec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">yvec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
+</div>
+<div class="viewcode-block" id="TestLinearOperator.test_type_errors"><a class="viewcode-back" href="../../../test.operator.html#test.operator.operator_test.TestLinearOperator.test_type_errors">[docs]</a>    <span class="k">def</span> <span class="nf">test_type_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">r4</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">r3Vec1</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="n">r3Vec2</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="n">r4Vec1</span> <span class="o">=</span> <span class="n">r4</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="n">r4Vec2</span> <span class="o">=</span> <span class="n">r4</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+        <span class="c"># Verify that correct usage works</span>
+        <span class="n">Aop</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r3Vec1</span><span class="p">,</span> <span class="n">r3Vec2</span><span class="p">)</span>
+        <span class="n">Aop</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r3Vec1</span><span class="p">,</span> <span class="n">r3Vec2</span><span class="p">)</span>
+
+        <span class="c"># Test that erroneous usage raises TypeError</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="p">(</span><span class="n">r4Vec1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">T</span><span class="p">(</span><span class="n">r4Vec1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r3Vec1</span><span class="p">,</span> <span class="n">r4Vec1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r3Vec1</span><span class="p">,</span> <span class="n">r4Vec1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r4Vec1</span><span class="p">,</span> <span class="n">r3Vec1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r4Vec1</span><span class="p">,</span> <span class="n">r3Vec1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r4Vec1</span><span class="p">,</span> <span class="n">r4Vec2</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r4Vec1</span><span class="p">,</span> <span class="n">r4Vec2</span><span class="p">)</span>
+
+        <span class="c"># Check test against aliased values</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r3Vec1</span><span class="p">,</span> <span class="n">r3Vec1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">Aop</span><span class="o">.</span><span class="n">adjoint</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">r3Vec1</span><span class="p">,</span> <span class="n">r3Vec1</span><span class="p">)</span>
+
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="nb">exit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

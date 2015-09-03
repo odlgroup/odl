@@ -1,0 +1,1200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>odl.operator package &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="odl-operator-package">
+<h1>odl.operator package<a class="headerlink" href="#odl-operator-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-odl.operator.default">
+<span id="odl-operator-default-module"></span><h2>odl.operator.default module<a class="headerlink" href="#module-odl.operator.default" title="Permalink to this headline">¶</a></h2>
+<p>Default operators defined on any space of a certain kind.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="74%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Class name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><cite>ScalingOperator</cite></td>
+<td><cite>SelfAdjointOperator</cite> scaling an element with a
+real number.</td>
+</tr>
+<tr class="row-odd"><td><cite>ZeroOperator</cite></td>
+<td><cite>ScalingOperator</cite> with <cite>scalar</cite> equal to 0</td>
+</tr>
+<tr class="row-even"><td><cite>IdentityOperator</cite></td>
+<td><cite>ScalingOperator</cite> with <cite>scalar</cite> equal to 1</td>
+</tr>
+<tr class="row-odd"><td><cite>LinCombOperator</cite></td>
+<td><cite>LinearOperator</cite> mapping two space elements to the
+linear combination with two fixed scalars.</td>
+</tr>
+<tr class="row-even"><td><cite>MultiplyOperator</cite></td>
+<td><cite>Operator</cite> of multiplying two space elements. The
+<cite>range</cite> needs to be an <cite>Algebra</cite> for the
+multiplication to be well-defined.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="odl.operator.default.IdentityOperator">
+<em class="property">class </em><code class="descclassname">odl.operator.default.</code><code class="descname">IdentityOperator</code><span class="sig-paren">(</span><em>space</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/default.html#IdentityOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.default.IdentityOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.default.ScalingOperator" title="odl.operator.default.ScalingOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.default.ScalingOperator</span></code></a></p>
+<p>Operator mapping each element to itself.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.default.LinCombOperator">
+<em class="property">class </em><code class="descclassname">odl.operator.default.</code><code class="descname">LinCombOperator</code><span class="sig-paren">(</span><em>space</em>, <em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/default.html#LinCombOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.default.LinCombOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator._DefaultCallOperator</span></code>, <a class="reference internal" href="#odl.operator.operator.LinearOperator" title="odl.operator.operator.LinearOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.LinearOperator</span></code></a></p>
+<p>Operator mapping two space elements to a linear combination.</p>
+<p>This opertor calculates:</p>
+<p>outp = a*inp[0] + b*inp[1]</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.default.MultiplyOperator">
+<em class="property">class </em><code class="descclassname">odl.operator.default.</code><code class="descname">MultiplyOperator</code><span class="sig-paren">(</span><em>space</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/default.html#MultiplyOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.default.MultiplyOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator._DefaultCallOperator</span></code>, <a class="reference internal" href="#odl.operator.operator.LinearOperator" title="odl.operator.operator.LinearOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.LinearOperator</span></code></a></p>
+<p>Operator multiplying two elements.</p>
+<p>The multiply operator calculates:</p>
+<p>outp = inp[0] * inp[1]</p>
+<p>This is only applicable in Algebras.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.default.ScalingOperator">
+<em class="property">class </em><code class="descclassname">odl.operator.default.</code><code class="descname">ScalingOperator</code><span class="sig-paren">(</span><em>space</em>, <em>scalar</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/default.html#ScalingOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.default.ScalingOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.SelfAdjointOperator" title="odl.operator.operator.SelfAdjointOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.SelfAdjointOperator</span></code></a></p>
+<p>Operator of multiplication with a scalar.</p>
+<dl class="attribute">
+<dt id="odl.operator.default.ScalingOperator.domain">
+<code class="descname">domain</code><a class="headerlink" href="#odl.operator.default.ScalingOperator.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator domain.</p>
+<p>None</p>
+<dl class="docutils">
+<dt>domain <span class="classifier-delimiter">:</span> <span class="classifier">LinearSpace</span></dt>
+<dd>The domain of the operator</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">ScalingOperator</span><span class="p">(</span><span class="n">r3</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">Rn(3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.default.ScalingOperator.inverse">
+<code class="descname">inverse</code><a class="headerlink" href="#odl.operator.default.ScalingOperator.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the inverse operator.</p>
+<p>None</p>
+<dl class="docutils">
+<dt>inv <span class="classifier-delimiter">:</span> <span class="classifier">ScalingOperator</span></dt>
+<dd>Scaling by 1/scale</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vec</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">ScalingOperator</span><span class="p">(</span><span class="n">r3</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inv</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">inverse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inv</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="n">vec</span><span class="p">))</span> <span class="o">==</span> <span class="n">vec</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="p">(</span><span class="n">inv</span><span class="p">(</span><span class="n">vec</span><span class="p">))</span> <span class="o">==</span> <span class="n">vec</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.default.ScalingOperator.range">
+<code class="descname">range</code><a class="headerlink" href="#odl.operator.default.ScalingOperator.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator range.</p>
+<p>None</p>
+<dl class="docutils">
+<dt>domain <span class="classifier-delimiter">:</span> <span class="classifier">LinearSpace</span></dt>
+<dd>The domain of the operator</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">ScalingOperator</span><span class="p">(</span><span class="n">r3</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">range</span>
+<span class="go">Rn(3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.default.ZeroOperator">
+<em class="property">class </em><code class="descclassname">odl.operator.default.</code><code class="descname">ZeroOperator</code><span class="sig-paren">(</span><em>space</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/default.html#ZeroOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.default.ZeroOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.default.ScalingOperator" title="odl.operator.default.ScalingOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.default.ScalingOperator</span></code></a></p>
+<p>Operator mapping each element to the zero element.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-odl.operator.operator">
+<span id="odl-operator-operator-module"></span><h2>odl.operator.operator module<a class="headerlink" href="#module-odl.operator.operator" title="Permalink to this headline">¶</a></h2>
+<p>Abstract mathematical (linear) operators.</p>
+<p>Operators are in the most general sense mappings from one set (<cite>Set</cite>)
+to another. More common and useful are operators mapping a vector
+space (<cite>LinearSpace</cite>) into another. Many of those are linear, and
+as such, they have additional properties. See the class documentation
+for further details.
+In addition, this module defines classes for sums, compositions and
+further combinations of operators of operators.</p>
+<p>Furthermore, there are two convenience functions for quick operator
+prototyping:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="33%" />
+<col width="42%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Return type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><cite>operator</cite></td>
+<td><cite>SimpleOperator</cite>
+(subclass of
+<cite>Operator</cite>)</td>
+<td>Create an <cite>Operator</cite> by
+specifying either a <cite>call</cite>
+or an <cite>apply</cite> method (or
+both) for evaluation. See
+the function doc for a full
+description.</td>
+</tr>
+<tr class="row-odd"><td><cite>linear_operator</cite></td>
+<td><cite>SimpleLinearOperator</cite>
+(subclass of
+<cite>LinearOperator</cite>)</td>
+<td>Create an <cite>Operator</cite> by
+specifying either a <cite>call</cite>
+or an <cite>apply</cite> method (or
+both) for evaluation as well
+<cite>domain</cite> and <cite>range</cite>. See
+the function doc for a full
+description.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="odl.operator.operator.LinearOperator">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">LinearOperator</code><a class="reference internal" href="_modules/odl/operator/operator.html#LinearOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.LinearOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Abstract linear operators.</p>
+<p>A <cite>LinearOperator</cite> is an <cite>Operator</cite> which satisfies the linearity
+relation</p>
+<p><cite>op(scalar * x + y) == scalar * op(x) + op(y)</cite></p>
+<p>for all scalars and all vectors <cite>x</cite> and <cite>y</cite>. A <cite>LinearOperator</cite>
+can only be defined if <cite>domain</cite> and <cite>range</cite> are both <cite>LinearSpace</cite>
+instances.</p>
+<p><cite>LinearOperator</cite> differs from <cite>Operator</cite> in the following ways</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="49%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute/Method</th>
+<th class="head">(Return) type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><cite>adjoint</cite>
+(short: <cite>T</cite>)</td>
+<td><cite>LinearOperator</cite></td>
+<td>Additional attribute. Satisfies
+<cite>op.adjoint.domain ==
+op.range</cite>, <cite>op.adjoint.range ==
+op.domain</cite> and
+<cite>op.domain.inner(x,
+op.adjoint(y)) ==
+op.range.inner(op(x), y)</cite>.</td>
+</tr>
+<tr class="row-odd"><td><cite>derivative
+(point)</cite></td>
+<td><cite>LinearOperator</cite></td>
+<td><cite>op.derivative == op</cite></td>
+</tr>
+<tr class="row-even"><td><cite>__add__(other)</cite></td>
+<td>depends</td>
+<td>If <cite>other</cite> is a
+<cite>LinearOperator</cite> the sum is a
+<cite>LinearOperatorSum</cite></td>
+</tr>
+<tr class="row-odd"><td><cite>__add__(other)</cite></td>
+<td>depends</td>
+<td>If <cite>other</cite> is a
+<cite>LinearOperator</cite>, the sum is a
+<cite>LinearOperatorSum</cite></td>
+</tr>
+<tr class="row-even"><td><cite>__mul__(other)</cite></td>
+<td>depends</td>
+<td>If <cite>other</cite> is a scalar, the
+product is a
+<code class="docutils literal"><span class="pre">LinearOperatorScalarMult</span></code></td>
+</tr>
+<tr class="row-odd"><td><cite>__rmul__
+(other)</cite></td>
+<td>depends</td>
+<td>If <cite>other</cite> is a scalar, the
+product is a
+<code class="docutils literal"><span class="pre">LinearOperatorScalarMult</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>See <cite>Operator</cite> for a list of public attributes and methods as well
+as further help.</p>
+<dl class="attribute">
+<dt id="odl.operator.operator.LinearOperator.T">
+<code class="descname">T</code><a class="headerlink" href="#odl.operator.operator.LinearOperator.T" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shorthand for <cite>adjoint</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.LinearOperator.adjoint">
+<code class="descname">adjoint</code><a class="headerlink" href="#odl.operator.operator.LinearOperator.adjoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator adjoint.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="odl.operator.operator.LinearOperator.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#LinearOperator.derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.LinearOperator.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator derivative at &#8216;point&#8217;.</p>
+<p>For a <cite>LinearOperator</cite>, this is equivalent to <cite>op(point)</cite>, i.e.
+a linear operator is its own derivative.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.LinearOperatorComp">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">LinearOperatorComp</code><span class="sig-paren">(</span><em>left</em>, <em>right</em>, <em>tmp=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#LinearOperatorComp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.LinearOperatorComp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.OperatorComp" title="odl.operator.operator.OperatorComp"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.OperatorComp</span></code></a>, <a class="reference internal" href="#odl.operator.operator.LinearOperator" title="odl.operator.operator.LinearOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.LinearOperator</span></code></a></p>
+<p>Expression type for the composition of linear operators.</p>
+<p><cite>LinearOperatorComp(left, right) &lt;==&gt; (x &#8211;&gt; left(right(x)))</cite></p>
+<p>The composition is only well-defined if
+<cite>left.domain == right.range</cite>.</p>
+<p>See <cite>LinearOperator</cite> and <cite>Operator</cite> for a list of public
+attributes and methods as well as further help.</p>
+<dl class="attribute">
+<dt id="odl.operator.operator.LinearOperatorComp.adjoint">
+<code class="descname">adjoint</code><a class="headerlink" href="#odl.operator.operator.LinearOperatorComp.adjoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator adjoint.</p>
+<p>The adjoint of the operator composition is the composition of
+the operator adjoints in reverse order:</p>
+<p><cite>LinearOperatorComp(left, right).adjoint ==
+`LinearOperatorComp(right.adjoint, left.adjoint)</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.LinearOperatorScalarMult">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">LinearOperatorScalarMult</code><span class="sig-paren">(</span><em>op</em>, <em>scalar</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#LinearOperatorScalarMult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.LinearOperatorScalarMult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.OperatorLeftScalarMult" title="odl.operator.operator.OperatorLeftScalarMult"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.OperatorLeftScalarMult</span></code></a>, <a class="reference internal" href="#odl.operator.operator.LinearOperator" title="odl.operator.operator.LinearOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.LinearOperator</span></code></a></p>
+<p>Expression type for the linear operator scalar multiplication.</p>
+<p><cite>LinearOperatorScalarMult(op, scalar) &lt;==&gt; (x &#8211;&gt; scalar * op(x))</cite></p>
+<p>For linear operators, left and right scalar multiplications are
+equal.</p>
+<p>See <cite>LinearOperator</cite> and <cite>Operator</cite> for a list of public
+attributes and methods as well as further help.</p>
+<dl class="attribute">
+<dt id="odl.operator.operator.LinearOperatorScalarMult.adjoint">
+<code class="descname">adjoint</code><a class="headerlink" href="#odl.operator.operator.LinearOperatorScalarMult.adjoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator adjoint.</p>
+<p>The adjoint of the operator scalar multiplication is the
+scalar multiplication of the operator adjoint:</p>
+<p><cite>LinearOperatorScalarMult(op, scalar).adjoint ==
+`LinearOperatorScalarMult(op.adjoint, scalar)</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.LinearOperatorSum">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">LinearOperatorSum</code><span class="sig-paren">(</span><em>op1</em>, <em>op2</em>, <em>tmp_ran=None</em>, <em>tmp_dom=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#LinearOperatorSum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.LinearOperatorSum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.OperatorSum" title="odl.operator.operator.OperatorSum"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.OperatorSum</span></code></a>, <a class="reference internal" href="#odl.operator.operator.LinearOperator" title="odl.operator.operator.LinearOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.LinearOperator</span></code></a></p>
+<p>Expression type for the sum of operators.</p>
+<p><cite>LinearOperatorSum(op1, op2) &lt;==&gt; (x &#8211;&gt; op1(x) + op2(x))</cite></p>
+<p>See <cite>Operator</cite> for a list of public attributes and methods as well
+as further help.</p>
+<dl class="attribute">
+<dt id="odl.operator.operator.LinearOperatorSum.adjoint">
+<code class="descname">adjoint</code><a class="headerlink" href="#odl.operator.operator.LinearOperatorSum.adjoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator adjoint.</p>
+<p>The adjoint of the operator sum is the sum of the operator
+adjoints:</p>
+<p><cite>LinearOperatorSum(op1, op2).adjoint ==
+`LinearOperatorSum(op1.adjoint, op2.adjoint)</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.Operator">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">Operator</code><a class="reference internal" href="_modules/odl/operator/operator.html#Operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.Operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Abstract operator.</p>
+<p><cite>Operator</cite> is an <strong>abstract</strong> class, i.e. it can only be
+subclassed, not used directly.</p>
+<p><strong>Any subclass of `Operator` must have the following attributes:</strong></p>
+<dl class="docutils">
+<dt>domain <span class="classifier-delimiter">:</span> <span class="classifier"><cite>Set</cite></span></dt>
+<dd>The set of elements this operator can be applied to</dd>
+<dt>range <span class="classifier-delimiter">:</span> <span class="classifier"><cite>Set</cite></span></dt>
+<dd>The set this operator maps to</dd>
+</dl>
+<p>In addition, <strong>any subclass needs to implement at least one of the
+methods `_call()` and `_apply()`.</strong>
+These are explained in the following.</p>
+<p>Out-of-place evaluation means that the operator is applied,
+and the result is written to a new element which is returned.
+In this case, a subclass has to implement the method</p>
+<p><cite>_call(self, inp)</cite>     &lt;==&gt;     <cite>operator(inp)</cite></p>
+<p><strong>Parameters:</strong></p>
+<dl class="docutils">
+<dt>inp <span class="classifier-delimiter">:</span> <span class="classifier"><cite>domain</cite> element</span></dt>
+<dd>An object in the operator domain to which the operator is
+applied.</dd>
+</dl>
+<p><strong>Returns:</strong></p>
+<dl class="docutils">
+<dt>outp <span class="classifier-delimiter">:</span> <span class="classifier"><cite>range</cite> element</span></dt>
+<dd>An object in the operator range, the result of the operator
+evaluation.</dd>
+</dl>
+<p>In-place evaluation means that the operator is applied, and the
+result is written to an existing element provided as an additional
+argument. In this case, a subclass has to implement the method</p>
+<p><cite>_apply(self, inp, outp)</cite>     &lt;==&gt;     <cite>outp &lt;&#8211; operator(inp)</cite></p>
+<p><strong>Parameters:</strong></p>
+<dl class="docutils">
+<dt>inp <span class="classifier-delimiter">:</span> <span class="classifier"><cite>domain</cite> element</span></dt>
+<dd>An object in the operator domain to which the operator is
+applied.</dd>
+<dt>outp <span class="classifier-delimiter">:</span> <span class="classifier"><cite>range</cite> element</span></dt>
+<dd>An object in the operator range to which the result of the
+operator evaluation is written.</dd>
+</dl>
+<p><strong>Returns:</strong></p>
+<p>None</p>
+<p>If not both <cite>_apply()</cite> and <cite>_call()</cite> are implemented and the
+<cite>range</cite> is a <cite>LinearSpace</cite>, a default implementation of the
+respective other is provided.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="25%" />
+<col width="56%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><cite>domain</cite></td>
+<td><cite>Set</cite></td>
+<td>Elements to which the operator can
+be applied</td>
+</tr>
+<tr class="row-odd"><td><cite>range</cite></td>
+<td><cite>Set</cite></td>
+<td>Results of operator application are
+elements of this set.</td>
+</tr>
+<tr class="row-even"><td><cite>inverse</cite>
+(short:<cite>I</cite>)</td>
+<td><cite>Operator</cite></td>
+<td>The inverse operator. Raises
+<cite>NotImplementedError</cite> by default.</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="26%" />
+<col width="13%" />
+<col width="37%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Signature</th>
+<th class="head">Return type</th>
+<th class="head" colspan="2">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><cite>apply(inp,
+outp)</cite></td>
+<td><cite>None</cite></td>
+<td colspan="2">Apply the operator to <cite>inp</cite> and
+write to <cite>outp</cite>. In addition to
+the private method <cite>_apply()</cite>,
+error checks are performed.</td>
+</tr>
+<tr class="row-odd"><td><cite>__call__(inp)</cite></td>
+<td>element of
+<cite>range</cite></td>
+<td colspan="2">Implements the call pattern
+<cite>op(inp)</cite>. In addition to the
+private method <cite>_call()</cite>, error
+checks are performed.</td>
+</tr>
+<tr class="row-even"><td><cite>derivative
+(point)</cite></td>
+<td><cite>LinearOperator</cite></td>
+<td colspan="2">The operator derivative at
+<cite>point</cite>. Raises
+<cite>NotImplementedError</cite> by
+default.</td>
+</tr>
+<tr class="row-odd"><td><cite>__add__(op2)</cite></td>
+<td colspan="3"><cite>OperatorSum</cite>   <a href="#id1"><span class="problematic" id="id2">|</span></a>Implements <cite>op + op2</cite>.</td>
+</tr>
+<tr class="row-even"><td><cite>__mul__</cite>
+(other)</td>
+<td colspan="3"><dl class="first last docutils">
+<dt>depends         <a href="#id3"><span class="problematic" id="id4">|</span></a>Implements <cite>other * op</cite>. If</dt>
+<dd><a href="#id5"><span class="problematic" id="id6">|</span></a><cite>other is a scalar, an
+|`OperatorLeftScalarMult</cite> is
+<a href="#id7"><span class="problematic" id="id8">|</span></a>created. If <cite>other</cite> is an
+<a href="#id9"><span class="problematic" id="id10">|</span></a><cite>Operator</cite>, the result is an
+<a href="#id11"><span class="problematic" id="id12">|</span></a><cite>OperatorPointwiseProduct</cite>.</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><cite>__rmul__</cite>
+(other)</td>
+<td colspan="3"><dl class="first last docutils">
+<dt>depends         <a href="#id13"><span class="problematic" id="id14">|</span></a>Implements <cite>op * other</cite>. If</dt>
+<dd><a href="#id15"><span class="problematic" id="id16">|</span></a><cite>other is a scalar, an
+|`OperatorRightScalarMult</cite> is
+<a href="#id17"><span class="problematic" id="id18">|</span></a>created. If <cite>other</cite> is an
+<a href="#id19"><span class="problematic" id="id20">|</span></a><cite>Operator</cite>, the result is an
+<a href="#id21"><span class="problematic" id="id22">|</span></a><cite>OperatorPointwiseProduct</cite>.</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="odl.operator.operator.Operator.I">
+<code class="descname">I</code><a class="headerlink" href="#odl.operator.operator.Operator.I" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shorthand for <cite>inverse</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="odl.operator.operator.Operator.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>inp</em>, <em>outp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#Operator.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.Operator.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>op.apply(inp, outp) &lt;==&gt; outp &lt;&#8211; op(inp)</cite>.</p>
+<p>Implementation of in-place operator evaluation with the private
+<cite>_apply()</cite> method and added error checking.</p>
+<dl class="docutils">
+<dt>inp <span class="classifier-delimiter">:</span> <span class="classifier">element of <cite>self.domain</cite></span></dt>
+<dd>An object in the operator domain to which the operator is
+applied. The object is treated as immutable, hence it is
+not modified during evaluation.</dd>
+<dt>outp <span class="classifier-delimiter">:</span> <span class="classifier">element of <cite>self.range</cite></span></dt>
+<dd>An object in the operator range to which the result of the
+operator evaluation is written. The result is independent
+of the initial state of this object.</dd>
+</dl>
+<p>None</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.operator.default</span> <span class="kn">import</span> <span class="n">IdentityOperator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rn</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span>
+<span class="go">Rn(3).element([1.0, 2.0, 3.0])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="odl.operator.operator.Operator.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#Operator.derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.Operator.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator derivative at <cite>point</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.Operator.inverse">
+<code class="descname">inverse</code><a class="headerlink" href="#odl.operator.operator.Operator.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator inverse.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.OperatorComp">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">OperatorComp</code><span class="sig-paren">(</span><em>left</em>, <em>right</em>, <em>tmp=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorComp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorComp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Expression type for the composition of operators.</p>
+<p><cite>OperatorComp(left, right) &lt;==&gt; (x &#8211;&gt; left(right(x)))</cite></p>
+<p>The composition is only well-defined if
+<cite>left.domain == right.range</cite>.</p>
+<p>See <cite>Operator</cite> for a list of public attributes and methods.</p>
+<dl class="method">
+<dt id="odl.operator.operator.OperatorComp.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorComp.derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorComp.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator derivative.</p>
+<p>The derivative of the operator composition follows the chain
+rule:</p>
+<p><cite>OperatorComp(left, right).derivative(point) ==
+LinearOperatorComp(left.derivative(right(point)),
+right.derivative(point))</cite></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorComp.domain">
+<code class="descname">domain</code><a class="headerlink" href="#odl.operator.operator.OperatorComp.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>domain</cite>.</p>
+<p>Corresponds to <cite>right.domain</cite></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorComp.inverse">
+<code class="descname">inverse</code><a class="headerlink" href="#odl.operator.operator.OperatorComp.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator inverse.</p>
+<p>The inverse of the operator composition is the composition of
+the inverses in reverse order:</p>
+<p><cite>OperatorComp(left, right).inverse ==
+OperatorComp(right.inverse, left.inverse)</cite></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorComp.range">
+<code class="descname">range</code><a class="headerlink" href="#odl.operator.operator.OperatorComp.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>range</cite>.</p>
+<p>Corresponds to <cite>left.range</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.OperatorLeftScalarMult">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">OperatorLeftScalarMult</code><span class="sig-paren">(</span><em>op</em>, <em>scalar</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorLeftScalarMult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorLeftScalarMult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Expression type for the operator left scalar multiplication.</p>
+<p><cite>OperatorLeftScalarMult(op, scalar) &lt;==&gt; (x &#8211;&gt; scalar * op(x))</cite></p>
+<p>The scalar multiplication is well-defined only if <cite>op.range</cite> is
+a <cite>LinearSpace</cite>.</p>
+<dl class="method">
+<dt id="odl.operator.operator.OperatorLeftScalarMult.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorLeftScalarMult.derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorLeftScalarMult.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the derivative at &#8216;point&#8217;.</p>
+<p>Left scalar multiplication and derivative are commutative:</p>
+<p><cite>OperatorLeftScalarMult(op, scalar).derivative(point) &lt;==&gt;
+LinearOperatorScalarMult(op.derivative(point), scalar)</cite></p>
+<p><code class="docutils literal"><span class="pre">LinearOperatorScalarMult</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorLeftScalarMult.domain">
+<code class="descname">domain</code><a class="headerlink" href="#odl.operator.operator.OperatorLeftScalarMult.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>domain</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorLeftScalarMult.inverse">
+<code class="descname">inverse</code><a class="headerlink" href="#odl.operator.operator.OperatorLeftScalarMult.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inverse operator.</p>
+<p>The inverse of <cite>scalar * op</cite> is given by
+<cite>op.inverse * 1/scalar</cite> if <cite>scalar != 0</cite>. If <cite>scalar == 0</cite>,
+the inverse is not defined.</p>
+<p><cite>OperatorLeftScalarMult(op, scalar).inverse &lt;==&gt;
+OperatorRightScalarMult(op.inverse, 1.0/scalar)</cite></p>
+<p><cite>OperatorRightScalarMult</cite></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorLeftScalarMult.range">
+<code class="descname">range</code><a class="headerlink" href="#odl.operator.operator.OperatorLeftScalarMult.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>range</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.OperatorPointwiseProduct">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">OperatorPointwiseProduct</code><span class="sig-paren">(</span><em>op1</em>, <em>op2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorPointwiseProduct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorPointwiseProduct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Expression type for the pointwise operator mulitplication.</p>
+<p><cite>OperatorPointwiseProduct(op1, op2) &lt;==&gt; (x &#8211;&gt; op1(x) * op2(x))</cite></p>
+<p>The product is only well-defined for <cite>Operator</cite> instances where
+<cite>range</cite> is an <cite>Algebra</cite>.</p>
+<p>See <cite>Operator</cite> for a list of public attributes and methods.</p>
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorPointwiseProduct.domain">
+<code class="descname">domain</code><a class="headerlink" href="#odl.operator.operator.OperatorPointwiseProduct.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>domain</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorPointwiseProduct.range">
+<code class="descname">range</code><a class="headerlink" href="#odl.operator.operator.OperatorPointwiseProduct.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>range</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.OperatorRightScalarMult">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">OperatorRightScalarMult</code><span class="sig-paren">(</span><em>op</em>, <em>scalar</em>, <em>tmp=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorRightScalarMult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorRightScalarMult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Expression type for the operator right scalar multiplication.</p>
+<p><cite>OperatorRightScalarMult(op, scalar) &lt;==&gt; (x &#8211;&gt; op(scalar * x))</cite></p>
+<p>The scalar multiplication is well-defined only if <cite>op.domain</cite> is
+a <cite>LinearSpace</cite>.</p>
+<dl class="method">
+<dt id="odl.operator.operator.OperatorRightScalarMult.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorRightScalarMult.derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorRightScalarMult.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the derivative at &#8216;point&#8217;.</p>
+<p>The derivative of the right scalar operator multiplication
+follows the chain rule:</p>
+<p><cite>OperatorRightScalarMult(op, scalar).derivative(point) &lt;==&gt;
+LinearOperatorScalarMult(op.derivative(scalar * point),
+scalar)</cite></p>
+<p><code class="docutils literal"><span class="pre">LinearOperatorScalarMult</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorRightScalarMult.domain">
+<code class="descname">domain</code><a class="headerlink" href="#odl.operator.operator.OperatorRightScalarMult.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>domain</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorRightScalarMult.inverse">
+<code class="descname">inverse</code><a class="headerlink" href="#odl.operator.operator.OperatorRightScalarMult.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inverse operator.</p>
+<p>The inverse of <cite>op * scalar</cite> is given by
+<cite>1/scalar * op.inverse</cite> if <cite>scalar != 0</cite>. If <cite>scalar == 0</cite>,
+the inverse is not defined.</p>
+<p><cite>OperatorRightScalarMult(op, scalar).inverse &lt;==&gt;
+OperatorLeftScalarMult(op.inverse, 1.0/scalar)</cite></p>
+<p><cite>OperatorLeftScalarMult</cite></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorRightScalarMult.range">
+<code class="descname">range</code><a class="headerlink" href="#odl.operator.operator.OperatorRightScalarMult.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>range</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.OperatorSum">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">OperatorSum</code><span class="sig-paren">(</span><em>op1</em>, <em>op2</em>, <em>tmp=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorSum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorSum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.Operator" title="odl.operator.operator.Operator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.Operator</span></code></a></p>
+<p>Expression type for the sum of operators.</p>
+<p><cite>OperatorSum(op1, op2) &lt;==&gt; (x &#8211;&gt; op1(x) + op2(x))</cite></p>
+<p>The sum is only well-defined for <cite>Operator</cite> instances where
+<cite>range</cite> is a <cite>LinearSpace</cite>.</p>
+<p>See <cite>Operator</cite> for a list of public attributes and methods.</p>
+<dl class="method">
+<dt id="odl.operator.operator.OperatorSum.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#OperatorSum.derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.OperatorSum.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator derivative at <cite>point</cite>.</p>
+<p>The derivative of a sum of two operators is equal to the sum of
+the derivatives.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorSum.domain">
+<code class="descname">domain</code><a class="headerlink" href="#odl.operator.operator.OperatorSum.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>domain</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.operator.default</span> <span class="kn">import</span> <span class="n">IdentityOperator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="n">r3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">OperatorSum</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">Rn(3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.OperatorSum.range">
+<code class="descname">range</code><a class="headerlink" href="#odl.operator.operator.OperatorSum.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator <cite>range</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">odl.operator.default</span> <span class="kn">import</span> <span class="n">IdentityOperator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">op</span> <span class="o">=</span> <span class="n">IdentityOperator</span><span class="p">(</span><span class="n">r3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">OperatorSum</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">range</span>
+<span class="go">Rn(3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.operator.SelfAdjointOperator">
+<em class="property">class </em><code class="descclassname">odl.operator.operator.</code><code class="descname">SelfAdjointOperator</code><a class="reference internal" href="_modules/odl/operator/operator.html#SelfAdjointOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.SelfAdjointOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#odl.operator.operator.LinearOperator" title="odl.operator.operator.LinearOperator"><code class="xref py py-class docutils literal"><span class="pre">odl.operator.operator.LinearOperator</span></code></a></p>
+<p>Abstract self-adjoint operator.</p>
+<p>A self-adjoint operator is a <cite>LinearOperator</cite> with
+<cite>op.adjoint == op</cite>. This implies in particular that
+<cite>op.domain == op.range</cite>.</p>
+<p>See <cite>LinearOperator</cite> and <cite>Operator</cite> for a list of public attributes
+and methods as well as further help.</p>
+<dl class="attribute">
+<dt id="odl.operator.operator.SelfAdjointOperator.adjoint">
+<code class="descname">adjoint</code><a class="headerlink" href="#odl.operator.operator.SelfAdjointOperator.adjoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator adjoint, equal to the operator itself.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="odl.operator.operator.SelfAdjointOperator.range">
+<code class="descname">range</code><a class="headerlink" href="#odl.operator.operator.SelfAdjointOperator.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>The operator range, equal to its <cite>domain</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="odl.operator.operator.linear_operator">
+<code class="descclassname">odl.operator.operator.</code><code class="descname">linear_operator</code><span class="sig-paren">(</span><em>call=None</em>, <em>apply=None</em>, <em>inv=None</em>, <em>adj=None</em>, <em>dom=UniversalSet()</em>, <em>ran=UniversalSet()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#linear_operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.linear_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a simple linear operator.</p>
+<p>Mostly intended for simple prototyping rather than final use.</p>
+<dl class="docutils">
+<dt>call <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>A function taking one argument and returning the result.
+It will be used for the operator call pattern
+<cite>outp = op(inp)</cite>.</dd>
+<dt>apply <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>A function taking two arguments.
+It will be used for the operator apply pattern
+<cite>op.apply(inp, outp) &lt;==&gt; outp &lt;&#8211; op(inp)</cite>. Return value
+is assumed to be <cite>None</cite> and is ignored.</dd>
+<dt>inv <span class="classifier-delimiter">:</span> <span class="classifier"><cite>LinearOperator</cite>, optional</span></dt>
+<dd>The operator inverse
+Default: <cite>None</cite></dd>
+<dt>adj <span class="classifier-delimiter">:</span> <span class="classifier"><cite>LinearOperator</cite>, optional</span></dt>
+<dd>The operator adjoint
+Default: <cite>None</cite></dd>
+<dt>dom <span class="classifier-delimiter">:</span> <span class="classifier"><cite>LinearSpace</cite>, optional</span></dt>
+<dd>The domain of the operator
+Default: <cite>UniversalSet</cite></dd>
+<dt>ran <span class="classifier-delimiter">:</span> <span class="classifier"><cite>Set</cite>, optional</span></dt>
+<dd>The range of the operator
+Default: <cite>UniversalSet</cite></dd>
+</dl>
+<dl class="docutils">
+<dt>op <span class="classifier-delimiter">:</span> <span class="classifier"><cite>SimpleLinearOperator</cite></span></dt>
+<dd>An operator with the provided attributes and methods.
+<cite>SimpleLinearOperator</cite> is a subclass of <cite>LinearOperator</cite>.</dd>
+</dl>
+<p>It suffices to supply one of the functions <cite>call</cite> and <cite>apply</cite>.
+If <cite>dom</cite> is a <cite>LinearSpace</cite>, a default implementation of the
+respective other method is automatically provided; if not, a
+<cite>NotImplementedError</cite> is raised when the other method is called.</p>
+<p>See <cite>LinearOperator</cite> and <cite>Operator</cite> for a list of public attributes
+and methods as well as further help.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">linear_operator</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">15</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="odl.operator.operator.operator">
+<code class="descclassname">odl.operator.operator.</code><code class="descname">operator</code><span class="sig-paren">(</span><em>call=None</em>, <em>apply=None</em>, <em>inv=None</em>, <em>deriv=None</em>, <em>dom=UniversalSet()</em>, <em>ran=UniversalSet()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/operator.html#operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.operator.operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a simple operator.</p>
+<p>Mostly intended for simple prototyping rather than final use.</p>
+<dl class="docutils">
+<dt>call <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>A function taking one argument and returning the result.
+It will be used for the operator call pattern
+<cite>outp = op(inp)</cite>.</dd>
+<dt>apply <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>A function taking two arguments.
+It will be used for the operator apply pattern
+<cite>op.apply(inp, outp) &lt;==&gt; outp &lt;&#8211; op(inp)</cite>. Return value
+is assumed to be <cite>None</cite> and is ignored.</dd>
+<dt>inv <span class="classifier-delimiter">:</span> <span class="classifier"><cite>Operator</cite>, optional</span></dt>
+<dd>The operator inverse
+Default: <cite>None</cite></dd>
+<dt>deriv <span class="classifier-delimiter">:</span> <span class="classifier"><cite>LinearOperator</cite>, optional</span></dt>
+<dd>The operator derivative
+Default: <cite>None</cite></dd>
+<dt>dom <span class="classifier-delimiter">:</span> <span class="classifier"><cite>Set</cite>, optional</span></dt>
+<dd>The domain of the operator
+Default: <cite>UniversalSet</cite></dd>
+<dt>ran <span class="classifier-delimiter">:</span> <span class="classifier"><cite>Set</cite>, optional</span></dt>
+<dd>The range of the operator
+Default: <cite>UniversalSet</cite></dd>
+</dl>
+<dl class="docutils">
+<dt>op <span class="classifier-delimiter">:</span> <span class="classifier"><cite>SimpleOperator</cite></span></dt>
+<dd>An operator with the provided attributes and methods.
+<cite>SimpleOperator</cite> is a subclass of <cite>Operator</cite>.</dd>
+</dl>
+<p>It suffices to supply one of the functions <cite>call</cite> and <cite>apply</cite>.
+If <cite>dom</cite> is a <cite>LinearSpace</cite>, a default implementation of the
+respective other method is automatically provided; if not, a
+<cite>NotImplementedError</cite> is raised when the other method is called.</p>
+<p>See <cite>Operator</cite> for a list of public attributes and methods as well
+as further help.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">operator</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">15</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-odl.operator.solvers">
+<span id="odl-operator-solvers-module"></span><h2>odl.operator.solvers module<a class="headerlink" href="#module-odl.operator.solvers" title="Permalink to this headline">¶</a></h2>
+<p>General and optimized equation system solvers in linear spaces.</p>
+<dl class="class">
+<dt id="odl.operator.solvers.ForEachPartial">
+<em class="property">class </em><code class="descclassname">odl.operator.solvers.</code><code class="descname">ForEachPartial</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#ForEachPartial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.ForEachPartial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Simple object for applying a function to each iterate</p>
+<dl class="method">
+<dt id="odl.operator.solvers.ForEachPartial.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>result</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#ForEachPartial.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.ForEachPartial.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies function to result</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.solvers.PrintIterationPartial">
+<em class="property">class </em><code class="descclassname">odl.operator.solvers.</code><code class="descname">PrintIterationPartial</code><a class="reference internal" href="_modules/odl/operator/solvers.html#PrintIterationPartial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.PrintIterationPartial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Prints the interation count</p>
+<dl class="method">
+<dt id="odl.operator.solvers.PrintIterationPartial.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>_</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#PrintIterationPartial.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.PrintIterationPartial.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the current iteration</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.solvers.PrintStatusPartial">
+<em class="property">class </em><code class="descclassname">odl.operator.solvers.</code><code class="descname">PrintStatusPartial</code><a class="reference internal" href="_modules/odl/operator/solvers.html#PrintStatusPartial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.PrintStatusPartial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Prints the interation count and current norm of each iterate</p>
+<dl class="method">
+<dt id="odl.operator.solvers.PrintStatusPartial.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>result</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#PrintStatusPartial.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.PrintStatusPartial.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the current iteration and norm</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="odl.operator.solvers.StorePartial">
+<em class="property">class </em><code class="descclassname">odl.operator.solvers.</code><code class="descname">StorePartial</code><a class="reference internal" href="_modules/odl/operator/solvers.html#StorePartial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.StorePartial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Simple object for storing all partial results of the solvers</p>
+<dl class="method">
+<dt id="odl.operator.solvers.StorePartial.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>result</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#StorePartial.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.StorePartial.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>append result to results list</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="odl.operator.solvers.conjugate_gradient">
+<code class="descclassname">odl.operator.solvers.</code><code class="descname">conjugate_gradient</code><span class="sig-paren">(</span><em>op</em>, <em>x</em>, <em>rhs</em>, <em>niter=1</em>, <em>partial=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#conjugate_gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.conjugate_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimized version of CGN, uses no temporaries etc.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="odl.operator.solvers.exp_zero_seq">
+<code class="descclassname">odl.operator.solvers.</code><code class="descname">exp_zero_seq</code><span class="sig-paren">(</span><em>scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#exp_zero_seq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.exp_zero_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default zero sequence given by:
+t_m = scale ^ (-m-1)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="odl.operator.solvers.gauss_newton">
+<code class="descclassname">odl.operator.solvers.</code><code class="descname">gauss_newton</code><span class="sig-paren">(</span><em>op</em>, <em>x</em>, <em>rhs</em>, <em>niter=1</em>, <em>zero_seq=&lt;generator object exp_zero_seq at 0x0000000008AD0048&gt;</em>, <em>partial=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#gauss_newton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.gauss_newton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves op(x) = rhs using the gauss newton method. The inner-solver
+uses conjugate gradient.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="odl.operator.solvers.landweber">
+<code class="descclassname">odl.operator.solvers.</code><code class="descname">landweber</code><span class="sig-paren">(</span><em>op</em>, <em>x</em>, <em>rhs</em>, <em>niter=1</em>, <em>omega=1</em>, <em>partial=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odl/operator/solvers.html#landweber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odl.operator.solvers.landweber" title="Permalink to this definition">¶</a></dt>
+<dd><p>General and efficient implementation of Landweber iteration</p>
+<p>x &lt;- x - omega * (A&#8217;)^* (Ax - rhs)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-odl.operator">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-odl.operator" title="Permalink to this headline">¶</a></h2>
+<p>Core Operator support for ODL.</p>
+<div class="section" id="operators-module-operator">
+<h3>Operators (module <cite>operator</cite>)<a class="headerlink" href="#operators-module-operator" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="core-operators">
+<h4>Core operators<a class="headerlink" href="#core-operators" title="Permalink to this headline">¶</a></h4>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Operator</td>
+<td>Basic operator class</td>
+</tr>
+<tr class="row-odd"><td>LinearOperator</td>
+<td>Basic linear operator class</td>
+</tr>
+<tr class="row-even"><td>SelfAdjointOperator</td>
+<td>Class of linear operators whose adjoint is itself</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="operator-compositions-sums-etc">
+<h4>Operator compositions, sums etc.<a class="headerlink" href="#operator-compositions-sums-etc" title="Permalink to this headline">¶</a></h4>
+<table border="1" class="docutils">
+<colgroup>
+<col width="56%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>OperatorSum</td>
+<td>x &#8211;&gt; A(x) + B(x)</td>
+</tr>
+<tr class="row-odd"><td>OperatorComp</td>
+<td>x &#8211;&gt; A(B(x))</td>
+</tr>
+<tr class="row-even"><td>OperatorPointwiseProduct</td>
+<td>x &#8211;&gt; A(x) * B(x)</td>
+</tr>
+<tr class="row-odd"><td>OperatorLeftScalarMult</td>
+<td>x &#8211;&gt; scalar * A(x)</td>
+</tr>
+<tr class="row-even"><td>OperatorRightScalarMult</td>
+<td>x &#8211;&gt; A(scalar * x)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="linear-operator-compositions-sums-etc">
+<h4>Linear Operator compositions, sums etc.<a class="headerlink" href="#linear-operator-compositions-sums-etc" title="Permalink to this headline">¶</a></h4>
+<table border="1" class="docutils">
+<colgroup>
+<col width="56%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>LinearOperatorSum</td>
+<td>x &#8211;&gt; A(x) + B(x)</td>
+</tr>
+<tr class="row-odd"><td>LinearOperatorComp</td>
+<td>x &#8211;&gt; A(B(x))</td>
+</tr>
+<tr class="row-even"><td>LinearOperatorScalarMult</td>
+<td>x &#8211;&gt; scalar * A(x)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="default-standard-operators-modlule-default">
+<h3>Default (standard) operators (modlule &#8216;default&#8217;)<a class="headerlink" href="#default-standard-operators-modlule-default" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="54%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>ScalingOperator</td>
+<td>x &#8211;&gt; scalar * x</td>
+</tr>
+<tr class="row-odd"><td>IdentityOperator</td>
+<td>x &#8211;&gt; x</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="equation-system-solvers-module-solvers">
+<h3>Equation system solvers (module &#8216;solvers&#8217;)<a class="headerlink" href="#equation-system-solvers-module-solvers" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>landweber</td>
+<td>Landweber&#8217;s method</td>
+</tr>
+<tr class="row-odd"><td>conjugate_gradient</td>
+<td>Conjugate gradient method for the normal equation</td>
+</tr>
+<tr class="row-even"><td>gauss_newton</td>
+<td>Gauss-Newton method</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">odl.operator package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-odl.operator.default">odl.operator.default module</a></li>
+<li><a class="reference internal" href="#module-odl.operator.operator">odl.operator.operator module</a></li>
+<li><a class="reference internal" href="#module-odl.operator.solvers">odl.operator.solvers module</a></li>
+<li><a class="reference internal" href="#module-odl.operator">Module contents</a><ul>
+<li><a class="reference internal" href="#operators-module-operator">Operators (module <cite>operator</cite>)</a><ul>
+<li><a class="reference internal" href="#core-operators">Core operators</a></li>
+<li><a class="reference internal" href="#operator-compositions-sums-etc">Operator compositions, sums etc.</a></li>
+<li><a class="reference internal" href="#linear-operator-compositions-sums-etc">Linear Operator compositions, sums etc.</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#default-standard-operators-modlule-default">Default (standard) operators (modlule &#8216;default&#8217;)</a></li>
+<li><a class="reference internal" href="#equation-system-solvers-module-solvers">Equation system solvers (module &#8216;solvers&#8217;)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/odl.operator.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/odl.operator.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

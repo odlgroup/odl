@@ -1,0 +1,1535 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>odl.space.cartesian &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for odl.space.cartesian</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="sd">&quot;&quot;&quot;CPU implementations of `n`-dimensional Cartesian spaces.</span>
+
+<span class="sd">This is a default implementation of :math:`A^n` for an arbitrary set</span>
+<span class="sd">:math:`A` as well as the real and complex spaces :math:`R^n` and</span>
+<span class="sd">:math:`C^n`. The latter two each come in a basic version with vector</span>
+<span class="sd">multiplication only and as metric, normed, Hilbert and Euclidean space</span>
+<span class="sd">variants. The data is represented by NumPy arrays.</span>
+
+<span class="sd">List of classes</span>
+<span class="sd">---------------</span>
+
+<span class="sd">+-------------+--------------+----------------------------------------+</span>
+<span class="sd">|Class name   |Direct        |Description                             |</span>
+<span class="sd">|             |Ancestors     |                                        |</span>
+<span class="sd">+=============+==============+========================================+</span>
+<span class="sd">|`Ntuples`    |`Set`         |Basic class of `n`-tuples where each    |</span>
+<span class="sd">|             |              |entry is of the same type               |</span>
+<span class="sd">+-------------+--------------+----------------------------------------+</span>
+<span class="sd">|`Fn`         |`EuclideanCn` |`HilbertRn` with the standard inner     |</span>
+<span class="sd">|             |              |(dot) product                           |</span>
+<span class="sd">+-------------+--------------+----------------------------------------+</span>
+<span class="sd">|`Cn`         |`Ntuples`,    |`n`-tuples of complex numbers with      |</span>
+<span class="sd">|             |`Algebra`     |vector-vector multiplication            |</span>
+<span class="sd">+-------------+--------------+----------------------------------------+</span>
+<span class="sd">|`Rn`         |`Cn`          |`n`-tuples of real numbers with         |</span>
+<span class="sd">|             |              |vector-vector multiplication            |</span>
+<span class="sd">+-------------+--------------+----------------------------------------+</span>
+
+
+
+<span class="sd">Space attributes and methods</span>
+<span class="sd">----------------------------</span>
+<span class="sd">The following tables summarize all attributes and methods of spaces in</span>
+<span class="sd">this module. Each table reflects the *added* features for the</span>
+<span class="sd">respective class.</span>
+
+<span class="sd">**`Ntuples` and subclasses:**</span>
+
+<span class="sd">Attributes:</span>
+
+<span class="sd">+----------+-------------+------------------------------------------+</span>
+<span class="sd">|Name      |Type         |Description                               |</span>
+<span class="sd">+==========+=============+==========================================+</span>
+<span class="sd">|`dim`     |`int`        |The number of entries per tuple           |</span>
+<span class="sd">+----------+-------------+------------------------------------------+</span>
+<span class="sd">|`dtype`   |`type`       |The data dype of each tuple entry         |</span>
+<span class="sd">+----------+-------------+------------------------------------------+</span>
+
+<span class="sd">Methods:</span>
+
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|Signature        |Return type    |Description                        |</span>
+<span class="sd">+=================+===============+===================================+</span>
+<span class="sd">|`contains(other)`|`bool`         |Test if `other` is an element of   |</span>
+<span class="sd">|                 |               |this space.                        |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`element         |`&lt;space        |Create a space element. If `inp` is|</span>
+<span class="sd">|(inp=None)`      |type&gt;.Vector`  |`None`, merely memory is allocated.|</span>
+<span class="sd">|                 |               |Otherwise, the element is created  |</span>
+<span class="sd">|                 |               |from `inp`.                        |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`equals (other)` |`bool`         |Create a space element. If `inp` is|</span>
+<span class="sd">|                 |               |`None`, merely memory is allocated.|</span>
+<span class="sd">|                 |               |Otherwise, the element is created  |</span>
+<span class="sd">|                 |               |from `inp`.                        |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+
+<span class="sd">Magic methods:</span>
+
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|Signature               |Provides syntax      |Implementation        |</span>
+<span class="sd">+========================+=====================+======================+</span>
+<span class="sd">|`s.__eq__(other)`       |`s == other`         |`equals(other)`       |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`s.__ne__(other)`       |`s != other`         |`not equals(other)`   |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`s.__contains__(other)` |`other in s`         |`contains(other)`     |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+
+<span class="sd">**`Rn`/`Cn` and subclasses:**</span>
+
+<span class="sd">Attributes:</span>
+
+<span class="sd">+-----------+----------------+----------------------------------------+</span>
+<span class="sd">|Name       |Type            |Description                             |</span>
+<span class="sd">+===========+================+========================================+</span>
+<span class="sd">|`field`    |`RealNumbers` or|The field over which the space is       |</span>
+<span class="sd">|           |`ComplexNumbers`|defined                                 |</span>
+<span class="sd">+-----------+----------------+----------------------------------------+</span>
+
+<span class="sd">Methods:</span>
+
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|Signature        |Return type    |Description                        |</span>
+<span class="sd">+=================+===============+===================================+</span>
+<span class="sd">|`lincomb(z, a, x,|`None`         |Calculate the linear combination   |</span>
+<span class="sd">|b, y)`           |               |`z &lt;-- a * x + b * y`.             |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`multiply(z, x,  |               |</span>
+<span class="sd">|             y)` |`None`         |Calculate the pointwise            |</span>
+<span class="sd">|                 |               |multiplication `z &lt;-- x * y`.      |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`zero()`         |`&lt;space        |Create a vector of zeros.          |</span>
+<span class="sd">|                 |type&gt;.Vector`  |                                   |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`dist(x, y)`     |`float`        |Distance between two space elements|</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`norm(x)`        |`float`        |Length of a space element          |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`inner(x, y)`    |`scalar`       |Inner product of two space elements|</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+
+
+<span class="sd">Vector attributes and methods</span>
+<span class="sd">-----------------------------</span>
+<span class="sd">Similarly, the following tables incrementally summarize all attributes</span>
+<span class="sd">and methods of vectors in this module.</span>
+
+<span class="sd">**`Ntuples.Vector` and subclasses:**</span>
+
+<span class="sd">Attributes:</span>
+
+<span class="sd">+-----------+---------------+---------------------------------+</span>
+<span class="sd">|Name       |Type           |Description                      |</span>
+<span class="sd">+===========+===============+=================================+</span>
+<span class="sd">|`data`     |`numpy.ndarray`|The container for the vector     |</span>
+<span class="sd">|           |               |entries                          |</span>
+<span class="sd">+-----------+---------------+---------------------------------+</span>
+<span class="sd">|`data_ptr` |`int`          |A raw memory pointer to the data |</span>
+<span class="sd">|           |               |container. Can be processed with |</span>
+<span class="sd">|           |               |the `ctypes` module in Python.   |</span>
+<span class="sd">+-----------+---------------+---------------------------------+</span>
+<span class="sd">|`space`    |`Set`          |The space to which this vector   |</span>
+<span class="sd">|           |               |belongs                          |</span>
+<span class="sd">+-----------+---------------+---------------------------------+</span>
+
+<span class="sd">Methods:</span>
+
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|Signature        |Return type    |Description                        |</span>
+<span class="sd">+=================+===============+===================================+</span>
+<span class="sd">|`equals(other)`  |`bool`         |Test if `other` is equal to this   |</span>
+<span class="sd">|                 |               |vector.                            |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`assign(other)`  |`None`         |Copy the values of `other` to this |</span>
+<span class="sd">|                 |               |vector.                            |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`copy()`         |`&lt;space        |Create a (deep) copy of this       |</span>
+<span class="sd">|                 |type&gt;.Vector`  |vector.                            |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+
+<span class="sd">Magic methods:</span>
+
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|Signature               |Provides syntax      |Implementation        |</span>
+<span class="sd">+========================+=====================+======================+</span>
+<span class="sd">|`v.__eq__(other)`       |`v == other`         |`equals(other)`       |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__ne__(other)`       |`v != other`         |`not equals(other)`   |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__getitem__(indices)`|`v[indices]`         |by NumPy&#39;s            |</span>
+<span class="sd">|                        |                     |`__getitem__` method  |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__setitem__(indices, |`v[indices] = values`|by NumPy&#39;s            |</span>
+<span class="sd">|values)`                |                     |`__setitem__` method  |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+
+<span class="sd">**`Rn.Vector`/`Cn.Vector` and subclasses:**</span>
+
+<span class="sd">Attributes:</span>
+
+<span class="sd">+-----------+----------------+----------------------------------------+</span>
+<span class="sd">|Name       |Type            |Description                             |</span>
+<span class="sd">+===========+================+========================================+</span>
+<span class="sd">|`real`     |`Rn.Vector`     |Real part of this vector as view        |</span>
+<span class="sd">|           |                |(modifications affect the original      |</span>
+<span class="sd">|           |                |vector)                                 |</span>
+<span class="sd">+-----------+----------------+----------------------------------------+</span>
+<span class="sd">|`imag`     |`Rn.Vector`     |Imaginary part of this vector as view   |</span>
+<span class="sd">|           |                |(modifications affect the original      |</span>
+<span class="sd">|           |                |vector)                                 |</span>
+<span class="sd">+-----------+----------------+----------------------------------------+</span>
+
+<span class="sd">Methods:</span>
+
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|Signature        |Return type    |Description                        |</span>
+<span class="sd">+=================+===============+===================================+</span>
+<span class="sd">|`set_zero()`     |`None`         |Set this vector&#39;s values to zero   |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+
+<span class="sd">Magic methods:</span>
+
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|Signature               |Provides syntax      |Implementation        |</span>
+<span class="sd">+========================+=====================+======================+</span>
+<span class="sd">|`v.__add__(other)`      |`v + other`          |`x = element()`;      |</span>
+<span class="sd">|                        |                     |`lincomb(x, 1, v, 1,  |</span>
+<span class="sd">|                        |                     |other)`               |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__sub__(other)`      |`v - other`          |`x = element()`;      |</span>
+<span class="sd">|                        |                     |`lincomb(x, 1, v, -1, |</span>
+<span class="sd">|                        |                     |other)`               |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__mul__(other)`      |`v * other`          |`x = element()`;      |</span>
+<span class="sd">|                        |                     |`lincomb(x, other, v)`|</span>
+<span class="sd">|                        |                     |**or**                |</span>
+<span class="sd">|                        |                     |`x = v.copy();        |</span>
+<span class="sd">|                        |                     |multiply(other, x)`   |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__rmul__(other)`     |`other * v`          |`__mul__(other)`      |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__truediv__(other)`  |`v / other`          |`__mul__(1.0/other)`  |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__div__(other)`      |`v / other`          |same as `__truediv__` |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__iadd__(other)`     |`v += other`         |`lincomb(v, 1, v, 1,  |</span>
+<span class="sd">|                        |                     |other)`               |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__isub__(other)`     |`v -= other`         |`lincomb(v, 1, v, -1, |</span>
+<span class="sd">|                        |                     |other)`               |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__imul__(other)`     |`v *= other`         |`lincomb(v, other, v)`|</span>
+<span class="sd">|                        |                     |**or**                |</span>
+<span class="sd">|                        |                     |`multiply(other, v)`  |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__itruediv__(other)` |`v /= other`         |`__imul__(1.0/other)` |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__idiv__(other)`     |`v /= other`         |same as `__itruediv__`|</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__pos__()`           |`+v`                 |`copy()`              |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`v.__neg__()`           |`-v`                 |`x = element()`;      |</span>
+<span class="sd">|                        |                     |`lincomb(x, -1, v)`   |</span>
+<span class="sd">+------------------------+---------------------+----------------------+</span>
+<span class="sd">|`dist(other)`    |`float`        |Distance between this vector and   |</span>
+<span class="sd">|                 |               |`other`                            |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`norm()`         |`float`        |Length of this vector and          |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+<span class="sd">|`inner(other)`   |`float`        |Inner product of this vector with  |</span>
+<span class="sd">|                 |               |`other`                            |</span>
+<span class="sd">+-----------------+---------------+-----------------------------------+</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">unicode_literals</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span>
+                        <span class="n">absolute_import</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">super</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+<span class="c"># External module imports</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg.blas</span> <span class="kn">import</span> <span class="n">get_blas_funcs</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Integral</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.space.set</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">RealNumbers</span><span class="p">,</span> <span class="n">ComplexNumbers</span>
+<span class="kn">from</span> <span class="nn">odl.space.space</span> <span class="kn">import</span> <span class="n">LinearSpace</span>
+<span class="kn">from</span> <span class="nn">odl.utility.utility</span> <span class="kn">import</span> <span class="n">errfmt</span><span class="p">,</span> <span class="n">array1d_repr</span><span class="p">,</span> <span class="n">dtype_repr</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;Ntuples&#39;</span><span class="p">,</span> <span class="s">&#39;Fn&#39;</span><span class="p">,</span> <span class="s">&#39;Cn&#39;</span><span class="p">,</span> <span class="s">&#39;Rn&#39;</span><span class="p">)</span>
+
+
+<span class="n">_type_map_c2r</span> <span class="o">=</span> <span class="p">{</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;complex64&#39;</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;complex128&#39;</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)}</span>
+
+<span class="n">_type_map_r2c</span> <span class="o">=</span> <span class="p">{</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;complex64&#39;</span><span class="p">),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;complex128&#39;</span><span class="p">)}</span>
+
+<span class="n">_real_dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float32&#39;</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)]</span>
+<span class="n">_complex_dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;complex64&#39;</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;complex128&#39;</span><span class="p">)]</span>
+
+
+<div class="viewcode-block" id="Ntuples"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples">[docs]</a><span class="k">class</span> <span class="nc">Ntuples</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The set of `n`-tuples of arbitrary type.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    See the module documentation for attributes, methods etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dim : `int`</span>
+<span class="sd">            The number entries per tuple</span>
+<span class="sd">        dtype : `object`</span>
+<span class="sd">            The data type for each tuple entry. Can be provided in any</span>
+<span class="sd">            way the `numpy.dtype()` function understands, most notably</span>
+<span class="sd">            as built-in type, as one of NumPy&#39;s internal datatype</span>
+<span class="sd">            objects or as string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">Integral</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dim</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            `dim` {} is not a non-negative integer.&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dim</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dim</span> <span class="o">=</span> <span class="n">dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Ntuples.element"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples.element">[docs]</a>    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new element.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : array-like or scalar, optional</span>
+<span class="sd">            Input to initialize the new element.</span>
+
+<span class="sd">            If `inp` is `None`, an empty element is created with no</span>
+<span class="sd">            guarantee of its state (memory allocation only).</span>
+
+<span class="sd">            If `inp` is a `numpy.ndarray` of shape `(dim,)` and the</span>
+<span class="sd">            same data type as this space, the array is wrapped, not</span>
+<span class="sd">            copied.</span>
+<span class="sd">            Other array-like objects are copied (with broadcasting</span>
+<span class="sd">            if necessary).</span>
+
+<span class="sd">            If a single value is given, it is copied to all entries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        element : `Ntuples.Vector`</span>
+<span class="sd">            The new element created (from `inp`).</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        This method preserves &quot;array views&quot; of correct size and type,</span>
+<span class="sd">        see the examples below.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; strings3 = Ntuples(3, dtype=&#39;S1&#39;)  # 1-char strings</span>
+<span class="sd">        &gt;&gt;&gt; x = strings3.element([&#39;w&#39;, &#39;b&#39;, &#39;w&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; x</span>
+<span class="sd">        Ntuples(3, dtype(&#39;S1&#39;)).element([&#39;w&#39;, &#39;b&#39;, &#39;w&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; y = strings3.element()</span>
+<span class="sd">        &gt;&gt;&gt; y.assign(x)</span>
+<span class="sd">        &gt;&gt;&gt; y == x</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; y = strings3.element(&#39;b&#39;); print(y)</span>
+<span class="sd">        [&#39;b&#39;, &#39;b&#39;, &#39;b&#39;]</span>
+
+<span class="sd">        Array views are preserved:</span>
+
+<span class="sd">        &gt;&gt;&gt; strings2 = Ntuples(2, dtype=&#39;S1&#39;)  # 1-char strings</span>
+<span class="sd">        &gt;&gt;&gt; x = strings3.element([&#39;w&#39;, &#39;b&#39;, &#39;w&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; y = strings2.element(x[::2])  # view into x</span>
+<span class="sd">        &gt;&gt;&gt; y[:] = &#39;x&#39;</span>
+<span class="sd">        &gt;&gt;&gt; print(x)</span>
+<span class="sd">        [&#39;x&#39;, &#39;b&#39;, &#39;x&#39;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">inp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">Ntuples</span><span class="o">.</span><span class="n">Vector</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">inp</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+                <span class="n">inp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">inp</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,):</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">                `inp` shape {} not broadcastable to shape ({},).</span>
+<span class="s">                &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The data type of each entry.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; int_3 = Ntuples(3, dtype=&#39;int64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; int_3.dtype</span>
+<span class="sd">        dtype(&#39;int64&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The dimension of this space.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; int_3 = Ntuples(3, dtype=int)</span>
+<span class="sd">        &gt;&gt;&gt; int_3.dim</span>
+<span class="sd">        3</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dim</span>
+
+<div class="viewcode-block" id="Ntuples.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is equal to this space.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equals : `bool`</span>
+<span class="sd">            `True` if `other` is an instance of this space&#39;s type</span>
+<span class="sd">            with the same `dim` and `dtype`, otherwise `False`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; int_3 = Ntuples(3, dtype=int)</span>
+<span class="sd">        &gt;&gt;&gt; int_3.equals(int_3)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Equality is not identity:</span>
+
+<span class="sd">        &gt;&gt;&gt; int_3a, int_3b = Ntuples(3, int), Ntuples(3, int)</span>
+<span class="sd">        &gt;&gt;&gt; int_3a.equals(int_3b)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; int_3a is int_3b</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &gt;&gt;&gt; int_3, int_4 = Ntuples(3, int), Ntuples(4, int)</span>
+<span class="sd">        &gt;&gt;&gt; int_3.equals(int_4)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; int_3, str_3 = Ntuples(3, &#39;int&#39;), Ntuples(3, &#39;string&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; int_3.equals(str_3)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        Equality can also be checked with &quot;==&quot;:</span>
+
+<span class="sd">        &gt;&gt;&gt; int_3, int_4 = Ntuples(3, int), Ntuples(4, int)</span>
+<span class="sd">        &gt;&gt;&gt; int_3 == int_3</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; int_3 == int_4</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; int_3 != int_4</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dim</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ntuples.contains"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is contained in this space.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        contains : `bool`</span>
+<span class="sd">            `True` if `other` is an `Ntuples.Vector` instance of and</span>
+<span class="sd">            `other.space` is equal to this space. `False` otherwise.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; long_3 = Ntuples(3, dtype=&#39;int64&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; long_3.element() in long_3</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; long_3.element() in Ntuples(3, dtype=&#39;int32&#39;)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; long_3.element() in Ntuples(3, dtype=&#39;float64&#39;)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Ntuples</span><span class="o">.</span><span class="n">Vector</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="bp">self</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;s.__repr__() &lt;==&gt; repr(s).&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="s">&#39;Ntuples({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span>  <span class="n">dtype_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;s.__str__() &lt;==&gt; str(s).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;Ntuples({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Ntuples.Vector"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples.Vector">[docs]</a>    <span class="k">class</span> <span class="nc">Vector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Representation of an `Ntuples` element.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        See the module documentation for attributes, methods etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">Ntuples</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">                `space` {!r} not an instance of `Ntuples`.</span>
+<span class="s">                &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">space</span><span class="p">)))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">                `data` {!r} not an instance of `numpy.ndarray`.</span>
+<span class="s">                &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">                `data.dtype` {} not equal to `space.dtype` {}.</span>
+<span class="s">                &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dim</span><span class="p">,):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">                `data.shape` {} not equal to `(space.dim,)` {}.</span>
+<span class="s">                &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">dim</span><span class="p">,))))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="o">=</span> <span class="n">space</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The space this vector belongs to.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The vector&#39;s data representation, a `numpy.ndarray`.</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; vec = Ntuples(3, int).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; vec.data</span>
+<span class="sd">            array([1, 2, 3])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">data_ptr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;A raw pointer to the data container.</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; import ctypes</span>
+<span class="sd">            &gt;&gt;&gt; vec = Ntuples(3, &#39;int32&#39;).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; arr_type = ctypes.c_int32 * 3</span>
+<span class="sd">            &gt;&gt;&gt; buffer = arr_type.from_address(vec.data_ptr)</span>
+<span class="sd">            &gt;&gt;&gt; arr = np.frombuffer(buffer, dtype=int)</span>
+<span class="sd">            &gt;&gt;&gt; arr</span>
+<span class="sd">            array([1, 2, 3])</span>
+
+<span class="sd">            In-place modification via pointer:</span>
+
+<span class="sd">            &gt;&gt;&gt; arr[0] = 5</span>
+<span class="sd">            &gt;&gt;&gt; vec</span>
+<span class="sd">            Ntuples(3, int).element([5, 2, 3])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
+
+<div class="viewcode-block" id="Ntuples.Vector.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples.Vector.equals">[docs]</a>        <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Test if `other` is equal to this vector.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            equals :  `bool`</span>
+<span class="sd">                `True` if all entries of `other` are equal to this</span>
+<span class="sd">                vector&#39;s entries, `False` otherwise.</span>
+
+<span class="sd">            Note</span>
+<span class="sd">            ----</span>
+<span class="sd">            Space membership is not checked, hence vectors from</span>
+<span class="sd">            different spaces can be equal.</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; vec1 = Ntuples(3, int).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; vec2 = Ntuples(3, int).element([-1, 2, 0])</span>
+<span class="sd">            &gt;&gt;&gt; vec1.equals(vec2)</span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; vec2 = Ntuples(3, int).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; vec1.equals(vec2)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; vec1 == vec2  # equivalent</span>
+<span class="sd">            True</span>
+
+<span class="sd">            Equality can hold across spaces:</span>
+
+<span class="sd">            &gt;&gt;&gt; vec2 = Ntuples(3, float).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; vec1.equals(vec2) and vec2.equals(vec1)</span>
+<span class="sd">            True</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c"># Convenience functions</span></div>
+<div class="viewcode-block" id="Ntuples.Vector.assign"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples.Vector.assign">[docs]</a>        <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Assign the values of `other` to this vector.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            other : `Ntuples.Vector`</span>
+<span class="sd">                The values to be copied to this vector. `other`</span>
+<span class="sd">                must be an element of this vector&#39;s space.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            `None`</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; vec1 = Ntuples(3, int).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; vec2 = Ntuples(3, int).element([-1, 2, 0])</span>
+<span class="sd">            &gt;&gt;&gt; vec1.assign(vec2)</span>
+<span class="sd">            &gt;&gt;&gt; vec1</span>
+<span class="sd">            Ntuples(3, int).element([-1, 2, 0])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">other</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">                `other` {!r} not in `space` {}&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">data</span>
+</div>
+<div class="viewcode-block" id="Ntuples.Vector.copy"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Ntuples.Vector.copy">[docs]</a>        <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Create an identical (deep) copy of this vector.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            copy : `Ntuples.Vector`</span>
+<span class="sd">                The deep copy</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; vec1 = Ntuples(3, int).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; vec2 = vec1.copy()</span>
+<span class="sd">            &gt;&gt;&gt; vec2</span>
+<span class="sd">            Ntuples(3, int).element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; vec1 == vec2</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; vec1 is vec2</span>
+<span class="sd">            False</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+</div>
+        <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The dimension this vector&#39;s space.</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; len(Ntuples(3, int).element())</span>
+<span class="sd">            3</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">dim</span>
+
+        <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Access values of this vector.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            indices : `int` or `slice`</span>
+<span class="sd">                The position(s) that should be accessed</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            values : `space.dtype` or `space.Vector`</span>
+<span class="sd">                The value(s) at the index (indices)</span>
+
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; str_3 = Ntuples(3, dtype=&#39;S6&#39;)  # 6-char strings</span>
+<span class="sd">            &gt;&gt;&gt; x = str_3.element([&#39;a&#39;, &#39;Hello!&#39;, &#39;0&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; x[0]</span>
+<span class="sd">            &#39;a&#39;</span>
+<span class="sd">            &gt;&gt;&gt; x[1:3]</span>
+<span class="sd">            Ntuples(2, dtype(&#39;S6&#39;)).element([&#39;Hello!&#39;, &#39;0&#39;])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">indices</span><span class="p">)]</span>  <span class="c"># single index</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">Ntuples</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Set values of this vector.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            indices : `int` or `slice`</span>
+<span class="sd">                The position(s) that should be set</span>
+<span class="sd">            values : {scalar, array-like, `Ntuples.Vector`}</span>
+<span class="sd">                The value(s) that are to be assigned.</span>
+
+<span class="sd">                If `index` is an `int`, `value` must be single value.</span>
+
+<span class="sd">                If `index` is a `slice`, `value` must be broadcastable</span>
+<span class="sd">                to the size of the slice (same size, shape (1,)</span>
+<span class="sd">                or single value).</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            None</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; int_3 = Ntuples(3, int)</span>
+<span class="sd">            &gt;&gt;&gt; x = int_3.element([1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; x[0] = 5</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Ntuples(3, int).element([5, 2, 3])</span>
+
+<span class="sd">            Assignment from array-like structures or another</span>
+<span class="sd">            vector:</span>
+
+<span class="sd">            &gt;&gt;&gt; y = Ntuples(2, &#39;short&#39;).element([-1, 2])</span>
+<span class="sd">            &gt;&gt;&gt; x[:2] = y</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Ntuples(3, int).element([-1, 2, 3])</span>
+<span class="sd">            &gt;&gt;&gt; x[1:3] = [7, 8]</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Ntuples(3, int).element([-1, 7, 8])</span>
+<span class="sd">            &gt;&gt;&gt; x[:] = np.array([0, 0, 0])</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Ntuples(3, int).element([0, 0, 0])</span>
+
+<span class="sd">            Broadcasting is also supported:</span>
+
+<span class="sd">            &gt;&gt;&gt; x[1:3] = -2.</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Ntuples(3, int).element([0, -2, -2])</span>
+
+<span class="sd">            Be aware of unsafe casts and over-/underflows, there</span>
+<span class="sd">            will be warnings at maximum.</span>
+
+<span class="sd">            &gt;&gt;&gt; x = Ntuples(2, &#39;int8&#39;).element([0, 0])</span>
+<span class="sd">            &gt;&gt;&gt; maxval = 127  # maximum signed 8-bit int</span>
+<span class="sd">            &gt;&gt;&gt; x[0] = maxval + 1</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Ntuples(2, dtype(&#39;int8&#39;)).element([-128, 0])</span>
+<span class="sd">            &gt;&gt;&gt; x[:] = np.arange(2, dtype=&#39;int64&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Ntuples(2, dtype(&#39;int8&#39;)).element([0, 1])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">Ntuples</span><span class="o">.</span><span class="n">Vector</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;`vec.__eq__(other) &lt;==&gt; vec == other`.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;`vec.__ne__(other) &lt;==&gt; vec != other`.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;`vec.__str__() &lt;==&gt; str(vec)`.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">array1d_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;`vec.__repr__() &lt;==&gt; repr(vec)`.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="s">&#39;{!r}.element({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                                             <span class="n">array1d_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">_lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raw linear combination depending on data type.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">fallback_axpy</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fallback axpy implementation avoiding copy.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">/=</span> <span class="n">a</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="n">x</span>
+            <span class="n">y</span> <span class="o">*=</span> <span class="n">a</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">fallback_scal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fallback scal implementation.&quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">*=</span> <span class="n">a</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">fallback_copy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fallback copy implementation.&quot;&quot;&quot;</span>
+        <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="c"># pylint: disable=unbalanced-tuple-unpacking</span>
+    <span class="n">blas_axpy</span><span class="p">,</span> <span class="n">blas_scal</span><span class="p">,</span> <span class="n">blas_copy</span> <span class="o">=</span> <span class="n">get_blas_funcs</span><span class="p">(</span>
+        <span class="p">[</span><span class="s">&#39;axpy&#39;</span><span class="p">,</span> <span class="s">&#39;scal&#39;</span><span class="p">,</span> <span class="s">&#39;copy&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">all</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">contiguous</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">))):</span>
+        <span class="n">axpy</span><span class="p">,</span> <span class="n">scal</span><span class="p">,</span> <span class="n">copy</span> <span class="o">=</span> <span class="p">(</span><span class="n">blas_axpy</span><span class="p">,</span> <span class="n">blas_scal</span><span class="p">,</span> <span class="n">blas_copy</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">axpy</span><span class="p">,</span> <span class="n">scal</span><span class="p">,</span> <span class="n">copy</span> <span class="o">=</span> <span class="p">(</span><span class="n">fallback_axpy</span><span class="p">,</span> <span class="n">fallback_scal</span><span class="p">,</span> <span class="n">fallback_copy</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">y</span> <span class="ow">and</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c"># x is aligned with y -&gt; z = (a+b)*x</span>
+        <span class="n">_lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">y</span><span class="p">:</span>
+        <span class="c"># All the vectors are aligned -&gt; z = (a+b)*z</span>
+        <span class="n">scal</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">x</span><span class="p">:</span>
+        <span class="c"># z is aligned with x -&gt; z = a*z + b*y</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">scal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">axpy</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">b</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">y</span><span class="p">:</span>
+        <span class="c"># z is aligned with y -&gt; z = a*x + b*z</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">scal</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">axpy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">a</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># We have exhausted all alignment options, so x != y != z</span>
+        <span class="c"># We now optimize for various values of a and b</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c"># Zero assignment -&gt; z = 0</span>
+                <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># Scaled copy -&gt; z = a*x</span>
+                <span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">scal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c"># Scaled copy -&gt; z = b*y</span>
+                <span class="n">copy</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">scal</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c"># No scaling in x -&gt; z = x + b*y</span>
+                <span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">axpy</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">b</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># Generic case -&gt; z = a*x + b*y</span>
+                <span class="n">copy</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">scal</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">axpy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">a</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_dist</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="c"># TODO: optimize</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="o">-</span><span class="n">y</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_norm</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c"># TODO: optimize</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="c"># TODO: optimize</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_dist_default</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_norm_default</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_inner_default</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Inner not implemented in this space&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Fn"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Fn">[docs]</a><span class="k">class</span> <span class="nc">Fn</span><span class="p">(</span><span class="n">Ntuples</span><span class="p">,</span> <span class="n">LinearSpace</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The complex vector space :math:`E^n` with vector multiplication.</span>
+
+<span class="sd">    Its elements are represented as instances of the inner `Cn.Vector`</span>
+<span class="sd">    class.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    See the module documentation for attributes, methods etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        `dim` : `int`</span>
+<span class="sd">            The dimension of the space</span>
+<span class="sd">        `dtype` : `type`</span>
+<span class="sd">            The data type of the storage array. Can be provided in any</span>
+<span class="sd">            way the `numpy.dtype()` function understands, most notably</span>
+<span class="sd">            as built-in type, as one of NumPy&#39;s internal datatype</span>
+<span class="sd">            objects or as string.</span>
+<span class="sd">        kwargs : {&#39;dist&#39;, &#39;norm&#39;, &#39;inner&#39;}</span>
+<span class="sd">            `dist` : `callable`, optional (Default: `norm(x-y)`)</span>
+<span class="sd">                The distance function defining a metric on :math:`C^n`. It</span>
+<span class="sd">                must accept two array arguments and fulfill the following</span>
+<span class="sd">                conditions for any vectors `x`, `y` and `z`:</span>
+
+<span class="sd">                - `dist(x, y) == dist(y, x)`</span>
+<span class="sd">                - `dist(x, y) &gt;= 0`</span>
+<span class="sd">                - `dist(x, y) == 0` (approx.) if and only if `x == y`</span>
+<span class="sd">                  (approx.)</span>
+<span class="sd">                - `dist(x, y) &lt;= dist(x, z) + dist(z, y)`</span>
+<span class="sd">            `norm` : `callable`, optional (Default: `sqrt(inner(x,y))`)</span>
+<span class="sd">                The norm implementation. It must accept an array-like</span>
+<span class="sd">                argument, return a `RealNumber` and satisfy the following</span>
+<span class="sd">                properties:</span>
+
+<span class="sd">                - `norm(x) &gt;= 0`</span>
+<span class="sd">                - `norm(x) == 0` (approx.) only if `x == 0` (approx.)</span>
+<span class="sd">                - `norm(s * x) == abs(s) * norm(x)` for `s` scalar</span>
+<span class="sd">                - `norm(x + y) &lt;= norm(x) + norm(y)`</span>
+<span class="sd">            `inner` : `callable`, optional</span>
+<span class="sd">                The inner product implementation. It must accept two</span>
+<span class="sd">                array-like arguments, return a complex number and satisfy</span>
+<span class="sd">                the following conditions for all vectors `x`, `y` and `z`</span>
+<span class="sd">                and scalars `s`:</span>
+
+<span class="sd">                 - `inner(x, y) == conjugate(inner(y, x))`</span>
+<span class="sd">                 - `inner(s * x, y) == s * inner(x, y)`</span>
+<span class="sd">                 - `inner(x + z, y) == inner(x, y) + inner(z, y)`</span>
+<span class="sd">                 - `inner(x, x) == 0` (approx.) only if `x == 0` (approx.)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">Integral</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dim</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            `dim` {} is not a positive integer.&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dim</span><span class="p">)))</span>
+
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;dist&#39;</span><span class="p">,</span> <span class="n">_dist_default</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;`dist` {!r} not callable.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dist</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dist_impl</span> <span class="o">=</span> <span class="n">dist</span>
+
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;norm&#39;</span><span class="p">,</span> <span class="n">_norm_default</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">norm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;`norm` {!r} not callable.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dist</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_norm_impl</span> <span class="o">=</span> <span class="n">norm</span>
+
+        <span class="n">inner</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;inner&#39;</span><span class="p">,</span> <span class="n">_inner_default</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">inner</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;`inner` {!r} not callable.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dist</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inner_impl</span> <span class="o">=</span> <span class="n">inner</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_dtype</span> <span class="o">=</span> <span class="n">_type_map_c2r</span><span class="p">[</span><span class="n">dtype</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">_real_dtypes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_field</span> <span class="o">=</span> <span class="n">RealNumbers</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">_complex_dtypes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_field</span> <span class="o">=</span> <span class="n">ComplexNumbers</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;dtype {!r} not real or complex&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_lincomb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Linear combination of `x` and `y`.</span>
+
+<span class="sd">        Calculate z = a * x + b * y using optimized BLAS routines.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        z : `Cn.Vector`</span>
+<span class="sd">            The Vector that the result is written to.</span>
+<span class="sd">        a, b : `ComplexNumber`</span>
+<span class="sd">            Scalar to multiply `x` and `y` with.</span>
+<span class="sd">        x, y : `Cn.Vector`</span>
+<span class="sd">            The summands</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; c3 = Cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = c3.element([1+1j, 2-1j, 3])</span>
+<span class="sd">        &gt;&gt;&gt; y = c3.element([4+0j, 5, 6+0.5j])</span>
+<span class="sd">        &gt;&gt;&gt; z = c3.element()</span>
+<span class="sd">        &gt;&gt;&gt; c3.lincomb(z, 2j, x, 3-1j, y)</span>
+<span class="sd">        &gt;&gt;&gt; z</span>
+<span class="sd">        Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the distance between two vectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x, y : `Cn.Vector`</span>
+<span class="sd">            The vectors whose mutual distance is calculated</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dist : `float`</span>
+<span class="sd">            Distance between the vectors</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from numpy.linalg import norm</span>
+<span class="sd">        &gt;&gt;&gt; c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=2))</span>
+<span class="sd">        &gt;&gt;&gt; x = c2_2.element([3+1j, 4])</span>
+<span class="sd">        &gt;&gt;&gt; y = c2_2.element([1j, 4-4j])</span>
+<span class="sd">        &gt;&gt;&gt; c2_2.dist(x, y)</span>
+<span class="sd">        5.0</span>
+
+<span class="sd">        &gt;&gt;&gt; c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=1))</span>
+<span class="sd">        &gt;&gt;&gt; x = c2_2.element([3+1j, 4])</span>
+<span class="sd">        &gt;&gt;&gt; y = c2_2.element([1j, 4-4j])</span>
+<span class="sd">        &gt;&gt;&gt; c2_2.dist(x, y)</span>
+<span class="sd">        7.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dist_impl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the norm of a vector.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : `Cn.Vector`</span>
+<span class="sd">            The vector whose norm is calculated</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        norm : `float`</span>
+<span class="sd">            Norm of the vector</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; c2_2 = Cn(2, norm=np.linalg.norm)  # 2-norm</span>
+<span class="sd">        &gt;&gt;&gt; x = c2_2.element([3+1j, 1-5j])</span>
+<span class="sd">        &gt;&gt;&gt; c2_2.norm(x)</span>
+<span class="sd">        6.0</span>
+
+<span class="sd">        &gt;&gt;&gt; from functools import partial</span>
+<span class="sd">        &gt;&gt;&gt; c2_1 = Cn(2, norm=partial(np.linalg.norm, ord=1))</span>
+<span class="sd">        &gt;&gt;&gt; x = c2_1.element([3-4j, 12+5j])</span>
+<span class="sd">        &gt;&gt;&gt; c2_1.norm(x)</span>
+<span class="sd">        18.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm_impl</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raw inner product of two vectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        x, y : `Cn.Vector`</span>
+<span class="sd">            The vectors whose inner product is calculated</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        inner : `complex`</span>
+<span class="sd">            Inner product of `x` and `y`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; c3 = Cn(2, inner=lambda x, y: np.vdot(y, x))</span>
+<span class="sd">        &gt;&gt;&gt; x = c3.element([5+1j, -2j])</span>
+<span class="sd">        &gt;&gt;&gt; y = c3.element([1, 1+1j])</span>
+<span class="sd">        &gt;&gt;&gt; c3.inner(x, y) == (5+1j)*1 + (-2j)*(1-1j)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; weights = np.array([1., 2.])</span>
+<span class="sd">        &gt;&gt;&gt; c3w = Cn(2, inner=lambda x, y: np.vdot(weights * y, x))</span>
+<span class="sd">        &gt;&gt;&gt; x = c3w.element(x)  # elements must be cast (no copy)</span>
+<span class="sd">        &gt;&gt;&gt; y = c3w.element(y)</span>
+<span class="sd">        &gt;&gt;&gt; c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner_impl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fn.zero"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Fn.zero">[docs]</a>    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a vector of zeros.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; c3 = Cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = c3.zero()</span>
+<span class="sd">        &gt;&gt;&gt; x</span>
+<span class="sd">        Cn(3).element([0j, 0j, 0j])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Fn.equals"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Fn.equals">[docs]</a>    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if `other` is equal to this space.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        equals : `bool`</span>
+<span class="sd">            `True` if `other` is an instance of this space&#39;s type</span>
+<span class="sd">            with the same `dim` and `dtype`, and **identical**</span>
+<span class="sd">            distance function, otherwise `False`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from numpy.linalg import norm</span>
+<span class="sd">        &gt;&gt;&gt; def dist(x, y, ord):</span>
+<span class="sd">        ...     return norm(x - y, ord)</span>
+
+<span class="sd">        &gt;&gt;&gt; from functools import partial</span>
+<span class="sd">        &gt;&gt;&gt; dist2 = partial(dist, ord=2)</span>
+<span class="sd">        &gt;&gt;&gt; c3 = Cn(3, dist=dist2)</span>
+<span class="sd">        &gt;&gt;&gt; c3_same = Cn(3, dist=dist2)</span>
+<span class="sd">        &gt;&gt;&gt; c3.equals(c3_same)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; c3 == c3_same  # equivalent</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Different `dist` functions result in different spaces:</span>
+
+<span class="sd">        &gt;&gt;&gt; dist1 = partial(dist, ord=1)</span>
+<span class="sd">        &gt;&gt;&gt; c3_1 = Cn(3, dist=dist1)</span>
+<span class="sd">        &gt;&gt;&gt; c3_2 = Cn(3, dist=dist2)</span>
+<span class="sd">        &gt;&gt;&gt; c3_1.equals(c3_2)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        Be careful with Lambdas - they result in non-identical function</span>
+<span class="sd">        objects:</span>
+
+<span class="sd">        &gt;&gt;&gt; c3_lambda1 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))</span>
+<span class="sd">        &gt;&gt;&gt; c3_lambda2 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))</span>
+<span class="sd">        &gt;&gt;&gt; c3_lambda1.equals(c3_lambda2)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dim</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dist_impl</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_dist_impl</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_norm_impl</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_norm_impl</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_inner_impl</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_inner_impl</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The field of :math:`C^n`, i.e. the complex numbers.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; c3 = Cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; c3.field</span>
+<span class="sd">        ComplexNumbers()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_field</span>
+
+    <span class="k">def</span> <span class="nf">_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The entry-wise product of two vectors, assigned to `z`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        z : `Cn.Vector`</span>
+<span class="sd">            The result vector</span>
+<span class="sd">        x : `Cn.Vector`</span>
+<span class="sd">            First factor</span>
+<span class="sd">        y : `Cn.Vector`</span>
+<span class="sd">            Second factor, used to store the result</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; c3 = Cn(3)</span>
+<span class="sd">        &gt;&gt;&gt; x = c3.element([5+1j, 3, 2-2j])</span>
+<span class="sd">        &gt;&gt;&gt; y = c3.element([1, 2+1j, 3-1j])</span>
+<span class="sd">        &gt;&gt;&gt; z = c3.element()</span>
+<span class="sd">        &gt;&gt;&gt; c3.multiply(z, x, y)</span>
+<span class="sd">        &gt;&gt;&gt; z</span>
+<span class="sd">        Cn(3).element([(5+1j), (6+3j), (4-8j)])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">y</span><span class="p">:</span> <span class="c"># z = z*z</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">*=</span> <span class="n">z</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">x</span><span class="p">:</span> <span class="c"># z = z*y</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">*=</span> <span class="n">y</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">y</span><span class="p">:</span> <span class="c"># z = z*x</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">*=</span> <span class="n">x</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c"># z = x*y</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">*=</span> <span class="n">y</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;repr() implementation.&quot;&quot;&quot;</span>
+        <span class="c">#TODO print dist, norm, inner</span>
+        <span class="k">return</span> <span class="s">&#39;Fn({}, {!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;str() implementation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;Fn({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fn.Vector"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Fn.Vector">[docs]</a>    <span class="k">class</span> <span class="nc">Vector</span><span class="p">(</span><span class="n">Ntuples</span><span class="o">.</span><span class="n">Vector</span><span class="p">,</span> <span class="n">LinearSpace</span><span class="o">.</span><span class="n">Vector</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Representation of a `Fn` element.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        See the module documentation for attributes, methods etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            space : `Fn`</span>
+<span class="sd">                Space instance this vector lives in</span>
+<span class="sd">            data : `numpy.ndarray`</span>
+<span class="sd">                Array that will be used as data representation. Its</span>
+<span class="sd">                dtype must be equal to `space.dtype`, and its shape</span>
+<span class="sd">                must be `(space.dim,)`.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Cn"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Cn">[docs]</a><span class="k">class</span> <span class="nc">Cn</span><span class="p">(</span><span class="n">Fn</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The real vector space :math:`R^n` with vector multiplication.</span>
+
+<span class="sd">    Its elements are represented as instances of the inner `Rn.Vector`</span>
+<span class="sd">    class.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    See the module documentation for attributes, methods etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        `dim` : `int`</span>
+<span class="sd">            The dimension of the space</span>
+<span class="sd">        `dtype` : `object`, optional  (Default: `np.complex128`)</span>
+<span class="sd">            The data type for each vector entry. Can be provided in any</span>
+<span class="sd">            way the `numpy.dtype()` function understands, most notably</span>
+<span class="sd">            as built-in type, as one of NumPy&#39;s internal datatype</span>
+<span class="sd">            objects or as string.</span>
+<span class="sd">            Only real floating-point types are allowed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_complex_dtypes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            `dtype` {} not a complex floating-point type.&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">)))</span>
+
+        <span class="c"># TODO: remove inner if norm or dist is provided</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;dist&#39;</span><span class="p">,</span> <span class="n">_dist</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;norm&#39;</span><span class="p">,</span> <span class="n">_norm</span><span class="p">)</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;inner&#39;</span><span class="p">,</span> <span class="n">_inner</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">dist</span><span class="o">=</span><span class="n">dist</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">inner</span><span class="o">=</span><span class="n">inner</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;`rn.__repr__() &lt;==&gt; repr(rn)`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Cn({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Cn({}, {!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;`rn.__str__() &lt;==&gt; str(rn)`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Cn({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Cn({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Cn.Vector"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Cn.Vector">[docs]</a>    <span class="k">class</span> <span class="nc">Vector</span><span class="p">(</span><span class="n">Fn</span><span class="o">.</span><span class="n">Vector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Representation of a `Cn` element.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        See the module documentation for attributes, methods etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The real part of this vector.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            real : `Rn.Vector` view</span>
+<span class="sd">                The real part this vector as a vector in `Rn`</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; c3 = Cn(3)</span>
+<span class="sd">            &gt;&gt;&gt; x = c3.element([5+1j, 3, 2-2j])</span>
+<span class="sd">            &gt;&gt;&gt; x.real</span>
+<span class="sd">            Rn(3).element([5.0, 3.0, 2.0])</span>
+
+<span class="sd">            The `Rn` vector is really a view, so changes affect</span>
+<span class="sd">            the original array:</span>
+
+<span class="sd">            &gt;&gt;&gt; x.real *= 2</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Cn(3).element([(10+1j), (6+0j), (4-2j)])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">rn</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">real_dtype</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+        <span class="nd">@real.setter</span>
+        <span class="k">def</span> <span class="nf">real</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newreal</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The setter for the real part.</span>
+
+<span class="sd">            This method is invoked by `vec.real = other`.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            newreal : array-like or scalar</span>
+<span class="sd">                The new real part for this vector.</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; c3 = Cn(3)</span>
+<span class="sd">            &gt;&gt;&gt; x = c3.element([5+1j, 3, 2-2j])</span>
+<span class="sd">            &gt;&gt;&gt; a = Rn(3).element([0, 0, 0])</span>
+<span class="sd">            &gt;&gt;&gt; x.real = a</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Cn(3).element([1j, 0j, -2j])</span>
+
+<span class="sd">            Other array-like types and broadcasting:</span>
+
+<span class="sd">            &gt;&gt;&gt; x.real = 1.0</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Cn(3).element([(1+1j), (1+0j), (1-2j)])</span>
+<span class="sd">            &gt;&gt;&gt; x.real = [0, 2, -1]</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Cn(3).element([1j, (2+0j), (-1-2j)])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">newreal</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">imag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The imaginary part of this vector.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            imag : `Rn.Vector`</span>
+<span class="sd">                The imaginary part this vector as a vector in `Rn`</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; c3 = Cn(3)</span>
+<span class="sd">            &gt;&gt;&gt; x = c3.element([5+1j, 3, 2-2j])</span>
+<span class="sd">            &gt;&gt;&gt; x.imag</span>
+<span class="sd">            Rn(3).element([1.0, 0.0, -2.0])</span>
+
+<span class="sd">            The `Rn` vector is really a view, so changes affect</span>
+<span class="sd">            the original array:</span>
+
+<span class="sd">            &gt;&gt;&gt; x.imag *= 2</span>
+<span class="sd">            &gt;&gt;&gt; x</span>
+<span class="sd">            Cn(3).element([(5+2j), (3+0j), (2-4j)])</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">rn</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">real_dtype</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+
+        <span class="nd">@imag.setter</span>
+        <span class="k">def</span> <span class="nf">imag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newimag</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;The setter for the imaginary part.</span>
+
+<span class="sd">            This method is invoked by `vec.imag = other`.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            newreal : array-like or scalar</span>
+<span class="sd">                The new imaginary part for this vector.</span>
+
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; x = Cn(3).element([5+1j, 3, 2-2j])</span>
+<span class="sd">            &gt;&gt;&gt; a = Rn(3).element([0, 0, 0])</span>
+<span class="sd">            &gt;&gt;&gt; x.imag = a; print(x)</span>
+<span class="sd">            [(5+0j), (3+0j), (2+0j)]</span>
+
+<span class="sd">            Other array-like types and broadcasting:</span>
+
+<span class="sd">            &gt;&gt;&gt; x.imag = 1.0; print(x)</span>
+<span class="sd">            [(5+1j), (3+1j), (2+1j)]</span>
+<span class="sd">            &gt;&gt;&gt; x.imag = [0, 2, -1]; print(x)</span>
+<span class="sd">            [(5+0j), (3+2j), (2-1j)]</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">newimag</span>
+
+</div></div>
+<div class="viewcode-block" id="Rn"><a class="viewcode-back" href="../../../odl.space.html#odl.space.cartesian.Rn">[docs]</a><span class="k">class</span> <span class="nc">Rn</span><span class="p">(</span><span class="n">Fn</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The real vector space :math:`R^n` with vector multiplication.</span>
+
+<span class="sd">    Its elements are represented as instances of the inner `Rn.Vector`</span>
+<span class="sd">    class.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    See the module documentation for attributes, methods etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a new instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        `dim` : `int`</span>
+<span class="sd">            The dimension of the space</span>
+<span class="sd">        `dtype` : `object`, optional  (Default: `np.float64`)</span>
+<span class="sd">            The data type for each vector entry. Can be provided in any</span>
+<span class="sd">            way the `numpy.dtype()` function understands, most notably</span>
+<span class="sd">            as built-in type, as one of NumPy&#39;s internal datatype</span>
+<span class="sd">            objects or as string.</span>
+<span class="sd">            Only real floating-point types are allowed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_real_dtypes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">errfmt</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">            `dtype` {} not a real floating-point type.&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">)))</span>
+
+        <span class="c"># TODO: remove inner if norm or dist is provided</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;dist&#39;</span><span class="p">,</span> <span class="n">_dist</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;norm&#39;</span><span class="p">,</span> <span class="n">_norm</span><span class="p">)</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;inner&#39;</span><span class="p">,</span> <span class="n">_inner</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">dist</span><span class="o">=</span><span class="n">dist</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">inner</span><span class="o">=</span><span class="n">inner</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;`rn.__repr__() &lt;==&gt; repr(rn)`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Rn({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Rn({}, {!r})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;`rn.__str__() &lt;==&gt; str(rn)`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Rn({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Rn({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">doctest</span> <span class="kn">import</span> <span class="n">testmod</span><span class="p">,</span> <span class="n">NORMALIZE_WHITESPACE</span>
+    <span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">NORMALIZE_WHITESPACE</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -274,8 +274,8 @@ class ProductSpace(LinearSpace):
         zero : ProducSpace.Vector
             The zero vector in the product space
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
@@ -328,8 +328,8 @@ class ProductSpace(LinearSpace):
             `True` if `other` is a ProductSpace instance, has
             the same length and the same factors. `False` otherwise.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> rn, rm = Rn(2), Rn(3)

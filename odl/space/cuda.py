@@ -263,23 +263,23 @@ class CudaFn(spaces.LinearSpace):
 
         Examples
         --------
+        Comparing with self:
 
-        Comparing with self
         >>> r3 = CudaFn(3)
         >>> r3.equals(r3)
         True
-
-        Also true when comparing with similar instance
         >>> r3a, r3b = CudaFn(3), CudaFn(3)
         >>> r3a.equals(r3b)
         True
 
-        False when comparing to other dimension Rn
+        False when comparing to other dimension Rn:
+
         >>> r3, r4 = CudaFn(3), CudaFn(4)
         >>> r3.equals(r4)
         False
 
-        We also support operators '==' and '!='
+        We also support operators '==' and '!=':
+
         >>> r3, r4 = CudaFn(3), CudaFn(4)
         >>> r3 == r3
         True
@@ -343,8 +343,8 @@ class CudaFn(spaces.LinearSpace):
             ptr : CudaFnVectorImpl
                 Underlying cuda data representation
 
-            Example
-            -------
+            Examples
+            --------
             """
             return self._data
 

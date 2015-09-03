@@ -1,0 +1,507 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test.space.cuda_test &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test.space.cuda_test</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+
+<span class="c"># External module imports</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">float64</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">from</span> <span class="nn">odl.operator.operator</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">odl.space.space</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="n">Rn</span>
+<span class="kn">from</span> <span class="nn">odl.utility.testutils</span> <span class="kn">import</span> <span class="n">skip_all</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">odl.utility.testutils</span> <span class="kn">import</span> <span class="n">ODLTestCase</span>
+    <span class="kn">from</span> <span class="nn">odl.space.cuda</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">ODLTestCase</span> <span class="o">=</span> <span class="n">skip_all</span><span class="p">(</span><span class="s">&quot;Missing odlpp: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="TestInit"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestInit">[docs]</a><span class="k">class</span> <span class="nc">TestInit</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestInit.test_empty"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestInit.test_empty">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">element</span><span class="p">())</span>
+        <span class="c"># Nothing to test, simply check that code runs</span>
+</div>
+<div class="viewcode-block" id="TestInit.test_zero"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestInit.test_zero">[docs]</a>    <span class="k">def</span> <span class="nf">test_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">zero</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="TestInit.test_list_init"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestInit.test_list_init">[docs]</a>    <span class="k">def</span> <span class="nf">test_list_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="TestInit.test_ndarray_init"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestInit.test_ndarray_init">[docs]</a>    <span class="k">def</span> <span class="nf">test_ndarray_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">])</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TestAccessors"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors">[docs]</a><span class="k">class</span> <span class="nc">TestAccessors</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestAccessors.test_getitem"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_getitem">[docs]</a>    <span class="k">def</span> <span class="nf">test_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="TestAccessors.test_iterator"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_iterator">[docs]</a>    <span class="k">def</span> <span class="nf">test_iterator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">y</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="TestAccessors.test_getitem_index_error"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_getitem_index_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_getitem_index_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="TestAccessors.test_setitem"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_setitem">[docs]</a>    <span class="k">def</span> <span class="nf">test_setitem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">42</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">42</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">index</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestAccessors.test_setitem_index_error"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_setitem_index_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_setitem_index_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</div>
+    <span class="k">def</span> <span class="nf">_test_getslice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+        <span class="c"># Validate get against python list behaviour</span>
+        <span class="n">r6</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r6</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="nb">slice</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="nb">slice</span><span class="p">])</span>
+
+<div class="viewcode-block" id="TestAccessors.test_getslice"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_getslice">[docs]</a>    <span class="k">def</span> <span class="nf">test_getslice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Tests getting all combinations of slices</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">ends</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">starts</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">ends</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_test_getslice</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestAccessors.test_getslice_index_error"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_getslice_index_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_getslice_index_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="c"># Bad slice</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">xd</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="mi">13</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_test_setslice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+        <span class="c"># Validate set against python list behaviour</span>
+        <span class="n">r6</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">r6</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">x</span><span class="p">[</span><span class="nb">slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="nb">slice</span><span class="p">]</span>
+        <span class="n">y</span><span class="p">[</span><span class="nb">slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="nb">slice</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestAccessors.test_setslice"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_setslice">[docs]</a>    <span class="k">def</span> <span class="nf">test_setslice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Tests a range of combination of slices</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">ends</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">starts</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">ends</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_test_setslice</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="TestAccessors.test_setslice_index_error"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestAccessors.test_setslice_index_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_setslice_index_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="c"># Bad slice</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">xd</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="mi">13</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+
+        <span class="c"># Bad size of rhs</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">xd</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">xd</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">IndexError</span><span class="p">):</span>
+            <span class="n">xd</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="TestMethods"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods">[docs]</a><span class="k">class</span> <span class="nc">TestMethods</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestMethods.test_norm"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods.test_norm">[docs]</a>    <span class="k">def</span> <span class="nf">test_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+        <span class="n">correct_norm_squared</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">correct_norm</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">correct_norm_squared</span><span class="p">)</span>
+
+        <span class="c"># Space function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">xd</span><span class="p">),</span> <span class="n">correct_norm</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestMethods.test_inner"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods.test_inner">[docs]</a>    <span class="k">def</span> <span class="nf">test_inner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+
+        <span class="n">correct_inner</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="mi">9</span>
+
+        <span class="c"># Space function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEquals</span><span class="p">(</span><span class="n">r3</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">xd</span><span class="p">,</span> <span class="n">yd</span><span class="p">),</span> <span class="n">correct_inner</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestMethods.vectors"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods.vectors">[docs]</a>    <span class="k">def</span> <span class="nf">vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rn</span><span class="p">):</span>
+        <span class="c"># Generate numpy arrays</span>
+        <span class="n">x_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">rn</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">y_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">rn</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">z_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">rn</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="c"># Make rn vectors</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x_arr</span><span class="p">),</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y_arr</span><span class="p">),</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">z_arr</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+</div>
+    <span class="k">def</span> <span class="nf">_test_lincomb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="c"># Validates lincomb against the result on host with randomized</span>
+        <span class="c"># data and given a,b</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c"># Unaliased arguments</span>
+        <span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+
+        <span class="n">z_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x_arr</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">y_arr</span>
+        <span class="n">rn</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">],</span> <span class="p">[</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">],</span> <span class="n">places</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="c"># First argument aliased with output</span>
+        <span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+
+        <span class="n">z_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">z_arr</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">y_arr</span>
+        <span class="n">rn</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">],</span> <span class="p">[</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">],</span> <span class="n">places</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="c"># Second argument aliased with output</span>
+        <span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+
+        <span class="n">z_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x_arr</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">z_arr</span>
+        <span class="n">rn</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">],</span> <span class="p">[</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">],</span> <span class="n">places</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="c"># Both arguments aliased with each other</span>
+        <span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+
+        <span class="n">z_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x_arr</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">x_arr</span>
+        <span class="n">rn</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">],</span> <span class="p">[</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">],</span> <span class="n">places</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="c"># All aliased</span>
+        <span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+
+        <span class="n">z_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">z_arr</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">z_arr</span>
+        <span class="n">rn</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">],</span> <span class="p">[</span><span class="n">x_arr</span><span class="p">,</span> <span class="n">y_arr</span><span class="p">,</span> <span class="n">z_arr</span><span class="p">],</span> <span class="n">places</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestMethods.test_lincomb"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods.test_lincomb">[docs]</a>    <span class="k">def</span> <span class="nf">test_lincomb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">scalar_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">3.41</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">scalar_values</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">scalar_values</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_test_lincomb</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_test_member_lincomb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="c"># Validates vector member lincomb against the result on host with</span>
+        <span class="c"># randomized data</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span>
+
+        <span class="c"># Generate vectors</span>
+        <span class="n">y_host</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">x_host</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">y_device</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y_host</span><span class="p">)</span>
+        <span class="n">x_device</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x_host</span><span class="p">)</span>
+
+        <span class="c"># Host side calculation</span>
+        <span class="n">y_host</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x_host</span>
+
+        <span class="c"># Device side calculation</span>
+        <span class="n">y_device</span><span class="o">.</span><span class="n">lincomb</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x_device</span><span class="p">)</span>
+
+        <span class="c"># Cuda only uses floats, so require 5 places</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">y_device</span><span class="p">,</span> <span class="n">y_host</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestMethods.test_member_lincomb"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods.test_member_lincomb">[docs]</a>    <span class="k">def</span> <span class="nf">test_member_lincomb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">scalar_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">3.41</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">1.0001</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">scalar_values</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_test_member_lincomb</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestMethods.test_multiply"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods.test_multiply">[docs]</a>    <span class="k">def</span> <span class="nf">test_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Validates multiply against the result on host with randomized data</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="n">x_host</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">y_host</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">z_host</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">x_device</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x_host</span><span class="p">)</span>
+        <span class="n">y_device</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y_host</span><span class="p">)</span>
+        <span class="n">z_device</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">()</span>
+
+        <span class="c"># Host side calculation</span>
+        <span class="n">z_host</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">x_host</span> <span class="o">*</span> <span class="n">y_host</span>
+
+        <span class="c"># Device side calculation</span>
+        <span class="n">r3</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">z_device</span><span class="p">,</span> <span class="n">x_device</span><span class="p">,</span> <span class="n">y_device</span><span class="p">)</span>
+
+        <span class="c"># Cuda only uses floats, so require 5 places</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">z_device</span><span class="p">,</span> <span class="n">z_host</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="c"># Assert input was not modified</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">x_device</span><span class="p">,</span> <span class="n">x_host</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">y_device</span><span class="p">,</span> <span class="n">y_host</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="c"># Aliased</span>
+        <span class="n">z_host</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">z_host</span> <span class="o">*</span> <span class="n">x_host</span>
+        <span class="n">r3</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">z_device</span><span class="p">,</span> <span class="n">z_device</span><span class="p">,</span> <span class="n">x_device</span><span class="p">)</span>
+
+        <span class="c"># Cuda only uses floats, so require 5 places</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">z_device</span><span class="p">,</span> <span class="n">z_host</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="c"># Aliased</span>
+        <span class="n">z_host</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">z_host</span> <span class="o">*</span> <span class="n">z_host</span>
+        <span class="n">r3</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">z_device</span><span class="p">,</span> <span class="n">z_device</span><span class="p">,</span> <span class="n">z_device</span><span class="p">)</span>
+
+        <span class="c"># Cuda only uses floats, so require 5 places</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">z_device</span><span class="p">,</span> <span class="n">z_host</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestMethods.test_member_multiply"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestMethods.test_member_multiply">[docs]</a>    <span class="k">def</span> <span class="nf">test_member_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Validates vector member multiply against the result on host</span>
+        <span class="c"># with randomized data</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="n">y_host</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">x_host</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">y_device</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">y_host</span><span class="p">)</span>
+        <span class="n">x_device</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x_host</span><span class="p">)</span>
+
+        <span class="c"># Host side calculation</span>
+        <span class="n">y_host</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">x_host</span> <span class="o">*</span> <span class="n">y_host</span>
+
+        <span class="c"># Device side calculation</span>
+        <span class="n">y_device</span> <span class="o">*=</span> <span class="n">x_device</span>
+
+        <span class="c"># Cuda only uses floats, so require 5 places</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">y_device</span><span class="p">,</span> <span class="n">y_host</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TestConvenience"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestConvenience">[docs]</a><span class="k">class</span> <span class="nc">TestConvenience</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestConvenience.test_addition"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestConvenience.test_addition">[docs]</a>    <span class="k">def</span> <span class="nf">test_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">xd</span> <span class="o">+</span> <span class="n">yd</span><span class="p">,</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="TestConvenience.test_scalar_mult"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestConvenience.test_scalar_mult">[docs]</a>    <span class="k">def</span> <span class="nf">test_scalar_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">C</span> <span class="o">*</span> <span class="n">xd</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="TestConvenience.test_incompatible_operations"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestConvenience.test_incompatible_operations">[docs]</a>    <span class="k">def</span> <span class="nf">test_incompatible_operations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">R3h</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xA</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="n">xB</span> <span class="o">=</span> <span class="n">R3h</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">xA</span> <span class="o">+=</span> <span class="n">xB</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">xA</span> <span class="o">-=</span> <span class="n">xB</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">xA</span> <span class="o">+</span> <span class="n">xB</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">xA</span> <span class="o">-</span> <span class="n">xB</span>
+
+</div></div>
+<div class="viewcode-block" id="TestPointer"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestPointer">[docs]</a><span class="k">class</span> <span class="nc">TestPointer</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestPointer.test_modify"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestPointer.test_modify">[docs]</a>    <span class="k">def</span> <span class="nf">test_modify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">data_ptr</span><span class="o">=</span><span class="n">xd</span><span class="o">.</span><span class="n">data_ptr</span><span class="p">)</span>
+
+        <span class="n">yd</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">xd</span><span class="p">,</span> <span class="n">yd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestPointer.test_sub_vector"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestPointer.test_sub_vector">[docs]</a>    <span class="k">def</span> <span class="nf">test_sub_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r6</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r6</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">data_ptr</span><span class="o">=</span><span class="n">xd</span><span class="o">.</span><span class="n">data_ptr</span><span class="p">)</span>
+        <span class="n">yd</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">([</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">xd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestPointer.test_offset_sub_vector"><a class="viewcode-back" href="../../../test.space.html#test.space.cuda_test.TestPointer.test_offset_sub_vector">[docs]</a>    <span class="k">def</span> <span class="nf">test_offset_sub_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r6</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">r3</span> <span class="o">=</span> <span class="n">CudaRn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">r6</span><span class="o">.</span><span class="n">element</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">r3</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">data_ptr</span><span class="o">=</span><span class="n">xd</span><span class="o">.</span><span class="n">data_ptr</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">xd</span><span class="o">.</span><span class="n">itemsize</span><span class="p">)</span>
+        <span class="n">yd</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="n">xd</span><span class="p">)</span>
+
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="nb">exit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

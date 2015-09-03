@@ -823,8 +823,8 @@ class LinearSpace(Set):
             operations on a vector should be expected to break equality
             testing.
 
-            Example
-            -------
+            Examples
+            --------
 
             >>> from odl.space.cartesian import Rn
             >>> import numpy as np

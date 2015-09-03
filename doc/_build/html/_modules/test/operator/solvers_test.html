@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test.operator.solvers_test &mdash; odl beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="odl beta documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for test.operator.solvers_test</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014, 2015 The ODL development group</span>
+<span class="c">#</span>
+<span class="c"># This file is part of ODL.</span>
+<span class="c">#</span>
+<span class="c"># ODL is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># ODL is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with ODL.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+
+<span class="c"># Imports for common Python 2/3 codebase</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">future</span> <span class="kn">import</span> <span class="n">standard_library</span>
+
+<span class="c"># External module imports</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># ODL imports</span>
+<span class="kn">import</span> <span class="nn">odl.operator.operator</span> <span class="kn">as</span> <span class="nn">OP</span>
+<span class="kn">import</span> <span class="nn">odl.operator.solvers</span> <span class="kn">as</span> <span class="nn">solvers</span>
+<span class="kn">from</span> <span class="nn">odl.space.space</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">odl.space.cartesian</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">odl.utility.testutils</span> <span class="kn">import</span> <span class="n">ODLTestCase</span>
+
+<span class="n">standard_library</span><span class="o">.</span><span class="n">install_aliases</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="MultiplyOp"><a class="viewcode-back" href="../../../test.operator.html#test.operator.solvers_test.MultiplyOp">[docs]</a><span class="k">class</span> <span class="nc">MultiplyOp</span><span class="p">(</span><span class="n">OP</span><span class="o">.</span><span class="n">LinearOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Multiply with matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_domain</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rn</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">domain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rn</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                       <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="nb">range</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">rhs</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_domain</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_range</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TestMatrixSolve"><a class="viewcode-back" href="../../../test.operator.html#test.operator.solvers_test.TestMatrixSolve">[docs]</a><span class="k">class</span> <span class="nc">TestMatrixSolve</span><span class="p">(</span><span class="n">ODLTestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Tests solutions of the linear equation Ax = b with dense A</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TestMatrixSolve.test_landweber"><a class="viewcode-back" href="../../../test.operator.html#test.operator.solvers_test.TestMatrixSolve.test_landweber">[docs]</a>    <span class="k">def</span> <span class="nf">test_landweber</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
+
+        <span class="c"># Np as validation</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="c"># Landweber is slow and needs a decent initial guess</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c"># Vector representation</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">bvec</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="c"># Make operator</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+        <span class="c"># Solve using landweber</span>
+        <span class="n">solvers</span><span class="o">.</span><span class="n">landweber</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">xvec</span><span class="p">,</span> <span class="n">bvec</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">n</span><span class="o">*</span><span class="mi">50</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">norm</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">xvec</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestMatrixSolve.test_conjugate_gradient"><a class="viewcode-back" href="../../../test.operator.html#test.operator.solvers_test.TestMatrixSolve.test_conjugate_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">test_conjugate_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
+
+        <span class="c"># Np as validation</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c"># Vector representation</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">bvec</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="c"># Make operator</span>
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+        <span class="c"># Solve using conjugate gradient</span>
+        <span class="n">solvers</span><span class="o">.</span><span class="n">conjugate_gradient</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">xvec</span><span class="p">,</span> <span class="n">bvec</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">xvec</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TestMatrixSolve.test_gauss_newton"><a class="viewcode-back" href="../../../test.operator.html#test.operator.solvers_test.TestMatrixSolve.test_gauss_newton">[docs]</a>    <span class="k">def</span> <span class="nf">test_gauss_newton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span>
+
+        <span class="c"># Np as validation</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c"># Vector representation</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">Rn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">xvec</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">bvec</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">element</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="c"># Make operator</span>
+        <span class="n">Aop</span> <span class="o">=</span> <span class="n">MultiplyOp</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+        <span class="c"># Solve using conjugate gradient</span>
+        <span class="n">solvers</span><span class="o">.</span><span class="n">gauss_newton</span><span class="p">(</span><span class="n">Aop</span><span class="p">,</span> <span class="n">xvec</span><span class="p">,</span> <span class="n">bvec</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAllAlmostEquals</span><span class="p">(</span><span class="n">xvec</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="nb">exit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, Jonas Adler.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
