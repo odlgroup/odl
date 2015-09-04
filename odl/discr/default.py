@@ -36,17 +36,15 @@ class DiscreteL2(LinearSpaceDiscretization):
 
     """Discretization of an :math:`L^2` space."""
 
-    def __init__(self, l2space, grid, rn_or_cn, interp='nearest', **kwargs):
+    def __init__(self, l2space, grid, dspace, interp='nearest', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         l2space : `L2`
             The continuous space to be discretized
-        rn_or_cn : `Rn` or `Cn`, same `field` as `l2space`
-            The space of elements used for data storage. If `l2space`
-            is a complex space, a `Cn` space must be given, and
-            analogously a `Rn` space if `l2space` is real.
+        dspace : `FnBase`, same `field` as `l2space`
+            The space of elements used for data storage
         grid : `TensorGrid`
             The sampling grid for the discretization. Must be contained
             in `l2space.domain`.
@@ -70,11 +68,11 @@ class DiscreteL2(LinearSpaceDiscretization):
                              'types {}.'.format(interp, _supported_interp))
 
         order = kwargs.pop('order', 'C')
-        restriction = GridCollocation(l2space, grid, rn_or_cn, order=order)
+        restriction = GridCollocation(l2space, grid, dspace, order=order)
         if interp == 'nearest':
-            extension = NearestInterpolation(l2space, grid, rn_or_cn,
+            extension = NearestInterpolation(l2space, grid, dspace,
                                              order=order)
         else:
             raise NotImplementedError
 
-        super().__init__(l2space, rn_or_cn, restriction, extension)
+        super().__init__(l2space, dspace, restriction, extension)

@@ -44,7 +44,7 @@ Module overview
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import object
+from builtins import object, str
 from future.utils import with_metaclass
 from future import standard_library
 standard_library.install_aliases()
@@ -55,7 +55,6 @@ from numbers import Integral, Real, Complex
 import numpy as np
 
 # ODL imports
-from odl.utility.utility import errfmt
 
 
 class Set(with_metaclass(ABCMeta, object)):
@@ -164,15 +163,11 @@ class EmptySet(Set):
 
     def equals(self, other):
         """Test if `other` is an `EmptySet` instance."""
-        return isinstance(other, EmptySet)
+        return type(other) == type(self)
 
     def element(self, inp=None):
-        """Return an element, only possible if `inp` is `None`."""
-        if inp is None:
-            return None
-        else:
-            raise ValueError(errfmt('''
-            Cannot create an `EmptySet` element from {}.'''.format(inp)))
+        """Return `None`."""
+        return None
 
     def __str__(self):
         """s.__str__() <==> str(s)."""
@@ -184,7 +179,6 @@ class EmptySet(Set):
 
 
 class UniversalSet(Set):
-
     """The set of all sets.
 
     Forget about set theory for a moment :-).
@@ -196,7 +190,7 @@ class UniversalSet(Set):
 
     def equals(self, other):
         """Test if `other` is a `UniversalSet` instance."""
-        return isinstance(other, UniversalSet)
+        return type(other) == type(self)
 
     def element(self, inp=None):
         """Return `inp` in any case."""
@@ -241,19 +235,12 @@ class Strings(Set):
 
     def equals(self, other):
         """Test if `other` is a `Strings` instance of equal length."""
-        return isinstance(other, Strings) and other.length == self.length
+        return type(other) == type(self) and other.length == self.length
 
     def element(self, inp=None):
-        """Return an integer from `inp` or from scratch."""
+        """Return a string from `inp` or from scratch."""
         if inp is not None:
-            try:
-                s = str(inp)
-                if len(s > self.length):
-                    raise ValueError
-                return str(inp)
-            except ValueError:
-                raise ValueError('Cannot create a string of length {} '
-                                 'from {}.'.format(self.length, inp))
+            return str(inp)[:self.length]
         else:
             return ''
 
@@ -269,23 +256,18 @@ class Strings(Set):
 class Integers(Set):
 
     """The set of integers."""
+    def equals(self, other):
+        """Tests if `other` is an `Integers` instance."""
+        return type(other) == type(self)
 
     def contains(self, other):
         """Test if `other` is an integer."""
         return isinstance(other, Integral)
 
-    def equals(self, other):
-        """Test if `other` is an `Integers` instance."""
-        return isinstance(other, Integers)
-
     def element(self, inp=None):
         """Return an integer from `inp` or from scratch."""
         if inp is not None:
-            try:
-                return int(inp)
-            except ValueError:
-                raise ValueError(errfmt('''
-                Cannot create an integer from {}.'''.format(inp)))
+            return int(inp)
         else:
             return 0
 
@@ -308,16 +290,12 @@ class RealNumbers(Set):
 
     def equals(self, other):
         """Test if `other` is a `RealNumbers` instance."""
-        return isinstance(other, RealNumbers)
+        return type(other) == type(self)
 
     def element(self, inp=None):
         """Return a real number from `inp` or from scratch."""
         if inp is not None:
-            try:
-                return float(inp)
-            except ValueError:
-                raise ValueError(errfmt('''
-                Cannot create a real number from {}.'''.format(inp)))
+            return float(inp)
         else:
             return 0.0
 
@@ -340,16 +318,12 @@ class ComplexNumbers(Set):
 
     def equals(self, other):
         """Test if `other` is a `ComplexNumbers` instance."""
-        return isinstance(other, ComplexNumbers)
+        return type(other) == type(self)
 
     def element(self, inp=None):
         """Return a complex number from `inp` or from scratch."""
         if inp is not None:
-            try:
-                return complex(inp)
-            except ValueError:
-                raise ValueError(errfmt('''
-                Cannot create a complex number from {}.'''.format(inp)))
+            return complex(inp)
         else:
             return complex(0.0, 0.0)
 
@@ -371,7 +345,7 @@ class CartesianProduct(Set):
     """
 
     def __init__(self, *sets):
-        """Initialize a new `CartesianProduct` instance."""
+        """Initialize a new instance."""
         if not all(isinstance(set_, Set) for set_ in sets):
             wrong = [set_ for set_ in sets
                      if not isinstance(set_, Set)]
@@ -411,9 +385,9 @@ class CartesianProduct(Set):
             the same length as this Cartesian product and all sets
             with the same index are equal, `False` otherwise.
         """
-        return (isinstance(other, CartesianProduct) and
-                len(self) == len(other) and
-                all(x == y for x, y in zip(self.sets, other.sets)))
+        return (type(other) == type(self) and
+                len(other) == len(self) and
+                all(so == ss for so, ss in zip(other.sets, self.sets)))
 
     def element(self, inp=None):
         """Create a `CartesianProduct` element.
@@ -428,12 +402,11 @@ class CartesianProduct(Set):
             tpl = tuple(set_.element() for set_ in self.sets)
         else:
             tpl = tuple(set_.element(inpt)
-                        for (set_, inpt) in zip(self.sets, inp))
+                        for inpt, set_ in zip(inp, self.sets))
 
             if len(tpl) != len(self):
-                raise ValueError(errfmt('''
-                `inp` provides only {} values, needed are {}.
-                '''.format(len(tpl), len(self))))
+                raise ValueError('input provides only {} values, needed '
+                                 'are {}.'.format(len(tpl), len(self)))
 
         return tpl
 

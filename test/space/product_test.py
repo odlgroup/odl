@@ -37,7 +37,7 @@ standard_library.install_aliases()
 class ProductTest(ODLTestCase):
     def test_RxR(self):
         H = Rn(2)
-        HxH = LinearProductSpace(H, H)
+        HxH = ProductSpace(H, H)
         self.assertTrue(len(HxH) == 2)
 
         v1 = H.element([1, 2])
@@ -50,7 +50,7 @@ class ProductTest(ODLTestCase):
 
     def test_lincomb(self):
         H = Rn(2)
-        HxH = LinearProductSpace(H, H)
+        HxH = ProductSpace(H, H)
 
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])
@@ -70,7 +70,7 @@ class ProductTest(ODLTestCase):
         self.assertAllAlmostEquals(z, expected)
 
     def test_metric(self):
-        H = En(2)
+        H = Rn(2)
         v11 = H.element([1, 2])
         v12 = H.element([5, 3])
 
@@ -78,20 +78,20 @@ class ProductTest(ODLTestCase):
         v22 = H.element([8, 9])
 
         # 0-norm
-        HxH = MetricProductSpace(H, H, ord=0.0)
+        HxH = ProductSpace(H, H, ord=0.0)
         w1 = HxH.element(v11, v12)
         w2 = HxH.element(v21, v22)
         self.assertAlmostEquals(HxH.dist(w1, w2), 1)  # One term is equal
 
         # 1-norm
-        HxH = MetricProductSpace(H, H, ord=1.0)
+        HxH = ProductSpace(H, H, ord=1.0)
         w1 = HxH.element(v11, v12)
         w2 = HxH.element(v21, v22)
         self.assertAlmostEquals(HxH.dist(w1, w2),
                                 H.dist(v11, v21) + H.dist(v12, v22))
 
         # 2-norm
-        HxH = MetricProductSpace(H, H, ord=2.0)
+        HxH = ProductSpace(H, H, ord=2.0)
         w1 = HxH.element(v11, v12)
         w2 = HxH.element(v21, v22)
         self.assertAlmostEquals(
@@ -99,7 +99,7 @@ class ProductTest(ODLTestCase):
             (H.dist(v11, v21)**2 + H.dist(v12, v22)**2)**(1/2.0))
 
         # -inf norm
-        HxH = MetricProductSpace(H, H, ord=-float('inf'))
+        HxH = ProductSpace(H, H, ord=-float('inf'))
         w1 = HxH.element(v11, v12)
         w2 = HxH.element(v21, v22)
         self.assertAlmostEquals(
@@ -107,7 +107,7 @@ class ProductTest(ODLTestCase):
             min(H.dist(v11, v21), H.dist(v12, v22)))
 
         # inf norm
-        HxH = MetricProductSpace(H, H, ord=float('inf'))
+        HxH = ProductSpace(H, H, ord=float('inf'))
         w1 = HxH.element(v11, v12)
         w2 = HxH.element(v21, v22)
         self.assertAlmostEquals(
@@ -117,7 +117,7 @@ class ProductTest(ODLTestCase):
         # Custom norm
         def my_norm(x):
             return np.sum(x)  # Same as 1-norm
-        HxH = MetricProductSpace(H, H, prod_dist=my_norm)
+        HxH = ProductSpace(H, H, prod_dist=my_norm)
         w1 = HxH.element(v11, v12)
         w2 = HxH.element(v21, v22)
         self.assertAlmostEquals(
@@ -125,40 +125,40 @@ class ProductTest(ODLTestCase):
             H.dist(v11, v21) + H.dist(v12, v22))
 
     def test_norm(self):
-        H = En(2)
+        H = Rn(2)
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])
 
         # 0-norm
-        HxH = NormedProductSpace(H, H, ord=0.0)
+        HxH = ProductSpace(H, H, ord=0.0)
         w = HxH.element(v1, v2)
         self.assertAlmostEquals(HxH.norm(w), 2)  # No term is zero
 
         # 1-norm
-        HxH = NormedProductSpace(H, H, ord=1.0)
+        HxH = ProductSpace(H, H, ord=1.0)
         w = HxH.element(v1, v2)
         self.assertAlmostEquals(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
         # 2-norm
-        HxH = NormedProductSpace(H, H, ord=2.0)
+        HxH = ProductSpace(H, H, ord=2.0)
         w = HxH.element(v1, v2)
         self.assertAlmostEquals(
             HxH.norm(w), (H.norm(v1)**2 + H.norm(v2)**2)**(1/2.0))
 
         # -inf norm
-        HxH = NormedProductSpace(H, H, ord=-float('inf'))
+        HxH = ProductSpace(H, H, ord=-float('inf'))
         w = HxH.element(v1, v2)
         self.assertAlmostEquals(HxH.norm(w), min(H.norm(v1), H.norm(v2)))
 
         # inf norm
-        HxH = NormedProductSpace(H, H, ord=float('inf'))
+        HxH = ProductSpace(H, H, ord=float('inf'))
         w = HxH.element(v1, v2)
         self.assertAlmostEquals(HxH.norm(w), max(H.norm(v1), H.norm(v2)))
 
         # Custom norm
         def my_norm(x):
             return np.sum(x)  # Same as 1-norm
-        HxH = NormedProductSpace(H, H, prod_norm=my_norm)
+        HxH = ProductSpace(H, H, prod_norm=my_norm)
         w = HxH.element(v1, v2)
         self.assertAlmostEquals(HxH.norm(w), H.norm(v1) + H.norm(v2))
 

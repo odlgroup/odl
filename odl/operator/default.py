@@ -141,8 +141,8 @@ class ScalingOperator(SelfAdjointOperator):
 
         Example
         -------
-        >>> from odl.space.cartesian import En
-        >>> r3 = En(3)
+        >>> from odl.space.cartesian import Rn
+        >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> inv = op.inverse
@@ -351,18 +351,17 @@ class MultiplyOperator(LinearOperator):
 
         Example
         -------
-        >>> from odl.space.cartesian import En
-        >>> r3 = En(3)
+        >>> from odl.space.cartesian import Rn
+        >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
         >>> op.apply([x, y], z)
         >>> z
-        En(3).element([1.0, 4.0, 9.0])
+        Rn(3).element([1.0, 4.0, 9.0])
         """
-        outp.assign(inp[1])
-        outp.space.multiply(inp[0], outp)
+        outp.space.multiply(outp, inp[0], inp[1])
 
     def __repr__(self):
         """repr(self) implementation."""

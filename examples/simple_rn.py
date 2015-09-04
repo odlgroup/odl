@@ -16,13 +16,13 @@ from odl.space.space import *
 from odl.space.cuda import *
 from odl.space.set import *
 from odl.utility.utility import errfmt
-from odl.space.cartesian import En
+from odl.space.cartesian import Rn
 from odl.utility.testutils import Timer
 
 standard_library.install_aliases()
 
 
-class SimpleRn(HilbertSpace, Algebra):
+class SimpleRn(LinearSpace):
     """The real space R^n, unoptimized implmentation
     """
 
@@ -39,8 +39,8 @@ class SimpleRn(HilbertSpace, Algebra):
     def _inner(self, x, y):
         return float(np.vdot(x.data, y.data))
 
-    def _multiply(self, x, y):
-        y.data[:] = x.data * y.data
+    def _multiply(self, z, x, y):
+        z.data[:] = x.data * y.data
 
     def element(self, *args, **kwargs):
         if not args and not kwargs:
@@ -68,7 +68,7 @@ class SimpleRn(HilbertSpace, Algebra):
         return self._dim
 
     def equals(self, other):
-        return isinstance(other, SimpleRn) and self.dim == other.dim
+        return type(self) == type(other) and self.dim == other.dim
 
     class Vector(HilbertSpace.Vector, Algebra.Vector):
         def __init__(self, space, data):
@@ -90,7 +90,7 @@ n = 10**7
 iterations = 10
 
 
-optX = En(n)
+optX = Rn(n)
 simpleX = SimpleRn(n)
 cuX = CudaRn(n)
 
@@ -109,7 +109,7 @@ with Timer("SimpleRn"):
         simpleX.lincomb(sz, 2.13, sx, 3.14, sy)
 print("result: {}".format(sz[1:5]))
 
-with Timer("En"):
+with Timer("Rn"):
     for _ in range(iterations):
         optX.lincomb(oz, 2.13, ox, 3.14, oy)
 print("result: {}".format(oz[1:5]))
@@ -126,7 +126,7 @@ with Timer("SimpleRn"):
         result = sz.norm()
 print("result: {}".format(result))
 
-with Timer("En"):
+with Timer("Rn"):
     for _ in range(iterations):
         result = oz.norm()
 print("result: {}".format(result))
@@ -143,7 +143,7 @@ with Timer("SimpleRn"):
         result = sz.inner(sx)
 print("result: {}".format(result))
 
-with Timer("En"):
+with Timer("Rn"):
     for _ in range(iterations):
         result = oz.inner(ox)
 print("result: {}".format(result))

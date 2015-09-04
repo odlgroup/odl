@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import odl.operator.operator as OP
 import odl.space.function as fs
-import odl.space.euclidean as ds
+import odl.space.cartesian as ds
 import odl.space.product as ps
 import odl.discr.discretization as dd
 import odl.space.set as sets
@@ -144,7 +144,7 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
 
 # Define the space of one projection
 projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRn = ds.En(nPixels)
+projectionRn = ds.Rn(nPixels)
 
 # Discretize projection space
 projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
@@ -157,7 +157,7 @@ dataDisc = ps.powerspace(projectionDisc, nProjection)
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconRn = ds.En(nVoxels.prod())
+reconRn = ds.Rn(nVoxels.prod())
 reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
 
 # Create a phantom
@@ -197,7 +197,7 @@ x = reconDisc.zero()
 # solvers.landweber(projector, x, projections, 20, omega=0.6/normEst,
 #                   part_results=solvers.ForEachPartial(plotResult))
 solvers.conjugate_gradient(projector, x, projections, 20,
-                           part_results=solvers.ForEachPartial(plotResult))
+                           partial=solvers.ForEachPartial(plotResult))
 # solvers.gauss_newton(projector, x, projections, 20,
 #                      part_results=solvers.ForEachPartial(plotResult))
 

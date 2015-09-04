@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Support for functionspaces, such as L2.
+"""Spaces of functions  with common domain and range.
+
+TODO: document properly
 """
 
 # Imports for common Python 2/3 codebase
@@ -34,7 +35,6 @@ from odl.operator.operator import Operator
 from odl.space.domain import IntervalProd
 from odl.space.set import RealNumbers, ComplexNumbers, Set
 from odl.space.space import Algebra
-from odl.utility.utility import errfmt
 
 
 class FunctionSet(Set):
@@ -94,12 +94,10 @@ class FunctionSet(Set):
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError(errfmt('''
-            `dom` {} not a `Set` instance.'''.format(dom)))
+            raise TypeError('domain {} not a `Set` instance.'.format(dom))
 
         if not isinstance(ran, Set):
-            raise TypeError(errfmt('''
-            `ran` {} not a `Set` instance.'''.format(dom)))
+            raise TypeError('range {} not a `Set` instance.'.format(dom))
 
         self._domain = dom
         self._range = ran
@@ -160,7 +158,7 @@ class FunctionSet(Set):
             `True` if `other` is a `FunctionSet` with same `domain`
             and `range`, `False` otherwise.
         """
-        return (isinstance(other, FunctionSet) and
+        return (type(self) == type(other) and
                 self.domain == other.domain and
                 self.range == other.range)
 
@@ -209,20 +207,20 @@ class FunctionSet(Set):
             be provided.*
             """
             if not isinstance(fset, FunctionSet):
-                raise TypeError(errfmt('''
-                `fset` {} not a `FunctionSet` instance.
-                '''.format(fset)))
+                raise TypeError('function set {} not a `FunctionSet` '
+                                'instance.'.format(fset))
 
             if fcall is None and fapply is None:
-                raise ValueError('`fcall` and `fapply` cannot both be `None`.')
+                raise ValueError('call function and apply function cannot '
+                                 'both be `None`.')
 
             if fcall is not None and not callable(fcall):
-                raise TypeError(errfmt('''
-                `fcall` {} is not callable.'''.format(fcall)))
+                raise TypeError('call function {} is not callable.'
+                                ''.format(fcall))
 
             if fapply is not None and not callable(fapply):
-                raise TypeError(errfmt('''
-                `fapply` {} is not callable.'''.format(fapply)))
+                raise TypeError('apply function {} is not callable.'
+                                ''.format(fapply))
 
             self._space = fset
             if fcall is not None:
@@ -303,10 +301,10 @@ class FunctionSet(Set):
 
                 if (min_coords not in self.domain or
                         max_coords not in self.domain):
-                    raise ValueError('`inp` contains points outside '
+                    raise ValueError('input contains points outside '
                                      '`domain` {}.'.format(self.domain))
             else:
-                raise TypeError('`inp` is neither an element of the function '
+                raise TypeError('input is neither an element of the function '
                                 'domain {} nor an array or meshgrid-type '
                                 'coordinate list.'.format(self.domain))
 
@@ -315,9 +313,9 @@ class FunctionSet(Set):
             if not (outp in self.range or
                     (isinstance(outp, np.ndarray) and
                      outp.flat[0] in self.range)):
-                raise TypeError(errfmt('''
-                result {!r} not an element or an array of elements of
-                `range` {}.'''.format(outp, self.range)))
+                raise TypeError('result {!r} not an element or an array of '
+                                'elements of the function range {}.'
+                                ''.format(outp, self.range))
 
             return outp
 
@@ -343,9 +341,9 @@ class FunctionSet(Set):
             if not (outp in self.range or
                     (isinstance(outp, np.ndarray) and
                      outp.flat[0] in self.range)):
-                raise TypeError(errfmt('''
-                result {!r} not an element or an array of elements of
-                `range` {}.'''.format(outp, self.range)))
+                raise TypeError('result {!r} not an element or an array of '
+                                'elements of the function range {}.'
+                                ''.format(outp, self.range))
 
             return self._apply(outp, *inp)
 
@@ -369,18 +367,16 @@ class FunctionSpace(FunctionSet, Algebra):
         ----------
         dom : `Set`
             The domain of the functions.
-        field : `RealNumbers` or `ComplexNumbers` instance
+        field : `RealNumbers` or `ComplexNumbers`
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError(errfmt('''
-            `dom` {} not a `Set` instance.'''.format(dom)))
+            raise TypeError('domain {} not a `Set` instance.'.format(dom))
 
         if not (isinstance(field, RealNumbers) or
                 isinstance(field, ComplexNumbers)):
-            raise TypeError(errfmt('''
-            `field` {} not a `RealNumbers` or `ComplexNumbers` instance.
-            '''.format(field)))
+            raise TypeError('field {} not a `RealNumbers` or `ComplexNumbers` '
+                            'instance.'.format(field))
 
         super().__init__(dom, field)
         self._field = field
@@ -468,9 +464,8 @@ class FunctionSpace(FunctionSet, Algebra):
             """Linear combination, apply version."""
             # TODO: allow also CudaRn-like container types
             if not isinstance(outp, np.ndarray):
-                raise TypeError(errfmt('''
-                in-place evaluation only possible if `outp` is a
-                `numpy.ndarray`.'''))
+                raise TypeError('in-place evaluation only possible if output '
+                                'is of type `numpy.ndarray`.')
             if a == 0 and b == 0:
                 outp *= 0
             elif a == 0 and b != 0:
@@ -559,8 +554,8 @@ class FunctionSpace(FunctionSet, Algebra):
             be provided.*
             """
             if not isinstance(fspace, FunctionSpace):
-                raise TypeError(errfmt('''
-                `fspace` {} not a `FunctionSpace` instance.'''.format(fspace)))
+                raise TypeError('function space {} not a `FunctionSpace` '
+                                'instance.'.format(fspace))
 
             super().__init__(fspace, fcall, fapply)
 

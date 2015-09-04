@@ -28,12 +28,14 @@ import matplotlib.pyplot as plt
 
 from odl.operator.operator import *
 from odl.space.space import *
+from odl.space.set import Rectangle
 from odl.space.product import powerspace
 from odl.space.cartesian import *
 from odl.space.function import *
 import odl.space.cuda as CS
 import odl.discr.discretization as DS
 import odlpp.odlpp_cuda as cuda
+import odlpp.odlpp_utils as utils
 from odl.utility.testutils import Timer
 
 from pooled import makePooledSpace
@@ -122,7 +124,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
 
         # s = xdiff[0] = sqrt(dx^2+dy^2)
         for i in range(dimension):
-            xdiff[i].multiply(xdiff[i])
+            xdiff[i].multiply(xdiff[i], xdiff[i])
 
         for i in range(1, dimension):
             xdiff[0].lincomb(1, xdiff[i])
@@ -136,7 +138,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
 
         # d = d * c = d * max(s - la^-1, 0) / s
         for i in range(dimension):
-            d[i].multiply(tmp)
+            d[i].multiply(d[i], tmp)
 
         # b = b + diff(x) - d
         diff.apply(x, xdiff)
@@ -183,7 +185,7 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
             CS.abs(d[i], d[i])
             CS.add_scalar(d[i], -1.0/la, d[i])
             CS.max_vector_scalar(d[i], 0.0, d[i])
-            d[i].multiply(tmp)
+            d[i].multiply(d[i], tmp)
 
         # b = b + diff(x) - d
         diff.apply(x, xdiff)
@@ -220,7 +222,7 @@ def TVdenoise2D(x0, la, mu, iterations=1):
             CS.abs(d[i], d[i])
             CS.add_scalar(d[i], -1.0/la, d[i])
             CS.max_vector_scalar(d[i], 0.0, d[i])
-            d[i].multiply(tmp)
+            d[i].multiply(d[i], tmp)
 
         b = b + diff(x) - d
 
@@ -242,7 +244,7 @@ rnpooled = makePooledSpace(rn, maxPoolSize=5)
 # Discretize
 d = DS.uniform_discretization(space, rnpooled, (n, m))
 x, y = d.points()
-data = odlpp.utils.phantom([n, m])
+data = utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5
 fun = d.element(data)
 

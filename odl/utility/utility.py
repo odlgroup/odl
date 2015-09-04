@@ -23,6 +23,7 @@ Utilities for use inside the ODL project, not for external use.
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 from future import standard_library
+import numpy as np
 
 # External module imports
 from textwrap import dedent, fill
@@ -36,11 +37,19 @@ def errfmt(errstr):
 
 def array1d_repr(array):
     if len(array) < 7:
-        return repr(array[:].tolist())
+        return repr(list(array[:]))
     else:
-        return (repr(array[:3].tolist()).rstrip(']') + ', ..., ' +
-                repr(array[-3:].tolist()).strip('['))
+        return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
+                repr(list(array[-3:])).strip('['))
 
+
+def dtype_repr(dtype):
+    if dtype == np.dtype(int):
+        return 'int'
+    elif dtype == np.dtype(float):
+        return 'float'
+    else:
+        return "'{}'".format(dtype)
 
 if __name__ == '__main__':
     import doctest

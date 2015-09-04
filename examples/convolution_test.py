@@ -82,7 +82,7 @@ continuousRhs = continuousSpace.element(lambda x: x**2 *
                                         np.sin(x)**2*(x > 5))
 
 # Discretization
-rn = ds.En(500)
+rn = ds.Rn(500)
 d = dd.uniform_discretization(continuousSpace, rn)
 kernel = d.element(continuousKernel)
 rhs = d.element(continuousRhs)

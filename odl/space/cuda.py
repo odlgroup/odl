@@ -23,102 +23,114 @@
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import str, super
+from builtins import super
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import numpy as np
-from numbers import Integral
 
 # ODL imports
-import odl.space.space as spaces
-import odl.space.set as sets
-from odl.utility.utility import errfmt, array1d_repr
+from odl.space.cartesian import NtuplesBase, FnBase
 import odlpp.odlpp_cuda as cuda
-from odlpp.odlpp_cuda import CudaVectorUchar, CudaVectorFloat
-
-standard_library.install_aliases()
 
 
-class CudaEn(spaces.LinearSpace):
+def _get_int_type():
+    if np.dtype(np.int).itemsize == 4:
+        return cuda.CudaVectorInt32
+    elif np.dtype(np.int).itemsize == 8:
+        return cuda.CudaVectorInt64
+    else:
+        raise NotImplementedError("int size not implemented")
 
-    """The real space E^n, implemented in CUDA.
+_type_map_npy2cuda = {np.dtype(np.float): cuda.CudaVectorFloat64,
+                      np.dtype(np.float32): cuda.CudaVectorFloat32,
+                      np.dtype(np.float64): cuda.CudaVectorFloat64,
+                      np.dtype(np.int): _get_int_type(),
+                      np.dtype(np.int8): cuda.CudaVectorInt8,
+                      np.dtype(np.int16): cuda.CudaVectorInt16,
+                      np.dtype(np.int32): cuda.CudaVectorInt32,
+                      np.dtype(np.int64): cuda.CudaVectorInt64,
+                      np.dtype(np.uint8): cuda.CudaVectorUInt8,
+                      np.dtype(np.uint16): cuda.CudaVectorUInt16,
+                      np.dtype(np.uint32): cuda.CudaVectorUInt32,
+                      np.dtype(np.uint64): cuda.CudaVectorUInt64}
 
-    Requires the compiled ODL extension odlpp.
 
-    # TODO: document public interface
-    """
+class CudaNtuples(NtuplesBase):
 
-    dtypes = {np.float32: CudaVectorFloat,
-              np.uint8: CudaVectorUchar}
+    """The set of `n`-tuples of arbitrary type, implemented in CUDA."""
 
-    def __init__(self, dim, dtype=np.float32):
-        """Initialize a new CudaEn.
+    def __init__(self, dim, dtype):
+        """Initialize a new instance.
 
         Parameters
         ----------
+        dim : `Integral`
+            The number entries per tuple
+        dtype : `object`
+            The data type for each tuple entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
 
-        dim : int
-            The dimension of the space
-
-        dtype : type
-            Numpy data type mapped to a CudaVector data type.
-            Currently supported:
-            float32, uint8
+            Currently supported: 'float32', 'uint8'
         """
-        if not isinstance(dim, Integral) or dim < 1:
-            raise TypeError(errfmt('''
-            dim ({}) has to be a positive integer'''.format(dim)))
+        super().__init__(dim, dtype)
+        if self._dtype not in _type_map_npy2cuda.keys():
+            raise TypeError('data type {} not supported in CUDA'.format(dtype))
 
-        self._dim = dim
-        self._dtype = dtype
-        self._vector_impl = self.dtypes.get(dtype)
-        self._field = sets.RealNumbers()
-
-        if self._vector_impl is None:
-            raise TypeError(errfmt('''
-            dtype ({}) must be a valid CudaEn.dtype'''.format(dtype)))
+        self._vector_impl = _type_map_npy2cuda[self._dtype]
 
     def element(self, inp=None, data_ptr=None):
-        """Create an element from given data or from scratch.
-
-        TODO: write up properly
+        """Create a new element.
 
         Parameters
         ----------
-        inp : array-like, optional
+        inp : array-like or scalar, optional
+            Input to initialize the new element.
 
-        The method has two call patterns, the first is:
+            If `inp` is a `numpy.ndarray` of shape `(dim,)` and the
+            same data type as this space, the array is wrapped, not
+            copied.
+            Other array-like objects are copied (with broadcasting
+            if necessary).
 
-        *args : numpy.ndarray
-            Array that will be copied to the GPU.
-            Data is not modified or bound.
-            The shape of the array must be (n,)
+            If a single value is given, it is copied to all entries.
+            TODO: make this work
 
-        **kwargs : None
+        data_ptr : `int`, optional
+            Memory address of a CUDA array container
 
-        The second pattern is to create a new numpy array which will then
-        be copied to the GPU. In this case
+        Arguments `inp` and `data_ptr` cannot be given at the same
+        time.
 
-        *args : Options for numpy.array constructor
-        **kwargs : Options for numpy.array constructor
+        If both `inp` and `data_ptr` are `None`, an empty element is
+        created with no guarantee of its state (memory allocation
+        only).
+
 
         Returns
         -------
-        CudaEn.Vector instance
+        element : `CudaNtuples.Vector`
+            The new element
 
+        Note
+        ----
+        This method preserves "array views" of correct size and type,
+        see the examples below.
+
+        TODO: No, it does not yet!
 
         Examples
         --------
-
-        >>> rn = CudaEn(3)
-        >>> x = rn.element(np.array([1, 2, 3]))
+        >>> uc3 = CudaNtuples(3, 'uint8')
+        >>> x = uc3.element(np.array([1, 2, 3], dtype='uint8'))
         >>> x
-        CudaEn(3).element([1.0, 2.0, 3.0])
-        >>> y = rn.element([1, 2, 3])
+        CudaNtuples(3, 'uint8').element([1, 2, 3])
+        >>> y = uc3.element([1, 2, 3])
         >>> y
-        CudaEn(3).element([1.0, 2.0, 3.0])
-
+        CudaNtuples(3, 'uint8').element([1, 2, 3])
         """
         if inp is None and data_ptr is None:
             return self.Vector(self, self._vector_impl(self.dim))
@@ -126,264 +138,74 @@ class CudaEn(spaces.LinearSpace):
             return self.Vector(
                 self, self._vector_impl.from_pointer(data_ptr, self.dim))
         elif data_ptr is None:
+            # TODO: scalar assignment will fail. Implement a fill()
+            # method for that case
             elem = self.element()
             elem[:] = inp
             return elem
         else:
             raise TypeError("Cannot provide both inp and data_ptr")
 
-    def _lincomb(self, z, a, x, b, y):
-        """Linear combination of `x` and `y`.
+    class Vector(NtuplesBase.Vector):
 
-        Calculates z = a*x + b*y
-
-        Parameters
-        ----------
-        z : CudaEn.Vector
-            The Vector that the result should be written to.
-        a : RealNumber
-            Scalar to multiply `x` with.
-        x : CudaEn.Vector
-            The first summand
-        b : RealNumber
-            Scalar to multiply `y` with.
-        y : CudaEn.Vector
-            The second summand
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> rn = CudaEn(3)
-        >>> x = rn.element([1, 2, 3])
-        >>> y = rn.element([4, 5, 6])
-        >>> z = rn.element()
-        >>> rn.lincomb(z, 2, x, 3, y)
-        >>> z
-        CudaEn(3).element([14.0, 19.0, 24.0])
-        """
-        z.data.linComb(a, x.data, b, y.data)
-
-    def zero(self):
-        """Create a vector of zeros.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        CudaEn.Vector instance with all elements set to zero (0.0)
-
-
-        Examples
-        --------
-
-        >>> rn = CudaEn(3)
-        >>> y = rn.zero()
-        >>> y
-        CudaEn(3).element([0.0, 0.0, 0.0])
-        """
-        return self.Vector(self, self._vector_impl(self.dim, 0))
-
-    @property
-    def field(self):
-        """The underlying field of R^n is the set of real numbers.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        RealNumbers instance
-
-
-        Examples
-        --------
-
-        >>> rn = CudaEn(3, np.float32)
-        >>> rn.field
-        RealNumbers()
-        """
-        return self._field
-
-    @property
-    def dim(self):
-        """The dimension of this space.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        Integer
-
-
-        Examples
-        --------
-
-        >>> rn = CudaEn(3)
-        >>> rn.dim
-        3
-        """
-        return self._dim
-
-    def equals(self, other):
-        """Check if `other` is a CudaEn instance of the same dimension.
-
-        Parameters
-        ----------
-        other : any object
-            The object to check for equality
-
-        Returns
-        -------
-        eq : boolean
-            True if equal, else false
-
-        Examples
-        --------
-
-        Comparing with self
-        >>> r3 = CudaEn(3)
-        >>> r3.equals(r3)
-        True
-
-        Also true when comparing with similar instance
-        >>> r3a, r3b = CudaEn(3), CudaEn(3)
-        >>> r3a.equals(r3b)
-        True
-
-        False when comparing to other dimension Rn
-        >>> r3, r4 = CudaEn(3), CudaEn(4)
-        >>> r3.equals(r4)
-        False
-
-        We also support operators '==' and '!='
-        >>> r3, r4 = CudaEn(3), CudaEn(4)
-        >>> r3 == r3
-        True
-        >>> r3 == r4
-        False
-        >>> r3 != r4
-        True
-        """
-        return (isinstance(other, CudaEn) and
-                self.dim == other.dim and
-                self._dtype == other._dtype)
-
-    def __str__(self):
-        """str() implementation."""
-        return "CudaEn(" + str(self.dim) + ")"
-
-    def __repr__(self):
-        """repr() implementation."""
-        if self._dtype == np.float32:
-            return "CudaEn(" + str(self.dim) + ")"
-        else:
-            return "CudaEn(" + str(self.dim) + ', ' + str(self._dtype) + ')'
-
-    class Vector(spaces.LinearSpace.Vector):
-
-        """An E^n vector represented in CUDA.
-
-        # TODO: document public interface
-        """
+        """Representation of a `CudaNtuples` element."""
 
         def __init__(self, space, data):
-            """Initialize a new CudaEn vector.
+            """Initialize a new instance."""
+            if not isinstance(space, CudaNtuples):
+                raise TypeError('{!r} not a `CudaNtuples` instance.'
+                                ''.format(space))
 
-            Parameters
-            ----------
+            super().__init__(space, data)
 
-            space : CudaEn
-                Instance of CudaEn this vector lives in
-            data : CudaVectorFloat
-                Underlying data-representation to be used by this vector
-            """
-            super().__init__(space)
-
-            if not isinstance(data, self.space._vector_impl):
-                return TypeError(errfmt('''
-                'data' ({}) must be a CudaEnVectorImpl instance
-                '''.format(data)))
-
-            self._data = data
-
-        @property
-        def data(self):
-            """The data of this vector.
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            ptr : CudaEnVectorImpl
-                Underlying cuda data representation
-            """
-            return self._data
+            if not isinstance(data, self._space._vector_impl):
+                raise TypeError('data {!r} not a `{}` instance.'
+                                ''.format(data, self._space._vector_impl))
 
         @property
         def data_ptr(self):
-            """A raw pointer to the data of this vector.
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            ptr : Int
-                Pointer to the CUDA data of this vector
-            """
+            """A raw pointer to the data of this vector."""
             return self._data.data_ptr()
 
         @property
         def itemsize(self):
-            """The size in bytes of the underlying element type.
+            """The size in bytes of the data type."""
+            return self.space._dtype.itemsize
 
-            Parameters
-            ----------
-            None
+        def equals(self, other):
+            """Test if `other` is equal to this vector.
 
             Returns
             -------
-            itemsize : Int
-                Size in bytes of type
-            """
-            return 4  # Currently hardcoded to float
-
-        def __str__(self):
-            return str(self[:])
-
-        def __repr__(self):
-            """repr() implementation.
+            equals : ``bool``
+                `True` if all elements of `other` are equal to this
+                vector's elements, `False` otherwise
 
             Examples
             --------
-
-            >>> rn = CudaEn(3)
-            >>> x = rn.element([1, 2, 3])
-            >>> y = eval(repr(x))
-            >>> y
-            CudaEn(3).element([1.0, 2.0, 3.0])
-            >>> z = CudaEn(8).element([1, 2, 3, 4, 5, 6, 7, 8])
-            >>> z
-            CudaEn(8).element([1.0, 2.0, 3.0, ..., 6.0, 7.0, 8.0])
+            >>> r3 = CudaNtuples(3, 'float32')
+            >>> x = r3.element([1, 2, 3])
+            >>> x.equals(x)
+            True
+            >>> y = r3.element([1, 2, 3])
+            >>> x == y
+            True
+            >>> y = r3.element([0, 0, 0])
+            >>> x == y
+            False
+            >>> r3_2 = CudaNtuples(3, 'float64')
+            >>> z = r3_2.element([1, 2, 3])
+            >>> x != z
+            True
             """
-            return '{!r}.element({})'.format(self.space, array1d_repr(self))
+            if other is self:
+                return True
+            elif other not in self.space:
+                return False
+            else:
+                return self.data.equals(other.data)
 
-        def __len__(self):
-            """The dimension of the underlying space."""
-            return self.space.dim
-
-        def __getitem__(self, index):
+        def __getitem__(self, indices):
             """Access values of this vector.
 
             This will cause the values to be copied to CPU
@@ -391,36 +213,30 @@ class CudaEn(spaces.LinearSpace):
 
             Parameters
             ----------
-
-            index : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be accessed
 
             Returns
             -------
-            If index is an `int`
-            float, value at index
-
-            If index is an `slice`
-            numpy.ndarray instance with the values at the slice
+            values : `space.dtype` or `space.Vector`
+                The value(s) at the index (indices)
 
 
             Examples
             --------
-
-            >>> rn = CudaEn(3)
-            >>> y = rn.element([1, 2, 3])
+            >>> uc3 = CudaNtuples(3, 'uint8')
+            >>> y = uc3.element([1, 2, 3])
             >>> y[0]
-            1.0
+            1
             >>> y[1:2]
-            array([ 2.], dtype=float32)
-
+            array([2], dtype=uint8)
             """
-            if isinstance(index, slice):
-                return self.data.getslice(index)
-            else:
-                return self.data.__getitem__(index)
+            try:
+                return self.data.__getitem__(int(indices))
+            except TypeError:
+                return self.data.getslice(indices)
 
-        def __setitem__(self, index, value):
+        def __setitem__(self, indices, values):
             """Set values of this vector.
 
             This will cause the values to be copied to CPU
@@ -428,92 +244,151 @@ class CudaEn(spaces.LinearSpace):
 
             Parameters
             ----------
-
-            index : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be set
-            value : Real or array-like
-                The values that should be assigned.
+            values : {scalar, array-like, `CudaNtuples.Vector`}
+                The value(s) that are to be assigned.
 
-                If index is an integer, value should be a Number
-                convertible to float.
-                If index is a slice, value should be array-like of
-                the same size as the slice.
+                If `index` is an `int`, `value` must be single value.
+
+                If `index` is a `slice`, `value` must be broadcastable
+                to the size of the slice (same size, shape (1,)
+                or single value).
 
             Returns
             -------
             None
 
-
             Examples
             --------
-
-            >>> rn = CudaEn(3)
-            >>> y = rn.element([1, 2, 3])
+            >>> uc3 = CudaNtuples(3, 'uint8')
+            >>> y = uc3.element([1, 2, 3])
             >>> y[0] = 5
             >>> y
-            CudaEn(3).element([5.0, 2.0, 3.0])
+            CudaNtuples(3, 'uint8').element([5, 2, 3])
             >>> y[1:3] = [7, 8]
             >>> y
-            CudaEn(3).element([5.0, 7.0, 8.0])
+            CudaNtuples(3, 'uint8').element([5, 7, 8])
             >>> y[:] = np.array([0, 0, 0])
             >>> y
-            CudaEn(3).element([0.0, 0.0, 0.0])
-
+            CudaNtuples(3, 'uint8').element([0, 0, 0])
             """
-            if isinstance(index, slice):
-                # Convert value to the correct type if needed
-                value = np.asarray(value, dtype=self.space._dtype)
-
-                # Size checking is performed in c++
-                self.data.setslice(index, value)
+            if isinstance(values, CudaNtuples.Vector):
+                raise NotImplementedError
+                # TODO: implement
+                # return self.data.__setitem__(indices, values.data)
             else:
-                self.data.__setitem__(index, value)
+                try:
+                    return self.data.__setitem__(int(indices), values)
+                except TypeError:
+                    # Convert value to the correct type if needed
+                    values = np.asarray(values, dtype=self.space._dtype)
+                    # Size checking is performed in c++
+                    return self.data.setslice(indices, values)
 
 
-class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
+class CudaFn(FnBase, CudaNtuples):
 
-    """The real space :math:`R^n`, implemented in CUDA.
+    """The space F^n, implemented in CUDA.
 
     Requires the compiled ODL extension odlpp.
-
-    # TODO: document public interface
     """
 
-    def __init__(self, dim):
-        """Initialize a new CudaRn.
+    def __init__(self, dim, dtype):
+        """Initialize a new instance.
 
         Parameters
         ----------
+        dim : `Integral`
+            The number entries per tuple
+        dtype : `object`
+            The data type for each tuple entry. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+            Only scalar data types (numbers) are allowed.
 
-        dim : int
-            The dimension of the space
+            Currently supported: 'float32', 'uint8'
         """
-        super().__init__(dim, np.float32)
+        super().__init__(dim, dtype)
+        CudaNtuples.__init__(self, dim, dtype)
+
+    def _lincomb(self, z, a, x, b, y):
+        """Linear combination of `x` and `y`.
+
+        Calculate `z = a * x + b * y` using optimized BLAS routines if
+        possible.
+
+        Parameters
+        ----------
+        z : `CudaFn.Vector`
+            The Vector that the result is written to.
+        a, b : `field` element
+            Scalar to multiply `x` and `y` with.
+        x, y : `CudaFn.Vector`
+            The summands
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> r3 = CudaFn(3, 'float32')
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([4, 5, 6])
+        >>> z = r3.element()
+        >>> r3.lincomb(z, 2, x, 3, y)
+        >>> z
+        CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
+        """
+        z.data.lincomb(a, x.data, b, y.data)
 
     def _inner(self, x, y):
         """Calculate the inner product of x and y.
 
         Parameters
         ----------
-        x : CudaRn.Vector
-        y : CudaRn.Vector
+        x, y : `CudaFn.Vector`
 
         Returns
         -------
-        inner: float
+        inner: `float` or `complex`
             The inner product of x and y
 
 
         Examples
         --------
-
-        >>> rn = CudaRn(3)
-        >>> x = rn.element([1, 2, 3])
-        >>> y = rn.element([3, 1, 5])
-        >>> rn.inner(x, y)
+        >>> uc3 = CudaFn(3, 'uint8')
+        >>> x = uc3.element([1, 2, 3])
+        >>> y = uc3.element([3, 1, 5])
+        >>> uc3.inner(x, y)
         20.0
         """
         return x.data.inner(y.data)
+
+    def _dist(self, x, y):
+        """Calculate the distance between two vectors.
+
+        Parameters
+        ----------
+        x, y : `CudaFn.Vector`
+            The vectors whose mutual distance is calculated
+
+        Returns
+        -------
+        dist : `float`
+            Distance between the vectors
+
+        Examples
+        --------
+        >>> r2 = CudaRn(2)
+        >>> x = r2.element([3, 8])
+        >>> y = r2.element([0, 4])
+        >>> r2.dist(x, y)
+        5.0
+        """
+        return x.data.dist(y.data)
 
     def _norm(self, x):
         """Calculate the 2-norm of x.
@@ -523,38 +398,39 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
 
         Parameters
         ----------
-        x : CudaRn.Vector
+        x : `CudaFn.Vector`
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The 2-norm of x
 
 
         Examples
         --------
-
-        >>> rn = CudaRn(3)
-        >>> x = rn.element([2, 3, 6])
-        >>> rn.norm(x)
+        >>> uc3 = CudaFn(3, 'uint8')
+        >>> x = uc3.element([2, 3, 6])
+        >>> uc3.norm(x)
         7.0
         """
         return x.data.norm()
 
-    def _multiply(self, x, y):
+    def _multiply(self, z, x, y):
         """The pointwise product of two vectors, assigned to `y`.
 
         This is defined as:
 
-        multiply(x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
+        multiply(z, x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
 
         Parameters
         ----------
 
+        z : CudaRn.Vector
+            Write to
         x : CudaRn.Vector
-            read from
+            Read from
         y : CudaRn.Vector
-            read from and written to
+            Read from
 
         Returns
         -------
@@ -566,63 +442,53 @@ class CudaRn(CudaEn, spaces.HilbertSpace, spaces.Algebra):
         >>> rn = CudaRn(3)
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
-        >>> rn.multiply(x, y)
-        >>> y
-        CudaRn(3).element([5.0, 6.0, 6.0])
+        >>> z = rn.element()
+        >>> rn.multiply(z, x, y)
+        >>> z
+        CudaRn(3, 'float32').element([5.0, 6.0, 6.0])
         """
-        y.data.multiply(x.data)
+        z.data.multiply(x.data, y.data)
 
-    def equals(self, other):
-        """Check if `other` is a CudaRn instance of the same dimension.
+    def zero(self):
+        """Create a vector of zeros."""
+        return self.Vector(self, self._vector_impl(self.dim, 0))
 
-        Parameters
-        ----------
-        other : any object
-                The object to check for equality
+    class Vector(FnBase.Vector, CudaNtuples.Vector):
 
-        Returns
-        -------
-        boolean      True if equal, else false
+        """Representation of a `CudaFn` element.
 
-        Examples
-        --------
-
-        Comparing with self
-        >>> r3 = CudaRn(3)
-        >>> r3.equals(r3)
-        True
-
-        Also true when comparing with similar instance
-        >>> r3a, r3b = CudaRn(3), CudaRn(3)
-        >>> r3a.equals(r3b)
-        True
-
-        False when comparing to other dimension Rn
-        >>> r3, r4 = CudaRn(3), CudaRn(4)
-        >>> r3.equals(r4)
-        False
-
-        We also support operators '==' and '!='
-        >>> r3, r4 = CudaRn(3), CudaRn(4)
-        >>> r3 == r3
-        True
-        >>> r3 == r4
-        False
-        >>> r3 != r4
-        True
+        # TODO: document public interface
         """
-        return isinstance(other, CudaRn) and self.dim == other.dim
 
-    def __str__(self):
-        """str() implementation."""
-        return "CudaRn(" + str(self.dim) + ")"
+        def __init__(self, space, data):
+            """Initialize a new instance."""
+            super().__init__(space, data)
+            if not isinstance(data, self._space._vector_impl):
+                return TypeError('data {!r} is not an instance of '
+                                 '{}.'.format(data, self._space._vector_impl))
 
-    def __repr__(self):
-        """repr() implementation."""
-        return "CudaRn(" + str(self.dim) + ")"
 
-    class Vector(CudaEn.Vector, spaces.HilbertSpace.Vector,
-                 spaces.Algebra.Vector):
+class CudaRn(CudaFn):
+
+    """The real space :math:`R^n`, implemented in CUDA.
+
+    Requires the compiled ODL extension odlpp.
+
+    # TODO: document public interface
+    """
+
+    def __init__(self, dim, dtype=np.float32):
+        """Initialize a new instance.
+
+        Only real floating-point types are allowed.
+        """
+        super().__init__(dim, dtype)
+
+        if not np.isrealobj(np.empty(0, dtype=self._dtype)):
+            raise TypeError('data type {} not a real floating-point type.'
+                            ''.format(dtype))
+
+    class Vector(CudaFn.Vector):
         pass
 
 
@@ -655,10 +521,8 @@ def sum(inp):
 try:
     CudaRn(1).element()
 except MemoryError:
-    print(errfmt("""
-    Warning: Your GPU seems to be misconfigured. Skipping CUDA-dependent
-    modules."""))
-    raise ImportError
+    raise ImportError('Warning: Your GPU seems to be misconfigured. Skipping '
+                      'CUDA-dependent modules.')
 
 
 if __name__ == '__main__':
