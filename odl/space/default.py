@@ -23,15 +23,19 @@ from future import standard_library
 standard_library.install_aliases()
 
 # ODL imports
-from odl.discr.default import DiscreteL2
 from odl.discr.grid import TensorGrid
-from odl.space.cartesian import En, EuclideanCn
+from odl.space.cartesian import Rn, Cn
 from odl.space.function import FunctionSpace
 from odl.space.set import RealNumbers, ComplexNumbers
-from odl.space.space import HilbertSpace
+try:
+    from odl.space.cuda import CudaRn
+    CUDA_AVAILABLE = True
+except ImportError:
+    CudaRn = None
+    CUDA_AVAILABLE = False
 
 
-class L2(FunctionSpace, HilbertSpace):
+class L2(FunctionSpace):
     """The space of square integrable functions on some domain."""
 
     def __init__(self, domain, field=RealNumbers()):
@@ -72,6 +76,8 @@ class L2(FunctionSpace, HilbertSpace):
         l2discr : `DiscreteL2`
             The discretized space
         """
+        from odl.discr.default import DiscreteL2
+
         if not isinstance(grid, TensorGrid):
             raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
         if not self.domain.contains_set(grid):
@@ -79,20 +85,25 @@ class L2(FunctionSpace, HilbertSpace):
                              'space {}'.format(grid, self.domain, self))
 
         impl = kwargs.pop('impl', 'numpy')
-        # TODO: change to Hilbert... classes and use the consistent inner
-        # products instead of the standard ones
+        # TODO: use the consistent inner products instead of the standard ones
         if self.field == RealNumbers():
             if impl == 'numpy':
-                ntuples_type = En
+                dspace_type = Rn
             elif impl == 'cuda':
-                ntuples_type = CudaEn
+                if not CUDA_AVAILABLE:
+                    raise ValueError('CUDA backend not available.')
+                else:
+                    dspace_type = CudaRn
         elif self.field == ComplexNumbers():
             if impl == 'numpy':
-                ntuples_type = EuclideanCn
+                dspace_type = Cn
             elif impl == 'cuda':
-                raise NotImplementedError
-                # ntuples_type = CudaEuclideanCn
-        return DiscreteL2(self, grid, ntuples_type(grid.ntotal), interp,
+                if not CUDA_AVAILABLE:
+                    raise ValueError('CUDA backend not available.')
+                else:
+                    raise NotImplementedError
+                    # dspace_type = CudaEuclideanCn
+        return DiscreteL2(self, grid, dspace_type(grid.ntotal), interp,
                           **kwargs)
 
     def __str__(self):
@@ -107,5 +118,5 @@ class L2(FunctionSpace, HilbertSpace):
         else:
             return 'L2({!r}, {!r})'.format(self.domain, self.field)
 
-    class Vector(FunctionSpace.Vector, HilbertSpace.Vector):
+    class Vector(FunctionSpace.Vector):
         """Representation of an `L2` element."""

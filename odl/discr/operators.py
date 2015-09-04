@@ -22,9 +22,11 @@ from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import super, str
+from future.utils import with_metaclass
 
 # External imports
+from abc import ABCMeta
 import numpy as np
 from scipy.interpolate import interpn, RegularGridInterpolator
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
@@ -32,12 +34,140 @@ from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 # ODL imports
 from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator, LinearOperator
-from odl.space.cartesian import Ntuples, Rn, Cn
+from odl.space.cartesian import NtuplesBase, FnBase
 from odl.space.function import FunctionSet, FunctionSpace
 from odl.space.domain import IntervalProd
 
 
-class RawGridCollocation(Operator):
+class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
+
+    """Abstract base class for function set discretization mappings."""
+
+    def __init__(self, map_type, fset, grid, dspace, order='C'):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        map_type : {'restriction', 'extension'}
+            The type of operator
+        fset : `FunctionSet`
+            The undiscretized (abstract) set of functions to be
+            discretized
+        grid : `TensorGrid`
+            The grid on which to evaluate. Must be contained in
+            the common domain of the function set.
+        dspace : `NtuplesBase`
+            Data space providing containers for the values of a
+            discretized object. Its dimension must be equal to the
+            total number of grid points.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
+        """
+        map_type = str(map_type)
+        if map_type not in ('restriction', 'extension'):
+            raise ValueError('mapping type {!r} not understood.'
+                             ''.format(map_type))
+
+        if not isinstance(fset, FunctionSet):
+            raise TypeError('function set {} is not a `FunctionSet` instance.'
+                            ''.format(fset))
+
+        if not isinstance(grid, TensorGrid):
+            raise TypeError('grid {} is not a `TensorGrid` instance.'
+                            ''.format(grid))
+
+        if not isinstance(dspace, NtuplesBase):
+            raise TypeError('data space {} is not an `Ntuples` instance.'
+                            ''.format(dspace))
+
+        # TODO: this method is expected to exist, which is the case for
+        # interval products. It could be a general optional `Set` method
+        if not fset.domain.contains_set(grid):
+            raise ValueError('grid {} not contained in the domain {} of the '
+                             'function set {}.'.format(grid, fset.domain,
+                                                       fset))
+
+        if dspace.dim != grid.ntotal:
+            raise ValueError('dimension {} of the data space {} not equal '
+                             'to the total number {} of grid points.'
+                             ''.format(dspace.dim, dspace, grid.ntotal))
+
+        if order not in ('C', 'F'):
+            raise ValueError('ordering {!r} not understood.'.format(order))
+
+        self._domain = fset if map_type == 'restriction' else dspace
+        self._range = dspace if map_type == 'restriction' else fset
+        self._grid = grid
+        self._order = order
+
+    @property
+    def domain(self):
+        """The operator domain."""
+        return self._domain
+
+    @property
+    def range(self):
+        """The operator range."""
+        return self._range
+
+    @property
+    def grid(self):
+        """The sampling grid."""
+        return self._grid
+
+    @property
+    def order(self):
+        """The axis ordering."""
+        return self._order
+
+
+class LinearFunctionSpaceMapping(with_metaclass(ABCMeta, FunctionSetMapping,
+                                                LinearOperator)):
+
+    """Abstract base class for function space discretization mappings."""
+
+    def __init__(self, map_type, fspace, grid, dspace, order='C'):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        map_type : {'restriction', 'extension'}
+            The type of operator
+        fspace : `FunctionSpace`
+            The undiscretized (abstract) space of functions to be
+            discretized. Its field must be the same as that of data
+            space.
+        grid : `TensorGrid`
+            The grid on which to evaluate. Must be contained in
+            the common domain of the function set.
+        dspace : `FnBase`
+            Data space providing containers for the values of a
+            discretized object. Its dimension must be equal to the
+            total number of grid points. Its field must be the same
+            as that of the function space.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
+        """
+        super().__init__(map_type, fspace, grid, dspace, order)
+        if not isinstance(fspace, FunctionSpace):
+            raise TypeError('function space {} is not a `FunctionSpace` '
+                            'instance.'.format(fspace))
+
+        if not isinstance(dspace, FnBase):
+            raise TypeError('data space {} is not an `FnBase` instance.'
+                            ''.format(dspace))
+
+        if fspace.field != dspace.field:
+            raise ValueError('field {} of the function space and field {} of '
+                             'the data space are not equal.'
+                             ''.format(fspace.field, dspace.field))
+
+
+class RawGridCollocation(FunctionSetMapping):
 
     """Function evaluation at grid points.
 
@@ -45,28 +175,28 @@ class RawGridCollocation(Operator):
     used by all core discretization classes.
     """
 
-    def __init__(self, ip_fset, grid, ntuples, order='C'):
+    def __init__(self, ip_fset, grid, dspace, order='C'):
         """Initialize a new instance.
 
         Parameters
         ----------
         ip_fset : `FunctionSet`
-            Set of functions, the operator range. Its `domain` must
-            be an `IntervalProd`.
+            The undiscretized (abstract) set of functions to be
+            discretized. The function domain must be an
+            `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
-            `ip_fset.domain`.
-        ntuples : `Ntuples`
-            Implementation of n-tuples, the operator domain. Its
-            dimension must be equal to `grid.ntotal`.
-        order : 'C' or 'F', optional
-            Ordering of the values in the flat `ntuples` array. 'C'
+            the common domain of the function set.
+        dspace : `NtuplesBase`
+            Data space providing containers for the values of a
+            discretized object. Its dimension must be equal to the
+            total number of grid points.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        if not isinstance(ip_fset, FunctionSet):
-            raise TypeError('{} is not a `FunctionSet` instance.'
-                            ''.format(ip_fset))
+        super().__init__('restriction', ip_fset, grid, dspace, order)
 
         # TODO: remove this requirement depending on the vectorization
         # solution
@@ -74,51 +204,7 @@ class RawGridCollocation(Operator):
             raise TypeError('domain {} of the function set is not an'
                             '`IntervalProd` instance.'.format(ip_fset.domain))
 
-        if not isinstance(grid, TensorGrid):
-            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
-
-        # TODO: base classes
-        if not isinstance(ntuples, Ntuples):
-            raise TypeError('{} is not an `Ntuples` instance.'.format(ntuples))
-
-        if ntuples.dim != grid.ntotal:
-            raise ValueError('dimension {} of the n-tuples set {} not equal '
-                             'to the total number {} of grid points.'
-                             ''.format(ntuples.dim, ntuples, grid.ntotal))
-
-        # TODO: this method is expected to exist, which is the case for
-        # interval products. It could be a general optional `Set` method
-        if not ip_fset.domain.contains_set(grid):
-            raise ValueError('{} not contained in the domain {} of the '
-                             'function set.'.format(grid, ip_fset.domain))
-
-        if order not in ('C', 'F'):
-            raise ValueError('ordering {!r} not understood.'.format(order))
-
-        self._domain = ip_fset
-        self._range = ntuples
-        self._grid = grid
-        self._order = order
-
-    @property
-    def domain(self):
-        """Return the `domain` attribute."""
-        return self._domain
-
-    @property
-    def range(self):
-        """Return the `range` attribute."""
-        return self._range
-
-    @property
-    def grid(self):
-        """Return the `grid` attribute."""
-        return self._grid
-
-    @property
-    def order(self):
-        """The axis ordering."""
-        return self._order
+    # TODO: Implement _apply()
 
     def _call(self, inp):
         """The raw `call` method for out-of-place evaluation.
@@ -163,7 +249,7 @@ class RawGridCollocation(Operator):
         >>> from odl.discr.grid import TensorGrid
         >>> grid = TensorGrid([1, 2], [3, 4, 5])
 
-        The `ntuples` backend is `Rn`:
+        The `dspace` backend is `Rn`:
 
         >>> from odl.space.cartesian import Rn
         >>> rn = Rn(grid.ntotal)
@@ -222,7 +308,7 @@ class RawGridCollocation(Operator):
         return self.range.element(values)
 
 
-class GridCollocation(RawGridCollocation, LinearOperator):
+class GridCollocation(RawGridCollocation, LinearFunctionSpaceMapping):
 
     """Function evaluation at grid points.
 
@@ -230,120 +316,65 @@ class GridCollocation(RawGridCollocation, LinearOperator):
     used by all core discretization classes.
     """
 
-    def __init__(self, ip_fspace, grid, ntuples, order='C'):
+    def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ip_fspace : `FunctionSpace`
-            Space of functions, the operator range. Its `domain` must
-            be an `IntervalProd`.
+        fspace : `FunctionSpace`
+            The undiscretized (abstract) space of functions to be
+            discretized. Its field must be the same as that of data
+            space. Its `domain` must be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
-            `ip_fspace.domain`.
-        ntuples : `Rn` or `Cn`
-            Implementation of n-tuples, the operator domain. Its
-            dimension must be equal to `grid.ntotal`.
-        order : 'C' or 'F', optional
-            Ordering of the values in the flat `ntuples` array. 'C'
+            the common domain of the function set.
+        dspace : `FnBase`
+            Data space providing containers for the values of a
+            discretized object. Its dimension must be equal to the
+            total number of grid points. Its field must be the same
+            as that of the function space.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        if not isinstance(ip_fspace, FunctionSpace):
-            raise TypeError('{} is not a `FunctionSpace` instance.'
-                            ''.format(ip_fspace))
-
-        # TODO: base classes
-        if not isinstance(ntuples, (Rn, Cn)):
-            raise TypeError('{} is not an instance of `Rn` or `Cn`.'
-                            ''.format(ntuples))
-
-        if ip_fspace.field != ntuples.field:
-            raise ValueError('field {} of the function space and field {} of '
-                             'the n-tuples set are not equal.'
-                             ''.format(ip_fspace.field, ntuples.field))
-
-        super().__init__(ip_fspace, grid, ntuples, order)
+        super().__init__(ip_fspace, grid, dspace, order)
+        LinearFunctionSpaceMapping.__init__(self, 'restriction', ip_fspace,
+                                            grid, dspace, order)
 
 
-class RawNearestInterpolation(Operator):
+class RawNearestInterpolation(FunctionSetMapping):
 
     """Nearest neighbor interpolation as a raw `Operator`."""
 
-    def __init__(self, ip_fset, grid, ntuples, order='C'):
+    def __init__(self, ip_fset, grid, dspace, order='C'):
         """Initialize a new `NearestInterpolation` instance.
 
         Parameters
         ----------
         ip_fset : `FunctionSet`
-            Set of functions, the operator domain. Its `domain` must
-            be an `IntervalProd`.
+            The undiscretized (abstract) set of functions to be
+            discretized. The function domain must be an
+            `IntervalProd`.
         grid : `TensorGrid`
-            The grid on which to interpolate. Must be contained in
-            `ip_fset.domain`.
-        ntuples : `Ntuples`
-            Implementation of n-tuples, the operator domain. Its
-            dimension must be equal to `grid.ntotal`.
-        order : 'C' or 'F', optional
-            Ordering of the values in the flat `ntuples` array. 'C'
+            The grid on which to evaluate. Must be contained in
+            the common domain of the function set.
+        dspace : `NtuplesBase`
+            Data space providing containers for the values of a
+            discretized object. Its dimension must be equal to the
+            total number of grid points.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        if not isinstance(ip_fset, FunctionSet):
-            raise TypeError('{} is not a `FunctionSet` instance.'
-                            ''.format(ip_fset))
+        super().__init__('extension', ip_fset, grid, dspace, order)
 
         # TODO: remove this requirement depending on the vectorization
         # solution
         if not isinstance(ip_fset.domain, IntervalProd):
             raise TypeError('domain {} of the function set is not an'
                             '`IntervalProd` instance.'.format(ip_fset.domain))
-
-        if not isinstance(grid, TensorGrid):
-            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
-
-        # TODO: base classes
-        if not isinstance(ntuples, Ntuples):
-            raise TypeError('{} is not an `Ntuples` instance.'.format(ntuples))
-
-        if ntuples.dim != grid.ntotal:
-            raise ValueError('dimension {} of the n-tuples set {} not equal '
-                             'to the total number {} of grid points.'
-                             ''.format(ntuples.dim, ntuples, grid.ntotal))
-
-        # TODO: this method is expected to exist, which is the case for
-        # interval products. It could be a general optional `Set` method
-        if not ip_fset.domain.contains_set(grid):
-            raise ValueError('{} not contained in the domain {} of the '
-                             'function set.'.format(grid, ip_fset.domain))
-
-        if order not in ('C', 'F'):
-            raise ValueError('ordering {!r} not understood.'.format(order))
-
-        self._domain = ntuples
-        self._range = ip_fset
-        self._grid = grid
-        self._order = order
-
-    @property
-    def domain(self):
-        """Return the `domain` attribute."""
-        return self._domain
-
-    @property
-    def range(self):
-        """Return the `range` attribute."""
-        return self._range
-
-    @property
-    def grid(self):
-        """Return the `grid` attribute."""
-        return self._grid
-
-    @property
-    def order(self):
-        """The axis ordering."""
-        return self._order
 
     # TODO: Implement _apply()
 
@@ -380,18 +411,18 @@ class RawNearestInterpolation(Operator):
         >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
         >>> grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
-        >>> ntuples = Cn(grid.ntotal)
+        >>> dspace = Cn(grid.ntotal)
 
         Now initialize the operator:
 
-        >>> interp_op = RawNearestInterpolation(space, grid, ntuples,
+        >>> interp_op = RawNearestInterpolation(space, grid, dspace,
         ...                                     order='C')
 
         We test some simple values:
 
         >>> import numpy as np
         >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
-        >>> values = ntuples.element(val_arr)
+        >>> values = dspace.element(val_arr)
         >>> function = interp_op(values)
         >>> function(0.3, 0.6)  # closest to index (1, 1) -> 3
         (3+4j)
@@ -421,131 +452,67 @@ class RawNearestInterpolation(Operator):
         return self.range.element(func)
 
 
-class NearestInterpolation(RawNearestInterpolation, LinearOperator):
+class NearestInterpolation(RawNearestInterpolation,
+                           LinearFunctionSpaceMapping):
 
     """Nearest neighbor interpolation as a `LinearOperator`."""
 
-    def __init__(self, ip_fspace, grid, ntuples, order='C'):
+    def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new `NearestInterpolation` instance.
 
         Parameters
         ----------
-        ip_fspace : `FunctionSpace`
-            Space of functions, the operator domain. Its `domain` must
-            be an `IntervalProd`.
+        fspace : `FunctionSpace`
+            The undiscretized (abstract) space of functions to be
+            discretized. Its field must be the same as that of data
+            space. Its `domain` must be an `IntervalProd`.
         grid : `TensorGrid`
-            The grid on which to interpolate. Must be contained in
-            `ip_fset.domain`.
-        ntuples : `Rn` or `Cn`
-            Implementation of n-tuples, the operator domain. Its
-            dimension must be equal to `grid.ntotal`.
-        order : 'C' or 'F', optional
-            Ordering of the values in the flat `ntuples` array. 'C'
+            The grid on which to evaluate. Must be contained in
+            the common domain of the function set.
+        dspace : `FnBase`
+            Data space providing containers for the values of a
+            discretized object. Its dimension must be equal to the
+            total number of grid points. Its field must be the same
+            as that of the function space.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        if not isinstance(ip_fspace, FunctionSpace):
-            raise TypeError('{} is not a `FunctionSpace` instance.'
-                            ''.format(ip_fspace))
-
-        # TODO: base classes
-        if not isinstance(ntuples, (Rn, Cn)):
-            raise TypeError('{} is not an instance of `Rn` or `Cn`.'
-                            ''.format(ntuples))
-
-        if ip_fspace.field != ntuples.field:
-            raise ValueError('field {} of the function space and field {} of '
-                             'the n-tuples set are not equal.'
-                             ''.format(ip_fspace.field, ntuples.field))
-
-        super().__init__(ip_fspace, grid, ntuples)
+        super().__init__(ip_fspace, grid, dspace, order)
+        LinearFunctionSpaceMapping.__init__(self, 'extension', ip_fspace,
+                                            grid, dspace, order)
 
 
 class LinearInterpolation(LinearOperator):
 
     """Linear interpolation interpolation as a `LinearOperator`."""
 
-    def __init__(self, ip_fspace, grid, ntuples, order='C'):
+    def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new `NearestInterpolation` instance.
 
         Parameters
         ----------
-        ip_fspace : `FunctionSpace`
-            Space of functions, the operator domain. Its `domain` must
-            be an `IntervalProd`.
+        fspace : `FunctionSpace`
+            The undiscretized (abstract) space of functions to be
+            discretized. Its field must be the same as that of data
+            space. Its `domain` must be an `IntervalProd`.
         grid : `TensorGrid`
-            The grid on which to interpolate. Must be contained in
-            `ip_fset.domain`.
-        ntuples : `Rn` or `Cn`
-            Implementation of n-tuples, the operator domain. Its
-            dimension must be equal to `grid.ntotal`.
-        order : 'C' or 'F', optional
-            Ordering of the values in the flat `ntuples` array. 'C'
+            The grid on which to evaluate. Must be contained in
+            the common domain of the function set.
+        dspace : `FnBase`
+            Data space providing containers for the values of a
+            discretized object. Its dimension must be equal to the
+            total number of grid points. Its field must be the same
+            as that of the function space.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        if not isinstance(ip_fspace, FunctionSet):
-            raise TypeError('{} is not a `FunctionSpace` instance.'
-                            ''.format(ip_fspace))
-
-        # TODO: remove this requirement depending on the vectorization
-        # solution
-        if not isinstance(ip_fspace.domain, IntervalProd):
-            raise TypeError('domain {} of the function space is not an '
-                            '`IntervalProd` instance.'
-                            ''.format(ip_fspace.domain))
-
-        if not isinstance(grid, TensorGrid):
-            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
-
-        # TODO: base classes
-        if not isinstance(ntuples, (Rn, Cn)):
-            raise TypeError('{} is not an instance of `Rn` or `Cn`.'
-                            ''.format(ntuples))
-
-        if ip_fspace.field != ntuples.field:
-            raise ValueError('field {} of the function space and field {} of '
-                             'the n-tuples set are not equal.'
-                             ''.format(ip_fspace.field, ntuples.field))
-
-        if ntuples.dim != grid.ntotal:
-            raise ValueError('dimension {} of the n-tuples set {} not equal '
-                             'to the total number {} of grid points.'
-                             ''.format(ntuples.dim, ntuples, grid.ntotal))
-
-        # TODO: this method is expected to exist, which is the case for
-        # interval products. It could be a general optional `Set` method
-        if not ip_fspace.domain.contains_set(grid):
-            raise ValueError('{} not contained in the domain {} of the '
-                             'function space.'.format(grid, ip_fspace.domain))
-
-        if order not in ('C', 'F'):
-            raise ValueError('ordering {!r} not understood.'.format(order))
-
-        self._domain = ntuples
-        self._range = ip_fspace
-        self._grid = grid
-        self._order = order
-
-    @property
-    def domain(self):
-        """Return the `domain` attribute."""
-        return self._domain
-
-    @property
-    def range(self):
-        """Return the `range` attribute."""
-        return self._range
-
-    @property
-    def grid(self):
-        """Return the `grid` attribute."""
-        return self._grid
-
-    @property
-    def order(self):
-        """The axis ordering."""
-        return self._order
+        super().__init__(ip_fspace, grid, dspace, order)
+        LinearFunctionSpaceMapping.__init__(self, 'extension', ip_fspace,
+                                            grid, dspace, order)
 
     # TODO: Implement _apply()
 

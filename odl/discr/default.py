@@ -53,7 +53,7 @@ class DiscreteL2(LinearSpaceDiscretization):
 
             'nearest' : use nearest-neighbor interpolation (default)
 
-            'linear' : use linear interpolation
+            'linear' : use linear interpolation (not implemented)
 
         kwargs : {'order'}
             'order' : 'C' or 'F'  (Default: 'C')

@@ -34,7 +34,7 @@ import numpy as np
 from odl.operator.operator import Operator
 from odl.space.domain import IntervalProd
 from odl.space.set import RealNumbers, ComplexNumbers, Set
-from odl.space.space import Algebra
+from odl.space.space import LinearSpace
 
 
 class FunctionSet(Set):
@@ -356,7 +356,7 @@ class FunctionSet(Set):
             return not self.equals(other)
 
 
-class FunctionSpace(FunctionSet, Algebra):
+class FunctionSpace(FunctionSet, LinearSpace):
 
     """A vector space of functions."""
 
@@ -529,7 +529,7 @@ class FunctionSpace(FunctionSet, Algebra):
             return x_old(arg) * y_old(arg)
         y._function = product
 
-    class Vector(FunctionSet.Vector, Algebra.Vector):
+    class Vector(FunctionSet.Vector, LinearSpace.Vector):
 
         """Representation of a `FunctionSpace` element."""
 

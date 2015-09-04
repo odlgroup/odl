@@ -76,21 +76,21 @@ The `Set` class is defined in `odl.space.set`.
 # Imports for common Python 2/3 codebase
 from __future__ import (unicode_literals, print_function, division,
                         absolute_import)
-from builtins import object, str, super
+from builtins import object, str
 from future import standard_library
+standard_library.install_aliases()
 from future.utils import with_metaclass
 
 # External module imports
 from abc import ABCMeta, abstractmethod, abstractproperty
-from math import sqrt
+import math as m
 
 # ODL imports
 from odl.space.set import Set
 from odl.utility.utility import errfmt
 
-standard_library.install_aliases()
 
-#__all__ = ('LinearSpace')
+__all__ = ('LinearSpace')
 
 
 class LinearSpace(Set):
@@ -309,9 +309,9 @@ class LinearSpace(Set):
     |              |                    |issuing `x = element()` and  |
     |              |                    |then                         |
     |              |                    |`_lincomb(x, 0, x, 0, x)`    |
-    +--------------+--------------------+-----------------------------+    
+    +--------------+--------------------+-----------------------------+
     |Metric Space methods                                             |
-    +--------------+--------------------+-----------------------------+    
+    +--------------+--------------------+-----------------------------+
     |`dist(x, y)`|`float`     |Distance between two space elements.   |
     |            |            |Like `_dist()`, but with type checks.  |
     +------------+------------+---------------------------------------+
@@ -389,18 +389,17 @@ class LinearSpace(Set):
         This method is intended to be private, public callers should
         resort to dist which is type-checked.
         """
-        #default implementation
+        # default implementation
         return self.norm(x-y)
 
-    
     def _norm(self, x):
         """Calculate the norm of x
 
         This method is intended to be private, public callers should
         resort to dist which is type-checked.
         """
-        #default implementation
-        return math.sqrt(self.inner(x,x))
+        # default implementation
+        return m.sqrt(self.inner(x, x))
 
     def _inner(self, x, y):
         """ Calculate the inner product of x and y
@@ -408,7 +407,7 @@ class LinearSpace(Set):
         This method is intended to be private, public callers should
         resort to dist which is type-checked.
         """
-        #No default implementation possible
+        # No default implementation possible
         raise NotImplementedError("Inner product not implemented")
 
     def _multiply(self, z, x, y):
@@ -417,7 +416,7 @@ class LinearSpace(Set):
         This method is intended to be private, public callers should
         resort to dist which is type-checked.
         """
-        #No default implementation possible
+        # No default implementation possible
         raise NotImplementedError("Multiplication not implemented")
 
     @abstractproperty
@@ -583,7 +582,7 @@ class LinearSpace(Set):
             raise TypeError('y ({}) is not in space ({})'.format(y, self))
 
         return self.field.element(self._inner(x, y))
-    
+
     def multiply(self, z, x, y):
         """ Calculates the pointwise product of x and y and assigns it to y
         z = x * y
@@ -860,7 +859,7 @@ class LinearSpace(Set):
             """Implementation of str()."""
             return str(self.space) + ".Vector"
 
-        #TODO: DECIDE ON THESE + DOCUMENT
+        # TODO: DECIDE ON THESE + DOCUMENT
         def norm(self):
             return self.space.norm(self)
 
@@ -871,4 +870,4 @@ class LinearSpace(Set):
             return self.space.inner(self, other)
 
         def multiply(self, x, y):
-            return self.space.multiply(other, x, y)
+            return self.space.multiply(self, x, y)
