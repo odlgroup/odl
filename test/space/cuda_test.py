@@ -411,7 +411,7 @@ class TestPointer(ODLTestCase):
         r3 = CudaRn(3)
         xd = r6.element([1, 2, 3, 4, 5, 6])
 
-        yd = r3.element(data_ptr=xd.data_ptr+3*xd.itemsize)
+        yd = r3.element(data_ptr=xd.data_ptr+3*xd.space.dtype.itemsize)
         yd[:] = [7, 8, 9]
 
         self.assertAllEquals([1, 2, 3, 7, 8, 9], xd)

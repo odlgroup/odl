@@ -272,6 +272,7 @@ from future.utils import with_metaclass
 # External module imports
 from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
+import ctypes
 from scipy.linalg.blas import get_blas_funcs
 from numbers import Integral
 import platform
@@ -418,51 +419,25 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         behavior of subclasses)
         """
 
-        def __init__(self, space, data):
+        def __init__(self, space, *args, **kwargs):
             """Initialize a new instance."""
-            if data.dtype != space.dtype:
-                raise TypeError(errfmt('''
-                `data.dtype` {} not equal to `space.dtype` {}.
-                '''.format(data.dtype, space.dtype)))
-
-            if data.shape != (space.dim,):
-                raise ValueError(errfmt('''
-                `data.shape` {} not equal to `(space.dim,)` {}.
-                '''.format(data.shape, (space.dim,))))
 
             self._space = space
-            self._data = data
 
         @property
         def space(self):
             """The space this vector belongs to."""
             return self._space
 
-        @property
-        def data(self):
-            """The vector's data representation."""
-            return self._data
-
+        @abstractmethod
         def copy(self):
             """Create an identical (deep) copy of this vector.
-
-            Returns
-            -------
-            copy : `Ntuples.Vector`
-                The deep copy
-
-            Examples
-            --------
-            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
-            >>> vec2 = vec1.copy()
-            >>> vec2
-            Ntuples(3, int).element([1, 2, 3])
-            >>> vec1 == vec2
-            True
-            >>> vec1 is vec2
-            False
             """
-            return self.space.element(self.data.copy())
+
+        @abstractmethod
+        def asarray(self):
+            """Extract the data of this array as a numpy array
+            """
 
         def __len__(self):
             """v.__len__() <==> len(v).
@@ -470,10 +445,6 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             Return the space dimension.
             """
             return self.space.dim
-
-        @abstractproperty
-        def data_ptr(self):
-            """A raw pointer to the data container."""
 
         @abstractmethod
         def equals(self, other):
@@ -486,7 +457,6 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 vector's entries, `False` otherwise.
             """
 
-        # TODO: this could be concrete
         @abstractmethod
         def __getitem__(self, indices):
             """Access values of this vector.
@@ -502,7 +472,6 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 The value(s) at the index (indices)
             """
 
-        # TODO: this could be concrete
         @abstractmethod
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -548,7 +517,7 @@ class Ntuples(NtuplesBase):
     See the module documentation for attributes, methods etc.
     """
 
-    def element(self, inp=None):
+    def element(self, inp=None, data_ptr=None):
         """Create a new element.
 
         Parameters
@@ -590,26 +559,51 @@ class Ntuples(NtuplesBase):
         >>> x = strings3.element(['w', 'b', 'w'])
         >>> y = strings2.element(x[::2])  # view into x
         >>> y[:] = 'x'
+        >>> print(y)
+        ['x', 'x']
         >>> print(x)
         ['x', 'b', 'x']
+        
+        construction from data_ptr
+
+        >>> R3 = Ntuples(3, dtype=int)
+        >>> x = R3.element([1, 2, 3])
+        >>> y = R3.element(data_ptr=x.data_ptr)
+        >>> y
+        Ntuples(3, int).element([1, 2, 3])
+        >>> y[0] = 5
+        >>> x
+        Ntuples(3, int).element([5, 2, 3])
+
         """
         if inp is None:
-            outp = np.empty(self.dim, dtype=self.dtype)
-        elif isinstance(inp, Ntuples.Vector):
-            return self.element(inp.data)
-        else:
-            inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
-
-            if inp.shape == (1,):
-                outp = np.empty(self.dim, dtype=self.dtype)
-                outp[:] = inp
-            elif inp.shape == (self.dim,):
-                outp = inp
+            if data_ptr is None:
+                arr = np.empty(self.dim, dtype=self.dtype)
+                return self.Vector(self, arr)
             else:
-                raise ValueError('input shape {} not broadcastable to '
-                                 'shape ({},).'.format(inp.shape, self.dim))
+                ctype_array_def = ctypes.c_byte * (self.dim * self.dtype.itemsize)
+                as_ctype_array = ctype_array_def.from_address(data_ptr)
+                as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
+                arr = as_numpy_array.view(dtype=self.dtype)
+                return self.Vector(self, arr)
+        else:
+            if data_ptr is None:
+                if isinstance(inp, Ntuples.Vector):
+                    return self.element(inp=inp.data)
 
-        return self.Vector(self, outp)
+                inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
+
+                if inp.shape == (1,):
+                    arr = np.empty(self.dim, dtype=self.dtype)
+                    arr[:] = inp
+                elif inp.shape == (self.dim,):
+                    arr = inp
+                else:
+                    raise ValueError('input shape {} not broadcastable to '
+                                     'shape ({},).'.format(inp.shape, self.dim))
+                return self.Vector(self, arr)
+            else:
+                raise TypeError("Cannot provide both inp and data_ptr")
 
     class Vector(NtuplesBase.Vector):
 
@@ -629,7 +623,26 @@ class Ntuples(NtuplesBase):
             if not isinstance(data, np.ndarray):
                 raise TypeError('data {!r} not a `numpy.ndarray` instance.'
                                 ''.format(data))
-            super().__init__(space, data)
+
+            if data.dtype != space.dtype:
+                raise TypeError('data {!r} not of dtype `{!r}`.'
+                                ''.format(data, space.dtype))
+
+            self._data = data
+
+            super().__init__(space)
+
+        @property
+        def data(self):
+            """The raw numpy array representing the data
+            """
+            return self._data
+
+        @property
+        def asarray(self):
+            """Extract the data of this array as a numpy array
+            """
+            return self.data.copy()
 
         @property
         def data_ptr(self):
@@ -691,6 +704,27 @@ class Ntuples(NtuplesBase):
                 return False
             else:
                 return np.all(self.data == other.data)
+
+        def copy(self):
+            """Create an identical (deep) copy of this vector.
+
+            Returns
+            -------
+            copy : `Ntuples.Vector`
+                The deep copy
+
+            Examples
+            --------
+            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
+            >>> vec2 = vec1.copy()
+            >>> vec2
+            Ntuples(3, int).element([1, 2, 3])
+            >>> vec1 == vec2
+            True
+            >>> vec1 is vec2
+            False
+            """
+            return self.space.element(self.data.copy())
 
         def __getitem__(self, indices):
             """Access values of this vector.
@@ -824,60 +858,19 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
         """The field of this space."""
         return self._field
 
+    @abstractmethod
     def _multiply(self, z, x, y):
         """The entry-wise product of two vectors, assigned to `z`.
-
-        Parameters
-        ----------
-        z : `Cn.Vector`
-            The result vector
-        x : `Cn.Vector`
-            First factor
-        y : `Cn.Vector`
-            Second factor, used to store the result
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
-        >>> y = c3.element([1, 2+1j, 3-1j])
-        >>> z = c3.element()
-        >>> c3.multiply(z, x, y)
-        >>> z
-        Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
-        if z is x and z is y:  # z = z*z
-            z.data[:] *= z.data
-        elif z is x:  # z = z*y
-            z.data[:] *= y.data
-        elif z is y:  # z = z*x
-            z.data[:] *= x.data
-        else:  # z = x*y
-            z.data[:] = x.data
-            z.data[:] *= y.data
 
     class Vector(with_metaclass(ABCMeta, NtuplesBase.Vector,
                                 LinearSpace.Vector)):
 
-        """Abstract class for representation of :math:`C^n` vectors.
+        """Abstract class for representation of :math:`F^n` vectors.
 
         Defines abstract attributes and concrete ones which are
         independent of data representation.
         """
-
-        @property
-        def space(self):
-            """The space this vector belongs to."""
-            return self._space
-
-        @property
-        def data(self):
-            """The vector's data representation."""
-            return self._data
 
 
 def _lincomb(z, a, x, b, y, dtype):
@@ -1180,6 +1173,42 @@ class Fn(FnBase, Ntuples):
         True
         """
         return self._inner_impl(x, y)
+
+    def _multiply(self, z, x, y):
+        """The entry-wise product of two vectors, assigned to `z`.
+
+        Parameters
+        ----------
+        z : `Cn.Vector`
+            The result vector
+        x : `Cn.Vector`
+            First factor
+        y : `Cn.Vector`
+            Second factor, used to store the result
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> y = c3.element([1, 2+1j, 3-1j])
+        >>> z = c3.element()
+        >>> c3.multiply(z, x, y)
+        >>> z
+        Cn(3).element([(5+1j), (6+3j), (4-8j)])
+        """
+        if z is x and z is y:  # z = z*z
+            z.data[:] *= z.data
+        elif z is x:  # z = z*y
+            z.data[:] *= y.data
+        elif z is y:  # z = z*x
+            z.data[:] *= x.data
+        else:  # z = x*y
+            z.data[:] = x.data
+            z.data[:] *= y.data
 
     def zero(self):
         """Create a vector of zeros.
