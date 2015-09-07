@@ -15,229 +15,550 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Support for functionspaces, such as L2.
+"""Spaces of functions  with common domain and range.
+
+TODO: document properly
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
+standard_library.install_aliases()
 from builtins import super
 
+# External imports
+import numpy as np
+
 # ODL imports
-import odl.operator.operator as fun
-from odl.space.space import LinearSpace
+from odl.operator.operator import Operator
+from odl.space.domain import IntervalProd
 from odl.space.set import RealNumbers, ComplexNumbers, Set
-from odl.utility.utility import errfmt
-
-standard_library.install_aliases()
+from odl.space.space import LinearSpace
 
 
-# Example of a space:
-class FunctionSpace(LinearSpace):
-    """ The space of scalar valued functions on some domain
+class FunctionSet(Set):
 
-    Parameters
+    """A general set of functions with common domain and range.
+
+    Attributes
     ----------
 
-    domain : Set
-             The set the functions take values from
-    field : {RealNumbers, ComplexNumbers}, optional
-            The field that the functions map values into.
-            Since FunctionSpace is a LinearSpace, this is also
-            the set of scalars for this space.
+    +----------+-----------+------------------------------------------+
+    |Name      |Type       |Description                               |
+    +==========+===========+==========================================+
+    |`domain`  |`Set`      |The domain of all functions in this set   |
+    +----------+-----------+------------------------------------------+
+    |`range`   |`Set`      |The range of all functions in this set    |
+    +----------+-----------+------------------------------------------+
+
+    Methods
+    -------
+
+    +-----------------+--------------------+--------------------------+
+    |Signature        |Return type         |Description               |
+    +=================+====================+==========================+
+    |`element(func)`  |`FunctionSet.Vector`|Create an element in this |
+    |                 |                    |`FunctionSet`.            |
+    +-----------------+--------------------+--------------------------+
+    |`equals(other)`  |`boolean`           |Test if `other` is equal  |
+    |                 |                    |to this `FunctionSet`.    |
+    +-----------------+--------------------+--------------------------+
+    |`contains(other)`|`boolean`           |Test if `other` is        |
+    |                 |                    |contained in this         |
+    |                 |                    |`FunctionSet`.            |
+    +-----------------+--------------------+--------------------------+
+
+    Magic methods
+    -------------
+
+    +----------------------+----------------+--------------------+
+    |Signature             |Provides syntax |Implementation      |
+    +======================+================+====================+
+    |`__eq__(other)`       |`self == other` |`equals(other)`     |
+    +----------------------+----------------+--------------------+
+    |`__ne__(other)`       |`self != other` |`not equals(other)` |
+    +----------------------+----------------+--------------------+
+    |`__contains__(other)` |`other in self` |`contains(other)`   |
+    +----------------------+----------------+--------------------+
     """
 
-    def __init__(self, domain, field=RealNumbers()):
-        if not isinstance(domain, Set):
-            raise TypeError(errfmt('''
-            domain ({!r}) is not a Set instance'''.format(domain)))
-
-        if not isinstance(field, (RealNumbers, ComplexNumbers)):
-            raise TypeError(errfmt('''
-            field ({!r}) is not a RealNumbers or ComplexNumbers.
-            '''.format(field)))
-
-        self.domain = domain
-        self._field = field
-
-    def element(self, funct=None):
-        """ Creates an element in FunctionSpace
+    def __init__(self, dom, ran):
+        """Initialize a new instance.
 
         Parameters
         ----------
-        funct : Function from self.domain to self.field
-            The function that should be converted/reinterpreted
-            as a vector.
+        dom : `Set`
+            The domain of the functions.
+        ran : `Set`
+            The range of the functions.
+        """
+        if not isinstance(dom, Set):
+            raise TypeError('domain {} not a `Set` instance.'.format(dom))
+
+        if not isinstance(ran, Set):
+            raise TypeError('range {} not a `Set` instance.'.format(dom))
+
+        self._domain = dom
+        self._range = ran
+
+    @property
+    def domain(self):
+        """Return `domain` attribute."""
+        return self._domain
+
+    @property
+    def range(self):
+        """Return `range` attribute."""
+        return self._range
+
+    def element(self, fcall=None, fapply=None):
+        """Create a `FunctionSet` element.
+
+        Parameters
+        ----------
+        fcall : callable, optional
+            The actual instruction for out-of-place evaluation.
+            It must return an `fset.range` element or a
+            `numpy.ndarray` of such (vectorized call).
+
+            If `fcall` is a `FunctionSet.Vector`, it is wrapped
+            as a new `Vector`.
+
+        fapply : callable, optional
+            The actual instruction for in-place evaluation.
+            Its first argument must be the `fset.range` element
+            or the array of such (vectorization) to which the
+            result is written.
+
+            If `fapply` is a `FunctionSet.Vector`, it is wrapped
+            as a new `Vector`.
+
+        *At least one of the arguments `fcall` and `fapply` must
+        be provided.*
 
         Returns
         -------
-        FunctionSpace.Vector instance
-
-
-        Examples
-        --------
-
-        >>> R = RealNumbers()
-        >>> space = FunctionSpace(R, R)
-        >>> x = space.element(lambda t: t**2)
-        >>> x(1)
-        1.0
-        >>> x(3)
-        9.0
+        element : `FunctionSet.Vector`
+            The new element created from `func`
         """
-
-        if funct is None:
-            def function(*_):
-                """ A function that always returns zero
-                """
-                return 0
-            funct = function
-        return FunctionSpace.Vector(self, funct)
-
-    def _lincomb(self, z, a, x, b, y):
-        """ Returns a function that calculates (a*x + b*y)(t) = a*x(t) + b*y(t)
-
-        The created object is rather slow,
-        and should only be used for testing purposes.
-        """
-        # Use operator overloading
-        # pylint: disable=protected-access
-        z._function = lambda *args: a*x._function(*args) + b*y._function(*args)
-
-    def _multiply(self, x, y):
-        """ Returns a function that calculates (x * y)(t) = x(t) * y(t)
-
-        The created object is rather slow,
-        and should only be used for testing purposes.
-        """
-        # pylint: disable=protected-access
-        tmp = y._function
-        y._function = lambda *args: x._function(*args)*tmp._function(*args)
-
-    @property
-    def field(self):
-        """ The field that the functions map values into.
-
-        Since FunctionSpace is a LinearSpace, this is also
-        the set of scalars for this space.
-        """
-        return self._field
+        if isinstance(fcall, self.Vector):  # no double wrapping
+            return self.element(fcall._call, fcall._apply)
+        elif isinstance(fapply, self.Vector):
+            return self.element(fapply._call, fapply._apply)
+        else:
+            return self.Vector(self, fcall, fapply)
 
     def equals(self, other):
-        """ Verify that other is a FunctionSpace with the same domain and field
+        """Test if `other` is equal to this set.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `FunctionSet` with same `domain`
+            and `range`, `False` otherwise.
         """
         return (type(self) == type(other) and
                 self.domain == other.domain and
-                self.field == other.field)
+                self.range == other.range)
 
-    def zero(self):
-        """ Returns the zero function
-        The function which maps any value to zero
+    def contains(self, other):
+        """Test if `other` is contained in this set.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `FunctionSet.Vector` whose `space`
+            attribute equals this space, `False` otherwise.
         """
-        return self.element(lambda *args: 0)
-
-    def __str__(self):
-        if isinstance(self.field, RealNumbers):
-            return "FunctionSpace(" + str(self.domain) + ")"
-        else:
-            return ("FunctionSpace(" + str(self.domain) + ", " +
-                    str(self.field) + ")")
+        return (isinstance(other, FunctionSet.Vector) and
+                self == other.space)
 
     def __repr__(self):
-        if isinstance(self.field, RealNumbers):
-            return "FunctionSpace(" + repr(self.domain) + ")"
-        else:
-            return ("FunctionSpace(" + repr(self.domain) + ", " +
-                    repr(self.field) + ")")
+        """`s.__repr__() <==> repr(s)`."""
+        return 'FunctionSet({!r}, {!r})'.format(self.domain, self.range)
 
-    class Vector(LinearSpace.Vector, fun.Operator):
-        """ A Vector in a FunctionSpace
+    def __str__(self):
+        """`s.__str__() <==> str(s)`."""
+        return 'FunctionSet({}, {})'.format(self.domain, self.range)
 
-        FunctionSpace-Vectors are themselves also Functionals, and inherit
-        a large set of features from them.
+    class Vector(Operator):
 
-        Parameters
-        ----------
+        """Representation of a `FunctionSet` element."""
 
-        space : FunctionSpace
-            Instance of FunctionSpace this vector lives in
-        function : Function from space.domain to space.field
-            The function that should be converted/reinterpreted as a vector.
-        """
+        def __init__(self, fset, fcall=None, fapply=None):
+            """Initialize a new instance.
 
-        def __init__(self, space, function):
-            super().__init__(space)
-            if not callable(function):
-                raise TypeError("'function' is not callable")
-            self._function = function
+            Parameters
+            ----------
+            fset : `FunctionSet`
+                The set of functions this element lives in
+            fcall : callable, optional
+                The actual instruction for out-of-place evaluation.
+                It must return an `fset.range` element or a
+                `numpy.ndarray` of such (vectorized call).
+            fapply : callable, optional
+                The actual instruction for in-place evaluation.
+                Its first argument must be the `fset.range` element
+                or the array of such (vectorization) to which the
+                result is written.
 
-        def _call(self, rhs):
-            """ Apply the functional in some point
+            *At least one of the arguments `fcall` and `fapply` must
+            be provided.*
             """
-            return float(self._function(rhs))
+            if not isinstance(fset, FunctionSet):
+                raise TypeError('function set {} not a `FunctionSet` '
+                                'instance.'.format(fset))
+
+            if fcall is None and fapply is None:
+                raise ValueError('call function and apply function cannot '
+                                 'both be `None`.')
+
+            if fcall is not None and not callable(fcall):
+                raise TypeError('call function {} is not callable.'
+                                ''.format(fcall))
+
+            if fapply is not None and not callable(fapply):
+                raise TypeError('apply function {} is not callable.'
+                                ''.format(fapply))
+
+            self._space = fset
+            if fcall is not None:
+                self._call = fcall
+            if fapply is not None:
+                self._apply = fapply
+
+        @property
+        def space(self):
+            """Return `space` attribute."""
+            return self._space
 
         @property
         def domain(self):
-            """ The range of this Vector (when viewed as a functional)
-            """
+            """The function domain (abstract in `Operator`)."""
             return self.space.domain
 
         @property
         def range(self):
-            """ The range of this Vector (when viewed as a functional)
+            """The function range (abstract in `Operator`)."""
+            return self.space.range
 
-            The range is the same as the field of the vectors space
+        def equals(self, other):
+            """Test `other` for equality.
+
+            Returns
+            -------
+            equals : `bool`
+                `True` if `other` is a `FunctionSet.Vector` with
+                `other.space` equal to this vector's space and
+                the call and apply implementations of `other` and
+                this vector are equal. `False` otherwise.
             """
-            return self.space.field
+            return (isinstance(other, FunctionSet.Vector) and
+                    self.space == other.space and
+                    self._call == other._call and
+                    self._apply == other._apply)
 
-        def __str__(self):
-            return str(self._function)
+        def __call__(self, *inp):
+            """Vectorized and multi-argument out-of-place evaluation.
 
-        def __repr__(self):
-            return repr(self.space) + '.element(' + repr(self._function) + ')'
+            Parameters
+            ----------
+            inp1,...,inpN : `object`
+                Input arguments for the function evaluation.
+
+            Returns
+            -------
+            outp : `range` element or array of elements
+                Result of the function evaluation.
+
+            Raises
+            ------
+            If `outp` is not a `range` element or a `numpy.ndarray`
+            with `outp[0] in range`, a `TypeError` is raised.
+            """
+            if inp in self.domain:
+                # single value list: f(0, 1, 2)
+                pass
+            elif inp[0] in self.domain:
+                # single array: f([0, 1, 2])
+                pass
+            elif isinstance(self.domain, IntervalProd):
+                # Vectorization only allowed in this case
+
+                # First case: (N, d) array of points, where d = dimension
+                if (isinstance(inp[0], np.ndarray) and
+                        inp[0].ndim == 2 and
+                        inp[0].shape[1] == self.domain.dim):
+                    min_coords = np.min(inp[0], axis=0)
+                    max_coords = np.max(inp[0], axis=0)
+
+                # Second case: d meshgrid type arrays
+                elif (len(inp) == self.domain.dim and
+                      all(isinstance(vec, np.ndarray) for vec in inp)):
+                    min_coords = [np.min(vec) for vec in inp]
+                    max_coords = [np.max(vec) for vec in inp]
+
+                if (min_coords not in self.domain or
+                        max_coords not in self.domain):
+                    raise ValueError('input contains points outside '
+                                     '`domain` {}.'.format(self.domain))
+            else:
+                raise TypeError('input is neither an element of the function '
+                                'domain {} nor an array or meshgrid-type '
+                                'coordinate list.'.format(self.domain))
+
+            outp = self._call(*inp)
+
+            if not (outp in self.range or
+                    (isinstance(outp, np.ndarray) and
+                     outp.flat[0] in self.range)):
+                raise TypeError('result {!r} not an element or an array of '
+                                'elements of the function range {}.'
+                                ''.format(outp, self.range))
+
+            return outp
+
+        def _apply(self, outp, *inp):
+            """Vectorized and multi-argument in-place evaluation.
+
+            Parameters
+            ----------
+            outp : `range` element or array of elements
+                Element(s) to which the result is written.
+            inp1,...,inpN : `object`
+                Input arguments for the function evaluation.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            If `outp` is not a `range` element or a `numpy.ndarray`
+            with `outp[0] in range`, a `TypeError` is raised.
+            """
+            if not (outp in self.range or
+                    (isinstance(outp, np.ndarray) and
+                     outp.flat[0] in self.range)):
+                raise TypeError('result {!r} not an element or an array of '
+                                'elements of the function range {}.'
+                                ''.format(outp, self.range))
+
+            return self._apply(outp, *inp)
+
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`"""
+            return self.equals(other)
+
+        def __ne__(self, other):
+            """`vec.__ne__(other) <==> vec != other`"""
+            return not self.equals(other)
 
 
-class L2(FunctionSpace):
-    """The space of square integrable functions on some domain
-    """
+class FunctionSpace(FunctionSet, LinearSpace):
 
-    def __init__(self, domain, field=RealNumbers()):
-        super().__init__(domain, field)
+    """A vector space of functions."""
 
-    def _inner(self, v1, v2):
-        """ TODO: remove?
-        """
-        raise NotImplementedError(errfmt('''
-        You cannot calculate inner products in non-discretized spaces'''))
-
-    def __str__(self):
-        if isinstance(self.field, RealNumbers):
-            return "L2(" + str(self.domain) + ")"
-        else:
-            return "L2(" + str(self.domain) + ", " + str(self.field) + ")"
-
-    def __repr__(self):
-        if isinstance(self.field, RealNumbers):
-            return "L2(" + repr(self.domain) + ")"
-        else:
-            return "L2(" + repr(self.domain) + ", " + repr(self.field) + ")"
-
-    class Vector(FunctionSpace.Vector):
-        """ A Vector in a L2-space
-
-        FunctionSpace-Vectors are themselves also Functionals, and inherit
-        a large set of features from them.
+    def __init__(self, dom, field):
+        """Initialize a new instance.
 
         Parameters
         ----------
-
-        space : FunctionSpace
-            Instance of FunctionSpace this vector lives in
-        function : Function from space.domain to space.field
-            The function that should be converted/reinterpreted as a vector.
+        dom : `Set`
+            The domain of the functions.
+        field : `RealNumbers` or `ComplexNumbers`
+            The range of the functions.
         """
+        if not isinstance(dom, Set):
+            raise TypeError('domain {} not a `Set` instance.'.format(dom))
+
+        if not (isinstance(field, RealNumbers) or
+                isinstance(field, ComplexNumbers)):
+            raise TypeError('field {} not a `RealNumbers` or `ComplexNumbers` '
+                            'instance.'.format(field))
+
+        super().__init__(dom, field)
+        self._field = field
+
+    @property
+    def field(self):
+        """Return `field` attribute."""
+        return self._field
+
+    def element(self, fcall=None, fapply=None):
+        """Create a `FunctionSet` element.
+
+        Parameters
+        ----------
+        fcall : callable, optional
+            The actual instruction for out-of-place evaluation.
+            It must return an `fset.range` element or a
+            `numpy.ndarray` of such (vectorized call).
+
+            If `fcall` is a `FunctionSet.Vector`, it is wrapped
+            as a new `FunctionSpace.Vector`.
+
+        fapply : callable, optional
+            The actual instruction for in-place evaluation.
+            Its first argument must be the `fset.range` element
+            or the array of such (vectorization) to which the
+            result is written.
+
+            If `fapply` is a `FunctionSet.Vector`, it is wrapped
+            as a new `FunctionSpace.Vector`.
+
+        Returns
+        -------
+        `element` : `FunctionSpace.Vector`
+            The new element.
+        """
+        if fcall is None and fapply is None:
+            return self.zero()
+        elif isinstance(fcall, FunctionSet.Vector):  # no double wrapping
+            return self.element(fcall._call, fcall._apply)
+        elif isinstance(fapply, FunctionSet.Vector):
+            return self.element(fapply._call, fapply._apply)
+        else:
+            return self.Vector(self, fcall, fapply)
+
+    def _lincomb(self, z, a, x, b, y):
+        """Raw linear combination of `x` and `y`.
+
+        Note
+        ----
+        The additions and multiplications are implemented via a simple
+        Python function, so the resulting function is probably slow.
+        """
+        # Store to allow aliasing
+        x_old_call = x._call
+        x_old_apply = x._apply
+        y_old_call = y._call
+        y_old_apply = y._apply
+
+        def lincomb_call(*inp):
+            """Linear combination, call version."""
+            # Due to vectorization, at least one call must be made to
+            # ensure the correct final shape. The rest is optimized as
+            # far as possible.
+            if a == 0 and b != 0:
+                outp = y_old_call(*inp)
+                if b != 1:
+                    outp *= b
+            elif b == 0:  # Contains the case a == 0
+                outp = x_old_call(*inp)
+                if a != 1:
+                    outp *= a
+            else:
+                outp = x_old_call(*inp)
+                if a != 1:
+                    outp *= a
+                tmp = y_old_call(*inp)
+                if b != 1:
+                    tmp *= b
+                outp += tmp
+
+            return outp
+
+        def lincomb_apply(outp, *inp):
+            """Linear combination, apply version."""
+            # TODO: allow also CudaRn-like container types
+            if not isinstance(outp, np.ndarray):
+                raise TypeError('in-place evaluation only possible if output '
+                                'is of type `numpy.ndarray`.')
+            if a == 0 and b == 0:
+                outp *= 0
+            elif a == 0 and b != 0:
+                y_old_apply(outp, *inp)
+                if b != 1:
+                    outp *= b
+            elif b == 0 and a != 0:
+                x_old_apply(outp, *inp)
+                if a != 1:
+                    outp *= a
+            else:
+                tmp = np.empty_like(outp)
+                x_old_apply(outp, *inp)
+                y_old_apply(tmp, *inp)
+                if a != 1:
+                    outp *= a
+                if b != 1:
+                    tmp *= b
+
+                outp += tmp
+
+        z._call = lincomb_call
+        z._apply = lincomb_apply
+
+    def zero(self):
+        """The function mapping everything to zero.
+
+        Since `lincomb` is slow, we implement this function directly.
+        """
+        def zero_(*_):
+            """The zero function."""
+            return self.field.element(0.0)
+        return self.element(zero_)
+
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `FunctionSpace` with same `domain`
+            and `range`, `False` otherwise.
+        """
+        return (isinstance(other, FunctionSpace) and
+                self.domain == other.domain and
+                self.range == other.range)
+
+    def _multiply(x, y):
+        """Raw pointwise multiplication of two functions.
+
+        Note
+        ----
+        The multiplication is implemented with a simple Python
+        function, so the resulting function object is probably slow.
+        """
+        x_old = x.function
+        y_old = y.function
+
+        def product(arg):
+            """The actual product function."""
+            return x_old(arg) * y_old(arg)
+        y._function = product
+
+    class Vector(FunctionSet.Vector, LinearSpace.Vector):
+
+        """Representation of a `FunctionSpace` element."""
+
+        def __init__(self, fspace, fcall=None, fapply=None):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            fspace : `FunctionSpace`
+                The set of functions this element lives in
+            fcall : callable, optional
+                The actual instruction for out-of-place evaluation.
+                It must return an `fset.range` element or a
+                `numpy.ndarray` of such (vectorized call).
+            fapply : callable, optional
+                The actual instruction for in-place evaluation.
+                Its first argument must be the `fset.range` element
+                or the array of such (vectorization) to which the
+                result is written.
+
+            *At least one of the arguments `fcall` and `fapply` must
+            be provided.*
+            """
+            if not isinstance(fspace, FunctionSpace):
+                raise TypeError('function space {} not a `FunctionSpace` '
+                                'instance.'.format(fspace))
+
+            super().__init__(fspace, fcall, fapply)
+
 
 if __name__ == '__main__':
     import doctest

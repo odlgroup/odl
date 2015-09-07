@@ -35,19 +35,19 @@ space with a certain structure which is exploited to minimize storage.
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import range, super, zip
 
 # External module imports
-from numbers import Integral
 import numpy as np
 
 # ODL imports
-from odl.space.set import Set
-from odl.utility.utility import errfmt, array1d_repr
+from odl.space.domain import IntervalProd
+from odl.space.set import Set, Integers
+from odl.utility.utility import array1d_repr
 
 
 __all__ = ('TensorGrid', 'RegularGrid')
@@ -174,26 +174,22 @@ class TensorGrid(Set):
         for i, vec in enumerate(vecs):
 
             if len(vec) == 0:
-                raise ValueError('Vector {} has zero length.'.format(i+1))
+                raise ValueError('vector {} has zero length.'.format(i+1))
 
             if not np.all(np.isfinite(vec)):
-                raise ValueError(errfmt('''
-                Vector {} contains invalid entries'''.format(i+1)))
+                raise ValueError('vector {} contains invalid entries.'
+                                 ''.format(i+1))
 
             if vec.ndim != 1:
-                raise ValueError(errfmt('''
-                Dimension of vector {} is {} instead of 1.
-                '''.format(i+1, vec.ndim)))
+                raise ValueError('dimension of vector {} is {} instead of 1.'
+                                 ''.format(i+1, vec.ndim))
 
             sorted_vec = np.sort(vec)
             if np.any(vec != sorted_vec):
-                raise ValueError(errfmt('''
-                Vector {} not sorted.'''.format(i+1)))
+                raise ValueError('vector {} not sorted.'.format(i+1))
 
-            for j in range(len(vec) - 1):
-                if vec[j] == vec[j+1]:
-                    raise ValueError(errfmt('''
-                    Vector {} contains duplicates.'''.format(i+1)))
+            if np.any(np.diff(vec) == 0):
+                raise ValueError('vector {} contains duplicates.'.format(i+1))
 
         self._coord_vectors = vecs
 
@@ -362,7 +358,7 @@ class TensorGrid(Set):
             The grid to be inserted. A float or array `a` is treated as
             `TensorGrid(a)`.
         index : `Integral`
-            The index of the dimension before which `grid` is to
+            The index of the dimension before which `other` is to
             be inserted. Must fulfill 0 <= index <= dim.
 
         Returns
@@ -378,7 +374,7 @@ class TensorGrid(Set):
         >>> g1.insert(g2, 1)
         TensorGrid([0.0, 1.0], [1.0], [-6.0, 15.0], [-1.0, 2.0])
         """
-        if not isinstance(index, Integral):
+        if index not in Integers():
             raise TypeError('{} is not an integer.'.format(index))
         if not 0 <= index <= self.dim:
             raise IndexError('index {} out of valid range 0 -> {}.'
@@ -425,8 +421,7 @@ class TensorGrid(Set):
                [ 1.,  2.]])
         """
         if order not in ('C', 'F'):
-            raise ValueError(errfmt('''
-            Value of 'order' ({}) must be 'C' or 'F'.'''.format(order)))
+            raise ValueError('order {!r} not recognized.'.format(order))
 
         axes = range(self.dim) if order == 'C' else reversed(range(self.dim))
         point_arr = np.empty((self.ntotal, self.dim))
@@ -474,8 +469,7 @@ class TensorGrid(Set):
                [ 1.,  2.]])
         """
         if order not in ('C', 'F'):
-            raise ValueError(errfmt('''
-            Value of 'order' ({}) must be 'C' or 'F'.'''.format(order)))
+            raise ValueError('order {!r} not recognized.'.format(order))
 
         minmax_vecs = []
         for axis in range(self.dim):
@@ -487,6 +481,47 @@ class TensorGrid(Set):
 
         minmax_grid = TensorGrid(*minmax_vecs)
         return minmax_grid.points(order=order)
+
+    def cell_sizes(self, as_midp=False):
+        """The grid cell sizes as coordinate vectors.
+
+        Parameters
+        ----------
+        as_midp : `bool`
+            Interpret sampling points as cell midpoints if `True`,
+            otherwise as cell corners.
+
+        Returns
+        -------
+        csizes : `numpy.ndarray` tuple
+            The cell sizes per axis. The length of the vectors will be
+            one less than `coord_vectors` if `as_midp == False`,
+            otherwise they will have the same length.
+            For axes with 1 grid point, cell size is set to 0.
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g.cell_sizes()
+        (array([ 1.]), array([ 1.,  2.]))
+        >>> g.cell_sizes(as_midp=True)
+        (array([ 1.,  1.]), array([ 1. ,  1.5,  2. ]))
+        """
+        csizes = []
+        for vec in self.coord_vectors:
+            if len(vec) == 1:
+                csizes.append(np.array([0.0]))
+            else:
+                if as_midp:
+                    csize = np.empty_like(vec)
+                    csize[1:-1] = (vec[2:] - vec[:-2]) / 2.0
+                    csize[0] = vec[1] - vec[0]
+                    csize[-1] = vec[-1] - vec[-2]
+                else:
+                    csize = vec[1:] - vec[:-1]
+                csizes.append(csize)
+
+        return tuple(csizes)
 
     def meshgrid(self, sparse=True):
         """A grid suitable for function evaluation.
@@ -569,7 +604,6 @@ class TensorGrid(Set):
         >>> ch.end
         array([ 3.,  4.,  5.,  7.])
         """
-        from odl.space.set import IntervalProd
         beg, end = [], []
         for axis in range(self.dim):
             beg.append(self.coord_vectors[axis][0])
@@ -606,11 +640,11 @@ class TensorGrid(Set):
         try:
             idx = np.array(slc_list, dtype=int)  # All single indices
             if len(idx) < self.dim:
-                raise IndexError(errfmt('''
-                Too few indices ({} < {}).'''.format(len(idx), self.dim)))
+                raise IndexError('too few indices ({} < {}).'
+                                 ''.format(len(idx), self.dim))
             elif len(idx) > self.dim:
-                raise IndexError(errfmt('''
-                Too many indices ({} > {}).'''.format(len(idx), self.dim)))
+                raise IndexError('too many indices ({} > {}).'
+                                 ''.format(len(idx), self.dim))
 
             return np.array([v[i] for i, v in zip(idx, self.coord_vectors)])
 
@@ -630,8 +664,8 @@ class TensorGrid(Set):
 
         else:
             if len(slc_list) < self.dim:
-                raise IndexError(errfmt('''
-                Too few axes ({} < {}).'''.format(len(slc_list), self.dim)))
+                raise IndexError('too few axes ({} < {}).'
+                                 ''.format(len(slc_list), self.dim))
             ellipsis_idx = self.dim
             num_after_ellipsis = 0
 
@@ -640,15 +674,15 @@ class TensorGrid(Set):
             raise IndexError('Slices with empty axes not allowed.')
 
         if len(slc_list) > self.dim:
-            raise IndexError(errfmt('''
-            Too many axes ({} > {}).'''.format(len(slc_list), self.dim)))
+            raise IndexError('too many axes ({} > {}).'
+                             ''.format(len(slc_list), self.dim))
 
         new_vecs = []
         for i in range(ellipsis_idx):
             new_vecs.append(self.coord_vectors[i][slc_list[i]])
         for i in range(ellipsis_idx, self.dim - num_after_ellipsis):
             new_vecs.append(self.coord_vectors[i])
-        for i in reversed(range(1, num_after_ellipsis + 1)):
+        for i in reversed(list(range(1, num_after_ellipsis + 1))):
             new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
 
         return TensorGrid(*new_vecs)
@@ -797,9 +831,8 @@ class RegularGrid(TensorGrid):
         else:
             center = np.atleast_1d(center).astype(np.float64)
             if len(center) != len(shape):
-                raise ValueError(errfmt('''
-                'center' ({}) must have the same length as 'shape' ({}).
-                '''.format(len(center), len(shape))))
+                raise ValueError('center {} does not have the same length as '
+                                 'shape {}.'.format(len(center), len(shape)))
 
         if not np.all(np.isfinite(center)):
             raise ValueError("'center' has invalid entries.")
@@ -809,9 +842,9 @@ class RegularGrid(TensorGrid):
         else:
             stride = np.atleast_1d(stride).astype(np.float64)
             if len(stride) != len(shape):
-                raise ValueError(errfmt('''
-                'stride' ({}) must have the same length as 'shape' ({}).
-                '''.format(len(stride), len(shape))))
+                raise ValueError('stride {} dones not have the same length '
+                                 'as shape ({}).'
+                                 ''.format(len(stride), len(shape)))
 
         if not np.all(np.isfinite(stride)):
             raise ValueError("'stride' has invalid entries.")
@@ -957,7 +990,7 @@ class RegularGrid(TensorGrid):
         grid : `RegularGrid`
             The grid to be inserted.
         index : `Integral`
-            The index of the dimension before which `grid` is to
+            The index of the dimension before which 'other' is to
             be inserted. Must fulfill 0 <= index <= dim.
 
         Returns
@@ -973,7 +1006,7 @@ class RegularGrid(TensorGrid):
         >>> rg1.insert(rg2, 1)
         RegularGrid([1, 7, 3], [-1.0, -3.0, 0.0], [2.0, 6.0, 0.5])
         """
-        if not isinstance(index, Integral):
+        if index not in Integers():
             raise TypeError('{} is not an integer.'.format(index))
         if not 0 <= index <= self.dim:
             raise IndexError('index {} out of valid range 0 -> {}.'
@@ -1025,11 +1058,11 @@ class RegularGrid(TensorGrid):
         try:
             idx = np.array(slc_list, dtype=int)  # All single indices
             if len(idx) < self.dim:
-                raise IndexError(errfmt('''
-                Too few indices ({} < {}).'''.format(len(idx), self.dim)))
+                raise IndexError('too few indices ({} < {}).'
+                                 ''.format(len(idx), self.dim))
             elif len(idx) > self.dim:
-                raise IndexError(errfmt('''
-                Too many indices ({} > {}).'''.format(len(idx), self.dim)))
+                raise IndexError('too many indices ({} > {}).'
+                                 ''.format(len(idx), self.dim))
 
             return np.array([v[i] for i, v in zip(idx, self.coord_vectors)])
 
@@ -1038,7 +1071,7 @@ class RegularGrid(TensorGrid):
 
         if Ellipsis in slc_list:
             if slc_list.count(Ellipsis) > 1:
-                raise IndexError("Cannot use more than one ellipsis.")
+                raise IndexError('Cannot use more than one ellipsis.')
             if len(slc_list) == self.dim + 1:  # Ellipsis without effect
                 ellipsis_idx = self.dim
                 num_after_ellipsis = 0
@@ -1049,8 +1082,8 @@ class RegularGrid(TensorGrid):
 
         else:
             if len(slc_list) < self.dim:
-                raise IndexError(errfmt('''
-                Too few axes ({} < {}).'''.format(len(slc_list), self.dim)))
+                raise IndexError('too few axes ({} < {}).'
+                                 ''.format(len(slc_list), self.dim))
             ellipsis_idx = self.dim
             num_after_ellipsis = 0
 
@@ -1059,8 +1092,8 @@ class RegularGrid(TensorGrid):
             raise IndexError('Slices with empty axes not allowed.')
 
         if len(slc_list) > self.dim:
-            raise IndexError(errfmt('''
-            Too many axes ({} > {}).'''.format(len(slc_list), self.dim)))
+            raise IndexError('too many axes ({} > {}).'
+                             ''.format(len(slc_list), self.dim))
 
         new_shape, new_center, new_stride = -np.ones((3, self.dim))
 

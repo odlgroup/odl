@@ -17,9 +17,10 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import division, print_function, unicode_literals
-from __future__ import absolute_import
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import unittest
@@ -27,42 +28,37 @@ from math import pi, sqrt
 import numpy as np
 
 # ODL imports
-from odl.operator.operator import *
-from odl.space.cartesian import Fn
-import odl.discr.discretization as disc
-import odl.space.function as fs
-import odl.space.set as sets
+from odl.space.default import L2
+from odl.space.domain import Interval, Rectangle
 from odl.utility.testutils import ODLTestCase
-
-standard_library.install_aliases()
 
 
 #class L2Test(ODLTestCase):
 #    def test_interval(self):
-#        I = sets.Interval(0, pi)
-#        l2 = fs.L2(I)
+#        I = Interval(0, pi)
+#        l2 = L2(I)
 #        l2sin = l2.element(np.sin)
 #
-#        rn =Rn10)
-#        d = disc.uniform_discretization(l2, rn)
+#        rn = En(10)
+#        d = uniform_discretization(l2, rn)
 #
 #        sind = d.element(l2sin)
 #
-#        self.assertAlmostEqual(rn.norm(sind), sqrt(pi/2))
+#        self.assertAlmostEqual(sind.norm(), sqrt(pi/2))
 #
 #    def test_rectangle(self):
-#        R = sets.Rectangle((0, 0), (pi, 2*pi))
-#        l2 = fs.L2(R)
+#        R = Rectangle((0, 0), (pi, 2*pi))
+#        l2 = L2(R)
 #        l2sin = l2.element(lambda p: np.sin(p[0]) * np.sin(p[1]))
 #
 #        n = 10
 #        m = 10
-#        rn =Rnn*m)
-#        d = disc.uniform_discretization(l2, rn, (n, m))
+#        rn = En(n*m)
+#        d = uniform_discretization(l2, rn, (n, m))
 #
 #        sind = d.element(l2sin)
 #
-#        self.assertAlmostEqual(rn.norm(sind), sqrt(pi**2 / 2))
+#        self.assertAlmostEqual(sind.norm(), sqrt(pi**2 / 2))
 
 if __name__ == '__main__':
     unittest.main(exit=False)

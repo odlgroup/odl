@@ -91,6 +91,7 @@ prototyping:
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+# from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object, super
@@ -450,17 +451,17 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> A.__call__(5)
         15
         """
-        if not self.domain.contains(inp):
+        if inp not in self.domain:
             raise TypeError(errfmt('''
-            inp ({}) is not in the operator domain ({})
-            '''.format(repr(inp), repr(self))))
+            `inp` {!r} is not in the operator `domain` {}.
+            '''.format(inp, self.domain)))
 
         result = self._call(inp)
 
-        if not self.range.contains(result):
+        if result not in self.range:
             raise TypeError(errfmt('''
-            result ({}) is not in the operator domain ({})
-            '''.format(repr(result), repr(self))))
+            `result` {!r} is not in the operator `range` {}.
+            '''.format(result, self.range)))
 
         return result
 
@@ -862,7 +863,7 @@ class OperatorPointwiseProduct(Operator):
             `op1.range` {} and `op2.range` {} not equal.
             '''.format(op1.range, op2.range)))
 
-        if not isinstance(op1.range, Algebra):
+        if not isinstance(op1.range, LinearSpace):
             raise TypeError(errfmt('''
             `range` {} not a `LinearSpace`.'''.format(op1.range)))
 

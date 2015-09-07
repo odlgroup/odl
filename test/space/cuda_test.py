@@ -17,30 +17,26 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import division, print_function, unicode_literals
-from __future__ import absolute_import
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import unittest
 import math
+import numpy as np
 from numpy import float64
 
 # ODL imports
-from odl.operator.operator import *
-from odl.space.space import *
 from odl.space.cartesian import Rn
 from odl.utility.testutils import skip_all
 
 try:
     from odl.utility.testutils import ODLTestCase
-    from odl.space.cuda import *
+    from odl.space.cuda import CudaRn
 except ImportError as e:
     ODLTestCase = skip_all("Missing odlpp: {}".format(e))
-
-import numpy as np
-
-standard_library.install_aliases()
 
 
 class TestInit(ODLTestCase):

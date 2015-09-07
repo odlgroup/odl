@@ -18,145 +18,334 @@
 # pylint: disable=abstract-method
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
-from builtins import str, zip, super
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
+from builtins import super
 from future import standard_library
-
-from math import sqrt
+standard_library.install_aliases()
+from future.utils import with_metaclass
 
 # External module imports
-import numpy as np
+from abc import ABCMeta
 
 # ODL imports
-import odl.space.set as sets
-import odl.space.space as space
-from odl.space.function import FunctionSpace
-from odl.utility.utility import errfmt
-
-standard_library.install_aliases()
+from odl.operator.operator import Operator, LinearOperator
+from odl.space.cartesian import NtuplesBase, FnBase
+from odl.space.set import Set
+from odl.space.space import LinearSpace
 
 
-def uniform_discretization(parent, rnimpl, shape=None, order='C'):
-    """ Creates an discretization of space parent using rn as the
-    underlying representation.
+class Discretization(with_metaclass(ABCMeta, Set)):
 
-    order indicates the order data is stored in, 'C'-order is the default
-    numpy order, also called row major.
+    """Abstract discretization class.
+
+    A discretization in ODL is a way to encode the transition from
+    an arbitrary set to a set of n-tuples explicitly representable
+    in a computer. The most common use case is the discretization of
+    an infinite-dimensional vector space of functions by means of
+    storing coefficients in a finite basis.
+
+    The minimal information required to create a discretization is
+    the set to be discretized ("undiscretized space") and a backend
+    for storage and processing of the n-tuples ("data space" or
+    "discretized space").
+
+    As additional information, two mappings can be provided.
+    The first one is an explicit way to map an (abstract) element from
+    the source set to an `n`-tuple. This mapping is called
+    **restriction** in ODL.
+    The second one encodes the converse way of mapping an `n`-tuple to
+    an element of the original set. This mapping is called
+    **extension**.
+
+    Attributes
+    ----------
+
+    +-------------+----------------+----------------------------------+
+    |Name         |Type            |Description                       |
+    +=============+================+==================================+
+    |`uspace`     |`Set`           |The set to be discretized         |
+    +-------------+----------------+----------------------------------+
+    |`dspace`     |`NtuplesBase`   |Data space providing structures to|
+    |             |                |hold the values of a discretized  |
+    |             |                |object                            |
+    +-------------+----------------+----------------------------------+
+    |`restriction`|`Operator`      |Operator mapping a `uspace`       |
+    |             |                |element to a `dspace` element.    |
+    |             |                |Raises `NotImplementedError` by   |
+    |             |                |default.                          |
+    +-------------+----------------+----------------------------------+
+    |`extension`  |`Operator`      |Operator mapping a `dspace`       |
+    |             |                |element to a `uspace` element.    |
+    |             |                |Raises `NotImplementedError` by   |
+    |             |                |default.                          |
+    +-------------+----------------+----------------------------------+
+
+    Methods
+    -------
+
+    +-----------+----------------+------------------------------------+
+    |Signature  |Return type     |Description                         |
+    +===========+================+====================================+
+    |`element   |`Discretization.|Create an element either from       |
+    |(inp=None)`|Vector`         |scratch using `dspace.element()` or |
+    |           |                |from `inp` by calling               |
+    |           |                |`dspace.element(inp)` or applying   |
+    |           |                |`restriction` to                    |
+    |           |                |`uspace.element(inp)`, in this      |
+    |           |                |order.                              |
+    +-----------+----------------+------------------------------------+
     """
 
-    rn_type = type(rnimpl)
-    rn_vector_type = rn_type.Vector
+    def __init__(self, uspace, dspace, restr=None, ext=None):
+        """Abstract initialization method.
 
-    if shape is None:
-        shape = (rnimpl.dim,)
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
 
-    class UniformDiscretization(rn_type):
-        """ Uniform discretization of an square
-            Represents vectors by R^n elements
-            Uses sum method for integration
+        Parameters
+        ----------
+        uspace : `Set`
+            The undiscretized (abstract) set to be discretized
+        dspace : `NtuplesBase`
+            Data space providing containers for the values of a
+            discretized object
+        restr : `Operator`, optional
+            Operator mapping a `uspace` element to a `dspace` element.
+            Must satisfy `restr.domain == uspace` and
+            `restr.range == dspace`.
+        ext : `Operator`, optional
+            Operator mapping a `dspace` element to a `uspace` element.
+            Must satisfy `ext.domain == dspace` and
+            `ext.range == uspace`.
         """
+        if not isinstance(uspace, Set):
+            raise TypeError('undiscretized space {} not a `Set` instance.'
+                            ''.format(uspace))
 
-        def __init__(self, parent, rn, shape, order):
-            if not isinstance(parent.domain, sets.IntervalProd):
-                raise NotImplementedError('Can only discretize IntervalProds')
+        if not isinstance(dspace, NtuplesBase):
+            raise TypeError('data space {} not an `NtuplesBase` instance.'
+                            ''.format(dspace))
 
-            #if not isinstance(rn, space.HilbertSpace):
-                # raise NotImplementedError('Rn has to be a Hilbert space')
+        if restr is not None:
+            if not isinstance(restr, Operator):
+                raise TypeError('restriction operator {} not an `Operator` '
+                                'instance.'.format(restr))
 
-            #if not isinstance(rn, space.Algebra):
-                # raise NotImplementedError('Rn has to be an algebra')
+            if restr.domain != uspace:
+                raise ValueError('restriction operator domain {} not equal to '
+                                 'the undiscretized space {}.'
+                                 ''.format(restr.domain, dspace))
 
-            if rn.dim != np.prod(shape):
-                raise NotImplementedError(errfmt('''
-                Dimensions do not match, expected {}, got {}
-                '''.format(np.prod(rn.dim), np.prod(shape))))
+            if restr.range != dspace:
+                raise ValueError('restriction operator range {} not equal to'
+                                 'the data space {}.'
+                                 ''.format(restr.range, dspace))
 
-            self.parent = parent
-            self.shape = tuple(shape)
-            self.order = order
-            self._rn = rn
-            dx = np.array(
-                [((self.parent.domain.end[i] - self.parent.domain.begin[i]) /
-                  (self.shape[i] - 1)) for i in range(self.parent.domain.dim)])
-            self.scale = float(np.prod(dx))
+        if ext is not None:
+            if not isinstance(ext, Operator):
+                raise TypeError('extension operator {} not an `Operator` '
+                                'instance.'.format(ext))
 
-        def _inner(self, vec1, vec2):
-            return self._rn._inner(vec1, vec2) * self.scale
+            if ext.domain != dspace:
+                raise ValueError('extension operator domain {} not equal to'
+                                 'the data space {}.'
+                                 ''.format(ext.domain, dspace))
 
-        def _norm(self, vector):
-            return self._rn._norm(vector) * sqrt(self.scale)
+            if ext.range != uspace:
+                raise ValueError('extension operator range {} not equal to'
+                                 'the undiscretized space {}.'
+                                 ''.format(ext.range, uspace))
+
+        self._uspace = uspace
+        self._dspace = dspace
+        self._restriction = restr
+        self._extension = ext
+
+    @property
+    def uspace(self):
+        """The undiscretized space."""
+        return self._uspace
+
+    @property
+    def dspace(self):
+        """The data space."""
+        return self._dspace
+
+    @property
+    def restriction(self):
+        """The operator mapping a `uspace` element to an n-tuple."""
+        if self._restriction is not None:
+            return self._restriction
+        else:
+            raise NotImplementedError('no restriction operator provided.')
+
+    @property
+    def extension(self):
+        """The operator mapping an n-tuple to a `uspace` element."""
+        if self._extension is not None:
+            return self._extension
+        else:
+            raise NotImplementedError('no extension operator provided.')
+
+    def element(self, inp=None):
+        """Create an element from `inp` or from scratch.
+
+        Parameters
+        ----------
+        inp : `object`, optional
+            The input data to create an element from. Must be
+            recognizable by the `element()` method of either `dspace`
+            or `uspace`.
+
+        Returns
+        -------
+        element : `Discretization.Vector`
+            The discretized element, calculated as
+            `dspace.element(inp)` or
+            `restriction(uspace.element(inp))`, tried in this order.
+        """
+        try:
+            elem = self.dspace.element(inp)
+        except TypeError:
+            elem = self.restriction(self.uspace.element(inp))
+        return self.Vector(self, elem.data)
+
+    def contains(self, other):
+        """Test if `other` is a member of this discretization."""
+        return (isinstance(other, Discretization.Vector) and
+                other.space == self)
+
+    def equals(self, other):
+        """Test if `other` is equal to this discretization.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is a `Discretization` instance and
+            all attributes `uspace`, `dspace`, `restriction` and
+            `extension` of `other` and this discretization are equal,
+            `False` otherwise.
+        """
+        return (isinstance(other, Discretization) and
+                other.uspace == self.uspace and
+                other.dspace == self.dspace and
+                other.restriction == self.restriction and
+                other.extension == self.extension)
+
+    # Pass-through attributes of the wrapped `dspace`
+    @property
+    def dim(self):
+        """The dimension of this discretization.
+
+        Equals the dimension of the `dspace` attribute, i.e. the
+        number of values representing a discretized element.
+        """
+        return self.dspace.dim
+
+    @property
+    def dtype(self):
+        """The data type of this discretization.
+
+        Equals the data type of the `dspace` attribute.
+        """
+        return self.dspace.dtype
+
+    class Vector(NtuplesBase.Vector):
+
+        """Representation of a `Discretization` element."""
+
+        def __init__(self, space, data):
+            """Initialize a new instance.
+
+            Since `Discretization` does not subclass `Ntuples`,
+            we must work around the error raised by the
+            `Ntuples.Vector` initializer.
+            """
+            super().__init__(space.dspace, data)
 
         def equals(self, other):
-            return (type(self) == type(other) and
-                    self.shape == other.shape and
-                    self._rn.equals(other._rn))
+            """Test if `other` is equal to this vector.
 
-        def element(self, data=None, **kwargs):
-            if isinstance(data, FunctionSpace.Vector):
-                if self.parent.domain.dim == 1:
-                    tmp = np.array([data(point)
-                                    for point in self.points()],
-                                   **kwargs)
-                else:
-                    tmp = np.array([data(point)
-                                    for point in zip(*self.points())],
-                                   **kwargs)
-                return self.element(tmp)
-            elif data is not None:
-                data = np.asarray(data)
-                if data.shape == (self.dim,):
-                    return super().element(data)
-                elif data.shape == self.shape:
-                    return self.element(data.flatten(self.order))
-                else:
-                    raise ValueError(errfmt('''
-                    Input numpy array is of shape {}, expected shape
-                    {} or {}'''.format(data.shape, (self.dim,), self.shape)))
-            else:
-                return super().element(data, **kwargs)
+            Returns
+            -------
+            equals: `bool`
+                `True` if `other` belongs to this vector's space
+                and their values are all equal.
+            """
+            return other in self.space and other.data == self.data
 
-        def integrate(self, vector):
-            return float(self._rn.sum(vector) * self.scale)
 
-        def points(self):
-            if self.parent.domain.dim == 1:
-                return np.linspace(self.parent.domain.begin[0],
-                                   self.parent.domain.end[0],
-                                   self.shape[0])
-            else:
-                oned = [np.linspace(self.parent.domain.begin[i],
-                                    self.parent.domain.end[i],
-                                    self.shape[i])
-                        for i in range(self.parent.domain.dim)]
+class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
+                                               LinearSpace)):
 
-                points = np.meshgrid(*oned)
+    """Abstract class for discretizations of linear vector spaces.
 
-                return tuple(point.flatten(self.order) for point in points)
+    This variant of `Discretization` adds linear structure to all
+    its members. The `uspace` is a linear space, the `dspace`
+    for the data representation is an implementation of :math:`F^n`,
+    where `F` is some field, and both `restriction` and `extension`
+    are linear operators.
+    """
 
-        def __getattr__(self, name):
-            if name in self.__dict__:
-                return self.__dict__[name]
-            else:
-                return getattr(self._rn, name)
+    def __init__(self, uspace, dspace, restr=None, ext=None):
+        """Abstract initialization method.
 
-        def __str__(self):
-            if len(self.shape) > 1:
-                return ('[' + repr(self.parent) + ', ' + str(self._rn) + ', ' +
-                        'x'.join(str(d) for d in self.shape) + ']')
-            else:
-                return '[' + repr(self.parent) + ', ' + str(self._rn) + ']'
+        Intended to be called by subclasses for proper type checking
+        and setting of attributes.
 
-        def __repr__(self):
-            shapestr = (', ' + repr(self.shape)
-                        if self.shape != (self._rn.dim,) else '')
-            orderstr = ', ' + repr(self.order) if self.order != 'C' else ''
+        Parameters
+        ----------
+        uspace : `LinearSpace`
+            The (abstract) space to be discretized
+        dspace : `FnBase`
+            Data space providing containers for the values of a
+            discretized object. Its `field` attribute must be the same
+            as `uspace.field`.
+        restr : `LinearOperator`, optional
+            Operator mapping a `uspace` element to a `dspace` element.
+            Must satisfy `restr.domain == uspace` and
+            `restr.range == dspace`.
+        ext : `LinearOperator`, optional
+            Operator mapping an `dspace` element to a `uspace` element.
+            Must satisfy `ext.domain == dspace` and
+            `ext.range == uspace`.
+        """
+        super().__init__(uspace, dspace, restr, ext)
 
-            return ("uniform_discretization(" + repr(self.parent) + ", " +
-                    repr(self._rn) + shapestr + orderstr + ")")
+        if not isinstance(uspace, LinearSpace):
+            raise TypeError('undiscretized space {} not a `LinearSpace` '
+                            'instance.'.format(uspace))
 
-        class Vector(rn_vector_type):
-            def asarray(self):
-                return np.reshape(self[:], self.space.shape, self.space.order)
+        if not isinstance(dspace, FnBase):
+            raise TypeError('data space {} not an `FnBase` instance.'
+                            ''.format(dspace))
 
-    return UniformDiscretization(parent, rnimpl, shape, order)
+        if uspace.field != dspace.field:
+            raise ValueError('fields {} and {} of the undiscretized and '
+                             'data spaces, resp., are not equal.'
+                             ''.format(uspace.field, dspace.field))
+
+        if restr is not None:
+            if not isinstance(restr, LinearOperator):
+                raise TypeError('restriction operator {} is not a '
+                                '`LinearOperator` instance.'.format(restr))
+
+        if ext is not None:
+            if not isinstance(ext, LinearOperator):
+                raise TypeError('extension operator {} is not a '
+                                '`LinearOperator` instance.'.format(ext))
+
+    # Pass-through attributes of the wrapped `dspace`
+    def _lincomb(self, z, a, x, b, y):
+        """Raw linear combination."""
+        return self.dspace._lincomb(z, a, x, b, y)
+
+    @property
+    def field(self):
+        """The field of this discretization."""
+        return self.dspace.field
+
+    class Vector(Discretization.Vector, FnBase.Vector):
+
+        """Representation of a `LinearSpaceDiscretization` element."""

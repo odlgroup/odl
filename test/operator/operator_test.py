@@ -17,9 +17,10 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import (division, print_function, unicode_literals,
-                        absolute_import)
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import unittest
@@ -34,8 +35,6 @@ from odl.operator.operator import LinearOperatorSum, LinearOperatorComp
 from odl.operator.operator import LinearOperatorScalarMult
 from odl.space.cartesian import Rn
 from odl.utility.testutils import ODLTestCase
-
-standard_library.install_aliases()
 
 
 class MultiplyAndSquareOp(Operator):
