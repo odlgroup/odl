@@ -132,19 +132,21 @@ class CudaNtuples(NtuplesBase):
         >>> y
         CudaNtuples(3, 'uint8').element([1, 2, 3])
         """
-        if inp is None and data_ptr is None:
-            return self.Vector(self, self._vector_impl(self.dim))
-        elif inp is None:
-            return self.Vector(
-                self, self._vector_impl.from_pointer(data_ptr, self.dim))
-        elif data_ptr is None:
-            # TODO: scalar assignment will fail. Implement a fill()
-            # method for that case
-            elem = self.element()
-            elem[:] = inp
-            return elem
+        if inp is None:
+            if data_ptr is None:
+                return self.Vector(self, self._vector_impl(self.dim))
+            else:
+                return self.Vector(
+                    self, self._vector_impl.from_pointer(data_ptr, self.dim))
         else:
-            raise TypeError("Cannot provide both inp and data_ptr")
+            if data_ptr is None:
+                # TODO: scalar assignment will fail. Implement a fill()
+                # method for that case
+                elem = self.element()
+                elem[:] = inp
+                return elem
+            else:
+                raise TypeError("Cannot provide both inp and data_ptr")
 
     class Vector(NtuplesBase.Vector):
 
@@ -156,21 +158,23 @@ class CudaNtuples(NtuplesBase):
                 raise TypeError('{!r} not a `CudaNtuples` instance.'
                                 ''.format(space))
 
-            super().__init__(space, data)
+            self._data = data
+
+            super().__init__(space)
 
             if not isinstance(data, self._space._vector_impl):
                 raise TypeError('data {!r} not a `{}` instance.'
                                 ''.format(data, self._space._vector_impl))
 
         @property
+        def data(self):
+            """The raw C data representation of this vector"""
+            return self._data
+
+        @property
         def data_ptr(self):
             """A raw pointer to the data of this vector."""
             return self._data.data_ptr()
-
-        @property
-        def itemsize(self):
-            """The size in bytes of the data type."""
-            return self.space._dtype.itemsize
 
         def equals(self, other):
             """Test if `other` is equal to this vector.
@@ -204,6 +208,39 @@ class CudaNtuples(NtuplesBase):
                 return False
             else:
                 return self.data.equals(other.data)
+
+        def copy(self):
+            """Create an identical (deep) copy of this vector.
+
+            Returns
+            -------
+            copy : `CudaNtuples.Vector`
+                The deep copy
+
+            Examples
+            --------
+            >>> vec1 = CudaNtuples(3, int).element([1, 2, 3])
+            >>> vec2 = vec1.copy()
+            >>> vec2
+            CudaNtuples(3, int).element([1, 2, 3])
+            >>> vec1 == vec2
+            True
+            >>> vec1 is vec2
+            False
+            """
+            return self.space.Vector(self.space, self.data.copy())
+
+        def asarray(self):
+            """Extract the data of this array as a numpy array
+
+            Examples
+            --------
+            >>> uc3 = CudaNtuples(3, 'uint8')
+            >>> y = uc3.element([1, 2, 3])
+            >>> y.asarray()
+            array([1, 2, 3], dtype=uint8)
+            """
+            return self.data.getslice(slice(None,None,None))
 
         def __getitem__(self, indices):
             """Access values of this vector.

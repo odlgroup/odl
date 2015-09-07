@@ -17,9 +17,10 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import division, print_function, unicode_literals
-from __future__ import absolute_import
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import unittest
@@ -28,8 +29,6 @@ import numpy as np
 # ODL imports
 from odl.space.domain import IntervalProd, Interval, Rectangle
 from odl.utility.testutils import ODLTestCase
-
-standard_library.install_aliases()
 
 
 def random_point(set_):

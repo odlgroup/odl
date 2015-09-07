@@ -17,9 +17,10 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import division, print_function, unicode_literals
-from __future__ import absolute_import
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
+standard_library.install_aliases()
 
 # External module imports
 import unittest
@@ -27,12 +28,10 @@ from math import pi, sqrt
 import numpy as np
 
 # ODL imports
-from odl.space.cartesian import En
 from odl.space.default import L2
 from odl.space.domain import Interval, Rectangle
 from odl.utility.testutils import ODLTestCase
 
-standard_library.install_aliases()
 
 #class L2Test(ODLTestCase):
 #    def test_interval(self):
