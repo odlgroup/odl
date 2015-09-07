@@ -713,7 +713,7 @@ class Ntuples(NtuplesBase):
             >>> vec1 = Ntuples(3, 'int').element([1, 2, 3])
             >>> vec2 = vec1.copy()
             >>> vec2
-            Ntuples(3, int).element([1, 2, 3])
+            Ntuples(3, 'int').element([1, 2, 3])
             >>> vec1 == vec2
             True
             >>> vec1 is vec2
@@ -778,7 +778,7 @@ class Ntuples(NtuplesBase):
             >>> x = int_3.element([1, 2, 3])
             >>> x[0] = 5
             >>> x
-            Ntuples(3, int).element([5, 2, 3])
+            Ntuples(3, 'int').element([5, 2, 3])
 
             Assignment from array-like structures or another
             vector:
@@ -786,19 +786,19 @@ class Ntuples(NtuplesBase):
             >>> y = Ntuples(2, 'short').element([-1, 2])
             >>> x[:2] = y
             >>> x
-            Ntuples(3, int).element([-1, 2, 3])
+            Ntuples(3, 'int').element([-1, 2, 3])
             >>> x[1:3] = [7, 8]
             >>> x
-            Ntuples(3, int).element([-1, 7, 8])
+            Ntuples(3, 'int').element([-1, 7, 8])
             >>> x[:] = np.array([0, 0, 0])
             >>> x
-            Ntuples(3, int).element([0, 0, 0])
+            Ntuples(3, 'int').element([0, 0, 0])
 
             Broadcasting is also supported:
 
             >>> x[1:3] = -2.
             >>> x
-            Ntuples(3, int).element([0, -2, -2])
+            Ntuples(3, 'int').element([0, -2, -2])
 
             Be aware of unsafe casts and over-/underflows, there
             will be warnings at maximum.

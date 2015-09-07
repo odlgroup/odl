@@ -232,10 +232,10 @@ class CudaNtuples(NtuplesBase):
 
             Examples
             --------
-            >>> vec1 = CudaNtuples(3, int).element([1, 2, 3])
+            >>> vec1 = CudaNtuples(3, 'int').element([1, 2, 3])
             >>> vec2 = vec1.copy()
             >>> vec2
-            CudaNtuples(3, int).element([1, 2, 3])
+            CudaNtuples(3, 'int').element([1, 2, 3])
             >>> vec1 == vec2
             True
             >>> vec1 is vec2

@@ -59,9 +59,9 @@ def array1d_str(array):
 def dtype_repr(dtype):
     """Stringification of data type with default for `int` and `float`."""
     if dtype == np.dtype(int):
-        return 'int'
+        return "'int'"
     elif dtype == np.dtype(float):
-        return 'float'
+        return "'float'"
     else:
         return "'{}'".format(dtype)
 
