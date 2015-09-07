@@ -168,7 +168,20 @@ class CudaNtuples(NtuplesBase):
 
         @property
         def data(self):
-            """The raw C data representation of this vector"""
+            """The data of this vector.
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            ptr : CudaFnVectorImpl
+                Underlying cuda data representation
+
+            Examples
+            --------
+            """
             return self._data
 
         @property

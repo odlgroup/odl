@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cartesian products of `LinearSpace`s.
+"""Cartesian products of `LinearSpace`'s.
 
 TODO: document public interface
 """
@@ -50,7 +50,7 @@ def _product_space_repr(spaces):
         return ('productspace(' +
                 ', '.join(repr(space) for space in spaces) + ')')
 
-    
+
 def _prod_inner_sum_not_defined(x):
     raise NotImplementedError("Inner product not defined with custom product norm")
 
@@ -214,7 +214,7 @@ class ProductSpace(LinearSpace):
         ProductSpace.Vector instance
 
         Examples
-        -------
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
@@ -226,6 +226,7 @@ class ProductSpace(LinearSpace):
         True
 
         Creates an element in the product space
+
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> prod = ProductSpace(r2, r3)
@@ -274,8 +275,8 @@ class ProductSpace(LinearSpace):
         zero : ProducSpace.Vector
             The zero vector in the product space
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
@@ -313,7 +314,7 @@ class ProductSpace(LinearSpace):
              for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
             dtype=np.float64, count=self._nfactors)
         return self._prod_norm(inners)
-    
+
     def equals(self, other):
         """Check if the `other` is the same product space.
 
@@ -328,8 +329,8 @@ class ProductSpace(LinearSpace):
             `True` if `other` is a ProductSpace instance, has
             the same length and the same factors. `False` otherwise.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> rn, rm = Rn(2), Rn(3)
