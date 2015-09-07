@@ -270,7 +270,7 @@ standard_library.install_aliases()
 from future.utils import with_metaclass
 
 # External module imports
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 import numpy as np
 import ctypes
 from scipy.linalg.blas import get_blas_funcs
@@ -414,9 +414,6 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         Defines abstract attributes and concrete ones which are
         independent of data representation.
-
-        TODO: make concrete as many attributes as possible (unify
-        behavior of subclasses)
         """
 
         def __init__(self, space, *args, **kwargs):
@@ -431,13 +428,11 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         @abstractmethod
         def copy(self):
-            """Create an identical (deep) copy of this vector.
-            """
+            """Create an identical (deep) copy of this vector."""
 
         @abstractmethod
         def asarray(self):
-            """Extract the data of this array as a numpy array
-            """
+            """Extract the data of this array as a numpy array."""
 
         def __len__(self):
             """v.__len__() <==> len(v).
@@ -563,7 +558,7 @@ class Ntuples(NtuplesBase):
         ['x', 'x']
         >>> print(x)
         ['x', 'b', 'x']
-        
+
         construction from data_ptr
 
         >>> R3 = Ntuples(3, dtype=int)
@@ -581,7 +576,8 @@ class Ntuples(NtuplesBase):
                 arr = np.empty(self.dim, dtype=self.dtype)
                 return self.Vector(self, arr)
             else:
-                ctype_array_def = ctypes.c_byte * (self.dim * self.dtype.itemsize)
+                ctype_array_def = ctypes.c_byte * (self.dim *
+                                                   self.dtype.itemsize)
                 as_ctype_array = ctype_array_def.from_address(data_ptr)
                 as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
                 arr = as_numpy_array.view(dtype=self.dtype)
@@ -600,7 +596,8 @@ class Ntuples(NtuplesBase):
                     arr = inp
                 else:
                     raise ValueError('input shape {} not broadcastable to '
-                                     'shape ({},).'.format(inp.shape, self.dim))
+                                     'shape ({},).'.format(inp.shape,
+                                                           self.dim))
                 return self.Vector(self, arr)
             else:
                 raise TypeError("Cannot provide both inp and data_ptr")
@@ -634,14 +631,12 @@ class Ntuples(NtuplesBase):
 
         @property
         def data(self):
-            """The raw numpy array representing the data
-            """
+            """The raw numpy array representing the data."""
             return self._data
 
         @property
         def asarray(self):
-            """Extract the data of this array as a numpy array
-            """
+            """Extract the data of this array as a numpy array."""
             return self.data.copy()
 
         @property
@@ -860,8 +855,7 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
 
     @abstractmethod
     def _multiply(self, z, x, y):
-        """The entry-wise product of two vectors, assigned to `z`.
-        """
+        """The entry-wise product of two vectors, assigned to `z`."""
 
     class Vector(with_metaclass(ABCMeta, NtuplesBase.Vector,
                                 LinearSpace.Vector)):
@@ -897,7 +891,7 @@ def _lincomb(z, a, x, b, y, dtype):
             all(a.flags.contiguous for a in (x.data, y.data, z.data))):
         # pylint: disable=unbalanced-tuple-unpacking
         axpy, scal, copy = get_blas_funcs(
-            ['axpy', 'scal', 'copy'], arrays=(x.data,y.data))
+            ['axpy', 'scal', 'copy'], arrays=(x.data, y.data))
     else:
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
 
