@@ -77,7 +77,7 @@ class CudaNtuples(NtuplesBase):
             Currently supported: 'float32', 'uint8'
         """
         super().__init__(dim, dtype)
-        if self._dtype not in list(_type_map_npy2cuda.keys()):
+        if self._dtype not in _type_map_npy2cuda.keys():
             raise TypeError('data type {} not supported in CUDA'.format(dtype))
 
         self._vector_impl = _type_map_npy2cuda[self._dtype]
