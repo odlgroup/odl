@@ -90,7 +90,7 @@ prototyping:
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (print_function, division, absolute_import)
+from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object, super
@@ -104,6 +104,11 @@ from numbers import Number
 from odl.utility.utility import errfmt
 from odl.space.space import LinearSpace
 from odl.space.set import UniversalSet
+
+__all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
+           'OperatorRightScalarMult', 'OperatorPointwiseProduct',
+           'LinearOperator', 'LinearOperatorComp', 'LinearOperatorSum',
+           'LinearOperatorScalarMult')
 
 
 class _DefaultCallOperator(object):
@@ -491,6 +496,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Returns
         -------
         mul : `OperatorPointwiseProduct` or `OperatorRightScalarMult`
+            The operator or scalar multiplication
 
         Examples
         --------
@@ -596,9 +602,6 @@ class OperatorSum(Operator):
     The sum is only well-defined for `Operator` instances where
     `range` is a `LinearSpace`.
 
-    See also
-    --------
-    See `Operator` for a list of public attributes and methods.
     """
 
     # pylint: disable=abstract-method
@@ -642,10 +645,6 @@ class OperatorSum(Operator):
     def _apply(self, inp, outp):
         """`op.apply(inp, outp) <==> outp <-- op(inp)`.
 
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-
         Examples
         --------
 
@@ -667,10 +666,6 @@ class OperatorSum(Operator):
 
     def _call(self, inp):
         """`op.__call__(inp) <==> op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
 
         Examples
         --------
@@ -745,10 +740,6 @@ class OperatorComp(Operator):
 
     The composition is only well-defined if
     `left.domain == right.range`.
-
-    See also
-    --------
-    See `Operator` for a list of public attributes and methods.
     """
 
     def __init__(self, left, right, tmp=None):
@@ -780,22 +771,12 @@ class OperatorComp(Operator):
         self._tmp = tmp
 
     def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.__call__(inp) <==> op(inp)`."""
         # pylint: disable=protected-access
         return self._left._call(self._right._call(inp))
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         tmp = (self._tmp if self._tmp is not None
                else self._right.range.element())
@@ -862,10 +843,6 @@ class OperatorPointwiseProduct(Operator):
 
     The product is only well-defined for `Operator` instances where
     `range` is an `Algebra`.
-
-    See also
-    --------
-    See `Operator` for a list of public attributes and methods.
     """
 
     # pylint: disable=abstract-method
@@ -898,22 +875,12 @@ class OperatorPointwiseProduct(Operator):
         self._op2 = op2
 
     def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.__call__(inp) <==> op(inp)`."""
         # pylint: disable=protected-access
         return self._op1._call(inp) * self._op2._call(inp)
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         tmp = self._op2.range.element()
         self._op1._apply(inp, outp)
@@ -974,22 +941,12 @@ class OperatorLeftScalarMult(Operator):
         self._scalar = scalar
 
     def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.__call__(inp) <==> op(inp)`."""
         # pylint: disable=protected-access
         return self._scalar * self._op._call(inp)
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         self._op._apply(inp, outp)
         outp *= self._scalar
@@ -1012,12 +969,8 @@ class OperatorLeftScalarMult(Operator):
         `op.inverse * 1/scalar` if `scalar != 0`. If `scalar == 0`,
         the inverse is not defined.
 
-        `OperatorLeftScalarMult(op, scalar).inverse <==>
-        OperatorRightScalarMult(op.inverse, 1.0/scalar)`
-
-        See also
-        --------
-        `OperatorRightScalarMult`
+        OperatorLeftScalarMult(op, scalar).inverse <==>
+        OperatorRightScalarMult(op.inverse, 1.0/scalar)
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
@@ -1028,12 +981,12 @@ class OperatorLeftScalarMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        `OperatorLeftScalarMult(op, scalar).derivative(point) <==>
-        LinearOperatorScalarMult(op.derivative(point), scalar)`
+        OperatorLeftScalarMult(op, scalar).derivative(point) <==>
+        LinearOperatorScalarMult(op.derivative(point), scalar)
 
         See also
         --------
-        ``LinearOperatorScalarMult``
+        LinearOperatorScalarMult: the result
         """
         return LinearOperatorScalarMult(self._op.derivative(point),
                                         self._scalar)
@@ -1052,10 +1005,10 @@ class OperatorRightScalarMult(Operator):
 
     """Expression type for the operator right scalar multiplication.
 
-    `OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))`
+    OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))
 
     The scalar multiplication is well-defined only if `op.domain` is
-    a `LinearSpace`.
+    a ``LinearSpace``.
     """
 
     def __init__(self, op, scalar, tmp=None):
@@ -1090,22 +1043,12 @@ class OperatorRightScalarMult(Operator):
         self._tmp = tmp
 
     def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.__call__(inp) <==> op(inp)`."""
         # pylint: disable=protected-access
         return self._op._call(self._scalar * inp)
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`.
-
-        See also
-        --------
-        See `Operator` for an explanation of the method.
-        """
+        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, inp)
@@ -1131,10 +1074,6 @@ class OperatorRightScalarMult(Operator):
 
         `OperatorRightScalarMult(op, scalar).inverse <==>
         OperatorLeftScalarMult(op.inverse, 1.0/scalar)`
-
-        See also
-        --------
-        `OperatorLeftScalarMult`
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
@@ -1149,10 +1088,6 @@ class OperatorRightScalarMult(Operator):
         `OperatorRightScalarMult(op, scalar).derivative(point) <==>
         LinearOperatorScalarMult(op.derivative(scalar * point),
         scalar)`
-
-        See also
-        --------
-        ``LinearOperatorScalarMult``
         """
         return LinearOperatorScalarMult(
             self._op.derivative(self._scalar * point), self._scalar)
@@ -1214,11 +1149,6 @@ class LinearOperator(Operator):
     |(other)`        |                |product is a                   |
     |                |                |``LinearOperatorScalarMult``   |
     +----------------+----------------+-------------------------------+
-
-    See also
-    --------
-    See `Operator` for a list of public attributes and methods as well
-    as further help.
     """
 
     @property
@@ -1257,10 +1187,6 @@ class LinearOperator(Operator):
 
         If `other` is a scalar, this is equivalent to
         `op.__rmul__(other)`.
-
-        See also
-        --------
-        `Operator.__mul__()`
         """
         if isinstance(other, Operator):
             return OperatorPointwiseProduct(self, other)
@@ -1286,11 +1212,6 @@ class SelfAdjointOperator(LinearOperator):
     A self-adjoint operator is a `LinearOperator` with
     `op.adjoint == op`. This implies in particular that
     `op.domain == op.range`.
-
-    See also
-    --------
-    See `LinearOperator` and `Operator` for a list of public attributes
-    and methods as well as further help.
     """
 
     # pylint: disable=abstract-method
@@ -1310,11 +1231,6 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
     """Expression type for the sum of operators.
 
     `LinearOperatorSum(op1, op2) <==> (x --> op1(x) + op2(x))`
-
-    See also
-    --------
-    See `Operator` for a list of public attributes and methods as well
-    as further help.
     """
 
     # pylint: disable=abstract-method
@@ -1387,11 +1303,6 @@ class LinearOperatorComp(OperatorComp, LinearOperator):
 
     The composition is only well-defined if
     `left.domain == right.range`.
-
-    See also
-    --------
-    See `LinearOperator` and `Operator` for a list of public
-    attributes and methods as well as further help.
     """
 
     def __init__(self, left, right, tmp=None):
@@ -1450,11 +1361,6 @@ class LinearOperatorScalarMult(OperatorLeftScalarMult, LinearOperator):
 
     For linear operators, left and right scalar multiplications are
     equal.
-
-    See also
-    --------
-    See `LinearOperator` and `Operator` for a list of public
-    attributes and methods as well as further help.
     """
 
     def __init__(self, op, scalar):
@@ -1546,11 +1452,6 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     respective other method is automatically provided; if not, a
     `NotImplementedError` is raised when the other method is called.
 
-    See also
-    --------
-    See `Operator` for a list of public attributes and methods as well
-    as further help.
-
     Examples
     --------
     >>> A = operator(lambda x: 3*x)
@@ -1611,11 +1512,6 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
     If `dom` is a `LinearSpace`, a default implementation of the
     respective other method is automatically provided; if not, a
     `NotImplementedError` is raised when the other method is called.
-
-    See also
-    --------
-    See `LinearOperator` and `Operator` for a list of public attributes
-    and methods as well as further help.
 
     Examples
     --------

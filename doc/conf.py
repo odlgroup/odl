@@ -32,7 +32,8 @@ import shlex
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinx.ext.pngmath'
+    'sphinx.ext.pngmath',
+    'numpydoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,7 +83,7 @@ exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
-#default_role = None
+default_role = 'any'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True

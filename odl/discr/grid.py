@@ -50,6 +50,9 @@ from odl.space.set import Set
 from odl.utility.utility import errfmt, array1d_repr
 
 
+__all__ = ('TensorGrid', 'RegularGrid')
+
+
 class TensorGrid(Set):
 
     """An n-dimensional tensor grid.
@@ -502,7 +505,8 @@ class TensorGrid(Set):
         See also
         --------
 
-        numpy.meshgrid (we use indexing='ij' and copy=True)
+        numpy.meshgrid : coordinate matrices from coordinate vectors
+            We use `indexing='ij'` and `copy=True`
 
         Examples
         --------
