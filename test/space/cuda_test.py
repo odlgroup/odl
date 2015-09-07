@@ -394,7 +394,7 @@ class TestPointer(ODLTestCase):
 
         yd[:] = [5, 6, 7]
 
-        self.assertAllAlmostEquals(xd, yd)
+        self.assertAllEquals(xd, yd)
 
     def test_sub_vector(self):
         r6 = CudaRn(6)
@@ -404,17 +404,17 @@ class TestPointer(ODLTestCase):
         yd = r3.element(data_ptr=xd.data_ptr)
         yd[:] = [7, 8, 9]
 
-        self.assertAllAlmostEquals([7, 8, 9, 4, 5, 6], xd)
+        self.assertAllEquals([7, 8, 9, 4, 5, 6], xd)
 
     def test_offset_sub_vector(self):
         r6 = CudaRn(6)
         r3 = CudaRn(3)
         xd = r6.element([1, 2, 3, 4, 5, 6])
 
-        yd = r3.element(data_ptr=xd.data_ptr+3*xd.itemsize)
+        yd = r3.element(data_ptr=xd.data_ptr+3*xd.space.dtype.itemsize)
         yd[:] = [7, 8, 9]
 
-        self.assertAllAlmostEquals([1, 2, 3, 7, 8, 9], xd)
+        self.assertAllEquals([1, 2, 3, 7, 8, 9], xd)
 
 
 if __name__ == '__main__':
