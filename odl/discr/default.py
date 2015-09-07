@@ -20,13 +20,18 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from builtins import super, str
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super, str
 
+# External
+
+# ODL
 from odl.discr.discretization import LinearSpaceDiscretization
+from odl.discr.discretization import dspace_type, dspace_default_dtype
 from odl.discr.operators import GridCollocation, NearestInterpolation
 from odl.space.default import L2
+from odl.space.domain import IntervalProd
 
 
 _supported_interp = ('nearest')
@@ -76,3 +81,60 @@ class DiscreteL2(LinearSpaceDiscretization):
             raise NotImplementedError
 
         super().__init__(l2space, dspace, restriction, extension)
+
+    @property
+    def grid(self):
+        """Sampling grid of the discretization mappings."""
+        return self.restriction.grid
+
+
+def l2_uniform_discretization(l2space, nsamples, interp='nearest',
+                              impl='numpy', **kwargs):
+    """Discretize an L2 space by uniform sampling.
+
+    Parameters
+    ----------
+    l2space : ``L2``
+        Continuous L2 type space. Its domain must be an `IntervalProd`.
+    nsamples : int or tuple of int
+        Number of samples per axis. For dimension >= 2, a tuple is
+        required.
+    interp : string, optional
+            Interpolation type to be used for discretization.
+
+            'nearest' : use nearest-neighbor interpolation (default)
+
+            'linear' : use linear interpolation (not implemented)
+    impl : {'numpy', 'cuda'}
+        Implementation of the data storage arrays
+    kwargs : {'order', 'dtype'}
+            'order' : 'C' or 'F', optional  (Default: 'C')
+                Axis ordering in the data storage
+            'dtype' : type, optional  (Default: depends on `impl`)
+                Data type for the discretized space
+
+                Default for 'numpy': 'float64' / 'complex128'
+                Default for 'cuda': 'float32' / TODO
+
+    Returns
+    -------
+    l2discr : ``DiscreteL2``
+        The uniformly discretized L2 space
+    """
+    if not isinstance(l2space, L2):
+        raise TypeError('space {} is not an L2 instance.'.format(l2space))
+
+    if not isinstance(l2space.domain, IntervalProd):
+        raise TypeError('domain {} of the L2 space is not an `IntervalProd` '
+                        'instance.'.format(l2space.domain))
+
+    ds_type = dspace_type(l2space, impl)
+    dtype = kwargs.pop('dtype', None)
+
+    grid = l2space.domain.uniform_sampling(nsamples, as_midp=True)
+    if dtype is not None:
+        dspace = ds_type(grid.ntotal, dtype)
+    else:
+        dspace = ds_type(grid.ntotal)
+
+    return DiscreteL2(l2space, grid, dspace, interp, **kwargs)
