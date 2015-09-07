@@ -20,30 +20,44 @@ Utilities for use inside the ODL project, not for external use.
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
-import numpy as np
+standard_library.install_aliases()
+from builtins import str
 
 # External module imports
 from textwrap import dedent, fill
-
-standard_library.install_aliases()
+import numpy as np
 
 
 def errfmt(errstr):
+    """TODO: remove"""
     return fill(dedent(errstr)).lstrip()
 
 
 def array1d_repr(array):
+    """Stringification of a 1D array, keeping byte / unicode."""
     if len(array) < 7:
         return repr(list(array[:]))
     else:
         return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
-                repr(list(array[-3:])).strip('['))
+                repr(list(array[-3:])).lstrip('['))
+
+
+def array1d_str(array):
+    """Stringification of a 1D array, regardless of byte or unicode."""
+    if len(array) < 7:
+        inner_str = ', '.join(str(a) for a in array)
+        return '[{}]'.format(inner_str)
+    else:
+        left_str = ', '.join(str(a) for a in array[:3])
+        right_str = ', '.join(str(a) for a in array[-3:])
+        return '[{}, ..., {}]'.format(left_str, right_str)
 
 
 def dtype_repr(dtype):
+    """Stringification of data type with default for `int` and `float`."""
     if dtype == np.dtype(int):
         return 'int'
     elif dtype == np.dtype(float):

@@ -21,8 +21,8 @@ TODO: document public interface
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from builtins import str, zip, super
 from future import standard_library
 standard_library.install_aliases()
@@ -51,7 +51,7 @@ def _product_space_repr(spaces):
         return ('productspace(' +
                 ', '.join(repr(space) for space in spaces) + ')')
 
-    
+
 def _prod_inner_sum_not_defined(x):
     raise NotImplementedError("Inner product not defined with custom product norm")
 
@@ -316,7 +316,7 @@ class ProductSpace(LinearSpace):
              for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
             dtype=np.float64, count=self._nfactors)
         return self._prod_norm(inners)
-    
+
     def equals(self, other):
         """Check if the `other` is the same product space.
 

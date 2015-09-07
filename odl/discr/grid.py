@@ -35,11 +35,11 @@ space with a certain structure which is exploited to minimize storage.
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import range, super, zip
 
 # External module imports
 import numpy as np
@@ -678,7 +678,7 @@ class TensorGrid(Set):
             new_vecs.append(self.coord_vectors[i][slc_list[i]])
         for i in range(ellipsis_idx, self.dim - num_after_ellipsis):
             new_vecs.append(self.coord_vectors[i])
-        for i in reversed(range(1, num_after_ellipsis + 1)):
+        for i in reversed(list(range(1, num_after_ellipsis + 1))):
             new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
 
         return TensorGrid(*new_vecs)

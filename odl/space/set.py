@@ -42,9 +42,9 @@ Module overview
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
-from builtins import object, str
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
+from builtins import int, object, str, zip
 from future.utils import with_metaclass
 from future import standard_library
 standard_library.install_aliases()
@@ -230,7 +230,12 @@ class Strings(Set):
         return self._length
 
     def contains(self, other):
-        """Test if `other` is a string."""
+        """Test if `other` is a string of at max `length` characters."""
+#        print(repr(other))
+#        print(type(other))
+#        print(isinstance(other, str))
+#        print(len(other))
+#        print(self.length)
         return isinstance(other, str) and len(other) <= self.length
 
     def equals(self, other):

@@ -21,9 +21,9 @@
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
-from builtins import super
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
+from builtins import int, super
 from future import standard_library
 standard_library.install_aliases()
 
@@ -77,7 +77,7 @@ class CudaNtuples(NtuplesBase):
             Currently supported: 'float32', 'uint8'
         """
         super().__init__(dim, dtype)
-        if self._dtype not in _type_map_npy2cuda.keys():
+        if self._dtype not in list(_type_map_npy2cuda.keys()):
             raise TypeError('data type {} not supported in CUDA'.format(dtype))
 
         self._vector_impl = _type_map_npy2cuda[self._dtype]

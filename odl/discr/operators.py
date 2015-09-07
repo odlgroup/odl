@@ -18,11 +18,11 @@
 # pylint: disable=abstract-method
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super, str
+from builtins import super, str, zip
 from future.utils import with_metaclass
 
 # External imports
@@ -281,7 +281,7 @@ class RawGridCollocation(FunctionSetMapping):
         >>> coll_op(func_elem)
         Traceback (most recent call last):
         ...
-        ValueError: `inp` shape (2,) not broadcastable to shape (6,).
+        ValueError: input shape (2,) not broadcastable to shape (6,).
 
         Do this instead:
 
@@ -394,16 +394,23 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Examples
         --------
-        Let's define the complex function space :math:`L^2` on a
-        rectangle:
+        Let's define a set of functions from the unit rectangle to
+        one-character strings:
 
+        >>> from __future__ import unicode_literals, print_function
+        >>> from builtins import str
         >>> from odl.space.domain import Rectangle
-        >>> from odl.space.default import L2
-        >>> from odl.space.set import ComplexNumbers
-        >>> from odl.space.cartesian import Cn
+        >>> from odl.space.set import Strings
 
         >>> rect = Rectangle([0, 0], [1, 1])
-        >>> space = L2(rect, field=ComplexNumbers())
+        >>> strings = Strings(1)  # 1-char strings
+
+        Initialize the space
+
+        >>> from odl.space.function import FunctionSet
+        >>> from odl.space.cartesian import Ntuples
+
+        >>> space = FunctionSet(rect, strings)
 
         The grid is defined by uniform sampling (`as_midp` indicates
         that the points will be cell midpoints instead of corners).
@@ -411,7 +418,8 @@ class RawNearestInterpolation(FunctionSetMapping):
         >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
         >>> grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
-        >>> dspace = Cn(grid.ntotal)
+
+        >>> dspace = Ntuples(grid.ntotal, dtype='U1')
 
         Now initialize the operator:
 
@@ -421,14 +429,16 @@ class RawNearestInterpolation(FunctionSetMapping):
         We test some simple values:
 
         >>> import numpy as np
-        >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
+        >>> val_arr = np.array([c for c in 'mystring'])
         >>> values = dspace.element(val_arr)
         >>> function = interp_op(values)
-        >>> function(0.3, 0.6)  # closest to index (1, 1) -> 3
-        (3+4j)
+        >>> val = function(0.3, 0.6)  # closest to index (1, 1) -> 3
+        >>> print(val)
+        t
         """
         def func(*x):
             """The actual interpolating function."""
+            # TODO: adapt when vectorization is settled
             if (len(x) == self.grid.dim and
                     hasattr(x[0], 'ndim') and
                     x[0].ndim == self.grid.dim):
@@ -478,6 +488,41 @@ class NearestInterpolation(RawNearestInterpolation,
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
+
+        Examples
+        --------
+        Let's define the complex function space :math:`L^2` on a
+        rectangle:
+
+        >>> from odl.space.domain import Rectangle
+        >>> from odl.space.default import L2
+        >>> from odl.space.set import ComplexNumbers
+        >>> from odl.space.cartesian import Cn
+
+        >>> rect = Rectangle([0, 0], [1, 1])
+        >>> space = L2(rect, field=ComplexNumbers())
+
+        The grid is defined by uniform sampling (`as_midp` indicates
+        that the points will be cell midpoints instead of corners).
+
+        >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
+        >>> grid.coord_vectors
+        (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
+        >>> dspace = Cn(grid.ntotal)
+
+        Now initialize the operator:
+
+        >>> interp_op = RawNearestInterpolation(space, grid, dspace,
+        ...                                     order='C')
+
+        We test some simple values:
+
+        >>> import numpy as np
+        >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
+        >>> values = dspace.element(val_arr)
+        >>> function = interp_op(values)
+        >>> function(0.3, 0.6)  # closest to index (1, 1) -> 3
+        (3+4j)
         """
         super().__init__(ip_fspace, grid, dspace, order)
         LinearFunctionSpaceMapping.__init__(self, 'extension', ip_fspace,

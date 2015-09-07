@@ -262,11 +262,11 @@ Magic methods:
 """
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
-from builtins import super
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
+from builtins import int, super
 from future.utils import with_metaclass
 
 # External module imports
@@ -279,7 +279,7 @@ import platform
 # ODL imports
 from odl.space.set import Set, RealNumbers, ComplexNumbers
 from odl.space.space import LinearSpace
-from odl.utility.utility import errfmt, array1d_repr, dtype_repr
+from odl.utility.utility import array1d_repr, array1d_str, dtype_repr
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn')
@@ -317,8 +317,8 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             objects or as string.
         """
         if not isinstance(dim, Integral) or dim < 0:
-            raise TypeError(errfmt('''
-            `dim` {} is not a non-negative integer.'''.format(dim)))
+            raise TypeError('dimension {} is not a non-negative integer.'
+                            ''.format(dim))
         self._dim = int(dim)
         self._dtype = np.dtype(dtype)
 
@@ -379,7 +379,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         >>> int_3, int_4 = Ntuples(3, int), Ntuples(4, int)
         >>> int_3.equals(int_4)
         False
-        >>> int_3, str_3 = Ntuples(3, 'int'), Ntuples(3, 'string')
+        >>> int_3, str_3 = Ntuples(3, 'int'), Ntuples(3, 'S2')
         >>> int_3.equals(str_3)
         False
 
@@ -421,14 +421,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         def __init__(self, space, data):
             """Initialize a new instance."""
             if data.dtype != space.dtype:
-                raise TypeError(errfmt('''
-                `data.dtype` {} not equal to `space.dtype` {}.
-                '''.format(data.dtype, space.dtype)))
+                raise TypeError('data type {} not equal to dtype {}.'
+                                ''.format(data.dtype, space.dtype))
 
             if data.shape != (space.dim,):
-                raise ValueError(errfmt('''
-                `data.shape` {} not equal to `(space.dim,)` {}.
-                '''.format(data.shape, (space.dim,))))
+                raise ValueError('data shape {} not equal to `(space.dim,)` '
+                                 '{}.'.format(data.shape, (space.dim,)))
 
             self._space = space
             self._data = data
@@ -453,7 +451,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Examples
             --------
-            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
+            >>> vec1 = Ntuples(3, 'int').element([1, 2, 3])
             >>> vec2 = vec1.copy()
             >>> vec2
             Ntuples(3, int).element([1, 2, 3])
@@ -486,7 +484,6 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 vector's entries, `False` otherwise.
             """
 
-        # TODO: this could be concrete
         @abstractmethod
         def __getitem__(self, indices):
             """Access values of this vector.
@@ -502,7 +499,6 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 The value(s) at the index (indices)
             """
 
-        # TODO: this could be concrete
         @abstractmethod
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -531,7 +527,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         def __str__(self):
             """`vec.__str__() <==> str(vec)`."""
-            return array1d_repr(self)
+            return array1d_str(self)
 
         def __repr__(self):
             """`vec.__repr__() <==> repr(vec)`."""
@@ -579,19 +575,21 @@ class Ntuples(NtuplesBase):
 
         Examples
         --------
-        >>> strings3 = Ntuples(3, dtype='S1')  # 1-char strings
+        >>> strings3 = Ntuples(3, dtype='U1')  # 1-char strings
         >>> x = strings3.element(['w', 'b', 'w'])
-        >>> x
-        Ntuples(3, '|S1').element(['w', 'b', 'w'])
+        >>> print(x)
+        [w, b, w]
+        >>> x.space
+        Ntuples(3, '<U1')
 
         Array views are preserved:
 
-        >>> strings2 = Ntuples(2, dtype='S1')  # 1-char strings
+        >>> strings2 = Ntuples(2, dtype='U1')  # 1-char unicode
         >>> x = strings3.element(['w', 'b', 'w'])
         >>> y = strings2.element(x[::2])  # view into x
         >>> y[:] = 'x'
         >>> print(x)
-        ['x', 'b', 'x']
+        [x, b, x]
         """
         if inp is None:
             outp = np.empty(self.dim, dtype=self.dtype)
@@ -708,12 +706,14 @@ class Ntuples(NtuplesBase):
 
             Examples
             --------
-            >>> str_3 = Ntuples(3, dtype='S6')  # 6-char strings
+            >>> str_3 = Ntuples(3, dtype='U6')  # 6-char unicode
             >>> x = str_3.element(['a', 'Hello!', '0'])
-            >>> x[0]
-            'a'
-            >>> x[1:3]
-            Ntuples(2, '|S6').element(['Hello!', '0'])
+            >>> print(x[0])
+            a
+            >>> print(x[1:3])
+            [Hello!, 0]
+            >>> x[1:3].space
+            Ntuples(2, '<U6')
             """
             try:
                 return self.data[int(indices)]  # single index
@@ -743,7 +743,7 @@ class Ntuples(NtuplesBase):
 
             Examples
             --------
-            >>> int_3 = Ntuples(3, int)
+            >>> int_3 = Ntuples(3, 'int')
             >>> x = int_3.element([1, 2, 3])
             >>> x[0] = 5
             >>> x

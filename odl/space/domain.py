@@ -16,9 +16,9 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
-from builtins import super
+from __future__ import print_function, division, absolute_import
+from __future__ import unicode_literals
+from builtins import super, zip
 from future import standard_library
 standard_library.install_aliases()
 
