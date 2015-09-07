@@ -50,6 +50,9 @@ from odl.space.set import Set, Integers
 from odl.utility.utility import array1d_repr
 
 
+__all__ = ('TensorGrid', 'RegularGrid')
+
+
 class TensorGrid(Set):
 
     """An n-dimensional tensor grid.
@@ -215,8 +218,8 @@ class TensorGrid(Set):
     def min(self):
         """Vector containing the minimal coordinates per axis.
 
-        Example
-        -------
+        Examples
+        --------
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.min
         array([ 1., -2.])
@@ -227,8 +230,8 @@ class TensorGrid(Set):
     def max(self):
         """Vector containing the maximal coordinates per axis.
 
-        Example
-        -------
+        Examples
+        --------
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max
         array([ 5., 2.])
@@ -537,7 +540,8 @@ class TensorGrid(Set):
         See also
         --------
 
-        numpy.meshgrid (we use indexing='ij' and copy=True)
+        numpy.meshgrid : coordinate matrices from coordinate vectors
+            We use `indexing='ij'` and `copy=True`
 
         Examples
         --------
@@ -858,8 +862,8 @@ class RegularGrid(TensorGrid):
     def center(self):
         """The center of the grid. Not necessarily a grid point.
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> rg = RegularGrid((2, 3), [-1, 1], [1, 2])
         >>> rg.center
@@ -871,8 +875,8 @@ class RegularGrid(TensorGrid):
     def stride(self):
         """The step per axis between two neighboring grid points.
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> rg = RegularGrid((2, 3), [-1, 1], [1, 2])
         >>> rg.stride

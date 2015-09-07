@@ -231,11 +231,6 @@ class Strings(Set):
 
     def contains(self, other):
         """Test if `other` is a string of at max `length` characters."""
-#        print(repr(other))
-#        print(type(other))
-#        print(isinstance(other, str))
-#        print(len(other))
-#        print(self.length)
         return isinstance(other, str) and len(other) <= self.length
 
     def equals(self, other):
@@ -286,7 +281,6 @@ class Integers(Set):
 
 
 class RealNumbers(Set):
-
     """The set of real numbers."""
 
     def contains(self, other):

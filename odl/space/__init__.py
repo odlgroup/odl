@@ -67,9 +67,10 @@ R^n type spaces, CPU implementation (module 'cartesian')
 ===========  ===========
 Name         Description
 ===========  ===========
-Rn           Basic space of n-tuples of real numbers, uses NumPy
-NormedRn     R^n with a norm
-Fn  R^n with an inner product
+NTuples      Any set of n elements represented using numpy
+Fn           NTuples where the elements are a field
+Cn           Basic space of n-tuples of complex numbers
+Rn           Basic space of n-tuples of real numbers
 ===========  ===========
 
 R^n type spaces, CUDA implementation (module 'cuda')
@@ -80,7 +81,8 @@ Requires the compiled extension 'odlpp'
 ===========  ===========
 Name         Description
 ===========  ===========
-CudaRn       En implemented in CUDA
+CudaFn       Any set of n elements with field operations
+CudaRn       Basic space of n-tuples of real numbers in CUDA
 ===========  ===========
 
 Function spaces (module 'function')

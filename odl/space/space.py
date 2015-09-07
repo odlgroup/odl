@@ -101,7 +101,8 @@ class LinearSpace(Set):
     `LinearSpace.Vector` class.
 
     The concept of linear vector spaces in ODL is largely inspired by
-    the `Rice Vector Library`_ (RVL).
+    the `Rice Vector Library
+    <http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/>`_ (RVL).
 
     The abstract `LinearSpace` class is intended for quick prototyping.
     It has a number of abstract methods which must be overridden by a
@@ -216,11 +217,11 @@ class LinearSpace(Set):
     A space with a norm is called a `Normed Space`.
 
     **Parameters:**
-        `x` : `object`
+        `x` : ``object``
             The vector to measure
 
     **Returns:**
-        `norm` : `RealNumber`
+        `norm` : ``RealNumber``
             The length of `x` as measured in the space's metric
 
     **Requirements:**
@@ -346,15 +347,11 @@ class LinearSpace(Set):
     |`__contains__(other)` |`other in self` |`contains(other)`   |
     +----------------------+----------------+--------------------+
 
-    See also
-    --------
-    See Wikipedia's `Vector space`_ article for a mathematical
-    overview.
-
-    .. _`Rice Vector Library`:
-       http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/
-    .. _`Vector space`:
-       https://en.wikipedia.org/wiki/Vector_space
+    Notes
+    -----
+    See Wikipedia's `Vector space
+    <https://en.wikipedia.org/wiki/Vector_space>`_ mathematical
+    overview article
     """
 
     @abstractmethod
@@ -822,8 +819,8 @@ class LinearSpace(Set):
             operations on a vector should be expected to break equality
             testing.
 
-            Example
-            -------
+            Examples
+            --------
 
             >>> from odl.space.cartesian import Rn
             >>> import numpy as np

@@ -88,8 +88,9 @@ class ScalingOperator(SelfAdjointOperator):
         -------
         None
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
@@ -115,8 +116,9 @@ class ScalingOperator(SelfAdjointOperator):
                  An element in the range of this operator,
                  inp * self.scale
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
@@ -139,8 +141,9 @@ class ScalingOperator(SelfAdjointOperator):
         inv : ScalingOperator
             Scaling by 1/scale
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
@@ -169,8 +172,8 @@ class ScalingOperator(SelfAdjointOperator):
         domain : LinearSpace
             The domain of the operator
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
@@ -192,8 +195,8 @@ class ScalingOperator(SelfAdjointOperator):
         domain : LinearSpace
                  The domain of the operator
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
@@ -298,8 +301,8 @@ class LinCombOperator(LinearOperator):
         outp : self.range.element
             An element in the operator range.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
@@ -349,8 +352,9 @@ class MultiplyOperator(LinearOperator):
     def _apply(self, inp, outp):
         """Multiply the input and write to output.
 
-        Example
-        -------
+        Examples
+        --------
+
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
