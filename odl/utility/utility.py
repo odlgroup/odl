@@ -42,6 +42,7 @@ def array1d_repr(array):
         return (repr(array[:3].tolist()).rstrip(']') + ', ..., ' +
                 repr(array[-3:].tolist()).strip('['))
 
+
 def dtype_repr(dtype):
     if dtype == np.dtype(int):
         return 'int'

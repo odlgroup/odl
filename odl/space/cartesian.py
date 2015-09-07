@@ -550,15 +550,15 @@ class Ntuples(Set):
             >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
             >>> arr_type = ctypes.c_int32 * 3
             >>> buffer = arr_type.from_address(vec.data_ptr)
-            >>> arr = np.frombuffer(buffer, dtype=int)
+            >>> arr = np.frombuffer(buffer, dtype='int32')
             >>> arr
-            array([1, 2, 3])
+            array([1, 2, 3], dtype=int32)
 
             In-place modification via pointer:
 
             >>> arr[0] = 5
             >>> vec
-            Ntuples(3, int).element([5, 2, 3])
+            Ntuples(3, dtype('int32')).element([5, 2, 3])
             """
             return self._data.ctypes.data
 
@@ -789,13 +789,11 @@ def _lincomb(z, a, x, b, y, dtype):
         y[...] = x[...]
         return y
 
-    # pylint: disable=unbalanced-tuple-unpacking
-    blas_axpy, blas_scal, blas_copy = get_blas_funcs(
-        ['axpy', 'scal', 'copy'], dtype=dtype)
-
     if (dtype in (np.float32, np.float64, np.complex64, np.complex128) and
             all(a.flags.contiguous for a in (x.data, y.data, z.data))):
-        axpy, scal, copy = (blas_axpy, blas_scal, blas_copy)
+        # pylint: disable=unbalanced-tuple-unpacking
+        axpy, scal, copy = get_blas_funcs(
+            ['axpy', 'scal', 'copy'], arrays=(x.data,y.data))
     else:
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
 
