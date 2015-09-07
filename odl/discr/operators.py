@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super, str, zip
+from builtins import super, str, zip, int
 from future.utils import with_metaclass
 
 # External imports
@@ -293,8 +293,8 @@ class RawGridCollocation(FunctionSetMapping):
 
         >>> xx, yy = grid.meshgrid()
         >>> vals = 2 * xx
-        >>> vals.shape  # Not possible to assign to an Rn(6) vector
-        (2, 1)
+        >>> vals.shape == (2, 1) # Not possible to assign to an Rn(6) vector
+        True
         """
         # TODO: update after vectorization issue is sorted out
         try:
