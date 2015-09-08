@@ -128,10 +128,9 @@ class IntervalProd(Set):
         ----------
         other : object
             The object to be tested.
-        tol : float, optional
+        tol : float, optional  (Default: 0.0)
             The maximum allowed difference in 'inf'-norm between the
             interval endpoints.
-            Default: 0.0
 
         Examples
         --------
@@ -319,8 +318,8 @@ class IntervalProd(Set):
         >>> rbox.collapse([1, 2], [0, 3.5])
         Traceback (most recent call last):
             ...
-        ValueError: 'values' not within interval boundaries ([3.5] >
-        [3.0])
+        ValueError: values [ 0.   3.5] not below the upper interval
+        boundaries [ 1.  3.].
         """
         indices = np.atleast_1d(indices)
         values = np.atleast_1d(values)
@@ -334,15 +333,15 @@ class IntervalProd(Set):
             raise IndexError('indices {} out of range 0 --> {}.'
                              ''.format(list(indices), self.dim))
 
-        if np.any(values < self._begin[indices]):
-            raise ValueError('values {} has entries below the lower interval '
-                             'boundary {}.'
-                             ''.format(values, self.begin))
+        if np.any(values < self.begin[indices]):
+            raise ValueError('values {} not above the lower interval '
+                             'boundaries {}.'
+                             ''.format(values, self.begin[indices]))
 
-        if np.any(values > self._end[indices]):
-            raise ValueError('values {} has entries above the upper interval '
-                             'boundary {}.'
-                             ''.format(values, self.end))
+        if np.any(values > self.end[indices]):
+            raise ValueError('values {} not below the upper interval '
+                             'boundaries {}.'
+                             ''.format(values, self.end[indices]))
 
         b_new = self._begin.copy()
         b_new[indices] = values

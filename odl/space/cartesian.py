@@ -432,13 +432,13 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         @abstractmethod
         def asarray(self, start=None, stop=None, step=None):
             """Extract the data of this array as a numpy array.
-            
+
             Parameters
             ----------
             start : `int`, Optional (default: `None`)
                 Start position. None means the first element.
             start : `int`, Optional (default: `None`)
-                One element past the last element to be extracted. 
+                One element past the last element to be extracted.
                 None means the last element.
             start : `int`, Optional (default: `None`)
                 Step length. None means 1.
@@ -565,17 +565,6 @@ class Ntuples(NtuplesBase):
         >>> x.space
         Ntuples(3, '<U1')
 
-        Array views are preserved:
-
-        >>> strings2 = Ntuples(2, dtype='U1')  # 1-char unicode
-        >>> x = strings3.element(['w', 'b', 'w'])
-        >>> y = strings2.element(x[::2])  # view into x
-        >>> y[:] = 'x'
-        >>> print(y)
-        [x, x]
-        >>> print(x)
-        [x, b, x]
-
         Construction from data pointer:
 
         >>> int3 = Ntuples(3, dtype='int')
@@ -653,13 +642,13 @@ class Ntuples(NtuplesBase):
 
         def asarray(self, start=None, stop=None, step=None, out=None):
             """Extract the data of this array as a numpy array.
-            
+
             Parameters
             ----------
             start : `int`, Optional (default: `None`)
                 Start position. None means the first element.
             start : `int`, Optional (default: `None`)
-                One element past the last element to be extracted. 
+                One element past the last element to be extracted.
                 None means the last element.
             start : `int`, Optional (default: `None`)
                 Step length. None means 1.
@@ -671,7 +660,7 @@ class Ntuples(NtuplesBase):
             -------
             asarray : `ndarray`
                 Numpy array of the same type as the space.
-            
+
             Examples
             --------
             >>> import ctypes
@@ -682,7 +671,7 @@ class Ntuples(NtuplesBase):
             array([ 2.,  3.])
 
             Using the out parameter
-            
+
             >>> out = np.empty((3,), dtype='float')
             >>> result = vec.asarray(out=out)
             >>> out
@@ -856,6 +845,15 @@ class Ntuples(NtuplesBase):
             >>> x[1:3] = -2.
             >>> x
             Ntuples(3, 'int').element([0, -2, -2])
+
+            Array views are preserved:
+
+            >>> y = x[::2]  # view into x
+            >>> y[:] = -9
+            >>> print(y)
+            [-9, -9]
+            >>> print(x)
+            [-9, -2, -9]
 
             Be aware of unsafe casts and over-/underflows, there
             will be warnings at maximum.

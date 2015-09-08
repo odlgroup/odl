@@ -64,44 +64,6 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
     The second one encodes the converse way of mapping an `n`-tuple to
     an element of the original set. This mapping is called
     **extension**.
-
-    Attributes
-    ----------
-
-    +-------------+----------------+----------------------------------+
-    |Name         |Type            |Description                       |
-    +=============+================+==================================+
-    |`uspace`     |`Set`           |The set to be discretized         |
-    +-------------+----------------+----------------------------------+
-    |`dspace`     |`NtuplesBase`   |Data space providing structures to|
-    |             |                |hold the values of a discretized  |
-    |             |                |object                            |
-    +-------------+----------------+----------------------------------+
-    |`restriction`|`Operator`      |Operator mapping a `uspace`       |
-    |             |                |element to a `dspace` element.    |
-    |             |                |Raises `NotImplementedError` by   |
-    |             |                |default.                          |
-    +-------------+----------------+----------------------------------+
-    |`extension`  |`Operator`      |Operator mapping a `dspace`       |
-    |             |                |element to a `uspace` element.    |
-    |             |                |Raises `NotImplementedError` by   |
-    |             |                |default.                          |
-    +-------------+----------------+----------------------------------+
-
-    Methods
-    -------
-
-    +-----------+----------------+------------------------------------+
-    |Signature  |Return type     |Description                         |
-    +===========+================+====================================+
-    |`element   |`Discretization.|Create an element either from       |
-    |(inp=None)`|Vector`         |scratch using `dspace.element()` or |
-    |           |                |from `inp` by calling               |
-    |           |                |`dspace.element(inp)` or applying   |
-    |           |                |`restriction` to                    |
-    |           |                |`uspace.element(inp)`, in this      |
-    |           |                |order.                              |
-    +-----------+----------------+------------------------------------+
     """
 
     def __init__(self, uspace, dspace, restr=None, ext=None):
@@ -389,7 +351,7 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
     # Pass-through attributes of the wrapped `dspace`
     def zero(self):
         """Create a vector of zeros."""
-        return self.Vector(self, self.dspace.zeros())
+        return self.Vector(self, self.dspace.zero())
 
     def _lincomb(self, z, a, x, b, y):
         """Raw linear combination."""
