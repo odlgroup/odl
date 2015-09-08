@@ -690,9 +690,9 @@ class Ntuples(NtuplesBase):
             True
             """
             if out is None:
-                return self.data.__getitem__(slice(start, stop, step)).copy()
+                return self.data[start:stop:step].copy()
             else:
-                out[:] = self.data.__getitem__(slice(start, stop, step))
+                out[:] = self.data[start:stop:step]
                 return out
 
         @property
