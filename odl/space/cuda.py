@@ -135,16 +135,17 @@ class CudaNtuples(NtuplesBase):
         if inp is None:
             if data_ptr is None:
                 return self.Vector(self, self._vector_impl(self.dim))
-            else:
+            else: #TODO handle non-1 length strides
                 return self.Vector(
-                    self, self._vector_impl.from_pointer(data_ptr, self.dim))
+                    self, self._vector_impl.from_pointer(data_ptr, self.dim, 1))
         else:
             if data_ptr is None:
-                # TODO: scalar assignment will fail. Implement a fill()
-                # method for that case
-                elem = self.element()
-                elem[:] = inp
-                return elem
+                if isinstance(inp, self._vector_impl):
+                    return self.Vector(self, inp)
+                else:
+                    elem = self.element()
+                    elem[:] = inp
+                    return elem
             else:
                 raise TypeError("Cannot provide both inp and data_ptr")
 
@@ -243,17 +244,50 @@ class CudaNtuples(NtuplesBase):
             """
             return self.space.Vector(self.space, self.data.copy())
 
-        def asarray(self):
-            """Extract the data of this array as a numpy array
+        def asarray(self, start=None, stop=None, step=None, out=None):
+            """Extract the data of this array as a numpy array.
+            
+            Parameters
+            ----------
+            start : `int`, Optional (default: `None`)
+                Start position. None means the first element.
+            start : `int`, Optional (default: `None`)
+                One element past the last element to be extracted. 
+                None means the last element.
+            start : `int`, Optional (default: `None`)
+                Step length. None means 1.
+            out : `ndarray`, Optional (default: `None`)
+                Array in which the result should be written in-place.
+                Has to be contiguous and of the correct dtype.
 
+            Returns
+            -------
+            asarray : `ndarray`
+                Numpy array of the same type as the space.
+            
             Examples
             --------
             >>> uc3 = CudaNtuples(3, 'uint8')
             >>> y = uc3.element([1, 2, 3])
             >>> y.asarray()
             array([1, 2, 3], dtype=uint8)
+            >>> y.asarray(1, 3)
+            array([2, 3], dtype=uint8)
+
+            Using the out parameter
+            
+            >>> out = np.empty((3,), dtype='uint8')
+            >>> result = y.asarray(out=out)
+            >>> out
+            array([1, 2, 3], dtype=uint8)
+            >>> result is out
+            True
             """
-            return self.data.getslice(slice(None,None,None))
+            if out is None:
+                return self.data.get_to_host(slice(start, stop, step))
+            else:
+                self.data.copy_device_to_host(slice(start, stop, step), out)
+                return out
 
         def __getitem__(self, indices):
             """Access values of this vector.
@@ -274,17 +308,33 @@ class CudaNtuples(NtuplesBase):
 
             Examples
             --------
-            >>> uc3 = CudaNtuples(3, 'uint8')
+            >>> uc3 = CudaNtuples(3, 'int')
             >>> y = uc3.element([1, 2, 3])
             >>> y[0]
             1
-            >>> y[1:2]
-            array([2], dtype=uint8)
+            >>> z = y[1:3]
+            >>> z
+            CudaNtuples(2, 'int').element([2, 3])
+            >>> y[::2]
+            CudaNtuples(2, 'int').element([1, 3])
+            >>> y[::-1]
+            CudaNtuples(3, 'int').element([3, 2, 1])
+
+            The returned value is a view, modifications are reflected in the original data
+
+            >>> z[:] = [4, 5]
+            >>> y
+            CudaNtuples(3, 'int').element([1, 4, 5])
             """
-            try:
-                return self.data.__getitem__(int(indices))
-            except TypeError:
-                return self.data.getslice(indices)
+            if isinstance(indices, slice):
+                data = self.data.getslice(indices)
+                return type(self.space)(data.size, data.dtype).element(self.data.getslice(indices))
+            else:
+                try:
+                    return self.data.__getitem__(int(indices))
+                except RuntimeError as e:
+                    print(e, indices)
+
 
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -322,19 +372,28 @@ class CudaNtuples(NtuplesBase):
             >>> y[:] = np.array([0, 0, 0])
             >>> y
             CudaNtuples(3, 'uint8').element([0, 0, 0])
+
+            Scalar assignment
+
+            >>> y[:] = 5
+            >>> y
+            CudaNtuples(3, 'uint8').element([5, 5, 5])
             """
             if isinstance(values, CudaNtuples.Vector):
-                raise NotImplementedError
-                # TODO: implement
-                # return self.data.__setitem__(indices, values.data)
+                self.assign(values) #use lincomb magic
             else:
-                try:
-                    return self.data.__setitem__(int(indices), values)
-                except TypeError:
+                if isinstance(indices, slice):
                     # Convert value to the correct type if needed
-                    values = np.asarray(values, dtype=self.space._dtype)
-                    # Size checking is performed in c++
-                    return self.data.setslice(indices, values)
+                    value_array = np.asarray(values, dtype=self.space._dtype)
+
+                    if (value_array.ndim == 0):
+                        self.data.fill(values)
+                    else:
+                        # Size checking is performed in c++
+                        self.data.setslice(indices, value_array)
+                else:
+                    self.data.__setitem__(int(indices), values)
+
 
 
 class CudaFn(FnBase, CudaNtuples):
