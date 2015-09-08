@@ -243,17 +243,50 @@ class CudaNtuples(NtuplesBase):
             """
             return self.space.Vector(self.space, self.data.copy())
 
-        def asarray(self):
-            """Extract the data of this array as a numpy array
+        def asarray(self, start=None, stop=None, step=None, out=None):
+            """Extract the data of this array as a numpy array.
+            
+            Parameters
+            ----------
+            start : `int`, Optional (default: `None`)
+                Start position. None means the first element.
+            start : `int`, Optional (default: `None`)
+                One element past the last element to be extracted. 
+                None means the last element.
+            start : `int`, Optional (default: `None`)
+                Step length. None means 1.
+            out : `ndarray`, Optional (default: `None`)
+                Array in which the result should be written in-place.
+                Has to be contiguous and of the correct dtype.
 
+            Returns
+            -------
+            asarray : `ndarray`
+                Numpy array of the same type as the space.
+            
             Examples
             --------
             >>> uc3 = CudaNtuples(3, 'uint8')
             >>> y = uc3.element([1, 2, 3])
             >>> y.asarray()
             array([1, 2, 3], dtype=uint8)
+            >>> y.asarray(1, 3)
+            array([2, 3], dtype=uint8)
+
+            Using the out parameter
+            
+            >>> out = np.empty((3,), dtype='uint8')
+            >>> result = y.asarray(out=out)
+            >>> out
+            array([1, 2, 3], dtype=uint8)
+            >>> result is out
+            True
             """
-            return self.data.getslice(slice(None,None,None))
+            if out is None:
+                return self.data.getslice(slice(start, stop, step))
+            else:
+                self.data.copy_device_to_host(slice(start, stop, step), out)
+                return out
 
         def __getitem__(self, indices):
             """Access values of this vector.

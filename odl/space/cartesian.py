@@ -430,8 +430,24 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             """Create an identical (deep) copy of this vector."""
 
         @abstractmethod
-        def asarray(self):
-            """Extract the data of this array as a numpy array."""
+        def asarray(self, start=None, stop=None, step=None):
+            """Extract the data of this array as a numpy array.
+            
+            Parameters
+            ----------
+            start : `int`, Optional (default: `None`)
+                Start position. None means the first element.
+            start : `int`, Optional (default: `None`)
+                One element past the last element to be extracted. 
+                None means the last element.
+            start : `int`, Optional (default: `None`)
+                Step length. None means 1.
+
+            Returns
+            -------
+            asarray : `ndarray`
+                Numpy array of the same type as the space.
+            """
 
         def __len__(self):
             """v.__len__() <==> len(v).
@@ -634,10 +650,50 @@ class Ntuples(NtuplesBase):
             """The raw numpy array representing the data."""
             return self._data
 
-        @property
-        def asarray(self):
-            """Extract the data of this array as a numpy array."""
-            return self.data.copy()
+        def asarray(self, start=None, stop=None, step=None, out=None):
+            """Extract the data of this array as a numpy array.
+            
+            Parameters
+            ----------
+            start : `int`, Optional (default: `None`)
+                Start position. None means the first element.
+            start : `int`, Optional (default: `None`)
+                One element past the last element to be extracted. 
+                None means the last element.
+            start : `int`, Optional (default: `None`)
+                Step length. None means 1.
+            out : `ndarray`, Optional (default: `None`)
+                Array in which the result should be written in-place.
+                Has to be contiguous and of the correct dtype.
+
+            Returns
+            -------
+            asarray : `ndarray`
+                Numpy array of the same type as the space.
+            
+            Examples
+            --------
+            >>> import ctypes
+            >>> vec = Ntuples(3, 'float').element([1, 2, 3])
+            >>> vec.asarray()
+            array([ 1.,  2.,  3.])
+            >>> vec.asarray(1, 3)
+            array([ 2.,  3.])
+
+            Using the out parameter
+            
+            >>> out = np.empty((3,), dtype='float')
+            >>> result = vec.asarray(out=out)
+            >>> out
+            array([ 1.,  2.,  3.])
+            >>> result is out
+            True
+            """
+            if out is None:
+                return self.data.__getitem__(slice(start, stop, step)).copy()
+            else:
+                out[:] = self.data.__getitem__(slice(start, stop, step))
+                return out
 
         @property
         def data_ptr(self):
