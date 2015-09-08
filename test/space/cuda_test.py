@@ -134,6 +134,22 @@ class TestAccessors(ODLTestCase):
                 for step in steps:
                     self._test_getslice(slice(start, end, step))
 
+    def test_slice_of_slice(self):
+        # Verify that creating slices from slices works as expected
+        r10 = CudaRn(10)
+        xh = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        xd = r10.element(xh)
+        
+        yh = xh[1:8:2]
+        yd = xd[1:8:2]
+        
+        self.assertAllAlmostEquals(yh, yd)
+
+        zh = yh[1::2]
+        zd = yd[1::2]
+        
+        self.assertAllAlmostEquals(zh, zd)
+
     def test_getslice_index_error(self):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])

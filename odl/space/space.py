@@ -90,7 +90,7 @@ from odl.space.set import Set
 from odl.utility.utility import errfmt
 
 
-__all__ = ('LinearSpace')
+__all__ = ('LinearSpace',)
 
 
 class LinearSpace(Set):
