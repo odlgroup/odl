@@ -30,9 +30,16 @@ from abc import ABCMeta
 
 # ODL imports
 from odl.operator.operator import Operator, LinearOperator
-from odl.space.cartesian import NtuplesBase, FnBase
-from odl.space.set import Set
+from odl.space.cartesian import NtuplesBase, FnBase, Ntuples, Rn, Cn
+from odl.space.set import Set, RealNumbers, ComplexNumbers
 from odl.space.space import LinearSpace
+try:
+    from odl.space.cuda import CudaNtuples, CudaRn
+    CudaCn = None
+    CUDA_AVAILABLE = True
+except ImportError:
+    CudaRn = CudaCn = CudaNtuples = None
+    CUDA_AVAILABLE = False
 
 
 class Discretization(with_metaclass(ABCMeta, Set)):
@@ -273,7 +280,11 @@ class Discretization(with_metaclass(ABCMeta, Set)):
                 `True` if `other` belongs to this vector's space
                 and their values are all equal.
             """
-            return other in self.space and other.data == self.data
+            return other in self.space and self.space.equals(self, other)
+
+        # TODO: things break down here due to abstract methods. Probably
+        # this Vector class should not inherit from NtuplesBase.Vector -
+        # maybe there shouldn't be a Vector class at all!
 
 
 class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
@@ -349,3 +360,40 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
     class Vector(Discretization.Vector, FnBase.Vector):
 
         """Representation of a `LinearSpaceDiscretization` element."""
+
+
+def dspace_type(space, impl):
+    """Select the correct corresponding n-tuples space.
+
+    Parameters
+    ----------
+    space : ``LinearSpace``
+        The template space
+    impl : {'numpy', 'cuda'}
+        The backend for the data space
+
+    Returns
+    -------
+    dtype : type
+        Space type selected after the space's field and the chosen
+        backend
+    """
+    if impl not in ('numpy', 'cuda'):
+        raise ValueError('implementation type {} not understood.'
+                         ''.format(impl))
+
+    if impl == 'cuda' and not CUDA_AVAILABLE:
+        raise ValueError('CUDA implementation not available.')
+
+    spacetype_map = {
+        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn, None: Ntuples},
+        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None, None: CudaNtuples}
+    }
+
+    field_type = None if not hasattr(space, 'field') else type(space.field)
+    stype = spacetype_map[impl][field_type]
+    if stype is None:
+        raise NotImplementedError('no corresponding data space available for '
+                                  'space {!r} and implementation {!r}.'
+                                  ''.format(space, impl))
+    return stype

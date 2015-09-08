@@ -562,9 +562,9 @@ class IntervalProd(Set):
         Parameters
         ----------
 
-        num_nodes : int or tuple of int's
-            The number of nodes per axis. For dim=1, a single int may
-            be given. All entries must be positive. Entries
+        num_nodes : int or tuple of int
+            The number of nodes per axis. For dimension >= 2, a tuple
+            is required. All entries must be positive. Entries
             corresponding to degenerate axes must be equal to 1.
         as_midp : boolean, optional
             If True, the midpoints of an interval partition will be
