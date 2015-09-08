@@ -150,6 +150,21 @@ class TestAccessors(ODLTestCase):
         
         self.assertAllAlmostEquals(zh, zd)
 
+    def test_slice_is_view(self):
+        # Verify that modifications of a view modify the original data
+        r10 = CudaRn(10)
+        xh = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        xd = r10.element(xh)
+
+        yh = xh[1:8:2]
+        yh[:] = [1, 3, 5, 7]
+
+        yd = xd[1:8:2]
+        yd[:] = [1, 3, 5, 7]
+        
+        self.assertAllAlmostEquals(xh, xd)
+        self.assertAllAlmostEquals(yh, yd)
+
     def test_getslice_index_error(self):
         r3 = CudaRn(3)
         xd = r3.element([1, 2, 3])

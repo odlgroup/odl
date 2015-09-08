@@ -319,6 +319,12 @@ class CudaNtuples(NtuplesBase):
             CudaNtuples(2, 'int').element([1, 3])
             >>> y[::-1]
             CudaNtuples(3, 'int').element([3, 2, 1])
+
+            The returned value is a view, modifications are reflected in the original data
+
+            >>> z[:] = [4, 5]
+            >>> y
+            CudaNtuples(3, 'int').element([1, 4, 5])
             """
             if isinstance(indices, slice):
                 data = self.data.getslice(indices)
