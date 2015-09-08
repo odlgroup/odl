@@ -355,19 +355,30 @@ class CudaNtuples(NtuplesBase):
             >>> y[:] = np.array([0, 0, 0])
             >>> y
             CudaNtuples(3, 'uint8').element([0, 0, 0])
+
+            Scalar assignment
+
+            >>> y[:] = 5
+            >>> y
+            CudaNtuples(3, 'uint8').element([5, 5, 5])
             """
             if isinstance(values, CudaNtuples.Vector):
                 raise NotImplementedError
                 # TODO: implement
                 # return self.data.__setitem__(indices, values.data)
             else:
-                try:
-                    return self.data.__setitem__(int(indices), values)
-                except TypeError:
+                if isinstance(indices, slice):
                     # Convert value to the correct type if needed
-                    values = np.asarray(values, dtype=self.space._dtype)
-                    # Size checking is performed in c++
-                    return self.data.setslice(indices, values)
+                    value_array = np.asarray(values, dtype=self.space._dtype)
+
+                    if (value_array.ndim == 0):
+                        self.data.fill(values)
+                    else:
+                        # Size checking is performed in c++
+                        self.data.setslice(indices, value_array)
+                else:
+                    self.data.__setitem__(int(indices), values)
+
 
 
 class CudaFn(FnBase, CudaNtuples):
