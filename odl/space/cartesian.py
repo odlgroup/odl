@@ -804,11 +804,11 @@ class Ntuples(NtuplesBase):
             will be warnings at maximum.
 
             >>> x = Ntuples(2, 'int8').element([0, 0])
-            >>> maxval = 127  # maximum signed 8-bit int
+            >>> maxval = 255  # maximum signed 8-bit unsigned int
             >>> x[0] = maxval + 1
             >>> x
-            Ntuples(2, 'int8').element([-128, 0])
-            >>> x[:] = np.arange(2, dtype='int64')
+            Ntuples(2, 'int8').element([0, 0])
+            >>> x[:] = np.arange(2, dtype='int64') #TODO: what is this supposed to test?
             >>> x
             Ntuples(2, 'int8').element([0, 1])
             """
