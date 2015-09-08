@@ -28,13 +28,13 @@ from builtins import super, str
 
 # ODL
 from odl.discr.discretization import LinearSpaceDiscretization
-from odl.discr.discretization import dspace_type, dspace_default_dtype
+from odl.discr.discretization import dspace_type
 from odl.discr.operators import GridCollocation, NearestInterpolation
 from odl.space.default import L2
 from odl.space.domain import IntervalProd
 
 
-_supported_interp = ('nearest')
+_supported_interp = ('nearest',)
 
 
 class DiscreteL2(LinearSpaceDiscretization):
@@ -95,7 +95,8 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     Parameters
     ----------
     l2space : ``L2``
-        Continuous L2 type space. Its domain must be an `IntervalProd`.
+        Continuous L2 type space. Its domain must be an
+        ``IntervalProd``.
     nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
@@ -133,7 +134,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     grid = l2space.domain.uniform_sampling(nsamples, as_midp=True)
     if dtype is not None:
-        dspace = ds_type(grid.ntotal, dtype)
+        dspace = ds_type(grid.ntotal, dtype=dtype)
     else:
         dspace = ds_type(grid.ntotal)
 

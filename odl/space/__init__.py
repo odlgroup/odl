@@ -17,83 +17,129 @@
 
 """Core Spaces and set support.
 
-Abstract and concrete sets (module 'set')
-=========================================
+Abstract and concrete sets (modules 'set' and 'domain')
+=======================================================
 
-==============  ===========
-Name            Description
-==============  ===========
-Set             Base class for mathematical sets
-ComplexNumbers  Set of complex numbers
-RealNumbers     Set of real numbers
-Integers        Set of integers
-IntervalProd    Cartesian product of n intervals
-Interval        IntervalProd specialization in 1-D
-Rectangle       IntervalProd specialization in 2-D
-Cube            IntervalProd specialization in 3-D
-==============  ===========
+Simple sets (module 'set')
+--------------------------
 
-Abstract vector spaces (modules 'space' and 'product')
-======================================================
++-------------------+-------------------+------------------------------+
+|Name               |Direct             |Description                   |
+|                   |ancestors          |                              |
++===================+===================+==============================+
+|``Set``            |`object`           |Base class for mathematical   |
+|                   |                   |sets                          |
++-------------------+-------------------+------------------------------+
+|``Integers``       |``Set``            |Set of integers               |
++-------------------+-------------------+------------------------------+
+|``RealNumbers``    |``Set``            |Set of real numbers           |
++-------------------+-------------------+------------------------------+
+|``ComplexNumbers`` |``Set``            |Set of complex numbers        |
++-------------------+-------------------+------------------------------+
+|``Strings``        |``Set``            |Set of fixed-length strings   |
++-------------------+-------------------+------------------------------+
 
-General Spaces (module 'space')
--------------------------------
+More complex sets intended as function domains (module 'domain')
+----------------------------------------------------------------
 
-==============  ===========
-Name            Description
-==============  ===========
-LinearSpace     Vector space with addition and scalar multiplication
-MetricSpace     A LinearSpace with a metric
-NormedSpace     A MetricSpace with a norm and induced metric
-HilbertSpace    A NormedSpace with an inner product and induced norm
-==============  ===========
++-------------------+-------------------+------------------------------+
+|Name               |Direct             |Description                   |
+|                   |ancestors          |                              |
++===================+===================+==============================+
+|``IntervalProd``   |``Set``            |Cartesian product of intervals|
++-------------------+-------------------+------------------------------+
+|``Interval``       |``IntervalProd``   |1-D special case              |
++-------------------+-------------------+------------------------------+
+|``Rectangle``      |``IntervalProd``   |1-D special case              |
++-------------------+-------------------+------------------------------+
+|``Cube``           |``IntervalProd``   |1-D special case              |
++-------------------+-------------------+------------------------------+
 
-Product Spaces (module 'product')
----------------------------------
-===================  ===========
-Name                 Description
-===================  ===========
-LinearProductSpace   Cartesian product of linear spaces
-MetricProductSpace   Cartesian product of metric spaces
-NormedProductSpace   Cartesian product of normed spaces
-HilbertProductSpace  Cartesian product of Hilbert spaces
-===================  ===========
 
-Concrete vector spaces (modules 'cartesian', 'cuda', 'function')
-================================================================
+Abstract vector spaces (modules 'space', 'product', 'function')
+===============================================================
 
-R^n type spaces, CPU implementation (module 'cartesian')
---------------------------------------------------------
-===========  ===========
-Name         Description
-===========  ===========
-NTuples      Any set of n elements represented using numpy
-Fn           NTuples where the elements are a field
-Cn           Basic space of n-tuples of complex numbers
-Rn           Basic space of n-tuples of real numbers
-===========  ===========
++----------------------+----------------+------------------------------+
+|Name                  |Direct          |Description                   |
+|                      |ancestors       |                              |
++======================+================+==============================+
+|``LinearSpace``       |``Set``         |Abstract vector space with    |
+|                      |                |addition and scalar           |
+|                      |                |multiplication                |
++----------------------+----------------+------------------------------+
+|``LinearProductSpace``|``LinearSpace`` |Cartesian product of linear   |
+|                      |                |spaces                        |
++----------------------+----------------+------------------------------+
+|``FunctionSet``       |``Set``         |Set of functions with common  |
+|                      |                |domain and range              |
++----------------------+----------------+------------------------------+
+|``FunctionSpace``     |``FunctionSet``,|Function set where the range  |
+|                      |``LinearSpace`` |is a field                    |
++----------------------+----------------+------------------------------+
 
-R^n type spaces, CUDA implementation (module 'cuda')
-----------------------------------------------------
+Concrete vector spaces (modules 'cartesian', 'cuda', 'default')
+===============================================================
+
+:math:`R^n` type spaces, NumPy implementation (module 'cartesian')
+------------------------------------------------------------------
+
++----------------------+----------------+------------------------------+
+|Name                  |Direct          |Description                   |
+|                      |ancestors       |                              |
++======================+================+==============================+
+|``NTuplesBase``       |``Set``         |Abstract base class for sets  |
+|                      |                |of n-tuples of various types  |
++----------------------+----------------+------------------------------+
+|``Ntuples``           |``NTuplesBase`` |Set of n-tuples of almost     |
+|                      |                |arbitrary type                |
++----------------------+----------------+------------------------------+
+|``FnBase``            |``NTuplesBase`` |Abstract base class for spaces|
+|                      |                |of n-tuples over a field      |
++----------------------+----------------+------------------------------+
+|``Fn``                |``FnBase``      |Space of n-tuples over a      |
+|                      |                |field allowing any scalar     |
+|                      |                |data type                     |
++----------------------+----------------+------------------------------+
+|``Cn``                |``Fn``          |Space of n-tuples of complex  |
+|                      |                |numbers                       |
++----------------------+----------------+------------------------------+
+|``Rn``                |``Fn``          |Space of n-tuples of real     |
+|                      |                |numbers                       |
++----------------------+----------------+------------------------------+
+
+:math:`R^n` type spaces, CUDA implementation (module 'cuda')
+------------------------------------------------------------
 
 Requires the compiled extension 'odlpp'
 
-===========  ===========
-Name         Description
-===========  ===========
-CudaFn       Any set of n elements with field operations
-CudaRn       Basic space of n-tuples of real numbers in CUDA
-===========  ===========
++----------------------+----------------+------------------------------+
+|Name                  |Direct          |Description                   |
+|                      |ancestors       |                              |
++======================+================+==============================+
+|``CudaNtuples``       |``NTuplesBase`` |Set of n-tuples of almost     |
+|                      |                |arbitrary type                |
++----------------------+----------------+------------------------------+
+|``CudaFn``            |``FnBase``      |Space of n-tuples over a      |
+|                      |                |field allowing any scalar     |
+|                      |                |data type                     |
++----------------------+----------------+------------------------------+
+|``CudaCn``            |TODO            |(Space of n-tuples of complex |
+|                      |                |numbers)                      |
++----------------------+----------------+------------------------------+
+|``CudaRn``            |``CudaFn``      |Space of n-tuples of real     |
+|                      |                |numbers                       |
++----------------------+----------------+------------------------------+
 
-Function spaces (module 'function')
+Function spaces (module 'default')
 -----------------------------------
 
-=============  ===========
-Name           Description
-=============  ===========
-FunctionSpace  Vector space of functions over some domain
-L2             FunctionSpace with the usual integral 2-norm
-=============  ===========
++----------------------+-----------------+-----------------------------+
+|Name                  |Direct           |Description                  |
+|                      |ancestors        |                             |
++======================+=================+=============================+
+|``L2``                |``FunctionSpace``|Square-integrable functions  |
+|                      |                 |taking real or complex values|
++----------------------+-----------------+-----------------------------+
 """
 
 from __future__ import print_function, division, absolute_import
@@ -101,5 +147,5 @@ from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 
-__all__ = ('cuda', 'cartesian', 'function', 'product',
-           'sequence', 'set', 'space')
+__all__ = ('cartesian', 'cuda', 'default', 'domain',  'function',
+           'product', 'sequence', 'set', 'space')

@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super, str, zip, int
+from builtins import super, str, zip
 from future.utils import with_metaclass
 
 # External imports
@@ -79,7 +79,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                             ''.format(grid))
 
         if not isinstance(dspace, NtuplesBase):
-            raise TypeError('data space {} is not an `Ntuples` instance.'
+            raise TypeError('data space {!r} is not an `NtuplesBase` instance.'
                             ''.format(dspace))
 
         # TODO: this method is expected to exist, which is the case for
@@ -183,7 +183,7 @@ class RawGridCollocation(FunctionSetMapping):
         ip_fset : `FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must be an
-            `IntervalProd`.
+            ```IntervalProd```.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
@@ -201,8 +201,9 @@ class RawGridCollocation(FunctionSetMapping):
         # TODO: remove this requirement depending on the vectorization
         # solution
         if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError('domain {} of the function set is not an'
-                            '`IntervalProd` instance.'.format(ip_fset.domain))
+            raise TypeError('domain {} of the function set is not an '
+                            '`IntervalProd` instance.'
+                            ''.format(ip_fset.domain))
 
     # TODO: Implement _apply()
 
@@ -293,7 +294,7 @@ class RawGridCollocation(FunctionSetMapping):
 
         >>> xx, yy = grid.meshgrid()
         >>> vals = 2 * xx
-        >>> vals.shape == (2, 1) # Not possible to assign to an Rn(6) vector
+        >>> vals.shape == (2, 1) # Cannot be assigned to an Rn(6) vector
         True
         """
         # TODO: update after vectorization issue is sorted out
@@ -324,7 +325,7 @@ class GridCollocation(RawGridCollocation, LinearFunctionSpaceMapping):
         fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an `IntervalProd`.
+            space. Its `domain` must be an ``IntervalProd``.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
@@ -355,7 +356,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         ip_fset : `FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must be an
-            `IntervalProd`.
+            ``IntervalProd``.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
@@ -373,8 +374,9 @@ class RawNearestInterpolation(FunctionSetMapping):
         # TODO: remove this requirement depending on the vectorization
         # solution
         if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError('domain {} of the function set is not an'
-                            '`IntervalProd` instance.'.format(ip_fset.domain))
+            raise TypeError('domain {} of the function set is not an '
+                            '`IntervalProd` instance.'
+                            ''.format(ip_fset.domain))
 
     # TODO: Implement _apply()
 
@@ -475,7 +477,7 @@ class NearestInterpolation(RawNearestInterpolation,
         fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an `IntervalProd`.
+            space. Its `domain` must be an ``IntervalProd``.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
@@ -541,7 +543,7 @@ class LinearInterpolation(LinearOperator):
         fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an `IntervalProd`.
+            space. Its `domain` must be an ``IntervalProd``.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.

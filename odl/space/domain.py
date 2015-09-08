@@ -27,90 +27,21 @@ import numpy as np
 
 # ODL imports
 from odl.space.set import Set, RealNumbers
-from odl.utility.utility import errfmt, array1d_repr
+from odl.utility.utility import array1d_repr
 
 
 class IntervalProd(Set):
 
     """An n-dimensional rectangular box.
 
-    An IntervalProd is a Cartesian product of `n` intervals, i.e. an
-    `n`-dimensional rectangular box aligned with the coordinate axes
+    An interval product is a Cartesian product of n intervals, i.e. an
+    n-dimensional rectangular box aligned with the coordinate axes
     as a subset of :math:`R^n`.
-
-    Attributes
-    ----------
-
-    +----------+---------------+--------------------------------------+
-    |Name      |Type           |Description                           |
-    +==========+===============+======================================+
-    |`begin`   |`numpy.ndarray`|(Vector of) leftmost interval point(s)|
-    |          |or `float`     |                                      |
-    +----------+---------------+--------------------------------------+
-    |`end`     |`numpy.ndarray`|(Vector of) rightmost interval        |
-    |          |or `float`     |point(s)                              |
-    +----------+---------------+--------------------------------------+
-    |`dim`     |`int`          |Number of axes                        |
-    +----------+---------------+--------------------------------------+
-    |`truedim` |`int`          |Number of non-degenerate axes, i.e.   |
-    |          |               |where `begin != end`                  |
-    +----------+---------------+--------------------------------------+
-    |`sizes`   |`numpy.ndarray`|(Vector of) interval length(s)        |
-    |          |or `float`     |                                      |
-    +----------+---------------+--------------------------------------+
-    |`volume`  |`float`        |`dim`-dimensional measure             |
-    +----------+---------------+--------------------------------------+
-    |`midpoint`|`numpy.ndarray`|Vector of interval midpoint(s)        |
-    |          |or `float`     |                                      |
-    +----------+---------------+--------------------------------------+
-
-    Methods
-    -------
-
-    +--------------------+---------------+----------------------------+
-    |Signature           |Return type    |Description                 |
-    +====================+===============+============================+
-    |`equals(other,      |`boolean`      |Test if `other` is equal to |
-    |tol=0.0)`           |               |this interval product.      |
-    +--------------------+---------------+----------------------------+
-    |`contains(other,    |`boolean`      |Test if `other` is contained|
-    |tol=0.0)`           |               |in this interval product.   |
-    +--------------------+---------------+----------------------------+
-    |`measure(dim=None)` |`float`        |Return the `dim`-dimensional|
-    |                    |               |measure of this interval    |
-    |                    |               |product.                    |
-    +--------------------+---------------+----------------------------+
-    |`dist(point,        |`float`        |Return the distance in      |
-    |ord=2.0)`           |               |`ord`-norm between `point`  |
-    |                    |               |and this interval product.  |
-    +--------------------+---------------+----------------------------+
-    |`collapse(indcs,    |`IntervalProd` |Return the interval product |
-    |vals)`              |               |where the intervals at      |
-    |                    |               |`indcs` are collapsed to    |
-    |                    |               |single values `vals`.       |
-    +--------------------+---------------+----------------------------+
-    |`insert(other,      |`IntervalProd` |Return the interval product |
-    |index)`             |               |where `other` has been      |
-    |                    |               |before `index`.             |
-    +--------------------+---------------+----------------------------+
-    |`corners(order='C')`|`numpy.ndarray`|Return the corner points    |
-    |                    |               |of this interval product    |
-    |                    |               |in a single array.          |
-    +--------------------+---------------+----------------------------+
-    |`uniform_sampling(  |`RegularGrid`  |Create a regular grid by    |
-    |num_nodes,          |               |sampling this interval      |
-    |as_midp=False)`     |               |product at `num_nodes`      |
-    |                    |               |equidistant nodes (per      |
-    |                    |               |axis).                      |
-    +--------------------+---------------+----------------------------+
-
-    See also
-    --------
-    `RegularGrid` is defined in `odl.discr.grid`.
     """
 
     def __init__(self, begin, end):
-        """
+        """Initialize a new instance.
+
         Parameters
         ----------
         begin : array-like or float
@@ -120,7 +51,6 @@ class IntervalProd(Set):
 
         Examples
         --------
-
         >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
         >>> rbox = IntervalProd(b, e)
         >>> rbox
@@ -130,15 +60,17 @@ class IntervalProd(Set):
         end = np.atleast_1d(end).astype(np.float64)
 
         if len(begin) != len(end):
-            raise ValueError(errfmt('''
-            Lengths of 'begin' ({}) and 'end' ({}) do not match.
-            '''.format(len(begin), len(end))))
+            raise ValueError('begin {} and end {} have different .'
+                             'lengths ({} != {}).'
+                             ''.format(begin, end,
+                                       len(begin), len(end)))
 
         if not np.all(begin <= end):
             i_wrong = np.where(begin > end)
-            raise ValueError(errfmt('''
-            Entries of 'begin' exceed those of 'end' ({!r} > {!r})
-            '''.format(list(begin[i_wrong]), list(end[i_wrong]))))
+            raise ValueError('entries at indices {} of begin exceed '
+                             'those of end ({} > {}).'
+                             ''.format(i_wrong, list(begin[i_wrong]),
+                                       list(end[i_wrong])))
 
         self._begin = begin
         self._end = end
@@ -174,18 +106,15 @@ class IntervalProd(Set):
 
     @property
     def volume(self):
-        """The 'dim'-dimensional volume of this IntervalProd."""
+        """The 'dim'-dimensional volume of this interval product."""
         return self.measure(dim=self.dim)
 
     @property
     def midpoint(self):
-        """The midpoint of the interval product.
-
-        If dim == 1, a float is returned, otherwise an array.
-        """
-        midp = (self._end + self._begin) / 2.
-        midp[self._ideg] = self._begin[self._ideg]
-        return midp[0] if self.dim == 1 else midp
+        """The midpoint of the interval product."""
+        midp = (self.end + self.begin) / 2.
+        midp[self._ideg] = self.begin[self._ideg]
+        return midp
 
     def element(self):
         """An arbitrary element, the midpoint."""
@@ -281,7 +210,7 @@ class IntervalProd(Set):
 
     # Additional property-like methods
     def measure(self, dim=None):
-        """The (Lebesgue) measure of the IntervalProd instance.
+        """The (Lebesgue) measure of this interval product.
 
         Parameters
         ----------
@@ -342,9 +271,9 @@ class IntervalProd(Set):
         """
         point = np.atleast_1d(point)
         if len(point) != self.dim:
-            raise ValueError(errfmt('''
-            'point' dimension ({}) different from set dimension ({}).
-            '''.format(len(point), self.dim)))
+            raise ValueError('length {} of point {} does not match '
+                             'the dimension {} of the set {}.'
+                             ''.format(len(point), point, self.dim))
 
         i_larger = np.where(point > self._end)
         i_smaller = np.where(point < self._begin)
@@ -359,14 +288,14 @@ class IntervalProd(Set):
             return np.linalg.norm(proj - border, ord=ord)
 
     # Manipulation
-    def collapse(self, indcs, values):
+    def collapse(self, indices, values):
         """Partly collapse the interval product to single values.
 
         Note that no changes are made in-place.
 
         Parameters
         ----------
-        indcs : int or tuple of ints
+        indices : int or tuple of ints
             The indices of the dimensions along which to collapse
         values : float or array-like
             The values to which to collapse. Must have the same
@@ -375,7 +304,8 @@ class IntervalProd(Set):
 
         Returns
         -------
-        The collapsed IntervalProd
+        collapsed : ``IntervalProd``
+            The collapsed set
 
         Examples
         --------
@@ -392,36 +322,32 @@ class IntervalProd(Set):
         ValueError: 'values' not within interval boundaries ([3.5] >
         [3.0])
         """
-        indcs = np.atleast_1d(indcs)
+        indices = np.atleast_1d(indices)
         values = np.atleast_1d(values)
-        if len(indcs) != len(values):
-            raise ValueError(errfmt('''
-            lengths of 'indcs' ({}) and 'values' ({}) do not match
-            '''.format(len(indcs), len(values))))
+        if len(indices) != len(values):
+            raise ValueError('lengths of indices {} and values {} do not '
+                             'match ({} != {}).'
+                             ''.format(indices, values,
+                                       len(indices), len(values)))
 
-        if np.any(indcs < 0) or np.any(indcs >= self.dim):
-            raise IndexError(errfmt('''
-            'indcs'({!r}) out of range (max {})
-            '''.format(list(indcs), self.dim)))
+        if np.any(indices < 0) or np.any(indices >= self.dim):
+            raise IndexError('indices {} out of range 0 --> {}.'
+                             ''.format(list(indices), self.dim))
 
-        if np.any(values < self._begin[indcs]):
-            i_smaller = np.where(values < self._begin[indcs])
-            raise ValueError(errfmt('''
-            'values' not within interval boundaries ({!r} < {!r})
-            '''.format(list(values[i_smaller]),
-                       list((self._begin[indcs])[i_smaller]))))
+        if np.any(values < self._begin[indices]):
+            raise ValueError('values {} has entries below the lower interval '
+                             'boundary {}.'
+                             ''.format(values, self.begin))
 
-        if np.any(values > self._end[indcs]):
-            i_larger = np.where(values > self._end[indcs])
-            raise ValueError(errfmt('''
-            'values' not within interval boundaries ({!r} > {!r})
-            '''.format(list(values[i_larger]),
-                       list((self._end[indcs])[i_larger]))))
+        if np.any(values > self._end[indices]):
+            raise ValueError('values {} has entries above the upper interval '
+                             'boundary {}.'
+                             ''.format(values, self.end))
 
         b_new = self._begin.copy()
-        b_new[indcs] = values
+        b_new[indices] = values
         e_new = self._end.copy()
-        e_new[indcs] = values
+        e_new[indices] = values
 
         return IntervalProd(b_new, e_new)
 
@@ -432,11 +358,11 @@ class IntervalProd(Set):
 
         Returns
         -------
-        The squeezed IntervalProd
+        squeezed : ``IntervalProd``
+            The squeezed set
 
         Examples
         --------
-
         >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(b, e)
         >>> rbox.collapse(1, 0).squeeze()
@@ -451,25 +377,27 @@ class IntervalProd(Set):
         return IntervalProd(b_new, e_new)
 
     def insert(self, other, index):
-        """Insert another IntervalProd before the given index.
+        """Insert another interval product before the given index.
 
-        The given IntervalProd (dim=m) is inserted into the current
+        The given interval product (dim=m) is inserted into the current
         one (dim=n) before the given index, resulting in a new
-        IntervalProd of dimension n+m.
-        Note that no changes are made in-place.
+        interval product of dimension n+m.
+
+        No changes are made in-place.
 
         Parameters
         ----------
-        other : IntervalProd, float or array-like
-            The IntervalProd to be inserted. A float or array a is
-            treated as an IntervalProd(a, a).
+        other : ``IntervalProd``, float or array-like
+            The set to be inserted. A float or array a is
+            treated as an `IntervalProd(a, a)`.
         index : int
-            The index of the dimension before which 'other' is to
-            be inserted. Must fulfill 0 <= index <= dim.
+            The index of the dimension before which `other` is to
+            be inserted. Must fulfill `0 <= index <= dim`.
 
         Returns
         -------
-        The enlarged IntervalProd
+        larger_set : ``IntervalProd``
+            The enlarged set
 
         Examples
         --------
@@ -507,21 +435,19 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-
-        order : 'C' or 'F'
+        order : {'C', 'F'}
             The ordering of the axes in which the corners appear in
-            the output.
+            the output. 'C' means that the first axis varies slowest
+            and the last one fastest, vice versa in 'F' ordering.
 
         Returns
         -------
-
         out : numpy.ndarray
-            The size of the array is 2^m x dim, where m is the number of
-            non-degenerate axes, i.e. the corners are stored as rows.
+            The size of the array is `2^m * dim`, where `m` is the number
+            of non-degenerate axes, i.e. the corners are stored as rows.
 
         Examples
         --------
-
         >>> rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
         >>> rbox.corners()
         array([[-1. ,  2. ,  0. ],
@@ -544,8 +470,7 @@ class IntervalProd(Set):
         """
         from odl.discr.grid import TensorGrid
         if order not in ('C', 'F'):
-            raise ValueError(errfmt('''
-            Value of 'order' ({}) must be 'C' or 'F'.'''.format(order)))
+            raise ValueError('order {} not understood.'.format(order))
 
         minmax_vecs = [0] * self.dim
         for axis in self._ideg:
@@ -593,22 +518,21 @@ class IntervalProd(Set):
         num_nodes = np.atleast_1d(num_nodes).astype(np.int64)
 
         if np.any(np.isinf(self._begin)) or np.any(np.isinf(self._end)):
-            raise ValueError(errfmt('''
-            Uniform sampling undefined for infinite domains.'''))
+            raise ValueError('uniform sampling undefined for infinite '
+                             'domains.')
 
         if num_nodes.shape != (self.dim,):
-            raise ValueError(errfmt('''
-            'num_nodes' ({}) must have shape ({},).
-            '''.format(num_nodes.shape, self.dim)))
+            raise ValueError('number of nodes {} has wrong shape '
+                             '({} != ({},)).'
+                             ''.format(num_nodes, num_nodes.shape, self.dim))
 
         if np.any(num_nodes <= 0):
-            raise ValueError(errfmt('''
-            All entries of 'num_nodes' must be positive.'''))
+            raise ValueError('number of nodes {} has non-positive entries.'
+                             ''.format(num_nodes))
 
         if np.any(num_nodes[self._ideg] > 1):
-            raise ValueError(errfmt('''
-            Degenerate axes {} cannot be sampled with more than one
-            node.'''.format(tuple(self._ideg))))
+            raise ValueError('degenerate axes {} cannot be sampled with more '
+                             'than one node.'.format(tuple(self._ideg)))
 
         center = self.midpoint
         stride = (self.size / num_nodes if as_midp else
@@ -629,19 +553,16 @@ class IntervalProd(Set):
 
 
 class Interval(IntervalProd):
-    """ The set of real numbers in the interval [begin, end]
-    """
+    """One-dimensional interval product, i.e. just one interval."""
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.dim != 1:
-            raise ValueError(errfmt('''
-            'begin' and 'end' must scalar or have length 1 (got {}).
-            '''.format(self.dim)))
+            raise ValueError('cannot make an interval from begin {} and '
+                             'end {}.'.format(begin, end))
 
     @property
     def length(self):
-        """ The length of this interval
-        """
+        """The length of this interval."""
         return self.end - self.begin
 
     def __repr__(self):
@@ -649,17 +570,16 @@ class Interval(IntervalProd):
 
 
 class Rectangle(IntervalProd):
+    """Two-dimensional interval product."""
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.dim != 2:
-            raise ValueError(errfmt('''
-            Lengths of 'begin' and 'end' must be equal to 2 (got {}).
-            '''.format(self.dim)))
+            raise ValueError('cannot make a rectangle from begin {} and '
+                             'end {}.'.format(begin, end))
 
     @property
     def area(self):
-        """ The area of this triangle
-        """
+        """Area measure of this rectangle."""
         return self.volume
 
     def __repr__(self):
@@ -668,12 +588,12 @@ class Rectangle(IntervalProd):
 
 
 class Cube(IntervalProd):
+    """Three-dimensional interval product."""
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.dim != 3:
-            raise ValueError(errfmt('''
-            Lengths of 'begin' and 'end' must be equal to 3 (got {}).
-            '''.format(self.dim)))
+            raise ValueError('cannot make an cube from begin {} and '
+                             'end {}.'.format(begin, end))
 
     def __repr__(self):
         return ('Cube({!r}, {!r})'.format(list(self._begin),

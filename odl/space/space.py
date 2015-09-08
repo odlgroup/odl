@@ -87,10 +87,9 @@ import math as m
 
 # ODL imports
 from odl.space.set import Set
-from odl.utility.utility import errfmt
 
 
-__all__ = ('LinearSpace')
+__all__ = ('LinearSpace',)
 
 
 class LinearSpace(Set):
@@ -384,41 +383,41 @@ class LinearSpace(Set):
         """Calculate the distance between x and y.
 
         This method is intended to be private, public callers should
-        resort to dist which is type-checked.
+        resort to `dist` which is type-checked.
         """
         # default implementation
         return self.norm(x-y)
 
     def _norm(self, x):
-        """Calculate the norm of x
+        """Calculate the norm of x.
 
         This method is intended to be private, public callers should
-        resort to dist which is type-checked.
+        resort to `norm` which is type-checked.
         """
         # default implementation
-        return m.sqrt(self.inner(x, x))
+        return m.sqrt(self.inner(x, x).real)
 
     def _inner(self, x, y):
-        """ Calculate the inner product of x and y
+        """Calculate the inner product of x and y.
 
         This method is intended to be private, public callers should
-        resort to dist which is type-checked.
+        resort to `inner` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError("Inner product not implemented")
+        raise NotImplementedError('inner product not implemented')
 
     def _multiply(self, z, x, y):
-        """ Calculate the multiplication of z = x * y
+        """Calculate the pointwise multiplication z = x * y.
 
         This method is intended to be private, public callers should
-        resort to dist which is type-checked.
+        resort to `multiply` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError("Multiplication not implemented")
+        raise NotImplementedError('multiplication not implemented')
 
     @abstractproperty
     def field(self):
-        """The field of the vector space."""
+        """The field of this vector space."""
 
     # Default methods
     def zero(self):
@@ -467,8 +466,10 @@ class LinearSpace(Set):
 
         Calculates
 
-        z = a*x
-        or if b and y are given
+        z = a * x
+
+        or, if b and y are given,
+
         z = a*x + b*y
 
         with error checking of types.
@@ -492,10 +493,6 @@ class LinearSpace(Set):
 
         Notes
         -----
-        Some notes and examples
-
-        Alignment
-        ~~~~~~~~~
         The vectors `z`, `x` and `y` may be aligned, thus a call
 
         space.lincomb(x, 2, x, 3.14, x)
@@ -505,33 +502,32 @@ class LinearSpace(Set):
         x = x * (1 + 2 + 3.14)
         """
         if z not in self:
-            raise TypeError(errfmt('''
-            `z` {!r} not in space {!r}.'''.format(z, self)))
+            raise TypeError('output vector {!r} not in space {!r}.'
+                            ''.format(z, self))
 
         if a not in self.field:
-            raise TypeError(errfmt('''
-            `a` {!r} not in `field` {!r} of space {!r}.
-            '''.format(a, self.field, self)))
+            raise TypeError('first scalar {!r} not in the field {!r} of the '
+                            'space {!r}.'.format(a, self.field, self))
 
         if x not in self:
-            raise TypeError(errfmt('''
-            `x` {!r} not in space {!r}.'''.format(x, self)))
+            raise TypeError('first input vector {!r} not in space {!r}.'
+                            ''.format(x, self))
 
         if b is None:  # Single argument
             if y is not None:
-                raise ValueError('`y` provided but not `b`.')
+                raise ValueError('second input vector provided but no '
+                                 'second scalar.')
 
             # Call method
             return self._lincomb(z, a, x, 0, x)
         else:  # Two arguments
             if b not in self.field:
-                raise TypeError(errfmt('''
-                `b` {!r} not in `field` {!r} of space {!r}.
-                '''.format(b, self.field, self)))
+                raise TypeError('second scalar {!r} not in the field {!r} of '
+                                'the space {!r}.'.format(b, self.field, self))
 
             if y not in self:
-                raise TypeError(errfmt('''
-                `y` {!r} not in space {!r}.'''.format(y, self)))
+                raise TypeError('second input vector {!r} not in space {!r}.'
+                                ''.format(x, self))
 
             # Call method
             return self._lincomb(z, a, x, b, y)
@@ -553,43 +549,40 @@ class LinearSpace(Set):
                Distance between vectors
         """
         if x not in self:
-            raise TypeError('`x` {} not in space {}'.format(x, self))
-
+            raise TypeError('first vector {!r} not in space {!r}'
+                            ''.format(x, self))
         if y not in self:
-            raise TypeError('`y` {} not in space {}'.format(y, self))
+            raise TypeError('second vector {!r} not in space {!r}'
+                            ''.format(y, self))
 
         return float(self._dist(x, y))
 
-    def norm(self, vector):
+    def norm(self, x):
         """Calculate the norm of a vector."""
-        if not self.contains(vector):
-            raise TypeError('x ({}) is not in space ({})'.format(vector, self))
+        if x not in self:
+            raise TypeError('vector {!r} not in space {!r}'.format(x, self))
 
-        return float(self._norm(vector))
+        return float(self._norm(x))
 
     def inner(self, x, y):
-        """ Calculates the inner product of the vectors x and y
-        """
-
-        # Check spaces
-        if not self.contains(x):
-            raise TypeError('x ({}) is not in space ({})'.format(x, self))
-
-        if not self.contains(y):
-            raise TypeError('y ({}) is not in space ({})'.format(y, self))
+        """Calculate the inner product of the vectors x and y."""
+        if x not in self:
+            raise TypeError('first vector {!r} not in space {!r}'
+                            ''.format(x, self))
+        if y not in self:
+            raise TypeError('second vector {!r} not in space {!r}'
+                            ''.format(y, self))
 
         return self.field.element(self._inner(x, y))
 
     def multiply(self, z, x, y):
-        """ Calculates the pointwise product of x and y and assigns it to y
-        z = x * y
-        """
-        # Check spaces
-        if not self.contains(x):
-            raise TypeError('x ({}) is in wrong space'.format(x))
-
-        if not self.contains(y):
-            raise TypeError('y ({}) is in wrong space'.format(y))
+        """Calculate the pointwise product of x and y, and assign to z."""
+        if x not in self:
+            raise TypeError('first vector {!r} not in space {!r}'
+                            ''.format(x, self))
+        if y not in self:
+            raise TypeError('second vector {!r} not in space {!r}'
+                            ''.format(y, self))
 
         self._multiply(z, x, y)
 
@@ -696,13 +689,13 @@ class LinearSpace(Set):
             All deriving classes must call this method to set space.
             """
             if not isinstance(space, LinearSpace):
-                raise TypeError(errfmt('''
-                'space' ({}) is not a LinearSpace instance'''.format(space)))
+                raise TypeError('space {!r} is not a `LinearSpace` instance'
+                                ''.format(space))
             self._space = space
 
         @property
         def space(self):
-            """The space this vector belongs to."""
+            """Space to which this vector belongs."""
             return self._space
 
         # Convenience functions

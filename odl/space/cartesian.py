@@ -585,9 +585,9 @@ class Ntuples(NtuplesBase):
         else:
             if data_ptr is None:
                 if isinstance(inp, Ntuples.Vector):
-                    return self.element(inp=inp.data)
-
-                inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
+                    inp = inp.data.astype(self.dtype, copy=True)
+                else:
+                    inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
 
                 if inp.shape == (1,):
                     arr = np.empty(self.dim, dtype=self.dtype)
@@ -598,6 +598,7 @@ class Ntuples(NtuplesBase):
                     raise ValueError('input shape {} not broadcastable to '
                                      'shape ({},).'.format(inp.shape,
                                                            self.dim))
+
                 return self.Vector(self, arr)
             else:
                 raise TypeError("Cannot provide both inp and data_ptr")
@@ -808,9 +809,6 @@ class Ntuples(NtuplesBase):
             >>> x[0] = maxval + 1
             >>> x
             Ntuples(2, 'int8').element([0, 0])
-            >>> x[:] = np.arange(2, dtype='int64') #TODO: what is this supposed to test?
-            >>> x
-            Ntuples(2, 'int8').element([0, 1])
             """
             if isinstance(values, Ntuples.Vector):
                 return self.data.__setitem__(indices, values.data)

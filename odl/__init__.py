@@ -30,9 +30,8 @@ standard_library.install_aliases()
 
 __version__ = '0.1b0.dev0'
 
-__all__ = ('geometry', 'operator', 'space', 'utility')
+__all__ = ('operator', 'space', 'utility')
 
-import odl.geometry
 import odl.operator
 import odl.space
 import odl.utility
