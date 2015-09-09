@@ -180,12 +180,12 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[i].data, tmp.data)
+            CS.sign(d[i].ntuple, tmp.ntuple)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[i].data, d[i].data)
-            CS.add_scalar(d[i].data, -1.0/la, d[i].data)
-            CS.max_vector_scalar(d[i].data, 0.0, d[i].data)
+            CS.abs(d[i].ntuple, d[i].ntuple)
+            CS.add_scalar(d[i].ntuple, -1.0/la, d[i].ntuple)
+            CS.max_vector_scalar(d[i].ntuple, 0.0, d[i].ntuple)
             d[i].multiply(d[i], tmp)
 
         # b = b + diff(x) - d

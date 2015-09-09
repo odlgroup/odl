@@ -155,8 +155,6 @@ vol = projector.domain.element()
 back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
                  geo.pixelDirectionV, result[0].ntuple.data_ptr, vol.ntuple.data_ptr)
 
-print(vol.asarray().min(), vol.asarray().max())
-
 plt.figure()
 plt.imshow(vol.asarray().reshape(nVoxels, order='F')[:, :, 200], cmap='bone')
 
