@@ -127,12 +127,22 @@ class Set(with_metaclass(ABCMeta, object)):
     def contains(self, other):
         """Test if `other` is a member of this set."""
 
+    def contains_set(self, other):
+        """Test if `other` is a subset of this set.
+        
+        Implementing this method is optional
+        """
+        raise NotImplementedError("'contains_set' method not implemented")
+
     @abstractmethod
     def equals(self, other):
         """Test if `other` is the same set as this set."""
 
     def element(self, inp=None):
-        """Return an element from `inp` or from scratch."""
+        """Return an element from `inp` or from scratch.
+        
+        Implementing this method is optional.
+        """
         raise NotImplementedError("'element' method not implemented")
 
     # Default implemenations
@@ -150,7 +160,6 @@ class Set(with_metaclass(ABCMeta, object)):
 
 
 class EmptySet(Set):
-
     """The empty set.
 
     `None` is considered as "no element", i.e.
@@ -206,7 +215,6 @@ class UniversalSet(Set):
 
 
 class Strings(Set):
-
     """The set of fixed-length (unicode) strings."""
 
     def __init__(self, length):
@@ -254,8 +262,8 @@ class Strings(Set):
 
 
 class Integers(Set):
-
     """The set of integers."""
+
     def equals(self, other):
         """Tests if `other` is an `Integers` instance."""
         return type(other) == type(self)
@@ -308,7 +316,6 @@ class RealNumbers(Set):
 
 
 class ComplexNumbers(Set):
-
     """The set of complex numbers."""
 
     def contains(self, other):
@@ -336,7 +343,6 @@ class ComplexNumbers(Set):
 
 
 class CartesianProduct(Set):
-
     """The Cartesian product of `n` sets.
 
     The elements of this set are `n`-tuples where the i-th entry
@@ -350,7 +356,7 @@ class CartesianProduct(Set):
                      if not isinstance(set_, Set)]
             raise TypeError('{} not Set instance(s)'.format(wrong))
 
-        self._sets = sets
+        self._sets = tuple(sets)
 
     @property
     def sets(self):
@@ -375,7 +381,7 @@ class CartesianProduct(Set):
                 all(p in set_ for set_, p in zip(self.sets, other)))
 
     def equals(self, other):
-        """Test if `other` is contained in this set.
+        """Test if `other` is equivalent to this set.
 
         Returns
         -------
@@ -425,19 +431,24 @@ class CartesianProduct(Set):
         >>> prod[2:4]
         CartesianProduct(UniversalSet(), EmptySet())
         """
-        try:
-            return self.sets[int(indcs)]  # single index
-        except TypeError:
-            index_arr = np.arange(len(self))[indcs]
-            set_tpl = tuple(self.sets[i] for i in index_arr)
-            return CartesianProduct(*set_tpl)
+        if isinstance(indcs, slice):
+            return CartesianProduct(*self.sets[indcs])
+        else:
+            return self.sets[indcs]
 
     def __str__(self):
         """s.__str__() <==> str(s)."""
         return ' x '.join(str(set_) for set_ in self.sets)
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """s.__repr__() <==> repr(s).
+
+        Examples
+        --------
+        >>> emp, univ = EmptySet(), UniversalSet()
+        >>> CartesianProduct(emp, univ)
+        CartesianProduct(EmptySet(), UniversalSet())
+        """
         sets_str = ', '.join(repr(set_) for set_ in self.sets)
         return 'CartesianProduct({})'.format(sets_str)
 
