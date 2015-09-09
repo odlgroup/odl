@@ -998,10 +998,14 @@ class RegularGrid(TensorGrid):
         return RegularGrid(new_shape, new_center, new_stride)
 
     def __repr__(self):
-        """repr(self) implementation."""
+        """g.__repr__() <==> repr(g)."""
         return 'RegularGrid({}, {}, {})'.format(list(self.shape),
                                                 list(self.center),
                                                 list(self.stride))
+
+    def __str__(self):
+        """g.__str__() <==> str(g)."""
+        return self.__repr__()
 
 
 if __name__ == '__main__':
