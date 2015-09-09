@@ -42,9 +42,9 @@ except ImportError:
     CUDA_AVAILABLE = False
 
 
-class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
+class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
-    """Abstract discretization class.
+    """Abstract raw discretization class.
 
     A discretization in ODL is a way to encode the transition from
     an arbitrary set to a set of n-tuples explicitly representable
@@ -175,7 +175,7 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Returns
         -------
-        element : `Discretization.Vector`
+        element : ``RawDiscretization.Vector``
             The discretized element, calculated as
             `dspace.element(inp)` or
             `restriction(uspace.element(inp))`, tried in this order.
@@ -196,7 +196,7 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a `Discretization` instance and
+            `True` if `other` is a ``RawDiscretization`` instance and
             all attributes `uspace`, `dspace`, `restriction` and
             `extension` of `other` and this discretization are equal,
             `False` otherwise.
@@ -207,17 +207,22 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
                 other.restriction == self.restriction and
                 other.extension == self.extension)
 
+    @property
+    def domain(self):
+        """The domain of the continuous space."""
+        return self.uspace.domain
+
     class Vector(NtuplesBase.Vector):
 
-        """Representation of a `Discretization` element.
+        """Representation of a ``RawDiscretization`` element.
 
-        Basically only a wrapper class for `dspace.Vector`."""
+        Basically only a wrapper class for dspace's vector class."""
 
         def __init__(self, space, dspace_data):
             """Initialize a new instance."""
-            if not isinstance(space, Discretization):
-                raise TypeError('space {!r} not a `Discretization` instance.'
-                                ''.format(space))
+            if not isinstance(space, RawDiscretization):
+                raise TypeError('space {!r} not a `RawDiscretization` '
+                                'instance.'.format(space))
 
             if not isinstance(dspace_data, space.dspace.Vector):
                 raise TypeError('data {!r} not an instance of `{}.Vector`.'
@@ -281,18 +286,18 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
                 to the size of the slice (same size, shape (1,)
                 or single value).
             """
-            if isinstance(values, Discretization.Vector):
+            if isinstance(values, RawDiscretization.Vector):
                 self.data.__setitem__(indices, values.data)
             else:
                 self.data.__setitem__(indices, values)
 
 
-class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
-                                               FnBase)):
+class Discretization(with_metaclass(ABCMeta, RawDiscretization,
+                                    FnBase)):
 
     """Abstract class for discretizations of linear vector spaces.
 
-    This variant of `Discretization` adds linear structure to all
+    This variant of ``RawDiscretization`` adds linear structure to all
     its members. The `uspace` is a linear space, the `dspace`
     for the data representation is an implementation of :math:`F^n`,
     where `F` is some field, and both `restriction` and `extension`
@@ -307,17 +312,17 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
 
         Parameters
         ----------
-        uspace : `LinearSpace`
+        uspace : ``LinearSpace``
             The (abstract) space to be discretized
-        dspace : `FnBase`
+        dspace : ``FnBase``
             Data space providing containers for the values of a
             discretized object. Its `field` attribute must be the same
             as `uspace.field`.
-        restr : `LinearOperator`, optional
+        restr : ``LinearOperator``, optional
             Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy `restr.domain == uspace` and
             `restr.range == dspace`.
-        ext : `LinearOperator`, optional
+        ext : ``LinearOperator``, optional
             Operator mapping an `dspace` element to a `uspace` element.
             Must satisfy `ext.domain == dspace` and
             `ext.range == uspace`.
@@ -379,14 +384,14 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
         """Raw pointwise multiplication of two vectors."""
         self.dspace._multiply(z.data, x.data, y.data)
 
-    class Vector(Discretization.Vector, FnBase.Vector):
+    class Vector(RawDiscretization.Vector, FnBase.Vector):
 
-        """Representation of a `LinearSpaceDiscretization` element."""
+        """Representation of a ``Discretization`` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            if not isinstance(space, LinearSpaceDiscretization):
-                raise TypeError('space {!r} not a `LinearSpaceDiscretization` '
+            if not isinstance(space, Discretization):
+                raise TypeError('space {!r} not a `Discretization` '
                                 'instance.'.format(space))
             super().__init__(space, data)
 

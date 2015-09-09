@@ -27,7 +27,7 @@ from builtins import super, str
 # External
 
 # ODL
-from odl.discr.discretization import LinearSpaceDiscretization
+from odl.discr.discretization import Discretization
 from odl.discr.discretization import dspace_type
 from odl.discr.operators import GridCollocation, NearestInterpolation
 from odl.space.default import L2
@@ -37,7 +37,7 @@ from odl.space.domain import IntervalProd
 _supported_interp = ('nearest',)
 
 
-class DiscreteL2(LinearSpaceDiscretization):
+class DiscreteL2(Discretization):
 
     """Discretization of an :math:`L^2` space."""
 
@@ -46,14 +46,14 @@ class DiscreteL2(LinearSpaceDiscretization):
 
         Parameters
         ----------
-        l2space : `L2`
+        l2space : ``L2``
             The continuous space to be discretized
-        dspace : `FnBase`, same `field` as `l2space`
+        dspace : ``FnBase``, same `field` as `l2space`
             The space of elements used for data storage
-        grid : `TensorGrid`
+        grid : ``TensorGrid``
             The sampling grid for the discretization. Must be contained
             in `l2space.domain`.
-        interp : `string`, optional
+        interp : string, optional
             The interpolation type to be used for discretization.
 
             'nearest' : use nearest-neighbor interpolation (default)
@@ -96,7 +96,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     ----------
     l2space : ``L2``
         Continuous L2 type space. Its domain must be an
-        ``IntervalProd``.
+        ``IntervalProd`` instance.
     nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
