@@ -189,7 +189,7 @@ class CudaNtuples(NtuplesBase):
         @property
         def data_ptr(self):
             """A raw pointer to the data of this vector."""
-            return self._data.data_ptr()
+            return self.data.data_ptr()
 
         def equals(self, other):
             """Test if `other` is equal to this vector.
@@ -614,6 +614,7 @@ def sign(inp, outp=None):
     if outp is None:
         outp = inp.space.element()
     cuda.sign(inp.data, outp.data)
+    return outp
 
 def add_scalar(inp, scal, outp=None):
     if outp is None:

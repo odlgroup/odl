@@ -42,9 +42,9 @@ except ImportError:
     CUDA_AVAILABLE = False
 
 
-class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
+class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
-    """Abstract discretization class.
+    """Abstract raw discretization class.
 
     A discretization in ODL is a way to encode the transition from
     an arbitrary set to a set of n-tuples explicitly representable
@@ -175,7 +175,7 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Returns
         -------
-        element : `Discretization.Vector`
+        element : ``RawDiscretization.Vector``
             The discretized element, calculated as
             `dspace.element(inp)` or
             `restriction(uspace.element(inp))`, tried in this order.
@@ -196,7 +196,7 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a `Discretization` instance and
+            `True` if `other` is a ``RawDiscretization`` instance and
             all attributes `uspace`, `dspace`, `restriction` and
             `extension` of `other` and this discretization are equal,
             `False` otherwise.
@@ -207,37 +207,42 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
                 other.restriction == self.restriction and
                 other.extension == self.extension)
 
+    @property
+    def domain(self):
+        """The domain of the continuous space."""
+        return self.uspace.domain
+
     class Vector(NtuplesBase.Vector):
 
-        """Representation of a `Discretization` element.
+        """Representation of a ``RawDiscretization`` element.
 
-        Basically only a wrapper class for `dspace.Vector`."""
+        Basically only a wrapper class for dspace's vector class."""
 
-        def __init__(self, space, dspace_data):
+        def __init__(self, space, ntuple):
             """Initialize a new instance."""
-            if not isinstance(space, Discretization):
-                raise TypeError('space {!r} not a `Discretization` instance.'
-                                ''.format(space))
+            if not isinstance(space, RawDiscretization):
+                raise TypeError('space {!r} not a `RawDiscretization` '
+                                'instance.'.format(space))
 
-            if not isinstance(dspace_data, space.dspace.Vector):
-                raise TypeError('data {!r} not an instance of `{}.Vector`.'
-                                ''.format(dspace_data,
+            if not isinstance(ntuple, space.dspace.Vector):
+                raise TypeError('n-tuple {!r} not an instance of `{}.Vector`.'
+                                ''.format(ntuple,
                                           space.dspace.__class__.__name__))
             super().__init__(space)
-            self._data = dspace_data
+            self._ntuple = ntuple
 
         @property
-        def data(self):
-            """Data representation of this vector."""
-            return self._data
+        def ntuple(self):
+            """Structure for data storage."""
+            return self._ntuple
 
         def copy(self):
             """Create an identical (deep) copy of this vector."""
-            return self.space.element(self.data.copy())
+            return self.space.element(self.ntuple.copy())
 
         def asarray(self):
             """Extract the data of this array as a numpy array."""
-            return self.data.asarray()
+            return self.ntuple.asarray()
 
         def equals(self, other):
             """Test if `other` is equal to this vector.
@@ -248,7 +253,8 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
                 `True` if all entries of `other` are equal to this
                 vector's entries, `False` otherwise.
             """
-            return type(other) == type(self) and self.data.equals(other.data)
+            return (type(other) == type(self) and
+                    self.ntuple.equals(other.ntuple))
 
         def __getitem__(self, indices):
             """Access values of this vector.
@@ -263,7 +269,7 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
             values : `dspace_type.Vector`
                 The value(s) at the index (indices)
             """
-            return self.data[indices]
+            return self.ntuple[indices]
 
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -272,7 +278,7 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
+            values : {scalar, array-like, `NtuplesBase.Vector`}
                 The value(s) that are to be assigned.
 
                 If `index` is an `int`, `value` must be single value.
@@ -281,18 +287,18 @@ class Discretization(with_metaclass(ABCMeta, NtuplesBase)):
                 to the size of the slice (same size, shape (1,)
                 or single value).
             """
-            if isinstance(values, Discretization.Vector):
-                self.data.__setitem__(indices, values.data)
+            if isinstance(values, RawDiscretization.Vector):
+                self.ntuple.__setitem__(indices, values.ntuple)
             else:
-                self.data.__setitem__(indices, values)
+                self.ntuple.__setitem__(indices, values)
 
 
-class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
-                                               FnBase)):
+class Discretization(with_metaclass(ABCMeta, RawDiscretization,
+                                    FnBase)):
 
     """Abstract class for discretizations of linear vector spaces.
 
-    This variant of `Discretization` adds linear structure to all
+    This variant of ``RawDiscretization`` adds linear structure to all
     its members. The `uspace` is a linear space, the `dspace`
     for the data representation is an implementation of :math:`F^n`,
     where `F` is some field, and both `restriction` and `extension`
@@ -307,17 +313,17 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
 
         Parameters
         ----------
-        uspace : `LinearSpace`
+        uspace : ``LinearSpace``
             The (abstract) space to be discretized
-        dspace : `FnBase`
+        dspace : ``FnBase``
             Data space providing containers for the values of a
             discretized object. Its `field` attribute must be the same
             as `uspace.field`.
-        restr : `LinearOperator`, optional
+        restr : ``LinearOperator``, optional
             Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy `restr.domain == uspace` and
             `restr.range == dspace`.
-        ext : `LinearOperator`, optional
+        ext : ``LinearOperator``, optional
             Operator mapping an `dspace` element to a `uspace` element.
             Must satisfy `ext.domain == dspace` and
             `ext.range == uspace`.
@@ -355,38 +361,38 @@ class LinearSpaceDiscretization(with_metaclass(ABCMeta, Discretization,
 
     def _lincomb(self, z, a, x, b, y):
         """Raw linear combination."""
-        self.dspace._lincomb(z.data, a, x.data, b, y.data)
+        self.dspace._lincomb(z.ntuple, a, x.ntuple, b, y.ntuple)
 
     def _dist(self, x, y):
         """Raw distance between two vectors."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._dist(x.data, y.data)
+        return self.dspace._dist(x.ntuple, y.ntuple)
 
     def _norm(self, x):
         """Raw norm of a vector."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._norm(x.data)
+        return self.dspace._norm(x.ntuple)
 
     def _inner(self, x, y):
         """Raw inner product of two vectors."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._inner(x.data, y.data)
+        return self.dspace._inner(x.ntuple, y.ntuple)
 
     def _multiply(self, z, x, y):
         """Raw pointwise multiplication of two vectors."""
-        self.dspace._multiply(z.data, x.data, y.data)
+        self.dspace._multiply(z.ntuple, x.ntuple, y.ntuple)
 
-    class Vector(Discretization.Vector, FnBase.Vector):
+    class Vector(RawDiscretization.Vector, FnBase.Vector):
 
-        """Representation of a `LinearSpaceDiscretization` element."""
+        """Representation of a ``Discretization`` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            if not isinstance(space, LinearSpaceDiscretization):
-                raise TypeError('space {!r} not a `LinearSpaceDiscretization` '
+            if not isinstance(space, Discretization):
+                raise TypeError('space {!r} not a `Discretization` '
                                 'instance.'.format(space))
             super().__init__(space, data)
 

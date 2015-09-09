@@ -26,10 +26,11 @@ from math import sin, cos
 
 import numpy as np
 import odl.operator.operator as OP
-import odl.space.function as fs
 import odl.space.cuda as cs
 import odl.discr.discretization as dd
-import odl.space.set as sets
+from odl.space.domain import Interval, Rectangle
+from odl.discr.default import DiscreteL2, l2_uniform_discretization
+from odl.space.default import L2
 import SimRec2DPy as SR
 import matplotlib.pyplot as plt
 
@@ -51,10 +52,10 @@ class CudaProjection(OP.LinearOperator):
             volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
             sourcePosition, detectorOrigin, pixelDirection, range_, domain)
 
-    def _apply(self, data, out):
-        self.forward.setData(data.data_ptr)
+    def _apply(self, volume, projection):
+        self.forward.setData(volume.ntuple.data_ptr)
         self.forward.project(self.sourcePosition, self.detectorOrigin,
-                             self.pixelDirection, out.data_ptr)
+                             self.pixelDirection, projection.ntuple.data_ptr)
 
     @property
     def adjoint(self):
@@ -73,10 +74,10 @@ class CudaBackProjector(OP.LinearOperator):
         self.back = SR.SRPyCuda.CudaBackProjector(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
-    def _apply(self, projection, out):
+    def _apply(self, projection, volume):
         self.back.backProject(self.sourcePosition, self.detectorOrigin,
-                              self.pixelDirection, projection.data_ptr,
-                              out.data_ptr)
+                              self.pixelDirection, projection.ntuple.data_ptr,
+                              volume.ntuple.data_ptr)
 
 
 # Set geometry parameters
@@ -108,18 +109,16 @@ sourcePosition = -sourceAxisDistance * x0
 detectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
 pixelDirection = y0 * pixelSize
 
-dataSpace = fs.L2(sets.Interval(0, 1))
-dataRn = cs.CudaRn(nPixels)
-dataDisc = dd.uniform_discretization(dataSpace, dataRn)
+dataSpace = L2(Interval(0, 1))
+dataDisc = l2_uniform_discretization(dataSpace, nPixels, impl='cuda')
 
-reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
-reconRn = cs.CudaRn(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
+reconSpace = L2(Rectangle((0, 0), (1, 1)))
+reconDisc = l2_uniform_discretization(reconSpace, nVoxels, impl='cuda')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
 plt.imshow(phantom)
-phantomVec = reconDisc.element(phantom)
+phantomVec = reconDisc.element(phantom.flatten())
 
 projector = CudaProjection(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                            sourcePosition, detectorOrigin, pixelDirection,
@@ -135,5 +134,5 @@ backprojected = reconDisc.element()
 projector.adjoint.apply(result, backprojected)
 
 plt.figure()
-plt.imshow(backprojected[:].reshape(nVoxels))
+plt.imshow(backprojected.asarray().reshape(nVoxels))
 plt.show()

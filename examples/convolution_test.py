@@ -45,13 +45,13 @@ class Convolution(LinearOperator):
 
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
-                          else kernel.space.element(kernel.data.data[::-1]))
+                          else kernel.space.element(kernel.ntuple.data[::-1]))
         self.space = kernel.space
-        self.norm = float(np.sum(np.abs(self.kernel.data.data)))
+        self.norm = float(np.sum(np.abs(self.kernel.ntuple.data)))
 
     def _apply(self, rhs, out):
-        ndimage.convolve(rhs.data.data, self.kernel.data.data,
-                         output=out.data.data, mode='wrap')
+        ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
+                         output=out.ntuple.data, mode='wrap')
 
     @property
     def adjoint(self):

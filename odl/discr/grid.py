@@ -466,7 +466,7 @@ class TensorGrid(Set):
         Parameters
         ----------
 
-        sparse : boolean, optional
+        sparse : bool, optional
             If True, the grid is not 'fleshed out' to save memory.
 
         Returns

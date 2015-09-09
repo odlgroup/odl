@@ -69,6 +69,11 @@ target/
 *.pyperf
 *.psess
 
+# vim viles
+*.swp
+*.swo
+*~
+
 # Spyder project files
 .spyderproject
 .spyderworkspace

@@ -51,12 +51,13 @@ class CudaConvolution(LinearOperator):
         self.kernel = kernel
         self.adjkernel = (adjointkernel if adjointkernel is not None
                           else self.space.element(kernel[::-1]))
-        print(repr(self.kernel),repr(self.adjkernel))
-        self.norm = float(cuda.sum(cuda.abs(self.kernel.data)))
+#        print(repr(self.kernel),repr(self.adjkernel))
+        self.norm = float(cuda.sum(cuda.abs(self.kernel.ntuples.data)))
         print("INITIALIZED OPERATOR")
 
     def _apply(self, rhs, out):
-        odlpp_cuda.conv(rhs.data.data, self.kernel.data.data, out.data.data)
+        odlpp_cuda.conv(rhs.ntuple.data, self.kernel.ntuple.data,
+                        out.ntuple.data)
         print(out)
 
     @property
