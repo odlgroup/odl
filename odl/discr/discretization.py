@@ -218,31 +218,31 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Basically only a wrapper class for dspace's vector class."""
 
-        def __init__(self, space, dspace_data):
+        def __init__(self, space, ntuple):
             """Initialize a new instance."""
             if not isinstance(space, RawDiscretization):
                 raise TypeError('space {!r} not a `RawDiscretization` '
                                 'instance.'.format(space))
 
-            if not isinstance(dspace_data, space.dspace.Vector):
-                raise TypeError('data {!r} not an instance of `{}.Vector`.'
-                                ''.format(dspace_data,
+            if not isinstance(ntuple, space.dspace.Vector):
+                raise TypeError('n-tuple {!r} not an instance of `{}.Vector`.'
+                                ''.format(ntuple,
                                           space.dspace.__class__.__name__))
             super().__init__(space)
-            self._data = dspace_data
+            self._ntuple = ntuple
 
         @property
-        def data(self):
-            """Data representation of this vector."""
-            return self._data
+        def ntuple(self):
+            """Structure for data storage."""
+            return self._ntuple
 
         def copy(self):
             """Create an identical (deep) copy of this vector."""
-            return self.space.element(self.data.copy())
+            return self.space.element(self.ntuple.copy())
 
         def asarray(self):
             """Extract the data of this array as a numpy array."""
-            return self.data.asarray()
+            return self.ntuple.asarray()
 
         def equals(self, other):
             """Test if `other` is equal to this vector.
@@ -253,7 +253,8 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                 `True` if all entries of `other` are equal to this
                 vector's entries, `False` otherwise.
             """
-            return type(other) == type(self) and self.data.equals(other.data)
+            return (type(other) == type(self) and
+                    self.ntuple.equals(other.ntuple))
 
         def __getitem__(self, indices):
             """Access values of this vector.
@@ -268,7 +269,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             values : `dspace_type.Vector`
                 The value(s) at the index (indices)
             """
-            return self.data[indices]
+            return self.ntuple[indices]
 
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -277,7 +278,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
+            values : {scalar, array-like, `NtuplesBase.Vector`}
                 The value(s) that are to be assigned.
 
                 If `index` is an `int`, `value` must be single value.
@@ -287,9 +288,9 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                 or single value).
             """
             if isinstance(values, RawDiscretization.Vector):
-                self.data.__setitem__(indices, values.data)
+                self.ntuple.__setitem__(indices, values.ntuple)
             else:
-                self.data.__setitem__(indices, values)
+                self.ntuple.__setitem__(indices, values)
 
 
 class Discretization(with_metaclass(ABCMeta, RawDiscretization,
@@ -360,29 +361,29 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
 
     def _lincomb(self, z, a, x, b, y):
         """Raw linear combination."""
-        self.dspace._lincomb(z.data, a, x.data, b, y.data)
+        self.dspace._lincomb(z.ntuple, a, x.ntuple, b, y.ntuple)
 
     def _dist(self, x, y):
         """Raw distance between two vectors."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._dist(x.data, y.data)
+        return self.dspace._dist(x.ntuple, y.ntuple)
 
     def _norm(self, x):
         """Raw norm of a vector."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._norm(x.data)
+        return self.dspace._norm(x.ntuple)
 
     def _inner(self, x, y):
         """Raw inner product of two vectors."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._inner(x.data, y.data)
+        return self.dspace._inner(x.ntuple, y.ntuple)
 
     def _multiply(self, z, x, y):
         """Raw pointwise multiplication of two vectors."""
-        self.dspace._multiply(z.data, x.data, y.data)
+        self.dspace._multiply(z.ntuple, x.ntuple, y.ntuple)
 
     class Vector(RawDiscretization.Vector, FnBase.Vector):
 
