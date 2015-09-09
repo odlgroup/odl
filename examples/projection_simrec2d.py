@@ -109,5 +109,5 @@ projector = Projection(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
 result = dataDisc.element()
 projector.apply(phantomVec, result)
 
-plt.plot(result[:])
+plt.plot(result.asarray())
 plt.show()
