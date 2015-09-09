@@ -27,12 +27,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import odl.operator.operator as OP
-import odl.space.function as fs
 import odl.space.cuda as cs
 import odl.space.product as ps
 import odl.discr.discretization as dd
-import odl.space.set as sets
 import SimRec2DPy as SR
+from odl.space.domain import Rectangle, Cube
+from odl.discr.default import DiscreteL2, l2_uniform_discretization
+from odl.space.default import L2
 from odl.utility.testutils import Timer
 
 standard_library.install_aliases()
@@ -60,9 +61,9 @@ class CudaProjector3D(OP.LinearOperator):
         self.forward = SR.SRPyCuda.CudaForwardProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
-    def _apply(self, data, out):
+    def _apply(self, volume, projection):
         # Create projector
-        self.forward.setData(data.data_ptr)
+        self.forward.setData(volume.data.data_ptr)
 
         # Project all geometries
 
@@ -71,7 +72,7 @@ class CudaProjector3D(OP.LinearOperator):
 
             self.forward.project(geo.sourcePosition, geo.detectorOrigin,
                                  geo.pixelDirectionU, geo.pixelDirectionV,
-                                 out[i].data_ptr)
+                                 projection[i].data.data_ptr)
 
 
 # Set geometry parameters
@@ -111,28 +112,25 @@ for theta in np.linspace(0, pi, nProjection, endpoint=False):
         projPixelDirectionV))
 
 # Define the space of one projection
-projectionSpace = fs.L2(sets.Rectangle([0, 0], detectorSize))
-projectionRn = cs.CudaRn(nPixels.prod())
+projectionSpace = L2(Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn,
-                                           nPixels, 'F')
+projectionDisc = l2_uniform_discretization(projectionSpace, nPixels, impl='cuda')
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
 dataDisc = ps.powerspace(projectionDisc, nProjection)
 
 # Define the reconstruction space
-reconSpace = fs.L2(sets.Cube([0, 0, 0], volumeSize))
+reconSpace = L2(Cube([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconRn = cs.CudaRn(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels, 'F')
+reconDisc = l2_uniform_discretization(reconSpace, nVoxels, impl='cuda')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])
 phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
-phantomVec = reconDisc.element(phantom)
+phantomVec = reconDisc.element(phantom.flatten(order='F'))
 
 # Make the operator
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
@@ -146,7 +144,7 @@ with Timer("project"):
 plt.figure()
 for i in range(15):
     plt.subplot(3, 5, i+1)
-    plt.imshow(result[i].asarray().T, cmap='bone', origin='lower')
+    plt.imshow(result[i].asarray().reshape(nPixels, order='F').T, cmap='bone', origin='lower')
     plt.axis('off')
 
 back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize,
@@ -154,11 +152,12 @@ back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize,
 geo = geometries[0]
 vol = projector.domain.element()
 
-
 back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
-                 geo.pixelDirectionV, result[0].data_ptr, vol.data_ptr)
+                 geo.pixelDirectionV, result[0].data.data_ptr, vol.data.data_ptr)
+
+print(vol.asarray().min(), vol.asarray().max())
 
 plt.figure()
-plt.imshow(vol.asarray()[:, :, 200], cmap='bone')
+plt.imshow(vol.asarray().reshape(nVoxels, order='F')[:, :, 200], cmap='bone')
 
 plt.show()
