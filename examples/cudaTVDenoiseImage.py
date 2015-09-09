@@ -61,7 +61,7 @@ class ForwardDiff2D(LinearOperator):
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(
-            rhs.data.data, out[0].data.data, out[1].data.data,
+            rhs.ntuple.data, out[0].ntuple.data, out[1].ntuple.data,
             self.domain.grid.shape[0], self.domain.grid.shape[1])
 
     @property
@@ -82,7 +82,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d_adj(
-            rhs[0].data.data, rhs[1].data.data, out.data.data,
+            rhs[0].ntuple.data, rhs[1].ntuple.data, out.ntuple.data,
             self.range.grid.shape[0], self.range.grid.shape[1])
 
     @property

@@ -68,7 +68,7 @@ class Projector(OP.LinearOperator):
         # Create projector
         print("create")
         forward = SR.SRPyForwardProject.SimpleForwardProjector(
-            data.data.reshape(self.nVoxels), self.volumeOrigin,
+            ntuple.data.reshape(self.nVoxels), self.volumeOrigin,
             self.voxelSize, self.nPixels, self.stepSize)
         print("done")
         # Project all geometries

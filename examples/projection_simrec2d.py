@@ -54,7 +54,7 @@ class Projection(OP.LinearOperator):
 
     def _apply(self, volume, out):
         forward = SR.SRPyForwardProject.SimpleForwardProjector(
-            volume.data.data.reshape(self.volumeSize), self.volumeOrigin,
+            volume.ntuple.data.reshape(self.volumeSize), self.volumeOrigin,
             self.voxelSize, self.detectorSize, self.stepSize)
 
         result = forward.project(self.sourcePosition, self.detectorOrigin,

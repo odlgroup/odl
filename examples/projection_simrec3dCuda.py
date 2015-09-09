@@ -63,7 +63,7 @@ class CudaProjector3D(OP.LinearOperator):
 
     def _apply(self, volume, projection):
         # Create projector
-        self.forward.setData(volume.data.data_ptr)
+        self.forward.setData(volume.ntuple.data_ptr)
 
         # Project all geometries
 
@@ -72,7 +72,7 @@ class CudaProjector3D(OP.LinearOperator):
 
             self.forward.project(geo.sourcePosition, geo.detectorOrigin,
                                  geo.pixelDirectionU, geo.pixelDirectionV,
-                                 projection[i].data.data_ptr)
+                                 projection[i].ntuple.data_ptr)
 
 
 # Set geometry parameters
@@ -153,7 +153,7 @@ geo = geometries[0]
 vol = projector.domain.element()
 
 back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
-                 geo.pixelDirectionV, result[0].data.data_ptr, vol.data.data_ptr)
+                 geo.pixelDirectionV, result[0].ntuple.data_ptr, vol.ntuple.data_ptr)
 
 print(vol.asarray().min(), vol.asarray().max())
 

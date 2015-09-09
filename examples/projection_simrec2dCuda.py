@@ -53,9 +53,9 @@ class CudaProjection(OP.LinearOperator):
             sourcePosition, detectorOrigin, pixelDirection, range_, domain)
 
     def _apply(self, volume, projection):
-        self.forward.setData(volume.data.data_ptr)
+        self.forward.setData(volume.ntuple.data_ptr)
         self.forward.project(self.sourcePosition, self.detectorOrigin,
-                             self.pixelDirection, projection.data.data_ptr)
+                             self.pixelDirection, projection.ntuple.data_ptr)
 
     @property
     def adjoint(self):
@@ -76,8 +76,8 @@ class CudaBackProjector(OP.LinearOperator):
 
     def _apply(self, projection, volume):
         self.back.backProject(self.sourcePosition, self.detectorOrigin,
-                              self.pixelDirection, projection.data.data_ptr,
-                              volume.data.data_ptr)
+                              self.pixelDirection, projection.ntuple.data_ptr,
+                              volume.ntuple.data_ptr)
 
 
 # Set geometry parameters
