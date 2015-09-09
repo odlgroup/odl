@@ -28,10 +28,11 @@ import matplotlib.pyplot as plt
 
 from odl.operator.operator import *
 from odl.space.space import *
-from odl.space.set import Rectangle
+from odl.space.domain import Rectangle
 from odl.space.product import powerspace
 from odl.space.cartesian import *
-from odl.space.function import *
+from odl.space.default import L2
+from odl.discr.default import DiscreteL2, l2_uniform_discretization
 import odl.space.cuda as CS
 import odl.discr.discretization as DS
 import odlpp.odlpp_cuda as cuda
@@ -52,16 +53,16 @@ class ForwardDiff2D(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRn):
-            raise TypeError("space must be CudaPixelDiscretization")
+        if not isinstance(space.dspace, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = space
         self.range = powerspace(space, 2)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(
-            rhs.data, out[0].data, out[1].data,
-            self.domain.shape[0], self.domain.shape[1])
+            rhs.data.data, out[0].data.data, out[1].data.data,
+            self.domain.grid.shape[0], self.domain.grid.shape[1])
 
     @property
     def adjoint(self):
@@ -73,16 +74,16 @@ class ForwardDiff2DAdjoint(LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space, CS.CudaRn):
-            raise TypeError("space must be CudaPixelDiscretization")
+        if not isinstance(space.dspace, CS.CudaRn):
+            raise TypeError("space must be CudaRn")
 
         self.domain = powerspace(space, 2)
         self.range = space
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d_adj(
-            rhs[0].data, rhs[1].data, out.data,
-            self.range.shape[0], self.range.shape[1])
+            rhs[0].data.data, rhs[1].data.data, out.data.data,
+            self.range.grid.shape[0], self.range.grid.shape[1])
 
     @property
     def adjoint(self):
@@ -179,12 +180,12 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[i], tmp)
+            CS.sign(d[i].data, tmp.data)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[i], d[i])
-            CS.add_scalar(d[i], -1.0/la, d[i])
-            CS.max_vector_scalar(d[i], 0.0, d[i])
+            CS.abs(d[i].data, d[i].data)
+            CS.add_scalar(d[i].data, -1.0/la, d[i].data)
+            CS.max_vector_scalar(d[i].data, 0.0, d[i].data)
             d[i].multiply(d[i], tmp)
 
         # b = b + diff(x) - d
@@ -236,21 +237,23 @@ space = L2(I)
 n = 2000
 m = 2000
 
+# TODO make this work again
 # Underlying Rn space
-rn = CS.CudaRn(n*m)
+# rn = CS.CudaRn(n*m)
 # Example of using an vector pool to reduce allocation overhead
-rnpooled = makePooledSpace(rn, maxPoolSize=5)
+# rnpooled = makePooledSpace(rn, maxPoolSize=5)
 
 # Discretize
-d = DS.uniform_discretization(space, rnpooled, (n, m))
-x, y = d.points()
+d = l2_uniform_discretization(space, (n, m), impl='cuda')
+x, y = d.grid.meshgrid()
+
 data = utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5
-fun = d.element(data)
+fun = d.element(data.flatten())
 
 # Show input
 plt.figure()
-p = plt.imshow(fun[:].reshape(n, m), interpolation='nearest')
+p = plt.imshow(fun.asarray().reshape(n, m), interpolation='nearest')
 plt.set_cmap('bone')
 plt.axis('off')
 
@@ -262,7 +265,7 @@ with Timer("denoising time"):
 
 # Show result
 plt.figure()
-p = plt.imshow(result[:].reshape(n, m), interpolation='nearest')
+p = plt.imshow(result.asarray().reshape(n, m), interpolation='nearest')
 plt.set_cmap('bone')
 plt.axis('off')
 
