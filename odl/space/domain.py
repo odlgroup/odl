@@ -490,7 +490,7 @@ class IntervalProd(Set):
             The number of nodes per axis. For dimension >= 2, a tuple
             is required. All entries must be positive. Entries
             corresponding to degenerate axes must be equal to 1.
-        as_midp : boolean, optional
+        as_midp : bool, optional
             If True, the midpoints of an interval partition will be
             returned, which excludes the endpoints. Otherwise,
             equispaced nodes including the endpoints are generated.

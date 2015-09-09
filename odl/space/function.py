@@ -39,49 +39,7 @@ from odl.space.space import LinearSpace
 
 class FunctionSet(Set):
 
-    """A general set of functions with common domain and range.
-
-    Attributes
-    ----------
-
-    +----------+-----------+------------------------------------------+
-    |Name      |Type       |Description                               |
-    +==========+===========+==========================================+
-    |`domain`  |`Set`      |The domain of all functions in this set   |
-    +----------+-----------+------------------------------------------+
-    |`range`   |`Set`      |The range of all functions in this set    |
-    +----------+-----------+------------------------------------------+
-
-    Methods
-    -------
-
-    +-----------------+--------------------+--------------------------+
-    |Signature        |Return type         |Description               |
-    +=================+====================+==========================+
-    |`element(func)`  |`FunctionSet.Vector`|Create an element in this |
-    |                 |                    |`FunctionSet`.            |
-    +-----------------+--------------------+--------------------------+
-    |`equals(other)`  |`boolean`           |Test if `other` is equal  |
-    |                 |                    |to this `FunctionSet`.    |
-    +-----------------+--------------------+--------------------------+
-    |`contains(other)`|`boolean`           |Test if `other` is        |
-    |                 |                    |contained in this         |
-    |                 |                    |`FunctionSet`.            |
-    +-----------------+--------------------+--------------------------+
-
-    Magic methods
-    -------------
-
-    +----------------------+----------------+--------------------+
-    |Signature             |Provides syntax |Implementation      |
-    +======================+================+====================+
-    |`__eq__(other)`       |`self == other` |`equals(other)`     |
-    +----------------------+----------------+--------------------+
-    |`__ne__(other)`       |`self != other` |`not equals(other)` |
-    +----------------------+----------------+--------------------+
-    |`__contains__(other)` |`other in self` |`contains(other)`   |
-    +----------------------+----------------+--------------------+
-    """
+    """A general set of functions with common domain and range."""
 
     def __init__(self, dom, ran):
         """Initialize a new instance.
@@ -154,7 +112,7 @@ class FunctionSet(Set):
 
         Returns
         -------
-        equals : `boolean`
+        equals : `bool`
             `True` if `other` is a `FunctionSet` with same `domain`
             and `range`, `False` otherwise.
         """
@@ -167,7 +125,7 @@ class FunctionSet(Set):
 
         Returns
         -------
-        equals : `boolean`
+        equals : `bool`
             `True` if `other` is a `FunctionSet.Vector` whose `space`
             attribute equals this space, `False` otherwise.
         """
@@ -505,7 +463,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Returns
         -------
-        equals : `boolean`
+        equals : `bool`
             `True` if `other` is a `FunctionSpace` with same `domain`
             and `range`, `False` otherwise.
         """
