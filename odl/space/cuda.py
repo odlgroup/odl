@@ -614,6 +614,7 @@ def sign(inp, outp=None):
     if outp is None:
         outp = inp.space.element()
     cuda.sign(inp.data, outp.data)
+    return outp
 
 def add_scalar(inp, scal, outp=None):
     if outp is None:
