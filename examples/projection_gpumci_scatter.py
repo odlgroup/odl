@@ -60,14 +60,14 @@ class CudaSimpleMCProjector(OP.Operator):
         #Create projector
         mat = data.asarray()>0
         materials = cs.CudaFn(data.space.dim, np.uint8).element(mat.flatten(order='F'))
-        self.forward.setData(data.data.data_ptr, materials.data_ptr)
+        self.forward.setData(data.ntuple.data_ptr, materials.data_ptr)
 
         #Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
 
             with Timer("projecting"):
-                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i][0].data.data_ptr, out[i][1].data.data_ptr)
+                self.forward.project(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU, geo.pixelDirectionV, out[i][0].ntuple.data_ptr, out[i][1].ntuple.data_ptr)
 
 
 #Set geometry parameters

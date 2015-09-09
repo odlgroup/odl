@@ -61,7 +61,7 @@ class ForwardDiff2D(LinearOperator):
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(
-            rhs.data.data, out[0].data.data, out[1].data.data,
+            rhs.ntuple.data, out[0].ntuple.data, out[1].ntuple.data,
             self.domain.grid.shape[0], self.domain.grid.shape[1])
 
     @property
@@ -82,7 +82,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d_adj(
-            rhs[0].data.data, rhs[1].data.data, out.data.data,
+            rhs[0].ntuple.data, rhs[1].ntuple.data, out.ntuple.data,
             self.range.grid.shape[0], self.range.grid.shape[1])
 
     @property
@@ -180,12 +180,12 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[i].data, tmp.data)
+            CS.sign(d[i].ntuple, tmp.ntuple)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[i].data, d[i].data)
-            CS.add_scalar(d[i].data, -1.0/la, d[i].data)
-            CS.max_vector_scalar(d[i].data, 0.0, d[i].data)
+            CS.abs(d[i].ntuple, d[i].ntuple)
+            CS.add_scalar(d[i].ntuple, -1.0/la, d[i].ntuple)
+            CS.max_vector_scalar(d[i].ntuple, 0.0, d[i].ntuple)
             d[i].multiply(d[i], tmp)
 
         # b = b + diff(x) - d
