@@ -189,7 +189,7 @@ class CudaNtuples(NtuplesBase):
         @property
         def data_ptr(self):
             """A raw pointer to the data of this vector."""
-            return self._data.data_ptr()
+            return self.data.data_ptr()
 
         def equals(self, other):
             """Test if `other` is equal to this vector.

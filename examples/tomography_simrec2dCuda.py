@@ -65,7 +65,7 @@ class CudaProjector(OP.LinearOperator):
 
     def _apply(self, data, out):
         # Create projector
-        self.forward.setData(data.data_ptr)
+        self.forward.setData(ntuple.data_ptr)
 
         # Project all geometries
         for i in range(len(self.geometries)):
