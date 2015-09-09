@@ -272,6 +272,22 @@ class Integers(Set):
         """Test if `other` is an integer."""
         return isinstance(other, Integral)
 
+    def contains_set(self, other):
+        """Test if `other` is a subset of the real numbers
+
+        Returns
+        -------
+        contained : boolean
+            True if  other is `Integers`, false else.
+
+        Examples
+        --------
+        >>> Z = Integers()
+        >>> Z.contains_set(RealNumbers())
+        False
+        """
+        return isinstance(other, Integers)
+
     def element(self, inp=None):
         """Return an integer from `inp` or from scratch."""
         if inp is not None:
@@ -294,6 +310,24 @@ class RealNumbers(Set):
     def contains(self, other):
         """Test if `other` is a real number."""
         return isinstance(other, Real)
+
+    def contains_set(self, other):
+        """Test if `other` is a subset of the real numbers
+
+        Returns
+        -------
+        contained : boolean
+            True if  other is a `RealNumbers` or `Integers`
+            False else.
+
+        Examples
+        --------
+        >>> R = RealNumbers()
+        >>> R.contains_set(RealNumbers())
+        True
+        """
+        return (isinstance(other, RealNumbers) or
+                isinstance(other, Integers))
 
     def equals(self, other):
         """Test if `other` is a `RealNumbers` instance."""
@@ -321,6 +355,25 @@ class ComplexNumbers(Set):
     def contains(self, other):
         """Test if `other` is a complex number."""
         return isinstance(other, Complex)
+
+    def contains_set(self, other):
+        """Test if `other` is a subset of the complex numbers
+
+        Returns
+        -------
+        contained : boolean
+            True if  other is a `ComplexNumbers`, `RealNumbers`
+            or `Integers`, false else.
+
+        Examples
+        --------
+        >>> C = ComplexNumbers()
+        >>> C.contains_set(RealNumbers())
+        True
+        """
+        return (isinstance(other, ComplexNumbers) or
+                isinstance(other, RealNumbers) or
+                isinstance(other, Integers))
 
     def equals(self, other):
         """Test if `other` is a `ComplexNumbers` instance."""
