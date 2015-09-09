@@ -28,8 +28,11 @@ import numpy as np
 from odl.operator.operator import *
 from odl.space.space import *
 from odl.space.set import *
+from odl.space.domain import Interval
+from odl.space.default import L2
 from odl.space.cartesian import *
 from odl.space.function import *
+from odl.discr.default import DiscreteL2, l2_uniform_discretization
 import odl.space.cuda as CS
 import odl.discr.discretization as DS
 import odlpp.odlpp_cuda as cuda
@@ -44,14 +47,14 @@ class ForwardDiff(LinearOperator):
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space, CS.CudaRn):
+        if not isinstance(space.dspace, CS.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
         self.scale = scale
 
     def _apply(self, rhs, out):
-        cuda.forward_diff(rhs.data, out.data)
+        cuda.forward_diff(rhs.data.data, out.data.data)
         out *= self.scale
 
     @property
@@ -64,14 +67,14 @@ class ForwardDiffAdj(LinearOperator):
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space, CS.CudaRn):
+        if not isinstance(space.dspace, CS.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
         self.scale = scale
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_adj(rhs.data, out.data)
+        cuda.forward_diff_adj(rhs.data.data, out.data.data)
         out *= self.scale
 
     @property
@@ -80,8 +83,8 @@ class ForwardDiffAdj(LinearOperator):
 
 
 def denoise(x0, la, mu, iterations=1):
-    scale = (x0.space.dim - 1.0)/(x0.space.parent.domain.end[0] -
-                                x0.space.parent.domain.begin[0])
+    scale = (x0.space.dim - 1.0)/(x0.space.uspace.domain.end[0] -
+                                x0.space.uspace.domain.begin[0])
 
     diff = ForwardDiff(x0.space, scale)
 
@@ -113,12 +116,12 @@ def denoise(x0, la, mu, iterations=1):
         d -= b
 
         # sign = d/abs(d)
-        cuda.sign(d.data, sign.data)
+        cuda.sign(d.data.data, sign.data.data)
 
         #
-        cuda.abs(d.data, d.data)
-        cuda.add_scalar(d.data, -1.0/la, d.data)
-        cuda.max_vector_scalar(d.data, 0.0, d.data)
+        cuda.abs(d.data.data, d.data.data)
+        cuda.add_scalar(d.data.data, -1.0/la, d.data.data)
+        cuda.max_vector_scalar(d.data.data, 0.0, d.data.data)
         d *= sign
 
         # b = b - diff(x) + d
@@ -130,15 +133,14 @@ def denoise(x0, la, mu, iterations=1):
 
 # Continuous definition of problem
 I = Interval(0, 1)
-space = L2(I)
+cont_space = L2(I)
 
 # Complicated functions to check performance
 n = 1000
 
 # Discretization
-rn = CS.CudaRn(n)
-d = DS.uniform_discretization(space, rn)
-x = d.points()
+d = l2_uniform_discretization(cont_space, n, impl='cuda')
+x = d.grid.meshgrid()[0]
 fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))
 plt.plot(fun)
 
