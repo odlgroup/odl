@@ -27,10 +27,11 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import odl.operator.operator as OP
-import odl.space.function as fs
+from odl.space.default import L2
 import odl.space.cartesian as ds
 import odl.discr.discretization as dd
-import odl.space.set as sets
+from odl.space.domain import Interval, Rectangle
+from odl.discr.default import DiscreteL2, l2_uniform_discretization
 import SimRec2DPy as SR
 
 standard_library.install_aliases()
@@ -51,9 +52,9 @@ class Projection(OP.LinearOperator):
         self.domain = domain
         self.range = range_
 
-    def _apply(self, data, out):
+    def _apply(self, volume, out):
         forward = SR.SRPyForwardProject.SimpleForwardProjector(
-            data.data.reshape(self.volumeSize), self.volumeOrigin,
+            volume.data.data.reshape(self.volumeSize), self.volumeOrigin,
             self.voxelSize, self.detectorSize, self.stepSize)
 
         result = forward.project(self.sourcePosition, self.detectorOrigin,
@@ -91,17 +92,15 @@ detectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
 pixelDirection = y0 * pixelSize
 
 
-dataSpace = fs.L2(sets.Interval(0, 1))
-dataRn = ds.Rn(nPixels)
-dataDisc = dd.uniform_discretization(dataSpace, dataRn)
+dataSpace = L2(Interval(0, 1))
+dataDisc = l2_uniform_discretization(dataSpace, nPixels, impl='numpy')
 
-reconSpace = fs.L2(sets.Rectangle((0, 0), (1, 1)))
-reconRn = ds.Rn(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
+reconSpace = L2(Rectangle((0, 0), (1, 1)))
+reconDisc = l2_uniform_discretization(reconSpace, nVoxels, impl='numpy')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)
-phantomVec = reconDisc.element(phantom)
+phantomVec = reconDisc.element(phantom.flatten())
 
 projector = Projection(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                        sourcePosition, detectorOrigin, pixelDirection,
