@@ -243,8 +243,8 @@ class ProductSpace(LinearSpace):
         data = kwargs.pop('data', None)
         if data is None:
             if not args:  # No argument at all -> arbitrary vector
-                data = elements = [space.element(**kwargs)
-                                   for space in self.spaces]
+                data = [space.element(**kwargs)
+                        for space in self.spaces]
             else:
                 data = args
 
@@ -258,7 +258,7 @@ class ProductSpace(LinearSpace):
                 raise TypeError(errfmt('''
                 The spaces of all parts must correspond to this
                 space's parts'''))
-            elements = data
+            elements = list(data)
 
         # Use __class__ to allow subclassing
         return self.__class__.Vector(self, *elements)
@@ -363,10 +363,17 @@ class ProductSpace(LinearSpace):
         return self.spaces[index_or_slice]
 
     def __str__(self):
-        return _product_space_str(self.spaces)
+        if all(self.spaces[0] == space for space in self.spaces):
+            return '{' + str(spaces[0]) + '}^' + str(len(spaces))
+        else:
+            return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
-        return _product_space_repr(self.spaces)
+        if all(self.spaces[0] == space for space in self.spaces):
+            return 'powerspace(' + str(self.spaces[0]) + ', ' + str(len(self.spaces)) + ')'
+        else:
+            return ('productspace(' +
+                    ', '.join(repr(space) for space in spaces) + ')')
 
     class Vector(LinearSpace.Vector):
         def __init__(self, space, *args):
@@ -378,6 +385,9 @@ class ProductSpace(LinearSpace):
 
         def __getitem__(self, index):
             return self.parts[index]
+
+        def __setitem__(self, index, value):
+            self.parts[index] = value
 
         def __str__(self):
             return ('{' + ', '.join(str(part) for part in self.parts) +
