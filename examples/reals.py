@@ -5,6 +5,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.space.space import LinearSpace
+from odl.space.domain import RealNumbers
 
 """ An example of a very simple space, the space Rn
 """
@@ -35,14 +36,28 @@ class Reals(LinearSpace):
     def element(self, value=0):
         return Reals.Vector(self, value)
 
-    class Vector(HilbertSpace.Vector):
+    class Vector(LinearSpace.Vector):
         """Real vectors are floats
         """
 
         __val__ = None
         def __init__(self, space, v):
-            HilbertSpace.Vector.__init__(self, space)
+            LinearSpace.Vector.__init__(self, space)
             self.__val__ = v
 
         def __float__(self):
             return self.__val__.__float__()
+
+        def __str__(self):
+            return str(self.__val__)
+
+if __name__ == '__main__':
+    R = Reals()
+    x = R.element(5.0)
+    y = R.element(10.0) 
+    
+    print(x+y)
+    print(x*y)
+    print(x-y)
+    print(x)
+    print(y)
