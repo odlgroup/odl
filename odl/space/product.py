@@ -189,7 +189,7 @@ class ProductSpace(LinearSpace):
         """A tuple containing all spaces."""
         return self._spaces
 
-    def element(self, *args, **kwargs):
+    def element(self, inp=None):
         """Create an element in the product space.
 
         Parameters
@@ -233,32 +233,24 @@ class ProductSpace(LinearSpace):
         >>> prod = ProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
-        >>> x = prod.element(x2, x3)
+        >>> x = prod.element([x2, x3])
         >>> print(x)
         {[1.0, 2.0], [1.0, 2.0, 3.0]}
         """
         # TODO: update this function!
 
         # If data is given as keyword arg, prefer it over arg list
-        data = kwargs.pop('data', None)
-        if data is None:
-            if not args:  # No argument at all -> arbitrary vector
-                data = [space.element(**kwargs)
-                        for space in self.spaces]
-            else:
-                data = args
+        if inp is None:
+            inp = [space.element() for space in self.spaces]
 
-        if not all(isinstance(v, LinearSpace.Vector) for v in data):
+        if all(isinstance(v, LinearSpace.Vector) for v in inp) and \
+           all(part.space == space
+                   for part, space in zip(inp, self.spaces)):
+            elements = list(inp)
+        else:
             # Delegate constructors
-            elements = [space.element(arg, **kwargs)
-                        for arg, space in zip(data, self.spaces)]
-        else:  # Construct from existing tuple
-            if any(part.space != space
-                   for part, space in zip(data, self.spaces)):
-                raise TypeError(errfmt('''
-                The spaces of all parts must correspond to this
-                space's parts'''))
-            elements = list(data)
+            elements = [space.element(arg)
+                        for arg, space in zip(inp, self.spaces)]
 
         # Use __class__ to allow subclassing
         return self.__class__.Vector(self, *elements)
@@ -290,7 +282,7 @@ class ProductSpace(LinearSpace):
         >>> zero_3 == zero_2x3[1]
         True
         """
-        return self.element(data=[space.zero() for space in self.spaces])
+        return self.element([space.zero() for space in self.spaces])
 
     def _lincomb(self, z, a, x, b, y):
         # pylint: disable=protected-access
