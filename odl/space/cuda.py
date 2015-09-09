@@ -604,25 +604,34 @@ class CudaRn(CudaFn):
 
 # Methods
 # TODO: move
-def abs(inp, outp):
+def abs(inp, outp=None):
+    if outp is None:
+        outp = inp.space.element()
     cuda.abs(inp.data, outp.data)
+    return outp
 
-
-def sign(inp, outp):
+def sign(inp, outp=None):
+    if outp is None:
+        outp = inp.space.element()
     cuda.sign(inp.data, outp.data)
 
-
-def add_scalar(inp, scal, outp):
+def add_scalar(inp, scal, outp=None):
+    if outp is None:
+        outp = inp.space.element()
     cuda.add_scalar(inp.data, scal, outp.data)
+    return outp
 
-
-def max_vector_scalar(inp, scal, outp):
+def max_vector_scalar(inp, scal, outp=None):
+    if outp is None:
+        outp = inp.space.element()
     cuda.max_vector_scalar(inp.data, scal, outp.data)
+    return outp
 
-
-def max_vector_vector(inp1, inp2, outp):
+def max_vector_vector(inp1, inp2, outp=None):
+    if outp is None:
+        outp = inp.space.element()
     cuda.max_vector_vector(inp1.data, inp2.data, outp.data)
-
+    return outp
 
 def sum(inp):
     return cuda.sum(inp.data)

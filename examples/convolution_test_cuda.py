@@ -29,7 +29,8 @@ import matplotlib.pyplot as plt
 
 # ODL
 from odl.discr.default import DiscreteL2, l2_uniform_discretization
-import odlpp.odlpp_cuda as cuda
+import odlpp.odlpp_cuda as odlpp_cuda
+import odl.space.cuda as cuda
 from odl.space.default import L2
 from odl.space.domain import Interval
 from odl.operator.operator import LinearOperator
@@ -49,11 +50,14 @@ class CudaConvolution(LinearOperator):
         self.space = kernel.space
         self.kernel = kernel
         self.adjkernel = (adjointkernel if adjointkernel is not None
-                          else self.space.element(kernel.data.data[::-1]))
-        self.norm = float(cuda.sum(cuda.abs(self.kernel.data.data)))
+                          else self.space.element(kernel[::-1]))
+        print(repr(self.kernel),repr(self.adjkernel))
+        self.norm = float(cuda.sum(cuda.abs(self.kernel.data)))
+        print("INITIALIZED OPERATOR")
 
     def _apply(self, rhs, out):
-        cuda.conv(rhs.data.data, self.kernel.data.data, out.data.data)
+        odlpp_cuda.conv(rhs.data.data, self.kernel.data.data, out.data.data)
+        print(out)
 
     @property
     def adjoint(self):
@@ -79,7 +83,7 @@ cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = l2_uniform_discretization(cont_space, 5000, impl='cuda')
+discr_space = l2_uniform_discretization(cont_space, 50, impl='cuda')
 kernel = discr_space.element(cont_kernel)
 data = discr_space.element(cont_data)
 
@@ -87,7 +91,7 @@ data = discr_space.element(cont_data)
 conv = CudaConvolution(kernel)
 
 # Dampening parameter for landweber
-iterations = 100
+iterations = 1
 omega = 1/conv.opnorm()**2
 
 # Display partial
