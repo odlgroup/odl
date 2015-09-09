@@ -49,12 +49,11 @@ from future.utils import with_metaclass
 from future import standard_library
 standard_library.install_aliases()
 
-# External imports
+# External
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
-import numpy as np
 
-# ODL imports
+# ODL
 
 
 class Set(with_metaclass(ABCMeta, object)):
@@ -76,7 +75,7 @@ class Set(with_metaclass(ABCMeta, object)):
             The object to be tested for membership.
 
     **Returns:**
-        equals : `boolean`
+        equals : `bool`
             `True` if `other` is a member of this set, `False`
             otherwise.
 
@@ -91,7 +90,7 @@ class Set(with_metaclass(ABCMeta, object)):
             The object to be tested for equality.
 
     **Returns:**
-        equals : `boolean`
+        equals : `bool`
             `True` if both sets are of the same type and contain the
             same elements, `False` otherwise.
 
@@ -129,10 +128,10 @@ class Set(with_metaclass(ABCMeta, object)):
 
     def contains_set(self, other):
         """Test if `other` is a subset of this set.
-        
-        Implementing this method is optional
+
+        Implementing this method is optional.
         """
-        raise NotImplementedError("'contains_set' method not implemented")
+        raise NotImplementedError("'contains_set' method not implemented.")
 
     @abstractmethod
     def equals(self, other):
@@ -140,10 +139,10 @@ class Set(with_metaclass(ABCMeta, object)):
 
     def element(self, inp=None):
         """Return an element from `inp` or from scratch.
-        
+
         Implementing this method is optional.
         """
-        raise NotImplementedError("'element' method not implemented")
+        raise NotImplementedError("'element' method not implemented.")
 
     # Default implemenations
     def __eq__(self, other):
@@ -160,6 +159,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
 
 class EmptySet(Set):
+
     """The empty set.
 
     `None` is considered as "no element", i.e.
@@ -169,6 +169,10 @@ class EmptySet(Set):
     def contains(self, other):
         """Test if `other` is `None`."""
         return other is None
+
+    def contains_set(self, other):
+        """Return `True` for the empty set, otherwise `False`."""
+        return isinstance(other, EmptySet)
 
     def equals(self, other):
         """Test if `other` is an `EmptySet` instance."""
@@ -188,7 +192,8 @@ class EmptySet(Set):
 
 
 class UniversalSet(Set):
-    """The set of all sets.
+
+    """The set of all objects.
 
     Forget about set theory for a moment :-).
     """
@@ -196,6 +201,10 @@ class UniversalSet(Set):
     def contains(self, other):
         """Return `True`."""
         return True
+
+    def contains_set(self, other):
+        """Return `True` for any set."""
+        return isinstance(other, Set)
 
     def equals(self, other):
         """Test if `other` is a `UniversalSet` instance."""
@@ -215,6 +224,7 @@ class UniversalSet(Set):
 
 
 class Strings(Set):
+
     """The set of fixed-length (unicode) strings."""
 
     def __init__(self, length):
@@ -262,6 +272,7 @@ class Strings(Set):
 
 
 class Integers(Set):
+
     """The set of integers."""
 
     def equals(self, other):
@@ -277,8 +288,8 @@ class Integers(Set):
 
         Returns
         -------
-        contained : boolean
-            True if  other is `Integers`, false else.
+        contained : bool
+            `True` if  other is `Integers`, `False` otherwise.
 
         Examples
         --------
@@ -305,6 +316,7 @@ class Integers(Set):
 
 
 class RealNumbers(Set):
+
     """The set of real numbers."""
 
     def contains(self, other):
@@ -350,6 +362,7 @@ class RealNumbers(Set):
 
 
 class ComplexNumbers(Set):
+
     """The set of complex numbers."""
 
     def contains(self, other):
@@ -396,6 +409,7 @@ class ComplexNumbers(Set):
 
 
 class CartesianProduct(Set):
+
     """The Cartesian product of `n` sets.
 
     The elements of this set are `n`-tuples where the i-th entry

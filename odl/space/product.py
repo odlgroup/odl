@@ -328,7 +328,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        equal : boolean
+        equals : bool
             `True` if `other` is a ProductSpace instance, has
             the same length and the same factors. `False` otherwise.
 
