@@ -35,23 +35,6 @@ from odl.space.space import LinearSpace
 from odl.utility.utility import errfmt
 
 
-# TODO: adapt product spaces to support function spaces
-
-def _product_space_str(spaces):
-    if all(spaces[0] == space for space in spaces):
-        return '{' + str(spaces[0]) + '}^' + str(len(spaces))
-    else:
-        return ' x '.join(str(space) for space in spaces)
-
-
-def _product_space_repr(spaces):
-    if all(spaces[0] == space for space in spaces):
-        return 'powerspace(' + str(spaces[0]) + ', ' + str(len(spaces)) + ')'
-    else:
-        return ('productspace(' +
-                ', '.join(repr(space) for space in spaces) + ')')
-
-
 def _prod_inner_sum_not_defined(x):
     raise NotImplementedError("Inner product not defined with custom product norm")
 
@@ -356,7 +339,7 @@ class ProductSpace(LinearSpace):
 
     def __str__(self):
         if all(self.spaces[0] == space for space in self.spaces):
-            return '{' + str(spaces[0]) + '}^' + str(len(spaces))
+            return '{' + str(spaces[0]) + '}^' + str(len(self.spaces))
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
@@ -365,7 +348,7 @@ class ProductSpace(LinearSpace):
             return 'powerspace(' + str(self.spaces[0]) + ', ' + str(len(self.spaces)) + ')'
         else:
             return ('productspace(' +
-                    ', '.join(repr(space) for space in spaces) + ')')
+                    ', '.join(repr(space) for space in self.spaces) + ')')
 
     class Vector(LinearSpace.Vector):
         def __init__(self, space, *args):
