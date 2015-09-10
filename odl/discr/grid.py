@@ -39,7 +39,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, super, zip
+from builtins import range, super, str, zip
 
 # External module imports
 import numpy as np
@@ -47,7 +47,7 @@ import numpy as np
 # ODL imports
 from odl.space.domain import IntervalProd
 from odl.space.set import Set, Integers
-from odl.utility.utility import array1d_repr
+from odl.utility.utility import array1d_repr, array1d_str
 
 
 __all__ = ('TensorGrid', 'RegularGrid')
@@ -631,7 +631,8 @@ class TensorGrid(Set):
 
     def __str__(self):
         """str(self) implementation."""
-        return ' x '.join(array1d_repr(vec) for vec in self.coord_vectors)
+        grid_str = ' x '.join(array1d_str(vec) for vec in self.coord_vectors)
+        return 'grid {}'.format(grid_str)
 
 
 class RegularGrid(TensorGrid):
@@ -1002,10 +1003,6 @@ class RegularGrid(TensorGrid):
         return 'RegularGrid({}, {}, {})'.format(list(self.shape),
                                                 list(self.center),
                                                 list(self.stride))
-
-    def __str__(self):
-        """g.__str__() <==> str(g)."""
-        return self.__repr__()
 
 
 if __name__ == '__main__':
