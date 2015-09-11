@@ -93,6 +93,15 @@ class DiscreteL2(Discretization):
         """Interpolation type of this discretization."""
         return self._interp
 
+    def equals(self, other):
+        """Check if `other` is the same L2 discretization."""
+        return (isinstance(other, DiscreteL2) and
+                self.uspace == other.uspace and
+                self.dspace == other.dspace and
+                self.grid == other.grid and
+                self.interp == other.interp and
+                self.order == other.order)
+
     def __repr__(self):
         """l2.__repr__() <==> repr(l2)."""
         arg_fstr = '''
@@ -107,6 +116,11 @@ class DiscreteL2(Discretization):
         return 'DiscreteL2({})'.format(arg_fstr.format(
             self.uspace, self.grid, self.dspace, interp=self.interp,
             order=self.order))
+
+    def __str__(self):
+        """l2.__str__() <==> str(l2)."""
+        # TODO: come up with something better
+        return self.__repr__()
 
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
