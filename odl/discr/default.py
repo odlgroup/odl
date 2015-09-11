@@ -95,18 +95,35 @@ class DiscreteL2(Discretization):
 
     def __repr__(self):
         """l2.__repr__() <==> repr(l2)."""
-        arg_fstr = '''
+        # Check if the factory repr can be used
+        if hasattr(self, '_simple_init') and self._simple_init:
+            arg_fstr = '{!r}, {!r}'
+            if self.interp != 'nearest':
+                arg_fstr += ', interp={interp!r}'
+            if self._impl != 'numpy':
+                arg_fstr += ', impl={impl!r}'
+            if self.order != 'C':
+                arg_fstr += ', order={order!r}'
+            return 'l2_uniform_discretization({})'.format(arg_fstr.format(
+                self.uspace, self.grid.shape, interp=self.interp,
+                impl=self._impl, order=self.order))
+        else:
+            arg_fstr = '''
     {!r},
     {!r},
     {!r}'''
-        if self.interp != 'nearest':
-            arg_fstr += ', interp={interp!r}'
-        if self.order != 'C':
-            arg_fstr += ', order={order!r}'
+            if self.interp != 'nearest':
+                arg_fstr += ', interp={interp!r}'
+            if self.order != 'C':
+                arg_fstr += ', order={order!r}'
 
-        return 'DiscreteL2({})'.format(arg_fstr.format(
-            self.uspace, self.grid, self.dspace, interp=self.interp,
-            order=self.order))
+            return 'DiscreteL2({})'.format(arg_fstr.format(
+                self.uspace, self.grid, self.dspace, interp=self.interp,
+                order=self.order))
+
+    def __str__(self):
+        """l2.__str__() <==> str(l2)."""
+        return self.__repr__()
 
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
@@ -161,4 +178,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     order = kwargs.pop('order', 'C')
 
-    return DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
+    discr = DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
+    discr._simple_init = True
+    discr._impl = impl
+    return discr

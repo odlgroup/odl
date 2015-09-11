@@ -520,11 +520,11 @@ class TensorGridTestMethods(ODLTestCase):
         scalar = 0.5
 
         grid = TensorGrid(vec1, scalar, vec2)
-        grid_string = '[0.0, 1.0] x [0.5] x [-1.0, 0.0, 2.0]'
+        grid_string = 'grid [0.0, 1.0] x [0.5] x [-1.0, 0.0, 2.0]'
         self.assertEquals(str(grid), grid_string)
 
         grid = TensorGrid(scalar, long_vec)
-        grid_string = '[0.5] x [0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]'
+        grid_string = 'grid [0.5] x [0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]'
         self.assertEquals(str(grid), grid_string)
 
 

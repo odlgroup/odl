@@ -81,7 +81,7 @@ class TensorGrid(Set):
         >>> g
         TensorGrid([1.0, 2.0, 5.0], [-2.0, 1.5, 2.0])
         >>> print(g)
-        [1.0, 2.0, 5.0] x [-2.0, 1.5, 2.0]
+        grid [1.0, 2.0, 5.0] x [-2.0, 1.5, 2.0]
         >>> g.dim  # dimension = number of axes
         2
         >>> g.shape  # points per axis

@@ -108,6 +108,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                 self.range == other.range and
                 self.grid == other.grid and
                 self.order == other.order)
+
     @property
     def domain(self):
         """The operator domain."""
