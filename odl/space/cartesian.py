@@ -994,21 +994,19 @@ def _lincomb(z, a, x, b, y, dtype):
                 axpy(x.data, z.data, len(z), a)
 
 
-def _dist(x, y):
-    # TODO: optimize
-    return np.linalg.norm(x.data-y.data)
+def _dist_not_impl(x, y):
+    raise NotImplementedError('no distance function provided.')
 
 
-def _norm(x):
-    # TODO: optimize
-    return np.linalg.norm(x.data)
+def _norm_not_impl(x):
+    raise NotImplementedError('no norm function provided.')
 
 
-def _inner(x, y):
-    # TODO: optimize
-    return np.inner(x.data, y.data)
+def _inner_not_impl(x, y):
+    raise NotImplementedError('no inner product function provided.')
 
 
+# TODO: optimize?
 def _dist_default(x, y):
     return (x-y).norm()
 
@@ -1018,7 +1016,7 @@ def _norm_default(x):
 
 
 def _inner_default(x, y):
-    raise NotImplementedError("Inner not implemented in this space")
+    return np.vdot(y.data, x.data)
 
 
 class Fn(FnBase, Ntuples):
@@ -1085,21 +1083,43 @@ class Fn(FnBase, Ntuples):
         """
         super().__init__(dim, dtype)
 
-        dist = kwargs.get('dist', _dist_default)
+        dist = kwargs.get('dist', None)
+        norm = kwargs.get('norm', None)
+        inner = kwargs.get('inner', None)
+
+        if dist is not None:
+            if norm is not None:
+                raise ValueError('custom norm cannot be combined with '
+                                 'custom distance.')
+            if inner is not None:
+                raise ValueError('custom inner product cannot be combined '
+                                 'with custom distance.')
+            norm = _norm_not_impl
+            inner = _inner_not_impl
+        elif norm is not None:
+            if inner is not None:
+                raise ValueError('custom inner product cannot be combined '
+                                 'with custom norm.')
+            inner = _inner_not_impl
+            dist = _dist_default
+        elif inner is not None:
+            dist = _dist_default
+            norm = _norm_default
+        else:
+            dist = _dist_default
+            norm = _norm_default
+            inner = _inner_default
+
         if not callable(dist):
             raise TypeError('distance function {!r} not callable.'
                             ''.format(dist))
-        self._dist_impl = dist
-
-        norm = kwargs.get('norm', _norm_default)
         if not callable(norm):
             raise TypeError('norm function {!r} not callable.'.format(norm))
-        self._norm_impl = norm
-
-        inner = kwargs.get('inner', _inner_default)
         if not callable(inner):
             raise TypeError('inner product function {!r} not callable.'
                             ''.format(inner))
+        self._norm_impl = norm
+        self._dist_impl = dist
         self._inner_impl = inner
 
     def _lincomb(self, z, a, x, b, y):
@@ -1296,7 +1316,8 @@ class Fn(FnBase, Ntuples):
         >>> c3 == c3_same  # equivalent
         True
 
-        Different `dist` functions result in different spaces:
+        Different `dist` functions result in different spaces - the
+        same applies for `norm` and `inner`:
 
         >>> dist1 = partial(dist, ord=1)
         >>> c3_1 = Cn(3, dist=dist1)
@@ -1311,8 +1332,19 @@ class Fn(FnBase, Ntuples):
         >>> c3_lambda2 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
         >>> c3_lambda1.equals(c3_lambda2)
         False
+
+        An ``Fn`` space with the same data type is considered equal:
+
+        >>> c3 = Cn(3)
+        >>> f3_cdouble = Fn(3, dtype='complex128')
+        >>> c3.equals(f3_cdouble)
+        True
+        >>> c3 == f3_cdouble
+        True
         """
-        return (super().equals(other) and
+        return (isinstance(other, Fn) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
                 self.field == other.field and
                 self._dist_impl == other._dist_impl and
                 self._norm_impl == other._norm_impl and
@@ -1356,10 +1388,10 @@ class Cn(Fn):
 
         Only complex floating-point data types are allowed.
         """
-        # TODO: remove inner if norm or dist is provided
-        dist = kwargs.pop('dist', _dist)
-        norm = kwargs.pop('norm', _norm)
-        inner = kwargs.pop('inner', _inner)
+        dist = kwargs.pop('dist', None)
+        norm = kwargs.pop('norm', None)
+        inner = kwargs.pop('inner', None)
+
         super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
@@ -1367,46 +1399,6 @@ class Cn(Fn):
             raise TypeError('data type {} not a complex floating-point type.'
                             ''.format(dtype))
         self._real_dtype = _type_map_c2r[self._dtype]
-
-    def equals(self, other):
-        """Test if `other` is equal to this space.
-
-        Returns
-        -------
-        equals : `bool`
-            `True` if `other` is an instance of this space's type
-            with the same `dim` and `dtype`, otherwise `False`.
-
-        Examples
-        --------
-        >>> c3 = Cn(3, dtype='complex128')  # default
-        >>> c3.equals(c3)
-        True
-        >>> c3.equals(Cn(3))
-        True
-
-        Data types make a difference:
-
-        >>> c3_csingle = Cn(3, dtype='complex64')
-        >>> c3.equals(c3_csingle)
-        False
-
-        An ``Fn`` space with the same data type is considered equal:
-
-        >>> f3_cdouble = Fn(3, dtype='complex128')
-        >>> c3.equals(f3_cdouble)
-        True
-        >>> c3 == f3_cdouble and c3 != c3_csingle
-        True
-        """
-        # In contrast to the ancestor's check, allow also `Fn`
-        return (isinstance(other, Fn) and
-                self.dim == other.dim and
-                self.dtype == other.dtype and
-                self.field == other.field and
-                self._dist_impl == other._dist_impl and
-                self._norm_impl == other._norm_impl and
-                self._inner_impl == other._inner_impl)
 
     @property
     def real_dtype(self):
@@ -1563,10 +1555,10 @@ class Rn(Fn):
 
         Only real floating-point types are allowed.
         """
-        # TODO: remove inner if norm or dist is provided
-        dist = kwargs.pop('dist', _dist)
-        norm = kwargs.pop('norm', _norm)
-        inner = kwargs.pop('inner', _inner)
+        dist = kwargs.pop('dist', None)
+        norm = kwargs.pop('norm', None)
+        inner = kwargs.pop('inner', None)
+
         super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
