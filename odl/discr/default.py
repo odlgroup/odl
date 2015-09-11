@@ -29,6 +29,7 @@ from builtins import super, str
 # ODL
 from odl.discr.discretization import Discretization
 from odl.discr.discretization import dspace_type
+from odl.discr.grid import RegularGrid
 from odl.discr.operators import GridCollocation, NearestInterpolation
 from odl.space.default import L2
 from odl.space.domain import IntervalProd
@@ -96,17 +97,24 @@ class DiscreteL2(Discretization):
     def __repr__(self):
         """l2.__repr__() <==> repr(l2)."""
         # Check if the factory repr can be used
-        if hasattr(self, '_simple_init') and self._simple_init:
+        if (self.uspace.domain.uniform_sampling(
+                self.grid.shape, as_midp=True) == self.grid):
+            if dspace_type(self.uspace, 'numpy') == self.dspace_type:
+                impl = 'numpy'
+            elif dspace_type(self.uspace, 'cuda') == self.dspace_type:
+                impl = 'cuda'
+            else:  # This should never happen
+                raise RuntimeError('unable to determine data space impl.')
             arg_fstr = '{!r}, {!r}'
             if self.interp != 'nearest':
                 arg_fstr += ', interp={interp!r}'
-            if self._impl != 'numpy':
+            if impl != 'numpy':
                 arg_fstr += ', impl={impl!r}'
             if self.order != 'C':
                 arg_fstr += ', order={order!r}'
             return 'l2_uniform_discretization({})'.format(arg_fstr.format(
                 self.uspace, self.grid.shape, interp=self.interp,
-                impl=self._impl, order=self.order))
+                impl=impl, order=self.order))
         else:
             arg_fstr = '''
     {!r},
@@ -178,7 +186,4 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     order = kwargs.pop('order', 'C')
 
-    discr = DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
-    discr._simple_init = True
-    discr._impl = impl
-    return discr
+    return DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
