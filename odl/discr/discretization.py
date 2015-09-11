@@ -206,7 +206,9 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             `dspace.element(inp)` or
             `restriction(uspace.element(inp))`, tried in this order.
         """
-        if inp in self.dspace:
+        if inp is None:
+            return self.Vector(self, self.dspace.element())
+        elif inp in self.dspace:
             return self.Vector(self, inp)
         elif inp in self.uspace:
             return self.Vector(
