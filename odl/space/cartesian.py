@@ -606,7 +606,7 @@ class Ntuples(NtuplesBase):
 
                 return self.Vector(self, arr)
             else:
-                raise TypeError("Cannot provide both inp and data_ptr")
+                raise ValueError('Cannot provide both `inp` and `data_ptr`')
 
     class Vector(NtuplesBase.Vector):
 
