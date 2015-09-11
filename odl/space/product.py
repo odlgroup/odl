@@ -339,13 +339,13 @@ class ProductSpace(LinearSpace):
 
     def __str__(self):
         if all(self.spaces[0] == space for space in self.spaces):
-            return '{' + str(spaces[0]) + '}^' + str(len(self.spaces))
+            return '{' + str(self.spaces[0]) + '}^' + str(len(self.spaces))
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
         if all(self.spaces[0] == space for space in self.spaces):
-            return 'powerspace(' + str(self.spaces[0]) + ', ' + str(len(self.spaces)) + ')'
+            return 'powerspace(' + repr(self.spaces[0]) + ', ' + str(len(self.spaces)) + ')'
         else:
             return ('productspace(' +
                     ', '.join(repr(space) for space in self.spaces) + ')')
@@ -380,7 +380,7 @@ def productspace(*spaces, **kwargs):
     are HilbertSpace instances, a HilbertProductSpace instance is
     returned.
 
-    Parameters
+    Parameteestrs
     ----------
     spaces : <Which>Space instances
         <Which> is either Hilbert, Normed, Metric or Linear
