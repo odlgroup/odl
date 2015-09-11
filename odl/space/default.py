@@ -46,10 +46,6 @@ class L2(FunctionSpace):
         raise NotImplementedError('inner product not computable in the'
                                   'non-discretized space {}.'.format(self))
 
-    def equals(self, other):
-        """Test if `other` is equal to this space."""
-        return isinstance(other, L2) and super().equals(other)
-
     def discretize(self, grid, interp='nearest', **kwargs):
         """Discretize the space with an interpolation dictionary.
 

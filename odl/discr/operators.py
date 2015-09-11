@@ -102,6 +102,12 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         self._grid = grid
         self._order = order
 
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.domain == other.domain and
+                self.range == other.range and
+                self.grid == other.grid and
+                self.order == other.order)
     @property
     def domain(self):
         """The operator domain."""
@@ -204,6 +210,7 @@ class RawGridCollocation(FunctionSetMapping):
             raise TypeError('domain {} of the function set is not an '
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
+
 
     # TODO: Implement _apply()
 
