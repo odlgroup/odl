@@ -1016,6 +1016,7 @@ def _norm_default(x):
 
 
 def _inner_default(x, y):
+    # y as first argument because we want linearity in x
     return np.vdot(y.data, x.data)
 
 
