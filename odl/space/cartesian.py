@@ -394,7 +394,8 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         >>> int_3 != int_4
         True
         """
-        return (type(self) == type(other) and
+        return (isinstance(other, type(self)) and
+                isinstance(self, type(other)) and
                 self.dim == other.dim and
                 self.dtype == other.dtype)
 
@@ -1312,6 +1313,7 @@ class Fn(FnBase, Ntuples):
         False
         """
         return (super().equals(other) and
+                self.field == other.field and
                 self._dist_impl == other._dist_impl and
                 self._norm_impl == other._norm_impl and
                 self._inner_impl == other._inner_impl)
@@ -1365,6 +1367,46 @@ class Cn(Fn):
             raise TypeError('data type {} not a complex floating-point type.'
                             ''.format(dtype))
         self._real_dtype = _type_map_c2r[self._dtype]
+
+    def equals(self, other):
+        """Test if `other` is equal to this space.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is an instance of this space's type
+            with the same `dim` and `dtype`, otherwise `False`.
+
+        Examples
+        --------
+        >>> c3 = Cn(3, dtype='complex128')  # default
+        >>> c3.equals(c3)
+        True
+        >>> c3.equals(Cn(3))
+        True
+
+        Data types make a difference:
+
+        >>> c3_csingle = Cn(3, dtype='complex64')
+        >>> c3.equals(c3_csingle)
+        False
+
+        An ``Fn`` space with the same data type is considered equal:
+
+        >>> f3_cdouble = Fn(3, dtype='complex128')
+        >>> c3.equals(f3_cdouble)
+        True
+        >>> c3 == f3_cdouble and c3 != c3_csingle
+        True
+        """
+        # In contrast to the ancestor's check, allow also `Fn`
+        return (isinstance(other, Fn) and
+                self.dim == other.dim and
+                self.dtype == other.dtype and
+                self.field == other.field and
+                self._dist_impl == other._dist_impl and
+                self._norm_impl == other._norm_impl and
+                self._inner_impl == other._inner_impl)
 
     @property
     def real_dtype(self):
