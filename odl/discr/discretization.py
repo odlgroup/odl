@@ -25,10 +25,11 @@ standard_library.install_aliases()
 from builtins import super
 from future.utils import with_metaclass
 
-# External module imports
+# External
 from abc import ABCMeta
+import numpy as np
 
-# ODL imports
+# ODL
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import NtuplesBase, FnBase, Ntuples, Rn, Cn
 from odl.space.set import Set, RealNumbers, ComplexNumbers
@@ -66,7 +67,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
     **extension**.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None):
+    def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -74,20 +75,25 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Parameters
         ----------
-        uspace : `Set`
+        uspace : ``Set``
             The undiscretized (abstract) set to be discretized
-        dspace : `NtuplesBase`
+        dspace : ``NtuplesBase``
             Data space providing containers for the values of a
             discretized object
-        restr : `Operator`, optional
+        restr : ``Operator``, optional
             Operator mapping a `uspace` element to a `dspace` element.
-            Must satisfy `restr.domain == uspace` and
-            `restr.range == dspace`.
-        ext : `Operator`, optional
+            Must satisfy `restr.domain == uspace`,
+            `restr.range == dspace` and `restr.order == order`.
+        ext : ``Operator``, optional
             Operator mapping a `dspace` element to a `uspace` element.
-            Must satisfy `ext.domain == dspace` and
-            `ext.range == uspace`.
-        """
+            Must satisfy `ext.domain == dspace`,
+            `ext.range == uspace` and `ext.order == order`.
+        kwargs : {'order'}
+            'order' : {'C', 'F'}, optional  (Default: 'C')
+                Ordering of the values in the flat data arrays. 'C'
+                means the first grid axis varies fastest, the last most
+                slowly, 'F' vice versa.
+            """
         if not isinstance(uspace, Set):
             raise TypeError('undiscretized space {} not a `Set` instance.'
                             ''.format(uspace))
@@ -95,6 +101,10 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         if not isinstance(dspace, NtuplesBase):
             raise TypeError('data space {} not an `NtuplesBase` instance.'
                             ''.format(dspace))
+
+        order = kwargs.pop('order', 'C')
+        if order not in ('C', 'F'):
+            raise ValueError('order {!r} not understood.'.format(order))
 
         if restr is not None:
             if not isinstance(restr, Operator):
@@ -111,6 +121,11 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                                  'the data space {}.'
                                  ''.format(restr.range, dspace))
 
+            if hasattr(restr, 'order') and restr.order != order:
+                raise ValueError('ordering {!r} of the restriction operator '
+                                 'differs from given ordering {!r}.'
+                                 ''.format(restr.order, order))
+
         if ext is not None:
             if not isinstance(ext, Operator):
                 raise TypeError('extension operator {} not an `Operator` '
@@ -126,11 +141,17 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                                  'the undiscretized space {}.'
                                  ''.format(ext.range, uspace))
 
+            if hasattr(ext, 'order') and ext.order != order:
+                raise ValueError('ordering {!r} of the extension operator '
+                                 'differs from given ordering {!r}.'
+                                 ''.format(ext.order, order))
+
         super().__init__(dspace.dim, dspace.dtype)
         self._uspace = uspace
         self._dspace = dspace
         self._restriction = restr
         self._extension = ext
+        self._order = order
 
     @property
     def uspace(self):
@@ -163,6 +184,11 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         else:
             raise NotImplementedError('no extension operator provided.')
 
+    @property
+    def order(self):
+        """Axis ordering for array flattening."""
+        return self._order
+
     def element(self, inp=None):
         """Create an element from `inp` or from scratch.
 
@@ -182,13 +208,13 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         """
         if inp in self.dspace:
             return self.Vector(self, inp)
-
-        # TODO: axis ordering
-        try:
-            elem = self.dspace.element(inp)
-        except TypeError:
-            elem = self.restriction(self.uspace.element(inp))
-        return self.Vector(self, elem)
+        elif inp in self.uspace:
+            return self.Vector(
+                self, self.restriction(self.uspace.element(inp)))
+        else:  # Sequence-type input
+            arr = np.asarray(inp, dtype=self.dspace.dtype).reshape(
+                -1, order=self.order)
+            return self.Vector(self, self.dspace.element(arr))
 
     def equals(self, other):
         """Test if `other` is equal to this discretization.
@@ -305,7 +331,7 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
     are linear operators.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None):
+    def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -321,14 +347,19 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
             as `uspace.field`.
         restr : ``LinearOperator``, optional
             Operator mapping a `uspace` element to a `dspace` element.
-            Must satisfy `restr.domain == uspace` and
-            `restr.range == dspace`.
+            Must satisfy `restr.domain == uspace`,
+            `restr.range == dspace` and `restr.order == order`.
         ext : ``LinearOperator``, optional
-            Operator mapping an `dspace` element to a `uspace` element.
-            Must satisfy `ext.domain == dspace` and
-            `ext.range == uspace`.
+            Operator mapping a `dspace` element to a `uspace` element.
+            Must satisfy `ext.domain == dspace`,
+            `ext.range == uspace` and `ext.order == order`.
+        kwargs : {'order'}
+            'order' : {'C', 'F'}, optional  (Default: 'C')
+                Ordering of the values in the flat data arrays. 'C'
+                means the first grid axis varies fastest, the last most
+                slowly, 'F' vice versa.
         """
-        super().__init__(uspace, dspace, restr, ext)
+        super().__init__(uspace, dspace, restr, ext, **kwargs)
         FnBase.__init__(self, dspace.dim, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):

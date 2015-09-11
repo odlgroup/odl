@@ -80,12 +80,33 @@ class DiscreteL2(Discretization):
         else:
             raise NotImplementedError
 
-        super().__init__(l2space, dspace, restriction, extension)
+        super().__init__(l2space, dspace, restriction, extension, order=order)
+        self._interp = interp
 
     @property
     def grid(self):
         """Sampling grid of the discretization mappings."""
         return self.restriction.grid
+
+    @property
+    def interp(self):
+        """Interpolation type of this discretization."""
+        return self._interp
+
+    def __repr__(self):
+        """l2.__repr__() <==> repr(l2)."""
+        arg_fstr = '''
+    {!r},
+    {!r},
+    {!r}'''
+        if self.interp != 'nearest':
+            arg_fstr += ', interp={interp!r}'
+        if self.order != 'C':
+            arg_fstr += ', order={order!r}'
+
+        return 'DiscreteL2({})'.format(arg_fstr.format(
+            self.uspace, self.grid, self.dspace, interp=self.interp,
+            order=self.order))
 
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
@@ -123,10 +144,10 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         The uniformly discretized L2 space
     """
     if not isinstance(l2space, L2):
-        raise TypeError('space {} is not an L2 instance.'.format(l2space))
+        raise TypeError('space {!r} is not an L2 instance.'.format(l2space))
 
     if not isinstance(l2space.domain, IntervalProd):
-        raise TypeError('domain {} of the L2 space is not an `IntervalProd` '
+        raise TypeError('domain {!r} of the L2 space is not an `IntervalProd` '
                         'instance.'.format(l2space.domain))
 
     ds_type = dspace_type(l2space, impl)
@@ -138,4 +159,6 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     else:
         dspace = ds_type(grid.ntotal)
 
-    return DiscreteL2(l2space, grid, dspace, interp, **kwargs)
+    order = kwargs.pop('order', 'C')
+
+    return DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
