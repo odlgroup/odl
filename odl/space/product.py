@@ -36,7 +36,8 @@ from odl.utility.utility import errfmt
 
 
 def _prod_inner_sum_not_defined(x):
-    raise NotImplementedError("Inner product not defined with custom product norm")
+    raise NotImplementedError('inner product not defined with custom product '
+                              'norm.')
 
 
 class ProductSpace(LinearSpace):
@@ -65,15 +66,16 @@ class ProductSpace(LinearSpace):
                 dist(x, y) = np.linalg.norm(x-y, ord=ord)
                 norm(x) = np.linalg.norm(x, ord=ord)
                 Default: 2.0
-            'weights' : array-like, optional, only usable with 'ord' option.
+            'weights' : array-like, optional, only usable with 'ord'
                 Array of weights, same size as number of space
                 components. All weights must be positive. It is
                 multiplied with the tuple of distances before
                 applying the Rn norm or 'prod_norm'.
                 Default: (1.0,...,1.0)
             'prod_norm' : callable, optional
-                Function that should be applied to the array of distances/norms
-                Specifying a product norm causes the space to NOT be a hilbert space.
+                Function that should be applied to the array of
+                distances/norms. Specifying a product norm causes
+                the space to NOT be a Hilbert space.
                 Default: np.linalg.norm(x, ord=ord)
 
         The following float values for `prod_norm` can be specified.
@@ -226,9 +228,9 @@ class ProductSpace(LinearSpace):
         if inp is None:
             inp = [space.element() for space in self.spaces]
 
-        if all(isinstance(v, LinearSpace.Vector) for v in inp) and \
-           all(part.space == space
-                   for part, space in zip(inp, self.spaces)):
+        if (all(isinstance(v, LinearSpace.Vector) for v in inp) and
+            all(part.space == space
+                for part, space in zip(inp, self.spaces))):
             elements = list(inp)
         else:
             # Delegate constructors
@@ -345,10 +347,11 @@ class ProductSpace(LinearSpace):
 
     def __repr__(self):
         if all(self.spaces[0] == space for space in self.spaces):
-            return 'powerspace(' + repr(self.spaces[0]) + ', ' + str(len(self.spaces)) + ')'
+            return 'powerspace({!r}, {})'.format(self.spaces[0],
+                                                 len(self.spaces))
         else:
-            return ('productspace(' +
-                    ', '.join(repr(space) for space in self.spaces) + ')')
+            inner_str = ', '.join(repr(space) for space in self.spaces)
+            return 'productspace({})'.format(inner_str)
 
     class Vector(LinearSpace.Vector):
         def __init__(self, space, *args):
@@ -365,12 +368,12 @@ class ProductSpace(LinearSpace):
             self.parts[index] = value
 
         def __str__(self):
-            return ('{' + ', '.join(str(part) for part in self.parts) +
-                    '}')
+            inner_str = ', '.join(str(part) for part in self.parts)
+            return '{{{}}}'.format(inner_str)
 
         def __repr__(self):
-            return (repr(self.space) + '.element(' +
-                    ', '.join(repr(part) for part in self.parts) + ')')
+            inner_str = ', '.join(str(part) for part in self.parts)
+            return '{!r}.element({})'.format(self.space, inner_str)
 
 
 def productspace(*spaces, **kwargs):

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Discretizations of default spaces."""
+
 # pylint: disable=abstract-method
 
 # Imports for common Python 2/3 codebase
@@ -29,7 +31,6 @@ from builtins import super, str
 # ODL
 from odl.discr.discretization import Discretization
 from odl.discr.discretization import dspace_type
-from odl.discr.grid import RegularGrid
 from odl.discr.operators import GridCollocation, NearestInterpolation
 from odl.space.default import L2
 from odl.space.domain import IntervalProd
