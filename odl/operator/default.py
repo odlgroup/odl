@@ -41,7 +41,6 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-
 from builtins import super
 
 # ODL imports
@@ -49,6 +48,10 @@ from odl.operator.operator import LinearOperator, SelfAdjointOperator
 from odl.space.space import LinearSpace
 from odl.space.set import CartesianProduct
 from odl.utility.utility import errfmt
+
+
+__all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
+           'LinCombOperator', 'MultiplyOperator')
 
 
 class ScalingOperator(SelfAdjointOperator):

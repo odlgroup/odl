@@ -35,6 +35,9 @@ except ImportError:
     CUDA_AVAILABLE = False
 
 
+__all__ = ('L2',)
+
+
 class L2(FunctionSpace):
     """The space of square integrable functions on some domain."""
 

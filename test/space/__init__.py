@@ -15,10 +15,5 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-
-# __all__ = ['']
-
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()

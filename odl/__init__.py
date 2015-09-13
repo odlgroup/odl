@@ -25,13 +25,46 @@ to be used to write general code and faciliate code reuse.
 
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 
 __version__ = '0.1b0.dev0'
+__all__ = ('discr', 'operator', 'space')
 
-__all__ = ('operator', 'space', 'utility')
 
-import odl.operator
-import odl.space
-import odl.utility
+# Propagate names defined in __all__ of all submodules into the top-level
+# module
+from . import discr
+from .discr.default import *
+from .discr.discretization import *
+from .discr.grid import *
+from .discr.operators import *
+
+__all__ += (discr.default.__all__ + discr.discretization.__all__ +
+            discr.grid.__all__ + discr.operators.__all__)
+
+from . import operator
+from .operator.default import *
+from .operator.operator import *
+
+__all__ += (operator.default.__all__ + operator.operator.__all__)
+
+from . import space
+from .space.cartesian import *
+from .space.default import *
+from .space.domain import *
+from .space.function import *
+from .space.product import *
+from .space.sequence import *
+from .space.set import *
+from .space.space import *
+try:
+    from .space.cuda import *
+    CUDA_AVAILABLE = True
+except ImportError:
+    CUDA_AVAILABLE = False
+
+__all__ += (space.cartesian.__all__ + space.default.__all__,
+            space.domain.__all__, space.function.__all__,
+            space.product.__all__, space.sequence.__all__,
+            space.space.__all__)
+if CUDA_AVAILABLE:
+    __all__ += space.cuda.__all__

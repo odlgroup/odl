@@ -43,6 +43,9 @@ except ImportError:
     CUDA_AVAILABLE = False
 
 
+__all__ = ('RawDiscretization', 'Discretization')
+
+
 class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
     """Abstract raw discretization class.

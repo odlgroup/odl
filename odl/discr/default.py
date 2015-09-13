@@ -36,6 +36,8 @@ from odl.space.default import L2
 from odl.space.domain import IntervalProd
 
 
+__all__ = ('DiscreteL2', 'l2_uniform_discretization')
+
 _supported_interp = ('nearest',)
 
 

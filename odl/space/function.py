@@ -37,6 +37,9 @@ from odl.space.set import RealNumbers, ComplexNumbers, Set
 from odl.space.space import LinearSpace
 
 
+__all__ = ('FunctionSet', 'FunctionSpace')
+
+
 class FunctionSet(Set):
 
     """A general set of functions with common domain and range."""

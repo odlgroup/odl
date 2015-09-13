@@ -39,6 +39,11 @@ from odl.space.function import FunctionSet, FunctionSpace
 from odl.space.domain import IntervalProd
 
 
+__all__ = ('FunctionSetMapping', 'LinearFunctionSpaceMapping',
+           'RawGridCollocation', 'GridCollocation', 'RawNearestInterpolation',
+           'NearestInterpolation', 'LinearInterpolation')
+
+
 class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
 
     """Abstract base class for function set discretization mappings."""
@@ -330,14 +335,14 @@ class GridCollocation(RawGridCollocation, LinearFunctionSpaceMapping):
 
         Parameters
         ----------
-        fspace : `FunctionSpace`
+        fspace : ``FunctionSpace``
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
             space. Its `domain` must be an ``IntervalProd``.
-        grid : `TensorGrid`
+        grid : ``TensorGrid``
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `FnBase`
+        dspace : ``FnBase``
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points. Its field must be the same
@@ -361,14 +366,14 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        ip_fset : `FunctionSet`
+        ip_fset : ``FunctionSet``
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must be an
             ``IntervalProd``.
-        grid : `TensorGrid`
+        grid : ``TensorGrid``
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `NtuplesBase`
+        dspace : ``NtuplesBase``
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points.
@@ -393,12 +398,12 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : `Ntuples.Vector`
+        inp : ``Ntuples.Vector``
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : `FunctionSet.Vector`
+        outp : ``FunctionSet.Vector``
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 
@@ -475,7 +480,7 @@ class RawNearestInterpolation(FunctionSetMapping):
 class NearestInterpolation(RawNearestInterpolation,
                            LinearFunctionSpaceMapping):
 
-    """Nearest neighbor interpolation as a `LinearOperator`."""
+    """Nearest neighbor interpolation as a ``LinearOperator``."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new `NearestInterpolation` instance.

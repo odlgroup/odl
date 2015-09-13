@@ -35,6 +35,9 @@ from odl.space.space import LinearSpace
 from odl.utility.utility import errfmt
 
 
+__all__ = ('ProductSpace', 'productspace', 'powerspace')
+
+
 def _prod_inner_sum_not_defined(x):
     raise NotImplementedError('inner product not defined with custom product '
                               'norm.')
@@ -252,7 +255,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        zero : ProducSpace.Vector
+        zero : ProductSpace.Vector
             The zero vector in the product space
 
         Examples

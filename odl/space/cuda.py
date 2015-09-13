@@ -35,6 +35,9 @@ from odl.space.cartesian import NtuplesBase, FnBase
 import odlpp.odlpp_cuda as cuda
 
 
+__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn')
+
+
 def _get_int_type():
     if np.dtype(np.int).itemsize == 4:
         return cuda.CudaVectorInt32

@@ -144,8 +144,6 @@ Function spaces (module 'default')
 
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 
 __all__ = ('cartesian', 'cuda', 'default', 'domain',  'function',
            'product', 'sequence', 'set', 'space')

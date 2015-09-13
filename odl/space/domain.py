@@ -30,6 +30,9 @@ from odl.space.set import Set, RealNumbers
 from odl.utility.utility import array1d_repr
 
 
+__all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cube')
+
+
 class IntervalProd(Set):
 
     """An n-dimensional rectangular box.

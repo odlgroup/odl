@@ -22,6 +22,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from future import standard_library
+standard_library.install_aliases()
 from builtins import super
 
 # External module imports
@@ -32,7 +33,8 @@ from odl.space.cartesian import Rn
 from odl.space.function import FunctionSpace
 from odl.space.set import Integers
 
-standard_library.install_aliases()
+
+__all__ = ('SequenceSpace',)
 
 
 class SequenceSpace(FunctionSpace):
