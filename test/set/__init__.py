@@ -15,28 +15,5 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
-from future import standard_library
-standard_library.install_aliases()
-
-# External module imports
-import unittest
-
-# ODL imports
-from odl.utility.testutils import ODLTestCase
-
-class ImportStarTest(ODLTestCase):
-    def test_all(self):
-        import odl
-        C3 = odl.Cn(3)
-
-        #Three ways of creating the identity
-        I1 = odl.IdentityOperator(C3)
-        I2 = odl.operator.IdentityOperator(C3)
-        I3 = odl.operator.default.IdentityOperator(C3)
-
-if __name__ == '__main__':
-    unittest.main(exit=False)
