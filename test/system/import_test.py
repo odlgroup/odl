@@ -31,12 +31,20 @@ from odl.utility.testutils import ODLTestCase
 class ImportStarTest(ODLTestCase):
     def test_all(self):
         import odl
-        C3 = odl.Cn(3)
+        #Create Cn
+        C1 = odl.Cn(3)
+        C2 = odl.space.Cn(3)
+        C3 = odl.space.cartesian.Cn(3)
 
         #Three ways of creating the identity
         I1 = odl.IdentityOperator(C3)
         I2 = odl.operator.IdentityOperator(C3)
         I3 = odl.operator.default.IdentityOperator(C3)
+
+        #Test that utility needs to be explicitly imported
+        x = odl.utility.utility.array1d_repr
+        with self.assertRaises(AttributeError):
+            x = odl.array1d_repr
 
 if __name__ == '__main__':
     unittest.main(exit=False)
