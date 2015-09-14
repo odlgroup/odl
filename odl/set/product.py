@@ -43,8 +43,8 @@ def _strip_space(x):
     """Strips the SPACE.element( ... ) part from a repr""" 
     r = repr(x)
     space_repr = '{!r}.element('.format(x.space)
-    if space_repr in r and r[-1] == ')':
-        r = r.strip(space_repr)
+    if r.startswith(space_repr) and r.endswith(')'):
+        r = r[len(space_repr):-1]
     return r
 
 def _indent(x):
