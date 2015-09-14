@@ -17,7 +17,7 @@
 
 """Utility library for ODL, only for internal use."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import
 
 
 __all__ = ('testutils', 'utility')
