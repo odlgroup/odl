@@ -56,6 +56,34 @@ def array1d_str(array):
         return '[{}, ..., {}]'.format(left_str, right_str)
 
 
+def arraynd_repr(array):
+    """Stringification of an nD array, keeping byte / unicode."""
+    if array.ndim > 1:
+        if len(array) < 7:
+            inner_str = ',\n '.join(arraynd_repr(a) for a in array)
+            return '[\n{}\n]'.format(inner_str)
+        else:
+            left_str = ',\n '.join(arraynd_repr(a) for a in array[:3])
+            right_str = ',\n '.join(arraynd_repr(a) for a in array[-3:])
+            return '[\n{},\n ...,\n{}\n]'.format(left_str, right_str)
+    else:
+        return array1d_repr(array)
+
+
+def arraynd_str(array):
+    """Stringification of a nD array, regardless of byte or unicode."""
+    if array.ndim > 1:
+        if len(array) < 7:
+            inner_str = ',\n '.join(arraynd_str(a) for a in array)
+            return '[{}]'.format(inner_str)
+        else:
+            left_str = ',\n '.join(arraynd_str(a) for a in array[:3])
+            right_str = ',\n '.join(arraynd_str(a) for a in array[-3:])
+            return '[{},\n ...,\n{}]'.format(left_str, right_str)
+    else:
+        return array1d_str(array)
+
+
 def dtype_repr(dtype):
     """Stringification of data type with default for `int` and `float`."""
     if dtype == np.dtype(int):
