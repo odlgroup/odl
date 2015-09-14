@@ -73,8 +73,8 @@ class DiscreteL2(Discretization):
 
         interp = str(interp)
         if interp not in _supported_interp:
-            raise ValueError('{} is not among the supported interpolation'
-                             'types {}.'.format(interp, _supported_interp))
+            raise TypeError('{} is not among the supported interpolation'
+                            'types {}.'.format(interp, _supported_interp))
 
         order = kwargs.pop('order', 'C')
         restriction = GridCollocation(l2space, grid, dspace, order=order)

@@ -167,3 +167,5 @@ try:
     CUDA_AVAILABLE = True
 except ImportError:
     CUDA_AVAILABLE = False
+
+__all__ += ('CUDA_AVAILABLE',)
