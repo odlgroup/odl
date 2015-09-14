@@ -227,15 +227,15 @@ class TestDiscreteL2Vector(odl.utility.testutils.ODLTestCase):
         unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
         discr_F = odl.l2_uniform_discretization(unit_square, (3, 3), order='F')
         vec_F = discr_F.element([[1, 2, 3],
-                             [4, 5, 6],
-                             [7, 8, 9]])
+                                 [4, 5, 6],
+                                 [7, 8, 9]])
         
         self.assertAllAlmostEquals(vec_F.asarray(), [[1, 2, 3],
                                                      [4, 5, 6],
                                                      [7, 8, 9]])
 
         
-        discr_C = odl.l2_uniform_discretization(unit_square, (3, 3), order='F')
+        discr_C = odl.l2_uniform_discretization(unit_square, (3, 3), order='C')
         vec_C = discr_C.element([[1, 2, 3],
                                  [4, 5, 6],
                                  [7, 8, 9]])
