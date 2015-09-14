@@ -668,7 +668,7 @@ class Ntuples(NtuplesBase):
             >>> vec = Ntuples(3, 'float').element([1, 2, 3])
             >>> vec.asarray()
             array([ 1.,  2.,  3.])
-            >>> vec.asarray(1, 3)
+            >>> vec.asarray(start=1, stop=3)
             array([ 2.,  3.])
 
             Using the out parameter

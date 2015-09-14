@@ -136,6 +136,26 @@ class DiscreteL2(Discretization):
         """l2.__str__() <==> str(l2)."""
         return self.__repr__()
 
+    class Vector(Discretization.Vector):
+
+        """Representation of a ``DiscreteL2`` element."""
+
+        def asarray(self, out=None):
+            """Extract the data of this array as a numpy array.
+
+            Parameters
+            ----------
+            out : `ndarray`, Optional (default: `None`)
+                Array in which the result should be written in-place.
+                Has to be contiguous and of the correct dtype and
+                shape.
+            """
+            if out is None:
+                return super().asarray().reshape(self.space.grid.shape,
+                                                 order=self.space.order)
+            else:
+                super().asarray(out=out.reshape(-1, order=self.space.order))
+
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
                               impl='numpy', **kwargs):
