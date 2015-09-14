@@ -31,9 +31,9 @@ import numpy as np
 import odl.operator.operator as OP
 import odl.space.function as fs
 import odl.space.cuda as cs
-import odl.space.product as prod
+import odl.set.product as prod
 import odl.discr.discretization as dd
-import odl.space.set as sets
+import odl.set.set as sets
 import SimRec2DPy as SR
 import odl.operator.solvers as solvers
 

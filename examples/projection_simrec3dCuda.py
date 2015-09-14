@@ -28,10 +28,10 @@ import numpy as np
 
 import odl.operator.operator as OP
 import odl.space.cuda as cs
-import odl.space.product as ps
+import odl.set.product as ps
 import odl.discr.discretization as dd
 import SimRec2DPy as SR
-from odl.space.domain import Rectangle, Cube
+from odl.set.domain import Rectangle, Cube
 from odl.discr.default import DiscreteL2, l2_uniform_discretization
 from odl.space.default import L2
 from odl.utility.testutils import Timer

@@ -278,8 +278,8 @@ from numbers import Integral
 import platform
 
 # ODL imports
-from odl.space.set import Set, RealNumbers, ComplexNumbers
-from odl.space.space import LinearSpace
+from odl.set.set import Set, RealNumbers, ComplexNumbers
+from odl.set.space import LinearSpace
 from odl.utility.utility import array1d_repr, array1d_str, dtype_repr
 
 

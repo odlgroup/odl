@@ -27,9 +27,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from odl.operator.operator import *
-from odl.space.space import *
-from odl.space.domain import Rectangle
-from odl.space.product import powerspace
+from odl.set.space import *
+from odl.set.domain import Rectangle
+from odl.set.product import powerspace
 from odl.space.cartesian import *
 from odl.space.default import L2
 from odl.discr.default import DiscreteL2, l2_uniform_discretization

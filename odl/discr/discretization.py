@@ -32,8 +32,8 @@ import numpy as np
 # ODL
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import NtuplesBase, FnBase, Ntuples, Rn, Cn
-from odl.space.set import Set, RealNumbers, ComplexNumbers
-from odl.space.space import LinearSpace
+from odl.set.set import Set, RealNumbers, ComplexNumbers
+from odl.set.space import LinearSpace
 try:
     from odl.space.cuda import CudaNtuples, CudaRn
     CudaCn = None  # TODO: add CudaCn to imports once it is implemented

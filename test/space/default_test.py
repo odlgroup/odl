@@ -29,7 +29,7 @@ import numpy as np
 
 # ODL imports
 from odl.space.default import L2
-from odl.space.domain import Interval, Rectangle
+from odl.set.domain import Interval, Rectangle
 from odl.utility.testutils import ODLTestCase
 
 

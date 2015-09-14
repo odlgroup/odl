@@ -33,7 +33,7 @@ from odl.discr.discretization import Discretization
 from odl.discr.discretization import dspace_type
 from odl.discr.operators import GridCollocation, NearestInterpolation
 from odl.space.default import L2
-from odl.space.domain import IntervalProd
+from odl.set.domain import IntervalProd
 
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')

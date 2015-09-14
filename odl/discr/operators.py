@@ -36,7 +36,7 @@ from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import NtuplesBase, FnBase
 from odl.space.function import FunctionSet, FunctionSpace
-from odl.space.domain import IntervalProd
+from odl.set.domain import IntervalProd
 
 
 __all__ = ('FunctionSetMapping', 'LinearFunctionSpaceMapping',
@@ -272,7 +272,7 @@ class RawGridCollocation(FunctionSetMapping):
         to the real numbers:
 
         >>> from odl.space.function import FunctionSet
-        >>> from odl.space.set import RealNumbers
+        >>> from odl.set.set import RealNumbers
         >>> funcset = FunctionSet(grid.convex_hull(), RealNumbers())
 
         Finally create the operator:
@@ -414,8 +414,8 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         >>> from __future__ import unicode_literals, print_function
         >>> from builtins import str
-        >>> from odl.space.domain import Rectangle
-        >>> from odl.space.set import Strings
+        >>> from odl.set.domain import Rectangle
+        >>> from odl.set.set import Strings
 
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> strings = Strings(1)  # 1-char strings
@@ -509,9 +509,9 @@ class NearestInterpolation(RawNearestInterpolation,
         Let's define the complex function space :math:`L^2` on a
         rectangle:
 
-        >>> from odl.space.domain import Rectangle
+        >>> from odl.set.domain import Rectangle
         >>> from odl.space.default import L2
-        >>> from odl.space.set import ComplexNumbers
+        >>> from odl.set.set import ComplexNumbers
         >>> from odl.space.cartesian import Cn
 
         >>> rect = Rectangle([0, 0], [1, 1])

@@ -12,9 +12,9 @@ from future import standard_library
 import numpy as np
 
 # ODL imports
-from odl.space.space import *
+from odl.set.space import *
 from odl.space.cuda import *
-from odl.space.set import *
+from odl.set.set import *
 from odl.utility.utility import errfmt
 from odl.space.cartesian import Rn
 from odl.utility.testutils import Timer

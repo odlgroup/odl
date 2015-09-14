@@ -45,8 +45,8 @@ from builtins import range, super, zip
 import numpy as np
 
 # ODL imports
-from odl.space.domain import IntervalProd
-from odl.space.set import Set, Integers
+from odl.set.domain import IntervalProd
+from odl.set.set import Set, Integers
 from odl.utility.utility import array1d_repr, array1d_str
 
 

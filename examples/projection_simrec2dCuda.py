@@ -28,7 +28,7 @@ import numpy as np
 import odl.operator.operator as OP
 import odl.space.cuda as cs
 import odl.discr.discretization as dd
-from odl.space.domain import Interval, Rectangle
+from odl.set.domain import Interval, Rectangle
 from odl.discr.default import DiscreteL2, l2_uniform_discretization
 from odl.space.default import L2
 import SimRec2DPy as SR

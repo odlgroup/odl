@@ -26,9 +26,9 @@ from numpy import float64
 
 import numpy as np
 from odl.operator.operator import *
-from odl.space.space import *
-from odl.space.set import *
-from odl.space.domain import Interval
+from odl.set.space import *
+from odl.set.set import *
+from odl.set.domain import Interval
 from odl.space.default import L2
 from odl.space.cartesian import *
 from odl.space.function import *

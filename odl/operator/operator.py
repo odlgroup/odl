@@ -102,8 +102,8 @@ from numbers import Number
 
 # ODL imports
 from odl.utility.utility import errfmt
-from odl.space.space import LinearSpace
-from odl.space.set import UniversalSet
+from odl.set.space import LinearSpace
+from odl.set.set import UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'OperatorRightScalarMult', 'OperatorPointwiseProduct',

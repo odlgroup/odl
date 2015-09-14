@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Spaces of functions  with common domain and range.
+"""Spaces of functions with common domain and range.
 
 TODO: document properly
 """
@@ -31,12 +31,10 @@ from builtins import super
 import numpy as np
 
 # ODL imports
-import odl
-print(odl.operator, odl, dir(odl), odl.__all__)
 from odl.operator.operator import Operator
-from odl.space.domain import IntervalProd
-from odl.space.set import RealNumbers, ComplexNumbers, Set
-from odl.space.space import LinearSpace
+from odl.set.domain import IntervalProd
+from odl.set.set import RealNumbers, ComplexNumbers, Set
+from odl.set.space import LinearSpace
 
 
 __all__ = ('FunctionSet', 'FunctionSpace')

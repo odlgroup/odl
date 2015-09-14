@@ -91,6 +91,5 @@ __all__ += default.__all__
 from . import operator
 from .operator import *
 __all__ += operator.__all__
-from . import solvers
 
-print(__all__)
+from . import solvers

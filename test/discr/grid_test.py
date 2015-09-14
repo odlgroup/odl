@@ -29,7 +29,7 @@ import numpy as np
 
 # ODL imports
 from odl.discr.grid import TensorGrid, RegularGrid
-from odl.space.domain import IntervalProd
+from odl.set.domain import IntervalProd
 from odl.utility.testutils import ODLTestCase
 
 

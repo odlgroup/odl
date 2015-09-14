@@ -28,7 +28,7 @@ import unittest
 
 # ODL imports
 from odl.space.cartesian import Rn
-from odl.space.product import ProductSpace, powerspace
+from odl.set.product import ProductSpace, powerspace
 from odl.utility.testutils import ODLTestCase
 
 

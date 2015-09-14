@@ -29,8 +29,8 @@ import unittest
 # ODL imports
 from odl.operator.operator import LinearOperator
 from odl.space.default import L2
-from odl.space.domain import Interval, Rectangle
-from odl.space.product import productspace
+from odl.set.domain import Interval, Rectangle
+from odl.set.product import productspace
 
 from odl.utility.testutils import skip_all
 

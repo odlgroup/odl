@@ -31,7 +31,7 @@ standard_library.install_aliases()
 import numpy as np
 
 # ODL imports
-from odl.space.space import LinearSpace
+from odl.set.space import LinearSpace
 from odl.utility.utility import errfmt
 
 

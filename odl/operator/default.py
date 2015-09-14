@@ -44,8 +44,8 @@ from builtins import super
 
 # ODL imports
 from odl.operator.operator import LinearOperator, SelfAdjointOperator
-from odl.space.space import LinearSpace
-from odl.space.set import CartesianProduct
+from odl.set.space import LinearSpace
+from odl.set.set import CartesianProduct
 from odl.utility.utility import errfmt
 
 

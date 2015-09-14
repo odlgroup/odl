@@ -29,7 +29,7 @@ from math import sqrt
 
 # ODL imports
 # import odl.operator.operator as op
-# import odl.space.space as space
+# import odl.set.space as space
 from odl.utility.testutils import ODLTestCase
 
 class ImportStarTest(ODLTestCase):

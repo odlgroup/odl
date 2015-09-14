@@ -27,7 +27,7 @@ import unittest
 import numpy as np
 
 # ODL imports
-from odl.space.domain import IntervalProd, Interval, Rectangle
+from odl.set.domain import IntervalProd, Interval, Rectangle
 from odl.utility.testutils import ODLTestCase
 
 

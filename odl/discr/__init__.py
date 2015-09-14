@@ -70,5 +70,20 @@ Restriction and Extension operators (Module `operators`)
 
 from __future__ import print_function, division, absolute_import
 
+__all__ = []
 
-__all__ = ('default', 'discretization', 'grid', 'operators')
+from . import default
+from .default import *
+__all__ += default.__all__
+
+from . import discretization
+from .discretization import *
+__all__ += discretization.__all__
+
+from . import grid
+from .grid import *
+__all__ += grid.__all__
+
+from . import operators
+from .operators import *
+__all__ += operators.__all__

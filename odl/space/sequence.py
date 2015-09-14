@@ -31,7 +31,7 @@ import numpy as np
 # ODL imports
 from odl.space.cartesian import Rn
 from odl.space.function import FunctionSpace
-from odl.space.set import Integers
+from odl.set.set import Integers
 
 
 __all__ = ('SequenceSpace',)

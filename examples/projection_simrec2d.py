@@ -30,7 +30,7 @@ import odl.operator.operator as OP
 from odl.space.default import L2
 import odl.space.cartesian as ds
 import odl.discr.discretization as dd
-from odl.space.domain import Interval, Rectangle
+from odl.set.domain import Interval, Rectangle
 from odl.discr.default import DiscreteL2, l2_uniform_discretization
 import SimRec2DPy as SR
 

@@ -29,9 +29,9 @@ import numpy as np
 import odl.operator.operator as OP
 import odl.space.function as fs
 import odl.space.cartesian as ds
-import odl.space.product as ps
+import odl.set.product as ps
 import odl.discr.discretization as dd
-import odl.space.set as sets
+import odl.set.set as sets
 import SimRec2DPy as SR
 import odl.operator.solvers as solvers
 

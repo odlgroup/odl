@@ -31,7 +31,7 @@ from scipy import ndimage
 # ODL
 from odl.discr.default import DiscreteL2, l2_uniform_discretization
 from odl.space.default import L2
-from odl.space.domain import Interval
+from odl.set.domain import Interval
 from odl.operator.operator import LinearOperator
 import odl.operator.solvers as solvers
 from odl.utility.testutils import Timer

@@ -26,7 +26,7 @@ import unittest
 
 import numpy as np
 from odl.operator.operator import *
-from odl.space.space import *
+from odl.set.space import *
 from odl.space.cartesian import *
 from odl.space.cuda import *
 from odl.utility.testutils import Timer

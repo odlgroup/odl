@@ -23,10 +23,10 @@ from future import standard_library
 standard_library.install_aliases()
 
 # ODL imports
-from odl.discr.grid import TensorGrid
-from odl.space.cartesian import Rn, Cn
+#from odl.discr.grid import TensorGrid
+#from odl.space.cartesian import Rn, Cn
 from odl.space.function import FunctionSpace
-from odl.space.set import RealNumbers, ComplexNumbers
+from odl.set.set import RealNumbers, ComplexNumbers
 try:
     from odl.space.cuda import CudaRn
     CUDA_AVAILABLE = True
@@ -48,9 +48,9 @@ class L2(FunctionSpace):
         """Inner product, not computable in continuous spaces."""
         raise NotImplementedError('inner product not computable in the'
                                   'non-discretized space {}.'.format(self))
-
+    """
     def discretize(self, grid, interp='nearest', **kwargs):
-        """Discretize the space with an interpolation dictionary.
+        '''Discretize the space with an interpolation dictionary.
 
         Parameters
         ----------
@@ -74,7 +74,7 @@ class L2(FunctionSpace):
         -------
         l2discr : `DiscreteL2`
             The discretized space
-        """
+        '''
         from odl.discr.default import DiscreteL2
 
         if not isinstance(grid, TensorGrid):
@@ -103,7 +103,7 @@ class L2(FunctionSpace):
                     raise NotImplementedError
                     # dspace_type = CudaEuclideanCn
         return DiscreteL2(self, grid, dspace_type(grid.ntotal), interp,
-                          **kwargs)
+                          **kwargs)"""
 
     def __str__(self):
         if isinstance(self.field, RealNumbers):
