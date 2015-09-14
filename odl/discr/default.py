@@ -154,7 +154,29 @@ class DiscreteL2(Discretization):
                 return super().asarray().reshape(self.space.grid.shape,
                                                  order=self.space.order)
             else:
-                return super().asarray(out=out.reshape(-1, order=self.space.order))
+                if out.shape not in (self.space.grid.shape,
+                                     (self.space.grid.ntotal,)):
+                    raise ValueError('output array has shape {}, expected '
+                                     '{} or ({},).'
+                                     ''.format(out.shape,
+                                               self.space.grid.shape,
+                                               self.space.grid.ntotal))
+                out_r = out.reshape(self.space.grid.shape,
+                                    order=self.space.order)
+                if out_r.flags.c_contiguous:
+                    out_order = 'C'
+                elif out_r.flags.f_contiguous:
+                    out_order = 'F'
+                else:
+                    raise ValueError('output array not contiguous.')
+
+                if out_order != self.space.order:
+                    raise ValueError('output array has ordering {!r}, '
+                                     'expected {!r}.'
+                                     .format(self.space.order, out_order))
+
+                super().asarray(out=out.reshape(-1, order=self.space.order))
+                return out
 
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
