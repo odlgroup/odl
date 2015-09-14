@@ -650,27 +650,22 @@ class RegularGrid(TensorGrid):
     axis with an even number of nodes, the center is not a grid point.
     """
 
-    def __init__(self, shape, center=None, stride=None):
-        """Initialize a RegularGrid instance.
-
+    def __init__(self, min_pt, max_pt, shape):
+        """Initialize a new instance.
         Parameters
         ----------
-
+        min_pt : array-like or float
+            Point with minimum coordinates, can be a single float for
+            1D grids
+        max_pt : array-like or float
+            Point with maximum coordinates, can be a single float for
+            1D grids
         shape : array-like or int
             The number of grid points per axis. For 1D grids, a single
             integer may be given.
-        center : array-like or float, optional
-            The center of the grid (may not be a grid point). For 1D
-            grids, a single float may be given.
-            Default: (0.0,...,0.0)
-        stride : array-like or float, optional
-            Vector pointing from x_j to x_(j+1). For 1D grids, a single
-            float may be given.
-            Default: (1.0,...,1.0)
 
         Examples
         --------
-
         >>> rg = RegularGrid((2, 3), center=[-1, 1], stride=[1, 2])
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
@@ -693,41 +688,41 @@ class RegularGrid(TensorGrid):
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([ 0.,  1.,  2.]))
         """
+        min_pt = np.atleast_1d(min_pt).astype(np.float64)
+        max_pt = np.atleast_1d(max_pt).astype(np.float64)
         shape = np.atleast_1d(shape).astype(np.int64)
-        if not np.all(shape > 0):
-            raise ValueError("'shape' may only have positive entries.")
 
-        if center is None:
-            center = np.zeros_like(shape).astype(np.float64)
-        else:
-            center = np.atleast_1d(center).astype(np.float64)
-            if len(center) != len(shape):
-                raise ValueError('center {} does not have the same length as '
-                                 'shape {}.'.format(len(center), len(shape)))
+        if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
+            raise ValueError('input arrays have dimensions {}, {}, {} '
+                             'instead of 1.'
+                             ''.format(min_pt.ndim, max_pt.ndim, shape.ndim))
 
-        if not np.all(np.isfinite(center)):
-            raise ValueError("'center' has invalid entries.")
+        if not min_pt.shape == max_pt.shape == shape.shape:
+            raise ValueError('input array shapes are {}, {}, {} but '
+                             'should be equal.')
 
-        if stride is None:
-            stride = np.ones_like(shape, dtype=np.float64)
-        else:
-            stride = np.atleast_1d(stride).astype(np.float64)
-            if len(stride) != len(shape):
-                raise ValueError('stride {} dones not have the same length '
-                                 'as shape ({}).'
-                                 ''.format(len(stride), len(shape)))
+        if not np.all(np.isfinite(min_pt)):
+            raise ValueError('minimum point {} has invalid entries.'
+                             ''.format(min_pt))
 
-        if not np.all(np.isfinite(stride)):
-            raise ValueError("'stride' has invalid entries.")
-        if not np.all(stride > 0):
-            raise ValueError("'stride' may only have positive entries.")
+        if not np.all(np.isfinite(max_pt)):
+            raise ValueError('maximum point {} has invalid entries.'
+                             ''.format(max_pt))
 
-        coord_vecs = [ct + (np.arange(shp, dtype=np.float64)-(shp-1)/2) * st
-                      for ct, st, shp in zip(center, stride, shape)]
+        if not np.all(min_pt <= max_pt):
+            raise ValueError('minimum point {} has not strictly smaller '
+                             'entries than maximum point {}.'
+                             ''.format(min_pt, max_pt))
+
+        if np.any(shape <= 0):
+            raise ValueError('shape parameter is {} but should only contain '
+                             'positive values.'.format(shape))
+
+        coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
+                      for mi, ma, num in zip(min_pt, max_pt, shape)]
         super().__init__(*coord_vecs)
-
-        self._center = center
-        self._stride = stride
+        self._center = (self.max + self.min) / 2
+        self._stride = (self.max - self.min) / (shape - 1)
 
     @property
     def center(self):
@@ -735,8 +730,7 @@ class RegularGrid(TensorGrid):
 
         Examples
         --------
-
-        >>> rg = RegularGrid((2, 3), [-1, 1], [1, 2])
+        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg.center
         array([-1.,  1.])
         """
@@ -748,8 +742,7 @@ class RegularGrid(TensorGrid):
 
         Examples
         --------
-
-        >>> rg = RegularGrid((2, 3), [-1, 1], [1, 2])
+        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg.stride
         array([ 1.,  2.])
         """
@@ -767,23 +760,19 @@ class RegularGrid(TensorGrid):
 
         Examples
         --------
-
-        >>> rg = RegularGrid((3, 4), [-1, 1], [1, 2])
+        >>> rg = RegularGrid([-2, -2], [0, 4], (3, 4))
         >>> rg.coord_vectors
         (array([-2., -1.,  0.]), array([-2.,  0.,  2.,  4.]))
-        >>> rg_sub = RegularGrid((2, 2), [-1, 1], [2, 2])
+        >>> rg_sub = RegularGrid([-1, 2], [0, 4], (2, 2))
         >>> rg_sub.coord_vectors
         (array([-2.,  0.]), array([ 0.,  2.]))
         >>> rg_sub.is_subgrid(rg)
         True
 
         Fuzzy check is also possible. Note that the tolerance still
-        applies to the coordinate vectors, not 'stride' and 'center'.
+        applies to the coordinate vectors.
 
-        >>> rg_sub = RegularGrid((2, 4), [-1, 1], [2.01, 2.01])
-        >>> # stride error accumulates towards the endpoints
-        >>> rg_sub.coord_vectors[1]
-        array([-2.015, -0.005,  2.005,  4.015])
+        >>> rg_sub = RegularGrid([-1.015, 2], [0, 3.99], (2, 2))
         >>> rg_sub.is_subgrid(rg, tol=0.01)
         False
         >>> rg_sub.is_subgrid(rg, tol=0.02)
@@ -871,9 +860,8 @@ class RegularGrid(TensorGrid):
 
         Examples
         --------
-
-        >>> rg1 = RegularGrid((1, 3), [-1, 0], [2, 0.5])
-        >>> rg2 = RegularGrid(7, -3, 6)
+        >>> rg1 = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
+        >>> rg2 = RegularGrid(-3, 7, 6)
         >>> rg1.insert(rg2, 1)
         RegularGrid([1, 7, 3], [-1.0, -3.0, 0.0], [2.0, 6.0, 0.5])
         """
@@ -887,11 +875,11 @@ class RegularGrid(TensorGrid):
             raise TypeError('{} is not a regular grid.'.format(grid))
 
         new_shape = self.shape[:index] + grid.shape + self.shape[index:]
-        new_center = (self.center[:index].tolist() + grid.center.tolist() +
-                      self.center[index:].tolist())
-        new_stride = (self.stride[:index].tolist() + grid.stride.tolist() +
-                      self.stride[index:].tolist())
-        return RegularGrid(new_shape, new_center, new_stride)
+        new_min = (self.min[:index].tolist() + grid.min.tolist() +
+                   self.min[index:].tolist())
+        new_max = (self.max[:index].tolist() + grid.max.tolist() +
+                   self.max[index:].tolist())
+        return RegularGrid(new_min, new_max, new_shape)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
@@ -1000,9 +988,9 @@ class RegularGrid(TensorGrid):
 
     def __repr__(self):
         """g.__repr__() <==> repr(g)."""
-        return 'RegularGrid({}, {}, {})'.format(list(self.shape),
-                                                list(self.center),
-                                                list(self.stride))
+        return 'RegularGrid({}, {}, {})'.format(list(self.min),
+                                                list(self.max),
+                                                list(self.shape))
 
 
 if __name__ == '__main__':
