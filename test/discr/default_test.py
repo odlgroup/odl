@@ -154,9 +154,32 @@ class TestDiscreteL2Vector(odl.utility.testutils.ODLTestCase):
         discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
         vec = discr.element([1, 2, 3])
         
+        self.assertIsInstance(vec, discr.Vector)
+        self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
+        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3])
+
+
+    def test_element_from_array_2d(self):
+        #assert orderings work properly with 2d
+        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+        discr = odl.l2_uniform_discretization(unit_square, (3, 3), impl='numpy', order='C')
+        vec = discr.element([[1, 2, 3],
+                             [4, 5, 6],
+                             [7, 8, 9]])
+        
+        self.assertIsInstance(vec, discr.Vector)
+        self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
+        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3, 4, 5, 6, 7, 8, 9]) #Check ordering
+
+        discr = odl.l2_uniform_discretization(unit_square, (3, 3), impl='numpy', order='F')
+        vec = discr.element([[1, 2, 3],
+                             [4, 5, 6],
+                             [7, 8, 9]])
+        
+        self.assertAllAlmostEquals(vec.ntuple, [1, 4, 7, 2, 5, 8, 3, 6, 9]) #Check ordering
+        
     def test_zero(self):
-        unit_interval = odl.L2(odl.Interval(0,1))
-        discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
+        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
         vec = discr.zero()
 
         self.assertIsInstance(vec, discr.Vector)
@@ -164,19 +187,62 @@ class TestDiscreteL2Vector(odl.utility.testutils.ODLTestCase):
         self.assertEqual(vec.norm(), 0.0)
 
     def test_getitem(self):
-        unit_interval = odl.L2(odl.Interval(0,1))
-        discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
+        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
         vec = discr.element([1, 2, 3])
 
         self.assertAllAlmostEquals(vec, [1, 2, 3])
 
     def test_getslice(self):
-        unit_interval = odl.L2(odl.Interval(0,1))
-        discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
+        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
         vec = discr.element([1, 2, 3])
 
         self.assertIsInstance(vec[:], odl.Rn.Vector)
         self.assertAllAlmostEquals(vec[:], [1, 2, 3])
+
+        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1), 
+                                                     field=odl.ComplexNumbers()), 
+                                              3)
+        vec = discr.element([1+2j, 2-2j, 3])
+
+        self.assertIsInstance(vec[:], odl.Cn.Vector)
+        self.assertAllAlmostEquals(vec[:], [1+2j, 2-2j, 3])
+
+    def test_setitem(self):
+        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+        vec = discr.element([1, 2, 3])
+        vec[0] = 4
+        vec[1] = 5
+        vec[2] = 6
+
+        self.assertAllAlmostEquals(vec, [4, 5, 6])
+
+    def test_setslice(self):
+        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0,1)), 3)
+        vec = discr.element([1, 2, 3])
+        
+        vec[:] = [4, 5, 6]
+        self.assertAllAlmostEquals(vec, [4, 5, 6])
+
+    def test_asarray_2d(self):
+        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+        discr_F = odl.l2_uniform_discretization(unit_square, (3, 3), order='F')
+        vec_F = discr_F.element([[1, 2, 3],
+                             [4, 5, 6],
+                             [7, 8, 9]])
+        
+        self.assertAllAlmostEquals(vec_F.asarray(), [[1, 2, 3],
+                                                     [4, 5, 6],
+                                                     [7, 8, 9]])
+
+        
+        discr_C = odl.l2_uniform_discretization(unit_square, (3, 3), order='F')
+        vec_C = discr_C.element([[1, 2, 3],
+                                 [4, 5, 6],
+                                 [7, 8, 9]])
+        
+        self.assertAllAlmostEquals(vec_C.asarray(), [[1, 2, 3],
+                                                     [4, 5, 6],
+                                                     [7, 8, 9]])
 
 
 if __name__ == '__main__':

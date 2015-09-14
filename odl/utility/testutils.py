@@ -41,7 +41,7 @@ class ODLTestCase(unittest.TestCase):
     # Use names compatible with unittest
     # pylint: disable=invalid-name
     def assertAlmostEqual(self, f1, f2, *args, **kwargs):
-        unittest.TestCase.assertAlmostEqual(self, float(f1), float(f2), *args,
+        unittest.TestCase.assertAlmostEqual(self, complex(f1), complex(f2), *args,
                                             **kwargs)
 
     # pylint: disable=invalid-name
