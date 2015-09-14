@@ -28,7 +28,7 @@ import unittest
 
 # ODL imports
 from odl.space.cartesian import Rn
-from odl.set.product import ProductSpace, powerspace
+from odl.set.product import ProductSpace
 from odl.utility.testutils import ODLTestCase
 
 
@@ -164,7 +164,7 @@ class ProductTest(ODLTestCase):
 class PowerTest(ODLTestCase):
     def test_RxR(self):
         H = Rn(2)
-        HxH = powerspace(H, 2)
+        HxH = ProductSpace(H, 2)
         self.assertTrue(len(HxH) == 2)
 
         v1 = H.element([1, 2])
@@ -177,7 +177,7 @@ class PowerTest(ODLTestCase):
 
     def test_lincomb(self):
         H = Rn(2)
-        HxH = powerspace(H, 2)
+        HxH = ProductSpace(H, 2)
 
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])
@@ -198,7 +198,7 @@ class PowerTest(ODLTestCase):
 
     def test_inplace_modify(self):
         H = Rn(2)
-        HxH = powerspace(H, 2)
+        HxH = ProductSpace(H, 2)
 
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])

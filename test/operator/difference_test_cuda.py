@@ -30,7 +30,7 @@ import unittest
 from odl.operator.operator import LinearOperator
 from odl.space.default import L2
 from odl.set.domain import Interval, Rectangle
-from odl.set.product import productspace
+from odl.set.product import ProductSpace
 
 from odl.utility.testutils import skip_all
 
@@ -87,7 +87,7 @@ except ImportError:
 #            raise TypeError("space must be CudaPixelDiscretization")
 #
 #        self.domain = space
-#        self.range = productspace(space, space)
+#        self.range = ProductSpace(space, space)
 #
 #    def _apply(self, rhs, out):
 #        cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
@@ -106,7 +106,7 @@ except ImportError:
 #        if not isinstance(space, CudaRn):
 #            raise TypeError("space must be CudaPixelDiscretization")
 #
-#        self.domain = productspace(space, space)
+#        self.domain = ProductSpace(space, space)
 #        self.range = space
 #
 #    def _apply(self, rhs, out):

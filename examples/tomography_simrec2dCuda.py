@@ -140,7 +140,7 @@ projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
-dataDisc = prod.powerspace(projectionDisc, nProjection)
+dataDisc = prod.ProductSpace(projectionDisc, nProjection)
 
 # Define the reconstruction space
 reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
