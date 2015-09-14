@@ -142,8 +142,44 @@ Function spaces (module 'default')
 +----------------------+-----------------+-----------------------------+
 """
 
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import
 
-__all__ = ('cartesian', 'cuda', 'default', 'domain',  'function',
-           'product', 'sequence', 'set', 'space')
+__all__ = []
+
+from . import cartesian
+from .cartesian import *
+__all__ += cartesian.__all__
+
+from . import default
+from .default import *
+__all__ += default.__all__
+
+from . import domain
+from .domain import *
+__all__ += domain.__all__
+
+from . import function
+from .function import *
+__all__ += function.__all__
+
+from . import product
+from .product import *
+__all__ += product.__all__
+
+from . import sequence
+
+from . import set
+from .set import *
+__all__ += set.__all__
+
+from . import space
+from .space import *
+__all__ += space.__all__
+
+try:
+    from . import cuda
+    from .cuda import *
+    __all__ += cuda.__all__
+    CUDA_AVAILABLE = True
+except ImportError:
+    CUDA_AVAILABLE = False

@@ -16,29 +16,31 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""ODL is a functional analysis library with a focus on discretization.
-
-ODL suppors abstract sets, linear vector spaces defined on such
-and Operators/Functionals defined on these sets. It is intended
-to be used to write general code and faciliate code reuse.
-"""
-
+# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
-__version__ = '0.1b0.dev0'
-__all__ = []
+from future import standard_library
+standard_library.install_aliases()
 
+# External module imports
+import unittest
+import numpy as np
+from math import sqrt
 
-# Propagate names defined in __all__ of all submodules into the top-level
-# module
-from . import discr
-from .discr import *
-__all__ += discr.__all__
+# ODL imports
+# import odl.operator.operator as op
+# import odl.space.space as space
+from odl.utility.testutils import ODLTestCase
 
-from . import operator
-from .operator import *
-__all__ += operator.__all__
+class ImportStarTest(ODLTestCase):
+    def test_all(self):
+        import odl
+        C3 = odl.Cn(3)
 
-from . import space
-from .space import *
-__all__ += space.__all__
+        #Three ways of creating the identity
+        I1 = odl.IdentityOperator(C3)
+        I2 = odl.operator.IdentityOperator(C3)
+        I3 = odl.operator.default.IdentityOperator(C3)
+
+if __name__ == '__main__':
+    unittest.main(exit=False)

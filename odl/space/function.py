@@ -22,7 +22,7 @@ TODO: document properly
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
@@ -31,6 +31,8 @@ from builtins import super
 import numpy as np
 
 # ODL imports
+import odl
+print(odl.operator, odl, dir(odl), odl.__all__)
 from odl.operator.operator import Operator
 from odl.space.domain import IntervalProd
 from odl.space.set import RealNumbers, ComplexNumbers, Set

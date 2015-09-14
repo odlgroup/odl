@@ -18,6 +18,6 @@
 """Utility library for ODL, only for internal use."""
 
 from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+
 
 __all__ = ('testutils', 'utility')

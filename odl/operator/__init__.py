@@ -80,7 +80,17 @@ gauss_newton        Gauss-Newton method
 =================== ===========
 """
 
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import
 
-__all__ = ('default', 'operator', 'solvers')
+__all__ = []
+
+from . import default
+from .default import *
+__all__ += default.__all__
+
+from . import operator
+from .operator import *
+__all__ += operator.__all__
+from . import solvers
+
+print(__all__)
