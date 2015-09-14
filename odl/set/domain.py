@@ -507,7 +507,6 @@ class IntervalProd(Set):
 
         Examples
         --------
-
         >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
         >>> grid = rbox.uniform_sampling([2, 5])
         >>> grid.coord_vectors
@@ -519,7 +518,7 @@ class IntervalProd(Set):
         from odl.discr.grid import RegularGrid
         num_nodes = np.atleast_1d(num_nodes).astype(np.int64)
 
-        if np.any(np.isinf(self._begin)) or np.any(np.isinf(self._end)):
+        if np.any(np.isinf(self.begin)) or np.any(np.isinf(self.end)):
             raise ValueError('uniform sampling undefined for infinite '
                              'domains.')
 
@@ -536,10 +535,11 @@ class IntervalProd(Set):
             raise ValueError('degenerate axes {} cannot be sampled with more '
                              'than one node.'.format(tuple(self._ideg)))
 
-        center = self.midpoint
-        stride = (self.size / num_nodes if as_midp else
-                  self.size / (num_nodes - 1))
-        return RegularGrid(num_nodes, center, stride)
+        grid_min = (self.begin if not as_midp
+                    else self.begin + self.size / 2*num_nodes)
+        grid_max = (self.end if not as_midp
+                    else self.end - self.size / 2*num_nodes)
+        return RegularGrid(grid_min, grid_max, num_nodes)
 
     # Magic methods
     def __repr__(self):

@@ -264,6 +264,8 @@ class TensorGrid(Set):
         True
         """
         # Optimization for some common cases
+        if other is self:
+            return True
         if not (isinstance(other, TensorGrid) and
                 np.all(self.shape <= other.shape) and
                 np.all(self.min >= other.min - tol) and
@@ -666,27 +668,13 @@ class RegularGrid(TensorGrid):
 
         Examples
         --------
-        >>> rg = RegularGrid((2, 3), center=[-1, 1], stride=[1, 2])
+        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
+        >>> rg
+        RegularGrid([-1.5, -1.0], [-0.5, 3.0], [2, 3])
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
         >>> rg.dim, rg.ntotal
         (2, 6)
-        >>> rg = RegularGrid((2, 3), center=[-1, 1], stride=[-1, 2])
-        Traceback (most recent call last):
-        ...
-        ValueError: 'stride' may only have positive entries.
-
-        Default for 'center' is [0,...,0]:
-
-        >>> rg = RegularGrid((2, 3), stride=[1, 2])
-        >>> rg.coord_vectors
-        (array([-0.5,  0.5]), array([-2.,  0.,  2.]))
-
-        Default for 'stride' is [1,...,1]:
-
-        >>> rg = RegularGrid((2, 3), center=[-1, 1])
-        >>> rg.coord_vectors
-        (array([-1.5, -0.5]), array([ 0.,  1.,  2.]))
         """
         min_pt = np.atleast_1d(min_pt).astype(np.float64)
         max_pt = np.atleast_1d(max_pt).astype(np.float64)
@@ -722,7 +710,9 @@ class RegularGrid(TensorGrid):
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
         super().__init__(*coord_vecs)
         self._center = (self.max + self.min) / 2
-        self._stride = (self.max - self.min) / (shape - 1)
+        self._stride = np.ones(len(shape), dtype='float64')
+        idcs = np.where(shape > 1)
+        self._stride[idcs] = (self.max - self.min)[idcs] / (shape[idcs] - 1)
 
     @property
     def center(self):
@@ -765,7 +755,7 @@ class RegularGrid(TensorGrid):
         (array([-2., -1.,  0.]), array([-2.,  0.,  2.,  4.]))
         >>> rg_sub = RegularGrid([-1, 2], [0, 4], (2, 2))
         >>> rg_sub.coord_vectors
-        (array([-2.,  0.]), array([ 0.,  2.]))
+        (array([-1.,  0.]), array([ 2.,  4.]))
         >>> rg_sub.is_subgrid(rg)
         True
 
@@ -779,6 +769,8 @@ class RegularGrid(TensorGrid):
         True
         """
         # Optimize some common cases
+        if other is self:
+            return True
         if not (isinstance(other, TensorGrid) and
                 np.all(self.shape <= other.shape) and
                 np.all(self.min >= other.min - tol) and
@@ -863,7 +855,7 @@ class RegularGrid(TensorGrid):
         >>> rg1 = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg2 = RegularGrid(-3, 7, 6)
         >>> rg1.insert(rg2, 1)
-        RegularGrid([1, 7, 3], [-1.0, -3.0, 0.0], [2.0, 6.0, 0.5])
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 6, 3])
         """
         if index not in Integers():
             raise TypeError('{} is not an integer.'.format(index))
@@ -886,27 +878,22 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-
         slc : int or slice
             Negative indices and 'None' (new axis) are not supported.
 
         Examples
         --------
 
-        >>> g = RegularGrid([3, 1, 9], stride=[0.5, 2, 3])
+        >>> g = RegularGrid([-1.5, -3, -1], [-0.5, 7, 3], (2, 3, 6))
         >>> g[0, 0, 0]
-        array([ -0.5,   0. , -12. ])
+        array([-1.5, -3. , -1. ])
         >>> g[:, 0, 0]
-        RegularGrid([3, 1, 1], [0.0, 0.0, -12.0], [0.5, 2.0, 3.0])
-        >>> g[:, 0, 0].coord_vectors
-        (array([-0.5,  0. ,  0.5]), array([ 0.]), array([-12.]))
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, -3.0, -1.0], [2, 1, 1])
 
         Ellipsis can be used, too:
 
-        >>> g[1:, ..., ::3]
-        RegularGrid([2, 1, 3], [0.25, 0.0, -3.0], [0.5, 2.0, 9.0])
-        >>> g[1:, ..., ::3].coord_vectors
-        (array([ 0. ,  0.5]), array([ 0.]), array([-12.,  -3.,   6.]))
+        >>> g[..., ::3]
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 3, 2])
         """
         from math import ceil
 
@@ -954,13 +941,14 @@ class RegularGrid(TensorGrid):
             raise IndexError('too many axes ({} > {}).'
                              ''.format(len(slc_list), self.dim))
 
-        new_shape, new_center, new_stride = -np.ones((3, self.dim))
+        new_shape = np.ones(self.dim, dtype=int)
+        new_min, new_max = -np.ones((2, self.dim), dtype='float64')
 
         # Copy axes corresponding to ellipsis
         ell_idcs = np.arange(ellipsis_idx, self.dim - num_after_ellipsis)
         new_shape[ell_idcs] = np.array(self.shape)[ell_idcs]
-        new_center[ell_idcs] = self.center[ell_idcs]
-        new_stride[ell_idcs] = self.stride[ell_idcs]
+        new_min[ell_idcs] = self.min[ell_idcs]
+        new_max[ell_idcs] = self.max[ell_idcs]
 
         # The other indices
         for i in range(ellipsis_idx):
@@ -969,9 +957,8 @@ class RegularGrid(TensorGrid):
             else:
                 istart, istop, istep = slc_list[i], slc_list[i]+1, 1
             new_shape[i] = ceil((istop - istart) / istep)
-            new_stride[i] = istep * self.stride[i]
-            new_center[i] = (self.min[i] + istart * self.stride[i] +
-                             (new_shape[i]-1)/2 * new_stride[i])
+            new_min[i] = self.min[i] + istart * self.stride[i]
+            new_max[i] = self.max[i] - (self.shape[i] - istop) * self.stride[i]
 
         for i in range(1, num_after_ellipsis + 1):
             i = -i
@@ -980,11 +967,10 @@ class RegularGrid(TensorGrid):
             else:
                 istart, istop, istep = slc_list[i], slc_list[i]+1, 1
             new_shape[i] = ceil((istop - istart) / istep)
-            new_stride[i] = istep * self.stride[i]
-            new_center[i] = (self.min[i] + istart * self.stride[i] +
-                             (new_shape[i]-1)/2 * new_stride[i])
+            new_min[i] = self.min[i] + istart * self.stride[i]
+            new_max[i] = self.max[i] - (self.shape[i] - istop) * self.stride[i]
 
-        return RegularGrid(new_shape, new_center, new_stride)
+        return RegularGrid(new_min, new_max, new_shape)
 
     def __repr__(self):
         """g.__repr__() <==> repr(g)."""
