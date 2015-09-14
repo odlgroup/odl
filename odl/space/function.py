@@ -184,10 +184,8 @@ class FunctionSet(Set):
                                 ''.format(fapply))
 
             self._space = fset
-            if fcall is not None:
-                self._call = fcall
-            if fapply is not None:
-                self._apply = fapply
+            self._call_impl = fcall
+            self._apply = fapply
 
         @property
         def space(self):
@@ -220,6 +218,8 @@ class FunctionSet(Set):
                     self._call == other._call and
                     self._apply == other._apply)
 
+        # FIXME: this is a bad hack bypassing the operator default
+        # pattern for apply and call
         def __call__(self, *inp):
             """Vectorized and multi-argument out-of-place evaluation.
 
@@ -244,7 +244,10 @@ class FunctionSet(Set):
             elif inp[0] in self.domain:
                 # single array: f([0, 1, 2])
                 pass
-            elif isinstance(self.domain, IntervalProd):
+            else:  # Try vectorization
+                if not isinstance(self.domain, IntervalProd):
+                    raise TypeError('vectorized evaluation only possible for '
+                                    '`IntervalProd` domains.')
                 # Vectorization only allowed in this case
 
                 # First case: (N, d) array of points, where d = dimension
@@ -260,16 +263,18 @@ class FunctionSet(Set):
                     min_coords = [np.min(vec) for vec in inp]
                     max_coords = [np.max(vec) for vec in inp]
 
+                else:
+                    raise TypeError('input is neither an element of the '
+                                    'function domain {} nor an array or '
+                                    'meshgrid-type coordinate list.'
+                                    ''.format(self.domain))
+
                 if (min_coords not in self.domain or
                         max_coords not in self.domain):
                     raise ValueError('input contains points outside '
                                      '`domain` {}.'.format(self.domain))
-            else:
-                raise TypeError('input is neither an element of the function '
-                                'domain {} nor an array or meshgrid-type '
-                                'coordinate list.'.format(self.domain))
 
-            outp = self._call(*inp)
+            outp = self._call_impl(*inp)
 
             if not (outp in self.range or
                     (isinstance(outp, np.ndarray) and
@@ -280,7 +285,7 @@ class FunctionSet(Set):
 
             return outp
 
-        def _apply(self, outp, *inp):
+        def apply(self, outp, *inp):
             """Vectorized and multi-argument in-place evaluation.
 
             Parameters
@@ -306,6 +311,7 @@ class FunctionSet(Set):
                                 'elements of the function range {}.'
                                 ''.format(outp, self.range))
 
+            # TODO: no checks on input so far
             return self._apply(outp, *inp)
 
         def __eq__(self, other):
@@ -317,10 +323,17 @@ class FunctionSet(Set):
             return not self.equals(other)
 
         def __str__(self):
-            return str(self._call)
+            if self._call_impl is not None:
+                return str(self._call_impl)
+            else:
+                return str(self._apply_impl)
 
         def __repr__(self):
-            return '{!r}.element({!r})'.format(self.space, self._call)
+            if self._call_impl is not None:
+                return '{!r}.element({!r})'.format(self.space, self._call_impl)
+            else:
+                return '{!r}.element({!r})'.format(self.space,
+                                                   self._apply_impl)
 
 
 class FunctionSpace(FunctionSet, LinearSpace):
@@ -495,6 +508,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
             """The actual product function."""
             return x_old(arg) * y_old(arg)
         y._function = product
+
+    def __repr__(self):
+        """`s.__repr__() <==> repr(s)`."""
+        return 'FunctionSpace({!r}, {!r})'.format(self.domain, self.range)
+
+    def __str__(self):
+        """`s.__str__() <==> str(s)`."""
+        return 'FunctionSpace({}, {})'.format(self.domain, self.range)
 
     class Vector(FunctionSet.Vector, LinearSpace.Vector):
 
