@@ -25,13 +25,17 @@ standard_library.install_aliases()
 import nose
 import sys
 
-arg = sys.argv[:1]
-arg.append('--verbosity=2')
-arg.append('--with-doctest')
-arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS')
-try:
-    # pylint: disable=unused-import
-    import odl.space.cuda
-except ImportError:
-    arg.append('--ignore-files=cuda.py')
-out = nose.run(defaultTest='./odl/.', argv=arg)
+def run_doctests():
+    arg = sys.argv[:1]
+    arg.append('--verbosity=2')
+    arg.append('--with-doctest')
+    arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS')
+    try:
+        # pylint: disable=unused-import
+        import odl.space.cuda
+    except ImportError:
+        arg.append('--ignore-files=cuda.py')
+    out = nose.run(defaultTest='./odl/.', argv=arg)
+    
+if __name__ == '__main__':
+    run_tests()

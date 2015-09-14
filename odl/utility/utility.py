@@ -19,6 +19,7 @@
 Utilities for use inside the ODL project, not for external use.
 """
 
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
@@ -30,6 +31,7 @@ from builtins import str
 from textwrap import dedent, fill
 import numpy as np
 
+__all__ = ['errfmt', 'array1d_repr', 'array1d_str']
 
 def errfmt(errstr):
     """TODO: remove"""

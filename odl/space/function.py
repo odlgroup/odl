@@ -316,6 +316,12 @@ class FunctionSet(Set):
             """`vec.__ne__(other) <==> vec != other`"""
             return not self.equals(other)
 
+        def __str__(self):
+            return str(self._call)
+
+        def __repr__(self):
+            return '{!r}.element({!r})'.format(self.space, self._call)
+
 
 class FunctionSpace(FunctionSet, LinearSpace):
 
