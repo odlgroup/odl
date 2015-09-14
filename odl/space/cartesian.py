@@ -797,7 +797,7 @@ class Ntuples(NtuplesBase):
                 return self.data[int(indices)]  # single index
             except TypeError:
                 arr = self.data[indices]
-                return Ntuples(len(arr), self.space.dtype).element(arr)
+                return type(self.space)(len(arr), dtype=self.space.dtype).element(arr)
 
         def __setitem__(self, indices, values):
             """Set values of this vector.

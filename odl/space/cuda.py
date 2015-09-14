@@ -336,10 +336,7 @@ class CudaNtuples(NtuplesBase):
                 return type(self.space)(data.size, data.dtype).element(
                     self.data.getslice(indices))
             else:
-                try:
-                    return self.data.__getitem__(int(indices))
-                except RuntimeError as e:
-                    print(e, indices)
+                return self.data.__getitem__(indices)
 
         def __setitem__(self, indices, values):
             """Set values of this vector.
