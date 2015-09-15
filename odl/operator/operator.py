@@ -101,9 +101,8 @@ from abc import ABCMeta
 from numbers import Number
 
 # ODL imports
-from odl.utility.utility import errfmt
-from odl.set.space import LinearSpace
-from odl.set.set import UniversalSet
+from odl.sets.space import LinearSpace
+from odl.sets.set import UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'OperatorRightScalarMult', 'OperatorPointwiseProduct',
@@ -207,16 +206,15 @@ class _OperatorMeta(ABCMeta):
         """Create a new class `cls` from given arguments."""
         obj = ABCMeta.__call__(cls, *args, **kwargs)
         if not hasattr(obj, 'domain'):
-            raise NotImplementedError(errfmt('''
-            `Operator` instances must have a `domain` attribute.'''))
+            raise NotImplementedError('`Operator` instances must have a '
+                                      '`domain` attribute.')
         if not hasattr(obj, 'range'):
-            raise NotImplementedError(errfmt('''
-            `Operator` instances must have a `range` attribute.'''))
+            raise NotImplementedError('`Operator` instances must have a '
+                                      '`range` attribute.')
         if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
-            raise NotImplementedError(errfmt('''
-            `Operator` instances must either have `_call` or `_apply`
-            as attribute.'''))
-
+            raise NotImplementedError('`Operator` instances must either '
+                                      'have `_call` or `_apply` as '
+                                      'attribute.')
         return obj
 
 
@@ -345,14 +343,14 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     def derivative(self, point):
         """Return the operator derivative at `point`."""
-        raise NotImplementedError(errfmt('''
-        `derivative` not implemented for operator {!r}'''.format(self)))
+        raise NotImplementedError('derivative not implemented for operator '
+                                  '{!r}'.format(self))
 
     @property
     def inverse(self):
         """Return the operator inverse."""
-        raise NotImplementedError(errfmt('''
-        `inverse` not implemented for operator {!r}.'''.format(self)))
+        raise NotImplementedError('inverse not implemented for operator '
+                                  '{!r}'.format(self))
 
     @property
     def I(self):
@@ -368,12 +366,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        inp : element of `self.domain`
+        inp : domain element
             An object in the operator domain to which the operator is
             applied. The object is treated as immutable, hence it is
             not modified during evaluation.
 
-        outp : element of `self.range`
+        outp : range element
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
@@ -384,7 +382,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
@@ -396,21 +393,18 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Rn(3).element([1.0, 2.0, 3.0])
         """
         if not self.domain.contains(inp):
-            raise TypeError(errfmt('''
-            inp ({}) is not in the operator domain ({})
-            '''.format(repr(inp), repr(self))))
+            raise TypeError('input {!r} not an element of the domain {!r} '
+                            'of {!r}.'
+                            ''.format(inp, self.domain, self))
 
         if not self.range.contains(outp):
-            raise TypeError(errfmt('''
-            outp ({}) is not in the operator range ({})
-            '''.format(repr(outp), repr(self))))
+            raise TypeError('output {!r} not an element of the range {!r} '
+                            'of {!r}.'
+                            ''.format(outp, self.range, self))
 
         if inp is outp:
-            raise ValueError(errfmt('''
-            inp ({}) is the same as outp ({}) operators do not permit
-            aliased arguments
-            '''.format(repr(inp), repr(outp))))
-
+            raise ValueError('aliased (identical) input and output not '
+                             'allowed.')
         self._apply(inp, outp)
 
     def __call__(self, inp):
@@ -421,20 +415,19 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        inp : element of `self.domain`
+        inp : domain element
             An object in the operator domain to which the operator is
             applied. The object is treated as immutable, hence it is
             not modified during evaluation.
 
         Returns
         -------
-        element of `self.range`
+        elem : range element
             An object in the operator range, the result of the operator
             evaluation.
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
@@ -451,17 +444,16 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         15
         """
         if inp not in self.domain:
-            raise TypeError(errfmt('''
-            `inp` {!r} is not in the operator `domain` {}.
-            '''.format(inp, self.domain)))
+            raise TypeError('input {!r} not an element of the domain {!r} '
+                            'of {!r}.'
+                            ''.format(inp, self.domain, self))
 
         result = self._call(inp)
 
         if result not in self.range:
-            raise TypeError(errfmt('''
-            `result` {!r} is not in the operator `range` {}.
-            '''.format(result, self.range)))
-
+            raise TypeError('result {!r} not an element of the range {!r} '
+                            'of {!r}.'
+                            ''.format(result, self.range, self))
         return result
 
     def __add__(self, other):
@@ -495,12 +487,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Returns
         -------
-        mul : `OperatorPointwiseProduct` or `OperatorRightScalarMult`
-            The operator or scalar multiplication
+        mul : ``Operator``
+            The multiplication operator. If `other` is a scalar, a
+            ``OperatorRightScalarMult`` is returned. If `other` is
+            an operator, an ``OperatorPointwiseProduct`` is returned.
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
@@ -517,9 +510,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         elif isinstance(other, Number):
             return OperatorRightScalarMult(self, other)
         else:
-            raise TypeError(errfmt('''
-            type {} of `other` is neither `Operator` nor scalar.
-            '''.format(type(other))))
+            raise TypeError('multiplicant {!r} is neither operator nor '
+                            'scalar.'.format(other))
 
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
@@ -548,11 +540,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Returns
         -------
-        mul : `OperatorPointwiseProduct` or `OperatorLeftScalarMult`
+        rmul : ``Operator``
+            The multiplication operator. If `other` is a scalar, a
+            ``OperatorLeftScalarMult`` is returned. If `other` is
+            an operator, an ``OperatorPointwiseProduct`` is returned.
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> rn = Rn(3)
@@ -569,9 +563,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
         else:
-            raise TypeError(errfmt('''
-            type {} of `other` is neither `Operator` nor scalar.
-            '''.format(type(other))))
+            raise TypeError('multiplicant {!r} is neither operator nor '
+                            'scalar.'.format(other))
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`.
@@ -610,33 +603,30 @@ class OperatorSum(Operator):
 
         Parameters
         ----------
-
-        op1 : `Operator`
+        op1 : ``Operator``
             The first summand. Its `range` must be a `LinearSpace`.
-        op2 : `Operator`
+        op2 : ``Operator``
             The second summand. Must have the same `domain` and `range` as
             `op1`.
-        tmp : `range` element, optional
+        tmp : range element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
         if op1.range != op2.range:
-            raise TypeError(errfmt('''
-            `op1.range` {} and `op2.range` {} not equal.
-            '''.format(op1.range, op2.range)))
+            raise TypeError('operator ranges {!r} and {!r} do not match.'
+                            ''.format(op1.range, op2.range))
 
         if not isinstance(op1.range, LinearSpace):
-            raise TypeError(errfmt('''
-            `range` {} not a `LinearSpace`.'''.format(op1.range)))
+            raise TypeError('range {!r} not a `LinearSpace` instance.'
+                            ''.format(op1.range))
 
         if op1.domain != op2.domain:
-            raise TypeError(errfmt('''
-            `op1.domain` {} and `op2.domain` {} not equal.
-            '''.format(op1.domain, op2.domain)))
+            raise TypeError('operator domains {!r} and {!r} do not match.'
+                            ''.format(op1.domain, op2.domain))
 
         if tmp is not None and tmp not in op1.domain:
-            raise TypeError(errfmt('''
-            `tmp` {} not in `domain` {}.'''.format(tmp, op1.domain)))
+            raise TypeError('temporary {!r} not an element of the operator '
+                            'domain {!r}.'.format(tmp, op1.domain))
 
         self._op1 = op1
         self._op2 = op2
@@ -647,7 +637,6 @@ class OperatorSum(Operator):
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
@@ -669,7 +658,6 @@ class OperatorSum(Operator):
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import ScalingOperator
         >>> r3 = Rn(3)
@@ -684,11 +672,10 @@ class OperatorSum(Operator):
 
     @property
     def domain(self):
-        """The operator `domain`.
+        """The operator domain.
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
@@ -700,11 +687,10 @@ class OperatorSum(Operator):
 
     @property
     def range(self):
-        """The operator `range`.
+        """The operator range (or codomain).
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> from odl.operator.default import IdentityOperator
         >>> r3 = Rn(3)
@@ -716,6 +702,8 @@ class OperatorSum(Operator):
 
     def derivative(self, point):
         """Return the operator derivative at `point`.
+
+        # TODO: finish doc
 
         The derivative of a sum of two operators is equal to the sum of
         the derivatives.
@@ -747,24 +735,24 @@ class OperatorComp(Operator):
 
         Parameters
         ----------
-        left : `Operator`
+        left : ``Operator``
             The left ("outer") operator
-        right : `Operator`
+        right : ``Operator``
             The right ("inner") operator. Its range must coincide with the
-            `domain` of `left`.
-        tmp : `right.range` element, optional
+            domain of `left`.
+        tmp : element of the range of `right`, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
         if right.range != left.domain:
-            raise TypeError(errfmt('''
-            `right.range` {} not equal to `left.domain` {}.
-            '''.format(right.range, left.domain)))
+            raise TypeError('range {!r} of the right operator {!r} not equal '
+                            'to the domain {!r} of the left operator {!r}.'
+                            ''.format(right.range, right,
+                                      left.domain, left))
 
-        if tmp is not None and tmp not in right.range:
-            raise TypeError(errfmt('''
-            `tmp` {} not in `right.range` {}.
-            '''.format(tmp, left.domain)))
+        if tmp is not None and tmp not in left.domain:
+            raise TypeError('temporary {!r} not an element of the left '
+                            'operator domain {!r}.'.format(tmp, left.domain))
 
         self._left = left
         self._right = right
@@ -847,29 +835,27 @@ class OperatorPointwiseProduct(Operator):
 
     # pylint: disable=abstract-method
     def __init__(self, op1, op2):
-        """Initialize a new `OperatorPointwiseProduct` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
-        op1 : `Operator`
-            The first factor. Its `range` must be an `Algebra`.
-        op2 : `Operator`
-            The second factor. Must have the same `domain` and `range`
-            as `op1`.
+        op1 : ``Operator``
+            The first factor
+        op2 : ``Operator``
+            The second factor. Must have the same domain and range as
+            `op1`.
         """
         if op1.range != op2.range:
-            raise TypeError(errfmt('''
-            `op1.range` {} and `op2.range` {} not equal.
-            '''.format(op1.range, op2.range)))
+            raise TypeError('operator ranges {!r} and {!r} do not match.'
+                            ''.format(op1.range, op2.range))
 
         if not isinstance(op1.range, LinearSpace):
-            raise TypeError(errfmt('''
-            `range` {} not a `LinearSpace`.'''.format(op1.range)))
+            raise TypeError('range {!r} not a `LinearSpace` instance.'
+                            ''.format(op1.range))
 
         if op1.domain != op2.domain:
-            raise TypeError(errfmt('''
-            `op1.domain` {} and `op2.domain` {} not equal.
-            '''.format(op1.domain, op2.domain)))
+            raise TypeError('operator domains {!r} and {!r} do not match.'
+                            ''.format(op1.domain, op2.domain))
 
         self._op1 = op1
         self._op2 = op2
@@ -922,20 +908,20 @@ class OperatorLeftScalarMult(Operator):
 
         Parameters
         ----------
-        op : `Operator`
-            The `range` of `op` must be a `LinearSpace`.
+        op : ``Operator``
+            The range of `op` must be a ``LinearSpace``.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
-            `op.range`.
+            the range.
         """
         if not isinstance(op.range, LinearSpace):
-            raise TypeError(errfmt('''
-            `op.range` {} is not a `LinearSpace`.'''.format(op.range)))
+            raise TypeError('range {!r} not a `LinearSpace` instance.'
+                            ''.format(op.range))
 
         if scalar not in op.range.field:
-            raise TypeError(errfmt('''
-            `scalar` {} not in `op.range.field` {}.
-            '''.format(scalar, op.range.field)))
+            raise TypeError('scalar {!r} not in the field {!r} of the '
+                            'operator range {!r}.'
+                            ''.format(scalar, op.range.field, op.range))
 
         self._op = op
         self._scalar = scalar
@@ -1017,26 +1003,26 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         op : `Operator`
-            The `domain` of `op` must be a `LinearSpace`.
+            The domain of `op` must be a ``LinearSpace``.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
-            `op.domain`.
-        tmp : `domain` element, optional
+            the operator domain.
+        tmp : domain element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
         if not isinstance(op.domain, LinearSpace):
-            raise TypeError(errfmt('''
-            `op.domain` {} is not a `LinearSpace`.'''.format(op.domain)))
+            raise TypeError('domain {!r} not a `LinearSpace` instance.'
+                            ''.format(op.domain))
 
         if scalar not in op.domain.field:
-            raise TypeError(errfmt('''
-            `scalar` {} not in `op.domain.field` {}.
-            '''.format(scalar, op.domain.field)))
+            raise TypeError('scalar {!r} not in the field {!r} of the '
+                            'operator domain {!r}.'
+                            ''.format(scalar, op.domain.field, op.domain))
 
         if tmp is not None and tmp not in op.domain:
-            raise TypeError(errfmt('''
-            'tmp' {} not in `op.domain {}`.'''.format(tmp, op.domain)))
+            raise TypeError('temporary {!r} not an element of the '
+                            'operator domain {!r}.'.format(tmp, op.domain))
 
         self._op = op
         self._scalar = scalar
@@ -1056,12 +1042,12 @@ class OperatorRightScalarMult(Operator):
 
     @property
     def domain(self):
-        """The operator `domain`."""
+        """The operator domain."""
         return self._op.domain
 
     @property
     def range(self):
-        """The operator `range`."""
+        """The operator range."""
         return self._op.range
 
     @property
@@ -1154,8 +1140,8 @@ class LinearOperator(Operator):
     @property
     def adjoint(self):
         """The operator adjoint."""
-        raise NotImplementedError(errfmt('''
-        `adjoint` not implemented for operator {!r}.'''.format(self)))
+        raise NotImplementedError('adjoint not implemented for operator {!r}.'
+                                  ''.format(self))
 
     # Implicitly defined operators
     @property
@@ -1193,9 +1179,8 @@ class LinearOperator(Operator):
         elif isinstance(other, Number):
             return LinearOperatorScalarMult(self, other)
         else:
-            raise TypeError(errfmt('''
-            type {} of `other` is neither `Operator` nor scalar.
-            '''.format(type(other))))
+            raise TypeError('multiplicant {!r} is neither operator nor '
+                            'scalar.'.format(other))
 
     def __rmul__(self, other):
         """`op.__rmul__(other) <==> other * op`.
@@ -1240,43 +1225,30 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
         Parameters
         ----------
 
-        op1 : `LinearOperator`
+        op1 : ``LinearOperator``
             The first summand
-        op2 : `LinearOperator`
+        op2 : ``LinearOperator``
             The second summand. Must have the same `domain` and `range` as
             `op1`.
-        tmp_ran : `range` element, optional
+        tmp_ran : range element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
-        tmp_dom : `domain` element, optional
+        tmp_dom : domain element, optional
             Used to avoid the creation of a temporary when applying the
             operator adjoint.
         """
         if not isinstance(op1, LinearOperator):
-            raise TypeError(errfmt('''
-            `op1` {} not a `LinearOperator`.'''.format(op1)))
+            raise TypeError('first operator {!r} is not a LinearOperator '
+                            'instance.'.format(op1))
 
         if not isinstance(op2, LinearOperator):
-            raise TypeError(errfmt('''
-            `op2` {} not a `LinearOperator`.'''.format(op2)))
-
-        if op1.range != op2.range:
-            raise TypeError(errfmt('''
-            `op1.range` {} and `op2.range` {} not equal.
-            '''.format(op1.range, op2.range)))
-
-        if op1.domain != op2.domain:
-            raise TypeError(errfmt('''
-            `op1.domain` {} and `op2.domain` {} not equal.
-            '''.format(op1.domain, op2.domain)))
-
-        if tmp_ran is not None and tmp_ran not in op1.range:
-            raise TypeError(errfmt('''
-            `tmp_ran` {} not in `range` {}.'''.format(tmp_ran, op1.range)))
+            raise TypeError('second operator {!r} is not a LinearOperator '
+                            'instance'.format(op2))
 
         if tmp_dom is not None and tmp_dom not in op1.domain:
-            raise TypeError(errfmt('''
-            `tmp_dom` {} not in `domain` {}.'''.format(tmp_dom, op1.domain)))
+            raise TypeError('domain temporary {!r} not an element of the '
+                            'operator domain {!r}.'
+                            ''.format(tmp_dom, op1.domain))
 
         super().__init__(op1, op2, tmp_ran)
         self._tmp_dom = tmp_dom
@@ -1310,7 +1282,7 @@ class LinearOperatorComp(OperatorComp, LinearOperator):
 
         Parameters
         ----------
-        left : `LinearOperator`
+        left : ``LinearOperator``
             The left ("outer") operator
         right : `LinearOperator`
             The right ("inner") operator. Its range must coincide with the
@@ -1320,22 +1292,12 @@ class LinearOperatorComp(OperatorComp, LinearOperator):
             operator.
         """
         if not isinstance(left, LinearOperator):
-            raise TypeError(errfmt('''
-            `left` {} not a `LinearOperator`.'''.format(left)))
+            raise TypeError('left operator {!r} is not a LinearOperator '
+                            'instance.'.format(left))
 
         if not isinstance(right, LinearOperator):
-            raise TypeError(errfmt('''
-            `right` {} not a `LinearOperator`.'''.format(right)))
-
-        if right.range != left.domain:
-            raise TypeError(errfmt('''
-            `right.range` {} not equal to `left.domain` {}.
-            '''.format(right.range, left.domain)))
-
-        if tmp is not None and tmp not in right.range:
-            raise TypeError(errfmt('''
-            `tmp` {} not in `right.range` {}.
-            '''.format(tmp, left.domain)))
+            raise TypeError('right operator {!r} is not a LinearOperator '
+                            'instance'.format(right))
 
         super().__init__(left, right, tmp)
 
@@ -1375,12 +1337,8 @@ class LinearOperatorScalarMult(OperatorLeftScalarMult, LinearOperator):
             `op.domain`.
         """
         if not isinstance(op, LinearOperator):
-            raise TypeError(errfmt('''
-            `op` {} not a `LinearOperator`.'''.format(op)))
-
-        if scalar not in op.range.field:
-            raise TypeError(errfmt('''
-            `scalar` {} not in `op.range.field`.'''.format(scalar)))
+            raise TypeError('operator {!r} is not a LinearOperator instance.'
+                            ''.format(op))
 
         super().__init__(op, scalar)
 
@@ -1459,8 +1417,8 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     15
     """
     if call is None and apply is None:
-        raise ValueError(errfmt('''
-        At least one argument `call` or `apply` must be given.'''))
+        raise ValueError("at least one argument 'call' or 'apply' must be "
+                         "given.")
 
     simple_operator = _OperatorMeta(
         'SimpleOperator', (Operator,),

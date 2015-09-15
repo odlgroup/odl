@@ -25,8 +25,8 @@ standard_library.install_aliases()
 # ODL imports
 #from odl.discr.grid import TensorGrid
 #from odl.space.cartesian import Rn, Cn
-from odl.space.function import FunctionSpace
-from odl.set.set import RealNumbers
+from odl.space.fspace import FunctionSpace
+from odl.sets.set import RealNumbers
 try:
     from odl.space.cuda import CudaRn
     CUDA_AVAILABLE = True

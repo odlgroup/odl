@@ -28,8 +28,8 @@ import unittest
 
 # ODL imports
 from odl.space.cartesian import Rn
-from odl.set.product import ProductSpace
-from odl.utility.testutils import ODLTestCase
+from odl.sets.product import ProductSpace
+from odl.util.testutils import ODLTestCase
 
 
 class ProductTest(ODLTestCase):

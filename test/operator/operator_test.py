@@ -34,7 +34,7 @@ from odl.operator.operator import OperatorRightScalarMult
 from odl.operator.operator import LinearOperatorSum, LinearOperatorComp
 from odl.operator.operator import LinearOperatorScalarMult
 from odl.space.cartesian import Rn
-from odl.utility.testutils import ODLTestCase
+from odl.util.testutils import ODLTestCase
 
 
 class MultiplyAndSquareOp(Operator):

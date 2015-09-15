@@ -45,9 +45,9 @@ from builtins import range, super, zip
 import numpy as np
 
 # ODL imports
-from odl.set.domain import IntervalProd
-from odl.set.set import Set, Integers
-from odl.utility.utility import array1d_repr, array1d_str
+from odl.sets.domain import IntervalProd
+from odl.sets.set import Set, Integers
+from odl.util.utility import array1d_repr, array1d_str
 
 
 __all__ = ('TensorGrid', 'RegularGrid')

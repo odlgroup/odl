@@ -29,9 +29,9 @@ from math import sqrt
 
 # ODL imports
 # import odl.operator.operator as op
-# import odl.set.space as space
+# import odl.sets.space as space
 from odl.space.cartesian import *
-from odl.utility.testutils import ODLTestCase
+from odl.util.testutils import ODLTestCase
 
 # TODO: add tests for:
 # * Ntuples (different data types)

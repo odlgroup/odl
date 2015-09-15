@@ -26,7 +26,7 @@ standard_library.install_aliases()
 import unittest
 
 # ODL imports
-from odl.utility.testutils import ODLTestCase
+from odl.util.testutils import ODLTestCase
 
 class ImportStarTest(ODLTestCase):
     def test_all(self):
@@ -42,7 +42,7 @@ class ImportStarTest(ODLTestCase):
         I3 = odl.operator.default.IdentityOperator(C3)
 
         #Test that utility needs to be explicitly imported
-        x = odl.utility.utility.array1d_repr
+        x = odl.util.utility.array1d_repr
         with self.assertRaises(AttributeError):
             x = odl.array1d_repr
 

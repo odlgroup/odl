@@ -29,15 +29,15 @@ import unittest
 # ODL imports
 from odl.operator.operator import LinearOperator
 from odl.space.default import L2
-from odl.set.domain import Interval, Rectangle
-from odl.set.product import ProductSpace
+from odl.sets.domain import Interval, Rectangle
+from odl.sets.product import ProductSpace
 
-from odl.utility.testutils import skip_all
+from odl.util.testutils import skip_all
 
 try:
     from odl.space.cuda import CudaRn
     import odlpp.odlpp_cuda as cuda
-    from odl.utility.testutils import ODLTestCase
+    from odl.util.testutils import ODLTestCase
 except ImportError:
     ODLTestCase = skip_all("Missing odlpp")
 

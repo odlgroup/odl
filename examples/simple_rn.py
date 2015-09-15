@@ -1,25 +1,40 @@
-""" An example of a very simple space, the space Rn, as well as benchmarks
-with an optimized version
-"""
+# Copyright 2014, 2015 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # Imports for common Python 2/3 codebase
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
-from builtins import super
+from __future__ import print_function, division, absolute_import
 from future import standard_library
+standard_library.install_aliases()
+from builtins import super
 
 # External module imports
 import numpy as np
 
 # ODL imports
-from odl.set.space import *
+from odl.sets.space import *
 from odl.space.cuda import *
-from odl.set.set import *
-from odl.utility.utility import errfmt
+from odl.sets.set import *
 from odl.space.cartesian import Rn
-from odl.utility.testutils import Timer
+from odl.util.testutils import Timer
 
-standard_library.install_aliases()
+
+"""An example of a very simple space, the space Rn, as well as benchmarks
+with an optimized version
+"""
 
 
 class SimpleRn(LinearSpace):

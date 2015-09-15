@@ -44,9 +44,8 @@ from builtins import super
 
 # ODL imports
 from odl.operator.operator import LinearOperator, SelfAdjointOperator
-from odl.set.space import LinearSpace
-from odl.set.set import CartesianProduct
-from odl.utility.utility import errfmt
+from odl.sets.space import LinearSpace
+from odl.sets.set import CartesianProduct
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
@@ -69,9 +68,8 @@ class ScalingOperator(SelfAdjointOperator):
             scaled with
         """
         if not isinstance(space, LinearSpace):
-            raise TypeError(errfmt('''
-            'space' ({}) must be a LinearSpace instance
-            '''.format(space)))
+            raise TypeError('space {!r} not a LinearSpace instance.'
+                            ''.format(space))
 
         self._space = space
         self._scal = float(scalar)
@@ -81,10 +79,10 @@ class ScalingOperator(SelfAdjointOperator):
 
         Parameters
         ----------
-        inp : self.domain element
-            An element in the operator domain
-        outp : self.range element
-            An element in the operator range
+        inp : domain element
+            Input vector to be scaled
+        outp : range element
+            Output vector to which the result is written
 
         Returns
         -------
@@ -92,7 +90,6 @@ class ScalingOperator(SelfAdjointOperator):
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
@@ -109,18 +106,16 @@ class ScalingOperator(SelfAdjointOperator):
 
         Parameters
         ----------
-        inp : self.domain element
-                An element in the domain of this operator
+        inp : domain element
+            Input vector to be scaled
 
         Returns
         -------
-        scaled : self.range element
-                 An element in the range of this operator,
-                 inp * self.scale
+        scaled : range element
+            The scaled vector
 
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
@@ -134,18 +129,8 @@ class ScalingOperator(SelfAdjointOperator):
     def inverse(self):
         """Return the inverse operator.
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        inv : ScalingOperator
-            Scaling by 1/scale
-
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
@@ -157,22 +142,13 @@ class ScalingOperator(SelfAdjointOperator):
         True
         """
         if self._scal == 0.0:
-            raise ZeroDivisionError(errfmt('''
-            Scaling operator not invertible for scalar=0'''))
+            raise ZeroDivisionError('scaling operator not invertible for '
+                                    'scalar==0')
         return ScalingOperator(self._space, 1.0/self._scal)
 
     @property
     def domain(self):
         """Return the operator domain.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        domain : LinearSpace
-            The domain of the operator
 
         Examples
         --------
@@ -188,15 +164,6 @@ class ScalingOperator(SelfAdjointOperator):
     def range(self):
         """Return the operator range.
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        domain : LinearSpace
-                 The domain of the operator
-
         Examples
         --------
         >>> from odl.space.cartesian import Rn
@@ -208,11 +175,11 @@ class ScalingOperator(SelfAdjointOperator):
         return self._space
 
     def __repr__(self):
-        """repr(self) implementation."""
+        """op.__repr__() <==> repr(op)."""
         return 'ScalingOperator({!r}, {!r})'.format(self._space, self._scal)
 
     def __str__(self):
-        """str(self) implementation."""
+        """op.__str__() <==> str(op)."""
         return '{} * I'.format(self._scal)
 
 
@@ -225,18 +192,17 @@ class ZeroOperator(ScalingOperator):
 
         Parameters
         ----------
-
         space : LinearSpace
             The space of elements which the operator is acting on
         """
         super().__init__(space, 0)
 
     def __repr__(self):
-        """repr(self) implementation."""
+        """op.__repr__() <==> repr(op)."""
         return 'ZeroOperator({!r})'.format(self._space)
 
     def __str__(self):
-        """str(self) implementation."""
+        """op.__str__() <==> str(op)."""
         return '0'
 
 
@@ -249,18 +215,17 @@ class IdentityOperator(ScalingOperator):
 
         Parameters
         ----------
-
         space : LinearSpace
             The space of elements which the operator is acting on
         """
         super().__init__(space, 1)
 
     def __repr__(self):
-        """repr(self) implementation."""
+        """op.__repr__() <==> repr(op)."""
         return 'IdentityOperator({!r})'.format(self._space)
 
     def __str__(self):
-        """str(self) implementation."""
+        """op.__str__() <==> str(op)."""
         return "I"
 
 
@@ -279,12 +244,11 @@ class LinCombOperator(LinearOperator):
 
         Parameters
         ----------
-
         space : LinearSpace
             The space of elements which the operator is acting on
-        a : float
+        a : scalar
             Scalar to multiply inp[0] with
-        b : float
+        b : scalar
             Scalar to multiply inp[1] with
         """
         self.domain = CartesianProduct(space, space)
@@ -297,11 +261,11 @@ class LinCombOperator(LinearOperator):
 
         Parameters
         ----------
-        inp : self.domain element
+        inp : domain element
             An element in the operator domain (2-tuple of space
-            elements)
-        outp : self.range.element
-            An element in the operator range.
+            elements) whose linear combination is calculated
+        outp : range element
+            Vector to which the result is written
 
         Examples
         --------
@@ -318,12 +282,12 @@ class LinCombOperator(LinearOperator):
         outp.lincomb(self.a, inp[0], self.b, inp[1])
 
     def __repr__(self):
-        """repr(self) implementation."""
+        """op.__repr__() <==> repr(op)."""
         return 'LinCombOperator({!r}, {!r}, {!r})'.format(
             self.range, self.a, self.b)
 
     def __str__(self):
-        """repr(self) implementation."""
+        """op.__str__() <==> str(op)."""
         return "{}*x + {}*y".format(self.a, self.b)
 
 
@@ -344,7 +308,6 @@ class MultiplyOperator(LinearOperator):
 
         Parameters
         ----------
-
         space : LinearSpace
             The space of elements which the operator is acting on
         """
@@ -354,9 +317,16 @@ class MultiplyOperator(LinearOperator):
     def _apply(self, inp, outp):
         """Multiply the input and write to output.
 
+        Parameters
+        ----------
+        inp : domain element
+            An element in the operator domain (2-tuple of space
+            elements) whose elementwise product is calculated
+        outp : range element
+            Vector to which the result is written
+
         Examples
         --------
-
         >>> from odl.space.cartesian import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
@@ -370,11 +340,11 @@ class MultiplyOperator(LinearOperator):
         outp.space.multiply(outp, inp[0], inp[1])
 
     def __repr__(self):
-        """repr(self) implementation."""
+        """op.__repr__() <==> repr(op)."""
         return 'MultiplyOperator({!r})'.format(self.range)
 
     def __str__(self):
-        """str(self) implementation."""
+        """op.__str__() <==> str(op)."""
         return "x * y"
 
 

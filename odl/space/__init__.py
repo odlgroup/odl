@@ -154,9 +154,9 @@ from . import default
 from .default import *
 __all__ += default.__all__
 
-from . import function
-from .function import *
-__all__ += function.__all__
+from . import fspace
+from .fspace import *
+__all__ += fspace.__all__
 
 try:
     from . import cuda

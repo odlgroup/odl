@@ -19,7 +19,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 
@@ -31,10 +30,10 @@ from scipy import ndimage
 # ODL
 from odl.discr.default import DiscreteL2, l2_uniform_discretization
 from odl.space.default import L2
-from odl.set.domain import Interval
+from odl.sets.domain import Interval
 from odl.operator.operator import LinearOperator
 import odl.operator.solvers as solvers
-from odl.utility.testutils import Timer
+from odl.util.testutils import Timer
 import solver_examples
 
 

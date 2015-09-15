@@ -1,21 +1,21 @@
-odl.utility package
-===================
+odl.util package
+================
 
 Submodules
 ----------
 
-odl.utility.testutils module
+odl.util.testutils module
 ----------------------------
 
-.. automodule:: odl.utility.testutils
+.. automodule:: odl.util.testutils
     :members:
     :undoc-members:
     :show-inheritance:
 
-odl.utility.utility module
+odl.util.utility module
 --------------------------
 
-.. automodule:: odl.utility.utility
+.. automodule:: odl.util.utility
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ odl.utility.utility module
 Module contents
 ---------------
 
-.. automodule:: odl.utility
+.. automodule:: odl.util
     :members:
     :undoc-members:
     :show-inheritance:
