@@ -96,6 +96,9 @@ class DiscreteL2(Discretization):
     def interp(self):
         """Interpolation type of this discretization."""
         return self._interp
+        
+    def points(self):
+        return self.grid.points(order=self.order)
 
     def __repr__(self):
         """l2.__repr__() <==> repr(l2)."""

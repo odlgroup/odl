@@ -121,6 +121,8 @@ class Timer(object):
             print('[{}] '.format(self.name))
         print('Elapsed: {}'.format(time() - self.tstart))
 
+
+
 class ProgressBar(object):
     """ A simple commandline progress bar
 
@@ -135,6 +137,12 @@ class ProgressBar(object):
     >>> progress = ProgressBar('Reading data', 10, 10)
     >>> progress.update(9, 8)
     Reading data [################] 99%
+    
+    Also supports simply calling update, which moves the counter forward
+    
+    >>> progress = ProgressBar('Reading data', 10, 10)
+    >>> progress.update()
+    Reading data [################] 99%
     """
 
     def __init__(self, text=None, *max_nrs):
@@ -142,14 +150,33 @@ class ProgressBar(object):
         if len(max_nrs) == 0:
             raise ValueError('Need to provide at least one max')
         self.max_nrs = max_nrs
+        self.current_nrs = [0]*len(max_nrs)
+        self.current_nrs[-1] = -1 #offset for zero indexing so first is [0,...]
+
+    def _increment_index(self):
+        self.current_nrs[-1] += 1
+        
+        updated = True
+        while updated:
+            updated = False
+            for i in range(len(self.current_nrs)):
+                if self.current_nrs[-i] == self.max_nrs[-i]:
+                    self.current_nrs[-i] = 0
+                    self.current_nrs[-i-1] += 1
+                    updated = True
+                    break
 
     def update(self, *index):
-        if len(index) != len(self.max_nrs):
-            raise ValueError('number of indices not correct')
+        if index:
+            if len(index) != len(self.max_nrs):
+                raise ValueError('number of indices not correct')
+            self.current_nrs = index
+        else:
+            self._increment_index()
 
         #Calculate nd index
         ind = 0
-        for i, max_nr in zip(index, self.max_nrs):
+        for i, max_nr in zip(self.current_nrs, self.max_nrs):
             ind *= max_nr
             ind += i
 

@@ -55,10 +55,10 @@ class FunctionSet(Set):
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError('domain {} not a `Set` instance.'.format(dom))
+            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
 
         if not isinstance(ran, Set):
-            raise TypeError('range {} not a `Set` instance.'.format(dom))
+            raise TypeError('range {!r} not a `Set` instance.'.format(dom))
 
         self._domain = dom
         self._range = ran
@@ -351,11 +351,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError('domain {} not a `Set` instance.'.format(dom))
+            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
 
         if not (isinstance(field, RealNumbers) or
                 isinstance(field, ComplexNumbers)):
-            raise TypeError('field {} not a `RealNumbers` or `ComplexNumbers` '
+            raise TypeError('field {!r} not a `RealNumbers` or `ComplexNumbers`'
                             'instance.'.format(field))
 
         super().__init__(dom, field)
