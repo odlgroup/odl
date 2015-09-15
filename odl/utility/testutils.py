@@ -30,12 +30,14 @@ standard_library.install_aliases()
 
 # External module imports
 # pylint: disable=no-name-in-module
+import numpy as np
 from itertools import zip_longest
 import unittest
+import sys
 from time import time
 from future.utils import with_metaclass
 
-__all__ = ['ODLTestCase', 'skip_all', 'Timer']
+__all__ = ['ODLTestCase', 'skip_all', 'Timer', 'ProgressBar']
 
 class ODLTestCase(unittest.TestCase):
     # Use names compatible with unittest
@@ -118,3 +120,40 @@ class Timer(object):
         if self.name is not None:
             print('[{}] '.format(self.name))
         print('Elapsed: {}'.format(time() - self.tstart))
+
+class ProgressBar(object):
+    """ A simple commandline progress bar
+
+    usage:
+
+    >>> progress = ProgressBar('Reading data', 10)
+    >>> progress.update(5) #halfway, zero indexing
+    Reading data [#######         ] 50%
+    """
+
+    def __init__(self, text=None, *max_nrs):
+        self.text = text
+        if len(max_nrs) == 0:
+            raise ValueError('Need to provide at least one max')
+        self.max_nrs = max_nrs
+
+    def update(self, *index):
+        if len(index) != len(self.max_nrs):
+            raise ValueError('number of indices not correct')
+
+        progress = 0.0
+        ind = 0 #offset by 1 for zero indexing
+        for i, max_nr in zip(index, self.max_nrs):
+            ind *= max_nr
+            ind += i
+
+        progress = (1 + ind) / np.prod(self.max_nrs)
+
+        if progress < 1.0:
+            sys.stdout.write('\r{0}: [{1:20s}] {2}%           '.format(self.text, 
+                '#'*int(20*progress), 
+                int(100*progress)))
+        else:
+            sys.stdout.write('\r{0}: Done                                   '.format(self.text))
+
+        sys.stdout.flush()
