@@ -129,6 +129,12 @@ class ProgressBar(object):
     >>> progress = ProgressBar('Reading data', 10)
     >>> progress.update(5) #halfway, zero indexing
     Reading data [#######         ] 50%
+
+    Also supports multiple index, from slowest varying to fastest
+
+    >>> progress = ProgressBar('Reading data', 10, 10)
+    >>> progress.update(9, 8)
+    Reading data [################] 99%
     """
 
     def __init__(self, text=None, *max_nrs):
@@ -150,10 +156,11 @@ class ProgressBar(object):
         progress = (1 + ind) / np.prod(self.max_nrs)
 
         if progress < 1.0:
-            sys.stdout.write('\r{0}: [{1:20s}] {2}%           '.format(self.text, 
+            sys.stdout.write('\r{0}: [{1:20s}] {2}%   '.format(self.text, 
                 '#'*int(20*progress), 
                 int(100*progress)))
         else:
-            sys.stdout.write('\r{0}: Done                                   '.format(self.text))
+            sys.stdout.write('\r{0}: [{1:20s}] Done   \n'.format(self.text,
+                '#'*20))
 
         sys.stdout.flush()
