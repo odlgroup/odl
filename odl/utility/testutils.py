@@ -119,8 +119,34 @@ class Timer(object):
     def __exit__(self, type, value, traceback):
         if self.name is not None:
             print('[{}] '.format(self.name))
-        print('Elapsed: {}'.format(time() - self.tstart))
+        print('Elapsed: {:.3f}'.format(time() - self.tstart))
+        
+def timeit(arg):
+    """ A decorator timer to be used as:
 
+    @timeit
+    def myfunction(...):
+        ...
+        
+    @timeit("info string")
+    def myfunction(...):
+        ...
+        
+    """
+    if callable(arg):
+        def timed_function(*args, **kwargs):
+            with Timer(str(arg)):
+                result = arg(*args, **kwargs)
+            return result
+        return timed_function
+    else:
+        def _timeit_helper(fn):
+            def timed_function(*args, **kwargs):
+                with Timer(arg):
+                    result = fn(*args, **kwargs)
+                return result
+            return timed_function
+        return _timeit_helper
 
 
 class ProgressBar(object):
