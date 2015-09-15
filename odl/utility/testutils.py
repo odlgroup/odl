@@ -30,7 +30,7 @@ standard_library.install_aliases()
 
 # External module imports
 # pylint: disable=no-name-in-module
-import numpy as np
+from numpy import prod
 from itertools import zip_longest
 import unittest
 import sys
@@ -124,7 +124,7 @@ class Timer(object):
 class ProgressBar(object):
     """ A simple commandline progress bar
 
-    usage:
+    Usage:
 
     >>> progress = ProgressBar('Reading data', 10)
     >>> progress.update(5) #halfway, zero indexing
@@ -138,7 +138,7 @@ class ProgressBar(object):
     """
 
     def __init__(self, text=None, *max_nrs):
-        self.text = text
+        self.text = str(text)
         if len(max_nrs) == 0:
             raise ValueError('Need to provide at least one max')
         self.max_nrs = max_nrs
@@ -147,21 +147,22 @@ class ProgressBar(object):
         if len(index) != len(self.max_nrs):
             raise ValueError('number of indices not correct')
 
-        progress = 0.0
-        ind = 0 
+        #Calculate nd index
+        ind = 0
         for i, max_nr in zip(index, self.max_nrs):
             ind *= max_nr
             ind += i
 
         #Find progress as ratio between 0 and 1
         #offset by 1 for zero indexing
-        progress = (1 + ind) / np.prod(self.max_nrs) 
+        progress = (1 + ind) / prod(self.max_nrs) 
 
+        #Write a progressbar and percent
         if progress < 1.0:
-            sys.stdout.write('\r{0}: [{1:30s}] {2:.2f}% '.format(self.text, 
+            sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}% '.format(self.text, 
                 '#'*int(30*progress), 
                 100*progress))
-        else:
+        else: #Special message when done
             sys.stdout.write('\r{0}: [{1:30s}] Done   \n'.format(self.text,
                 '#'*30))
 
