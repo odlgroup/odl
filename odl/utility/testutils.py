@@ -148,19 +148,21 @@ class ProgressBar(object):
             raise ValueError('number of indices not correct')
 
         progress = 0.0
-        ind = 0 #offset by 1 for zero indexing
+        ind = 0 
         for i, max_nr in zip(index, self.max_nrs):
             ind *= max_nr
             ind += i
 
-        progress = (1 + ind) / np.prod(self.max_nrs)
+        #Find progress as ratio between 0 and 1
+        #offset by 1 for zero indexing
+        progress = (1 + ind) / np.prod(self.max_nrs) 
 
         if progress < 1.0:
-            sys.stdout.write('\r{0}: [{1:20s}] {2}%   '.format(self.text, 
-                '#'*int(20*progress), 
-                int(100*progress)))
+            sys.stdout.write('\r{0}: [{1:30s}] {2:.2f}% '.format(self.text, 
+                '#'*int(30*progress), 
+                100*progress))
         else:
-            sys.stdout.write('\r{0}: [{1:20s}] Done   \n'.format(self.text,
-                '#'*20))
+            sys.stdout.write('\r{0}: [{1:30s}] Done   \n'.format(self.text,
+                '#'*30))
 
         sys.stdout.flush()
