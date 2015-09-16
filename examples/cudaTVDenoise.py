@@ -32,7 +32,7 @@ from odl.sets.domain import Interval
 from odl.space.default import L2
 from odl.space.cartesian import *
 from odl.space.fspace import *
-from odl.discr.default import l2_uniform_discretization
+from odl.discr.l2_discr import l2_uniform_discretization
 import odl.space.cuda as CS
 import odlpp.odlpp_cuda as cuda
 

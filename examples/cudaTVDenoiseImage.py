@@ -26,10 +26,10 @@ import matplotlib.pyplot as plt
 from odl.operator.operator import *
 from odl.sets.space import *
 from odl.sets.domain import Rectangle
-from odl.sets.product import ProductSpace
+from odl.sets.pspace import ProductSpace
 from odl.space.cartesian import *
 from odl.space.default import L2
-from odl.discr.default import l2_uniform_discretization
+from odl.discr.l2_discr import l2_uniform_discretization
 import odl.space.cuda as CS
 import odlpp.odlpp_cuda as cuda
 import odlpp.odlpp_utils as utils

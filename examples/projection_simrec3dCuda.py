@@ -27,10 +27,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import odl.operator.operator as OP
-import odl.sets.product as ps
+import odl.sets.pspace as ps
 import SimRec2DPy as SR
 from odl.sets.domain import Rectangle, Cube
-from odl.discr.default import l2_uniform_discretization
+from odl.discr.l2_discr import l2_uniform_discretization
 from odl.space.default import L2
 from odl.utility.testutils import Timer
 

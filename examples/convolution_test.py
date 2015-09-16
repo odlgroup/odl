@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage
 
 # ODL
-from odl.discr.default import DiscreteL2, l2_uniform_discretization
+from odl.discr.l2_discr import DiscreteL2, l2_uniform_discretization
 from odl.space.default import L2
 from odl.sets.domain import Interval
 from odl.operator.operator import LinearOperator

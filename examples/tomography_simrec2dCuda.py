@@ -28,7 +28,7 @@ import numpy as np
 import odl.operator.operator as OP
 import odl.space.fspace as fs
 import odl.space.cuda as cs
-import odl.sets.product as prod
+import odl.sets.pspace as prod
 import odl.discr.discretization as dd
 import odl.sets.set as sets
 import SimRec2DPy as SR

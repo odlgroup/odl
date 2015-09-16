@@ -25,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ODL
-from odl.discr.default import DiscreteL2, l2_uniform_discretization
+from odl.discr.l2_discr import DiscreteL2, l2_uniform_discretization
 import odlpp.odlpp_cuda as odlpp_cuda
 import odl.space.cuda as cuda
 from odl.space.default import L2

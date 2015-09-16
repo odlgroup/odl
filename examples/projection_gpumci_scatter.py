@@ -26,9 +26,9 @@ import numpy as np
 import odl.operator.operator as OP
 from odl.space.default import L2
 import odl.space.cuda as cs
-import odl.sets.product as ps
+import odl.sets.pspace as ps
 from odl.sets.domain import Rectangle, Cube
-from odl.discr.default import l2_uniform_discretization
+from odl.discr.l2_discr import l2_uniform_discretization
 import SimRec2DPy as SR
 import GPUMCIPy as gpumci
 from odl.util.testutils import Timer

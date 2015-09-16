@@ -43,8 +43,8 @@ class SimpleRn(LinearSpace):
 
     def __init__(self, dim):
         if not isinstance(n, Integral) or dim < 1:
-            raise TypeError(errfmt('''
-            dim ({}) has to be a positive integer'''.format(dim)))
+            raise TypeError('dimension {!r} not a positive integer.'
+                            ''.format(dim))
         self._dim = dim
         self._field = RealNumbers()
 
@@ -64,9 +64,9 @@ class SimpleRn(LinearSpace):
             if args[0].shape == (self.dim,):
                 return SimpleRn.Vector(self, args[0])
             else:
-                raise ValueError(errfmt('''
-                Input numpy array ({}) is of shape {}, expected shape shape {}
-                '''.format(args[0], args[0].shape, (self.dim,))))
+                raise ValueError('input array {} is of shape {}, expected '
+                                 'shape ({},).'.format(args[0], args[0].shape,
+                                                       self.dim,))
         else:
             return self.element(np.array(
                 *args, **kwargs).astype(np.float64, copy=False))
