@@ -26,6 +26,7 @@ import nose
 import sys
 from run_doctests import run_doctests
 
+
 def run_tests():
     arg = sys.argv[:1]
     arg.append('--verbosity=2')
