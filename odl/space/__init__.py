@@ -158,8 +158,6 @@ from . import function
 from .function import *
 __all__ += function.__all__
 
-from . import sequence
-
 try:
     from . import cuda
     from .cuda import *
@@ -167,3 +165,5 @@ try:
     CUDA_AVAILABLE = True
 except ImportError:
     CUDA_AVAILABLE = False
+
+__all__ += ('CUDA_AVAILABLE',)

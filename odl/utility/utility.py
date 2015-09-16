@@ -19,6 +19,7 @@
 Utilities for use inside the ODL project, not for external use.
 """
 
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
@@ -30,6 +31,7 @@ from builtins import str
 from textwrap import dedent, fill
 import numpy as np
 
+__all__ = ['errfmt', 'array1d_repr', 'array1d_str']
 
 def errfmt(errstr):
     """TODO: remove"""
@@ -54,6 +56,34 @@ def array1d_str(array):
         left_str = ', '.join(str(a) for a in array[:3])
         right_str = ', '.join(str(a) for a in array[-3:])
         return '[{}, ..., {}]'.format(left_str, right_str)
+
+
+def arraynd_repr(array):
+    """Stringification of an nD array, keeping byte / unicode."""
+    if array.ndim > 1:
+        if len(array) < 7:
+            inner_str = ',\n '.join(arraynd_repr(a) for a in array)
+            return '[\n{}\n]'.format(inner_str)
+        else:
+            left_str = ',\n '.join(arraynd_repr(a) for a in array[:3])
+            right_str = ',\n '.join(arraynd_repr(a) for a in array[-3:])
+            return '[\n{},\n ...,\n{}\n]'.format(left_str, right_str)
+    else:
+        return array1d_repr(array)
+
+
+def arraynd_str(array):
+    """Stringification of a nD array, regardless of byte or unicode."""
+    if array.ndim > 1:
+        if len(array) < 7:
+            inner_str = ',\n '.join(arraynd_str(a) for a in array)
+            return '[{}]'.format(inner_str)
+        else:
+            left_str = ',\n '.join(arraynd_str(a) for a in array[:3])
+            right_str = ',\n '.join(arraynd_str(a) for a in array[-3:])
+            return '[{},\n ...,\n{}]'.format(left_str, right_str)
+    else:
+        return array1d_str(array)
 
 
 def dtype_repr(dtype):

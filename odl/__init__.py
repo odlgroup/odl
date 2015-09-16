@@ -23,7 +23,7 @@ and Operators/Functionals defined on these sets. It is intended
 to be used to write general code and faciliate code reuse.
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import
 
 __version__ = '0.1b0.dev0'
 __all__ = []

@@ -30,6 +30,7 @@ from abc import ABCMeta
 import numpy as np
 
 # ODL
+from odl.utility.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import NtuplesBase, FnBase, Ntuples, Rn, Cn
 from odl.set.set import Set, RealNumbers, ComplexNumbers
@@ -271,9 +272,16 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             """Create an identical (deep) copy of this vector."""
             return self.space.element(self.ntuple.copy())
 
-        def asarray(self):
-            """Extract the data of this array as a numpy array."""
-            return self.ntuple.asarray()
+        def asarray(self, out=None):
+            """Extract the data of this array as a numpy array.
+
+            Parameters
+            ----------
+            out : `ndarray`, Optional (default: `None`)
+                Array in which the result should be written in-place.
+                Has to be contiguous and of the correct dtype.
+            """
+            return self.ntuple.asarray(out=out)
 
         def equals(self, other):
             """Test if `other` is equal to this vector.
@@ -322,6 +330,15 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                 self.ntuple.__setitem__(indices, values.ntuple)
             else:
                 self.ntuple.__setitem__(indices, values)
+
+        def __str__(self):
+            """`vec.__str__() <==> str(vec)`."""
+            return arraynd_str(self.asarray())
+
+        def __repr__(self):
+            """`vec.__repr__() <==> repr(vec)`."""
+            return '{!r}.element({})'.format(self.space,
+                                             arraynd_repr(self.asarray()))
 
 
 class Discretization(with_metaclass(ABCMeta, RawDiscretization,

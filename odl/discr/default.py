@@ -73,8 +73,8 @@ class DiscreteL2(Discretization):
 
         interp = str(interp)
         if interp not in _supported_interp:
-            raise ValueError('{} is not among the supported interpolation'
-                             'types {}.'.format(interp, _supported_interp))
+            raise TypeError('{} is not among the supported interpolation'
+                            'types {}.'.format(interp, _supported_interp))
 
         order = kwargs.pop('order', 'C')
         restriction = GridCollocation(l2space, grid, dspace, order=order)
@@ -96,6 +96,9 @@ class DiscreteL2(Discretization):
     def interp(self):
         """Interpolation type of this discretization."""
         return self._interp
+        
+    def points(self):
+        return self.grid.points(order=self.order)
 
     def __repr__(self):
         """l2.__repr__() <==> repr(l2)."""
@@ -135,6 +138,48 @@ class DiscreteL2(Discretization):
     def __str__(self):
         """l2.__str__() <==> str(l2)."""
         return self.__repr__()
+
+    class Vector(Discretization.Vector):
+
+        """Representation of a ``DiscreteL2`` element."""
+
+        def asarray(self, out=None):
+            """Extract the data of this array as a numpy array.
+
+            Parameters
+            ----------
+            out : `ndarray`, Optional (default: `None`)
+                Array in which the result should be written in-place.
+                Has to be contiguous and of the correct dtype and
+                shape.
+            """
+            if out is None:
+                return super().asarray().reshape(self.space.grid.shape,
+                                                 order=self.space.order)
+            else:
+                if out.shape not in (self.space.grid.shape,
+                                     (self.space.grid.ntotal,)):
+                    raise ValueError('output array has shape {}, expected '
+                                     '{} or ({},).'
+                                     ''.format(out.shape,
+                                               self.space.grid.shape,
+                                               self.space.grid.ntotal))
+                out_r = out.reshape(self.space.grid.shape,
+                                    order=self.space.order)
+                if out_r.flags.c_contiguous:
+                    out_order = 'C'
+                elif out_r.flags.f_contiguous:
+                    out_order = 'F'
+                else:
+                    raise ValueError('output array not contiguous.')
+
+                if out_order != self.space.order:
+                    raise ValueError('output array has ordering {!r}, '
+                                     'expected {!r}.'
+                                     .format(self.space.order, out_order))
+
+                super().asarray(out=out.reshape(-1, order=self.space.order))
+                return out
 
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',

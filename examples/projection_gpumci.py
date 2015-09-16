@@ -123,7 +123,7 @@ projectionDisc = l2_uniform_discretization(projectionSpace, nPixels, impl='cuda'
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
-dataDisc = ps.powerspace(projectionDisc, nProjection)
+dataDisc = ps.ProductSpace(projectionDisc, nProjection)
 
 # Define the reconstruction space
 reconSpace = L2(Cube([0, 0, 0], volumeSize))

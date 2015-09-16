@@ -19,6 +19,7 @@
 Utilities for use inside the ODL project, not for external use.
 """
 
+
 # Imports for common Python 2/3 codebase
 
 from __future__ import print_function, division, absolute_import
@@ -29,18 +30,20 @@ standard_library.install_aliases()
 
 # External module imports
 # pylint: disable=no-name-in-module
+from numpy import ravel_multi_index, prod
 from itertools import zip_longest
 import unittest
+import sys
 from time import time
 from future.utils import with_metaclass
 
+__all__ = ['ODLTestCase', 'skip_all', 'Timer', 'ProgressBar']
 
-# TODO: move
 class ODLTestCase(unittest.TestCase):
     # Use names compatible with unittest
     # pylint: disable=invalid-name
     def assertAlmostEqual(self, f1, f2, *args, **kwargs):
-        unittest.TestCase.assertAlmostEqual(self, float(f1), float(f2), *args,
+        unittest.TestCase.assertAlmostEqual(self, complex(f1), complex(f2), *args,
                                             **kwargs)
 
     # pylint: disable=invalid-name
@@ -116,4 +119,95 @@ class Timer(object):
     def __exit__(self, type, value, traceback):
         if self.name is not None:
             print('[{}] '.format(self.name))
-        print('Elapsed: {}'.format(time() - self.tstart))
+        print('Elapsed: {:.3f}'.format(time() - self.tstart))
+        
+def timeit(arg):
+    """ A decorator timer to be used as:
+
+    @timeit
+    def myfunction(...):
+        ...
+        
+    @timeit("info string")
+    def myfunction(...):
+        ...
+        
+    """
+    if callable(arg):
+        def timed_function(*args, **kwargs):
+            with Timer(str(arg)):
+                result = arg(*args, **kwargs)
+            return result
+        return timed_function
+    else:
+        def _timeit_helper(fn):
+            def timed_function(*args, **kwargs):
+                with Timer(arg):
+                    result = fn(*args, **kwargs)
+                return result
+            return timed_function
+        return _timeit_helper
+
+
+class ProgressBar(object):
+    """ A simple commandline progress bar
+
+    Usage:
+
+    >>> progress = ProgressBar('Reading data', 10)
+    >>> progress.update(5) #halfway, zero indexing
+    Reading data [#######         ] 50%
+
+    Also supports multiple index, from slowest varying to fastest
+
+    >>> progress = ProgressBar('Reading data', 10, 10)
+    >>> progress.update(9, 8)
+    Reading data [################] 99%
+    
+    Also supports simply calling update, which moves the counter forward
+    
+    >>> progress = ProgressBar('Reading data', 10, 10)
+    >>> progress.update()
+    Reading data [################] 99%
+    """
+
+    def __init__(self, text='progress', *njobs):
+        self.text = str(text)
+        if len(njobs) == 0:
+            raise ValueError('Need to provide at least one job len')
+        self.njobs = njobs
+        self.current_progress = 0.0
+        self.index = 0
+        self.start()
+        
+    def start(self):
+        sys.stdout.write('\r{0}: [{1:30s}] Starting \n'.format(self.text,
+                ' '*30))
+
+        sys.stdout.flush()
+
+    def update(self, *indices):
+        if indices:
+            if len(indices) != len(self.njobs):
+                raise ValueError('number of indices not correct')
+            self.index = ravel_multi_index(indices, self.njobs) + 1
+        else:
+            self.index += 1
+
+        #Find progress as ratio between 0 and 1
+        #offset by 1 for zero indexing
+        progress = self.index / prod(self.njobs) 
+
+        #Write a progressbar and percent
+        if progress < 1.0:
+            #Only update on 0.1% intervals
+            if progress > self.current_progress+0.001:
+                sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}% '.format(self.text, 
+                    '#'*int(30*progress), 
+                    100*progress))
+                self.current_progress = progress
+        else: #Special message when done
+            sys.stdout.write('\r{0}: [{1:30s}] Done   \n'.format(self.text,
+                '#'*30))
+
+        sys.stdout.flush()

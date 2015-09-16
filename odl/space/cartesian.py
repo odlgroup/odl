@@ -668,7 +668,7 @@ class Ntuples(NtuplesBase):
             >>> vec = Ntuples(3, 'float').element([1, 2, 3])
             >>> vec.asarray()
             array([ 1.,  2.,  3.])
-            >>> vec.asarray(1, 3)
+            >>> vec.asarray(start=1, stop=3)
             array([ 2.,  3.])
 
             Using the out parameter
@@ -797,7 +797,7 @@ class Ntuples(NtuplesBase):
                 return self.data[int(indices)]  # single index
             except TypeError:
                 arr = self.data[indices]
-                return Ntuples(len(arr), self.space.dtype).element(arr)
+                return type(self.space)(len(arr), dtype=self.space.dtype).element(arr)
 
         def __setitem__(self, indices, values):
             """Set values of this vector.

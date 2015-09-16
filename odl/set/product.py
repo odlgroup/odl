@@ -27,6 +27,8 @@ from builtins import str, zip, super
 from future import standard_library
 standard_library.install_aliases()
 
+from numbers import Integral
+
 # External
 import numpy as np
 
@@ -35,7 +37,22 @@ from odl.set.space import LinearSpace
 from odl.utility.utility import errfmt
 
 
-__all__ = ('ProductSpace', 'productspace', 'powerspace')
+__all__ = ('ProductSpace',)
+
+def _strip_space(x):
+    """Strips the SPACE.element( ... ) part from a repr""" 
+    r = repr(x)
+    space_repr = '{!r}.element('.format(x.space)
+    if r.startswith(space_repr) and r.endswith(')'):
+        r = r[len(space_repr):-1]
+    return r
+
+def _indent(x):
+    """Indents a string by 4 characters"""
+    lines = x.split('\n')
+    for i in range(len(lines)):
+        lines[i] = '    ' + lines[i]
+    return '\n'.join(lines)
 
 
 def _prod_inner_sum_not_defined(x):
@@ -61,8 +78,11 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        spaces : LinearSpace instances
-            The factors of the product space
+        args : {'LinearSpace' and 'int' OR 'LinearSpace' instances
+            Either a space and an integer, 
+            in this case the power of the space is taken (R^n)
+            Otherwise, a set of spaces, 
+            in this case the product is taken (RxRxRxC)
         kwargs : {'ord', 'weights', 'prod_norm'}
             'ord' : float, optional
                 Order of the product distance/norm, i.e.
@@ -102,14 +122,13 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn, Rn
+        >>> from odl.space.cartesian import Rn
         >>> r2x3 = ProductSpace(Rn(2), Rn(3))
-        >>> r2x3.__class__.__name__
-        'ProductSpace'
-        >>> r2x3 = ProductSpace(Rn(2), Rn(3))
-        >>> r2x3.__class__.__name__
-        'ProductSpace'
         """
+        if len(spaces) == 2 and isinstance(spaces[0], LinearSpace) and isinstance(spaces[1], Integral):
+            #Powerspace initialization
+            return self.__init__(*([spaces[0]] * spaces[1]), **kwargs)
+
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
             wrong_spc = [spc for spc in spaces
                          if not isinstance(spc, LinearSpace)]
@@ -225,7 +244,6 @@ class ProductSpace(LinearSpace):
         >>> print(x)
         {[1.0, 2.0], [1.0, 2.0, 3.0]}
         """
-        # TODO: update this function!
 
         # If data is given as keyword arg, prefer it over arg list
         if inp is None:
@@ -350,11 +368,11 @@ class ProductSpace(LinearSpace):
 
     def __repr__(self):
         if all(self.spaces[0] == space for space in self.spaces):
-            return 'powerspace({!r}, {})'.format(self.spaces[0],
+            return 'ProductSpace({!r}, {})'.format(self.spaces[0],
                                                  len(self.spaces))
         else:
             inner_str = ', '.join(repr(space) for space in self.spaces)
-            return 'productspace({})'.format(inner_str)
+            return 'ProductSpace({})'.format(inner_str)
 
     class Vector(LinearSpace.Vector):
         def __init__(self, space, *args):
@@ -375,115 +393,59 @@ class ProductSpace(LinearSpace):
             return '{{{}}}'.format(inner_str)
 
         def __repr__(self):
-            inner_str = ', '.join(str(part) for part in self.parts)
+            """ Get a representation of this vector
+
+            Returns
+            -------
+            repr : string
+                
+
+            Examples
+            --------
+            >>> from odl.space.cartesian import Rn
+            >>> r2, r3 = Rn(2), Rn(3)
+            >>> r2x3 = ProductSpace(r2, r3)
+            >>> x = r2x3.element([[1, 2], [3, 4, 5]])
+            >>> eval(repr(x)) == x
+            True
+
+            The result is readable
+
+            >>> x
+            ProductSpace(Rn(2), Rn(3)).element([
+                [1.0, 2.0],
+                [3.0, 4.0, 5.0]
+            ])
+
+            Nestled spaces work as well
+
+            >>> X = ProductSpace(r2x3, r2x3)
+            >>> x = X.element([[[1, 2], [3, 4, 5]],[[1, 2], [3, 4, 5]]])
+            >>> eval(repr(x)) == x
+            True
+            >>> x
+            ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element([
+                [
+                    [1.0, 2.0],
+                    [3.0, 4.0, 5.0]
+                ],
+                [
+                    [1.0, 2.0],
+                    [3.0, 4.0, 5.0]
+                ]
+            ])
+            """
+            inner_str = '[\n'
+            if len(self) < 7:
+                inner_str += ',\n'.join('{}'.format(_indent(_strip_space(part))) for part in self.parts)
+            else:
+                inner_str += ',\n'.join('{}'.format(_indent(_strip_space(part))) for part in self.parts[:3])
+                inner_str += ',\n    ...\n'
+                inner_str += ',\n'.join('{}'.format(_indent(_strip_space(part))) for part in self.parts[-3:])
+
+            inner_str += '\n]'
+
             return '{!r}.element({})'.format(self.space, inner_str)
-
-
-def productspace(*spaces, **kwargs):
-    """ Creates a product space X1 x ... x XN
-
-    Selects the 'most powerful' space possible, i.e. if all spaces
-    are HilbertSpace instances, a HilbertProductSpace instance is
-    returned.
-
-    Parameteestrs
-    ----------
-    spaces : <Which>Space instances
-        <Which> is either Hilbert, Normed, Metric or Linear
-    kwargs : {'ord', 'weights', 'prod_norm'}
-              'ord' : float, optional
-                  Order of the product distance/norm, i.e.
-                  dist(x, y) = np.linalg.norm(x-y, ord=ord)
-                  norm(x) = np.linalg.norm(x, ord=ord)
-                  If used, forces the space to not be a Hilbert space.
-                  Default: 2.0
-              'weights' : array-like, optional, only usable with the
-                          'ord' option.
-                  Array of weights, same size as number of space
-                  components. All weights must be positive. It is
-                  multiplied with the tuple of distances before
-                  applying the Rn norm or 'prod_norm'.
-                  Default: (1.0,...,1.0)
-              'prod_norm' : callable, optional
-                  Function that should be applied to the array of
-                  distances/norms.
-                  If used, forces the space to not be a Hilbert space.
-                  Defaults if applicable:
-                      dist = np.linalg.norm(x-y, ord=ord)
-                      norm = np.linalg.norm(x, ord=ord)
-                      inner = np.vdot(x,y)
-
-
-    Returns
-    -------
-    prodspace : <Which>ProductSpace instance
-        <Which> is either Hilbert, Normed, Metric or Linear
-
-    Remark
-    ------
-    productspace(Rn(1), Rn(1)) is mathematically equivalent to Rn(2),
-    however the latter is usually more efficient numerically.
-
-    See also
-    --------
-    ProductSpace, MetricProductSpace, NormedProductSpace,
-    HilbertProductSpace
-    """
-
-    return ProductSpace(*spaces, **kwargs)
-
-
-def powerspace(base, power, **kwargs):
-    """ Creates a power space X^N = X x ... x X
-
-    Selects the 'most powerful' space possible, i.e. if all spaces
-    are HilbertSpace instances, a HilbertProductSpace instance is
-    returned.
-
-    Parameters
-    ----------
-    base : <Which>Space instance
-        <Which> is either Hilbert, Normed, Metric or Linear
-    power : int
-        The number of factors in the product
-    kwargs : {'ord', 'weights', 'prod_norm'}
-              'ord' : float, optional
-                  Order of the product distance/norm, i.e.
-                  dist(x, y) = np.linalg.norm(x-y, ord=ord)
-                  norm(x) = np.linalg.norm(x, ord=ord)
-                  If used, forces the space to not be a hilbert space.
-                  Default: 2.0
-              'weights' : array-like, optional, only usable with 'ord' option.
-                  Array of weights, same size as number of space
-                  components. All weights must be positive. It is
-                  multiplied with the tuple of distances before
-                  applying the Rn norm or 'prod_norm'.
-                  Default: (1.0,...,1.0)
-              'prod_norm' : callable, optional
-                  Function that should be applied to the array of
-                  distances/norms
-                  If used, forces the space to not be a hilbert space.
-                  Defaults if applicable:
-                      dist = np.linalg.norm(x-y, ord=ord)
-                      norm = np.linalg.norm(x, ord=ord)
-
-    Returns
-    -------
-    prodspace : <Which>ProductSpace instance
-        <Which> is either Hilbert, Normed, Metric or Linear
-
-    Remark
-    ------
-    powerspace(Rn(1), 2) is mathematically equivalent to Rn(2),
-    however the latter is usually more efficient numerically.
-
-    See also
-    --------
-    ProductSpace
-    """
-
-    return productspace(*([base] * power), **kwargs)
-
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

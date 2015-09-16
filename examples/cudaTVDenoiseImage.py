@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 from odl.operator.operator import *
 from odl.set.space import *
 from odl.set.domain import Rectangle
-from odl.set.product import powerspace
+from odl.set.product import ProductSpace
 from odl.space.cartesian import *
 from odl.space.default import L2
 from odl.discr.default import DiscreteL2, l2_uniform_discretization
@@ -57,7 +57,7 @@ class ForwardDiff2D(LinearOperator):
             raise TypeError("space must be CudaRn")
 
         self.domain = space
-        self.range = powerspace(space, 2)
+        self.range = ProductSpace(space, 2)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(
@@ -77,7 +77,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
         if not isinstance(space.dspace, CS.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        self.domain = powerspace(space, 2)
+        self.domain = ProductSpace(space, 2)
         self.range = space
 
     def _apply(self, rhs, out):
