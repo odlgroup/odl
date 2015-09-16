@@ -61,3 +61,7 @@ class L2(FunctionSpace):
 
     class Vector(FunctionSpace.Vector):
         """Representation of an `L2` element."""
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Discretizations of default spaces."""
+"""Discretizations of L2 spaces."""
 
 # pylint: disable=abstract-method
 
@@ -29,9 +29,9 @@ from builtins import super, str
 # External
 
 # ODL
-from odl.discr.discretization import Discretization
-from odl.discr.discretization import dspace_type
+from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
+from odl.discr.grid import uniform_sampling
 from odl.space.default import L2
 from odl.sets.domain import IntervalProd
 
@@ -103,8 +103,8 @@ class DiscreteL2(Discretization):
     def __repr__(self):
         """l2.__repr__() <==> repr(l2)."""
         # Check if the factory repr can be used
-        if (self.uspace.domain.uniform_sampling(
-                self.grid.shape, as_midp=True) == self.grid):
+        if (uniform_sampling(self.uspace.domain, self.grid.shape,
+                             as_midp=True) == self.grid):
             if dspace_type(self.uspace, 'numpy') == self.dspace_type:
                 impl = 'numpy'
             elif dspace_type(self.uspace, 'cuda') == self.dspace_type:
@@ -226,7 +226,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     ds_type = dspace_type(l2space, impl)
     dtype = kwargs.pop('dtype', None)
 
-    grid = l2space.domain.uniform_sampling(nsamples, as_midp=True)
+    grid = uniform_sampling(l2space.domain, nsamples, as_midp=True)
     if dtype is not None:
         dspace = ds_type(grid.ntotal, dtype=dtype)
     else:
@@ -235,3 +235,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     return DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

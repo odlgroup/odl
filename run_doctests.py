@@ -25,6 +25,7 @@ standard_library.install_aliases()
 import nose
 import sys
 
+
 def run_doctests():
     arg = sys.argv[:1]
     arg.append('--verbosity=2')
@@ -36,6 +37,6 @@ def run_doctests():
     except ImportError:
         arg.append('--ignore-files=cuda.py')
     out = nose.run(defaultTest='./odl/.', argv=arg)
-    
+
 if __name__ == '__main__':
-    run_tests()
+    run_doctests()

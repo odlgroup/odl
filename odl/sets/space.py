@@ -718,3 +718,7 @@ class LinearSpace(Set):
 
         def multiply(self, x, y):
             return self.space.multiply(self, x, y)
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

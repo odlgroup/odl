@@ -413,24 +413,20 @@ class RawNearestInterpolation(FunctionSetMapping):
         one-character strings:
 
         >>> from __future__ import unicode_literals, print_function
-        >>> from builtins import str
-        >>> from odl.sets.domain import Rectangle
-        >>> from odl.sets.set import Strings
-
+        >>> from odl import Rectangle, Strings
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> strings = Strings(1)  # 1-char strings
 
         Initialize the space
 
-        >>> from odl.space.fspace import FunctionSet
-        >>> from odl.space.cartesian import Ntuples
-
+        >>> from odl import FunctionSet
         >>> space = FunctionSet(rect, strings)
 
         The grid is defined by uniform sampling (`as_midp` indicates
         that the points will be cell midpoints instead of corners).
 
-        >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
+        >>> from odl import uniform_sampling, Ntuples
+        >>> grid = uniform_sampling(rect, [4, 2], as_midp=True)
         >>> grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
@@ -509,18 +505,15 @@ class NearestInterpolation(RawNearestInterpolation,
         Let's define the complex function space :math:`L^2` on a
         rectangle:
 
-        >>> from odl.sets.domain import Rectangle
-        >>> from odl.space.default import L2
-        >>> from odl.sets.set import ComplexNumbers
-        >>> from odl.space.cartesian import Cn
-
+        >>> from odl import Rectangle, L2, ComplexNumbers
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> space = L2(rect, field=ComplexNumbers())
 
         The grid is defined by uniform sampling (`as_midp` indicates
         that the points will be cell midpoints instead of corners).
 
-        >>> grid = rect.uniform_sampling([4, 2], as_midp=True)
+        >>> from odl import uniform_sampling, Cn
+        >>> grid = uniform_sampling(rect, [4, 2], as_midp=True)
         >>> grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
         >>> dspace = Cn(grid.ntotal)
@@ -758,3 +751,7 @@ class _NearestMeshgridInterpolator(_NearestPointwiseInterpolator):
             return outp
         else:
             return self.values[idx_res]
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)
