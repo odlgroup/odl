@@ -36,7 +36,7 @@ class TestDiscreteL2(odl.util.testutils.ODLTestCase):
 
         # Normal discretization of unit interval
         unit_interval = odl.L2(odl.Interval(0, 1))
-        grid = unit_interval.domain.uniform_sampling(10)
+        grid = odl.uniform_sampling(unit_interval.domain, 10)
         R10 = odl.Rn(10)
         discr = odl.DiscreteL2(unit_interval, grid, R10)
 
@@ -63,7 +63,7 @@ class TestDiscreteL2(odl.util.testutils.ODLTestCase):
     def test_init_cuda(self):
         # Normal discretization of unit interval
         unit_interval = odl.L2(odl.Interval(0, 1))
-        grid = unit_interval.domain.uniform_sampling(10)
+        grid = odl.uniform_sampling(unit_interval.domain, 10)
         R10 = odl.CudaRn(10)
         discr = odl.DiscreteL2(unit_interval, grid, R10)
 
