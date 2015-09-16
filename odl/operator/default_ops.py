@@ -15,26 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Default operators defined on any space of a certain kind.
-
-+------------------+--------------------------------------------------+
-|Class name        |Description                                       |
-+==================+==================================================+
-|`ScalingOperator` |`SelfAdjointOperator` scaling an element with a   |
-|                  |real number.                                      |
-+------------------+--------------------------------------------------+
-|`ZeroOperator`    |`ScalingOperator` with `scalar` equal to 0        |
-+------------------+--------------------------------------------------+
-|`IdentityOperator`|`ScalingOperator` with `scalar` equal to 1        |
-+------------------+--------------------------------------------------+
-|`LinCombOperator` |`LinearOperator` mapping two space elements to the|
-|                  |linear combination with two fixed scalars.        |
-+------------------+--------------------------------------------------+
-|`MultiplyOperator`|`Operator` of multiplying two space elements. The |
-|                  |`range` needs to be an `Algebra` for the          |
-|                  |multiplication to be well-defined.                |
-+------------------+--------------------------------------------------+
-"""
+"""Default operators defined on any (reasonable) space."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import

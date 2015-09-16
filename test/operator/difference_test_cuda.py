@@ -30,7 +30,7 @@ import unittest
 from odl.operator.operator import LinearOperator
 from odl.space.default import L2
 from odl.sets.domain import Interval, Rectangle
-from odl.sets.product import ProductSpace
+from odl.sets.pspace import ProductSpace
 
 from odl.util.testutils import skip_all
 

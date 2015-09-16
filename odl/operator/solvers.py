@@ -25,7 +25,7 @@ from builtins import next, object, range
 
 # ODL imports
 from odl.operator.operator import LinearOperatorComp, LinearOperatorSum
-from odl.operator.default import IdentityOperator
+from odl.operator.default_ops import IdentityOperator
 
 
 class StorePartial(object):

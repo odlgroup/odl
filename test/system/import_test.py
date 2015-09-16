@@ -39,7 +39,7 @@ class ImportStarTest(ODLTestCase):
         #Three ways of creating the identity
         I1 = odl.IdentityOperator(C3)
         I2 = odl.operator.IdentityOperator(C3)
-        I3 = odl.operator.default.IdentityOperator(C3)
+        I3 = odl.operator.default_ops.IdentityOperator(C3)
 
         #Test that utility needs to be explicitly imported
         x = odl.util.utility.array1d_repr

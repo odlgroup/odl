@@ -17,76 +17,13 @@
 
 """Abstract mathematical (linear) operators.
 
-Operators are in the most general sense mappings from one set (`Set`)
+Operators are in the most general sense mappings from one set (``Set``)
 to another. More common and useful are operators mapping a vector
-space (`LinearSpace`) into another. Many of those are linear, and
+space (``LinearSpace``) into another. Many of those are linear, and
 as such, they have additional properties. See the class documentation
 for further details.
 In addition, this module defines classes for sums, compositions and
 further combinations of operators of operators.
-
-+--------------------------+------------------------------------------+
-|Class name                |Description                               |
-+==========================+==========================================+
-|`Operator`                |Basic operator class                      |
-+--------------------------+------------------------------------------+
-|`OperatorSum`             |Sum of two operators, `S = A + B`, defined|
-|                          |by `x` --> `(A + B)(x) = A(x) + B(x)`     |
-+--------------------------+------------------------------------------+
-|`OperatorComp`            |Composition of two operators, `C = A o B`,|
-|                          |defined by `x` --> `(A o B)(x) = A(B(x))` |
-+--------------------------+------------------------------------------+
-|`OperatorPointwiseProduct`|Product of two operators,`P = A * B`,     |
-|                          |defined by                                |
-|                          |`x --> (A * B)(x) = A(x) * B(x)`. The     |
-|                          |operators need to be mappings to an       |
-|                          |algebra for the multiplication to be      |
-|                          |well-defined.                             |
-+--------------------------+------------------------------------------+
-|`OperatorLeftScalarMult`  |Multiplication of an operator from left   |
-|                          |with a scalar, `L = c * A`, defined by    |
-|                          |`x --> (c * A)(x) = c * A(x)`             |
-+--------------------------+------------------------------------------+
-|`OperatorRightScalarMult` |Multiplication of an operator from right  |
-|                          |with a scalar, `S = A * c`, defined by    |
-|                          |`x --> (A * c)(x) =  A(c * x)`            |
-+--------------------------+------------------------------------------+
-|`LinearOperator`          |Basic linear operator class               |
-+--------------------------+------------------------------------------+
-|`SelfAdjointOperator`     |Basic class for linear operators between  |
-|                          |Hilbert spaces which are self-adjoint     |
-+--------------------------+------------------------------------------+
-|`LinearOperatorSum`       |Sum of two linear operators, again a      |
-|                          |linear operator (see `OperatorSum` for the|
-|                          |definition)                               |
-+--------------------------+------------------------------------------+
-|``LinearOperatorScalarMult``|Multiplication of a linear operator with a|
-|                          |scalar. Left and right multiplications are|
-|                          |equivalent (see `OperatorLeftScalarMult`  |
-|                          |for the definition)                       |
-+--------------------------+------------------------------------------+
-
-Furthermore, there are two convenience functions for quick operator
-prototyping:
-
-+-----------------+----------------------+----------------------------+
-|Name             |Return type           |Description                 |
-+=================+======================+============================+
-|`operator`       |`SimpleOperator`      |Create an `Operator` by     |
-|                 |(subclass of          |specifying either a `call`  |
-|                 |`Operator`)           |or an `apply` method (or    |
-|                 |                      |both) for evaluation. See   |
-|                 |                      |the function doc for a full |
-|                 |                      |description.                |
-+-----------------+----------------------+----------------------------+
-|`linear_operator`|`SimpleLinearOperator`|Create an `Operator` by     |
-|                 |(subclass of          |specifying either a `call`  |
-|                 |`LinearOperator`)     |or an `apply` method (or    |
-|                 |                      |both) for evaluation as well|
-|                 |                      |`domain` and `range`. See   |
-|                 |                      |the function doc for a full |
-|                 |                      |description.                |
-+-----------------+----------------------+----------------------------+
 """
 
 # Imports for common Python 2/3 codebase
@@ -286,59 +223,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     If not both `_apply()` and `_call()` are implemented and the
     `range` is a `LinearSpace`, a default implementation of the
     respective other is provided.
-
-    Attributes
-    ----------
-
-    +------------+----------------+-----------------------------------+
-    |Name        |Type            |Description                        |
-    +============+================+===================================+
-    |`domain`    |`Set`           |Elements to which the operator can |
-    |            |                |be applied                         |
-    +------------+----------------+-----------------------------------+
-    |`range`     |`Set`           |Results of operator application are|
-    |            |                |elements of this set.              |
-    +------------+----------------+-----------------------------------+
-    |`inverse`   |`Operator`      |The inverse operator. Raises       |
-    |(short:`I`) |                |`NotImplementedError` by default.  |
-    +------------+----------------+-----------------------------------+
-
-    Methods
-    -------
-    +---------------+----------------+--------------------------------+
-    |Signature      |Return type     |Description                     |
-    +===============+================+================================+
-    |`apply(inp,    |`None`          |Apply the operator to `inp` and |
-    |outp)`         |                |write to `outp`. In addition to |
-    |               |                |the private method `_apply()`,  |
-    |               |                |error checks are performed.     |
-    +---------------+----------------+--------------------------------+
-    |`__call__(inp)`|element of      |Implements the call pattern     |
-    |               |`range`         |`op(inp)`. In addition to the   |
-    |               |                |private method `_call()`, error |
-    |               |                |checks are performed.           |
-    +---------------+----------------+--------------------------------+
-    |`derivative    |`LinearOperator`|The operator derivative at      |
-    |(point)`       |                |`point`. Raises                 |
-    |               |                |`NotImplementedError` by        |
-    |               |                |default.                        |
-    +---------------+----------------+--------------------------------+
-    |`__add__(op2)` |`OperatorSum`   |Implements `op + op2`.          |
-    +---------------+-------------------------+-----------------------+
-    |`__mul__`      |depends         |Implements `other * op`. If     |
-    |(other)        |                |`other is a scalar, an          |
-    |               |                |`OperatorLeftScalarMult` is     |
-    |               |                |created. If `other` is an       |
-    |               |                |`Operator`, the result is an    |
-    |               |                |`OperatorPointwiseProduct`.     |
-    +---------------+-------------------------+-----------------------+
-    |`__rmul__`     |depends         |Implements `op * other`. If     |
-    |(other)        |                |`other is a scalar, an          |
-    |               |                |`OperatorRightScalarMult` is    |
-    |               |                |created. If `other` is an       |
-    |               |                |`Operator`, the result is an    |
-    |               |                |`OperatorPointwiseProduct`.     |
-    +---------------+-------------------------+-----------------------+
     """
 
     def derivative(self, point):
@@ -383,7 +267,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import IdentityOperator
+        >>> from odl.operator.default_ops import IdentityOperator
         >>> rn = Rn(3)
         >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -429,7 +313,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import IdentityOperator
+        >>> from odl.operator.default_ops import IdentityOperator
         >>> rn = Rn(3)
         >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -495,7 +379,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import IdentityOperator
+        >>> from odl.operator.default_ops import IdentityOperator
         >>> rn = Rn(3)
         >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -548,7 +432,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import IdentityOperator
+        >>> from odl.operator.default_ops import IdentityOperator
         >>> rn = Rn(3)
         >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -638,7 +522,7 @@ class OperatorSum(Operator):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import IdentityOperator
+        >>> from odl.operator.default_ops import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> inp = r3.element([1, 2, 3])
@@ -659,7 +543,7 @@ class OperatorSum(Operator):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import ScalingOperator
+        >>> from odl.operator.default_ops import ScalingOperator
         >>> r3 = Rn(3)
         >>> A = ScalingOperator(r3, 3.0)
         >>> B = ScalingOperator(r3, -1.0)
@@ -677,7 +561,7 @@ class OperatorSum(Operator):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import IdentityOperator
+        >>> from odl.operator.default_ops import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).domain
@@ -692,7 +576,7 @@ class OperatorSum(Operator):
         Examples
         --------
         >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default import IdentityOperator
+        >>> from odl.operator.default_ops import IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).range
@@ -1100,41 +984,6 @@ class LinearOperator(Operator):
     for all scalars and all vectors `x` and `y`. A `LinearOperator`
     can only be defined if `domain` and `range` are both `LinearSpace`
     instances.
-
-    Notes
-    -----
-    `LinearOperator` differs from `Operator` in the following ways
-
-    +----------------+----------------+-------------------------------+
-    |Attribute/Method|(Return) type   |Description                    |
-    +================+================+===============================+
-    |`adjoint`       |`LinearOperator`|Additional attribute. Satisfies|
-    |(short: `T`)    |                |`op.adjoint.domain ==          |
-    |                |                |op.range`, `op.adjoint.range ==|
-    |                |                |op.domain` and                 |
-    |                |                |`op.domain.inner(x,            |
-    |                |                |op.adjoint(y)) ==              |
-    |                |                |op.range.inner(op(x), y)`.     |
-    +----------------+----------------+-------------------------------+
-    |`derivative     |`LinearOperator`|`op.derivative == op`          |
-    |(point)`        |                |                               |
-    +----------------+----------------+-------------------------------+
-    |`__add__(other)`|depends         |If `other` is a                |
-    |                |                |`LinearOperator` the sum is a  |
-    |                |                |`LinearOperatorSum`            |
-    +----------------+----------------+-------------------------------+
-    |`__add__(other)`|depends         |If `other` is a                |
-    |                |                |`LinearOperator`, the sum is a |
-    |                |                |`LinearOperatorSum`            |
-    +----------------+----------------+-------------------------------+
-    |`__mul__(other)`|depends         |If `other` is a scalar, the    |
-    |                |                |product is a                   |
-    |                |                |``LinearOperatorScalarMult``   |
-    +----------------+----------------+-------------------------------+
-    |`__rmul__       |depends         |If `other` is a scalar, the    |
-    |(other)`        |                |product is a                   |
-    |                |                |``LinearOperatorScalarMult``   |
-    +----------------+----------------+-------------------------------+
     """
 
     @property

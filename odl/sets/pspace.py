@@ -130,12 +130,13 @@ class ProductSpace(LinearSpace):
                 isinstance(spaces[0], LinearSpace) and
                 isinstance(spaces[1], Integral)):
             # Powerspace initialization
-            self.__init__(*([spaces[0]] * spaces[1]), **kwargs)
+            spaces = [spaces[0]] * spaces[1]
 
-        if not all(isinstance(spc, LinearSpace) for spc in spaces):
-            wrong_spc = [spc for spc in spaces
-                         if not isinstance(spc, LinearSpace)]
-            raise TypeError('{} not LinearSpace instance(s)'.format(wrong_spc))
+        wrong_spaces = [spc for spc in spaces
+                        if not isinstance(spc, LinearSpace)]
+        if wrong_spaces:
+            raise TypeError('{!r} not LinearSpace instance(s).'
+                            ''.format(wrong_spaces))
 
         if not all(spc.field == spaces[0].field for spc in spaces):
             raise TypeError('All spaces must have the same field')

@@ -31,7 +31,7 @@ from builtins import super, str
 # ODL
 from odl.discr.discretization import Discretization
 from odl.discr.discretization import dspace_type
-from odl.discr.operators import GridCollocation, NearestInterpolation
+from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.space.default import L2
 from odl.sets.domain import IntervalProd
 

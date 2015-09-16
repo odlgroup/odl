@@ -23,8 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 # ODL imports
-#from odl.discr.grid import TensorGrid
-#from odl.space.cartesian import Rn, Cn
 from odl.space.fspace import FunctionSpace
 from odl.sets.set import RealNumbers
 try:
@@ -48,62 +46,6 @@ class L2(FunctionSpace):
         """Inner product, not computable in continuous spaces."""
         raise NotImplementedError('inner product not computable in the'
                                   'non-discretized space {}.'.format(self))
-    """
-    def discretize(self, grid, interp='nearest', **kwargs):
-        '''Discretize the space with an interpolation dictionary.
-
-        Parameters
-        ----------
-        grid : `TensorGrid`
-            Sampling grid underlying the discretization. Must be
-            contained in this space's domain.
-        interp : `string`, optional
-            The interpolation type to be used for discretization.
-
-            'nearest' : use nearest-neighbor interpolation (default)
-
-            'linear' : use linear interpolation
-
-        kwargs : {'impl', 'order'}
-            'impl' : 'numpy' or 'cuda'  (Default: 'numpy')
-                The implementation of the data storage arrays
-            'order' : 'C' or 'F'  (Default: 'C')
-                The axis ordering in the data storage
-
-        Returns
-        -------
-        l2discr : `DiscreteL2`
-            The discretized space
-        '''
-        from odl.discr.default import DiscreteL2
-
-        if not isinstance(grid, TensorGrid):
-            raise TypeError('{} is not a `TensorGrid` instance.'.format(grid))
-        if not self.domain.contains_set(grid):
-            raise ValueError('{} is not contained in the domain {} of the '
-                             'space {}'.format(grid, self.domain, self))
-
-        impl = kwargs.pop('impl', 'numpy')
-        # TODO: use the consistent inner products instead of the standard ones
-        if self.field == RealNumbers():
-            if impl == 'numpy':
-                dspace_type = Rn
-            elif impl == 'cuda':
-                if not CUDA_AVAILABLE:
-                    raise ValueError('CUDA backend not available.')
-                else:
-                    dspace_type = CudaRn
-        elif self.field == ComplexNumbers():
-            if impl == 'numpy':
-                dspace_type = Cn
-            elif impl == 'cuda':
-                if not CUDA_AVAILABLE:
-                    raise ValueError('CUDA backend not available.')
-                else:
-                    raise NotImplementedError
-                    # dspace_type = CudaEuclideanCn
-        return DiscreteL2(self, grid, dspace_type(grid.ntotal), interp,
-                          **kwargs)"""
 
     def __str__(self):
         if isinstance(self.field, RealNumbers):
