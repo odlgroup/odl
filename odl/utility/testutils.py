@@ -30,7 +30,7 @@ standard_library.install_aliases()
 
 # External module imports
 # pylint: disable=no-name-in-module
-from numpy import prod
+from numpy import ravel_multi_index, prod
 from itertools import zip_longest
 import unittest
 import sys
@@ -171,50 +171,41 @@ class ProgressBar(object):
     Reading data [################] 99%
     """
 
-    def __init__(self, text=None, *max_nrs):
+    def __init__(self, text='progress', *njobs):
         self.text = str(text)
-        if len(max_nrs) == 0:
-            raise ValueError('Need to provide at least one max')
-        self.max_nrs = max_nrs
-        self.current_nrs = [0]*len(max_nrs)
-        self.current_nrs[-1] = -1 #offset for zero indexing so first is [0,...]
-
-    def _increment_index(self):
-        self.current_nrs[-1] += 1
+        if len(njobs) == 0:
+            raise ValueError('Need to provide at least one job len')
+        self.njobs = njobs
+        self.current_progress = 0.0
+        self.update(*([0]*len(njobs)))
+        self.start()
         
-        updated = True
-        while updated:
-            updated = False
-            for i in range(len(self.current_nrs)):
-                if self.current_nrs[-i] == self.max_nrs[-i]:
-                    self.current_nrs[-i] = 0
-                    self.current_nrs[-i-1] += 1
-                    updated = True
-                    break
+    def start(self):
+        sys.stdout.write('\r{0}: [{1:30s}] Starting \n'.format(self.text,
+                ' '*30))
 
-    def update(self, *index):
-        if index:
-            if len(index) != len(self.max_nrs):
+        sys.stdout.flush()
+
+    def update(self, *indices):
+        if indices:
+            if len(indices) != len(self.njobs):
                 raise ValueError('number of indices not correct')
-            self.current_nrs = index
+            self.index = ravel_multi_index(indices, self.njobs) + 1
         else:
-            self._increment_index()
-
-        #Calculate nd index
-        ind = 0
-        for i, max_nr in zip(self.current_nrs, self.max_nrs):
-            ind *= max_nr
-            ind += i
+            self.index += 1
 
         #Find progress as ratio between 0 and 1
         #offset by 1 for zero indexing
-        progress = (1 + ind) / prod(self.max_nrs) 
+        progress = self.index / prod(self.njobs) 
 
         #Write a progressbar and percent
         if progress < 1.0:
-            sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}% '.format(self.text, 
-                '#'*int(30*progress), 
-                100*progress))
+            #Only update on 0.1% intervals
+            if progress > self.current_progress+0.001:
+                sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}% '.format(self.text, 
+                    '#'*int(30*progress), 
+                    100*progress))
+                self.current_progress = progress
         else: #Special message when done
             sys.stdout.write('\r{0}: [{1:30s}] Done   \n'.format(self.text,
                 '#'*30))
