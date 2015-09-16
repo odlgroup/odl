@@ -177,7 +177,7 @@ class ProgressBar(object):
             raise ValueError('Need to provide at least one job len')
         self.njobs = njobs
         self.current_progress = 0.0
-        self.update(*([0]*len(njobs)))
+        self.index = 0
         self.start()
         
     def start(self):
