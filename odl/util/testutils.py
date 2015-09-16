@@ -37,14 +37,15 @@ import sys
 from time import time
 from future.utils import with_metaclass
 
-__all__ = ['ODLTestCase', 'skip_all', 'Timer', 'ProgressBar']
+__all__ = ('ODLTestCase', 'skip_all', 'Timer', 'timeit', 'ProgressBar')
+
 
 class ODLTestCase(unittest.TestCase):
     # Use names compatible with unittest
     # pylint: disable=invalid-name
     def assertAlmostEqual(self, f1, f2, *args, **kwargs):
-        unittest.TestCase.assertAlmostEqual(self, complex(f1), complex(f2), *args,
-                                            **kwargs)
+        unittest.TestCase.assertAlmostEqual(self, complex(f1), complex(f2),
+                                            *args, **kwargs)
 
     # pylint: disable=invalid-name
     def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
@@ -82,8 +83,7 @@ class ODLTestCase(unittest.TestCase):
 
 
 def skip_all(reason=None):
-    """ Create a TestCase replacement class where all tests are skipped
-    """
+    """Create a TestCase replacement class where all tests are skipped."""
     if reason is None:
         reason = ''
 
@@ -102,10 +102,13 @@ def skip_all(reason=None):
 
 
 class Timer(object):
-    """ A timer to be used as:
+    """A timer context manager.
+
+    Usage
+    -----
 
     with Timer("name"):
-        Do stuff
+        # Do stuff
 
     Prints the time stuff took to execute.
     """
@@ -120,18 +123,22 @@ class Timer(object):
         if self.name is not None:
             print('[{}] '.format(self.name))
         print('Elapsed: {:.3f}'.format(time() - self.tstart))
-        
+
+
 def timeit(arg):
-    """ A decorator timer to be used as:
+    """A timer decorator.
+
+    Usage
+    -----
 
     @timeit
     def myfunction(...):
         ...
-        
+
     @timeit("info string")
     def myfunction(...):
         ...
-        
+
     """
     if callable(arg):
         def timed_function(*args, **kwargs):
@@ -150,9 +157,10 @@ def timeit(arg):
 
 
 class ProgressBar(object):
-    """ A simple commandline progress bar
+    """A simple command-line progress bar.
 
-    Usage:
+    Usage
+    -----
 
     >>> progress = ProgressBar('Reading data', 10)
     >>> progress.update(5) #halfway, zero indexing
@@ -163,9 +171,9 @@ class ProgressBar(object):
     >>> progress = ProgressBar('Reading data', 10, 10)
     >>> progress.update(9, 8)
     Reading data [################] 99%
-    
+
     Also supports simply calling update, which moves the counter forward
-    
+
     >>> progress = ProgressBar('Reading data', 10, 10)
     >>> progress.update()
     Reading data [################] 99%
@@ -177,11 +185,12 @@ class ProgressBar(object):
             raise ValueError('Need to provide at least one max')
         self.max_nrs = max_nrs
         self.current_nrs = [0]*len(max_nrs)
-        self.current_nrs[-1] = -1 #offset for zero indexing so first is [0,...]
+        # offset for zero indexing so first is [0,...]
+        self.current_nrs[-1] = -1
 
     def _increment_index(self):
         self.current_nrs[-1] += 1
-        
+
         updated = True
         while updated:
             updated = False
@@ -200,23 +209,22 @@ class ProgressBar(object):
         else:
             self._increment_index()
 
-        #Calculate nd index
+        # Calculate nd index
         ind = 0
         for i, max_nr in zip(self.current_nrs, self.max_nrs):
             ind *= max_nr
             ind += i
 
-        #Find progress as ratio between 0 and 1
-        #offset by 1 for zero indexing
-        progress = (1 + ind) / prod(self.max_nrs) 
+        # Find progress as ratio between 0 and 1
+        # offset by 1 for zero indexing
+        progress = (1 + ind) / prod(self.max_nrs)
 
-        #Write a progressbar and percent
+        # Write a progressbar and percent
         if progress < 1.0:
-            sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}% '.format(self.text, 
-                '#'*int(30*progress), 
-                100*progress))
-        else: #Special message when done
-            sys.stdout.write('\r{0}: [{1:30s}] Done   \n'.format(self.text,
-                '#'*30))
+            sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}% '.format(
+                self.text, '#'*int(30*progress), 100*progress))
+        else:  # Special message when done
+            sys.stdout.write('\r{0}: [{1:30s}] Done   \n'.format(
+                self.text, '#'*30))
 
         sys.stdout.flush()
