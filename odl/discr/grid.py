@@ -19,19 +19,6 @@
 
 Sampling grids are collections of points in an n-dimensional coordinate
 space with a certain structure which is exploited to minimize storage.
-
-+-------------+-------------------------------------------------------+
-|Class name   |Description                                            |
-+=============+=======================================================+
-|`TensorGrid` |The points are given as the tensor product of n        |
-|             |coordinate vectors, i.e. all possible n-tuples where   |
-|             |the i-th coordinate is from the i-th coordinate vector.|
-+-------------+-------------------------------------------------------+
-|`RegularGrid`|A variant of a tensor grid where the entries of each   |
-|             |coordinate vector are equispaced. This type of grid can|
-|             |be represented by three n-dimensional vectors `shape`, |
-|             |`center` and `stride`.                                 |
-+-------------+-------------------------------------------------------+
 """
 
 # Imports for common Python 2/3 codebase
@@ -50,7 +37,7 @@ from odl.sets.set import Set, Integers
 from odl.util.utility import array1d_repr, array1d_str
 
 
-__all__ = ('TensorGrid', 'RegularGrid')
+__all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling')
 
 
 class TensorGrid(Set):
@@ -65,15 +52,19 @@ class TensorGrid(Set):
     p = (x_i, y_j, z_k), hence 2 * 4 * 3 = 24 points in total.
     """
 
-    def __init__(self, *coord_vectors):
+    def __init__(self, *coord_vectors, **kwargs):
         """Initialize a TensorGrid instance.
 
         Parameters
         ----------
         v1,...,vn : array-like
-            The coordinate vectors defining the grid points. They must be
-            sorted in ascending order and may not contain duplicates.
-            Empty vectors are not allowed.
+            The coordinate vectors defining the grid points. They must
+            be sorted in ascending order and may not contain
+            duplicates. Empty vectors are not allowed.
+        kwargs : {'as_midp'}
+            'as_midp' : bool, optional  (Default: `False`)
+                Treat grid points as midpoints of rectangular cells.
+                This influences the behavior of `min` and `max`.
 
         Examples
         --------
@@ -152,20 +143,20 @@ class TensorGrid(Set):
         return np.prod(self.shape)
 
     @property
-    def min(self):
-        """Vector containing the minimal coordinates per axis.
+    def min_pt(self):
+        """Vector containing the minimal grid coordinates per axis.
 
         Examples
         --------
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
-        >>> g.min
+        >>> g.min_pt
         array([ 1., -2.])
         """
         return np.array([vec[0] for vec in self.coord_vectors])
 
     @property
-    def max(self):
-        """Vector containing the maximal coordinates per axis.
+    def max_pt(self):
+        """Vector containing the maximal grid coordinates per axis.
 
         Examples
         --------
@@ -173,6 +164,38 @@ class TensorGrid(Set):
         >>> g.max
         array([ 5., 2.])
         """
+        return np.array([vec[-1] for vec in self.coord_vectors])
+
+    def min(self):
+        """Return vector with minimal cell coordinates per axis.
+
+        This is relevant if the grid was initialized with
+        `as_midp=True`, in which case the minimum is half a stride
+        smaller than the minimum grid point.
+
+        Examples
+        --------
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g.min_pt
+        array([ 1., -2.])
+        """
+        # TODO: finalize
+        return np.array([vec[0] for vec in self.coord_vectors])
+
+    def max(self):
+        """Return vector with maximal cell coordinates per axis.
+
+        This is relevant if the grid was initialized with
+        `as_midp=True`, in which case the maximum is half a stride
+        larger than the maximum grid point.
+
+        Examples
+        --------
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g.max
+        array([ 5., 2.])
+        """
+        # TODO: finalize
         return np.array([vec[-1] for vec in self.coord_vectors])
 
     # Methods
@@ -687,7 +710,9 @@ class RegularGrid(TensorGrid):
 
         if not min_pt.shape == max_pt.shape == shape.shape:
             raise ValueError('input array shapes are {}, {}, {} but '
-                             'should be equal.')
+                             'should be equal.'
+                             ''.format(min_pt.shape, max_pt.shape,
+                                       shape.shape))
 
         if not np.all(np.isfinite(min_pt)):
             raise ValueError('minimum point {} has invalid entries.'
@@ -705,6 +730,12 @@ class RegularGrid(TensorGrid):
         if np.any(shape <= 0):
             raise ValueError('shape parameter is {} but should only contain '
                              'positive values.'.format(shape))
+
+        degen = np.where(min_pt == max_pt)[0]
+        if np.any(shape[degen] != 1):
+            raise ValueError('degenerated axes {} have shapes {}, expected '
+                             '{}.'.format(tuple(degen[:]), tuple(shape[degen]),
+                                          len(degen) * (1,)))
 
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
@@ -977,6 +1008,69 @@ class RegularGrid(TensorGrid):
         return 'RegularGrid({}, {}, {})'.format(list(self.min),
                                                 list(self.max),
                                                 list(self.shape))
+
+
+def uniform_sampling(intv_prod, num_nodes, as_midp=True):
+    """Sample an interval product uniformly.
+
+    Parameters
+    ----------
+    intv_prod : ``IntervalProd``
+        Set to be sampled
+    num_nodes : int or tuple of int
+        Number of nodes per axis. For dimension >= 2, a tuple
+        is required. All entries must be positive. Entries
+        corresponding to degenerate axes must be equal to 1.
+    as_midp : bool, optional
+        If True, the midpoints of an interval partition will be
+        returned, which excludes the endpoints. Otherwise,
+        equispaced nodes including the endpoints are generated.
+        Note that the resulting strides are different.
+        Default: `True`.
+
+    Returns
+    -------
+    sampling : grid.RegularGrid
+
+    Examples
+    --------
+    >>> from odl.set.domain import IntervalProd
+    >>> rbox = IntervalProd([-1.5, 2], [-0.5, 3])
+    >>> grid = uniform_sampling(rbox, [2, 5])
+    >>> grid.coord_vectors
+    (array([-1.25, -0.75]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
+    >>> grid = uniform_sampling(rbox, [2, 5], as_midp=False)
+    >>> grid.coord_vectors
+    (array([-1.5, -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))
+    """
+    num_nodes = np.atleast_1d(num_nodes).astype(np.int64)
+
+    if not isinstance(intv_prod, IntervalProd):
+        raise TypeError('interval product {!r} not an `IntervalProd` instance.'
+                        ''.format(intv_prod))
+
+    if np.any(np.isinf(intv_prod.begin)) or np.any(np.isinf(intv_prod.end)):
+        raise ValueError('uniform sampling undefined for infinite '
+                         'domains.')
+
+    if num_nodes.shape != (intv_prod.dim,):
+        raise ValueError('number of nodes {} has wrong shape '
+                         '({} != ({},)).'
+                         ''.format(num_nodes, num_nodes.shape, intv_prod.dim))
+
+    if np.any(num_nodes <= 0):
+        raise ValueError('number of nodes {} has non-positive entries.'
+                         ''.format(num_nodes))
+
+    if np.any(num_nodes[intv_prod._ideg] > 1):
+        raise ValueError('degenerate axes {} cannot be sampled with more '
+                         'than one node.'.format(tuple(intv_prod._ideg)))
+
+    grid_min = (intv_prod.begin if not as_midp
+                else intv_prod.begin + intv_prod.size / (2*num_nodes))
+    grid_max = (intv_prod.end if not as_midp
+                else intv_prod.end - intv_prod.size / (2*num_nodes))
+    return RegularGrid(grid_min, grid_max, num_nodes)
 
 
 if __name__ == '__main__':
