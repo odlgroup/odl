@@ -20,10 +20,10 @@ odl.space.cuda module
     :undoc-members:
     :show-inheritance:
 
-odl.space.function module
--------------------------
+odl.space.fspace module
+-----------------------
 
-.. automodule:: odl.space.function
+.. automodule:: odl.space.fspace
     :members:
     :undoc-members:
     :show-inheritance:

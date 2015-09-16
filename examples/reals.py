@@ -1,14 +1,32 @@
-from __future__ import (unicode_literals, print_function, division,
-                        absolute_import)
-from future.builtins import object, zip
+# Copyright 2014, 2015 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
+
+# pylint: disable=abstract-method
+
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.set.space import LinearSpace
-from odl.set.domain import RealNumbers
+from odl.sets.space import LinearSpace
+from odl.sets.domain import RealNumbers
 
-""" An example of a very simple space, the space Rn
-"""
+"""An example of a very simple space, the real numbers."""
+
 
 class Reals(LinearSpace):
     """The real numbers
@@ -54,8 +72,8 @@ class Reals(LinearSpace):
 if __name__ == '__main__':
     R = Reals()
     x = R.element(5.0)
-    y = R.element(10.0) 
-    
+    y = R.element(10.0)
+
     print(x+y)
     print(x*y)
     print(x-y)

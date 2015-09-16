@@ -1,27 +1,25 @@
-# -*- coding: utf-8 -*-
-"""
-simple_test_astra.py -- a simple test script
+# Copyright 2014, 2015 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2014, 2015 Holger Kohr
-
-This file is part of ODL.
-
-ODL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-ODL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with ODL.  If not, see <http://www.gnu.org/licenses/>.
-"""
-from __future__ import (division, print_function, unicode_literals,
-                        absolute_import)
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
 from future import standard_library
+standard_library.install_aliases()
+
 from math import sin, cos, pi
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,15 +27,12 @@ import numpy as np
 import odl.operator.operator as OP
 from odl.space.default import L2
 import odl.space.cuda as cs
-import odl.set.product as ps
-import odl.discr.discretization as dd
-from odl.set.domain import Rectangle, Cube
-from odl.discr.default import DiscreteL2, l2_uniform_discretization
+import odl.sets.pspace as ps
+from odl.sets.domain import Rectangle, Cube
+from odl.discr.l2_discr import l2_uniform_discretization
 import SimRec2DPy as SR
 import GPUMCIPy as gpumci
-from odl.utility.testutils import Timer
-
-standard_library.install_aliases()
+from odl.util.testutils import Timer
 
 
 class ProjectionGeometry3D(object):
@@ -119,7 +114,8 @@ projectionSpace = L2(Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
 # TODO: specify F ordering!
-projectionDisc = l2_uniform_discretization(projectionSpace, nPixels, impl='cuda')
+projectionDisc = l2_uniform_discretization(projectionSpace, nPixels,
+                                           impl='cuda')
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
@@ -144,7 +140,8 @@ result = projector(phantomVec)
 fig, axes = plt.subplots(nrows=2, ncols=2)
 fig.tight_layout()
 for i, ax in enumerate(axes.flat):
-    ax.imshow(result[i].asarray().reshape(nPixels,order='F').T, cmap='bone', origin='lower')
+    ax.imshow(result[i].asarray().reshape(nPixels, order='F').T,
+              cmap='bone', origin='lower')
     ax.axis('off')
 
 plt.show()

@@ -29,8 +29,8 @@ Abstract discretization classes (Module `discretization`)
 |                     |linear spaces                                   |
 +---------------------+------------------------------------------------+
 
-Discretizations of default spaces (Module `default`)
-====================================================
+Discretizations of L2 spaces (Module `l2_discr`)
+================================================
 
 +--------------+-------------------------------------------------------+
 |Class name    |Description                                            |
@@ -38,6 +38,17 @@ Discretizations of default spaces (Module `default`)
 |``DiscreteL2``|Discretization of an :math:`L^2` space defined on an   |
 |              |interval product                                       |
 +--------------+-------------------------------------------------------+
+
+Factory functions
+-----------------
+
++-----------------------------+----------------------------------------+
+|Name                         |Description                             |
++=============================+========================================+
+|`l2_uniform_discretization()`|Discretize an L2 space based on uniform |
+|                             |sampling and interpolation between      |
+|                             |samples                                 |
++-----------------------------+----------------------------------------+
 
 Sampling grids (Module `grid`)
 ==============================
@@ -51,8 +62,8 @@ Sampling grids (Module `grid`)
 |``RegularGrid``      |Tensor grid with regularly spaced coordinates   |
 +---------------------+------------------------------------------------+
 
-Restriction and Extension operators (Module `operators`)
-========================================================
+Restriction and Extension operators (Module `discr_mappings`)
+=============================================================
 
 +---------------------------+------------------------------------------+
 |Class name                 |Description                               |
@@ -70,11 +81,11 @@ Restriction and Extension operators (Module `operators`)
 
 from __future__ import absolute_import
 
-__all__ = []
+__all__ = ()
 
-from . import default
-from .default import *
-__all__ += default.__all__
+from . import l2_discr
+from .l2_discr import *
+__all__ += l2_discr.__all__
 
 from . import discretization
 from .discretization import *
@@ -84,6 +95,6 @@ from . import grid
 from .grid import *
 __all__ += grid.__all__
 
-from . import operators
-from .operators import *
-__all__ += operators.__all__
+from . import discr_mappings
+from .discr_mappings import *
+__all__ += discr_mappings.__all__

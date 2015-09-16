@@ -15,11 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=abstract-method
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 
@@ -28,14 +25,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ODL
-from odl.discr.default import DiscreteL2, l2_uniform_discretization
+from odl.discr.l2_discr import DiscreteL2, l2_uniform_discretization
 import odlpp.odlpp_cuda as odlpp_cuda
 import odl.space.cuda as cuda
 from odl.space.default import L2
-from odl.set.domain import Interval
+from odl.sets.domain import Interval
 from odl.operator.operator import LinearOperator
 import odl.operator.solvers as solvers
-from odl.utility.testutils import Timer
+from odl.util.testutils import Timer
 import examples.solver_examples as solver_examples
 
 

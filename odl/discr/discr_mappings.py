@@ -35,8 +35,8 @@ from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import NtuplesBase, FnBase
-from odl.space.function import FunctionSet, FunctionSpace
-from odl.set.domain import IntervalProd
+from odl.space.fspace import FunctionSet, FunctionSpace
+from odl.sets.domain import IntervalProd
 
 
 __all__ = ('FunctionSetMapping', 'LinearFunctionSpaceMapping',
@@ -271,8 +271,8 @@ class RawGridCollocation(FunctionSetMapping):
         Define a set of functions from the convex hull of the grid
         to the real numbers:
 
-        >>> from odl.space.function import FunctionSet
-        >>> from odl.set.set import RealNumbers
+        >>> from odl.space.fspace import FunctionSet
+        >>> from odl.sets.set import RealNumbers
         >>> funcset = FunctionSet(grid.convex_hull(), RealNumbers())
 
         Finally create the operator:
@@ -414,15 +414,15 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         >>> from __future__ import unicode_literals, print_function
         >>> from builtins import str
-        >>> from odl.set.domain import Rectangle
-        >>> from odl.set.set import Strings
+        >>> from odl.sets.domain import Rectangle
+        >>> from odl.sets.set import Strings
 
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> strings = Strings(1)  # 1-char strings
 
         Initialize the space
 
-        >>> from odl.space.function import FunctionSet
+        >>> from odl.space.fspace import FunctionSet
         >>> from odl.space.cartesian import Ntuples
 
         >>> space = FunctionSet(rect, strings)
@@ -509,9 +509,9 @@ class NearestInterpolation(RawNearestInterpolation,
         Let's define the complex function space :math:`L^2` on a
         rectangle:
 
-        >>> from odl.set.domain import Rectangle
+        >>> from odl.sets.domain import Rectangle
         >>> from odl.space.default import L2
-        >>> from odl.set.set import ComplexNumbers
+        >>> from odl.sets.set import ComplexNumbers
         >>> from odl.space.cartesian import Cn
 
         >>> rect = Rectangle([0, 0], [1, 1])

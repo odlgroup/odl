@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Core Operator support for ODL.
+"""Core Operator support for ODL.
 
 Operators (module `operator`)
 =============================
@@ -24,69 +23,114 @@ Operators (module `operator`)
 Core operators
 --------------
 
-=================== ===========
-Name                Description
-=================== ===========
-Operator            Basic operator class
-LinearOperator      Basic linear operator class
-SelfAdjointOperator Class of linear operators whose adjoint is itself
-=================== ===========
-
++-----------------------+----------------------------------------------+
+|Class name             |Description                                   |
++=======================+==============================================+
+|``Operator``           |**Abstract** basic class for (mathematical)   |
+|                       |operators                                     |
++-----------------------+----------------------------------------------+
+|``LinearOperator``     |**Abstract** basic class for linear operators |
+|                       |operators                                     |
++-----------------------+----------------------------------------------+
+|``SelfAdjointOperator``|**Abstract** basic class for linear operators |
+|                       |whose adjoint is itself                       |
++-----------------------+----------------------------------------------+
 
 Operator compositions, sums etc.
 --------------------------------
 
-======================== ===========
-Name                     Description
-======================== ===========
-OperatorSum              x --> A(x) + B(x)
-OperatorComp             x --> A(B(x))
-OperatorPointwiseProduct x --> A(x) * B(x)
-OperatorLeftScalarMult   x --> scalar * A(x)
-OperatorRightScalarMult  x --> A(scalar * x)
-======================== ===========
++----------------------------+-----------------------------------------+
+|Class name                  |Description                              |
++============================+=========================================+
+|``OperatorSum``             |Sum of two operators, `S = A + B`,       |
+|                            |defined as                               |
+|                            |`x` --> `(A + B)(x) = A(x) + B(x)`       |
++----------------------------+-----------------------------------------+
+|``OperatorComp``            |Composition of two operators,            |
+|                            |`C = A o B` defined as                   |
+|                            |`x` --> `(A o B)(x) = A(B(x))`           |
++----------------------------+-----------------------------------------+
+|``OperatorPointwiseProduct``|Product of two operators,`P = A * B`,    |
+|                            |defined as                               |
+|                            |`x --> (A * B)(x) = A(x) * B(x)`.        |
++----------------------------+-----------------------------------------+
+|``OperatorLeftScalarMult``  |Multiplication of an operator from left  |
+|                            |with a scalar, `L = c * A`, defined as   |
+|                            |`x --> (c * A)(x) = c * A(x)`            |
++----------------------------+-----------------------------------------+
+|``OperatorRightScalarMult`` |Multiplication of an operator from right |
+|                            |with a scalar, `S = A * c`, defined by   |
+|                            |`x --> (A * c)(x) =  A(c * x)`           |
++----------------------------+-----------------------------------------+
+|``LinearOperatorSum``       |Sum of two linear operators, again a     |
+|                            |linear operator (see ``OperatorSum``)    |
++----------------------------+-----------------------------------------+
+|``LinearOperatorScalarMult``|Multiplication of a linear operator with |
+|                            |a scalar. Left and right multiplications |
+|                            |are equivalent (see                      |
+|                            |``OperatorLeftScalarMult``)              |
++----------------------------+-----------------------------------------+
 
+Factory functions
+-----------------
 
-Linear Operator compositions, sums etc.
----------------------------------------
++-------------------+--------------------------------------------------+
+|Name               |Description                                       |
++===================+==================================================+
+|`operator()`       |Create an ``Operator`` by specifying either a     |
+|                   |`call` or an `apply` method (or both) for         |
+|                   |evaluation.                                       |
++-------------------+--------------------------------------------------+
+|`linear_operator()`|Create a ``LinearOperator`` by specifying either a|
+|                   |`call` or an `apply` method (or both) for         |
+|                   |evaluation.                                       |
++-------------------+--------------------------------------------------+
 
-======================== ===========
-Name                     Description
-======================== ===========
-LinearOperatorSum        x --> A(x) + B(x)
-LinearOperatorComp       x --> A(B(x))
-LinearOperatorScalarMult x --> scalar * A(x)
-======================== ===========
+Default (standard) operators (modlule `default_ops`)
+====================================================
 
-Default (standard) operators (modlule 'default')
-================================================
++--------------------+-------------------------------------------------+
+|Class name          |Description                                      |
++====================+=================================================+
+|``ScalingOperator`` |Multiplication with a scalar `s`, defined as     |
+|                    |`x` --> `s * x`                                  |
++--------------------+-------------------------------------------------+
+|``ZeroOperator``    |Multiplication with 0, defined as                |
+|                    |`x` --> `0 * x`                                  |
++--------------------+-------------------------------------------------+
+|``IdentityOperator``|Multiplication with 1, defined as                |
+|                    |`x` --> `1 * x`                                  |
++--------------------+-------------------------------------------------+
+|``LinCombOperator`` |Linear combination of two space elements with two|
+|                    |fixed scalars `a` and `b`, defined as            |
+|                    |`(x, y)` --> `a * x + b * y`                     |
++--------------------+-------------------------------------------------+
+|``MultiplyOperator``|Multiplication of two space elements, defined as |
+|                    |`(x, y)` --> `x * y`                             |
++--------------------+-------------------------------------------------+
 
-=================== ===========
-Name                Description
-=================== ===========
-ScalingOperator     x --> scalar * x
-IdentityOperator    x --> x
-=================== ===========
-
-Equation system solvers (module 'solvers')
+Equation system solvers (module `solvers`)
 ==========================================
 
-=================== ===========
-Name                Description
-=================== ===========
-landweber           Landweber's method
-conjugate_gradient  Conjugate gradient method for the normal equation
-gauss_newton        Gauss-Newton method
-=================== ===========
++----------------------+-----------------------------------------------+
+|Name                  |Description                                    |
++======================+===============================================+
+|`landweber()`         |Landweber's iterative method                   |
++----------------------+-----------------------------------------------+
+|`conjugate_gradient()`|Conjugate gradient method for the normal       |
+|                      |equation                                       |
++----------------------+-----------------------------------------------+
+|`gauss_newton()`      |Gauss-Newton iterative method                  |
++----------------------+-----------------------------------------------+
 """
 
 from __future__ import absolute_import
 
-__all__ = []
+__all__ = ()
 
-from . import default
-from .default import *
-__all__ += default.__all__
+from . import default_ops
+from .default_ops import *
+__all__ += default_ops.__all__
 
 from . import operator
 from .operator import *

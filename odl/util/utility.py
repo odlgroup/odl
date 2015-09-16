@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Utilities for use inside the ODL project, not for external use.
-"""
+"""Utilities for internal use."""
 
 
 # Imports for common Python 2/3 codebase
@@ -28,14 +26,10 @@ standard_library.install_aliases()
 from builtins import str
 
 # External module imports
-from textwrap import dedent, fill
 import numpy as np
 
-__all__ = ['errfmt', 'array1d_repr', 'array1d_str']
-
-def errfmt(errstr):
-    """TODO: remove"""
-    return fill(dedent(errstr)).lstrip()
+__all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
+           'dtype_repr')
 
 
 def array1d_repr(array):

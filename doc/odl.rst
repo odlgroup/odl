@@ -10,7 +10,7 @@ Subpackages
     odl.geometry
     odl.operator
     odl.space
-    odl.utility
+    odl.util
 
 Module contents
 ---------------

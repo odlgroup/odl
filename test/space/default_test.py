@@ -29,8 +29,8 @@ import numpy as np
 
 # ODL imports
 from odl.space.default import L2
-from odl.set.domain import Interval, Rectangle
-from odl.utility.testutils import ODLTestCase
+from odl.sets.domain import Interval, Rectangle
+from odl.util.testutils import ODLTestCase
 
 
 #class L2Test(ODLTestCase):

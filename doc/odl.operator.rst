@@ -4,10 +4,10 @@ odl.operator package
 Submodules
 ----------
 
-odl.operator.default module
----------------------------
+odl.operator.default_ops module
+-------------------------------
 
-.. automodule:: odl.operator.default
+.. automodule:: odl.operator.default_ops
     :members:
     :undoc-members:
     :show-inheritance:

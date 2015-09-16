@@ -25,15 +25,16 @@ to be used to write general code and faciliate code reuse.
 
 from __future__ import absolute_import
 
-__version__ = '0.1b0.dev0'
-__all__ = []
+__version__ = '0.9b1'
+__all__ = ('sets', 'operator', 'space', 'discr')
 
 
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
-from . import set
-from .set import *
-__all__ += set.__all__
+
+from . import sets
+from .sets import *
+__all__ += sets.__all__
 
 from . import operator
 from .operator import *
