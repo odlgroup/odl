@@ -530,27 +530,12 @@ class TensorGridTestMethods(ODLTestCase):
 
 class RegularGridTestInit(ODLTestCase):
     def test_init(self):
-        center = (1, 0, -2)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
         shape = (2, 1, 3)
-        stride = (0.5, 2, 3)
 
-        # Just test if the code runs
-        grid = RegularGrid(shape, center, stride)
-        grid = RegularGrid(shape, center=center)
-        grid = RegularGrid(shape, stride=stride)
-        grid = RegularGrid(shape)
-
-        # Defaults
-        grid = RegularGrid(shape, center=center)
-        grid2 = RegularGrid(shape, center, stride=(1, 1, 1))
-        self.assertEquals(grid, grid2)
-
-        grid = RegularGrid(shape, stride=stride)
-        grid2 = RegularGrid(shape, center=(0, 0, 0), stride=stride)
-        self.assertEquals(grid, grid2)
-
-        # Correct initialization of coord_vectors
-        grid = RegularGrid(shape, center, stride)
+        # Check correct initialization of coord_vectors
+        grid = RegularGrid(minpt, maxpt, shape)
         vec1 = (0.75, 1.25)
         vec2 = (0,)
         vec3 = (-5, -2, 1)
@@ -561,94 +546,127 @@ class RegularGridTestInit(ODLTestCase):
         nonpos_shape2 = (-2, 1, 3)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(nonpos_shape1, center, stride)
+            grid = RegularGrid(minpt, maxpt, nonpos_shape1)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(nonpos_shape2, center, stride)
+            grid = RegularGrid(minpt, maxpt, nonpos_shape2)
 
-        center_with_nan = (1, 0, np.nan)
-        center_with_inf = (np.inf, 0, -2)
-
-        with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center_with_nan, stride)
-
-        with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center_with_inf, stride)
-
-        nonpos_stride1 = (0.0, 2, 3)
-        nonpos_stride2 = (0.5, -2.0, 3)
-        stride_with_nan = (0.5, np.nan, 3)
-        stride_with_inf = (0.5, 2, np.inf)
+        minpt_with_nan = (0.75, 0, np.nan)
+        minpt_with_inf = (0.75, 0, np.inf)
+        maxpt_with_nan = (1.25, np.nan, 1)
+        maxpt_with_inf = (1.25, np.inf, 1)
+        shape_with_nan = (2, np.nan, 3)
+        shape_with_inf = (2, np.inf, 3)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, nonpos_stride1)
+            grid = RegularGrid(minpt_with_nan, maxpt, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, nonpos_stride2)
+            grid = RegularGrid(minpt_with_inf, maxpt, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, stride_with_nan)
+            grid = RegularGrid(minpt, maxpt_with_nan, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, stride_with_inf)
-
-        too_short_center = (0, -2)
-        too_long_center = (1, 1, 0, -2)
+            grid = RegularGrid(minpt, maxpt_with_inf, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, too_short_center, stride)
+            grid = RegularGrid(minpt, maxpt, shape_with_nan)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, too_long_center, stride)
+            grid = RegularGrid(minpt, maxpt, shape_with_inf)
 
-        too_short_stride = (2, 3)
-        too_long_stride = (0.5, 2, 3, 1)
-
-        with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, too_short_stride)
+        maxpt_smaller_minpt1 = (0.7, 0, 1)
+        maxpt_smaller_minpt2 = (1.25, -1, 1)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, too_long_stride)
+            grid = RegularGrid(minpt, maxpt_smaller_minpt1, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt_smaller_minpt2, shape)
+
+        too_short_minpt = (0.75, 0)
+        too_long_minpt = (0.75, 0, -5, 2)
+        too_short_maxpt = (0, 1)
+        too_long_maxpt = (1.25, 0, 1, 25)
+        too_short_shape = (2, 3)
+        too_long_shape = (2, 1, 4, 3)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(too_short_minpt, maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(too_long_minpt, maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, too_short_maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, too_long_maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt, too_short_shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt, too_long_shape)
+
+        maxpt_eq_minpt_at_shape_larger_than_1 = (0.75, 0, 1)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt_eq_minpt_at_shape_larger_than_1,
+                               shape)
 
 
 class RegularGridTestAttributes(ODLTestCase):
     def test_center(self):
-        center = (1, 0, -2)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
         shape = (2, 1, 3)
-        stride = (0.5, 2, 3)
 
-        grid = RegularGrid(shape, center, stride)
+        center = (1, 0, -2)
+
+        grid = RegularGrid(minpt, maxpt, shape)
         self.assertAllEquals(grid.center, center)
 
-        grid = RegularGrid(shape, stride=stride)
-        self.assertAllEquals(grid.center, (0, 0, 0))
-
     def test_stride(self):
-        center = (1, 0, -2)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
         shape = (2, 1, 3)
-        stride = (0.5, 2, 3)
 
-        grid = RegularGrid(shape, center, stride)
+        stride = (0.5, 1, 3)
+
+        grid = RegularGrid(minpt, maxpt, shape)
         self.assertAllEquals(grid.stride, stride)
-
-        grid = RegularGrid(shape, center)
-        self.assertAllEquals(grid.stride, (1, 1, 1))
 
 
 class RegularGridTestMethods(ODLTestCase):
     def test_is_subgrid(self):
-        center = (1, 0, -2)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
         shape = (2, 1, 3)
-        stride = (0.5, 1, 3)
 
-        grid = RegularGrid(shape, center, stride)
+        # Optimized cases
+        grid = RegularGrid(minpt, maxpt, shape)
         self.assertTrue(grid.is_subgrid(grid))
 
-        center_sup = (1.125, -1, -2)
-        shape_sup = (6, 2, 5)
-        stride_sup = (0.25, 2, 3)
+        smaller_shape = (1, 1, 3)
+        not_sup_grid = RegularGrid(minpt, maxpt, smaller_shape)
+        self.assertFalse(grid.is_subgrid(not_sup_grid))
 
-        sup_grid = RegularGrid(shape_sup, center_sup, stride_sup)
+        larger_minpt = (0.75, 0.5, -4)
+        not_sup_grid = RegularGrid(larger_minpt, maxpt, shape)
+        self.assertFalse(grid.is_subgrid(not_sup_grid))
+
+        smaller_maxpt = (1.15, 0, 0)
+        not_sup_grid = RegularGrid(minpt, smaller_maxpt, shape)
+        self.assertFalse(grid.is_subgrid(not_sup_grid))
+
+        # Real checks
+        minpt_sup1 = (-0.25, -2, -5)
+        maxpt_sup1 = (1.25, 2, 1)
+        shape_sup1 = (4, 3, 3)
+
+        sup_grid = RegularGrid(minpt_sup1, maxpt_sup1, shape_sup1)
         self.assertTrue(grid.is_subgrid(sup_grid))
         self.assertFalse(sup_grid.is_subgrid(grid))
 
