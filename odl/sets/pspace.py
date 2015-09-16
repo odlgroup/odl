@@ -33,22 +33,23 @@ from numbers import Integral
 import numpy as np
 
 # ODL imports
-from odl.set.space import LinearSpace
-from odl.utility.utility import errfmt
+from odl.sets.space import LinearSpace
 
 
 __all__ = ('ProductSpace',)
 
+
 def _strip_space(x):
-    """Strips the SPACE.element( ... ) part from a repr""" 
+    """Strip the SPACE.element( ... ) part from a repr."""
     r = repr(x)
     space_repr = '{!r}.element('.format(x.space)
     if r.startswith(space_repr) and r.endswith(')'):
         r = r[len(space_repr):-1]
     return r
 
+
 def _indent(x):
-    """Indents a string by 4 characters"""
+    """Indent a string by 4 characters."""
     lines = x.split('\n')
     for i in range(len(lines)):
         lines[i] = '    ' + lines[i]
@@ -79,9 +80,9 @@ class ProductSpace(LinearSpace):
         Parameters
         ----------
         args : {'LinearSpace' and 'int' OR 'LinearSpace' instances
-            Either a space and an integer, 
+            Either a space and an integer,
             in this case the power of the space is taken (R^n)
-            Otherwise, a set of spaces, 
+            Otherwise, a set of spaces,
             in this case the product is taken (RxRxRxC)
         kwargs : {'ord', 'weights', 'prod_norm'}
             'ord' : float, optional
@@ -125,14 +126,17 @@ class ProductSpace(LinearSpace):
         >>> from odl.space.cartesian import Rn
         >>> r2x3 = ProductSpace(Rn(2), Rn(3))
         """
-        if len(spaces) == 2 and isinstance(spaces[0], LinearSpace) and isinstance(spaces[1], Integral):
-            #Powerspace initialization
-            return self.__init__(*([spaces[0]] * spaces[1]), **kwargs)
+        if (len(spaces) == 2 and
+                isinstance(spaces[0], LinearSpace) and
+                isinstance(spaces[1], Integral)):
+            # Powerspace initialization
+            spaces = [spaces[0]] * spaces[1]
 
-        if not all(isinstance(spc, LinearSpace) for spc in spaces):
-            wrong_spc = [spc for spc in spaces
-                         if not isinstance(spc, LinearSpace)]
-            raise TypeError('{} not LinearSpace instance(s)'.format(wrong_spc))
+        wrong_spaces = [spc for spc in spaces
+                        if not isinstance(spc, LinearSpace)]
+        if wrong_spaces:
+            raise TypeError('{!r} not LinearSpace instance(s).'
+                            ''.format(wrong_spaces))
 
         if not all(spc.field == spaces[0].field for spc in spaces):
             raise TypeError('All spaces must have the same field')
@@ -141,7 +145,7 @@ class ProductSpace(LinearSpace):
 
         if prod_norm is not None:
             if not callable(prod_norm):
-                raise TypeError(errfmt("'prod_norm' must be callable"))
+                raise TypeError('product norm is not callable.')
 
             self._prod_norm = prod_norm
             self._prod_inner_sum = _prod_inner_sum_not_defined
@@ -154,9 +158,9 @@ class ProductSpace(LinearSpace):
                 if not np.all(weights > 0):
                     raise ValueError('weights must all be positive')
                 if not len(weights) == len(spaces):
-                    raise ValueError(errfmt('''
-                    'spaces' and 'weights' have different lengths ({} != {})
-                    '''.format(len(spaces), len(weights))))
+                    raise ValueError('spaces and weights have different '
+                                     'lengths ({} != {}).'
+                                     ''.format(len(spaces), len(weights)))
 
                 def w_norm(x):
                     return np.linalg.norm(x*weights, ord=order)
@@ -250,8 +254,8 @@ class ProductSpace(LinearSpace):
             inp = [space.element() for space in self.spaces]
 
         if (all(isinstance(v, LinearSpace.Vector) for v in inp) and
-            all(part.space == space
-                for part, space in zip(inp, self.spaces))):
+                all(part.space == space
+                    for part, space in zip(inp, self.spaces))):
             elements = list(inp)
         else:
             # Delegate constructors
@@ -369,7 +373,7 @@ class ProductSpace(LinearSpace):
     def __repr__(self):
         if all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
-                                                 len(self.spaces))
+                                                   len(self.spaces))
         else:
             inner_str = ', '.join(repr(space) for space in self.spaces)
             return 'ProductSpace({})'.format(inner_str)
@@ -398,7 +402,7 @@ class ProductSpace(LinearSpace):
             Returns
             -------
             repr : string
-                
+
 
             Examples
             --------
@@ -437,11 +441,14 @@ class ProductSpace(LinearSpace):
             """
             inner_str = '[\n'
             if len(self) < 7:
-                inner_str += ',\n'.join('{}'.format(_indent(_strip_space(part))) for part in self.parts)
+                inner_str += ',\n'.join('{}'.format(
+                    _indent(_strip_space(part))) for part in self.parts)
             else:
-                inner_str += ',\n'.join('{}'.format(_indent(_strip_space(part))) for part in self.parts[:3])
+                inner_str += ',\n'.join('{}'.format(
+                    _indent(_strip_space(part))) for part in self.parts[:3])
                 inner_str += ',\n    ...\n'
-                inner_str += ',\n'.join('{}'.format(_indent(_strip_space(part))) for part in self.parts[-3:])
+                inner_str += ',\n'.join('{}'.format(
+                    _indent(_strip_space(part))) for part in self.parts[-3:])
 
             inner_str += '\n]'
 

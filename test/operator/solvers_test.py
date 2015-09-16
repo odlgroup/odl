@@ -30,7 +30,7 @@ import numpy as np
 from odl.operator.operator import LinearOperator
 import odl.operator.solvers as solvers
 from odl.space.cartesian import Rn
-from odl.utility.testutils import ODLTestCase
+from odl.util.testutils import ODLTestCase
 
 
 class MultiplyOp(LinearOperator):

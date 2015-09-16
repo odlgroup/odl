@@ -26,8 +26,8 @@ standard_library.install_aliases()
 import numpy as np
 
 # ODL imports
-from odl.set.set import Set, RealNumbers
-from odl.utility.utility import array1d_repr
+from odl.sets.set import Set, RealNumbers
+from odl.util.utility import array1d_repr
 
 
 __all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cube')

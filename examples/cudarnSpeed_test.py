@@ -1,37 +1,33 @@
-# -*- coding: utf-8 -*-
-"""
-simple_test_astra.py -- a simple test script
+# Copyright 2014, 2015 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2014, 2015 Holger Kohr
-
-This file is part of ODL.
-
-ODL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-ODL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with ODL.  If not, see <http://www.gnu.org/licenses/>.
-"""
-from __future__ import division, print_function, unicode_literals, absolute_import
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-import unittest
 
 import numpy as np
 from odl.operator.operator import *
-from odl.set.space import *
+from odl.sets.space import *
 from odl.space.cartesian import *
 from odl.space.cuda import *
-from odl.utility.testutils import Timer
+from odl.util.testutils import Timer
 
-n=10**7
+n = 10**7
 iterations = 100
 deviceSpace = CudaRn(n)
 hostSpace = Rn(n)

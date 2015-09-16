@@ -30,11 +30,11 @@ from abc import ABCMeta
 import numpy as np
 
 # ODL
-from odl.utility.utility import arraynd_repr, arraynd_str
+from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.cartesian import NtuplesBase, FnBase, Ntuples, Rn, Cn
-from odl.set.set import Set, RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace
+from odl.sets.set import Set, RealNumbers, ComplexNumbers
+from odl.sets.space import LinearSpace
 try:
     from odl.space.cuda import CudaNtuples, CudaRn
     CudaCn = None  # TODO: add CudaCn to imports once it is implemented

@@ -278,9 +278,9 @@ from numbers import Integral
 import platform
 
 # ODL imports
-from odl.set.set import Set, RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace
-from odl.utility.utility import array1d_repr, array1d_str, dtype_repr
+from odl.sets.set import Set, RealNumbers, ComplexNumbers
+from odl.sets.space import LinearSpace
+from odl.util.utility import array1d_repr, array1d_str, dtype_repr
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn')

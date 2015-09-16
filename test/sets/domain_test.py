@@ -27,8 +27,8 @@ import unittest
 import numpy as np
 
 # ODL imports
-from odl.set.domain import IntervalProd, Interval, Rectangle
-from odl.utility.testutils import ODLTestCase
+from odl.sets.domain import IntervalProd, Interval, Rectangle
+from odl.util.testutils import ODLTestCase
 
 
 def random_point(set_):

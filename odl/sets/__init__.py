@@ -17,64 +17,61 @@
 
 """Core Spaces and set support.
 
-Abstract and concrete sets (modules 'set' and 'domain')
+Abstract and concrete sets (modules `set` and `domain`)
 =======================================================
 
-Simple sets (module 'set')
+Simple sets (module `set`)
 --------------------------
 
-+-------------------+-------------------+------------------------------+
-|Name               |Direct             |Description                   |
-|                   |ancestors          |                              |
-+===================+===================+==============================+
-|``Set``            |`object`           |Base class for mathematical   |
-|                   |                   |sets                          |
-+-------------------+-------------------+------------------------------+
-|``Integers``       |``Set``            |Set of integers               |
-+-------------------+-------------------+------------------------------+
-|``RealNumbers``    |``Set``            |Set of real numbers           |
-+-------------------+-------------------+------------------------------+
-|``ComplexNumbers`` |``Set``            |Set of complex numbers        |
-+-------------------+-------------------+------------------------------+
-|``Strings``        |``Set``            |Set of fixed-length strings   |
-+-------------------+-------------------+------------------------------+
++--------------------+-------------------------------------------------+
+|Name                |Description                                      |
++====================+=================================================+
+|``Set``             |**Abstract** base class for mathematical sets    |
++--------------------+-------------------------------------------------+
+|``EmptySet``        |Empty set, contains only `None`                  |
++--------------------+-------------------------------------------------+
+|``UniversalSet``    |Contains everything                              |
++--------------------+-------------------------------------------------+
+|``Integers``        |Set of integers                                  |
++--------------------+-------------------------------------------------+
+|``RealNumbers``     |Set of real numbers                              |
++--------------------+-------------------------------------------------+
+|``ComplexNumbers``  |Set of complex numbers                           |
++--------------------+-------------------------------------------------+
+|``Strings``         |Set of fixed-length strings                      |
++--------------------+-------------------------------------------------+
+|``CartesianProduct``|Set of tuples with the i-th entry being an       |
+|                    |element of the i-th factor (set)                 |
++--------------------+-------------------------------------------------+
 
-More complex sets intended as function domains (module 'domain')
+More complex sets intended as function domains (module `domain`)
 ----------------------------------------------------------------
 
-+-------------------+-------------------+------------------------------+
-|Name               |Direct             |Description                   |
-|                   |ancestors          |                              |
-+===================+===================+==============================+
-|``IntervalProd``   |``Set``            |Cartesian product of intervals|
-+-------------------+-------------------+------------------------------+
-|``Interval``       |``IntervalProd``   |1-D special case              |
-+-------------------+-------------------+------------------------------+
-|``Rectangle``      |``IntervalProd``   |1-D special case              |
-+-------------------+-------------------+------------------------------+
-|``Cube``           |``IntervalProd``   |1-D special case              |
-+-------------------+-------------------+------------------------------+
++-------------------+--------------------------------------------------+
+|Name               |Description                                       |
++===================+==================================================+
+|``IntervalProd``   |n-dimensional Cartesian product of intervals      |
+|                   |forming a rectangular box in :math_`R^n`          |
++-------------------+--------------------------------------------------+
+|``Interval``       |1-D special case                                  |
++-------------------+--------------------------------------------------+
+|``Rectangle``      |2-D special case                                  |
++-------------------+--------------------------------------------------+
+|``Cube``           |3-D special case                                  |
++-------------------+--------------------------------------------------+
 
 
-Abstract vector spaces (modules 'space', 'product', 'function')
-===============================================================
+Abstract vector spaces (modules `space`, `pspace`)
+==================================================
 
-+----------------------+----------------+------------------------------+
-|Name                  |Direct          |Description                   |
-|                      |ancestors       |                              |
-+======================+================+==============================+
-|``LinearSpace``       |``Set``         |Abstract vector space with    |
-|                      |                |addition and scalar           |
-|                      |                |multiplication                |
-+----------------------+----------------+------------------------------+
-|``LinearProductSpace``|``LinearSpace`` |Cartesian product of linear   |
-|                      |                |spaces                        |
-+----------------------+----------------+------------------------------+
-|``FunctionSet``       |``Set``         |Set of functions with common  |
-|                      |                |domain and range              |
-+----------------------+----------------+------------------------------+
-|``FunctionSpace``     |``FunctionSet``,|Function set where the range  |
-|                      |``LinearSpace`` |is a field                    |
++----------------------+-----------------------------------------------+
+|Name                  |Description                                    |
++======================+===============================================+
+|``LinearSpace``       |**Abstract** base class for vector spaces over |
+|                      |the real or complex numbers with addition and  |
+|                      |scalar multiplication                          |
++----------------------+-----------------------------------------------+
+|``LinearProductSpace``|Cartesian product of linear spaces             |
 +----------------------+----------------+------------------------------+
 
 Concrete vector spaces (modules 'cartesian', 'cuda', 'default')
@@ -144,16 +141,20 @@ Function spaces (module 'default')
 
 from __future__ import absolute_import
 
-__all__ = []
+__all__ = ()
 
 from . import domain
 from .domain import *
 __all__ += domain.__all__
 
-from . import product
-from .product import *
-__all__ += product.__all__
+from . import pspace
+from .pspace import *
+__all__ += pspace.__all__
 
 from . import set
 from .set import *
 __all__ += set.__all__
+
+from . import space
+from .space import *
+__all__ += space.__all__

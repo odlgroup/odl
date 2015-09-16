@@ -29,8 +29,8 @@ import numpy as np
 
 # ODL imports
 from odl.discr.grid import TensorGrid, RegularGrid
-from odl.set.domain import IntervalProd
-from odl.utility.testutils import ODLTestCase
+from odl.sets.domain import IntervalProd
+from odl.util.testutils import ODLTestCase
 
 
 class TensorGridTestInit(ODLTestCase):

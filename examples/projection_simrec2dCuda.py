@@ -1,40 +1,36 @@
-# -*- coding: utf-8 -*-
-"""
-simple_test_astra.py -- a simple test script
+# Copyright 2014, 2015 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2014, 2015 Holger Kohr
+# pylint: disable=abstract-method
 
-This file is part of ODL.
-
-ODL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-ODL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with ODL.  If not, see <http://www.gnu.org/licenses/>.
-"""
-from __future__ import (division, print_function, unicode_literals,
-                        absolute_import)
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
 from future import standard_library
+standard_library.install_aliases()
+
 from math import sin, cos
 
 import numpy as np
 import odl.operator.operator as OP
-import odl.space.cuda as cs
-import odl.discr.discretization as dd
-from odl.set.domain import Interval, Rectangle
-from odl.discr.default import DiscreteL2, l2_uniform_discretization
+from odl.sets.domain import Interval, Rectangle
+from odl.discr.l2_discr import l2_uniform_discretization
 from odl.space.default import L2
 import SimRec2DPy as SR
 import matplotlib.pyplot as plt
-
-standard_library.install_aliases()
 
 
 class CudaProjection(OP.LinearOperator):

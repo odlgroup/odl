@@ -85,7 +85,7 @@ a range of convenience functions, see below.
 -------
 The public attribute determining the type of scalars which
 underlie the space. Can be instances of either ``RealNumbers`` or
-``ComplexNumbers`` (see `odl.set.set`).
+``ComplexNumbers`` (see `odl.sets.set`).
 
 Should be implemented as a `@property` to make it immutable.
 
@@ -285,7 +285,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import math as m
 
 # ODL imports
-from odl.set.set import Set
+from odl.sets.set import Set
 
 
 __all__ = ('LinearSpace',)
