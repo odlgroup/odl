@@ -31,8 +31,15 @@ def run_tests():
     arg.append('--verbosity=2')
     arg.append('--with-coverage')
     arg.append('--cover-package=odl')
-    out = nose.run(defaultTest='./test/.', argv=arg)
+    arg.append('--with-doctest')
+    arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS')
+    try:
+        # pylint: disable=unused-import
+        import odl.space.cuda
+    except ImportError:
+        arg.append('--ignore-files=cuda.py')    
+    
+    nose.run(defaultTest=['./odl/','./test/.'], argv=arg)
 
 if __name__ == '__main__':
-    run_doctests()
     run_tests()
