@@ -185,8 +185,8 @@ class ProgressBar(object):
         self.start()
 
     def start(self):
-        sys.stdout.write('\r{0}: [{1:30s}] Starting \n'.format(self.text,
-                                                               ' '*30))
+        sys.stdout.write('\r{0}: [{1:30s}] Starting'.format(self.text,
+                                                            ' '*30))
 
         sys.stdout.flush()
 

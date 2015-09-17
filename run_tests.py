@@ -24,7 +24,6 @@ standard_library.install_aliases()
 
 import nose
 import sys
-from run_doctests import run_doctests
 
 def run_tests():
     arg = sys.argv[:1]
