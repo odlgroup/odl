@@ -646,7 +646,7 @@ class TensorGrid(Set):
         return TensorGrid(*new_vecs)
 
     def __repr__(self):
-        """repr(self) implementation."""
+        """g.__repr__() <==> repr(g)."""
         vec_str = ', '.join(array1d_repr(vec) for vec in self.coord_vectors)
         if self._as_midp:
             return 'TensorGrid({}, as_midp=True)'.format(vec_str)
@@ -654,10 +654,10 @@ class TensorGrid(Set):
             return 'TensorGrid({})'.format(vec_str)
 
     def __str__(self):
-        """str(self) implementation."""
+        """g.__str__() <==> str(g)."""
         grid_str = ' x '.join(array1d_str(vec) for vec in self.coord_vectors)
         if self._as_midp:
-            return 'midpoint grid {}'.format(grid_str)
+            return 'midp grid {}'.format(grid_str)
         else:
             return 'grid {}'.format(grid_str)
 
@@ -761,14 +761,14 @@ class RegularGrid(TensorGrid):
             # Returns False for different lengths
             if not np.allclose(_min, super().min()):
                 raise ValueError('min override vector {} not close to '
-                                 'computed one {}'
+                                 'computed min {}.'
                                  ''.format(_min, super().min()))
 
         if _max is not None:
             _max = np.asarray(_max)
             if not np.allclose(_max, super().max()):
                 raise ValueError('max override vector {} not close to '
-                                 'computed one {}'
+                                 'computed min {}.'
                                  ''.format(_max, super().max()))
 
         self._min = _min
@@ -890,6 +890,8 @@ class RegularGrid(TensorGrid):
                 other_tg = TensorGrid(*[other.coord_vectors[i] for i in idcs])
                 if not self_tg.is_subgrid(other_tg, tol=tol):
                     return False
+
+            # FIXME: something goes wrong here, find the error!
 
             # Further checks are restricted to axes with more than 3 points
             idcs = np.where(np.array(self.shape) > 3)[0]
@@ -1080,9 +1082,26 @@ class RegularGrid(TensorGrid):
 
     def __repr__(self):
         """g.__repr__() <==> repr(g)."""
-        return 'RegularGrid({}, {}, {})'.format(list(self.min_pt),
-                                                list(self.max_pt),
-                                                list(self.shape))
+        if self._as_midp:
+            return 'RegularGrid({}, {}, {}, as_midp=True)'.format(
+                list(self.min_pt), list(self.max_pt), list(self.shape))
+        else:
+            return 'RegularGrid({}, {}, {})'.format(
+                list(self.min_pt), list(self.max_pt), list(self.shape))
+
+    def __str__(self):
+        """g.__str__() <==> str(g)."""
+        str_lst = []
+        for vec in self.coord_vectors:
+            if len(vec) <= 3:
+                str_lst.append('{!r}'.format(vec.tolist()))
+            else:
+                str_lst.append('[{}, {}, ..., {}]'.format(vec[0], vec[1],
+                                                          vec[-1]))
+        if self._as_midp:
+            return 'midp regular grid ' + ' x '.join(str_lst)
+        else:
+            return 'regular grid ' + ' x '.join(str_lst)
 
 
 def uniform_sampling(intv_prod, num_nodes, as_midp=True):
