@@ -647,13 +647,19 @@ class TensorGrid(Set):
 
     def __repr__(self):
         """repr(self) implementation."""
-        return 'TensorGrid(' + ', '.join(
-            array1d_repr(vec) for vec in self.coord_vectors) + ')'
+        vec_str = ', '.join(array1d_repr(vec) for vec in self.coord_vectors)
+        if self._as_midp:
+            return 'TensorGrid({}, as_midp=True)'.format(vec_str)
+        else:
+            return 'TensorGrid({})'.format(vec_str)
 
     def __str__(self):
         """str(self) implementation."""
         grid_str = ' x '.join(array1d_str(vec) for vec in self.coord_vectors)
-        return 'grid {}'.format(grid_str)
+        if self._as_midp:
+            return 'midpoint grid {}'.format(grid_str)
+        else:
+            return 'grid {}'.format(grid_str)
 
 
 class RegularGrid(TensorGrid):
@@ -738,6 +744,9 @@ class RegularGrid(TensorGrid):
                              '{}.'.format(tuple(degen[:]), tuple(shape[degen]),
                                           len(degen) * (1,)))
 
+        _min = kwargs.pop('_min', None)
+        _max = kwargs.pop('_max', None)
+
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
         super().__init__(*coord_vecs, **kwargs)
@@ -746,6 +755,24 @@ class RegularGrid(TensorGrid):
         idcs = np.where(shape > 1)
         self._stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
                               (shape[idcs] - 1))
+
+        if _min is not None:
+            _min = np.asarray(_min)
+            # Returns False for different lengths
+            if not np.allclose(_min, super().min()):
+                raise ValueError('min override vector {} not close to '
+                                 'computed one {}'
+                                 ''.format(_min, super().min()))
+
+        if _max is not None:
+            _max = np.asarray(_max)
+            if not np.allclose(_max, super().max()):
+                raise ValueError('max override vector {} not close to '
+                                 'computed one {}'
+                                 ''.format(_max, super().max()))
+
+        self._min = _min
+        self._max = _max
 
     @property
     def center(self):
@@ -770,6 +797,50 @@ class RegularGrid(TensorGrid):
         array([ 1.,  2.])
         """
         return self._stride
+
+    def min(self):
+        """Return vector with minimal cell coordinates per axis.
+
+        This is relevant if the grid was initialized with
+        `as_midp=True`, in which case the minimum is half a cell
+        smaller than the minimum grid point.
+
+        Examples
+        --------
+        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
+        >>> rg.min()
+        array([-1.5, -1. ])
+        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3),
+        ...                  as_midp=True)
+        >>> rg.min()
+        array([-2., -2.])
+        """
+        if self._min is not None:
+            return self._min
+        else:
+            return super().min()
+
+    def max(self):
+        """Return vector with maximal cell coordinates per axis.
+
+        This is relevant if the grid was initialized with
+        `as_midp=True`, in which case the maximum is half a cell
+        larger than the maximum grid point.
+
+        Examples
+        --------
+        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
+        >>> rg.max()
+        array([-0.5,  3. ])
+        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3),
+        ...                  as_midp=True)
+        >>> rg.max()
+        array([ 0.,  4.])
+        """
+        if self._max is not None:
+            return self._max
+        else:
+            return super().max()
 
     def is_subgrid(self, other, tol=0.0):
         """Test if this grid is contained in another grid.
@@ -1034,7 +1105,8 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
 
     Returns
     -------
-    sampling : grid.RegularGrid
+    sampling : ``RegularGrid``
+        Uniform sampling grid for the interval product
 
     Examples
     --------
@@ -1070,11 +1142,15 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
         raise ValueError('degenerate axes {} cannot be sampled with more '
                          'than one node.'.format(tuple(intv_prod._ideg)))
 
-    grid_min = (intv_prod.begin if not as_midp
-                else intv_prod.begin + intv_prod.size / (2*num_nodes))
-    grid_max = (intv_prod.end if not as_midp
-                else intv_prod.end - intv_prod.size / (2*num_nodes))
-    return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp)
+    if as_midp:
+        grid_min = intv_prod.begin + intv_prod.size / (2*num_nodes)
+        grid_max = intv_prod.end - intv_prod.size / (2*num_nodes)
+        return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
+                           _min=intv_prod.begin, _max=intv_prod.end)
+    else:
+        grid_min = intv_prod.begin
+        grid_max = intv_prod.end
+        return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp)
 
 
 if __name__ == '__main__':
