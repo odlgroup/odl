@@ -62,10 +62,6 @@ Sampling grids (Module `grid`)
 |``RegularGrid``      |Tensor grid with regularly spaced coordinates   |
 +---------------------+------------------------------------------------+
 
-<<<<<<< Updated upstream
-Restriction and Extension operators (Module `discr_mappings`)
-=============================================================
-=======
 Factory functions
 -----------------
 
@@ -76,9 +72,8 @@ Factory functions
 |                    |by uniform sampling                              |
 +--------------------+-------------------------------------------------+
 
-Restriction and Extension operators (Module `operators`)
-========================================================
->>>>>>> Stashed changes
+Restriction and Extension operators (Module `discr_mappings`)
+=============================================================
 
 +---------------------------+------------------------------------------+
 |Class name                 |Description                               |
