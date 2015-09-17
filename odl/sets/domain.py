@@ -204,12 +204,12 @@ class IntervalProd(Set):
             other set and this interval product.
             Default: 0.0
         """
-        if not (hasattr(other, 'min') and hasattr(other, 'max')):
-            raise TypeError('cannot test {!r} without `min()` and `max()`'
-                            'methods.'.format(other))
-
-        return (self.contains(other.min(), tol) and
-                self.contains(other.max(), tol))
+        try:
+            return (self.contains(other.min(), tol) and
+                    self.contains(other.max(), tol))
+        except AttributeError:
+            raise AttributeError('cannot test {!r} without `min()` and `max()`'
+                                 'methods.'.format(other))
 
     # Additional property-like methods
     def measure(self, dim=None):
