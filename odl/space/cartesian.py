@@ -42,223 +42,6 @@ List of classes
 |`Rn`         |`Cn`          |`n`-tuples of real numbers with         |
 |             |              |vector-vector multiplication            |
 +-------------+--------------+----------------------------------------+
-
-
-
-Space attributes and methods
-----------------------------
-The following tables summarize all attributes and methods of spaces in
-this module. Each table reflects the *added* features for the
-respective class.
-
-**`Ntuples` and subclasses:**
-
-Attributes:
-
-+----------+-------------+------------------------------------------+
-|Name      |Type         |Description                               |
-+==========+=============+==========================================+
-|`dim`     |`int`        |The number of entries per tuple           |
-+----------+-------------+------------------------------------------+
-|`dtype`   |`type`       |The data dype of each tuple entry         |
-+----------+-------------+------------------------------------------+
-
-Methods:
-
-+-----------------+---------------+-----------------------------------+
-|Signature        |Return type    |Description                        |
-+=================+===============+===================================+
-|`contains(other)`|`bool`         |Test if `other` is an element of   |
-|                 |               |this space.                        |
-+-----------------+---------------+-----------------------------------+
-|`element         |`<space        |Create a space element. If `inp` is|
-|(inp=None)`      |type>.Vector`  |`None`, merely memory is allocated.|
-|                 |               |Otherwise, the element is created  |
-|                 |               |from `inp`.                        |
-+-----------------+---------------+-----------------------------------+
-|`equals (other)` |`bool`         |Create a space element. If `inp` is|
-|                 |               |`None`, merely memory is allocated.|
-|                 |               |Otherwise, the element is created  |
-|                 |               |from `inp`.                        |
-+-----------------+---------------+-----------------------------------+
-
-Magic methods:
-
-+------------------------+---------------------+----------------------+
-|Signature               |Provides syntax      |Implementation        |
-+========================+=====================+======================+
-|`s.__eq__(other)`       |`s == other`         |`equals(other)`       |
-+------------------------+---------------------+----------------------+
-|`s.__ne__(other)`       |`s != other`         |`not equals(other)`   |
-+------------------------+---------------------+----------------------+
-|`s.__contains__(other)` |`other in s`         |`contains(other)`     |
-+------------------------+---------------------+----------------------+
-
-**`Rn`/`Cn` and subclasses:**
-
-Attributes:
-
-+-----------+----------------+----------------------------------------+
-|Name       |Type            |Description                             |
-+===========+================+========================================+
-|`field`    |`RealNumbers` or|The field over which the space is       |
-|           |`ComplexNumbers`|defined                                 |
-+-----------+----------------+----------------------------------------+
-
-Methods:
-
-+-----------------+---------------+-----------------------------------+
-|Signature        |Return type    |Description                        |
-+=================+===============+===================================+
-|`lincomb(z, a, x,|`None`         |Calculate the linear combination   |
-|b, y)`           |               |`z <-- a * x + b * y`.             |
-+-----------------+---------------+-----------------------------------+
-|`multiply(z, x,  |               |
-|             y)` |`None`         |Calculate the pointwise            |
-|                 |               |multiplication `z <-- x * y`.      |
-+-----------------+---------------+-----------------------------------+
-|`zero()`         |`<space        |Create a vector of zeros.          |
-|                 |type>.Vector`  |                                   |
-+-----------------+---------------+-----------------------------------+
-|`dist(x, y)`     |`float`        |Distance between two space elements|
-+-----------------+---------------+-----------------------------------+
-|`norm(x)`        |`float`        |Length of a space element          |
-+-----------------+---------------+-----------------------------------+
-|`inner(x, y)`    |`scalar`       |Inner product of two space elements|
-+-----------------+---------------+-----------------------------------+
-
-
-Vector attributes and methods
------------------------------
-Similarly, the following tables incrementally summarize all attributes
-and methods of vectors in this module.
-
-**`Ntuples.Vector` and subclasses:**
-
-Attributes:
-
-+-----------+---------------+---------------------------------+
-|Name       |Type           |Description                      |
-+===========+===============+=================================+
-|`data`     |`numpy.ndarray`|The container for the vector     |
-|           |               |entries                          |
-+-----------+---------------+---------------------------------+
-|`data_ptr` |`int`          |A raw memory pointer to the data |
-|           |               |container. Can be processed with |
-|           |               |the `ctypes` module in Python.   |
-+-----------+---------------+---------------------------------+
-|`space`    |`Set`          |The space to which this vector   |
-|           |               |belongs                          |
-+-----------+---------------+---------------------------------+
-
-Methods:
-
-+-----------------+---------------+-----------------------------------+
-|Signature        |Return type    |Description                        |
-+=================+===============+===================================+
-|`equals(other)`  |`bool`         |Test if `other` is equal to this   |
-|                 |               |vector.                            |
-+-----------------+---------------+-----------------------------------+
-|`assign(other)`  |`None`         |Copy the values of `other` to this |
-|                 |               |vector.                            |
-+-----------------+---------------+-----------------------------------+
-|`copy()`         |`<space        |Create a (deep) copy of this       |
-|                 |type>.Vector`  |vector.                            |
-+-----------------+---------------+-----------------------------------+
-
-Magic methods:
-
-+------------------------+---------------------+----------------------+
-|Signature               |Provides syntax      |Implementation        |
-+========================+=====================+======================+
-|`v.__eq__(other)`       |`v == other`         |`equals(other)`       |
-+------------------------+---------------------+----------------------+
-|`v.__ne__(other)`       |`v != other`         |`not equals(other)`   |
-+------------------------+---------------------+----------------------+
-|`v.__getitem__(indices)`|`v[indices]`         |by NumPy's            |
-|                        |                     |`__getitem__` method  |
-+------------------------+---------------------+----------------------+
-|`v.__setitem__(indices, |`v[indices] = values`|by NumPy's            |
-|values)`                |                     |`__setitem__` method  |
-+------------------------+---------------------+----------------------+
-
-**`Rn.Vector`/`Cn.Vector` and subclasses:**
-
-Attributes:
-
-+-----------+----------------+----------------------------------------+
-|Name       |Type            |Description                             |
-+===========+================+========================================+
-|`real`     |`Rn.Vector`     |Real part of this vector as view        |
-|           |                |(modifications affect the original      |
-|           |                |vector)                                 |
-+-----------+----------------+----------------------------------------+
-|`imag`     |`Rn.Vector`     |Imaginary part of this vector as view   |
-|           |                |(modifications affect the original      |
-|           |                |vector)                                 |
-+-----------+----------------+----------------------------------------+
-
-Methods:
-
-+-----------------+---------------+-----------------------------------+
-|Signature        |Return type    |Description                        |
-+=================+===============+===================================+
-|`set_zero()`     |`None`         |Set this vector's values to zero   |
-+-----------------+---------------+-----------------------------------+
-
-Magic methods:
-
-+------------------------+---------------------+----------------------+
-|Signature               |Provides syntax      |Implementation        |
-+========================+=====================+======================+
-|`v.__add__(other)`      |`v + other`          |`x = element()`;      |
-|                        |                     |`lincomb(x, 1, v, 1,  |
-|                        |                     |other)`               |
-+------------------------+---------------------+----------------------+
-|`v.__sub__(other)`      |`v - other`          |`x = element()`;      |
-|                        |                     |`lincomb(x, 1, v, -1, |
-|                        |                     |other)`               |
-+------------------------+---------------------+----------------------+
-|`v.__mul__(other)`      |`v * other`          |`x = element()`;      |
-|                        |                     |`lincomb(x, other, v)`|
-|                        |                     |**or**                |
-|                        |                     |`x = v.copy();        |
-|                        |                     |multiply(other, x)`   |
-+------------------------+---------------------+----------------------+
-|`v.__rmul__(other)`     |`other * v`          |`__mul__(other)`      |
-+------------------------+---------------------+----------------------+
-|`v.__truediv__(other)`  |`v / other`          |`__mul__(1.0/other)`  |
-+------------------------+---------------------+----------------------+
-|`v.__div__(other)`      |`v / other`          |same as `__truediv__` |
-+------------------------+---------------------+----------------------+
-|`v.__iadd__(other)`     |`v += other`         |`lincomb(v, 1, v, 1,  |
-|                        |                     |other)`               |
-+------------------------+---------------------+----------------------+
-|`v.__isub__(other)`     |`v -= other`         |`lincomb(v, 1, v, -1, |
-|                        |                     |other)`               |
-+------------------------+---------------------+----------------------+
-|`v.__imul__(other)`     |`v *= other`         |`lincomb(v, other, v)`|
-|                        |                     |**or**                |
-|                        |                     |`multiply(other, v)`  |
-+------------------------+---------------------+----------------------+
-|`v.__itruediv__(other)` |`v /= other`         |`__imul__(1.0/other)` |
-+------------------------+---------------------+----------------------+
-|`v.__idiv__(other)`     |`v /= other`         |same as `__itruediv__`|
-+------------------------+---------------------+----------------------+
-|`v.__pos__()`           |`+v`                 |`copy()`              |
-+------------------------+---------------------+----------------------+
-|`v.__neg__()`           |`-v`                 |`x = element()`;      |
-|                        |                     |`lincomb(x, -1, v)`   |
-+------------------------+---------------------+----------------------+
-|`dist(other)`    |`float`        |Distance between this vector and   |
-|                 |               |`other`                            |
-+-----------------+---------------+-----------------------------------+
-|`norm()`         |`float`        |Length of this vector and          |
-+-----------------+---------------+-----------------------------------+
-|`inner(other)`   |`float`        |Inner product of this vector with  |
-|                 |               |`other`                            |
-+-----------------+---------------+-----------------------------------+
-
 """
 
 # Imports for common Python 2/3 codebase
@@ -286,18 +69,18 @@ from odl.util.utility import array1d_repr, array1d_str, dtype_repr
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn')
 
 
-_type_map_c2r = {np.dtype('float32'): np.dtype('float32'),
+_TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
                  np.dtype('float64'): np.dtype('float64'),
                  np.dtype('complex64'): np.dtype('float32'),
                  np.dtype('complex128'): np.dtype('float64')}
 
-_type_map_r2c = {np.dtype('float32'): np.dtype('complex64'),
+_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
                  np.dtype('float64'): np.dtype('complex128')}
 
 if platform.system() == 'Linux':
-    _type_map_c2r.update({np.dtype('float128'): np.dtype('float128'),
+    _TYPE_MAP_C2R.update({np.dtype('float128'): np.dtype('float128'),
                           np.dtype('complex256'): np.dtype('float128')})
-    _type_map_r2c.update({np.dtype('float128'): np.dtype('complex256')})
+    _TYPE_MAP_R2C.update({np.dtype('float128'): np.dtype('complex256')})
 
 
 class NtuplesBase(with_metaclass(ABCMeta, Set)):
@@ -309,9 +92,9 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         Parameters
         ----------
-        dim : `Integral`
-            The number entries per tuple
-        dtype : `object`
+        dim : int
+            The number of entries per tuple
+        dtype : object
             The data type for each tuple entry. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -330,7 +113,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
     @property
     def dim(self):
-        """The dimension of this space."""
+        """The number of entries per tuple."""
         return self._dim
 
     def contains(self, other):
@@ -423,8 +206,23 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         @property
         def space(self):
-            """The space this vector belongs to."""
+            """Space to which this vector."""
             return self._space
+
+        @property
+        def ndim(self):
+            """Number of dimensions, always 1."""
+            return 1
+
+        @property
+        def size(self):
+            """Length of this vector, equal to space dimension."""
+            return self.space.dim
+
+        @property
+        def shape(self):
+            """Shape of this vector, equals `(size,)`."""
+            return (self.size,)
 
         @abstractmethod
         def copy(self):
@@ -453,7 +251,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         def __len__(self):
             """v.__len__() <==> len(v).
 
-            Return the space dimension.
+            Return the number of space dimensions.
             """
             return self.space.dim
 
@@ -881,9 +679,9 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
 
         Parameters
         ----------
-        dim : `int`
-            The dimension of the space
-        dtype : `type`
+        dim : int
+            The number of dimensions of the space
+        dtype : object
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -1041,9 +839,9 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        dim : `int`
-            The dimension of the space
-        dtype : `type`
+        dim : int
+            The number of dimensions of the space
+        dtype : object
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -1051,7 +849,7 @@ class Fn(FnBase, Ntuples):
             Only scalar data types are allowed.
 
         kwargs : {'dist', 'norm', 'inner'}
-            `dist` : `callable`, optional (Default: `norm(x-y)`)
+            'dist' : callable, optional (Default: `norm(x-y)`)
                 The distance function defining a metric on :math:`F^n`. It
                 must accept two array arguments and fulfill the following
                 conditions for any vectors `x`, `y` and `z`:
@@ -1062,7 +860,7 @@ class Fn(FnBase, Ntuples):
                   (approx.)
                 - `dist(x, y) <= dist(x, z) + dist(z, y)`
 
-            `norm` : `callable`, optional (Default: `sqrt(inner(x,y))`)
+            'norm' : callable, optional (Default: `sqrt(inner(x,y))`)
                 The norm implementation. It must accept an array-like
                 argument, return a `RealNumber` and satisfy the following
                 properties:
@@ -1072,7 +870,7 @@ class Fn(FnBase, Ntuples):
                 - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
                 - `norm(x + y) <= norm(x) + norm(y)`
 
-            `inner` : `callable`, optional
+            'inner' : callable, optional
                 The inner product implementation. It must accept two
                 array-like arguments, return a complex number and satisfy
                 the following conditions for all vectors `x`, `y` and `z`
@@ -1335,7 +1133,7 @@ class Fn(FnBase, Ntuples):
         >>> c3_lambda1.equals(c3_lambda2)
         False
 
-        An ``Fn`` space with the same data type is considered equal:
+        An `Fn` space with the same data type is considered equal:
 
         >>> c3 = Cn(3)
         >>> f3_cdouble = Fn(3, dtype='complex128')
@@ -1400,7 +1198,7 @@ class Cn(Fn):
         if not np.iscomplexobj(np.empty(0, dtype=self._dtype)):
             raise TypeError('data type {} not a complex floating-point type.'
                             ''.format(dtype))
-        self._real_dtype = _type_map_c2r[self._dtype]
+        self._real_dtype = _TYPE_MAP_C2R[self._dtype]
 
     @property
     def real_dtype(self):

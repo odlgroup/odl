@@ -26,20 +26,20 @@ NumPy implementation (module `cartesian`)
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|``NTuplesBase``       |**Abstract** base class for sets of n-tuples of|
+|`NTuplesBase`         |**Abstract** base class for sets of n-tuples of|
 |                      |various types                                  |
 +----------------------+-----------------------------------------------+
-|``Ntuples``           |Set of n-tuples of any NumPy supported type    |
+|`Ntuples`             |Set of n-tuples of any NumPy supported type    |
 +----------------------+-----------------------------------------------+
-|``FnBase``            |**Abstract** base class for spaces of n-tuples |
+|`FnBase`              |**Abstract** base class for spaces of n-tuples |
 |                      |over the real or complex numbers               |
 +----------------------+-----------------------------------------------+
-|``Fn``                |Space of n-tuples over the real or complex     |
+|`Fn`                  |Space of n-tuples over the real or complex     |
 |                      |numbers allowing any adequate scalar data type |
 +----------------------+-----------------------------------------------+
-|``Cn``                |Space of n-tuples of complex numbers           |
+|`Cn`                  |Space of n-tuples of complex numbers           |
 +----------------------+-----------------------------------------------+
-|``Rn``                |Space of n-tuples of real numbers              |
+|`Rn`                  |Space of n-tuples of real numbers              |
 +----------------------+-----------------------------------------------+
 
 CUDA implementation (module `cuda`)
@@ -50,15 +50,15 @@ Requires the compiled extension `odlpp`
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|``CudaNtuples``       |Set of n-tuples of any type supported by the   |
+|`CudaNtuples`         |Set of n-tuples of any type supported by the   |
 |                      |`odlpp` backend                                |
 +----------------------+-----------------------------------------------+
-|``CudaFn``            |Space of n-tuples over the real or complex     |
+|`CudaFn`              |Space of n-tuples over the real or complex     |
 |                      |numbers allowing any adequate scalar data type |
 +----------------------+-----------------------------------------------+
-|(``CudaCn``)          |Space of n-tuples of complex numbers (TODO)    |
+|(`CudaCn`)            |Space of n-tuples of complex numbers (TODO)    |
 +----------------------+-----------------------------------------------+
-|``CudaRn``            |Space of n-tuples of real numbers              |
+|`CudaRn`              |Space of n-tuples of real numbers              |
 +----------------------+-----------------------------------------------+
 
 Function spaces (module `fspace`)
@@ -67,7 +67,7 @@ Function spaces (module `fspace`)
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|``L2``                |Square-integrable functions taking real or     |
+|`L2`                  |Square-integrable functions taking real or     |
 |                      |complex values                                 |
 +----------------------+-----------------------------------------------+
 """

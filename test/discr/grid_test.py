@@ -83,7 +83,7 @@ class TensorGridTestInit(ODLTestCase):
 
 
 class TensorGridTestAttributes(ODLTestCase):
-    def test_dim(self):
+    def test_ndim(self):
         vec1 = np.arange(2, 6)
         vec2 = np.arange(-4, 5, 2)
         vec3 = np.linspace(-2, 2, 50)
@@ -91,8 +91,8 @@ class TensorGridTestAttributes(ODLTestCase):
         grid1 = TensorGrid(vec1)
         grid2 = TensorGrid(vec1, vec2, vec3)
 
-        self.assertEquals(grid1.dim, 1)
-        self.assertEquals(grid2.dim, 3)
+        self.assertEquals(grid1.ndim, 1)
+        self.assertEquals(grid2.ndim, 3)
 
     def test_shape(self):
         vec1 = np.arange(2, 6)

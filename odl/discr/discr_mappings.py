@@ -195,7 +195,7 @@ class RawGridCollocation(FunctionSetMapping):
         ip_fset : `FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must be an
-            ```IntervalProd```.
+            `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
@@ -335,14 +335,14 @@ class GridCollocation(RawGridCollocation, LinearFunctionSpaceMapping):
 
         Parameters
         ----------
-        fspace : ``FunctionSpace``
+        fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an ``IntervalProd``.
-        grid : ``TensorGrid``
+            space. Its `domain` must be an `IntervalProd`.
+        grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : ``FnBase``
+        dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points. Its field must be the same
@@ -366,14 +366,14 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        ip_fset : ``FunctionSet``
+        ip_fset : `FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must be an
-            ``IntervalProd``.
-        grid : ``TensorGrid``
+            `IntervalProd`.
+        grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : ``NtuplesBase``
+        dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points.
@@ -398,12 +398,12 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : ``Ntuples.Vector``
+        inp : `Ntuples.Vector`
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : ``FunctionSet.Vector``
+        outp : `FunctionSet.Vector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 
@@ -450,9 +450,9 @@ class RawNearestInterpolation(FunctionSetMapping):
         def func(*x):
             """The actual interpolating function."""
             # TODO: adapt when vectorization is settled
-            if (len(x) == self.grid.dim and
+            if (len(x) == self.grid.ndim and
                     hasattr(x[0], 'ndim') and
-                    x[0].ndim == self.grid.dim):
+                    x[0].ndim == self.grid.ndim):
                 # meshgrid vectors
                 interpolator = _NearestMeshgridInterpolator
             elif len(x) == 1:
@@ -476,7 +476,7 @@ class RawNearestInterpolation(FunctionSetMapping):
 class NearestInterpolation(RawNearestInterpolation,
                            LinearFunctionSpaceMapping):
 
-    """Nearest neighbor interpolation as a ``LinearOperator``."""
+    """Nearest neighbor interpolation as a `LinearOperator`."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new `NearestInterpolation` instance.
@@ -486,7 +486,7 @@ class NearestInterpolation(RawNearestInterpolation,
         fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an ``IntervalProd``.
+            space. Its `domain` must be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
@@ -549,7 +549,7 @@ class LinearInterpolation(LinearOperator):
         fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an ``IntervalProd``.
+            space. Its `domain` must be an `IntervalProd`.
         grid : `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.

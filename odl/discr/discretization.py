@@ -79,16 +79,16 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Parameters
         ----------
-        uspace : ``Set``
+        uspace : `Set`
             The undiscretized (abstract) set to be discretized
-        dspace : ``NtuplesBase``
+        dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object
-        restr : ``Operator``, optional
+        restr : `Operator`, optional
             Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy `restr.domain == uspace`,
             `restr.range == dspace`.
-        ext : ``Operator``, optional
+        ext : `Operator`, optional
             Operator mapping a `dspace` element to a `uspace` element.
             Must satisfy `ext.domain == dspace`,
             `ext.range == uspace.
@@ -181,7 +181,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Returns
         -------
-        element : ``RawDiscretization.Vector``
+        element : `RawDiscretization.Vector`
             The discretized element, calculated as
             `dspace.element(inp)` or
             `restriction(uspace.element(inp))`, tried in this order.
@@ -200,7 +200,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a ``RawDiscretization`` instance and
+            `True` if `other` is a `RawDiscretization` instance and
             all attributes `uspace`, `dspace`, `restriction` and
             `extension` of `other` and this discretization are equal,
             `False` otherwise.
@@ -223,7 +223,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
     class Vector(NtuplesBase.Vector):
 
-        """Representation of a ``RawDiscretization`` element.
+        """Representation of a `RawDiscretization` element.
 
         Basically only a wrapper class for dspace's vector class."""
 
@@ -323,7 +323,7 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
 
     """Abstract class for discretizations of linear vector spaces.
 
-    This variant of ``RawDiscretization`` adds linear structure to all
+    This variant of `RawDiscretization` adds linear structure to all
     its members. The `uspace` is a linear space, the `dspace`
     for the data representation is an implementation of :math:`F^n`,
     where `F` is some field, and both `restriction` and `extension`
@@ -338,17 +338,17 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
 
         Parameters
         ----------
-        uspace : ``LinearSpace``
+        uspace : `LinearSpace`
             The (abstract) space to be discretized
-        dspace : ``FnBase``
+        dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its `field` attribute must be the same
             as `uspace.field`.
-        restr : ``LinearOperator``, optional
+        restr : `LinearOperator`, optional
             Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy `restr.domain == uspace`,
             `restr.range == dspace`
-        ext : ``LinearOperator``, optional
+        ext : `LinearOperator`, optional
             Operator mapping a `dspace` element to a `uspace` element.
             Must satisfy `ext.domain == dspace`,
             `ext.range == uspace`
@@ -412,7 +412,7 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
 
     class Vector(RawDiscretization.Vector, FnBase.Vector):
 
-        """Representation of a ``Discretization`` element."""
+        """Representation of a `Discretization` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""
@@ -427,7 +427,7 @@ def dspace_type(space, impl):
 
     Parameters
     ----------
-    space : ``LinearSpace``
+    space : `LinearSpace`
         The template space
     impl : {'numpy', 'cuda'}
         The backend for the data space

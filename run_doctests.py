@@ -30,7 +30,8 @@ def run_doctests():
     arg = sys.argv[:1]
     arg.append('--verbosity=2')
     arg.append('--with-doctest')
-    arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS')
+    arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS'
+               ',+IGNORE_EXCEPTION_DETAIL')
     try:
         # pylint: disable=unused-import
         import odl.space.cuda

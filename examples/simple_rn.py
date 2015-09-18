@@ -78,8 +78,7 @@ class SimpleRn(LinearSpace):
 
     @property
     def dim(self):
-        """ The number of dimensions of this space
-        """
+        """The dimension of this space."""
         return self._dim
 
     def equals(self, other):

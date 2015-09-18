@@ -93,12 +93,12 @@ class IntervalProd(Set):
         return self._end
 
     @property
-    def dim(self):
+    def ndim(self):
         """The number of intervals in the product."""
-        return len(self._begin)
+        return len(self.begin)
 
     @property
-    def truedim(self):
+    def true_ndim(self):
         """The number of non-degenerate (zero-length) intervals."""
         return len(self._inondeg)
 
@@ -110,7 +110,7 @@ class IntervalProd(Set):
     @property
     def volume(self):
         """The 'dim'-dimensional volume of this interval product."""
-        return self.measure(dim=self.dim)
+        return self.measure(ndim=self.ndim)
 
     @property
     def midpoint(self):
@@ -182,7 +182,7 @@ class IntervalProd(Set):
         # pylint: disable=arguments-differ
         point = np.atleast_1d(point)
 
-        if len(point) != self.dim:
+        if len(point) != self.ndim:
             return False
 
         if not RealNumbers().contains(point[0]):
@@ -196,7 +196,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : ``Set``
+        other : `Set`
             The set to be tested. It must implement a `min()` and a
             `max()` method, otherwise a `TypeError` is raised.
         tol : float, optional
@@ -212,14 +212,14 @@ class IntervalProd(Set):
                                  'methods.'.format(other))
 
     # Additional property-like methods
-    def measure(self, dim=None):
+    def measure(self, ndim=None):
         """The (Lebesgue) measure of this interval product.
 
         Parameters
         ----------
-        dim : int, optional
+        ndim : int, optional
               The dimension of the measure to apply.
-              Default: truedim
+              Default: `true_ndim`
 
         Examples
         --------
@@ -228,23 +228,23 @@ class IntervalProd(Set):
         >>> rbox = IntervalProd(b, e)
         >>> rbox.measure()
         3.75
-        >>> rbox.measure(dim=3)
+        >>> rbox.measure(ndim=3)
         0.0
-        >>> rbox.measure(dim=3) == rbox.volume
+        >>> rbox.measure(ndim=3) == rbox.volume
         True
-        >>> rbox.measure(dim=1)
+        >>> rbox.measure(ndim=1)
         inf
         >>> rbox.measure() == rbox.squeeze().volume
         True
         """
-        if self.truedim == 0:
+        if self.true_ndim == 0:
             return 0.0
 
-        if dim is None:
-            return self.measure(dim=self.truedim)
-        elif dim < self.truedim:
+        if ndim is None:
+            return self.measure(ndim=self.true_ndim)
+        elif ndim < self.true_ndim:
             return np.inf
-        elif dim > self.truedim:
+        elif ndim > self.true_ndim:
             return 0.0
         else:
             return np.prod((self._end - self._begin)[self._inondeg])
@@ -256,8 +256,7 @@ class IntervalProd(Set):
         ----------
         point : array-like or float
                 The point. Its length must be equal to the set's
-                dimension. In the 1d case, 'point' can be given as a
-                float.
+                dimension. Can be a float in the 1d case.
         ord : non-zero int or float('inf'), optional
               The order of the norm (see numpy.linalg.norm).
               Default: 2.0
@@ -273,10 +272,10 @@ class IntervalProd(Set):
         4.0
         """
         point = np.atleast_1d(point)
-        if len(point) != self.dim:
+        if len(point) != self.ndim:
             raise ValueError('length {} of point {} does not match '
                              'the dimension {} of the set {}.'
-                             ''.format(len(point), point, self.dim))
+                             ''.format(len(point), point, self.ndim))
 
         i_larger = np.where(point > self._end)
         i_smaller = np.where(point < self._begin)
@@ -307,7 +306,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        collapsed : ``IntervalProd``
+        collapsed : `IntervalProd`
             The collapsed set
 
         Examples
@@ -333,9 +332,9 @@ class IntervalProd(Set):
                              ''.format(indices, values,
                                        len(indices), len(values)))
 
-        if np.any(indices < 0) or np.any(indices >= self.dim):
+        if np.any(indices < 0) or np.any(indices >= self.ndim):
             raise IndexError('indices {} out of range 0 --> {}.'
-                             ''.format(list(indices), self.dim))
+                             ''.format(list(indices), self.ndim))
 
         if np.any(values < self.begin[indices]):
             raise ValueError('values {} not above the lower interval '
@@ -361,7 +360,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        squeezed : ``IntervalProd``
+        squeezed : `IntervalProd`
             The squeezed set
 
         Examples
@@ -382,24 +381,24 @@ class IntervalProd(Set):
     def insert(self, other, index):
         """Insert another interval product before the given index.
 
-        The given interval product (dim=m) is inserted into the current
-        one (dim=n) before the given index, resulting in a new
-        interval product of dimension n+m.
+        The given interval product (`ndim=m`) is inserted into the
+        current one (`ndim=n`) before the given index, resulting in a
+        new interval product with `n+m` dimensions.
 
         No changes are made in-place.
 
         Parameters
         ----------
-        other : ``IntervalProd``, float or array-like
+        other : `IntervalProd`, float or array-like
             The set to be inserted. A float or array a is
             treated as an `IntervalProd(a, a)`.
         index : int
             The index of the dimension before which `other` is to
-            be inserted. Must fulfill `0 <= index <= dim`.
+            be inserted. Must fulfill `0 <= index <= ndim`.
 
         Returns
         -------
-        larger_set : ``IntervalProd``
+        larger_set : `IntervalProd`
             The enlarged set
 
         Examples
@@ -414,22 +413,22 @@ class IntervalProd(Set):
         >>> rbox.insert(0, 1).squeeze().equals(rbox)
         True
         """
-        if not 0 <= index <= self.dim:
+        if not 0 <= index <= self.ndim:
             raise IndexError('Index ({}) out of range'.format(index))
 
         if not isinstance(other, IntervalProd):
             other = IntervalProd(other, other)
 
-        new_beg = np.empty(self.dim + other.dim)
-        new_end = np.empty(self.dim + other.dim)
+        new_beg = np.empty(self.ndim + other.ndim)
+        new_end = np.empty(self.ndim + other.ndim)
 
         new_beg[: index] = self._begin[: index]
         new_end[: index] = self._end[: index]
-        new_beg[index: index+other.dim] = other.begin
-        new_end[index: index+other.dim] = other.end
-        if index < self.dim:  # Avoid IndexError
-            new_beg[index+other.dim:] = self._begin[index:]
-            new_end[index+other.dim:] = self._end[index:]
+        new_beg[index: index+other.ndim] = other.begin
+        new_end[index: index+other.ndim] = other.end
+        if index < self.ndim:  # Avoid IndexError
+            new_beg[index+other.ndim:] = self._begin[index:]
+            new_end[index+other.ndim:] = self._end[index:]
 
         return IntervalProd(new_beg, new_end)
 
@@ -446,7 +445,7 @@ class IntervalProd(Set):
         Returns
         -------
         out : numpy.ndarray
-            The size of the array is `2^m * dim`, where `m` is the number
+            The size of the array is `2^m * ndim`, where `m` is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 
         Examples
@@ -475,7 +474,7 @@ class IntervalProd(Set):
         if order not in ('C', 'F'):
             raise ValueError('order {} not understood.'.format(order))
 
-        minmax_vecs = [0] * self.dim
+        minmax_vecs = [0] * self.ndim
         for axis in self._ideg:
             minmax_vecs[axis] = self._begin[axis]
         for axis in self._inondeg:
@@ -494,14 +493,14 @@ class IntervalProd(Set):
                           for (b, e) in zip(self._begin, self._end))
 
     def __len__(self):
-        return self.dim
+        return self.ndim
 
 
 class Interval(IntervalProd):
     """One-dimensional interval product, i.e. just one interval."""
     def __init__(self, begin, end):
         super().__init__(begin, end)
-        if self.dim != 1:
+        if self.ndim != 1:
             raise ValueError('cannot make an interval from begin {} and '
                              'end {}.'.format(begin, end))
 
@@ -518,7 +517,7 @@ class Rectangle(IntervalProd):
     """Two-dimensional interval product."""
     def __init__(self, begin, end):
         super().__init__(begin, end)
-        if self.dim != 2:
+        if self.ndim != 2:
             raise ValueError('cannot make a rectangle from begin {} and '
                              'end {}.'.format(begin, end))
 
@@ -536,7 +535,7 @@ class Cuboid(IntervalProd):
     """Three-dimensional interval product."""
     def __init__(self, begin, end):
         super().__init__(begin, end)
-        if self.dim != 3:
+        if self.ndim != 3:
             raise ValueError('cannot make a cuboid from begin {} and '
                              'end {}.'.format(begin, end))
 

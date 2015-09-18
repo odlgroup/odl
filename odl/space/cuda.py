@@ -69,7 +69,7 @@ class CudaNtuples(NtuplesBase):
 
         Parameters
         ----------
-        dim : `Integral`
+        dim : int
             The number entries per tuple
         dtype : `object`
             The data type for each tuple entry. Can be provided in any
@@ -199,7 +199,7 @@ class CudaNtuples(NtuplesBase):
 
             Returns
             -------
-            equals : ``bool``
+            equals : `bool`
                 `True` if all elements of `other` are equal to this
                 vector's elements, `False` otherwise
 
@@ -408,9 +408,9 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        dim : `Integral`
+        dim : int
             The number entries per tuple
-        dtype : `object`
+        dtype : object
             The data type for each tuple entry. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -609,11 +609,13 @@ def abs(inp, outp=None):
     cuda.abs(inp.data, outp.data)
     return outp
 
+
 def sign(inp, outp=None):
     if outp is None:
         outp = inp.space.element()
     cuda.sign(inp.data, outp.data)
     return outp
+
 
 def add_scalar(inp, scal, outp=None):
     if outp is None:
@@ -621,17 +623,20 @@ def add_scalar(inp, scal, outp=None):
     cuda.add_scalar(inp.data, scal, outp.data)
     return outp
 
+
 def max_vector_scalar(inp, scal, outp=None):
     if outp is None:
         outp = inp.space.element()
     cuda.max_vector_scalar(inp.data, scal, outp.data)
     return outp
 
+
 def max_vector_vector(inp1, inp2, outp=None):
     if outp is None:
-        outp = inp.space.element()
+        outp = inp1.space.element()
     cuda.max_vector_vector(inp1.data, inp2.data, outp.data)
     return outp
+
 
 def sum(inp):
     return cuda.sum(inp.data)
