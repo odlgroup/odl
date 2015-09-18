@@ -797,7 +797,8 @@ class Ntuples(NtuplesBase):
                 return self.data[int(indices)]  # single index
             except TypeError:
                 arr = self.data[indices]
-                return type(self.space)(len(arr), dtype=self.space.dtype).element(arr)
+                return type(self.space)(len(arr),
+                                        dtype=self.space.dtype).element(arr)
 
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -809,11 +810,11 @@ class Ntuples(NtuplesBase):
             values : {scalar, array-like, `Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `index` is an `int`, `value` must be single value.
+                If `indices` is an `int`, `value` must be single value.
 
-                If `index` is a `slice`, `value` must be broadcastable
-                to the size of the slice (same size, shape (1,)
-                or single value).
+                If `indices` is a `slice`, `value` must be
+                broadcastable to the size of the slice (same size,
+                shape (1,) or single value).
 
             Returns
             -------

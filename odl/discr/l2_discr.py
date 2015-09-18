@@ -27,6 +27,7 @@ standard_library.install_aliases()
 from builtins import super, str
 
 # External
+import numpy as np
 
 # ODL
 from odl.discr.discretization import Discretization
@@ -181,6 +182,36 @@ class DiscreteL2(Discretization):
                 super().asarray(out=out.reshape(-1, order=self.space.order))
                 return out
 
+        def __setitem__(self, indices, values):
+            """Set values of this vector.
+
+            Parameters
+            ----------
+            indices : int or slice
+                The position(s) that should be set
+            values : {scalar, array-like, `Ntuples.Vector`}
+                The value(s) that are to be assigned.
+
+                If `indices` is an `int`, `value` must be single value.
+
+                If `indices` is a `slice`, `value` must be
+                broadcastable to the size of the slice (same size,
+                shape (1,) or single value).
+                For `indices=slice(None, None, None)`, i.e. in the call
+                `vec[:] = values`, a multi-dimensional array of correct
+                shape is allowed as `values`.
+            """
+            if (indices == slice(None, None, None) and
+                    isinstance(values, np.ndarray) and
+                    values.ndim > 1):
+                if values.shape != self.space.grid.shape:
+                    raise ValueError('shape {} of value array {} not equal '
+                                     'to sampling grid shape {}.'
+                                     ''.format(values.shape, values,
+                                               self.space.grid.shape))
+                values = values.reshape(-1, order=self.space.order)
+            super().__setitem__(indices, values)
+
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
                               impl='numpy', **kwargs):
@@ -189,7 +220,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     Parameters
     ----------
     l2space : ``L2``
-        Continuous L2 type space. Its domain must be an
+        Continuous :math:`L^2` type space. Its domain must be an
         ``IntervalProd`` instance.
     nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
