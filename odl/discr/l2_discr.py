@@ -25,6 +25,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str
+import numpy as np
 
 # External
 
@@ -63,34 +64,74 @@ class DiscreteL2(Discretization):
             'nearest' : use nearest-neighbor interpolation (default)
 
             'linear' : use linear interpolation (not implemented)
-
         kwargs : {'order'}
-            'order' : 'C' or 'F'  (Default: 'C')
-                The axis ordering in the data storage
+            'order' : {'C', 'F'}, optional  (Default: 'C')
+                Ordering of the values in the flat data arrays. 'C'
+                means the first grid axis varies fastest, the last most
+                slowly, 'F' vice versa.
         """
         if not isinstance(l2space, L2):
             raise TypeError('{} is not an `L2` type space.'.format(l2space))
+
+        if not isinstance(l2space.domain, IntervalProd):
+            raise TypeError('l2space.domain {} is not an `IntervalProd`.'.format(l2space.domain))
 
         interp = str(interp)
         if interp not in _supported_interp:
             raise TypeError('{} is not among the supported interpolation'
                             'types {}.'.format(interp, _supported_interp))
 
-        order = kwargs.pop('order', 'C')
-        restriction = GridCollocation(l2space, grid, dspace, order=order)
+        self._order = kwargs.pop('order', 'C')
+        restriction = GridCollocation(l2space, grid, dspace, order=self.order)
         if interp == 'nearest':
             extension = NearestInterpolation(l2space, grid, dspace,
-                                             order=order)
+                                             order=self.order)
         else:
             raise NotImplementedError
 
-        super().__init__(l2space, dspace, restriction, extension, order=order)
+        super().__init__(l2space, dspace, restriction, extension)
         self._interp = interp
+
+    def element(self, inp=None):
+        """Create an element from `inp` or from scratch.
+
+        Parameters
+        ----------
+        inp : `object`, optional
+            The input data to create an element from. Must be
+            recognizable by the `element()` method of either `dspace`
+            or `uspace`.
+
+        Returns
+        -------
+        element : ``DiscreteL2.Vector``
+            The discretized element, calculated as
+            `dspace.element(inp)` or
+            `restriction(uspace.element(inp))`, tried in this order.
+        """
+        if inp is None:
+            return self.Vector(self, self.dspace.element())
+        elif inp in self.dspace:
+            return self.Vector(self, inp)
+        elif inp in self.uspace:
+            return self.Vector(
+                self, self.restriction(self.uspace.element(inp)))
+        else:  # Sequence-type input
+            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+            if arr.shape != self.grid.shape:
+                raise ValueError('inp.shape {} does not match space.grid.shape {}'.format(arr.shape, self.grid.shape))
+            arr = arr.flatten(order=self.order)
+            return self.Vector(self, self.dspace.element(arr))
 
     @property
     def grid(self):
         """Sampling grid of the discretization mappings."""
         return self.restriction.grid
+    
+    @property
+    def order(self):
+        """Axis ordering for array flattening."""
+        return self._order
 
     @property
     def interp(self):

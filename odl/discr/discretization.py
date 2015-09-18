@@ -87,16 +87,12 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         restr : ``Operator``, optional
             Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy `restr.domain == uspace`,
-            `restr.range == dspace` and `restr.order == order`.
+            `restr.range == dspace`.
         ext : ``Operator``, optional
             Operator mapping a `dspace` element to a `uspace` element.
             Must satisfy `ext.domain == dspace`,
-            `ext.range == uspace` and `ext.order == order`.
-        kwargs : {'order'}
-            'order' : {'C', 'F'}, optional  (Default: 'C')
-                Ordering of the values in the flat data arrays. 'C'
-                means the first grid axis varies fastest, the last most
-                slowly, 'F' vice versa.
+            `ext.range == uspace.
+
             """
         if not isinstance(uspace, Set):
             raise TypeError('undiscretized space {} not a `Set` instance.'
@@ -105,10 +101,6 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         if not isinstance(dspace, NtuplesBase):
             raise TypeError('data space {} not an `NtuplesBase` instance.'
                             ''.format(dspace))
-
-        order = kwargs.pop('order', 'C')
-        if order not in ('C', 'F'):
-            raise ValueError('order {!r} not understood.'.format(order))
 
         if restr is not None:
             if not isinstance(restr, Operator):
@@ -125,11 +117,6 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                                  'the data space {}.'
                                  ''.format(restr.range, dspace))
 
-            if hasattr(restr, 'order') and restr.order != order:
-                raise ValueError('ordering {!r} of the restriction operator '
-                                 'differs from given ordering {!r}.'
-                                 ''.format(restr.order, order))
-
         if ext is not None:
             if not isinstance(ext, Operator):
                 raise TypeError('extension operator {} not an `Operator` '
@@ -145,17 +132,11 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                                  'the undiscretized space {}.'
                                  ''.format(ext.range, uspace))
 
-            if hasattr(ext, 'order') and ext.order != order:
-                raise ValueError('ordering {!r} of the extension operator '
-                                 'differs from given ordering {!r}.'
-                                 ''.format(ext.order, order))
-
         super().__init__(dspace.dim, dspace.dtype)
         self._uspace = uspace
         self._dspace = dspace
         self._restriction = restr
         self._extension = ext
-        self._order = order
 
     @property
     def uspace(self):
@@ -188,11 +169,6 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         else:
             raise NotImplementedError('no extension operator provided.')
 
-    @property
-    def order(self):
-        """Axis ordering for array flattening."""
-        return self._order
-
     def element(self, inp=None):
         """Create an element from `inp` or from scratch.
 
@@ -218,9 +194,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             return self.Vector(
                 self, self.restriction(self.uspace.element(inp)))
         else:  # Sequence-type input
-            arr = np.asarray(inp, dtype=self.dspace.dtype).reshape(
-                -1, order=self.order)
-            return self.Vector(self, self.dspace.element(arr))
+            return self.Vector(self, self.dspace.element(inp))
 
     def equals(self, other):
         """Test if `other` is equal to this discretization.
@@ -243,6 +217,11 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
     def domain(self):
         """The domain of the continuous space."""
         return self.uspace.domain
+
+    @property
+    def dtype(self):
+        """The dtype of the representation space."""
+        return self.dspace.dtype
 
     class Vector(NtuplesBase.Vector):
 
@@ -370,16 +349,11 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
         restr : ``LinearOperator``, optional
             Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy `restr.domain == uspace`,
-            `restr.range == dspace` and `restr.order == order`.
+            `restr.range == dspace`
         ext : ``LinearOperator``, optional
             Operator mapping a `dspace` element to a `uspace` element.
             Must satisfy `ext.domain == dspace`,
-            `ext.range == uspace` and `ext.order == order`.
-        kwargs : {'order'}
-            'order' : {'C', 'F'}, optional  (Default: 'C')
-                Ordering of the values in the flat data arrays. 'C'
-                means the first grid axis varies fastest, the last most
-                slowly, 'F' vice versa.
+            `ext.range == uspace`
         """
         super().__init__(uspace, dspace, restr, ext, **kwargs)
         FnBase.__init__(self, dspace.dim, dspace.dtype)
