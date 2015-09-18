@@ -188,8 +188,6 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         """
         if inp is None:
             return self.Vector(self, self.dspace.element())
-        elif inp in self.dspace:
-            return self.Vector(self, inp)
         elif inp in self.uspace:
             return self.Vector(
                 self, self.restriction(self.uspace.element(inp)))
@@ -287,7 +285,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             values : `dspace_type.Vector`
                 The value(s) at the index (indices)
             """
-            return self.ntuple[indices]
+            return self.ntuple.__getitem__(indices)
 
         def __setitem__(self, indices, values):
             """Set values of this vector.

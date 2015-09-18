@@ -104,9 +104,9 @@ class FunctionSet(Set):
             The new element created from `func`
         """
         if isinstance(fcall, self.Vector):  # no double wrapping
-            return self.element(fcall._call, fcall._apply)
+            return self.element(fcall._call_impl, fcall._apply)
         elif isinstance(fapply, self.Vector):
-            return self.element(fapply._call, fapply._apply)
+            return self.element(fapply._call_impl, fapply._apply)
         else:
             return self.Vector(self, fcall, fapply)
 
@@ -395,12 +395,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         """
         if fcall is None and fapply is None:
             return self.zero()
-        elif isinstance(fcall, FunctionSet.Vector):  # no double wrapping
-            return self.element(fcall._call, fcall._apply)
-        elif isinstance(fapply, FunctionSet.Vector):
-            return self.element(fapply._call, fapply._apply)
         else:
-            return self.Vector(self, fcall, fapply)
+            return super().element(fcall, fapply)
 
     def _lincomb(self, z, a, x, b, y):
         """Raw linear combination of `x` and `y`.

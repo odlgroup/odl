@@ -290,7 +290,6 @@ from odl.sets.set import Set
 
 __all__ = ('LinearSpace',)
 
-
 class LinearSpace(Set):
 
     """Abstract linear vector space.

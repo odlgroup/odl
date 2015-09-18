@@ -333,8 +333,7 @@ class CudaNtuples(NtuplesBase):
             """
             if isinstance(indices, slice):
                 data = self.data.getslice(indices)
-                return type(self.space)(data.size, data.dtype).element(
-                    self.data.getslice(indices))
+                return type(self.space)(data.size, data.dtype).element(data)
             else:
                 return self.data.__getitem__(indices)
 

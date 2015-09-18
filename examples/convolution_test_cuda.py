@@ -47,15 +47,13 @@ class CudaConvolution(LinearOperator):
         self.space = kernel.space
         self.kernel = kernel
         self.adjkernel = (adjointkernel if adjointkernel is not None
-                          else self.space.element(kernel[::-1]))
-#        print(repr(self.kernel),repr(self.adjkernel))
-        self.norm = float(cuda.sum(cuda.abs(self.kernel.ntuples.data)))
-        print("INITIALIZED OPERATOR")
+                          else self.space.element(kernel[::-1].copy()))
+        self.norm = float(cuda.sum(cuda.abs(self.kernel.ntuple)))
+
 
     def _apply(self, rhs, out):
         odlpp_cuda.conv(rhs.ntuple.data, self.kernel.ntuple.data,
                         out.ntuple.data)
-        print(out)
 
     @property
     def adjoint(self):
@@ -81,7 +79,7 @@ cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = l2_uniform_discretization(cont_space, 50, impl='cuda')
+discr_space = l2_uniform_discretization(cont_space, 5000, impl='cuda')
 kernel = discr_space.element(cont_kernel)
 data = discr_space.element(cont_data)
 
@@ -89,11 +87,11 @@ data = discr_space.element(cont_data)
 conv = CudaConvolution(kernel)
 
 # Dampening parameter for landweber
-iterations = 1
-omega = 1/conv.opnorm()**2
+iterations = 10
+omega = 1.0/conv.opnorm()**2
 
 # Display partial
-partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result)[:]))
+partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result).asarray()))
 
 # Test CGN
 plt.figure()
