@@ -705,7 +705,19 @@ class RegularGridTestInit(ODLTestCase):
             grid = RegularGrid(minpt, maxpt_eq_minpt_at_shape_larger_than_1,
                                shape)
 
-    # TODO: add test for min and max override args
+        # Overrides for exact min and max
+        exact_min = np.array((0, 1, 0), dtype=float)
+        exact_max = np.array((1, 1, 3), dtype=float)
+        shape = np.array((3, 1, 7), dtype=int)
+        shift = (exact_max - exact_min) / (2 * shape)
+
+        minpt = exact_min + shift
+        maxpt = exact_max - shift
+
+        grid = RegularGrid(minpt, maxpt, shape, as_midp=True,
+                           _exact_min=exact_min, _exact_max=exact_max)
+        self.assertAllEquals(grid.min(), exact_min)
+        self.assertAllEquals(grid.max(), exact_max)
 
 
 class RegularGridTestAttributes(ODLTestCase):
@@ -777,7 +789,7 @@ class RegularGridTestMethods(ODLTestCase):
         self.assertFalse(grid.is_subgrid(not_sup_grid))
         self.assertFalse(not_sup_grid.is_subgrid(grid))
 
-        maxpt_not_sup1 = (-0.2, -2.5, -5)
+        maxpt_not_sup1 = (1.35, 2.0001, 1)
         not_sup_grid = RegularGrid(minpt_sup1, maxpt_not_sup1, shape_sup1)
         self.assertFalse(grid.is_subgrid(not_sup_grid))
         self.assertFalse(not_sup_grid.is_subgrid(grid))
