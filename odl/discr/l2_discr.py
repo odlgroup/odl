@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Discretizations of default spaces."""
+"""Discretizations of L2 spaces."""
 
 # pylint: disable=abstract-method
 
@@ -25,14 +25,15 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str
+import numpy as np
 
 # External
 import numpy as np
 
 # ODL
-from odl.discr.discretization import Discretization
-from odl.discr.discretization import dspace_type
+from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
+from odl.discr.grid import uniform_sampling
 from odl.space.default import L2
 from odl.sets.domain import IntervalProd
 
@@ -64,34 +65,74 @@ class DiscreteL2(Discretization):
             'nearest' : use nearest-neighbor interpolation (default)
 
             'linear' : use linear interpolation (not implemented)
-
         kwargs : {'order'}
-            'order' : 'C' or 'F'  (Default: 'C')
-                The axis ordering in the data storage
+            'order' : {'C', 'F'}, optional  (Default: 'C')
+                Ordering of the values in the flat data arrays. 'C'
+                means the first grid axis varies fastest, the last most
+                slowly, 'F' vice versa.
         """
         if not isinstance(l2space, L2):
             raise TypeError('{} is not an `L2` type space.'.format(l2space))
+
+        if not isinstance(l2space.domain, IntervalProd):
+            raise TypeError('l2space.domain {} is not an `IntervalProd`.'.format(l2space.domain))
 
         interp = str(interp)
         if interp not in _supported_interp:
             raise TypeError('{} is not among the supported interpolation'
                             'types {}.'.format(interp, _supported_interp))
 
-        order = kwargs.pop('order', 'C')
-        restriction = GridCollocation(l2space, grid, dspace, order=order)
+        self._order = kwargs.pop('order', 'C')
+        restriction = GridCollocation(l2space, grid, dspace, order=self.order)
         if interp == 'nearest':
             extension = NearestInterpolation(l2space, grid, dspace,
-                                             order=order)
+                                             order=self.order)
         else:
             raise NotImplementedError
 
-        super().__init__(l2space, dspace, restriction, extension, order=order)
+        super().__init__(l2space, dspace, restriction, extension)
         self._interp = interp
+
+    def element(self, inp=None):
+        """Create an element from `inp` or from scratch.
+
+        Parameters
+        ----------
+        inp : `object`, optional
+            The input data to create an element from. Must be
+            recognizable by the `element()` method of either `dspace`
+            or `uspace`.
+
+        Returns
+        -------
+        element : ``DiscreteL2.Vector``
+            The discretized element, calculated as
+            `dspace.element(inp)` or
+            `restriction(uspace.element(inp))`, tried in this order.
+        """
+        if inp is None:
+            return self.Vector(self, self.dspace.element())
+        elif inp in self.dspace:
+            return self.Vector(self, inp)
+        elif inp in self.uspace:
+            return self.Vector(
+                self, self.restriction(self.uspace.element(inp)))
+        else:  # Sequence-type input
+            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+            if arr.shape != self.grid.shape:
+                raise ValueError('inp.shape {} does not match space.grid.shape {}'.format(arr.shape, self.grid.shape))
+            arr = arr.flatten(order=self.order)
+            return self.Vector(self, self.dspace.element(arr))
 
     @property
     def grid(self):
         """Sampling grid of the discretization mappings."""
         return self.restriction.grid
+    
+    @property
+    def order(self):
+        """Axis ordering for array flattening."""
+        return self._order
 
     @property
     def interp(self):
@@ -104,8 +145,8 @@ class DiscreteL2(Discretization):
     def __repr__(self):
         """l2.__repr__() <==> repr(l2)."""
         # Check if the factory repr can be used
-        if (self.uspace.domain.uniform_sampling(
-                self.grid.shape, as_midp=True) == self.grid):
+        if (uniform_sampling(self.uspace.domain, self.grid.shape,
+                             as_midp=True) == self.grid):
             if dspace_type(self.uspace, 'numpy') == self.dspace_type:
                 impl = 'numpy'
             elif dspace_type(self.uspace, 'cuda') == self.dspace_type:
@@ -257,7 +298,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     ds_type = dspace_type(l2space, impl)
     dtype = kwargs.pop('dtype', None)
 
-    grid = l2space.domain.uniform_sampling(nsamples, as_midp=True)
+    grid = uniform_sampling(l2space.domain, nsamples, as_midp=True)
     if dtype is not None:
         dspace = ds_type(grid.ntotal, dtype=dtype)
     else:
@@ -266,3 +307,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     return DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)
