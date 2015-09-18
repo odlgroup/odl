@@ -128,7 +128,7 @@ class DiscreteL2(Discretization):
     def grid(self):
         """Sampling grid of the discretization mappings."""
         return self.restriction.grid
-    
+
     @property
     def order(self):
         """Axis ordering for array flattening."""
@@ -242,15 +242,15 @@ class DiscreteL2(Discretization):
                 `vec[:] = values`, a multi-dimensional array of correct
                 shape is allowed as `values`.
             """
-            if (indices == slice(None, None, None) and
-                    isinstance(values, np.ndarray) and
-                    values.ndim > 1):
-                if values.shape != self.space.grid.shape:
+            if indices == slice(None, None, None):
+                values = np.atleast_1d(values)
+                if values.ndim > 1 and values.shape != self.space.grid.shape:
                     raise ValueError('shape {} of value array {} not equal '
                                      'to sampling grid shape {}.'
                                      ''.format(values.shape, values,
                                                self.space.grid.shape))
                 values = values.reshape(-1, order=self.space.order)
+
             super().__setitem__(indices, values)
 
 
