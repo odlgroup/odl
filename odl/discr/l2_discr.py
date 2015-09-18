@@ -28,7 +28,6 @@ from builtins import super, str
 import numpy as np
 
 # External
-import numpy as np
 
 # ODL
 from odl.discr.discretization import Discretization, dspace_type
@@ -75,7 +74,8 @@ class DiscreteL2(Discretization):
             raise TypeError('{} is not an `L2` type space.'.format(l2space))
 
         if not isinstance(l2space.domain, IntervalProd):
-            raise TypeError('l2space.domain {} is not an `IntervalProd`.'.format(l2space.domain))
+            raise TypeError('L2 space domain {} is not an `IntervalProd` '
+                            'instance.'.format(l2space.domain))
 
         interp = str(interp)
         if interp not in _supported_interp:
@@ -120,7 +120,8 @@ class DiscreteL2(Discretization):
         else:  # Sequence-type input
             arr = np.asarray(inp, dtype=self.dtype, order=self.order)
             if arr.shape != self.grid.shape:
-                raise ValueError('inp.shape {} does not match space.grid.shape {}'.format(arr.shape, self.grid.shape))
+                raise ValueError('input shape {} does not match grid shape {}'
+                                 ''.format(arr.shape, self.grid.shape))
             arr = arr.flatten(order=self.order)
             return self.Vector(self, self.dspace.element(arr))
 
@@ -220,7 +221,7 @@ class DiscreteL2(Discretization):
                                      'expected {!r}.'
                                      .format(self.space.order, out_order))
 
-                super().asarray(out=out.reshape(-1, order=self.space.order))
+                super().asarray(out=out.ravel(order=self.space.order))
                 return out
 
         def __setitem__(self, indices, values):
@@ -249,7 +250,7 @@ class DiscreteL2(Discretization):
                                      'to sampling grid shape {}.'
                                      ''.format(values.shape, values,
                                                self.space.grid.shape))
-                values = values.reshape(-1, order=self.space.order)
+                values = values.ravel(order=self.space.order)
 
             super().__setitem__(indices, values)
 
