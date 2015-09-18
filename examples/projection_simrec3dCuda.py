@@ -29,7 +29,7 @@ import numpy as np
 import odl.operator.operator as OP
 import odl.sets.pspace as ps
 import SimRec2DPy as SR
-from odl.sets.domain import Rectangle, Cube
+from odl.sets.domain import Rectangle, Cuboid
 from odl.discr.l2_discr import l2_uniform_discretization
 from odl.space.default import L2
 from odl.utility.testutils import Timer
@@ -118,7 +118,7 @@ projectionDisc = l2_uniform_discretization(projectionSpace, nPixels, impl='cuda'
 dataDisc = ps.ProductSpace(projectionDisc, nProjection)
 
 # Define the reconstruction space
-reconSpace = L2(Cube([0, 0, 0], volumeSize))
+reconSpace = L2(Cuboid([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
 reconDisc = l2_uniform_discretization(reconSpace, nVoxels, impl='cuda')

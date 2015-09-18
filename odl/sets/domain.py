@@ -30,7 +30,7 @@ from odl.sets.set import Set, RealNumbers
 from odl.util.utility import array1d_repr
 
 
-__all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cube')
+__all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')
 
 
 class IntervalProd(Set):
@@ -589,14 +589,14 @@ class Rectangle(IntervalProd):
                                                list(self._end)))
 
 
-class Cube(IntervalProd):
+class Cuboid(IntervalProd):
     """Three-dimensional interval product."""
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.dim != 3:
-            raise ValueError('cannot make an cube from begin {} and '
+            raise ValueError('cannot make a cuboid from begin {} and '
                              'end {}.'.format(begin, end))
 
     def __repr__(self):
-        return ('Cube({!r}, {!r})'.format(list(self._begin),
+        return ('Cuboid({!r}, {!r})'.format(list(self._begin),
                                           list(self._end)))
