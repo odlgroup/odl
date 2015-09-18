@@ -313,7 +313,7 @@ class RawGridCollocation(FunctionSetMapping):
         # TODO: update after vectorization issue is sorted out
         try:
             mg_tuple = self.grid.meshgrid()
-            values = inp(*mg_tuple).reshape(-1, order=self.order)
+            values = inp(*mg_tuple).ravel(order=self.order)
         except TypeError:
             points = self.grid.points(order=self.order)
             values = np.empty(points.shape[0], dtype=self.range.dtype)
@@ -467,7 +467,7 @@ class RawNearestInterpolation(FunctionSetMapping):
             interp = interpolator(self.grid.coord_vectors,
                                   inp.data.reshape(self.grid.shape,
                                                    order=self.order))
-            values = interp(x).reshape(-1, order=self.order)
+            values = interp(x).ravel(order=self.order)
             return values[0] if values.shape == (1,) else values
 
         return self.range.element(func)

@@ -129,11 +129,11 @@ class TestDiscreteL2(odl.util.testutils.ODLTestCase):
 
     def test_factory_nd(self):
         # 2d
-        unit_square = odl.L2(odl.Rectangle([0, 0],[1, 1]))
+        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
         discr = odl.l2_uniform_discretization(unit_square, (5, 5))
 
         # 3d
-        unit_cube = odl.L2(odl.Cuboid([0, 0, 0],[1, 1, 1]))
+        unit_cube = odl.L2(odl.Cuboid([0, 0, 0], [1, 1, 1]))
         discr = odl.l2_uniform_discretization(unit_cube, (5, 5, 5))
 
         # nd
@@ -166,7 +166,6 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
         self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
         self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3])
 
-
     def test_element_from_array_2d(self):
         # assert orderings work properly with 2d
         unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
@@ -189,7 +188,7 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
 
         # Check ordering
         self.assertAllAlmostEquals(vec.ntuple, [1, 4, 7, 2, 5, 8, 3, 6, 9])
-    
+
     def test_element_from_array_2d_shape(self):
         # Verify that the shape is correctly tested for
         unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
@@ -251,6 +250,83 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
         vec[2] = 6
 
         self.assertAllAlmostEquals(vec, [4, 5, 6])
+
+    def test_setitem_nd(self):
+
+        # 1D
+        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+        vec = discr.element([1, 2, 3])
+
+        vec[:] = [4, 5, 6]
+        self.assertAllEquals(vec, [4, 5, 6])
+
+        vec[:] = np.array([3, 2, 1])
+        self.assertAllEquals(vec, [3, 2, 1])
+
+        vec[:] = 0
+        self.assertAllEquals(vec, [0, 0, 0])
+
+        vec[:] = [1]
+        self.assertAllEquals(vec, [1, 1, 1])
+
+        with self.assertRaises(ValueError):
+            vec[:] = [0, 0]  # bad shape
+
+        with self.assertRaises(ValueError):
+            vec[:] = [0, 0, 1, 2]  # bad shape
+
+        # 2D
+        discr = odl.l2_uniform_discretization(
+            odl.L2(odl.Rectangle([0, 0], [1, 1])), [3, 2])
+        vec = discr.element([[1, 2], [3, 4], [5, 6]])
+
+        vec[:] = [[-1, -2], [-3, -4], [-5, -6]]
+        self.assertAllEquals(vec, [-1, -2, -3, -4, -5, -6])
+
+        arr = np.arange(6, 12).reshape([3, 2])
+        vec[:] = arr
+        self.assertAllEquals(vec, np.arange(6, 12))
+
+        vec[:] = 0
+        self.assertAllEquals(vec, [0]*6)
+
+        vec[:] = [1]
+        self.assertAllEquals(vec, [1]*6)
+
+        with self.assertRaises(ValueError):
+            vec[:] = [0, 0]  # bad shape
+
+        with self.assertRaises(ValueError):
+            vec[:] = [0, 0, 0]  # bad shape
+
+        with self.assertRaises(ValueError):
+            vec[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
+
+        with self.assertRaises(ValueError):
+            arr = np.arange(6, 12).reshape([3, 2])
+            vec[:] = arr.T  # bad shape (2, 3)
+
+        # nD
+        unit_10_cube = odl.L2(odl.IntervalProd([0]*6, [1]*6))
+        shape = (3,)*3 + (4,)*3
+        discr = odl.l2_uniform_discretization(unit_10_cube, shape)
+        ntotal = np.prod(shape)
+        vec = discr.element(np.zeros(shape))
+
+        arr = np.arange(ntotal).reshape(shape)
+
+        vec[:] = arr
+        self.assertAllEquals(vec, np.arange(ntotal))
+
+        vec[:] = 0
+        self.assertAllEquals(vec, np.zeros(ntotal))
+
+        vec[:] = [1]
+        self.assertAllEquals(vec, np.ones(ntotal))
+
+        with self.assertRaises(ValueError):
+            # Reversed shape -> bad
+            vec[:] = arr = np.arange(ntotal).reshape((4,)*3 + (3,)*3)
 
     def test_setslice(self):
         discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
