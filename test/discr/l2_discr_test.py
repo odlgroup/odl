@@ -189,6 +189,30 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
 
         # Check ordering
         self.assertAllAlmostEquals(vec.ntuple, [1, 4, 7, 2, 5, 8, 3, 6, 9])
+    
+    def test_element_from_array_2d_shape(self):
+        # Verify that the shape is correctly tested for
+        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+        discr = odl.l2_uniform_discretization(unit_square, (4, 3),
+                                              impl='numpy', order='C')
+
+        #Correct order
+        vec = discr.element([[1, 2, 3],
+                             [4, 5, 6],
+                             [7, 8, 9],
+                             [10, 11, 12]])
+
+        #Wrong order, should throw
+        with self.assertRaises(ValueError):
+            vec = discr.element([[1, 2, 3, 10],
+                                 [4, 5, 6, 11],
+                                 [7, 8, 9, 12]])
+
+        #Wrong number of elements, should throw
+        with self.assertRaises(ValueError):
+            vec = discr.element([[1, 2, 3],
+                                 [4, 5, 6],
+                                 [7, 8, 9]])
 
     def test_zero(self):
         discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
