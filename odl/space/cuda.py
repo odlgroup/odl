@@ -64,12 +64,12 @@ class CudaNtuples(NtuplesBase):
 
     """The set of `n`-tuples of arbitrary type, implemented in CUDA."""
 
-    def __init__(self, dim, dtype):
+    def __init__(self, size, dtype):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dim : int
+        size : int
             The number entries per tuple
         dtype : `object`
             The data type for each tuple entry. Can be provided in any
@@ -79,7 +79,7 @@ class CudaNtuples(NtuplesBase):
 
             Currently supported: 'float32', 'uint8'
         """
-        super().__init__(dim, dtype)
+        super().__init__(size, dtype)
         if self._dtype not in _type_map_npy2cuda.keys():
             raise TypeError('data type {} not supported in CUDA'.format(dtype))
 
@@ -93,7 +93,7 @@ class CudaNtuples(NtuplesBase):
         inp : array-like or scalar, optional
             Input to initialize the new element.
 
-            If `inp` is a `numpy.ndarray` of shape `(dim,)` and the
+            If `inp` is a `numpy.ndarray` of shape `(size,)` and the
             same data type as this space, the array is wrapped, not
             copied.
             Other array-like objects are copied (with broadcasting
@@ -137,10 +137,10 @@ class CudaNtuples(NtuplesBase):
         """
         if inp is None:
             if data_ptr is None:
-                return self.Vector(self, self._vector_impl(self.dim))
+                return self.Vector(self, self._vector_impl(self.size))
             else:  # TODO handle non-1 length strides
                 return self.Vector(
-                    self, self._vector_impl.from_pointer(data_ptr, self.dim,
+                    self, self._vector_impl.from_pointer(data_ptr, self.size,
                                                          1))
         else:
             if data_ptr is None:
@@ -403,12 +403,12 @@ class CudaFn(FnBase, CudaNtuples):
     Requires the compiled ODL extension odlpp.
     """
 
-    def __init__(self, dim, dtype):
+    def __init__(self, size, dtype):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dim : int
+        size : int
             The number entries per tuple
         dtype : object
             The data type for each tuple entry. Can be provided in any
@@ -419,8 +419,8 @@ class CudaFn(FnBase, CudaNtuples):
 
             Currently supported: 'float32', 'uint8'
         """
-        super().__init__(dim, dtype)
-        CudaNtuples.__init__(self, dim, dtype)
+        super().__init__(size, dtype)
+        CudaNtuples.__init__(self, size, dtype)
 
     def _lincomb(self, z, a, x, b, y):
         """Linear combination of `x` and `y`.
@@ -560,7 +560,7 @@ class CudaFn(FnBase, CudaNtuples):
 
     def zero(self):
         """Create a vector of zeros."""
-        return self.Vector(self, self._vector_impl(self.dim, 0))
+        return self.Vector(self, self._vector_impl(self.size, 0))
 
     class Vector(FnBase.Vector, CudaNtuples.Vector):
 
@@ -586,12 +586,12 @@ class CudaRn(CudaFn):
     # TODO: document public interface
     """
 
-    def __init__(self, dim, dtype=np.float32):
+    def __init__(self, size, dtype=np.float32):
         """Initialize a new instance.
 
         Only real floating-point types are allowed.
         """
-        super().__init__(dim, dtype)
+        super().__init__(size, dtype)
 
         if not np.isrealobj(np.empty(0, dtype=self._dtype)):
             raise TypeError('data type {} not a real floating-point type.'

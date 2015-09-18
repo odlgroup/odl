@@ -45,9 +45,9 @@ class RnTest(ODLTestCase):
     @staticmethod
     def _vectors(rn):
         # Generate numpy vectors
-        y = np.random.rand(rn.dim)
-        x = np.random.rand(rn.dim)
-        z = np.random.rand(rn.dim)
+        y = np.random.rand(rn.size)
+        x = np.random.rand(rn.size)
+        z = np.random.rand(rn.size)
 
         # Make rn vectors
         yVec = rn.element(y)

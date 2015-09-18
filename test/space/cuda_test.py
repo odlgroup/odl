@@ -237,9 +237,9 @@ class TestMethods(ODLTestCase):
 
     def vectors(self, rn):
         # Generate numpy arrays
-        x_arr = np.random.rand(rn.dim)
-        y_arr = np.random.rand(rn.dim)
-        z_arr = np.random.rand(rn.dim)
+        x_arr = np.random.rand(rn.size)
+        y_arr = np.random.rand(rn.size)
+        z_arr = np.random.rand(rn.size)
 
         # Make rn vectors
         x, y, z = rn.element(x_arr), rn.element(y_arr), rn.element(z_arr)

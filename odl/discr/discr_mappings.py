@@ -94,10 +94,10 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                              'function set {}.'.format(grid, fset.domain,
                                                        fset))
 
-        if dspace.dim != grid.ntotal:
-            raise ValueError('dimension {} of the data space {} not equal '
+        if dspace.size != grid.ntotal:
+            raise ValueError('size {} of the data space {} not equal '
                              'to the total number {} of grid points.'
-                             ''.format(dspace.dim, dspace, grid.ntotal))
+                             ''.format(dspace.size, dspace, grid.ntotal))
 
         if order not in ('C', 'F'):
             raise ValueError('ordering {!r} not understood.'.format(order))
@@ -156,7 +156,7 @@ class LinearFunctionSpaceMapping(with_metaclass(ABCMeta, FunctionSetMapping,
             the common domain of the function set.
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its dimension must be equal to the
+            discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
             as that of the function space.
         order : {'C', 'F'}, optional
@@ -201,7 +201,7 @@ class RawGridCollocation(FunctionSetMapping):
             the common domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
-            discretized object. Its dimension must be equal to the
+            discretized object. Its size must be equal to the
             total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
@@ -344,7 +344,7 @@ class GridCollocation(RawGridCollocation, LinearFunctionSpaceMapping):
             the common domain of the function set.
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its dimension must be equal to the
+            discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
             as that of the function space.
         order : {'C', 'F'}, optional
@@ -375,7 +375,7 @@ class RawNearestInterpolation(FunctionSetMapping):
             the common domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
-            discretized object. Its dimension must be equal to the
+            discretized object. Its size must be equal to the
             total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
@@ -492,7 +492,7 @@ class NearestInterpolation(RawNearestInterpolation,
             the common domain of the function set.
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its dimension must be equal to the
+            discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
             as that of the function space.
         order : {'C', 'F'}, optional
@@ -555,7 +555,7 @@ class LinearInterpolation(LinearOperator):
             the common domain of the function set.
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its dimension must be equal to the
+            discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
             as that of the function space.
         order : {'C', 'F'}, optional

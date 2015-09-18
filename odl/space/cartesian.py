@@ -87,12 +87,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
     """Base class for sets of n-tuples independent of implementation."""
 
-    def __init__(self, dim, dtype):
+    def __init__(self, size, dtype):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dim : int
+        size : int
             The number of entries per tuple
         dtype : object
             The data type for each tuple entry. Can be provided in any
@@ -100,10 +100,10 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
-        if not isinstance(dim, Integral) or dim < 0:
-            raise TypeError('dimension {} is not a non-negative integer.'
-                            ''.format(dim))
-        self._dim = int(dim)
+        if not isinstance(size, Integral) or size < 0:
+            raise TypeError('size {} is not a non-negative integer.'
+                            ''.format(size))
+        self._size = int(size)
         self._dtype = np.dtype(dtype)
 
     @property
@@ -112,9 +112,9 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return self._dtype
 
     @property
-    def dim(self):
+    def size(self):
         """The number of entries per tuple."""
-        return self._dim
+        return self._size
 
     def contains(self, other):
         """Test if `other` is contained in this space.
@@ -144,7 +144,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         -------
         equals : `bool`
             `True` if `other` is an instance of this space's type
-            with the same `dim` and `dtype`, otherwise `False`.
+            with the same `size` and `dtype`, otherwise `False`.
 
         Examples
         --------
@@ -179,17 +179,17 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         """
         return (isinstance(other, type(self)) and
                 isinstance(self, type(other)) and
-                self.dim == other.dim and
+                self.size == other.size and
                 self.dtype == other.dtype)
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        return '{}({}, {})'.format(self.__class__.__name__, self.dim,
+        return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
     def __str__(self):
         """s.__str__() <==> str(s)."""
-        return '{}({}, {})'.format(self.__class__.__name__, self.dim,
+        return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
     class Vector(with_metaclass(ABCMeta, object)):
@@ -216,8 +216,8 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         @property
         def size(self):
-            """Length of this vector, equal to space dimension."""
-            return self.space.dim
+            """Length of this vector, equal to space size."""
+            return self.space.size
 
         @property
         def shape(self):
@@ -253,7 +253,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Return the number of space dimensions.
             """
-            return self.space.dim
+            return self.space.size
 
         @abstractmethod
         def equals(self, other):
@@ -337,7 +337,7 @@ class Ntuples(NtuplesBase):
             If `inp` is `None`, an empty element is created with no
             guarantee of its state (memory allocation only).
 
-            If `inp` is a `numpy.ndarray` of shape `(dim,)` and the
+            If `inp` is a `numpy.ndarray` of shape `(size,)` and the
             same data type as this space, the array is wrapped, not
             copied.
             Other array-like objects are copied (with broadcasting
@@ -377,10 +377,10 @@ class Ntuples(NtuplesBase):
         """
         if inp is None:
             if data_ptr is None:
-                arr = np.empty(self.dim, dtype=self.dtype)
+                arr = np.empty(self.size, dtype=self.dtype)
                 return self.Vector(self, arr)
             else:
-                ctype_array_def = ctypes.c_byte * (self.dim *
+                ctype_array_def = ctypes.c_byte * (self.size *
                                                    self.dtype.itemsize)
                 as_ctype_array = ctype_array_def.from_address(data_ptr)
                 as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
@@ -394,14 +394,14 @@ class Ntuples(NtuplesBase):
                     inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
 
                 if inp.shape == (1,):
-                    arr = np.empty(self.dim, dtype=self.dtype)
+                    arr = np.empty(self.size, dtype=self.dtype)
                     arr[:] = inp
-                elif inp.shape == (self.dim,):
+                elif inp.shape == (self.size,):
                     arr = inp
                 else:
                     raise ValueError('input shape {} not broadcastable to '
                                      'shape ({},).'.format(inp.shape,
-                                                           self.dim))
+                                                           self.size))
 
                 return self.Vector(self, arr)
             else:
@@ -674,12 +674,12 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
 
     """Base class for :math:`F^n` independent of implementation."""
 
-    def __init__(self, dim, dtype):
+    def __init__(self, size, dtype):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dim : int
+        size : int
             The number of dimensions of the space
         dtype : object
             The data type of the storage array. Can be provided in any
@@ -688,7 +688,7 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
             objects or as string.
             Only scalar data types (numbers) are allowed.
         """
-        super().__init__(dim, dtype)
+        super().__init__(size, dtype)
         if not np.issubsctype(self._dtype, np.number):
             raise TypeError('{} not a scalar data type.'.format(dtype))
 
@@ -834,12 +834,12 @@ class Fn(FnBase, Ntuples):
     See the module documentation for attributes, methods etc.
     """
 
-    def __init__(self, dim, dtype, **kwargs):
+    def __init__(self, size, dtype, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dim : int
+        size : int
             The number of dimensions of the space
         dtype : object
             The data type of the storage array. Can be provided in any
@@ -881,7 +881,7 @@ class Fn(FnBase, Ntuples):
                  - `inner(x + z, y) == inner(x, y) + inner(z, y)`
                  - `inner(x, x) == 0` (approx.) only if `x == 0` (approx.)
         """
-        super().__init__(dim, dtype)
+        super().__init__(size, dtype)
 
         dist = kwargs.get('dist', None)
         norm = kwargs.get('norm', None)
@@ -1089,7 +1089,7 @@ class Fn(FnBase, Ntuples):
         >>> x
         Cn(3).element([0j, 0j, 0j])
         """
-        return self.element(np.zeros(self.dim, dtype=self.dtype))
+        return self.element(np.zeros(self.size, dtype=self.dtype))
 
     def equals(self, other):
         """Test if `other` is equal to this space.
@@ -1098,7 +1098,7 @@ class Fn(FnBase, Ntuples):
         -------
         equals : `bool`
             `True` if `other` is an instance of this space's type
-            with the same `dim` and `dtype`, and **identical**
+            with the same `size` and `dtype`, and **identical**
             distance function, otherwise `False`.
 
         Examples
@@ -1143,7 +1143,7 @@ class Fn(FnBase, Ntuples):
         True
         """
         return (isinstance(other, Fn) and
-                self.dim == other.dim and
+                self.size == other.size and
                 self.dtype == other.dtype and
                 self.field == other.field and
                 self._dist_impl == other._dist_impl and
@@ -1183,7 +1183,7 @@ class Cn(Fn):
     See the module documentation for attributes, methods etc.
     """
 
-    def __init__(self, dim, dtype=np.complex128, **kwargs):
+    def __init__(self, size, dtype=np.complex128, **kwargs):
         """Initialize a new instance.
 
         Only complex floating-point data types are allowed.
@@ -1192,7 +1192,7 @@ class Cn(Fn):
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
 
-        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
+        super().__init__(size, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
         if not np.iscomplexobj(np.empty(0, dtype=self._dtype)):
@@ -1208,16 +1208,16 @@ class Cn(Fn):
     def __repr__(self):
         """`cn.__repr__() <==> repr(cn)`."""
         if self.dtype == np.complex128:
-            return 'Cn({})'.format(self.dim)
+            return 'Cn({})'.format(self.size)
         else:
-            return 'Cn({}, {!r})'.format(self.dim, self.dtype)
+            return 'Cn({}, {!r})'.format(self.size, self.dtype)
 
     def __str__(self):
         """`cn.__str__() <==> str(cn)`."""
         if self.dtype == np.complex128:
-            return 'Cn({})'.format(self.dim)
+            return 'Cn({})'.format(self.size)
         else:
-            return 'Cn({}, {})'.format(self.dim, self.dtype)
+            return 'Cn({}, {})'.format(self.size, self.dtype)
 
     class Vector(Fn.Vector):
         """Representation of a `Cn` element.
@@ -1250,7 +1250,7 @@ class Cn(Fn):
             >>> x
             Cn(3).element([(10+1j), (6+0j), (4-2j)])
             """
-            rn = Rn(self.space.dim, self.space.real_dtype)
+            rn = Rn(self.space.size, self.space.real_dtype)
             return rn.element(self.data.real)
 
         @real.setter
@@ -1307,7 +1307,7 @@ class Cn(Fn):
             >>> x
             Cn(3).element([(5+2j), (3+0j), (2-4j)])
             """
-            rn = Rn(self.space.dim, self.space.real_dtype)
+            rn = Rn(self.space.size, self.space.real_dtype)
             return rn.element(self.data.imag)
 
         @imag.setter
@@ -1350,7 +1350,7 @@ class Rn(Fn):
     See the module documentation for attributes, methods etc.
     """
 
-    def __init__(self, dim, dtype=np.float64, **kwargs):
+    def __init__(self, size, dtype=np.float64, **kwargs):
         """Initialize a new instance.
 
         Only real floating-point types are allowed.
@@ -1359,7 +1359,7 @@ class Rn(Fn):
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
 
-        super().__init__(dim, dtype, dist=dist, norm=norm, inner=inner,
+        super().__init__(size, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
         if not np.isrealobj(np.empty(0, dtype=self._dtype)):
@@ -1369,16 +1369,16 @@ class Rn(Fn):
     def __repr__(self):
         """`rn.__repr__() <==> repr(rn)`."""
         if self.dtype == np.float64:
-            return 'Rn({})'.format(self.dim)
+            return 'Rn({})'.format(self.size)
         else:
-            return 'Rn({}, {!r})'.format(self.dim, self.dtype)
+            return 'Rn({}, {!r})'.format(self.size, self.dtype)
 
     def __str__(self):
         """`rn.__str__() <==> str(rn)`."""
         if self.dtype == np.float64:
-            return 'Rn({})'.format(self.dim)
+            return 'Rn({})'.format(self.size)
         else:
-            return 'Rn({}, {})'.format(self.dim, self.dtype)
+            return 'Rn({}, {})'.format(self.size, self.dtype)
 
 
 if __name__ == '__main__':

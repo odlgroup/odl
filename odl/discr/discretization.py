@@ -132,7 +132,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                                  'the undiscretized space {}.'
                                  ''.format(ext.range, uspace))
 
-        super().__init__(dspace.dim, dspace.dtype)
+        super().__init__(dspace.size, dspace.dtype)
         self._uspace = uspace
         self._dspace = dspace
         self._restriction = restr
@@ -354,7 +354,7 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
             `ext.range == uspace`
         """
         super().__init__(uspace, dspace, restr, ext, **kwargs)
-        FnBase.__init__(self, dspace.dim, dspace.dtype)
+        FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
             raise TypeError('undiscretized space {} not a `LinearSpace` '
