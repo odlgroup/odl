@@ -177,9 +177,15 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
 
         self.assertIsInstance(vec, discr.Vector)
         self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
+
         # Check ordering
         self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
+        # Linear creation works aswell
+        linear_vec = discr.element([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertAllAlmostEquals(vec.ntuple, linear_vec)
+
+        #Fortran order
         discr = odl.l2_uniform_discretization(unit_square, (3, 3),
                                               impl='numpy', order='F')
         vec = discr.element([[1, 2, 3],
@@ -188,6 +194,10 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
 
         # Check ordering
         self.assertAllAlmostEquals(vec.ntuple, [1, 4, 7, 2, 5, 8, 3, 6, 9])
+
+        # Linear creation works aswell
+        linear_vec = discr.element([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertAllAlmostEquals(vec.ntuple, linear_vec)
 
     def test_element_from_array_2d_shape(self):
         # Verify that the shape is correctly tested for
