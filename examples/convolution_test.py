@@ -44,9 +44,9 @@ class Convolution(LinearOperator):
 
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
-                          else kernel.space.element(kernel.ntuple.data[::-1]))
+                          else kernel.space.element(kernel[::-1].copy()))
         self.space = kernel.space
-        self.norm = float(np.sum(np.abs(self.kernel.ntuple.data)))
+        self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
 
     def _apply(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
@@ -84,7 +84,7 @@ data = discr_space.element(cont_data)
 conv = Convolution(kernel)
 
 # Dampening parameter for landweber
-iterations = 100
+iterations = 10
 omega = 1/conv.opnorm()**2
 
 # Display partial
