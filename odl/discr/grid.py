@@ -127,6 +127,16 @@ class TensorGrid(Set):
         self._inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
+        # Thes args are not public and thus not checked for consistency!
+        _exact_min = kwargs.pop('_exact_min', None)
+        _exact_max = kwargs.pop('_exact_max', None)
+        if _exact_min is not None:
+            _exact_min = np.atleast_1d(_exact_min)
+        if _exact_max is not None:
+            _exact_max = np.atleast_1d(_exact_max)
+        self._exact_min = _exact_min
+        self._exact_max = _exact_max
+
     # Attributes
     @property
     def coord_vectors(self):
@@ -190,6 +200,8 @@ class TensorGrid(Set):
         """
         if not self._as_midp:
             return self.min_pt
+        elif self._exact_min is not None:
+            return self._exact_min
         else:
             minpt_cell_size = np.array([cs[0] for cs in self.cell_sizes()])
             return self.min_pt - minpt_cell_size / 2
@@ -212,6 +224,8 @@ class TensorGrid(Set):
         """
         if not self._as_midp:
             return self.max_pt
+        elif self._exact_max is not None:
+            return self._exact_max
         else:
             maxpt_cell_size = np.array([cs[-1] for cs in self.cell_sizes()])
             return self.max_pt + maxpt_cell_size / 2
@@ -744,9 +758,6 @@ class RegularGrid(TensorGrid):
                              '{}.'.format(tuple(degen[:]), tuple(shape[degen]),
                                           len(degen) * (1,)))
 
-        _min = kwargs.pop('_min', None)
-        _max = kwargs.pop('_max', None)
-
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
         super().__init__(*coord_vecs, **kwargs)
@@ -755,24 +766,6 @@ class RegularGrid(TensorGrid):
         idcs = np.where(shape > 1)
         self._stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
                               (shape[idcs] - 1))
-
-        if _min is not None:
-            _min = np.asarray(_min)
-            # Returns False for different lengths
-            if not np.allclose(_min, super().min()):
-                raise ValueError('min override vector {} not close to '
-                                 'computed min {}.'
-                                 ''.format(_min, super().min()))
-
-        if _max is not None:
-            _max = np.asarray(_max)
-            if not np.allclose(_max, super().max()):
-                raise ValueError('max override vector {} not close to '
-                                 'computed min {}.'
-                                 ''.format(_max, super().max()))
-
-        self._min = _min
-        self._max = _max
 
     @property
     def center(self):
@@ -797,50 +790,6 @@ class RegularGrid(TensorGrid):
         array([ 1.,  2.])
         """
         return self._stride
-
-    def min(self):
-        """Return vector with minimal cell coordinates per axis.
-
-        This is relevant if the grid was initialized with
-        `as_midp=True`, in which case the minimum is half a cell
-        smaller than the minimum grid point.
-
-        Examples
-        --------
-        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
-        >>> rg.min()
-        array([-1.5, -1. ])
-        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3),
-        ...                  as_midp=True)
-        >>> rg.min()
-        array([-2., -2.])
-        """
-        if self._min is not None:
-            return self._min
-        else:
-            return super().min()
-
-    def max(self):
-        """Return vector with maximal cell coordinates per axis.
-
-        This is relevant if the grid was initialized with
-        `as_midp=True`, in which case the maximum is half a cell
-        larger than the maximum grid point.
-
-        Examples
-        --------
-        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
-        >>> rg.max()
-        array([-0.5,  3. ])
-        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3),
-        ...                  as_midp=True)
-        >>> rg.max()
-        array([ 0.,  4.])
-        """
-        if self._max is not None:
-            return self._max
-        else:
-            return super().max()
 
     def is_subgrid(self, other, tol=0.0):
         """Test if this grid is contained in another grid.
@@ -881,59 +830,25 @@ class RegularGrid(TensorGrid):
                 np.all(self.max_pt <= other.max_pt + tol)):
             return False
 
+        # For regular grids, it suffices to show that min_pt, max_pt
+        # and g[1,...,1] are contained in the other grid. For axes
+        # with less than 2 points, this reduces to min_pt and max_pt,
+        # and the corresponding indices in the other check point are
+        # set to 0.
         if isinstance(other, RegularGrid):
-            # Do a full check for axes with less than 3 points since
-            # errors can cancel out
-            idcs = np.where(np.array(self.shape) <= 3)[0]
-            if idcs.tolist():
-                self_tg = TensorGrid(*[self.coord_vectors[i] for i in idcs])
-                other_tg = TensorGrid(*[other.coord_vectors[i] for i in idcs])
-                if not self_tg.is_subgrid(other_tg, tol=tol):
-                    return False
+            minmax_contained = (other.contains(self.min_pt, tol=tol) and
+                                other.contains(self.max_pt, tol=tol))
+            check_idx = np.zeros(self.dim, dtype=int)
+            check_idx[np.array(self.shape) >= 3] = 1
+            checkpt_contained = other.contains(self[check_idx.tolist()],
+                                               tol=tol)
 
-            # FIXME: something goes wrong here, find the error!
-
-            # Further checks are restricted to axes with more than 3 points
-            idcs = np.where(np.array(self.shape) > 3)[0]
-            if idcs.tolist():
-                # Test corners, here the error is largest
-                corners = self.corners()[idcs]
-                if not all(other.contains(c, tol=tol) for c in corners):
-                    return False
-
-                # stride must be an integer multiple of other's stride
-                stride_mult = np.around(self.stride[idcs] / other.stride[idcs])
-                if not np.allclose(
-                        self.stride[idcs] - stride_mult*other.stride[idcs], 0,
-                        rtol=0, atol=tol):
-                    return False
-
-                # Center shift has to be multiple of other's stride
-                # plus half a stride if the shape difference parity
-                # is the same as the stride multiple parity (see above)
-                cshift = other.center[idcs] - self.center[idcs]
-                stride_mult_par = stride_mult % 2
-                shape_diff_par = (np.array(other.shape)[idcs] -
-                                  np.array(self.shape)[idcs]) % 2
-                par_corr = np.zeros_like(idcs, dtype=np.float64)
-                par_corr[stride_mult_par == shape_diff_par] = 0.5
-                cshift_mult = np.around(
-                    cshift / other.stride[idcs] - par_corr)
-                if not np.allclose(
-                        cshift - (par_corr + cshift_mult)*other.stride[idcs],
-                        0, rtol=0, atol=tol):
-                    return False
+            return minmax_contained and checkpt_contained
 
         elif isinstance(other, TensorGrid):
             # other is a TensorGrid, we need to fall back to full check
-            # pylint: disable=unbalanced-tuple-unpacking
-            for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
-                vec_o_mg, vec_s_mg = np.meshgrid(vec_o, vec_s, sparse=True,
-                                                 copy=True, indexing='ij')
-                if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol,
-                                     axis=0)):
-                    return False
-        return True
+            self_tg = TensorGrid(*self.coord_vectors)
+            return self_tg.is_subgrid(other)
 
     def insert(self, grid, index):
         """Insert another regular grid before the given index.
@@ -1165,7 +1080,8 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
         grid_min = intv_prod.begin + intv_prod.size / (2*num_nodes)
         grid_max = intv_prod.end - intv_prod.size / (2*num_nodes)
         return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
-                           _min=intv_prod.begin, _max=intv_prod.end)
+                           _exact_min=intv_prod.begin,
+                           _exact_max=intv_prod.end)
     else:
         grid_min = intv_prod.begin
         grid_max = intv_prod.end
