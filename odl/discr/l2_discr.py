@@ -51,11 +51,11 @@ class DiscreteL2(Discretization):
 
         Parameters
         ----------
-        l2space : ``L2``
+        l2space : `L2`
             The continuous space to be discretized
-        dspace : ``FnBase``, same `field` as `l2space`
+        dspace : `FnBase`, same `field` as `l2space`
             The space of elements used for data storage
-        grid : ``TensorGrid``
+        grid : `TensorGrid`
             The sampling grid for the discretization. Must be contained
             in `l2space.domain`.
         interp : string, optional
@@ -105,7 +105,7 @@ class DiscreteL2(Discretization):
 
         Returns
         -------
-        element : ``DiscreteL2.Vector``
+        element : `DiscreteL2.Vector`
             The discretized element, calculated as
             `dspace.element(inp)` or
             `restriction(uspace.element(inp))`, tried in this order.
@@ -184,7 +184,7 @@ class DiscreteL2(Discretization):
 
     class Vector(Discretization.Vector):
 
-        """Representation of a ``DiscreteL2`` element."""
+        """Representation of a `DiscreteL2` element."""
 
         def asarray(self, out=None):
             """Extract the data of this array as a numpy array.
@@ -261,9 +261,9 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     Parameters
     ----------
-    l2space : ``L2``
+    l2space : `L2`
         Continuous :math:`L^2` type space. Its domain must be an
-        ``IntervalProd`` instance.
+        `IntervalProd` instance.
     nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
@@ -286,7 +286,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     Returns
     -------
-    l2discr : ``DiscreteL2``
+    l2discr : `DiscreteL2`
         The uniformly discretized L2 space
     """
     if not isinstance(l2space, L2):

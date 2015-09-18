@@ -253,12 +253,12 @@ class FunctionSet(Set):
                 # First case: (N, d) array of points, where d = dimension
                 if (isinstance(inp[0], np.ndarray) and
                         inp[0].ndim == 2 and
-                        inp[0].shape[1] == self.domain.dim):
+                        inp[0].shape[1] == self.domain.ndim):
                     min_coords = np.min(inp[0], axis=0)
                     max_coords = np.max(inp[0], axis=0)
 
                 # Second case: d meshgrid type arrays
-                elif (len(inp) == self.domain.dim and
+                elif (len(inp) == self.domain.ndim and
                       all(isinstance(vec, np.ndarray) for vec in inp)):
                     min_coords = [np.min(vec) for vec in inp]
                     max_coords = [np.max(vec) for vec in inp]

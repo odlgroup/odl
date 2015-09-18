@@ -26,13 +26,13 @@ Core operators
 +-----------------------+----------------------------------------------+
 |Class name             |Description                                   |
 +=======================+==============================================+
-|``Operator``           |**Abstract** basic class for (mathematical)   |
+|`Operator`             |**Abstract** basic class for (mathematical)   |
 |                       |operators                                     |
 +-----------------------+----------------------------------------------+
-|``LinearOperator``     |**Abstract** basic class for linear operators |
+|`LinearOperator`       |**Abstract** basic class for linear operators |
 |                       |operators                                     |
 +-----------------------+----------------------------------------------+
-|``SelfAdjointOperator``|**Abstract** basic class for linear operators |
+|`SelfAdjointOperator`  |**Abstract** basic class for linear operators |
 |                       |whose adjoint is itself                       |
 +-----------------------+----------------------------------------------+
 
@@ -42,33 +42,33 @@ Operator compositions, sums etc.
 +----------------------------+-----------------------------------------+
 |Class name                  |Description                              |
 +============================+=========================================+
-|``OperatorSum``             |Sum of two operators, `S = A + B`,       |
+|`OperatorSum`               |Sum of two operators, `S = A + B`,       |
 |                            |defined as                               |
 |                            |`x` --> `(A + B)(x) = A(x) + B(x)`       |
 +----------------------------+-----------------------------------------+
-|``OperatorComp``            |Composition of two operators,            |
+|`OperatorComp`              |Composition of two operators,            |
 |                            |`C = A o B` defined as                   |
 |                            |`x` --> `(A o B)(x) = A(B(x))`           |
 +----------------------------+-----------------------------------------+
-|``OperatorPointwiseProduct``|Product of two operators,`P = A * B`,    |
+|`OperatorPointwiseProduct`  |Product of two operators,`P = A * B`,    |
 |                            |defined as                               |
 |                            |`x --> (A * B)(x) = A(x) * B(x)`.        |
 +----------------------------+-----------------------------------------+
-|``OperatorLeftScalarMult``  |Multiplication of an operator from left  |
+|`OperatorLeftScalarMult`    |Multiplication of an operator from left  |
 |                            |with a scalar, `L = c * A`, defined as   |
 |                            |`x --> (c * A)(x) = c * A(x)`            |
 +----------------------------+-----------------------------------------+
-|``OperatorRightScalarMult`` |Multiplication of an operator from right |
+|`OperatorRightScalarMult`   |Multiplication of an operator from right |
 |                            |with a scalar, `S = A * c`, defined by   |
 |                            |`x --> (A * c)(x) =  A(c * x)`           |
 +----------------------------+-----------------------------------------+
-|``LinearOperatorSum``       |Sum of two linear operators, again a     |
-|                            |linear operator (see ``OperatorSum``)    |
+|`LinearOperatorSum`         |Sum of two linear operators, again a     |
+|                            |linear operator (see `OperatorSum`)      |
 +----------------------------+-----------------------------------------+
-|``LinearOperatorScalarMult``|Multiplication of a linear operator with |
+|`LinearOperatorScalarMult`  |Multiplication of a linear operator with |
 |                            |a scalar. Left and right multiplications |
 |                            |are equivalent (see                      |
-|                            |``OperatorLeftScalarMult``)              |
+|                            |`OperatorLeftScalarMult`)                |
 +----------------------------+-----------------------------------------+
 
 Factory functions
@@ -77,11 +77,11 @@ Factory functions
 +-------------------+--------------------------------------------------+
 |Name               |Description                                       |
 +===================+==================================================+
-|`operator()`       |Create an ``Operator`` by specifying either a     |
+|`operator()`       |Create an `Operator` by specifying either a       |
 |                   |`call` or an `apply` method (or both) for         |
 |                   |evaluation.                                       |
 +-------------------+--------------------------------------------------+
-|`linear_operator()`|Create a ``LinearOperator`` by specifying either a|
+|`linear_operator()`|Create a `LinearOperator` by specifying either a  |
 |                   |`call` or an `apply` method (or both) for         |
 |                   |evaluation.                                       |
 +-------------------+--------------------------------------------------+
@@ -92,20 +92,20 @@ Default (standard) operators (modlule `default_ops`)
 +--------------------+-------------------------------------------------+
 |Class name          |Description                                      |
 +====================+=================================================+
-|``ScalingOperator`` |Multiplication with a scalar `s`, defined as     |
+|`ScalingOperator`   |Multiplication with a scalar `s`, defined as     |
 |                    |`x` --> `s * x`                                  |
 +--------------------+-------------------------------------------------+
-|``ZeroOperator``    |Multiplication with 0, defined as                |
+|`ZeroOperator`      |Multiplication with 0, defined as                |
 |                    |`x` --> `0 * x`                                  |
 +--------------------+-------------------------------------------------+
-|``IdentityOperator``|Multiplication with 1, defined as                |
+|`IdentityOperator`  |Multiplication with 1, defined as                |
 |                    |`x` --> `1 * x`                                  |
 +--------------------+-------------------------------------------------+
-|``LinCombOperator`` |Linear combination of two space elements with two|
+|`LinCombOperator`   |Linear combination of two space elements with two|
 |                    |fixed scalars `a` and `b`, defined as            |
 |                    |`(x, y)` --> `a * x + b * y`                     |
 +--------------------+-------------------------------------------------+
-|``MultiplyOperator``|Multiplication of two space elements, defined as |
+|`MultiplyOperator`  |Multiplication of two space elements, defined as |
 |                    |`(x, y)` --> `x * y`                             |
 +--------------------+-------------------------------------------------+
 

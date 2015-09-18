@@ -51,7 +51,7 @@ Current status (2015-09-16) is
 | Windows 7    | 2.7    | ✔     |
 | Ubuntu 14.04 | 2.7    | ✔     |
 | Fedora ??    | ??     | ✔     |
-| Mac OSX      | ??     | ??     |
+| Mac OSX      | ??     | ??    |
 
 ### Formating
 The code is supposed to be formated according to the python style guide [PEP8](https://www.python.org/dev/peps/pep-0008/). A useful tool to enforce this is [autopep8](https://pypi.python.org/pypi/autopep8/).

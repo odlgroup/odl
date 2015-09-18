@@ -28,7 +28,7 @@ The concept of linear vector spaces in ODL is largely inspired by
 the `Rice Vector Library
 <http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/>`_ (RVL).
 
-The abstract ``LinearSpace`` class is intended for quick prototyping.
+The abstract `LinearSpace` class is intended for quick prototyping.
 It has a number of abstract methods which must be overridden by a
 subclass. On the other hand, it provides automatic error checking
 and numerous attributes and methods for convenience.
@@ -41,10 +41,10 @@ Abstract methods
 `element(inp=None)`
 -------------------
 This public method is the factory for the inner
-``LinearSpace.Vector`` class. It creates a new element of the space,
+`LinearSpace.Vector` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
 simplest possible case, it just delegates the construction to the
-``Vector`` class.
+`Vector` class.
 
 If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
@@ -54,7 +54,7 @@ initialized**, thus it can contain *any* value.
         A container for values for the element initialization
 
 **Returns:**
-    element : ``LinearSpace.Vector``
+    element : `LinearSpace.Vector`
         The new vector
 
 `_lincomb(z, a, x, b, y)`
@@ -65,12 +65,12 @@ checking) of the linear combination `z <-- a * x + b * y`.
 a range of convenience functions, see below.
 
 **Parameters:**
-    z : ``LinearSpace.Vector``
+    z : `LinearSpace.Vector`
         Element to which the result of the computation is written
     a,b : scalars, must be members of the space's `field`
         Multiplicative scalar factors for input vector `x` or `y`,
         respectively
-    x,y : ``LinearSpace.Vector``
+    x,y : `LinearSpace.Vector`
         Input vectors
 
 **Returns:** `None`
@@ -84,15 +84,15 @@ a range of convenience functions, see below.
 `field`
 -------
 The public attribute determining the type of scalars which
-underlie the space. Can be instances of either ``RealNumbers`` or
-``ComplexNumbers`` (see `odl.sets.set`).
+underlie the space. Can be instances of either `RealNumbers` or
+`ComplexNumbers` (see `odl.sets.set`).
 
 Should be implemented as a `@property` to make it immutable.
 
 `equals(other)`
 ---------------
-``LinearSpace`` inherits this abstract method from ``Set``. Its
-purpose is to check two ``LinearSpace`` instances for equality.
+`LinearSpace` inherits this abstract method from `Set`. Its
+purpose is to check two `LinearSpace` instances for equality.
 
 **Parameters:**
     other : object
@@ -100,7 +100,7 @@ purpose is to check two ``LinearSpace`` instances for equality.
 
 **Returns:**
     equals : bool
-        `True` if `other` is the same ``LinearSpace``, `False`
+        `True` if `other` is the same `LinearSpace`, `False`
         otherwise
 
 Optional methods
@@ -114,7 +114,7 @@ between two vectors `x` and `y`.
 A space with a distance is called a **metric space**.
 
 **Parameters:**
-    x,y : ``LinearSpace.Vector``
+    x,y : `LinearSpace.Vector`
         Vectors whose mutual distance to calculate
 
 **Returns:**
@@ -136,7 +136,7 @@ space element `x`.
 A space with a norm is called a **normed space**.
 
 **Parameters:**
-    x : ``LinearSpace.Vector``
+    x : `LinearSpace.Vector`
         The vector to measure
 
 **Returns:**
@@ -161,7 +161,7 @@ A raw (not type-checking) private method calculating the inner
 product of two space elements `x` and `y`.
 
 **Parameters:**
-    x,y : ``LinearSpace.Vector``
+    x,y : `LinearSpace.Vector`
         Vectors whose inner product to calculate
 
 **Returns:**
@@ -188,9 +188,9 @@ A raw (not type-checking) private method multiplying two vectors
 `x` and `y` element-wise and storing the result in `z`.
 
 **Parameters:**
-    z : ``LinearSpace.Vector``
+    z : `LinearSpace.Vector`
         Vector to store the result
-    x,y : ``LinearSpace.Vector``
+    x,y : `LinearSpace.Vector`
         Vectors whose element-wise product to calculate
 
 **Returns:** `None`
@@ -211,7 +211,7 @@ The above conditions on the multiplication constitute a
 
 Default convenience methods
 ---------------------------
-``LinearSpace`` provides several default methods for convenience
+`LinearSpace` provides several default methods for convenience
 which use the abstract methods above. A subclass may override
 them with own implementations.
 
@@ -223,7 +223,7 @@ them with own implementations.
 |              |                      |`_lincomb()`, but with type    |
 |              |                      |checks.                        |
 +--------------+----------------------+-------------------------------+
-|`zero()`      |``LinearSpace.Vector``|Create a zero vector by first  |
+|`zero()`      |`LinearSpace.Vector`|Create a zero vector by first  |
 |              |                      |issuing `x = element()` and    |
 |              |                      |then `_lincomb(x, 0, x, 0, x)`.|
 |              |                      |**NOTE:** this is not safe     |
@@ -483,7 +483,7 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x : ``LinearSpace.Vector``
+        x : `LinearSpace.Vector`
             The first element
 
         y : LinearSpace.Vector

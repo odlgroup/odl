@@ -33,7 +33,7 @@ from odl.util.testutils import ODLTestCase
 
 def random_point(set_):
     if isinstance(set_, IntervalProd):
-        return np.random.rand(set_.dim) * (set_.end - set_.begin) + set_.begin
+        return np.random.rand(set_.ndim) * (set_.end - set_.begin) + set_.begin
     else:
         raise NotImplementedError("unknown type")
 
@@ -83,43 +83,43 @@ class IntervalProdTest(ODLTestCase):
         set_ = IntervalProd([1, 2, 3], [5, 6, 7])
         self.assertAllAlmostEquals(set_.end, [5, 6, 7])
 
-    def test_dim(self):
+    def test_ndim(self):
         set_ = IntervalProd(1, 2)
-        self.assertEquals(set_.dim, 1)
+        self.assertEquals(set_.ndim, 1)
 
         set_ = IntervalProd(1, 1)
-        self.assertEquals(set_.dim, 1)
+        self.assertEquals(set_.ndim, 1)
 
         set_ = IntervalProd(0, np.inf)
-        self.assertEquals(set_.dim, 1)
+        self.assertEquals(set_.ndim, 1)
 
         set_ = IntervalProd([1], [2])
-        self.assertEquals(set_.dim, 1)
+        self.assertEquals(set_.ndim, 1)
 
         set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-        self.assertEquals(set_.dim, 3)
+        self.assertEquals(set_.ndim, 3)
 
         set_ = IntervalProd([1, 2, 3], [1, 6, 7])
-        self.assertEquals(set_.dim, 3)
+        self.assertEquals(set_.ndim, 3)
 
-    def test_truedim(self):
+    def test_true_ndim(self):
         set_ = IntervalProd(1, 2)
-        self.assertEquals(set_.truedim, 1)
+        self.assertEquals(set_.true_ndim, 1)
 
         set_ = IntervalProd(1, 1)
-        self.assertEquals(set_.truedim, 0)
+        self.assertEquals(set_.true_ndim, 0)
 
         set_ = IntervalProd(0, np.inf)
-        self.assertEquals(set_.truedim, 1)
+        self.assertEquals(set_.true_ndim, 1)
 
         set_ = IntervalProd([1], [2])
-        self.assertEquals(set_.truedim, 1)
+        self.assertEquals(set_.true_ndim, 1)
 
         set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-        self.assertEquals(set_.truedim, 3)
+        self.assertEquals(set_.true_ndim, 3)
 
         set_ = IntervalProd([1, 2, 3], [1, 6, 7])
-        self.assertEquals(set_.truedim, 2)
+        self.assertEquals(set_.true_ndim, 2)
 
     def test_size(self):
         set_ = IntervalProd(1, 2)

@@ -17,9 +17,9 @@
 
 """Abstract mathematical (linear) operators.
 
-Operators are in the most general sense mappings from one set (``Set``)
+Operators are in the most general sense mappings from one set (`Set`)
 to another. More common and useful are operators mapping a vector
-space (``LinearSpace``) into another. Many of those are linear, and
+space (`LinearSpace`) into another. Many of those are linear, and
 as such, they have additional properties. See the class documentation
 for further details.
 In addition, this module defines classes for sums, compositions and
@@ -371,10 +371,10 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Returns
         -------
-        mul : ``Operator``
+        mul : `Operator`
             The multiplication operator. If `other` is a scalar, a
-            ``OperatorRightScalarMult`` is returned. If `other` is
-            an operator, an ``OperatorPointwiseProduct`` is returned.
+            `OperatorRightScalarMult` is returned. If `other` is
+            an operator, an `OperatorPointwiseProduct` is returned.
 
         Examples
         --------
@@ -424,10 +424,10 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Returns
         -------
-        rmul : ``Operator``
+        rmul : `Operator`
             The multiplication operator. If `other` is a scalar, a
-            ``OperatorLeftScalarMult`` is returned. If `other` is
-            an operator, an ``OperatorPointwiseProduct`` is returned.
+            `OperatorLeftScalarMult` is returned. If `other` is
+            an operator, an `OperatorPointwiseProduct` is returned.
 
         Examples
         --------
@@ -487,9 +487,9 @@ class OperatorSum(Operator):
 
         Parameters
         ----------
-        op1 : ``Operator``
+        op1 : `Operator`
             The first summand. Its `range` must be a `LinearSpace`.
-        op2 : ``Operator``
+        op2 : `Operator`
             The second summand. Must have the same `domain` and `range` as
             `op1`.
         tmp : range element, optional
@@ -619,9 +619,9 @@ class OperatorComp(Operator):
 
         Parameters
         ----------
-        left : ``Operator``
+        left : `Operator`
             The left ("outer") operator
-        right : ``Operator``
+        right : `Operator`
             The right ("inner") operator. Its range must coincide with the
             domain of `left`.
         tmp : element of the range of `right`, optional
@@ -723,9 +723,9 @@ class OperatorPointwiseProduct(Operator):
 
         Parameters
         ----------
-        op1 : ``Operator``
+        op1 : `Operator`
             The first factor
-        op2 : ``Operator``
+        op2 : `Operator`
             The second factor. Must have the same domain and range as
             `op1`.
         """
@@ -792,8 +792,8 @@ class OperatorLeftScalarMult(Operator):
 
         Parameters
         ----------
-        op : ``Operator``
-            The range of `op` must be a ``LinearSpace``.
+        op : `Operator`
+            The range of `op` must be a `LinearSpace`.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
             the range.
@@ -878,7 +878,7 @@ class OperatorRightScalarMult(Operator):
     OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))
 
     The scalar multiplication is well-defined only if `op.domain` is
-    a ``LinearSpace``.
+    a `LinearSpace`.
     """
 
     def __init__(self, op, scalar, tmp=None):
@@ -887,7 +887,7 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         op : `Operator`
-            The domain of `op` must be a ``LinearSpace``.
+            The domain of `op` must be a `LinearSpace`.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
             the operator domain.
@@ -1074,9 +1074,9 @@ class LinearOperatorSum(OperatorSum, LinearOperator):
         Parameters
         ----------
 
-        op1 : ``LinearOperator``
+        op1 : `LinearOperator`
             The first summand
-        op2 : ``LinearOperator``
+        op2 : `LinearOperator`
             The second summand. Must have the same `domain` and `range` as
             `op1`.
         tmp_ran : range element, optional
@@ -1131,7 +1131,7 @@ class LinearOperatorComp(OperatorComp, LinearOperator):
 
         Parameters
         ----------
-        left : ``LinearOperator``
+        left : `LinearOperator`
             The left ("outer") operator
         right : `LinearOperator`
             The right ("inner") operator. Its range must coincide with the
