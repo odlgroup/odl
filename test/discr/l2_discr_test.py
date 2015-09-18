@@ -169,49 +169,54 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
     def test_element_from_array_2d(self):
         # assert orderings work properly with 2d
         unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr = odl.l2_uniform_discretization(unit_square, (3, 3),
+        discr = odl.l2_uniform_discretization(unit_square, (2, 2),
                                               impl='numpy', order='C')
-        vec = discr.element([[1, 2, 3],
-                             [4, 5, 6],
-                             [7, 8, 9]])
+        vec = discr.element([[1, 2],
+                             [3, 4]])
 
         self.assertIsInstance(vec, discr.Vector)
         self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
-        # Check ordering
-        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-        discr = odl.l2_uniform_discretization(unit_square, (3, 3),
+        # Check ordering
+        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3, 4])
+
+        # Linear creation works aswell
+        linear_vec = discr.element([1, 2, 3, 4])
+        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3, 4])
+
+        #Fortran order
+        discr = odl.l2_uniform_discretization(unit_square, (2, 2),
                                               impl='numpy', order='F')
-        vec = discr.element([[1, 2, 3],
-                             [4, 5, 6],
-                             [7, 8, 9]])
+        vec = discr.element([[1, 2],
+                             [3, 4]])
 
         # Check ordering
-        self.assertAllAlmostEquals(vec.ntuple, [1, 4, 7, 2, 5, 8, 3, 6, 9])
+        self.assertAllAlmostEquals(vec.ntuple, [1, 3, 2, 4])
+
+        # Linear creation works aswell
+        linear_vec = discr.element([1, 2, 3, 4])
+        self.assertAllAlmostEquals(linear_vec.ntuple, [1, 2, 3, 4])
 
     def test_element_from_array_2d_shape(self):
         # Verify that the shape is correctly tested for
         unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr = odl.l2_uniform_discretization(unit_square, (4, 3),
+        discr = odl.l2_uniform_discretization(unit_square, (3, 2),
                                               impl='numpy', order='C')
 
         #Correct order
-        vec = discr.element([[1, 2, 3],
-                             [4, 5, 6],
-                             [7, 8, 9],
-                             [10, 11, 12]])
+        vec = discr.element([[1, 2],
+                             [3, 4],
+                             [5, 6]])
 
         #Wrong order, should throw
         with self.assertRaises(ValueError):
-            vec = discr.element([[1, 2, 3, 10],
-                                 [4, 5, 6, 11],
-                                 [7, 8, 9, 12]])
+            vec = discr.element([[1, 2, 3],
+                                 [4, 5, 6]])
 
         #Wrong number of elements, should throw
         with self.assertRaises(ValueError):
-            vec = discr.element([[1, 2, 3],
-                                 [4, 5, 6],
-                                 [7, 8, 9]])
+            vec = discr.element([[1, 2],
+                                 [3, 4]])
 
     def test_zero(self):
         discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
@@ -219,7 +224,7 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
 
         self.assertIsInstance(vec, discr.Vector)
         self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
-        self.assertEqual(vec.norm(), 0.0)
+        self.assertAllAlmostEquals(vec, [0, 0, 0])
 
     def test_getitem(self):
         discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
@@ -278,9 +283,14 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
         # 2D
         discr = odl.l2_uniform_discretization(
             odl.L2(odl.Rectangle([0, 0], [1, 1])), [3, 2])
-        vec = discr.element([[1, 2], [3, 4], [5, 6]])
 
-        vec[:] = [[-1, -2], [-3, -4], [-5, -6]]
+        vec = discr.element([[1, 2], 
+                             [3, 4], 
+                             [5, 6]])
+
+        vec[:] = [[-1, -2], 
+                  [-3, -4], 
+                  [-5, -6]]
         self.assertAllEquals(vec, [-1, -2, -3, -4, -5, -6])
 
         arr = np.arange(6, 12).reshape([3, 2])
@@ -326,7 +336,7 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
 
         with self.assertRaises(ValueError):
             # Reversed shape -> bad
-            vec[:] = arr = np.arange(ntotal).reshape((4,)*3 + (3,)*3)
+            vec[:] = np.arange(ntotal).reshape((4,)*3 + (3,)*3)
 
     def test_setslice(self):
         discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
@@ -337,23 +347,28 @@ class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
 
     def test_asarray_2d(self):
         unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr_F = odl.l2_uniform_discretization(unit_square, (3, 3), order='F')
-        vec_F = discr_F.element([[1, 2, 3],
-                                 [4, 5, 6],
-                                 [7, 8, 9]])
+        discr_F = odl.l2_uniform_discretization(unit_square, (2, 2), order='F')
+        vec_F = discr_F.element([[1, 2],
+                                 [3, 4]])
 
-        self.assertAllAlmostEquals(vec_F.asarray(), [[1, 2, 3],
-                                                     [4, 5, 6],
-                                                     [7, 8, 9]])
+        # Verify that returned array equals input data
+        self.assertAllAlmostEquals(vec_F.asarray(), [[1, 2],
+                                                     [3, 4]])
+        # Check order of out array
+        self.assertTrue(vec_F.asarray().flags['F_CONTIGUOUS'])
 
-        discr_C = odl.l2_uniform_discretization(unit_square, (3, 3), order='C')
-        vec_C = discr_C.element([[1, 2, 3],
-                                 [4, 5, 6],
-                                 [7, 8, 9]])
 
-        self.assertAllAlmostEquals(vec_C.asarray(), [[1, 2, 3],
-                                                     [4, 5, 6],
-                                                     [7, 8, 9]])
+        # Also check with C ordering
+        discr_C = odl.l2_uniform_discretization(unit_square, (2, 2), order='C')
+        vec_C = discr_C.element([[1, 2],
+                                 [3, 4]])
+        
+        # Verify that returned array equals input data
+        self.assertAllAlmostEquals(vec_C.asarray(), [[1, 2],
+                                                     [3, 4]])
+
+        # Check order of out array
+        self.assertTrue(vec_C.asarray().flags['C_CONTIGUOUS'])
 
 
 if __name__ == '__main__':

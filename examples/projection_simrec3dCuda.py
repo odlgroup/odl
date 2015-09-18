@@ -32,7 +32,7 @@ import SimRec2DPy as SR
 from odl.sets.domain import Rectangle, Cuboid
 from odl.discr.l2_discr import l2_uniform_discretization
 from odl.space.default import L2
-from odl.utility.testutils import Timer
+from odl.util.testutils import Timer
 
 
 class ProjectionGeometry3D(object):
@@ -84,12 +84,12 @@ detectorAxisDistance = 210.0
 # Discretization parameters
 nVoxels = np.array([448, 448, 448])
 nPixels = np.array([780, 720])
-nProjection = 332
+nProjection = 15
 
 # Scale factors
 voxelSize = np.array([0.5, 0.5, 0.3])
 pixelSize = np.array([0.368, 0.368])  # detectorSize/nPixels
-stepSize = voxelSize.max()
+stepSize = voxelSize.max()/5.0
 
 # Define projection geometries
 geometries = []
@@ -111,7 +111,8 @@ for theta in np.linspace(0, pi, nProjection, endpoint=False):
 projectionSpace = L2(Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
-projectionDisc = l2_uniform_discretization(projectionSpace, nPixels, impl='cuda')
+projectionDisc = l2_uniform_discretization(projectionSpace, nPixels, 
+                                           impl='cuda', order='F')
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
@@ -121,12 +122,13 @@ dataDisc = ps.ProductSpace(projectionDisc, nProjection)
 reconSpace = L2(Cuboid([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconDisc = l2_uniform_discretization(reconSpace, nVoxels, impl='cuda')
+reconDisc = l2_uniform_discretization(reconSpace, nVoxels, 
+                                      impl='cuda', order='F')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])
 phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
-phantomVec = reconDisc.element(phantom.flatten(order='F'))
+phantomVec = reconDisc.element(phantom)
 
 # Make the operator
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
@@ -140,7 +142,7 @@ with Timer("project"):
 plt.figure()
 for i in range(15):
     plt.subplot(3, 5, i+1)
-    plt.imshow(result[i].asarray().reshape(nPixels, order='F').T, cmap='bone', origin='lower')
+    plt.imshow(result[i].asarray().T, cmap='bone', origin='lower')
     plt.axis('off')
 
 back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize,
@@ -148,10 +150,11 @@ back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize,
 geo = geometries[0]
 vol = projector.domain.element()
 
-back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
-                 geo.pixelDirectionV, result[0].ntuple.data_ptr, vol.ntuple.data_ptr)
+with Timer("back_project"):
+    back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
+                     geo.pixelDirectionV, result[0].ntuple.data_ptr, vol.ntuple.data_ptr)
 
 plt.figure()
-plt.imshow(vol.asarray().reshape(nVoxels, order='F')[:, :, 200], cmap='bone')
+plt.imshow(vol.asarray()[:, :, 200], cmap='bone')
 
 plt.show()

@@ -119,7 +119,7 @@ class DiscreteL2(Discretization):
                 self, self.restriction(self.uspace.element(inp)))
         else:  # Sequence-type input
             arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-            if arr.shape != self.grid.shape:
+            if arr.ndim>1 and arr.shape != self.grid.shape:
                 raise ValueError('input shape {} does not match grid shape {}'
                                  ''.format(arr.shape, self.grid.shape))
             arr = arr.flatten(order=self.order)
