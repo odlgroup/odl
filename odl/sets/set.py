@@ -51,7 +51,7 @@ from numbers import Integral, Real, Complex
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Integers', 'RealNumbers',
-           'ComplexNumbers', 'CartesianProduct')
+           'ComplexNumbers', 'Strings', 'CartesianProduct')
 
 
 class Set(with_metaclass(ABCMeta, object)):

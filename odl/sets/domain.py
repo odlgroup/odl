@@ -196,7 +196,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : `Set`
+        other : ``Set``
             The set to be tested. It must implement a `min()` and a
             `max()` method, otherwise a `TypeError` is raised.
         tol : float, optional
@@ -204,11 +204,12 @@ class IntervalProd(Set):
             other set and this interval product.
             Default: 0.0
         """
-        if not (hasattr(other, 'min') and hasattr(other, 'max')):
-            raise TypeError('cannot test `other` {} without `min` and `max`'
-                            'attributes.'.format(other))
-
-        return self.contains(other.min, tol) and self.contains(other.max, tol)
+        try:
+            return (self.contains(other.min(), tol) and
+                    self.contains(other.max(), tol))
+        except AttributeError:
+            raise AttributeError('cannot test {!r} without `min()` and `max()`'
+                                 'methods.'.format(other))
 
     # Additional property-like methods
     def measure(self, dim=None):
@@ -483,64 +484,6 @@ class IntervalProd(Set):
         minmax_grid = TensorGrid(*minmax_vecs)
         return minmax_grid.points(order=order)
 
-    def uniform_sampling(self, num_nodes, as_midp=False):
-        """Produce equispaced nodes, a RegularGrid.
-
-        Parameters
-        ----------
-
-        num_nodes : int or tuple of int
-            The number of nodes per axis. For dimension >= 2, a tuple
-            is required. All entries must be positive. Entries
-            corresponding to degenerate axes must be equal to 1.
-        as_midp : bool, optional
-            If True, the midpoints of an interval partition will be
-            returned, which excludes the endpoints. Otherwise,
-            equispaced nodes including the endpoints are generated.
-            Note that the resulting strides are different.
-            Default: False.
-
-        Returns
-        -------
-
-        sampling : grid.RegularGrid
-
-        Examples
-        --------
-
-        >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
-        >>> grid = rbox.uniform_sampling([2, 5])
-        >>> grid.coord_vectors
-        (array([-1. , -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))
-        >>> grid = rbox.uniform_sampling([2, 5], as_midp=True)
-        >>> grid.coord_vectors
-        (array([-0.875, -0.625]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
-        """
-        from odl.discr.grid import RegularGrid
-        num_nodes = np.atleast_1d(num_nodes).astype(np.int64)
-
-        if np.any(np.isinf(self._begin)) or np.any(np.isinf(self._end)):
-            raise ValueError('uniform sampling undefined for infinite '
-                             'domains.')
-
-        if num_nodes.shape != (self.dim,):
-            raise ValueError('number of nodes {} has wrong shape '
-                             '({} != ({},)).'
-                             ''.format(num_nodes, num_nodes.shape, self.dim))
-
-        if np.any(num_nodes <= 0):
-            raise ValueError('number of nodes {} has non-positive entries.'
-                             ''.format(num_nodes))
-
-        if np.any(num_nodes[self._ideg] > 1):
-            raise ValueError('degenerate axes {} cannot be sampled with more '
-                             'than one node.'.format(tuple(self._ideg)))
-
-        center = self.midpoint
-        stride = (self.size / num_nodes if as_midp else
-                  self.size / (num_nodes - 1))
-        return RegularGrid(num_nodes, center, stride)
-
     # Magic methods
     def __repr__(self):
         return ('IntervalProd({}, {})'.format(
@@ -600,3 +543,7 @@ class Cuboid(IntervalProd):
     def __repr__(self):
         return ('Cuboid({!r}, {!r})'.format(list(self._begin),
                                           list(self._end)))
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

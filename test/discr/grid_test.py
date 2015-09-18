@@ -120,19 +120,19 @@ class TensorGridTestAttributes(ODLTestCase):
         self.assertEquals(grid2.ntotal, 200)
         self.assertEquals(grid3.ntotal, 50)
 
-    def test_min_max(self):
+    def test_minpt_maxpt(self):
         vec1 = np.arange(2, 6)
         vec2 = np.arange(-4, 5, 2)
         vec3 = np.arange(-1, 1)
         scalar = 0.5
 
         grid = TensorGrid(vec1, vec2, vec3)
-        self.assertAllEquals(grid.min, (2, -4, -1))
-        self.assertAllEquals(grid.max, (5, 4, 0))
+        self.assertAllEquals(grid.min_pt, (2, -4, -1))
+        self.assertAllEquals(grid.max_pt, (5, 4, 0))
 
         grid = TensorGrid(vec1, scalar, vec2, scalar)
-        self.assertAllEquals(grid.min, (2, 0.5, -4, 0.5))
-        self.assertAllEquals(grid.max, (5, 0.5, 4, 0.5))
+        self.assertAllEquals(grid.min_pt, (2, 0.5, -4, 0.5))
+        self.assertAllEquals(grid.max_pt, (5, 0.5, 4, 0.5))
 
 
 class TensorGridTestMethods(ODLTestCase):
@@ -143,6 +143,28 @@ class TensorGridTestMethods(ODLTestCase):
         grid = TensorGrid(vec1, vec2)
         some_pt = grid.element()
         self.assertIn(some_pt, grid)
+
+    def test_min_max(self):
+        vec1 = np.arange(2, 6)
+        vec2 = np.arange(-4, 5, 2)
+        vec3 = np.arange(-1, 1)
+        scalar = 0.5
+
+        grid = TensorGrid(vec1, vec2, vec3, as_midp=False)
+        self.assertAllEquals(grid.min(), (2, -4, -1))
+        self.assertAllEquals(grid.max(), (5, 4, 0))
+
+        grid = TensorGrid(vec1, scalar, vec2, scalar, as_midp=False)
+        self.assertAllEquals(grid.min(), (2, 0.5, -4, 0.5))
+        self.assertAllEquals(grid.max(), (5, 0.5, 4, 0.5))
+
+        grid = TensorGrid(vec1, vec2, vec3, as_midp=True)
+        self.assertAllEquals(grid.min(), (1.5, -5, -1.5))
+        self.assertAllEquals(grid.max(), (5.5, 5, 0.5))
+
+        grid = TensorGrid(vec1, scalar, vec2, scalar, as_midp=True)
+        self.assertAllEquals(grid.min(), (1.5, 0.5, -5, 0.5))
+        self.assertAllEquals(grid.max(), (5.5, 0.5, 5, 0.5))
 
     def test_equals(self):
         vec1 = np.arange(2, 6)
@@ -270,8 +292,8 @@ class TensorGridTestMethods(ODLTestCase):
         grid = TensorGrid(vec1, vec2)
         self.assertAllEquals(points, grid.points())
         self.assertAllEquals(points, grid.points(order='C'))
-        self.assertAllEquals(grid.min, grid.points()[0])
-        self.assertAllEquals(grid.max, grid.points()[-1])
+        self.assertAllEquals(grid.min_pt, grid.points()[0])
+        self.assertAllEquals(grid.max_pt, grid.points()[-1])
 
         # F ordering
         points = []
@@ -330,9 +352,9 @@ class TensorGridTestMethods(ODLTestCase):
         self.assertAllEquals(corners, grid.corners())
         self.assertAllEquals(corners, grid.corners(order='C'))
 
-        # Min and max should appear at the beginning and the end, resp.
-        self.assertAllEquals(grid.min, grid.corners()[0])
-        self.assertAllEquals(grid.max, grid.corners()[-1])
+        # minpt and maxpt should appear at the beginning and the end, resp.
+        self.assertAllEquals(grid.min_pt, grid.corners()[0])
+        self.assertAllEquals(grid.max_pt, grid.corners()[-1])
 
         # F ordering
         corners = []
@@ -480,37 +502,93 @@ class TensorGridTestMethods(ODLTestCase):
         sub_grid = TensorGrid(vec3_sub)
         self.assertEquals(grid[1:3], sub_grid)
 
-    def test_convex_hull(self):
-        vec1 = (0, 1)
-        vec2 = (-1, 0, 1)
-        vec3 = (2, 3, 4, 5)
+    def test_cell_sizes(self):
+        vec1 = np.array([1, 3])
+        vec2 = np.array([-1, 0, 1])
+        vec3 = np.array([2, 4, 5, 10])
         scalar = 0.5
 
-        grid = TensorGrid(vec1, vec2, vec3)
+        cs1, cs2, cs3 = [np.diff(vec) for vec in (vec1, vec2, vec3)]
+        csscal = 0
+
+        # Grid as set
+        grid = TensorGrid(vec1, vec2, vec3, as_midp=False)
+        self.assertAllEquals(grid.cell_sizes(), (cs1, cs2, cs3))
+
+        grid = TensorGrid(vec1, scalar, vec3, as_midp=False)
+        self.assertAllEquals(grid.cell_sizes(), (cs1, csscal, cs3))
+
+        # Grid as tesselation
+        cs1 = (2, 2)
+        cs2 = (1, 1, 1)
+        cs3 = (2, 1.5, 3, 5)
+
+        grid = TensorGrid(vec1, vec2, vec3, as_midp=True)
+        self.assertAllEquals(grid.cell_sizes(), (cs1, cs2, cs3))
+
+        grid = TensorGrid(vec1, scalar, vec3, as_midp=True)
+        self.assertAllEquals(grid.cell_sizes(), (cs1, csscal, cs3))
+
+    def test_convex_hull(self):
+        vec1 = (1, 3)
+        vec2 = (-1, 0, 1)
+        vec3 = (2, 4, 5, 10)
+        scalar = 0.5
+
+        # Grid as set
+        grid = TensorGrid(vec1, vec2, vec3, as_midp=False)
         begin = (vec1[0], vec2[0], vec3[0])
         end = (vec1[-1], vec2[-1], vec3[-1])
         chull = IntervalProd(begin, end)
         self.assertEquals(grid.convex_hull(), chull)
 
         # With degenerate axis
-        grid = TensorGrid(vec1, vec2, scalar)
+        grid = TensorGrid(vec1, vec2, scalar, as_midp=False)
         begin = (vec1[0], vec2[0], scalar)
         end = (vec1[-1], vec2[-1], scalar)
         chull = IntervalProd(begin, end)
         self.assertEquals(grid.convex_hull(), chull)
 
+        # Grid as tesselation
+        grid = TensorGrid(vec1, vec2, vec3, as_midp=True)
+        cs1 = (2, 2)
+        cs2 = (1, 1, 1)
+        cs3 = (2, 1.5, 3, 5)
+        begin = (vec1[0] - cs1[0]/2., vec2[0] - cs2[0]/2., vec3[0] - cs3[0]/2.)
+        end = (vec1[-1] + cs1[-1]/2., vec2[-1] + cs2[-1]/2.,
+               vec3[-1] + cs3[-1]/2.)
+        chull = IntervalProd(begin, end)
+        self.assertEquals(grid.convex_hull(), chull)
+
+        # With degenerate axis
+        grid = TensorGrid(vec1, vec2, scalar, as_midp=True)
+        begin = (vec1[0] - cs1[0]/2., vec2[0] - cs2[0]/2., scalar)
+        end = (vec1[-1] + cs1[-1]/2., vec2[-1] + cs2[-1]/2., scalar)
+        chull = IntervalProd(begin, end)
+        self.assertEquals(grid.convex_hull(), chull)
+
     def test_repr(self):
         vec1 = (0, 1)
-        vec2 = (-1, 0, 2)
         long_vec = np.arange(10)
         scalar = 0.5
 
-        grid = TensorGrid(vec1, scalar, vec2)
-        repr_string = 'TensorGrid([0.0, 1.0], [0.5], [-1.0, 0.0, 2.0])'
+        # Grid as set
+        grid = TensorGrid(vec1, scalar)
+        repr_string = 'TensorGrid([0.0, 1.0], [0.5])'
         self.assertEquals(repr(grid), repr_string)
 
         grid = TensorGrid(scalar, long_vec)
         repr_string = 'TensorGrid([0.5], [0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0])'
+        self.assertEquals(repr(grid), repr_string)
+
+        # Grid as tesselation
+        grid = TensorGrid(vec1, scalar, as_midp=True)
+        repr_string = 'TensorGrid([0.0, 1.0], [0.5], as_midp=True)'
+        self.assertEquals(repr(grid), repr_string)
+
+        grid = TensorGrid(scalar, long_vec, as_midp=True)
+        repr_string = ('TensorGrid([0.5], [0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0],'
+                       ' as_midp=True)')
         self.assertEquals(repr(grid), repr_string)
 
     def test_str(self):
@@ -519,6 +597,7 @@ class TensorGridTestMethods(ODLTestCase):
         long_vec = np.arange(10)
         scalar = 0.5
 
+        # Grid as set
         grid = TensorGrid(vec1, scalar, vec2)
         grid_string = 'grid [0.0, 1.0] x [0.5] x [-1.0, 0.0, 2.0]'
         self.assertEquals(str(grid), grid_string)
@@ -527,30 +606,25 @@ class TensorGridTestMethods(ODLTestCase):
         grid_string = 'grid [0.5] x [0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]'
         self.assertEquals(str(grid), grid_string)
 
+        # Grid as tesselation
+        grid = TensorGrid(vec1, scalar, vec2, as_midp=True)
+        grid_string = 'midp grid [0.0, 1.0] x [0.5] x [-1.0, 0.0, 2.0]'
+        self.assertEquals(str(grid), grid_string)
+
+        grid = TensorGrid(scalar, long_vec, as_midp=True)
+        grid_string = ('midp grid [0.5] x [0.0, 1.0, 2.0, ..., '
+                       '7.0, 8.0, 9.0]')
+        self.assertEquals(str(grid), grid_string)
+
 
 class RegularGridTestInit(ODLTestCase):
     def test_init(self):
-        center = (1, 0, -2)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
         shape = (2, 1, 3)
-        stride = (0.5, 2, 3)
 
-        # Just test if the code runs
-        grid = RegularGrid(shape, center, stride)
-        grid = RegularGrid(shape, center=center)
-        grid = RegularGrid(shape, stride=stride)
-        grid = RegularGrid(shape)
-
-        # Defaults
-        grid = RegularGrid(shape, center=center)
-        grid2 = RegularGrid(shape, center, stride=(1, 1, 1))
-        self.assertEquals(grid, grid2)
-
-        grid = RegularGrid(shape, stride=stride)
-        grid2 = RegularGrid(shape, center=(0, 0, 0), stride=stride)
-        self.assertEquals(grid, grid2)
-
-        # Correct initialization of coord_vectors
-        grid = RegularGrid(shape, center, stride)
+        # Check correct initialization of coord_vectors
+        grid = RegularGrid(minpt, maxpt, shape)
         vec1 = (0.75, 1.25)
         vec2 = (0,)
         vec3 = (-5, -2, 1)
@@ -561,118 +635,169 @@ class RegularGridTestInit(ODLTestCase):
         nonpos_shape2 = (-2, 1, 3)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(nonpos_shape1, center, stride)
+            grid = RegularGrid(minpt, maxpt, nonpos_shape1)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(nonpos_shape2, center, stride)
+            grid = RegularGrid(minpt, maxpt, nonpos_shape2)
 
-        center_with_nan = (1, 0, np.nan)
-        center_with_inf = (np.inf, 0, -2)
-
-        with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center_with_nan, stride)
-
-        with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center_with_inf, stride)
-
-        nonpos_stride1 = (0.0, 2, 3)
-        nonpos_stride2 = (0.5, -2.0, 3)
-        stride_with_nan = (0.5, np.nan, 3)
-        stride_with_inf = (0.5, 2, np.inf)
+        minpt_with_nan = (0.75, 0, np.nan)
+        minpt_with_inf = (0.75, 0, np.inf)
+        maxpt_with_nan = (1.25, np.nan, 1)
+        maxpt_with_inf = (1.25, np.inf, 1)
+        shape_with_nan = (2, np.nan, 3)
+        shape_with_inf = (2, np.inf, 3)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, nonpos_stride1)
+            grid = RegularGrid(minpt_with_nan, maxpt, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, nonpos_stride2)
+            grid = RegularGrid(minpt_with_inf, maxpt, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, stride_with_nan)
+            grid = RegularGrid(minpt, maxpt_with_nan, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, stride_with_inf)
-
-        too_short_center = (0, -2)
-        too_long_center = (1, 1, 0, -2)
+            grid = RegularGrid(minpt, maxpt_with_inf, shape)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, too_short_center, stride)
+            grid = RegularGrid(minpt, maxpt, shape_with_nan)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, too_long_center, stride)
+            grid = RegularGrid(minpt, maxpt, shape_with_inf)
 
-        too_short_stride = (2, 3)
-        too_long_stride = (0.5, 2, 3, 1)
-
-        with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, too_short_stride)
+        maxpt_smaller_minpt1 = (0.7, 0, 1)
+        maxpt_smaller_minpt2 = (1.25, -1, 1)
 
         with self.assertRaises(ValueError):
-            grid = RegularGrid(shape, center, too_long_stride)
+            grid = RegularGrid(minpt, maxpt_smaller_minpt1, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt_smaller_minpt2, shape)
+
+        too_short_minpt = (0.75, 0)
+        too_long_minpt = (0.75, 0, -5, 2)
+        too_short_maxpt = (0, 1)
+        too_long_maxpt = (1.25, 0, 1, 25)
+        too_short_shape = (2, 3)
+        too_long_shape = (2, 1, 4, 3)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(too_short_minpt, maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(too_long_minpt, maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, too_short_maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, too_long_maxpt, shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt, too_short_shape)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt, too_long_shape)
+
+        maxpt_eq_minpt_at_shape_larger_than_1 = (0.75, 0, 1)
+
+        with self.assertRaises(ValueError):
+            grid = RegularGrid(minpt, maxpt_eq_minpt_at_shape_larger_than_1,
+                               shape)
+
+        # Overrides for exact min and max
+        exact_min = np.array((0, 1, 0), dtype=float)
+        exact_max = np.array((1, 1, 3), dtype=float)
+        shape = np.array((3, 1, 7), dtype=int)
+        shift = (exact_max - exact_min) / (2 * shape)
+
+        minpt = exact_min + shift
+        maxpt = exact_max - shift
+
+        grid = RegularGrid(minpt, maxpt, shape, as_midp=True,
+                           _exact_min=exact_min, _exact_max=exact_max)
+        self.assertAllEquals(grid.min(), exact_min)
+        self.assertAllEquals(grid.max(), exact_max)
 
 
 class RegularGridTestAttributes(ODLTestCase):
     def test_center(self):
-        center = (1, 0, -2)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
         shape = (2, 1, 3)
-        stride = (0.5, 2, 3)
 
-        grid = RegularGrid(shape, center, stride)
+        center = (1, 0, -2)
+
+        grid = RegularGrid(minpt, maxpt, shape)
         self.assertAllEquals(grid.center, center)
 
-        grid = RegularGrid(shape, stride=stride)
-        self.assertAllEquals(grid.center, (0, 0, 0))
-
     def test_stride(self):
-        center = (1, 0, -2)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
         shape = (2, 1, 3)
-        stride = (0.5, 2, 3)
 
-        grid = RegularGrid(shape, center, stride)
+        stride = (0.5, 1, 3)
+
+        grid = RegularGrid(minpt, maxpt, shape)
         self.assertAllEquals(grid.stride, stride)
-
-        grid = RegularGrid(shape, center)
-        self.assertAllEquals(grid.stride, (1, 1, 1))
 
 
 class RegularGridTestMethods(ODLTestCase):
     def test_is_subgrid(self):
-        center = (1, 0, -2)
-        shape = (2, 1, 3)
-        stride = (0.5, 1, 3)
+        minpt = (0.75, 0, -5)
+        maxpt = (1.25, 0, 1)
+        shape = (2, 1, 5)
 
-        grid = RegularGrid(shape, center, stride)
+        # Optimized cases
+        grid = RegularGrid(minpt, maxpt, shape)
         self.assertTrue(grid.is_subgrid(grid))
 
-        center_sup = (1.125, -1, -2)
-        shape_sup = (6, 2, 5)
-        stride_sup = (0.25, 2, 3)
+        smaller_shape = (1, 1, 5)
+        not_sup_grid = RegularGrid(minpt, maxpt, smaller_shape)
+        self.assertFalse(grid.is_subgrid(not_sup_grid))
 
-        sup_grid = RegularGrid(shape_sup, center_sup, stride_sup)
+        larger_minpt = (0.85, 0, -4)
+        not_sup_grid = RegularGrid(larger_minpt, maxpt, shape)
+        self.assertFalse(grid.is_subgrid(not_sup_grid))
+
+        smaller_maxpt = (1.15, 0, 0)
+        not_sup_grid = RegularGrid(minpt, smaller_maxpt, shape)
+        self.assertFalse(grid.is_subgrid(not_sup_grid))
+
+        # Real checks
+        minpt_sup1 = (-0.25, -2, -5)
+        maxpt_sup1 = (1.25, 2, 1)
+        shape_sup1 = (4, 3, 9)
+        sup_grid = RegularGrid(minpt_sup1, maxpt_sup1, shape_sup1)
         self.assertTrue(grid.is_subgrid(sup_grid))
         self.assertFalse(sup_grid.is_subgrid(grid))
 
-        center_sup = (1.375, -1, -2)
-        sup_grid = RegularGrid(shape_sup, center_sup, stride_sup)
+        minpt_sup2 = (0.5, 0, -5)
+        maxpt_sup2 = (1.5, 0, 1)
+        shape_sup2 = (5, 1, 9)
+        sup_grid = RegularGrid(minpt_sup2, maxpt_sup2, shape_sup2)
         self.assertTrue(grid.is_subgrid(sup_grid))
+        self.assertFalse(sup_grid.is_subgrid(grid))
 
-        center_not_sup = (1.25, -1, -8)
-        shape_not_sup = (1, 2, 5)
-        stride_not_sup = (1, 1, 3)
-
-        not_sup_grid = RegularGrid(shape_not_sup, center_sup, stride_sup)
+        shape_not_sup1 = (4, 3, 10)
+        not_sup_grid = RegularGrid(minpt_sup1, maxpt_sup1, shape_not_sup1)
         self.assertFalse(grid.is_subgrid(not_sup_grid))
+        self.assertFalse(not_sup_grid.is_subgrid(grid))
 
-        not_sup_grid = RegularGrid(shape_sup, center_not_sup, stride_sup)
+        minpt_not_sup1 = (-0.25, -2.5, -5)
+        not_sup_grid = RegularGrid(minpt_not_sup1, maxpt_sup1, shape_sup1)
         self.assertFalse(grid.is_subgrid(not_sup_grid))
+        self.assertFalse(not_sup_grid.is_subgrid(grid))
 
-        not_sup_grid = RegularGrid(shape_sup, center_sup, stride_not_sup)
+        maxpt_not_sup1 = (1.35, 2.0001, 1)
+        not_sup_grid = RegularGrid(minpt_sup1, maxpt_not_sup1, shape_sup1)
         self.assertFalse(grid.is_subgrid(not_sup_grid))
+        self.assertFalse(not_sup_grid.is_subgrid(grid))
 
         # Should also work for TensorGrid's
         vec1_sup = (0.75, 1, 1.25, 7)
         vec2_sup = (0,)
-        vec3_sup = (-5, -4, -2, 1)
+        vec3_sup = (-5, -3.5, -3, -2, -0.5, 0, 1, 9.5)
 
         tensor_sup_grid = TensorGrid(vec1_sup, vec2_sup, vec3_sup)
         self.assertTrue(grid.is_subgrid(tensor_sup_grid))
@@ -686,25 +811,22 @@ class RegularGridTestMethods(ODLTestCase):
         self.assertFalse(grid.is_subgrid(tensor_not_sup_grid))
 
         # Fuzzy check
-        center_sup = (1.125, -1, -2)
-        shape_sup = (6, 2, 5)
-        stride_sup = (0.25, 2, 3)
-        center_fuzzy_sup = (1.35, -1.02, 0.975)  # tol <= 0.025
-        stride_fuzzy_sup = (0.225, 2, 3.01)  # tol <= 0.025
+        shape_sup = (4, 3, 9)
 
-        fuzzy_sup_grid = RegularGrid(shape_sup, center_fuzzy_sup, stride_sup)
-        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.03))
-        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.02))
+        minpt_fuzzy_sup1 = (-0.24, -2, -5.01)
+        minpt_fuzzy_sup2 = (-0.24, -2, -5)
+        maxpt_fuzzy_sup1 = (1.24, 2, 1)
+        maxpt_fuzzy_sup2 = (1.25, 2, 1.01)
 
-        # Stride error builds up at the grid ends
-        fuzzy_sup_grid = RegularGrid(shape_sup, center_sup, stride_fuzzy_sup)
-        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.04))
-        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.03))
+        fuzzy_sup_grid = RegularGrid(minpt_fuzzy_sup1, maxpt_fuzzy_sup1,
+                                     shape_sup)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.015))
+        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.005))
 
-        fuzzy_sup_grid = RegularGrid(shape_sup, center_fuzzy_sup,
-                                     stride_fuzzy_sup)
-        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.05))
-        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.04))
+        fuzzy_sup_grid = RegularGrid(minpt_fuzzy_sup2, maxpt_fuzzy_sup2,
+                                     shape_sup)
+        self.assertTrue(grid.is_subgrid(fuzzy_sup_grid, tol=0.015))
+        self.assertFalse(grid.is_subgrid(fuzzy_sup_grid, tol=0.005))
 
         # TODO: make modules for automated randomized tests
         # Some more randomized tests
@@ -736,26 +858,32 @@ class RegularGridTestMethods(ODLTestCase):
 #                    grid.is_subgrid(fuzzy_sup_tensor_grid2, tol=fac*tol))
 
     def test_getitem(self):
-        center = (1, 0, -2, 0.5)
-        shape = (3, 1, 9, 6)
-        stride = (0.5, 2, 3, 1.5)
+        minpt = (0.75, 0, -5, 4)
+        maxpt = (1.25, 0, 1, 13)
+        shape = (2, 1, 5, 4)
 
-        grid = RegularGrid(shape, center, stride)
+        grid = RegularGrid(minpt, maxpt, shape)
 
         # Single indices yield points as an array
-        self.assertAllEquals(grid[1, 0, 6, 5], (1.0, 0.0, 4.0, 4.25))
+        indices = [1, 0, 1, 1]
+        values = [vec[i] for i, vec in zip(indices, grid.coord_vectors)]
+        self.assertAllEquals(grid[1, 0, 1, 1], values)
+
+        indices = [0, 0, 4, 3]
+        values = [vec[i] for i, vec in zip(indices, grid.coord_vectors)]
+        self.assertAllEquals(grid[0, 0, 4, 3], values)
 
         with self.assertRaises(IndexError):
-            grid[1, 0, 6]
+            grid[1, 0, 1]
 
         with self.assertRaises(IndexError):
-            grid[1, 0, 6, 5, 0]
+            grid[1, 0, 1, 2, 0]
 
         with self.assertRaises(IndexError):
-            grid[1, 1, 6, 5]
+            grid[1, 1, 6, 2]
 
         with self.assertRaises(IndexError):
-            grid[1, 0, 6, 6]
+            grid[1, 0, 4, 6]
 
         # Slices return new RegularGrid's
         self.assertEquals(grid, grid[...])
@@ -771,12 +899,12 @@ class RegularGridTestMethods(ODLTestCase):
         self.assertAllEquals(grid[1:2, :, ::2, ..., ::3].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
 
-        test_slice = np.s_[0:2, :, :, 4:6]
+        test_slice = np.s_[0:1, :, :, 2:4]
         self.assertAllEquals(grid[test_slice].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
-        self.assertAllEquals(grid[:2, :, :, 4:].coord_vectors,
+        self.assertAllEquals(grid[:1, :, :, 2:].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
-        self.assertAllEquals(grid[:-1, ..., 4:].coord_vectors,
+        self.assertAllEquals(grid[:-1, ..., 2:].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
 
         test_slice = np.s_[:, 0, :, :]
@@ -784,15 +912,15 @@ class RegularGridTestMethods(ODLTestCase):
                              tensor_grid[test_slice].coord_vectors)
         self.assertAllEquals(grid[:, 0, ...].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
-        self.assertAllEquals(grid[0:3, :, ...].coord_vectors,
+        self.assertAllEquals(grid[0:2, :, ...].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
         self.assertAllEquals(grid[...].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
 
-        test_slice = np.s_[:, :, 2::2, :]
+        test_slice = np.s_[:, :, 0::2, :]
         self.assertAllEquals(grid[test_slice].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
-        self.assertAllEquals(grid[..., 2::2, :].coord_vectors,
+        self.assertAllEquals(grid[..., 0::2, :].coord_vectors,
                              tensor_grid[test_slice].coord_vectors)
 
         test_slice = np.s_[..., 1, :]
@@ -820,20 +948,38 @@ class RegularGridTestMethods(ODLTestCase):
             grid[1, 0, None, 1, 0]
 
         # One-dimensional grid
-        grid = RegularGrid(5, 1, 0.5)
+        grid = RegularGrid(1, 5, 5)
         self.assertEquals(grid, grid[...])
 
-        sub_grid = RegularGrid(3, 1, 1)
+        sub_grid = RegularGrid(1, 5, 3)
         self.assertEquals(grid[::2], sub_grid)
 
     def test_repr(self):
-        center = (1, -2)
-        shape = (2, 3)
-        stride = (0.5, 3)
+        minpt = (0.75, 0)
+        maxpt = (1.25, 0)
+        shape = (2, 1)
 
-        grid = RegularGrid(shape, center, stride)
-        repr_string = 'RegularGrid([2, 3], [1.0, -2.0], [0.5, 3.0])'
+        grid = RegularGrid(minpt, maxpt, shape)
+        repr_string = 'RegularGrid([0.75, 0.0], [1.25, 0.0], [2, 1])'
         self.assertEquals(repr(grid), repr_string)
+
+        grid = RegularGrid(minpt, maxpt, shape, as_midp=True)
+        repr_string = ('RegularGrid([0.75, 0.0], [1.25, 0.0], [2, 1], '
+                       'as_midp=True)')
+        self.assertEquals(repr(grid), repr_string)
+
+    def test_str(self):
+        minpt = (0, 0)
+        maxpt = (1, 0)
+        shape = (5, 1)
+
+        grid = RegularGrid(minpt, maxpt, shape)
+        str_string = 'regular grid [0.0, 0.25, ..., 1.0] x [0.0]'
+        self.assertEquals(str(grid), str_string)
+
+        grid = RegularGrid(minpt, maxpt, shape, as_midp=True)
+        str_string = 'midp regular grid [0.0, 0.25, ..., 1.0] x [0.0]'
+        self.assertEquals(str(grid), str_string)
 
 
 if __name__ == '__main__':

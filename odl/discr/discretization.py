@@ -459,3 +459,7 @@ def dspace_type(space, impl):
                                   'space {!r} and implementation {!r}.'
                                   ''.format(space, impl))
     return stype
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

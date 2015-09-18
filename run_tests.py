@@ -25,6 +25,7 @@ standard_library.install_aliases()
 import nose
 import sys
 
+
 def run_tests():
     arg = sys.argv[:1]
     arg.append('--verbosity=2')

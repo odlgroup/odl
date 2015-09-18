@@ -62,6 +62,16 @@ Sampling grids (Module `grid`)
 |``RegularGrid``      |Tensor grid with regularly spaced coordinates   |
 +---------------------+------------------------------------------------+
 
+Factory functions
+-----------------
+
++--------------------+-------------------------------------------------+
+|Name                |Description                                      |
++====================+=================================================+
+|`uniform_sampling()`|Create a regular grid from an interval product   |
+|                    |by uniform sampling                              |
++--------------------+-------------------------------------------------+
+
 Restriction and Extension operators (Module `discr_mappings`)
 =============================================================
 
