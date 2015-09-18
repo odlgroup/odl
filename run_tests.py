@@ -32,13 +32,14 @@ def run_tests():
     arg.append('--with-coverage')
     arg.append('--cover-package=odl')
     arg.append('--with-doctest')
-    arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS')
+    arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS'
+               ',+IGNORE_EXCEPTION_DETAIL')
     try:
         # pylint: disable=unused-import
         import odl.space.cuda
     except ImportError:
-        arg.append('--ignore-files=cuda.py')    
-    
+        arg.append('--ignore-files=cuda.py')
+
     nose.run(defaultTest=['./odl/','./test/.'], argv=arg)
 
 if __name__ == '__main__':
