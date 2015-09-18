@@ -206,11 +206,11 @@ class ProgressBar(object):
         if progress < 1.0:
             # Only update on 0.1% intervals
             if progress > self.current_progress+0.001:
-                sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}% '.format(
+                sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}%   '.format(
                     self.text, '#'*int(30*progress), 100*progress))
                 self.current_progress = progress
         else:  # Special message when done
-            sys.stdout.write('\r{0}: [{1:30s}] Done   \n'.format(
+            sys.stdout.write('\r{0}: [{1:30s}] Done    \n'.format(
                 self.text, '#'*30))
 
         sys.stdout.flush()
