@@ -133,7 +133,7 @@ class TestDiscreteL2(odl.util.testutils.ODLTestCase):
         discr = odl.l2_uniform_discretization(unit_square, (5, 5))
 
         # 3d
-        unit_cube = odl.L2(odl.Cube([0, 0, 0],[1, 1, 1]))
+        unit_cube = odl.L2(odl.Cuboid([0, 0, 0],[1, 1, 1]))
         discr = odl.l2_uniform_discretization(unit_cube, (5, 5, 5))
 
         # nd
