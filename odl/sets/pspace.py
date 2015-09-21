@@ -324,6 +324,10 @@ class ProductSpace(LinearSpace):
             dtype=np.float64, count=self.size)
         return self._prod_norm(inners)
 
+    def _multiply(self, z, x, y):
+        for spc, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
+            spc._multiply(zp, xp, yp)
+
     def equals(self, other):
         """Check if the `other` is the same product space.
 
