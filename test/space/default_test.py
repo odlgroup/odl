@@ -32,33 +32,34 @@ from odl.space.default import L2
 from odl.sets.domain import Interval, Rectangle
 from odl.util.testutils import ODLTestCase
 
+class L2Test(ODLTestCase):
+    def test_interval(self):
+        self.skipTest("needs to be updated to new discr")
+        """I = Interval(0, pi)
+        l2 = L2(I)
+        l2sin = l2.element(np.sin)
 
-#class L2Test(ODLTestCase):
-#    def test_interval(self):
-#        I = Interval(0, pi)
-#        l2 = L2(I)
-#        l2sin = l2.element(np.sin)
-#
-#        rn = En(10)
-#        d = uniform_discretization(l2, rn)
-#
-#        sind = d.element(l2sin)
-#
-#        self.assertAlmostEqual(sind.norm(), sqrt(pi/2))
-#
-#    def test_rectangle(self):
-#        R = Rectangle((0, 0), (pi, 2*pi))
-#        l2 = L2(R)
-#        l2sin = l2.element(lambda p: np.sin(p[0]) * np.sin(p[1]))
-#
-#        n = 10
-#        m = 10
-#        rn = En(n*m)
-#        d = uniform_discretization(l2, rn, (n, m))
-#
-#        sind = d.element(l2sin)
-#
-#        self.assertAlmostEqual(sind.norm(), sqrt(pi**2 / 2))
+        rn = En(10)
+        d = uniform_discretization(l2, rn)
+
+        sind = d.element(l2sin)
+
+        self.assertAlmostEqual(sind.norm(), sqrt(pi/2))"""
+        
+    def test_rectangle(self):
+        self.skipTest("needs to be updated to new discr")
+        """R = Rectangle((0, 0), (pi, 2*pi))
+        l2 = L2(R)
+        l2sin = l2.element(lambda p: np.sin(p[0]) * np.sin(p[1]))
+
+        n = 10
+        m = 10
+        #rn = En(n*m)
+        d = uniform_discretization(l2, rn, (n, m))
+
+        sind = d.element(l2sin)
+
+        self.assertAlmostEqual(sind.norm(), sqrt(pi**2 / 2))"""
 
 if __name__ == '__main__':
     unittest.main(exit=False)

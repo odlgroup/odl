@@ -106,7 +106,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     """
     d = op(x)
     d.lincomb(1, rhs, -1, d)       # d = rhs - A x
-    p = op.T(d)
+    p = op.adjoint(d)
     s = p.copy()
     q = op.range.element()
     sqnorm_s_old = op.domain.norm(s)**2  # Only recalculate norm after update

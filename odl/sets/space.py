@@ -349,7 +349,7 @@ class LinearSpace(Set):
         resort to `inner` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError('inner product not implemented')
+        raise NotImplementedError('inner product not implemented in space {!r}'.format(self))
 
     def _multiply(self, z, x, y):
         """Calculate the pointwise multiplication z = x * y.
@@ -358,7 +358,7 @@ class LinearSpace(Set):
         resort to `multiply` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError('multiplication not implemented')
+        raise NotImplementedError('multiplication not implemented in space {!r}'.format(self))
 
     @abstractproperty
     def field(self):
@@ -624,14 +624,25 @@ class LinearSpace(Set):
                 self.space.lincomb(tmp, other, self)
             return tmp
 
+        def __ipow__(self, n):
+            """Take the n:th power of self, only defined for integer n"""
+            if n == 1:
+                return self
+            elif n%2 == 0:
+                self.space.multiply(self, self, self)
+                return self.__ipow__(n//2)
+            else:
+                tmp = self.copy()
+                for i in range(n):
+                    self.space.multiply(tmp, tmp, self)
+                return tmp
+
         def __pow__(self, n):
             """Take the n:th power of self, only defined for integer n"""
             tmp = self.copy()
             for i in range(n):
                 self.space.multiply(tmp, tmp, self)
             return tmp
-
-        #No efficient default __ipow__, use pythons
 
         def __rmul__(self, other):
             """Implementation of 'other * self'."""

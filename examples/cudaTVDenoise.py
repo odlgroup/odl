@@ -25,26 +25,18 @@ standard_library.install_aliases()
 from numpy import float64
 
 import numpy as np
-from odl.operator.operator import *
-from odl.sets.space import *
-from odl.sets.set import *
-from odl.sets.domain import Interval
-from odl.space.default import L2
-from odl.space.cartesian import *
-from odl.space.fspace import *
-from odl.discr.l2_discr import l2_uniform_discretization
-import odl.space.cuda as CS
+import odl
 import odlpp.odlpp_cuda as cuda
 
 import matplotlib.pyplot as plt
 
 
-class ForwardDiff(LinearOperator):
-    """ Calculates the circular convolution of two CUDA vectors
+class ForwardDiff(odl.LinearOperator):
+    """ Calculates the forward difference of a vector
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space.dspace, CS.CudaRn):
+        if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
@@ -59,12 +51,12 @@ class ForwardDiff(LinearOperator):
         return ForwardDiffAdj(self.domain, self.scale)
 
 
-class ForwardDiffAdj(LinearOperator):
-    """ Calculates the circular convolution of two CUDA vectors
+class ForwardDiffAdj(odl.LinearOperator):
+    """ Calculates the adjoint of the sforward difference of a vector
     """
 
     def __init__(self, space, scale=1.0):
-        if not isinstance(space.dspace, CS.CudaRn):
+        if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
@@ -80,8 +72,8 @@ class ForwardDiffAdj(LinearOperator):
 
 
 def denoise(x0, la, mu, iterations=1):
-    scale = (x0.space.dim - 1.0)/(x0.space.uspace.domain.end[0] -
-                                   x0.space.uspace.domain.begin[0])
+    scale = (x0.space.size - 1.0)/(x0.space.domain.end[0] -
+                                   x0.space.domain.begin[0])
 
     diff = ForwardDiff(x0.space, scale)
 
@@ -99,6 +91,7 @@ def denoise(x0, la, mu, iterations=1):
     C1 = mu/(mu+2*la)
     C2 = la/(mu+2*la)
 
+    progress = odl.util.testutils.ProgressBar("denoising", iterations)
     for i in range(iterations):
         # x = ((f * mu + (diff.T(diff(x)) + 2*x - diff.T(d-b)) * la)/(mu+2*la))
         diff.apply(x, xdiff)
@@ -126,23 +119,24 @@ def denoise(x0, la, mu, iterations=1):
         b -= xdiff
         b += d
 
+        progress.update()
+
     plt.plot(x)
 
 # Continuous definition of problem
-I = Interval(0, 1)
-cont_space = L2(I)
+cont_space = odl.L2(odl.Interval(0, 1))
 
 # Complicated functions to check performance
 n = 1000
 
 # Discretization
-d = l2_uniform_discretization(cont_space, n, impl='cuda')
+d = odl.l2_uniform_discretization(cont_space, n, impl='cuda')
 x = d.grid.meshgrid()[0]
-fun = d.element(2*((x>0.3).astype(float64) - (x>0.6).astype(float64)) + np.random.rand(n))
+fun = d.element(5*np.logical_and(x>0.3, x<0.6).astype(float64) + np.random.rand(n))
 plt.plot(fun)
 
 la = 0.00001
-mu = 200.0
-denoise(fun, la, mu, 500)
+mu = 100.0
+denoise(fun, la, mu, 200)
 
 plt.show()

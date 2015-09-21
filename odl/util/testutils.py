@@ -33,7 +33,7 @@ import sys
 from time import time
 from future.utils import with_metaclass
 
-__all__ = ('ODLTestCase', 'skip_all', 'Timer', 'timeit', 'ProgressBar')
+__all__ = ('ODLTestCase', 'skip_all', 'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
 
 class ODLTestCase(unittest.TestCase):
@@ -214,3 +214,21 @@ class ProgressBar(object):
                 self.text, '#'*30))
 
         sys.stdout.flush()
+
+class ProgressRange(object):
+    def __init__(self, text, n):
+        self.current = 0
+        self.n = n
+        self.bar = ProgressBar(text, n)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.current < self.n:
+            val = self.current
+            self.current += 1
+            self.bar.update()
+            return val
+        else:
+            raise StopIteration()

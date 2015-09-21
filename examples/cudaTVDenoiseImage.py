@@ -23,13 +23,7 @@ standard_library.install_aliases()
 import numpy as np
 import matplotlib.pyplot as plt
 
-from odl.operator.operator import *
-from odl.sets.space import *
-from odl.sets.domain import Rectangle
-from odl.sets.pspace import ProductSpace
-from odl.space.cartesian import *
-from odl.space.default import L2
-from odl.discr.l2_discr import l2_uniform_discretization
+import odl
 import odl.space.cuda as CS
 import odlpp.odlpp_cuda as cuda
 import odlpp.odlpp_utils as utils
@@ -42,7 +36,7 @@ class RegularizationType(object):
     Anisotropic, Isotropic = range(2)
 
 
-class ForwardDiff2D(LinearOperator):
+class ForwardDiff2D(odl.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
@@ -51,7 +45,7 @@ class ForwardDiff2D(LinearOperator):
             raise TypeError("space must be CudaRn")
 
         self.domain = space
-        self.range = ProductSpace(space, 2)
+        self.range = odl.ProductSpace(space, 2)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(
@@ -63,7 +57,7 @@ class ForwardDiff2D(LinearOperator):
         return ForwardDiff2DAdjoint(self.domain)
 
 
-class ForwardDiff2DAdjoint(LinearOperator):
+class ForwardDiff2DAdjoint(odl.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
@@ -71,7 +65,7 @@ class ForwardDiff2DAdjoint(LinearOperator):
         if not isinstance(space.dspace, CS.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        self.domain = ProductSpace(space, 2)
+        self.domain = odl.ProductSpace(space, 2)
         self.range = space
 
     def _apply(self, rhs, out):
@@ -101,16 +95,16 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
 
     C1 = mu/(mu+2*la)
     C2 = la/(mu+2*la)
-
-    for i in range(iterations):
+    
+    for i in odl.util.ProgressRange("denoising", iterations):
         # x = ((f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la))
         diff.apply(x, xdiff)
         xdiff += d
         xdiff -= b
         diff.adjoint.apply(xdiff, tmp)
 
-        L2.lincomb(C1, f, 2*C2, x)
-        x.lincomb(C2, tmp)
+        x.lincomb(C1, f, 2*C2, x)
+        x.lincomb(1, x, C2, tmp)
 
         # d = diff(x)+b
         diff.apply(x, xdiff)
@@ -118,22 +112,21 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
         d.assign(xdiff)
 
         # s = xdiff[0] = sqrt(dx^2+dy^2)
-        for i in range(dimension):
-            xdiff[i].multiply(xdiff[i], xdiff[i])
+        xdiff **= 2
 
         for i in range(1, dimension):
-            xdiff[0].lincomb(1, xdiff[i])
+            xdiff[0] += xdiff[i]
 
-        CS.sqrt(xdiff[0], xdiff[0])
+        CS.sqrt(xdiff[0].ntuple, xdiff[0].ntuple)
 
         # c = tmp = max(s - la^-1, 0) / s
-        CS.add_scalar(xdiff[0], -1.0/la, tmp)
-        CS.max_vector_scalar(tmp, 0.0, tmp)
-        CS.divide_vector_vector(tmp, xdiff[0], tmp)
+        CS.add_scalar(xdiff[0].ntuple, -1.0/la, tmp.ntuple)
+        CS.max_vector_scalar(tmp.ntuple, 0.0, tmp.ntuple)
+        CS.divide_vector_vector(tmp.ntuple, xdiff[0].ntuple, tmp.ntuple)
 
         # d = d * c = d * max(s - la^-1, 0) / s
         for i in range(dimension):
-            d[i].multiply(d[i], tmp)
+            d[i] *= tmp
 
         # b = b + diff(x) - d
         diff.apply(x, xdiff)
@@ -159,7 +152,8 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
     C1 = mu/(mu+2*la)
     C2 = la/(mu+2*la)
-    for i in range(iterations):
+
+    for i in odl.util.ProgressRange("denoising", iterations):
         # x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
         diff.apply(x, xdiff)
         xdiff += d
@@ -172,15 +166,15 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
         diff.apply(x, d)
         d += b
 
-        for i in range(dimension):
+        for j in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[i].ntuple, tmp.ntuple)
+            CS.sign(d[j].ntuple, tmp.ntuple)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[i].ntuple, d[i].ntuple)
-            CS.add_scalar(d[i].ntuple, -1.0/la, d[i].ntuple)
-            CS.max_vector_scalar(d[i].ntuple, 0.0, d[i].ntuple)
-            d[i].multiply(d[i], tmp)
+            CS.abs(d[j].ntuple, d[j].ntuple)
+            CS.add_scalar(d[j].ntuple, -1.0/la, d[j].ntuple)
+            CS.max_vector_scalar(d[j].ntuple, 0.0, d[j].ntuple)
+            d[j].multiply(d[j], tmp)
 
         # b = b + diff(x) - d
         diff.apply(x, xdiff)
@@ -203,29 +197,28 @@ def TVdenoise2D(x0, la, mu, iterations=1):
     b = L2xL2.zero()
     d = L2xL2.zero()
     tmp = L2.zero()
-
-    for i in range(iterations):
+    
+    for i in odl.util.ProgressRange("denoising", iterations):
         x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
 
         d = diff(x)+b
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[i], tmp)
+            CS.sign(d[i].ntuple, tmp)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[i], d[i])
-            CS.add_scalar(d[i], -1.0/la, d[i])
-            CS.max_vector_scalar(d[i], 0.0, d[i])
-            d[i].multiply(d[i], tmp)
+            CS.abs(d[i].ntuple, d[i].ntuple)
+            CS.add_scalar(d[i].ntuple, -1.0/la, d[i].ntuple)
+            CS.max_vector_scalar(d[i].ntuple, 0.0, d[i].ntuple)
+            d[i] *= tmp
 
         b = b + diff(x) - d
 
     return x
 
 # Continuous definition of problem
-I = Rectangle([0, 0], [1, 1])
-space = L2(I)
+space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
 
 # Complicated functions to check performance
 n = 2000
@@ -238,8 +231,7 @@ m = 2000
 # rnpooled = makePooledSpace(rn, maxPoolSize=5)
 
 # Discretize
-d = l2_uniform_discretization(space, (n, m), impl='cuda')
-x, y = d.grid.meshgrid()
+d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
 
 data = utils.phantom([n, m])
 data[1:-1, 1:-1] += np.random.rand(n-2, m-2) - 0.5
@@ -255,7 +247,7 @@ plt.axis('off')
 la = 0.3
 mu = 5.0
 with Timer("denoising time"):
-    result = TVdenoise2DOpt(fun, la, mu, 100)
+    result = TVdenoise2DIsotropic(fun, la, mu, 100)
 
 # Show result
 plt.figure()
