@@ -39,7 +39,7 @@ from odl.sets.domain import IntervalProd
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')
 
-_supported_interp = ('nearest',)
+_SUPPORTED_INTERP = ('nearest',)
 
 
 class DiscreteL2(Discretization):
@@ -78,9 +78,9 @@ class DiscreteL2(Discretization):
                             'instance.'.format(l2space.domain))
 
         interp = str(interp)
-        if interp not in _supported_interp:
+        if interp not in _SUPPORTED_INTERP:
             raise TypeError('{} is not among the supported interpolation'
-                            'types {}.'.format(interp, _supported_interp))
+                            'types {}.'.format(interp, _SUPPORTED_INTERP))
 
         self._order = kwargs.pop('order', 'C')
         restriction = GridCollocation(l2space, grid, dspace, order=self.order)
@@ -119,7 +119,7 @@ class DiscreteL2(Discretization):
                 self, self.restriction(self.uspace.element(inp)))
         else:  # Sequence-type input
             arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-            if arr.ndim>1 and arr.shape != self.grid.shape:
+            if arr.ndim > 1 and arr.shape != self.grid.shape:
                 raise ValueError('input shape {} does not match grid shape {}'
                                  ''.format(arr.shape, self.grid.shape))
             arr = arr.flatten(order=self.order)
