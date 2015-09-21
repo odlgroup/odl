@@ -117,8 +117,9 @@ class Timer(object):
 
     def __exit__(self, type, value, traceback):
         if self.name is not None:
-            print('[{}] '.format(self.name))
-        print('Elapsed: {:.3f}'.format(time() - self.tstart))
+            print('[{}] : {:.3f} '.format(self.name, time() - self.tstart))
+        else:
+            print('Elapsed: {:.3f}'.format(time() - self.tstart))
 
 
 def timeit(arg):

@@ -15,17 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=abstract-method
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
 from math import sin, cos, pi
+from time import time
 import matplotlib.pyplot as plt
-import numpy as np
 
+import numpy as np
 import odl
 import SimRec2DPy as SR
 
@@ -94,7 +93,6 @@ class CudaBackProjector3D(odl.LinearOperator):
             self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
                                   geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
 
-
 # Set geometry parameters
 volumeSize = np.array([224.0, 224.0, 135.0])
 volumeOrigin = np.array([-112.0, -112.0, 10.0])  # -volumeSize/2.0
@@ -106,7 +104,7 @@ sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
 # Discretization parameters
-#nVoxels, nPixels = np.array([44, 44, 44]), np.array([78, 72])
+#nVoxels, nPixels = np.array([44, 44, 27]), np.array([78, 72])
 nVoxels, nPixels = np.array([448, 448, 270]), np.array([780, 720])
 nProjection = 332
 
@@ -136,7 +134,7 @@ projectionSpace = odl.L2(odl.Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
 projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels, 
-                                           impl='cuda', order='F')
+                                               impl='cuda', order='F')
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
@@ -147,7 +145,7 @@ reconSpace = odl.L2(odl.Cuboid([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
 reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels, 
-                                      impl='cuda', order='F')
+                                          impl='cuda', order='F')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])
@@ -158,25 +156,38 @@ phantomVec = reconDisc.element(phantom)
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
                             stepSize, geometries, reconDisc, dataDisc)
 
-result = projector(phantomVec)
+# Apply once to find norm estimate
+projections = projector(phantomVec)
+recon = projector.T(projections)
+normEst = recon.norm() / phantomVec.norm()
+print('normEst',normEst)
 
-plt.figure()
-for i in range(15):
-    plt.subplot(3, 5, i+1)
-    plt.imshow(result[i].asarray().T, cmap='bone', origin='lower')
-    plt.axis('off')
-                       
-vol = projector.adjoint(result)
-                         
-#del projector
+del recon
 
-plt.figure()
-plt.imshow(vol.asarray()[:, :, nVoxels[2]/2], cmap='bone')
+# Define function to plot each result
+tstart = time()
 
-plt.figure()
-plt.imshow(phantom[:, :, nVoxels[2]/2], cmap='bone')
+# plt.figure()
+# plt.ion()
+# plt.set_cmap('bone')
 
-plt.figure()
-plt.imshow((projector(vol)-result)[0].asarray())
 
+def plotResult(x):
+    #print('Elapsed: {}'.format(time() - tstart))
+    print('Error: ',(x-phantomVec).norm())
+    plt.figure()
+    plt.imshow(x.asarray()[:,:,nVoxels[2]/2])
+    plt.colorbar()
+    plt.show()
+
+# Solve using landweber
+x = reconDisc.zero()
+odl.operator.solvers.landweber(projector, x, projections, 100, omega=0.5/normEst,
+                               partial=odl.operator.solvers.ForEachPartial(plotResult))
+# solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
+#                   partial=solvers.PrintIterationPartial())
+# solvers.conjugate_gradient(projector, x, projections, 20,
+#                            partial=solvers.ForEachPartial(plotResult))
+
+plt.imshow((x-phantomVec).asarray()[:,:,nVoxels[2]/2])
 plt.show()
