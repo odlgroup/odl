@@ -185,10 +185,15 @@ class ProductSpace(LinearSpace):
                 else:
                     self._prod_inner_sum = _prod_inner_sum_not_defined
 
-        self._spaces = spaces
-        self._nfactors = len(spaces)
+        self._spaces = tuple(spaces)
+        self._size = len(spaces)
         self._field = spaces[0].field
         super().__init__()
+
+    @property
+    def size(self):
+        """The number of factors."""
+        return self._size
 
     @property
     def field(self):
@@ -256,14 +261,13 @@ class ProductSpace(LinearSpace):
         if (all(isinstance(v, LinearSpace.Vector) for v in inp) and
                 all(part.space == space
                     for part, space in zip(inp, self.spaces))):
-            elements = list(inp)
+            parts = list(inp)
         else:
             # Delegate constructors
-            elements = [space.element(arg)
+            parts = [space.element(arg)
                         for arg, space in zip(inp, self.spaces)]
 
-        # Use __class__ to allow subclassing
-        return self.__class__.Vector(self, *elements)
+        return self.Vector(self, parts)
 
     def zero(self):
         """Create the zero vector of the product space.
@@ -303,21 +307,21 @@ class ProductSpace(LinearSpace):
         dists = np.fromiter(
             (spc._dist(xp, yp)
              for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
-            dtype=np.float64, count=self._nfactors)
+            dtype=np.float64, count=self.size)
         return self._prod_norm(dists)
 
     def _norm(self, x):
         norms = np.fromiter(
             (spc._norm(xp)
              for spc, xp in zip(self.spaces, x.parts)),
-            dtype=np.float64, count=self._nfactors)
+            dtype=np.float64, count=self.size)
         return self._prod_norm(norms)
 
     def _inner(self, x, y):
         inners = np.fromiter(
             (spc._inner(xp, yp)
              for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
-            dtype=np.float64, count=self._nfactors)
+            dtype=np.float64, count=self.size)
         return self._prod_norm(inners)
 
     def equals(self, other):
@@ -358,7 +362,7 @@ class ProductSpace(LinearSpace):
 
     def __len__(self):
         """The number of factors."""
-        return self._nfactors
+        return self._size
 
     def __getitem__(self, index_or_slice):
         """Implementation of spc[index] and spc[slice]."""
@@ -366,22 +370,26 @@ class ProductSpace(LinearSpace):
 
     def __str__(self):
         if all(self.spaces[0] == space for space in self.spaces):
-            return '{' + str(self.spaces[0]) + '}^' + str(len(self.spaces))
+            return '{' + str(self.spaces[0]) + '}^' + str(self.size)
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
         if all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
-                                                   len(self.spaces))
+                                                   self.size)
         else:
             inner_str = ', '.join(repr(space) for space in self.spaces)
             return 'ProductSpace({})'.format(inner_str)
 
     class Vector(LinearSpace.Vector):
-        def __init__(self, space, *args):
+        def __init__(self, space, parts):
             super().__init__(space)
-            self.parts = args
+            self.parts = parts
+
+        @property
+        def size(self):
+            return self.space.size
 
         def __len__(self):
             return len(self.space)
@@ -440,7 +448,7 @@ class ProductSpace(LinearSpace):
             ])
             """
             inner_str = '[\n'
-            if len(self) < 7:
+            if len(self) < 5:
                 inner_str += ',\n'.join('{}'.format(
                     _indent(_strip_space(part))) for part in self.parts)
             else:
@@ -448,7 +456,7 @@ class ProductSpace(LinearSpace):
                     _indent(_strip_space(part))) for part in self.parts[:3])
                 inner_str += ',\n    ...\n'
                 inner_str += ',\n'.join('{}'.format(
-                    _indent(_strip_space(part))) for part in self.parts[-3:])
+                    _indent(_strip_space(part))) for part in self.parts[-1:])
 
             inner_str += '\n]'
 
