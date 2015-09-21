@@ -205,13 +205,13 @@ def TVdenoise2D(x0, la, mu, iterations=1):
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[i], tmp)
+            CS.sign(d[i].ntuple, tmp)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[i], d[i])
-            CS.add_scalar(d[i], -1.0/la, d[i])
-            CS.max_vector_scalar(d[i], 0.0, d[i])
-            d[i].multiply(d[i], tmp)
+            CS.abs(d[i].ntuple, d[i].ntuple)
+            CS.add_scalar(d[i].ntuple, -1.0/la, d[i].ntuple)
+            CS.max_vector_scalar(d[i].ntuple, 0.0, d[i].ntuple)
+            d[i] *= tmp
 
         b = b + diff(x) - d
 
