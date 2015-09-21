@@ -25,9 +25,12 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str
-import numpy as np
+from future.utils import with_metaclass
 
 # External
+from abc import ABCMeta
+import numpy as np
+import scipy as sp
 
 # ODL
 from odl.discr.discretization import Discretization, dspace_type
@@ -308,6 +311,43 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     return DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
+
+
+class WeightedInnerBase(with_metaclass(ABCMeta, object)):
+
+    """Abstract base class for weighted inner products."""
+
+
+class MatrixWeightedInner(object):
+
+    """Function object for matrix-weighted :math:`L^2` inner products.
+
+    The weighted inner product with matrix :math:`G` is defined as
+
+    :math:`<a, b> := b^H G a`
+
+    with :math:`b^H` standing for transposed complex conjugate.
+    """
+
+    def __init__(self, matrix):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        matrix : array-like or scipy.sparse.spmatrix
+            Weighting matrix of the inner product.
+        """
+        if isinstance(matrix, sp.sparse.spmatrix):
+            self.matrix = matrix
+            self._mat_type = sp.sparse.spmatrix
+        else:
+            self.matrix = np.asmatrix(matrix)
+            self._mat_type = np.matrix
+
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`."""
+        if not isinstance(other, MatrixWeightedInner):
+            return False
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
