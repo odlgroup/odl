@@ -624,6 +624,15 @@ class LinearSpace(Set):
                 self.space.lincomb(tmp, other, self)
             return tmp
 
+        def __pow__(self, n):
+            """Take the n:th power of self, only defined for integer n"""
+            tmp = self.copy()
+            for i in range(n):
+                self.space.multiply(tmp, tmp, self)
+            return tmp
+
+        #No efficient default __ipow__, use pythons
+
         def __rmul__(self, other):
             """Implementation of 'other * self'."""
             return self.__mul__(other)
