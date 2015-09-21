@@ -33,8 +33,8 @@ from odl.sets.domain import Interval, Rectangle
 from odl.util.testutils import ODLTestCase
 
 class L2Test(ODLTestCase):
-    unittest.skip("needs to be updated to new discr")
     def test_interval(self):
+        self.skipTest("needs to be updated to new discr")
         """I = Interval(0, pi)
         l2 = L2(I)
         l2sin = l2.element(np.sin)
@@ -46,8 +46,8 @@ class L2Test(ODLTestCase):
 
         self.assertAlmostEqual(sind.norm(), sqrt(pi/2))"""
         
-    unittest.skip("needs to be updated to new discr")
     def test_rectangle(self):
+        self.skipTest("needs to be updated to new discr")
         """R = Rectangle((0, 0), (pi, 2*pi))
         l2 = L2(R)
         l2sin = l2.element(lambda p: np.sin(p[0]) * np.sin(p[1]))
