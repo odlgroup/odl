@@ -617,6 +617,13 @@ def sign(inp, outp=None):
     return outp
 
 
+def sqrt(inp, outp=None):
+    if outp is None:
+        outp = inp.space.element()
+    cuda.sqrt(inp.data, outp.data)
+    return outp
+
+
 def add_scalar(inp, scal, outp=None):
     if outp is None:
         outp = inp.space.element()
@@ -635,6 +642,13 @@ def max_vector_vector(inp1, inp2, outp=None):
     if outp is None:
         outp = inp1.space.element()
     cuda.max_vector_vector(inp1.data, inp2.data, outp.data)
+    return outp
+
+
+def divide_vector_vector(inp1, inp2, outp=None):
+    if outp is None:
+        outp = inp1.space.element()
+    cuda.divide_vector_vector(inp1.data, inp2.data, outp.data)
     return outp
 
 
