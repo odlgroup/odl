@@ -72,7 +72,7 @@ class CudaProjector3D(OP.LinearOperator):
 
 
 # Set geometry parameters
-volumeSize = np.array([224.0, 224.0, 224.0])
+volumeSize = np.array([224.0, 224.0, 135.0])
 volumeOrigin = np.array([-112.0, -112.0, 10.0])  # -volumeSize/2.0
 
 detectorSize = np.array([287.04, 264.94])
@@ -82,14 +82,14 @@ sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
 # Discretization parameters
-nVoxels = np.array([448, 448, 448])
-nPixels = np.array([780, 720])
-nProjection = 15
+#nVoxels, nPixels = np.array([44, 44, 44]), np.array([78, 72])
+nVoxels, nPixels = np.array([448, 448, 448]), np.array([780, 720])
+nProjection = 332
 
 # Scale factors
-voxelSize = np.array([0.5, 0.5, 0.3])
-pixelSize = np.array([0.368, 0.368])  # detectorSize/nPixels
-stepSize = voxelSize.max()/5.0
+voxelSize = volumeSize/nVoxels
+pixelSize = detectorSize/nPixels
+stepSize = voxelSize.max()/1.0
 
 # Define projection geometries
 geometries = []
@@ -133,11 +133,11 @@ phantomVec = reconDisc.element(phantom)
 # Make the operator
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
                             stepSize, geometries, reconDisc, dataDisc)
-result = projector(phantomVec)
 
-result = dataDisc.element()
 with Timer("project"):
-    projector.apply(phantomVec, result)
+    result = projector(phantomVec)
+    
+del projector
 
 plt.figure()
 for i in range(15):
@@ -147,14 +147,19 @@ for i in range(15):
 
 back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, voxelSize,
                                        nPixels, stepSize)
-geo = geometries[0]
-vol = projector.domain.element()
-
+                                       
+vol = reconDisc.zero()
 with Timer("back_project"):
-    back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
-                     geo.pixelDirectionV, result[0].ntuple.data_ptr, vol.ntuple.data_ptr)
+    for geo, proj in zip(geometries, result):
+        back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
+                         geo.pixelDirectionV, proj.ntuple.data_ptr, vol.ntuple.data_ptr)
+                         
+del back
 
 plt.figure()
-plt.imshow(vol.asarray()[:, :, 200], cmap='bone')
+plt.imshow(vol.asarray()[:, :, nVoxels[2]/2], cmap='bone')
+
+plt.figure()
+plt.imshow(phantom[:, :, nVoxels[2]/2], cmap='bone')
 
 plt.show()
