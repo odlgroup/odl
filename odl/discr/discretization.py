@@ -27,7 +27,6 @@ from future.utils import with_metaclass
 
 # External
 from abc import ABCMeta
-import numpy as np
 
 # ODL
 from odl.util.utility import arraynd_repr, arraynd_str

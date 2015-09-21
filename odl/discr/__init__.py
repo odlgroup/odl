@@ -81,11 +81,15 @@ Restriction and Extension operators (Module `discr_mappings`)
 |`RawGridCollocation`       |Evaluation of functions in a function set |
 |                           |on a sampling grid                        |
 +---------------------------+------------------------------------------+
-|`GridCollocation`          |TODO                                      |
+|`GridCollocation`          |TODO write doc                            |
 +---------------------------+------------------------------------------+
-|`RawNearestInterpolation`  |TODO                                      |
+|`RawNearestInterpolation`  |TODO write doc                            |
 +---------------------------+------------------------------------------+
-|`NearestInterpolation`     |TODO                                      |
+|`NearestInterpolation`     |TODO write doc                            |
++---------------------------+------------------------------------------+
+|`LinearInterpolation`      |TODO write doc                            |
++---------------------------+------------------------------------------+
+|`CubicInterpolation`       |TODO implement                            |
 +---------------------------+------------------------------------------+
 """
 
@@ -108,3 +112,7 @@ __all__ += grid.__all__
 from . import discr_mappings
 from .discr_mappings import *
 __all__ += discr_mappings.__all__
+
+_CONT_TO_DISCR_MAP = {L2: DiscreteL2}
+
+__all__ += ('_CONT_TO_DISCR_MAP',)
