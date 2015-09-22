@@ -140,15 +140,13 @@ def timeit(arg):
     if callable(arg):
         def timed_function(*args, **kwargs):
             with Timer(str(arg)):
-                result = arg(*args, **kwargs)
-            return result
+                return arg(*args, **kwargs)
         return timed_function
     else:
         def _timeit_helper(fn):
             def timed_function(*args, **kwargs):
                 with Timer(arg):
-                    result = fn(*args, **kwargs)
-                return result
+                    return fn(*args, **kwargs)
             return timed_function
         return _timeit_helper
 

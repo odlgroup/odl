@@ -21,7 +21,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 from math import sin, cos, pi
-from time import time
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -58,7 +57,6 @@ class CudaProjector3D(odl.LinearOperator):
     def _apply(self, volume, projection):
         # Create projector
         self.forward.setData(volume.ntuple.data_ptr)
-        projection.set_zero()
         
         # Project all geometries       
         for i in range(len(self.geometries)):
@@ -78,8 +76,7 @@ class CudaBackProjector3D(odl.LinearOperator):
                  geometries, domain, range):
         self.geometries = geometries
         self.domain = domain
-        self.range = range
-                                                  
+        self.range = range                  
         self.back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, 
                                                     voxelSize, nPixels, stepSize)
 
@@ -93,7 +90,8 @@ class CudaBackProjector3D(odl.LinearOperator):
             self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
                                   geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
                                   
-        out /= 75310.129351
+        #correct for unmatched projectors
+        out *= 3.0 #0.165160099353932
 
 # Set geometry parameters
 volumeSize = np.array([224.0, 224.0, 135.0])
@@ -158,35 +156,30 @@ phantomVec = reconDisc.element(phantom)
 projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
                             stepSize, geometries, reconDisc, dataDisc)
 
-# Apply once to find norm estimate
 projections = projector(phantomVec)
+"""
+#Apply once to find norm estimate
 recon = projector.T(projections)
-normEst = recon.norm() / phantomVec.norm()
-print('normEst',normEst)
-
-print(recon.nbytes)
-
-del recon
+#print('normEst', recon.norm() / phantomVec.norm())
+print('const = ', projections.inner(projector(phantomVec))/ phantomVec.inner(projector.adjoint(projections)))
+raise Exception()
+del recon"""
+del phantomVec
 
 # Define function to plot each result
-tstart = time()
-
 def plotResult(x):
-    #print('Elapsed: {}'.format(time() - tstart))
-    print('Error: ',(x-phantomVec).norm())
-    plt.figure()
-    plt.imshow(x.asarray()[:,:,nVoxels[2]//2])
-    plt.colorbar()
-    plt.show()
+    with odl.util.Timer('plotting'):
+        plt.figure()
+        plt.imshow(x.asarray()[:,:,nVoxels[2]//2])
+        plt.clim(0, 1)
+        plt.colorbar()
+        plt.show()
 
 # Solve using landweber
 x = reconDisc.zero()
-odl.operator.solvers.landweber(projector, x, projections, 100, omega=0.5/normEst,
-                               partial=odl.operator.solvers.ForEachPartial(plotResult))
+#odl.operator.solvers.landweber(projector, x, projections, 100, omega=0.5/normEst,
+#                               partial=odl.operator.solvers.ForEachPartial(plotResult))
 # solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
 #                   partial=solvers.PrintIterationPartial())
-# solvers.conjugate_gradient(projector, x, projections, 20,
-#                            partial=solvers.ForEachPartial(plotResult))
-
-plt.imshow((x-phantomVec).asarray()[:,:,nVoxels[2]/2])
-plt.show()
+odl.operator.solvers.conjugate_gradient(projector, x, projections, 200,
+                                        partial=odl.operator.solvers.ForEachPartial(plotResult))
