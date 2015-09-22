@@ -120,7 +120,9 @@ class CudaConstantWeightedInner(CudaWeightedInner):
 
     def __eq__(self, other):
         """`inner.__eq__(other) <==> inner == other`."""
-        if isinstance(other, CudaConstantWeightedInner):
+        if other is self:
+            return True
+        elif isinstance(other, CudaConstantWeightedInner):
             return self.const == other.const
         elif isinstance(other, CudaWeightedInner):
             return other.__eq__(self)
@@ -143,6 +145,14 @@ class CudaConstantWeightedInner(CudaWeightedInner):
         newvec = type(vec)(vec.size)
         newvec.lincomb(self.const, vec, 0, vec)
         return newvec
+
+    def __repr__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return 'CudaConstantWeightedInner({})'.format(self.const)
+
+    def __str__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return '(x, y) --> {:.4} * y^H x'.format(self.const)
 
 
 if __name__ == '__main__':

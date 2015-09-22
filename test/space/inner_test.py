@@ -145,6 +145,24 @@ class MatrixWeightedInnerTest(ODLTestCase):
             self._test_call_real(10)
             self._test_call_complex(10)
 
+    def test_repr(self):
+        n = 10
+        sparse_mat = sp.sparse.dia_matrix((np.arange(n, dtype=float), [0]),
+                                          shape=(n, n))
+        dense_mat = sparse_mat.todense()
+
+        inner_sparse = odl.MatrixWeightedInner(sparse_mat)
+        inner_dense = odl.MatrixWeightedInner(dense_mat)
+
+        repr_str = 'MatrixWeightedInner()'
+        self.assertEquals(repr(inner_const), repr_str)
+
+    def test_str(self):
+        constant = 1.5
+        inner_const = odl.CudaConstantWeightedInner(constant)
+
+        print_str = '(x, y) --> 1.5 * y^H x'
+        self.assertEquals(str(inner_const), print_str)
 
 if __name__ == '__main__':
     unittest.main(exit=False)

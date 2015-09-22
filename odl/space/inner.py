@@ -157,7 +157,7 @@ class MatrixWeightedInner(WeightedInner):
                 if other.matrix_type == np.matrix:
                     return np.array_equal(self.matrix.todense(), other.matrix)
                 else:
-                    return (self.matrix - other.matrix).getnnz() == 0
+                    return (self.matrix - other.matrix).nnz == 0
         elif isinstance(other, ConstantWeightedInner):
             if self.matrix_type == np.matrix:
                 return np.array_equal(
@@ -168,7 +168,7 @@ class MatrixWeightedInner(WeightedInner):
                 const_diag.fill(other.const)
                 const_mat = sp.sparse.dia_matrix((const_diag, [0]),
                                                  self.matrix.shape)
-                return (self.matrix - const_mat).getnnz() == 0
+                return (self.matrix - const_mat).nnz == 0
         else:
             return False
 
@@ -186,6 +186,15 @@ class MatrixWeightedInner(WeightedInner):
             The matrix-vector product as a NumPy array
         """
         return np.asarray(self.matrix.dot(vec)).squeeze()
+
+    def __repr__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return 'MatrixWeightedInner({!r})'.format(self.matrix)
+
+    def __str__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return '''(x, y) --> y^H G x,  G =
+{}'''.format(self.matrix)
 
 
 class ConstantWeightedInner(WeightedInner):
@@ -233,6 +242,13 @@ class ConstantWeightedInner(WeightedInner):
         """
         return np.asarray(self.const * vec).squeeze()
 
+    def __repr__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return 'ConstantWeightedInner({})'.format(self.const)
+
+    def __str__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return '(x, y) --> {:.4} * y^H x'.format(self.const)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
