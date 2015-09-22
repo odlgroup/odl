@@ -543,7 +543,7 @@ class Ntuples(NtuplesBase):
             elif other not in self.space:
                 return False
             else:
-                return np.all(self.data == other.data)
+                return np.array_equal(self.data, other.data)
 
         def copy(self):
             """Create an identical (deep) copy of this vector.
