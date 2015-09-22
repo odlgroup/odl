@@ -148,6 +148,9 @@ class IntervalProd(Set):
         True
         """
         # pylint: disable=arguments-differ
+        if other is self:
+            return True        
+        
         if not isinstance(other, IntervalProd):
             return False
 

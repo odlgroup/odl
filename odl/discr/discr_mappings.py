@@ -28,7 +28,7 @@ from future.utils import with_metaclass
 # External imports
 from abc import ABCMeta
 import numpy as np
-from scipy.interpolate import interpn, RegularGridInterpolator
+from scipy.interpolate import interpnd, RegularGridInterpolator
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 
 # ODL imports
@@ -593,7 +593,7 @@ class LinearInterpolation(LinearOperator):
         """
         def func(*x):
             x = np.atleast_1d(x).squeeze()
-            values = interpn(points=self.grid.coord_vectors,
+            values = interpnd(points=self.grid.coord_vectors,
                              values=inp.data.reshape(self.grid.shape,
                                                      order=self.order),
                              method='nearest',

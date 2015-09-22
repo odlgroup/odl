@@ -360,9 +360,12 @@ class ProductSpace(LinearSpace):
         >>> r2x3.equals(r5)
         False
         """
-        return (type(self) == type(other) and
-                len(self) == len(other) and
-                all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
+        if other is self:
+            return True
+        else:
+            return (type(self) == type(other) and
+                    len(self) == len(other) and
+                    all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
 
     def __len__(self):
         """The number of factors."""

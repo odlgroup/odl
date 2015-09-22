@@ -258,6 +258,9 @@ class TensorGrid(Set):
         >>> g1.equals(g2, tol=0.15)
         True
         """
+        if other is self:
+            return True
+        
         # pylint: disable=arguments-differ
         return (type(self) == type(other) and
                 self.ndim == other.ndim and

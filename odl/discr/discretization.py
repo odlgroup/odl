@@ -204,6 +204,9 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             `extension` of `other` and this discretization are equal,
             `False` otherwise.
         """
+        if other is self:
+            return True        
+        
         return (super().equals(other) and
                 other.uspace == self.uspace and
                 other.dspace == self.dspace and

@@ -119,6 +119,9 @@ class FunctionSet(Set):
             `True` if `other` is a `FunctionSet` with same `domain`
             and `range`, `False` otherwise.
         """
+        if other is self:
+            return True
+        
         return (type(self) == type(other) and
                 self.domain == other.domain and
                 self.range == other.range)
@@ -213,6 +216,9 @@ class FunctionSet(Set):
                 the call and apply implementations of `other` and
                 this vector are equal. `False` otherwise.
             """
+            if other is self:
+                return True
+            
             return (isinstance(other, FunctionSet.Vector) and
                     self.space == other.space and
                     self._call == other._call and
@@ -484,6 +490,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
             `True` if `other` is a `FunctionSpace` with same `domain`
             and `range`, `False` otherwise.
         """
+        if other is self:
+            return True        
+        
         return (isinstance(other, FunctionSpace) and
                 self.domain == other.domain and
                 self.range == other.range)

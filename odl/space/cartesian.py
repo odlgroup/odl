@@ -177,6 +177,9 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         >>> int_3 != int_4
         True
         """
+        if other is self:
+            return True        
+        
         return (isinstance(other, type(self)) and
                 isinstance(self, type(other)) and
                 self.size == other.size and
@@ -1142,6 +1145,9 @@ class Fn(FnBase, Ntuples):
         >>> c3 == f3_cdouble
         True
         """
+        if other is self:
+            return True
+        
         return (isinstance(other, Fn) and
                 self.size == other.size and
                 self.dtype == other.dtype and
