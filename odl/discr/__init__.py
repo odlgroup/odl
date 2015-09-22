@@ -112,7 +112,3 @@ __all__ += grid.__all__
 from . import discr_mappings
 from .discr_mappings import *
 __all__ += discr_mappings.__all__
-
-_CONT_TO_DISCR_MAP = {L2: DiscreteL2}
-
-__all__ += ('_CONT_TO_DISCR_MAP',)
