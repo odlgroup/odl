@@ -92,6 +92,8 @@ class CudaBackProjector3D(odl.LinearOperator):
         for geo, proj in zip(self.geometries, projections):
             self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
                                   geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
+                                  
+        out /= 75310.129351
 
 # Set geometry parameters
 volumeSize = np.array([224.0, 224.0, 135.0])
@@ -162,21 +164,18 @@ recon = projector.T(projections)
 normEst = recon.norm() / phantomVec.norm()
 print('normEst',normEst)
 
+print(recon.nbytes)
+
 del recon
 
 # Define function to plot each result
 tstart = time()
 
-# plt.figure()
-# plt.ion()
-# plt.set_cmap('bone')
-
-
 def plotResult(x):
     #print('Elapsed: {}'.format(time() - tstart))
     print('Error: ',(x-phantomVec).norm())
     plt.figure()
-    plt.imshow(x.asarray()[:,:,nVoxels[2]/2])
+    plt.imshow(x.asarray()[:,:,nVoxels[2]//2])
     plt.colorbar()
     plt.show()
 
