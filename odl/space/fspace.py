@@ -353,10 +353,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if not isinstance(dom, Set):
             raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
 
-        if not (isinstance(field, RealNumbers) or
-                isinstance(field, ComplexNumbers)):
-            raise TypeError('field {!r} not a `RealNumbers` or `ComplexNumbers`'
-                            'instance.'.format(field))
+        if not (isinstance(field, (RealNumbers, ComplexNumbers))):
+            raise TypeError('field {!r} not a `RealNumbers` or '
+                            '`ComplexNumbers` instance.'.format(field))
 
         super().__init__(dom, field)
         self._field = field

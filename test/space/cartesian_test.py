@@ -201,6 +201,7 @@ class MethodTest(ODLTestCase):
         correct_inner = 1*5 + 2*(-3) + 3*9
         self.assertAlmostEquals(r3.inner(xd, yd), correct_inner)
 
+
 class GetSetTest(ODLTestCase):
     def test_setitem(self):
         r3 = Rn(3)

@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""CUDA implementation of n-dimensional Cartesian spaces.
-
-# TODO: document public interface
-"""
+"""CUDA implementation of n-dimensional Cartesian spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -46,7 +43,7 @@ def _get_int_type():
     else:
         raise NotImplementedError("int size not implemented")
 
-_type_map_npy2cuda = {np.dtype(np.float): cuda.CudaVectorFloat64,
+_TYPE_MAP_NPY2CUDA = {np.dtype(np.float): cuda.CudaVectorFloat64,
                       np.dtype(np.float32): cuda.CudaVectorFloat32,
                       np.dtype(np.float64): cuda.CudaVectorFloat64,
                       np.dtype(np.int): _get_int_type(),
@@ -80,10 +77,10 @@ class CudaNtuples(NtuplesBase):
             Currently supported: 'float32', 'uint8'
         """
         super().__init__(size, dtype)
-        if self._dtype not in _type_map_npy2cuda.keys():
+        if self._dtype not in _TYPE_MAP_NPY2CUDA.keys():
             raise TypeError('data type {} not supported in CUDA'.format(dtype))
 
-        self._vector_impl = _type_map_npy2cuda[self._dtype]
+        self._vector_impl = _TYPE_MAP_NPY2CUDA[self._dtype]
 
     def element(self, inp=None, data_ptr=None):
         """Create a new element.
