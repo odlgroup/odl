@@ -50,7 +50,6 @@ class CudaConstantWeightedInnerTest(ODLTestCase):
         return xarr, yarr, x, y
 
     def test_init(self):
-        rn = odl.CudaRn(10)
         constant = 1.5
 
         # Just test if the code runs

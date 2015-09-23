@@ -189,12 +189,17 @@ class MatrixWeightedInner(WeightedInner):
 
     def __repr__(self):
         """`inner.__repr__() <==> repr(inner)`."""
-        return 'MatrixWeightedInner({!r})'.format(self.matrix)
+        if self.matrix_type == sp.sparse.spmatrix:
+            return ('MatrixWeightedInner(<{} sparse matrix, format {!r}, '
+                    '{} stored entries>)'
+                    ''.format(self.matrix.shape, self.matrix.format,
+                              self.matrix.nnz))
+        else:
+            return 'MatrixWeightedInner(\n{!r}\n)'.format(self.matrix)
 
     def __str__(self):
         """`inner.__repr__() <==> repr(inner)`."""
-        return '''(x, y) --> y^H G x,  G =
-{}'''.format(self.matrix)
+        return '(x, y) --> y^H G x,  G =\n{}'.format(self.matrix)
 
 
 class ConstantWeightedInner(WeightedInner):
