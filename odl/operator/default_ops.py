@@ -42,9 +42,9 @@ class ScalingOperator(SelfAdjointOperator):
 
         Parameters
         ----------
-        space : LinearSpace
+        space : `LinearSpace`
             The space of elements which the operator is acting on
-        scalar : space.field element
+        scalar : field element
             An element in the field of the space that the vectors are
             scaled with
         """

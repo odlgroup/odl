@@ -290,6 +290,7 @@ from odl.sets.set import Set
 
 __all__ = ('LinearSpace',)
 
+
 class LinearSpace(Set):
 
     """Abstract linear vector space.
@@ -628,7 +629,7 @@ class LinearSpace(Set):
             """Take the n:th power of self, only defined for integer n"""
             if n == 1:
                 return self
-            elif n%2 == 0:
+            elif n % 2 == 0:
                 self.space.multiply(self, self, self)
                 return self.__ipow__(n//2)
             else:
@@ -690,7 +691,6 @@ class LinearSpace(Set):
 
             Examples
             --------
-
             >>> from odl.space.cartesian import Rn
             >>> import numpy as np
             >>> X = Rn(1, norm=np.linalg.norm)
