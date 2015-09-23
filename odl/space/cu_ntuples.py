@@ -734,7 +734,7 @@ class CudaMatrixWeightedInner(CudaWeightedInner):
         raise NotImplementedError
 
 
-class CudaConstWeightedInner(ConstWeightedInner, CudaWeightedInner):
+class CudaConstWeightedInner(CudaWeightedInner, ConstWeightedInner):
 
     """Constant-weighted :math:`F^n` inner product in CUDA."""
 

@@ -461,17 +461,22 @@ class CudaConstWeightedInnerTest(ODLTestCase):
         return xarr, yarr, x, y
 
     def test_init(self):
+        n = 10
+        rn = odl.CudaRn(n)
         constant = 1.5
 
         # Just test if the code runs
-        inner = odl.CudaConstWeightedInner(constant)
+        inner = odl.CudaConstWeightedInner(rn, constant)
 
     def test_equals(self):
+        n = 10
+        rn = odl.CudaRn(n)
+        rn_npy = odl.Rn(n)
         constant = 1.5
 
-        inner_const = odl.CudaConstWeightedInner(constant)
-        inner_const2 = odl.CudaConstWeightedInner(constant)
-        inner_const_npy = odl.ConstWeightedInner(constant)
+        inner_const = odl.CudaConstWeightedInner(rn, constant)
+        inner_const2 = odl.CudaConstWeightedInner(rn, constant)
+        inner_const_npy = odl.ConstWeightedInner(rn_npy, constant)
 
         self.assertEquals(inner_const, inner_const)
         self.assertEquals(inner_const, inner_const2)
@@ -484,7 +489,7 @@ class CudaConstWeightedInnerTest(ODLTestCase):
         xarr, yarr, x, y = self._vectors(rn)
 
         constant = 1.5
-        inner_const = odl.CudaConstWeightedInner(constant)
+        inner_const = odl.CudaConstWeightedInner(rn, constant)
 
         result_const = inner_const(x, y)
         true_result_const = constant * np.dot(yarr, xarr)
@@ -496,15 +501,19 @@ class CudaConstWeightedInnerTest(ODLTestCase):
             self._test_call_real(10)
 
     def test_repr(self):
+        n = 10
+        rn = odl.CudaRn(n)
         constant = 1.5
-        inner_const = odl.CudaConstWeightedInner(constant)
+        inner_const = odl.CudaConstWeightedInner(rn, constant)
 
-        repr_str = 'CudaConstWeightedInner(1.5)'
+        repr_str = "CudaConstWeightedInner(CudaRn(10, 'float32'), 1.5)"
         self.assertEquals(repr(inner_const), repr_str)
 
     def test_str(self):
+        n = 10
+        rn = odl.CudaRn(n)
         constant = 1.5
-        inner_const = odl.CudaConstWeightedInner(constant)
+        inner_const = odl.CudaConstWeightedInner(rn, constant)
 
         print_str = '(x, y) --> 1.5 * y^H x'
         self.assertEquals(str(inner_const), print_str)
