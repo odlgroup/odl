@@ -23,16 +23,19 @@ from __future__ import print_function, division, absolute_import
 from builtins import int, super
 from future import standard_library
 standard_library.install_aliases()
+from future.utils import with_metaclass
 
 # External module imports
 import numpy as np
+from abc import ABCMeta
 
 # ODL imports
 from odl.space.ntuples import NtuplesBase, FnBase
+from odl.space.ntuples import WeightedInnerBase, ConstWeightedInner
 import odlpp.odlpp_cuda as cuda
 
 
-__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn')
+__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CudaConstWeightedInner')
 
 
 def _get_int_type():
@@ -661,6 +664,84 @@ def divide_vector_vector(inp1, inp2, outp=None):
 
 def sum(inp):
     return cuda.sum(inp.data)
+
+
+class CudaWeightedInner(with_metaclass(ABCMeta, WeightedInnerBase)):
+
+    """Abstract base class for CUDA weighted inner products. """
+
+    def __call__(self, x, y):
+        """`inner.__call__(x, y) <==> inner(x, y).`
+
+        Calculate the inner product of `x` and `y` weighted by the
+        matrix of this instance.
+
+        Parameters
+        ----------
+        x, y : `CudaFn.Vector`
+            Arrays whose inner product is calculated. They must have
+            equal length.
+
+        Returns
+        -------
+        inner : float or complex
+            Weighted inner product. The output type depends on the
+            input array dtype and the weighting.
+        """
+        if not isinstance(x, CudaFn.Vector):
+            raise TypeError('x vector {!r} not a `CudaFn.Vector` instance.'
+                            ''.format(x))
+        if not isinstance(y, CudaFn.Vector):
+            raise TypeError('y vector {!r} not a `CudaFn.Vector` instance.'
+                            ''.format(y))
+
+        if x.size != y.size:
+            raise TypeError('vector sizes {} and {} are different.'
+                            ''.format(x.size, y.size))
+
+        # TODO: possibly adapt syntax once complex vectors are supported
+        return self.matvec(x).inner(y)
+
+
+class CudaMatrixWeightedInner(CudaWeightedInner):
+
+    """Function object for matrix-weighted :math:`F^n` inner products.
+
+    The weighted inner product with matrix :math:`G` is defined as
+
+    :math:`<a, b> := b^H G a`
+
+    with :math:`b^H` standing for transposed complex conjugate.
+    """
+
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`."""
+        raise NotImplementedError
+
+    def matvec(self, vec):
+        """Return product of the weighting matrix with a vector.
+
+        Parameters
+        ----------
+        vec : CudaVector
+            Array with which to multiply the weighting matrix
+
+        Returns
+        -------
+        weighted : CudaVector
+            The matrix-vector product as a CUDA vector
+        """
+        raise NotImplementedError
+
+
+class CudaConstWeightedInner(ConstWeightedInner, CudaWeightedInner):
+
+    """Constant-weighted :math:`F^n` inner product in CUDA."""
+
+    def __repr__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return 'CudaConstWeightedInner({!r}, {})'.format(self.matvec.domain,
+                                                         self.const)
 
 
 try:

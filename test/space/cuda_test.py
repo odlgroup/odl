@@ -443,5 +443,72 @@ class TestPointer(ODLTestCase):
         self.assertAllEquals([1, 2, 3, 7, 8, 9], xd)
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
+class CudaConstWeightedInnerTest(ODLTestCase):
+    @staticmethod
+    def _vectors(fn):
+        # Generate numpy vectors, real or complex
+        if isinstance(fn, odl.CudaRn):
+            xarr = np.random.rand(fn.size)
+            yarr = np.random.rand(fn.size)
+        else:
+            xarr = np.random.rand(fn.size) + 1j * np.random.rand(fn.size)
+            yarr = np.random.rand(fn.size) + 1j * np.random.rand(fn.size)
+
+        # Make CudaFn vectors
+        x = fn.element(xarr)
+        y = fn.element(yarr)
+        return xarr, yarr, x, y
+
+    def test_init(self):
+        constant = 1.5
+
+        # Just test if the code runs
+        inner = odl.CudaConstWeightedInner(constant)
+
+    def test_equals(self):
+        constant = 1.5
+
+        inner_const = odl.CudaConstWeightedInner(constant)
+        inner_const2 = odl.CudaConstWeightedInner(constant)
+        inner_const_npy = odl.ConstWeightedInner(constant)
+
+        self.assertEquals(inner_const, inner_const)
+        self.assertEquals(inner_const, inner_const2)
+        self.assertEquals(inner_const2, inner_const)
+
+        self.assertNotEquals(inner_const, inner_const_npy)
+
+    def _test_call_real(self, n):
+        rn = odl.CudaRn(n)
+        xarr, yarr, x, y = self._vectors(rn)
+
+        constant = 1.5
+        inner_const = odl.CudaConstWeightedInner(constant)
+
+        result_const = inner_const(x, y)
+        true_result_const = constant * np.dot(yarr, xarr)
+
+        self.assertAlmostEquals(result_const, true_result_const, places=5)
+
+    def test_call(self):
+        for _ in range(20):
+            self._test_call_real(10)
+
+    def test_repr(self):
+        constant = 1.5
+        inner_const = odl.CudaConstWeightedInner(constant)
+
+        repr_str = 'CudaConstWeightedInner(1.5)'
+        self.assertEquals(repr(inner_const), repr_str)
+
+    def test_str(self):
+        constant = 1.5
+        inner_const = odl.CudaConstWeightedInner(constant)
+
+        print_str = '(x, y) --> 1.5 * y^H x'
+        self.assertEquals(str(inner_const), print_str)
+
+
 if __name__ == '__main__':
     unittest.main(exit=False)

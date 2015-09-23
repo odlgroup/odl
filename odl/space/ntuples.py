@@ -55,18 +55,22 @@ from future.utils import with_metaclass
 # External module imports
 from abc import ABCMeta, abstractmethod
 import numpy as np
+import scipy as sp
 import ctypes
 from scipy.linalg.blas import get_blas_funcs
 from numbers import Integral
 import platform
 
 # ODL imports
+from odl.operator.default_ops import ScalingOperator
+from odl.operator.operator import LinearOperator
 from odl.sets.set import Set, RealNumbers, ComplexNumbers
 from odl.sets.space import LinearSpace
 from odl.util.utility import array1d_repr, array1d_str, dtype_repr
 
 
-__all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn')
+__all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn',
+           'ConstWeightedInner', 'MatrixWeightedInner', 'WeightedInnerBase')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -1365,6 +1369,308 @@ class Rn(Fn):
             return 'Rn({})'.format(self.size)
         else:
             return 'Rn({}, {})'.format(self.size, self.dtype)
+
+
+class WeightedInnerBase(with_metaclass(ABCMeta, object)):
+
+    """Abstract base class for weighted inner products.
+
+    This class and its subclasses serve as a simple means to evaluate
+    and compare weighted inner products semantically rather than by
+    identity on a pure function level.
+    """
+
+    @abstractmethod
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`.
+
+        Returns
+        -------
+        equal : bool
+            `True` if `other` is a `WeightedInnerBase` instance
+            represented by the same matrix, `False` otherwise.
+        """
+
+    @abstractmethod
+    def matvec(self, vec):
+        """Return product of the weighting matrix with a vector.
+
+        Parameters
+        ----------
+        vec : `FnBase.Vector`
+            Vector with which to multiply the weighting matrix
+
+        Returns
+        -------
+        weighted : `FnBase.Vector`
+            The matrix-vector product
+        """
+
+    @abstractmethod
+    def __call__(self, x, y):
+        """`inner.__call__(x, y) <==> inner(x, y).`"""
+
+
+class WeightedInner(with_metaclass(ABCMeta, WeightedInnerBase)):
+
+    """Abstract base class for NumPy weighted inner products. """
+
+    def __call__(self, x, y):
+        """`inner.__call__(x, y) <==> inner(x, y).`
+
+        Calculate the inner product of `x` and `y` weighted by the
+        matrix of this instance.
+
+        Parameters
+        ----------
+        x, y : `Fn.Vector`
+            Vectors whose inner product is calculated. They must be
+            one-dimensional and have equal length.
+
+        Returns
+        -------
+        inner : scalar NumPy dtype
+            Weighted inner product. The output dtype depends on the
+            input vector dtype and the weighting.
+
+        See also
+        --------
+        numpy.vdot : unweighted inner product
+        """
+        if not isinstance(x, Fn.Vector):
+            raise TypeError('x vector {!r} not an `Fn.Vector` instance.'
+                            ''.format(x))
+        if not isinstance(y, Fn.Vector):
+            raise TypeError('y vector {!r} not an `Fn.Vector` instance.'
+                            ''.format(y))
+
+        if x.size != y.size:
+            raise TypeError('vector sizes {} and {} are different.'
+                            ''.format(x.size, y.size))
+
+        # vdot conjugates the first argument if complex
+        return np.vdot(y.data, self.matvec(x).data)
+
+
+class MatVecOperator(LinearOperator):
+
+    """Operator :math:`F^n -> F^m` represented by a matrix."""
+
+    def __init__(self, dom, ran, matrix):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dom : `Fn`
+            Space on whose elements the matrix acts
+        ran : `Fn`
+            Space to which the matrix maps
+        matrix : array-like or scipy.sparse.spmatrix
+            Matrix representing the linear operator. Its shape must be
+            `(m, n)`, where `n` is the size of `dom` and `m` the size
+            of `ran`.
+        """
+        if not isinstance(dom, Fn):
+            raise TypeError('domain {!r} is not an `Fn` instance.')
+        if not isinstance(ran, Fn):
+            raise TypeError('range {!r} is not an `Fn` instance.')
+
+        self._domain = dom
+        self._range = ran
+
+        if isinstance(matrix, sp.sparse.spmatrix):
+            self._matrix = matrix
+        else:
+            self._matrix = np.asmatrix(matrix)
+
+    @property
+    def domain(self):
+        """The operator domain."""
+        return self._domain
+
+    @property
+    def range(self):
+        """The operator range."""
+        return self._range
+
+    @property
+    def matrix(self):
+        """Matrix representing this operator."""
+        return self._matrix
+
+    @property
+    def matrix_issparse(self):
+        """Whether the representing matrix is sparse or not."""
+        return issubclass(type(self.matrix), sp.sparse.spmatrix)
+
+    @property
+    def adjoint(self):
+        """Adjoint operator represented by the adjoint matrix."""
+        return MatVecOperator(self.range, self.domain, self.matrix.H)
+
+    def _call(self, inp):
+        """Raw call method on input, producing a new output."""
+        return self.range.element(
+            np.asarray(self.matrix.dot(inp.data)).squeeze())
+
+    def _apply(self, inp, outp):
+        """Raw apply method on input, writing to given output."""
+        if self.matrix_type == np.matrix:
+            self.matrix.dot(inp.data, out=outp.data)
+        else:
+            # Unfortunately, there is no native in-place dot product for
+            # sparse matrices
+            outp.data[:] = np.asarray(self.matrix.dot(inp.data)).squeeze()
+
+
+class MatrixWeightedInner(WeightedInner):
+
+    """Function object for matrix-weighted :math:`F^n` inner products.
+
+    The weighted inner product with matrix :math:`G` is defined as
+
+    :math:`<a, b> := b^H G a`
+
+    with :math:`b^H` standing for transposed complex conjugate. The
+    matrix must be real-valued and symmetric posivive definite,
+    otherwise it does not define an inner product. This is not checked
+    during initialization.
+    """
+
+    def __init__(self, space, matrix):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `Fn`
+            Domain and range of the matrix operator
+        matrix : array-like or scipy.sparse.spmatrix
+            Weighting matrix of the inner product. Its shape must be
+            `(n, n)`, where `n` is the size of `space`.
+        """
+        self._matvec = MatVecOperator(space, space, matrix)
+        if self._matvec.matrix.shape[0] != self._matvec.matrix.shape[1]:
+            raise ValueError('matrix with shape {} is not square.'
+                             ''.format(self.matrix.shape))
+
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`."""
+        if other is self:
+            return True
+
+        elif isinstance(other, MatrixWeightedInner):
+            if self.matrix_issparse:
+                if other.matrix_issparse:
+                    return (self.matrix - other.matrix).nnz == 0
+                else:
+                    return np.array_equal(self.matrix.todense(), other.matrix)
+
+            else:  # matrix of `self` is dense
+                if other.matrix_issparse:
+                    return np.array_equal(self.matrix, other.matrix.todense())
+                else:
+                    return np.array_equal(self.matrix, other.matrix)
+
+        elif isinstance(other, ConstWeightedInner):
+            if self.matrix_issparse:
+                # Construct sparse matrix with constant diagonal
+                const_diag = np.empty(self.matrix.shape[0])
+                const_diag.fill(other.const)
+                const_mat = sp.sparse.dia_matrix((const_diag, [0]),
+                                                 self.matrix.shape)
+                return (self.matrix - const_mat).nnz == 0
+            else:
+                return np.array_equal(
+                    self.matrix, np.eye(self.matrix.shape[0]) * other.const)
+
+        else:
+            return False
+
+    @property
+    def matvec(self):
+        """The matvec operator of this inner product."""
+        return self._matvec
+
+    @property
+    def matrix(self):
+        """The matrix of this inner product."""
+        return self.matvec.matrix
+
+    @property
+    def matrix_issparse(self):
+        """Whether the weighting matrix is sparse or not."""
+        return self.matvec.matrix_issparse
+
+    def __repr__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        if self.matrix_issparse:
+            return ('MatrixWeightedInner(<{} sparse matrix, format {!r}, '
+                    '{} stored entries>)'
+                    ''.format(self.matrix.shape, self.matrix.format,
+                              self.matrix.nnz))
+        else:
+            return 'MatrixWeightedInner(\n{!r}\n)'.format(self.matrix)
+
+    def __str__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return '(x, y) --> y^H G x,  G =\n{}'.format(self.matrix)
+
+
+class ConstWeightedInner(WeightedInner):
+
+    """Function object for constant-weighted :math:`F^n` inner products.
+
+    The weighted inner product with constant :math:`c` is defined as
+
+    :math:`<a, b> := b^H c a`
+
+    with :math:`b^H` standing for transposed complex conjugate.
+    """
+
+    def __init__(self, space, constant):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            Space in which the inner product is defined
+        constant : float
+            Weighting constant of the inner product.
+        """
+        if not isinstance(space, LinearSpace):
+            raise ValueError('space {!} is not a `LinearSpace` instance.'
+                             ''.format(space))
+        self._const = float(constant)
+        self._matvec = ScalingOperator(space, self.const)
+
+    @property
+    def const(self):
+        """This instance's constant."""
+        return self._const
+
+    @property
+    def matvec(self):
+        """This instance's matvec operator."""
+        return self._matvec
+
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`."""
+        if isinstance(other, ConstWeightedInner):
+            return (self.matvec.domain == other.matvec.domain and
+                    self.const == other.const)
+        elif isinstance(other, WeightedInner):
+            return other.__eq__(self)
+        else:
+            return False
+
+    def __repr__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return 'ConstWeightedInner({!r}, {})'.format(self.matvec.domain,
+                                                     self.const)
+
+    def __str__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return '(x, y) --> {:.4} * y^H x'.format(self.const)
 
 
 if __name__ == '__main__':
