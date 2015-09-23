@@ -88,10 +88,6 @@ from . import fspace
 from .fspace import *
 __all__ += fspace.__all__
 
-from . import inner
-from .inner import *
-__all__ += inner.__all__
-
 try:
     from . import cu_ntuples
     from .cu_ntuples import *
