@@ -27,7 +27,7 @@ from builtins import range
 import unittest
 import numpy as np
 import scipy as sp
-from textwrap import dedent, TextWrapper
+from textwrap import dedent
 
 # ODL
 import odl
