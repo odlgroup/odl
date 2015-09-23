@@ -1501,7 +1501,7 @@ class MatVecOperator(LinearOperator):
     @property
     def matrix_issparse(self):
         """Whether the representing matrix is sparse or not."""
-        return issubclass(type(self.matrix), sp.sparse.spmatrix)
+        return isinstance(self.matrix, sp.sparse.spmatrix)
 
     @property
     def adjoint(self):
