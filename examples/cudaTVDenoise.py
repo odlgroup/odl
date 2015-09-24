@@ -94,15 +94,15 @@ def denoise(x0, la, mu, iterations=1):
     progress = odl.util.testutils.ProgressBar("denoising", iterations)
     for i in range(iterations):
         # x = ((f * mu + (diff.T(diff(x)) + 2*x - diff.T(d-b)) * la)/(mu+2*la))
-        diff.apply(x, xdiff)
+        diff(x, outp=xdiff)
         x.lincomb(C1, f, 2*C2, x)
         xdiff -= d
         xdiff += b
-        diff.adjoint.apply(xdiff, tmp)
+        diff.adjoint(xdiff, outp=tmp)
         x.lincomb(1, x, C2, tmp)
 
         # d = diff(x)-b
-        diff.apply(x, d)
+        diff(x, outp=d)
         d -= b
 
         # sign = d/abs(d)
@@ -115,7 +115,7 @@ def denoise(x0, la, mu, iterations=1):
         d *= sign
 
         # b = b - diff(x) + d
-        diff.apply(x, xdiff)
+        diff(x, outp=xdiff)
         b -= xdiff
         b += d
 

@@ -92,9 +92,9 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     tmp_dom = op.domain.element()
 
     for _ in range(niter):
-        op.apply(x, tmp_ran)
+        op(x, outp=tmp_ran)
         tmp_ran -= rhs
-        op.derivative(x).adjoint.apply(tmp_ran, tmp_dom)
+        op.derivative(x).adjoint(tmp_ran, outp=tmp_dom)
         x.lincomb(1, x, -omega, tmp_dom)
 
         if partial is not None:
@@ -112,7 +112,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     sqnorm_s_old = s.norm()**2  # Only recalculate norm after update
 
     for _ in range(niter):
-        op.apply(p, q)                        # q = A p
+        op(p, outp=q)  # q = A p
         sqnorm_q = q.norm()**2
         if sqnorm_q == 0.0:  # Return if residual is 0
             return
@@ -120,7 +120,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         a = sqnorm_s_old / sqnorm_q
         x.lincomb(1, x, a, p)                       # x = x + a*p
         d.lincomb(1, d, -a, q)                      # d = d - a*Ap
-        op.derivative(p).adjoint.apply(d, s)  # s = A^T d
+        op.derivative(p).adjoint(d, outp=s)  # s = A^T d
 
         sqnorm_s_new = s.norm()**2
         b = sqnorm_s_new / sqnorm_s_old
@@ -163,12 +163,12 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
         # v = rhs - op(x) - deriv(x0-x)
         # u = deriv.T(v)
-        op.apply(x, tmp_ran)      # eval        op(x)
+        op(x, outp=tmp_ran)      # eval        op(x)
         v.lincomb(1, rhs, -1, tmp_ran)  # assign      v = rhs - op(x)
         tmp_dom.lincomb(1, x0, -1, x)  # assign temp  tmp_dom = x0 - x
-        deriv.apply(tmp_dom, tmp_ran)   # eval        deriv(x0-x)
+        deriv(tmp_dom, outp=tmp_ran)   # eval        deriv(x0-x)
         v -= tmp_ran                    # assign      v = rhs-op(x)-deriv(x0-x)
-        deriv_adjoint.apply(v, u)       # eval/assign u = deriv.T(v)
+        deriv_adjoint(v, outp=u)       # eval/assign u = deriv.T(v)
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx

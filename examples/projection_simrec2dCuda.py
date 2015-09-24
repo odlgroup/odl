@@ -121,13 +121,13 @@ projector = CudaProjection(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                            reconDisc, dataDisc)
 
 result = dataDisc.element()
-projector.apply(phantomVec, result)
+projector(phantomVec, result)
 
 plt.figure()
 plt.plot(result[:])
 
 backprojected = reconDisc.element()
-projector.adjoint.apply(result, backprojected)
+projector.adjoint(result, backprojected)
 
 plt.figure()
 plt.imshow(backprojected.asarray().reshape(nVoxels))

@@ -32,8 +32,8 @@ import gpumci
 class ProjectionGeometry3D(object):
     """ Geometry for a specific projection
     """
-    def __init__(self, sourcePosition, 
-                       detectorOrigin, 
+    def __init__(self, sourcePosition,
+                       detectorOrigin,
                        pixelDirectionU,
                        pixelDirectionV):
         self.sourcePosition = sourcePosition
@@ -46,7 +46,7 @@ class ProjectionGeometry3D(object):
                                                              self.detectorOrigin,
                                                              self.pixelDirectionU,
                                                              self.pixelDirectionV)
-    
+
 
 class SimulatedCudaProjector3D(odl.Operator):
     """ A projector that creates several projections as defined by geometries
@@ -57,31 +57,31 @@ class SimulatedCudaProjector3D(odl.Operator):
         self.domain = domain
         self.range = range
         self.nphotons = 500
-        self._simulator = gpumci.CudaProjector(volumeOrigin, voxelSize, 
-                                               nVoxels, nPixels, geometries, 
+        self._simulator = gpumci.CudaProjector(volumeOrigin, voxelSize,
+                                               nVoxels, nPixels, geometries,
                                                nphotons=self.nphotons)
         self._projector = CudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
                                           stepSize, geometries, reconDisc, dataDisc)
         self._sim_domain_el = self._simulator.domain.element()
         self._sim_domain_el[1] = self._simulator.domain[1].element(np.ones(nVoxels))
         self._sim_result = self._simulator.range.element()
-        
+
 
     @odl.util.timeit("Simulate")
     def _apply(self, volume, projections, nphotons=None):
         if not nphotons:
             nphotons = self.nphotons
-        
+
         #simulated result
         self._sim_domain_el[0] = volume
-        self._simulator.apply(self._sim_domain_el,
-                              self._sim_result)
-        
+        self._simulator(self._sim_domain_el,
+                        self._sim_result)
+
         #Normalize scaling
         self._sim_result *= (500.0/nphotons/46.0)
-        
-        self._projector.apply(volume, projections)
-        
+
+        self._projector(volume, projections)
+
         for i in range(len(self._sim_result)):
             #plt.figure()
             #plt.imshow(-np.log(self._sim_result[i][0].asarray()))
@@ -90,20 +90,20 @@ class SimulatedCudaProjector3D(odl.Operator):
             sim_sum = -np.log(0.0001+self._sim_result[i][0].asarray()+self._sim_result[i][1].asarray())
             const = sim_sum.ravel().mean() / projections[i].asarray().mean()
             print(const)
-        
+
             projections[i][:] = -np.log(0.0001+self._sim_result[i][0].asarray())
         """
         # Create projector
         self._projector.setData(volume.ntuple.data_ptr)
-        
-        # Project all geometries       
+
+        # Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
 
             self._projector.project(geo.sourcePosition, geo.detectorOrigin,
                                     geo.pixelDirectionU, geo.pixelDirectionV,
                                     projection[i].ntuple.data_ptr)"""
-                                 
+
     def derivative(self, point):
         return self._projector
 
@@ -117,7 +117,7 @@ class CudaProjector3D(odl.LinearOperator):
         self.range = range
         self.forward = SR.SRPyCuda.CudaForwardProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-        self._adjoint = CudaBackProjector3D(volumeOrigin, voxelSize, nVoxels, 
+        self._adjoint = CudaBackProjector3D(volumeOrigin, voxelSize, nVoxels,
                                             nPixels, stepSize, geometries,
                                             range, domain)
 
@@ -125,15 +125,15 @@ class CudaProjector3D(odl.LinearOperator):
     def _apply(self, volume, projection):
         # Create projector
         self.forward.setData(volume.ntuple.data_ptr)
-        
-        # Project all geometries       
+
+        # Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
 
             self.forward.project(geo.sourcePosition, geo.detectorOrigin,
                                  geo.pixelDirectionU, geo.pixelDirectionV,
                                  projection[i].ntuple.data_ptr)
-                                 
+
     @property
     def adjoint(self):
         return self._adjoint
@@ -144,8 +144,8 @@ class CudaBackProjector3D(odl.LinearOperator):
                  geometries, domain, range):
         self.geometries = geometries
         self.domain = domain
-        self.range = range                  
-        self.back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, 
+        self.range = range
+        self.back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin,
                                                     voxelSize, nPixels, stepSize)
         self.run = 0
 
@@ -158,7 +158,7 @@ class CudaBackProjector3D(odl.LinearOperator):
         for geo, proj in zip(self.geometries, projections):
             self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
                                   geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
-                          
+
         self.run += 1
         if self.run > 5:
             out_host = out.asarray()
@@ -207,7 +207,7 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
 projectionSpace = odl.L2(odl.Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
-projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels, 
+projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels,
                                                impl='cuda', order='F')
 
 # Create the data space, which is the Cartesian product of the
@@ -218,7 +218,7 @@ dataDisc = odl.ProductSpace(projectionDisc, nProjection)
 reconSpace = odl.L2(odl.Cuboid([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels, 
+reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels,
                                           impl='cuda', order='F')
 
 # Create a phantom

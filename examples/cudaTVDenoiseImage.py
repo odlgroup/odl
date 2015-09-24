@@ -95,19 +95,19 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
 
     C1 = mu/(mu+2*la)
     C2 = la/(mu+2*la)
-    
+
     for i in odl.util.ProgressRange("denoising", iterations):
         # x = ((f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la))
-        diff.apply(x, xdiff)
+        diff(x, xdiff)
         xdiff += d
         xdiff -= b
-        diff.adjoint.apply(xdiff, tmp)
+        diff.adjoint(xdiff, tmp)
 
         x.lincomb(C1, f, 2*C2, x)
         x.lincomb(1, x, C2, tmp)
 
         # d = diff(x)+b
-        diff.apply(x, xdiff)
+        diff(x, xdiff)
         xdiff += b
         d.assign(xdiff)
 
@@ -129,7 +129,7 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
             d[i] *= tmp
 
         # b = b + diff(x) - d
-        diff.apply(x, xdiff)
+        diff(x, xdiff)
         b += xdiff
         b -= d
 
@@ -155,15 +155,15 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
     for i in odl.util.ProgressRange("denoising", iterations):
         # x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
-        diff.apply(x, xdiff)
+        diff(x, xdiff)
         xdiff += d
         xdiff -= b
-        diff.adjoint.apply(xdiff, tmp)
+        diff.adjoint(xdiff, tmp)
         x.lincomb(C1, f, 2*C2, x)
         x.lincomb(C2, tmp, 1, x)
 
         # d = diff(x)+b
-        diff.apply(x, d)
+        diff(x, d)
         d += b
 
         for j in range(dimension):
@@ -177,7 +177,7 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
             d[j].multiply(d[j], tmp)
 
         # b = b + diff(x) - d
-        diff.apply(x, xdiff)
+        diff(x, xdiff)
         b += xdiff
         b -= d
 
@@ -197,7 +197,7 @@ def TVdenoise2D(x0, la, mu, iterations=1):
     b = L2xL2.zero()
     d = L2xL2.zero()
     tmp = L2.zero()
-    
+
     for i in odl.util.ProgressRange("denoising", iterations):
         x = (f * mu + (diff.T(diff(x)) + 2*x + diff.T(d-b)) * la)/(mu+2*la)
 

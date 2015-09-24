@@ -182,7 +182,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     and the result is written to a new element which is returned.
     In this case, a subclass has to implement the method
 
-    `_call(self, inp)`     <==>     `operator(inp)`
+    `_call(self, inp)  <==>  operator(inp)`
 
     **Parameters:**
 
@@ -202,7 +202,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     result is written to an existing element provided as an additional
     argument. In this case, a subclass has to implement the method
 
-    `_apply(self, inp, outp)`     <==>     `outp <-- operator(inp)`
+    `_apply(self, inp, outp)  <==>  outp <-- operator(inp)`
 
     **Parameters:**
 
@@ -242,56 +242,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         return self.inverse
 
     # Implicitly defined operators
-    def apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`.
-
-        Implementation of in-place operator evaluation with the private
-        `_apply()` method and added error checking.
-
-        Parameters
-        ----------
-        inp : domain element
-            An object in the operator domain to which the operator is
-            applied. The object is treated as immutable, hence it is
-            not modified during evaluation.
-
-        outp : range element
-            An object in the operator range to which the result of the
-            operator evaluation is written. The result is independent
-            of the initial state of this object.
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import IdentityOperator
-        >>> rn = Rn(3)
-        >>> op = IdentityOperator(rn)
-        >>> x = rn.element([1, 2, 3])
-        >>> y = rn.element()
-        >>> op.apply(x, y)
-        >>> y
-        Rn(3).element([1.0, 2.0, 3.0])
-        """
-        if inp not in self.domain:
-            raise TypeError('input {!r} not an element of the domain {!r} '
-                            'of {!r}.'
-                            ''.format(inp, self.domain, self))
-
-        if outp not in self.range:
-            raise TypeError('output {!r} not an element of the range {!r} '
-                            'of {!r}.'
-                            ''.format(outp, self.range, self))
-
-        if inp is outp:
-            raise ValueError('aliased (identical) input and output not '
-                             'allowed.')
-        self._apply(inp, outp)
-
-    def __call__(self, inp):
+    def __call__(self, inp, outp=None):
         """`op.__call__(inp) <==> op(inp)`.
 
         Implementation of the call pattern `op(inp)` with the private
@@ -303,42 +254,61 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             An object in the operator domain to which the operator is
             applied. The object is treated as immutable, hence it is
             not modified during evaluation.
+        outp : `range` element, optional
+            An object in the operator range to which the result of the
+            operator evaluation is written. The result is independent
+            of the initial state of this object.
 
         Returns
         -------
         elem : range element
             An object in the operator range, the result of the operator
-            evaluation.
+            evaluation. It is identical to `outp` if provided.
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import IdentityOperator
+        >>> from odl import Rn, ScalingOperator
         >>> rn = Rn(3)
-        >>> op = IdentityOperator(rn)
+        >>> op = ScalingOperator(rn, 2.0)
         >>> x = rn.element([1, 2, 3])
-        >>> op(x)
-        Rn(3).element([1.0, 2.0, 3.0])
 
-        >>> from odl.operator.operator import operator
-        >>> A = operator(lambda x: 3*x)
-        >>> A(3)
-        9
-        >>> A.__call__(5)
-        15
+        Out-of-place evaluation:
+
+        >>> op(x)
+        Rn(3).element([2.0, 4.0, 6.0])
+
+        In-place evaluation:
+
+        >>> y = rn.element()
+        >>> op(x, outp=y)
+        Rn(3).element([2.0, 4.0, 6.0])
+        >>> y
+        Rn(3).element([2.0, 4.0, 6.0])
         """
         if inp not in self.domain:
             raise TypeError('input {!r} not an element of the domain {!r} '
                             'of {!r}.'
                             ''.format(inp, self.domain, self))
 
-        result = self._call(inp)
+        if outp is not None:  # In-place evaluation
+            if outp not in self.range:
+                raise TypeError('output {!r} not an element of the range {!r} '
+                                'of {!r}.'
+                                ''.format(outp, self.range, self))
+            if inp is outp:
+                raise ValueError('aliased (identical) input and output not '
+                                 'allowed.')
+            self._apply(inp, outp)
+            return outp
 
-        if result not in self.range:
-            raise TypeError('result {!r} not an element of the range {!r} '
-                            'of {!r}.'
-                            ''.format(result, self.range, self))
-        return result
+        else:  # Out-of-place evaluation
+            result = self._call(inp)
+
+            if result not in self.range:
+                raise TypeError('result {!r} not an element of the range {!r} '
+                                'of {!r}.'
+                                ''.format(result, self.range, self))
+            return result
 
     def __add__(self, other):
         """`op.__add__(other) <==> op + other`."""
@@ -517,7 +487,7 @@ class OperatorSum(Operator):
         self._tmp = tmp
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`.
+        """`op._apply(inp, outp) <==> outp <-- op(inp)`.
 
         Examples
         --------
@@ -527,7 +497,8 @@ class OperatorSum(Operator):
         >>> op = IdentityOperator(r3)
         >>> inp = r3.element([1, 2, 3])
         >>> outp = r3.element()
-        >>> OperatorSum(op, op).apply(inp, outp)
+        >>> OperatorSum(op, op)(inp, outp)
+        Rn(3).element([2.0, 4.0, 6.0])
         >>> outp
         Rn(3).element([2.0, 4.0, 6.0])
         """
@@ -648,7 +619,7 @@ class OperatorComp(Operator):
         return self._left._call(self._right._call(inp))
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
+        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         tmp = (self._tmp if self._tmp is not None
                else self._right.range.element())
@@ -750,7 +721,7 @@ class OperatorPointwiseProduct(Operator):
         return self._op1._call(inp) * self._op2._call(inp)
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
+        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         tmp = self._op2.range.element()
         self._op1._apply(inp, outp)
@@ -816,7 +787,7 @@ class OperatorLeftScalarMult(Operator):
         return self._scalar * self._op._call(inp)
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
+        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         self._op._apply(inp, outp)
         outp *= self._scalar
@@ -918,7 +889,7 @@ class OperatorRightScalarMult(Operator):
         return self._op._call(self._scalar * inp)
 
     def _apply(self, inp, outp):
-        """`op.apply(inp, outp) <==> outp <-- op(inp)`."""
+        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
         # pylint: disable=protected-access
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, inp)
@@ -1232,7 +1203,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     apply : callable
         A function taking two arguments.
         It will be used for the operator apply pattern
-        `op.apply(inp, outp) <==> outp <-- op(inp)`. Return value
+        `op._apply(inp, outp) <==> outp <-- op(inp)`. Return value
         is assumed to be `None` and is ignored.
     inv : `Operator`, optional
         The operator inverse
@@ -1293,7 +1264,7 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
     apply : callable
         A function taking two arguments.
         It will be used for the operator apply pattern
-        `op.apply(inp, outp) <==> outp <-- op(inp)`. Return value
+        `op._apply(inp, outp) <==> outp <-- op(inp)`. Return value
         is assumed to be `None` and is ignored.
     inv : `LinearOperator`, optional
         The operator inverse

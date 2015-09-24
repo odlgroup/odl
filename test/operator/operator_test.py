@@ -195,7 +195,7 @@ class TestLinearOperator(ODLTestCase):
         outvec = Aop.range.element()
 
         # Using apply
-        Aop.apply(xvec, outvec)
+        Aop(xvec, outvec)
         np.dot(A, x, out)
         self.assertAllAlmostEquals(out, outvec)
 
@@ -213,7 +213,7 @@ class TestLinearOperator(ODLTestCase):
         outvec = Aop.range.element()
 
         # Using apply
-        Aop.apply(xvec, outvec)
+        Aop(xvec, outvec)
         np.dot(A, x, out)
         self.assertAllAlmostEquals(out, outvec)
 
@@ -229,8 +229,8 @@ class TestLinearOperator(ODLTestCase):
         xvec = Aop.range.element(x)
         outvec = Aop.domain.element()
 
-        # Using adjoint.apply
-        Aop.adjoint.apply(xvec, outvec)
+        # Using adjoint
+        Aop.adjoint(xvec, outvec)
         np.dot(A.T, x, out)
         self.assertAllAlmostEquals(out, outvec)
 
@@ -315,8 +315,8 @@ class TestLinearOperator(ODLTestCase):
         r4Vec2 = r4.zero()
 
         # Verify that correct usage works
-        Aop.apply(r3Vec1, r3Vec2)
-        Aop.adjoint.apply(r3Vec1, r3Vec2)
+        Aop(r3Vec1, r3Vec2)
+        Aop.adjoint(r3Vec1, r3Vec2)
 
         # Test that erroneous usage raises TypeError
         with self.assertRaises(TypeError):
@@ -326,29 +326,29 @@ class TestLinearOperator(ODLTestCase):
             Aop.T(r4Vec1)
 
         with self.assertRaises(TypeError):
-            Aop.apply(r3Vec1, r4Vec1)
+            Aop(r3Vec1, r4Vec1)
 
         with self.assertRaises(TypeError):
-            Aop.adjoint.apply(r3Vec1, r4Vec1)
+            Aop.adjoint(r3Vec1, r4Vec1)
 
         with self.assertRaises(TypeError):
-            Aop.apply(r4Vec1, r3Vec1)
+            Aop(r4Vec1, r3Vec1)
 
         with self.assertRaises(TypeError):
-            Aop.adjoint.apply(r4Vec1, r3Vec1)
+            Aop.adjoint(r4Vec1, r3Vec1)
 
         with self.assertRaises(TypeError):
-            Aop.apply(r4Vec1, r4Vec2)
+            Aop(r4Vec1, r4Vec2)
 
         with self.assertRaises(TypeError):
-            Aop.adjoint.apply(r4Vec1, r4Vec2)
+            Aop.adjoint(r4Vec1, r4Vec2)
 
         # Check test against aliased values
         with self.assertRaises(ValueError):
-            Aop.apply(r3Vec1, r3Vec1)
+            Aop(r3Vec1, r3Vec1)
 
         with self.assertRaises(ValueError):
-            Aop.adjoint.apply(r3Vec1, r3Vec1)
+            Aop.adjoint(r3Vec1, r3Vec1)
 
 
 if __name__ == '__main__':

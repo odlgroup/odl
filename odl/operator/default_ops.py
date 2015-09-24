@@ -76,7 +76,8 @@ class ScalingOperator(SelfAdjointOperator):
         >>> vec = r3.element([1, 2, 3])
         >>> outp = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
-        >>> op.apply(vec, outp)
+        >>> op(vec, outp)  # Returns outp
+        Rn(3).element([2.0, 4.0, 6.0])
         >>> outp
         Rn(3).element([2.0, 4.0, 6.0])
         """
@@ -256,7 +257,8 @@ class LinCombOperator(LinearOperator):
         >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = LinCombOperator(r3, 1.0, 1.0)
-        >>> op.apply([x, y], z)
+        >>> op([x, y], z)  # Returns z
+        Rn(3).element([2.0, 4.0, 6.0])
         >>> z
         Rn(3).element([2.0, 4.0, 6.0])
         """
@@ -314,7 +316,8 @@ class MultiplyOperator(LinearOperator):
         >>> y = r3.element([1, 2, 3])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
-        >>> op.apply([x, y], z)
+        >>> op([x, y], z)
+        Rn(3).element([1.0, 4.0, 9.0])
         >>> z
         Rn(3).element([1.0, 4.0, 9.0])
         """
