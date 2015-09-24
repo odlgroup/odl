@@ -1431,8 +1431,8 @@ class WeightedInner(with_metaclass(ABCMeta, WeightedInnerBase)):
         Returns
         -------
         inner : scalar NumPy dtype
-            Weighted inner product. The output dtype depends on the
-            input vector dtype and the weighting.
+            Weighted inner product. The output dtype is the same as
+            the dtype of `x` and `y`.
 
         See also
         --------
@@ -1463,18 +1463,23 @@ class MatVecOperator(LinearOperator):
         Parameters
         ----------
         dom : `Fn`
-            Space on whose elements the matrix acts
+            Space on whose elements the matrix acts. Its dtype must be
+            castable to the range dtype.
         ran : `Fn`
             Space to which the matrix maps
         matrix : array-like or scipy.sparse.spmatrix
             Matrix representing the linear operator. Its shape must be
             `(m, n)`, where `n` is the size of `dom` and `m` the size
-            of `ran`.
+            of `ran`. Its dtype must be castable to the range dtype.
         """
         if not isinstance(dom, Fn):
             raise TypeError('domain {!r} is not an `Fn` instance.')
         if not isinstance(ran, Fn):
             raise TypeError('range {!r} is not an `Fn` instance.')
+        if not np.can_cast(dom.dtype, ran.dtype):
+            raise TypeError('domain data type {} cannot be safely cast to '
+                            'range data type {}.'
+                            ''.format(dom.dtype, ran.dtype))
 
         self._domain = dom
         self._range = ran
@@ -1490,6 +1495,10 @@ class MatVecOperator(LinearOperator):
                              ''.format(self._matrix.shape,
                                        (ran.size, dom.size),
                                        dom, ran))
+        if not np.can_cast(self._matrix.dtype, ran.dtype):
+            raise TypeError('matrix data type {} cannot be safely cast to '
+                            'range data type {}.'
+                            ''.format(matrix.dtype, ran.dtype))
 
     @property
     def domain(self):
@@ -1514,6 +1523,11 @@ class MatVecOperator(LinearOperator):
     @property
     def adjoint(self):
         """Adjoint operator represented by the adjoint matrix."""
+        if self.domain.field != self.range.field:
+            raise NotImplementedError('adjoint not defined since fields '
+                                      'of domain and range differ ({} != {}).'
+                                      ''.format(self.domain.field,
+                                                self.range.field))
         return MatVecOperator(self.range, self.domain, self.matrix.H)
 
     def _call(self, inp):
@@ -1523,12 +1537,12 @@ class MatVecOperator(LinearOperator):
 
     def _apply(self, inp, outp):
         """Raw apply method on input, writing to given output."""
-        if self.matrix_type == np.matrix:
-            self.matrix.dot(inp.data, out=outp.data)
-        else:
+        if self.matrix_issparse:
             # Unfortunately, there is no native in-place dot product for
             # sparse matrices
             outp.data[:] = np.asarray(self.matrix.dot(inp.data)).squeeze()
+        else:
+            self.matrix.dot(inp.data, out=outp.data)
 
 
 class MatrixWeightedInner(WeightedInner):
@@ -1557,18 +1571,25 @@ class MatrixWeightedInner(WeightedInner):
             `(n, n)`, where `n` is the size of `space`.
         """
         self._matvec = MatVecOperator(space, space, matrix)
-        if self._matvec.matrix.shape[0] != self._matvec.matrix.shape[1]:
-            raise ValueError('matrix with shape {} is not square.'
-                             ''.format(self.matrix.shape))
 
     def __eq__(self, other):
         """`inner.__eq__(other) <==> inner == other`."""
         if other is self:
             return True
 
+        if isinstance(other, MatrixWeightedInner):
+            # Optimization for obvious cases
+            if self.space != other.space:
+                return False
+            elif self.matrix is other.matrix:
+                return True
+
         elif isinstance(other, MatrixWeightedInner):
             if self.matrix_issparse:
                 if other.matrix_issparse:
+                    # Optimization for different number of nonzero elements
+                    if self.matrix.nnz != other.matrix.nnz:
+                        return False
                     return (self.matrix - other.matrix).nnz == 0
                 else:
                     return np.array_equal(self.matrix.todense(), other.matrix)
