@@ -39,6 +39,7 @@ from odl.util.testutils import ODLTestCase
 # * Cn
 # * Rn, Cn with non-standard data types
 # * vector multiplication
+# * MatVecOperator
 
 
 class RnTest(ODLTestCase):

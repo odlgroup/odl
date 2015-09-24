@@ -70,7 +70,8 @@ from odl.util.utility import array1d_repr, array1d_str, dtype_repr
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn',
-           'ConstWeightedInner', 'MatrixWeightedInner', 'WeightedInnerBase')
+           'ConstWeightedInner', 'MatrixWeightedInner', 'WeightedInnerBase',
+           'MatVecOperator')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -1482,6 +1483,13 @@ class MatVecOperator(LinearOperator):
             self._matrix = matrix
         else:
             self._matrix = np.asmatrix(matrix)
+
+        if self._matrix.shape != (ran.size, dom.size):
+            raise ValueError('matrix shape {} does not match the required '
+                             'shape {} of a matrix {} --> {}.'
+                             ''.format(self._matrix.shape,
+                                       (ran.size, dom.size),
+                                       dom, ran))
 
     @property
     def domain(self):
