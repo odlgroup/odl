@@ -109,17 +109,17 @@ class Timer(object):
     Prints the time stuff took to execute.
     """
     def __init__(self, name=None):
-        self.name = name
+        if name is not None:
+            self.name = name
+        else:
+            self.name = 'Elapsed'
         self.tstart = None
 
     def __enter__(self):
         self.tstart = time()
 
     def __exit__(self, type, value, traceback):
-        if self.name is not None:
-            print('[{}] : {:.3f} '.format(self.name, time() - self.tstart))
-        else:
-            print('Elapsed: {:.3f}'.format(time() - self.tstart))
+        print('[{:10s}] : {:.3f} '.format(self.name, time() - self.tstart))
 
 
 def timeit(arg):
