@@ -15,25 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Basic abstract and concrete sets.
-
-List of classes
-===============
-
-+--------------------+--------------------------------------------------+
-|Class name          |Description                                       |
-|                    |                                                  |
-+====================+==================================================+
-|`Set`               |**Abstract** base class for sets                  |
-+--------------------+--------------------------------------------------+
-|`Integers`          |Set of (signed) integers                          |
-+--------------------+--------------------------------------------------+
-|`RealNumbers`       |Set of real numbers                               |
-+--------------------+--------------------------------------------------+
-|`ComplexNumbers`    |Set of complex numbers                            |
-+--------------------+--------------------------------------------------+
-"""
-
+"""Basic abstract and concrete sets."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -59,29 +41,31 @@ class Set(with_metaclass(ABCMeta, object)):
     """An abstract set.
 
     Abstract Methods
-    ----------------
+    ================
     Each subclass of `Set` must implement two methods: one to check if
     an object is contained in the set and one to test if two sets are
     equal.
 
-    `contains(self, other)`
-    ~~~~~~~~~~~~~~~~~~~~~~~
-    Test if `other` is a member of this set.
+    `__contains__(self, other)`
+    ---------------------------
+    Test if `other` is a member of this set. This function provides the
+    operator overload for `in`.
 
     **Parameters:**
         other : `object`
             The object to be tested for membership.
 
     **Returns:**
-        equals : `bool`
+        contains : `bool`
             `True` if `other` is a member of this set, `False`
             otherwise.
 
 
-    `equals(self, other)`
-    ~~~~~~~~~~~~~~~~~~~~~
+    `__eq__(self, other)`
+    ---------------------
     Test if `other` is the same set as this set, i.e. both sets are
-    of the same type and contain the same elements.
+    of the same type and contain the same elements. This function
+    provides the operator overload for `==`.
 
     **Parameters:**
         other : `object`
@@ -92,8 +76,11 @@ class Set(with_metaclass(ABCMeta, object)):
             `True` if both sets are of the same type and contain the
             same elements, `False` otherwise.
 
+    A default implementation of the operator overload for `!=` via
+    `__ne__(self, other)` is provided as `not self.__eq__(other)`.
+
     optional: `element(inp=None)`
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    -----------------------------
     Create an element of this set, either from scratch or from an
     input parameter.
 
@@ -105,24 +92,11 @@ class Set(with_metaclass(ABCMeta, object)):
         element : member of this set
             If `inp == None`, return an arbitrary element.
             Otherwise, return the element created from `inp`.
-
-    Magic methods
-    -------------
-
-    +----------------------+----------------+--------------------+
-    |Signature             |Provides syntax |Implementation      |
-    +======================+================+====================+
-    |`__eq__(other)`       |`self == other` |`equals(other)`     |
-    +----------------------+----------------+--------------------+
-    |`__ne__(other)`       |`self != other` |`not equals(other)` |
-    +----------------------+----------------+--------------------+
-    |`__contains__(other)` |`other in self` |`contains(other)`   |
-    +----------------------+----------------+--------------------+
     """
 
     @abstractmethod
-    def contains(self, other):
-        """Test if `other` is a member of this set."""
+    def __contains__(self, other):
+        """`s.__contains__(other) <==> other in s`."""
 
     def contains_set(self, other):
         """Test if `other` is a subset of this set.
@@ -132,8 +106,12 @@ class Set(with_metaclass(ABCMeta, object)):
         raise NotImplementedError("'contains_set' method not implemented.")
 
     @abstractmethod
-    def equals(self, other):
-        """Test if `other` is the same set as this set."""
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+
+    def __ne__(self, other):
+        """`s.__ne__(other) <==> s != other`."""
+        return not self.__eq__(other)
 
     def element(self, inp=None):
         """Return an element from `inp` or from scratch.
@@ -141,19 +119,6 @@ class Set(with_metaclass(ABCMeta, object)):
         Implementing this method is optional.
         """
         raise NotImplementedError("'element' method not implemented.")
-
-    # Default implemenations
-    def __eq__(self, other):
-        """s.__eq__(other) <==> s == other."""
-        return self.equals(other)
-
-    def __ne__(self, other):
-        """s.__ne__(other) <==> s != other."""
-        return not self.equals(other)
-
-    def __contains__(self, other):
-        """s.__contains__(other) <==> other in s."""
-        return self.contains(other)
 
 
 class EmptySet(Set):
@@ -164,7 +129,7 @@ class EmptySet(Set):
     `None in EmptySet() is True`
     """
 
-    def contains(self, other):
+    def __contains__(self, other):
         """Test if `other` is `None`."""
         return other is None
 
@@ -172,9 +137,9 @@ class EmptySet(Set):
         """Return `True` for the empty set, otherwise `False`."""
         return isinstance(other, EmptySet)
 
-    def equals(self, other):
-        """Test if `other` is an `EmptySet` instance."""
-        return type(other) == type(self)
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, EmptySet)
 
     def element(self, inp=None):
         """Return `None`."""
@@ -196,7 +161,7 @@ class UniversalSet(Set):
     Forget about set theory for a moment :-).
     """
 
-    def contains(self, other):
+    def __contains__(self, other):
         """Return `True`."""
         return True
 
@@ -204,9 +169,9 @@ class UniversalSet(Set):
         """Return `True` for any set."""
         return isinstance(other, Set)
 
-    def equals(self, other):
-        """Test if `other` is a `UniversalSet` instance."""
-        return type(other) == type(self)
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, UniversalSet)
 
     def element(self, inp=None):
         """Return `inp` in any case."""
@@ -245,13 +210,13 @@ class Strings(Set):
         """The `length` attribute."""
         return self._length
 
-    def contains(self, other):
+    def __contains__(self, other):
         """Test if `other` is a string of at max `length` characters."""
         return isinstance(other, str) and len(other) <= self.length
 
-    def equals(self, other):
-        """Test if `other` is a `Strings` instance of equal length."""
-        return type(other) == type(self) and other.length == self.length
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, Strings) and other.length == self.length
 
     def element(self, inp=None):
         """Return a string from `inp` or from scratch."""
@@ -273,11 +238,11 @@ class Integers(Set):
 
     """The set of integers."""
 
-    def equals(self, other):
-        """Tests if `other` is an `Integers` instance."""
-        return type(other) == type(self)
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, Integers)
 
-    def contains(self, other):
+    def __contains__(self, other):
         """Test if `other` is an integer."""
         return isinstance(other, Integral)
 
@@ -317,7 +282,7 @@ class RealNumbers(Set):
 
     """The set of real numbers."""
 
-    def contains(self, other):
+    def __contains__(self, other):
         """Test if `other` is a real number."""
         return isinstance(other, Real)
 
@@ -339,9 +304,9 @@ class RealNumbers(Set):
         return (isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
-    def equals(self, other):
-        """Test if `other` is a `RealNumbers` instance."""
-        return type(other) == type(self)
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, RealNumbers)
 
     def element(self, inp=None):
         """Return a real number from `inp` or from scratch."""
@@ -363,7 +328,7 @@ class ComplexNumbers(Set):
 
     """The set of complex numbers."""
 
-    def contains(self, other):
+    def __contains__(self, other):
         """Test if `other` is a complex number."""
         return isinstance(other, Complex)
 
@@ -386,9 +351,9 @@ class ComplexNumbers(Set):
                 isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
-    def equals(self, other):
-        """Test if `other` is a `ComplexNumbers` instance."""
-        return type(other) == type(self)
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, ComplexNumbers)
 
     def element(self, inp=None):
         """Return a complex number from `inp` or from scratch."""
@@ -428,12 +393,12 @@ class CartesianProduct(Set):
         """The factors (sets) as a tuple."""
         return self._sets
 
-    def contains(self, other):
+    def __contains__(self, other):
         """Test if `other` is contained in this set.
 
         Returns
         -------
-        contains : `boolean`
+        contains : `bool`
             `True` if `other` has the same length as this Cartesian
             product and each entry is contained in the set with
             corresponding index, `False` otherwise.
@@ -445,8 +410,8 @@ class CartesianProduct(Set):
         return (len(other) == len(self) and
                 all(p in set_ for set_, p in zip(self.sets, other)))
 
-    def equals(self, other):
-        """Test if `other` is equivalent to this set.
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
 
         Returns
         -------
@@ -455,7 +420,7 @@ class CartesianProduct(Set):
             the same length as this Cartesian product and all sets
             with the same index are equal, `False` otherwise.
         """
-        return (type(other) == type(self) and
+        return (isinstance(other, CartesianProduct) and
                 len(other) == len(self) and
                 all(so == ss for so, ss in zip(other.sets, self.sets)))
 

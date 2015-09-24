@@ -159,30 +159,16 @@ class IntervalProdTest(ODLTestCase):
         rectangle2 = IntervalProd((1, 2), (2, 3))
         rectangle3 = IntervalProd([0, 2], [2, 3])
 
-        self.assertTrue(interval1.equals(interval1))
-        self.assertTrue(interval1.equals(interval2))
-        self.assertTrue(interval1.equals(interval3))
-        self.assertFalse(interval1.equals(interval4))
-        self.assertFalse(interval1.equals(rectangle1))
-        self.assertTrue(rectangle1.equals(rectangle1))
-        self.assertTrue(rectangle2.equals(rectangle2))
-        self.assertFalse(rectangle1.equals(rectangle3))
-
-        # Test operators
         self.assertTrue(interval1 == interval1)
         self.assertFalse(interval1 != interval1)
-
+        self.assertTrue(interval1 == interval2)
+        self.assertTrue(interval1 == interval3)
         self.assertFalse(interval1 == interval4)
         self.assertTrue(interval1 != interval4)
-
         self.assertFalse(interval1 == rectangle1)
-        self.assertTrue(interval1 != rectangle1)
-
         self.assertTrue(rectangle1 == rectangle1)
-        self.assertFalse(rectangle1 != rectangle1)
-
+        self.assertTrue(rectangle2 == rectangle2)
         self.assertFalse(rectangle1 == rectangle3)
-        self.assertTrue(rectangle1 != rectangle3)
 
         r1_1 = IntervalProd(-np.inf, np.inf)
         r1_2 = IntervalProd(-np.inf, np.inf)
@@ -196,17 +182,16 @@ class IntervalProdTest(ODLTestCase):
     def test_contains(self):
         set_ = IntervalProd(1, 2)
 
-        self.assertTrue(set_.contains(1))
-        self.assertTrue(set_.contains(2))
-        self.assertTrue(set_.contains(1.5))
-        self.assertFalse(set_.contains(3))
+        self.assertTrue(1 in set_)
+        self.assertTrue(2 in set_)
         self.assertTrue(1.5 in set_)
+        self.assertFalse(3 in set_)
         self.assertTrue(3 not in set_)
 
         positive_reals = IntervalProd(0, np.inf)
-        self.assertTrue(positive_reals.contains(1))
-        self.assertTrue(positive_reals.contains(np.inf))
-        self.assertFalse(positive_reals.contains(-1))
+        self.assertTrue(1 in positive_reals)
+        self.assertTrue(np.inf in positive_reals)
+        self.assertFalse(-1 in positive_reals)
 
 
 class IntervalTest(ODLTestCase):

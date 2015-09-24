@@ -328,18 +328,13 @@ class ProductSpace(LinearSpace):
         for spc, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
             spc._multiply(zp, xp, yp)
 
-    def equals(self, other):
-        """Check if the `other` is the same product space.
-
-        Parameters
-        ----------
-        other : object
-            The object to be compared
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
 
         Returns
         -------
         equals : bool
-            `True` if `other` is a ProductSpace instance, has
+            `True` if `other` is a `ProductSpace` instance, has
             the same length and the same factors. `False` otherwise.
 
         Examples
@@ -348,16 +343,16 @@ class ProductSpace(LinearSpace):
         >>> r2, r3 = Rn(2), Rn(3)
         >>> rn, rm = Rn(2), Rn(3)
         >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
-        >>> r2x3.equals(rnxm)
+        >>> r2x3 == rnxm
         True
         >>> r3x2 = ProductSpace(r3, r2)
-        >>> r2x3.equals(r3x2)
+        >>> r2x3 == r3x2
         False
         >>> r5 = ProductSpace(*[Rn(1)]*5)
-        >>> r2x3.equals(r5)
+        >>> r2x3 == r5
         False
         >>> r5 = Rn(5)
-        >>> r2x3.equals(r5)
+        >>> r2x3 == r5
         False
         """
         if other is self:
@@ -365,8 +360,8 @@ class ProductSpace(LinearSpace):
         else:
             return (type(self) == type(other) and
                     len(self) == len(other) and
-                    all(x.equals(y) for x, y in zip(self.spaces,
-                                                    other.spaces)))
+                    all(x == y for x, y in zip(self.spaces,
+                                               other.spaces)))
 
     def __len__(self):
         """The number of factors."""

@@ -110,8 +110,8 @@ class FunctionSet(Set):
         else:
             return self.Vector(self, fcall, fapply)
 
-    def equals(self, other):
-        """Test if `other` is equal to this set.
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
 
         Returns
         -------
@@ -121,13 +121,13 @@ class FunctionSet(Set):
         """
         if other is self:
             return True
-        
-        return (type(self) == type(other) and
+
+        return (isinstance(other, FunctionSet) and
                 self.domain == other.domain and
                 self.range == other.range)
 
-    def contains(self, other):
-        """Test if `other` is contained in this set.
+    def __contains__(self, other):
+        """`s.__contains__(other) <==> other in s`.
 
         Returns
         -------
@@ -205,8 +205,8 @@ class FunctionSet(Set):
             """The function range (abstract in `Operator`)."""
             return self.space.range
 
-        def equals(self, other):
-            """Test `other` for equality.
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`.
 
             Returns
             -------
@@ -218,7 +218,7 @@ class FunctionSet(Set):
             """
             if other is self:
                 return True
-            
+
             return (isinstance(other, FunctionSet.Vector) and
                     self.space == other.space and
                     self._call == other._call and
@@ -320,13 +320,9 @@ class FunctionSet(Set):
             # TODO: no checks on input so far
             return self._apply(outp, *inp)
 
-        def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`"""
-            return self.equals(other)
-
         def __ne__(self, other):
             """`vec.__ne__(other) <==> vec != other`"""
-            return not self.equals(other)
+            return not self.__eq__(other)
 
         def __str__(self):
             if self._call_impl is not None:
@@ -481,8 +477,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             return self.field.element(0.0)
         return self.element(zero_)
 
-    def equals(self, other):
-        """Test if `other` is equal to this space.
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
 
         Returns
         -------
@@ -490,9 +486,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
             `True` if `other` is a `FunctionSpace` with same `domain`
             and `range`, `False` otherwise.
         """
+        # TODO: equality also for FunctionSet instances?
         if other is self:
-            return True        
-        
+            return True
+
         return (isinstance(other, FunctionSpace) and
                 self.domain == other.domain and
                 self.range == other.range)

@@ -193,8 +193,8 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         else:  # Sequence-type input
             return self.Vector(self, self.dspace.element(inp))
 
-    def equals(self, other):
-        """Test if `other` is equal to this discretization.
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
 
         Returns
         -------
@@ -205,9 +205,9 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             `False` otherwise.
         """
         if other is self:
-            return True        
-        
-        return (super().equals(other) and
+            return True
+
+        return (super().__eq__(other) and
                 other.uspace == self.uspace and
                 other.dspace == self.dspace and
                 other.restriction == self.restriction and
@@ -262,8 +262,8 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             """
             return self.ntuple.asarray(out=out)
 
-        def equals(self, other):
-            """Test if `other` is equal to this vector.
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`.
 
             Returns
             -------
@@ -272,7 +272,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                 vector's entries, `False` otherwise.
             """
             return (type(other) == type(self) and
-                    self.ntuple.equals(other.ntuple))
+                    self.ntuple == other.ntuple)
 
         def __getitem__(self, indices):
             """Access values of this vector.

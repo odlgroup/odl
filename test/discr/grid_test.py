@@ -175,38 +175,28 @@ class TensorGridTestMethods(ODLTestCase):
         grid2_again = TensorGrid(vec1, vec2)
         grid2_rev = TensorGrid(vec2, vec1)
 
-        self.assertTrue(grid1.equals(grid1))
-        self.assertTrue(grid2.equals(grid2))
-        self.assertTrue(grid2.equals(grid2_again))
-        self.assertFalse(grid1.equals(grid2))
-        self.assertFalse(grid2.equals(grid2_rev))
-        self.assertFalse(grid2.equals((vec1, vec2)))
-
-        # Test operators
         self.assertTrue(grid1 == grid1)
         self.assertFalse(grid1 != grid1)
         self.assertTrue(grid2 == grid2)
         self.assertFalse(grid2 != grid2)
         self.assertTrue(grid2 == grid2_again)
-        self.assertFalse(grid2_again != grid2)
+        self.assertFalse(grid1 == grid2)
         self.assertFalse(grid2 == grid2_rev)
-        self.assertTrue(grid2_rev != grid2)
         self.assertFalse(grid2 == (vec1, vec2))
-        self.assertTrue(grid2_rev != (vec1, vec2))
 
         # Fuzzy check
         grid1 = TensorGrid(vec1, vec2)
         grid2 = TensorGrid(vec1 + (0.1, 0.05, 0, -0.1),
                            vec2 + (0.1, 0.05, 0, -0.1, -0.1))
-        self.assertTrue(grid1.equals(grid2, tol=0.15))
-        self.assertTrue(grid2.equals(grid1, tol=0.15))
+        self.assertTrue(grid1.approx_equals(grid2, tol=0.15))
+        self.assertTrue(grid2.approx_equals(grid1, tol=0.15))
 
         grid2 = TensorGrid(vec1 + (0.11, 0.05, 0, -0.1),
                            vec2 + (0.1, 0.05, 0, -0.1, -0.1))
-        self.assertFalse(grid1.equals(grid2, tol=0.1))
+        self.assertFalse(grid1.approx_equals(grid2, tol=0.1))
         grid2 = TensorGrid(vec1 + (0.1, 0.05, 0, -0.1),
                            vec2 + (0.1, 0.05, 0, -0.11, -0.1))
-        self.assertFalse(grid1.equals(grid2, tol=0.1))
+        self.assertFalse(grid1.approx_equals(grid2, tol=0.1))
 
     def test_contains(self):
         vec1 = np.arange(2, 6)
@@ -219,17 +209,15 @@ class TensorGridTestMethods(ODLTestCase):
             for y in vec2:
                 point_list.append((x, y))
 
-        self.assertTrue(all(grid.contains(p) for p in point_list))
         self.assertTrue(all(p in grid for p in point_list))
 
-        self.assertFalse(grid.contains((0, 0)))
         self.assertFalse((0, 0) in grid)
         self.assertTrue((0, 0) not in grid)
         self.assertTrue((2, 0, 0) not in grid)
 
         # Fuzzy check
-        self.assertTrue(grid.contains((2.1, -2.1), tol=0.15))
-        self.assertFalse(grid.contains((2.2, -2.1), tol=0.15))
+        self.assertTrue(grid.approx_contains((2.1, -2.1), tol=0.15))
+        self.assertFalse(grid.approx_contains((2.2, -2.1), tol=0.15))
 
         # 1d points
         grid = TensorGrid(vec1)

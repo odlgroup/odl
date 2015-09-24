@@ -124,14 +124,14 @@ class IntervalProd(Set):
         return self.midpoint
 
     # Overrides of the abstract base class methods
-    def equals(self, other, tol=0.0):
-        """Test if another set is equal to the current one.
+    def approx_equals(self, other, tol):
+        """Test if `other` is equal to this set up to `tol`.
 
         Parameters
         ----------
         other : object
-            The object to be tested.
-        tol : float, optional  (Default: 0.0)
+            The object to be tested
+        tol : float
             The maximum allowed difference in 'inf'-norm between the
             interval endpoints.
 
@@ -140,11 +140,9 @@ class IntervalProd(Set):
         >>> from math import sqrt
         >>> rbox1 = IntervalProd(0, 0.5)
         >>> rbox2 = IntervalProd(0, sqrt(0.5)**2)
-        >>> rbox1.equals(rbox2)  # Num error
+        >>> rbox1.approx_equals(rbox2, tol=0)  # Num error
         False
-        >>> rbox1 == rbox2  # Equivalent to rbox1.equals(rbox2)
-        False
-        >>> rbox1.equals(rbox2, tol=1e-15)
+        >>> rbox1.approx_equals(rbox2, tol=1e-15)
         True
         """
         # pylint: disable=arguments-differ
@@ -157,7 +155,11 @@ class IntervalProd(Set):
         return (np.allclose(self.begin, other.begin, atol=tol, rtol=0.0) and
                 np.allclose(self.end, other.end, atol=tol, rtol=0.0))
 
-    def contains(self, point, tol=0.0):
+    def __eq__(self, other):
+        """`g.__eq__(other) <==> g == other`."""
+        return self.approx_equals(other, tol=0.0)
+
+    def approx_contains(self, point, tol):
         """Test if a point is contained.
 
         Parameters
@@ -166,7 +168,7 @@ class IntervalProd(Set):
             The point to be tested. Its length must be equal
             to the set's dimension. In the 1d case, 'point'
             can be given as a float.
-        tol : float, optional
+        tol : float
             The maximum allowed distance in 'inf'-norm between the
             point and the set.
             Default: 0.0
@@ -177,22 +179,26 @@ class IntervalProd(Set):
         >>> from math import sqrt
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
-        >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9])  # Num error
+        >>> # Numerical error
+        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=0)
         False
-        >>> rbox.contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-15)
+        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-9)
         True
         """
-        # pylint: disable=arguments-differ
         point = np.atleast_1d(point)
 
         if len(point) != self.ndim:
             return False
 
-        if not RealNumbers().contains(point[0]):
+        if point[0] not in RealNumbers():
             return False
         if self.dist(point, ord=np.inf) > tol:
             return False
         return True
+
+    def __contains__(self, other):
+        """`g.__contains__(other) <==> other in g`."""
+        return self.approx_contains(other, tol=0)
 
     def contains_set(self, other, tol=0.0):
         """Test if another set is contained.
@@ -208,8 +214,8 @@ class IntervalProd(Set):
             Default: 0.0
         """
         try:
-            return (self.contains(other.min(), tol) and
-                    self.contains(other.max(), tol))
+            return (self.approx_contains(other.min(), tol) and
+                    self.approx_contains(other.max(), tol))
         except AttributeError:
             raise AttributeError('cannot test {!r} without `min()` and `max()`'
                                  'methods.'.format(other))
@@ -413,7 +419,7 @@ class IntervalProd(Set):
         IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
         >>> rbox.insert([-1.0, 0.0], 2)
         IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
-        >>> rbox.insert(0, 1).squeeze().equals(rbox)
+        >>> rbox.insert(0, 1).squeeze() == rbox
         True
         """
         if not 0 <= index <= self.ndim:

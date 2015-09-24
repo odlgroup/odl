@@ -48,7 +48,7 @@ class Reals(LinearSpace):
     def field(self):
         return self._field
 
-    def equals(self, other):
+    def __eq__(self, other):
         return isinstance(other, Reals)
 
     def element(self, value=0):
@@ -59,6 +59,7 @@ class Reals(LinearSpace):
         """
 
         __val__ = None
+
         def __init__(self, space, v):
             LinearSpace.Vector.__init__(self, space)
             self.__val__ = v

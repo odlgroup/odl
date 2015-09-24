@@ -89,7 +89,7 @@ underlie the space. Can be instances of either `RealNumbers` or
 
 Should be implemented as a `@property` to make it immutable.
 
-`equals(other)`
+`__eq__(other)`
 ---------------
 `LinearSpace` inherits this abstract method from `Set`. Its
 purpose is to check two `LinearSpace` instances for equality.
@@ -208,60 +208,6 @@ Note
 The above conditions on the multiplication constitute a
 *unital commutative algebra* in the mathematical sense.
 
-
-Default convenience methods
----------------------------
-`LinearSpace` provides several default methods for convenience
-which use the abstract methods above. A subclass may override
-them with own implementations.
-
-+--------------+----------------------+-------------------------------+
-|Signature     |Return type           |Description                    |
-+==============+======================+===============================+
-|`lincomb(z, a,|`None`                |Linear combination             |
-|x, b, y)`     |                      |`z <-- a * x + b * y`. Like    |
-|              |                      |`_lincomb()`, but with type    |
-|              |                      |checks.                        |
-+--------------+----------------------+-------------------------------+
-|`zero()`      |`LinearSpace.Vector`|Create a zero vector by first  |
-|              |                      |issuing `x = element()` and    |
-|              |                      |then `_lincomb(x, 0, x, 0, x)`.|
-|              |                      |**NOTE:** this is not safe     |
-|              |                      |since the new element can      |
-|              |                      |contain `NaN`s. Subclasses     |
-|              |                      |should override this method.   |
-+--------------+----------------------+-------------------------------+
-|`dist(x, y)`  |`float`               |Distance between two space     |
-|              |                      |elements. Like `_dist()`, but  |
-|              |                      |with type checks.              |
-+--------------+----------------------+-------------------------------+
-|`norm(x)`     |`float`               |Length of a space element. Like|
-|              |                      |`_norm()`, but with type       |
-|              |                      | checks.                       |
-+--------------+----------------------+-------------------------------+
-|`inner(x, y)` |`field`               |Inner product of two space     |
-|              |                      |elements. Like `_inner()`, but |
-|              |                      |with type checks.              |
-+--------------+----------------------+-------------------------------+
-|`multiply(x,  |`None`                |Multiplication of two space    |
-| y)`          |                      |elements. Like `_multiply()`,  |
-|              |                      |but                            |
-|              |                      |with type checks.              |
-+--------------+----------------------+-------------------------------+
-
-Magic methods
--------------
-
-+----------------------+----------------+--------------------+
-|Signature             |Provides syntax |Implementation      |
-+======================+================+====================+
-|`__eq__(other)`       |`self == other` |`equals(other)`     |
-+----------------------+----------------+--------------------+
-|`__ne__(other)`       |`self != other` |`not equals(other)` |
-+----------------------+----------------+--------------------+
-|`__contains__(other)` |`other in self` |`contains(other)`   |
-+----------------------+----------------+--------------------+
-
 Notes
 -----
 See Wikipedia's mathematical overview articles
@@ -350,7 +296,8 @@ class LinearSpace(Set):
         resort to `inner` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError('inner product not implemented in space {!r}'.format(self))
+        raise NotImplementedError('inner product not implemented in space {!r}'
+                                  ''.format(self))
 
     def _multiply(self, z, x, y):
         """Calculate the pointwise multiplication z = x * y.
@@ -359,7 +306,8 @@ class LinearSpace(Set):
         resort to `multiply` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError('multiplication not implemented in space {!r}'.format(self))
+        raise NotImplementedError('multiplication not implemented in space '
+                                  '{!r}'.format(self))
 
     @abstractproperty
     def field(self):
@@ -385,19 +333,14 @@ class LinearSpace(Set):
         self._lincomb(tmp, 0, tmp, 0, tmp)
         return tmp
 
-    def contains(self, other):
-        """Test an object for membership in space.
-
-        Parameters
-        ----------
-        other : `object`
-            The object to test for membership
+    def __contains__(self, other):
+        """`s.__contains__(other) <==> other in s`.
 
         Returns
         -------
         contains : `bool`
-            True if `other` is a `LinearSpace.Vector` instance and
-            `other.space` is equal to this space.
+            `True` if `other` is a `LinearSpace.Vector` instance and
+            `other.space` is equal to this space, `False` otherwise.
 
         Notes
         -----
@@ -668,20 +611,20 @@ class LinearSpace(Set):
             return self.copy()
 
         # Metric space method
-        def equals(self, other):
-            """Test two vectors for equality.
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`.
 
             Two vectors are equal if their distance is 0
 
             Parameters
             ----------
             other : LinearSpace.Vector
-                    Vector in this space.
+                Vector in this space.
 
             Returns
             -------
-            equals : boolean
-                     True if the vectors are equal, else false.
+            equals : bool
+                True if the vectors are equal, else false.
 
             Note
             ----
@@ -693,14 +636,14 @@ class LinearSpace(Set):
             --------
             >>> from odl.space.cartesian import Rn
             >>> import numpy as np
-            >>> X = Rn(1, norm=np.linalg.norm)
-            >>> x = X.element([0.1])
+            >>> rn = Rn(1, norm=np.linalg.norm)
+            >>> x = rn.element([0.1])
             >>> x == x
             True
-            >>> y = X.element([0.1])
+            >>> y = rn.element([0.1])
             >>> x == y
             True
-            >>> z = X.element([0.3])
+            >>> z = rn.element([0.3])
             >>> x+x+x == z
             False
             """
@@ -715,11 +658,8 @@ class LinearSpace(Set):
             else:
                 return self.space.dist(self, other) == 0
 
-        def __eq__(self, other):
-            return self.equals(other)
-
         def __ne__(self, other):
-            return not self.equals(other)
+            return not self.__eq__(other)
 
         def __str__(self):
             """Implementation of str()."""

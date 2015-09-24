@@ -235,32 +235,36 @@ class TensorGrid(Set):
         """An arbitrary element, the minimum coordinates."""
         return self.min_pt
 
-    def equals(self, other, tol=0.0):
+    def approx_equals(self, other, tol):
         """Test if this grid is equal to another grid.
-
-        Return True if all coordinate vectors are equal (up to the
-        given tolerance), otherwise False.
 
         Parameters
         ----------
+        other : object
+            Object to be tested
         tol : float
             Allow deviations up to this number in absolute value
             per vector entry.
+
+        Returns
+        -------
+        equals : bool
+            `True` if `other` is a `TensorGrid` instance with all
+            coordinate vectors equal (up to the given tolerance), to
+            the ones of this grid, otherwise `False`.
 
         Examples
         --------
         >>> g1 = TensorGrid([0, 1], [-1, 0, 2])
         >>> g2 = TensorGrid([-0.1, 1.1], [-1, 0.1, 2])
-        >>> g1.equals(g2)
+        >>> g1.approx_equals(g2, tol=0)
         False
-        >>> g1 == g2  # equivalent
-        False
-        >>> g1.equals(g2, tol=0.15)
+        >>> g1.approx_equals(g2, tol=0.15)
         True
         """
         if other is self:
             return True
-        
+
         # pylint: disable=arguments-differ
         return (type(self) == type(other) and
                 self.ndim == other.ndim and
@@ -269,8 +273,12 @@ class TensorGrid(Set):
                     for (vec_s, vec_o) in zip(self.coord_vectors,
                                               other.coord_vectors)))
 
-    def contains(self, other, tol=0.0):
-        """Test if `other` belongs to this grid.
+    def __eq__(self, other):
+        """`g.__eq__(other) <==> g == other`."""
+        return self.approx_equals(other, tol=0.0)
+
+    def approx_contains(self, other, tol):
+        """Test if `other` belongs to this grid up to a tolerance.
 
         Parameters
         ----------
@@ -283,19 +291,25 @@ class TensorGrid(Set):
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> g.contains([0, 0])
+        >>> g.approx_contains([0, 0], tol=0.0)
         True
         >>> [0, 0] in g  # equivalent
         True
-        >>> g.contains([0.1, -0.1])
+        >>> g.approx_contains([0.1, -0.1], tol=0.0)
         False
-        >>> g.contains([0.1, -0.1], tol=0.15)
+        >>> g.approx_contains([0.1, -0.1], tol=0.15)
         True
         """
-        # pylint: disable=arguments-differ
         other = np.atleast_1d(other)
         return (other.shape == (self.ndim,) and
                 all(np.any(np.isclose(vector, coord, atol=tol, rtol=0.0))
+                    for vector, coord in zip(self.coord_vectors, other)))
+
+    def __contains__(self, other):
+        """`g.__contains__(other) <==> other in g`."""
+        other = np.atleast_1d(other)
+        return (other.shape == (self.ndim,) and
+                all(coord in vector
                     for vector, coord in zip(self.coord_vectors, other)))
 
     def is_subgrid(self, other, tol=0.0):
@@ -839,12 +853,12 @@ class RegularGrid(TensorGrid):
         # and the corresponding indices in the other check point are
         # set to 0.
         if isinstance(other, RegularGrid):
-            minmax_contained = (other.contains(self.min_pt, tol=tol) and
-                                other.contains(self.max_pt, tol=tol))
+            minmax_contained = (other.approx_contains(self.min_pt, tol=tol) and
+                                other.approx_contains(self.max_pt, tol=tol))
             check_idx = np.zeros(self.ndim, dtype=int)
             check_idx[np.array(self.shape) >= 3] = 1
-            checkpt_contained = other.contains(self[check_idx.tolist()],
-                                               tol=tol)
+            checkpt_contained = other.approx_contains(self[check_idx.tolist()],
+                                                      tol=tol)
 
             return minmax_contained and checkpt_contained
 

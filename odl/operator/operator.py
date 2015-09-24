@@ -276,12 +276,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         >>> y
         Rn(3).element([1.0, 2.0, 3.0])
         """
-        if not self.domain.contains(inp):
+        if inp not in self.domain:
             raise TypeError('input {!r} not an element of the domain {!r} '
                             'of {!r}.'
                             ''.format(inp, self.domain, self))
 
-        if not self.range.contains(outp):
+        if outp not in self.range:
             raise TypeError('output {!r} not an element of the range {!r} '
                             'of {!r}.'
                             ''.format(outp, self.range, self))
@@ -1201,6 +1201,7 @@ class LinearOperatorScalarMult(OperatorLeftScalarMult, LinearOperator):
         `LinearOperatorScalarMult(op, scalar).adjoint ==
         `LinearOperatorScalarMult(op.adjoint, scalar)`
         """
+        # TODO: take conj(scalar) if complex
         return LinearOperatorScalarMult(self._op.adjoint, self._scalar)
 
 

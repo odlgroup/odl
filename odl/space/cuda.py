@@ -190,19 +190,19 @@ class CudaNtuples(NtuplesBase):
         def data_ptr(self):
             """A raw pointer to the data of this vector."""
             return self.data.data_ptr()
-            
+
         @property
         def nbytes(self):
             """The number of bytes this vector uses in memory."""
             return self.data.nbytes
-            
+
         @property
         def itemsize(self):
             """The size in bytes on one element of this type."""
             return self.data.itemsize
 
-        def equals(self, other):
-            """Test if `other` is equal to this vector.
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`.
 
             Returns
             -------
@@ -214,7 +214,7 @@ class CudaNtuples(NtuplesBase):
             --------
             >>> r3 = CudaNtuples(3, 'float32')
             >>> x = r3.element([1, 2, 3])
-            >>> x.equals(x)
+            >>> x == x
             True
             >>> y = r3.element([1, 2, 3])
             >>> x == y

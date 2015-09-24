@@ -116,8 +116,8 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         """The number of entries per tuple."""
         return self._size
 
-    def contains(self, other):
-        """Test if `other` is contained in this space.
+    def __contains__(self, other):
+        """`s.__contains__(other) <==> other in s`.
 
         Returns
         -------
@@ -137,8 +137,8 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         """
         return isinstance(other, NtuplesBase.Vector) and other.space == self
 
-    def equals(self, other):
-        """Test if `other` is equal to this space.
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
 
         Returns
         -------
@@ -149,37 +149,27 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         Examples
         --------
         >>> int_3 = Ntuples(3, dtype=int)
-        >>> int_3.equals(int_3)
+        >>> int_3 == int_3
         True
 
         Equality is not identity:
 
         >>> int_3a, int_3b = Ntuples(3, int), Ntuples(3, int)
-        >>> int_3a.equals(int_3b)
+        >>> int_3a == int_3b
         True
         >>> int_3a is int_3b
         False
 
         >>> int_3, int_4 = Ntuples(3, int), Ntuples(4, int)
-        >>> int_3.equals(int_4)
-        False
-        >>> int_3, str_3 = Ntuples(3, 'int'), Ntuples(3, 'S2')
-        >>> int_3.equals(str_3)
-        False
-
-        Equality can also be checked with "==":
-
-        >>> int_3, int_4 = Ntuples(3, int), Ntuples(4, int)
-        >>> int_3 == int_3
-        True
         >>> int_3 == int_4
         False
-        >>> int_3 != int_4
-        True
+        >>> int_3, str_3 = Ntuples(3, 'int'), Ntuples(3, 'S2')
+        >>> int_3 == str_3
+        False
         """
         if other is self:
-            return True        
-        
+            return True
+
         return (isinstance(other, type(self)) and
                 isinstance(self, type(other)) and
                 self.size == other.size and
@@ -259,8 +249,8 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             return self.space.size
 
         @abstractmethod
-        def equals(self, other):
-            """Test if `other` is equal to this vector.
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`.
 
             Returns
             -------
@@ -302,13 +292,9 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 or single value).
             """
 
-        def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`."""
-            return self.equals(other)
-
         def __ne__(self, other):
             """`vec.__ne__(other) <==> vec != other`."""
-            return not self.equals(other)
+            return not self.__eq__(other)
 
         def __str__(self):
             """`vec.__str__() <==> str(vec)`."""
@@ -509,8 +495,8 @@ class Ntuples(NtuplesBase):
             """
             return self._data.ctypes.data
 
-        def equals(self, other):
-            """Test if `other` is equal to this vector.
+        def __eq__(self, other):
+            """`vec.__eq__(other) <==> vec == other`.
 
             Returns
             -------
@@ -527,18 +513,16 @@ class Ntuples(NtuplesBase):
             --------
             >>> vec1 = Ntuples(3, int).element([1, 2, 3])
             >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
-            >>> vec1.equals(vec2)
+            >>> vec1 == vec2
             False
             >>> vec2 = Ntuples(3, int).element([1, 2, 3])
-            >>> vec1.equals(vec2)
-            True
-            >>> vec1 == vec2  # equivalent
+            >>> vec1 == vec2
             True
 
             Space membership matters:
 
             >>> vec2 = Ntuples(3, float).element([1, 2, 3])
-            >>> vec1.equals(vec2) and vec2.equals(vec1)
+            >>> vec1 == vec2 or vec2 == vec1
             False
             """
             if other is self:
@@ -1094,8 +1078,8 @@ class Fn(FnBase, Ntuples):
         """
         return self.element(np.zeros(self.size, dtype=self.dtype))
 
-    def equals(self, other):
-        """Test if `other` is equal to this space.
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
 
         Returns
         -------
@@ -1114,9 +1098,7 @@ class Fn(FnBase, Ntuples):
         >>> dist2 = partial(dist, ord=2)
         >>> c3 = Cn(3, dist=dist2)
         >>> c3_same = Cn(3, dist=dist2)
-        >>> c3.equals(c3_same)
-        True
-        >>> c3 == c3_same  # equivalent
+        >>> c3  == c3_same
         True
 
         Different `dist` functions result in different spaces - the
@@ -1125,7 +1107,7 @@ class Fn(FnBase, Ntuples):
         >>> dist1 = partial(dist, ord=1)
         >>> c3_1 = Cn(3, dist=dist1)
         >>> c3_2 = Cn(3, dist=dist2)
-        >>> c3_1.equals(c3_2)
+        >>> c3_1 == c3_2
         False
 
         Be careful with Lambdas - they result in non-identical function
@@ -1133,21 +1115,19 @@ class Fn(FnBase, Ntuples):
 
         >>> c3_lambda1 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
         >>> c3_lambda2 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda1.equals(c3_lambda2)
+        >>> c3_lambda1 == c3_lambda2
         False
 
         An `Fn` space with the same data type is considered equal:
 
         >>> c3 = Cn(3)
         >>> f3_cdouble = Fn(3, dtype='complex128')
-        >>> c3.equals(f3_cdouble)
-        True
         >>> c3 == f3_cdouble
         True
         """
         if other is self:
             return True
-        
+
         return (isinstance(other, Fn) and
                 self.size == other.size and
                 self.dtype == other.dtype and
