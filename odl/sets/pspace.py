@@ -265,7 +265,7 @@ class ProductSpace(LinearSpace):
         else:
             # Delegate constructors
             parts = [space.element(arg)
-                        for arg, space in zip(inp, self.spaces)]
+                     for arg, space in zip(inp, self.spaces)]
 
         return self.Vector(self, parts)
 
@@ -365,7 +365,8 @@ class ProductSpace(LinearSpace):
         else:
             return (type(self) == type(other) and
                     len(self) == len(other) and
-                    all(x.equals(y) for x, y in zip(self.spaces, other.spaces)))
+                    all(x.equals(y) for x, y in zip(self.spaces,
+                                                    other.spaces)))
 
     def __len__(self):
         """The number of factors."""

@@ -149,8 +149,8 @@ class IntervalProd(Set):
         """
         # pylint: disable=arguments-differ
         if other is self:
-            return True        
-        
+            return True
+
         if not isinstance(other, IntervalProd):
             return False
 
@@ -544,7 +544,7 @@ class Cuboid(IntervalProd):
 
     def __repr__(self):
         return ('Cuboid({!r}, {!r})'.format(list(self._begin),
-                                          list(self._end)))
+                                            list(self._end)))
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
