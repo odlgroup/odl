@@ -26,11 +26,11 @@ standard_library.install_aliases()
 import unittest
 import numpy as np
 import scipy as sp
-from math import sqrt
+from math import sqrt, ceil
 from textwrap import dedent
 
 # ODL imports
-import odl
+from odl import Rn, Cn, Fn, ConstWeightedInner, MatrixWeightedInner
 from odl.util.testutils import ODLTestCase
 
 # TODO: add tests for:
@@ -59,7 +59,7 @@ class RnTest(ODLTestCase):
     def _test_lincomb(self, a, b, n=10):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
-        rn = odl.Rn(n)
+        rn = Rn(n)
 
         # Unaliased arguments
         x, y, z, xVec, yVec, zVec = self._vectors(rn)
@@ -107,7 +107,7 @@ class OperatorOverloadTest(ODLTestCase):
         """ Verifies that the statement y=function(x) gives equivalent
         results to Numpy.
         """
-        rn = odl.Rn(n)
+        rn = Rn(n)
 
         x_arr = np.random.rand(n)
         y_arr = function(x_arr)
@@ -122,7 +122,7 @@ class OperatorOverloadTest(ODLTestCase):
         """ Verifies that the statement z=function(x,y) gives equivalent
         results to Numpy.
         """
-        rn = odl.Rn(n)
+        rn = Rn(n)
 
         x_arr = np.random.rand(n)
         y_arr = np.random.rand(n)
@@ -188,14 +188,14 @@ class OperatorOverloadTest(ODLTestCase):
 
 class MethodTest(ODLTestCase):
     def test_norm(self):
-        r3 = odl.Rn(3)
+        r3 = Rn(3)
         xd = r3.element([1, 2, 3])
 
         correct_norm = sqrt(1**2 + 2**2 + 3**2)
         self.assertAlmostEquals(r3.norm(xd), correct_norm)
 
     def test_inner(self):
-        r3 = odl.Rn(3)
+        r3 = Rn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, -3, 9])
 
@@ -205,7 +205,7 @@ class MethodTest(ODLTestCase):
 
 class GetSetTest(ODLTestCase):
     def test_setitem(self):
-        r3 = odl.Rn(3)
+        r3 = Rn(3)
         x = r3.element([42, 42, 42])
 
         for index in [0, 1, 2, -1, -2, -3]:
@@ -213,7 +213,7 @@ class GetSetTest(ODLTestCase):
             self.assertAlmostEquals(x[index], index)
 
     def test_setitem_index_error(self):
-        r3 = odl.Rn(3)
+        r3 = Rn(3)
         x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
@@ -224,7 +224,7 @@ class GetSetTest(ODLTestCase):
 
     def _test_getslice(self, slice):
         # Validate get against python list behaviour
-        r6 = odl.Rn(6)
+        r6 = Rn(6)
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
 
@@ -243,7 +243,7 @@ class GetSetTest(ODLTestCase):
 
     def _test_setslice(self, slice):
         # Validate set against python list behaviour
-        r6 = odl.Rn(6)
+        r6 = Rn(6)
         z = [7, 8, 9, 10, 11, 10]
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
@@ -264,7 +264,7 @@ class GetSetTest(ODLTestCase):
                     self._test_setslice(slice(start, end, step))
 
     def test_setslice_index_error(self):
-        r3 = odl.Rn(3)
+        r3 = Rn(3)
         xd = r3.element([1, 2, 3])
 
         # Bad slice
@@ -286,7 +286,7 @@ class MatrixWeightedInnerTest(ODLTestCase):
     @staticmethod
     def _vectors(fn):
         # Generate numpy vectors, real or complex
-        if isinstance(fn, odl.Rn):
+        if isinstance(fn, Rn):
             xarr = np.random.rand(fn.size)
             yarr = np.random.rand(fn.size)
         else:
@@ -300,7 +300,7 @@ class MatrixWeightedInnerTest(ODLTestCase):
 
     @staticmethod
     def _sparse_matrix(fn):
-        nnz = np.random.randint(0, fn.size**2/2)
+        nnz = np.random.randint(0, int(ceil(fn.size**2/2)))
         coo_r = np.random.randint(0, fn.size, size=nnz)
         coo_c = np.random.randint(0, fn.size, size=nnz)
         values = np.random.rand(nnz)
@@ -312,50 +312,81 @@ class MatrixWeightedInnerTest(ODLTestCase):
         return np.asmatrix(np.random.rand(fn.size, fn.size), dtype=float)
 
     def test_init(self):
-        rn = odl.Rn(10)
+        rn = Rn(10)
         sparse_mat = self._sparse_matrix(rn)
         dense_mat = self._dense_matrix(rn)
 
         # Just test if the code runs
-        inner = odl.MatrixWeightedInner(rn, sparse_mat)
-        inner = odl.MatrixWeightedInner(rn, dense_mat)
+        inner = MatrixWeightedInner(rn, sparse_mat)
+        inner = MatrixWeightedInner(rn, dense_mat)
 
         nonsquare_mat = np.eye(10, 5)
         with self.assertRaises(ValueError):
-            odl.MatrixWeightedInner(rn, nonsquare_mat)
+            MatrixWeightedInner(rn, nonsquare_mat)
 
     def _test_equals(self, n):
-        rn = odl.Rn(n)
+        rn = Rn(n)
         sparse_mat = self._sparse_matrix(rn)
         sparse_mat_as_dense = sparse_mat.todense()
         dense_mat = self._dense_matrix(rn)
+        different_dense_mat = dense_mat.copy()
+        different_dense_mat[0, 0] = -10
 
-        inner_sparse = odl.MatrixWeightedInner(rn, sparse_mat)
-        inner_sparse2 = odl.MatrixWeightedInner(rn, sparse_mat)
-        inner_sparse_as_dense = odl.MatrixWeightedInner(rn,
-                                                        sparse_mat_as_dense)
-        inner_dense = odl.MatrixWeightedInner(rn, dense_mat)
-        inner_dense2 = odl.MatrixWeightedInner(rn, dense_mat)
+        inner_sparse = MatrixWeightedInner(rn, sparse_mat)
+        inner_sparse2 = MatrixWeightedInner(rn, sparse_mat)
+        inner_sparse_as_dense = MatrixWeightedInner(rn, sparse_mat_as_dense)
+        inner_dense = MatrixWeightedInner(rn, dense_mat)
+        inner_dense2 = MatrixWeightedInner(rn, dense_mat)
+        inner_different_dense = MatrixWeightedInner(rn, different_dense_mat)
 
+        # Identical objects -> True
         self.assertEquals(inner_sparse, inner_sparse)
+        # Identical matrices -> True
         self.assertEquals(inner_sparse, inner_sparse2)
-        self.assertEquals(inner_sparse, inner_sparse_as_dense)
-        self.assertEquals(inner_sparse_as_dense, inner_sparse)
         self.assertEquals(inner_dense, inner_dense2)
+        # Equivalent but not identical matrices -> False
+        self.assertNotEquals(inner_sparse, inner_sparse_as_dense)
+        self.assertNotEquals(inner_sparse_as_dense, inner_sparse)
+        # Not equivalent -> False
+        self.assertNotEquals(inner_dense, inner_different_dense)
 
     def test_equals(self):
-        for _ in range(20):
-            self._test_equals(10)
+        for n in range(1, 20):
+            self._test_equals(n)
+
+    def _test_equiv(self, n):
+        rn = Rn(n)
+        sparse_mat = self._sparse_matrix(rn)
+        sparse_mat_as_dense = sparse_mat.todense()
+        dense_mat = self._dense_matrix(rn)
+        different_dense_mat = dense_mat.copy()
+        different_dense_mat[0, 0] = -10
+
+        inner_sparse = MatrixWeightedInner(rn, sparse_mat)
+        inner_sparse2 = MatrixWeightedInner(rn, sparse_mat)
+        inner_sparse_as_dense = MatrixWeightedInner(rn, sparse_mat_as_dense)
+        inner_dense = MatrixWeightedInner(rn, dense_mat)
+        inner_dense_copy = MatrixWeightedInner(rn, dense_mat.copy())
+        inner_different_dense = MatrixWeightedInner(rn, different_dense_mat)
+
+        # Equal -> True
+        self.assertTrue(inner_sparse.equiv(inner_sparse))
+        self.assertTrue(inner_sparse.equiv(inner_sparse2))
+        # Equivalent matrices -> True
+        self.assertTrue(inner_sparse.equiv(inner_sparse_as_dense))
+        self.assertTrue(inner_dense.equiv(inner_dense_copy))
+        # Different matrices -> False
+        self.assertFalse(inner_dense.equiv(inner_different_dense))
 
     def _test_call_real(self, n):
-        rn = odl.Rn(n)
+        rn = Rn(n)
         xarr, yarr, x, y = self._vectors(rn)
         sparse_mat = self._sparse_matrix(rn)
         sparse_mat_as_dense = sparse_mat.todense()
         dense_mat = self._dense_matrix(rn)
 
-        inner_sparse = odl.MatrixWeightedInner(rn, sparse_mat)
-        inner_dense = odl.MatrixWeightedInner(rn, dense_mat)
+        inner_sparse = MatrixWeightedInner(rn, sparse_mat)
+        inner_dense = MatrixWeightedInner(rn, dense_mat)
 
         result_sparse = inner_sparse(x, y)
         result_dense = inner_dense(x, y)
@@ -369,14 +400,14 @@ class MatrixWeightedInnerTest(ODLTestCase):
         self.assertAlmostEquals(result_dense, true_result_dense)
 
     def _test_call_complex(self, n):
-        cn = odl.Cn(n)
+        cn = Cn(n)
         xarr, yarr, x, y = self._vectors(cn)
         sparse_mat = self._sparse_matrix(cn)
         sparse_mat_as_dense = sparse_mat.todense()
         dense_mat = self._dense_matrix(cn)
 
-        inner_sparse = odl.MatrixWeightedInner(cn, sparse_mat)
-        inner_dense = odl.MatrixWeightedInner(cn, dense_mat)
+        inner_sparse = MatrixWeightedInner(cn, sparse_mat)
+        inner_dense = MatrixWeightedInner(cn, dense_mat)
 
         result_sparse = inner_sparse(x, y)
         result_dense = inner_dense(x, y)
@@ -397,13 +428,13 @@ class MatrixWeightedInnerTest(ODLTestCase):
 
     def test_repr(self):
         n = 5
-        rn = odl.Rn(n)
+        rn = Rn(n)
         sparse_mat = sp.sparse.dia_matrix((np.arange(n, dtype=float), [0]),
                                           shape=(n, n))
         dense_mat = sparse_mat.todense()
 
-        inner_sparse = odl.MatrixWeightedInner(rn, sparse_mat)
-        inner_dense = odl.MatrixWeightedInner(rn, dense_mat)
+        inner_sparse = MatrixWeightedInner(rn, sparse_mat)
+        inner_dense = MatrixWeightedInner(rn, dense_mat)
 
         mat_str_sparse = ("<(5, 5) sparse matrix, format 'dia', "
                           "5 stored entries>")
@@ -422,13 +453,13 @@ class MatrixWeightedInnerTest(ODLTestCase):
 
     def test_str(self):
         n = 5
-        rn = odl.Rn(n)
+        rn = Rn(n)
         sparse_mat = sp.sparse.dia_matrix((np.arange(n, dtype=float), [0]),
                                           shape=(n, n))
         dense_mat = sparse_mat.todense()
 
-        inner_sparse = odl.MatrixWeightedInner(rn, sparse_mat)
-        inner_dense = odl.MatrixWeightedInner(rn, dense_mat)
+        inner_sparse = MatrixWeightedInner(rn, sparse_mat)
+        inner_dense = MatrixWeightedInner(rn, dense_mat)
 
         mat_str_sparse = '''
   (1, 1)\t1.0
@@ -455,7 +486,7 @@ class ConstWeightedInnerTest(ODLTestCase):
     @staticmethod
     def _vectors(fn):
         # Generate numpy vectors, real or complex
-        if isinstance(fn, odl.Rn):
+        if isinstance(fn, Rn):
             xarr = np.random.rand(fn.size)
             yarr = np.random.rand(fn.size)
         else:
@@ -469,43 +500,74 @@ class ConstWeightedInnerTest(ODLTestCase):
 
     def test_init(self):
         n = 10
-        rn = odl.Rn(n)
+        rn = Rn(n)
         constant = 1.5
 
         # Just test if the code runs
-        inner = odl.ConstWeightedInner(rn, constant)
+        inner = ConstWeightedInner(rn, constant)
 
     def test_equals(self):
         n = 10
-        rn = odl.Rn(n)
+        rn = Rn(n)
         constant = 1.5
 
-        inner_const = odl.ConstWeightedInner(rn, constant)
-        inner_const2 = odl.ConstWeightedInner(rn, constant)
+        inner_const = ConstWeightedInner(rn, constant)
+        inner_const2 = ConstWeightedInner(rn, constant)
 
-        n = 10  # doesn't matter
         const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
                                                 shape=(n, n))
         const_dense_mat = constant * np.eye(n)
-        inner_matrix_sp = odl.MatrixWeightedInner(rn, const_sparse_mat)
-        inner_matrix_de = odl.MatrixWeightedInner(rn, const_dense_mat)
+        inner_matrix_sp = MatrixWeightedInner(rn, const_sparse_mat)
+        inner_matrix_de = MatrixWeightedInner(rn, const_dense_mat)
 
         self.assertEquals(inner_const, inner_const)
         self.assertEquals(inner_const, inner_const2)
         self.assertEquals(inner_const2, inner_const)
-        self.assertEquals(inner_const, inner_matrix_sp)
-        self.assertEquals(inner_const, inner_matrix_de)
+        # Equivalent but not equal -> False
+        self.assertNotEquals(inner_const, inner_matrix_sp)
+        self.assertNotEquals(inner_const, inner_matrix_de)
 
-        rn_single = odl.Rn(n, dtype='single')
-        inner_const_single = odl.ConstWeightedInner(rn_single, constant)
+        rn_single = Rn(n, dtype='single')
+        inner_const_single = ConstWeightedInner(rn_single, constant)
         self.assertNotEquals(inner_const, inner_const_single)
 
+        inner_different_const = ConstWeightedInner(rn, 2.5)
+        self.assertNotEquals(inner_const, inner_different_const)
+
+    def test_equiv(self):
+        n = 10
+        rn = Rn(n)
+        constant = 1.5
+
+        inner_const = ConstWeightedInner(rn, constant)
+        inner_const2 = ConstWeightedInner(rn, constant)
+
+        const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
+                                                shape=(n, n))
+        const_dense_mat = constant * np.eye(n)
+        inner_matrix_sp = MatrixWeightedInner(rn, const_sparse_mat)
+        inner_matrix_de = MatrixWeightedInner(rn, const_dense_mat)
+
+        # Equal -> True
+        self.assertTrue(inner_const.equiv(inner_const))
+        self.assertTrue(inner_const.equiv(inner_const2))
+        # Equivalent matrix representation -> True
+        self.assertTrue(inner_const.equiv(inner_matrix_sp))
+        self.assertTrue(inner_const.equiv(inner_matrix_de))
+
+        rn_single = Rn(n, dtype='single')
+        inner_const_single = ConstWeightedInner(rn_single, constant)
+        self.assertFalse(inner_const.equiv(inner_const_single))
+
+        inner_different_const = ConstWeightedInner(rn, 2.5)
+        self.assertFalse(inner_const.equiv(inner_different_const))
+
     def _test_call_real(self, n):
-        rn = odl.Rn(n)
+        rn = Rn(n)
         xarr, yarr, x, y = self._vectors(rn)
 
         constant = 1.5
-        inner_const = odl.ConstWeightedInner(rn, constant)
+        inner_const = ConstWeightedInner(rn, constant)
 
         result_const = inner_const(x, y)
         true_result_const = constant * np.dot(yarr, xarr)
@@ -513,11 +575,11 @@ class ConstWeightedInnerTest(ODLTestCase):
         self.assertAlmostEquals(result_const, true_result_const)
 
     def _test_call_complex(self, n):
-        cn = odl.Cn(n)
+        cn = Cn(n)
         xarr, yarr, x, y = self._vectors(cn)
 
         constant = 1.5
-        inner_const = odl.ConstWeightedInner(cn, constant)
+        inner_const = ConstWeightedInner(cn, constant)
 
         result_const = inner_const(x, y)
         true_result_const = constant * np.dot(yarr.conj(), xarr)
@@ -525,24 +587,24 @@ class ConstWeightedInnerTest(ODLTestCase):
         self.assertAlmostEquals(result_const, true_result_const)
 
     def test_call(self):
-        for _ in range(20):
-            self._test_call_real(10)
-            self._test_call_complex(10)
+        for n in range(1, 20):
+            self._test_call_real(n)
+            self._test_call_complex(n)
 
     def test_repr(self):
         n = 10
-        rn = odl.Rn(n)
+        rn = Rn(n)
         constant = 1.5
-        inner_const = odl.ConstWeightedInner(rn, constant)
+        inner_const = ConstWeightedInner(rn, constant)
 
         repr_str = 'ConstWeightedInner(Rn(10), 1.5)'
         self.assertEquals(repr(inner_const), repr_str)
 
     def test_str(self):
         n = 10
-        rn = odl.Rn(n)
+        rn = Rn(n)
         constant = 1.5
-        inner_const = odl.ConstWeightedInner(rn, constant)
+        inner_const = ConstWeightedInner(rn, constant)
 
         print_str = '(x, y) --> 1.5 * y^H x'
         self.assertEquals(str(inner_const), print_str)

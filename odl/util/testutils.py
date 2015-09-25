@@ -19,7 +19,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from builtins import object, super
 from future import standard_library
 standard_library.install_aliases()
@@ -33,7 +32,8 @@ import sys
 from time import time
 from future.utils import with_metaclass
 
-__all__ = ('ODLTestCase', 'skip_all', 'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
+__all__ = ('ODLTestCase', 'skip_all', 'Timer', 'timeit', 'ProgressBar',
+           'ProgressRange')
 
 
 class ODLTestCase(unittest.TestCase):
@@ -98,6 +98,7 @@ def skip_all(reason=None):
 
 
 class Timer(object):
+
     """A timer context manager.
 
     Usage
@@ -108,6 +109,7 @@ class Timer(object):
 
     Prints the time stuff took to execute.
     """
+
     def __init__(self, name=None):
         if name is not None:
             self.name = name
@@ -123,6 +125,7 @@ class Timer(object):
 
 
 def timeit(arg):
+
     """A timer decorator.
 
     Usage
@@ -135,8 +138,8 @@ def timeit(arg):
     @timeit("info string")
     def myfunction(...):
         ...
-
     """
+
     if callable(arg):
         def timed_function(*args, **kwargs):
             with Timer(str(arg)):
@@ -152,6 +155,7 @@ def timeit(arg):
 
 
 class ProgressBar(object):
+
     """A simple command-line progress bar.
 
     Usage
@@ -213,6 +217,7 @@ class ProgressBar(object):
                 self.text, '#'*30))
 
         sys.stdout.flush()
+
 
 class ProgressRange(object):
     def __init__(self, text, n):

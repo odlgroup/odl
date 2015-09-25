@@ -36,7 +36,7 @@ from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
-from odl.sets.domain import IntervalProd
+from odl.set.domain import IntervalProd
 
 
 __all__ = ('FunctionSetMapping', 'LinearFunctionSpaceMapping',

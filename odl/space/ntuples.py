@@ -62,16 +62,14 @@ from numbers import Integral
 import platform
 
 # ODL imports
-from odl.operator.default_ops import ScalingOperator
-from odl.operator.operator import LinearOperator
-from odl.sets.set import Set, RealNumbers, ComplexNumbers
-from odl.sets.space import LinearSpace
+from odl.operator.operator import Operator, LinearOperator
+from odl.set.sets import Set, RealNumbers, ComplexNumbers, CartesianProduct
+from odl.set.space import LinearSpace
 from odl.util.utility import array1d_repr, array1d_str, dtype_repr
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn',
-           'ConstWeightedInner', 'MatrixWeightedInner', 'WeightedInnerBase',
-           'MatVecOperator')
+           'ConstWeightedInner', 'MatrixWeightedInner', 'MatVecOperator')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -1372,87 +1370,6 @@ class Rn(Fn):
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
 
-class WeightedInnerBase(with_metaclass(ABCMeta, object)):
-
-    """Abstract base class for weighted inner products.
-
-    This class and its subclasses serve as a simple means to evaluate
-    and compare weighted inner products semantically rather than by
-    identity on a pure function level.
-    """
-
-    @abstractmethod
-    def __eq__(self, other):
-        """`inner.__eq__(other) <==> inner == other`.
-
-        Returns
-        -------
-        equal : bool
-            `True` if `other` is a `WeightedInnerBase` instance
-            represented by the same matrix, `False` otherwise.
-        """
-
-    @abstractmethod
-    def matvec(self, vec):
-        """Return product of the weighting matrix with a vector.
-
-        Parameters
-        ----------
-        vec : `FnBase.Vector`
-            Vector with which to multiply the weighting matrix
-
-        Returns
-        -------
-        weighted : `FnBase.Vector`
-            The matrix-vector product
-        """
-
-    @abstractmethod
-    def __call__(self, x, y):
-        """`inner.__call__(x, y) <==> inner(x, y).`"""
-
-
-class WeightedInner(with_metaclass(ABCMeta, WeightedInnerBase)):
-
-    """Abstract base class for NumPy weighted inner products. """
-
-    def __call__(self, x, y):
-        """`inner.__call__(x, y) <==> inner(x, y).`
-
-        Calculate the inner product of `x` and `y` weighted by the
-        matrix of this instance.
-
-        Parameters
-        ----------
-        x, y : `Fn.Vector`
-            Vectors whose inner product is calculated. They must be
-            one-dimensional and have equal length.
-
-        Returns
-        -------
-        inner : scalar NumPy dtype
-            Weighted inner product. The output dtype is the same as
-            the dtype of `x` and `y`.
-
-        See also
-        --------
-        numpy.vdot : unweighted inner product
-        """
-        if not isinstance(x, Fn.Vector):
-            raise TypeError('x vector {!r} not an `Fn.Vector` instance.'
-                            ''.format(x))
-        if not isinstance(y, Fn.Vector):
-            raise TypeError('y vector {!r} not an `Fn.Vector` instance.'
-                            ''.format(y))
-
-        if x.size != y.size:
-            raise TypeError('vector sizes {} and {} are different.'
-                            ''.format(x.size, y.size))
-
-        # vdot conjugates the first argument if complex
-        return np.vdot(y.data, self.matvec(x).data)
-
-
 class MatVecOperator(LinearOperator):
 
     """Operator :math:`F^n -> F^m` represented by a matrix."""
@@ -1545,18 +1462,135 @@ class MatVecOperator(LinearOperator):
             self.matrix.dot(inp.data, out=outp.data)
 
 
+class WeightedInnerBase(with_metaclass(ABCMeta, Operator)):
+
+    """Abstract base class for weighted inner products.
+
+    This class and its subclasses serve as a simple means to evaluate
+    and compare weighted inner products semantically rather than by
+    identity on a pure function level.
+
+    It is implemented as an operator from the cartesian product of
+    an `FnBase` type space with itself to the real or complex numbers.
+    """
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            The space on which this inner product is defined
+        """
+        if not isinstance(space, LinearSpace):
+            raise TypeError('space {!} is not a `LinearSpace` instance.'
+                            ''.format(space))
+
+        self._domain = CartesianProduct(space, space)
+        self._range = space.field
+
+    @property
+    def domain(self):
+        """Domain of this inner product, `space x space`."""
+        return self._domain
+
+    @property
+    def range(self):
+        """Range of this inner product, the `field` of `space`."""
+        return self._range
+
+    @property
+    def space(self):
+        """Space on which this inner product is defined."""
+        return self.domain[0]
+
+    @abstractmethod
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`.
+
+        Returns
+        -------
+        equal : bool
+            `True` if `other` is a `WeightedInnerBase` instance
+            represented by the **identical** matrix, `False` otherwise.
+
+        Notes
+        -----
+        This operation must be computationally cheap, i.e. no arrays
+        may be compared element-wise. That is the task of the `equiv`
+        method.
+        """
+
+    @abstractmethod
+    def equiv(self, other):
+        """Test if `other` is an equivalent inner product.
+
+        Returns
+        -------
+        equivalent : bool
+            `True` if `other` is a `WeightedInnerBase` instance which
+            yields the same result as this inner product for any
+            input, `False` otherwise. This is checked by entry-wise
+            comparison of this inner product's matrix with the matrix
+            or constant of `other`.
+        """
+
+    # Override the default __call__ of Operator to allow arg lists and
+    # remove output parameter since in-place evaluation is impossible
+    def __call__(self, *inp):
+        """`op.__call__(inp) <==> op(inp)`.
+
+        Implementation of the call pattern `op(inp)` with the private
+        `_call()` method and added error checking.
+
+        Parameters
+        ----------
+        inp1, inp2 : domain elements
+            Objects in the operator domain to which the operator is
+            applied. The objects are treated as immutable, hence they
+            are not modified during evaluation.
+
+        Returns
+        -------
+        elem : range element
+            An object in the operator range, the result of the operator
+            evaluation. It is identical to `outp` if provided.
+        """
+        if inp not in self.domain:
+            if inp[0] in self.domain:
+                inp = inp[0]
+            else:
+                raise TypeError('input {!r} not an element of the domain '
+                                '{!r} x {!r} of {!r}.'
+                                ''.format(inp, self.domain[0], self.domain[1],
+                                          self))
+        result = self._call(*inp)
+
+        if result not in self.range:
+            raise TypeError('result {!r} not an element of the range {!r} '
+                            'of {!r}.'
+                            ''.format(result, self.range, self))
+        return result
+
+
+class WeightedInner(with_metaclass(ABCMeta, WeightedInnerBase)):
+
+    """Abstract base class for weighted inner products, NumPy version."""
+
+
 class MatrixWeightedInner(WeightedInner):
 
-    """Function object for matrix-weighted :math:`F^n` inner products.
+    """Operator for matrix-weighted :math:`F^n` inner products.
 
     The weighted inner product with matrix :math:`G` is defined as
 
     :math:`<a, b> := b^H G a`
 
     with :math:`b^H` standing for transposed complex conjugate. The
-    matrix must be real-valued and symmetric posivive definite,
-    otherwise it does not define an inner product. This is not checked
-    during initialization.
+    matrix must be Hermitian and posivive definite, otherwise it does
+    not define an inner product. This is not checked during
+    initialization.
+    This is the CPU implementation using NumPy.
     """
 
     def __init__(self, space, matrix):
@@ -1570,19 +1604,46 @@ class MatrixWeightedInner(WeightedInner):
             Weighting matrix of the inner product. Its shape must be
             `(n, n)`, where `n` is the size of `space`.
         """
+        super().__init__(space)
         self._matvec = MatVecOperator(space, space, matrix)
+        self._domain = CartesianProduct(space, space)
+        self._range = space.field
 
     def __eq__(self, other):
-        """`inner.__eq__(other) <==> inner == other`."""
+        """`inner.__eq__(other) <==> inner == other`.
+
+        Returns
+        -------
+        equals : bool
+            `True` if `other` is a `MatrixWeightedInner` instance with
+            **identical** matrix, `False` otherwise.
+
+        See also
+        --------
+        equiv : test for equivalent inner products
+        """
         if other is self:
             return True
 
-        if isinstance(other, MatrixWeightedInner):
-            # Optimization for obvious cases
-            if self.space != other.space:
-                return False
-            elif self.matrix is other.matrix:
-                return True
+        return (isinstance(other, MatrixWeightedInner) and
+                self.space == other.space and
+                self.matrix is other.matrix)
+
+    def equiv(self, other):
+        """Test if `other` is an equivalent inner product.
+
+        Returns
+        -------
+        equivalent : bool
+            `True` if `other` is a `WeightedInner` instance which
+            yields the same result as this inner product for any
+            input, `False` otherwise. This is checked by entry-wise
+            comparison of this inner product's matrix with the matrix
+            or constant of `other`.
+        """
+        # Optimization for equality
+        if self == other:
+            return True
 
         elif isinstance(other, MatrixWeightedInner):
             if self.matrix_issparse:
@@ -1590,7 +1651,7 @@ class MatrixWeightedInner(WeightedInner):
                     # Optimization for different number of nonzero elements
                     if self.matrix.nnz != other.matrix.nnz:
                         return False
-                    return (self.matrix - other.matrix).nnz == 0
+                    return (self.matrix != other.matrix).nnz == 0
                 else:
                     return np.array_equal(self.matrix.todense(), other.matrix)
 
@@ -1601,16 +1662,7 @@ class MatrixWeightedInner(WeightedInner):
                     return np.array_equal(self.matrix, other.matrix)
 
         elif isinstance(other, ConstWeightedInner):
-            if self.matrix_issparse:
-                # Construct sparse matrix with constant diagonal
-                const_diag = np.empty(self.matrix.shape[0])
-                const_diag.fill(other.const)
-                const_mat = sp.sparse.dia_matrix((const_diag, [0]),
-                                                 self.matrix.shape)
-                return (self.matrix - const_mat).nnz == 0
-            else:
-                return np.array_equal(
-                    self.matrix, np.eye(self.matrix.shape[0]) * other.const)
+            return np.all(self.matrix.diagonal() == other.const)
 
         else:
             return False
@@ -1622,13 +1674,22 @@ class MatrixWeightedInner(WeightedInner):
 
     @property
     def matrix(self):
-        """The matrix of this inner product."""
+        """Weighting matrix of this inner product."""
         return self.matvec.matrix
 
     @property
     def matrix_issparse(self):
         """Whether the weighting matrix is sparse or not."""
         return self.matvec.matrix_issparse
+
+    def _call(self, x1, x2):
+        """Raw call method of this inner product.`
+
+        Calculate the inner product of `x1` and `x2` weighted by the
+        matrix of this instance.
+        """
+        # vdot conjugates the first argument if complex
+        return np.vdot(x2.data, self.matvec(x1).data)
 
     def __repr__(self):
         """`inner.__repr__() <==> repr(inner)`."""
@@ -1647,13 +1708,14 @@ class MatrixWeightedInner(WeightedInner):
 
 class ConstWeightedInner(WeightedInner):
 
-    """Function object for constant-weighted :math:`F^n` inner products.
+    """Operator for constant-weighted :math:`F^n` inner products.
 
     The weighted inner product with constant :math:`c` is defined as
 
     :math:`<a, b> := b^H c a`
 
     with :math:`b^H` standing for transposed complex conjugate.
+    This is the CPU implementation using NumPy.
     """
 
     def __init__(self, space, constant):
@@ -1666,36 +1728,57 @@ class ConstWeightedInner(WeightedInner):
         constant : float
             Weighting constant of the inner product.
         """
-        if not isinstance(space, LinearSpace):
-            raise ValueError('space {!} is not a `LinearSpace` instance.'
-                             ''.format(space))
+        super().__init__(space)
         self._const = float(constant)
-        self._matvec = ScalingOperator(space, self.const)
 
     @property
     def const(self):
-        """This instance's constant."""
+        """Weighting constant of this inner product."""
         return self._const
 
     @property
-    def matvec(self):
-        """This instance's matvec operator."""
-        return self._matvec
+    def space(self):
+        """The space on which this inner product is defined."""
+        return self.domain[0]
+
+    def _call(self, x1, x2):
+        """Raw call method of this inner product.
+
+        Calculate the inner product of `x1` and `x2` weighted by the
+        constant of this instance.
+        """
+        # vdot conjugates the first argument if complex
+        return np.vdot(x2.data, x1.data) * self.const
 
     def __eq__(self, other):
         """`inner.__eq__(other) <==> inner == other`."""
+        return (isinstance(other, ConstWeightedInner) and
+                self.space == other.space and
+                self.const == other.const)
+
+    def equiv(self, other):
+        """Test if `other` is an equivalent inner product.
+
+        Returns
+        -------
+        equivalent : bool
+            `True` if `other` is a `WeightedInner` instance which
+            yields the same result as this inner product for any
+            input, `False` otherwise. This is the same as equality
+            if `other` is a `ConstWeightedInner` instance, otherwise
+            by entry-wise comparison of this inner product's constant
+            with the matrix of `other`.
+        """
         if isinstance(other, ConstWeightedInner):
-            return (self.matvec.domain == other.matvec.domain and
-                    self.const == other.const)
-        elif isinstance(other, WeightedInner):
-            return other.__eq__(self)
+            return self == other
+        elif isinstance(other, MatrixWeightedInner):
+            return other.equiv(self)
         else:
             return False
 
     def __repr__(self):
         """`inner.__repr__() <==> repr(inner)`."""
-        return 'ConstWeightedInner({!r}, {})'.format(self.matvec.domain,
-                                                     self.const)
+        return 'ConstWeightedInner({!r}, {})'.format(self.space, self.const)
 
     def __str__(self):
         """`inner.__repr__() <==> repr(inner)`."""

@@ -24,7 +24,7 @@ standard_library.install_aliases()
 
 # ODL imports
 from odl.space.fspace import FunctionSpace
-from odl.sets.set import RealNumbers
+from odl.set.sets import RealNumbers
 
 
 __all__ = ('L2',)

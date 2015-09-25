@@ -141,9 +141,9 @@ from . import pspace
 from .pspace import *
 __all__ += pspace.__all__
 
-from . import set
-from .set import *
-__all__ += set.__all__
+from . import sets
+from .sets import *
+__all__ += sets.__all__
 
 from . import space
 from .space import *

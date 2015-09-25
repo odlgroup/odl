@@ -28,38 +28,30 @@ from math import pi, sqrt
 import numpy as np
 
 # ODL imports
-from odl.space.default import L2
-from odl.sets.domain import Interval, Rectangle
+import odl
+from odl import L2
 from odl.util.testutils import ODLTestCase
+
 
 class L2Test(ODLTestCase):
     def test_interval(self):
-        self.skipTest("needs to be updated to new discr")
-        """I = Interval(0, pi)
-        l2 = L2(I)
-        l2sin = l2.element(np.sin)
+        l2space = L2(odl.Interval(0, pi))
+        l2discr = odl.l2_uniform_discretization(l2space, 10)
 
-        rn = En(10)
-        d = uniform_discretization(l2, rn)
+        l2sin = l2space.element(np.sin)
+        discr_sin = l2discr.element(l2sin)
 
-        sind = d.element(l2sin)
+        self.assertAlmostEqual(discr_sin.norm(), sqrt(pi/2))
 
-        self.assertAlmostEqual(sind.norm(), sqrt(pi/2))"""
-        
     def test_rectangle(self):
-        self.skipTest("needs to be updated to new discr")
-        """R = Rectangle((0, 0), (pi, 2*pi))
-        l2 = L2(R)
-        l2sin = l2.element(lambda p: np.sin(p[0]) * np.sin(p[1]))
+        l2space = L2(odl.Rectangle((0, 0), (pi, 2*pi)))
+        n, m = 10, 10
+        l2discr = odl.l2_uniform_discretization(l2space, (n, m))
 
-        n = 10
-        m = 10
-        #rn = En(n*m)
-        d = uniform_discretization(l2, rn, (n, m))
+        l2sin2 = l2space.element(lambda x, y: np.sin(x) * np.sin(y))
+        discr_sin2 = l2discr.element(l2sin2)
 
-        sind = d.element(l2sin)
-
-        self.assertAlmostEqual(sind.norm(), sqrt(pi**2 / 2))"""
+        self.assertAlmostEqual(discr_sin2.norm(), pi / sqrt(2))
 
 if __name__ == '__main__':
     unittest.main(exit=False)

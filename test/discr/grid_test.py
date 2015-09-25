@@ -28,8 +28,8 @@ import unittest
 import numpy as np
 
 # ODL imports
-from odl.discr.grid import TensorGrid, RegularGrid
-from odl.sets.domain import IntervalProd
+import odl
+from odl import TensorGrid, RegularGrid
 from odl.util.testutils import ODLTestCase
 
 
@@ -527,14 +527,14 @@ class TensorGridTestMethods(ODLTestCase):
         grid = TensorGrid(vec1, vec2, vec3, as_midp=False)
         begin = (vec1[0], vec2[0], vec3[0])
         end = (vec1[-1], vec2[-1], vec3[-1])
-        chull = IntervalProd(begin, end)
+        chull = odl.IntervalProd(begin, end)
         self.assertEquals(grid.convex_hull(), chull)
 
         # With degenerate axis
         grid = TensorGrid(vec1, vec2, scalar, as_midp=False)
         begin = (vec1[0], vec2[0], scalar)
         end = (vec1[-1], vec2[-1], scalar)
-        chull = IntervalProd(begin, end)
+        chull = odl.IntervalProd(begin, end)
         self.assertEquals(grid.convex_hull(), chull)
 
         # Grid as tesselation
@@ -545,14 +545,14 @@ class TensorGridTestMethods(ODLTestCase):
         begin = (vec1[0] - cs1[0]/2., vec2[0] - cs2[0]/2., vec3[0] - cs3[0]/2.)
         end = (vec1[-1] + cs1[-1]/2., vec2[-1] + cs2[-1]/2.,
                vec3[-1] + cs3[-1]/2.)
-        chull = IntervalProd(begin, end)
+        chull = odl.IntervalProd(begin, end)
         self.assertEquals(grid.convex_hull(), chull)
 
         # With degenerate axis
         grid = TensorGrid(vec1, vec2, scalar, as_midp=True)
         begin = (vec1[0] - cs1[0]/2., vec2[0] - cs2[0]/2., scalar)
         end = (vec1[-1] + cs1[-1]/2., vec2[-1] + cs2[-1]/2., scalar)
-        chull = IntervalProd(begin, end)
+        chull = odl.IntervalProd(begin, end)
         self.assertEquals(grid.convex_hull(), chull)
 
     def test_repr(self):

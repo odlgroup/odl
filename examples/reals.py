@@ -22,18 +22,17 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.sets.space import LinearSpace
-from odl.sets.domain import RealNumbers
+import odl
 
 """An example of a very simple space, the real numbers."""
 
 
-class Reals(LinearSpace):
+class Reals(odl.LinearSpace):
     """The real numbers
     """
 
     def __init__(self):
-        self._field = RealNumbers()
+        self._field = odl.RealNumbers()
 
     def _inner(self, x, y):
         return x.__val__ * y.__val__
@@ -54,14 +53,14 @@ class Reals(LinearSpace):
     def element(self, value=0):
         return Reals.Vector(self, value)
 
-    class Vector(LinearSpace.Vector):
+    class Vector(odl.LinearSpace.Vector):
         """Real vectors are floats
         """
 
         __val__ = None
 
         def __init__(self, space, v):
-            LinearSpace.Vector.__init__(self, space)
+            odl.LinearSpace.Vector.__init__(self, space)
             self.__val__ = v
 
         def __float__(self):

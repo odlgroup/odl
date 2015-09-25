@@ -23,16 +23,13 @@ from builtins import super
 
 from math import sin, cos
 import matplotlib.pyplot as plt
-
 import numpy as np
-import odl.operator.operator as OP
-from odl.space.default import L2
-from odl.sets.domain import Interval, Rectangle
-from odl.discr.l2_discr import l2_uniform_discretization
+
+import odl
 import SimRec2DPy as SR
 
 
-class Projection(OP.LinearOperator):
+class Projection(odl.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, volumeSize, detectorSize,
                  stepSize, sourcePosition, detectorOrigin, pixelDirection,
                  domain, range_):
@@ -86,11 +83,11 @@ detectorOrigin = detectorAxisDistance * x0 + detectorOrigin * y0
 pixelDirection = y0 * pixelSize
 
 
-dataSpace = L2(Interval(0, 1))
-dataDisc = l2_uniform_discretization(dataSpace, nPixels, impl='numpy')
+dataSpace = odl.L2(odl.Interval(0, 1))
+dataDisc = odl.l2_uniform_discretization(dataSpace, nPixels, impl='numpy')
 
-reconSpace = L2(Rectangle((0, 0), (1, 1)))
-reconDisc = l2_uniform_discretization(reconSpace, nVoxels, impl='numpy')
+reconSpace = odl.L2(odl.Rectangle((0, 0), (1, 1)))
+reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels, impl='numpy')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)

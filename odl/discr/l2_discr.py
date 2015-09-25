@@ -33,9 +33,14 @@ import numpy as np
 from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
+from odl.set.domain import IntervalProd
+from odl.space.ntuples import ConstWeightedInner
 from odl.space.default import L2
-from odl.sets.domain import IntervalProd
-
+from odl.space import CUDA_AVAILABLE
+if CUDA_AVAILABLE:
+    from odl.space.cu_ntuples import CudaConstWeightedInner
+else:
+    CudaConstWeightedInner = None
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')
 
@@ -303,6 +308,9 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         raise TypeError('domain {!r} of the L2 space is not an `IntervalProd` '
                         'instance.'.format(l2space.domain))
 
+    if impl == 'cuda' and not CUDA_AVAILABLE:
+        raise ValueError('CUDA not available.')
+
     ds_type = dspace_type(l2space, impl)
     dtype = kwargs.pop('dtype', None)
 
@@ -317,6 +325,24 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         dspace = ds_type(grid.ntotal, dtype=dtype)
     else:
         dspace = ds_type(grid.ntotal)
+
+    if weighting == 'simple':
+        weighting_const = np.prod(grid.stride)
+        if impl == 'numpy':
+            inner = ConstWeightedInner(dspace, weighting_const)
+        else:
+            inner = CudaConstWeightedInner(dspace, weighting_const)
+    else:  # Consistent weighting
+        # TODO: implement
+        raise NotImplementedError
+
+    # FIXME: This does not work since the domain of inner is the old dspace
+    # which is re-assigned!
+    # dspace = ds_type(dspace.size, dspace.dtype, inner=inner)
+
+    # FIXME: this works but is ugly. Users will hardly be able to use
+    # inner products defined as operators in this way
+    dspace._inner_impl = inner
 
     order = kwargs.pop('order', 'C')
 

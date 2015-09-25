@@ -32,8 +32,8 @@ from builtins import range, super, zip
 import numpy as np
 
 # ODL imports
-from odl.sets.domain import IntervalProd
-from odl.sets.set import Set, Integers
+from odl.set.domain import IntervalProd
+from odl.set.sets import Set, Integers
 from odl.util.utility import array1d_repr, array1d_str
 
 
@@ -1061,7 +1061,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
 
     Examples
     --------
-    >>> from odl.sets.domain import IntervalProd
+    >>> from odl import IntervalProd
     >>> rbox = IntervalProd([-1.5, 2], [-0.5, 3])
     >>> grid = uniform_sampling(rbox, [2, 5])
     >>> grid.coord_vectors
