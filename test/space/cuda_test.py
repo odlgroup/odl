@@ -394,7 +394,7 @@ class TestConvenience(ODLTestCase):
 
     def test_incompatible_operations(self):
         r3 = odl.CudaRn(3)
-        R3h = Rn(3)
+        R3h = odl.Rn(3)
         xA = r3.zero()
         xB = R3h.zero()
 
