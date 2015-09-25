@@ -1662,7 +1662,7 @@ class MatrixWeightedInner(WeightedInner):
                     return np.array_equal(self.matrix, other.matrix)
 
         elif isinstance(other, ConstWeightedInner):
-            return np.all(self.matrix.diagonal() == other.const)
+            return np.array_equiv(self.matrix.diagonal(), other.const)
 
         else:
             return False
