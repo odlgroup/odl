@@ -123,7 +123,7 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r2x3 = ProductSpace(Rn(2), Rn(3))
         """
         if (len(spaces) == 2 and
@@ -232,7 +232,7 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
         >>> r2x3 = ProductSpace(r2, r3)
@@ -244,7 +244,7 @@ class ProductSpace(LinearSpace):
 
         Creates an element in the product space
 
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> prod = ProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
@@ -286,7 +286,7 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = ProductSpace(r2, r3)
@@ -339,7 +339,7 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r2, r3 = Rn(2), Rn(3)
         >>> rn, rm = Rn(2), Rn(3)
         >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
@@ -408,26 +408,22 @@ class ProductSpace(LinearSpace):
             return '{{{}}}'.format(inner_str)
 
         def __repr__(self):
-            """ Get a representation of this vector
-
-            Returns
-            -------
-            repr : string
-
+            """`s.__repr__() <==> repr(s)`.
 
             Examples
             --------
-            >>> from odl.space.cartesian import Rn
+            >>> from odl import Rn
             >>> r2, r3 = Rn(2), Rn(3)
             >>> r2x3 = ProductSpace(r2, r3)
             >>> x = r2x3.element([[1, 2], [3, 4, 5]])
             >>> eval(repr(x)) == x
             True
 
-            The result is readable
+            The result is readable:
 
             >>> x
-            ProductSpace(Rn(2), Rn(3)).element([
+            ProductSpace(Rn(2), Rn(3)).element(
+            [
                 [1.0, 2.0],
                 [3.0, 4.0, 5.0]
             ])
@@ -439,7 +435,8 @@ class ProductSpace(LinearSpace):
             >>> eval(repr(x)) == x
             True
             >>> x
-            ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element([
+            ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element(
+            [
                 [
                     [1.0, 2.0],
                     [3.0, 4.0, 5.0]
@@ -450,7 +447,7 @@ class ProductSpace(LinearSpace):
                 ]
             ])
             """
-            inner_str = '[\n'
+            inner_str = '\n[\n'
             if len(self) < 5:
                 inner_str += ',\n'.join('{}'.format(
                     _indent(_strip_space(part))) for part in self.parts)

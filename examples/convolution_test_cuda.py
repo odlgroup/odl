@@ -25,31 +25,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ODL
-from odl.discr.l2_discr import DiscreteL2, l2_uniform_discretization
-import odlpp.odlpp_cuda as odlpp_cuda
-import odl.space.cuda as cuda
-from odl.space.default import L2
-from odl.sets.domain import Interval
-from odl.operator.operator import LinearOperator
+import odl
+from odl import cu_ntuples
 import odl.operator.solvers as solvers
 from odl.util.testutils import Timer
+from odlpp import odlpp_cuda
 import examples.solver_examples as solver_examples
 
 
-class CudaConvolution(LinearOperator):
+class CudaConvolution(odl.LinearOperator):
 
     """Calculates the circular convolution of two CUDA vectors."""
 
     def __init__(self, kernel, adjointkernel=None):
-        if not isinstance(kernel.space, DiscreteL2):
+        if not isinstance(kernel.space, odl.DiscreteL2):
             raise TypeError("Kernel must be DiscreteL2 vector")
 
         self.space = kernel.space
         self.kernel = kernel
         self.adjkernel = (adjointkernel if adjointkernel is not None
                           else self.space.element(kernel[::-1].copy()))
-        self.norm = float(cuda.sum(cuda.abs(self.kernel.ntuple)))
-
+        self.norm = float(cu_ntuples.sum(cu_ntuples.abs(self.kernel.ntuple)))
 
     def _apply(self, rhs, out):
         odlpp_cuda.conv(rhs.ntuple.data, self.kernel.ntuple.data,
@@ -72,14 +68,14 @@ class CudaConvolution(LinearOperator):
 
 
 # Continuous definition of problem
-cont_space = L2(Interval(0, 10))
+cont_space = odl.L2(odl.Interval(0, 10))
 
 # Complicated functions to check performance
 cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = l2_uniform_discretization(cont_space, 5000, impl='cuda')
+discr_space = odl.l2_uniform_discretization(cont_space, 5000, impl='cuda')
 kernel = discr_space.element(cont_kernel)
 data = discr_space.element(cont_data)
 
@@ -91,7 +87,8 @@ iterations = 10
 omega = 1.0/conv.opnorm()**2
 
 # Display partial
-partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result).asarray()))
+partial = solvers.ForEachPartial(
+    lambda result: plt.plot(conv(result).asarray()))
 
 # Test CGN
 plt.figure()

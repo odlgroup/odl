@@ -24,12 +24,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import odl
-import odl.space.cuda as CS
 import odlpp.odlpp_cuda as cuda
 import odlpp.odlpp_utils as utils
 from odl.util.testutils import Timer
 
-from pooled import makePooledSpace
+# from pooled import makePooledSpace
 
 
 class RegularizationType(object):
@@ -41,7 +40,7 @@ class ForwardDiff2D(odl.LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space.dspace, CS.CudaRn):
+        if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = space
@@ -62,7 +61,7 @@ class ForwardDiff2DAdjoint(odl.LinearOperator):
     """
 
     def __init__(self, space):
-        if not isinstance(space.dspace, CS.CudaRn):
+        if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = odl.ProductSpace(space, 2)
@@ -117,12 +116,13 @@ def TVdenoise2DIsotropic(x0, la, mu, iterations=1):
         for i in range(1, dimension):
             xdiff[0] += xdiff[i]
 
-        CS.sqrt(xdiff[0].ntuple, xdiff[0].ntuple)
+        odl.cu_ntuples.sqrt(xdiff[0].ntuple, xdiff[0].ntuple)
 
         # c = tmp = max(s - la^-1, 0) / s
-        CS.add_scalar(xdiff[0].ntuple, -1.0/la, tmp.ntuple)
-        CS.max_vector_scalar(tmp.ntuple, 0.0, tmp.ntuple)
-        CS.divide_vector_vector(tmp.ntuple, xdiff[0].ntuple, tmp.ntuple)
+        odl.cu_ntuples.add_scalar(xdiff[0].ntuple, -1.0/la, tmp.ntuple)
+        odl.cu_ntuples.max_vector_scalar(tmp.ntuple, 0.0, tmp.ntuple)
+        odl.cu_ntuples.divide_vector_vector(tmp.ntuple, xdiff[0].ntuple,
+                                            tmp.ntuple)
 
         # d = d * c = d * max(s - la^-1, 0) / s
         for i in range(dimension):
@@ -168,12 +168,12 @@ def TVdenoise2DOpt(x0, la, mu, iterations=1):
 
         for j in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[j].ntuple, tmp.ntuple)
+            odl.cu_ntuples.sign(d[j].ntuple, tmp.ntuple)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[j].ntuple, d[j].ntuple)
-            CS.add_scalar(d[j].ntuple, -1.0/la, d[j].ntuple)
-            CS.max_vector_scalar(d[j].ntuple, 0.0, d[j].ntuple)
+            odl.cu_ntuples.abs(d[j].ntuple, d[j].ntuple)
+            odl.cu_ntuples.add_scalar(d[j].ntuple, -1.0/la, d[j].ntuple)
+            odl.cu_ntuples.max_vector_scalar(d[j].ntuple, 0.0, d[j].ntuple)
             d[j].multiply(d[j], tmp)
 
         # b = b + diff(x) - d
@@ -205,12 +205,12 @@ def TVdenoise2D(x0, la, mu, iterations=1):
 
         for i in range(dimension):
             # tmp = d/abs(d)
-            CS.sign(d[i].ntuple, tmp)
+            odl.cu_ntuples.sign(d[i].ntuple, tmp)
 
             # d = sign(diff(x)+b) * max(|diff(x)+b|-la^-1,0)
-            CS.abs(d[i].ntuple, d[i].ntuple)
-            CS.add_scalar(d[i].ntuple, -1.0/la, d[i].ntuple)
-            CS.max_vector_scalar(d[i].ntuple, 0.0, d[i].ntuple)
+            odl.cu_ntuples.abs(d[i].ntuple, d[i].ntuple)
+            odl.cu_ntuples.add_scalar(d[i].ntuple, -1.0/la, d[i].ntuple)
+            odl.cu_ntuples.max_vector_scalar(d[i].ntuple, 0.0, d[i].ntuple)
             d[i] *= tmp
 
         b = b + diff(x) - d

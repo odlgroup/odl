@@ -29,34 +29,29 @@ import numpy as np
 from numpy import float64
 
 # ODL imports
-from odl.space.cartesian import Rn
-from odl.util.testutils import skip_all
-
-try:
-    from odl.util.testutils import ODLTestCase
-    from odl.space.cuda import CudaRn
-except ImportError as e:
-    ODLTestCase = skip_all("Missing odlpp: {}".format(e))
+import odl
+from odl.util.testutils import ODLTestCase
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available')
 class TestInit(ODLTestCase):
     def test_empty(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         x = r3.element()
-        self.assertEqual(x, CudaRn(3).element())
+        self.assertEqual(x, odl.CudaRn(3).element())
         # Nothing to test, simply check that code runs
 
     def test_zero(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         self.assertAllAlmostEquals(r3.zero(), [0, 0, 0])
 
     def test_list_init(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         x = r3.element([1, 2, 3])
         self.assertAllAlmostEquals(x, [1, 2, 3])
 
     def test_ndarray_init(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
 
         x0 = np.array([1., 2., 3.])
         x = r3.element(x0)
@@ -71,9 +66,10 @@ class TestInit(ODLTestCase):
         self.assertAllAlmostEquals(x, x0)
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available')
 class TestAccessors(ODLTestCase):
     def test_getitem(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         y = [1, 2, 3]
         x = r3.element(y)
 
@@ -81,14 +77,14 @@ class TestAccessors(ODLTestCase):
             self.assertAlmostEquals(x[index], y[index])
 
     def test_iterator(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         y = [1, 2, 3]
         x = r3.element(y)
 
         self.assertAlmostEquals([a for a in x], [b for b in y])
 
     def test_getitem_index_error(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
@@ -98,7 +94,7 @@ class TestAccessors(ODLTestCase):
             x[3]
 
     def test_setitem(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         x = r3.element([42, 42, 42])
 
         for index in [0, 1, 2, -1, -2, -3]:
@@ -106,7 +102,7 @@ class TestAccessors(ODLTestCase):
             self.assertAlmostEquals(x[index], index)
 
     def test_setitem_index_error(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
@@ -117,7 +113,7 @@ class TestAccessors(ODLTestCase):
 
     def _test_getslice(self, slice):
         # Validate get against python list behaviour
-        r6 = CudaRn(6)
+        r6 = odl.CudaRn(6)
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
 
@@ -136,7 +132,7 @@ class TestAccessors(ODLTestCase):
 
     def test_slice_of_slice(self):
         # Verify that creating slices from slices works as expected
-        r10 = CudaRn(10)
+        r10 = odl.CudaRn(10)
         xh = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         xd = r10.element(xh)
 
@@ -152,7 +148,7 @@ class TestAccessors(ODLTestCase):
 
     def test_slice_is_view(self):
         # Verify that modifications of a view modify the original data
-        r10 = CudaRn(10)
+        r10 = odl.CudaRn(10)
         xh = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         xd = r10.element(xh)
 
@@ -166,7 +162,7 @@ class TestAccessors(ODLTestCase):
         self.assertAllAlmostEquals(yh, yd)
 
     def test_getslice_index_error(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         xd = r3.element([1, 2, 3])
 
         # Bad slice
@@ -175,7 +171,7 @@ class TestAccessors(ODLTestCase):
 
     def _test_setslice(self, slice):
         # Validate set against python list behaviour
-        r6 = CudaRn(6)
+        r6 = odl.CudaRn(6)
         z = [7, 8, 9, 10, 11, 10]
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
@@ -196,7 +192,7 @@ class TestAccessors(ODLTestCase):
                     self._test_setslice(slice(start, end, step))
 
     def test_setslice_index_error(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         xd = r3.element([1, 2, 3])
 
         # Bad slice
@@ -214,9 +210,10 @@ class TestAccessors(ODLTestCase):
             xd[:] = [1, 2, 3, 4]
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available')
 class TestMethods(ODLTestCase):
     def test_norm(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         xd = r3.element([1, 2, 3])
 
         correct_norm_squared = 1 ** 2 + 2 ** 2 + 3 ** 2
@@ -226,7 +223,7 @@ class TestMethods(ODLTestCase):
         self.assertAlmostEquals(r3.norm(xd), correct_norm, places=5)
 
     def test_inner(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, 3, 9])
 
@@ -249,7 +246,7 @@ class TestMethods(ODLTestCase):
     def _test_lincomb(self, a, b, n=100):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
-        rn = CudaRn(n)
+        rn = odl.CudaRn(n)
 
         # Unaliased arguments
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
@@ -301,7 +298,7 @@ class TestMethods(ODLTestCase):
         y_host = np.random.rand(n)
         x_host = np.random.rand(n)
 
-        r3 = CudaRn(n)
+        r3 = odl.CudaRn(n)
         y_device = r3.element(y_host)
         x_device = r3.element(x_host)
 
@@ -326,7 +323,7 @@ class TestMethods(ODLTestCase):
         y_host = np.random.rand(n)
         z_host = np.empty(n)
 
-        r3 = CudaRn(n)
+        r3 = odl.CudaRn(n)
         x_device = r3.element(x_host)
         y_device = r3.element(y_host)
         z_device = r3.element()
@@ -365,7 +362,7 @@ class TestMethods(ODLTestCase):
         y_host = np.random.rand(n)
         x_host = np.random.rand(n)
 
-        r3 = CudaRn(n)
+        r3 = odl.CudaRn(n)
         y_device = r3.element(y_host)
         x_device = r3.element(x_host)
 
@@ -379,23 +376,24 @@ class TestMethods(ODLTestCase):
         self.assertAllAlmostEquals(y_device, y_host, places=5)
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available')
 class TestConvenience(ODLTestCase):
     def test_addition(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, 3, 7])
 
         self.assertAllAlmostEquals(xd + yd, [6, 5, 10])
 
     def test_scalar_mult(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         xd = r3.element([1, 2, 3])
         C = 5
 
         self.assertAllAlmostEquals(C * xd, [5, 10, 15])
 
     def test_incompatible_operations(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         R3h = Rn(3)
         xA = r3.zero()
         xB = R3h.zero()
@@ -413,9 +411,10 @@ class TestConvenience(ODLTestCase):
             z = xA - xB
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available')
 class TestPointer(ODLTestCase):
     def test_modify(self):
-        r3 = CudaRn(3)
+        r3 = odl.CudaRn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element(data_ptr=xd.data_ptr)
 
@@ -424,8 +423,8 @@ class TestPointer(ODLTestCase):
         self.assertAllEquals(xd, yd)
 
     def test_sub_vector(self):
-        r6 = CudaRn(6)
-        r3 = CudaRn(3)
+        r6 = odl.CudaRn(6)
+        r3 = odl.CudaRn(3)
         xd = r6.element([1, 2, 3, 4, 5, 6])
 
         yd = r3.element(data_ptr=xd.data_ptr)
@@ -434,8 +433,8 @@ class TestPointer(ODLTestCase):
         self.assertAllEquals([7, 8, 9, 4, 5, 6], xd)
 
     def test_offset_sub_vector(self):
-        r6 = CudaRn(6)
-        r3 = CudaRn(3)
+        r6 = odl.CudaRn(6)
+        r3 = odl.CudaRn(3)
         xd = r6.element([1, 2, 3, 4, 5, 6])
 
         yd = r3.element(data_ptr=xd.data_ptr+3*xd.space.dtype.itemsize)

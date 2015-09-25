@@ -21,16 +21,13 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from odl.operator.operator import *
-from odl.sets.space import *
-from odl.space.cartesian import *
-from odl.space.cuda import *
+import odl
 from odl.util.testutils import Timer
 
 n = 10**7
 iterations = 100
-deviceSpace = CudaRn(n)
-hostSpace = Rn(n)
+deviceSpace = odl.CudaRn(n)
+hostSpace = odl.Rn(n)
 x = np.random.rand(n)
 y = np.random.rand(n)
 z = np.empty(n)

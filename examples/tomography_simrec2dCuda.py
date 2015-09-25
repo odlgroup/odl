@@ -23,14 +23,9 @@ standard_library.install_aliases()
 from math import sin, cos, pi
 from time import time
 import matplotlib.pyplot as plt
-
 import numpy as np
-import odl.operator.operator as OP
-import odl.space.fspace as fs
-import odl.space.cuda as cs
-import odl.sets.pspace as prod
-import odl.discr.discretization as dd
-import odl.sets.set as sets
+
+import odl
 import SimRec2DPy as SR
 import odl.operator.solvers as solvers
 
@@ -44,7 +39,7 @@ class ProjectionGeometry(object):
         self.pixelDirection = pixelDirection
 
 
-class CudaProjector(OP.LinearOperator):
+class CudaProjector(odl.LinearOperator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
@@ -60,7 +55,7 @@ class CudaProjector(OP.LinearOperator):
 
     def _apply(self, data, out):
         # Create projector
-        self.forward.setData(ntuple.data_ptr)
+        self.forward.setData(data.data_ptr)
 
         # Project all geometries
         for i in range(len(self.geometries)):
@@ -73,7 +68,7 @@ class CudaProjector(OP.LinearOperator):
         return self._adjoint
 
 
-class CudaBackProjector(OP.LinearOperator):
+class CudaBackProjector(odl.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
         self.geometries = geometries
@@ -127,22 +122,21 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
         projSourcePosition, projDetectorOrigin, projPixelDirection))
 
 # Define the space of one projection
-projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRn = cs.CudaRn(nPixels)
+projectionSpace = odl.L2(odl.Interval(0, detectorSize))
 
 # Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
+projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels,
+                                               impl='cuda')
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
-dataDisc = prod.ProductSpace(projectionDisc, nProjection)
+dataDisc = odl.ProductSpace(projectionDisc, nProjection)
 
 # Define the reconstruction space
-reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
+reconSpace = odl.L2(odl.Rectangle([0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconRn = cs.CudaRn(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
+reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels, impl='cuda')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)

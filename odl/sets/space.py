@@ -634,7 +634,7 @@ class LinearSpace(Set):
 
             Examples
             --------
-            >>> from odl.space.cartesian import Rn
+            >>> from odl import Rn
             >>> import numpy as np
             >>> rn = Rn(1, norm=np.linalg.norm)
             >>> x = rn.element([0.1])

@@ -27,20 +27,18 @@ import unittest
 import numpy as np
 
 # ODL imports
-from odl.operator.operator import LinearOperator
+import odl
 import odl.operator.solvers as solvers
-from odl.space.cartesian import Rn
 from odl.util.testutils import ODLTestCase
 
 
-class MultiplyOp(LinearOperator):
-    """Multiply with matrix
-    """
+class MultiplyOp(odl.LinearOperator):
+    """Multiply with a matrix."""
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (Rn(matrix.shape[1])
+        self._domain = (odl.Rn(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (Rn(matrix.shape[0])
+        self._range = (odl.Rn(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
@@ -61,8 +59,9 @@ class MultiplyOp(LinearOperator):
 
 
 class TestMatrixSolve(ODLTestCase):
-    """ Tests solutions of the linear equation Ax = b with dense A
-    """
+
+    """Test solutions of the linear equation Ax = b with dense A."""
+
     def test_landweber(self):
         n = 3
 
@@ -73,7 +72,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = Rn(n)
+        rn = odl.Rn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -95,7 +94,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = Rn(n)
+        rn = odl.Rn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 
@@ -116,7 +115,7 @@ class TestMatrixSolve(ODLTestCase):
         b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
         # Vector representation
-        rn = Rn(n)
+        rn = odl.Rn(n)
         xvec = rn.element(x)
         bvec = rn.element(b)
 

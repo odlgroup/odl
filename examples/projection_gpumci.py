@@ -24,12 +24,7 @@ from math import sin, cos, pi
 import matplotlib.pyplot as plt
 import numpy as np
 
-import odl.operator.operator as OP
-from odl.space.default import L2
-import odl.space.cuda as cs
-import odl.sets.pspace as ps
-from odl.sets.domain import Rectangle, Cuboid
-from odl.discr.l2_discr import l2_uniform_discretization
+import odl
 import SimRec2DPy as SR
 import GPUMCIPy as gpumci
 from odl.util.testutils import Timer
@@ -46,7 +41,7 @@ class ProjectionGeometry3D(object):
         self.pixelDirectionV = pixelDirectionV
 
 
-class CudaSimpleMCProjector(OP.Operator):
+class CudaSimpleMCProjector(odl.Operator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, geometries,
@@ -60,7 +55,7 @@ class CudaSimpleMCProjector(OP.Operator):
     def _apply(self, data, out):
         # Create projector
         mat = data.asarray() > 0
-        materials = cs.CudaFn(data.space.dim, np.uint8).element(
+        materials = odl.CudaFn(data.space.dim, np.uint8).element(
             mat.flatten(order='F'))
         self.forward.setData(data.ntuple.data_ptr, materials.data_ptr)
 
@@ -110,22 +105,22 @@ for theta in np.linspace(0, pi, nProjection, endpoint=False):
         projPixelDirectionV))
 
 # Define the space of one projection
-projectionSpace = L2(Rectangle([0, 0], detectorSize))
+projectionSpace = odl.L2(odl.Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
 # TODO: specify F ordering!
-projectionDisc = l2_uniform_discretization(projectionSpace, nPixels,
-                                           impl='cuda')
+projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels,
+                                               impl='cuda')
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
-dataDisc = ps.ProductSpace(projectionDisc, nProjection)
+dataDisc = odl.ProductSpace(projectionDisc, nProjection)
 
 # Define the reconstruction space
-reconSpace = L2(Cuboid([0, 0, 0], volumeSize))
+reconSpace = odl.L2(odl.Cuboid([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconDisc = l2_uniform_discretization(reconSpace, nVoxels, impl='cuda')
+reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels, impl='cuda')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])

@@ -34,13 +34,11 @@ def run_tests():
     arg.append('--with-doctest')
     arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS'
                ',+IGNORE_EXCEPTION_DETAIL')
-    try:
-        # pylint: disable=unused-import
-        import odl.space.cuda
-    except ImportError:
-        arg.append('--ignore-files=cuda.py')
+    from odl import CUDA_AVAILABLE
+    if not CUDA_AVAILABLE:
+        arg.append('--ignore-files=cu_ntuples.py')
 
-    nose.run(defaultTest=['./odl/','./test/.'], argv=arg)
+    nose.run(defaultTest=['./odl/', './test/.'], argv=arg)
 
 if __name__ == '__main__':
     run_tests()
