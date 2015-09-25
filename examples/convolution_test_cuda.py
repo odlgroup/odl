@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 
 # ODL
 import odl
-from odl import cu_ntuples
+from odl.space import cu_ntuples
 import odl.operator.solvers as solvers
 from odl.util.testutils import Timer
 from odlpp import odlpp_cuda
