@@ -26,13 +26,9 @@ from math import sin, cos, pi
 import matplotlib.pyplot as plt
 
 import numpy as np
-import odl.operator.operator as OP
-import odl.space.fspace as fs
-import odl.space.cartesian as ds
-import odl.sets.pspace as ps
-import odl.discr.discretization as dd
-import odl.sets.set as sets
 import SimRec2DPy as SR
+
+import odl
 import odl.operator.solvers as solvers
 
 
@@ -45,7 +41,7 @@ class ProjectionGeometry(object):
         self.pixelDirection = pixelDirection
 
 
-class Projector(OP.LinearOperator):
+class Projector(odl.LinearOperator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
@@ -66,7 +62,7 @@ class Projector(OP.LinearOperator):
         # Create projector
         print("create")
         forward = SR.SRPyForwardProject.SimpleForwardProjector(
-            ntuple.data.reshape(self.nVoxels), self.volumeOrigin,
+            data.data.reshape(self.nVoxels), self.volumeOrigin,
             self.voxelSize, self.nPixels, self.stepSize)
         print("done")
         # Project all geometries
@@ -81,7 +77,7 @@ class Projector(OP.LinearOperator):
         return self._adjoint
 
 
-class BackProjector(OP.LinearOperator):
+class BackProjector(odl.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
         self.volumeOrigin = volumeOrigin
@@ -141,22 +137,20 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
         projSourcePosition, projDetectorOrigin, projPixelDirection))
 
 # Define the space of one projection
-projectionSpace = fs.L2(sets.Interval(0, detectorSize))
-projectionRn = ds.Rn(nPixels)
+projectionSpace = odl.L2(odl.Interval(0, detectorSize))
 
 # Discretize projection space
-projectionDisc = dd.uniform_discretization(projectionSpace, projectionRn)
+projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels)
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
-dataDisc = ps.ProductSpace(projectionDisc, nProjection)
+dataDisc = odl.ProductSpace(projectionDisc, nProjection)
 
 # Define the reconstruction space
-reconSpace = fs.L2(sets.Rectangle([0, 0], volumeSize))
+reconSpace = odl.L2(odl.Rectangle([0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconRn = ds.Rn(nVoxels.prod())
-reconDisc = dd.uniform_discretization(reconSpace, reconRn, nVoxels)
+reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels)
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels)

@@ -27,27 +27,19 @@ standard_library.install_aliases()
 import unittest
 
 # ODL imports
-from odl.operator.operator import LinearOperator
-from odl.space.default import L2
-from odl.sets.domain import Interval, Rectangle
-from odl.sets.pspace import ProductSpace
-
-from odl.util.testutils import skip_all
+import odl
+from odl.util.testutils import ODLTestCase
 
 try:
-    from odl.space.cuda import CudaRn
     import odlpp.odlpp_cuda as cuda
-    from odl.util.testutils import ODLTestCase
 except ImportError:
-    ODLTestCase = skip_all("Missing odlpp")
+    cuda = None
 
 
-class ForwardDiff(LinearOperator):
-    """ Calculates the circular convolution of two CUDA vectors
-    """
-
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
+class ForwardDiff(odl.LinearOperator):
     def __init__(self, space):
-        if not isinstance(space, CudaRn):
+        if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
@@ -60,12 +52,10 @@ class ForwardDiff(LinearOperator):
         return ForwardDiffAdjoint(self.domain)
 
 
-class ForwardDiffAdjoint(LinearOperator):
-    """ Calculates the circular convolution of two CUDA vectors
-    """
-
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
+class ForwardDiffAdjoint(odl.LinearOperator):
     def __init__(self, space):
-        if not isinstance(space, CudaRn):
+        if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
         self.domain = self.range = space
@@ -78,16 +68,14 @@ class ForwardDiffAdjoint(LinearOperator):
         return ForwardDiff(self.domain)
 
 
-class ForwardDiff2D(LinearOperator):
-    """ Calculates the circular convolution of two CUDA vectors
-    """
-
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
+class ForwardDiff2D(odl.LinearOperator):
     def __init__(self, space):
-        if not isinstance(space, CudaRn):
+        if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
         self.domain = space
-        self.range = ProductSpace(space, space)
+        self.range = odl.ProductSpace(space, space)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
@@ -98,15 +86,16 @@ class ForwardDiff2D(LinearOperator):
         return ForwardDiff2DAdjoint(self.domain)
 
 
-class ForwardDiff2DAdjoint(LinearOperator):
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
+class ForwardDiff2DAdjoint(odl.LinearOperator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
     def __init__(self, space):
-        if not isinstance(space, CudaRn):
+        if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
 
-        self.domain = ProductSpace(space, space)
+        self.domain = odl.ProductSpace(space, space)
         self.range = space
 
     def _apply(self, rhs, out):
@@ -118,17 +107,16 @@ class ForwardDiff2DAdjoint(LinearOperator):
         return ForwardDiff2D(self.range)
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
 class TestCudaForwardDifference(ODLTestCase):
-    @unittest.skip("needs new discr")
+    @unittest.skip('TODO: update to new discretization')
     def test_fwd_diff(self):
         # Continuous definition of problem
-        I = Interval(0, 1)
-        space = L2(I)
+        space = odl.L2(odl.Interval(0, 1))
 
         # Discretization
         n = 6
-        rn = CudaRn(n)
-        d = uniform_discretization(space, rn)
+        d = odl.l2_uniform_discretization(space, n, impl='cuda')
         fun = d.element([1, 2, 5, 3, 2, 1])
 
         # Create operator
@@ -139,18 +127,17 @@ class TestCudaForwardDifference(ODLTestCase):
         self.assertAllAlmostEquals(diff.T(diff(fun)), [0, -3, 5, -1, 0, 0])
 
 
+@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
 class TestCudaForwardDifference2D(ODLTestCase):
-    @unittest.skip("needs new discr")
+    @unittest.skip('TODO: update to new discretization')
     def test_square(self):
         # Continuous definition of problem
-        I = Rectangle([0, 0], [1, 1])
-        space = L2(I)
+        space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
 
         # Discretization
         n = 5
         m = 5
-        rn = CudaRn(n*m)
-        d = uniform_discretization(space, rn, (n, m))
+        d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0],
@@ -183,20 +170,18 @@ class TestCudaForwardDifference2D(ODLTestCase):
                                     [0, 1, -4, 1, 0],
                                     [0, 0, 1, 0, 0],
                                     [0, 0, 0, 0, 0]])
-        
-    @unittest.skip("needs new discr")
+
+    @unittest.skip('TODO: update to new discretization')
     def test_rectangle(self):
         # Continuous definition of problem
-        I = Rectangle([0, 0], [1, 1])
-        space = L2(I)
+        space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
 
         # Complicated functions to check performance
         n = 5
         m = 7
 
         # Discretization
-        rn = CudaRn(n*m)
-        d = uniform_discretization(space, rn, (n, m))
+        d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
         x, y = d.points()
         fun = d.element([[0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0],

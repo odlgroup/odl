@@ -25,12 +25,6 @@ standard_library.install_aliases()
 # ODL imports
 from odl.space.fspace import FunctionSpace
 from odl.sets.set import RealNumbers
-try:
-    from odl.space.cuda import CudaRn
-    CUDA_AVAILABLE = True
-except ImportError:
-    CudaRn = None
-    CUDA_AVAILABLE = False
 
 
 __all__ = ('L2',)

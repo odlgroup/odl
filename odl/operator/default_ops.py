@@ -71,7 +71,7 @@ class ScalingOperator(SelfAdjointOperator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> outp = r3.element()
@@ -98,7 +98,7 @@ class ScalingOperator(SelfAdjointOperator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
@@ -113,7 +113,7 @@ class ScalingOperator(SelfAdjointOperator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
@@ -134,7 +134,7 @@ class ScalingOperator(SelfAdjointOperator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.domain
@@ -148,7 +148,7 @@ class ScalingOperator(SelfAdjointOperator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> op = ScalingOperator(r3, 2.0)
         >>> op.range
@@ -251,7 +251,7 @@ class LinCombOperator(LinearOperator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])
@@ -310,7 +310,7 @@ class MultiplyOperator(LinearOperator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([1, 2, 3])

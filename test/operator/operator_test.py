@@ -27,13 +27,11 @@ import unittest
 import numpy as np
 
 # ODL imports
-from odl.operator.operator import Operator, LinearOperator
-from odl.operator.operator import OperatorSum, OperatorComp
-from odl.operator.operator import OperatorLeftScalarMult
-from odl.operator.operator import OperatorRightScalarMult
-from odl.operator.operator import LinearOperatorSum, LinearOperatorComp
-from odl.operator.operator import LinearOperatorScalarMult
-from odl.space.cartesian import Rn
+import odl
+from odl import (Operator, LinearOperator, OperatorSum, OperatorComp,
+                 OperatorLeftScalarMult, OperatorRightScalarMult,
+                 LinearOperatorSum, LinearOperatorComp,
+                 LinearOperatorScalarMult)
 from odl.util.testutils import ODLTestCase
 
 
@@ -42,9 +40,9 @@ class MultiplyAndSquareOp(Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self.domain = (Rn(matrix.shape[1])
+        self.domain = (odl.Rn(matrix.shape[1])
                        if domain is None else domain)
-        self.range = (Rn(matrix.shape[0])
+        self.range = (odl.Rn(matrix.shape[0])
                       if range is None else range)
         self.matrix = matrix
 
@@ -160,9 +158,9 @@ class MultiplyOp(LinearOperator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (Rn(matrix.shape[1])
+        self._domain = (odl.Rn(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (Rn(matrix.shape[0])
+        self._range = (odl.Rn(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
 
@@ -305,8 +303,8 @@ class TestLinearOperator(ODLTestCase):
         self.assertAllAlmostEquals(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))
 
     def test_type_errors(self):
-        r3 = Rn(3)
-        r4 = Rn(4)
+        r3 = odl.Rn(3)
+        r4 = odl.Rn(4)
 
         Aop = MultiplyOp(np.random.rand(3, 3))
         r3Vec1 = r3.zero()

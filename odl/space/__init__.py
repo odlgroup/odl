@@ -17,11 +17,11 @@
 
 """Concrete vector spaces.
 
-Spaces of n-tuples (modules `cartesian`, `cuda`)
-================================================
+Spaces of n-tuples (modules `ntuples`, `cu_ntuples`)
+====================================================
 
-NumPy implementation (module `cartesian`)
------------------------------------------
+NumPy implementation (module `ntuples`)
+---------------------------------------
 
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
@@ -42,8 +42,8 @@ NumPy implementation (module `cartesian`)
 |`Rn`                  |Space of n-tuples of real numbers              |
 +----------------------+-----------------------------------------------+
 
-CUDA implementation (module `cuda`)
------------------------------------
+CUDA implementation (module `cu_ntuples`)
+-----------------------------------------
 
 Requires the compiled extension `odlpp`
 
@@ -76,9 +76,9 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import cartesian
-from .cartesian import *
-__all__ += cartesian.__all__
+from . import ntuples
+from .ntuples import *
+__all__ += ntuples.__all__
 
 from . import default
 from .default import *
@@ -89,9 +89,9 @@ from .fspace import *
 __all__ += fspace.__all__
 
 try:
-    from . import cuda
-    from .cuda import *
-    __all__ += cuda.__all__
+    from . import cu_ntuples
+    from .cu_ntuples import *
+    __all__ += cu_ntuples.__all__
     CUDA_AVAILABLE = True
 except ImportError:
     CUDA_AVAILABLE = False

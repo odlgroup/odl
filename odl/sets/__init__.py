@@ -74,11 +74,11 @@ Abstract vector spaces (modules `space`, `pspace`)
 |`LinearProductSpace`  |Cartesian product of linear spaces             |
 +----------------------+----------------+------------------------------+
 
-Concrete vector spaces (modules 'cartesian', 'cuda', 'default')
-===============================================================
+Concrete vector spaces (modules 'ntuples', 'cu_ntuples', 'default')
+===================================================================
 
-:math:`R^n` type spaces, NumPy implementation (module 'cartesian')
-------------------------------------------------------------------
+:math:`R^n` type spaces, NumPy implementation (module 'ntuples')
+----------------------------------------------------------------
 
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
@@ -100,8 +100,8 @@ Concrete vector spaces (modules 'cartesian', 'cuda', 'default')
 |`Rn`                  |Space of n-tuples of real numbers              |
 +----------------------+-----------------------------------------------+
 
-:math:`R^n` type spaces, CUDA implementation (module 'cuda')
-------------------------------------------------------------
+:math:`R^n` type spaces, CUDA implementation (module 'cu_ntuples')
+------------------------------------------------------------------
 
 Requires the compiled extension 'odlpp'
 

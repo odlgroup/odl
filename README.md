@@ -22,9 +22,9 @@ in the root folder of the package. After installing, you should check that every
 python run_tests.py
 ```
 
-##### Cuda
+##### CUDA
 
-If you also wish to use the (optional) `cuda` extensions you need to do:
+If you also wish to use the (optional) CUDA extensions you need to do:
 
 ```bash
 git submodule update --init --recursive

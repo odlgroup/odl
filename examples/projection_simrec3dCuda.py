@@ -60,15 +60,15 @@ class CudaProjector3D(odl.LinearOperator):
         # Create projector
         self.forward.setData(volume.ntuple.data_ptr)
         projection.set_zero()
-        
-        # Project all geometries       
+
+        # Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
 
             self.forward.project(geo.sourcePosition, geo.detectorOrigin,
                                  geo.pixelDirectionU, geo.pixelDirectionV,
                                  projection[i].ntuple.data_ptr)
-                                 
+
     @property
     def adjoint(self):
         return self._adjoint
@@ -80,9 +80,9 @@ class CudaBackProjector3D(odl.LinearOperator):
         self.geometries = geometries
         self.domain = domain
         self.range = range
-                                                  
-        self.back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, 
-                                                    voxelSize, nPixels, stepSize)
+
+        self.back = SR.SRPyCuda.CudaBackProjector3D(
+            nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
 
     @odl.util.timeit("BackProject")
     def _apply(self, projections, out):
@@ -91,8 +91,9 @@ class CudaBackProjector3D(odl.LinearOperator):
 
         # Append all projections
         for geo, proj in zip(self.geometries, projections):
-            self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
-                                  geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
+            self.back.backProject(
+                geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
+                geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
 
 
 # Set geometry parameters
@@ -106,7 +107,7 @@ sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
 # Discretization parameters
-#nVoxels, nPixels = np.array([44, 44, 44]), np.array([78, 72])
+# nVoxels, nPixels = np.array([44, 44, 44]), np.array([78, 72])
 nVoxels, nPixels = np.array([448, 448, 270]), np.array([780, 720])
 nProjection = 332
 
@@ -135,8 +136,8 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
 projectionSpace = odl.L2(odl.Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
-projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels, 
-                                           impl='cuda', order='F')
+projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels,
+                                               impl='cuda', order='F')
 
 # Create the data space, which is the Cartesian product of the
 # single projection spaces
@@ -146,8 +147,8 @@ dataDisc = odl.ProductSpace(projectionDisc, nProjection)
 reconSpace = odl.L2(odl.Cuboid([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels, 
-                                      impl='cuda', order='F')
+reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels,
+                                          impl='cuda', order='F')
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2])
@@ -165,10 +166,10 @@ for i in range(15):
     plt.subplot(3, 5, i+1)
     plt.imshow(result[i].asarray().T, cmap='bone', origin='lower')
     plt.axis('off')
-                       
+
 vol = projector.adjoint(result)
-                         
-#del projector
+
+# del projector
 
 plt.figure()
 plt.imshow(vol.asarray()[:, :, nVoxels[2]/2], cmap='bone')

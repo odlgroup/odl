@@ -28,7 +28,7 @@ standard_library.install_aliases()
 import numpy as np
 
 # ODL imports
-from odl.space.cartesian import NtuplesBase, FnBase
+from odl.space.ntuples import NtuplesBase, FnBase
 import odlpp.odlpp_cuda as cuda
 
 

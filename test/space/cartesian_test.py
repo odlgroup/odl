@@ -28,9 +28,7 @@ import numpy as np
 from math import sqrt
 
 # ODL imports
-# import odl.operator.operator as op
-# import odl.sets.space as space
-from odl.space.cartesian import *
+import odl
 from odl.util.testutils import ODLTestCase
 
 # TODO: add tests for:
@@ -58,7 +56,7 @@ class RnTest(ODLTestCase):
     def _test_lincomb(self, a, b, n=10):
         # Validates lincomb against the result on host with randomized
         # data and given a,b
-        rn = Rn(n)
+        rn = odl.Rn(n)
 
         # Unaliased arguments
         x, y, z, xVec, yVec, zVec = self._vectors(rn)
@@ -106,7 +104,7 @@ class OperatorOverloadTest(ODLTestCase):
         """ Verifies that the statement y=function(x) gives equivalent
         results to Numpy.
         """
-        rn = Rn(n)
+        rn = odl.Rn(n)
 
         x_arr = np.random.rand(n)
         y_arr = function(x_arr)
@@ -121,7 +119,7 @@ class OperatorOverloadTest(ODLTestCase):
         """ Verifies that the statement z=function(x,y) gives equivalent
         results to Numpy.
         """
-        rn = Rn(n)
+        rn = odl.Rn(n)
 
         x_arr = np.random.rand(n)
         y_arr = np.random.rand(n)
@@ -187,14 +185,14 @@ class OperatorOverloadTest(ODLTestCase):
 
 class MethodTest(ODLTestCase):
     def test_norm(self):
-        r3 = Rn(3)
+        r3 = odl.Rn(3)
         xd = r3.element([1, 2, 3])
 
         correct_norm = sqrt(1**2 + 2**2 + 3**2)
         self.assertAlmostEquals(r3.norm(xd), correct_norm)
 
     def test_inner(self):
-        r3 = Rn(3)
+        r3 = odl.Rn(3)
         xd = r3.element([1, 2, 3])
         yd = r3.element([5, -3, 9])
 
@@ -204,7 +202,7 @@ class MethodTest(ODLTestCase):
 
 class GetSetTest(ODLTestCase):
     def test_setitem(self):
-        r3 = Rn(3)
+        r3 = odl.Rn(3)
         x = r3.element([42, 42, 42])
 
         for index in [0, 1, 2, -1, -2, -3]:
@@ -212,7 +210,7 @@ class GetSetTest(ODLTestCase):
             self.assertAlmostEquals(x[index], index)
 
     def test_setitem_index_error(self):
-        r3 = Rn(3)
+        r3 = odl.Rn(3)
         x = r3.element([1, 2, 3])
 
         with self.assertRaises(IndexError):
@@ -223,7 +221,7 @@ class GetSetTest(ODLTestCase):
 
     def _test_getslice(self, slice):
         # Validate get against python list behaviour
-        r6 = Rn(6)
+        r6 = odl.Rn(6)
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
 
@@ -242,7 +240,7 @@ class GetSetTest(ODLTestCase):
 
     def _test_setslice(self, slice):
         # Validate set against python list behaviour
-        r6 = Rn(6)
+        r6 = odl.Rn(6)
         z = [7, 8, 9, 10, 11, 10]
         y = [0, 1, 2, 3, 4, 5]
         x = r6.element(y)
@@ -263,7 +261,7 @@ class GetSetTest(ODLTestCase):
                     self._test_setslice(slice(start, end, step))
 
     def test_setslice_index_error(self):
-        r3 = Rn(3)
+        r3 = odl.Rn(3)
         xd = r3.element([1, 2, 3])
 
         # Bad slice

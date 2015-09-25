@@ -23,30 +23,27 @@ from builtins import super
 
 # External module imports
 import numpy as np
+from numbers import Integral
 
 # ODL imports
-from odl.sets.space import *
-from odl.space.cuda import *
-from odl.sets.set import *
-from odl.space.cartesian import Rn
+import odl
 from odl.util.testutils import Timer
 
 
 """An example of a very simple space, the space Rn, as well as benchmarks
-with an optimized version
+with an optimized version.
 """
 
 
-class SimpleRn(LinearSpace):
-    """The real space R^n, unoptimized implmentation
-    """
+class SimpleRn(odl.LinearSpace):
+    """The real space R^n, non-optimized implmentation."""
 
     def __init__(self, dim):
         if not isinstance(n, Integral) or dim < 1:
             raise TypeError('dimension {!r} not a positive integer.'
                             ''.format(dim))
         self._dim = dim
-        self._field = RealNumbers()
+        self._field = odl.RealNumbers()
 
     def _lincomb(self, z, a, x, b, y):
         z.data[:] = a * x.data + b * y.data
@@ -84,7 +81,7 @@ class SimpleRn(LinearSpace):
     def __eq__(self, other):
         return type(self) == type(other) and self.dim == other.dim
 
-    class Vector(HilbertSpace.Vector, Algebra.Vector):
+    class Vector(odl.LinearSpace.Vector):
         def __init__(self, space, data):
             super().__init__(space)
             self.data = data
@@ -104,17 +101,19 @@ n = 10**7
 iterations = 10
 
 
-optX = Rn(n)
+optX = odl.Rn(n)
 simpleX = SimpleRn(n)
-cuX = CudaRn(n)
+if odl.CUDA_AVAILABLE:
+    cuX = odl.CudaRn(n)
 
 x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
 ox, oy, oz = (optX.element(x.copy()), optX.element(y.copy()),
               optX.element(z.copy()))
 sx, sy, sz = (simpleX.element(x.copy()), simpleX.element(y.copy()),
               simpleX.element(z.copy()))
-cx, cy, cz = (cuX.element(x.copy()), cuX.element(y.copy()),
-              cuX.element(z.copy()))
+if odl.CUDA_AVAILABLE:
+    cx, cy, cz = (cuX.element(x.copy()), cuX.element(y.copy()),
+                  cuX.element(z.copy()))
 
 
 print(" lincomb:")
@@ -128,10 +127,11 @@ with Timer("Rn"):
         optX.lincomb(oz, 2.13, ox, 3.14, oy)
 print("result: {}".format(oz[1:5]))
 
-with Timer("CudaRn"):
-    for _ in range(iterations):
-        cuX.lincomb(cz, 2.13, cx, 3.14, cy)
-print("result: {}".format(cz[1:5]))
+if odl.CUDA_AVAILABLE:
+    with Timer("CudaRn"):
+        for _ in range(iterations):
+            cuX.lincomb(cz, 2.13, cx, 3.14, cy)
+    print("result: {}".format(cz[1:5]))
 
 
 print("\n Norm:")
@@ -145,10 +145,11 @@ with Timer("Rn"):
         result = oz.norm()
 print("result: {}".format(result))
 
-with Timer("CudaRn"):
-    for _ in range(iterations):
-        result = cz.norm()
-print("result: {}".format(result))
+if odl.CUDA_AVAILABLE:
+    with Timer("CudaRn"):
+        for _ in range(iterations):
+            result = cz.norm()
+    print("result: {}".format(result))
 
 
 print("\n Inner:")
@@ -162,7 +163,8 @@ with Timer("Rn"):
         result = oz.inner(ox)
 print("result: {}".format(result))
 
-with Timer("CudaRn"):
-    for _ in range(iterations):
-        result = cz.inner(cx)
-print("result: {}".format(result))
+if odl.CUDA_AVAILABLE:
+    with Timer("CudaRn"):
+        for _ in range(iterations):
+            result = cz.inner(cx)
+    print("result: {}".format(result))

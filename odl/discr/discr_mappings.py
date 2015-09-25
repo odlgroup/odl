@@ -34,7 +34,7 @@ from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 # ODL imports
 from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator, LinearOperator
-from odl.space.cartesian import NtuplesBase, FnBase
+from odl.space.ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.sets.domain import IntervalProd
 
@@ -260,19 +260,18 @@ class RawGridCollocation(FunctionSetMapping):
         --------
         Define the grid:
 
-        >>> from odl.discr.grid import TensorGrid
-        >>> grid = TensorGrid([1, 2], [3, 4, 5])
+        >>> from odl import TensorGrid
+        >>> grid = TensorGrid([1, 2], [3, 4, 5], as_midp=True)
 
         The `dspace` backend is `Rn`:
 
-        >>> from odl.space.cartesian import Rn
+        >>> from odl import Rn
         >>> rn = Rn(grid.ntotal)
 
         Define a set of functions from the convex hull of the grid
         to the real numbers:
 
-        >>> from odl.space.fspace import FunctionSet
-        >>> from odl.sets.set import RealNumbers
+        >>> from odl import FunctionSet, RealNumbers
         >>> funcset = FunctionSet(grid.convex_hull(), RealNumbers())
 
         Finally create the operator:

@@ -348,8 +348,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import IdentityOperator
+        >>> from odl import Rn, IdentityOperator
         >>> rn = Rn(3)
         >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -401,8 +400,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import IdentityOperator
+        >>> from odl import Rn, IdentityOperator
         >>> rn = Rn(3)
         >>> op = IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -491,8 +489,7 @@ class OperatorSum(Operator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import IdentityOperator
+        >>> from odl import Rn, IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> inp = r3.element([1, 2, 3])
@@ -513,8 +510,7 @@ class OperatorSum(Operator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import ScalingOperator
+        >>> from odl import Rn, ScalingOperator
         >>> r3 = Rn(3)
         >>> A = ScalingOperator(r3, 3.0)
         >>> B = ScalingOperator(r3, -1.0)
@@ -531,8 +527,7 @@ class OperatorSum(Operator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import IdentityOperator
+        >>> from odl import Rn, IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).domain
@@ -546,8 +541,7 @@ class OperatorSum(Operator):
 
         Examples
         --------
-        >>> from odl.space.cartesian import Rn
-        >>> from odl.operator.default_ops import IdentityOperator
+        >>> from odl import Rn, IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
         >>> OperatorSum(op, op).range

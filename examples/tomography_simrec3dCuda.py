@@ -22,8 +22,8 @@ standard_library.install_aliases()
 
 from math import sin, cos, pi
 import matplotlib.pyplot as plt
-
 import numpy as np
+
 import odl
 import SimRec2DPy as SR
 
@@ -31,21 +31,18 @@ import SimRec2DPy as SR
 class ProjectionGeometry3D(object):
     """ Geometry for a specific projection
     """
-    def __init__(self, sourcePosition, 
-                       detectorOrigin, 
-                       pixelDirectionU,
-                       pixelDirectionV):
+    def __init__(self, sourcePosition, detectorOrigin, pixelDirectionU,
+                 pixelDirectionV):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirectionU = pixelDirectionU
         self.pixelDirectionV = pixelDirectionV
 
     def __repr__(self):
-        return 'ProjectionGeometry3D({}, {}, {}, {})'.format(self.sourcePosition,
-                                                             self.detectorOrigin,
-                                                             self.pixelDirectionU,
-                                                             self.pixelDirectionV)
-    
+        return ('ProjectionGeometry3D({}, {}, {}, {})'
+                ''.format(self.sourcePosition, self.detectorOrigin,
+                          self.pixelDirectionU, self.pixelDirectionV))
+
 
 class CudaProjector3D(odl.LinearOperator):
     """ A projector that creates several projections as defined by geometries
@@ -65,15 +62,15 @@ class CudaProjector3D(odl.LinearOperator):
     def _apply(self, volume, projection):
         # Create projector
         self.forward.setData(volume.ntuple.data_ptr)
-        
-        # Project all geometries       
+
+        # Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
 
             self.forward.project(geo.sourcePosition, geo.detectorOrigin,
                                  geo.pixelDirectionU, geo.pixelDirectionV,
                                  projection[i].ntuple.data_ptr)
-                                 
+
     @property
     def adjoint(self):
         return self._adjoint
@@ -84,9 +81,10 @@ class CudaBackProjector3D(odl.LinearOperator):
                  geometries, domain, range):
         self.geometries = geometries
         self.domain = domain
-        self.range = range                  
-        self.back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin, 
-                                                    voxelSize, nPixels, stepSize)
+        self.range = range
+        self.back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin,
+                                                    voxelSize, nPixels,
+                                                    stepSize)
 
     @odl.util.timeit("BackProject")
     def _apply(self, projections, out):
@@ -95,11 +93,12 @@ class CudaBackProjector3D(odl.LinearOperator):
 
         # Append all projections
         for geo, proj in zip(self.geometries, projections):
-            self.back.backProject(geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
-                                  geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
-                                  
-        #correct for unmatched projectors
-        out *= 3.0 #0.165160099353932
+            self.back.backProject(
+                geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
+                geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
+
+        # correct for unmatched projectors
+        out *= 3.0  # 0.165160099353932
 
 # Set geometry parameters
 volumeSize = np.array([224.0, 224.0, 135.0])
@@ -112,7 +111,7 @@ sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
 # Discretization parameters
-#nVoxels, nPixels = np.array([44, 44, 27]), np.array([78, 72])
+# nVoxels, nPixels = np.array([44, 44, 27]), np.array([78, 72])
 nVoxels, nPixels = np.array([448, 448, 270]), np.array([780, 720])
 nProjection = 332
 
@@ -141,7 +140,7 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
 projectionSpace = odl.L2(odl.Rectangle([0, 0], detectorSize))
 
 # Discretize projection space
-projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels, 
+projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels,
                                                impl='cuda', order='F')
 
 # Create the data space, which is the Cartesian product of the
@@ -152,7 +151,7 @@ dataDisc = odl.ProductSpace(projectionDisc, nProjection)
 reconSpace = odl.L2(odl.Cuboid([0, 0, 0], volumeSize))
 
 # Discretize the reconstruction space
-reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels, 
+reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels,
                                           impl='cuda', order='F')
 
 # Create a phantom
@@ -174,11 +173,12 @@ raise Exception()
 del recon"""
 del phantomVec
 
+
 # Define function to plot each result
 def plotResult(x):
     with odl.util.Timer('plotting'):
         plt.figure()
-        plt.imshow(x.asarray()[:,:,nVoxels[2]//2])
+        plt.imshow(x.asarray()[:, :, nVoxels[2]//2])
         plt.clim(0, 1)
         plt.colorbar()
         plt.show()
@@ -189,5 +189,6 @@ x = reconDisc.zero()
 #                               partial=odl.operator.solvers.ForEachPartial(plotResult))
 # solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
 #                   partial=solvers.PrintIterationPartial())
-odl.operator.solvers.conjugate_gradient(projector, x, projections, 2,
-                                        partial=odl.operator.solvers.ForEachPartial(plotResult))
+odl.operator.solvers.conjugate_gradient(
+    projector, x, projections, 2,
+    partial=odl.operator.solvers.ForEachPartial(plotResult))
