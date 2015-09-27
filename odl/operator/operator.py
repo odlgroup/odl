@@ -39,7 +39,8 @@ from numbers import Number
 
 # ODL imports
 from odl.sets.space import LinearSpace
-from odl.sets.set import UniversalSet
+from odl.sets.set import Set, UniversalSet, CartesianProduct
+from odl.sets.set import RealNumbers, ComplexNumbers
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'OperatorRightScalarMult', 'OperatorPointwiseProduct',
@@ -172,6 +173,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     range : `Set`
         The set this operator maps to
 
+    It is **highly** recommended to call `super().__init__(dom, ran)` in
+    the `__init__()` method of any subclass, where `dom` and `ran` are
+    the arguments specifying domain and range of the new operator. In
+    that case, the attributes `domain` and `range` are automatically
+    provided by `Operator`.
+
     In addition, **any subclass needs to implement at least one of the
     methods `_call()` and `_apply()`.**
     These are explained in the following.
@@ -224,6 +231,37 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     `range` is a `LinearSpace`, a default implementation of the
     respective other is provided.
     """
+
+    def __init__(self, dom, ran):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dom : `Set`
+            The domain of this operator, i.e., the set of elements to
+            which this operator can be applied
+
+        ran : `Set`
+            The range of this operator, i.e., the set this operator
+            maps to
+        """
+        if not isinstance(dom, Set):
+            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
+        if not isinstance(ran, Set):
+            raise TypeError('range {!r} not a `Set` instance.'.format(dom))
+
+        self._domain = dom
+        self._range = ran
+
+    @property
+    def domain(self):
+        """The domain of this operator."""
+        return self._domain
+
+    @property
+    def range(self):
+        """The range of this operator."""
+        return self._range
 
     def derivative(self, point):
         """Return the operator derivative at `point`."""
@@ -480,6 +518,7 @@ class OperatorSum(Operator):
             raise TypeError('temporary {!r} not an element of the operator '
                             'domain {!r}.'.format(tmp, op1.domain))
 
+        super().__init__(op1.domain, op1.range)
         self._op1 = op1
         self._op2 = op2
         self._tmp = tmp
@@ -521,34 +560,6 @@ class OperatorSum(Operator):
         # pylint: disable=protected-access
         return self._op1._call(inp) + self._op2._call(inp)
 
-    @property
-    def domain(self):
-        """The operator domain.
-
-        Examples
-        --------
-        >>> from odl import Rn, IdentityOperator
-        >>> r3 = Rn(3)
-        >>> op = IdentityOperator(r3)
-        >>> OperatorSum(op, op).domain
-        Rn(3)
-        """
-        return self._op1.domain
-
-    @property
-    def range(self):
-        """The operator range (or codomain).
-
-        Examples
-        --------
-        >>> from odl import Rn, IdentityOperator
-        >>> r3 = Rn(3)
-        >>> op = IdentityOperator(r3)
-        >>> OperatorSum(op, op).range
-        Rn(3)
-        """
-        return self._op1.range
-
     def derivative(self, point):
         """Return the operator derivative at `point`.
 
@@ -562,7 +573,8 @@ class OperatorSum(Operator):
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
-        return 'OperatorSum({!r}, {!r})'.format(self._op1, self._op2)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op1, self._op2)
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
@@ -603,6 +615,7 @@ class OperatorComp(Operator):
             raise TypeError('temporary {!r} not an element of the left '
                             'operator domain {!r}.'.format(tmp, left.domain))
 
+        super().__init__(right.domain, left.range)
         self._left = left
         self._right = right
         self._tmp = tmp
@@ -619,22 +632,6 @@ class OperatorComp(Operator):
                else self._right.range.element())
         self._right._apply(inp, tmp)
         self._left._apply(tmp, outp)
-
-    @property
-    def domain(self):
-        """The operator `domain`.
-
-        Corresponds to `right.domain`
-        """
-        return self._right.domain
-
-    @property
-    def range(self):
-        """The operator `range`.
-
-        Corresponds to `left.range`
-        """
-        return self._left.range
 
     @property
     def inverse(self):
@@ -706,6 +703,7 @@ class OperatorPointwiseProduct(Operator):
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
 
+        super().__init__(op1.domain, op1.range)
         self._op1 = op1
         self._op2 = op2
 
@@ -721,16 +719,6 @@ class OperatorPointwiseProduct(Operator):
         self._op1._apply(inp, outp)
         self._op2._apply(inp, tmp)
         outp *= tmp
-
-    @property
-    def domain(self):
-        """The operator `domain`."""
-        return self._op1.domain
-
-    @property
-    def range(self):
-        """The operator `range`."""
-        return self._op1.range
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -772,6 +760,7 @@ class OperatorLeftScalarMult(Operator):
                             'operator range {!r}.'
                             ''.format(scalar, op.range.field, op.range))
 
+        super().__init__(op.domain, op.range)
         self._op = op
         self._scalar = scalar
 
@@ -785,16 +774,6 @@ class OperatorLeftScalarMult(Operator):
         # pylint: disable=protected-access
         self._op._apply(inp, outp)
         outp *= self._scalar
-
-    @property
-    def domain(self):
-        """The operator `domain`."""
-        return self._op.domain
-
-    @property
-    def range(self):
-        """The operator `range`."""
-        return self._op.range
 
     @property
     def inverse(self):
@@ -873,6 +852,7 @@ class OperatorRightScalarMult(Operator):
             raise TypeError('temporary {!r} not an element of the '
                             'operator domain {!r}.'.format(tmp, op.domain))
 
+        super().__init__(op.domain, op.range)
         self._op = op
         self._scalar = scalar
         self._tmp = tmp
@@ -888,16 +868,6 @@ class OperatorRightScalarMult(Operator):
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, inp)
         self._op._apply(tmp, outp)
-
-    @property
-    def domain(self):
-        """The operator domain."""
-        return self._op.domain
-
-    @property
-    def range(self):
-        """The operator range."""
-        return self._op.range
 
     @property
     def inverse(self):
@@ -950,6 +920,27 @@ class LinearOperator(Operator):
     can only be defined if `domain` and `range` are both `LinearSpace`
     instances.
     """
+
+    def __init__(self, dom, ran):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dom : `LinearSpace`
+            The domain of this operator, i.e., the space of elements to
+            which this operator can be applied
+
+        ran : `Set`
+            The range of this operator, i.e., the space this operator
+            maps to
+        """
+        super().__init__(dom, ran)
+        if not isinstance(self._domain, LinearSpace):
+            raise TypeError('domain {!r} not a `LinearSpace` instance.'
+                            ''.format(self._domain))
+        if not isinstance(self._range, LinearSpace):
+            raise TypeError('range {!r} not a `LinearSpace` instance.'
+                            ''.format(self._range))
 
     @property
     def adjoint(self):
@@ -1191,11 +1182,11 @@ class Form(with_metaclass(ABCMeta, Operator)):
         The set of elements this form can be applied to
 
     range : {`RealNumbers`, `ComplexNumbers`}
-        The set of scalars to which this operator maps
+        The set of scalars to which this form maps
 
     In addition, any subclass needs to implement the method `_call()`:
 
-    `_call(self, *inp)  <==>  operator(*inp)`
+    `_call(self, *inp)  <==>  form(*inp)`
 
     **Parameters:**
 
@@ -1210,7 +1201,16 @@ class Form(with_metaclass(ABCMeta, Operator)):
         The result of the form evaluation, a real or complex number
     """
 
-    # Implicitly defined operators
+    def __init__(self, dom, ran):
+        """Initialize a new instance."""
+        if not isinstance(dom, CartesianProduct):
+            dom = CartesianProduct(dom)
+        if not isinstance(ran, RealNumbers, ComplexNumbers):
+            raise TypeError('range {!r} is not a `RealNumbers` or '
+                            '`ComplexNumbers` instance.'.format(ran))
+
+        super().__init__(dom, ran)
+
     def __call__(self, *inp):
         """`f.__call__(inp) <==> f(inp)`.
 
@@ -1249,7 +1249,7 @@ class Form(with_metaclass(ABCMeta, Operator)):
         return result
 
     def derivative(self, *point, **kwargs):
-        """Return the operator derivative at `point`.
+        """Return the derivative at `point`.
 
         Parameters
         ----------
@@ -1258,11 +1258,18 @@ class Form(with_metaclass(ABCMeta, Operator)):
             be in the i-th component of the domain of this form.
             Alternatively, a single sequence belonging to the domain
             can be given.
-        index :
+        indices : int or slice, optional
+            If provided, only the given indices are considered variable.
+            Hence, the resulting `LinearForm` is a mapping only from
+            the Cartesian product of the variable spaces to the scalars.
+
+        Returns
+        -------
+        derivative : `LinearForm`
+            The derivative at the given points
         """
         raise NotImplementedError('derivative not implemented for form '
                                   '{!r}'.format(self))
-
 
     def __add__(self, other):
         """`op.__add__(other) <==> op + other`."""
@@ -1276,18 +1283,18 @@ class Form(with_metaclass(ABCMeta, Operator)):
 
         `f1 * f2 <==> (x --> (f1(x) * f2(x)))`
 
-        If `other` is a scalar, this corresponds to right
-        multiplication of scalars with operators:
+        If `other` is a scalar, this corresponds to the multiplicatoin
+        of a form with a scalar from right.
 
-        `op * scalar <==> (x --> op(scalar * x))`
+        `f * scalar <==> (x --> f(scalar * x))`
 
         Note that left and right multiplications are usually different.
 
         Parameters
         ----------
-        other : `Operator` or scalar
-            If `other` is an `Operator`, their `domain` and `range`
-            must be equal, and `range` must be an `Algebra`.
+        other : `Form` or scalar
+            If `other` is a `Form`, their `domain` and `range`
+            must be equal.
 
             If `other` is a scalar and `self.domain` is a
             `LinearSpace`, `scalar` must be an element of
@@ -1295,81 +1302,62 @@ class Form(with_metaclass(ABCMeta, Operator)):
 
         Returns
         -------
-        mul : `Operator`
-            The multiplication operator. If `other` is a scalar, a
-            `OperatorRightScalarMult` is returned. If `other` is
-            an operator, an `OperatorPointwiseProduct` is returned.
+        mul : `Form`
+            The multiplication form. If `other` is a scalar, a
+            `FormRightScalarMult` is returned. If `other` is
+            a form, a `FormProduct` is returned.
 
         Examples
         --------
-        >>> from odl import Rn, IdentityOperator
-        >>> rn = Rn(3)
-        >>> op = IdentityOperator(rn)
-        >>> x = rn.element([1, 2, 3])
-        >>> op(x)
-        Rn(3).element([1.0, 2.0, 3.0])
-        >>> Scaled = op * 3
-        >>> Scaled(x)
-        Rn(3).element([3.0, 6.0, 9.0])
         """
-        if isinstance(other, Operator):
-            return OperatorPointwiseProduct(self, other)
+        if isinstance(other, Form):
+            return FormProduct(self, other)
         elif isinstance(other, Number):
-            return OperatorRightScalarMult(self, other)
+            return FormRightScalarMult(self, other)
         else:
-            raise TypeError('multiplicant {!r} is neither operator nor '
+            raise TypeError('multiplicant {!r} is neither `Form` nor '
                             'scalar.'.format(other))
 
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
 
-        If `other` is an operator, this corresponds to the pointwise
-        operator product:
+        If `other` is a form, this corresponds to the pointwise
+        product:
 
-        `op1 * op2 <==> (x --> (op1(x) * op2(x)))`
+        `f1 * f2 = (x --> (f1(x) * f2(x)))`
 
-        If `other` is a scalar, this corresponds to left
-        multiplication of scalars with operators:
+        If `other` is a scalar, this corresponds to the multiplication
+        of a form with a scalar from left:
 
-        `op * scalar <==> (x --> scalar * op(x))`
+        `f * scalar <==> (x --> scalar * f(x))`
 
         Note that left and right multiplications are usually different.
 
         Parameters
         ----------
-        other : `Operator` or scalar
-            If `other` is an `Operator`, their `domain` and `range`
-            must be equal, and `range` must be an `Algebra`.
+        other : `Form` or scalar
+            If `other` is a `Form`, their domains and ranges
+            must be equal.
 
-            If `other` is a scalar and `self.range` is a
-            `LinearSpace`, `scalar` must be an element of
-            `self.range.field`.
+            If `other` is a scalar, it must be an element of
+            the range of the field.
 
         Returns
         -------
-        rmul : `Operator`
-            The multiplication operator. If `other` is a scalar, a
-            `OperatorLeftScalarMult` is returned. If `other` is
-            an operator, an `OperatorPointwiseProduct` is returned.
+        mul : `Form`
+            The multiplication form. If `other` is a scalar, a
+            `FormLeftScalarMult` is returned. If `other` is
+            a form, a `FormProduct` is returned.
 
         Examples
         --------
-        >>> from odl import Rn, IdentityOperator
-        >>> rn = Rn(3)
-        >>> op = IdentityOperator(rn)
-        >>> x = rn.element([1, 2, 3])
-        >>> op(x)
-        Rn(3).element([1.0, 2.0, 3.0])
-        >>> Scaled = 3 * op
-        >>> Scaled(x)
-        Rn(3).element([3.0, 6.0, 9.0])
         """
-        if isinstance(other, Operator):
-            return OperatorPointwiseProduct(self, other)
+        if isinstance(other, Form):
+            return FormProduct(self, other)
         elif isinstance(other, Number):
-            return OperatorLeftScalarMult(self, other)
+            return FormLeftScalarMult(self, other)
         else:
-            raise TypeError('multiplicant {!r} is neither operator nor '
+            raise TypeError('multiplicant {!r} is neither form nor '
                             'scalar.'.format(other))
 
     def __repr__(self):
@@ -1392,6 +1380,86 @@ class Form(with_metaclass(ABCMeta, Operator)):
         # return self.__class__.__name__
 
 
+class FormSum(Form):
+
+    """Expression type for the sum of forms.
+
+    `FormSum(f1, f2) <==> (x --> f1(x) + f2(x))`
+    """
+
+    # pylint: disable=abstract-method
+    def __init__(self, form1, form2):
+        """Initialize a new `FormSum` instance.
+
+        Parameters
+        ----------
+        form1,form2 : `Form`
+            The forms to be added. Their domains and ranges must be
+            equal.
+        """
+        if not isinstance(form1, Form):
+            raise TypeError('form 1 {!r} not a `Form` instance.'.format(form1))
+        if not isinstance(form2, Form):
+            raise TypeError('form 2 {!r} not a `Form` instance.'.format(form2))
+
+        super().__init__(form1.domain, form1.range)
+
+        if form1.domain != form2.domain:
+            raise TypeError('form domains {!r} and {!r} do not match.'
+                            ''.format(form1.domain, form2.domain))
+
+        if form1.range != form2.range:
+            raise TypeError('form ranges {!r} and {!r} do not match.'
+                            ''.format(form1.range, form2.range))
+
+        self._form1 = form1
+        self._form2 = form2
+
+    def _call(self, *inp):
+        """`op.__call__(inp) <==> op(inp)`.
+
+        Examples
+        --------
+        """
+        # pylint: disable=protected-access
+        return self._form1._call(*inp) + self._form2._call(*inp)
+
+    def derivative(self, *point, **kwargs):
+        """Return the derivative at `point`.
+
+        Parameters
+        ----------
+        point1,...,pointN : domain elements
+            Evaluation points of the derivative. The i-th argument must
+            be in the i-th component of the domain of this form.
+            Alternatively, a single sequence belonging to the domain
+            can be given.
+        indices : int or slice, optional
+            If provided, only the given indices are considered variable.
+            Hence, the resulting `LinearForm` is a mapping only from
+            the Cartesian product of the variable spaces to the scalars.
+
+        Returns
+        -------
+        derivative : `LinearFormSum`
+            The derivative at the given points, the sum of the
+            derivatives of the member forms
+        """
+        indices = kwargs.pop('indices', None)
+        return LinearFormSum(self._form1.derivative(*point, indices=indices),
+                             self._form2.derivative(*point, indices=indices))
+
+    def __repr__(self):
+        """`op.__repr__() <==> repr(op)`."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._form1, self._form2)
+
+    def __str__(self):
+        """`op.__str__() <==> str(op)`."""
+        return '{} + {}'.format(self._op1, self._op2)
+
+
+# TODO: make this a decorator using the wrapt module
 def _bound_method(function):
     """Add a `self` argument to a function.
 
