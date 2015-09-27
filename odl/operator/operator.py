@@ -1170,6 +1170,228 @@ class LinearOperatorScalarMult(OperatorLeftScalarMult, LinearOperator):
         return LinearOperatorScalarMult(self._op.adjoint, self._scalar)
 
 
+class Form(with_metaclass(ABCMeta, Operator)):
+
+    """Abstract form class.
+
+    A form is a special case of an operator defined on the Cartesian
+    product of a number of spaces, mapping to the real or complex
+    numbers. Special cases of forms are functionals mapping from a
+    single space to its field, and inner products mapping from the
+    Cartesian product of a space with itself to its field.
+
+    Abstract attributes and methods
+    -------------------------------
+    `Form` is an **abstract** class, i.e. it can only be
+    subclassed, not used directly.
+
+    **Any subclass of `Form` must have the following attributes:**
+
+    domain : `Set` or `CartesianProduct`
+        The set of elements this form can be applied to
+
+    range : {`RealNumbers`, `ComplexNumbers`}
+        The set of scalars to which this operator maps
+
+    In addition, any subclass needs to implement the method `_call()`:
+
+    `_call(self, *inp)  <==>  operator(*inp)`
+
+    **Parameters:**
+
+    inp1,...,inpN : domain elements
+        Arguments to the form. The i-th argument must be in the
+        i-th component of the domain of this form. Alternatively,
+        a single sequence belonging to the domain can be given.
+
+    **Returns:**
+
+    outp : float or complex
+        The result of the form evaluation, a real or complex number
+    """
+
+    # Implicitly defined operators
+    def __call__(self, *inp):
+        """`f.__call__(inp) <==> f(inp)`.
+
+        Implementation of the call pattern `op(inp)` with the private
+        `_call()` method and added error checking.
+
+        Parameters
+        ----------
+        inp1,...,inpN : domain elements
+            Arguments to the form. The i-th argument must be in the
+            i-th component of the domain of this form. Alternatively,
+            a single sequence belonging to the domain can be given.
+
+        Returns
+        -------
+        outp : float or complex
+            The result of the form evaluation, a real or complex number
+
+        Examples
+        --------
+        """
+        if inp not in self.domain:
+            if inp[0] in self.domain:
+                inp = inp[0]
+            else:
+                raise TypeError('input {!r} not an element of the domain {!r} '
+                                'of {!r}.'
+                                ''.format(inp, self.domain, self))
+
+        result = self._call(inp)
+
+        if result not in self.range:
+            raise TypeError('result {!r} not an element of the range {!r} '
+                            'of {!r}.'
+                            ''.format(result, self.range, self))
+        return result
+
+    def derivative(self, *point, **kwargs):
+        """Return the operator derivative at `point`.
+
+        Parameters
+        ----------
+        point1,...,pointN : domain elements
+            Evaluation points of the derivative. The i-th argument must
+            be in the i-th component of the domain of this form.
+            Alternatively, a single sequence belonging to the domain
+            can be given.
+        index :
+        """
+        raise NotImplementedError('derivative not implemented for form '
+                                  '{!r}'.format(self))
+
+
+    def __add__(self, other):
+        """`op.__add__(other) <==> op + other`."""
+        return FormSum(self, other)
+
+    def __mul__(self, other):
+        """`op.__mul__(other) <==> op * other`.
+
+        If `other` is a form, this corresponds to the pointwise
+        product:
+
+        `f1 * f2 <==> (x --> (f1(x) * f2(x)))`
+
+        If `other` is a scalar, this corresponds to right
+        multiplication of scalars with operators:
+
+        `op * scalar <==> (x --> op(scalar * x))`
+
+        Note that left and right multiplications are usually different.
+
+        Parameters
+        ----------
+        other : `Operator` or scalar
+            If `other` is an `Operator`, their `domain` and `range`
+            must be equal, and `range` must be an `Algebra`.
+
+            If `other` is a scalar and `self.domain` is a
+            `LinearSpace`, `scalar` must be an element of
+            `self.domain.field`.
+
+        Returns
+        -------
+        mul : `Operator`
+            The multiplication operator. If `other` is a scalar, a
+            `OperatorRightScalarMult` is returned. If `other` is
+            an operator, an `OperatorPointwiseProduct` is returned.
+
+        Examples
+        --------
+        >>> from odl import Rn, IdentityOperator
+        >>> rn = Rn(3)
+        >>> op = IdentityOperator(rn)
+        >>> x = rn.element([1, 2, 3])
+        >>> op(x)
+        Rn(3).element([1.0, 2.0, 3.0])
+        >>> Scaled = op * 3
+        >>> Scaled(x)
+        Rn(3).element([3.0, 6.0, 9.0])
+        """
+        if isinstance(other, Operator):
+            return OperatorPointwiseProduct(self, other)
+        elif isinstance(other, Number):
+            return OperatorRightScalarMult(self, other)
+        else:
+            raise TypeError('multiplicant {!r} is neither operator nor '
+                            'scalar.'.format(other))
+
+    def __rmul__(self, other):
+        """`op.__rmul__(s) <==> s * op`.
+
+        If `other` is an operator, this corresponds to the pointwise
+        operator product:
+
+        `op1 * op2 <==> (x --> (op1(x) * op2(x)))`
+
+        If `other` is a scalar, this corresponds to left
+        multiplication of scalars with operators:
+
+        `op * scalar <==> (x --> scalar * op(x))`
+
+        Note that left and right multiplications are usually different.
+
+        Parameters
+        ----------
+        other : `Operator` or scalar
+            If `other` is an `Operator`, their `domain` and `range`
+            must be equal, and `range` must be an `Algebra`.
+
+            If `other` is a scalar and `self.range` is a
+            `LinearSpace`, `scalar` must be an element of
+            `self.range.field`.
+
+        Returns
+        -------
+        rmul : `Operator`
+            The multiplication operator. If `other` is a scalar, a
+            `OperatorLeftScalarMult` is returned. If `other` is
+            an operator, an `OperatorPointwiseProduct` is returned.
+
+        Examples
+        --------
+        >>> from odl import Rn, IdentityOperator
+        >>> rn = Rn(3)
+        >>> op = IdentityOperator(rn)
+        >>> x = rn.element([1, 2, 3])
+        >>> op(x)
+        Rn(3).element([1.0, 2.0, 3.0])
+        >>> Scaled = 3 * op
+        >>> Scaled(x)
+        Rn(3).element([3.0, 6.0, 9.0])
+        """
+        if isinstance(other, Operator):
+            return OperatorPointwiseProduct(self, other)
+        elif isinstance(other, Number):
+            return OperatorLeftScalarMult(self, other)
+        else:
+            raise TypeError('multiplicant {!r} is neither operator nor '
+                            'scalar.'.format(other))
+
+    def __repr__(self):
+        """`op.__repr__() <==> repr(op)`.
+
+        The default `repr` implementation. Should be overridden by
+        subclasses.
+        """
+        return '{}: {!r} -> {!r}'.format(self.__class__.__name__, self.domain,
+                                         self.range)
+
+    def __str__(self):
+        """`op.__str__() <==> str(op)`.
+
+        The default `str` implementation. Should be overridden by
+        subclasses.
+        """
+        return '{}: {} -> {}'.format(self.__class__.__name__, self.domain,
+                                     self.range)
+        # return self.__class__.__name__
+
+
 def _bound_method(function):
     """Add a `self` argument to a function.
 
