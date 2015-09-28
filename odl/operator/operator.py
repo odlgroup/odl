@@ -38,7 +38,7 @@ from abc import ABCMeta
 from numbers import Number
 
 # ODL imports
-from odl.sets.space import LinearSpace
+from odl.sets.space import LinearSpace, UniversalSpace
 from odl.sets.set import Set, UniversalSet, CartesianProduct
 from odl.sets.set import RealNumbers, ComplexNumbers
 
@@ -48,74 +48,59 @@ __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'LinearOperatorScalarMult')
 
 
-class _DefaultCallOperator(object):
+def _bound_method(function):
+    """Add a `self` argument to a function.
 
-    """Decorator class that adds a `_call`  method to an `Operator`.
-
-    This default implementation assumes that the operator implements
-    `_apply()` and that the `range` of the operator implements
-    `element()`. The latter is true for all vector spaces.
+    This way, the decorated function may be used as a bound method.
     """
+    def method(_, *args, **kwargs):
+        return function(*args, **kwargs)
+    if hasattr(function, '__name__'):
+        method.__name__ = function.__name__
+    if hasattr(function, '__doc__'):
+        method.__doc__ = function.__doc__
 
-    # pylint: disable=too-few-public-methods
-    def _call(self, inp):
-        """Apply the operator out-of-place using `_apply()`.
-
-        Implemented as:
-
-        `outp = self.range.element()`
-        `self._apply(inp, outp)`
-        `return outp`
-
-        Parameters
-        ----------
-
-        inp : `domain` element
-            An object in the operator domain. The operator is applied
-            to it.
-
-        Returns
-        -------
-
-        out : `range` element
-            An object in the operator range. The result of an operator
-            evaluation.
-        """
-        out = self.range.element()
-        self._apply(inp, out)
-        return out
+    return method
 
 
-class _DefaultApplyOperator(object):
+def _call(self, inp):
+    """Default out-of-place operator evaluation using `_apply()`.
 
-    """Decorator class that adds an `_apply` method to `Operator`.
+    Parameters
+    ----------
+    inp : domain element
+        An object in the operator domain. The operator is applied
+        to it.
 
-    The default implementation assumes that the operator implements
-    `_call()` and that elements in the `range` of the operator
-    implement `assign()`.
+    Returns
+    -------
+    out : range element
+        An object in the operator range. The result of an operator
+        evaluation.
     """
+    out = self.range.element()
+    self._apply(inp, out)
+    return out
 
-    # pylint: disable=too-few-public-methods
-    def _apply(self, inp, out):
-        """Apply the operator in-place using `_call()`.
 
-        Implemented as:
+def _apply(self, inp, out):
+    """Default in-place operator evaluation using `_call()`.
 
-        `out.assign(self._call(inp))`
+    Parameters
+    ----------
+    inp : domain element
+        An object in the operator domain. The operator is applied
+        to it.
 
-        inp : `self.domain` element
-            An object in the operator domain. The operator is applied
-            to it.
+    out : range element
+        An object in the operator range. The result of an operator
+        evaluation.
 
-        out : `self.range` element
-            An object in the operator range. The result of an operator
-            evaluation.
-
-        Returns
-        -------
-        None
-        """
-        out.assign(self._call(inp))
+    Returns
+    -------
+    None
+    """
+    out.assign(self._call(inp))
 
 
 class _OperatorMeta(ABCMeta):
@@ -130,15 +115,13 @@ class _OperatorMeta(ABCMeta):
     def __new__(mcs, name, bases, attrs):
         """Create a new `_OperatorMeta` instance."""
         if '_call' in attrs and '_apply' in attrs:
-            return super().__new__(mcs, name, bases, attrs)
+            pass
         elif '_call' in attrs:
-            return super().__new__(mcs, name, (_DefaultApplyOperator,) + bases,
-                                   attrs)
+            attrs['_apply'] = _apply
         elif '_apply' in attrs:
-            return super().__new__(mcs, name, (_DefaultCallOperator,) + bases,
-                                   attrs)
-        else:
-            return super().__new__(mcs, name, bases, attrs)
+            attrs['_call'] = _call
+
+        return super().__new__(mcs, name, bases, attrs)
 
     def __call__(cls, *args, **kwargs):
         """Create a new class `cls` from given arguments."""
@@ -1161,317 +1144,6 @@ class LinearOperatorScalarMult(OperatorLeftScalarMult, LinearOperator):
         return LinearOperatorScalarMult(self._op.adjoint, self._scalar)
 
 
-class Form(with_metaclass(ABCMeta, Operator)):
-
-    """Abstract form class.
-
-    A form is a special case of an operator defined on the Cartesian
-    product of a number of spaces, mapping to the real or complex
-    numbers. Special cases of forms are functionals mapping from a
-    single space to its field, and inner products mapping from the
-    Cartesian product of a space with itself to its field.
-
-    Abstract attributes and methods
-    -------------------------------
-    `Form` is an **abstract** class, i.e. it can only be
-    subclassed, not used directly.
-
-    **Any subclass of `Form` must have the following attributes:**
-
-    domain : `Set` or `CartesianProduct`
-        The set of elements this form can be applied to
-
-    range : {`RealNumbers`, `ComplexNumbers`}
-        The set of scalars to which this form maps
-
-    In addition, any subclass needs to implement the method `_call()`:
-
-    `_call(self, *inp)  <==>  form(*inp)`
-
-    **Parameters:**
-
-    inp1,...,inpN : domain elements
-        Arguments to the form. The i-th argument must be in the
-        i-th component of the domain of this form. Alternatively,
-        a single sequence belonging to the domain can be given.
-
-    **Returns:**
-
-    outp : float or complex
-        The result of the form evaluation, a real or complex number
-    """
-
-    def __init__(self, dom, ran):
-        """Initialize a new instance."""
-        if not isinstance(dom, CartesianProduct):
-            dom = CartesianProduct(dom)
-        if not isinstance(ran, RealNumbers, ComplexNumbers):
-            raise TypeError('range {!r} is not a `RealNumbers` or '
-                            '`ComplexNumbers` instance.'.format(ran))
-
-        super().__init__(dom, ran)
-
-    def __call__(self, *inp):
-        """`f.__call__(inp) <==> f(inp)`.
-
-        Implementation of the call pattern `op(inp)` with the private
-        `_call()` method and added error checking.
-
-        Parameters
-        ----------
-        inp1,...,inpN : domain elements
-            Arguments to the form. The i-th argument must be in the
-            i-th component of the domain of this form. Alternatively,
-            a single sequence belonging to the domain can be given.
-
-        Returns
-        -------
-        outp : float or complex
-            The result of the form evaluation, a real or complex number
-
-        Examples
-        --------
-        """
-        if inp not in self.domain:
-            if inp[0] in self.domain:
-                inp = inp[0]
-            else:
-                raise TypeError('input {!r} not an element of the domain {!r} '
-                                'of {!r}.'
-                                ''.format(inp, self.domain, self))
-
-        result = self._call(inp)
-
-        if result not in self.range:
-            raise TypeError('result {!r} not an element of the range {!r} '
-                            'of {!r}.'
-                            ''.format(result, self.range, self))
-        return result
-
-    def derivative(self, *point, **kwargs):
-        """Return the derivative at `point`.
-
-        Parameters
-        ----------
-        point1,...,pointN : domain elements
-            Evaluation points of the derivative. The i-th argument must
-            be in the i-th component of the domain of this form.
-            Alternatively, a single sequence belonging to the domain
-            can be given.
-        indices : int or slice, optional
-            If provided, only the given indices are considered variable.
-            Hence, the resulting `LinearForm` is a mapping only from
-            the Cartesian product of the variable spaces to the scalars.
-
-        Returns
-        -------
-        derivative : `LinearForm`
-            The derivative at the given points
-        """
-        raise NotImplementedError('derivative not implemented for form '
-                                  '{!r}'.format(self))
-
-    def __add__(self, other):
-        """`op.__add__(other) <==> op + other`."""
-        return FormSum(self, other)
-
-    def __mul__(self, other):
-        """`op.__mul__(other) <==> op * other`.
-
-        If `other` is a form, this corresponds to the pointwise
-        product:
-
-        `f1 * f2 <==> (x --> (f1(x) * f2(x)))`
-
-        If `other` is a scalar, this corresponds to the multiplicatoin
-        of a form with a scalar from right.
-
-        `f * scalar <==> (x --> f(scalar * x))`
-
-        Note that left and right multiplications are usually different.
-
-        Parameters
-        ----------
-        other : `Form` or scalar
-            If `other` is a `Form`, their `domain` and `range`
-            must be equal.
-
-            If `other` is a scalar and `self.domain` is a
-            `LinearSpace`, `scalar` must be an element of
-            `self.domain.field`.
-
-        Returns
-        -------
-        mul : `Form`
-            The multiplication form. If `other` is a scalar, a
-            `FormRightScalarMult` is returned. If `other` is
-            a form, a `FormProduct` is returned.
-
-        Examples
-        --------
-        """
-        if isinstance(other, Form):
-            return FormProduct(self, other)
-        elif isinstance(other, Number):
-            return FormRightScalarMult(self, other)
-        else:
-            raise TypeError('multiplicant {!r} is neither `Form` nor '
-                            'scalar.'.format(other))
-
-    def __rmul__(self, other):
-        """`op.__rmul__(s) <==> s * op`.
-
-        If `other` is a form, this corresponds to the pointwise
-        product:
-
-        `f1 * f2 = (x --> (f1(x) * f2(x)))`
-
-        If `other` is a scalar, this corresponds to the multiplication
-        of a form with a scalar from left:
-
-        `f * scalar <==> (x --> scalar * f(x))`
-
-        Note that left and right multiplications are usually different.
-
-        Parameters
-        ----------
-        other : `Form` or scalar
-            If `other` is a `Form`, their domains and ranges
-            must be equal.
-
-            If `other` is a scalar, it must be an element of
-            the range of the field.
-
-        Returns
-        -------
-        mul : `Form`
-            The multiplication form. If `other` is a scalar, a
-            `FormLeftScalarMult` is returned. If `other` is
-            a form, a `FormProduct` is returned.
-
-        Examples
-        --------
-        """
-        if isinstance(other, Form):
-            return FormProduct(self, other)
-        elif isinstance(other, Number):
-            return FormLeftScalarMult(self, other)
-        else:
-            raise TypeError('multiplicant {!r} is neither form nor '
-                            'scalar.'.format(other))
-
-    def __repr__(self):
-        """`op.__repr__() <==> repr(op)`.
-
-        The default `repr` implementation. Should be overridden by
-        subclasses.
-        """
-        return '{}: {!r} -> {!r}'.format(self.__class__.__name__, self.domain,
-                                         self.range)
-
-    def __str__(self):
-        """`op.__str__() <==> str(op)`.
-
-        The default `str` implementation. Should be overridden by
-        subclasses.
-        """
-        return '{}: {} -> {}'.format(self.__class__.__name__, self.domain,
-                                     self.range)
-        # return self.__class__.__name__
-
-
-class FormSum(Form):
-
-    """Expression type for the sum of forms.
-
-    `FormSum(f1, f2) <==> (x --> f1(x) + f2(x))`
-    """
-
-    # pylint: disable=abstract-method
-    def __init__(self, form1, form2):
-        """Initialize a new `FormSum` instance.
-
-        Parameters
-        ----------
-        form1,form2 : `Form`
-            The forms to be added. Their domains and ranges must be
-            equal.
-        """
-        if not isinstance(form1, Form):
-            raise TypeError('form 1 {!r} not a `Form` instance.'.format(form1))
-        if not isinstance(form2, Form):
-            raise TypeError('form 2 {!r} not a `Form` instance.'.format(form2))
-
-        super().__init__(form1.domain, form1.range)
-
-        if form1.domain != form2.domain:
-            raise TypeError('form domains {!r} and {!r} do not match.'
-                            ''.format(form1.domain, form2.domain))
-
-        if form1.range != form2.range:
-            raise TypeError('form ranges {!r} and {!r} do not match.'
-                            ''.format(form1.range, form2.range))
-
-        self._form1 = form1
-        self._form2 = form2
-
-    def _call(self, *inp):
-        """`op.__call__(inp) <==> op(inp)`.
-
-        Examples
-        --------
-        """
-        # pylint: disable=protected-access
-        return self._form1._call(*inp) + self._form2._call(*inp)
-
-    def derivative(self, *point, **kwargs):
-        """Return the derivative at `point`.
-
-        Parameters
-        ----------
-        point1,...,pointN : domain elements
-            Evaluation points of the derivative. The i-th argument must
-            be in the i-th component of the domain of this form.
-            Alternatively, a single sequence belonging to the domain
-            can be given.
-        indices : int or slice, optional
-            If provided, only the given indices are considered variable.
-            Hence, the resulting `LinearForm` is a mapping only from
-            the Cartesian product of the variable spaces to the scalars.
-
-        Returns
-        -------
-        derivative : `LinearFormSum`
-            The derivative at the given points, the sum of the
-            derivatives of the member forms
-        """
-        indices = kwargs.pop('indices', None)
-        return LinearFormSum(self._form1.derivative(*point, indices=indices),
-                             self._form2.derivative(*point, indices=indices))
-
-    def __repr__(self):
-        """`op.__repr__() <==> repr(op)`."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self._form1, self._form2)
-
-    def __str__(self):
-        """`op.__str__() <==> str(op)`."""
-        return '{} + {}'.format(self._op1, self._op2)
-
-
-# TODO: make this a decorator using the wrapt module
-def _bound_method(function):
-    """Add a `self` argument to a function.
-
-    This way, the decorated function may be used as a bound method.
-    """
-    def method(_, *args, **kwargs):
-        """Call function with *args, **kwargs."""
-        return function(*args, **kwargs)
-
-    return method
-
-
 def operator(call=None, apply=None, inv=None, deriv=None,
              dom=UniversalSet(), ran=UniversalSet()):
     """Create a simple operator.
@@ -1530,11 +1202,11 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         {'_call': _bound_method(call), '_apply': _bound_method(apply),
          'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran})
 
-    return simple_operator()
+    return simple_operator(dom, ran)
 
 
 def linear_operator(call=None, apply=None, inv=None, adj=None,
-                    dom=UniversalSet(), ran=UniversalSet()):
+                    dom=UniversalSpace(), ran=UniversalSpace()):
     """Create a simple linear operator.
 
     Mostly intended for simple prototyping rather than final use.
@@ -1558,10 +1230,10 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
         Default: `None`
     dom : `LinearSpace`, optional
         The domain of the operator
-        Default: `UniversalSet`
+        Default: `UniversalSpace`
     ran : `Set`, optional
         The range of the operator
-        Default: `UniversalSet`
+        Default: `UniversalSpace`
 
     Returns
     -------
@@ -1593,7 +1265,7 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
         {'_call': _bound_method(call), '_apply': _bound_method(apply),
          'inverse': inv, 'adjoint': adj, 'domain': dom, 'range': ran})
 
-    return simple_linear_operator()
+    return simple_linear_operator(dom, ran)
 
 
 if __name__ == '__main__':

@@ -231,7 +231,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import math as m
 
 # ODL imports
-from odl.sets.set import Set
+from odl.sets.set import Set, UniversalSet
 
 
 __all__ = ('LinearSpace',)
@@ -677,6 +677,55 @@ class LinearSpace(Set):
 
         def multiply(self, x, y):
             return self.space.multiply(self, x, y)
+
+
+class UniversalSpace(LinearSpace):
+
+    """A dummy linear space class mostly raising `NotImplementedError`."""
+
+    def element(self, inp=None):
+        """Dummy element creation method, raises `NotImplementedError`."""
+        raise NotImplementedError
+
+    def _lincomb(self, z, a, x, b, y):
+        """Dummy linear combination, raises `NotImplementedError`."""
+        raise NotImplementedError
+
+    def _dist(self, x, y):
+        """Dummy distance method, raises `NotImplementedError`."""
+        raise NotImplementedError
+
+    def _norm(self, x):
+        """Dummy norm method, raises `NotImplementedError`."""
+        raise NotImplementedError
+
+    def _inner(self, x, y):
+        """Dummy inner product method, raises `NotImplementedError`."""
+        raise NotImplementedError
+
+    def _multiply(self, z, x, y):
+        """Dummy multiplication method, raises `NotImplementedError`."""
+        raise NotImplementedError
+
+    @property
+    def field(self):
+        """Dummy field `UniversalSet`."""
+        return UniversalSet()
+
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
+
+        Dummy check, `True` for any `LinearSpace`.
+        """
+        return isinstance(other, LinearSpace)
+
+    def __contains__(self, other):
+        """`s.__contains__(other) <==> other in s`.
+
+        Dummy membership check, `True` for any `LinearSpace.Vector`.
+        """
+        return True
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
