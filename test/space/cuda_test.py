@@ -473,6 +473,100 @@ class TestDType(ODLTestCase):
         self.assertTrue(True)
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
+class TestUFunc(ODLTestCase):
+    #Simple tests for the various dtypes
+
+    def test_sin(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 10.0]
+        y_host = np.sin(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.sin(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_cos(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 10.0]
+        y_host = np.cos(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.cos(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_arcsin(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.arcsin(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.arcsin(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_arccos(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.arccos(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.arccos(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_log(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.log(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.log(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_exp(self):
+        r3 = odl.CudaRn(3)
+        x_host = [-1.0, 0.0, 1.0]
+        y_host = np.exp(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.exp(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_abs(self):
+        r3 = odl.CudaRn(3)
+        x_host = [-1.0, 0.0, 1.0]
+        y_host = np.abs(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.abs(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_sign(self):
+        r3 = odl.CudaRn(3)
+        x_host = [-1.0, 0.0, 1.0]
+        y_host = np.sign(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.sign(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_sqrt(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.sqrt(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.sqrt(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+@unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
 class CudaConstWeightedInnerTest(ODLTestCase):
     @staticmethod
     def _vectors(fn):

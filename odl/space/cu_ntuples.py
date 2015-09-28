@@ -624,26 +624,24 @@ class CudaRn(CudaFn):
 
 # Methods
 # TODO: move
-def abs(inp, outp=None):
-    if outp is None:
-        outp = inp.space.element()
-    cuda.abs(inp.data, outp.data)
-    return outp
 
+def _make_unary_fun(name):
+    def fun(inp, outp=None):
+        if outp is None:
+            outp = inp.space.element()
+        getattr(inp.data, name)(outp.data)
+        return outp
+    return fun
 
-def sign(inp, outp=None):
-    if outp is None:
-        outp = inp.space.element()
-    cuda.sign(inp.data, outp.data)
-    return outp
-
-
-def sqrt(inp, outp=None):
-    if outp is None:
-        outp = inp.space.element()
-    cuda.sqrt(inp.data, outp.data)
-    return outp
-
+sin = _make_unary_fun('sin')
+cos = _make_unary_fun('cos')
+arcsin = _make_unary_fun('arcsin')
+arccos = _make_unary_fun('arccos')
+log = _make_unary_fun('log')
+exp = _make_unary_fun('exp')
+abs = _make_unary_fun('abs')
+sign = _make_unary_fun('sign')
+sqrt = _make_unary_fun('sqrt')
 
 def add_scalar(inp, scal, outp=None):
     if outp is None:
