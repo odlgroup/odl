@@ -914,17 +914,18 @@ class LinearOperator(Operator):
             The domain of this operator, i.e., the space of elements to
             which this operator can be applied
 
-        ran : `Set`
+        ran : `LinearSpace`
             The range of this operator, i.e., the space this operator
             maps to
         """
-        super().__init__(dom, ran)
-        if not isinstance(self._domain, LinearSpace):
+        if not isinstance(dom, LinearSpace):
             raise TypeError('domain {!r} not a `LinearSpace` instance.'
-                            ''.format(self._domain))
-        if not isinstance(self._range, LinearSpace):
+                            ''.format(dom))
+        if not isinstance(ran, LinearSpace):
             raise TypeError('range {!r} not a `LinearSpace` instance.'
-                            ''.format(self._range))
+                            ''.format(ran))
+
+        super().__init__(dom, ran)
 
     @property
     def adjoint(self):
