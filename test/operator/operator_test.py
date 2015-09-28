@@ -41,12 +41,12 @@ class MultiplyAndSquareOp(Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        domain = (odl.Rn(matrix.shape[1])
-                  if domain is None else domain)
-        range = (odl.Rn(matrix.shape[0])
-                 if range is None else range)
+        dom = (odl.Rn(matrix.shape[1])
+               if domain is None else domain)
+        ran = (odl.Rn(matrix.shape[0])
+               if range is None else range)
 
-        super().__init__(domain, range)
+        super().__init__(dom, ran)
         self.matrix = matrix
 
     def _apply(self, rhs, out):

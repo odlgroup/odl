@@ -19,6 +19,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -44,8 +45,7 @@ class ForwardDiff2D(odl.LinearOperator):
         if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        self.domain = space
-        self.range = odl.ProductSpace(space, 2)
+        super().__init__(space, odl.ProductSpace(space, 2))
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(
@@ -65,8 +65,7 @@ class ForwardDiff2DAdjoint(odl.LinearOperator):
         if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        self.domain = odl.ProductSpace(space, 2)
-        self.range = space
+        super().__init__(odl.ProductSpace(space, 2), space)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d_adj(

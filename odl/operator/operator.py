@@ -39,8 +39,7 @@ from numbers import Number
 
 # ODL imports
 from odl.sets.space import LinearSpace, UniversalSpace
-from odl.sets.set import Set, UniversalSet, CartesianProduct
-from odl.sets.set import RealNumbers, ComplexNumbers
+from odl.sets.set import Set, UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'OperatorRightScalarMult', 'OperatorPointwiseProduct',
@@ -55,6 +54,8 @@ def _bound_method(function):
     """
     def method(_, *args, **kwargs):
         return function(*args, **kwargs)
+
+    # Do the minimum and copy function name and docstring
     if hasattr(function, '__name__'):
         method.__name__ = function.__name__
     if hasattr(function, '__doc__'):
@@ -63,7 +64,7 @@ def _bound_method(function):
     return method
 
 
-def _call(self, inp):
+def _default_call(self, inp):
     """Default out-of-place operator evaluation using `_apply()`.
 
     Parameters
@@ -83,7 +84,7 @@ def _call(self, inp):
     return out
 
 
-def _apply(self, inp, out):
+def _default_apply(self, inp, out):
     """Default in-place operator evaluation using `_call()`.
 
     Parameters
@@ -117,9 +118,9 @@ class _OperatorMeta(ABCMeta):
         if '_call' in attrs and '_apply' in attrs:
             pass
         elif '_call' in attrs:
-            attrs['_apply'] = _apply
+            attrs['_apply'] = _default_apply
         elif '_apply' in attrs:
-            attrs['_call'] = _call
+            attrs['_call'] = _default_call
 
         return super().__new__(mcs, name, bases, attrs)
 
@@ -1194,14 +1195,18 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     15
     """
     if call is None and apply is None:
-        raise ValueError("at least one argument 'call' or 'apply' must be "
-                         "given.")
+        raise ValueError('at least one argument `call` or `apply` must be '
+                         'given.')
 
-    simple_operator = _OperatorMeta(
-        'SimpleOperator', (Operator,),
-        {'_call': _bound_method(call), '_apply': _bound_method(apply),
-         'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran})
+    attrs = {'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran}
 
+    if call is not None:
+        attrs['_call'] = _bound_method(call)
+
+    if apply is not None:
+        attrs['_apply'] = _bound_method(apply)
+
+    simple_operator = _OperatorMeta('SimpleOperator', (Operator,), attrs)
     return simple_operator(dom, ran)
 
 
@@ -1260,11 +1265,17 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
     if call is None and apply is None:
         raise ValueError("Need to supply at least one of call or apply")
 
-    simple_linear_operator = _OperatorMeta(
-        'SimpleLinearOperator', (LinearOperator,),
-        {'_call': _bound_method(call), '_apply': _bound_method(apply),
-         'inverse': inv, 'adjoint': adj, 'domain': dom, 'range': ran})
+    attrs = {'inverse': inv, 'adjoint': adj, 'domain': dom, 'range': ran}
 
+    if call is not None:
+        attrs['_call'] = _bound_method(call)
+
+    if apply is not None:
+        attrs['_apply'] = _bound_method(apply)
+
+    simple_linear_operator = _OperatorMeta('SimpleLinearOperator',
+                                           (LinearOperator,),
+                                           attrs)
     return simple_linear_operator(dom, ran)
 
 

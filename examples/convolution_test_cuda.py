@@ -19,6 +19,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 # External
 import numpy as np
@@ -46,6 +47,7 @@ class CudaConvolution(odl.LinearOperator):
         self.adjkernel = (adjointkernel if adjointkernel is not None
                           else self.space.element(kernel[::-1].copy()))
         self.norm = float(cu_ntuples.sum(cu_ntuples.abs(self.kernel.ntuple)))
+        super().__init__(self.space, self.space)
 
     def _apply(self, rhs, out):
         odlpp_cuda.conv(rhs.ntuple.data, self.kernel.ntuple.data,
@@ -57,14 +59,6 @@ class CudaConvolution(odl.LinearOperator):
 
     def opnorm(self):  # An upper limit estimate of the operator norm
         return self.norm
-
-    @property
-    def domain(self):
-        return self.space
-
-    @property
-    def range(self):
-        return self.space
 
 
 # Continuous definition of problem

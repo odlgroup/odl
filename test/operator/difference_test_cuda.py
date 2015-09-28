@@ -41,8 +41,7 @@ class ForwardDiff(odl.LinearOperator):
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaRn")
-
-        self.domain = self.range = space
+        super().__init__(space, space)
 
     def _apply(self, rhs, out):
         cuda.forward_diff(rhs.data, out.data)
@@ -57,8 +56,7 @@ class ForwardDiffAdjoint(odl.LinearOperator):
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaRn")
-
-        self.domain = self.range = space
+        super().__init__(space, space)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_adj(rhs.data, out.data)
@@ -73,9 +71,7 @@ class ForwardDiff2D(odl.LinearOperator):
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
-
-        self.domain = space
-        self.range = odl.ProductSpace(space, space)
+        super().__init__(space, odl.ProductSpace(space, space))
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
@@ -94,9 +90,7 @@ class ForwardDiff2DAdjoint(odl.LinearOperator):
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
-
-        self.domain = odl.ProductSpace(space, space)
-        self.range = space
+        super().__init__(odl.ProductSpace(space, space), space)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d_adj(rhs[0].data, rhs[1].data, out.data,

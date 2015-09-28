@@ -27,7 +27,6 @@ from builtins import super
 from odl.operator.operator import LinearOperator, SelfAdjointOperator
 from odl.sets.pspace import ProductSpace
 from odl.sets.space import LinearSpace
-from odl.sets.set import CartesianProduct
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',

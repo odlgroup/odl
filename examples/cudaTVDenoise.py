@@ -21,6 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from numpy import float64
 
@@ -39,7 +40,7 @@ class ForwardDiff(odl.LinearOperator):
         if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        self.domain = self.range = space
+        super().__init__(space, space)
         self.scale = scale
 
     def _apply(self, rhs, out):

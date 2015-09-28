@@ -19,6 +19,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from math import sin, cos, pi
 from time import time
@@ -44,9 +45,8 @@ class CudaProjector(odl.LinearOperator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range)
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
         self.forward = SR.SRPyCuda.CudaForwardProjector(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
         self._adjoint = CudaBackProjector(
@@ -71,9 +71,8 @@ class CudaProjector(odl.LinearOperator):
 class CudaBackProjector(odl.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range)
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
         self.back = SR.SRPyCuda.CudaBackProjector(nVoxels, volumeOrigin,
                                                   voxelSize, nPixels, stepSize)
 

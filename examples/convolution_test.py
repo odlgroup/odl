@@ -21,6 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 # External
 import numpy as np
@@ -28,18 +29,15 @@ import matplotlib.pyplot as plt
 from scipy import ndimage
 
 # ODL
-from odl.discr.l2_discr import DiscreteL2, l2_uniform_discretization
-from odl.space.default import L2
-from odl.sets.domain import Interval
-from odl.operator.operator import LinearOperator
+import odl
 import odl.operator.solvers as solvers
 from odl.util.testutils import Timer
 import solver_examples
 
 
-class Convolution(LinearOperator):
+class Convolution(odl.LinearOperator):
     def __init__(self, kernel, adjkernel=None):
-        if not isinstance(kernel.space, DiscreteL2):
+        if not isinstance(kernel.space, odl.DiscreteL2):
             raise TypeError("Kernel must be a DiscreteL2 vector")
 
         self.kernel = kernel
@@ -47,6 +45,7 @@ class Convolution(LinearOperator):
                           else kernel.space.element(kernel[::-1].copy()))
         self.space = kernel.space
         self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
+        super().__init__(self.space, self.space)
 
     def _apply(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
@@ -59,24 +58,16 @@ class Convolution(LinearOperator):
     def opnorm(self):
         return self.norm
 
-    @property
-    def domain(self):
-        return self.space
-
-    @property
-    def range(self):
-        return self.space
-
 
 # Continuous definition of problem
-cont_space = L2(Interval(0, 10))
+cont_space = odl.L2(odl.Interval(0, 10))
 
 # Complicated functions to check performance
 cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = l2_uniform_discretization(cont_space, 500, impl='numpy')
+discr_space = odl.l2_uniform_discretization(cont_space, 500, impl='numpy')
 kernel = discr_space.element(cont_kernel)
 data = discr_space.element(cont_data)
 
