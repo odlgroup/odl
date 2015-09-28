@@ -35,7 +35,9 @@ from odl.space.ntuples import WeightedInnerBase, ConstWeightedInner
 import odlpp.odlpp_cuda as cuda
 
 
-__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CudaConstWeightedInner')
+__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CudaConstWeightedInner',
+           'CUDA_DTYPES')
+
 
 def _get_int_type():
     if np.dtype(np.int).itemsize == 4:
@@ -44,20 +46,21 @@ def _get_int_type():
         return 'CudaVectorInt64'
     else:
         raise NotImplementedError("int size not implemented")
-    
+
+
 def _add_if_exists(dtype, name):
     if hasattr(cuda, name):
         _TYPE_MAP_NPY2CUDA[np.dtype(dtype)] = getattr(cuda, name)
-        AVAILABLE_DTYPES.append(np.dtype(dtype))
+        CUDA_DTYPES.append(np.dtype(dtype))
 
 
-#A list of all available dtypes
-AVAILABLE_DTYPES = []
+# A list of all available dtypes
+CUDA_DTYPES = []
 
-#Typemap from numpy dtype to implementations
+# Typemap from numpy dtype to implementations
 _TYPE_MAP_NPY2CUDA = {}
 
-#Initialize the available dtypes
+# Initialize the available dtypes
 _add_if_exists(np.float, 'CudaVectorFloat64')
 _add_if_exists(np.float32, 'CudaVectorFloat32')
 _add_if_exists(np.float64, 'CudaVectorFloat64')
@@ -70,6 +73,7 @@ _add_if_exists(np.uint8, 'CudaVectorUInt8')
 _add_if_exists(np.uint16, 'CudaVectorInt64')
 _add_if_exists(np.uint32, 'CudaVectorUInt16')
 _add_if_exists(np.uint64, 'CudaVectorUInt64')
+
 
 class CudaNtuples(NtuplesBase):
 

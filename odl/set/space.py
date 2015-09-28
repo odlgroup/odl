@@ -231,7 +231,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import math as m
 
 # ODL imports
-from odl.sets.set import Set, UniversalSet
+from odl.set.sets import Set, UniversalSet
 
 
 __all__ = ('LinearSpace',)

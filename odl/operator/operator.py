@@ -38,8 +38,8 @@ from abc import ABCMeta
 from numbers import Number
 
 # ODL imports
-from odl.sets.space import LinearSpace, UniversalSpace
-from odl.sets.set import Set, UniversalSet
+from odl.set.space import LinearSpace, UniversalSpace
+from odl.set.sets import Set, UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'OperatorRightScalarMult', 'OperatorPointwiseProduct',

@@ -95,5 +95,6 @@ try:
     CUDA_AVAILABLE = True
 except ImportError:
     CUDA_AVAILABLE = False
+    CUDA_DTYPES = []
 
-__all__ += ('CUDA_AVAILABLE',)
+__all__ += ('CUDA_AVAILABLE', 'CUDA_DTYPES')

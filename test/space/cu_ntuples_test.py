@@ -442,12 +442,12 @@ class TestPointer(ODLTestCase):
 
         self.assertAllEquals([1, 2, 3, 7, 8, 9], xd)
 
+
 @unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
 class TestDType(ODLTestCase):
-    #Simple tests for the various dtypes
+    # Simple tests for the various dtypes
 
-    @unittest.skipIf(np.int8 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "int8 not available")
+    @unittest.skipIf(np.int8 not in odl.CUDA_DTYPES, "int8 not available")
     def do_test_int8(self):
         r3 = odl.CudaFn(3, np.int8)
         x = r3.element([1, 2, 3])
@@ -455,8 +455,7 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.int16 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "int16 not available")
+    @unittest.skipIf(np.int16 not in odl.CUDA_DTYPES, "int16 not available")
     def do_test_int16(self):
         r3 = odl.CudaFn(3, np.int16)
         x = r3.element([1, 2, 3])
@@ -464,8 +463,7 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.int32 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "int32 not available")
+    @unittest.skipIf(np.int32 not in odl.CUDA_DTYPES, "int32 not available")
     def do_test_int32(self):
         r3 = odl.CudaFn(3, np.int32)
         x = r3.element([1, 2, 3])
@@ -473,8 +471,7 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.int64 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "int64 not available")
+    @unittest.skipIf(np.int64 not in odl.CUDA_DTYPES, "int64 not available")
     def do_test_int64(self):
         r3 = odl.CudaFn(3, np.int64)
         x = r3.element([1, 2, 3])
@@ -482,8 +479,7 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.uint8 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "uint8 not available")
+    @unittest.skipIf(np.uint8 not in odl.CUDA_DTYPES, "uint8 not available")
     def do_test_uint8(self):
         r3 = odl.CudaFn(3, np.uint8)
         x = r3.element([1, 2, 3])
@@ -491,8 +487,7 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.uint16 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "uint16 not available")
+    @unittest.skipIf(np.uint16 not in odl.CUDA_DTYPES, "uint16 not available")
     def do_test_uint16(self):
         r3 = odl.CudaFn(3, np.uint16)
         x = r3.element([1, 2, 3])
@@ -500,8 +495,7 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.uint32 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "uint32 not available")
+    @unittest.skipIf(np.uint32 not in odl.CUDA_DTYPES, "uint32 not available")
     def do_test_uint32(self):
         r3 = odl.CudaFn(3, np.uint32)
         x = r3.element([1, 2, 3])
@@ -509,8 +503,7 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.uint64 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "uint64 not available")
+    @unittest.skipIf(np.uint64 not in odl.CUDA_DTYPES, "uint64 not available")
     def do_test_uint64(self):
         r3 = odl.CudaFn(3, np.uint64)
         x = r3.element([1, 2, 3])
@@ -518,8 +511,8 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.float32 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "float32 not available")
+    @unittest.skipIf(np.float32 not in odl.CUDA_DTYPES,
+                     "float32 not available")
     def do_test_float32(self):
         r3 = odl.CudaFn(3, np.float32)
         x = r3.element([1, 2, 3])
@@ -527,32 +520,31 @@ class TestDType(ODLTestCase):
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
 
-    @unittest.skipIf(np.float64 not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "float64 not available")
+    @unittest.skipIf(np.float64 not in odl.CUDA_DTYPES,
+                     "float64 not available")
     def do_test_float64(self):
         r3 = odl.CudaFn(3, np.float64)
         x = r3.element([1, 2, 3])
         y = r3.element([4, 5, 6])
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
-        
-    @unittest.skipIf(np.float not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "float not available")
+
+    @unittest.skipIf(np.float not in odl.CUDA_DTYPES, "float not available")
     def do_test_float(self):
         r3 = odl.CudaFn(3, np.float)
         x = r3.element([1, 2, 3])
         y = r3.element([4, 5, 6])
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
-        
-    @unittest.skipIf(np.int not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
-                    "int not available")
+
+    @unittest.skipIf(np.int not in odl.CUDA_DTYPES, "int not available")
     def do_test_int(self):
         r3 = odl.CudaFn(3, np.int)
         x = r3.element([1, 2, 3])
         y = r3.element([4, 5, 6])
         z = x + y
         self.assertAllEquals(z, [5, 7, 9])
+
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
 class TestUFunc(ODLTestCase):
@@ -647,6 +639,7 @@ class TestUFunc(ODLTestCase):
         y_dev = odl.space.cu_ntuples.sqrt(x_dev)
 
         self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
 class CudaConstWeightedInnerTest(ODLTestCase):
