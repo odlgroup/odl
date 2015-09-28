@@ -55,13 +55,13 @@ class CudaProjector(odl.LinearOperator):
 
     def _apply(self, data, out):
         # Create projector
-        self.forward.setData(data.data_ptr)
+        self.forward.setData(data.ntuple.data_ptr)
 
         # Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
             self.forward.project(geo.sourcePosition, geo.detectorOrigin,
-                                 geo.pixelDirection, out[i].data_ptr)
+                                 geo.pixelDirection, out[i].ntuple.data_ptr)
 
     @property
     def adjoint(self):
@@ -85,7 +85,7 @@ class CudaBackProjector(odl.LinearOperator):
             geo = self.geometries[i]
             self.back.backProject(
                 geo.sourcePosition, geo.detectorOrigin, geo.pixelDirection,
-                projections[i].data_ptr, out.data_ptr)
+                projections[i].ntuple.data_ptr, out.ntuple.data_ptr)
 
 
 # Set geometry parameters
@@ -174,5 +174,5 @@ solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
 # solvers.conjugate_gradient(projector, x, projections, 20,
 #                            partial=solvers.ForEachPartial(plotResult))
 
-plt.imshow(x[:].reshape(nVoxels))
+plt.imshow(x[:].asarray().reshape(nVoxels))
 plt.show()
