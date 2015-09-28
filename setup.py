@@ -33,15 +33,17 @@ scipy >= 0.14
 nose >= 1.3
 """
 
-setup(name='odl',
-      version='0.1b0.dev0',
-      author='Holger Kohr, Jonas Adler',
-      author_email='kohr@kth.se, jonasadl@kth.se',
-      url='https://gits-14.sys.kth.se/LCR/ODL',
-      description='Regularization Library',
-      license='GPLv3',
-      packages=find_packages(exclude=['*test*']),
-      install_requires=[requires],
-      # packages=['odl', 'odl.discr', 'odl.operator',
-      #           'odl.space', 'odl.util'],
-      package_dir={'odl': 'odl'})
+if __name__ == '__main__':
+
+    setup(name='odl',
+          version='0.1b0.dev0',
+          author='Holger Kohr, Jonas Adler',
+          author_email='kohr@kth.se, jonasadl@kth.se',
+          url='https://gits-14.sys.kth.se/LCR/ODL',
+          description='Regularization Library',
+          license='GPLv3',
+          packages=find_packages(exclude=['*test*']),
+          install_requires=[requires],
+          # packages=['odl', 'odl.discr', 'odl.operator',
+          #           'odl.space', 'odl.util'],
+          package_dir={'odl': 'odl'})
