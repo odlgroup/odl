@@ -37,28 +37,39 @@ import odlpp.odlpp_cuda as cuda
 
 __all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CudaConstWeightedInner')
 
-
 def _get_int_type():
     if np.dtype(np.int).itemsize == 4:
-        return cuda.CudaVectorInt32
+        return 'CudaVectorInt32'
     elif np.dtype(np.int).itemsize == 8:
-        return cuda.CudaVectorInt64
+        return 'CudaVectorInt64'
     else:
         raise NotImplementedError("int size not implemented")
+    
+def _add_if_exists(dtype, name):
+    if hasattr(cuda, name):
+        _TYPE_MAP_NPY2CUDA[np.dtype(dtype)] = getattr(cuda, name)
+        AVAILABLE_DTYPES.append(np.dtype(dtype))
 
-_TYPE_MAP_NPY2CUDA = {np.dtype(np.float): cuda.CudaVectorFloat64,
-                      np.dtype(np.float32): cuda.CudaVectorFloat32,
-                      np.dtype(np.float64): cuda.CudaVectorFloat64,
-                      np.dtype(np.int): _get_int_type(),
-                      np.dtype(np.int8): cuda.CudaVectorInt8,
-                      np.dtype(np.int16): cuda.CudaVectorInt16,
-                      np.dtype(np.int32): cuda.CudaVectorInt32,
-                      np.dtype(np.int64): cuda.CudaVectorInt64,
-                      np.dtype(np.uint8): cuda.CudaVectorUInt8,
-                      np.dtype(np.uint16): cuda.CudaVectorUInt16,
-                      np.dtype(np.uint32): cuda.CudaVectorUInt32,
-                      np.dtype(np.uint64): cuda.CudaVectorUInt64}
 
+#A list of all available dtypes
+AVAILABLE_DTYPES = []
+
+#Typemap from numpy dtype to implementations
+_TYPE_MAP_NPY2CUDA = {}
+
+#Initialize the available dtypes
+_add_if_exists(np.float, 'CudaVectorFloat64')
+_add_if_exists(np.float32, 'CudaVectorFloat32')
+_add_if_exists(np.float64, 'CudaVectorFloat64')
+_add_if_exists(np.int, _get_int_type())
+_add_if_exists(np.int8, 'CudaVectorInt8')
+_add_if_exists(np.int16, 'CudaVectorInt16')
+_add_if_exists(np.int32, 'CudaVectorInt32')
+_add_if_exists(np.int64, 'CudaVectorInt64')
+_add_if_exists(np.uint8, 'CudaVectorUInt8')
+_add_if_exists(np.uint16, 'CudaVectorInt64')
+_add_if_exists(np.uint32, 'CudaVectorUInt16')
+_add_if_exists(np.uint64, 'CudaVectorUInt64')
 
 class CudaNtuples(NtuplesBase):
 
@@ -225,7 +236,7 @@ class CudaNtuples(NtuplesBase):
             >>> y = r3.element([0, 0, 0])
             >>> x == y
             False
-            >>> r3_2 = CudaNtuples(3, 'float64')
+            >>> r3_2 = CudaNtuples(3, 'uint8')
             >>> z = r3_2.element([1, 2, 3])
             >>> x != z
             True
@@ -247,10 +258,10 @@ class CudaNtuples(NtuplesBase):
 
             Examples
             --------
-            >>> vec1 = CudaNtuples(3, 'int').element([1, 2, 3])
+            >>> vec1 = CudaNtuples(3, 'uint8').element([1, 2, 3])
             >>> vec2 = vec1.copy()
             >>> vec2
-            CudaNtuples(3, 'int').element([1, 2, 3])
+            CudaNtuples(3, 'uint8').element([1, 2, 3])
             >>> vec1 == vec2
             True
             >>> vec1 is vec2
@@ -322,24 +333,24 @@ class CudaNtuples(NtuplesBase):
 
             Examples
             --------
-            >>> uc3 = CudaNtuples(3, 'int')
+            >>> uc3 = CudaNtuples(3, 'uint8')
             >>> y = uc3.element([1, 2, 3])
             >>> y[0]
             1
             >>> z = y[1:3]
             >>> z
-            CudaNtuples(2, 'int').element([2, 3])
+            CudaNtuples(2, 'uint8').element([2, 3])
             >>> y[::2]
-            CudaNtuples(2, 'int').element([1, 3])
+            CudaNtuples(2, 'uint8').element([1, 3])
             >>> y[::-1]
-            CudaNtuples(3, 'int').element([3, 2, 1])
+            CudaNtuples(3, 'uint8').element([3, 2, 1])
 
             The returned value is a view, modifications are reflected
             in the original data:
 
             >>> z[:] = [4, 5]
             >>> y
-            CudaNtuples(3, 'int').element([1, 4, 5])
+            CudaNtuples(3, 'uint8').element([1, 4, 5])
             """
             if isinstance(indices, slice):
                 data = self.data.getslice(indices)

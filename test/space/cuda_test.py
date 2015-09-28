@@ -442,6 +442,35 @@ class TestPointer(ODLTestCase):
 
         self.assertAllEquals([1, 2, 3, 7, 8, 9], xd)
 
+class TestDTypeMeta(type(ODLTestCase)):
+    def __new__(cls, name, bases, attrs):
+        def create_test(dtype):
+            @unittest.skipIf(dtype not in odl.space.cu_ntuples.AVAILABLE_DTYPES,
+                             "dtype {} not available".format(dtype))
+            def do_test_dtype(self):
+                r3 = odl.CudaFn(3, dtype)
+                x = r3.element([1, 2, 3])
+                y = r3.element([4, 5, 6])
+                z = x + y
+                self.assertAllEquals(z, [5, 7, 9])
+
+            return do_test_dtype
+
+        dtypes = [np.int8, np.int16, np.int32, np.int64,
+                  np.uint8, np.uint16, np.uint32, np.uint64,
+                  np.float32, np.float64, np.float, np.int]
+        
+        for dtype in dtypes:
+            attrs['test_expected_{}'.format(dtype)] = create_test(dtype)
+        return type(ODLTestCase).__new__(cls, name, bases, attrs)
+
+@unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
+class TestDType(ODLTestCase):
+    #Simple tests for the various dtypes
+    __metaclass__ = TestDTypeMeta
+
+    def testOne(self):
+        self.assertTrue(True)
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
 class CudaConstWeightedInnerTest(ODLTestCase):
