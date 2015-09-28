@@ -102,8 +102,9 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         if order not in ('C', 'F'):
             raise ValueError('ordering {!r} not understood.'.format(order))
 
-        self._domain = fset if map_type == 'restriction' else dspace
-        self._range = dspace if map_type == 'restriction' else fset
+        dom = fset if map_type == 'restriction' else dspace
+        ran = dspace if map_type == 'restriction' else fset
+        super().__init__(dom, ran)
         self._grid = grid
         self._order = order
 
@@ -113,16 +114,6 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                 self.range == other.range and
                 self.grid == other.grid and
                 self.order == other.order)
-
-    @property
-    def domain(self):
-        """The operator domain."""
-        return self._domain
-
-    @property
-    def range(self):
-        """The operator range."""
-        return self._range
 
     @property
     def grid(self):

@@ -38,8 +38,8 @@ from abc import ABCMeta
 from numbers import Number
 
 # ODL imports
-from odl.sets.space import LinearSpace
-from odl.sets.set import UniversalSet
+from odl.sets.space import LinearSpace, UniversalSpace
+from odl.sets.set import Set, UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'OperatorRightScalarMult', 'OperatorPointwiseProduct',
@@ -47,74 +47,61 @@ __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'LinearOperatorScalarMult')
 
 
-class _DefaultCallOperator(object):
+def _bound_method(function):
+    """Add a `self` argument to a function.
 
-    """Decorator class that adds a `_call`  method to an `Operator`.
-
-    This default implementation assumes that the operator implements
-    `_apply()` and that the `range` of the operator implements
-    `element()`. The latter is true for all vector spaces.
+    This way, the decorated function may be used as a bound method.
     """
+    def method(_, *args, **kwargs):
+        return function(*args, **kwargs)
 
-    # pylint: disable=too-few-public-methods
-    def _call(self, inp):
-        """Apply the operator out-of-place using `_apply()`.
+    # Do the minimum and copy function name and docstring
+    if hasattr(function, '__name__'):
+        method.__name__ = function.__name__
+    if hasattr(function, '__doc__'):
+        method.__doc__ = function.__doc__
 
-        Implemented as:
-
-        `outp = self.range.element()`
-        `self._apply(inp, outp)`
-        `return outp`
-
-        Parameters
-        ----------
-
-        inp : `domain` element
-            An object in the operator domain. The operator is applied
-            to it.
-
-        Returns
-        -------
-
-        out : `range` element
-            An object in the operator range. The result of an operator
-            evaluation.
-        """
-        out = self.range.element()
-        self._apply(inp, out)
-        return out
+    return method
 
 
-class _DefaultApplyOperator(object):
+def _default_call(self, inp):
+    """Default out-of-place operator evaluation using `_apply()`.
 
-    """Decorator class that adds an `_apply` method to `Operator`.
+    Parameters
+    ----------
+    inp : domain element
+        An object in the operator domain. The operator is applied
+        to it.
 
-    The default implementation assumes that the operator implements
-    `_call()` and that elements in the `range` of the operator
-    implement `assign()`.
+    Returns
+    -------
+    out : range element
+        An object in the operator range. The result of an operator
+        evaluation.
     """
+    out = self.range.element()
+    self._apply(inp, out)
+    return out
 
-    # pylint: disable=too-few-public-methods
-    def _apply(self, inp, out):
-        """Apply the operator in-place using `_call()`.
 
-        Implemented as:
+def _default_apply(self, inp, out):
+    """Default in-place operator evaluation using `_call()`.
 
-        `out.assign(self._call(inp))`
+    Parameters
+    ----------
+    inp : domain element
+        An object in the operator domain. The operator is applied
+        to it.
 
-        inp : `self.domain` element
-            An object in the operator domain. The operator is applied
-            to it.
+    out : range element
+        An object in the operator range. The result of an operator
+        evaluation.
 
-        out : `self.range` element
-            An object in the operator range. The result of an operator
-            evaluation.
-
-        Returns
-        -------
-        None
-        """
-        out.assign(self._call(inp))
+    Returns
+    -------
+    None
+    """
+    out.assign(self._call(inp))
 
 
 class _OperatorMeta(ABCMeta):
@@ -129,15 +116,13 @@ class _OperatorMeta(ABCMeta):
     def __new__(mcs, name, bases, attrs):
         """Create a new `_OperatorMeta` instance."""
         if '_call' in attrs and '_apply' in attrs:
-            return super().__new__(mcs, name, bases, attrs)
+            pass
         elif '_call' in attrs:
-            return super().__new__(mcs, name, (_DefaultApplyOperator,) + bases,
-                                   attrs)
+            attrs['_apply'] = _default_apply
         elif '_apply' in attrs:
-            return super().__new__(mcs, name, (_DefaultCallOperator,) + bases,
-                                   attrs)
-        else:
-            return super().__new__(mcs, name, bases, attrs)
+            attrs['_call'] = _default_call
+
+        return super().__new__(mcs, name, bases, attrs)
 
     def __call__(cls, *args, **kwargs):
         """Create a new class `cls` from given arguments."""
@@ -171,6 +156,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     range : `Set`
         The set this operator maps to
+
+    It is **highly** recommended to call `super().__init__(dom, ran)` in
+    the `__init__()` method of any subclass, where `dom` and `ran` are
+    the arguments specifying domain and range of the new operator. In
+    that case, the attributes `domain` and `range` are automatically
+    provided by `Operator`.
 
     In addition, **any subclass needs to implement at least one of the
     methods `_call()` and `_apply()`.**
@@ -224,6 +215,37 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     `range` is a `LinearSpace`, a default implementation of the
     respective other is provided.
     """
+
+    def __init__(self, dom, ran):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dom : `Set`
+            The domain of this operator, i.e., the set of elements to
+            which this operator can be applied
+
+        ran : `Set`
+            The range of this operator, i.e., the set this operator
+            maps to
+        """
+        if not isinstance(dom, Set):
+            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
+        if not isinstance(ran, Set):
+            raise TypeError('range {!r} not a `Set` instance.'.format(dom))
+
+        self._domain = dom
+        self._range = ran
+
+    @property
+    def domain(self):
+        """The domain of this operator."""
+        return self._domain
+
+    @property
+    def range(self):
+        """The range of this operator."""
+        return self._range
 
     def derivative(self, point):
         """Return the operator derivative at `point`."""
@@ -480,6 +502,7 @@ class OperatorSum(Operator):
             raise TypeError('temporary {!r} not an element of the operator '
                             'domain {!r}.'.format(tmp, op1.domain))
 
+        super().__init__(op1.domain, op1.range)
         self._op1 = op1
         self._op2 = op2
         self._tmp = tmp
@@ -521,34 +544,6 @@ class OperatorSum(Operator):
         # pylint: disable=protected-access
         return self._op1._call(inp) + self._op2._call(inp)
 
-    @property
-    def domain(self):
-        """The operator domain.
-
-        Examples
-        --------
-        >>> from odl import Rn, IdentityOperator
-        >>> r3 = Rn(3)
-        >>> op = IdentityOperator(r3)
-        >>> OperatorSum(op, op).domain
-        Rn(3)
-        """
-        return self._op1.domain
-
-    @property
-    def range(self):
-        """The operator range (or codomain).
-
-        Examples
-        --------
-        >>> from odl import Rn, IdentityOperator
-        >>> r3 = Rn(3)
-        >>> op = IdentityOperator(r3)
-        >>> OperatorSum(op, op).range
-        Rn(3)
-        """
-        return self._op1.range
-
     def derivative(self, point):
         """Return the operator derivative at `point`.
 
@@ -562,7 +557,8 @@ class OperatorSum(Operator):
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
-        return 'OperatorSum({!r}, {!r})'.format(self._op1, self._op2)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op1, self._op2)
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
@@ -603,6 +599,7 @@ class OperatorComp(Operator):
             raise TypeError('temporary {!r} not an element of the left '
                             'operator domain {!r}.'.format(tmp, left.domain))
 
+        super().__init__(right.domain, left.range)
         self._left = left
         self._right = right
         self._tmp = tmp
@@ -619,22 +616,6 @@ class OperatorComp(Operator):
                else self._right.range.element())
         self._right._apply(inp, tmp)
         self._left._apply(tmp, outp)
-
-    @property
-    def domain(self):
-        """The operator `domain`.
-
-        Corresponds to `right.domain`
-        """
-        return self._right.domain
-
-    @property
-    def range(self):
-        """The operator `range`.
-
-        Corresponds to `left.range`
-        """
-        return self._left.range
 
     @property
     def inverse(self):
@@ -706,6 +687,7 @@ class OperatorPointwiseProduct(Operator):
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
 
+        super().__init__(op1.domain, op1.range)
         self._op1 = op1
         self._op2 = op2
 
@@ -721,16 +703,6 @@ class OperatorPointwiseProduct(Operator):
         self._op1._apply(inp, outp)
         self._op2._apply(inp, tmp)
         outp *= tmp
-
-    @property
-    def domain(self):
-        """The operator `domain`."""
-        return self._op1.domain
-
-    @property
-    def range(self):
-        """The operator `range`."""
-        return self._op1.range
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -772,6 +744,7 @@ class OperatorLeftScalarMult(Operator):
                             'operator range {!r}.'
                             ''.format(scalar, op.range.field, op.range))
 
+        super().__init__(op.domain, op.range)
         self._op = op
         self._scalar = scalar
 
@@ -785,16 +758,6 @@ class OperatorLeftScalarMult(Operator):
         # pylint: disable=protected-access
         self._op._apply(inp, outp)
         outp *= self._scalar
-
-    @property
-    def domain(self):
-        """The operator `domain`."""
-        return self._op.domain
-
-    @property
-    def range(self):
-        """The operator `range`."""
-        return self._op.range
 
     @property
     def inverse(self):
@@ -873,6 +836,7 @@ class OperatorRightScalarMult(Operator):
             raise TypeError('temporary {!r} not an element of the '
                             'operator domain {!r}.'.format(tmp, op.domain))
 
+        super().__init__(op.domain, op.range)
         self._op = op
         self._scalar = scalar
         self._tmp = tmp
@@ -888,16 +852,6 @@ class OperatorRightScalarMult(Operator):
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, inp)
         self._op._apply(tmp, outp)
-
-    @property
-    def domain(self):
-        """The operator domain."""
-        return self._op.domain
-
-    @property
-    def range(self):
-        """The operator range."""
-        return self._op.range
 
     @property
     def inverse(self):
@@ -950,6 +904,27 @@ class LinearOperator(Operator):
     can only be defined if `domain` and `range` are both `LinearSpace`
     instances.
     """
+
+    def __init__(self, dom, ran):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dom : `LinearSpace`
+            The domain of this operator, i.e., the space of elements to
+            which this operator can be applied
+
+        ran : `Set`
+            The range of this operator, i.e., the space this operator
+            maps to
+        """
+        super().__init__(dom, ran)
+        if not isinstance(self._domain, LinearSpace):
+            raise TypeError('domain {!r} not a `LinearSpace` instance.'
+                            ''.format(self._domain))
+        if not isinstance(self._range, LinearSpace):
+            raise TypeError('range {!r} not a `LinearSpace` instance.'
+                            ''.format(self._range))
 
     @property
     def adjoint(self):
@@ -1170,18 +1145,6 @@ class LinearOperatorScalarMult(OperatorLeftScalarMult, LinearOperator):
         return LinearOperatorScalarMult(self._op.adjoint, self._scalar)
 
 
-def _bound_method(function):
-    """Add a `self` argument to a function.
-
-    This way, the decorated function may be used as a bound method.
-    """
-    def method(_, *args, **kwargs):
-        """Call function with *args, **kwargs."""
-        return function(*args, **kwargs)
-
-    return method
-
-
 def operator(call=None, apply=None, inv=None, deriv=None,
              dom=UniversalSet(), ran=UniversalSet()):
     """Create a simple operator.
@@ -1232,19 +1195,23 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     15
     """
     if call is None and apply is None:
-        raise ValueError("at least one argument 'call' or 'apply' must be "
-                         "given.")
+        raise ValueError('at least one argument `call` or `apply` must be '
+                         'given.')
 
-    simple_operator = _OperatorMeta(
-        'SimpleOperator', (Operator,),
-        {'_call': _bound_method(call), '_apply': _bound_method(apply),
-         'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran})
+    attrs = {'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran}
 
-    return simple_operator()
+    if call is not None:
+        attrs['_call'] = _bound_method(call)
+
+    if apply is not None:
+        attrs['_apply'] = _bound_method(apply)
+
+    simple_operator = _OperatorMeta('SimpleOperator', (Operator,), attrs)
+    return simple_operator(dom, ran)
 
 
 def linear_operator(call=None, apply=None, inv=None, adj=None,
-                    dom=UniversalSet(), ran=UniversalSet()):
+                    dom=UniversalSpace(), ran=UniversalSpace()):
     """Create a simple linear operator.
 
     Mostly intended for simple prototyping rather than final use.
@@ -1268,10 +1235,10 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
         Default: `None`
     dom : `LinearSpace`, optional
         The domain of the operator
-        Default: `UniversalSet`
+        Default: `UniversalSpace`
     ran : `Set`, optional
         The range of the operator
-        Default: `UniversalSet`
+        Default: `UniversalSpace`
 
     Returns
     -------
@@ -1298,12 +1265,18 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
     if call is None and apply is None:
         raise ValueError("Need to supply at least one of call or apply")
 
-    simple_linear_operator = _OperatorMeta(
-        'SimpleLinearOperator', (LinearOperator,),
-        {'_call': _bound_method(call), '_apply': _bound_method(apply),
-         'inverse': inv, 'adjoint': adj, 'domain': dom, 'range': ran})
+    attrs = {'inverse': inv, 'adjoint': adj, 'domain': dom, 'range': ran}
 
-    return simple_linear_operator()
+    if call is not None:
+        attrs['_call'] = _bound_method(call)
+
+    if apply is not None:
+        attrs['_apply'] = _bound_method(apply)
+
+    simple_linear_operator = _OperatorMeta('SimpleLinearOperator',
+                                           (LinearOperator,),
+                                           attrs)
+    return simple_linear_operator(dom, ran)
 
 
 if __name__ == '__main__':

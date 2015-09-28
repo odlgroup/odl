@@ -19,6 +19,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from math import sin, cos
 import matplotlib.pyplot as plt
@@ -43,8 +44,7 @@ class Projection(OP.LinearOperator):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
-        self.domain = domain
-        self.range = range_
+        super().__init__(domain, range_)
 
     def _apply(self, volume, out):
         forward = SR.SRPyForwardProject.SimpleForwardProjector(

@@ -19,6 +19,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from math import sin, cos, pi
 import numpy as np
@@ -47,9 +48,8 @@ class CudaSimpleMCProjector(odl.Operator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, geometries,
                  domain, range):
+        super().__init__(domain, range)
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
         self.forward = gpumci.SimpleMC(nVoxels, volumeOrigin, voxelSize,
                                        nPixels)
 

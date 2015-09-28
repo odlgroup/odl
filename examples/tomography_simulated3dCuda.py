@@ -19,6 +19,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from math import sin, cos, pi
 import matplotlib.pyplot as plt
@@ -50,9 +51,8 @@ class SimulatedCudaProjector3D(odl.Operator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, dom, ran):
+        super().__init__(dom, ran)
         self.geometries = geometries
-        self.domain = dom
-        self.range = ran
         self.nphotons = 500
         self._simulator = gpumci.CudaProjector(
             volumeOrigin, voxelSize, nVoxels, nPixels, geometries,
@@ -113,9 +113,8 @@ class CudaProjector3D(odl.LinearOperator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range)
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
         self.forward = SR.SRPyCuda.CudaForwardProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
         self._adjoint = CudaBackProjector3D(volumeOrigin, voxelSize, nVoxels,
@@ -143,11 +142,10 @@ class CudaProjector3D(odl.LinearOperator):
 class CudaBackProjector3D(odl.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range)
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
         self.back = SR.SRPyCuda.CudaBackProjector3D(
-            qnVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
+            nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
         self.run = 0
 
     @odl.util.timeit("BackProject")

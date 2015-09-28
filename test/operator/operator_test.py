@@ -20,6 +20,7 @@
 from __future__ import print_function, division, absolute_import
 
 from future import standard_library
+from builtins import super
 standard_library.install_aliases()
 
 # External module imports
@@ -40,10 +41,12 @@ class MultiplyAndSquareOp(Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self.domain = (odl.Rn(matrix.shape[1])
-                       if domain is None else domain)
-        self.range = (odl.Rn(matrix.shape[0])
-                      if range is None else range)
+        dom = (odl.Rn(matrix.shape[1])
+               if domain is None else domain)
+        ran = (odl.Rn(matrix.shape[0])
+               if range is None else range)
+
+        super().__init__(dom, ran)
         self.matrix = matrix
 
     def _apply(self, rhs, out):

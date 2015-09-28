@@ -25,8 +25,8 @@ from builtins import super
 
 # ODL imports
 from odl.operator.operator import LinearOperator, SelfAdjointOperator
+from odl.sets.pspace import ProductSpace
 from odl.sets.space import LinearSpace
-from odl.sets.set import CartesianProduct
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
@@ -52,6 +52,7 @@ class ScalingOperator(SelfAdjointOperator):
             raise TypeError('space {!r} not a LinearSpace instance.'
                             ''.format(space))
 
+        super().__init__(space, space)
         self._space = space
         self._scal = float(scalar)
 
@@ -127,34 +128,6 @@ class ScalingOperator(SelfAdjointOperator):
             raise ZeroDivisionError('scaling operator not invertible for '
                                     'scalar==0')
         return ScalingOperator(self._space, 1.0/self._scal)
-
-    @property
-    def domain(self):
-        """Return the operator domain.
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> op = ScalingOperator(r3, 2.0)
-        >>> op.domain
-        Rn(3)
-        """
-        return self._space
-
-    @property
-    def range(self):
-        """Return the operator range.
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> op = ScalingOperator(r3, 2.0)
-        >>> op.range
-        Rn(3)
-        """
-        return self._space
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
@@ -233,8 +206,8 @@ class LinCombOperator(LinearOperator):
         b : scalar
             Scalar to multiply inp[1] with
         """
-        self.domain = CartesianProduct(space, space)
-        self.range = space
+        domain = ProductSpace(space, space)
+        super().__init__(domain, space)
         self.a = a
         self.b = b
 
@@ -251,13 +224,13 @@ class LinCombOperator(LinearOperator):
 
         Examples
         --------
-        >>> from odl import Rn
+        >>> from odl import Rn, ProductSpace
         >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> y = r3.element([1, 2, 3])
+        >>> r3xr3 = ProductSpace(r3, r3)
+        >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
         >>> z = r3.element()
         >>> op = LinCombOperator(r3, 1.0, 1.0)
-        >>> op([x, y], z)  # Returns z
+        >>> op(xy, outp=z)  # Returns z
         Rn(3).element([2.0, 4.0, 6.0])
         >>> z
         Rn(3).element([2.0, 4.0, 6.0])
@@ -294,8 +267,8 @@ class MultiplyOperator(LinearOperator):
         space : LinearSpace
             The space of elements which the operator is acting on
         """
-        self.domain = CartesianProduct(space, space)
-        self.range = space
+        domain = ProductSpace(space, space)
+        super().__init__(domain, space)
 
     def _apply(self, inp, outp):
         """Multiply the input and write to output.
@@ -312,11 +285,11 @@ class MultiplyOperator(LinearOperator):
         --------
         >>> from odl import Rn
         >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> y = r3.element([1, 2, 3])
+        >>> r3xr3 = ProductSpace(r3, r3)
+        >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
-        >>> op([x, y], z)
+        >>> op(xy, z)
         Rn(3).element([1.0, 4.0, 9.0])
         >>> z
         Rn(3).element([1.0, 4.0, 9.0])

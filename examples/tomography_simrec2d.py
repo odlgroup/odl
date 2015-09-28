@@ -21,6 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from math import sin, cos, pi
 import matplotlib.pyplot as plt
@@ -46,14 +47,13 @@ class Projector(odl.LinearOperator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range)
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
         self.nVoxels = nVoxels
         self.nPixels = nPixels
         self.stepSize = stepSize
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
         self._adjoint = BackProjector(volumeOrigin, voxelSize, nVoxels,
                                       nPixels, stepSize, geometries,
                                       range, domain)
@@ -80,14 +80,13 @@ class Projector(odl.LinearOperator):
 class BackProjector(odl.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range)
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
         self.nVoxels = nVoxels
         self.nPixels = nPixels
         self.stepSize = stepSize
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
 
     def _apply(self, projections, out):
         # Create backprojector

@@ -21,6 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from math import sin, cos, pi
 import matplotlib.pyplot as plt
@@ -46,9 +47,8 @@ class CudaProjector3D(odl.LinearOperator):
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range_)
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
         self.forward = SR.SRPyCuda.CudaForwardProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
         self._adjoint = CudaBackProjector3D(
@@ -77,9 +77,8 @@ class CudaProjector3D(odl.LinearOperator):
 class CudaBackProjector3D(odl.LinearOperator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
+        super().__init__(domain, range)
         self.geometries = geometries
-        self.domain = domain
-        self.range = range
 
         self.back = SR.SRPyCuda.CudaBackProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)

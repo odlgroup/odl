@@ -18,6 +18,7 @@
 from __future__ import print_function, division
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 import odl
 
@@ -26,9 +27,8 @@ import odl
 
 class AddOp(odl.Operator):
     def __init__(self, n, x):
+        super().__init__(odl.Rn(n), odl.Rn(n))
         self.x = x
-        self.range = odl.Rn(n)
-        self.domain = odl.Rn(n)
 
     def _apply(self, rhs, out):
         out.data[:] = rhs.data[:] + self.x
