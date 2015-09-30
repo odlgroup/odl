@@ -121,7 +121,8 @@ class Timer(object):
         self.tstart = time()
 
     def __exit__(self, type, value, traceback):
-        print('[{:>20s}] : {:.3f} '.format(self.name, time() - self.tstart))
+        time_str = '{:.3f}'.format(time() - self.tstart)
+        print('{:>30s} : {:>10s} '.format(self.name, time_str))
 
 
 def timeit(arg):
