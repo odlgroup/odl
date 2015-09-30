@@ -228,6 +228,16 @@ class DiscreteL2(Discretization):
 
                 super().asarray(out=out.ravel(order=self.space.order))
                 return out
+            
+        @property
+        def ndim(self):
+            """Number of dimensions, always 1."""
+            return self.space.grid.ndim
+
+        @property
+        def shape(self):
+            #override shape
+            return self.space.grid.shape
 
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -248,16 +258,19 @@ class DiscreteL2(Discretization):
                 `vec[:] = values`, a multi-dimensional array of correct
                 shape is allowed as `values`.
             """
-            if indices == slice(None, None, None):
-                values = np.atleast_1d(values)
-                if values.ndim > 1 and values.shape != self.space.grid.shape:
-                    raise ValueError('shape {} of value array {} not equal '
-                                     'to sampling grid shape {}.'
-                                     ''.format(values.shape, values,
-                                               self.space.grid.shape))
-                values = values.ravel(order=self.space.order)
-
-            super().__setitem__(indices, values)
+            if values in self.space:
+                self.ntuple.__setitem__(indices, values.ntuple)
+            else:       
+                if indices == slice(None, None, None):
+                    values = np.atleast_1d(values)
+                    if values.ndim > 1 and values.shape != self.space.grid.shape:
+                        raise ValueError('shape {} of value array {} not equal '
+                                         'to sampling grid shape {}.'
+                                         ''.format(values.shape, values,
+                                                   self.space.grid.shape))
+                    values = values.ravel(order=self.space.order)
+    
+                super().__setitem__(indices, values)
 
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
