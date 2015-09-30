@@ -317,9 +317,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 raise TypeError('output {!r} not an element of the range {!r} '
                                 'of {!r}.'
                                 ''.format(outp, self.range, self))
-            if inp is outp:
-                raise ValueError('aliased (identical) input and output not '
-                                 'allowed.')
+                                
             self._apply(inp, outp)
             return outp
 

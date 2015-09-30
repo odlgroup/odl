@@ -210,6 +210,11 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         def ndim(self):
             """Number of dimensions, always 1."""
             return 1
+        
+        @property
+        def dtype(self):
+            """Length of this vector, equal to space size."""
+            return self.space.dtype
 
         @property
         def size(self):
@@ -219,7 +224,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         @property
         def shape(self):
             """Shape of this vector, equals `(size,)`."""
-            return (self.size,)
+            return (self.space,)
 
         @abstractmethod
         def copy(self):
