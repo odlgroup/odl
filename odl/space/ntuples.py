@@ -64,7 +64,7 @@ import platform
 # ODL imports
 from odl.operator.operator import LinearOperator
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace, UniversalSpace
+from odl.set.space import LinearSpace
 from odl.util.utility import array1d_repr, array1d_str, dtype_repr
 
 
