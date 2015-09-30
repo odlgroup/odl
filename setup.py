@@ -21,10 +21,11 @@ Install usage:
 >>> python setup.py install
 """
 
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
 
 from setuptools import setup, find_packages
+
+__version__ = '0.9b1'
 
 requires = """
 future >= 0.14
@@ -33,17 +34,15 @@ scipy >= 0.14
 nose >= 1.3
 """
 
-if __name__ == '__main__':
-
-    setup(name='odl',
-          version='0.1b0.dev0',
-          author='Holger Kohr, Jonas Adler',
-          author_email='kohr@kth.se, jonasadl@kth.se',
-          url='https://gits-14.sys.kth.se/LCR/ODL',
-          description='Regularization Library',
-          license='GPLv3',
-          packages=find_packages(exclude=['*test*']),
-          install_requires=[requires],
-          # packages=['odl', 'odl.discr', 'odl.operator',
-          #           'odl.space', 'odl.util'],
-          package_dir={'odl': 'odl'})
+setup(name='odl',
+      version=__version__,
+      author='ODL development group',
+      author_email='kohr@kth.se, jonasadl@kth.se',
+      url='https://gits-14.sys.kth.se/LCR/ODL',
+      description='Operator Discretization Library',
+      license='GPLv3',
+      packages=find_packages(exclude=['*test*']),
+      install_requires=[requires],
+      # packages=['odl', 'odl.discr', 'odl.operator',
+      #           'odl.space', 'odl.util'],
+      package_dir={'odl': 'odl'})
