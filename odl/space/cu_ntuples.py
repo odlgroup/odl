@@ -763,7 +763,7 @@ class CudaConstWeightedInnerProduct(CudaInnerProduct,
         inner : float or complex
             The inner product of the two provided vectors
         """
-        return self.constant * x1.inner(x2)
+        return self.const * x1.inner(x2)
 
 
 try:

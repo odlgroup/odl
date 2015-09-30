@@ -665,12 +665,11 @@ class CudaConstWeightedInnerProductTest(ODLTestCase):
         inner = odl.CudaConstWeightedInnerProduct(constant)
 
     def test_equals(self):
-        n = 10
         constant = 1.5
 
         inner_const = odl.CudaConstWeightedInnerProduct(constant)
         inner_const2 = odl.CudaConstWeightedInnerProduct(constant)
-        inner_const_npy = odl.ConstWeightedInner(constant)
+        inner_const_npy = odl.ConstWeightedInnerProduct(constant)
 
         self.assertEquals(inner_const, inner_const)
         self.assertEquals(inner_const, inner_const2)

@@ -344,13 +344,6 @@ class TestLinearOperator(ODLTestCase):
         with self.assertRaises(TypeError):
             Aop.adjoint(r4Vec1, r4Vec2)
 
-        # Check test against aliased values
-        with self.assertRaises(ValueError):
-            Aop(r3Vec1, r3Vec1)
-
-        with self.assertRaises(ValueError):
-            Aop.adjoint(r3Vec1, r3Vec1)
-
 
 if __name__ == '__main__':
     unittest.main(exit=False)
