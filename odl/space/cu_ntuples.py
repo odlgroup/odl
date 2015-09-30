@@ -31,11 +31,11 @@ from abc import ABCMeta
 
 # ODL imports
 from odl.space.ntuples import NtuplesBase, FnBase
-from odl.space.ntuples import WeightedInnerBase, ConstWeightedInner
+from odl.space.ntuples import InnerProductBase, ConstWeightedInnerProduct
 import odlpp.odlpp_cuda as cuda
 
 
-__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CudaConstWeightedInner',
+__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CudaConstWeightedInnerProduct',
            'CUDA_DTYPES')
 
 
@@ -647,6 +647,7 @@ abs = _make_unary_fun('abs')
 sign = _make_unary_fun('sign')
 sqrt = _make_unary_fun('sqrt')
 
+
 def add_scalar(inp, scal, outp=None):
     if outp is None:
         outp = inp.space.element()
@@ -679,44 +680,12 @@ def sum(inp):
     return cuda.sum(inp.data)
 
 
-class CudaWeightedInner(with_metaclass(ABCMeta, WeightedInnerBase)):
+class CudaInnerProduct(with_metaclass(ABCMeta, InnerProductBase)):
 
     """Abstract base class for CUDA weighted inner products. """
 
-    def __call__(self, x, y):
-        """`inner.__call__(x, y) <==> inner(x, y).`
 
-        Calculate the inner product of `x` and `y` weighted by the
-        matrix of this instance.
-
-        Parameters
-        ----------
-        x, y : `CudaFn.Vector`
-            Arrays whose inner product is calculated. They must have
-            equal length.
-
-        Returns
-        -------
-        inner : float or complex
-            Weighted inner product. The output type depends on the
-            input array dtype and the weighting.
-        """
-        if not isinstance(x, CudaFn.Vector):
-            raise TypeError('x vector {!r} not a `CudaFn.Vector` instance.'
-                            ''.format(x))
-        if not isinstance(y, CudaFn.Vector):
-            raise TypeError('y vector {!r} not a `CudaFn.Vector` instance.'
-                            ''.format(y))
-
-        if x.size != y.size:
-            raise TypeError('vector sizes {} and {} are different.'
-                            ''.format(x.size, y.size))
-
-        # TODO: possibly adapt syntax once complex vectors are supported
-        return self.matvec(x).inner(y)
-
-
-class CudaMatrixWeightedInner(CudaWeightedInner):
+class CudaMatrixWeightedInnerProduct(CudaInnerProduct):
 
     """Function object for matrix-weighted :math:`F^n` inner products.
 
@@ -729,6 +698,35 @@ class CudaMatrixWeightedInner(CudaWeightedInner):
 
     def __eq__(self, other):
         """`inner.__eq__(other) <==> inner == other`."""
+        raise NotImplementedError
+
+    def equiv(self, other):
+        """Test if `other` is an equivalent inner product.
+
+        Returns
+        -------
+        equivalent : bool
+            `True` if `other` is a `WeightedInnerBase` instance which
+            yields the same result as this inner product for any
+            input, `False` otherwise. This is checked by entry-wise
+            comparison of this inner product's matrix with the matrix
+            or constant of `other`.
+        """
+        raise NotImplementedError
+
+    def __call__(self, x1, x2):
+        """`inner.__call__(x1, x2) <==> inner(x1, x2)`.
+
+        Parameters
+        ----------
+        x1, x2 : `FnBase.Vector`
+            Vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided vectors
+        """
         raise NotImplementedError
 
     def matvec(self, vec):
@@ -747,14 +745,25 @@ class CudaMatrixWeightedInner(CudaWeightedInner):
         raise NotImplementedError
 
 
-class CudaConstWeightedInner(CudaWeightedInner, ConstWeightedInner):
+class CudaConstWeightedInnerProduct(CudaInnerProduct,
+                                    ConstWeightedInnerProduct):
 
     """Constant-weighted :math:`F^n` inner product in CUDA."""
 
-    def __repr__(self):
-        """`inner.__repr__() <==> repr(inner)`."""
-        return 'CudaConstWeightedInner({!r}, {})'.format(self.matvec.domain,
-                                                         self.const)
+    def __call__(self, x1, x2):
+        """`inner.__call__(x1, x2) <==> inner(x1, x2)`.
+
+        Parameters
+        ----------
+        x1, x2 : `FnBase.Vector`
+            Vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided vectors
+        """
+        return self.constant * x1.inner(x2)
 
 
 try:
