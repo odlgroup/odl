@@ -348,12 +348,14 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         # FIXME: CUDA spaces do not yet support custom inner product
         if impl == 'cuda':  # ignore inner until fix
             dspace = ds_type(grid.ntotal, dtype=dtype)
-        dspace = ds_type(grid.ntotal, dtype=dtype, inner=inner)
+        else:
+            dspace = ds_type(grid.ntotal, dtype=dtype, inner=inner)
     else:
         # FIXME: CUDA spaces do not yet support custom inner product
         if impl == 'cuda':  # ignore inner until fix
             dspace = ds_type(grid.ntotal)
-        dspace = ds_type(grid.ntotal, inner=inner)
+        else:
+            dspace = ds_type(grid.ntotal, inner=inner)
 
     order = kwargs.pop('order', 'C')
 
