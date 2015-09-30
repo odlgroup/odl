@@ -228,7 +228,7 @@ class DiscreteL2(Discretization):
 
                 super().asarray(out=out.ravel(order=self.space.order))
                 return out
-            
+
         @property
         def ndim(self):
             """Number of dimensions, always 1."""
@@ -236,7 +236,7 @@ class DiscreteL2(Discretization):
 
         @property
         def shape(self):
-            #override shape
+            # override shape
             return self.space.grid.shape
 
         def __setitem__(self, indices, values):
@@ -260,16 +260,17 @@ class DiscreteL2(Discretization):
             """
             if values in self.space:
                 self.ntuple.__setitem__(indices, values.ntuple)
-            else:       
+            else:
                 if indices == slice(None, None, None):
                     values = np.atleast_1d(values)
-                    if values.ndim > 1 and values.shape != self.space.grid.shape:
-                        raise ValueError('shape {} of value array {} not equal '
-                                         'to sampling grid shape {}.'
+                    if (values.ndim > 1 and
+                            values.shape != self.space.grid.shape):
+                        raise ValueError('shape {} of value array {} not equal'
+                                         ' to sampling grid shape {}.'
                                          ''.format(values.shape, values,
                                                    self.space.grid.shape))
                     values = values.ravel(order=self.space.order)
-    
+
                 super().__setitem__(indices, values)
 
 
@@ -344,8 +345,14 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         raise NotImplementedError
 
     if dtype is not None:
+        # FIXME: CUDA spaces do not yet support custom inner product
+        if impl == 'cuda':  # ignore inner until fix
+            dspace = ds_type(grid.ntotal, dtype=dtype)
         dspace = ds_type(grid.ntotal, dtype=dtype, inner=inner)
     else:
+        # FIXME: CUDA spaces do not yet support custom inner product
+        if impl == 'cuda':  # ignore inner until fix
+            dspace = ds_type(grid.ntotal)
         dspace = ds_type(grid.ntotal, inner=inner)
 
     order = kwargs.pop('order', 'C')
