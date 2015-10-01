@@ -34,13 +34,12 @@ from odl.operator.operator import Operator, LinearOperator
 from odl.space.ntuples import NtuplesBase, FnBase, Ntuples, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-try:
+from odl.space import CUDA_AVAILABLE
+if CUDA_AVAILABLE:
     from odl.space.cu_ntuples import CudaNtuples, CudaRn
-    CudaCn = None  # TODO: add CudaCn to imports once it is implemented
-    CUDA_AVAILABLE = True
-except ImportError:
-    CudaRn = CudaCn = CudaNtuples = None
-    CUDA_AVAILABLE = False
+    CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
+else:
+    CudaRn = CudaCn = CudaNtuples = type(None)
 
 
 __all__ = ('RawDiscretization', 'Discretization')
