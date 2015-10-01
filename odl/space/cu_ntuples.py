@@ -421,6 +421,27 @@ class CudaNtuples(NtuplesBase):
                     self.data.__setitem__(int(indices), values)
 
 
+def _dist_default(x, y):
+    return x.data.dist(y.data)
+
+
+def _inner_induced_dist(x, y):
+    return (_inner_induced_norm(x)**2 + _inner_induced_norm(y)**2 -
+            2 * x.inner(y))
+
+
+def _norm_default(x):
+    return x.data.norm()
+
+
+def _inner_induced_norm(x):
+    return np.sqrt(float(x.inner(x)))
+
+
+def _inner_default(x, y):
+    return x.data.inner(y.data)
+
+
 class CudaFn(FnBase, CudaNtuples):
 
     """The space F^n, implemented in CUDA.
@@ -428,7 +449,7 @@ class CudaFn(FnBase, CudaNtuples):
     Requires the compiled ODL extension odlpp.
     """
 
-    def __init__(self, size, dtype):
+    def __init__(self, size, dtype, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -443,9 +464,42 @@ class CudaFn(FnBase, CudaNtuples):
             Only scalar data types (numbers) are allowed.
 
             Currently supported: 'float32', 'uint8'
+
+        kwargs : {'inner'}
+            'inner' : callable, optional
+                The inner product implementation. It must accept two
+                `CudaFn.Vector` arguments, return a complex number and
+                satisfy the following conditions for all vectors `x`,
+                `y` and `z` and scalars `s`:
+
+                 - `inner(x, y) == conjugate(inner(y, x))`
+                 - `inner(s * x, y) == s * inner(x, y)`
+                 - `inner(x + z, y) == inner(x, y) + inner(z, y)`
+                 - `inner(x, x) == 0` (approx.) only if `x == 0`
+                   (approx.)
         """
         super().__init__(size, dtype)
         CudaNtuples.__init__(self, size, dtype)
+
+        inner = kwargs.pop('inner', None)
+        if inner is not None:
+            dist = _inner_induced_dist
+            norm = _inner_induced_norm
+        else:
+            inner = _inner_default
+            dist = _dist_default
+            norm = _norm_default
+        if not callable(dist):
+            raise TypeError('distance function {!r} not callable.'
+                            ''.format(dist))
+        if not callable(norm):
+            raise TypeError('norm function {!r} not callable.'.format(norm))
+        if not callable(inner):
+            raise TypeError('inner product function {!r} not callable.'
+                            ''.format(inner))
+        self._norm_impl = norm
+        self._dist_impl = dist
+        self._inner_impl = inner
 
     def _lincomb(self, z, a, x, b, y):
         """Linear combination of `x` and `y`.
@@ -499,7 +553,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> uc3.inner(x, y)
         20.0
         """
-        return x.data.inner(y.data)
+        return self._inner_impl(x, y)
 
     def _dist(self, x, y):
         """Calculate the distance between two vectors.
@@ -522,7 +576,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> r2.dist(x, y)
         5.0
         """
-        return x.data.dist(y.data)
+        return self._dist_impl(x, y)
 
     def _norm(self, x):
         """Calculate the 2-norm of x.
@@ -547,7 +601,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> uc3.norm(x)
         7.0
         """
-        return x.data.norm()
+        return self._norm_impl(x)
 
     def _multiply(self, z, x, y):
         """The pointwise product of two vectors, assigned to `y`.
