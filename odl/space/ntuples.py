@@ -87,6 +87,10 @@ if platform.system() == 'Linux':
     _TYPE_MAP_R2C.update({np.dtype('float128'): np.dtype('complex256')})
 
 
+_BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
+                np.dtype('complex64'), np.dtype('complex128'))
+
+
 class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
     """Base class for sets of n-tuples independent of implementation."""
@@ -717,6 +721,22 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
         """
 
 
+def _blas_is_applicable(*args):
+    """Whether BLAS routines can be applied or not.
+
+    BLAS routines are available for single and double precision
+    float or complex data only. If the arrays are non-contiguous,
+    BLAS methods are usually slower, and array-writing routines do
+    not work at all. Hence, only contiguous arrays are allowed.
+    """
+    if len(args) == 0:
+        return False
+
+    return (all(x.dtype == args[0].dtype for x in args) and
+            all(x.dtype in _BLAS_DTYPES for x in args) and
+            all(x.data.flags.contiguous for x in args))
+
+
 def _lincomb(z, a, x, b, y, dtype):
     """Raw linear combination depending on data type."""
     def fallback_axpy(x, y, n, a):
@@ -737,8 +757,7 @@ def _lincomb(z, a, x, b, y, dtype):
         y[...] = x[...]
         return y
 
-    if (dtype in (np.float32, np.float64, np.complex64, np.complex128) and
-            all(a.flags.contiguous for a in (x.data, y.data, z.data))):
+    if _blas_is_applicable(x, y, z):
         # pylint: disable=unbalanced-tuple-unpacking
         axpy, scal, copy = get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x.data, y.data))
@@ -803,16 +822,41 @@ def _inner_not_impl(x, y):
 
 # TODO: optimize?
 def _dist_default(x, y):
-    return (x-y).norm()
+    return (_norm_default(x)**2 + _norm_default(y)**2 -
+            2 * _inner_default(x, y).real)
+
+
+def _inner_induced_dist(x, y):
+    return (_inner_induced_norm(x)**2 + _inner_induced_norm(y)**2 -
+            2 * x.inner(y))
+
+
+def _norm_induced_dist(x, y):
+    return (x - y).norm()  # SLOW! Creates a copy
 
 
 def _norm_default(x):
+    if _blas_is_applicable(x):
+        norm = get_blas_funcs('nrm2', dtype=x.space.dtype)
+    else:
+        norm = np.linalg.norm
+    return norm(x.data)
+
+
+def _inner_induced_norm(x):
     return np.sqrt(x.inner(x))
 
 
 def _inner_default(x, y):
+    if _blas_is_applicable(x, y):
+        dot = get_blas_funcs('dotc', dtype=x.space.dtype)
+    elif np.isrealobj(np.empty(0, dtype=x.space.dtype)):
+        dot = np.dot  # still much faster than vdot
+    else:
+        dot = np.vdot  # slowest alternative
+
     # y as first argument because we want linearity in x
-    return np.vdot(y.data, x.data)
+    return dot(y.data, x.data)
 
 
 class Fn(FnBase, Ntuples):
@@ -898,14 +942,14 @@ class Fn(FnBase, Ntuples):
                 raise ValueError('custom inner product cannot be combined '
                                  'with custom norm.')
             inner = _inner_not_impl
-            dist = _dist_default
+            dist = _norm_induced_dist
         elif inner is not None:
-            dist = _dist_default
-            norm = _norm_default
+            dist = _inner_induced_dist
+            norm = _inner_induced_norm
         else:
+            inner = _inner_default
             dist = _dist_default
             norm = _norm_default
-            inner = _inner_default
 
         if not callable(dist):
             raise TypeError('distance function {!r} not callable.'
