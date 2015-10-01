@@ -34,13 +34,14 @@ from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
-from odl.space.ntuples import ConstWeightedInnerProduct
+from odl.space.ntuples import ConstWeightedInnerProduct, Fn
 from odl.space.default import L2
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaConstWeightedInnerProduct
+    from odl.space.cu_ntuples import CudaConstWeightedInnerProduct, CudaFn
 else:
     CudaConstWeightedInnerProduct = None
+    CudaFn = None
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')
 
@@ -82,12 +83,12 @@ class DiscreteL2(Discretization):
             raise TypeError('L2 space domain {} is not an `IntervalProd` '
                             'instance.'.format(l2space.domain))
 
-        interp = str(interp)
+        interp = str(interp).lower()
         if interp not in _SUPPORTED_INTERP:
             raise TypeError('{} is not among the supported interpolation'
                             'types {}.'.format(interp, _SUPPORTED_INTERP))
 
-        self._order = kwargs.pop('order', 'C')
+        self._order = str(kwargs.pop('order', 'C')).upper()
         restriction = GridCollocation(l2space, grid, dspace, order=self.order)
         if interp == 'nearest':
             extension = NearestInterpolation(l2space, grid, dspace,
@@ -153,9 +154,9 @@ class DiscreteL2(Discretization):
         # Check if the factory repr can be used
         if (uniform_sampling(self.uspace.domain, self.grid.shape,
                              as_midp=True) == self.grid):
-            if dspace_type(self.uspace, 'numpy') == self.dspace_type:
+            if isinstance(self.dspace, Fn):
                 impl = 'numpy'
-            elif dspace_type(self.uspace, 'cuda') == self.dspace_type:
+            elif isinstance(self.dspace, CudaFn):
                 impl = 'cuda'
             else:  # This should never happen
                 raise RuntimeError('unable to determine data space impl.')
