@@ -74,12 +74,6 @@ class ProductTest(ODLTestCase):
         v21 = H.element([1, 2])
         v22 = H.element([8, 9])
 
-        # 0-norm
-        HxH = odl.ProductSpace(H, H, ord=0.0)
-        w1 = HxH.element([v11, v12])
-        w2 = HxH.element([v21, v22])
-        self.assertAlmostEquals(HxH.dist(w1, w2), 1)  # One term is equal
-
         # 1-norm
         HxH = odl.ProductSpace(H, H, ord=1.0)
         w1 = HxH.element([v11, v12])
@@ -125,11 +119,6 @@ class ProductTest(ODLTestCase):
         H = odl.Rn(2)
         v1 = H.element([1, 2])
         v2 = H.element([5, 3])
-
-        # 0-norm
-        HxH = odl.ProductSpace(H, H, ord=0.0)
-        w = HxH.element([v1, v2])
-        self.assertAlmostEquals(HxH.norm(w), 2)  # No term is zero
 
         # 1-norm
         HxH = odl.ProductSpace(H, H, ord=1.0)

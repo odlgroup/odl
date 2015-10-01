@@ -103,19 +103,22 @@ class ProductSpace(LinearSpace):
                 Default: np.linalg.norm(x, ord=ord)
 
         The following float values for `prod_norm` can be specified.
-        Note that any value of ord < 1 only gives a pseudonorm.
+        Note that any value of ord < 1 only gives a pseudo-norm.
 
-        =========  ==========================
-        prod_norm    Distance Definition
-        =========  ==========================
-        'inf'       max(w * z)
-        '-inf'      min(w * z)
-        0           sum(w * z != 0)
-        other       sum(w * z**ord)**(1/ord)
-        =========  ==========================
+        +----------+---------------------------+
+        |prod_norm |Distance Definition        |
+        +==========+===========================+
+        |'inf'     |`max(w * z)`               |
+        |'-inf'    |`min(w * z)`               |
+        |other     |`sum(w * z**ord)**(1/ord)` |
+        +==========+===========================+
 
         Here, z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1])) and
         w = weights.
+
+        Note that `0 <= ord < 1` are not allowed since these
+        pseudo-norms are very unstable numerically.
+
 
         Returns
         -------
@@ -151,6 +154,9 @@ class ProductSpace(LinearSpace):
             self._prod_inner_sum = _prod_inner_sum_not_defined
         else:
             order = float(kwargs.get('ord', 2.0))
+            if 0 <= order < 1:
+                raise ValueError('Cannot use {:.2}-norm due to numerical '
+                                 'instability.'.format(order))
 
             weights = kwargs.get('weights', None)
             if weights is not None:
@@ -322,14 +328,14 @@ class ProductSpace(LinearSpace):
             (spc._inner(xp, yp)
              for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
             dtype=np.float64, count=self.size)
-        return self._prod_norm(inners)
+        return self._prod_inner_sum(inners)
 
     def _multiply(self, z, x, y):
         for spc, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
             spc._multiply(zp, xp, yp)
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """`ps.__eq__(other) <==> ps == other`.
 
         Returns
         -------
@@ -358,26 +364,28 @@ class ProductSpace(LinearSpace):
         if other is self:
             return True
         else:
-            return (type(self) == type(other) and
+            return (isinstance(other, ProductSpace) and
                     len(self) == len(other) and
                     all(x == y for x, y in zip(self.spaces,
                                                other.spaces)))
 
     def __len__(self):
-        """The number of factors."""
+        """`ps.__len__() <==> len(ps)`."""
         return self._size
 
-    def __getitem__(self, index_or_slice):
-        """Implementation of spc[index] and spc[slice]."""
-        return self.spaces[index_or_slice]
+    def __getitem__(self, indices):
+        """`ps.__getitem__(indices) <==> ps[indices]`."""
+        return self.spaces[indices]
 
     def __str__(self):
+        """`ps.__str__() <==> str(ps)`."""
         if all(self.spaces[0] == space for space in self.spaces):
             return '{' + str(self.spaces[0]) + '}^' + str(self.size)
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
+        """`ps.__repr__() <==> repr(ps)`."""
         if all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
                                                    self.size)
@@ -387,23 +395,49 @@ class ProductSpace(LinearSpace):
 
     class Vector(LinearSpace.Vector):
         def __init__(self, space, parts):
+            """"Initialize a new instance."""
             super().__init__(space)
-            self.parts = parts
+            self._parts = parts
+
+        @property
+        def parts(self):
+            """The parts of this vector."""
+            return self._parts
 
         @property
         def size(self):
+            """The number of factors of this vector's space."""
             return self.space.size
 
+        def __eq__(self, other):
+            """`ps.__eq__(other) <==> ps == other`.
+
+            Overrides the default `LinearSpace` method since it is
+            implemented with the distance function, which is prone to
+            numerical errors. This function checks equality per
+            component.
+            """
+            if other not in self.space:
+                return False
+            elif other is self:
+                return True
+            else:
+                return all(sp == op for sp, op in zip(self.parts, other.parts))
+
         def __len__(self):
+            """`v.__len__() <==> len(v)`."""
             return len(self.space)
 
-        def __getitem__(self, index):
-            return self.parts[index]
+        def __getitem__(self, indices):
+            """`ps.__getitem__(indices) <==> ps[indices]`."""
+            return self.parts[indices]
 
-        def __setitem__(self, index, value):
-            self.parts[index] = value
+        def __setitem__(self, indices, values):
+            """`ps.__setitem__(indcs, vals) <==> ps[indcs] = vals`."""
+            self.parts[indices] = values
 
         def __str__(self):
+            """`ps.__str__() <==> str(ps)`."""
             inner_str = ', '.join(str(part) for part in self.parts)
             return '{{{}}}'.format(inner_str)
 
