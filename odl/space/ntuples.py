@@ -210,7 +210,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         def ndim(self):
             """Number of dimensions, always 1."""
             return 1
-        
+
         @property
         def dtype(self):
             """Length of this vector, equal to space size."""
@@ -846,9 +846,9 @@ class Fn(FnBase, Ntuples):
 
         kwargs : {'dist', 'norm', 'inner'}
             'dist' : callable, optional (Default: `norm(x-y)`)
-                The distance function defining a metric on :math:`F^n`. It
-                must accept two array arguments and fulfill the following
-                conditions for any vectors `x`, `y` and `z`:
+                The distance function defining a metric on :math:`F^n`.
+                It must accept two `Fn.Vector` arguments and fulfill the
+                following conditions for any vectors `x`, `y` and `z`:
 
                 - `dist(x, y) == dist(y, x)`
                 - `dist(x, y) >= 0`
@@ -857,9 +857,9 @@ class Fn(FnBase, Ntuples):
                 - `dist(x, y) <= dist(x, z) + dist(z, y)`
 
             'norm' : callable, optional (Default: `sqrt(inner(x,y))`)
-                The norm implementation. It must accept an array-like
-                argument, return a `RealNumber` and satisfy the following
-                properties:
+                The norm implementation. It must accept an `Fn.Vector`
+                argument, return a `RealNumber` and satisfy the
+                following properties:
 
                 - `norm(x) >= 0`
                 - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
@@ -868,14 +868,15 @@ class Fn(FnBase, Ntuples):
 
             'inner' : callable, optional
                 The inner product implementation. It must accept two
-                array-like arguments, return a complex number and satisfy
-                the following conditions for all vectors `x`, `y` and `z`
-                and scalars `s`:
+                `Fn.Vector` arguments, return a complex number and
+                satisfy the following conditions for all vectors `x`,
+                `y` and `z` and scalars `s`:
 
                  - `inner(x, y) == conjugate(inner(y, x))`
                  - `inner(s * x, y) == s * inner(x, y)`
                  - `inner(x + z, y) == inner(x, y) + inner(z, y)`
-                 - `inner(x, x) == 0` (approx.) only if `x == 0` (approx.)
+                 - `inner(x, x) == 0` (approx.) only if `x == 0`
+                   (approx.)
         """
         super().__init__(size, dtype)
 
