@@ -421,6 +421,7 @@ class CudaNtuples(NtuplesBase):
                     self.data.__setitem__(int(indices), values)
 
 
+# TODO: abstract into a common structure for dist, norm, inner
 def _dist_default(x, y):
     return x.data.dist(y.data)
 
@@ -822,7 +823,7 @@ class CudaConstWeightedInnerProduct(CudaInnerProduct,
 
 try:
     CudaRn(1).element()
-except MemoryError:
+except (MemoryError, RuntimeError):
     raise ImportError('Warning: Your GPU seems to be misconfigured. Skipping '
                       'CUDA-dependent modules.')
 
