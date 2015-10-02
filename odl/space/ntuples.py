@@ -820,7 +820,7 @@ def _inner_not_impl(x, y):
     raise NotImplementedError('no inner product function provided.')
 
 
-# TODO: optimize?
+# TODO: use member norm?
 def _dist_default(x, y):
     return (_norm_default(x)**2 + _norm_default(y)**2 -
             2 * _inner_default(x, y).real)
@@ -835,6 +835,7 @@ def _norm_induced_dist(x, y):
     return (x - y).norm()  # SLOW! Creates a copy
 
 
+# TODO: use dot instead of nrm2?
 def _norm_default(x):
     if _blas_is_applicable(x):
         norm = get_blas_funcs('nrm2', dtype=x.space.dtype)
