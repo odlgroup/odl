@@ -66,11 +66,12 @@ from odl.operator.operator import LinearOperator
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.util.utility import array1d_repr, array1d_str, dtype_repr
+from odl.util.utility import is_real_dtype, is_complex_dtype
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn',
            'MatVecOperator',
-           'ConstWeightedInnerProduct', 'MatrixWeightedInnerProduct')
+           'ConstWeighting', 'MatrixWeighting')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -692,8 +693,7 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
         if not np.issubsctype(self._dtype, np.number):
             raise TypeError('{} not a scalar data type.'.format(dtype))
 
-        dummy = np.empty(0, dtype=self._dtype)
-        if np.isrealobj(dummy):
+        if is_real_dtype(self._dtype):
             self._field = RealNumbers()
         else:
             self._field = ComplexNumbers()
@@ -818,46 +818,6 @@ def _norm_not_impl(x):
 
 def _inner_not_impl(x, y):
     raise NotImplementedError('no inner product function provided.')
-
-
-# TODO: use member norm?
-def _dist_default(x, y):
-    return (_norm_default(x)**2 + _norm_default(y)**2 -
-            2 * _inner_default(x, y).real)
-
-
-def _inner_induced_dist(x, y):
-    return (_inner_induced_norm(x)**2 + _inner_induced_norm(y)**2 -
-            2 * x.inner(y))
-
-
-def _norm_induced_dist(x, y):
-    return (x - y).norm()  # SLOW! Creates a copy
-
-
-# TODO: use dot instead of nrm2?
-def _norm_default(x):
-    if _blas_is_applicable(x):
-        norm = get_blas_funcs('nrm2', dtype=x.space.dtype)
-    else:
-        norm = np.linalg.norm
-    return norm(x.data)
-
-
-def _inner_induced_norm(x):
-    return np.sqrt(x.inner(x))
-
-
-def _inner_default(x, y):
-    if _blas_is_applicable(x, y):
-        dot = get_blas_funcs('dotc', dtype=x.space.dtype)
-    elif np.isrealobj(np.empty(0, dtype=x.space.dtype)):
-        dot = np.dot  # still much faster than vdot
-    else:
-        dot = np.vdot  # slowest alternative
-
-    # y as first argument because we want linearity in x
-    return dot(y.data, x.data)
 
 
 class Fn(FnBase, Ntuples):
@@ -1236,7 +1196,7 @@ class Cn(Fn):
         super().__init__(size, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
-        if not np.iscomplexobj(np.empty(0, dtype=self._dtype)):
+        if not is_complex_dtype(self._dtype):
             raise TypeError('data type {} not a complex floating-point type.'
                             ''.format(dtype))
         self._real_dtype = _TYPE_MAP_C2R[self._dtype]
@@ -1403,7 +1363,7 @@ class Rn(Fn):
         super().__init__(size, dtype, dist=dist, norm=norm, inner=inner,
                          **kwargs)
 
-        if not np.isrealobj(np.empty(0, dtype=self._dtype)):
+        if not is_real_dtype(self._dtype):
             raise TypeError('data type {} not a real floating-point type.'
                             ''.format(dtype))
 
@@ -1504,53 +1464,69 @@ class MatVecOperator(LinearOperator):
             self.matrix.dot(inp.data, out=outp.data)
 
 
-class InnerProductBase(with_metaclass(ABCMeta, object)):
+class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for raw (weighted) inner products.
+    """Abstract base class for (raw) weighting of linear spaces.
 
     This class and its subclasses serve as a simple means to evaluate
-    and compare weighted inner products semantically rather than by
-    identity on a pure function level.
+    and compare weighted inner products, norms and metrics semantically
+    rather than by identity on a pure function level.
 
-    It is implemented similarly to `Operator` but without extra type
-    checks of input parameters - this is done in the caller `inner()`
-    of the `LinearSpace` instance where this inner product is used.
+    The functions are implemented similarly to `Operator` but without
+    extra type checks of input parameters - this is done in the callers
+    of the `LinearSpace` instance where these functions used.
     """
+
+    def __init__(self, dist_using_inner=False):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dist_using_inner : bool, optional
+            Calculate `dist` using the formula
+
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
+        """
+        self._dist_using_inner = bool(dist_using_inner)
 
     @abstractmethod
     def __eq__(self, other):
-        """`inner.__eq__(other) <==> inner == other`.
+        """`w.__eq__(other) <==> w == other`.
 
         Returns
         -------
         equal : bool
-            `True` if `other` is a `WeightedInnerBase` instance
+            `True` if `other` is a `SpaceWeightingBase` instance
             represented by the **identical** matrix, `False` otherwise.
 
         Notes
         -----
-        This operation must be computationally cheap, i.e. no arrays
-        may be compared element-wise. That is the task of the `equiv`
-        method.
+        This operation must be computationally cheap, i.e. no large
+        arrays may be compared element-wise. That is the task of the
+        `equiv` method.
         """
 
-    @abstractmethod
     def equiv(self, other):
         """Test if `other` is an equivalent inner product.
 
         Returns
         -------
         equivalent : bool
-            `True` if `other` is a `WeightedInnerBase` instance which
+            `True` if `other` is a `SpaceWeightingBase` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
-            comparison of this inner product's matrix with the matrix
-            or constant of `other`.
+            comparison of this instance's matrix with the matrix of
+            `other`.
         """
+        raise NotImplementedError
 
     @abstractmethod
-    def __call__(self, x1, x2):
-        """`inner.__call__(x1, x2) <==> inner(x1, x2)`.
+    def inner(self, x1, x2):
+        """Calculate the inner product of two vectors.
 
         Parameters
         ----------
@@ -1563,15 +1539,80 @@ class InnerProductBase(with_metaclass(ABCMeta, object)):
             The inner product of the two provided vectors
         """
 
+    def norm(self, x):
+        """Calculate the norm of a vector.
 
-class InnerProduct(with_metaclass(ABCMeta, InnerProductBase)):
+        This is the standard implementation using `inner`. Subclasses
+        should override it for optimization purposes.
 
-    """Abstract base class for raw inner products, NumPy version."""
+        Parameters
+        ----------
+        x1 : `FnBase.Vector`
+            Vector whose norm is calculated
+
+        Returns
+        -------
+        norm : float
+            The norm of the vector
+        """
+        return float(np.sqrt(self.inner(x, x)))
+
+    def dist(self, x1, x2):
+        """Calculate the distance between two vectors.
+
+        This is the standard implementation using `norm`. Subclasses
+        should override it for optimization purposes.
+
+        Parameters
+        ----------
+        x1, x2 : `FnBase.Vector`
+            Vectors whose mutual distance is calculated
+
+        Returns
+        -------
+        dist : float
+            The distance between the vectors
+        """
+        if self._dist_using_inner:
+            return float(np.sqrt(self.norm(x1)**2 + self.norm(x2)**2 -
+                                 2 * self.inner(x1, x2).real))
+        else:
+            return self.norm(x1 - x2)
 
 
-class MatrixWeightedInnerProduct(InnerProduct):
+def _dist_default(x, y):
+    return np.sqrt(_norm_default(x)**2 + _norm_default(y)**2 -
+                   2 * _inner_default(x, y).real)
 
-    """Matrix-weighted :math:`F^n` inner products in NumPy.
+
+def _norm_default(x):
+    if _blas_is_applicable(x):
+        norm = get_blas_funcs('nrm2', dtype=x.space.dtype)
+    else:
+        norm = np.linalg.norm
+    return norm(x.data)
+
+
+def _inner_default(x, y):
+    if _blas_is_applicable(x, y):
+        dot = get_blas_funcs('dotc', dtype=x.space.dtype)
+    elif is_real_dtype(x.space.dtype):
+        dot = np.dot  # still much faster than vdot
+    else:
+        dot = np.vdot  # slowest alternative
+
+    # y as first argument because we want linearity in x
+    return dot(y.data, x.data)
+
+
+class SpaceWeighting(with_metaclass(ABCMeta, SpaceWeightingBase)):
+
+    """Abstract base class for weighting, NumPy version."""
+
+
+class MatrixWeighting(SpaceWeighting):
+
+    """Matrix-weighting for :math:`F^n` in NumPy.
 
     The weighted inner product with matrix :math:`G` is defined as
 
@@ -1581,9 +1622,11 @@ class MatrixWeightedInnerProduct(InnerProduct):
     matrix must be Hermitian and posivive definite, otherwise it does
     not define an inner product. This is not checked during
     initialization.
+
+    Norm and distance are implemented as in the base class by default.
     """
 
-    def __init__(self, matrix):
+    def __init__(self, matrix, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
@@ -1591,8 +1634,16 @@ class MatrixWeightedInnerProduct(InnerProduct):
         matrix : array-like or scipy.sparse.spmatrix
             Weighting matrix of the inner product. Its shape must be
             `(n, n)`, where `n` is the size of `space`.
+        dist_using_inner : bool, optional
+            Calculate `dist` using the formula
+
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
         """
-        super().__init__()
+        super().__init__(dist_using_inner)
         if isinstance(matrix, sp.sparse.spmatrix):
             self._matrix = matrix
         else:
@@ -1618,7 +1669,7 @@ class MatrixWeightedInnerProduct(InnerProduct):
         Returns
         -------
         equals : bool
-            `True` if `other` is a `MatrixWeightedInner` instance with
+            `True` if `other` is a `MatrixWeighting` instance with
             **identical** matrix, `False` otherwise.
 
         See also
@@ -1628,16 +1679,16 @@ class MatrixWeightedInnerProduct(InnerProduct):
         if other is self:
             return True
 
-        return (isinstance(other, MatrixWeightedInnerProduct) and
+        return (isinstance(other, MatrixWeighting) and
                 self.matrix is other.matrix)
 
     def equiv(self, other):
-        """Test if `other` is an equivalent inner product.
+        """Test if `other` is an equivalent weighting.
 
         Returns
         -------
         equivalent : bool
-            `True` if `other` is a `WeightedInner` instance which
+            `True` if `other` is a `SpaceWeighting` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this inner product's matrix with the matrix
@@ -1647,7 +1698,7 @@ class MatrixWeightedInnerProduct(InnerProduct):
         if self == other:
             return True
 
-        elif isinstance(other, MatrixWeightedInnerProduct):
+        elif isinstance(other, MatrixWeighting):
             if self.matrix_issparse:
                 if other.matrix_issparse:
                     # Optimization for different number of nonzero elements
@@ -1663,7 +1714,7 @@ class MatrixWeightedInnerProduct(InnerProduct):
                 else:
                     return np.array_equal(self.matrix, other.matrix)
 
-        elif isinstance(other, ConstWeightedInnerProduct):
+        elif isinstance(other, ConstWeighting):
             return np.array_equiv(self.matrix.diagonal(), other.const)
 
         else:
@@ -1681,33 +1732,52 @@ class MatrixWeightedInnerProduct(InnerProduct):
         else:
             return np.asarray(self.matrix.dot(inp)).squeeze()
 
-    def __call__(self, x1, x2):
-        """Raw call method of this inner product.`
+    def inner(self, x1, x2):
+        """Calculate the matrix-weighted inner product of two vectors.
 
-        Calculate the inner product of `x1` and `x2` weighted by the
-        matrix of this instance.
+        Parameters
+        ----------
+        x1, x2 : `FnBase.Vector`
+            Vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided vectors
         """
-        # vdot conjugates the first argument if complex
-        return np.vdot(x2.data, self.matvec(x1.data))
+        return _inner_default(self.matvec(x1), x2)
 
     def __repr__(self):
-        """`inner.__repr__() <==> repr(inner)`."""
+        """`w.__repr__() <==> repr(w)`."""
         if self.matrix_issparse:
-            return ('MatrixWeightedInnerProduct(<{} sparse matrix, '
-                    'format {!r}, {} stored entries>)'
-                    ''.format(self.matrix.shape, self.matrix.format,
-                              self.matrix.nnz))
+            inner_fstr = ('<{shape} sparse matrix, format {fmt!r}, {nnz} '
+                          'stored entries>')
+            fmt = self.matrix.format
+            nnz = self.matrix.nnz
+            if self._dist_using_inner:
+                inner_fstr += ', dist_using_inner={dist_u_i}'
         else:
-            return 'MatrixWeightedInnerProduct(\n{!r}\n)'.format(self.matrix)
+            inner_fstr = '\n{matrix!r}'
+            fmt = ''
+            nnz = 0
+            if self._dist_using_inner:
+                inner_fstr += ',\n dist_using_inner={dist_w_i}'
+            else:
+                inner_fstr += '\n'
+
+        inner_str = inner_fstr.format(shape=self.matrix.shape, fmt=fmt,
+                                      nnz=nnz, matrix=self.matrix,
+                                      dist_u_i=self._dist_using_inner)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """`inner.__repr__() <==> repr(inner)`."""
-        return '(x, y) --> y^H G x,  G =\n{}'.format(self.matrix)
+        return 'Weighting: matrix =\n{}'.format(self.matrix)
 
 
-class ConstWeightedInnerProduct(InnerProduct):
+class ConstWeighting(SpaceWeighting):
 
-    """Operator for constant-weighted :math:`F^n` inner products.
+    """Weighting by a constant of :math:`F^n` in NumPy.
 
     The weighted inner product with constant :math:`c` is defined as
 
@@ -1717,15 +1787,23 @@ class ConstWeightedInnerProduct(InnerProduct):
     This is the CPU implementation using NumPy.
     """
 
-    def __init__(self, constant):
+    def __init__(self, constant, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
         constant : float
             Weighting constant of the inner product.
+        dist_using_inner : bool, optional
+            Calculate `dist` using the formula
+
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
         """
-        super().__init__()
+        super().__init__(dist_using_inner)
         self._const = float(constant)
 
     @property
@@ -1733,14 +1811,144 @@ class ConstWeightedInnerProduct(InnerProduct):
         """Weighting constant of this inner product."""
         return self._const
 
-    def __call__(self, x1, x2):
-        """Raw call method of this inner product.
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`.
 
-        Calculate the inner product of `x1` and `x2` weighted by the
-        constant of this instance.
+        Returns
+        -------
+        equal : bool
+            `True` if `other` is a `ConstWeighting`
+            instance with the same constant, `False` otherwise.
         """
-        # vdot conjugates the first argument if complex
-        return np.vdot(x2.data, x1.data) * self.const
+        return (isinstance(other, ConstWeighting) and
+                self.const == other.const)
+
+    def equiv(self, other):
+        """Test if `other` is an equivalentl weighting.
+
+        Returns
+        -------
+        equivalent : bool
+            `True` if `other` is a `SpaceWeighting` instance which
+            yields the same result as this inner product for any
+            input, `False` otherwise. This is the same as equality
+            if `other` is a `ConstWeighting` instance, otherwise
+            by entry-wise comparison of this inner product's constant
+            with the matrix of `other`.
+        """
+        if isinstance(other, ConstWeighting):
+            return self == other
+        elif isinstance(other, MatrixWeighting):
+            return other.equiv(self)
+        else:
+            return False
+
+    def inner(self, x1, x2):
+        """Calculate the constant-weighted inner product of two vectors.
+
+        Parameters
+        ----------
+        x1, x2 : `FnBase.Vector`
+            Vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided vectors
+        """
+        return self.const * float(_inner_default(x1, x2))
+
+    def norm(self, x):
+        """Calculate the constant-weighted norm of a vector.
+
+        Parameters
+        ----------
+        x1 : `FnBase.Vector`
+            Vector whose norm is calculated
+
+        Returns
+        -------
+        norm : float
+            The norm of the vector
+        """
+        return abs(self.const) * float(_norm_default(x))
+
+    def dist(self, x1, x2):
+        """Calculate the constant-weighted distance between two vectors.
+
+        Parameters
+        ----------
+        x1, x2 : `FnBase.Vector`
+            Vectors whose mutual distance is calculated
+
+        Returns
+        -------
+        dist : float
+            The distance between the vectors
+        """
+        if self._dist_using_inner:
+            return abs(self.const) * float(
+                np.sqrt(_norm_default(x1)**2 + _norm_default(x2)**2 -
+                        2 * _inner_default(x1, x2).real))
+        else:
+            return abs(self.const) * self.norm(x1 - x2)
+
+    def __repr__(self):
+        """`w.__repr__() <==> repr(w)`."""
+        inner_fstr = '{}'
+        if self._dist_using_inner:
+            inner_fstr += ',dist_using_inner={dist_u_i}'
+
+        inner_str = inner_fstr.format(self.const,
+                                      dist_u_i=self._dist_using_inner)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """`w.__str__() <==> str(w)`."""
+        return 'Weighting: constant = {:.4}'.format(self.const)
+
+
+class CustomInnerProduct(SpaceWeighting):
+
+    """Custom inner product on :math:`F^n` in NumPy."""
+
+    def __init__(self, inner, dist_using_inner=False):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        inner : callable
+            The inner product implementation. It must accept two
+            `Fn.Vector` arguments, return a complex number and
+            satisfy the following conditions for all vectors `x`,
+            `y` and `z` and scalars `s`:
+
+             - `inner(x, y) == conjugate(inner(y, x))`
+             - `inner(s * x, y) == s * inner(x, y)`
+             - `inner(x + z, y) == inner(x, y) + inner(z, y)`
+             - `inner(x, x) == 0` (approx.) only if `x == 0`
+               (approx.)
+
+        dist_using_inner : bool, optional
+            Calculate `dist` using the formula
+
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
+        """
+        super().__init__(dist_using_inner)
+
+        if not callable(inner):
+            raise TypeError('inner product function {!r} not callable.'
+                            ''.format(inner))
+        self._inner_impl = inner
+
+    @property
+    def inner(self):
+        """Custom inner product of this instance.."""
+        return self._inner_impl
 
     def __eq__(self, other):
         """`inner.__eq__(other) <==> inner == other`.
@@ -1748,39 +1956,146 @@ class ConstWeightedInnerProduct(InnerProduct):
         Returns
         -------
         equal : bool
-            `True` if `other` is a `ConstWeightedInnerProduct`
-            instance with the same constant, `False` otherwise.
+            `True` if `other` is a `CustomInnerProduct`
+            instance with the same inner product, `False` otherwise.
         """
-        return (isinstance(other, ConstWeightedInnerProduct) and
-                self.const == other.const)
+        return (isinstance(other, CustomInnerProduct) and
+                self.inner == other.inner)
 
-    def equiv(self, other):
-        """Test if `other` is an equivalent inner product.
+    def __repr__(self):
+        """`w.__repr__() <==> repr(w)`."""
+        inner_fstr = '{!r}'
+        if self._dist_using_inner:
+            inner_fstr += ',dist_using_inner={dist_u_i}'
+
+        inner_str = inner_fstr.format(self.inner,
+                                      dist_u_i=self._dist_using_inner)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """`w.__str__() <==> str(w)`."""
+        return self.__repr__()  # TODO: prettify?
+
+
+class CustomNorm(SpaceWeighting):
+
+    """Custom norm on :math:`F^n` in NumPy."""
+
+    def __init__(self, norm):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        norm : callable
+            The norm implementation. It must accept an `Fn.Vector`
+            argument, return a `RealNumber` and satisfy the
+            following properties:
+
+            - `norm(x) >= 0`
+            - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
+            - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
+            - `norm(x + y) <= norm(x) + norm(y)`
+        """
+        super().__init__(dist_using_inner=False)
+
+        if not callable(norm):
+            raise TypeError('norm function {!r} not callable.'
+                            ''.format(norm))
+        self._norm_impl = norm
+
+    @property
+    def norm(self):
+        """Custom norm of this instance.."""
+        return self._norm_impl
+
+    def inner(self, x1, x2):
+        """Inner product is not defined for custom norm."""
+        raise NotImplementedError
+
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`.
 
         Returns
         -------
-        equivalent : bool
-            `True` if `other` is a `WeightedInner` instance which
-            yields the same result as this inner product for any
-            input, `False` otherwise. This is the same as equality
-            if `other` is a `ConstWeightedInner` instance, otherwise
-            by entry-wise comparison of this inner product's constant
-            with the matrix of `other`.
+        equal : bool
+            `True` if `other` is a `CustomNorm`
+            instance with the same norm, `False` otherwise.
         """
-        if isinstance(other, ConstWeightedInnerProduct):
-            return self == other
-        elif isinstance(other, MatrixWeightedInnerProduct):
-            return other.equiv(self)
-        else:
-            return False
+        return (isinstance(other, CustomNorm) and
+                self.norm == other.norm)
 
     def __repr__(self):
-        """`inner.__repr__() <==> repr(inner)`."""
-        return '{}({})'.format(self.__class__.__name__, self.const)
+        """`w.__repr__() <==> repr(w)`."""
+        inner_fstr = '{!r}'
+        inner_str = inner_fstr.format(self.norm)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`inner.__repr__() <==> repr(inner)`."""
-        return '(x, y) --> {:.4} * y^H x'.format(self.const)
+        """`w.__str__() <==> str(w)`."""
+        return self.__repr__()  # TODO: prettify?
+
+
+class CustomDist(SpaceWeighting):
+
+    """Custom distance on :math:`F^n` in NumPy."""
+
+    def __init__(self, dist):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dist : callable
+            The distance function defining a metric on :math:`F^n`.
+            It must accept two `Fn.Vector` arguments and fulfill the
+            following conditions for any vectors `x`, `y` and `z`:
+
+            - `dist(x, y) == dist(y, x)`
+            - `dist(x, y) >= 0`
+            - `dist(x, y) == 0` (approx.) if and only if `x == y`
+              (approx.)
+            - `dist(x, y) <= dist(x, z) + dist(z, y)`
+        """
+        super().__init__(dist_using_inner=False)
+
+        if not callable(dist):
+            raise TypeError('distance function {!r} not callable.'
+                            ''.format(dist))
+        self._dist_impl = dist
+
+    @property
+    def dist(self):
+        """Custom distance of this instance.."""
+        return self._dist_impl
+
+    def inner(self, x1, x2):
+        """Inner product is not defined for custom distance."""
+        raise NotImplementedError
+
+    def norm(self, x):
+        """Norm is not defined for custom distance."""
+        raise NotImplementedError
+
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`.
+
+        Returns
+        -------
+        equal : bool
+            `True` if `other` is a `CustomDist`
+            instance with the same norm, `False` otherwise.
+        """
+        return (isinstance(other, CustomDist) and
+                self.dist == other.dist)
+
+    def __repr__(self):
+        """`w.__repr__() <==> repr(w)`."""
+        inner_fstr = '{!r}'
+        inner_str = inner_fstr.format(self.dist)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """`w.__repr__() <==> repr(w)`."""
+        return self.__repr__()  # TODO: prettify?
 
 
 if __name__ == '__main__':
