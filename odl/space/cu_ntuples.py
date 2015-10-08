@@ -32,6 +32,7 @@ from abc import ABCMeta
 # ODL imports
 from odl.space.ntuples import NtuplesBase, FnBase
 from odl.space.ntuples import InnerProductBase, ConstWeightedInnerProduct
+from odl.util.utility import is_real_dtype, is_complex_dtype
 import odlpp.odlpp_cuda as cuda
 
 
@@ -673,7 +674,7 @@ class CudaRn(CudaFn):
         """
         super().__init__(size, dtype)
 
-        if not np.isrealobj(np.empty(0, dtype=self._dtype)):
+        if not is_real_dtype(self._dtype):
             raise TypeError('data type {} not a real floating-point type.'
                             ''.format(dtype))
 
