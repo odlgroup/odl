@@ -241,6 +241,11 @@ class TensorGrid(Set):
             return self.max_pt + maxpt_cell_size / 2
 
     # Methods
+
+    def size(self):
+        """Return a vector containing the total sizes."""
+        return self.max() - self.min()
+
     def element(self):
         """An arbitrary element, the minimum coordinates."""
         return self.min_pt
