@@ -92,3 +92,13 @@ def dtype_repr(dtype):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+
+
+def is_complex_dtype(dtype):
+    """Whether a datatype is real or not."""
+    return np.isrealobj(np.empty(0, dtype=dtype))
+
+
+def is_complex_dtype(dtype):
+    """Whether a datatype is complex or not."""
+    return np.iscomplexobj(np.empty(0, dtype=dtype))
