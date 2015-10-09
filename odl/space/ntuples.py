@@ -838,7 +838,7 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        kwargs : {'weight', 'dist', 'norm', 'inner'}
+        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             'weight' : matrix, float or `None`
                 Use weighted inner product, norm, and dist.
 
@@ -1235,7 +1235,7 @@ class Cn(Fn):
             objects or as string.
 
             Only complex floating-point data types are allowed.
-        kwargs : dict
+        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
         super().__init__(size, dtype, **kwargs)
@@ -1427,7 +1427,7 @@ class Rn(Fn):
             objects or as string.
 
             Only real floating-point data types are allowed.
-        kwargs : dict
+        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
         super().__init__(size, dtype, **kwargs)
