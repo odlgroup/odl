@@ -42,19 +42,21 @@ def _get_int_type():
         return cuda.CudaVectorInt64
     else:
         raise NotImplementedError("int size not implemented")
-
-_TYPE_MAP_NPY2CUDA = {np.dtype(np.float): cuda.CudaVectorFloat64,
-                      np.dtype(np.float32): cuda.CudaVectorFloat32,
-                      np.dtype(np.float64): cuda.CudaVectorFloat64,
-                      np.dtype(np.int): _get_int_type(),
-                      np.dtype(np.int8): cuda.CudaVectorInt8,
-                      np.dtype(np.int16): cuda.CudaVectorInt16,
-                      np.dtype(np.int32): cuda.CudaVectorInt32,
-                      np.dtype(np.int64): cuda.CudaVectorInt64,
-                      np.dtype(np.uint8): cuda.CudaVectorUInt8,
-                      np.dtype(np.uint16): cuda.CudaVectorUInt16,
-                      np.dtype(np.uint32): cuda.CudaVectorUInt32,
-                      np.dtype(np.uint64): cuda.CudaVectorUInt64}
+try:
+    _TYPE_MAP_NPY2CUDA = {np.dtype(np.float): cuda.CudaVectorFloat64,
+                          np.dtype(np.float32): cuda.CudaVectorFloat32,
+                          np.dtype(np.float64): cuda.CudaVectorFloat64,
+                          np.dtype(np.int): _get_int_type(),
+                          np.dtype(np.int8): cuda.CudaVectorInt8,
+                          np.dtype(np.int16): cuda.CudaVectorInt16,
+                          np.dtype(np.int32): cuda.CudaVectorInt32,
+                          np.dtype(np.int64): cuda.CudaVectorInt64,
+                          np.dtype(np.uint8): cuda.CudaVectorUInt8,
+                          np.dtype(np.uint16): cuda.CudaVectorUInt16,
+                          np.dtype(np.uint32): cuda.CudaVectorUInt32,
+                          np.dtype(np.uint64): cuda.CudaVectorUInt64}
+except AttributeError:
+    raise ImportError
 
 
 class CudaNtuples(NtuplesBase):
