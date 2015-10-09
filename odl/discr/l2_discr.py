@@ -34,14 +34,14 @@ from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
-from odl.space.ntuples import ConstWeighting, Fn
+from odl.space.ntuples import FnConstWeighting, Fn
 from odl.space.default import L2
 from odl.util.utility import is_complex_dtype
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaConstWeighting, CudaFn
+    from odl.space.cu_ntuples import CudaFnConstWeighting, CudaFn
 else:
-    CudaConstWeighting = None
+    CudaFnConstWeighting = None
     CudaFn = type(None)
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')
@@ -486,9 +486,9 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         weighting_const = np.prod(grid.stride)
         if impl == 'numpy':
             # TODO: default for dist_usint_inner?
-            inner = ConstWeighting(weighting_const)
+            inner = FnConstWeighting(weighting_const)
         else:
-            inner = CudaConstWeighting(weighting_const)
+            inner = CudaFnConstWeighting(weighting_const)
     else:  # weighting == 'consistent'
         # TODO: implement
         raise NotImplemented
