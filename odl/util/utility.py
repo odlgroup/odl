@@ -94,7 +94,7 @@ if __name__ == '__main__':
     doctest.testmod()
 
 
-def is_complex_dtype(dtype):
+def is_real_dtype(dtype):
     """Whether a datatype is real or not."""
     return np.isrealobj(np.empty(0, dtype=dtype))
 
