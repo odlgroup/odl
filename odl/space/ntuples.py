@@ -54,6 +54,7 @@ from future.utils import with_metaclass
 
 # External module imports
 from abc import ABCMeta, abstractmethod
+from math import sqrt
 import numpy as np
 import scipy as sp
 import ctypes
@@ -808,18 +809,6 @@ def _lincomb(z, a, x, b, y, dtype):
                 axpy(x.data, z.data, len(z), a)
 
 
-def _dist_not_impl(x, y):
-    raise NotImplementedError('no distance function provided.')
-
-
-def _norm_not_impl(x):
-    raise NotImplementedError('no norm function provided.')
-
-
-def _inner_not_impl(x, y):
-    raise NotImplementedError('no inner product function provided.')
-
-
 class Fn(FnBase, Ntuples):
 
     """The vector space :math:`F^n` with vector multiplication.
@@ -840,17 +829,32 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        size : int
+        size : positive int
             The number of dimensions of the space
         dtype : object
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
+
             Only scalar data types are allowed.
 
-        kwargs : {'dist', 'norm', 'inner'}
-            'dist' : callable, optional (Default: `norm(x-y)`)
+        kwargs : {'weight', 'dist', 'norm', 'inner'}
+            'weight' : matrix, float or `None`
+                Use weighted inner product, norm, and dist.
+
+                `None` (default) : Use the standard unweighted functions
+
+                float : Use functions weighted by a constant
+
+                matrix : Use functions weighted by a matrix. The matrix
+                can be dense (`numpy.matrix`) or sparse
+                (`scipy.sparse.spmatrix`).
+
+                This option cannot be combined with `dist`, `norm` or
+                `inner`.
+
+            'dist' : callable, optional
                 The distance function defining a metric on :math:`F^n`.
                 It must accept two `Fn.Vector` arguments and fulfill the
                 following conditions for any vectors `x`, `y` and `z`:
@@ -861,6 +865,13 @@ class Fn(FnBase, Ntuples):
                   (approx.)
                 - `dist(x, y) <= dist(x, z) + dist(z, y)`
 
+                By default, `dist(x, y)` is calculated as `norm(x - y)`.
+                This creates an intermediate array `x-y`, which can be
+                avoided by choosing `dist_using_inner=True`.
+
+                This option cannot be combined with `weight`, `norm`
+                or `inner`.
+
             'norm' : callable, optional (Default: `sqrt(inner(x,y))`)
                 The norm implementation. It must accept an `Fn.Vector`
                 argument, return a `RealNumber` and satisfy the
@@ -870,6 +881,9 @@ class Fn(FnBase, Ntuples):
                 - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
                 - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
                 - `norm(x + y) <= norm(x) + norm(y)`
+
+                This option cannot be combined with `weight`, `dist`
+                or `inner`.
 
             'inner' : callable, optional
                 The inner product implementation. It must accept two
@@ -882,52 +896,57 @@ class Fn(FnBase, Ntuples):
                  - `inner(x + z, y) == inner(x, y) + inner(z, y)`
                  - `inner(x, x) == 0` (approx.) only if `x == 0`
                    (approx.)
+
+                This option cannot be combined with `weight`, `dist`
+                or `norm`.
+
+            'dist_using_inner' : bool, optional  (Default: `False`)
+                Calculate `dist(x, y)` as
+
+                `sqrt(norm(x)**2 + norm(y)**2 - 2 * inner(x, y).real)`
+
+                This avoids the creation of new arrays and is thus
+                faster for large arrays. On the downside, it will not
+                evaluate to exactly zero for equal (but not identical)
+                `x` and `y`.
         """
         super().__init__(size, dtype)
 
-        dist = kwargs.get('dist', None)
-        norm = kwargs.get('norm', None)
-        inner = kwargs.get('inner', None)
+        dist = kwargs.pop('dist', None)
+        norm = kwargs.pop('norm', None)
+        inner = kwargs.pop('inner', None)
+        weight = kwargs.pop('weight', None)
+        dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
-        if dist is not None:
-            if norm is not None:
-                raise ValueError('custom norm cannot be combined with '
-                                 'custom distance.')
-            if inner is not None:
-                raise ValueError('custom inner product cannot be combined '
-                                 'with custom distance.')
-            norm = _norm_not_impl
-            inner = _inner_not_impl
+        # Check validity of option combination (3 or 4 out of 4 must be None)
+        if (dist, norm, inner, weight).count(None) < 3:
+            raise ValueError('invalid combination of options `weight`, '
+                             '`dist`, `norm` and `inner`.')
+        if weight is not None:
+            if np.isscalar(weight):
+                self._space_funcs = ConstWeighting(
+                    weight, dist_using_inner=dist_using_inner)
+            elif isinstance(weight, (np.matrix, sp.sparse.spmatrix)):
+                self._space_funcs = MatrixWeighting(
+                    weight, dist_using_inner=dist_using_inner)
+            elif weight is None:
+                pass
+            else:
+                raise ValueError('invalid weight argument {!r}.'
+                                 ''.format(weight))
+        elif dist is not None:
+            self._space_funcs = CustomDist(dist)
         elif norm is not None:
-            if inner is not None:
-                raise ValueError('custom inner product cannot be combined '
-                                 'with custom norm.')
-            inner = _inner_not_impl
-            dist = _norm_induced_dist
+            self._space_funcs = CustomNorm(norm)
         elif inner is not None:
-            dist = _inner_induced_dist
-            norm = _inner_induced_norm
-        else:
-            inner = _inner_default
-            dist = _dist_default
-            norm = _norm_default
+            self._space_funcs = CustomInnerProduct(inner)
+        else:  # all None -> no weighing
+            self._space_funcs = NoWeighting()
 
-        if not callable(dist):
-            raise TypeError('distance function {!r} not callable.'
-                            ''.format(dist))
-        if not callable(norm):
-            raise TypeError('norm function {!r} not callable.'.format(norm))
-        if not callable(inner):
-            raise TypeError('inner product function {!r} not callable.'
-                            ''.format(inner))
-        self._norm_impl = norm
-        self._dist_impl = dist
-        self._inner_impl = inner
-
-    def _lincomb(self, z, a, x, b, y):
+    def _lincomb(self, z, a, x1, b, x2):
         """Linear combination of `x` and `y`.
 
-        Calculate `z = a * x + b * y` using optimized BLAS routines if
+        Calculate `z = a * x1 + b * x2` using optimized BLAS routines if
         possible.
 
         Parameters
@@ -936,7 +955,7 @@ class Fn(FnBase, Ntuples):
             The Vector that the result is written to.
         a, b : `field` element
             Scalar to multiply `x` and `y` with.
-        x, y : `Fn.Vector`
+        x1, x2 : `Fn.Vector`
             The summands
 
         Returns
@@ -953,14 +972,14 @@ class Fn(FnBase, Ntuples):
         >>> z
         Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         """
-        _lincomb(z, a, x, b, y, self.dtype)
+        _lincomb(z, a, x1, b, x2, self.dtype)
 
-    def _dist(self, x, y):
+    def _dist(self, x1, x2):
         """Calculate the distance between two vectors.
 
         Parameters
         ----------
-        x, y : `Fn.Vector`
+        x1, x2 : `Fn.Vector`
             The vectors whose mutual distance is calculated
 
         Returns
@@ -983,7 +1002,7 @@ class Fn(FnBase, Ntuples):
         >>> c2_2.dist(x, y)
         7.0
         """
-        return self._dist_impl(x, y)
+        return self._space_funcs.dist(x1, x2)
 
     def _norm(self, x):
         """Calculate the norm of a vector.
@@ -1012,21 +1031,21 @@ class Fn(FnBase, Ntuples):
         >>> c2_1.norm(x)
         18.0
         """
-        return self._norm_impl(x)
+        return self._space_funcs.norm(x)
 
-    def _inner(self, x, y):
+    def _inner(self, x1, x2):
         """Raw inner product of two vectors.
 
         Parameters
         ----------
 
-        x, y : `Cn.Vector`
+        x1, x2 : `Cn.Vector`
             The vectors whose inner product is calculated
 
         Returns
         -------
         inner : `complex`
-            Inner product of `x` and `y`.
+            Inner product of `x1` and `x2`.
 
         Examples
         --------
@@ -1043,7 +1062,7 @@ class Fn(FnBase, Ntuples):
         >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
         True
         """
-        return self._inner_impl(x, y)
+        return self._space_funcs.inner(x1, x2)
 
     def _multiply(self, z, x, y):
         """The entry-wise product of two vectors, assigned to `z`.
@@ -1147,9 +1166,9 @@ class Fn(FnBase, Ntuples):
                 self.size == other.size and
                 self.dtype == other.dtype and
                 self.field == other.field and
-                self._dist_impl == other._dist_impl and
-                self._norm_impl == other._norm_impl and
-                self._inner_impl == other._inner_impl)
+                self._space_funcs == other._space_funcs)
+
+    # TODO: change repr and str depending on kwargs
 
     class Vector(FnBase.Vector, Ntuples.Vector):
 
@@ -1176,25 +1195,32 @@ class Cn(Fn):
 
     """The complex vector space :math:`C^n` with vector multiplication.
 
-    Its elements are represented as instances of the inner `Fn.Vector`
+    Its elements are represented as instances of the inner `Cn.Vector`
     class.
 
     See also
     --------
-    See the module documentation for attributes, methods etc.
+    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
     """
 
     def __init__(self, size, dtype=np.complex128, **kwargs):
         """Initialize a new instance.
 
-        Only complex floating-point data types are allowed.
-        """
-        dist = kwargs.pop('dist', None)
-        norm = kwargs.pop('norm', None)
-        inner = kwargs.pop('inner', None)
+        Parameters
+        ----------
+        size : positive int
+            The number of dimensions of the space
+        dtype : object
+            The data type of the storage array. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
 
-        super().__init__(size, dtype, dist=dist, norm=norm, inner=inner,
-                         **kwargs)
+            Only complex floating-point data types are allowed.
+        kwargs : dict
+            See `Fn`
+        """
+        super().__init__(size, dtype, **kwargs)
 
         if not is_complex_dtype(self._dtype):
             raise TypeError('data type {} not a complex floating-point type.'
@@ -1348,20 +1374,27 @@ class Rn(Fn):
 
     See also
     --------
-    See the module documentation for attributes, methods etc.
+    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
     """
 
     def __init__(self, size, dtype=np.float64, **kwargs):
         """Initialize a new instance.
 
-        Only real floating-point types are allowed.
-        """
-        dist = kwargs.pop('dist', None)
-        norm = kwargs.pop('norm', None)
-        inner = kwargs.pop('inner', None)
+        Parameters
+        ----------
+        size : positive int
+            The number of dimensions of the space
+        dtype : object
+            The data type of the storage array. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
 
-        super().__init__(size, dtype, dist=dist, norm=norm, inner=inner,
-                         **kwargs)
+            Only real floating-point data types are allowed.
+        kwargs : dict
+            See `Fn`
+        """
+        super().__init__(size, dtype, **kwargs)
 
         if not is_real_dtype(self._dtype):
             raise TypeError('data type {} not a real floating-point type.'
@@ -1463,10 +1496,12 @@ class MatVecOperator(LinearOperator):
         else:
             self.matrix.dot(inp.data, out=outp.data)
 
+    # TODO: repr and str
+
 
 class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for (raw) weighting of linear spaces.
+    """Abstract base class for weighting of `FnBase` spaces.
 
     This class and its subclasses serve as a simple means to evaluate
     and compare weighted inner products, norms and metrics semantically
@@ -1555,7 +1590,7 @@ class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
         norm : float
             The norm of the vector
         """
-        return float(np.sqrt(self.inner(x, x)))
+        return float(sqrt(self.inner(x, x)))
 
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
@@ -1574,15 +1609,15 @@ class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
             The distance between the vectors
         """
         if self._dist_using_inner:
-            return float(np.sqrt(self.norm(x1)**2 + self.norm(x2)**2 -
-                                 2 * self.inner(x1, x2).real))
+            return float(sqrt(self.norm(x1)**2 + self.norm(x2)**2 -
+                              2 * self.inner(x1, x2).real))
         else:
             return self.norm(x1 - x2)
 
 
 def _dist_default(x, y):
-    return np.sqrt(_norm_default(x)**2 + _norm_default(y)**2 -
-                   2 * _inner_default(x, y).real)
+    return sqrt(_norm_default(x)**2 + _norm_default(y)**2 -
+                2 * _inner_default(x, y).real)
 
 
 def _norm_default(x):
@@ -1600,7 +1635,6 @@ def _inner_default(x, y):
         dot = np.dot  # still much faster than vdot
     else:
         dot = np.vdot  # slowest alternative
-
     # y as first argument because we want linearity in x
     return dot(y.data, x.data)
 
@@ -1824,7 +1858,7 @@ class ConstWeighting(SpaceWeighting):
                 self.const == other.const)
 
     def equiv(self, other):
-        """Test if `other` is an equivalentl weighting.
+        """Test if `other` is an equivalent weighting.
 
         Returns
         -------
@@ -1871,7 +1905,7 @@ class ConstWeighting(SpaceWeighting):
         norm : float
             The norm of the vector
         """
-        return abs(self.const) * float(_norm_default(x))
+        return sqrt(abs(self.const)) * float(_norm_default(x))
 
     def dist(self, x1, x2):
         """Calculate the constant-weighted distance between two vectors.
@@ -1887,11 +1921,11 @@ class ConstWeighting(SpaceWeighting):
             The distance between the vectors
         """
         if self._dist_using_inner:
-            return abs(self.const) * float(
-                np.sqrt(_norm_default(x1)**2 + _norm_default(x2)**2 -
-                        2 * _inner_default(x1, x2).real))
+            return sqrt(abs(self.const)) * float(
+                sqrt(_norm_default(x1)**2 + _norm_default(x2)**2 -
+                     2 * _inner_default(x1, x2).real))
         else:
-            return abs(self.const) * self.norm(x1 - x2)
+            return sqrt(abs(self.const)) * self.norm(x1 - x2)
 
     def __repr__(self):
         """`w.__repr__() <==> repr(w)`."""
@@ -1906,6 +1940,48 @@ class ConstWeighting(SpaceWeighting):
     def __str__(self):
         """`w.__str__() <==> str(w)`."""
         return 'Weighting: constant = {:.4}'.format(self.const)
+
+
+class NoWeighting(ConstWeighting):
+
+    """Pure :math:`F^n` without weighting in NumPy.
+
+    The unweighted inner product is defined as
+
+    :math:`<a, b> := b^H a`
+
+    with :math:`b^H` standing for transposed complex conjugate.
+    This is the CPU implementation using NumPy.
+    """
+
+    def __init__(self, dist_using_inner=False):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dist_using_inner : bool, optional
+            Calculate `dist` using the formula
+
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
+        """
+        super().__init__(1.0, dist_using_inner)
+
+    def __repr__(self):
+        """`w.__repr__() <==> repr(w)`."""
+        inner_fstr = ''
+        if self._dist_using_inner:
+            inner_fstr += ',dist_using_inner={dist_u_i}'
+
+        inner_str = inner_fstr.format(dist_u_i=self._dist_using_inner)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """`w.__str__() <==> str(w)`."""
+        return 'NoWeighting'
 
 
 class CustomInnerProduct(SpaceWeighting):
