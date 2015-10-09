@@ -32,16 +32,16 @@ import numpy as np
 # ODL
 from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
-from odl.discr.grid import uniform_sampling, RegularGrid
+from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
-from odl.space.ntuples import ConstWeightedInnerProduct, Fn
+from odl.space.ntuples import ConstWeighting, Fn
 from odl.space.default import L2
 from odl.util.utility import is_complex_dtype
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaConstWeightedInnerProduct, CudaFn
+    from odl.space.cu_ntuples import CudaConstWeighting, CudaFn
 else:
-    CudaConstWeightedInnerProduct = None
+    CudaConstWeighting = None
     CudaFn = type(None)
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')
@@ -485,12 +485,13 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     if weighting == 'simple':
         weighting_const = np.prod(grid.stride)
         if impl == 'numpy':
-            inner = ConstWeightedInnerProduct(weighting_const)
+            # TODO: default for dist_usint_inner?
+            inner = ConstWeighting(weighting_const)
         else:
-            inner = CudaConstWeightedInnerProduct(weighting_const)
+            inner = CudaConstWeighting(weighting_const)
     else:  # weighting == 'consistent'
         # TODO: implement
-        raise NotImplementedError
+        raise NotImplemented
 
     if dtype is not None:
         # FIXME: CUDA spaces do not yet support custom inner product
