@@ -705,12 +705,25 @@ class CudaRn(CudaFn):
     Requires the compiled ODL extension odlpp.
     """
 
-    def __init__(self, size, dtype=np.float32):
+    def __init__(self, size, dtype=np.float32, **kwargs):
         """Initialize a new instance.
 
-        Only real floating-point types are allowed.
+        Parameters
+        ----------
+        size : positive int
+            The number of dimensions of the space
+        dtype : object
+            The data type of the storage array. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+
+            Only real floating-point data types are allowed.
+
+        kwargs : {'weight', 'dist', 'norm', 'inner'}
+            See `CudaFn`
         """
-        super().__init__(size, dtype)
+        super().__init__(size, dtype, **kwargs)
 
         if not is_real_dtype(self._dtype):
             raise TypeError('data type {} not a real floating-point type.'
@@ -1124,8 +1137,9 @@ class CudaFnCustomDist(CudaFnWeighting):
 
 try:
     CudaRn(1).element()
-except (MemoryError, RuntimeError):
-    raise ImportError('Warning: Your GPU seems to be misconfigured. Skipping '
+except (MemoryError, RuntimeError) as err:
+    print(err)
+    raise ImportError('Your GPU seems to be misconfigured. Skipping '
                       'CUDA-dependent modules.')
 
 
