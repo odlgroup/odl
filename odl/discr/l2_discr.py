@@ -34,7 +34,7 @@ from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
-from odl.space.ntuples import FnConstWeighting, Fn
+from odl.space.ntuples import Fn
 from odl.space.default import L2
 from odl.util.utility import is_complex_dtype
 from odl.space import CUDA_AVAILABLE
@@ -483,28 +483,15 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         raise ValueError('weighting {!r} not understood.'.format(weighting))
 
     if weighting == 'simple':
-        weighting_const = np.prod(grid.stride)
-        if impl == 'numpy':
-            # TODO: default for dist_usint_inner?
-            inner = FnConstWeighting(weighting_const)
-        else:
-            inner = CudaFnConstWeighting(weighting_const)
+        weight = np.prod(grid.stride)
     else:  # weighting == 'consistent'
         # TODO: implement
         raise NotImplemented
 
     if dtype is not None:
-        # FIXME: CUDA spaces do not yet support custom inner product
-        if impl == 'cuda':  # ignore inner until fix
-            dspace = ds_type(grid.ntotal, dtype=dtype)
-        else:
-            dspace = ds_type(grid.ntotal, dtype=dtype, inner=inner)
+        dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight)
     else:
-        # FIXME: CUDA spaces do not yet support custom inner product
-        if impl == 'cuda':  # ignore inner until fix
-            dspace = ds_type(grid.ntotal)
-        else:
-            dspace = ds_type(grid.ntotal, inner=inner)
+        dspace = ds_type(grid.ntotal, weight=weight)
 
     order = kwargs.pop('order', 'C')
 
