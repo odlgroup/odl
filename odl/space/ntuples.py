@@ -71,8 +71,7 @@ from odl.util.utility import is_real_dtype, is_complex_dtype
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn',
-           'MatVecOperator',
-           'ConstWeighting', 'MatrixWeighting')
+           'MatVecOperator')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -131,7 +130,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         Returns
         -------
-        contains : `bool`
+        contains : bool
             `True` if `other` is an `NtuplesBase.Vector` instance and
             `other.space` is equal to this space, `False` otherwise.
 
@@ -152,7 +151,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         Returns
         -------
-        equals : `bool`
+        equals : bool
             `True` if `other` is an instance of this space's type
             with the same `size` and `dtype`, otherwise `False`.
 
@@ -242,12 +241,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            start : `int`, Optional (default: `None`)
+            start : int, optional (default: `None`)
                 Start position. None means the first element.
-            start : `int`, Optional (default: `None`)
+            start : int, optional (default: `None`)
                 One element past the last element to be extracted.
                 None means the last element.
-            start : `int`, Optional (default: `None`)
+            start : int, optional (default: `None`)
                 Step length. None means 1.
 
             Returns
@@ -269,7 +268,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Returns
             -------
-            equals : `bool`
+            equals : bool
                 `True` if all entries of `other` are equal to this
                 vector's entries, `False` otherwise.
             """
@@ -280,7 +279,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            indices : `int` or `slice`
+            indices : int or slice
                 The position(s) that should be accessed
 
             Returns
@@ -295,14 +294,14 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            indices : `int` or `slice`
+            indices : int or slice
                 The position(s) that should be set
             values : {scalar, array-like, `Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `index` is an `int`, `value` must be single value.
+                If `index` is an integer, `value` must be single value.
 
-                If `index` is a `slice`, `value` must be broadcastable
+                If `index` is a slice, `value` must be broadcastable
                 to the size of the slice (same size, shape (1,)
                 or single value).
             """
@@ -448,14 +447,14 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            start : `int`, Optional (default: `None`)
+            start : int, optional (default: `None`)
                 Start position. None means the first element.
-            start : `int`, Optional (default: `None`)
+            start : int, optional (default: `None`)
                 One element past the last element to be extracted.
                 None means the last element.
-            start : `int`, Optional (default: `None`)
+            start : int, optional (default: `None`)
                 Step length. None means 1.
-            out : `ndarray`, Optional (default: `None`)
+            out : `ndarray`, optional (default: `None`)
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
 
@@ -515,7 +514,7 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            equals :  `bool`
+            equals :  bool
                 `True` if all entries of `other` are equal to this
                 vector's entries, `False` otherwise.
 
@@ -573,7 +572,7 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            indices : `int` or `slice`
+            indices : int or slice
                 The position(s) that should be accessed
 
             Returns
@@ -605,14 +604,14 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            indices : `int` or `slice`
+            indices : int or slice
                 The position(s) that should be set
             values : {scalar, array-like, `Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `indices` is an `int`, `value` must be single value.
+                If `indices` is an integer, `value` must be single value.
 
-                If `indices` is a `slice`, `value` must be
+                If `indices` is a slice, `value` must be
                 broadcastable to the size of the slice (same size,
                 shape (1,) or single value).
 
@@ -709,7 +708,7 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
         return self._field
 
     @abstractmethod
-    def _multiply(self, z, x, y):
+    def _multiply(self, z, x1, x2):
         """The entry-wise product of two vectors, assigned to `z`."""
 
     class Vector(with_metaclass(ABCMeta, NtuplesBase.Vector,
@@ -738,75 +737,75 @@ def _blas_is_applicable(*args):
             all(x.data.flags.contiguous for x in args))
 
 
-def _lincomb(z, a, x, b, y, dtype):
+def _lincomb(z, a, x1, b, x2, dtype):
     """Raw linear combination depending on data type."""
-    def fallback_axpy(x, y, n, a):
+    def fallback_axpy(x1, x2, n, a):
         """Fallback axpy implementation avoiding copy."""
         if a != 0:
-            y /= a
-            y += x
-            y *= a
-        return y
+            x2 /= a
+            x2 += x1
+            x2 *= a
+        return x2
 
     def fallback_scal(a, x, n):
         """Fallback scal implementation."""
         x *= a
         return x
 
-    def fallback_copy(x, y, n):
+    def fallback_copy(x1, x2, n):
         """Fallback copy implementation."""
-        y[...] = x[...]
-        return y
+        x2[...] = x1[...]
+        return x2
 
-    if _blas_is_applicable(x, y, z):
+    if _blas_is_applicable(x1, x2, z):
         # pylint: disable=unbalanced-tuple-unpacking
         axpy, scal, copy = get_blas_funcs(
-            ['axpy', 'scal', 'copy'], arrays=(x.data, y.data))
+            ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data))
     else:
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
 
-    if x is y and b != 0:
-        # x is aligned with y -> z = (a+b)*x
-        _lincomb(z, a+b, x, 0, x, dtype)
-    elif z is x and z is y:
+    if x1 is x2 and b != 0:
+        # x1 is aligned with x2 -> z = (a+b)*x1
+        _lincomb(z, a+b, x1, 0, x1, dtype)
+    elif z is x1 and z is x2:
         # All the vectors are aligned -> z = (a+b)*z
         scal(a+b, z.data, len(z))
-    elif z is x:
-        # z is aligned with x -> z = a*z + b*y
+    elif z is x1:
+        # z is aligned with x1 -> z = a*z + b*x2
         if a != 1:
             scal(a, z.data, len(z))
         if b != 0:
-            axpy(y.data, z.data, len(z), b)
-    elif z is y:
-        # z is aligned with y -> z = a*x + b*z
+            axpy(x2.data, z.data, len(z), b)
+    elif z is x2:
+        # z is aligned with x2 -> z = a*x1 + b*z
         if b != 1:
             scal(b, z.data, len(z))
         if a != 0:
-            axpy(x.data, z.data, len(z), a)
+            axpy(x1.data, z.data, len(z), a)
     else:
-        # We have exhausted all alignment options, so x != y != z
+        # We have exhausted all alignment options, so x1 != x2 != z
         # We now optimize for various values of a and b
         if b == 0:
             if a == 0:  # Zero assignment -> z = 0
                 z.data[:] = 0
-            else:  # Scaled copy -> z = a*x
-                copy(x.data, z.data, len(z))
+            else:  # Scaled copy -> z = a*x1
+                copy(x1.data, z.data, len(z))
                 if a != 1:
                     scal(a, z.data, len(z))
         else:
-            if a == 0:  # Scaled copy -> z = b*y
-                copy(y.data, z.data, len(z))
+            if a == 0:  # Scaled copy -> z = b*x2
+                copy(x2.data, z.data, len(z))
                 if b != 1:
                     scal(b, z.data, len(z))
 
-            elif a == 1:  # No scaling in x -> z = x + b*y
-                copy(x.data, z.data, len(z))
-                axpy(y.data, z.data, len(z), b)
-            else:  # Generic case -> z = a*x + b*y
-                copy(y.data, z.data, len(z))
+            elif a == 1:  # No scaling in x1 -> z = x1 + b*x2
+                copy(x1.data, z.data, len(z))
+                axpy(x2.data, z.data, len(z), b)
+            else:  # Generic case -> z = a*x1 + b*x2
+                copy(x2.data, z.data, len(z))
                 if b != 1:
                     scal(b, z.data, len(z))
-                axpy(x.data, z.data, len(z), a)
+                axpy(x1.data, z.data, len(z), a)
 
 
 class Fn(FnBase, Ntuples):
@@ -924,10 +923,10 @@ class Fn(FnBase, Ntuples):
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
             if np.isscalar(weight):
-                self._space_funcs = ConstWeighting(
+                self._space_funcs = FnConstWeighting(
                     weight, dist_using_inner=dist_using_inner)
             elif isinstance(weight, (np.matrix, sp.sparse.spmatrix)):
-                self._space_funcs = MatrixWeighting(
+                self._space_funcs = FnMatrixWeighting(
                     weight, dist_using_inner=dist_using_inner)
             elif weight is None:
                 pass
@@ -935,13 +934,13 @@ class Fn(FnBase, Ntuples):
                 raise ValueError('invalid weight argument {!r}.'
                                  ''.format(weight))
         elif dist is not None:
-            self._space_funcs = CustomDist(dist)
+            self._space_funcs = FnCustomDist(dist)
         elif norm is not None:
-            self._space_funcs = CustomNorm(norm)
+            self._space_funcs = FnCustomNorm(norm)
         elif inner is not None:
-            self._space_funcs = CustomInnerProduct(inner)
+            self._space_funcs = FnCustomInnerProduct(inner)
         else:  # all None -> no weighing
-            self._space_funcs = NoWeighting()
+            self._space_funcs = FnNoWeighting()
 
     def _lincomb(self, z, a, x1, b, x2):
         """Linear combination of `x` and `y`.
@@ -984,7 +983,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        dist : `float`
+        dist : float
             Distance between the vectors
 
         Examples
@@ -1014,7 +1013,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        norm : `float`
+        norm : float
             Norm of the vector
 
         Examples
@@ -1064,17 +1063,15 @@ class Fn(FnBase, Ntuples):
         """
         return self._space_funcs.inner(x1, x2)
 
-    def _multiply(self, z, x, y):
+    def _multiply(self, z, x1, x2):
         """The entry-wise product of two vectors, assigned to `z`.
 
         Parameters
         ----------
         z : `Cn.Vector`
             The result vector
-        x : `Cn.Vector`
-            First factor
-        y : `Cn.Vector`
-            Second factor, used to store the result
+        x1, x2 : `Cn.Vector`
+            Factors in the product
 
         Returns
         -------
@@ -1090,15 +1087,15 @@ class Fn(FnBase, Ntuples):
         >>> z
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
-        if z is x and z is y:  # z = z*z
+        if z is x1 and z is x2:  # z = z*z
             z.data[:] *= z.data
-        elif z is x:  # z = z*y
-            z.data[:] *= y.data
-        elif z is y:  # z = z*x
-            z.data[:] *= x.data
-        else:  # z = x*y
-            z.data[:] = x.data
-            z.data[:] *= y.data
+        elif z is x1:  # z = z*x2
+            z.data[:] *= x2.data
+        elif z is x2:  # z = z*x1
+            z.data[:] *= x1.data
+        else:  # z = x1*x2
+            z.data[:] = x1.data
+            z.data[:] *= x2.data
 
     def zero(self):
         """Create a vector of zeros.
@@ -1117,7 +1114,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        equals : `bool`
+        equals : bool
             `True` if `other` is an instance of this space's type
             with the same `size` and `dtype`, and **identical**
             distance function, otherwise `False`.
@@ -1168,7 +1165,27 @@ class Fn(FnBase, Ntuples):
                 self.field == other.field and
                 self._space_funcs == other._space_funcs)
 
-    # TODO: change repr and str depending on kwargs
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        inner_fstr = '{}, {}'
+        if self._space_funcs._dist_using_inner:
+            inner_fstr += ', dist_using_inner=True'
+        if isinstance(self._space_funcs, FnCustomInnerProduct):
+            inner_fstr += ', inner=<custom inner>'
+        elif isinstance(self._space_funcs, FnCustomNorm):
+            inner_fstr += ', norm=<custom norm>'
+        elif isinstance(self._space_funcs, FnCustomDist):
+            inner_fstr += ', norm=<custom dist>'
+        elif isinstance(self._space_funcs, FnConstWeighting):
+            inner_fstr += ', weight={weight}'
+            weight = self._space_funcs.const
+        elif isinstance(self._space_funcs, FnMatrixWeighting):
+            inner_fstr += ', weight={weight!r}'
+            weight = self._space_funcs.matrix
+
+        inner_str = inner_fstr.format(self.size, dtype_repr(self.dtype),
+                                      weight=weight)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     class Vector(FnBase.Vector, Ntuples.Vector):
 
@@ -1233,11 +1250,28 @@ class Cn(Fn):
         return self._real_dtype
 
     def __repr__(self):
-        """`cn.__repr__() <==> repr(cn)`."""
-        if self.dtype == np.complex128:
-            return 'Cn({})'.format(self.size)
-        else:
-            return 'Cn({}, {!r})'.format(self.size, self.dtype)
+        """s.__repr__() <==> repr(s)."""
+        inner_fstr = '{}'
+        if self.dtype != np.complex128:
+            inner_fstr += ', {dtype}'
+        if self._space_funcs._dist_using_inner:
+            inner_fstr += ', dist_using_inner=True'
+        if isinstance(self._space_funcs, FnCustomInnerProduct):
+            inner_fstr += ', inner=<custom inner>'
+        elif isinstance(self._space_funcs, FnCustomNorm):
+            inner_fstr += ', norm=<custom norm>'
+        elif isinstance(self._space_funcs, FnCustomDist):
+            inner_fstr += ', norm=<custom dist>'
+        elif isinstance(self._space_funcs, FnConstWeighting):
+            inner_fstr += ', weight={weight}'
+            weight = self._space_funcs.const
+        elif isinstance(self._space_funcs, FnMatrixWeighting):
+            inner_fstr += ', weight={weight!r}'
+            weight = self._space_funcs.matrix
+
+        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype),
+                                      weight=weight)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """`cn.__str__() <==> str(cn)`."""
@@ -1401,11 +1435,28 @@ class Rn(Fn):
                             ''.format(dtype))
 
     def __repr__(self):
-        """`rn.__repr__() <==> repr(rn)`."""
-        if self.dtype == np.float64:
-            return 'Rn({})'.format(self.size)
-        else:
-            return 'Rn({}, {!r})'.format(self.size, self.dtype)
+        """s.__repr__() <==> repr(s)."""
+        inner_fstr = '{}'
+        if self.dtype != np.float64:
+            inner_fstr += ', {dtype}'
+        if self._space_funcs._dist_using_inner:
+            inner_fstr += ', dist_using_inner=True'
+        if isinstance(self._space_funcs, FnCustomInnerProduct):
+            inner_fstr += ', inner=<custom inner>'
+        elif isinstance(self._space_funcs, FnCustomNorm):
+            inner_fstr += ', norm=<custom norm>'
+        elif isinstance(self._space_funcs, FnCustomDist):
+            inner_fstr += ', norm=<custom dist>'
+        elif isinstance(self._space_funcs, FnConstWeighting):
+            inner_fstr += ', weight={weight}'
+            weight = self._space_funcs.const
+        elif isinstance(self._space_funcs, FnMatrixWeighting):
+            inner_fstr += ', weight={weight!r}'
+            weight = self._space_funcs.matrix
+
+        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype),
+                                      weight=weight)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """`rn.__str__() <==> str(rn)`."""
@@ -1499,7 +1550,7 @@ class MatVecOperator(LinearOperator):
     # TODO: repr and str
 
 
-class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
+class FnWeightingBase(with_metaclass(ABCMeta, object)):
 
     """Abstract base class for weighting of `FnBase` spaces.
 
@@ -1535,7 +1586,7 @@ class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
         Returns
         -------
         equal : bool
-            `True` if `other` is a `SpaceWeightingBase` instance
+            `True` if `other` is a `FnWeightingBase` instance
             represented by the **identical** matrix, `False` otherwise.
 
         Notes
@@ -1551,7 +1602,7 @@ class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
         Returns
         -------
         equivalent : bool
-            `True` if `other` is a `SpaceWeightingBase` instance which
+            `True` if `other` is a `FnWeightingBase` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this instance's matrix with the matrix of
@@ -1609,15 +1660,13 @@ class SpaceWeightingBase(with_metaclass(ABCMeta, object)):
             The distance between the vectors
         """
         if self._dist_using_inner:
-            return float(sqrt(self.norm(x1)**2 + self.norm(x2)**2 -
-                              2 * self.inner(x1, x2).real))
+            dist_squared = (self.norm(x1)**2 + self.norm(x2)**2 -
+                            2 * self.inner(x1, x2).real)
+            if dist_squared < 0:  # Compensate for numerical error
+                dist_squared = 0.0
+            return float(sqrt(dist_squared))
         else:
             return self.norm(x1 - x2)
-
-
-def _dist_default(x, y):
-    return sqrt(_norm_default(x)**2 + _norm_default(y)**2 -
-                2 * _inner_default(x, y).real)
 
 
 def _norm_default(x):
@@ -1628,25 +1677,25 @@ def _norm_default(x):
     return norm(x.data)
 
 
-def _inner_default(x, y):
-    if _blas_is_applicable(x, y):
-        dot = get_blas_funcs('dotc', dtype=x.space.dtype)
-    elif is_real_dtype(x.space.dtype):
+def _inner_default(x1, x2):
+    if _blas_is_applicable(x1, x2):
+        dot = get_blas_funcs('dotc', dtype=x1.space.dtype)
+    elif is_real_dtype(x1.space.dtype):
         dot = np.dot  # still much faster than vdot
     else:
         dot = np.vdot  # slowest alternative
-    # y as first argument because we want linearity in x
-    return dot(y.data, x.data)
+    # x2 as first argument because we want linearity in x1
+    return dot(x2.data, x1.data)
 
 
-class SpaceWeighting(with_metaclass(ABCMeta, SpaceWeightingBase)):
+class FnWeighting(with_metaclass(ABCMeta, FnWeightingBase)):
 
-    """Abstract base class for weighting, NumPy version."""
+    """Abstract base class for `Fn` weighting."""
 
 
-class MatrixWeighting(SpaceWeighting):
+class FnMatrixWeighting(FnWeighting):
 
-    """Matrix-weighting for :math:`F^n` in NumPy.
+    """Matrix-weighting for `Fn`.
 
     The weighted inner product with matrix :math:`G` is defined as
 
@@ -1669,13 +1718,14 @@ class MatrixWeighting(SpaceWeighting):
             Weighting matrix of the inner product. Its shape must be
             `(n, n)`, where `n` is the size of `space`.
         dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+            Calculate `dist(x, y)` as
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            `sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)`
 
             This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            for large arrays. On the downside, it is not guaranteed to
+            evaluate to exactly zero for equal (but not identical)
+            `x` and `y`.
         """
         super().__init__(dist_using_inner)
         if isinstance(matrix, sp.sparse.spmatrix):
@@ -1703,7 +1753,7 @@ class MatrixWeighting(SpaceWeighting):
         Returns
         -------
         equals : bool
-            `True` if `other` is a `MatrixWeighting` instance with
+            `True` if `other` is an `FnMatrixWeighting` instance with
             **identical** matrix, `False` otherwise.
 
         See also
@@ -1713,7 +1763,7 @@ class MatrixWeighting(SpaceWeighting):
         if other is self:
             return True
 
-        return (isinstance(other, MatrixWeighting) and
+        return (isinstance(other, FnMatrixWeighting) and
                 self.matrix is other.matrix)
 
     def equiv(self, other):
@@ -1722,7 +1772,7 @@ class MatrixWeighting(SpaceWeighting):
         Returns
         -------
         equivalent : bool
-            `True` if `other` is a `SpaceWeighting` instance which
+            `True` if `other` is an `FnWeighting` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this inner product's matrix with the matrix
@@ -1732,7 +1782,7 @@ class MatrixWeighting(SpaceWeighting):
         if self == other:
             return True
 
-        elif isinstance(other, MatrixWeighting):
+        elif isinstance(other, FnMatrixWeighting):
             if self.matrix_issparse:
                 if other.matrix_issparse:
                     # Optimization for different number of nonzero elements
@@ -1748,7 +1798,7 @@ class MatrixWeighting(SpaceWeighting):
                 else:
                     return np.array_equal(self.matrix, other.matrix)
 
-        elif isinstance(other, ConstWeighting):
+        elif isinstance(other, FnConstWeighting):
             return np.array_equiv(self.matrix.diagonal(), other.const)
 
         else:
@@ -1771,7 +1821,7 @@ class MatrixWeighting(SpaceWeighting):
 
         Parameters
         ----------
-        x1, x2 : `FnBase.Vector`
+        x1, x2 : `Fn.Vector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1789,19 +1839,18 @@ class MatrixWeighting(SpaceWeighting):
             fmt = self.matrix.format
             nnz = self.matrix.nnz
             if self._dist_using_inner:
-                inner_fstr += ', dist_using_inner={dist_u_i}'
+                inner_fstr += ', dist_using_inner=True'
         else:
             inner_fstr = '\n{matrix!r}'
             fmt = ''
             nnz = 0
             if self._dist_using_inner:
-                inner_fstr += ',\n dist_using_inner={dist_w_i}'
+                inner_fstr += ',\n dist_using_inner=True'
             else:
                 inner_fstr += '\n'
 
         inner_str = inner_fstr.format(shape=self.matrix.shape, fmt=fmt,
-                                      nnz=nnz, matrix=self.matrix,
-                                      dist_u_i=self._dist_using_inner)
+                                      nnz=nnz, matrix=self.matrix)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
@@ -1809,16 +1858,15 @@ class MatrixWeighting(SpaceWeighting):
         return 'Weighting: matrix =\n{}'.format(self.matrix)
 
 
-class ConstWeighting(SpaceWeighting):
+class FnConstWeighting(FnWeighting):
 
-    """Weighting by a constant of :math:`F^n` in NumPy.
+    """Weighting of `Fn` by a constant.
 
-    The weighted inner product with constant :math:`c` is defined as
+    The weighted inner product with constant `c` is defined as
 
     :math:`<a, b> := b^H c a`
 
     with :math:`b^H` standing for transposed complex conjugate.
-    This is the CPU implementation using NumPy.
     """
 
     def __init__(self, constant, dist_using_inner=False):
@@ -1829,13 +1877,14 @@ class ConstWeighting(SpaceWeighting):
         constant : float
             Weighting constant of the inner product.
         dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+            Calculate `dist(x, y)` as
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            `sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)`
 
             This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            for large arrays. On the downside, it is not guaranteed to
+            evaluate to exactly zero for equal (but not identical)
+            `x` and `y`.
         """
         super().__init__(dist_using_inner)
         self._const = float(constant)
@@ -1851,10 +1900,10 @@ class ConstWeighting(SpaceWeighting):
         Returns
         -------
         equal : bool
-            `True` if `other` is a `ConstWeighting`
+            `True` if `other` is an `FnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
-        return (isinstance(other, ConstWeighting) and
+        return (isinstance(other, FnConstWeighting) and
                 self.const == other.const)
 
     def equiv(self, other):
@@ -1863,16 +1912,16 @@ class ConstWeighting(SpaceWeighting):
         Returns
         -------
         equivalent : bool
-            `True` if `other` is a `SpaceWeighting` instance which
+            `True` if `other` is an `FnWeighting` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
-            if `other` is a `ConstWeighting` instance, otherwise
+            if `other` is an `FnConstWeighting` instance, otherwise
             by entry-wise comparison of this inner product's constant
             with the matrix of `other`.
         """
-        if isinstance(other, ConstWeighting):
+        if isinstance(other, FnConstWeighting):
             return self == other
-        elif isinstance(other, MatrixWeighting):
+        elif isinstance(other, FnWeighting):
             return other.equiv(self)
         else:
             return False
@@ -1882,7 +1931,7 @@ class ConstWeighting(SpaceWeighting):
 
         Parameters
         ----------
-        x1, x2 : `FnBase.Vector`
+        x1, x2 : `Fn.Vector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1897,7 +1946,7 @@ class ConstWeighting(SpaceWeighting):
 
         Parameters
         ----------
-        x1 : `FnBase.Vector`
+        x1 : `Fn.Vector`
             Vector whose norm is calculated
 
         Returns
@@ -1912,7 +1961,7 @@ class ConstWeighting(SpaceWeighting):
 
         Parameters
         ----------
-        x1, x2 : `FnBase.Vector`
+        x1, x2 : `Fn.Vector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -1921,9 +1970,11 @@ class ConstWeighting(SpaceWeighting):
             The distance between the vectors
         """
         if self._dist_using_inner:
-            return sqrt(abs(self.const)) * float(
-                sqrt(_norm_default(x1)**2 + _norm_default(x2)**2 -
-                     2 * _inner_default(x1, x2).real))
+            dist_squared = (_norm_default(x1)**2 + _norm_default(x2)**2 -
+                            2 * _inner_default(x1, x2).real)
+            if dist_squared < 0.0:  # Compensate for numerical error
+                dist_squared = 0.0
+            return sqrt(abs(self.const)) * float(sqrt(dist_squared))
         else:
             return sqrt(abs(self.const)) * self.norm(x1 - x2)
 
@@ -1931,10 +1982,9 @@ class ConstWeighting(SpaceWeighting):
         """`w.__repr__() <==> repr(w)`."""
         inner_fstr = '{}'
         if self._dist_using_inner:
-            inner_fstr += ',dist_using_inner={dist_u_i}'
+            inner_fstr += ', dist_using_inner=True'
 
-        inner_str = inner_fstr.format(self.const,
-                                      dist_u_i=self._dist_using_inner)
+        inner_str = inner_fstr.format(self.const)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
@@ -1942,9 +1992,9 @@ class ConstWeighting(SpaceWeighting):
         return 'Weighting: constant = {:.4}'.format(self.const)
 
 
-class NoWeighting(ConstWeighting):
+class FnNoWeighting(FnConstWeighting):
 
-    """Pure :math:`F^n` without weighting in NumPy.
+    """Weighting of `Fn` with constant 1.
 
     The unweighted inner product is defined as
 
@@ -1972,21 +2022,21 @@ class NoWeighting(ConstWeighting):
 
     def __repr__(self):
         """`w.__repr__() <==> repr(w)`."""
-        inner_fstr = ''
         if self._dist_using_inner:
-            inner_fstr += ',dist_using_inner={dist_u_i}'
+            inner_str = 'dist_using_inner=True'
+        else:
+            inner_str = ''
 
-        inner_str = inner_fstr.format(dist_u_i=self._dist_using_inner)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """`w.__str__() <==> str(w)`."""
-        return 'NoWeighting'
+        return self.__class__.__name__
 
 
-class CustomInnerProduct(SpaceWeighting):
+class FnCustomInnerProduct(FnWeighting):
 
-    """Custom inner product on :math:`F^n` in NumPy."""
+    """Custom inner product on `Fn`."""
 
     def __init__(self, inner, dist_using_inner=False):
         """Initialize a new instance.
@@ -2032,20 +2082,19 @@ class CustomInnerProduct(SpaceWeighting):
         Returns
         -------
         equal : bool
-            `True` if `other` is a `CustomInnerProduct`
+            `True` if `other` is an `FnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
-        return (isinstance(other, CustomInnerProduct) and
+        return (isinstance(other, FnCustomInnerProduct) and
                 self.inner == other.inner)
 
     def __repr__(self):
         """`w.__repr__() <==> repr(w)`."""
         inner_fstr = '{!r}'
         if self._dist_using_inner:
-            inner_fstr += ',dist_using_inner={dist_u_i}'
+            inner_fstr += ', dist_using_inner=True'
 
-        inner_str = inner_fstr.format(self.inner,
-                                      dist_u_i=self._dist_using_inner)
+        inner_str = inner_fstr.format(self.inner)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
@@ -2053,9 +2102,9 @@ class CustomInnerProduct(SpaceWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class CustomNorm(SpaceWeighting):
+class FnCustomNorm(FnWeighting):
 
-    """Custom norm on :math:`F^n` in NumPy."""
+    """Custom norm on `Fn`, removes `inner`."""
 
     def __init__(self, norm):
         """Initialize a new instance.
@@ -2094,10 +2143,10 @@ class CustomNorm(SpaceWeighting):
         Returns
         -------
         equal : bool
-            `True` if `other` is a `CustomNorm`
+            `True` if `other` is an `FnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
-        return (isinstance(other, CustomNorm) and
+        return (isinstance(other, FnCustomNorm) and
                 self.norm == other.norm)
 
     def __repr__(self):
@@ -2111,9 +2160,9 @@ class CustomNorm(SpaceWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class CustomDist(SpaceWeighting):
+class FnCustomDist(FnWeighting):
 
-    """Custom distance on :math:`F^n` in NumPy."""
+    """Custom distance on `Fn`, removes `norm` and `inner`."""
 
     def __init__(self, dist):
         """Initialize a new instance.
@@ -2157,10 +2206,10 @@ class CustomDist(SpaceWeighting):
         Returns
         -------
         equal : bool
-            `True` if `other` is a `CustomDist`
+            `True` if `other` is an `FnCustomDist`
             instance with the same norm, `False` otherwise.
         """
-        return (isinstance(other, CustomDist) and
+        return (isinstance(other, FnCustomDist) and
                 self.dist == other.dist)
 
     def __repr__(self):
