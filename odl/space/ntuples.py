@@ -483,7 +483,7 @@ class Ntuples(NtuplesBase):
             True
             """
             if out is None:
-                return self.data[start:stop:step].copy()
+                return self.data[start:stop:step]
             else:
                 out[:] = self.data[start:stop:step]
                 return out
