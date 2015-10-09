@@ -675,8 +675,9 @@ class CudaFn(FnBase, CudaNtuples):
         elif isinstance(self._space_funcs, CudaFnCustomDist):
             inner_fstr += ', norm=<custom dist>'
         elif isinstance(self._space_funcs, CudaFnConstWeighting):
-            inner_fstr += ', weight={weight}'
             weight = self._space_funcs.const
+            if weight != 1.0:
+                inner_fstr += ', weight={weight}'
 
         inner_str = inner_fstr.format(self.size, dtype_repr(self.dtype),
                                       weight=weight)

@@ -1177,8 +1177,9 @@ class Fn(FnBase, Ntuples):
         elif isinstance(self._space_funcs, FnCustomDist):
             inner_fstr += ', norm=<custom dist>'
         elif isinstance(self._space_funcs, FnConstWeighting):
-            inner_fstr += ', weight={weight}'
             weight = self._space_funcs.const
+            if weight != 1.0:
+                inner_fstr += ', weight={weight}'
         elif isinstance(self._space_funcs, FnMatrixWeighting):
             inner_fstr += ', weight={weight!r}'
             weight = self._space_funcs.matrix
@@ -1263,8 +1264,9 @@ class Cn(Fn):
         elif isinstance(self._space_funcs, FnCustomDist):
             inner_fstr += ', norm=<custom dist>'
         elif isinstance(self._space_funcs, FnConstWeighting):
-            inner_fstr += ', weight={weight}'
             weight = self._space_funcs.const
+            if weight != 1.0:
+                inner_fstr += ', weight={weight}'
         elif isinstance(self._space_funcs, FnMatrixWeighting):
             inner_fstr += ', weight={weight!r}'
             weight = self._space_funcs.matrix
@@ -1448,8 +1450,9 @@ class Rn(Fn):
         elif isinstance(self._space_funcs, FnCustomDist):
             inner_fstr += ', norm=<custom dist>'
         elif isinstance(self._space_funcs, FnConstWeighting):
-            inner_fstr += ', weight={weight}'
             weight = self._space_funcs.const
+            if weight != 1.0:
+                inner_fstr += ', weight={weight}'
         elif isinstance(self._space_funcs, FnMatrixWeighting):
             inner_fstr += ', weight={weight!r}'
             weight = self._space_funcs.matrix
