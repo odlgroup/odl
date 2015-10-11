@@ -17,6 +17,9 @@
 
 import warnings
 import numpy as np
+from itertools import product
+
+from odl.sets.pspace import ProductSpace
 from odl.operator.operator import LinearOperator
 from odl.space.ntuples import NtuplesBase
 from odl.discr.l2_discr import DiscreteL2
@@ -38,12 +41,19 @@ def _round_sig(x, sig=3):
         return round(x, sig-int(floor(log10(abs(x))))-1)
 
 def vector_examples(space):
-    uspace = space.uspace
     
     #All spaces should yield the zero element
     yield ('Zero', space.zero())
     
+    if isinstance(space, ProductSpace):
+        for examples in product(*[vector_examples(spc) for spc in space]):
+            name = ', '.join(name for name, _ in examples)
+            vector = space.element([vec for _, vec in examples])
+            yield (name, space.element(vector))
+    
     if isinstance(space, DiscreteL2):
+        uspace = space.uspace
+        
         #Get the points and calculate some statistics on them
         points = space.points()        
         mins = space.grid.min()
@@ -99,7 +109,7 @@ def vector_examples(space):
                     
                 return s
             
-            yield ('gradient {}'.format(dim), space.element(uspace.element(_gradient_fun)))
+            yield ('grad {}'.format(dim), space.element(uspace.element(_gradient_fun)))
         
         #Gradient in all dimensions
         def _all_gradient_fun(*args):
@@ -110,7 +120,7 @@ def vector_examples(space):
                 
             return s
         
-        yield ('Gradient all', space.element(uspace.element(_all_gradient_fun)))
+        yield ('Grad all', space.element(uspace.element(_all_gradient_fun)))
         
     elif isinstance(space, NtuplesBase):
         yield ('Linspaced', space.element(np.linspace(0, 1, space.dim)))
@@ -140,7 +150,7 @@ class OpeartorTest(object):
                 estimate = 0
             else:
                 estimate = self.operator(vec).norm() / vec.norm()
-            print('Norm estimate for {:15s}: {:10.5f}'.format(name, estimate))
+            print('Norm estimate for {:25s}: {:10.5f}'.format(name, estimate))
             operator_norm = max(operator_norm, estimate)
             
         print('Norm is at least: {}'.format(operator_norm))
@@ -156,7 +166,7 @@ class OpeartorTest(object):
             print('Operator has no adjoint')
             return
             
-        print('\n== Verifying adjoint of operator ==')
+        print('\n== Verifying adjoint of operator ==\n')
         print('Verifying the identity (Ax, y) = (x, A^T y)')
         print('error = ||(Ax, y) - (x, A^T y)|| / ||A|| ||x|| ||y||')
         
@@ -180,7 +190,7 @@ class OpeartorTest(object):
                     error = abs(Axy-xAty)/ (self.operator_norm * vec_dom_norm * vec_ran_norm)
                     
                 if error > 0.00001:
-                    print('x={:15s} y={:15s} : error={:6.5f}'.format(name_dom, name_ran, error))
+                    print('x={:25s} y={:25s} : error={:6.5f}'.format(name_dom, name_ran, error))
                     num_failed += 1
                 
                 x.append(Axy)
@@ -208,8 +218,10 @@ class OpeartorTest(object):
             print('Cannot do tests before norm is calculated, run test.norm() or give norm as a parameter')
             return
             
-        print('\n== Verifying derivative of operator ==')
+        print('\n== Verifying derivative of operator with step = {} ==\n'.format(step))
         print("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / |c| ||dx|| ||A||")
+        
+        num_failed = 0        
         
         for [name_x, x] in vector_examples(self.operator.domain):
             deriv = self.operator.derivative(x)
@@ -219,8 +231,15 @@ class OpeartorTest(object):
                 expected_step = deriv(dx*step)
                 denom = step * dx.norm() * self.operator_norm
                 error = 0 if denom == 0 else (exact_step-expected_step).norm()/denom
-            
-                print("x={:15s} dx={:15s} and step={:10.9f} error={:6.5f}".format(name_x, name_dx, step, error))
+                
+                if error > 0.00001:
+                    print("x={:15s} dx={:15s} : error={:6.5f}".format(name_x, name_dx, step, error))
+                    num_failed += 1
+                          
+        if num_failed == 0:
+            print('error = 0.0 for all test cases')
+        else:         
+            print('*** FAILED {} TEST CASES ***'.format(num_failed))    
                     
     def linear(self):
         """ Verifies that the operator is actually linear
@@ -254,7 +273,7 @@ class OpeartorTest(object):
                 error = 0 if denom == 0 else (scaled_opx - opx * scale).norm()/denom
                 
                 if error > 0.00001:
-                    print("x={:15s} scale={:7.2f} error={:6.5f}".format(name_x, scale, error))
+                    print("x={:25s} scale={:7.2f} error={:6.5f}".format(name_x, scale, error))
                     num_failed += 1
                     
         if num_failed == 0:
@@ -278,7 +297,7 @@ class OpeartorTest(object):
                 error = 0 if denom == 0 else (opxy - opx - opy).norm()/denom                
                 
                 if error > 0.00001:
-                    print("x={:15s} y={:15s} error={:6.5f}".format(name_x, name_y, error))
+                    print("x={:25s} y={:25s} error={:6.5f}".format(name_x, name_y, error))
                     num_failed += 1
                 
         if num_failed == 0:
@@ -294,8 +313,7 @@ class OpeartorTest(object):
             self.linear()
             self.adjoint()
         else:
-            for c in np.logspace(-2, -7, 3):
-                self.derivative(c)
+            self.derivative()
         
     def __repr__(self):
         return 'OperatorTest({!r})'.format(self.operator)
