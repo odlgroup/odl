@@ -62,7 +62,7 @@ class Projector(odl.LinearOperator):
         # Create projector
         print("create")
         forward = SR.SRPyForwardProject.SimpleForwardProjector(
-            data.data.reshape(self.nVoxels), self.volumeOrigin,
+            data.ntuple.data.reshape(self.nVoxels), self.volumeOrigin,
             self.voxelSize, self.nPixels, self.stepSize)
         print("done")
         # Project all geometries
@@ -70,7 +70,7 @@ class Projector(odl.LinearOperator):
             geo = self.geometries[i]
             result = forward.project(geo.sourcePosition, geo.detectorOrigin,
                                      geo.pixelDirection)
-            out[i][:] = result.transpose()
+            out[i][:] = result.transpose().squeeze()
 
     @property
     def adjoint(self):
@@ -97,10 +97,11 @@ class BackProjector(odl.LinearOperator):
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
             back.append(geo.sourcePosition, geo.detectorOrigin,
-                        geo.pixelDirection, projections[i].data)
+                        geo.pixelDirection, projections[i].ntuple.data)
 
         # Perform back projection
-        out.data[:] = back.finalize().flatten() * (51770422.4687/16720.1875882)
+        out.ntuple.data[:] = (back.finalize().ravel() *
+                              (51770422.4687/16720.1875882))
 
 
 # Set geometry parameters
@@ -174,7 +175,7 @@ plt.set_cmap('bone')
 
 
 def plotResult(x):
-    plt.imshow(x.data.reshape(nVoxels))
+    plt.imshow(x.ntuple.data.reshape(nVoxels))
     plt.draw()
     print((x-phantomVec).norm())
     plt.pause(0.01)

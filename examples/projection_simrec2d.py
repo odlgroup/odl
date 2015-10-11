@@ -51,7 +51,8 @@ class Projection(odl.LinearOperator):
         result = forward.project(self.sourcePosition, self.detectorOrigin,
                                  self.pixelDirection)
 
-        out[:] = result.transpose()
+        # Old shape was (1, n) instead of (n,)
+        out[:] = result.transpose().squeeze()
 
 # Set geometry parameters
 volumeSize = np.array([20.0, 20.0])
