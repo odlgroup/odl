@@ -1444,6 +1444,7 @@ class Rn(Fn):
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
         inner_fstr = '{}'
+        weight = 1.0
         if self.dtype != np.float64:
             inner_fstr += ', {dtype}'
         if self._space_funcs._dist_using_inner:

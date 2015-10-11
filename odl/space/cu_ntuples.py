@@ -666,6 +666,7 @@ class CudaFn(FnBase, CudaNtuples):
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
         inner_fstr = '{}, {}'
+        weight = 1.0
         if self._space_funcs._dist_using_inner:
             inner_fstr += ', dist_using_inner=True'
         if isinstance(self._space_funcs, CudaFnCustomInnerProduct):
