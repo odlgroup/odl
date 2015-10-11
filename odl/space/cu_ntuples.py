@@ -891,6 +891,8 @@ class CudaFnConstWeighting(CudaFnWeighting):
         norm : float
             The norm of the vector
         """
+        from math import sqrt
+        from builtins import abs
         return sqrt(abs(self.const)) * float(_norm_default(x))
 
     def dist(self, x1, x2):
@@ -906,6 +908,8 @@ class CudaFnConstWeighting(CudaFnWeighting):
         dist : float
             The distance between the vectors
         """
+        from math import sqrt
+        from builtins import abs
         return sqrt(abs(self.const)) * float(_dist_default(x1, x2))
 
     def __repr__(self):
