@@ -728,12 +728,17 @@ def _blas_is_applicable(*args):
     float or complex data only. If the arrays are non-contiguous,
     BLAS methods are usually slower, and array-writing routines do
     not work at all. Hence, only contiguous arrays are allowed.
+
+    Parameters
+    ----------
+    x1,...,xN : `NtuplesBase.Vector`
+        The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
         return False
 
-    return (all(x.dtype == args[0].dtype for x in args) and
-            all(x.dtype in _BLAS_DTYPES for x in args) and
+    return (all(x.space.dtype == args[0].space.dtype for x in args) and
+            all(x.space.dtype in _BLAS_DTYPES for x in args) and
             all(x.data.flags.contiguous for x in args))
 
 
@@ -1644,7 +1649,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         norm : float
             The norm of the vector
         """
-        return float(sqrt(self.inner(x, x)))
+        return float(sqrt(self.inner(x, x).real))
 
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
@@ -1808,16 +1813,33 @@ class FnMatrixWeighting(FnWeighting):
             return False
 
     def matvec(self, inp, outp=None):
-        """The matvec operation of this inner product."""
+        """The matvec operation of this inner product.
+
+        Parameters
+        ----------
+        inp : `FnBase.Vector`
+            Input vector in the matrix-vector product
+        outp : `FnBase.Vector`, optional
+            Output vector which the result is written to
+
+        Returns
+        -------
+        outp : `FnBase.Vector`
+            The result of the matrix-vector multiplication. If `outp`
+            was provided as argument, it is returned again.
+        """
         if outp is not None:
             if self.matrix_issparse:
                 # Unfortunately, there is no native in-place dot product for
                 # sparse matrices
-                outp[:] = np.asarray(self.matrix.dot(inp)).squeeze()
+                outp.data[:] = np.asarray(self.matrix.dot(inp.data)).squeeze()
             else:
-                self.matrix.dot(inp, out=outp)
+                self.matrix.dot(inp.data, out=outp.data)
         else:
-            return np.asarray(self.matrix.dot(inp)).squeeze()
+            outp = inp.space.element(
+                np.asarray(self.matrix.dot(inp.data)).squeeze())
+
+        return outp
 
     def inner(self, x1, x2):
         """Calculate the matrix-weighted inner product of two vectors.
@@ -1832,7 +1854,11 @@ class FnMatrixWeighting(FnWeighting):
         inner : float or complex
             The inner product of the two provided vectors
         """
-        return _inner_default(self.matvec(x1), x2)
+        inner = _inner_default(self.matvec(x1), x2)
+        if is_real_dtype(x1.space.dtype):
+            return float(inner)
+        else:
+            return complex(inner)
 
     def __repr__(self):
         """`w.__repr__() <==> repr(w)`."""
@@ -1942,7 +1968,11 @@ class FnConstWeighting(FnWeighting):
         inner : float or complex
             The inner product of the two provided vectors
         """
-        return self.const * float(_inner_default(x1, x2))
+        inner = self.const * _inner_default(x1, x2)
+        if is_real_dtype(x1.space.dtype):
+            return float(inner)
+        else:
+            return complex(inner)
 
     def norm(self, x):
         """Calculate the constant-weighted norm of a vector.
@@ -1979,7 +2009,7 @@ class FnConstWeighting(FnWeighting):
                 dist_squared = 0.0
             return sqrt(abs(self.const)) * float(sqrt(dist_squared))
         else:
-            return sqrt(abs(self.const)) * self.norm(x1 - x2)
+            return sqrt(abs(self.const)) * _norm_default(x1 - x2)
 
     def __repr__(self):
         """`w.__repr__() <==> repr(w)`."""
@@ -1992,7 +2022,7 @@ class FnConstWeighting(FnWeighting):
 
     def __str__(self):
         """`w.__str__() <==> str(w)`."""
-        return 'Weighting: constant = {:.4}'.format(self.const)
+        return 'Weighting: const = {:.4}'.format(self.const)
 
 
 class FnNoWeighting(FnConstWeighting):
