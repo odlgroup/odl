@@ -416,7 +416,7 @@ class LinearSpace(Set):
 
             if y not in self:
                 raise TypeError('second input vector {!r} not in space {!r}.'
-                                ''.format(x, self))
+                                ''.format(y, self))
 
             # Call method
             return self._lincomb(z, a, x, b, y)
