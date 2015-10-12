@@ -216,7 +216,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     respective other is provided.
     """
 
-    def __init__(self, dom, ran):
+    def __init__(self, domain, range):
         """Initialize a new instance.
 
         Parameters
@@ -229,13 +229,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             The range of this operator, i.e., the set this operator
             maps to
         """
-        if not isinstance(dom, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
-        if not isinstance(ran, Set):
-            raise TypeError('range {!r} not a `Set` instance.'.format(dom))
+        if not isinstance(domain, Set):
+            raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
+        if not isinstance(range, Set):
+            raise TypeError('range {!r} not a `Set` instance.'.format(range))
 
-        self._domain = dom
-        self._range = ran
+        self._domain = domain
+        self._range = range
 
     @property
     def domain(self):
@@ -379,7 +379,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Rn(3).element([3.0, 6.0, 9.0])
         """
         if isinstance(other, Operator):
-            return OperatorPointwiseProduct(self, other)
+            return OperatorComp(self, other)
         elif isinstance(other, Number):
             return OperatorRightScalarMult(self, other)
         else:
@@ -431,7 +431,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Rn(3).element([3.0, 6.0, 9.0])
         """
         if isinstance(other, Operator):
-            return OperatorPointwiseProduct(self, other)
+            return OperatorComp(other, self)
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
         else:
@@ -903,7 +903,7 @@ class LinearOperator(Operator):
     instances.
     """
 
-    def __init__(self, dom, ran):
+    def __init__(self, domain, range):
         """Initialize a new instance.
 
         Parameters
@@ -916,13 +916,13 @@ class LinearOperator(Operator):
             The range of this operator, i.e., the space this operator
             maps to
         """
-        super().__init__(dom, ran)
-        if not isinstance(self._domain, LinearSpace):
+        super().__init__(domain, range)
+        if not isinstance(self.domain, LinearSpace):
             raise TypeError('domain {!r} not a `LinearSpace` instance.'
-                            ''.format(self._domain))
-        if not isinstance(self._range, LinearSpace):
+                            ''.format(self.domain))
+        if not isinstance(self.range, LinearSpace):
             raise TypeError('range {!r} not a `LinearSpace` instance.'
-                            ''.format(self._range))
+                            ''.format(self.range))
 
     @property
     def adjoint(self):
@@ -961,8 +961,10 @@ class LinearOperator(Operator):
         If `other` is a scalar, this is equivalent to
         `op.__rmul__(other)`.
         """
-        if isinstance(other, Operator):
-            return OperatorPointwiseProduct(self, other)
+        if isinstance(other, LinearOperator):
+            return LinearOperatorComp(self, other)
+        elif isinstance(other, Operator):
+            return OperatorComp(self, other)
         elif isinstance(other, Number):
             return LinearOperatorScalarMult(self, other)
         else:
@@ -974,7 +976,15 @@ class LinearOperator(Operator):
 
         Equivalent to `op.__mul__(other)`.
         """
-        return self.__mul__(other)
+        if isinstance(other, LinearOperator):
+            return LinearOperatorComp(other, self)
+        elif isinstance(other, Operator):
+            return OperatorComp(self, other)
+        elif isinstance(other, Number):
+            return LinearOperatorScalarMult(self, other)
+        else:
+            raise TypeError('multiplicant {!r} is neither operator nor '
+                            'scalar.'.format(other))
 
 
 class SelfAdjointOperator(LinearOperator):
