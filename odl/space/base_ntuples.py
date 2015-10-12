@@ -37,7 +37,7 @@ from odl.util.utility import array1d_repr, array1d_str, dtype_repr
 from odl.util.utility import is_real_dtype
 
 
-__all__ = ()
+__all__ = ('NtuplesBase', 'FnBase', '_FnWeightingBase')
 
 
 class NtuplesBase(with_metaclass(ABCMeta, Set)):

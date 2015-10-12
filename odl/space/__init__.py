@@ -73,10 +73,6 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import base_ntuples
-from .base_ntuples import *
-__all__ += base_ntuples.__all__
-
 from . import ntuples
 from .ntuples import *
 __all__ += ntuples.__all__
