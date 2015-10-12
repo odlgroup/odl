@@ -36,7 +36,7 @@ from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.default import L2
-from odl.util.utility import is_complex_dtype
+from odl.util.graphics import show_discrete_function
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
     from odl.space.cu_ntuples import CudaFn
@@ -274,8 +274,8 @@ class DiscreteL2(Discretization):
 
                 super().__setitem__(indices, values)
 
-        def show(self, method='', figsize=None, saveto='', title=None, **kwargs):
-            """Create a plot of the function in 1d or 2d.
+        def show(self, method='', title='', **kwargs):
+            """Create a figure displaying the function in 1d or 2d.
 
             Parameters
             ----------
@@ -294,7 +294,10 @@ class DiscreteL2(Discretization):
 
                 'wireframe', 'plot_wireframe' : surface plot
 
-            kwargs : extra keyword arguments passed on to display method
+            title : string, optional
+                Set the title of the figure
+            kwargs : {'figsize', 'saveto', ...}
+                Extra keyword arguments passed on to display method
                 See the Matplotlib functions for documentation of extra
                 options.
 
@@ -306,135 +309,8 @@ class DiscreteL2(Discretization):
 
             matplotlib.pyplot.scatter : Show scattered 3d points
             """
-            from matplotlib import pyplot as plt
-            args_re = []
-            args_im = []
-            dsp_kwargs = {}
-            sub_kwargs = {}
-            arrange_subplots = (121, 122)  # horzontal arrangement
-
-            values = self.asarray()
-
-            if self.ndim == 1:  # TODO: maybe a plotter class would be better
-                if not method:
-                    if self.space.interp == 'nearest':
-                        method = 'step'
-                        dsp_kwargs['where'] = 'mid'
-                    elif self.space.interp == 'linear':
-                        method = 'plot'
-                    else:
-                        method = 'plot'
-
-                if method == 'plot' or method == 'step':
-                    args_re += [self.space.grid.coord_vectors[0], values.real]
-                    args_im += [self.space.grid.coord_vectors[0], values.imag]
-                else:
-                    raise ValueError('display method {!r} not supported.'
-                                     ''.format(method))
-
-            elif self.ndim == 2:
-                if not method:
-                    method = 'imshow'
-
-                if method == 'imshow':
-                    #TODO: optimize if real
-                    args_re = [np.rot90(values.real)]
-                    args_im = [np.rot90(values.imag)]
-                    
-                    extent = [self.space.grid.min()[0],
-                              self.space.grid.max()[0],
-                              self.space.grid.min()[1],
-                              self.space.grid.max()[1]]
-
-
-                    if self.space.interp == 'nearest':
-                        interpolation = 'nearest'
-                    elif self.space.interp == 'linear':
-                        interpolation = 'bilinear'
-                    else:
-                        interpolation = 'none'
-                        
-                    dsp_kwargs.update({'interpolation': interpolation, 'cmap': 'bone',
-                                       'extent': extent,
-                                       'aspect': 'auto'})
-                elif method == 'scatter':
-                    pts = self.space.grid.points()
-                    args_re = [pts[:, 0], pts[:, 1], values.ravel().real]
-                    args_re = [pts[:, 0], pts[:, 1], values.ravel().imag]
-                    sub_kwargs.update({'projection': '3d'})
-                elif method in ('wireframe', 'plot_wireframe'):
-                    method = 'plot_wireframe'
-                    xm, ym = self.space.grid.meshgrid()
-                    args_re = [xm, ym, np.rot90(values.real)]
-                    args_im = [xm, ym, np.rot90(values.imag)]
-                    sub_kwargs.update({'projection': '3d'})
-                else:
-                    raise ValueError('display method {!r} not supported.'
-                                     ''.format(method))
-
-            else:
-                raise NotImplemented('no method for {}d display implemented.'
-                                     ''.format(self.space.ndim))
-
-            # Additional keyword args are passed on to the display method
-            dsp_kwargs.update(**kwargs)
-
-            fig = plt.figure(figsize=figsize)
-            if title is not None:
-                plt.title(title)
-                
-            if is_complex_dtype(self.space.dspace.dtype):
-                sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
-                sub_re.set_title('Real part')
-                sub_re.set_xlabel('x')
-                sub_re.set_ylabel('y')
-                display_re = getattr(sub_re, method)
-                csub_re = display_re(*args_re, **dsp_kwargs)
-
-                if method == 'imshow':
-                    minval_re = np.min(values.real)
-                    maxval_re = np.max(values.real)
-                    ticks_re = [minval_re, (maxval_re + minval_re) / 2.,
-                                maxval_re]
-                    plt.colorbar(csub_re, orientation='horizontal',
-                                 ticks=ticks_re, format='%.4g')
-
-                sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
-                sub_im.set_title('Imaginary part')
-                sub_im.set_xlabel('x')
-                sub_im.set_ylabel('y')
-                display_im = getattr(sub_im, method)
-                csub_im = display_im(*args_im, **dsp_kwargs)
-
-                if method == 'imshow':
-                    minval_im = np.min(values.imag)
-                    maxval_im = np.max(values.imag)
-                    ticks_im = [minval_im, (maxval_im + minval_im) / 2.,
-                                maxval_im]
-                    plt.colorbar(csub_im, orientation='horizontal',
-                                 ticks=ticks_im, format='%.4g')
-
-            else:
-                sub = plt.subplot(111, **sub_kwargs)
-                sub.set_xlabel('x')
-                sub.set_ylabel('y')
-                try:
-                    # For 3d plots
-                    sub.set_zlabel('z')
-                except AttributeError:
-                    pass
-                display = getattr(sub, method)
-                csub = display(*args_re, **dsp_kwargs)
-
-                if method == 'imshow':
-                    minval = np.min(values)
-                    maxval = np.max(values)
-                    ticks = [minval, (maxval + minval) / 2., maxval]
-                    plt.colorbar(csub, ticks=ticks, format='%.4g')
-
-            plt.show()
-            if saveto:
-                fig.savefig(saveto)
+            show_discrete_function(self, method=method, title=title,
+                                   **kwargs)
 
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
