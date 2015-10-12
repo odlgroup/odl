@@ -60,11 +60,10 @@ class Projector(odl.LinearOperator):
 
     def _apply(self, data, out):
         # Create projector
-        print("create")
         forward = SR.SRPyForwardProject.SimpleForwardProjector(
             data.ntuple.data.reshape(self.nVoxels), self.volumeOrigin,
             self.voxelSize, self.nPixels, self.stepSize)
-        print("done")
+            
         # Project all geometries
         for i in range(len(self.geometries)):
             geo = self.geometries[i]
@@ -100,8 +99,7 @@ class BackProjector(odl.LinearOperator):
                         geo.pixelDirection, projections[i].ntuple.data)
 
         # Perform back projection
-        out.ntuple.data[:] = (back.finalize().ravel() *
-                              (51770422.4687/16720.1875882))
+        out[:] = back.finalize() * (51770422.4687/16720.1875882)
 
 
 # Set geometry parameters
@@ -186,11 +184,5 @@ print(x.inner(projector.T(y)), projector(x).inner(y))
 
 # Solve using some predefined method
 x = reconDisc.zero()
-# solvers.landweber(projector, x, projections, 20, omega=0.6/normEst,
-#                   part_results=solvers.ForEachPartial(plotResult))
-solvers.conjugate_gradient(projector, x, projections, 20,
-                           partial=solvers.ForEachPartial(plotResult))
-# solvers.gauss_newton(projector, x, projections, 20,
-#                      part_results=solvers.ForEachPartial(plotResult))
-
-# plt.show()
+solvers.conjugate_gradient_normal(projector, x, projections, 20,
+                                  partial=solvers.ForEachPartial(plotResult))

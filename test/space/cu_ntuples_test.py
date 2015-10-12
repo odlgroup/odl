@@ -30,7 +30,18 @@ from numpy import float64
 
 # ODL imports
 import odl
+from odl.space.ntuples import _FnConstWeighting
+if odl.CUDA_AVAILABLE:
+    from odl.space.cu_ntuples import (
+        _CudaFnConstWeighting, _CudaFnCustomDist, _CudaFnCustomInnerProduct,
+        _CudaFnCustomNorm)
+
 from odl.util.testutils import ODLTestCase
+
+
+# TODO:
+# * weighted spaces
+# * custom dist/norm/inner
 
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available')
@@ -441,6 +452,274 @@ class TestPointer(ODLTestCase):
         yd[:] = [7, 8, 9]
 
         self.assertAllEquals([1, 2, 3, 7, 8, 9], xd)
+
+
+@unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
+class TestDType(ODLTestCase):
+    # Simple tests for the various dtypes
+
+    @unittest.skipIf(np.int8 not in odl.CUDA_DTYPES, "int8 not available")
+    def do_test_int8(self):
+        r3 = odl.CudaFn(3, np.int8)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.int16 not in odl.CUDA_DTYPES, "int16 not available")
+    def do_test_int16(self):
+        r3 = odl.CudaFn(3, np.int16)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.int32 not in odl.CUDA_DTYPES, "int32 not available")
+    def do_test_int32(self):
+        r3 = odl.CudaFn(3, np.int32)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.int64 not in odl.CUDA_DTYPES, "int64 not available")
+    def do_test_int64(self):
+        r3 = odl.CudaFn(3, np.int64)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.uint8 not in odl.CUDA_DTYPES, "uint8 not available")
+    def do_test_uint8(self):
+        r3 = odl.CudaFn(3, np.uint8)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.uint16 not in odl.CUDA_DTYPES, "uint16 not available")
+    def do_test_uint16(self):
+        r3 = odl.CudaFn(3, np.uint16)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.uint32 not in odl.CUDA_DTYPES, "uint32 not available")
+    def do_test_uint32(self):
+        r3 = odl.CudaFn(3, np.uint32)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.uint64 not in odl.CUDA_DTYPES, "uint64 not available")
+    def do_test_uint64(self):
+        r3 = odl.CudaFn(3, np.uint64)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.float32 not in odl.CUDA_DTYPES,
+                     "float32 not available")
+    def do_test_float32(self):
+        r3 = odl.CudaFn(3, np.float32)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.float64 not in odl.CUDA_DTYPES,
+                     "float64 not available")
+    def do_test_float64(self):
+        r3 = odl.CudaFn(3, np.float64)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.float not in odl.CUDA_DTYPES, "float not available")
+    def do_test_float(self):
+        r3 = odl.CudaFn(3, np.float)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+    @unittest.skipIf(np.int not in odl.CUDA_DTYPES, "int not available")
+    def do_test_int(self):
+        r3 = odl.CudaFn(3, np.int)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        self.assertAllEquals(z, [5, 7, 9])
+
+
+@unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
+class TestUFunc(ODLTestCase):
+    #Simple tests for the various dtypes
+
+    def test_sin(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 10.0]
+        y_host = np.sin(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.sin(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_cos(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 10.0]
+        y_host = np.cos(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.cos(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_arcsin(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.arcsin(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.arcsin(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_arccos(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.arccos(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.arccos(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_log(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.log(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.log(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_exp(self):
+        r3 = odl.CudaRn(3)
+        x_host = [-1.0, 0.0, 1.0]
+        y_host = np.exp(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.exp(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_abs(self):
+        r3 = odl.CudaRn(3)
+        x_host = [-1.0, 0.0, 1.0]
+        y_host = np.abs(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.abs(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_sign(self):
+        r3 = odl.CudaRn(3)
+        x_host = [-1.0, 0.0, 1.0]
+        y_host = np.sign(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.sign(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+    def test_sqrt(self):
+        r3 = odl.CudaRn(3)
+        x_host = [0.1, 0.3, 0.5]
+        y_host = np.sqrt(x_host)
+
+        x_dev = r3.element(x_host)
+        y_dev = odl.space.cu_ntuples.sqrt(x_dev)
+
+        self.assertAllAlmostEquals(y_host, y_dev, places=5)
+
+
+@unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
+class CudaConstWeightingTest(ODLTestCase):
+    @staticmethod
+    def _vectors(fn):
+        # Generate numpy vectors, real or complex
+        if isinstance(fn, odl.CudaRn):
+            xarr = np.random.rand(fn.size)
+            yarr = np.random.rand(fn.size)
+        else:
+            xarr = np.random.rand(fn.size) + 1j * np.random.rand(fn.size)
+            yarr = np.random.rand(fn.size) + 1j * np.random.rand(fn.size)
+
+        # Make CudaFn vectors
+        x = fn.element(xarr)
+        y = fn.element(yarr)
+        return xarr, yarr, x, y
+
+    def test_init(self):
+        constant = 1.5
+
+        # Just test if the code runs
+        weighting = _CudaFnConstWeighting(constant)
+        weighting = _CudaFnConstWeighting(constant)
+
+    def test_equals(self):
+        constant = 1.5
+
+        weighting = _CudaFnConstWeighting(constant)
+        weighting2 = _CudaFnConstWeighting(constant)
+        other_weighting = _CudaFnConstWeighting(2.5)
+        weighting_npy = _FnConstWeighting(constant)
+
+        self.assertEquals(weighting, weighting)
+        self.assertEquals(weighting, weighting2)
+        self.assertEquals(weighting2, weighting)
+
+        self.assertNotEquals(weighting, other_weighting)
+        self.assertNotEquals(weighting, weighting_npy)
+
+    def _test_call_real(self, n):
+        rn = odl.CudaRn(n)
+        xarr, yarr, x, y = self._vectors(rn)
+
+        constant = 1.5
+        weighting = _CudaFnConstWeighting(constant)
+
+        result_const = weighting.inner(x, y)
+        true_result_const = constant * np.dot(yarr, xarr)
+
+        self.assertAlmostEquals(result_const, true_result_const, places=5)
+
+    def test_call(self):
+        for n in range(20):
+            self._test_call_real(n)
+
+    def test_repr(self):
+        constant = 1.5
+        weighting = _CudaFnConstWeighting(constant)
+
+        repr_str = '_CudaFnConstWeighting(1.5)'
+        self.assertEquals(repr(weighting), repr_str)
+
+    def test_str(self):
+        constant = 1.5
+        weighting = _CudaFnConstWeighting(constant)
+
+        print_str = '_CudaFnConstWeighting: constant = 1.5'
+        self.assertEquals(str(weighting), print_str)
 
 
 if __name__ == '__main__':

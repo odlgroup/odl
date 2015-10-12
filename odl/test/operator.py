@@ -19,9 +19,9 @@ import warnings
 import numpy as np
 from itertools import product
 
-from odl.sets.pspace import ProductSpace
+from odl.set.pspace import ProductSpace
 from odl.operator.operator import LinearOperator
-from odl.space.ntuples import NtuplesBase
+from odl.space.ntuples import FnBase, NtuplesBase
 from odl.discr.l2_discr import DiscreteL2
 
 from math import floor, log10
@@ -39,9 +39,8 @@ def _round_sig(x, sig=3):
         return x
     else:
         return round(x, sig-int(floor(log10(abs(x))))-1)
-
+        
 def vector_examples(space):
-    
     #All spaces should yield the zero element
     yield ('Zero', space.zero())
     
@@ -51,7 +50,7 @@ def vector_examples(space):
             vector = space.element([vec for _, vec in examples])
             yield (name, space.element(vector))
     
-    if isinstance(space, DiscreteL2):
+    elif isinstance(space, DiscreteL2):
         uspace = space.uspace
         
         #Get the points and calculate some statistics on them
@@ -122,7 +121,7 @@ def vector_examples(space):
         
         yield ('Grad all', space.element(uspace.element(_all_gradient_fun)))
         
-    elif isinstance(space, NtuplesBase):
+    elif isinstance(space, FnBase):
         yield ('Linspaced', space.element(np.linspace(0, 1, space.dim)))
 
         yield ('Ones', space.element(np.ones(space.dim)))
@@ -130,7 +129,7 @@ def vector_examples(space):
         yield ('Random noise', space.element(np.random.rand(space.dim)))
            
         yield ('Normally distributed random noise', space.element(np.random.randn(space.dim)))
-        
+                
     else:
         warnings.warn('No known examples in this space')
         
@@ -145,29 +144,18 @@ class OpeartorTest(object):
         
         operator_norm = 0.0
         for [name, vec] in vector_examples(self.operator.domain):
+            result = self.operator(vec)
             vecnorm = vec.norm()
-            if vecnorm == 0:
-                estimate = 0
-            else:
-                estimate = self.operator(vec).norm() / vec.norm()
-            print('Norm estimate for {:25s}: {:10.5f}'.format(name, estimate))
+            estimate = 0 if vecnorm == 0 else result.norm() / vecnorm
+                
             operator_norm = max(operator_norm, estimate)
             
         print('Norm is at least: {}'.format(operator_norm))
         self.operator_norm = operator_norm
         return operator_norm
-        
-    def adjoint(self):
-        """ Verifies that the adjoint works appropriately
-        """
-        try:
-            self.operator.adjoint
-        except NotImplementedError:
-            print('Operator has no adjoint')
-            return
-            
-        print('\n== Verifying adjoint of operator ==\n')
-        print('Verifying the identity (Ax, y) = (x, A^T y)')
+
+    def _adjoint_definition(self):
+        print('\nVerifying the identity (Ax, y) = (x, A^T y)')
         print('error = ||(Ax, y) - (x, A^T y)|| / ||A|| ||x|| ||y||')
         
         x = []
@@ -184,10 +172,7 @@ class OpeartorTest(object):
                 xAty = vec_dom.inner(self.operator.adjoint(vec_ran))
                 
                 denom = self.operator_norm * vec_dom_norm * vec_ran_norm
-                if denom == 0:
-                    error = 0
-                else:
-                    error = abs(Axy-xAty)/ (self.operator_norm * vec_dom_norm * vec_ran_norm)
+                error = 0 if denom == 0 else abs(Axy-xAty)/denom
                     
                 if error > 0.00001:
                     print('x={:25s} y={:25s} : error={:6.5f}'.format(name_dom, name_ran, error))
@@ -204,6 +189,66 @@ class OpeartorTest(object):
         scale = np.polyfit(x, y, 1)[0]  
         print('\nThe adjoint seems to be scaled according to:')
         print('(x, A^T y) / (Ax, y) = {}. Should be 1.0'.format(scale))
+
+    def _adjoint_of_adjoint(self):
+        #Verify (A^*)^* = A
+        try:
+            self.operator.adjoint.adjoint
+        except AttributeError:
+            print('A^* has no adjoint')
+            return
+            
+        if self.operator.adjoint.adjoint is self.operator:
+            print('(A^*)^* == A')
+            return
+        
+        print('\nVerifying the identity Ax = (A^T)^T x')
+        print('error = ||Ax - (A^T)^T x|| / ||A|| ||x||')        
+        
+        num_failed = 0
+        
+        for [name, vec] in vector_examples(self.operator.domain):
+            A_result = self.operator(vec)
+            ATT_result = self.operator.adjoint.adjoint(vec)
+            
+            denom = self.operator_norm * vec.norm()
+            error = 0 if denom == 0 else (A_result-ATT_result).norm()/denom
+            if error > 0.00001:
+                print('x={:25s} : error={:6.5f}'.format(name, error))
+                num_failed += 1
+                
+        if num_failed == 0:
+            print('error = 0.0 for all test cases')
+        else:         
+            print('*** FAILED {} TEST CASES ***'.format(num_failed))
+        
+    def adjoint(self):
+        """ Verifies that the adjoint works appropriately
+        """
+        try:
+            self.operator.adjoint
+        except NotImplementedError:
+            print('Operator has no adjoint')
+            return
+            
+        print('\n== Verifying adjoint of operator ==\n')
+        
+        domain_range_ok = True
+        if self.operator.domain != self.operator.adjoint.range:
+            print('ERROR: A.domain != A.adjoint.range')
+            domain_range_ok = False
+            
+        if self.operator.range != self.operator.adjoint.domain:
+            print('ERROR: A.domain != A.adjoint.range')
+            domain_range_ok = False
+            
+        if domain_range_ok:
+            print('Domain and range of adjoint is OK.')
+        
+        self._adjoint_definition()
+        
+        self._adjoint_of_adjoint()
+        
         
     def derivative(self, step=0.0001):
         """ Verifies that the derivative works appropriately
@@ -308,6 +353,9 @@ class OpeartorTest(object):
     def run_tests(self):
         """Runs all tests on this operator
         """
+        print('\n== RUNNING ALL TESTS ==\n')
+        print('Operator = {}'.format(self.operator))
+        
         self.norm()
         if isinstance(self.operator, LinearOperator):
             self.linear()

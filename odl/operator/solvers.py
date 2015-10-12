@@ -104,6 +104,40 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
 def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     """ Optimized version of CGN, uses no temporaries etc.
     """
+    if op.domain != op.range:
+        raise TypeError('Operator needs to be self adjoint')
+    
+    r = op(x)
+    r.lincomb(1, rhs, -1, r)       # r = rhs - A x
+    p = r.copy()
+    Ap = op.domain.element() #Extra storage for storing A x
+    
+    sqnorm_r_old = r.norm()**2  # Only recalculate norm after update
+
+    for _ in range(niter):
+        op(p, outp=Ap)  # Ap = A p
+        
+        alpha = sqnorm_r_old / p.inner(Ap)
+        
+        if alpha == 0.0:  # Return if residual is 0
+            return
+            
+        x.lincomb(1, x, alpha, p)            # x = x + alpha*p
+        r.lincomb(1, r, -alpha, Ap)           # r = r - alpha*p
+        
+        sqnorm_r_new = r.norm()**2    
+        
+        beta = sqnorm_r_new / sqnorm_r_old
+        sqnorm_r_old = sqnorm_r_new
+
+        p.lincomb(1, r, beta, p)                       # p = s + b * p
+
+        if partial is not None:
+            partial.send(x)
+
+def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
+    """ Optimized version of CGN, uses no temporaries etc.
+    """
     d = op(x)
     d.lincomb(1, rhs, -1, d)       # d = rhs - A x
     p = op.derivative(x).adjoint(d)

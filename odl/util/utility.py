@@ -35,7 +35,7 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
 def array1d_repr(array):
     """Stringification of a 1D array, keeping byte / unicode."""
     if len(array) < 7:
-        return repr(list(array[:]))
+        return repr(list(array))
     else:
         return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
                 repr(list(array[-3:])).lstrip('['))
@@ -92,3 +92,13 @@ def dtype_repr(dtype):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+
+
+def is_real_dtype(dtype):
+    """Whether a datatype is real or not."""
+    return np.isrealobj(np.empty(0, dtype=dtype))
+
+
+def is_complex_dtype(dtype):
+    """Whether a datatype is complex or not."""
+    return np.iscomplexobj(np.empty(0, dtype=dtype))

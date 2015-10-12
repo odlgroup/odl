@@ -26,7 +26,7 @@ standard_library.install_aliases()
 import numpy as np
 
 # ODL imports
-from odl.sets.set import Set, RealNumbers
+from odl.set.sets import Set, RealNumbers
 from odl.util.utility import array1d_repr
 
 

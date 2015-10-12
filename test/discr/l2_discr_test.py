@@ -119,9 +119,7 @@ class TestDiscreteL2(odl.util.testutils.ODLTestCase):
         unit_interval = odl.L2(odl.Interval(0, 1))
 
         # valid types
-        for dtype in [np.int8, np.int16, np.int32, np.int64,
-                      np.uint8, np.uint16, np.uint32, np.uint64,
-                      np.float32, np.float64]:
+        for dtype in odl.space.cu_ntuples.CUDA_DTYPES:
             discr = odl.l2_uniform_discretization(unit_interval, 10,
                                                   impl='cuda', dtype=dtype)
             self.assertIsInstance(discr.dspace, odl.CudaFn)

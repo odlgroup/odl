@@ -32,9 +32,9 @@ import numpy as np
 
 # ODL imports
 from odl.operator.operator import Operator
-from odl.sets.domain import IntervalProd
-from odl.sets.set import RealNumbers, ComplexNumbers, Set
-from odl.sets.space import LinearSpace
+from odl.set.domain import IntervalProd
+from odl.set.sets import RealNumbers, ComplexNumbers, Set
+from odl.set.space import LinearSpace
 
 
 __all__ = ('FunctionSet', 'FunctionSpace')

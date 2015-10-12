@@ -32,15 +32,14 @@ from abc import ABCMeta
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator, LinearOperator
 from odl.space.ntuples import NtuplesBase, FnBase, Ntuples, Rn, Cn
-from odl.sets.set import Set, RealNumbers, ComplexNumbers
-from odl.sets.space import LinearSpace
-try:
+from odl.set.sets import Set, RealNumbers, ComplexNumbers
+from odl.set.space import LinearSpace
+from odl.space import CUDA_AVAILABLE
+if CUDA_AVAILABLE:
     from odl.space.cu_ntuples import CudaNtuples, CudaRn
-    CudaCn = None  # TODO: add CudaCn to imports once it is implemented
-    CUDA_AVAILABLE = True
-except ImportError:
-    CudaRn = CudaCn = CudaNtuples = None
-    CUDA_AVAILABLE = False
+    CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
+else:
+    CudaRn = CudaCn = CudaNtuples = type(None)
 
 
 __all__ = ('RawDiscretization', 'Discretization')
@@ -246,6 +245,16 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         def ntuple(self):
             """Structure for data storage."""
             return self._ntuple
+
+        @property
+        def dtype(self):
+            """type of data storage."""
+            return self.ntuple.dtype
+
+        @property
+        def size(self):
+            """size of data storage."""
+            return self.ntuple.size
 
         def copy(self):
             """Create an identical (deep) copy of this vector."""

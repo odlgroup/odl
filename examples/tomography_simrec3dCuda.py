@@ -100,7 +100,7 @@ class CudaBackProjector3D(odl.LinearOperator):
         out *= 3.0  # 0.165160099353932
 
 # Set geometry parameters
-volumeSize = np.array([224.0, 224.0, 135.0])
+volumeSize = np.array([224.0, 224.0, 1.0])
 volumeOrigin = np.array([-112.0, -112.0, 10.0])  # -volumeSize/2.0
 
 detectorSize = np.array([287.04, 264.94])
@@ -111,7 +111,7 @@ detectorAxisDistance = 210.0
 
 # Discretization parameters
 # nVoxels, nPixels = np.array([44, 44, 27]), np.array([78, 72])
-nVoxels, nPixels = np.array([448, 448, 270]), np.array([780, 720])
+nVoxels, nPixels = np.array([448, 448, 1]), np.array([780, 720])
 nProjection = 332
 
 # Scale factors
@@ -178,7 +178,7 @@ def plotResult(x):
     with odl.util.Timer('plotting'):
         plt.figure()
         plt.imshow(x.asarray()[:, :, nVoxels[2]//2])
-        plt.clim(0, 1)
+        #plt.clim(0, 1)
         plt.colorbar()
         plt.show()
 
@@ -188,6 +188,6 @@ x = reconDisc.zero()
 #                               partial=odl.operator.solvers.ForEachPartial(plotResult))
 # solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
 #                   partial=solvers.PrintIterationPartial())
-odl.operator.solvers.conjugate_gradient(
-    projector, x, projections, 2,
+odl.operator.solvers.conjugate_gradient_normal(
+    projector, x, projections, 100,
     partial=odl.operator.solvers.ForEachPartial(plotResult))
