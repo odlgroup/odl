@@ -31,6 +31,10 @@ from odl.set.domain import IntervalProd, Interval, Rectangle
 from odl.util.testutils import ODLTestCase
 
 
+# TODO:
+# - Interval arithmetics
+
+
 def random_point(set_):
     if isinstance(set_, IntervalProd):
         return np.random.rand(set_.ndim) * (set_.end - set_.begin) + set_.begin
