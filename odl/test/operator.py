@@ -153,18 +153,9 @@ class OpeartorTest(object):
         print('Norm is at least: {}'.format(operator_norm))
         self.operator_norm = operator_norm
         return operator_norm
-        
-    def adjoint(self):
-        """ Verifies that the adjoint works appropriately
-        """
-        try:
-            self.operator.adjoint
-        except NotImplementedError:
-            print('Operator has no adjoint')
-            return
-            
-        print('\n== Verifying adjoint of operator ==\n')
-        print('Verifying the identity (Ax, y) = (x, A^T y)')
+
+    def _adjoint_definition(self):
+        print('\nVerifying the identity (Ax, y) = (x, A^T y)')
         print('error = ||(Ax, y) - (x, A^T y)|| / ||A|| ||x|| ||y||')
         
         x = []
@@ -198,6 +189,66 @@ class OpeartorTest(object):
         scale = np.polyfit(x, y, 1)[0]  
         print('\nThe adjoint seems to be scaled according to:')
         print('(x, A^T y) / (Ax, y) = {}. Should be 1.0'.format(scale))
+
+    def _adjoint_of_adjoint(self):
+        #Verify (A^*)^* = A
+        try:
+            self.operator.adjoint.adjoint
+        except AttributeError:
+            print('A^* has no adjoint')
+            return
+            
+        if self.operator.adjoint.adjoint is self.operator:
+            print('(A^*)^* == A')
+            return
+        
+        print('\nVerifying the identity Ax = (A^T)^T x')
+        print('error = ||Ax - (A^T)^T x|| / ||A|| ||x||')        
+        
+        num_failed = 0
+        
+        for [name, vec] in vector_examples(self.operator.domain):
+            A_result = self.operator(vec)
+            ATT_result = self.operator.adjoint.adjoint(vec)
+            
+            denom = self.operator_norm * vec.norm()
+            error = 0 if denom == 0 else (A_result-ATT_result).norm()/denom
+            if error > 0.00001:
+                print('x={:25s} : error={:6.5f}'.format(name, error))
+                num_failed += 1
+                
+        if num_failed == 0:
+            print('error = 0.0 for all test cases')
+        else:         
+            print('*** FAILED {} TEST CASES ***'.format(num_failed))
+        
+    def adjoint(self):
+        """ Verifies that the adjoint works appropriately
+        """
+        try:
+            self.operator.adjoint
+        except NotImplementedError:
+            print('Operator has no adjoint')
+            return
+            
+        print('\n== Verifying adjoint of operator ==\n')
+        
+        domain_range_ok = True
+        if self.operator.domain != self.operator.adjoint.range:
+            print('ERROR: A.domain != A.adjoint.range')
+            domain_range_ok = False
+            
+        if self.operator.range != self.operator.adjoint.domain:
+            print('ERROR: A.domain != A.adjoint.range')
+            domain_range_ok = False
+            
+        if domain_range_ok:
+            print('Domain and range of adjoint is OK.')
+        
+        self._adjoint_definition()
+        
+        self._adjoint_of_adjoint()
+        
         
     def derivative(self, step=0.0001):
         """ Verifies that the derivative works appropriately
