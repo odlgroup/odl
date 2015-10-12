@@ -853,8 +853,14 @@ class Fn(FnBase, Ntuples):
         >>> y = c3.element([1, 1+1j])
         >>> c3.inner(x, y) == (5+1j)*1 + (-2j)*(1-1j)
         True
+
+        Define a space with custom inner product:
+
         >>> weights = np.array([1., 2.])
-        >>> c3w = Cn(2, inner=lambda x, y: np.vdot(weights * y, x))
+        >>> def weighted_inner(x, y):
+        ...     return np.vdot(weights * y.data, x.data)
+
+        >>> c3w = Cn(2, inner=weighted_inner)
         >>> x = c3w.element(x)  # elements must be cast (no copy)
         >>> y = c3w.element(y)
         >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
