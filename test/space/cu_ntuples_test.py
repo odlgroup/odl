@@ -31,8 +31,11 @@ from numpy import float64
 # ODL imports
 import odl
 from odl.space.ntuples import _FnConstWeighting
-from odl.space.cu_ntuples import _CudaFnConstWeighting, _CudaFnCustomDist
-from odl.space.cu_ntuples import _CudaFnCustomInnerProduct, _CudaFnCustomNorm
+if odl.CUDA_AVAILABLE:
+    from odl.space.cu_ntuples import (
+        _CudaFnConstWeighting, _CudaFnCustomDist, _CudaFnCustomInnerProduct,
+        _CudaFnCustomNorm)
+
 from odl.util.testutils import ODLTestCase
 
 
