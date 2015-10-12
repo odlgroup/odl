@@ -912,7 +912,7 @@ class LinearOperator(Operator):
             The domain of this operator, i.e., the space of elements to
             which this operator can be applied
 
-        ran : `Set`
+        ran : `LinearSpace`
             The range of this operator, i.e., the space this operator
             maps to
         """

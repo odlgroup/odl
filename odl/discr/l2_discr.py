@@ -34,14 +34,15 @@ from odl.discr.discretization import Discretization, dspace_type
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
-from odl.space.ntuples import ConstWeightedInnerProduct, Fn
+from odl.space.ntuples import Fn
 from odl.space.default import L2
+from odl.util.utility import is_complex_dtype
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaConstWeightedInnerProduct, CudaFn
+    from odl.space.cu_ntuples import CudaFnConstWeighting, CudaFn
 else:
-    CudaConstWeightedInnerProduct = None
-    CudaFn = None
+    CudaFnConstWeighting = None
+    CudaFn = type(None)
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')
 
@@ -274,6 +275,152 @@ class DiscreteL2(Discretization):
 
                 super().__setitem__(indices, values)
 
+        def show(self, method='', figsize=None, saveto='', **kwargs):
+            """Create a plot of the function in 1d or 2d.
+
+            Parameters
+            ----------
+            method : string, optional
+                1d methods:
+
+                'plot' : graph plot
+
+                2d methods:
+
+                'imshow' : image plot with coloring according to value,
+                including a colorbar.
+
+                'scatter' : cloud of scattered 3d points
+                (3rd axis <-> value)
+
+                'wireframe', 'plot_wireframe' : surface plot
+
+            kwargs : extra keyword arguments passed on to display method
+                See the Matplotlib functions for documentation of extra
+                options.
+
+            See Also
+            --------
+            matplotlib.pyplot.plot : Show graph plot
+
+            matplotlib.pyplot.imshow : Show data as image
+
+            matplotlib.pyplot.scatter : Show scattered 3d points
+            """
+            from matplotlib import pyplot as plt
+            from mpl_toolkits.mplot3d import Axes3D
+            args_re = []
+            args_im = []
+            dsp_kwargs = {}
+            sub_kwargs = {}
+            arrange_subplots = (121, 122)  # horzontal arrangement
+
+            values = self.asarray()
+
+            if self.ndim == 1:  # TODO: maybe a plotter class would be better
+                if not method:
+                    method = 'plot'
+
+                if method == 'plot':
+                    args_re += [self.space.grid.coord_vecs[0], values.real]
+                    args_im += [self.space.grid.coord_vecs[0], values.imag]
+                else:
+                    raise ValueError('display method {!r} not supported.'
+                                     ''.format(method))
+
+            elif self.ndim == 2:
+                if not method:
+                    method = 'imshow'
+
+                if method == 'imshow':
+                    from matplotlib.cm import gray
+                    args_re = [values.real.T]
+                    args_im = [values.imag.T]
+                    extent = [self.space.grid.min()[0],
+                              self.space.grid.max()[0],
+                              self.space.grid.min()[1],
+                              self.space.grid.max()[1]]
+
+                    # TODO: Make interpolation smart
+                    dsp_kwargs.update({'interpolation': 'none', 'cmap': gray,
+                                       'extent': extent,
+                                       'aspect': 'auto'})
+                elif method == 'scatter':
+                    pts = self.space.grid.points()
+                    args_re = [pts[:, 0], pts[:, 1], values.ravel().real]
+                    args_re = [pts[:, 0], pts[:, 1], values.ravel().imag]
+                    sub_kwargs.update({'projection': '3d'})
+                elif method in ('wireframe', 'plot_wireframe'):
+                    method = 'plot_wireframe'
+                    xm, ym = self.space.grid.meshgrid()
+                    args_re = [xm, ym, values.real.T]
+                    args_im = [xm, ym, values.imag.T]
+                    sub_kwargs.update({'projection': '3d'})
+                else:
+                    raise ValueError('display method {!r} not supported.'
+                                     ''.format(method))
+
+            else:
+                raise NotImplemented('no method for {}d display implemented.'
+                                     ''.format(self.space.ndim))
+
+            # Additional keyword args are passed on to the display method
+            dsp_kwargs.update(**kwargs)
+
+            fig = plt.figure(figsize=figsize)
+            if is_complex_dtype(self.space.dspace.dtype):
+                sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
+                sub_re.set_title('Real part')
+                sub_re.set_xlabel('x')
+                sub_re.set_ylabel('y')
+                display_re = getattr(sub_re, method)
+                csub_re = display_re(*args_re, **dsp_kwargs)
+
+                if method == 'imshow':
+                    minval_re = np.min(values.real)
+                    maxval_re = np.max(values.real)
+                    ticks_re = [minval_re, (maxval_re + minval_re) / 2.,
+                                maxval_re]
+                    plt.colorbar(csub_re, orientation='horizontal',
+                                 ticks=ticks_re, format='%.4g')
+
+                sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
+                sub_im.set_title('Imaginary part')
+                sub_im.set_xlabel('x')
+                sub_im.set_ylabel('y')
+                display_im = getattr(sub_im, method)
+                csub_im = display_im(*args_im, **dsp_kwargs)
+
+                if method == 'imshow':
+                    minval_im = np.min(values.imag)
+                    maxval_im = np.max(values.imag)
+                    ticks_im = [minval_im, (maxval_im + minval_im) / 2.,
+                                maxval_im]
+                    plt.colorbar(csub_im, orientation='horizontal',
+                                 ticks=ticks_im, format='%.4g')
+
+            else:
+                sub = plt.subplot(111, **sub_kwargs)
+                sub.set_xlabel('x')
+                sub.set_ylabel('y')
+                try:
+                    # For 3d plots
+                    sub.set_zlabel('z')
+                except AttributeError:
+                    pass
+                display = getattr(sub, method)
+                csub = display(*args_re, **dsp_kwargs)
+
+                if method == 'imshow':
+                    minval = np.min(values)
+                    maxval = np.max(values)
+                    ticks = [minval, (maxval + minval) / 2., maxval]
+                    plt.colorbar(csub, ticks=ticks, format='%.4g')
+
+            plt.show()
+            if saveto:
+                fig.savefig(saveto)
+
 
 def l2_uniform_discretization(l2space, nsamples, interp='nearest',
                               impl='numpy', **kwargs):
@@ -336,27 +483,15 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
         raise ValueError('weighting {!r} not understood.'.format(weighting))
 
     if weighting == 'simple':
-        weighting_const = np.prod(grid.stride)
-        if impl == 'numpy':
-            inner = ConstWeightedInnerProduct(weighting_const)
-        else:
-            inner = CudaConstWeightedInnerProduct(weighting_const)
+        weight = np.prod(grid.stride)
     else:  # weighting == 'consistent'
         # TODO: implement
-        raise NotImplementedError
+        raise NotImplemented
 
     if dtype is not None:
-        # FIXME: CUDA spaces do not yet support custom inner product
-        if impl == 'cuda':  # ignore inner until fix
-            dspace = ds_type(grid.ntotal, dtype=dtype)
-        else:
-            dspace = ds_type(grid.ntotal, dtype=dtype, inner=inner)
+        dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight)
     else:
-        # FIXME: CUDA spaces do not yet support custom inner product
-        if impl == 'cuda':  # ignore inner until fix
-            dspace = ds_type(grid.ntotal)
-        else:
-            dspace = ds_type(grid.ntotal, inner=inner)
+        dspace = ds_type(grid.ntotal, weight=weight)
 
     order = kwargs.pop('order', 'C')
 

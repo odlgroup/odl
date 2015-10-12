@@ -15,37 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-
-"""ODL is a functional analysis library with a focus on discretization.
-
-ODL suppors abstract sets, linear vector spaces defined on such
-and Operators/Functionals defined on these sets. It is intended
-to be used to write general code and faciliate code reuse.
+"""Automatic tests for ODL
 """
 
 from __future__ import absolute_import
 
-__version__ = '0.9b1'
-__all__ = ('sets', 'operator', 'space', 'discr')
-
-
-# Propagate names defined in __all__ of all submodules into the top-level
-# module
-
-from . import set
-from .set import *
-__all__ += set.__all__
+__all__ = ()
 
 from . import operator
 from .operator import *
 __all__ += operator.__all__
-
-from . import space
-from .space import *
-__all__ += space.__all__
-
-from . import discr
-from .discr import *
-__all__ += discr.__all__
-
-from . import test

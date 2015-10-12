@@ -30,7 +30,15 @@ from numpy import float64
 
 # ODL imports
 import odl
+from odl.space.ntuples import FnConstWeighting
+from odl.space.cu_ntuples import CudaFnConstWeighting, CudaFnCustomDist
+from odl.space.cu_ntuples import CudaFnCustomInnerProduct, CudaFnCustomNorm
 from odl.util.testutils import ODLTestCase
+
+
+# TODO:
+# * weighted spaces
+# * custom dist/norm/inner
 
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available')
@@ -642,7 +650,7 @@ class TestUFunc(ODLTestCase):
 
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, "CUDA not available")
-class CudaConstWeightedInnerProductTest(ODLTestCase):
+class CudaConstWeightingTest(ODLTestCase):
     @staticmethod
     def _vectors(fn):
         # Generate numpy vectors, real or complex
@@ -662,50 +670,53 @@ class CudaConstWeightedInnerProductTest(ODLTestCase):
         constant = 1.5
 
         # Just test if the code runs
-        inner = odl.CudaConstWeightedInnerProduct(constant)
+        weighting = CudaFnConstWeighting(constant)
+        weighting = CudaFnConstWeighting(constant)
 
     def test_equals(self):
         constant = 1.5
 
-        inner_const = odl.CudaConstWeightedInnerProduct(constant)
-        inner_const2 = odl.CudaConstWeightedInnerProduct(constant)
-        inner_const_npy = odl.ConstWeightedInnerProduct(constant)
+        weighting = CudaFnConstWeighting(constant)
+        weighting2 = CudaFnConstWeighting(constant)
+        other_weighting = CudaFnConstWeighting(2.5)
+        weighting_npy = FnConstWeighting(constant)
 
-        self.assertEquals(inner_const, inner_const)
-        self.assertEquals(inner_const, inner_const2)
-        self.assertEquals(inner_const2, inner_const)
+        self.assertEquals(weighting, weighting)
+        self.assertEquals(weighting, weighting2)
+        self.assertEquals(weighting2, weighting)
 
-        self.assertNotEquals(inner_const, inner_const_npy)
+        self.assertNotEquals(weighting, other_weighting)
+        self.assertNotEquals(weighting, weighting_npy)
 
     def _test_call_real(self, n):
         rn = odl.CudaRn(n)
         xarr, yarr, x, y = self._vectors(rn)
 
         constant = 1.5
-        inner_const = odl.CudaConstWeightedInnerProduct(constant)
+        weighting = CudaFnConstWeighting(constant)
 
-        result_const = inner_const(x, y)
+        result_const = weighting.inner(x, y)
         true_result_const = constant * np.dot(yarr, xarr)
 
         self.assertAlmostEquals(result_const, true_result_const, places=5)
 
     def test_call(self):
-        for _ in range(20):
-            self._test_call_real(10)
+        for n in range(20):
+            self._test_call_real(n)
 
     def test_repr(self):
         constant = 1.5
-        inner_const = odl.CudaConstWeightedInnerProduct(constant)
+        weighting = CudaFnConstWeighting(constant)
 
-        repr_str = 'CudaConstWeightedInnerProduct(1.5)'
-        self.assertEquals(repr(inner_const), repr_str)
+        repr_str = 'CudaFnConstWeighting(1.5)'
+        self.assertEquals(repr(weighting), repr_str)
 
     def test_str(self):
         constant = 1.5
-        inner_const = odl.CudaConstWeightedInnerProduct(constant)
+        weighting = CudaFnConstWeighting(constant)
 
-        print_str = '(x, y) --> 1.5 * y^H x'
-        self.assertEquals(str(inner_const), print_str)
+        print_str = 'CudaFnConstWeighting: constant = 1.5'
+        self.assertEquals(str(weighting), print_str)
 
 
 if __name__ == '__main__':

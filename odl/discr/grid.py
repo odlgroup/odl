@@ -61,11 +61,15 @@ class TensorGrid(Set):
             The coordinate vectors defining the grid points. They must
             be sorted in ascending order and may not contain
             duplicates. Empty vectors are not allowed.
-        kwargs : {'as_midp'}
+        kwargs : {'as_midp', 'order'}
             'as_midp' : bool, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
                 This influences the behavior of `min`, `max` and
                 `cell_sizes`.
+            'order' : {'C', 'F'}, optional
+                Ordering of the grid axes. 'C' means the first axis
+                varies slowest, the last axis fastest; vice versa for
+                'F'.
 
         Examples
         --------
@@ -122,6 +126,7 @@ class TensorGrid(Set):
 
         self._coord_vectors = vecs
         self._as_midp = bool(kwargs.pop('as_midp', False))
+        self._order = str(kwargs.pop('order', 'C'))
         self._ideg = np.array([i for i in range(len(vecs))
                                if len(vecs[i]) == 1])
         self._inondeg = np.array([i for i in range(len(vecs))
@@ -157,6 +162,11 @@ class TensorGrid(Set):
     def ntotal(self):
         """The total number of grid points."""
         return np.prod(self.shape)
+
+    @property
+    def order(self):
+        """Axis ordering of this grid."""
+        return self._order
 
     @property
     def min_pt(self):
@@ -231,6 +241,11 @@ class TensorGrid(Set):
             return self.max_pt + maxpt_cell_size / 2
 
     # Methods
+
+    def size(self):
+        """Return a vector containing the total sizes."""
+        return self.max() - self.min()
+
     def element(self):
         """An arbitrary element, the minimum coordinates."""
         return self.min_pt
@@ -397,14 +412,13 @@ class TensorGrid(Set):
                     self.coord_vectors[index:])
         return TensorGrid(*new_vecs)
 
-    def points(self, order='C'):
+    def points(self, order=None):
         """All grid points in a single array.
 
         Parameters
         ----------
-        order : 'C' or 'F'
-            The ordering of the axes in which the points appear in
-            the output.
+        order : {'C', 'F'}
+            Force this axis ordering instead of the grid's own
 
         Returns
         -------
@@ -414,7 +428,7 @@ class TensorGrid(Set):
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
         >>> g.points()
         array([[ 0., -1.],
                [ 0.,  0.],
@@ -430,7 +444,9 @@ class TensorGrid(Set):
                [ 0.,  2.],
                [ 1.,  2.]])
         """
-        if order not in ('C', 'F'):
+        if order is None:
+            order = self.order
+        elif order not in ('C', 'F'):
             raise ValueError('order {!r} not recognized.'.format(order))
 
         axes = range(self.ndim) if order == 'C' else reversed(range(self.ndim))
@@ -446,14 +462,13 @@ class TensorGrid(Set):
 
         return point_arr
 
-    def corners(self, order='C'):
+    def corners(self, order=None):
         """The corner points of the grid in a single array.
 
         Parameters
         ----------
         order : {'C', 'F'}
-            The ordering of the axes in which the corners appear in
-            the output.
+            Force this axis ordering instead of the grid's own
 
         Returns
         -------
@@ -463,7 +478,7 @@ class TensorGrid(Set):
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
         >>> g.corners()
         array([[ 0., -1.],
                [ 0.,  2.],
@@ -475,7 +490,9 @@ class TensorGrid(Set):
                [ 0.,  2.],
                [ 1.,  2.]])
         """
-        if order not in ('C', 'F'):
+        if order is None:
+            order = self.order
+        elif order not in ('C', 'F'):
             raise ValueError('order {!r} not recognized.'.format(order))
 
         minmax_vecs = []
