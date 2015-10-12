@@ -26,9 +26,6 @@ NumPy implementation (module `ntuples`)
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|`NTuplesBase`         |**Abstract** base class for sets of n-tuples of|
-|                      |various types                                  |
-+----------------------+-----------------------------------------------+
 |`Ntuples`             |Set of n-tuples of any NumPy supported type    |
 +----------------------+-----------------------------------------------+
 |`FnBase`              |**Abstract** base class for spaces of n-tuples |
@@ -75,6 +72,10 @@ Function spaces (module `fspace`)
 from __future__ import absolute_import
 
 __all__ = ()
+
+from . import base_ntuples
+from .base_ntuples import *
+__all__ += base_ntuples.__all__
 
 from . import ntuples
 from .ntuples import *

@@ -59,19 +59,18 @@ import numpy as np
 import scipy as sp
 import ctypes
 from scipy.linalg.blas import get_blas_funcs
-from numbers import Integral
 import platform
 
 # ODL imports
 from odl.operator.operator import LinearOperator
-from odl.set.sets import Set, RealNumbers, ComplexNumbers
+from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.util.utility import array1d_repr, array1d_str, dtype_repr
+from odl.space.base_ntuples import NtuplesBase, _FnWeightingBase
+from odl.util.utility import dtype_repr
 from odl.util.utility import is_real_dtype, is_complex_dtype
 
 
-__all__ = ('NtuplesBase', 'FnBase', 'Ntuples', 'Fn', 'Cn', 'Rn',
-           'MatVecOperator')
+__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn', 'MatVecOperator')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -90,243 +89,6 @@ if platform.system() == 'Linux':
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
-
-
-class NtuplesBase(with_metaclass(ABCMeta, Set)):
-
-    """Base class for sets of n-tuples independent of implementation."""
-
-    def __init__(self, size, dtype):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        size : int
-            The number of entries per tuple
-        dtype : object
-            The data type for each tuple entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-        """
-        if not isinstance(size, Integral) or size < 0:
-            raise TypeError('size {} is not a non-negative integer.'
-                            ''.format(size))
-        self._size = int(size)
-        self._dtype = np.dtype(dtype)
-
-    @property
-    def dtype(self):
-        """The data type of each entry."""
-        return self._dtype
-
-    @property
-    def size(self):
-        """The number of entries per tuple."""
-        return self._size
-
-    def __contains__(self, other):
-        """`s.__contains__(other) <==> other in s`.
-
-        Returns
-        -------
-        contains : bool
-            `True` if `other` is an `NtuplesBase.Vector` instance and
-            `other.space` is equal to this space, `False` otherwise.
-
-        Examples
-        --------
-        >>> long_3 = Ntuples(3, dtype='int64')
-        >>> long_3.element() in long_3
-        True
-        >>> long_3.element() in Ntuples(3, dtype='int32')
-        False
-        >>> long_3.element() in Ntuples(3, dtype='float64')
-        False
-        """
-        return isinstance(other, NtuplesBase.Vector) and other.space == self
-
-    def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
-
-        Returns
-        -------
-        equals : bool
-            `True` if `other` is an instance of this space's type
-            with the same `size` and `dtype`, otherwise `False`.
-
-        Examples
-        --------
-        >>> int_3 = Ntuples(3, dtype=int)
-        >>> int_3 == int_3
-        True
-
-        Equality is not identity:
-
-        >>> int_3a, int_3b = Ntuples(3, int), Ntuples(3, int)
-        >>> int_3a == int_3b
-        True
-        >>> int_3a is int_3b
-        False
-
-        >>> int_3, int_4 = Ntuples(3, int), Ntuples(4, int)
-        >>> int_3 == int_4
-        False
-        >>> int_3, str_3 = Ntuples(3, 'int'), Ntuples(3, 'S2')
-        >>> int_3 == str_3
-        False
-        """
-        if other is self:
-            return True
-
-        return ((isinstance(self, type(other)) or isinstance(other, type(self))) and
-                self.size == other.size and
-                self.dtype == other.dtype)
-
-    def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
-        return '{}({}, {})'.format(self.__class__.__name__, self.size,
-                                   dtype_repr(self.dtype))
-
-    def __str__(self):
-        """s.__str__() <==> str(s)."""
-        return '{}({}, {})'.format(self.__class__.__name__, self.size,
-                                   dtype_repr(self.dtype))
-
-    class Vector(with_metaclass(ABCMeta, object)):
-
-        """Abstract class for representation of n-tuples.
-
-        Defines abstract attributes and concrete ones which are
-        independent of data representation.
-        """
-
-        def __init__(self, space, *args, **kwargs):
-            """Initialize a new instance."""
-            self._space = space
-
-        @property
-        def space(self):
-            """Space to which this vector."""
-            return self._space
-
-        @property
-        def ndim(self):
-            """Number of dimensions, always 1."""
-            return 1
-
-        @property
-        def dtype(self):
-            """Length of this vector, equal to space size."""
-            return self.space.dtype
-
-        @property
-        def size(self):
-            """Length of this vector, equal to space size."""
-            return self.space.size
-
-        @property
-        def shape(self):
-            """Shape of this vector, equals `(size,)`."""
-            return (self.space,)
-
-        @property
-        def itemsize(self):
-            """The size in bytes on one element of this type."""
-            return self.dtype.itemsize
-
-        @property
-        def nbytes(self):
-            """The number of bytes this vector uses in memory."""
-            return self.size * self.itemsize
-
-        @abstractmethod
-        def copy(self):
-            """Create an identical (deep) copy of this vector."""
-
-        @abstractmethod
-        def asarray(self, start=None, stop=None, step=None):
-            """Extract the data of this array as a numpy array.
-
-            Parameters
-            ----------
-            start : int, optional (default: `None`)
-                Start position. None means the first element.
-            start : int, optional (default: `None`)
-                One element past the last element to be extracted.
-                None means the last element.
-            start : int, optional (default: `None`)
-                Step length. None means 1.
-
-            Returns
-            -------
-            asarray : `ndarray`
-                Numpy array of the same type as the space.
-            """
-
-        def __len__(self):
-            """v.__len__() <==> len(v).
-
-            Return the number of space dimensions.
-            """
-            return self.space.size
-
-        @abstractmethod
-        def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`.
-
-            Returns
-            -------
-            equals : bool
-                `True` if all entries of `other` are equal to this
-                vector's entries, `False` otherwise.
-            """
-
-        @abstractmethod
-        def __getitem__(self, indices):
-            """Access values of this vector.
-
-            Parameters
-            ----------
-            indices : int or slice
-                The position(s) that should be accessed
-
-            Returns
-            -------
-            values : `space.dtype` or `space.Vector`
-                The value(s) at the index (indices)
-            """
-
-        @abstractmethod
-        def __setitem__(self, indices, values):
-            """Set values of this vector.
-
-            Parameters
-            ----------
-            indices : int or slice
-                The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
-                The value(s) that are to be assigned.
-
-                If `index` is an integer, `value` must be single value.
-
-                If `index` is a slice, `value` must be broadcastable
-                to the size of the slice (same size, shape (1,)
-                or single value).
-            """
-
-        def __ne__(self, other):
-            """`vec.__ne__(other) <==> vec != other`."""
-            return not self.__eq__(other)
-
-        def __str__(self):
-            """`vec.__str__() <==> str(vec)`."""
-            return array1d_str(self)
-
-        def __repr__(self):
-            """`vec.__repr__() <==> repr(vec)`."""
-            return '{!r}.element({})'.format(self.space,
-                                             array1d_repr(self))
 
 
 class Ntuples(NtuplesBase):
@@ -575,7 +337,7 @@ class Ntuples(NtuplesBase):
             False
             """
             return self.space.element(self.data.copy())
-    
+
         def __getitem__(self, indices):
             """Access values of this vector.
 
@@ -821,6 +583,7 @@ def _lincomb(z, a, x1, b, x2, dtype):
                     scal(b, z.data, len(z))
                 axpy(x1.data, z.data, len(z), a)
 
+
 def _repr_space_funcs(space):
     inner_str = ''
 
@@ -842,6 +605,7 @@ def _repr_space_funcs(space):
         inner_str += ', weight={!r}'.format(weight)
 
     return inner_str
+
 
 class Fn(FnBase, Ntuples):
 
@@ -1455,7 +1219,7 @@ class Rn(Fn):
 
 
 class MatVecOperator(LinearOperator):
-    #TODO: move to some default operator place
+    # TODO: move to some default operator place
 
     """Operator :math:`F^n -> F^m` represented by a matrix."""
 
@@ -1537,125 +1301,6 @@ class MatVecOperator(LinearOperator):
             self.matrix.dot(inp.data, out=outp.data)
 
     # TODO: repr and str
-
-
-class _FnWeightingBase(with_metaclass(ABCMeta, object)):
-
-    """Abstract base class for weighting of `FnBase` spaces.
-
-    This class and its subclasses serve as a simple means to evaluate
-    and compare weighted inner products, norms and metrics semantically
-    rather than by identity on a pure function level.
-
-    The functions are implemented similarly to `Operator` but without
-    extra type checks of input parameters - this is done in the callers
-    of the `LinearSpace` instance where these functions used.
-    """
-
-    def __init__(self, dist_using_inner=False):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
-
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
-        """
-        self._dist_using_inner = bool(dist_using_inner)
-
-    @abstractmethod
-    def __eq__(self, other):
-        """`w.__eq__(other) <==> w == other`.
-
-        Returns
-        -------
-        equal : bool
-            `True` if `other` is a `FnWeightingBase` instance
-            represented by the **identical** matrix, `False` otherwise.
-
-        Notes
-        -----
-        This operation must be computationally cheap, i.e. no large
-        arrays may be compared element-wise. That is the task of the
-        `equiv` method.
-        """
-
-    def equiv(self, other):
-        """Test if `other` is an equivalent inner product.
-
-        Returns
-        -------
-        equivalent : bool
-            `True` if `other` is a `FnWeightingBase` instance which
-            yields the same result as this inner product for any
-            input, `False` otherwise. This is checked by entry-wise
-            comparison of this instance's matrix with the matrix of
-            `other`.
-        """
-        raise NotImplementedError
-
-    def inner(self, x1, x2):
-        """Calculate the inner product of two vectors.
-
-        Parameters
-        ----------
-        x1, x2 : `FnBase.Vector`
-            Vectors whose inner product is calculated
-
-        Returns
-        -------
-        inner : float or complex
-            The inner product of the two provided vectors
-        """
-        raise NotImplementedError
-
-    def norm(self, x):
-        """Calculate the norm of a vector.
-
-        This is the standard implementation using `inner`. Subclasses
-        should override it for optimization purposes.
-
-        Parameters
-        ----------
-        x1 : `FnBase.Vector`
-            Vector whose norm is calculated
-
-        Returns
-        -------
-        norm : float
-            The norm of the vector
-        """
-        return float(sqrt(self.inner(x, x).real))
-
-    def dist(self, x1, x2):
-        """Calculate the distance between two vectors.
-
-        This is the standard implementation using `norm`. Subclasses
-        should override it for optimization purposes.
-
-        Parameters
-        ----------
-        x1, x2 : `FnBase.Vector`
-            Vectors whose mutual distance is calculated
-
-        Returns
-        -------
-        dist : float
-            The distance between the vectors
-        """
-        if self._dist_using_inner:
-            dist_squared = (self.norm(x1)**2 + self.norm(x2)**2 -
-                            2 * self.inner(x1, x2).real)
-            if dist_squared < 0:  # Compensate for numerical error
-                dist_squared = 0.0
-            return float(sqrt(dist_squared))
-        else:
-            return self.norm(x1 - x2)
 
 
 def _norm_default(x):
@@ -1885,7 +1530,7 @@ class _FnConstWeighting(_FnWeighting):
 
         Parameters
         ----------
-        constant : strictly positive float
+        constant : positive float
             Weighting constant of the inner product.
         dist_using_inner : bool, optional
             Calculate `dist(x, y)` as
@@ -1899,9 +1544,8 @@ class _FnConstWeighting(_FnWeighting):
         """
         super().__init__(dist_using_inner)
         self._const = float(constant)
-
         if self._const <= 0:
-            raise ValueError('constant {} is not strictly positive'.format(constant))
+            raise ValueError('constant {} is not positive'.format(constant))
 
     @property
     def const(self):
@@ -1917,7 +1561,7 @@ class _FnConstWeighting(_FnWeighting):
             `True` if `other` is an `FnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
-        #TODO: make symmetric
+        # TODO: make symmetric
         return (isinstance(other, _FnConstWeighting) and
                 self.const == other.const)
 
@@ -2101,7 +1745,7 @@ class _FnCustomInnerProduct(_FnWeighting):
             `True` if `other` is an `FnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
-        #TODO: make symmetric
+        # TODO: make symmetric
         return (isinstance(other, _FnCustomInnerProduct) and
                 self.inner == other.inner)
 
@@ -2159,7 +1803,7 @@ class _FnCustomNorm(_FnWeighting):
             `True` if `other` is an `FnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
-        #TODO: make symmetric
+        # TODO: make symmetric
         return (isinstance(other, _FnCustomNorm) and
                 self.norm == other.norm)
 

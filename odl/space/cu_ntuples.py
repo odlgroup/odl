@@ -30,7 +30,7 @@ import numpy as np
 from abc import ABCMeta
 
 # ODL imports
-from odl.space.ntuples import NtuplesBase, FnBase, _FnWeightingBase
+from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
 from odl.util.utility import is_real_dtype, dtype_repr
 import odlpp.odlpp_cuda as cuda
 
