@@ -30,9 +30,9 @@ from numpy import float64
 
 # ODL imports
 import odl
-from odl.space.ntuples import FnConstWeighting
-from odl.space.cu_ntuples import CudaFnConstWeighting, CudaFnCustomDist
-from odl.space.cu_ntuples import CudaFnCustomInnerProduct, CudaFnCustomNorm
+from odl.space.ntuples import _FnConstWeighting
+from odl.space.cu_ntuples import _CudaFnConstWeighting, _CudaFnCustomDist
+from odl.space.cu_ntuples import _CudaFnCustomInnerProduct, _CudaFnCustomNorm
 from odl.util.testutils import ODLTestCase
 
 
@@ -670,16 +670,16 @@ class CudaConstWeightingTest(ODLTestCase):
         constant = 1.5
 
         # Just test if the code runs
-        weighting = CudaFnConstWeighting(constant)
-        weighting = CudaFnConstWeighting(constant)
+        weighting = _CudaFnConstWeighting(constant)
+        weighting = _CudaFnConstWeighting(constant)
 
     def test_equals(self):
         constant = 1.5
 
-        weighting = CudaFnConstWeighting(constant)
-        weighting2 = CudaFnConstWeighting(constant)
-        other_weighting = CudaFnConstWeighting(2.5)
-        weighting_npy = FnConstWeighting(constant)
+        weighting = _CudaFnConstWeighting(constant)
+        weighting2 = _CudaFnConstWeighting(constant)
+        other_weighting = _CudaFnConstWeighting(2.5)
+        weighting_npy = _FnConstWeighting(constant)
 
         self.assertEquals(weighting, weighting)
         self.assertEquals(weighting, weighting2)
@@ -693,7 +693,7 @@ class CudaConstWeightingTest(ODLTestCase):
         xarr, yarr, x, y = self._vectors(rn)
 
         constant = 1.5
-        weighting = CudaFnConstWeighting(constant)
+        weighting = _CudaFnConstWeighting(constant)
 
         result_const = weighting.inner(x, y)
         true_result_const = constant * np.dot(yarr, xarr)
@@ -706,16 +706,16 @@ class CudaConstWeightingTest(ODLTestCase):
 
     def test_repr(self):
         constant = 1.5
-        weighting = CudaFnConstWeighting(constant)
+        weighting = _CudaFnConstWeighting(constant)
 
-        repr_str = 'CudaFnConstWeighting(1.5)'
+        repr_str = '_CudaFnConstWeighting(1.5)'
         self.assertEquals(repr(weighting), repr_str)
 
     def test_str(self):
         constant = 1.5
-        weighting = CudaFnConstWeighting(constant)
+        weighting = _CudaFnConstWeighting(constant)
 
-        print_str = 'CudaFnConstWeighting: constant = 1.5'
+        print_str = '_CudaFnConstWeighting: constant = 1.5'
         self.assertEquals(str(weighting), print_str)
 
 

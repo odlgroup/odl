@@ -35,7 +35,7 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
 def array1d_repr(array):
     """Stringification of a 1D array, keeping byte / unicode."""
     if len(array) < 7:
-        return repr(list(array.asarray()))
+        return repr(list(array))
     else:
         return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
                 repr(list(array[-3:])).lstrip('['))

@@ -39,9 +39,8 @@ from odl.space.default import L2
 from odl.util.utility import is_complex_dtype
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaFnConstWeighting, CudaFn
+    from odl.space.cu_ntuples import CudaFn
 else:
-    CudaFnConstWeighting = None
     CudaFn = type(None)
 
 __all__ = ('DiscreteL2', 'l2_uniform_discretization')
