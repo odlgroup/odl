@@ -453,9 +453,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         The default `str` implementation. Should be overridden by
         subclasses.
         """
-        return '{}: {} -> {}'.format(self.__class__.__name__, self.domain,
-                                     self.range)
-        # return self.__class__.__name__
+        return self.__class__.__name__
 
 
 class OperatorSum(Operator):
