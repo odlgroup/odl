@@ -59,24 +59,27 @@ class IntervalProd(Set):
         >>> rbox
         IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
-        begin = np.atleast_1d(begin).astype(np.float64)
-        end = np.atleast_1d(end).astype(np.float64)
+        self._begin = np.atleast_1d(begin).astype(np.float64)
+        self._end = np.atleast_1d(end).astype(np.float64)
 
-        if len(begin) != len(end):
-            raise ValueError('begin {} and end {} have different .'
+        if self._begin.ndim > 1:
+            raise ValueError('begin {} is {}- instead of 1-dimensional.'
+                             ''.format(begin, self._begin.ndim))
+        if self._end.ndim > 1:
+            raise ValueError('end {} is {}- instead of 1-dimensional.'
+                             ''.format(end, self._end.ndim))
+        if len(self._begin) != len(self._end):
+            raise ValueError('begin {} and end {} have different '
                              'lengths ({} != {}).'
                              ''.format(begin, end,
-                                       len(begin), len(end)))
-
-        if not np.all(begin <= end):
-            i_wrong = np.where(begin > end)
+                                       len(self._begin), len(self._end)))
+        if not np.all(self._begin <= self._end):
+            i_wrong = np.where(self._begin > self._end)
             raise ValueError('entries at indices {} of begin exceed '
                              'those of end ({} > {}).'
-                             ''.format(i_wrong, list(begin[i_wrong]),
-                                       list(end[i_wrong])))
+                             ''.format(i_wrong, list(self._begin[i_wrong]),
+                                       list(self._end[i_wrong])))
 
-        self._begin = begin
-        self._end = end
         self._ideg = np.where(self._begin == self._end)[0]
         self._inondeg = np.where(self._begin != self._end)[0]
         super().__init__()
@@ -148,8 +151,7 @@ class IntervalProd(Set):
         # pylint: disable=arguments-differ
         if other is self:
             return True
-
-        if not isinstance(other, IntervalProd):
+        elif not isinstance(other, IntervalProd):
             return False
 
         return (np.allclose(self.begin, other.begin, atol=tol, rtol=0.0) and
@@ -186,10 +188,10 @@ class IntervalProd(Set):
         True
         """
         point = np.atleast_1d(point)
-
+        if point.ndim > 1:
+            return False
         if len(point) != self.ndim:
             return False
-
         if point[0] not in RealNumbers():
             return False
         if self.dist(point, ord=np.inf) > tol:
@@ -493,16 +495,71 @@ class IntervalProd(Set):
         return minmax_grid.points(order=order)
 
     # Magic methods
+    def __len__(self):
+        """`ip.__len__() <==> len(ip)`."""
+        return self.ndim
+
+    def __add__(self, other):
+        """`ip.__add__(other) <==> ip + other`."""
+        if isinstance(other, IntervalProd):
+            if self.ndim != other.ndim:
+                raise ValueError('addition not possible for {} and {}: '
+                                 'dimension mismatch ({} != {}).'
+                                 ''.format(self, other, self.ndim, other.ndim))
+            return type(self)(self.begin + other.begin, self.end + other.end)
+        elif np.isscalar(other):
+            return type(self)(self.begin + other, self.end + other)
+        else:  # TODO: more supported types of `other`?
+            raise TypeError('addition not supported for type {}.'
+                            ''.format(type(other)))
+
+    def __sub__(self, other):
+        """`ip.__sub__(other) <==> ip - other`."""
+        if isinstance(other, IntervalProd):
+            if self.ndim != other.ndim:
+                raise ValueError('subtraction not possible for {} and {}: '
+                                 'dimension mismatch ({} != {}).'
+                                 ''.format(self, other, self.ndim, other.ndim))
+            return type(self)(self.begin - other.end, self.end - other.begin)
+        elif np.isscalar(other):
+            return type(self)(self.begin - other, self.end - other)
+        else:  # TODO: more supported types of `other`?
+            raise TypeError('subtraction not supported for type {}.'
+                            ''.format(type(other)))
+
+    def __mul__(self, other):
+        """`ip.__mul__(other) <==> ip * other`."""
+        if isinstance(other, IntervalProd):
+            if self.ndim != other.ndim:
+                raise ValueError('multiplication not possible for {} and {}: '
+                                 'dimension mismatch ({} != {}).'
+                                 ''.format(self, other, self.ndim, other.ndim))
+
+            comp_mat = np.empty([self.ndim, 4])
+            comp_mat[:, 0] = self.begin * other.begin
+            comp_mat[:, 1] = self.begin * other.end
+            comp_mat[:, 2] = self.end * other.begin
+            comp_mat[:, 3] = self.end * other.end
+            new_beg = np.min(comp_mat, axis=1)
+            new_end = np.max(comp_mat, axis=1)
+            return type(self)(new_beg, new_end)
+        elif np.isscalar(other):
+            vec1 = self.begin * other
+            vec2 = self.end * other
+            return type(self)(np.minimum(vec1, vec2), np.maximum(vec1, vec2))
+        else:  # TODO: more supported types of `other`?
+            raise TypeError('subtraction not supported for type {}.'
+                            ''.format(type(other)))
+
     def __repr__(self):
+        """`ip.__repr__() <==> repr(ip)`."""
         return ('IntervalProd({}, {})'.format(
-            array1d_repr(self._begin), array1d_repr(self._end)))
+            array1d_repr(self.begin), array1d_repr(self._end)))
 
     def __str__(self):
+        """`ip.__str__() <==> str(ip)`."""
         return ' x '.join('[{}, {}]'.format(b, e)
-                          for (b, e) in zip(self._begin, self._end))
-
-    def __len__(self):
-        return self.ndim
+                          for (b, e) in zip(self.begin, self.end))
 
 
 class Interval(IntervalProd):
@@ -516,7 +573,7 @@ class Interval(IntervalProd):
     @property
     def length(self):
         """The length of this interval."""
-        return self.end - self.begin
+        return self.end[0] - self.begin[0]
 
     def __repr__(self):
         return 'Interval({}, {})'.format(self.begin[0], self.end[0])
@@ -536,8 +593,8 @@ class Rectangle(IntervalProd):
         return self.volume
 
     def __repr__(self):
-        return ('Rectangle({!r}, {!r})'.format(list(self._begin),
-                                               list(self._end)))
+        return ('Rectangle({!r}, {!r})'.format(list(self.begin),
+                                               list(self.end)))
 
 
 class Cuboid(IntervalProd):
@@ -549,8 +606,8 @@ class Cuboid(IntervalProd):
                              'end {}.'.format(begin, end))
 
     def __repr__(self):
-        return ('Cuboid({!r}, {!r})'.format(list(self._begin),
-                                            list(self._end)))
+        return ('Cuboid({!r}, {!r})'.format(list(self.begin),
+                                            list(self.end)))
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
