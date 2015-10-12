@@ -275,7 +275,7 @@ class DiscreteL2(Discretization):
 
                 super().__setitem__(indices, values)
 
-        def show(self, method='', figsize=None, saveto='', **kwargs):
+        def show(self, method='', figsize=None, saveto='', title=None, **kwargs):
             """Create a plot of the function in 1d or 2d.
 
             Parameters
@@ -308,7 +308,6 @@ class DiscreteL2(Discretization):
             matplotlib.pyplot.scatter : Show scattered 3d points
             """
             from matplotlib import pyplot as plt
-            from mpl_toolkits.mplot3d import Axes3D
             args_re = []
             args_im = []
             dsp_kwargs = {}
@@ -319,11 +318,17 @@ class DiscreteL2(Discretization):
 
             if self.ndim == 1:  # TODO: maybe a plotter class would be better
                 if not method:
-                    method = 'plot'
+                    if self.space.interp == 'nearest':
+                        method = 'step'
+                        dsp_kwargs['where'] = 'mid'
+                    elif self.space.interp == 'linear':
+                        method = 'plot'
+                    else:
+                        method = 'plot'
 
-                if method == 'plot':
-                    args_re += [self.space.grid.coord_vecs[0], values.real]
-                    args_im += [self.space.grid.coord_vecs[0], values.imag]
+                if method == 'plot' or method == 'step':
+                    args_re += [self.space.grid.coord_vectors[0], values.real]
+                    args_im += [self.space.grid.coord_vectors[0], values.imag]
                 else:
                     raise ValueError('display method {!r} not supported.'
                                      ''.format(method))
@@ -333,16 +338,24 @@ class DiscreteL2(Discretization):
                     method = 'imshow'
 
                 if method == 'imshow':
-                    from matplotlib.cm import gray
-                    args_re = [values.real.T]
-                    args_im = [values.imag.T]
+                    #TODO: optimize if real
+                    args_re = [np.rot90(values.real)]
+                    args_im = [np.rot90(values.imag)]
+                    
                     extent = [self.space.grid.min()[0],
                               self.space.grid.max()[0],
                               self.space.grid.min()[1],
                               self.space.grid.max()[1]]
 
-                    # TODO: Make interpolation smart
-                    dsp_kwargs.update({'interpolation': 'none', 'cmap': gray,
+
+                    if self.space.interp == 'nearest':
+                        interpolation = 'nearest'
+                    elif self.space.interp == 'linear':
+                        interpolation = 'bilinear'
+                    else:
+                        interpolation = 'none'
+                        
+                    dsp_kwargs.update({'interpolation': interpolation, 'cmap': 'bone',
                                        'extent': extent,
                                        'aspect': 'auto'})
                 elif method == 'scatter':
@@ -353,8 +366,8 @@ class DiscreteL2(Discretization):
                 elif method in ('wireframe', 'plot_wireframe'):
                     method = 'plot_wireframe'
                     xm, ym = self.space.grid.meshgrid()
-                    args_re = [xm, ym, values.real.T]
-                    args_im = [xm, ym, values.imag.T]
+                    args_re = [xm, ym, np.rot90(values.real)]
+                    args_im = [xm, ym, np.rot90(values.imag)]
                     sub_kwargs.update({'projection': '3d'})
                 else:
                     raise ValueError('display method {!r} not supported.'
@@ -368,6 +381,9 @@ class DiscreteL2(Discretization):
             dsp_kwargs.update(**kwargs)
 
             fig = plt.figure(figsize=figsize)
+            if title is not None:
+                plt.title(title)
+                
             if is_complex_dtype(self.space.dspace.dtype):
                 sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
                 sub_re.set_title('Real part')

@@ -730,6 +730,29 @@ class CudaRn(CudaFn):
             raise TypeError('data type {} not a real floating-point type.'
                             ''.format(dtype))
 
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        inner_fstr = '{}'
+        weight = 1.0
+        if self.dtype != np.float32:
+            inner_fstr += ', {dtype}'
+        if self._space_funcs._dist_using_inner:
+            inner_fstr += ', dist_using_inner=True'
+        if isinstance(self._space_funcs, CudaFnCustomInnerProduct):
+            inner_fstr += ', inner=<custom inner>'
+        elif isinstance(self._space_funcs, CudaFnCustomNorm):
+            inner_fstr += ', norm=<custom norm>'
+        elif isinstance(self._space_funcs, CudaFnCustomDist):
+            inner_fstr += ', norm=<custom dist>'
+        elif isinstance(self._space_funcs, CudaFnConstWeighting):
+            weight = self._space_funcs.const
+            if weight != 1.0:
+                inner_fstr += ', weight={weight}'
+
+        inner_str = inner_fstr.format(self.size, dtype_repr(self.dtype),
+                                      weight=weight)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
     class Vector(CudaFn.Vector):
         pass
 

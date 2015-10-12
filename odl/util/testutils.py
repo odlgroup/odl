@@ -96,7 +96,6 @@ def skip_all(reason=None):
 
     return SkipAllTestCase
 
-
 class Timer(object):
 
     """A timer context manager.

@@ -566,7 +566,7 @@ class Ntuples(NtuplesBase):
             False
             """
             return self.space.element(self.data.copy())
-
+    
         def __getitem__(self, indices):
             """Access values of this vector.
 
