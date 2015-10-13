@@ -270,6 +270,37 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 or single value).
             """
 
+        def __array__(self, dtype=None):
+            """ Returns a numpy array of this ntuple.
+
+            Parameters
+            ----------
+            dtype : numpy.dtype, Optional (default: self.dtype)
+                The dtype of the output array
+
+            Returns
+            -------
+            array : ndarray
+            """
+            if dtype is None:
+                return self.asarray()
+            else:
+                return self.asarray().astype(dtype)
+
+        def __array_wrap__(self, obj):
+            """ Returns a new vector from the data in obj
+
+            Parameters
+            ----------
+            obj : ndarray
+                The array that should be wrapped
+
+            Returns
+            -------
+                vector : self.space.Vector
+            """
+            return self.space.element(obj)
+
         def __ne__(self, other):
             """`vec.__ne__(other) <==> vec != other`."""
             return not self.__eq__(other)

@@ -292,6 +292,27 @@ class NumpyInteractionTest(ODLTestCase):
         self.assertIsInstance(1.0 * x, r3.Vector)
         self.assertIsInstance(np.float32(1.0) * x, Rn.Vector)
 
+    def test_array_method(self):
+        r3 = Rn(3)
+        x = r3.zero()
+
+        arr = x.__array__()
+        
+        self.assertIsInstance(arr, np.ndarray)
+        self.assertAllAlmostEquals(arr, [0.0, 0.0, 0.0])
+
+    def test_array_wrap_method(self):
+        r3 = Rn(3)
+        x_h = [0.0, 1.0, 2.0]
+        x = r3.element([0.0, 1.0, 2.0])
+        y_h = np.sin(x_h)
+        y = np.sin(x)
+        
+        self.assertAllAlmostEquals(y, y_h)
+        self.assertIsInstance(y, Rn.Vector)
+
+        
+
 class FnMatrixWeightingTest(ODLTestCase):
     @staticmethod
     def _vectors(fn):
