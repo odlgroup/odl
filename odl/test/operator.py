@@ -20,7 +20,7 @@ import numpy as np
 from itertools import product
 
 from odl.set.pspace import ProductSpace
-from odl.operator.operator import LinearOperator
+from odl.operator.operator import Operator
 from odl.space.base_ntuples import FnBase, NtuplesBase
 from odl.discr.l2_discr import DiscreteL2
 from odl.test.examples import scalar_examples, vector_examples
@@ -186,7 +186,7 @@ class OperatorTest(object):
     def linear(self):
         """ Verifies that the operator is actually linear
         """
-        if not isinstance(self.operator, LinearOperator):
+        if not self.operator.linear:
             print('Operator is not linear')
             return
 
@@ -258,7 +258,7 @@ class OperatorTest(object):
         print('Operator = {}'.format(self.operator))
 
         self.norm()
-        if isinstance(self.operator, LinearOperator):
+        if self.operator.linear:
             self.linear()
             self.adjoint()
         else:

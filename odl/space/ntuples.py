@@ -62,7 +62,7 @@ from scipy.linalg.blas import get_blas_funcs
 import platform
 
 # ODL imports
-from odl.operator.operator import LinearOperator
+from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
@@ -1174,7 +1174,7 @@ class Rn(Fn):
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
 
-class MatVecOperator(LinearOperator):
+class MatVecOperator(Operator):
     # TODO: move to some default operator place
 
     """Operator :math:`F^n -> F^m` represented by a matrix."""
@@ -1194,7 +1194,7 @@ class MatVecOperator(LinearOperator):
             `(m, n)`, where `n` is the size of `dom` and `m` the size
             of `ran`. Its dtype must be castable to the range dtype.
         """
-        super().__init__(dom, ran)
+        super().__init__(dom, ran, linear=True)
         if not isinstance(dom, Fn):
             raise TypeError('domain {!r} is not an `Fn` instance.'
                             ''.format(dom))

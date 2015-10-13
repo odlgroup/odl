@@ -33,13 +33,13 @@ from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 
 # ODL imports
 from odl.discr.grid import TensorGrid
-from odl.operator.operator import Operator, LinearOperator
+from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.set.domain import IntervalProd
 
 
-__all__ = ('FunctionSetMapping', 'LinearFunctionSpaceMapping',
+__all__ = ('FunctionSetMapping',
            'RawGridCollocation', 'GridCollocation', 'RawNearestInterpolation',
            'NearestInterpolation', 'LinearInterpolation')
 
@@ -48,7 +48,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
 
     """Abstract base class for function set discretization mappings."""
 
-    def __init__(self, map_type, fset, grid, dspace, order='C'):
+    def __init__(self, map_type, fset, grid, dspace, order='C', linear=False):
         """Initialize a new instance.
 
         Parameters
@@ -104,9 +104,23 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
 
         dom = fset if map_type == 'restriction' else dspace
         ran = dspace if map_type == 'restriction' else fset
-        super().__init__(dom, ran)
+        super().__init__(dom, ran, linear=linear)
         self._grid = grid
         self._order = order
+
+        if self.linear:
+            if not isinstance(fset, FunctionSpace):
+                raise TypeError('function space {} is not a `FunctionSpace` '
+                                'instance.'.format(fset))
+
+            if not isinstance(dspace, FnBase):
+                raise TypeError('data space {} is not an `FnBase` instance.'
+                                ''.format(dspace))
+
+            if fset.field != dspace.field:
+                raise ValueError('field {} of the function space and field {} of '
+                                 'the data space are not equal.'
+                                 ''.format(fset.field, dspace.field))
 
     def __eq__(self, other):
         return (type(self) == type(other) and
@@ -124,51 +138,6 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
     def order(self):
         """The axis ordering."""
         return self._order
-
-
-class LinearFunctionSpaceMapping(with_metaclass(ABCMeta, FunctionSetMapping,
-                                                LinearOperator)):
-
-    """Abstract base class for function space discretization mappings."""
-
-    def __init__(self, map_type, fspace, grid, dspace, order='C'):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        map_type : {'restriction', 'extension'}
-            The type of operator
-        fspace : `FunctionSpace`
-            The undiscretized (abstract) space of functions to be
-            discretized. Its field must be the same as that of data
-            space.
-        grid : `TensorGrid`
-            The grid on which to evaluate. Must be contained in
-            the common domain of the function set.
-        dspace : `FnBase`
-            Data space providing containers for the values of a
-            discretized object. Its size must be equal to the
-            total number of grid points. Its field must be the same
-            as that of the function space.
-        order : {'C', 'F'}, optional
-            Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
-        """
-        super().__init__(map_type, fspace, grid, dspace, order)
-        if not isinstance(fspace, FunctionSpace):
-            raise TypeError('function space {} is not a `FunctionSpace` '
-                            'instance.'.format(fspace))
-
-        if not isinstance(dspace, FnBase):
-            raise TypeError('data space {} is not an `FnBase` instance.'
-                            ''.format(dspace))
-
-        if fspace.field != dspace.field:
-            raise ValueError('field {} of the function space and field {} of '
-                             'the data space are not equal.'
-                             ''.format(fspace.field, dspace.field))
-
 
 class RawGridCollocation(FunctionSetMapping):
 
@@ -312,7 +281,7 @@ class RawGridCollocation(FunctionSetMapping):
         return self.range.element(values)
 
 
-class GridCollocation(RawGridCollocation, LinearFunctionSpaceMapping):
+class GridCollocation(RawGridCollocation, FunctionSetMapping):
 
     """Function evaluation at grid points.
 
@@ -342,9 +311,9 @@ class GridCollocation(RawGridCollocation, LinearFunctionSpaceMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        super().__init__(ip_fspace, grid, dspace, order)
-        LinearFunctionSpaceMapping.__init__(self, 'restriction', ip_fspace,
-                                            grid, dspace, order)
+        RawGridCollocation.__init__(self, ip_fspace, grid, dspace, order)
+        FunctionSetMapping.__init__(self, 'restriction', ip_fspace,
+                                    grid, dspace, order, linear=True)
 
 
 class RawNearestInterpolation(FunctionSetMapping):
@@ -464,7 +433,7 @@ class RawNearestInterpolation(FunctionSetMapping):
 
 
 class NearestInterpolation(RawNearestInterpolation,
-                           LinearFunctionSpaceMapping):
+                           FunctionSetMapping):
 
     """Nearest neighbor interpolation as a `LinearOperator`."""
 
@@ -522,13 +491,13 @@ class NearestInterpolation(RawNearestInterpolation,
         >>> function(0.3, 0.6)  # closest to index (1, 1) -> 3
         (3+4j)
         """
-        super().__init__(ip_fspace, grid, dspace, order)
-        LinearFunctionSpaceMapping.__init__(self, 'extension', ip_fspace,
-                                            grid, dspace, order)
+        RawNearestInterpolation.__init__(self, ip_fspace, grid, dspace, order)
+        FunctionSetMapping.__init__(self, 'extension', ip_fspace,
+                                    grid, dspace, order, linear=True)
 
 
-class LinearInterpolation(LinearOperator):
-
+class LinearInterpolation(FunctionSetMapping):
+    #TODO: this needs to be tested properly
     """Linear interpolation interpolation as a `LinearOperator`."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
@@ -553,9 +522,8 @@ class LinearInterpolation(LinearOperator):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        super().__init__(ip_fspace, grid, dspace, order)
-        LinearFunctionSpaceMapping.__init__(self, 'extension', ip_fspace,
-                                            grid, dspace, order)
+        FunctionSetMapping.__init__(self, 'extension', ip_fspace,
+                                    grid, dspace, order, linear=True)
 
     # TODO: Implement _apply()
 

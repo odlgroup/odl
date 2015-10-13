@@ -21,7 +21,7 @@ from itertools import product
 
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.pspace import ProductSpace
-from odl.operator.operator import LinearOperator
+from odl.operator.operator import Operator
 from odl.space.base_ntuples import FnBase, NtuplesBase
 from odl.discr.l2_discr import DiscreteL2
 

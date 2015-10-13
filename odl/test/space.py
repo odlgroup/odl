@@ -19,7 +19,6 @@ import warnings
 import numpy as np
 from itertools import product
 
-from odl.operator.operator import LinearOperator
 from odl.space.base_ntuples import FnBase, NtuplesBase
 from odl.discr.l2_discr import DiscreteL2
 from odl.test.examples import scalar_examples, vector_examples

@@ -42,9 +42,7 @@ from odl.set.space import LinearSpace, UniversalSpace
 from odl.set.sets import Set, UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
-           'OperatorRightScalarMult', 'OperatorPointwiseProduct',
-           'LinearOperator', 'LinearOperatorComp', 'LinearOperatorSum',
-           'LinearOperatorScalarMult')
+           'OperatorRightScalarMult', 'OperatorPointwiseProduct')
 
 
 def _bound_method(function):
@@ -216,7 +214,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     respective other is provided.
     """
 
-    def __init__(self, domain, range):
+    def __init__(self, domain, range, linear=False):
         """Initialize a new instance.
 
         Parameters
@@ -236,6 +234,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         self._domain = domain
         self._range = range
+        self._linear = bool(linear)
+
+        if self.linear:
+            if not isinstance(domain, LinearSpace):
+                raise TypeError('domain {!r} not a `LinearSpace` instance.'.format(domain))
+            if not isinstance(range, LinearSpace):
+                raise TypeError('range {!r} not a `LinearSpace` instance.'.format(range))
 
     @property
     def domain(self):
@@ -247,10 +252,29 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         """The range of this operator."""
         return self._range
 
+    @property
+    def linear(self):
+        """True if this operator is linear."""
+        return self._linear
+
+    @property
+    def adjoint(self):
+        """The operator adjoint."""
+        raise NotImplementedError('adjoint not implemented for operator {!r}.'
+                                  ''.format(self))
+
+    @property
+    def T(self):
+        """Shorthand for `adjoint`."""
+        return self.adjoint
+
     def derivative(self, point):
         """Return the operator derivative at `point`."""
-        raise NotImplementedError('derivative not implemented for operator '
-                                  '{!r}'.format(self))
+        if self.linear:
+            return self
+        else:
+            raise NotImplementedError('derivative not implemented for operator '
+                                      '{!r}'.format(self))
 
     @property
     def inverse(self):
@@ -381,7 +405,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         if isinstance(other, Operator):
             return OperatorComp(self, other)
         elif isinstance(other, Number):
-            return OperatorRightScalarMult(self, other)
+            #Left multiplication is more efficient,
+            #so we can use this in the case of linear operator.
+            if self.linear:
+                return OperatorLeftScalarMult(self, other)
+            else:
+                return OperatorRightScalarMult(self, other)
         else:
             raise TypeError('multiplicant {!r} is neither operator nor '
                             'scalar.'.format(other))
@@ -468,7 +497,7 @@ class OperatorSum(Operator):
     """
 
     # pylint: disable=abstract-method
-    def __init__(self, op1, op2, tmp=None):
+    def __init__(self, op1, op2, tmp_ran=None, tmp_dom=None):
         """Initialize a new `OperatorSum` instance.
 
         Parameters
@@ -478,9 +507,12 @@ class OperatorSum(Operator):
         op2 : `Operator`
             The second summand. Must have the same `domain` and `range` as
             `op1`.
-        tmp : range element, optional
+        tmp_ran : range element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
+        tmp_dom : domain element, optional
+            Used to avoid the creation of a temporary when applying the
+            operator adjoint.
         """
         if op1.range != op2.range:
             raise TypeError('operator ranges {!r} and {!r} do not match.'
@@ -494,14 +526,19 @@ class OperatorSum(Operator):
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
 
-        if tmp is not None and tmp not in op1.domain:
-            raise TypeError('temporary {!r} not an element of the operator '
+        if tmp_ran is not None and tmp_ran not in op1.range:
+            raise TypeError('tmp_ran {!r} not an element of the operator '
+                            'range {!r}.'.format(tmp, op1.range))
+
+        if tmp_dom is not None and tmp_ran not in op1.domain:
+            raise TypeError('tmp_dom {!r} not an element of the operator '
                             'domain {!r}.'.format(tmp, op1.domain))
 
-        super().__init__(op1.domain, op1.range)
+        super().__init__(op1.domain, op1.range, linear=op1.linear and op2.linear)
         self._op1 = op1
         self._op2 = op2
-        self._tmp = tmp
+        self._tmp_ran = tmp_ran
+        self._tmp_dom = tmp_dom
 
     def _apply(self, inp, outp):
         """`op._apply(inp, outp) <==> outp <-- op(inp)`.
@@ -519,7 +556,7 @@ class OperatorSum(Operator):
         Rn(3).element([2.0, 4.0, 6.0])
         """
         # pylint: disable=protected-access
-        tmp = self._tmp if self._tmp is not None else self.range.element()
+        tmp = self._tmp_ran if self._tmp_ran is not None else self.range.element()
         self._op1._apply(inp, outp)
         self._op2._apply(inp, tmp)
         outp += tmp
@@ -550,6 +587,22 @@ class OperatorSum(Operator):
         """
         return LinearOperatorSum(self._op1.derivative(point),
                                  self._op2.derivative(point))
+
+    @property
+    def adjoint(self):
+        """The operator adjoint.
+
+        The adjoint of the operator sum is the sum of the operator
+        adjoints:
+
+        `OperatorSum(op1, op2).adjoint ==
+        `OperatorSum(op1.adjoint, op2.adjoint)`
+        """
+        if not self.linear:
+            raise NotImplementedError('Nonlinear operators have no adjoint')
+
+        return OperatorSum(self._op1.adjoint, self._op2.adjoint,
+                           self._tmp_dom, self._tmp_ran)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -595,7 +648,7 @@ class OperatorComp(Operator):
             raise TypeError('temporary {!r} not an element of the left '
                             'operator domain {!r}.'.format(tmp, left.domain))
 
-        super().__init__(right.domain, left.range)
+        super().__init__(right.domain, left.range, linear=left.linear and right.linear)
         self._left = left
         self._right = right
         self._tmp = tmp
@@ -640,6 +693,22 @@ class OperatorComp(Operator):
 
         return LinearOperatorComp(left_deriv, right_deriv)
 
+    @property
+    def adjoint(self):
+        """The operator adjoint.
+
+        The adjoint of the operator composition is the composition of
+        the operator adjoints in reverse order:
+
+        `OperatorComp(left, right).adjoint ==
+        `OperatorComp(right.adjoint, left.adjoint)`
+        """
+        if not self.linear:
+            raise NotImplementedError('Nonlinear operators have no adjoint')
+
+        return OperatorComp(self._right.adjoint, self._left.adjoint,
+                            self._tmp)
+
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
         return 'OperatorComp({!r}, {!r})'.format(self._left, self._right)
@@ -683,7 +752,7 @@ class OperatorPointwiseProduct(Operator):
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
 
-        super().__init__(op1.domain, op1.range)
+        super().__init__(op1.domain, op1.range, linear=False)
         self._op1 = op1
         self._op2 = op2
 
@@ -740,7 +809,7 @@ class OperatorLeftScalarMult(Operator):
                             'operator range {!r}.'
                             ''.format(scalar, op.range.field, op.range))
 
-        super().__init__(op.domain, op.range)
+        super().__init__(op.domain, op.range, linear=op.linear)
         self._op = op
         self._scalar = scalar
 
@@ -768,7 +837,8 @@ class OperatorLeftScalarMult(Operator):
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
-        return OperatorRightScalarMult(self._op.inverse, 1.0/self._scalar)
+        return OperatorLeftScalarMult(self._op.inverse, 
+                                      1.0/self._scalar)
 
     def derivative(self, point):
         """Return the derivative at 'point'.
@@ -782,8 +852,25 @@ class OperatorLeftScalarMult(Operator):
         --------
         LinearOperatorScalarMult: the result
         """
-        return LinearOperatorScalarMult(self._op.derivative(point),
-                                        self._scalar)
+        return OperatorLeftScalarMult(self._op.derivative(point),
+                                      self._scalar)
+
+    @property
+    def adjoint(self):
+        """The operator adjoint.
+
+        The adjoint of the operator scalar multiplication is the
+        scalar multiplication of the operator adjoint:
+
+        `OperatorLeftScalarMult(op, scalar).adjoint ==
+        `OperatorLeftScalarMult(op.adjoint, scalar)`
+        """
+
+        if not self.linear:
+            raise NotImplementedError('Nonlinear operators have no adjoint')
+        
+        # TODO: take conj(scalar) if complex
+        return OperatorRightScalarMult(self._op.adjoint, self._scalar)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -832,7 +919,7 @@ class OperatorRightScalarMult(Operator):
             raise TypeError('temporary {!r} not an element of the '
                             'operator domain {!r}.'.format(tmp, op.domain))
 
-        super().__init__(op.domain, op.range)
+        super().__init__(op.domain, op.range, op.linear)
         self._op = op
         self._scalar = scalar
         self._tmp = tmp
@@ -874,8 +961,25 @@ class OperatorRightScalarMult(Operator):
         LinearOperatorScalarMult(op.derivative(scalar * point),
         scalar)`
         """
-        return LinearOperatorScalarMult(
-            self._op.derivative(self._scalar * point), self._scalar)
+        return OperatorLeftScalarMult(self._op.derivative(self._scalar * point), 
+                                      self._scalar)
+
+    @property
+    def adjoint(self):
+        """The operator adjoint.
+
+        The adjoint of the operator scalar multiplication is the
+        scalar multiplication of the operator adjoint:
+
+        `OperatorLeftScalarMult(op, scalar).adjoint ==
+        `OperatorLeftScalarMult(op.adjoint, scalar)`
+        """
+
+        if not self.linear:
+            raise NotImplementedError('Nonlinear operators have no adjoint')
+        
+        # TODO: take conj(scalar) if complex
+        return OperatorRightScalarMult(self._op.adjoint, self._scalar)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -887,272 +991,8 @@ class OperatorRightScalarMult(Operator):
         return '{} * {}'.format(self._op, self._scalar)
 
 
-class LinearOperator(Operator):
-
-    """Abstract linear operators.
-
-    A `LinearOperator` is an `Operator` which satisfies the linearity
-    relation
-
-    `op(scalar * x + y) == scalar * op(x) + op(y)`
-
-    for all scalars and all vectors `x` and `y`. A `LinearOperator`
-    can only be defined if `domain` and `range` are both `LinearSpace`
-    instances.
-    """
-
-    def __init__(self, domain, range):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        dom : `LinearSpace`
-            The domain of this operator, i.e., the space of elements to
-            which this operator can be applied
-
-        ran : `LinearSpace`
-            The range of this operator, i.e., the space this operator
-            maps to
-        """
-        super().__init__(domain, range)
-        if not isinstance(self.domain, LinearSpace):
-            raise TypeError('domain {!r} not a `LinearSpace` instance.'
-                            ''.format(self.domain))
-        if not isinstance(self.range, LinearSpace):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
-                            ''.format(self.range))
-
-    @property
-    def adjoint(self):
-        """The operator adjoint."""
-        raise NotImplementedError('adjoint not implemented for operator {!r}.'
-                                  ''.format(self))
-
-    # Implicitly defined operators
-    @property
-    def T(self):
-        """Shorthand for `adjoint`."""
-        return self.adjoint
-
-    def derivative(self, point):
-        """Return the operator derivative at 'point'.
-
-        For a `LinearOperator`, this is equivalent to `op(point)`, i.e.
-        a linear operator is its own derivative.
-        """
-        return self
-
-    def __add__(self, other):
-        """`op.__add__(other) <==> op + other`.
-
-        If `other` is a `LinearOperator`, a `LinearOperatorSum` is
-        returned.
-        """
-        if isinstance(other, LinearOperator):
-            return LinearOperatorSum(self, other)
-        else:
-            return super().__add__(other)
-
-    def __mul__(self, other):
-        """`op.__mul__(other) <==> op * other`.
-
-        If `other` is a scalar, this is equivalent to
-        `op.__rmul__(other)`.
-        """
-        if isinstance(other, LinearOperator):
-            return LinearOperatorComp(self, other)
-        elif isinstance(other, Operator):
-            return OperatorComp(self, other)
-        elif isinstance(other, Number):
-            return LinearOperatorScalarMult(self, other)
-        else:
-            raise TypeError('multiplicant {!r} is neither operator nor '
-                            'scalar.'.format(other))
-
-    def __rmul__(self, other):
-        """`op.__rmul__(other) <==> other * op`.
-
-        Equivalent to `op.__mul__(other)`.
-        """
-        if isinstance(other, LinearOperator):
-            return LinearOperatorComp(other, self)
-        elif isinstance(other, Operator):
-            return OperatorComp(self, other)
-        elif isinstance(other, Number):
-            return LinearOperatorScalarMult(self, other)
-        else:
-            raise TypeError('multiplicant {!r} is neither operator nor '
-                            'scalar.'.format(other))
-
-
-class SelfAdjointOperator(LinearOperator):
-
-    """Abstract self-adjoint operator.
-
-    A self-adjoint operator is a `LinearOperator` with
-    `op.adjoint == op`. This implies in particular that
-    `op.domain == op.range`.
-    """
-
-    # pylint: disable=abstract-method
-    @property
-    def adjoint(self):
-        """The operator adjoint, equal to the operator itself."""
-        return self
-
-    @property
-    def range(self):
-        """The operator range, equal to its `domain`."""
-        return self.domain
-
-
-class LinearOperatorSum(OperatorSum, LinearOperator):
-
-    """Expression type for the sum of operators.
-
-    `LinearOperatorSum(op1, op2) <==> (x --> op1(x) + op2(x))`
-    """
-
-    # pylint: disable=abstract-method
-    def __init__(self, op1, op2, tmp_ran=None, tmp_dom=None):
-        """Initialize a new `LinearOperatorSum` instance.
-
-        Parameters
-        ----------
-
-        op1 : `LinearOperator`
-            The first summand
-        op2 : `LinearOperator`
-            The second summand. Must have the same `domain` and `range` as
-            `op1`.
-        tmp_ran : range element, optional
-            Used to avoid the creation of a temporary when applying the
-            operator.
-        tmp_dom : domain element, optional
-            Used to avoid the creation of a temporary when applying the
-            operator adjoint.
-        """
-        if not isinstance(op1, LinearOperator):
-            raise TypeError('first operator {!r} is not a LinearOperator '
-                            'instance.'.format(op1))
-
-        if not isinstance(op2, LinearOperator):
-            raise TypeError('second operator {!r} is not a LinearOperator '
-                            'instance'.format(op2))
-
-        if tmp_dom is not None and tmp_dom not in op1.domain:
-            raise TypeError('domain temporary {!r} not an element of the '
-                            'operator domain {!r}.'
-                            ''.format(tmp_dom, op1.domain))
-
-        super().__init__(op1, op2, tmp_ran)
-        self._tmp_dom = tmp_dom
-
-    @property
-    def adjoint(self):
-        """The operator adjoint.
-
-        The adjoint of the operator sum is the sum of the operator
-        adjoints:
-
-        `LinearOperatorSum(op1, op2).adjoint ==
-        `LinearOperatorSum(op1.adjoint, op2.adjoint)`
-        """
-        return LinearOperatorSum(self._op1.adjoint, self._op2.adjoint,
-                                 self._tmp_dom, self._tmp)
-
-
-class LinearOperatorComp(OperatorComp, LinearOperator):
-
-    """Expression type for the composition of linear operators.
-
-    `LinearOperatorComp(left, right) <==> (x --> left(right(x)))`
-
-    The composition is only well-defined if
-    `left.domain == right.range`.
-    """
-
-    def __init__(self, left, right, tmp=None):
-        """Initialize a new `LinearOperatorComp` instance.
-
-        Parameters
-        ----------
-        left : `LinearOperator`
-            The left ("outer") operator
-        right : `LinearOperator`
-            The right ("inner") operator. Its range must coincide with the
-            `domain` of `left`.
-        tmp : `right.range` element, optional
-            Used to avoid the creation of a temporary when applying the
-            operator.
-        """
-        if not isinstance(left, LinearOperator):
-            raise TypeError('left operator {!r} is not a LinearOperator '
-                            'instance.'.format(left))
-
-        if not isinstance(right, LinearOperator):
-            raise TypeError('right operator {!r} is not a LinearOperator '
-                            'instance'.format(right))
-
-        super().__init__(left, right, tmp)
-
-    @property
-    def adjoint(self):
-        """The operator adjoint.
-
-        The adjoint of the operator composition is the composition of
-        the operator adjoints in reverse order:
-
-        `LinearOperatorComp(left, right).adjoint ==
-        `LinearOperatorComp(right.adjoint, left.adjoint)`
-        """
-        return LinearOperatorComp(self._right.adjoint, self._left.adjoint,
-                                  self._tmp)
-
-
-class LinearOperatorScalarMult(OperatorLeftScalarMult, LinearOperator):
-
-    """Expression type for the linear operator scalar multiplication.
-
-    `LinearOperatorScalarMult(op, scalar) <==> (x --> scalar * op(x))`
-
-    For linear operators, left and right scalar multiplications are
-    equal.
-    """
-
-    def __init__(self, op, scalar):
-        """Initialize a new `OperatorLeftScalarMult` instance.
-
-        Parameters
-        ----------
-        op : `Operator`
-            The `domain` of `op` must be a `LinearSpace`.
-        scalar : `op.range.field` element
-            A real or complex number, depending on the field of
-            `op.domain`.
-        """
-        if not isinstance(op, LinearOperator):
-            raise TypeError('operator {!r} is not a LinearOperator instance.'
-                            ''.format(op))
-
-        super().__init__(op, scalar)
-
-    @property
-    def adjoint(self):
-        """The operator adjoint.
-
-        The adjoint of the operator scalar multiplication is the
-        scalar multiplication of the operator adjoint:
-
-        `LinearOperatorScalarMult(op, scalar).adjoint ==
-        `LinearOperatorScalarMult(op.adjoint, scalar)`
-        """
-        # TODO: take conj(scalar) if complex
-        return LinearOperatorScalarMult(self._op.adjoint, self._scalar)
-
-
 def operator(call=None, apply=None, inv=None, deriv=None,
-             dom=UniversalSet(), ran=UniversalSet()):
+             dom=UniversalSet(), ran=UniversalSet(), linear=False):
     """Create a simple operator.
 
     Mostly intended for simple prototyping rather than final use.
@@ -1180,6 +1020,9 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     ran : `Set`, optional
         The range of the operator
         Default: `UniversalSet`
+    linear : `boolean`, optional
+        True if the operator is linear
+        Default: False
 
     Returns
     -------
@@ -1213,77 +1056,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         attrs['_apply'] = _bound_method(apply)
 
     simple_operator = _OperatorMeta('SimpleOperator', (Operator,), attrs)
-    return simple_operator(dom, ran)
-
-
-def linear_operator(call=None, apply=None, inv=None, adj=None,
-                    dom=UniversalSpace(), ran=UniversalSpace()):
-    """Create a simple linear operator.
-
-    Mostly intended for simple prototyping rather than final use.
-
-    Parameters
-    ----------
-    call : callable
-        A function taking one argument and returning the result.
-        It will be used for the operator call pattern
-        `outp = op(inp)`.
-    apply : callable
-        A function taking two arguments.
-        It will be used for the operator apply pattern
-        `op._apply(inp, outp) <==> outp <-- op(inp)`. Return value
-        is assumed to be `None` and is ignored.
-    inv : `LinearOperator`, optional
-        The operator inverse
-        Default: `None`
-    adj : `LinearOperator`, optional
-        The operator adjoint
-        Default: `None`
-    dom : `LinearSpace`, optional
-        The domain of the operator
-        Default: `UniversalSpace`
-    ran : `Set`, optional
-        The range of the operator
-        Default: `UniversalSpace`
-
-    Returns
-    -------
-    op : `SimpleLinearOperator`
-        An operator with the provided attributes and methods.
-        `SimpleLinearOperator` is a subclass of `LinearOperator`.
-
-    Notes
-    -----
-    It suffices to supply one of the functions `call` and `apply`.
-    If `dom` is a `LinearSpace`, a default implementation of the
-    respective other method is automatically provided; if not, a
-    `NotImplementedError` is raised when the other method is called.
-
-    Examples
-    --------
-    >>> A = linear_operator(lambda x: 3*x)
-    >>> A(5)
-    15
-    """
-    # FIXME: This function is inconsistent witht the LinearOperator
-    # class requirements (domain and range). Either fix this or delete
-    # the function!
-    if call is None and apply is None:
-        raise ValueError("Need to supply at least one of call or apply")
-
-    attrs = {'inverse': inv, 'adjoint': adj, 'domain': dom, 'range': ran}
-
-    if call is not None:
-        attrs['_call'] = _bound_method(call)
-
-    if apply is not None:
-        attrs['_apply'] = _bound_method(apply)
-
-    simple_linear_operator = _OperatorMeta('SimpleLinearOperator',
-                                           (LinearOperator,),
-                                           attrs)
-    return simple_linear_operator(dom, ran)
-
+    return simple_operator(dom, ran, linear)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

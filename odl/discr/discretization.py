@@ -30,7 +30,7 @@ from abc import ABCMeta
 
 # ODL
 from odl.util.utility import arraynd_repr, arraynd_str
-from odl.operator.operator import Operator, LinearOperator
+from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.ntuples import Ntuples, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
@@ -356,11 +356,11 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
             Data space providing containers for the values of a
             discretized object. Its `field` attribute must be the same
             as `uspace.field`.
-        restr : `LinearOperator`, optional
+        restr : `Operator`, linear, optional
             Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy `restr.domain == uspace`,
             `restr.range == dspace`
-        ext : `LinearOperator`, optional
+        ext : `Operator`, linear, optional
             Operator mapping a `dspace` element to a `uspace` element.
             Must satisfy `ext.domain == dspace`,
             `ext.range == uspace`
@@ -382,14 +382,22 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
                              ''.format(uspace.field, dspace.field))
 
         if restr is not None:
-            if not isinstance(restr, LinearOperator):
+            if not isinstance(restr, Operator):
                 raise TypeError('restriction operator {} is not a '
-                                '`LinearOperator` instance.'.format(restr))
+                                '`Operator` instance.'.format(restr))
+
+            if not restr.linear:
+                raise TypeError('restriction operator {} is not '
+                                'linear'.format(restr))
 
         if ext is not None:
-            if not isinstance(ext, LinearOperator):
+            if not isinstance(ext, Operator):
                 raise TypeError('extension operator {} is not a '
-                                '`LinearOperator` instance.'.format(ext))
+                                '`Operator` instance.'.format(ext))
+
+            if not ext.linear:
+                raise TypeError('extension operator {} is not '
+                                'linear'.format(ext))
 
     # Pass-through attributes of the wrapped `dspace`
     def zero(self):

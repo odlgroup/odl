@@ -24,7 +24,7 @@ standard_library.install_aliases()
 from builtins import super
 
 # ODL imports
-from odl.operator.operator import LinearOperator, SelfAdjointOperator
+from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 from odl.set.space import LinearSpace
 
@@ -33,7 +33,7 @@ __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator')
 
 
-class ScalingOperator(SelfAdjointOperator):
+class ScalingOperator(Operator):
 
     """Operator of multiplication with a scalar."""
 
@@ -52,7 +52,7 @@ class ScalingOperator(SelfAdjointOperator):
             raise TypeError('space {!r} not a LinearSpace instance.'
                             ''.format(space))
 
-        super().__init__(space, space)
+        super().__init__(space, space, linear=True)
         self._space = space
         self._scal = float(scalar)
 
@@ -129,6 +129,12 @@ class ScalingOperator(SelfAdjointOperator):
                                     'scalar==0')
         return ScalingOperator(self._space, 1.0/self._scal)
 
+    @property
+    def adjoint(self):
+        """ This operator is self adjoint
+        """
+        return self
+
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
         return 'ScalingOperator({!r}, {!r})'.format(self._space, self._scal)
@@ -184,7 +190,7 @@ class IdentityOperator(ScalingOperator):
         return "I"
 
 
-class LinCombOperator(LinearOperator):
+class LinCombOperator(Operator):
 
     """Operator mapping two space elements to a linear combination.
 
@@ -207,7 +213,7 @@ class LinCombOperator(LinearOperator):
             Scalar to multiply inp[1] with
         """
         domain = ProductSpace(space, space)
-        super().__init__(domain, space)
+        super().__init__(domain, space, linear=True)
         self.a = a
         self.b = b
 
@@ -247,7 +253,7 @@ class LinCombOperator(LinearOperator):
         return "{}*x + {}*y".format(self.a, self.b)
 
 
-class MultiplyOperator(LinearOperator):
+class MultiplyOperator(Operator):
 
     """Operator multiplying two elements.
 
