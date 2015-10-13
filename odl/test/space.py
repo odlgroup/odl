@@ -112,7 +112,7 @@ class SpaceTest(object):
                 for [n_y, y] in vector_examples(self.space):
                     ok = _apprimately_equal(a * (x + y), a * x + a * y)
                     if not ok:
-                        print('failed with x={:25s}, y={:25s}, a={}'.format(n_x, x_y, a))
+                        print('failed with x={:25s}, y={:25s}, a={}'.format(n_x, n_y, a))
 
     def _distributivity_of_mult_scalar(self):
         print('\ntesting Distributivity of multiplication wrt scalar add, (a + b) * x = a * x + b * x\n')
@@ -168,7 +168,7 @@ class SpaceTest(object):
         for [name, vec] in vector_examples(self.space):
             norm = vec.norm()
 
-            if norm < 0:
+            if norm < 0 or (norm == 0 and name != 'Zero'):
                 print('x={:25s} : ||x||={}'
                         ''.format(name, error))
                 num_failed += 1

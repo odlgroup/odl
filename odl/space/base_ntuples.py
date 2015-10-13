@@ -315,7 +315,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                                              array1d_repr(self))
 
 
-class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
+class FnBase(NtuplesBase, LinearSpace):
 
     """Base class for :math:`F^n` independent of implementation."""
 
@@ -355,14 +355,16 @@ class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
     def _multiply(self, z, x1, x2):
         """The entry-wise product of two vectors, assigned to `z`."""
 
-    class Vector(with_metaclass(ABCMeta, NtuplesBase.Vector,
-                                LinearSpace.Vector)):
+    class Vector(NtuplesBase.Vector, LinearSpace.Vector):
 
         """Abstract class for representation of :math:`F^n` vectors.
 
         Defines abstract attributes and concrete ones which are
         independent of data representation.
         """
+
+        __eq__ = LinearSpace.Vector.__eq__
+        copy = LinearSpace.Vector.copy
 
 
 class _FnWeightingBase(with_metaclass(ABCMeta, object)):

@@ -35,15 +35,14 @@ with an optimized version.
 """
 
 
-class SimpleRn(odl.LinearSpace):
+class SimpleRn(odl.space.base_ntuples.FnBase):
     """The real space R^n, non-optimized implmentation."""
 
-    def __init__(self, dim):
-        if not isinstance(n, Integral) or dim < 1:
-            raise TypeError('dimension {!r} not a positive integer.'
-                            ''.format(dim))
-        self._dim = dim
-        self._field = odl.RealNumbers()
+    def __init__(self, size):
+        super().__init__(size, np.float)
+
+    def zero(self):
+        return self.element(np.zeros(self.size))
 
     def _lincomb(self, z, a, x, b, y):
         z.data[:] = a * x.data + b * y.data
@@ -56,9 +55,9 @@ class SimpleRn(odl.LinearSpace):
 
     def element(self, *args, **kwargs):
         if not args and not kwargs:
-            return self.element(np.empty(self.dim))
+            return self.element(np.empty(self.size))
         if isinstance(args[0], np.ndarray):
-            if args[0].shape == (self.dim,):
+            if args[0].shape == (self.size,):
                 return SimpleRn.Vector(self, args[0])
             else:
                 raise ValueError('input array {} is of shape {}, expected '
@@ -69,25 +68,10 @@ class SimpleRn(odl.LinearSpace):
                 *args, **kwargs).astype(np.float64, copy=False))
         return self.element(np.empty(self.dim, dtype=np.float64))
 
-    @property
-    def field(self):
-        return self._field
-
-    @property
-    def dim(self):
-        """The dimension of this space."""
-        return self._dim
-
-    def __eq__(self, other):
-        return type(self) == type(other) and self.dim == other.dim
-
-    class Vector(odl.LinearSpace.Vector):
+    class Vector(odl.space.base_ntuples.FnBase.Vector):
         def __init__(self, space, data):
             super().__init__(space)
             self.data = data
-
-        def __len__(self):
-            return self.space._n
 
         def __getitem__(self, index):
             return self.data.__getitem__(index)
@@ -95,6 +79,11 @@ class SimpleRn(odl.LinearSpace):
         def __setitem__(self, index, value):
             return self.data.__setitem__(index, value)
 
+        def asarray(self, *args):
+            return self.data(*args)
+
+r5 = SimpleRn(5)
+odl.test.SpaceTest(r5).run_tests()
 
 # Do some tests to compare
 n = 10**7
@@ -103,8 +92,6 @@ iterations = 10
 
 optX = odl.Rn(n)
 simpleX = SimpleRn(n)
-if odl.CUDA_AVAILABLE:
-    cuX = odl.CudaRn(n)
 
 x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
 ox, oy, oz = (optX.element(x.copy()), optX.element(y.copy()),
@@ -112,6 +99,7 @@ ox, oy, oz = (optX.element(x.copy()), optX.element(y.copy()),
 sx, sy, sz = (simpleX.element(x.copy()), simpleX.element(y.copy()),
               simpleX.element(z.copy()))
 if odl.CUDA_AVAILABLE:
+    cuX = odl.CudaRn(n)
     cx, cy, cz = (cuX.element(x.copy()), cuX.element(y.copy()),
                   cuX.element(z.copy()))
 
