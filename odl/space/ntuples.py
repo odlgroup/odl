@@ -65,7 +65,7 @@ import platform
 from odl.operator.operator import LinearOperator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.space.base_ntuples import NtuplesBase, _FnWeightingBase
+from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
 from odl.util.utility import dtype_repr
 from odl.util.utility import is_real_dtype, is_complex_dtype
 
@@ -440,56 +440,6 @@ class Ntuples(NtuplesBase):
                 return self.data.__setitem__(indices, values.data)
             else:
                 return self.data.__setitem__(indices, values)
-
-
-class FnBase(with_metaclass(ABCMeta, NtuplesBase, LinearSpace)):
-
-    """Base class for :math:`F^n` independent of implementation."""
-
-    def __init__(self, size, dtype):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        size : int
-            The number of dimensions of the space
-        dtype : object
-            The data type of the storage array. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only scalar data types (numbers) are allowed.
-        """
-        super().__init__(size, dtype)
-        if not np.issubsctype(self._dtype, np.number):
-            raise TypeError('{} not a scalar data type.'.format(dtype))
-
-        if is_real_dtype(self._dtype):
-            self._field = RealNumbers()
-        else:
-            self._field = ComplexNumbers()
-
-    @abstractmethod
-    def zero(self):
-        """Create a vector of zeros."""
-
-    @property
-    def field(self):
-        """The field of this space."""
-        return self._field
-
-    @abstractmethod
-    def _multiply(self, z, x1, x2):
-        """The entry-wise product of two vectors, assigned to `z`."""
-
-    class Vector(with_metaclass(ABCMeta, NtuplesBase.Vector,
-                                LinearSpace.Vector)):
-
-        """Abstract class for representation of :math:`F^n` vectors.
-
-        Defines abstract attributes and concrete ones which are
-        independent of data representation.
-        """
 
 
 def _blas_is_applicable(*args):
