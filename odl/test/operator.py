@@ -23,123 +23,11 @@ from odl.set.pspace import ProductSpace
 from odl.operator.operator import LinearOperator
 from odl.space.base_ntuples import FnBase, NtuplesBase
 from odl.discr.l2_discr import DiscreteL2
+from odl.test.examples import scalar_examples, vector_examples
 
-from math import floor, log10
+__all__ = ('OperatorTest',)
 
-__all__ = ('vector_examples', 'OpeartorTest')
-
-
-def _arg_shape(*args):
-    if len(args) == 1:
-        return args[0].shape
-    else:
-        return np.broadcast(*args).shape
-
-
-def _round_sig(x, sig=3):
-    if x == 0:
-        return x
-    else:
-        return round(x, sig-int(floor(log10(abs(x))))-1)
-
-
-def vector_examples(space):
-    # All spaces should yield the zero element
-    yield ('Zero', space.zero())
-
-    if isinstance(space, ProductSpace):
-        for examples in product(*[vector_examples(spc) for spc in space]):
-            name = ', '.join(name for name, _ in examples)
-            vector = space.element([vec for _, vec in examples])
-            yield (name, space.element(vector))
-
-    elif isinstance(space, DiscreteL2):
-        uspace = space.uspace
-
-        # Get the points and calculate some statistics on them
-        points = space.points()
-        mins = space.grid.min()
-        maxs = space.grid.max()
-        means = (maxs+mins)/2.0
-        stds = np.apply_along_axis(np.std, axis=0, arr=points)
-
-        # Indicator function in first dimension
-        def _step_fun(*args):
-            z = np.zeros(_arg_shape(*args))
-            z[:space.grid.shape[0] // 2, ...] = 1
-            return z
-
-        yield ('Step', space.element(uspace.element(_step_fun)))
-
-        # Indicator function on hypercube
-        def _cube_fun(*args):
-            inside = np.ones(_arg_shape(*args), dtype=bool)
-            for points, mean, std in zip(args, means, stds):
-                inside = np.logical_and(inside, points < mean+std)
-                inside = np.logical_and(inside, mean-std < points)
-
-            return inside.astype(space.dtype)
-
-        yield ('Cube', space.element(uspace.element(_cube_fun)))
-
-        # Indicator function on hypersphere
-        def _sphere_fun(*args):
-            r = np.zeros(_arg_shape(*args))
-
-            for points, mean, std in zip(args, means, stds):
-                r += (points - mean)**2 / std**2
-            return (r < 1.0).astype(space.dtype)
-
-        yield ('Sphere', space.element(uspace.element(_sphere_fun)))
-
-        # Gaussian function
-        def _gaussian_fun(*args):
-            r2 = np.zeros(_arg_shape(*args))
-
-            for points, mean, std in zip(args, means, stds):
-                r2 += (points - mean)**2 / ((std/2)**2)
-
-            return np.exp(-r2)
-
-        yield ('Gaussian', space.element(uspace.element(_gaussian_fun)))
-
-        # Gradient in each dimensions
-        for dim in range(space.grid.ndim):
-            def _gradient_fun(*args):
-                s = np.zeros(_arg_shape(*args))
-                s += (args[dim]-mins[dim]) / (maxs[dim]-mins[dim])
-
-                return s
-
-            yield ('grad {}'.format(dim),
-                   space.element(uspace.element(_gradient_fun)))
-
-        # Gradient in all dimensions
-        def _all_gradient_fun(*args):
-            s = np.zeros(_arg_shape(*args))
-
-            for points, minv, maxv in zip(args, mins, maxs):
-                s += (points - minv) / (maxv-minv)
-
-            return s
-
-        yield ('Grad all', space.element(uspace.element(_all_gradient_fun)))
-
-    elif isinstance(space, FnBase):
-        yield ('Linspaced', space.element(np.linspace(0, 1, space.dim)))
-
-        yield ('Ones', space.element(np.ones(space.dim)))
-
-        yield ('Random noise', space.element(np.random.rand(space.dim)))
-
-        yield ('Normally distributed random noise',
-               space.element(np.random.randn(space.dim)))
-
-    else:
-        warnings.warn('No known examples in this space')
-
-
-class OpeartorTest(object):
+class OperatorTest(object):
     def __init__(self, operator, operator_norm=None):
         self.operator = operator
         self.operator_norm = operator_norm
@@ -319,7 +207,7 @@ class OpeartorTest(object):
 
         for [name_x, x] in vector_examples(self.operator.domain):
             opx = self.operator(x)
-            for scale in [-5.0, -0.5, 0.0, 0.5, 5.0, 100.0]:
+            for scale in scalar_examples(self.operator.domain):
                 scaled_opx = self.operator(scale*x)
 
                 denom = self.operator_norm * scale * x.norm()
@@ -373,6 +261,9 @@ class OpeartorTest(object):
             self.adjoint()
         else:
             self.derivative()
+            
+    def __str__(self):
+        return 'OperatorTest({})'.format(self.operator)
 
     def __repr__(self):
         return 'OperatorTest({!r})'.format(self.operator)

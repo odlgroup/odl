@@ -32,6 +32,7 @@ from textwrap import dedent
 # ODL imports
 from odl import Rn, Cn, Fn
 from odl.space.ntuples import _FnConstWeighting, _FnMatrixWeighting
+from odl.test.space import SpaceTest
 from odl.util.testutils import ODLTestCase
 
 # TODO: add tests for:
