@@ -283,6 +283,14 @@ class GetSetTest(ODLTestCase):
         with self.assertRaises(ValueError):
             xd[:] = [1, 2, 3, 4]
 
+class NumpyInteractionTest(ODLTestCase):
+    def test_multiply_by_scalar(self):
+        r3 = Rn(3)
+        x = r3.zero()
+        self.assertIsInstance(x * 1.0, Rn.Vector)
+        self.assertIsInstance(x * np.float32(1.0), Rn.Vector)
+        self.assertIsInstance(1.0 * x, r3.Vector)
+        self.assertIsInstance(np.float32(1.0) * x, Rn.Vector)
 
 class FnMatrixWeightingTest(ODLTestCase):
     @staticmethod
@@ -680,13 +688,8 @@ class FnConstWeightingTest(ODLTestCase):
         constant = 1.5
         w_const = _FnConstWeighting(constant)
 
-        print('x: ', x)
-        print('y: ', y)
-        print('x-y: ', x-y)
         result_const = w_const.dist(x, y)
         true_result_const = np.sqrt(constant * np.dot(xarr-yarr, xarr-yarr))
-        print('dist(x, y): ', result_const)
-        print('true dist(x, y): ', true_result_const)
 
         self.assertAlmostEquals(result_const, true_result_const)
 
