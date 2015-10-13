@@ -31,7 +31,8 @@ from abc import ABCMeta
 # ODL
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator, LinearOperator
-from odl.space.base_ntuples import NtuplesBase, FnBase, Ntuples, Rn, Cn
+from odl.space.base_ntuples import NtuplesBase, FnBase
+from odl.space.ntuples import Ntuples, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
