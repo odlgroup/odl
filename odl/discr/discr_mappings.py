@@ -34,7 +34,7 @@ from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 # ODL imports
 from odl.discr.grid import TensorGrid
 from odl.operator.operator import Operator, LinearOperator
-from odl.space.ntuples import NtuplesBase, FnBase
+from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.set.domain import IntervalProd
 
