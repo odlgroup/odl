@@ -137,9 +137,11 @@ class OperatorTest(object):
 
         if domain_range_ok:
             print('Domain and range of adjoint is OK.')
+        else:
+            print('Domain and range of adjoint not OK exiting.')
+            return
 
         self._adjoint_definition()
-
         self._adjoint_of_adjoint()
 
     def derivative(self, step=0.0001):

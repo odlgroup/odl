@@ -19,7 +19,6 @@ import warnings
 import numpy as np
 from itertools import product
 
-from odl.set.pspace import ProductSpace
 from odl.operator.operator import LinearOperator
 from odl.space.base_ntuples import FnBase, NtuplesBase
 from odl.discr.l2_discr import DiscreteL2
@@ -27,13 +26,143 @@ from odl.test.examples import scalar_examples, vector_examples
 
 __all__ = ('SpaceTest',)
 
+def _apprimately_equal(x, y):
+    if x.space != y.space:
+        return False
+
+    if x is y:
+        return True
+
+    try:
+        return x.dist(y) < 0.0001
+    except NotImplementedError:
+        try:
+            return x == y
+        except NotImplementedError:
+            return False
+
 class SpaceTest(object):
     def __init__(self, space):
         self.space = space
 
+    def _associativity_of_addition(self):
+        print('\ntesting Associativity of addition, x + (y + z) = (x + y) + z\n')
+
+        for [n_x, x] in vector_examples(self.space):
+            for [n_y, y] in vector_examples(self.space):
+                for [n_z, z] in vector_examples(self.space):
+                    ok = _apprimately_equal(x + (y + z), (x + y) + z)
+                    if not ok:
+                        print('failed with x={:25s} y={:25s} z={:25s}'.format(n_x, n_y, n_z))
+
+    def _commutativity_of_addition(self):
+        print('\ntesting Commutativity of addition, x + y = y + x\n')
+
+        for [n_x, x] in vector_examples(self.space):
+            for [n_y, y] in vector_examples(self.space):
+                ok = _apprimately_equal(x + y, y + x)
+                if not ok:
+                    print('failed with x={:25s} y={:25s}'.format(n_x, n_y))
+
+    def _identity_of_addition(self):
+        print('\ntesting Identity element of addition, x + 0 = x\n')
+
+        try:
+            zero = self.space.zero()
+        except:
+            print('*** SPACE HAS NO ZERO VECTOR ***')
+
+        for [n_x, x] in vector_examples(self.space):
+            ok = _apprimately_equal(x + zero, x)
+            if not ok:
+                print('failed with x={:25s}'.format(n_x))
+
+    def _inverse_element_of_addition(self):
+        print('\ntesting Inverse element of addition, x + (-x) = 0\n')
+        zero = self.space.zero()
+
+        for [n_x, x] in vector_examples(self.space):
+            ok = _apprimately_equal(x + (-x), zero)
+            if not ok:
+                print('failed with x={:25s}'.format(n_x))
+
+    def _commutativity_of_scalar_mult(self):
+        print('\ntesting Commutativity of scalar multiplication, a * (b * x) = (a * b) * x\n')
+
+        for [n_x, x] in vector_examples(self.space):
+            for a in scalar_examples(self.space):
+                for b in scalar_examples(self.space):
+                    ok = _apprimately_equal(a * (b * x), (a * b) * x)
+                    if not ok:
+                        print('failed with x={:25s}, a={}, b={}'.format(n_x, a, b))
+
+    def _identity_of_mult(self):
+        print('\ntesting Identity element of multiplication, 1 * x = x\n')
+
+        for [n_x, x] in vector_examples(self.space):
+            ok = _apprimately_equal(1 * x, x)
+            if not ok:
+                print('failed with x={:25s}'.format(n_x))
+
+    def _distributivity_of_mult_vector(self):
+        print('\ntesting Distributivity of multiplication wrt vector add, a * (x + y) = a * x + a * y\n')
+
+        for a in scalar_examples(self.space):
+            for [n_x, x] in vector_examples(self.space):
+                for [n_y, y] in vector_examples(self.space):
+                    ok = _apprimately_equal(a * (x + y), a * x + a * y)
+                    if not ok:
+                        print('failed with x={:25s}, y={:25s}, a={}'.format(n_x, x_y, a))
+
+    def _distributivity_of_mult_scalar(self):
+        print('\ntesting Distributivity of multiplication wrt scalar add, (a + b) * x = a * x + b * x\n')
+
+        for a in scalar_examples(self.space):
+            for b in scalar_examples(self.space):
+                for [n_x, x] in vector_examples(self.space):
+                    ok = _apprimately_equal((a + b) * x, a * x + b * x)
+                    if not ok:
+                        print('failed with x={:25s}, a={}, b={}'.format(n_x, a, b))
+
+    def _subtraction(self):
+        print('\ntesting Subtraction, x - y = x + (-1 * y)\n')
+
+        for [n_x, x] in vector_examples(self.space):
+            for [n_y, y] in vector_examples(self.space):
+                ok = _apprimately_equal(x - y, x + (-1 * y)) and _apprimately_equal(x - y, x + (-y))
+                if not ok:
+                    print('failed with x={:25s}, y={:25s}'.format(n_x, n_y))
+
+    def _division(self):
+        print('\ntesting Division, x / a = x * (1/a) \n')
+
+        for [n_x, x] in vector_examples(self.space):
+            for a in scalar_examples(self.space):
+                if a != 0:
+                    ok = _apprimately_equal(x / a, x * (1.0/a))
+                    if not ok:
+                        print('failed with x={:25s}, a={}'.format(n_x, a))
+
+    def linear(self):
+        print('\n== Verifying linear space properties ==\n')
+
+        self._associativity_of_addition()
+        self._commutativity_of_addition()
+        self._identity_of_addition()
+        self._inverse_element_of_addition()
+        self._commutativity_of_scalar_mult()
+        self._identity_of_mult()
+        self._distributivity_of_mult_vector()
+        self._distributivity_of_mult_scalar()
+        self._subtraction()
+        self._division()
+
+
     def _norm_positive(self):
         print('\ntesting positivity, ||x|| >= 0\n')
         print('error = -||x||')
+
+        #TODO: assert ||x|| = 0 iff x = 0
 
         num_failed = 0
         for [name, vec] in vector_examples(self.space):
@@ -109,7 +238,8 @@ class SpaceTest(object):
         """
         print('\n== RUNNING ALL TESTS ==\n')
         print('Space = {}'.format(self.space))
-
+        
+        self.linear()
         self.norm()
 
     def __str__(self):
