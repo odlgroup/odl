@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Automatic tests for ODL
-"""
+"""Automatic tests for ODL."""
 
 from __future__ import absolute_import
 

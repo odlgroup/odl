@@ -48,4 +48,4 @@ from . import discr
 from .discr import *
 __all__ += discr.__all__
 
-from . import test
+from . import diagnostics
