@@ -285,14 +285,20 @@ class GetSetTest(ODLTestCase):
 
 class NumpyInteractionTest(ODLTestCase):
     def test_multiply_by_scalar(self):
+        """Verifies that multiplying with numpy scalars 
+        does not change the type of the array
+        """
+
         r3 = Rn(3)
         x = r3.zero()
-        self.assertIsInstance(x * 1.0, Rn.Vector)
-        self.assertIsInstance(x * np.float32(1.0), Rn.Vector)
-        self.assertIsInstance(1.0 * x, r3.Vector)
-        self.assertIsInstance(np.float32(1.0) * x, Rn.Vector)
+        self.assertIn(x * 1.0, r3)
+        self.assertIn(x * np.float32(1.0), r3)
+        self.assertIn(1.0 * x, r3)
+        self.assertIn(np.float32(1.0) * x, r3)
 
     def test_array_method(self):
+        """ Verifies that the __array__ method works
+        """
         r3 = Rn(3)
         x = r3.zero()
 
@@ -302,6 +308,9 @@ class NumpyInteractionTest(ODLTestCase):
         self.assertAllAlmostEquals(arr, [0.0, 0.0, 0.0])
 
     def test_array_wrap_method(self):
+        """ Verifies that the __array_wrap__ method works
+        This enables us to use numpy ufuncs on vectors
+        """
         r3 = Rn(3)
         x_h = [0.0, 1.0, 2.0]
         x = r3.element([0.0, 1.0, 2.0])
@@ -309,7 +318,17 @@ class NumpyInteractionTest(ODLTestCase):
         y = np.sin(x)
         
         self.assertAllAlmostEquals(y, y_h)
-        self.assertIsInstance(y, Rn.Vector)
+        self.assertIn(y, r3)
+
+        #Test with a non-standard dtype
+        r3_f32 = Rn(3, dtype=np.float32)
+        x_h = [0.0, 1.0, 2.0]
+        x = r3_f32.element(x_h)
+        y_h = np.sin(x_h)
+        y = np.sin(x)
+        
+        self.assertAllAlmostEquals(y, y_h)
+        self.assertIn(y, r3_f32)
 
         
 
