@@ -17,6 +17,7 @@
 
 import numpy as np
 
+from odl.operator.operator import LinearOperator
 from odl.diagnostics.examples import scalar_examples, vector_examples
 
 __all__ = ('OperatorTest',)
@@ -180,7 +181,7 @@ class OperatorTest(object):
     def linear(self):
         """ Verifies that the operator is actually linear
         """
-        if self.operator.linear:
+        if not isinstance(self.operator, LinearOperator):
             print('Operator is not linear')
             return
 
@@ -252,7 +253,7 @@ class OperatorTest(object):
         print('Operator = {}'.format(self.operator))
 
         self.norm()
-        if self.operator.linear:
+        if isinstance(self.operator, LinearOperator):
             self.linear()
             self.adjoint()
         else:
