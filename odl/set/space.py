@@ -528,7 +528,7 @@ class LinearSpace(Set):
 
         def set_zero(self):
             """Set this vector to the zero vector."""
-            self.space.lincomb(self, 0, self, 0, out=self)
+            self.space.lincomb(0, self, 0, self, out=self)
 
         # Convenience operators
         def __iadd__(self, other):
