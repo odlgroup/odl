@@ -116,7 +116,7 @@ class FailCounter(object):
     Prints the time stuff took to execute.
     """
 
-    def __init__(self, name=None):
+    def __init__(self, err_msg=None):
         self.num_failed = 0
 
     def __enter__(self):
@@ -133,6 +133,8 @@ class FailCounter(object):
         if self.num_failed == 0:
             print('Completed all test cases')
         else:
+            if self.err_msg is not None:
+                print(self.err_msg)
             print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
 
 class Timer(object):
