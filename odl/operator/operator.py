@@ -672,11 +672,9 @@ class OperatorSum(Operator):
         if op1.range != op2.range:
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
-
         if not isinstance(op1.range, (LinearSpace, Field)):
             raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                             'instance.'.format(op1.range))
-
         if op1.domain != op2.domain:
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
@@ -684,7 +682,6 @@ class OperatorSum(Operator):
         if tmp_ran is not None and tmp_ran not in op1.range:
             raise TypeError('tmp_ran {!r} not an element of the operator '
                             'range {!r}.'.format(tmp_ran, op1.range))
-
         if tmp_dom is not None and tmp_dom not in op1.domain:
             raise TypeError('tmp_dom {!r} not an element of the operator '
                             'domain {!r}.'.format(tmp_dom, op1.domain))
