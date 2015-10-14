@@ -4,7 +4,6 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy
 import scipy.ndimage
 import odl
@@ -61,4 +60,4 @@ disc_adjkernel = disc_kernel_domain.element(adjkernel)
 # Create operator
 conv = Convolution(disc_domain, disc_kernel, disc_adjkernel)
 
-odl.test.OperatorTest(conv).run_tests()
+odl.diagnostics.OperatorTest(conv).run_tests()

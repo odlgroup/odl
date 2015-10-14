@@ -21,9 +21,9 @@ from itertools import product
 
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.pspace import ProductSpace
-from odl.operator.operator import Operator
-from odl.space.base_ntuples import FnBase, NtuplesBase
+from odl.space.base_ntuples import FnBase
 from odl.discr.l2_discr import DiscreteL2
+
 
 __all__ = ('scalar_examples', 'vector_examples')
 
@@ -34,11 +34,13 @@ def _arg_shape(*args):
     else:
         return np.broadcast(*args).shape
 
+
 def scalar_examples(space):
     if space.field == RealNumbers():
         return [-1.0, 0.5, 0.0, 0.01, 1.0, 100.0]
     if space.field == ComplexNumbers():
         return [-1.0, 0.5, 0.0+2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0, 100.0]
+
 
 def vector_examples(space):
     # All spaces should yield the zero element

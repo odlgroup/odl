@@ -751,11 +751,11 @@ class CudaRn(CudaFn):
 # TODO: move
 
 def _make_unary_fun(name):
-    def fun(inp, outp=None):
-        if outp is None:
-            outp = inp.space.element()
-        getattr(inp.data, name)(outp.data)
-        return outp
+    def fun(x, out=None):
+        if out is None:
+            out = x.space.element()
+        getattr(x.data, name)(out.data)
+        return out
     return fun
 
 sin = _make_unary_fun('sin')
@@ -769,36 +769,36 @@ sign = _make_unary_fun('sign')
 sqrt = _make_unary_fun('sqrt')
 
 
-def add_scalar(inp, scal, outp=None):
-    if outp is None:
-        outp = inp.space.element()
-    cuda.add_scalar(inp.data, scal, outp.data)
-    return outp
+def add_scalar(x, scal, out=None):
+    if out is None:
+        out = x.space.element()
+    cuda.add_scalar(x.data, scal, out.data)
+    return out
 
 
-def max_vector_scalar(inp, scal, outp=None):
-    if outp is None:
-        outp = inp.space.element()
-    cuda.max_vector_scalar(inp.data, scal, outp.data)
-    return outp
+def max_vector_scalar(x, scal, out=None):
+    if out is None:
+        out = x.space.element()
+    cuda.max_vector_scalar(x.data, scal, out.data)
+    return out
 
 
-def max_vector_vector(inp1, inp2, outp=None):
-    if outp is None:
-        outp = inp1.space.element()
-    cuda.max_vector_vector(inp1.data, inp2.data, outp.data)
-    return outp
+def max_vector_vector(x1, x2, out=None):
+    if out is None:
+        out = x1.space.element()
+    cuda.max_vector_vector(x1.data, x2.data, out.data)
+    return out
 
 
-def divide_vector_vector(inp1, inp2, outp=None):
-    if outp is None:
-        outp = inp1.space.element()
-    cuda.divide_vector_vector(inp1.data, inp2.data, outp.data)
-    return outp
+def divide_vector_vector(x1, x2, out=None):
+    if out is None:
+        out = x1.space.element()
+    cuda.divide_vector_vector(x1.data, x2.data, out.data)
+    return out
 
 
-def sum(inp):
-    return cuda.sum(inp.data)
+def sum(x):
+    return cuda.sum(x.data)
 
 
 def _dist_default(x1, x2):

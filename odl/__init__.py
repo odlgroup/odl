@@ -26,26 +26,27 @@ to be used to write general code and faciliate code reuse.
 from __future__ import absolute_import
 
 __version__ = '0.9b1'
-__all__ = ('sets', 'operator', 'space', 'discr')
+__all__ = ('diagnostics', 'discr', 'operator', 'sets', 'space')
 
 
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
 
-from . import set
-from .set import *
-__all__ += set.__all__
-
-from . import operator
-from .operator import *
-__all__ += operator.__all__
-
-from . import space
-from .space import *
-__all__ += space.__all__
+from . import diagnostics
 
 from . import discr
 from .discr import *
 __all__ += discr.__all__
 
-from . import test
+from . import operator
+from .operator import *
+__all__ += operator.__all__
+
+from . import set
+from .set import *
+__all__ += set.__all__
+
+from . import space
+from .space import *
+__all__ += space.__all__
+

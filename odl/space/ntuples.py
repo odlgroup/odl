@@ -1240,19 +1240,19 @@ class MatVecOperator(Operator):
                                                 self.range.field))
         return MatVecOperator(self.range, self.domain, self.matrix.H)
 
-    def _call(self, inp):
+    def _call(self, x):
         """Raw call method on input, producing a new output."""
         return self.range.element(
-            np.asarray(self.matrix.dot(inp.data)).squeeze())
+            np.asarray(self.matrix.dot(x.data)).squeeze())
 
-    def _apply(self, inp, outp):
+    def _apply(self, x, out):
         """Raw apply method on input, writing to given output."""
         if self.matrix_issparse:
             # Unfortunately, there is no native in-place dot product for
             # sparse matrices
-            outp.data[:] = np.asarray(self.matrix.dot(inp.data)).squeeze()
+            out.data[:] = np.asarray(self.matrix.dot(x.data)).squeeze()
         else:
-            self.matrix.dot(inp.data, out=outp.data)
+            self.matrix.dot(x.data, out=out.data)
 
     # TODO: repr and str
 
