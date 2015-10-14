@@ -62,7 +62,7 @@ class ProductTest(ODLTestCase):
         b = 1.23
 
         expected = [a*v1 + b*u1, a*v2 + b*u2]
-        HxH.lincomb(z, a, v, b, u)
+        HxH.lincomb(a, v, b, u, out=z)
 
         self.assertAllAlmostEquals(z, expected)
 
@@ -180,7 +180,7 @@ class PowerTest(ODLTestCase):
         b = 1.23
 
         expected = [a*v1 + b*u1, a*v2 + b*u2]
-        HxH.lincomb(z, a, v, b, u)
+        HxH.lincomb(a, v, b, u, out=z)
 
         self.assertAllAlmostEquals(z, expected)
 
@@ -202,7 +202,7 @@ class PowerTest(ODLTestCase):
         a = 3.12
         b = 1.23
 
-        HxH.lincomb(z, a, v, b, u)
+        HxH.lincomb(a, v, b, u, out=z)
 
         # Assert that z1 and z2 has been modified as well
         self.assertAllAlmostEquals(z, [z1, z2])

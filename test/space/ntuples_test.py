@@ -67,34 +67,34 @@ class RnTest(ODLTestCase):
         x, y, z, xVec, yVec, zVec = self._vectors(rn)
 
         z[:] = a*x + b*y
-        rn.lincomb(zVec, a, xVec, b, yVec)
+        rn.lincomb(a, xVec, b, yVec, out=zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # First argument aliased with output
         x, y, z, xVec, yVec, zVec = self._vectors(rn)
 
         z[:] = a*z + b*y
-        rn.lincomb(zVec, a, zVec, b, yVec)
+        rn.lincomb(a, zVec, b, yVec, out=zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Second argument aliased with output
         x, y, z, xVec, yVec, zVec = self._vectors(rn)
 
         z[:] = a*x + b*z
-        rn.lincomb(zVec, a, xVec, b, zVec)
+        rn.lincomb(a, xVec, b, zVec, out=zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # Both arguments aliased with each other
         x, y, z, xVec, yVec, zVec = self._vectors(rn)
 
         z[:] = a*x + b*x
-        rn.lincomb(zVec, a, xVec, b, xVec)
+        rn.lincomb(a, xVec, b, xVec, out=zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
         # All aliased
         x, y, z, xVec, yVec, zVec = self._vectors(rn)
         z[:] = a*z + b*z
-        rn.lincomb(zVec, a, zVec, b, zVec)
+        rn.lincomb(a, zVec, b, zVec, out=zVec)
         self.assertAllAlmostEquals([xVec, yVec, zVec], [x, y, z])
 
     def test_lincomb(self):

@@ -463,7 +463,7 @@ def _blas_is_applicable(*args):
             all(x.data.flags.contiguous for x in args))
 
 
-def _lincomb(z, a, x1, b, x2, dtype):
+def _lincomb(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
     def fallback_axpy(x1, x2, n, a):
         """Fallback axpy implementation avoiding copy."""
@@ -483,7 +483,7 @@ def _lincomb(z, a, x1, b, x2, dtype):
         x2[...] = x1[...]
         return x2
 
-    if _blas_is_applicable(x1, x2, z):
+    if _blas_is_applicable(x1, x2, out):
         # pylint: disable=unbalanced-tuple-unpacking
         axpy, scal, copy = get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data))
@@ -491,47 +491,47 @@ def _lincomb(z, a, x1, b, x2, dtype):
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
 
     if x1 is x2 and b != 0:
-        # x1 is aligned with x2 -> z = (a+b)*x1
-        _lincomb(z, a+b, x1, 0, x1, dtype)
-    elif z is x1 and z is x2:
-        # All the vectors are aligned -> z = (a+b)*z
-        scal(a+b, z.data, len(z))
-    elif z is x1:
-        # z is aligned with x1 -> z = a*z + b*x2
+        # x1 is aligned with x2 -> out = (a+b)*x1
+        _lincomb(a+b, x1, 0, x1, out, dtype)
+    elif out is x1 and out is x2:
+        # All the vectors are aligned -> out = (a+b)*out
+        scal(a+b, out.data, len(out))
+    elif out is x1:
+        # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
-            scal(a, z.data, len(z))
+            scal(a, out.data, len(out))
         if b != 0:
-            axpy(x2.data, z.data, len(z), b)
-    elif z is x2:
-        # z is aligned with x2 -> z = a*x1 + b*z
+            axpy(x2.data, out.data, len(out), b)
+    elif out is x2:
+        # out is aligned with x2 -> out = a*x1 + b*out
         if b != 1:
-            scal(b, z.data, len(z))
+            scal(b, out.data, len(out))
         if a != 0:
-            axpy(x1.data, z.data, len(z), a)
+            axpy(x1.data, out.data, len(out), a)
     else:
-        # We have exhausted all alignment options, so x1 != x2 != z
+        # We have exhausted all alignment options, so x1 != x2 != out
         # We now optimize for various values of a and b
         if b == 0:
-            if a == 0:  # Zero assignment -> z = 0
-                z.data[:] = 0
-            else:  # Scaled copy -> z = a*x1
-                copy(x1.data, z.data, len(z))
+            if a == 0:  # Zero assignment -> out = 0
+                out.data[:] = 0
+            else:  # Scaled copy -> out = a*x1
+                copy(x1.data, out.data, len(out))
                 if a != 1:
-                    scal(a, z.data, len(z))
+                    scal(a, out.data, len(out))
         else:
-            if a == 0:  # Scaled copy -> z = b*x2
-                copy(x2.data, z.data, len(z))
+            if a == 0:  # Scaled copy -> out = b*x2
+                copy(x2.data, out.data, len(out))
                 if b != 1:
-                    scal(b, z.data, len(z))
+                    scal(b, out.data, len(out))
 
-            elif a == 1:  # No scaling in x1 -> z = x1 + b*x2
-                copy(x1.data, z.data, len(z))
-                axpy(x2.data, z.data, len(z), b)
-            else:  # Generic case -> z = a*x1 + b*x2
-                copy(x2.data, z.data, len(z))
+            elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
+                copy(x1.data, out.data, len(out))
+                axpy(x2.data, out.data, len(out), b)
+            else:  # Generic case -> out = a*x1 + b*x2
+                copy(x2.data, out.data, len(out))
                 if b != 1:
-                    scal(b, z.data, len(z))
-                axpy(x1.data, z.data, len(z), a)
+                    scal(b, out.data, len(out))
+                axpy(x1.data, out.data, len(out), a)
 
 
 def _repr_space_funcs(space):
@@ -691,20 +691,20 @@ class Fn(FnBase, Ntuples):
         else:  # all None -> no weighing
             self._space_funcs = _FnNoWeighting()
 
-    def _lincomb(self, z, a, x1, b, x2):
+    def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of `x` and `y`.
 
-        Calculate `z = a * x1 + b * x2` using optimized BLAS routines if
+        Calculate `out = a * x1 + b * x2` using optimized BLAS routines if
         possible.
 
         Parameters
         ----------
-        z : `Fn.Vector`
-            The Vector that the result is written to.
         a, b : `field` element
             Scalar to multiply `x` and `y` with.
         x1, x2 : `Fn.Vector`
             The summands
+        out : `Fn.Vector`
+            The Vector that the result is written to.
 
         Returns
         -------
@@ -715,12 +715,12 @@ class Fn(FnBase, Ntuples):
         >>> c3 = Cn(3)
         >>> x = c3.element([1+1j, 2-1j, 3])
         >>> y = c3.element([4+0j, 5, 6+0.5j])
-        >>> z = c3.element()
-        >>> c3.lincomb(z, 2j, x, 3-1j, y)
-        >>> z
+        >>> out = c3.element()
+        >>> c3.lincomb(2j, x, 3-1j, y, out)
+        >>> out
         Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         """
-        _lincomb(z, a, x1, b, x2, self.dtype)
+        _lincomb(a, x1, b, x2, out, self.dtype)
 
     def _dist(self, x1, x2):
         """Calculate the distance between two vectors.
@@ -818,15 +818,15 @@ class Fn(FnBase, Ntuples):
         """
         return self._space_funcs.inner(x1, x2)
 
-    def _multiply(self, z, x1, x2):
-        """The entry-wise product of two vectors, assigned to `z`.
+    def _multiply(self, x1, x2, out):
+        """The entry-wise product of two vectors, assigned to `out`.
 
         Parameters
         ----------
-        z : `Cn.Vector`
-            The result vector
         x1, x2 : `Cn.Vector`
             Factors in the product
+        out : `Cn.Vector`
+            The result vector
 
         Returns
         -------
@@ -837,20 +837,20 @@ class Fn(FnBase, Ntuples):
         >>> c3 = Cn(3)
         >>> x = c3.element([5+1j, 3, 2-2j])
         >>> y = c3.element([1, 2+1j, 3-1j])
-        >>> z = c3.element()
-        >>> c3.multiply(z, x, y)
-        >>> z
+        >>> out = c3.element()
+        >>> c3.multiply(x, y, out)
+        >>> out
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
-        if z is x1 and z is x2:  # z = z*z
-            z.data[:] *= z.data
-        elif z is x1:  # z = z*x2
-            z.data[:] *= x2.data
-        elif z is x2:  # z = z*x1
-            z.data[:] *= x1.data
-        else:  # z = x1*x2
-            z.data[:] = x1.data
-            z.data[:] *= x2.data
+        if out is x1 and out is x2:  # out = out*out
+            out.data[:] *= out.data
+        elif out is x1:  # out = out*x2
+            out.data[:] *= x2.data
+        elif out is x2:  # out = out*x1
+            out.data[:] *= x1.data
+        else:  # out = x1*x2
+            out.data[:] = x1.data
+            out.data[:] *= x2.data
 
     def zero(self):
         """Create a vector of zeros.

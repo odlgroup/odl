@@ -294,7 +294,7 @@ class MultiplyOperator(LinearOperator):
         >>> z
         Rn(3).element([1.0, 4.0, 9.0])
         """
-        out.space.multiply(out, x[0], x[1])
+        out.space.multiply(x[0], x[1], out)
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""

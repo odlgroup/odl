@@ -304,15 +304,15 @@ class ProductSpace(LinearSpace):
         """
         return self.element([space.zero() for space in self.spaces])
 
-    def _lincomb(self, z, a, x, b, y):
+    def _lincomb(self, a, x, b, y, out):
         # pylint: disable=protected-access
-        for space, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
-            space._lincomb(zp, a, xp, b, yp)
+        for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts, out.parts):
+            space._lincomb(a, xp, b, yp, outp)
 
-    def _dist(self, x, y):
+    def _dist(self, x1, x2):
         dists = np.fromiter(
-            (spc._dist(xp, yp)
-             for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
+            (spc._dist(x1p, x2p)
+             for spc, x1p, x2p in zip(self.spaces, x1.parts, x2.parts)),
             dtype=np.float64, count=self.size)
         return self._prod_norm(dists)
 
@@ -323,16 +323,16 @@ class ProductSpace(LinearSpace):
             dtype=np.float64, count=self.size)
         return self._prod_norm(norms)
 
-    def _inner(self, x, y):
+    def _inner(self, x1, x2):
         inners = np.fromiter(
-            (spc._inner(xp, yp)
-             for spc, xp, yp in zip(self.spaces, x.parts, y.parts)),
+            (spc._inner(x1p, x2p)
+             for spc, x1p, x2p in zip(self.spaces, x1.parts, x2.parts)),
             dtype=np.float64, count=self.size)
         return self._prod_inner_sum(inners)
 
-    def _multiply(self, z, x, y):
-        for spc, zp, xp, yp in zip(self.spaces, z.parts, x.parts, y.parts):
-            spc._multiply(zp, xp, yp)
+    def _multiply(self, x1, x2, out):
+        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts, out.parts):
+            spc._multiply(xp, yp, outp)
 
     def __eq__(self, other):
         """`ps.__eq__(other) <==> ps == other`.
