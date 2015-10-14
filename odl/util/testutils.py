@@ -96,6 +96,45 @@ def skip_all(reason=None):
 
     return SkipAllTestCase
 
+class FailCounter(object):
+    """ Used to count the number of failures of something
+
+    Usage
+    -----
+
+    with FailCounter() as counter:
+        # Do stuff
+    
+        counter.fail()
+        
+    #when done
+        
+    *** FAILED 1 TEST CASE(S) ***
+    
+        
+
+    Prints the time stuff took to execute.
+    """
+
+    def __init__(self, name=None):
+        self.num_failed = 0
+
+    def __enter__(self):
+        pass
+        
+    def fail(self, string=None):
+        self.num_failed += 1
+        
+        #Todo: possibly limit number of printed strings
+        if string is not None:
+            print(string)
+
+    def __exit__(self, type, value, traceback):
+        if self.num_failed == 0:
+            print('Completed all test cases')
+        else:
+            print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
+
 class Timer(object):
 
     """A timer context manager.

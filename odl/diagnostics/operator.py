@@ -19,6 +19,7 @@ import numpy as np
 
 from odl.operator.operator import LinearOperator
 from odl.diagnostics.examples import scalar_examples, vector_examples
+from odl.util.testutils import FailCounter
 
 __all__ = ('OperatorTest',)
 
@@ -49,31 +50,25 @@ class OperatorTest(object):
         x = []
         y = []
 
-        num_failed = 0
-
-        for [name_dom, vec_dom] in vector_examples(self.operator.domain):
-            vec_dom_norm = vec_dom.norm()
-            for [name_ran, vec_ran] in vector_examples(self.operator.range):
-                vec_ran_norm = vec_ran.norm()
-
-                Axy = self.operator(vec_dom).inner(vec_ran)
-                xAty = vec_dom.inner(self.operator.adjoint(vec_ran))
-
-                denom = self.operator_norm * vec_dom_norm * vec_ran_norm
-                error = 0 if denom == 0 else abs(Axy-xAty)/denom
-
-                if error > 0.00001:
-                    print('x={:25s} y={:25s} : error={:6.5f}'
-                          ''.format(name_dom, name_ran, error))
-                    num_failed += 1
-
-                x.append(Axy)
-                y.append(xAty)
-
-        if num_failed == 0:
-            print('error = 0.0 for all test cases')
-        else:
-            print('*** FAILED {} TEST CASES ***'.format(num_failed))
+        with FailCounter() as counter:
+            for [name_dom, vec_dom] in vector_examples(self.operator.domain):
+                vec_dom_norm = vec_dom.norm()
+                for [name_ran, vec_ran] in vector_examples(self.operator.range):
+                    vec_ran_norm = vec_ran.norm()
+    
+                    Axy = self.operator(vec_dom).inner(vec_ran)
+                    xAty = vec_dom.inner(self.operator.adjoint(vec_ran))
+    
+                    denom = self.operator_norm * vec_dom_norm * vec_ran_norm
+                    error = 0 if denom == 0 else abs(Axy-xAty)/denom
+    
+                    if error > 0.00001:
+                        print('x={:25s} y={:25s} : error={:6.5f}'
+                              ''.format(name_dom, name_ran, error))
+                        counter.fail()
+    
+                    x.append(Axy)
+                    y.append(xAty)
 
         scale = np.polyfit(x, y, 1)[0]
         print('\nThe adjoint seems to be scaled according to:')
@@ -94,22 +89,16 @@ class OperatorTest(object):
         print('\nVerifying the identity Ax = (A^T)^T x')
         print('error = ||Ax - (A^T)^T x|| / ||A|| ||x||')
 
-        num_failed = 0
-
-        for [name, vec] in vector_examples(self.operator.domain):
-            A_result = self.operator(vec)
-            ATT_result = self.operator.adjoint.adjoint(vec)
-
-            denom = self.operator_norm * vec.norm()
-            error = 0 if denom == 0 else (A_result-ATT_result).norm()/denom
-            if error > 0.00001:
-                print('x={:25s} : error={:6.5f}'.format(name, error))
-                num_failed += 1
-
-        if num_failed == 0:
-            print('error = 0.0 for all test cases')
-        else:
-            print('*** FAILED {} TEST CASES ***'.format(num_failed))
+        with FailCounter() as counter:
+            for [name, vec] in vector_examples(self.operator.domain):
+                A_result = self.operator(vec)
+                ATT_result = self.operator.adjoint.adjoint(vec)
+    
+                denom = self.operator_norm * vec.norm()
+                error = 0 if denom == 0 else (A_result-ATT_result).norm()/denom
+                if error > 0.00001:
+                    print('x={:25s} : error={:6.5f}'.format(name, error))
+                    counter.fail()
 
     def adjoint(self):
         """Verify that the adjoint works appropriately."""
@@ -139,10 +128,35 @@ class OperatorTest(object):
         self._adjoint_definition()
         self._adjoint_of_adjoint()
 
+    def _derivative_convergence(self, step):
+        print('\n== Verifying derivative of operator with step = {} ==\n'
+              ''.format(step))
+        print("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / |c| ||dx|| ||A||")
+
+        with FailCounter() as counter:
+            for [name_x, x] in vector_examples(self.operator.domain):
+                deriv = self.operator.derivative(x)
+                opx = self.operator(x)
+                for [name_dx, dx] in vector_examples(self.operator.domain):
+                    exact_step = self.operator(x+dx*step)-opx
+                    expected_step = deriv(dx*step)
+                    denom = step * dx.norm() * self.operator_norm
+                    error = (0 if denom == 0
+                             else (exact_step-expected_step).norm() / denom)
+    
+                    if error > 0.00001:
+                        print('x={:15s} dx={:15s} : error={:6.5f}'
+                              ''.format(name_x, name_dx, step, error))
+                        counter.fail()
+
     def derivative(self, step=0.0001):
         """Verify that the derivative works appropriately."""
         try:
-            self.operator.derivative(self.operator.domain.zero())
+            deriv = self.operator.derivative(self.operator.domain.zero())
+            
+            if not isinstance(deriv, LinearOperator):
+                print('Derivative is not a linear operator')
+                return
         except NotImplementedError:
             print('Operator has no derivative')
             return
@@ -152,32 +166,49 @@ class OperatorTest(object):
                   'or give norm as a parameter')
             return
 
-        print('\n== Verifying derivative of operator with step = {} ==\n'
-              ''.format(step))
-        print("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / |c| ||dx|| ||A||")
+        self.__derivative_convergence()
 
-        num_failed = 0
+    def _scale_invariance(self):
+        print("\nCalculating invariance under scaling")
+        print("error = ||A(c*x)-c*A(x)|| / |c| ||A|| ||x||")
 
-        for [name_x, x] in vector_examples(self.operator.domain):
-            deriv = self.operator.derivative(x)
-            opx = self.operator(x)
-            for [name_dx, dx] in vector_examples(self.operator.domain):
-                exact_step = self.operator(x+dx*step)-opx
-                expected_step = deriv(dx*step)
-                denom = step * dx.norm() * self.operator_norm
-                error = (0 if denom == 0
-                         else (exact_step-expected_step).norm() / denom)
+        # Test scaling
+        with FailCounter() as counter:
+            for [name_x, x] in vector_examples(self.operator.domain):
+                opx = self.operator(x)
+                for scale in scalar_examples(self.operator.domain):
+                    scaled_opx = self.operator(scale*x)
+    
+                    denom = self.operator_norm * scale * x.norm()
+                    error = (0 if denom == 0
+                             else (scaled_opx - opx * scale).norm() / denom)
+    
+                    if error > 0.00001:
+                        print('x={:25s} scale={:7.2f} error={:6.5f}'
+                              ''.format(name_x, scale, error))
+                        counter.fail()
 
-                if error > 0.00001:
-                    print('x={:15s} dx={:15s} : error={:6.5f}'
-                          ''.format(name_x, name_dx, step, error))
-                    num_failed += 1
-
-        if num_failed == 0:
-            print('error = 0.0 for all test cases')
-        else:
-            print('*** FAILED {} TEST CASES ***'.format(num_failed))
-
+        
+    def _addition_invariance(self):
+        print("\nCalculating invariance under addition")
+        print("error = ||A(x+y)-A(x)-A(y)|| / ||A||(||x|| + ||y||)")
+        
+        # Test addition
+        with FailCounter() as counter:
+            for [name_x, x] in vector_examples(self.operator.domain):
+                opx = self.operator(x)
+                for [name_y, y] in vector_examples(self.operator.domain):
+                    opy = self.operator(y)
+                    opxy = self.operator(x+y)
+    
+                    denom = self.operator_norm * (x.norm() + y.norm())
+                    error = 0 if denom == 0 else (opxy - opx - opy).norm()/denom
+    
+                    if error > 0.00001:
+                        print('x={:25s} y={:25s} error={:6.5f}'
+                              ''.format(name_x, name_y, error))
+                        counter.fail()
+        
     def linear(self):
         """ Verifies that the operator is actually linear
         """
@@ -196,55 +227,9 @@ class OperatorTest(object):
         result = self.operator(self.operator.domain.zero())
         print("||A(0)||={:6.5f}. Should be 0.0000".format(result.norm()))
 
-        print("\nCalculating invariance under scaling")
-        print("error = ||A(c*x)-c*A(x)|| / |c| ||A|| ||x||")
+        self._scale_invariance()
+        self._addition_invariance()
 
-        # Test scaling
-        num_failed = 0
-
-        for [name_x, x] in vector_examples(self.operator.domain):
-            opx = self.operator(x)
-            for scale in scalar_examples(self.operator.domain):
-                scaled_opx = self.operator(scale*x)
-
-                denom = self.operator_norm * scale * x.norm()
-                error = (0 if denom == 0
-                         else (scaled_opx - opx * scale).norm() / denom)
-
-                if error > 0.00001:
-                    print('x={:25s} scale={:7.2f} error={:6.5f}'
-                          ''.format(name_x, scale, error))
-                    num_failed += 1
-
-        if num_failed == 0:
-            print('error = 0.0 for all test cases')
-        else:
-            print('*** FAILED {} TEST CASES ***'.format(num_failed))
-
-        print("\nCalculating invariance under addition")
-        print("error = ||A(x+y)-A(x)-A(y)|| / ||A||(||x|| + ||y||)")
-
-        # Test addition
-        num_failed = 0
-
-        for [name_x, x] in vector_examples(self.operator.domain):
-            opx = self.operator(x)
-            for [name_y, y] in vector_examples(self.operator.domain):
-                opy = self.operator(y)
-                opxy = self.operator(x+y)
-
-                denom = self.operator_norm * (x.norm() + y.norm())
-                error = 0 if denom == 0 else (opxy - opx - opy).norm()/denom
-
-                if error > 0.00001:
-                    print('x={:25s} y={:25s} error={:6.5f}'
-                          ''.format(name_x, name_y, error))
-                    num_failed += 1
-
-        if num_failed == 0:
-            print('error = 0.0 for all test cases')
-        else:
-            print('*** FAILED {} TEST CASES ***'.format(num_failed))
 
     def run_tests(self):
         """Runs all tests on this operator
