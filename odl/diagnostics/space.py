@@ -224,6 +224,7 @@ class SpaceTest(object):
             print('*** FAILED {} TEST CASES ***'.format(num_failed))
 
     def norm(self):
+        """Run all norm-related tests on this space."""
         print('\n== Verifying norm ==\n')
 
         try:
@@ -239,8 +240,7 @@ class SpaceTest(object):
         self._norm_homogeneity()
 
     def run_tests(self):
-        """Runs all tests on this operator
-        """
+        """Run all tests on this space."""
         print('\n== RUNNING ALL TESTS ==\n')
         print('Space = {}'.format(self.space))
 
