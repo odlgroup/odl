@@ -108,12 +108,12 @@ class SimulatedCudaProjector3D(odl.Operator):
         return self._projector
 
 
-class CudaProjector3D(odl.LinearOperator):
+class CudaProjector3D(odl.Operator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.geometries = geometries
         self.forward = SR.SRPyCuda.CudaForwardProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
@@ -139,10 +139,10 @@ class CudaProjector3D(odl.LinearOperator):
         return self._adjoint
 
 
-class CudaBackProjector3D(odl.LinearOperator):
+class CudaBackProjector3D(odl.Operator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.geometries = geometries
         self.back = SR.SRPyCuda.CudaBackProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
@@ -259,5 +259,5 @@ x = reconDisc.zero()
 odl.operator.solvers.landweber(
     projector, x, projections, 100, omega=0.5/normEst,
     partial=odl.operator.solvers.ForEachPartial(plotResult))
-#odl.operator.solvers.conjugate_gradient(projector, x, projections, 100,
-#                                        partial=odl.operator.solvers.ForEachPartial(plotResult))
+#odl.operator.solvers.conjugate_gradient_normal(projector, x, projections, 100,
+#                                               partial=odl.operator.solvers.ForEachPartial(plotResult))

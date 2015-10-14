@@ -29,12 +29,6 @@ Core operators
 |`Operator`             |**Abstract** basic class for (mathematical)   |
 |                       |operators                                     |
 +-----------------------+----------------------------------------------+
-|`LinearOperator`       |**Abstract** basic class for linear operators |
-|                       |operators                                     |
-+-----------------------+----------------------------------------------+
-|`SelfAdjointOperator`  |**Abstract** basic class for linear operators |
-|                       |whose adjoint is itself                       |
-+-----------------------+----------------------------------------------+
 
 Operator compositions, sums etc.
 --------------------------------
@@ -62,14 +56,6 @@ Operator compositions, sums etc.
 |                            |with a scalar, `S = A * c`, defined by   |
 |                            |`x --> (A * c)(x) =  A(c * x)`           |
 +----------------------------+-----------------------------------------+
-|`LinearOperatorSum`         |Sum of two linear operators, again a     |
-|                            |linear operator (see `OperatorSum`)      |
-+----------------------------+-----------------------------------------+
-|`LinearOperatorScalarMult`  |Multiplication of a linear operator with |
-|                            |a scalar. Left and right multiplications |
-|                            |are equivalent (see                      |
-|                            |`OperatorLeftScalarMult`)                |
-+----------------------------+-----------------------------------------+
 
 Factory functions
 -----------------
@@ -78,10 +64,6 @@ Factory functions
 |Name               |Description                                       |
 +===================+==================================================+
 |`operator()`       |Create an `Operator` by specifying either a       |
-|                   |`call` or an `apply` method (or both) for         |
-|                   |evaluation.                                       |
-+-------------------+--------------------------------------------------+
-|`linear_operator()`|Create a `LinearOperator` by specifying either a  |
 |                   |`call` or an `apply` method (or both) for         |
 |                   |evaluation.                                       |
 +-------------------+--------------------------------------------------+

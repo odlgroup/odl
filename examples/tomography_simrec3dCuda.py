@@ -45,12 +45,12 @@ class ProjectionGeometry3D(object):
                           self.pixelDirectionU, self.pixelDirectionV))
 
 
-class CudaProjector3D(odl.LinearOperator):
+class CudaProjector3D(odl.Operator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.geometries = geometries
         self.forward = SR.SRPyCuda.CudaForwardProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
@@ -76,10 +76,10 @@ class CudaProjector3D(odl.LinearOperator):
         return self._adjoint
 
 
-class CudaBackProjector3D(odl.LinearOperator):
+class CudaBackProjector3D(odl.Operator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.geometries = geometries
         self.back = SR.SRPyCuda.CudaBackProjector3D(nVoxels, volumeOrigin,
                                                     voxelSize, nPixels,
@@ -100,7 +100,7 @@ class CudaBackProjector3D(odl.LinearOperator):
         out *= 3.0  # 0.165160099353932
 
 # Set geometry parameters
-volumeSize = np.array([224.0, 224.0, 1.0])
+volumeSize = np.array([224.0, 224.0, 135.0])
 volumeOrigin = np.array([-112.0, -112.0, 10.0])  # -volumeSize/2.0
 
 detectorSize = np.array([287.04, 264.94])
@@ -111,7 +111,7 @@ detectorAxisDistance = 210.0
 
 # Discretization parameters
 # nVoxels, nPixels = np.array([44, 44, 27]), np.array([78, 72])
-nVoxels, nPixels = np.array([448, 448, 1]), np.array([780, 720])
+nVoxels, nPixels = np.array([448, 448, 270]), np.array([780, 720])
 nProjection = 332
 
 # Scale factors
@@ -189,5 +189,5 @@ x = reconDisc.zero()
 # solvers.landweber(projector, x, projections, 10, omega=0.4/normEst,
 #                   partial=solvers.PrintIterationPartial())
 odl.operator.solvers.conjugate_gradient_normal(
-    projector, x, projections, 100,
+    projector, x, projections, 10,
     partial=odl.operator.solvers.ForEachPartial(plotResult))

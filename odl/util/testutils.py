@@ -226,6 +226,7 @@ class ProgressBar(object):
         self.njobs = njobs
         self.current_progress = 0.0
         self.index = 0
+        self.done = False
         self.start()
 
     def start(self):
@@ -254,8 +255,10 @@ class ProgressBar(object):
                     self.text, '#'*int(30*progress), 100*progress))
                 self.current_progress = progress
         else:  # Special message when done
-            sys.stdout.write('\r{0}: [{1:30s}] Done      '.format(
-                self.text, '#'*30))
+            if not self.done:
+                sys.stdout.write('\r{0}: [{1:30s}] Done      \n'.format(
+                    self.text, '#'*30))
+                self.done = True
 
         sys.stdout.flush()
 

@@ -42,12 +42,12 @@ class ProjectionGeometry3D(object):
         self.pixelDirectionV = pixelDirectionV
 
 
-class CudaProjector3D(odl.LinearOperator):
+class CudaProjector3D(odl.Operator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range_)
+        super().__init__(domain, range, linear=True)
         self.geometries = geometries
         self.forward = SR.SRPyCuda.CudaForwardProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
@@ -74,10 +74,10 @@ class CudaProjector3D(odl.LinearOperator):
         return self._adjoint
 
 
-class CudaBackProjector3D(odl.LinearOperator):
+class CudaBackProjector3D(odl.Operator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.geometries = geometries
 
         self.back = SR.SRPyCuda.CudaBackProjector3D(

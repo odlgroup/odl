@@ -34,7 +34,7 @@ from odlpp import odlpp_cuda
 import examples.solver_examples as solver_examples
 
 
-class CudaConvolution(odl.LinearOperator):
+class CudaConvolution(odl.Operator):
 
     """Calculates the circular convolution of two CUDA vectors."""
 
@@ -47,7 +47,7 @@ class CudaConvolution(odl.LinearOperator):
         self.adjkernel = (adjointkernel if adjointkernel is not None
                           else self.space.element(kernel[::-1].copy()))
         self.norm = float(cu_ntuples.sum(cu_ntuples.abs(self.kernel.ntuple)))
-        super().__init__(self.space, self.space)
+        super().__init__(self.space, self.space, linear=True)
 
     def _apply(self, rhs, out):
         odlpp_cuda.conv(rhs.ntuple.data, self.kernel.ntuple.data,
@@ -87,7 +87,7 @@ partial = solvers.ForEachPartial(
 # Test CGN
 plt.figure()
 plt.plot(data)
-solvers.conjugate_gradient(conv, discr_space.zero(), data, iterations, partial)
+solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations, partial)
 
 # Landweber
 plt.figure()
@@ -96,7 +96,7 @@ solvers.landweber(conv, discr_space.zero(), data, iterations, omega, partial)
 
 # testTimingCG
 with Timer("Optimized CG"):
-    solvers.conjugate_gradient(conv, discr_space.zero(), data, iterations)
+    solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations)
 
 with Timer("Base CG"):
     solver_examples.conjugate_gradient_base(conv, discr_space.zero(), data,

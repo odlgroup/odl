@@ -31,11 +31,11 @@ import SimRec2DPy as SR
 import matplotlib.pyplot as plt
 
 
-class CudaProjection(odl.LinearOperator):
+class CudaProjection(odl.Operator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  sourcePosition, detectorOrigin, pixelDirection,
                  domain, range_):
-        super().__init__(domain, range_)
+        super().__init__(domain, range_, linear=True)
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
@@ -55,11 +55,11 @@ class CudaProjection(odl.LinearOperator):
         return self._adjoint
 
 
-class CudaBackProjector(odl.LinearOperator):
+class CudaBackProjector(odl.Operator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  sourcePosition, detectorOrigin, pixelDirection,
                  domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection

@@ -32,7 +32,7 @@ import odlpp.odlpp_cuda as cuda
 import matplotlib.pyplot as plt
 
 
-class ForwardDiff(odl.LinearOperator):
+class ForwardDiff(odl.Operator):
     """ Calculates the forward difference of a vector
     """
 
@@ -40,7 +40,7 @@ class ForwardDiff(odl.LinearOperator):
         if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        super().__init__(space, space)
+        super().__init__(space, space, linear=True)
         self.scale = scale
 
     def _apply(self, rhs, out):
@@ -52,7 +52,7 @@ class ForwardDiff(odl.LinearOperator):
         return ForwardDiffAdj(self.domain, self.scale)
 
 
-class ForwardDiffAdj(odl.LinearOperator):
+class ForwardDiffAdj(odl.Operator):
     """ Calculates the adjoint of the sforward difference of a vector
     """
 
@@ -60,8 +60,9 @@ class ForwardDiffAdj(odl.LinearOperator):
         if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        self.domain = self.range = space
         self.scale = scale
+        
+        super().__init__(space, space, linear=True)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_adj(rhs.ntuple.data, out.ntuple.data)
@@ -95,28 +96,28 @@ def denoise(x0, la, mu, iterations=1):
     progress = odl.util.testutils.ProgressBar("denoising", iterations)
     for i in range(iterations):
         # x = ((f * mu + (diff.T(diff(x)) + 2*x - diff.T(d-b)) * la)/(mu+2*la))
-        diff(x, outp=xdiff)
+        diff(x, out=xdiff)
         x.lincomb(C1, f, 2*C2, x)
         xdiff -= d
         xdiff += b
-        diff.adjoint(xdiff, outp=tmp)
+        diff.adjoint(xdiff, out=tmp)
         x.lincomb(1, x, C2, tmp)
 
         # d = diff(x)-b
-        diff(x, outp=d)
+        diff(x, out=d)
         d -= b
 
         # sign = d/abs(d)
-        cuda.sign(d.ntuple.data, sign.ntuple.data)
+        d.ntuple.data.sign(sign.ntuple.data)
 
         #
-        cuda.abs(d.ntuple.data, d.ntuple.data)
+        d.ntuple.data.abs(d.ntuple.data)
         cuda.add_scalar(d.ntuple.data, -1.0/la, d.ntuple.data)
         cuda.max_vector_scalar(d.ntuple.data, 0.0, d.ntuple.data)
         d *= sign
 
         # b = b - diff(x) + d
-        diff(x, outp=xdiff)
+        diff(x, out=xdiff)
         b -= xdiff
         b += d
 

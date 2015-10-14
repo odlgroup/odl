@@ -693,7 +693,7 @@ class OperatorComp(Operator):
         rule:
 
         `OperatorComp(left, right).derivative(point) ==
-        LinearOperatorComp(left.derivative(right(point)),
+        OperatorComp(left.derivative(right(point)),
         right.derivative(point))`
         """
         left_deriv = self._left.derivative(self._right(point))
@@ -858,7 +858,7 @@ class OperatorLeftScalarMult(Operator):
 
         See also
         --------
-        LinearOperatorScalarMult: the result
+        OperatorLeftScalarMult : the result
         """
         return OperatorLeftScalarMult(self._op.derivative(x), self._scalar)
 
@@ -1017,8 +1017,8 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     inv : `Operator`, optional
         The operator inverse
         Default: `None`
-    deriv : `LinearOperator`, optional
-        The operator derivative
+    deriv : `Operator`, optional
+        The operator derivative, linear
         Default: `None`
     dom : `Set`, optional
         The domain of the operator

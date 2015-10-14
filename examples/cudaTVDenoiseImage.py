@@ -37,7 +37,7 @@ class RegularizationType(object):
     Anisotropic, Isotropic = range(2)
 
 
-class ForwardDiff2D(odl.LinearOperator):
+class ForwardDiff2D(odl.Operator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
@@ -45,7 +45,7 @@ class ForwardDiff2D(odl.LinearOperator):
         if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        super().__init__(space, odl.ProductSpace(space, 2))
+        super().__init__(space, odl.ProductSpace(space, 2), linear=True)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(
@@ -57,7 +57,7 @@ class ForwardDiff2D(odl.LinearOperator):
         return ForwardDiff2DAdjoint(self.domain)
 
 
-class ForwardDiff2DAdjoint(odl.LinearOperator):
+class ForwardDiff2DAdjoint(odl.Operator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
@@ -65,7 +65,7 @@ class ForwardDiff2DAdjoint(odl.LinearOperator):
         if not isinstance(space.dspace, odl.CudaRn):
             raise TypeError("space must be CudaRn")
 
-        super().__init__(odl.ProductSpace(space, 2), space)
+        super().__init__(odl.ProductSpace(space, 2), space, linear=True)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d_adj(

@@ -12,12 +12,12 @@ from scipy import ndimage
 import odl
 
 
-class Convolution(odl.LinearOperator):
+class Convolution(odl.Operator):
     def __init__(self, space, kernel, adjkernel):
         self.kernel = kernel
         self.adjkernel = adjkernel
         
-        super().__init__(domain=space, range=space)
+        super().__init__(domain=space, range=space, linear=True)
 
     def _apply(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data.reshape(rhs.shape), 
@@ -29,9 +29,11 @@ class Convolution(odl.LinearOperator):
     def adjoint(self):
         return Convolution(self.domain, self.adjkernel, self.kernel)
 
-class Difference(odl.LinearOperator):
+class Difference(odl.Operator):
     def __init__(self, space):        
-        super().__init__(domain=space, range=odl.ProductSpace(space, 2))
+        super().__init__(domain=space, 
+                         range=odl.ProductSpace(space, 2), 
+                         linear=True)
 
     def _apply(self, rhs, out):
         asarr = rhs.asarray()
@@ -47,9 +49,11 @@ class Difference(odl.LinearOperator):
     def adjoint(self):
         return DifferenceAdjoint(self.domain)
         
-class DifferenceAdjoint(odl.LinearOperator):
+class DifferenceAdjoint(odl.Operator):
     def __init__(self, space):
-        super().__init__(domain=odl.ProductSpace(space, 2), range=space)
+        super().__init__(domain=odl.ProductSpace(space, 2), 
+                         range=space, 
+                         linear=True)
 
     def _apply(self, rhs, out):
         dx = rhs[0].asarray()

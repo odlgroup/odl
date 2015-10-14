@@ -29,7 +29,7 @@ import odl
 import SimRec2DPy as SR
 
 
-class Projection(odl.LinearOperator):
+class Projection(odl.Operator):
     def __init__(self, volumeOrigin, voxelSize, volumeSize, detectorSize,
                  stepSize, sourcePosition, detectorOrigin, pixelDirection,
                  domain, range_):
@@ -41,7 +41,7 @@ class Projection(odl.LinearOperator):
         self.sourcePosition = sourcePosition
         self.detectorOrigin = detectorOrigin
         self.pixelDirection = pixelDirection
-        super().__init__(domain, range_)
+        super().__init__(domain, range_, linear=True)
 
     def _apply(self, volume, out):
         forward = SR.SRPyForwardProject.SimpleForwardProjector(

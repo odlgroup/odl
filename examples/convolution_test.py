@@ -35,7 +35,7 @@ from odl.util.testutils import Timer
 import solver_examples
 
 
-class Convolution(odl.LinearOperator):
+class Convolution(odl.Operator):
     def __init__(self, kernel, adjkernel=None):
         if not isinstance(kernel.space, odl.DiscreteL2):
             raise TypeError("Kernel must be a DiscreteL2 vector")
@@ -45,7 +45,7 @@ class Convolution(odl.LinearOperator):
                           else kernel.space.element(kernel[::-1].copy()))
         self.space = kernel.space
         self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
-        super().__init__(self.space, self.space)
+        super().__init__(self.space, self.space, linear=True)
 
     def _apply(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
@@ -84,7 +84,7 @@ partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result)[:]))
 # Test CGN
 plt.figure()
 plt.plot(data)
-solvers.conjugate_gradient(conv, discr_space.zero(), data, iterations, partial)
+solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations, partial)
 
 # Landweber
 plt.figure()
@@ -93,7 +93,7 @@ solvers.landweber(conv, discr_space.zero(), data, iterations, omega, partial)
 
 # testTimingCG
 with Timer("Optimized CG"):
-    solvers.conjugate_gradient(conv, discr_space.zero(), data, iterations)
+    solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations)
 
 with Timer("Base CG"):
     solver_examples.conjugate_gradient_base(conv, discr_space.zero(), data,

@@ -8,13 +8,13 @@ import scipy
 import scipy.ndimage
 import odl
 
-class Convolution(odl.LinearOperator):
+class Convolution(odl.Operator):
     def __init__(self, space, kernel, adjkernel):
         self.kernel = kernel
         self.adjkernel = adjkernel
         self.scale = kernel.space.domain.volume / len(kernel)
         
-        super().__init__(space, space)
+        super().__init__(space, space, linear=True)
 
     def _apply(self, rhs, out):
         scipy.ndimage.convolve(rhs, 

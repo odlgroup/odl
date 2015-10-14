@@ -42,12 +42,12 @@ class ProjectionGeometry(object):
         self.pixelDirection = pixelDirection
 
 
-class Projector(odl.LinearOperator):
+class Projector(odl.Operator):
     """ A projector that creates several projections as defined by geometries
     """
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
         self.nVoxels = nVoxels
@@ -76,10 +76,10 @@ class Projector(odl.LinearOperator):
         return self._adjoint
 
 
-class BackProjector(odl.LinearOperator):
+class BackProjector(odl.Operator):
     def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
                  geometries, domain, range):
-        super().__init__(domain, range)
+        super().__init__(domain, range, linear=True)
         self.volumeOrigin = volumeOrigin
         self.voxelSize = voxelSize
         self.nVoxels = nVoxels
@@ -160,7 +160,6 @@ projector = Projector(volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
 
 # Apply once to find norm estimate
 projections = projector(phantomVec)
-print(projections[0].asarray())
 plt.plot(projections[0].asarray())
 plt.show()
 recon = projector.T(projections)

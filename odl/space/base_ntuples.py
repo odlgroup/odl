@@ -299,7 +299,10 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             -------
                 vector : self.space.Vector
             """
-            return self.space.element(obj)
+            if obj.ndim == 0:
+                return self.space.field.element(obj)
+            else:
+                return self.space.element(obj)
 
         def __ne__(self, other):
             """`vec.__ne__(other) <==> vec != other`."""
