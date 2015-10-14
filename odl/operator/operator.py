@@ -710,8 +710,9 @@ class OperatorComp(Operator):
                             self._tmp)
 
     def __repr__(self):
-        """`op.__repr__() <==> repr(op)`."""
-        return 'OperatorComp({!r}, {!r})'.format(self._left, self._right)
+        """`op.__repr__() <==> repr(op)`."""        
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._left, self._right)
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
@@ -771,8 +772,8 @@ class OperatorPointwiseProduct(Operator):
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
-        return 'OperatorPointwiseProduct({!r}, {!r})'.format(self._op1,
-                                                             self._op2)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op1, self._op2)
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
@@ -874,8 +875,8 @@ class OperatorLeftScalarMult(Operator):
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
-        return 'OperatorLeftScalarMult({!r}, {!r})'.format(self._op,
-                                                           self._scalar)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op, self._scalar)
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
@@ -983,8 +984,8 @@ class OperatorRightScalarMult(Operator):
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
-        return 'OperatorRightScalarMult({!r}, {!r})'.format(self._op,
-                                                            self._scalar)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op, self._scalar)
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
