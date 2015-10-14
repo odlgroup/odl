@@ -37,11 +37,11 @@ except ImportError:
 
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
-class ForwardDiff(odl.LinearOperator):
+class ForwardDiff(odl.Operator):
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaRn")
-        super().__init__(space, space)
+        super().__init__(space, space, linear=True)
 
     def _apply(self, rhs, out):
         cuda.forward_diff(rhs.data, out.data)
@@ -52,11 +52,11 @@ class ForwardDiff(odl.LinearOperator):
 
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
-class ForwardDiffAdjoint(odl.LinearOperator):
+class ForwardDiffAdjoint(odl.Operator):
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaRn")
-        super().__init__(space, space)
+        super().__init__(space, space, linear=True)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_adj(rhs.data, out.data)
@@ -67,11 +67,11 @@ class ForwardDiffAdjoint(odl.LinearOperator):
 
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
-class ForwardDiff2D(odl.LinearOperator):
+class ForwardDiff2D(odl.Operator):
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
-        super().__init__(space, odl.ProductSpace(space, space))
+        super().__init__(space, odl.ProductSpace(space, space), linear=True)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
@@ -83,14 +83,14 @@ class ForwardDiff2D(odl.LinearOperator):
 
 
 @unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
-class ForwardDiff2DAdjoint(odl.LinearOperator):
+class ForwardDiff2DAdjoint(odl.Operator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
     def __init__(self, space):
         if not isinstance(space, odl.CudaRn):
             raise TypeError("space must be CudaPixelDiscretization")
-        super().__init__(odl.ProductSpace(space, space), space)
+        super().__init__(odl.ProductSpace(space, space), space, linear=True)
 
     def _apply(self, rhs, out):
         cuda.forward_diff_2d_adj(rhs[0].data, rhs[1].data, out.data,

@@ -17,11 +17,12 @@
 
 import numpy as np
 
-from odl.operator.operator import LinearOperator
 from odl.diagnostics.examples import scalar_examples, vector_examples
 from odl.util.testutils import FailCounter
 
+
 __all__ = ('OperatorTest',)
+
 
 class OperatorTest(object):
     def __init__(self, operator, operator_norm=None):
@@ -49,23 +50,24 @@ class OperatorTest(object):
         x = []
         y = []
 
-        with FailCounter('error = ||(Ax, y) - (x, A^T y)|| / ||A|| ||x|| ||y||') as counter:
+        with FailCounter('error = ||(Ax, y) - (x, A^T y)|| / '
+                         '||A|| ||x|| ||y||') as counter:
             for [name_dom, vec_dom] in vector_examples(self.operator.domain):
                 vec_dom_norm = vec_dom.norm()
                 for [name_ran, vec_ran] in vector_examples(self.operator.range):
                     vec_ran_norm = vec_ran.norm()
-    
+
                     Axy = self.operator(vec_dom).inner(vec_ran)
                     xAty = vec_dom.inner(self.operator.adjoint(vec_ran))
-    
+
                     denom = self.operator_norm * vec_dom_norm * vec_ran_norm
                     error = 0 if denom == 0 else abs(Axy-xAty)/denom
-    
+
                     if error > 0.00001:
                         print('x={:25s} y={:25s} : error={:6.5f}'
                               ''.format(name_dom, name_ran, error))
                         counter.fail()
-    
+
                     x.append(Axy)
                     y.append(xAty)
 
@@ -87,11 +89,12 @@ class OperatorTest(object):
 
         print('\nVerifying the identity Ax = (A^T)^T x')
 
-        with FailCounter('error = ||Ax - (A^T)^T x|| / ||A|| ||x||') as counter:
+        with FailCounter('error = ||Ax - (A^T)^T x|| / '
+                         '||A|| ||x||') as counter:
             for [name, vec] in vector_examples(self.operator.domain):
                 A_result = self.operator(vec)
                 ATT_result = self.operator.adjoint.adjoint(vec)
-    
+
                 denom = self.operator_norm * vec.norm()
                 error = 0 if denom == 0 else (A_result-ATT_result).norm()/denom
                 if error > 0.00001:
@@ -126,10 +129,11 @@ class OperatorTest(object):
         self._adjoint_definition()
         self._adjoint_of_adjoint()
 
-    def _derivative_convergence(self, step):       
-        print('\nTesting derivative is linear approximation')        
-        
-        with FailCounter("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / |c| ||dx|| ||A||") as counter:
+    def _derivative_convergence(self, step):
+        print('\nTesting derivative is linear approximation')
+
+        with FailCounter("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / "
+                         "|c| ||dx|| ||A||") as counter:
             for [name_x, x] in vector_examples(self.operator.domain):
                 deriv = self.operator.derivative(x)
                 opx = self.operator(x)
@@ -139,7 +143,7 @@ class OperatorTest(object):
                     denom = step * dx.norm() * self.operator_norm
                     error = (0 if denom == 0
                              else (exact_step-expected_step).norm() / denom)
-    
+
                     if error > 0.00001:
                         print('x={:15s} dx={:15s} c={}: error={:6.5f}'
                               ''.format(name_x, name_dx, step, error))
@@ -147,12 +151,12 @@ class OperatorTest(object):
 
     def derivative(self, step=0.0001):
         """Verify that the derivative works appropriately."""
-        
+
         print('\n==Verifying derivative of operator ==')
         try:
             deriv = self.operator.derivative(self.operator.domain.zero())
-            
-            if not isinstance(deriv, LinearOperator):
+
+            if not deriv.is_linear:
                 print('Derivative is not a linear operator')
                 return
         except NotImplementedError:
@@ -163,7 +167,7 @@ class OperatorTest(object):
             print('Cannot do tests before norm is calculated, run test.norm() '
                   'or give norm as a parameter')
             return
-            
+
         if deriv == self:
             print('A is linear and A.derivative == A')
             return
@@ -174,45 +178,46 @@ class OperatorTest(object):
         print("\nCalculating invariance under scaling")
 
         # Test scaling
-        with FailCounter("error = ||A(c*x)-c*A(x)|| / |c| ||A|| ||x||") as counter:
+        with FailCounter('error = ||A(c*x)-c*A(x)|| / '
+                         '|c| ||A|| ||x||') as counter:
             for [name_x, x] in vector_examples(self.operator.domain):
                 opx = self.operator(x)
                 for scale in scalar_examples(self.operator.domain):
                     scaled_opx = self.operator(scale*x)
-    
+
                     denom = self.operator_norm * scale * x.norm()
                     error = (0 if denom == 0
                              else (scaled_opx - opx * scale).norm() / denom)
-    
+
                     if error > 0.00001:
                         print('x={:25s} scale={:7.2f} error={:6.5f}'
                               ''.format(name_x, scale, error))
                         counter.fail()
 
-        
     def _addition_invariance(self):
         print("\nCalculating invariance under addition")
-        
+
         # Test addition
-        with FailCounter("error = ||A(x+y)-A(x)-A(y)|| / ||A||(||x|| + ||y||)") as counter:
+        with FailCounter('error = ||A(x+y) - A(x) - A(y)|| / '
+                         '||A||(||x|| + ||y||)') as counter:
             for [name_x, x] in vector_examples(self.operator.domain):
                 opx = self.operator(x)
                 for [name_y, y] in vector_examples(self.operator.domain):
                     opy = self.operator(y)
                     opxy = self.operator(x+y)
-    
+
                     denom = self.operator_norm * (x.norm() + y.norm())
-                    error = 0 if denom == 0 else (opxy - opx - opy).norm()/denom
-    
+                    error = (0 if denom == 0
+                             else (opxy - opx - opy).norm() / denom)
+
                     if error > 0.00001:
                         print('x={:25s} y={:25s} error={:6.5f}'
                               ''.format(name_x, name_y, error))
                         counter.fail()
-        
+
     def linear(self):
-        """ Verifies that the operator is actually linear
-        """
-        if not isinstance(self.operator, LinearOperator):
+        """Verify that the operator is actually linear."""
+        if not self.operator.is_linear:
             print('Operator is not linear')
             return
 
@@ -230,26 +235,24 @@ class OperatorTest(object):
         self._scale_invariance()
         self._addition_invariance()
 
-
     def run_tests(self):
-        """Runs all tests on this operator
-        """
+        """Run all tests on this operator."""
         print('\n== RUNNING ALL TESTS ==\n')
         print('Operator = {}'.format(self.operator))
 
         self.norm()
-        
-        if isinstance(self.operator, LinearOperator):
+
+        if self.operator.is_linear:
             self.linear()
             self.adjoint()
-            
-        self.derivative()
-            
+        else:
+            self.derivative()
+
     def __str__(self):
-        return 'OperatorTest({})'.format(self.operator)
+        return '{}({})'.format(self.__class__.__name__, self.operator)
 
     def __repr__(self):
-        return 'OperatorTest({!r})'.format(self.operator)
+        return '{}({!r})'.format(self.__class__.__name__, self.operator)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
