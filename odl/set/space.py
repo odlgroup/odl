@@ -734,7 +734,7 @@ class UniversalSpace(LinearSpace):
 
         Dummy membership check, `True` for any `LinearSpace.Vector`.
         """
-        return True #TODO: isinstance(other, LinearSpace.Vector)
+        return isinstance(other, LinearSpace.Vector)
 
 
 if __name__ == '__main__':
