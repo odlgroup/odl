@@ -49,14 +49,21 @@ class ProjectionGeometry3D(object):
 class SimulatedCudaProjector3D(odl.Operator):
     """ A projector that creates several projections as defined by geometries
     """
-    def __init__(self, volumeOrigin, voxelSize, nVoxels, nPixels, stepSize,
-                 geometries, dom, ran):
-        super().__init__(dom, ran)
+    def __init__(self, volumeOrigin, 
+                       voxelSize, nVoxels, 
+                       nPixels, stepSize, 
+                       geometries, gain, 
+                       energies, spectrum, 
+                       n_materials, blur_radius):
         self.geometries = geometries
         self.nphotons = 500
-        self._simulator = gpumci.CudaProjector(
-            volumeOrigin, voxelSize, nVoxels, nPixels, geometries,
-            nphotons=self.nphotons)
+        self._simulator = gpumci.CudaProjectorOptimized(volumeOrigin, 
+                                                        voxelSize, nVoxels, 
+                                                        nPixels, stepSize, 
+                                                        geometries, gain, 
+                                                        energies, spectrum, 
+                                                        n_materials, blur_radius)
+                                                        
         self._projector = CudaProjector3D(
             volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries,
             reconDisc, dataDisc)
@@ -64,6 +71,9 @@ class SimulatedCudaProjector3D(odl.Operator):
         self._sim_domain_el[1] = self._simulator.domain[1].element(
             np.ones(nVoxels))
         self._sim_result = self._simulator.range.element()
+        
+        
+        super().__init__(self._projector.domain, self._projector.range)
 
     @odl.util.timeit("Simulate")
     def _apply(self, volume, projections, nphotons=None):
@@ -71,38 +81,13 @@ class SimulatedCudaProjector3D(odl.Operator):
             nphotons = self.nphotons
 
         # simulated result
-        self._sim_domain_el[0] = volume
+        self._sim_domain_el[0][:] = volume
         self._simulator(self._sim_domain_el,
                         self._sim_result)
 
-        # Normalize scaling
-        self._sim_result *= (500.0/nphotons/46.0)
-
-        self._projector(volume, projections)
-
         for i in range(len(self._sim_result)):
-            #plt.figure()
-            #plt.imshow(-np.log(self._sim_result[i][0].asarray()))
-            #plt.colorbar()
-            # plt.show()
-            sim_sum = -np.log(0.0001 + self._sim_result[i][0].asarray() +
-                              self._sim_result[i][1].asarray())
-            const = sim_sum.ravel().mean() / projections[i].asarray().mean()
-            print(const)
+            projections[i][:] = -np.log(0.0001 + self._sim_result[i].asarray())
 
-            projections[i][:] = -np.log(0.0001 +
-                                        self._sim_result[i][0].asarray())
-        """
-        # Create projector
-        self._projector.setData(volume.ntuple.data_ptr)
-
-        # Project all geometries
-        for i in range(len(self.geometries)):
-           =A(A(A(x))) geo = self.geometries[i]
-
-            self._projector.project(geo.sourcePosition, geo.detectorOrigin,
-                                    geo.pixelDirectionU, geo.pixelDirectionV,
-                                    projection[i].ntuple.data_ptr)"""
 
     def derivative(self, point):
         return self._projector
@@ -146,7 +131,6 @@ class CudaBackProjector3D(odl.Operator):
         self.geometries = geometries
         self.back = SR.SRPyCuda.CudaBackProjector3D(
             nVoxels, volumeOrigin, voxelSize, nPixels, stepSize)
-        self.run = 0
 
     @odl.util.timeit("BackProject")
     def _apply(self, projections, out):
@@ -159,13 +143,8 @@ class CudaBackProjector3D(odl.Operator):
                 geo.sourcePosition, geo.detectorOrigin, geo.pixelDirectionU,
                 geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
 
-        self.run += 1
-        if self.run > 5:
-            out_host = out.asarray()
-            out_host[out_host > -1.0] = 0
-            out[:] = out_host
         # correct for unmatched projectors
-        out *= 3.0*0.00030612127705988737
+        out *= 8.0*0.00030612127705988737
 
 # Set geometry parameters
 volumeSize = np.array([224.0, 224.0, 135.0])
@@ -178,7 +157,7 @@ sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
 # Discretization parameters
-nVoxels, nPixels = np.array([44, 44, 27])*4, np.array([78, 72])*4
+nVoxels, nPixels = np.array([44, 44, 27])*7, np.array([78, 72])*7
 #nVoxels, nPixels = np.array([448, 448, 270]), np.array([780, 720])
 nProjection = 332
 
@@ -227,11 +206,21 @@ phantom = SR.SRPyUtils.phantom(nVoxels[0:2],
 phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
 phantomVec = reconDisc.element(phantom)
 
-# Make the operator
-projector = SimulatedCudaProjector3D(volumeOrigin, voxelSize, nVoxels, nPixels,
-                                     stepSize, geometries, reconDisc, dataDisc)
 
-projections = projector._projector(phantomVec)
+gain = np.ones(nPixels)
+energies = np.array([0.09])
+spectrum = np.array([10.0])
+n_materials = 2
+
+# Make the operator
+projector = SimulatedCudaProjector3D(volumeOrigin, 
+                                     voxelSize, nVoxels, 
+                                     nPixels, stepSize, 
+                                     geometries, gain, 
+                                     energies, spectrum, 
+                                     n_materials, blur_radius=30.0)
+
+projections = projector(phantomVec)
 p2 = projector(phantomVec)
 projections *= p2.norm()/projections.norm()  # Fix scaling
 
@@ -259,5 +248,5 @@ x = reconDisc.zero()
 odl.operator.solvers.landweber(
     projector, x, projections, 100, omega=0.5/normEst,
     partial=odl.operator.solvers.ForEachPartial(plotResult))
-#odl.operator.solvers.conjugate_gradient_normal(projector, x, projections, 100,
-#                                               partial=odl.operator.solvers.ForEachPartial(plotResult))
+odl.operator.solvers.conjugate_gradient_normal(projector, x, projections, 100,
+                                               partial=odl.operator.solvers.ForEachPartial(plotResult))

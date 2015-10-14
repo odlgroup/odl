@@ -404,15 +404,15 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
         """Create a vector of zeros."""
         return self.Vector(self, self.dspace.zero())
 
-    def _lincomb(self, z, a, x, b, y):
+    def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
-        self.dspace._lincomb(z.ntuple, a, x.ntuple, b, y.ntuple)
+        self.dspace._lincomb(a, x1.ntuple, b, x2.ntuple, out.ntuple)
 
-    def _dist(self, x, y):
+    def _dist(self, x1, x2):
         """Raw distance between two vectors."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._dist(x.ntuple, y.ntuple)
+        return self.dspace._dist(x1.ntuple, x2.ntuple)
 
     def _norm(self, x):
         """Raw norm of a vector."""
@@ -420,15 +420,15 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
         # principle!
         return self.dspace._norm(x.ntuple)
 
-    def _inner(self, x, y):
+    def _inner(self, x1, x2):
         """Raw inner product of two vectors."""
         # TODO: implement inner product according to correspondence
         # principle!
-        return self.dspace._inner(x.ntuple, y.ntuple)
+        return self.dspace._inner(x1.ntuple, x2.ntuple)
 
-    def _multiply(self, z, x, y):
+    def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two vectors."""
-        self.dspace._multiply(z.ntuple, x.ntuple, y.ntuple)
+        self.dspace._multiply(x1.ntuple, x2.ntuple, out.ntuple)
 
     class Vector(RawDiscretization.Vector, FnBase.Vector):
 
