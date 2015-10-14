@@ -63,30 +63,27 @@ class SimulatedCudaProjector3D(odl.Operator):
                                                         geometries, gain, 
                                                         energies, spectrum, 
                                                         n_materials, blur_radius)
-                                                        
+        
+                 
         self._projector = CudaProjector3D(
             volumeOrigin, voxelSize, nVoxels, nPixels, stepSize, geometries,
-            reconDisc, dataDisc)
+            self._simulator.domain[0], self._simulator.range)
         self._sim_domain_el = self._simulator.domain.element()
         self._sim_domain_el[1] = self._simulator.domain[1].element(
             np.ones(nVoxels))
-        self._sim_result = self._simulator.range.element()
         
         
-        super().__init__(self._projector.domain, self._projector.range)
+        super().__init__(self._simulator.domain[0], self._simulator.range)
 
     @odl.util.timeit("Simulate")
-    def _apply(self, volume, projections, nphotons=None):
-        if not nphotons:
-            nphotons = self.nphotons
-
+    def _apply(self, volume, projections):
         # simulated result
         self._sim_domain_el[0][:] = volume
         self._simulator(self._sim_domain_el,
-                        self._sim_result)
+                        projections)
 
-        for i in range(len(self._sim_result)):
-            projections[i][:] = -np.log(0.0001 + self._sim_result[i].asarray())
+        for i in range(len(projections)):
+            projections[i][:] = -np.log(0.0001 + projections[i].asarray())
 
 
     def derivative(self, point):
@@ -182,29 +179,10 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
         projSourcePosition, projDetectorOrigin, projPixelDirectionU,
         projPixelDirectionV))
 
-# Define the space of one projection
-projectionSpace = odl.L2(odl.Rectangle([0, 0], detectorSize))
-
-# Discretize projection space
-projectionDisc = odl.l2_uniform_discretization(projectionSpace, nPixels,
-                                               impl='cuda', order='F')
-
-# Create the data space, which is the Cartesian product of the
-# single projection spaces
-dataDisc = odl.ProductSpace(projectionDisc, nProjection)
-
-# Define the reconstruction space
-reconSpace = odl.L2(odl.Cuboid([0, 0, 0], volumeSize))
-
-# Discretize the reconstruction space
-reconDisc = odl.l2_uniform_discretization(reconSpace, nVoxels,
-                                          impl='cuda', order='F')
-
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2],
                                SR.SRPyUtils.PhantomType.modifiedSheppLogan)
 phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
-phantomVec = reconDisc.element(phantom)
 
 
 gain = np.ones(nPixels)
@@ -219,6 +197,9 @@ projector = SimulatedCudaProjector3D(volumeOrigin,
                                      geometries, gain, 
                                      energies, spectrum, 
                                      n_materials, blur_radius=30.0)
+                                     
+                                     
+phantomVec = projector.domain.element(phantom)
 
 projections = projector(phantomVec)
 p2 = projector(phantomVec)
@@ -244,7 +225,7 @@ def plotResult(x):
     plt.show()
 
 # Solve using landweber
-x = reconDisc.zero()
+x = projector.domain.zero()
 odl.operator.solvers.landweber(
     projector, x, projections, 100, omega=0.5/normEst,
     partial=odl.operator.solvers.ForEachPartial(plotResult))
