@@ -53,7 +53,7 @@ from builtins import int, super
 from future.utils import with_metaclass
 
 # External module imports
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from math import sqrt
 import numpy as np
 import scipy as sp
@@ -63,8 +63,6 @@ import platform
 
 # ODL imports
 from odl.operator.operator import Operator
-from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace
 from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
 from odl.util.utility import dtype_repr
 from odl.util.utility import is_real_dtype, is_complex_dtype

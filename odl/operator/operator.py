@@ -870,8 +870,7 @@ class OperatorLeftScalarMult(Operator):
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
         
-        # TODO: take conj(scalar) if complex
-        return OperatorRightScalarMult(self._op.adjoint, self._scalar)
+        return OperatorRightScalarMult(self._op.adjoint, self._scalar.conjugate())
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -979,8 +978,7 @@ class OperatorRightScalarMult(Operator):
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
         
-        # TODO: take conj(scalar) if complex
-        return OperatorRightScalarMult(self._op.adjoint, self._scalar)
+        return OperatorRightScalarMult(self._op.adjoint, self._scalar.conjugate())
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
