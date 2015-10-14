@@ -563,7 +563,7 @@ class OperatorSum(Operator):
         Rn(3).element([2.0, 4.0, 6.0])
         """
         # pylint: disable=protected-access
-        tmp = self._tmp if self._tmp is not None else self.range.element()
+        tmp = self._tmp_ran if self._tmp_ran is not None else self.range.element()
         self._op1._apply(x, out)
         self._op2._apply(x, tmp)
         out += tmp
