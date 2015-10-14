@@ -263,35 +263,35 @@ class TestMethods(ODLTestCase):
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
         z_arr[:] = a * x_arr + b * y_arr
-        rn.lincomb(z, a, x, b, y)
+        rn.lincomb(a, x, b, y, out=z)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # First argument aliased with output
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
         z_arr[:] = a * z_arr + b * y_arr
-        rn.lincomb(z, a, z, b, y)
+        rn.lincomb(a, z, b, y, out=z)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # Second argument aliased with output
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
         z_arr[:] = a * x_arr + b * z_arr
-        rn.lincomb(z, a, x, b, z)
+        rn.lincomb(a, x, b, z, out=z)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # Both arguments aliased with each other
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
         z_arr[:] = a * x_arr + b * x_arr
-        rn.lincomb(z, a, x, b, x)
+        rn.lincomb(a, x, b, x, out=z)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
         # All aliased
         x_arr, y_arr, z_arr, x, y, z = self.vectors(rn)
 
         z_arr[:] = a * z_arr + b * z_arr
-        rn.lincomb(z, a, z, b, z)
+        rn.lincomb(a, z, b, z, out=z)
         self.assertAllAlmostEquals([x, y, z], [x_arr, y_arr, z_arr], places=4)
 
     def test_lincomb(self):
@@ -343,7 +343,7 @@ class TestMethods(ODLTestCase):
         z_host[:] = x_host * y_host
 
         # Device side calculation
-        r3.multiply(z_device, x_device, y_device)
+        r3.multiply(x_device, y_device, out=z_device)
 
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(z_device, z_host, places=5)
@@ -354,14 +354,14 @@ class TestMethods(ODLTestCase):
 
         # Aliased
         z_host[:] = z_host * x_host
-        r3.multiply(z_device, z_device, x_device)
+        r3.multiply(z_device, x_device, out=z_device)
 
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(z_device, z_host, places=5)
 
         # Aliased
         z_host[:] = z_host * z_host
-        r3.multiply(z_device, z_device, z_device)
+        r3.multiply(z_device, z_device, out=z_device)
 
         # Cuda only uses floats, so require 5 places
         self.assertAllAlmostEquals(z_device, z_host, places=5)

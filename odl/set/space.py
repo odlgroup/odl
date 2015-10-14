@@ -264,21 +264,21 @@ class LinearSpace(Set):
         """
 
     @abstractmethod
-    def _lincomb(self, z, a, x, b, y):
-        """Calculate z = a*x + b*y.
+    def _lincomb(self, a, x1, b, x2, out):
+        """Calculate out = a*x1 + b*x2.
 
         This method is intended to be private, public callers should
         resort to lincomb which is type-checked.
         """
 
-    def _dist(self, x, y):
-        """Calculate the distance between x and y.
+    def _dist(self, x1, x2):
+        """Calculate the distance between x1 and x2.
 
         This method is intended to be private, public callers should
         resort to `dist` which is type-checked.
         """
         # default implementation
-        return self.norm(x-y)
+        return self.norm(x1-x2)
 
     def _norm(self, x):
         """Calculate the norm of x.
@@ -289,8 +289,8 @@ class LinearSpace(Set):
         # default implementation
         return m.sqrt(self.inner(x, x).real)
 
-    def _inner(self, x, y):
-        """Calculate the inner product of x and y.
+    def _inner(self, x1, x2):
+        """Calculate the inner product of x1 and x2.
 
         This method is intended to be private, public callers should
         resort to `inner` which is type-checked.
@@ -350,7 +350,7 @@ class LinearSpace(Set):
         return isinstance(other, LinearSpace.Vector) and other.space == self
 
     # Error checking variant of methods
-    def lincomb(self, z, a, x, b=None, y=None):
+    def lincomb(self, a, x1, b=None, x2=None, out=None):
         """Linear combination of vectors.
 
         Calculates
@@ -365,71 +365,74 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        z : Vector
-            The Vector that the result should be written to.
         a : Scalar in the field of this space
             Scalar to multiply `x` with.
-        x : Vector
+        x1 : Vector
             The first of the summands
         b : Scalar, optional
             Scalar to multiply `y` with.
-        y : Vector, optional
+        x2 : Vector, optional
             The second of the summands
+        out : Vector, optional
+            The Vector that the result should be written to.
 
         Returns
         -------
-        None
+        out : Vector
 
         Notes
         -----
-        The vectors `z`, `x` and `y` may be aligned, thus a call
+        The vectors `out`, `x1` and `x2` may be aligned, thus a call
 
-        space.lincomb(x, 2, x, 3.14, x)
+        space.lincomb(x, 2, x, 3.14, out=x)
 
         is (mathematically) equivalent to
 
         x = x * (1 + 2 + 3.14)
         """
-        if z not in self:
+        if out is None:
+            out = self.element()
+        
+        if out not in self:
             raise TypeError('output vector {!r} not in space {!r}.'
-                            ''.format(z, self))
+                            ''.format(out, self))
 
         if a not in self.field:
             raise TypeError('first scalar {!r} not in the field {!r} of the '
                             'space {!r}.'.format(a, self.field, self))
 
-        if x not in self:
+        if x1 not in self:
             raise TypeError('first input vector {!r} not in space {!r}.'
-                            ''.format(x, self))
+                            ''.format(x1, self))
 
         if b is None:  # Single argument
-            if y is not None:
+            if x2 is not None:
                 raise ValueError('second input vector provided but no '
                                  'second scalar.')
 
             # Call method
-            return self._lincomb(z, a, x, 0, x)
+            return self._lincomb(a, x1, 0, x1, out)
         else:  # Two arguments
             if b not in self.field:
                 raise TypeError('second scalar {!r} not in the field {!r} of '
                                 'the space {!r}.'.format(b, self.field, self))
 
-            if y not in self:
+            if x2 not in self:
                 raise TypeError('second input vector {!r} not in space {!r}.'
-                                ''.format(y, self))
+                                ''.format(x2, self))
 
             # Call method
-            return self._lincomb(z, a, x, b, y)
+            return self._lincomb(a, x1, b, x2, out)
 
-    def dist(self, x, y):
+    def dist(self, x1, x2):
         """Calculate the distance between two vectors.
 
         Parameters
         ----------
-        x : `LinearSpace.Vector`
+        x1 : `LinearSpace.Vector`
             The first element
 
-        y : LinearSpace.Vector
+        x2 : LinearSpace.Vector
             The second element
 
         Returns
@@ -437,14 +440,14 @@ class LinearSpace(Set):
         dist : RealNumber
                Distance between vectors
         """
-        if x not in self:
+        if x1 not in self:
             raise TypeError('first vector {!r} not in space {!r}'
-                            ''.format(x, self))
-        if y not in self:
+                            ''.format(x1, self))
+        if x2 not in self:
             raise TypeError('second vector {!r} not in space {!r}'
-                            ''.format(y, self))
+                            ''.format(x2, self))
 
-        return float(self._dist(x, y))
+        return float(self._dist(x1, x2))
 
     def norm(self, x):
         """Calculate the norm of a vector."""
@@ -453,27 +456,34 @@ class LinearSpace(Set):
 
         return float(self._norm(x))
 
-    def inner(self, x, y):
+    def inner(self, x1, x2):
         """Calculate the inner product of the vectors x and y."""
-        if x not in self:
+        if x1 not in self:
             raise TypeError('first vector {!r} not in space {!r}'
-                            ''.format(x, self))
-        if y not in self:
+                            ''.format(x1, self))
+        if x2 not in self:
             raise TypeError('second vector {!r} not in space {!r}'
-                            ''.format(y, self))
+                            ''.format(x2, self))
 
-        return self.field.element(self._inner(x, y))
+        return self.field.element(self._inner(x1, x2))
 
-    def multiply(self, z, x, y):
+    def multiply(self, x1, x2, out=None):
         """Calculate the pointwise product of x and y, and assign to z."""
-        if x not in self:
+        if out is None:
+            out = self.element()
+        
+        if x1 not in self:
             raise TypeError('first vector {!r} not in space {!r}'
-                            ''.format(x, self))
-        if y not in self:
+                            ''.format(x1, self))
+        if x2 not in self:
             raise TypeError('second vector {!r} not in space {!r}'
-                            ''.format(y, self))
+                            ''.format(x2, self))
+                            
+        if out not in self:
+            raise TypeError('ouput vector {!r} not in space {!r}'
+                            ''.format(out, self))
 
-        self._multiply(z, x, y)
+        self._multiply(x1, x2, out)
 
     class Vector(with_metaclass(ABCMeta, object)):
 
@@ -501,7 +511,7 @@ class LinearSpace(Set):
         # Convenience functions
         def assign(self, other):
             """Assign the values of other to this vector."""
-            self.space.lincomb(self, 1, other)
+            self.space.lincomb(1, other, out=self)
 
         def copy(self):
             """Create an identical (deep) copy of this vector."""
@@ -509,34 +519,34 @@ class LinearSpace(Set):
             result.assign(self)
             return result
 
-        def lincomb(self, a, x, b=None, y=None):
+        def lincomb(self, a, x1, b=None, x2=None):
             """Assign a linear combination to this vector.
 
-            Implemented as `space.lincomb(self, a, x, b, y)`.
+            Implemented as `space.lincomb(a, x1, b, x2)`.
             """
-            self.space.lincomb(self, a, x, b, y)
+            self.space.lincomb(a, x1, b, x2, out=self)
 
         def set_zero(self):
             """Set this vector to the zero vector."""
-            self.space.lincomb(self, 0, self, 0, self)
+            self.space.lincomb(0, self, 0, self, out=self)
 
         # Convenience operators
         def __iadd__(self, other):
             """Implementation of 'self += other'."""
-            self.space.lincomb(self, 1, self, 1, other)
+            self.space.lincomb(1, self, 1, other, out=self)
             return self
 
         def __isub__(self, other):
             """Implementation of 'self -= other'."""
-            self.space.lincomb(self, 1, self, -1, other)
+            self.space.lincomb(1, self, -1, other, out=self)
             return self
 
         def __imul__(self, other):
             """Implementation of 'self *= other'."""
             if other in self.space:
-                self.space.multiply(self, other, self)
+                self.space.multiply(other, self, out=self)
             else:
-                self.space.lincomb(self, other, self)
+                self.space.lincomb(other, self, out=self)
             return self
 
         def __itruediv__(self, other):
@@ -550,22 +560,22 @@ class LinearSpace(Set):
         def __add__(self, other):
             """Implementation of 'self + other'."""
             tmp = self.space.element()
-            self.space.lincomb(tmp, 1, self, 1, other)
+            self.space.lincomb(1, self, 1, other, out=tmp)
             return tmp
 
         def __sub__(self, other):
             """Implementation of 'self - other'."""
             tmp = self.space.element()
-            self.space.lincomb(tmp, 1, self, -1, other)
+            self.space.lincomb(1, self, -1, other, out=tmp)
             return tmp
 
         def __mul__(self, other):
             """Implementation of 'self * other'."""
             tmp = self.space.element()
             if other in self.space:
-                self.space.multiply(tmp, other, self)
+                self.space.multiply(other, self, out=tmp)
             else:
-                self.space.lincomb(tmp, other, self)
+                self.space.lincomb(other, self, out=tmp)
             return tmp
 
         def __ipow__(self, n):
@@ -573,19 +583,19 @@ class LinearSpace(Set):
             if n == 1:
                 return self
             elif n % 2 == 0:
-                self.space.multiply(self, self, self)
+                self.space.multiply(self, self, out=self)
                 return self.__ipow__(n//2)
             else:
                 tmp = self.copy()
                 for i in range(n):
-                    self.space.multiply(tmp, tmp, self)
+                    self.space.multiply(tmp, self, out=tmp)
                 return tmp
 
         def __pow__(self, n):
             """Take the n:th power of self, only defined for integer n"""
             tmp = self.copy()
             for i in range(n):
-                self.space.multiply(tmp, tmp, self)
+                self.space.multiply(tmp, self, out=tmp)
             return tmp
 
         def __rmul__(self, other):
@@ -603,7 +613,7 @@ class LinearSpace(Set):
         def __neg__(self):
             """Implementation of '-self'."""
             tmp = self.space.element()
-            self.space.lincomb(tmp, -1.0, self)
+            self.space.lincomb(-1.0, self, out=tmp)
             return tmp
 
         def __pos__(self):
@@ -665,7 +675,7 @@ class LinearSpace(Set):
             """Implementation of str()."""
             return str(self.space) + ".Vector"
 
-        # TODO: DECIDE ON THESE + DOCUMENT
+        # TODO: DOCUMENT
         def norm(self):
             return self.space.norm(self)
 
@@ -676,7 +686,7 @@ class LinearSpace(Set):
             return self.space.inner(self, other)
 
         def multiply(self, x, y):
-            return self.space.multiply(self, x, y)
+            return self.space.multiply(x, y, out=self)
 
 
 class UniversalSpace(LinearSpace):
@@ -687,11 +697,11 @@ class UniversalSpace(LinearSpace):
         """Dummy element creation method, raises `NotImplementedError`."""
         raise NotImplementedError
 
-    def _lincomb(self, z, a, x, b, y):
+    def _lincomb(self, a, x1, b, x2, out):
         """Dummy linear combination, raises `NotImplementedError`."""
         raise NotImplementedError
 
-    def _dist(self, x, y):
+    def _dist(self, x1, x2):
         """Dummy distance method, raises `NotImplementedError`."""
         raise NotImplementedError
 
@@ -699,11 +709,11 @@ class UniversalSpace(LinearSpace):
         """Dummy norm method, raises `NotImplementedError`."""
         raise NotImplementedError
 
-    def _inner(self, x, y):
+    def _inner(self, x1, x2):
         """Dummy inner product method, raises `NotImplementedError`."""
         raise NotImplementedError
 
-    def _multiply(self, z, x, y):
+    def _multiply(self, x1, x2, out):
         """Dummy multiplication method, raises `NotImplementedError`."""
         raise NotImplementedError
 
@@ -724,7 +734,7 @@ class UniversalSpace(LinearSpace):
 
         Dummy membership check, `True` for any `LinearSpace.Vector`.
         """
-        return True
+        return isinstance(other, LinearSpace.Vector)
 
 
 if __name__ == '__main__':

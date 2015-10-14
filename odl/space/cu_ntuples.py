@@ -517,19 +517,19 @@ class CudaFn(FnBase, CudaNtuples):
         else:  # all None -> no weighing
             self._space_funcs = _CudaFnNoWeighting()
 
-    def _lincomb(self, z, a, x1, b, x2):
-        """Linear combination of `x1` and `x2`, assigned to `z`.
+    def _lincomb(self, a, x1, b, x2, out):
+        """Linear combination of `x1` and `x2`, assigned to `out`.
 
         Calculate `z = a * x + b * y` using optimized CUDA routines.
 
         Parameters
         ----------
-        z : `CudaFn.Vector`
-            The Vector that the result is written to.
         a, b : `field` element
             Scalar to multiply `x` and `y` with.
         x, y : `CudaFn.Vector`
             The summands
+        out : `CudaFn.Vector`
+            The Vector that the result is written to.
 
         Returns
         -------
@@ -541,11 +541,11 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([4, 5, 6])
         >>> z = r3.element()
-        >>> r3.lincomb(z, 2, x, 3, y)
+        >>> r3.lincomb(2, x, 3, y, z)
         >>> z
         CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
         """
-        z.data.lincomb(a, x1.data, b, x2.data)
+        out.data.lincomb(a, x1.data, b, x2.data)
 
     def _inner(self, x1, x2):
         """Calculate the inner product of x and y.
@@ -617,7 +617,7 @@ class CudaFn(FnBase, CudaNtuples):
         """
         return self._space_funcs.norm(x)
 
-    def _multiply(self, z, x1, x2):
+    def _multiply(self, x1, x2, out):
         """The pointwise product of two vectors, assigned to `z`.
 
         This is defined as:
@@ -643,11 +643,11 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x = rn.element([5, 3, 2])
         >>> y = rn.element([1, 2, 3])
         >>> z = rn.element()
-        >>> rn.multiply(z, x, y)
+        >>> rn.multiply(x, y, z)
         >>> z
         CudaRn(3).element([5.0, 6.0, 6.0])
         """
-        z.data.multiply(x1.data, x2.data)
+        out.data.multiply(x1.data, x2.data)
 
     def zero(self):
         """Create a vector of zeros."""
