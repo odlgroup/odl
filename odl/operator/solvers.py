@@ -24,7 +24,7 @@ standard_library.install_aliases()
 from builtins import next, object, range
 
 # ODL imports
-from odl.operator.operator import LinearOperatorComp, LinearOperatorSum
+from odl.operator.operator import OperatorComp, OperatorSum
 from odl.operator.default_ops import IdentityOperator
 
 
@@ -206,8 +206,8 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx
-        A = LinearOperatorSum(LinearOperatorComp(deriv.T, deriv),
-                              tm * I, tmp_dom)
+        A = OperatorSum(OperatorComp(deriv.T, deriv),
+                        tm * I, tmp_dom)
 
         # TODO: allow user to select other method
         conjugate_gradient(A, dx, u, 3)

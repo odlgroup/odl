@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from odl.diagnostics.examples import scalar_examples, vector_examples
 
 
@@ -149,7 +148,7 @@ class SpaceTest(object):
                     if not ok:
                         print('failed with x={:25s}, a={}'.format(n_x, a))
 
-    def linear(self):
+    def linearity(self):
         print('\n== Verifying linear space properties ==\n')
 
         self._associativity_of_addition()
@@ -175,7 +174,7 @@ class SpaceTest(object):
 
             if norm < 0 or (norm == 0 and name != 'Zero'):
                 print('x={:25s} : ||x||={}'
-                      ''.format(name))
+                      ''.format(name, norm))
                 num_failed += 1
 
         if num_failed == 0:
@@ -225,6 +224,7 @@ class SpaceTest(object):
             print('*** FAILED {} TEST CASES ***'.format(num_failed))
 
     def norm(self):
+        """Run all norm-related tests on this space."""
         print('\n== Verifying norm ==\n')
 
         try:
@@ -240,12 +240,11 @@ class SpaceTest(object):
         self._norm_homogeneity()
 
     def run_tests(self):
-        """Runs all tests on this operator
-        """
+        """Run all tests on this space."""
         print('\n== RUNNING ALL TESTS ==\n')
         print('Space = {}'.format(self.space))
 
-        self.linear()
+        self.linearity()
         self.norm()
 
     def __str__(self):

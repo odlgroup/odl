@@ -29,10 +29,8 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl import (Operator, LinearOperator, OperatorSum, OperatorComp,
-                 OperatorLeftScalarMult, OperatorRightScalarMult,
-                 LinearOperatorSum, LinearOperatorComp,
-                 LinearOperatorScalarMult)
+from odl import (Operator, OperatorSum, OperatorComp,
+                 OperatorLeftScalarMult, OperatorRightScalarMult)
 from odl.util.testutils import ODLTestCase
 
 
@@ -84,6 +82,9 @@ class TestOperator(ODLTestCase):
 
         # Explicit instantiation
         C = OperatorSum(Aop, Bop)
+        
+        self.assertFalse(C.is_linear)        
+        
         self.assertAllAlmostEquals(C(xvec),
                                    mult_sq_np(A, x) + mult_sq_np(B, x))
 
@@ -111,6 +112,9 @@ class TestOperator(ODLTestCase):
         for scale in scalars:
             lscaled = OperatorLeftScalarMult(Aop, scale)
             rscaled = OperatorRightScalarMult(Aop, scale)
+            
+            self.assertFalse(lscaled.is_linear)
+            self.assertFalse(rscaled.is_linear)
 
             self.assertAllAlmostEquals(lscaled(xvec),
                                        scale * mult_sq_np(A, x))
@@ -148,6 +152,8 @@ class TestOperator(ODLTestCase):
         xvec = Bop.domain.element(x)
 
         C = OperatorComp(Aop, Bop)
+        
+        self.assertFalse(C.is_linear)
 
         self.assertAllAlmostEquals(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
 
@@ -156,16 +162,18 @@ class TestOperator(ODLTestCase):
             C = OperatorComp(Bop, Aop)
 
 
-class MultiplyOp(LinearOperator):
+class MultiplyOp(Operator):
     """Multiply with matrix.
     """
 
     def __init__(self, matrix, domain=None, range=None):
-        self._domain = (odl.Rn(matrix.shape[1])
+        domain = (odl.Rn(matrix.shape[1])
                         if domain is None else domain)
-        self._range = (odl.Rn(matrix.shape[0])
+        range = (odl.Rn(matrix.shape[0])
                        if range is None else range)
         self.matrix = matrix
+
+        super().__init__(domain, range, linear=True)
 
     def _apply(self, rhs, out):
         np.dot(self.matrix, rhs.data, out=out.data)
@@ -195,12 +203,12 @@ class TestLinearOperator(ODLTestCase):
         xvec = Aop.domain.element(x)
         outvec = Aop.range.element()
 
-        # Using apply
+        # Using out parameter
         Aop(xvec, outvec)
         np.dot(A, x, out)
         self.assertAllAlmostEquals(out, outvec)
 
-        # Using __call__
+        # Using return value
         self.assertAllAlmostEquals(Aop(xvec), np.dot(A, x))
 
     def test_MultiplyOp_nonsquare(self):
@@ -213,12 +221,12 @@ class TestLinearOperator(ODLTestCase):
         xvec = Aop.domain.element(x)
         outvec = Aop.range.element()
 
-        # Using apply
+        # Using out parameter
         Aop(xvec, outvec)
         np.dot(A, x, out)
         self.assertAllAlmostEquals(out, outvec)
 
-        # Using __call__
+        # Using return value
         self.assertAllAlmostEquals(Aop(xvec), np.dot(A, x))
 
     def test_adjoint(self):
@@ -235,7 +243,7 @@ class TestLinearOperator(ODLTestCase):
         np.dot(A.T, x, out)
         self.assertAllAlmostEquals(out, outvec)
 
-        # Using T method and __call__
+        # Using T method
         self.assertAllAlmostEquals(Aop.T(xvec), np.dot(A.T, x))
 
     def test_addition(self):
@@ -250,7 +258,9 @@ class TestLinearOperator(ODLTestCase):
         yvec = Aop.range.element(y)
 
         # Explicit instantiation
-        C = LinearOperatorSum(Aop, Bop)
+        C = OperatorSum(Aop, Bop)
+
+        self.assertTrue(C.is_linear)
 
         self.assertAllAlmostEquals(C(xvec), np.dot(A, x) + np.dot(B, x))
         self.assertAllAlmostEquals(C.T(yvec), np.dot(A.T, y) + np.dot(B.T, y))
@@ -274,7 +284,9 @@ class TestLinearOperator(ODLTestCase):
         # optimizations for (-1, 0, 1).
         scalars = [-1.432, -1, 0, 1, 3.14]
         for scale in scalars:
-            C = LinearOperatorScalarMult(Aop, scale)
+            C = OperatorRightScalarMult(Aop, scale)
+            
+            self.assertTrue(C.is_linear)
 
             self.assertAllAlmostEquals(C(xvec), scale * np.dot(A, x))
             self.assertAllAlmostEquals(C.T(yvec), scale * np.dot(A.T, y))
@@ -300,7 +312,9 @@ class TestLinearOperator(ODLTestCase):
         xvec = Bop.domain.element(x)
         yvec = Aop.range.element(y)
 
-        C = LinearOperatorComp(Aop, Bop)
+        C = OperatorComp(Aop, Bop)
+
+        self.assertTrue(C.is_linear)
 
         self.assertAllAlmostEquals(C(xvec), np.dot(A, np.dot(B, x)))
         self.assertAllAlmostEquals(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))

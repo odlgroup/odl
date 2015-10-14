@@ -53,7 +53,7 @@ from builtins import int, super
 from future.utils import with_metaclass
 
 # External module imports
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from math import sqrt
 import numpy as np
 import scipy as sp
@@ -62,9 +62,7 @@ from scipy.linalg.blas import get_blas_funcs
 import platform
 
 # ODL imports
-from odl.operator.operator import LinearOperator
-from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace
+from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
 from odl.util.utility import dtype_repr
 from odl.util.utility import is_real_dtype, is_complex_dtype
@@ -1174,7 +1172,7 @@ class Rn(Fn):
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
 
-class MatVecOperator(LinearOperator):
+class MatVecOperator(Operator):
     # TODO: move to some default operator place
 
     """Operator :math:`F^n -> F^m` represented by a matrix."""
@@ -1194,7 +1192,7 @@ class MatVecOperator(LinearOperator):
             `(m, n)`, where `n` is the size of `dom` and `m` the size
             of `ran`. Its dtype must be castable to the range dtype.
         """
-        super().__init__(dom, ran)
+        super().__init__(dom, ran, linear=True)
         if not isinstance(dom, Fn):
             raise TypeError('domain {!r} is not an `Fn` instance.'
                             ''.format(dom))

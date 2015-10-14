@@ -33,13 +33,13 @@ import odl.operator.solvers as solvers
 from odl.util.testutils import ODLTestCase
 
 
-class MultiplyOp(odl.LinearOperator):
+class MultiplyOp(odl.Operator):
     """Multiply with a matrix."""
 
     def __init__(self, matrix, domain=None, range=None):
         dom = odl.Rn(matrix.shape[1]) if domain is None else domain
         ran = odl.Rn(matrix.shape[0]) if range is None else range
-        super().__init__(dom, ran)
+        super().__init__(dom, ran, linear=True)
         self.matrix = matrix
 
     def _apply(self, rhs, out):

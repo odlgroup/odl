@@ -17,7 +17,6 @@
 
 import numpy as np
 
-from odl import LinearOperator
 from odl.diagnostics.examples import scalar_examples, vector_examples
 from odl.util.testutils import FailCounter
 
@@ -157,7 +156,7 @@ class OperatorTest(object):
         try:
             deriv = self.operator.derivative(self.operator.domain.zero())
 
-            if not isinstance(deriv, LinearOperator):
+            if not deriv.is_linear:
                 print('Derivative is not a linear operator')
                 return
         except NotImplementedError:
@@ -217,9 +216,8 @@ class OperatorTest(object):
                         counter.fail()
 
     def linear(self):
-        """ Verifies that the operator is actually linear
-        """
-        if not isinstance(self.operator, LinearOperator):
+        """Verify that the operator is actually linear."""
+        if not self.operator.is_linear:
             print('Operator is not linear')
             return
 
@@ -238,14 +236,13 @@ class OperatorTest(object):
         self._addition_invariance()
 
     def run_tests(self):
-        """Runs all tests on this operator
-        """
+        """Run all tests on this operator."""
         print('\n== RUNNING ALL TESTS ==\n')
         print('Operator = {}'.format(self.operator))
 
         self.norm()
 
-        if isinstance(self.operator, LinearOperator):
+        if self.operator.is_linear:
             self.linear()
             self.adjoint()
         else:
