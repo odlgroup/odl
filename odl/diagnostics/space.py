@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
-import numpy as np
-from itertools import product
 
-from odl.operator.operator import LinearOperator
-from odl.space.base_ntuples import FnBase, NtuplesBase
-from odl.discr.l2_discr import DiscreteL2
-from odl.test.examples import scalar_examples, vector_examples
+from odl.diagnostics.examples import scalar_examples, vector_examples
 
 __all__ = ('SpaceTest',)
 
@@ -162,15 +156,13 @@ class SpaceTest(object):
         print('\ntesting positivity, ||x|| >= 0\n')
         print('error = -||x||')
 
-        #TODO: assert ||x|| = 0 iff x = 0
-
         num_failed = 0
         for [name, vec] in vector_examples(self.space):
             norm = vec.norm()
 
             if norm < 0 or (norm == 0 and name != 'Zero'):
                 print('x={:25s} : ||x||={}'
-                        ''.format(name, error))
+                        ''.format(name, norm))
                 num_failed += 1
 
         if num_failed == 0:
@@ -192,8 +184,8 @@ class SpaceTest(object):
             error = norm_xy-norm_x-norm_y
 
             if error > 0:
-                print('x={:25s} x={:25s}: error={}'
-                        ''.format(name, error))
+                print('x={:25s} y={:25s}: error={}'
+                        ''.format(name_x, name_y, error))
                 num_failed += 1
 
         if num_failed == 0:
