@@ -131,9 +131,10 @@ class ScalingOperator(Operator):
 
     @property
     def adjoint(self):
-        """ This operator is self adjoint
+        """ The adjoint is given by taking the conjugate of the scalar
         """
-        return self
+        #TODO: optimize to self if `scal` is real
+        return ScalingOperator(self._space, self._scal.conjugate())
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
