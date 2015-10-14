@@ -386,7 +386,7 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
                 raise TypeError('restriction operator {} is not a '
                                 '`Operator` instance.'.format(restr))
 
-            if not restr.linear:
+            if not restr.is_linear:
                 raise TypeError('restriction operator {} is not '
                                 'linear'.format(restr))
 
@@ -395,7 +395,7 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
                 raise TypeError('extension operator {} is not a '
                                 '`Operator` instance.'.format(ext))
 
-            if not ext.linear:
+            if not ext.is_linear:
                 raise TypeError('extension operator {} is not '
                                 'linear'.format(ext))
 

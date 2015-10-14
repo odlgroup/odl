@@ -108,7 +108,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         self._grid = grid
         self._order = order
 
-        if self.linear:
+        if self.is_linear:
             if not isinstance(fset, FunctionSpace):
                 raise TypeError('function space {} is not a `FunctionSpace` '
                                 'instance.'.format(fset))

@@ -15,12 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
-import numpy as np
-from itertools import product
-
-from odl.space.base_ntuples import FnBase, NtuplesBase
-from odl.discr.l2_discr import DiscreteL2
 from odl.test.examples import scalar_examples, vector_examples
 
 __all__ = ('SpaceTest',)
@@ -142,7 +136,7 @@ class SpaceTest(object):
                     if not ok:
                         print('failed with x={:25s}, a={}'.format(n_x, a))
 
-    def linear(self):
+    def linearity(self):
         print('\n== Verifying linear space properties ==\n')
 
         self._associativity_of_addition()
@@ -169,7 +163,7 @@ class SpaceTest(object):
 
             if norm < 0 or (norm == 0 and name != 'Zero'):
                 print('x={:25s} : ||x||={}'
-                        ''.format(name, error))
+                        ''.format(name, norm))
                 num_failed += 1
 
         if num_failed == 0:
@@ -192,7 +186,7 @@ class SpaceTest(object):
 
             if error > 0:
                 print('x={:25s} x={:25s}: error={}'
-                        ''.format(name, error))
+                        ''.format(name_x, error))
                 num_failed += 1
 
         if num_failed == 0:
@@ -238,7 +232,7 @@ class SpaceTest(object):
         print('\n== RUNNING ALL TESTS ==\n')
         print('Space = {}'.format(self.space))
         
-        self.linear()
+        self.linearity()
         self.norm()
 
     def __str__(self):

@@ -38,7 +38,7 @@ from abc import ABCMeta
 from numbers import Number
 
 # ODL imports
-from odl.set.space import LinearSpace, UniversalSpace
+from odl.set.space import LinearSpace
 from odl.set.sets import Set, UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
@@ -234,9 +234,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         self._domain = domain
         self._range = range
-        self._linear = bool(linear)
+        self._is_linear = bool(linear)
 
-        if self.linear:
+        if self.is_linear:
             if not isinstance(domain, LinearSpace):
                 raise TypeError('domain {!r} not a `LinearSpace` instance.'.format(domain))
             if not isinstance(range, LinearSpace):
@@ -253,9 +253,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         return self._range
 
     @property
-    def linear(self):
+    def is_linear(self):
         """True if this operator is linear."""
-        return self._linear
+        return self._is_linear
 
     @property
     def adjoint(self):
@@ -270,7 +270,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     def derivative(self, point):
         """Return the operator derivative at `point`."""
-        if self.linear:
+        if self.is_linear:
             return self
         else:
             raise NotImplementedError('derivative not implemented for operator '
@@ -407,7 +407,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         elif isinstance(other, Number):
             #Left multiplication is more efficient,
             #so we can use this in the case of linear operator.
-            if self.linear:
+            if self.is_linear:
                 return OperatorLeftScalarMult(self, other)
             else:
                 return OperatorRightScalarMult(self, other)
@@ -528,13 +528,13 @@ class OperatorSum(Operator):
 
         if tmp_ran is not None and tmp_ran not in op1.range:
             raise TypeError('tmp_ran {!r} not an element of the operator '
-                            'range {!r}.'.format(tmp, op1.range))
+                            'range {!r}.'.format(tmp_ran, op1.range))
 
-        if tmp_dom is not None and tmp_ran not in op1.domain:
+        if tmp_dom is not None and tmp_dom not in op1.domain:
             raise TypeError('tmp_dom {!r} not an element of the operator '
-                            'domain {!r}.'.format(tmp, op1.domain))
+                            'domain {!r}.'.format(tmp_dom, op1.domain))
 
-        super().__init__(op1.domain, op1.range, linear=op1.linear and op2.linear)
+        super().__init__(op1.domain, op1.range, linear=op1.is_linear and op2.is_linear)
         self._op1 = op1
         self._op2 = op2
         self._tmp_ran = tmp_ran
@@ -585,8 +585,8 @@ class OperatorSum(Operator):
         The derivative of a sum of two operators is equal to the sum of
         the derivatives.
         """
-        return LinearOperatorSum(self._op1.derivative(point),
-                                 self._op2.derivative(point))
+        return OperatorSum(self._op1.derivative(point),
+                           self._op2.derivative(point))
 
     @property
     def adjoint(self):
@@ -598,7 +598,7 @@ class OperatorSum(Operator):
         `OperatorSum(op1, op2).adjoint ==
         `OperatorSum(op1.adjoint, op2.adjoint)`
         """
-        if not self.linear:
+        if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
         return OperatorSum(self._op1.adjoint, self._op2.adjoint,
@@ -648,7 +648,7 @@ class OperatorComp(Operator):
             raise TypeError('temporary {!r} not an element of the left '
                             'operator domain {!r}.'.format(tmp, left.domain))
 
-        super().__init__(right.domain, left.range, linear=left.linear and right.linear)
+        super().__init__(right.domain, left.range, linear=left.is_linear and right.is_linear)
         self._left = left
         self._right = right
         self._tmp = tmp
@@ -691,7 +691,7 @@ class OperatorComp(Operator):
         left_deriv = self._left.derivative(self._right(point))
         right_deriv = self._right.derivative(point)
 
-        return LinearOperatorComp(left_deriv, right_deriv)
+        return OperatorComp(left_deriv, right_deriv)
 
     @property
     def adjoint(self):
@@ -703,7 +703,7 @@ class OperatorComp(Operator):
         `OperatorComp(left, right).adjoint ==
         `OperatorComp(right.adjoint, left.adjoint)`
         """
-        if not self.linear:
+        if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
         return OperatorComp(self._right.adjoint, self._left.adjoint,
@@ -809,7 +809,7 @@ class OperatorLeftScalarMult(Operator):
                             'operator range {!r}.'
                             ''.format(scalar, op.range.field, op.range))
 
-        super().__init__(op.domain, op.range, linear=op.linear)
+        super().__init__(op.domain, op.range, linear=op.is_linear)
         self._op = op
         self._scalar = scalar
 
@@ -866,7 +866,7 @@ class OperatorLeftScalarMult(Operator):
         `OperatorLeftScalarMult(op.adjoint, scalar)`
         """
 
-        if not self.linear:
+        if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
         
         # TODO: take conj(scalar) if complex
@@ -919,7 +919,7 @@ class OperatorRightScalarMult(Operator):
             raise TypeError('temporary {!r} not an element of the '
                             'operator domain {!r}.'.format(tmp, op.domain))
 
-        super().__init__(op.domain, op.range, op.linear)
+        super().__init__(op.domain, op.range, op.is_linear)
         self._op = op
         self._scalar = scalar
         self._tmp = tmp
@@ -975,7 +975,7 @@ class OperatorRightScalarMult(Operator):
         `OperatorLeftScalarMult(op.adjoint, scalar)`
         """
 
-        if not self.linear:
+        if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
         
         # TODO: take conj(scalar) if complex

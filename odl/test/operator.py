@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
 import numpy as np
-from itertools import product
 
-from odl.set.pspace import ProductSpace
-from odl.operator.operator import Operator
-from odl.space.base_ntuples import FnBase, NtuplesBase
-from odl.discr.l2_discr import DiscreteL2
 from odl.test.examples import scalar_examples, vector_examples
 
 __all__ = ('OperatorTest',)
@@ -183,10 +177,10 @@ class OperatorTest(object):
         else:
             print('*** FAILED {} TEST CASES ***'.format(num_failed))
 
-    def linear(self):
+    def linearity(self):
         """ Verifies that the operator is actually linear
         """
-        if not self.operator.linear:
+        if not self.operator.is_linear:
             print('Operator is not linear')
             return
 
@@ -258,8 +252,8 @@ class OperatorTest(object):
         print('Operator = {}'.format(self.operator))
 
         self.norm()
-        if self.operator.linear:
-            self.linear()
+        if self.operator.is_linear:
+            self.linearity()
             self.adjoint()
         else:
             self.derivative()
