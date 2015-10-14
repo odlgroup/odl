@@ -56,14 +56,14 @@ class ScalingOperator(SelfAdjointOperator):
         self._space = space
         self._scal = float(scalar)
 
-    def _apply(self, inp, outp):
+    def _apply(self, x, out):
         """Scale input and write to output.
 
         Parameters
         ----------
-        inp : domain element
-            Input vector to be scaled
-        outp : range element
+        x : domain element
+            input vector to be scaled
+        out : range element
             Output vector to which the result is written
 
         Returns
@@ -75,22 +75,22 @@ class ScalingOperator(SelfAdjointOperator):
         >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> vec = r3.element([1, 2, 3])
-        >>> outp = r3.element()
+        >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
-        >>> op(vec, outp)  # Returns outp
+        >>> op(vec, out)  # Returns out
         Rn(3).element([2.0, 4.0, 6.0])
-        >>> outp
+        >>> out
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        outp.lincomb(self._scal, inp)
+        out.lincomb(self._scal, x)
 
-    def _call(self, inp):
+    def _call(self, x):
         """Return the scaled element.
 
         Parameters
         ----------
-        inp : domain element
-            Input vector to be scaled
+        x : domain element
+            input vector to be scaled
 
         Returns
         -------
@@ -106,7 +106,7 @@ class ScalingOperator(SelfAdjointOperator):
         >>> op(vec)
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        return self._scal * inp
+        return self._scal * x
 
     @property
     def inverse(self):
@@ -190,7 +190,7 @@ class LinCombOperator(LinearOperator):
 
     This opertor calculates:
 
-    outp = a*inp[0] + b*inp[1]
+    out = a*x[0] + b*x[1]
     """
 
     # pylint: disable=abstract-method
@@ -202,24 +202,24 @@ class LinCombOperator(LinearOperator):
         space : LinearSpace
             The space of elements which the operator is acting on
         a : scalar
-            Scalar to multiply inp[0] with
+            Scalar to multiply x[0] with
         b : scalar
-            Scalar to multiply inp[1] with
+            Scalar to multiply x[1] with
         """
         domain = ProductSpace(space, space)
         super().__init__(domain, space)
         self.a = a
         self.b = b
 
-    def _apply(self, inp, outp):
+    def _apply(self, x, out):
         """Linearly combine the input and write to output.
 
         Parameters
         ----------
-        inp : domain element
+        x : domain element
             An element in the operator domain (2-tuple of space
             elements) whose linear combination is calculated
-        outp : range element
+        out : range element
             Vector to which the result is written
 
         Examples
@@ -230,12 +230,12 @@ class LinCombOperator(LinearOperator):
         >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
         >>> z = r3.element()
         >>> op = LinCombOperator(r3, 1.0, 1.0)
-        >>> op(xy, outp=z)  # Returns z
+        >>> op(xy, out=z)  # Returns z
         Rn(3).element([2.0, 4.0, 6.0])
         >>> z
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        outp.lincomb(self.a, inp[0], self.b, inp[1])
+        out.lincomb(self.a, x[0], self.b, x[1])
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
@@ -253,7 +253,7 @@ class MultiplyOperator(LinearOperator):
 
     The multiply operator calculates:
 
-    outp = inp[0] * inp[1]
+    out = x[0] * x[1]
 
     This is only applicable in Algebras.
     """
@@ -270,15 +270,15 @@ class MultiplyOperator(LinearOperator):
         domain = ProductSpace(space, space)
         super().__init__(domain, space)
 
-    def _apply(self, inp, outp):
+    def _apply(self, x, out):
         """Multiply the input and write to output.
 
         Parameters
         ----------
-        inp : domain element
+        x : domain element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        outp : range element
+        out : range element
             Vector to which the result is written
 
         Examples
@@ -294,7 +294,7 @@ class MultiplyOperator(LinearOperator):
         >>> z
         Rn(3).element([1.0, 4.0, 9.0])
         """
-        outp.space.multiply(outp, inp[0], inp[1])
+        out.space.multiply(out, x[0], x[1])
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""

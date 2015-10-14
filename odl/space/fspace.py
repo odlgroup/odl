@@ -226,28 +226,28 @@ class FunctionSet(Set):
 
         # FIXME: this is a bad hack bypassing the operator default
         # pattern for apply and call
-        def __call__(self, *inp):
+        def __call__(self, *x):
             """Vectorized and multi-argument out-of-place evaluation.
 
             Parameters
             ----------
-            inp1,...,inpN : `object`
+            x1,...,xN : `object`
                 Input arguments for the function evaluation.
 
             Returns
             -------
-            outp : `range` element or array of elements
+            out : `range` element or array of elements
                 Result of the function evaluation.
 
             Raises
             ------
-            If `outp` is not a `range` element or a `numpy.ndarray`
-            with `outp[0] in range`, a `TypeError` is raised.
+            If `out` is not a `range` element or a `numpy.ndarray`
+            with `out[0] in range`, a `TypeError` is raised.
             """
-            if inp in self.domain:
+            if x in self.domain:
                 # single value list: f(0, 1, 2)
                 pass
-            elif inp[0] in self.domain:
+            elif x[0] in self.domain:
                 # single array: f([0, 1, 2])
                 pass
             else:  # Try vectorization
@@ -257,17 +257,17 @@ class FunctionSet(Set):
                 # Vectorization only allowed in this case
 
                 # First case: (N, d) array of points, where d = dimension
-                if (isinstance(inp[0], np.ndarray) and
-                        inp[0].ndim == 2 and
-                        inp[0].shape[1] == self.domain.ndim):
-                    min_coords = np.min(inp[0], axis=0)
-                    max_coords = np.max(inp[0], axis=0)
+                if (isinstance(x[0], np.ndarray) and
+                        x[0].ndim == 2 and
+                        x[0].shape[1] == self.domain.ndim):
+                    min_coords = np.min(x[0], axis=0)
+                    max_coords = np.max(x[0], axis=0)
 
                 # Second case: d meshgrid type arrays
-                elif (len(inp) == self.domain.ndim and
-                      all(isinstance(vec, np.ndarray) for vec in inp)):
-                    min_coords = [np.min(vec) for vec in inp]
-                    max_coords = [np.max(vec) for vec in inp]
+                elif (len(x) == self.domain.ndim and
+                      all(isinstance(vec, np.ndarray) for vec in x)):
+                    min_coords = [np.min(vec) for vec in x]
+                    max_coords = [np.max(vec) for vec in x]
 
                 else:
                     raise TypeError('input is neither an element of the '
@@ -280,23 +280,23 @@ class FunctionSet(Set):
                     raise ValueError('input contains points outside '
                                      '`domain` {}.'.format(self.domain))
 
-            outp = self._call_impl(*inp)
+            out = self._call_impl(*x)
 
-            if not (outp in self.range or
-                    (isinstance(outp, np.ndarray) and
-                     outp.flat[0] in self.range)):
+            if not (out in self.range or
+                    (isinstance(out, np.ndarray) and
+                     out.flat[0] in self.range)):
                 raise TypeError('result {!r} not an element or an array of '
                                 'elements of the function range {}.'
-                                ''.format(outp, self.range))
+                                ''.format(out, self.range))
 
-            return outp
+            return out
 
-        def apply(self, outp, *inp):
+        def apply(self, out, *x):
             """Vectorized and multi-argument in-place evaluation.
 
             Parameters
             ----------
-            outp : `range` element or array of elements
+            out : `range` element or array of elements
                 Element(s) to which the result is written.
             inp1,...,inpN : `object`
                 Input arguments for the function evaluation.
@@ -307,18 +307,18 @@ class FunctionSet(Set):
 
             Raises
             ------
-            If `outp` is not a `range` element or a `numpy.ndarray`
-            with `outp[0] in range`, a `TypeError` is raised.
+            If `out` is not a `range` element or a `numpy.ndarray`
+            with `out[0] in range`, a `TypeError` is raised.
             """
-            if not (outp in self.range or
-                    (isinstance(outp, np.ndarray) and
-                     outp.flat[0] in self.range)):
+            if not (out in self.range or
+                    (isinstance(out, np.ndarray) and
+                     out.flat[0] in self.range)):
                 raise TypeError('result {!r} not an element or an array of '
                                 'elements of the function range {}.'
-                                ''.format(outp, self.range))
+                                ''.format(out, self.range))
 
             # TODO: no checks on input so far
-            return self._apply(outp, *inp)
+            return self._apply(out, *x)
 
         def __ne__(self, other):
             """`vec.__ne__(other) <==> vec != other`"""
@@ -413,56 +413,56 @@ class FunctionSpace(FunctionSet, LinearSpace):
         y_old_call = y._call
         y_old_apply = y._apply
 
-        def lincomb_call(*inp):
+        def lincomb_call(*x):
             """Linear combination, call version."""
             # Due to vectorization, at least one call must be made to
             # ensure the correct final shape. The rest is optimized as
             # far as possible.
             if a == 0 and b != 0:
-                outp = y_old_call(*inp)
+                out = y_old_call(*x)
                 if b != 1:
-                    outp *= b
+                    out *= b
             elif b == 0:  # Contains the case a == 0
-                outp = x_old_call(*inp)
+                out = x_old_call(*x)
                 if a != 1:
-                    outp *= a
+                    out *= a
             else:
-                outp = x_old_call(*inp)
+                out = x_old_call(*x)
                 if a != 1:
-                    outp *= a
-                tmp = y_old_call(*inp)
+                    out *= a
+                tmp = y_old_call(*x)
                 if b != 1:
                     tmp *= b
-                outp += tmp
+                out += tmp
 
-            return outp
+            return out
 
-        def lincomb_apply(outp, *inp):
+        def lincomb_apply(out, *x):
             """Linear combination, apply version."""
             # TODO: allow also CudaRn-like container types
-            if not isinstance(outp, np.ndarray):
+            if not isinstance(out, np.ndarray):
                 raise TypeError('in-place evaluation only possible if output '
                                 'is of type `numpy.ndarray`.')
             if a == 0 and b == 0:
-                outp *= 0
+                out *= 0
             elif a == 0 and b != 0:
-                y_old_apply(outp, *inp)
+                y_old_apply(out, *x)
                 if b != 1:
-                    outp *= b
+                    out *= b
             elif b == 0 and a != 0:
-                x_old_apply(outp, *inp)
+                x_old_apply(out, *x)
                 if a != 1:
-                    outp *= a
+                    out *= a
             else:
-                tmp = np.empty_like(outp)
-                x_old_apply(outp, *inp)
-                y_old_apply(tmp, *inp)
+                tmp = np.empty_like(out)
+                x_old_apply(out, *x)
+                y_old_apply(tmp, *x)
                 if a != 1:
-                    outp *= a
+                    out *= a
                 if b != 1:
                     tmp *= b
 
-                outp += tmp
+                out += tmp
 
         z._call = lincomb_call
         z._apply = lincomb_apply

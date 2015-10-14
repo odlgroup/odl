@@ -64,12 +64,12 @@ def _bound_method(function):
     return method
 
 
-def _default_call(self, inp):
+def _default_call(self, x):
     """Default out-of-place operator evaluation using `_apply()`.
 
     Parameters
     ----------
-    inp : domain element
+    x : domain element
         An object in the operator domain. The operator is applied
         to it.
 
@@ -80,16 +80,16 @@ def _default_call(self, inp):
         evaluation.
     """
     out = self.range.element()
-    self._apply(inp, out)
+    self._apply(x, out)
     return out
 
 
-def _default_apply(self, inp, out):
+def _default_apply(self, x, out):
     """Default in-place operator evaluation using `_call()`.
 
     Parameters
     ----------
-    inp : domain element
+    x : domain element
         An object in the operator domain. The operator is applied
         to it.
 
@@ -101,7 +101,7 @@ def _default_apply(self, inp, out):
     -------
     None
     """
-    out.assign(self._call(inp))
+    out.assign(self._call(x))
 
 
 class _OperatorMeta(ABCMeta):
@@ -173,17 +173,17 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     and the result is written to a new element which is returned.
     In this case, a subclass has to implement the method
 
-    `_call(self, inp)  <==>  operator(inp)`
+    `_call(self, x)  <==>  operator(x)`
 
     **Parameters:**
 
-    inp : `domain` element
+    x : `domain` element
         An object in the operator domain to which the operator is
         applied.
 
     **Returns:**
 
-    outp : `range` element
+    out : `range` element
         An object in the operator range, the result of the operator
         evaluation.
 
@@ -193,15 +193,15 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     result is written to an existing element provided as an additional
     argument. In this case, a subclass has to implement the method
 
-    `_apply(self, inp, outp)  <==>  outp <-- operator(inp)`
+    `_apply(self, x, out)  <==>  out <-- operator(x)`
 
     **Parameters:**
 
-    inp : `domain` element
+    x : `domain` element
         An object in the operator domain to which the operator is
         applied.
 
-    outp : `range` element
+    out : `range` element
         An object in the operator range to which the result of the
         operator evaluation is written.
 
@@ -264,19 +264,19 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         return self.inverse
 
     # Implicitly defined operators
-    def __call__(self, inp, outp=None):
-        """`op.__call__(inp) <==> op(inp)`.
+    def __call__(self, x, out=None):
+        """`op.__call__(x) <==> op(x)`.
 
-        Implementation of the call pattern `op(inp)` with the private
+        Implementation of the call pattern `op(x)` with the private
         `_call()` method and added error checking.
 
         Parameters
         ----------
-        inp : domain element
+        x : domain element
             An object in the operator domain to which the operator is
             applied. The object is treated as immutable, hence it is
             not modified during evaluation.
-        outp : `range` element, optional
+        out : `range` element, optional
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
@@ -285,7 +285,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         -------
         elem : range element
             An object in the operator range, the result of the operator
-            evaluation. It is identical to `outp` if provided.
+            evaluation. It is identical to `out` if provided.
 
         Examples
         --------
@@ -302,27 +302,27 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         In-place evaluation:
 
         >>> y = rn.element()
-        >>> op(x, outp=y)
+        >>> op(x, out=y)
         Rn(3).element([2.0, 4.0, 6.0])
         >>> y
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        if inp not in self.domain:
+        if x not in self.domain:
             raise TypeError('input {!r} not an element of the domain {!r} '
                             'of {!r}.'
-                            ''.format(inp, self.domain, self))
+                            ''.format(x, self.domain, self))
 
-        if outp is not None:  # In-place evaluation
-            if outp not in self.range:
+        if out is not None:  # In-place evaluation
+            if out not in self.range:
                 raise TypeError('output {!r} not an element of the range {!r} '
                                 'of {!r}.'
-                                ''.format(outp, self.range, self))
+                                ''.format(out, self.range, self))
                                 
-            self._apply(inp, outp)
-            return outp
+            self._apply(x, out)
+            return out
 
         else:  # Out-of-place evaluation
-            result = self._call(inp)
+            result = self._call(x)
 
             if result not in self.range:
                 raise TypeError('result {!r} not an element of the range {!r} '
@@ -508,29 +508,29 @@ class OperatorSum(Operator):
         self._op2 = op2
         self._tmp = tmp
 
-    def _apply(self, inp, outp):
-        """`op._apply(inp, outp) <==> outp <-- op(inp)`.
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`.
 
         Examples
         --------
         >>> from odl import Rn, IdentityOperator
         >>> r3 = Rn(3)
         >>> op = IdentityOperator(r3)
-        >>> inp = r3.element([1, 2, 3])
-        >>> outp = r3.element()
-        >>> OperatorSum(op, op)(inp, outp)
+        >>> x = r3.element([1, 2, 3])
+        >>> out = r3.element()
+        >>> OperatorSum(op, op)(x, out)
         Rn(3).element([2.0, 4.0, 6.0])
-        >>> outp
+        >>> out
         Rn(3).element([2.0, 4.0, 6.0])
         """
         # pylint: disable=protected-access
         tmp = self._tmp if self._tmp is not None else self.range.element()
-        self._op1._apply(inp, outp)
-        self._op2._apply(inp, tmp)
-        outp += tmp
+        self._op1._apply(x, out)
+        self._op2._apply(x, tmp)
+        out += tmp
 
-    def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`.
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`.
 
         Examples
         --------
@@ -543,18 +543,18 @@ class OperatorSum(Operator):
         Rn(3).element([2.0, 4.0, 6.0])
         """
         # pylint: disable=protected-access
-        return self._op1._call(inp) + self._op2._call(inp)
+        return self._op1._call(x) + self._op2._call(x)
 
-    def derivative(self, point):
-        """Return the operator derivative at `point`.
+    def derivative(self, x):
+        """Return the operator derivative at `x`.
 
         # TODO: finish doc
 
         The derivative of a sum of two operators is equal to the sum of
         the derivatives.
         """
-        return LinearOperatorSum(self._op1.derivative(point),
-                                 self._op2.derivative(point))
+        return LinearOperatorSum(self._op1.derivative(x),
+                                 self._op2.derivative(x))
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -605,18 +605,18 @@ class OperatorComp(Operator):
         self._right = right
         self._tmp = tmp
 
-    def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`."""
-        # pylint: disable=protected-access
-        return self._left._call(self._right._call(inp))
-
-    def _apply(self, inp, outp):
-        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`."""
         # pylint: disable=protected-access
         tmp = (self._tmp if self._tmp is not None
                else self._right.range.element())
-        self._right._apply(inp, tmp)
-        self._left._apply(tmp, outp)
+        self._right._apply(x, tmp)
+        self._left._apply(tmp, out)
+        
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`."""
+        # pylint: disable=protected-access
+        return self._left._call(self._right._call(x))
 
     @property
     def inverse(self):
@@ -692,19 +692,19 @@ class OperatorPointwiseProduct(Operator):
         self._op1 = op1
         self._op2 = op2
 
-    def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`."""
-        # pylint: disable=protected-access
-        return self._op1._call(inp) * self._op2._call(inp)
-
-    def _apply(self, inp, outp):
-        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`."""
         # pylint: disable=protected-access
         tmp = self._op2.range.element()
-        self._op1._apply(inp, outp)
-        self._op2._apply(inp, tmp)
-        outp *= tmp
+        self._op1._apply(x, out)
+        self._op2._apply(x, tmp)
+        out *= tmp
 
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`."""
+        # pylint: disable=protected-access
+        return self._op1._call(x) * self._op2._call(x)
+        
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
         return 'OperatorPointwiseProduct({!r}, {!r})'.format(self._op1,
@@ -749,16 +749,16 @@ class OperatorLeftScalarMult(Operator):
         self._op = op
         self._scalar = scalar
 
-    def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`."""
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`."""
         # pylint: disable=protected-access
-        return self._scalar * self._op._call(inp)
+        return self._scalar * self._op._call(x)
 
-    def _apply(self, inp, outp):
-        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`."""
         # pylint: disable=protected-access
-        self._op._apply(inp, outp)
-        outp *= self._scalar
+        self._op._apply(x, out)
+        out *= self._scalar
 
     @property
     def inverse(self):
@@ -773,22 +773,23 @@ class OperatorLeftScalarMult(Operator):
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
+            
         return OperatorRightScalarMult(self._op.inverse, 1.0/self._scalar)
 
-    def derivative(self, point):
-        """Return the derivative at 'point'.
+    def derivative(self, x):
+        """Return the derivative at 'x'.
 
         Left scalar multiplication and derivative are commutative:
 
-        OperatorLeftScalarMult(op, scalar).derivative(point) <==>
-        LinearOperatorScalarMult(op.derivative(point), scalar)
+        OperatorLeftScalarMult(op, scalar).derivative(x) <==>
+        OperatorLeftScalarMult(op.derivative(x), scalar)
 
         See also
         --------
         LinearOperatorScalarMult: the result
         """
-        return LinearOperatorScalarMult(self._op.derivative(point),
-                                        self._scalar)
+        return OperatorLeftScalarMult(self._op.derivative(x),
+                                      self._scalar)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -842,17 +843,17 @@ class OperatorRightScalarMult(Operator):
         self._scalar = scalar
         self._tmp = tmp
 
-    def _call(self, inp):
-        """`op.__call__(inp) <==> op(inp)`."""
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`."""
         # pylint: disable=protected-access
-        return self._op._call(self._scalar * inp)
+        return self._op._call(self._scalar * x)
 
-    def _apply(self, inp, outp):
-        """`op._apply(inp, outp) <==> outp <-- op(inp)`."""
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`."""
         # pylint: disable=protected-access
         tmp = self._tmp if self._tmp is not None else self.domain.element()
-        tmp.lincomb(self._scalar, inp)
-        self._op._apply(tmp, outp)
+        tmp.lincomb(self._scalar, x)
+        self._op._apply(tmp, out)
 
     @property
     def inverse(self):
@@ -867,20 +868,21 @@ class OperatorRightScalarMult(Operator):
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
+            
         return OperatorLeftScalarMult(self._op.inverse, 1.0/self._scalar)
 
-    def derivative(self, point):
-        """Return the derivative at 'point'.
+    def derivative(self, x):
+        """Return the derivative at 'x'.
 
         The derivative of the right scalar operator multiplication
         follows the chain rule:
 
-        `OperatorRightScalarMult(op, scalar).derivative(point) <==>
-        LinearOperatorScalarMult(op.derivative(scalar * point),
+        `OperatorRightScalarMult(op, scalar).derivative(x) <==>
+        OperatorLeftScalarMult(op.derivative(scalar * x),
         scalar)`
         """
-        return LinearOperatorScalarMult(
-            self._op.derivative(self._scalar * point), self._scalar)
+        return OperatorLeftScalarMult(
+            self._op.derivative(self._scalar * x), self._scalar)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -1167,11 +1169,11 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     call : callable
         A function taking one argument and returning the result.
         It will be used for the operator call pattern
-        `outp = op(inp)`.
+        `out = op(x)`.
     apply : callable
         A function taking two arguments.
         It will be used for the operator apply pattern
-        `op._apply(inp, outp) <==> outp <-- op(inp)`. Return value
+        `op._apply(x, out) <==> out <-- op(x)`. Return value
         is assumed to be `None` and is ignored.
     inv : `Operator`, optional
         The operator inverse
@@ -1232,11 +1234,11 @@ def linear_operator(call=None, apply=None, inv=None, adj=None,
     call : callable
         A function taking one argument and returning the result.
         It will be used for the operator call pattern
-        `outp = op(inp)`.
+        `out = op(x)`.
     apply : callable
         A function taking two arguments.
         It will be used for the operator apply pattern
-        `op._apply(inp, outp) <==> outp <-- op(inp)`. Return value
+        `op._apply(x, out) <==> out <-- op(x)`. Return value
         is assumed to be `None` and is ignored.
     inv : `LinearOperator`, optional
         The operator inverse
