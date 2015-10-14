@@ -222,18 +222,23 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        dom : `Set`
+        domain : `Set`
             The domain of this operator, i.e., the set of elements to
             which this operator can be applied
-
-        ran : `Set`
+        range : `Set`
             The range of this operator, i.e., the set this operator
             maps to
+        linear : bool
+            If `True`, the operator is considered as linear. In this
+            case, `domain` and `range` have to be instances of
+            `LinearSpace`, `RealNumbers` or `ComplexNumbers`.
         """
         if not isinstance(domain, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
+            raise TypeError('domain {!r} is not a `Set` instance.'
+                            ''.format(domain))
         if not isinstance(range, Set):
-            raise TypeError('range {!r} not a `Set` instance.'.format(range))
+            raise TypeError('range {!r} is not a `Set` instance.'
+                            ''.format(range))
 
         self._domain = domain
         self._range = range
@@ -339,8 +344,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                                 ''.format(out, self.range, self))
 
             if isinstance(self.range, Field):
-                raise TypeError('`out` parameter cannot be used when range is '
-                                'a field')
+                raise TypeError('output parameter cannot be used when range '
+                                'is a field')
 
             self._apply(x, out, *args, **kwargs)
             return out
@@ -365,7 +370,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __mul__(self, other):
         """`op.__mul__(other) <==> op * other`.
 
-        If `other` is an operator, this corresponds to 
+        If `other` is an operator, this corresponds to
         operator composition:
 
         `op1 * op2 <==> (x --> op1(op2(x))`
@@ -398,11 +403,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Returns
         -------
         mul : `Operator`
-            The multiplication operator. 
+            The multiplication operator.
 
-            If `other` is an operator, 
+            If `other` is an operator,
             mul is a `OperatorComp`.
-            
+
             If `other` is a scalar
             mul is a `OperatorRightScalarMult`.
 
@@ -440,7 +445,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
 
-        If `other` is an operator, this corresponds to 
+        If `other` is an operator, this corresponds to
         operator composition:
 
         `op1 * op2 <==> (x --> op1(op2(x)))`
@@ -475,9 +480,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         mul : `Operator`
             The multiplication operator.
 
-            If `other` is an operator, 
+            If `other` is an operator,
             mul is a `OperatorComp`.
-            
+
             If `other` is a scalar
             mul is a `OperatorLeftScalarMult`.
 
@@ -669,8 +674,8 @@ class OperatorSum(Operator):
                             ''.format(op1.range, op2.range))
 
         if not isinstance(op1.range, (LinearSpace, Field)):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
-                            ''.format(op1.range))
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` '
+                            'instance.'.format(op1.range))
 
         if op1.domain != op2.domain:
             raise TypeError('operator domains {!r} and {!r} do not match.'
@@ -896,11 +901,9 @@ class OperatorPointwiseProduct(Operator):
         if op1.range != op2.range:
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
-
         if not isinstance(op1.range, (LinearSpace, Field)):
             raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                             'instance.'.format(op1.range))
-
         if op1.domain != op2.domain:
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
@@ -1144,13 +1147,13 @@ class OperatorRightScalarMult(Operator):
 class FunctionalLeftVectorMult(Operator):
     """Expression type for the functional left vector multiplication.
 
-    A functional is a `Operator` whose `range` is a `Field`.
+    A functional is an `Operator` whose `range` is a `Field`.
 
-    `FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)`
+    `FunctionalLeftVectorMult(op, vector)(x) <==> vector * func(x)`
     """
 
     def __init__(self, op, vector):
-        """Initialize a new `FunctionalLeftVectorMult` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -1160,9 +1163,8 @@ class FunctionalLeftVectorMult(Operator):
             The vector to multiply by
         """
         if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('Vector {!r} not is not a LinearSpace.Vector'
-                            ''.format(vector))
-
+            raise TypeError('Vector {!r} not is not a `LinearSpace.Vector` '
+                            'instance.'.format(vector))
         if op.range != vector.space.field:
             raise TypeError('range {!r} not is not vector.space.field {!r}'
                             ''.format(op.range, vector.space.field))

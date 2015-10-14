@@ -73,27 +73,33 @@ class FunctionSet(Set):
         """Return `range` attribute."""
         return self._range
 
-    def element(self, fcall=None, fapply=None):
+    def element(self, fcall, fapply=None, vectorization='none'):
         """Create a `FunctionSet` element.
 
         Parameters
         ----------
-        fcall : callable, optional
-            The actual instruction for out-of-place evaluation.
-            It must return an `fset.range` element or a
-            `numpy.ndarray` of such (vectorized call).
-
-            If `fcall` is a `FunctionSet.Vector`, it is wrapped
-            as a new `Vector`.
-
+        fcall : callable
+            The actual instruction for out-of-place evaluation. If
+            `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
+            and `vectorization` are used for initialization unless
+            explicitly given
         fapply : callable, optional
-            The actual instruction for in-place evaluation.
-            Its first argument must be the `fset.range` element
-            or the array of such (vectorization) to which the
-            result is written.
+            The actual instruction for in-place evaluation
+        vectorization : {'none', 'array', 'meshgrid', 'all'}
+            Type of vectorization to be allowed in the function
+            evaluation
 
-            If `fapply` is a `FunctionSet.Vector`, it is wrapped
-            as a new `Vector`.
+            'none' : no vectorization; this is equivalent to the plain
+            `Operator` evaluation where the argument must be a domain
+            element.
+
+            'array' : allow function argument to be a NumPy array of
+            domain elements.
+
+            'meshgrid' : allow function argument to be a tuple of
+            arrays comprising a sparse evaluation grid.
+
+            'all' : allow all mentioned types of vectorization
 
         *At least one of the arguments `fcall` and `fapply` must
         be provided.*
@@ -101,14 +107,24 @@ class FunctionSet(Set):
         Returns
         -------
         element : `FunctionSet.Vector`
-            The new element created from `func`
+            The new element created from `fcall` and `fapply`
+
+        See also
+        --------
+        discr.grid.TensorGrid.meshgrid : efficient grids for function
+        evaluation
         """
         if isinstance(fcall, self.Vector):  # no double wrapping
-            return self.element(fcall._call, fcall._apply)
-        elif isinstance(fapply, self.Vector):
-            return self.element(fapply._call, fapply._apply)
+            if fapply is None:
+                if vectorization == fcall.vectorization:
+                    return fcall
+                else:
+                    vectorization = fcall.vectorization
+                    fapply = fcall._apply
+                    fcall = fcall._call
+                    return self.Vector(fcall, fapply, vectorization)
         else:
-            return self.Vector(self, fcall, fapply)
+            return self.Vector(fcall, fapply, vectorization)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
@@ -150,28 +166,47 @@ class FunctionSet(Set):
 
         """Representation of a `FunctionSet` element."""
 
-        def __init__(self, fset, fcall=None, fapply=None):
+        def __init__(self, fset, fcall=None, fapply=None,
+                     vectorization='none'):
             """Initialize a new instance.
 
             Parameters
             ----------
             fset : `FunctionSet`
                 The set of functions this element lives in
-            fcall : callable, optional
-                The actual instruction for out-of-place evaluation.
-                It must return an `fset.range` element or a
-                `numpy.ndarray` of such (vectorized call).
+            fcall : callable
+                The actual instruction for out-of-place evaluation. If
+                `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
+                and `vectorization` are used for initialization unless
+                explicitly given
             fapply : callable, optional
-                The actual instruction for in-place evaluation.
-                Its first argument must be the `fset.range` element
-                or the array of such (vectorization) to which the
-                result is written.
+                The actual instruction for in-place evaluation
+            vectorization : {'none', 'array', 'meshgrid', 'all'}
+                Type of vectorization to be allowed in the function
+                evaluation
+
+                'none' : no vectorization; this is equivalent to the
+                plain `Operator` evaluation where the argument must be a
+                domain element.
+
+                'array' : allow function argument to be a NumPy array of
+                domain elements.
+
+                'meshgrid' : allow function argument to be a tuple of
+                arrays comprising a sparse evaluation grid.
+
+                'all' : allow all mentioned types of vectorization
 
             *At least one of the arguments `fcall` and `fapply` must
             be provided.*
+
+            See also
+            --------
+            discr.grid.TensorGrid.meshgrid : efficient grids for
+            function evaluation
             """
             if not isinstance(fset, FunctionSet):
-                raise TypeError('function set {} not a `FunctionSet` '
+                raise TypeError('function set {!r} is not a `FunctionSet` '
                                 'instance.'.format(fset))
 
             if fcall is None and fapply is None:
@@ -186,17 +221,34 @@ class FunctionSet(Set):
                 raise TypeError('apply function {} is not callable.'
                                 ''.format(fapply))
 
+            super().__init__(fset.domain, fset.range, linear=False)
+            self._vectorization = str(vectorization).lower()
             self._space = fset
             self._call = fcall
             self._apply = fapply
-            
-            #Todo: allow users to specify linear
-            super().__init__(self.space.domain, self.space.range, linear=False)
+
+            super().__init__(self.space.domain, self.space.range,
+                             linear=False)
 
         @property
         def space(self):
             """Return `space` attribute."""
             return self._space
+
+        @property
+        def domain(self):
+            """The function domain (abstract in `Operator`)."""
+            return self.space.domain
+
+        @property
+        def range(self):
+            """The function range (abstract in `Operator`)."""
+            return self.space.range
+
+        @property
+        def vectorization(self):
+            """Vectorization type of this function."""
+            return self._vectorization
 
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`.
@@ -215,7 +267,8 @@ class FunctionSet(Set):
             return (isinstance(other, FunctionSet.Vector) and
                     self.space == other.space and
                     self._call == other._call and
-                    self._apply == other._apply)
+                    self._apply == other._apply and
+                    self.vectorization == other.vectorization)
 
         # FIXME: this is a bad hack bypassing the operator default
         # pattern for apply and call
@@ -324,6 +377,7 @@ class FunctionSet(Set):
                 return str(self._apply_impl)
 
         def __repr__(self):
+            # TODO: add vectorization
             if self._call is not None:
                 return '{!r}.element({!r})'.format(self.space, self._call)
             else:
