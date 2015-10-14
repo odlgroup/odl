@@ -333,6 +333,10 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __add__(self, other):
         """`op.__add__(other) <==> op + other`."""
         return OperatorSum(self, other)
+        
+    def __sub__(self, other):
+        """`op.__add__(other) <==> op - other`."""
+        return OperatorSum(self, -1 * other)
 
     def __mul__(self, other):
         """`op.__mul__(other) <==> op * other`.
@@ -385,6 +389,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         else:
             raise TypeError('multiplicant {!r} is neither operator nor '
                             'scalar.'.format(other))
+                        
 
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
