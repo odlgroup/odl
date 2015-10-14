@@ -38,7 +38,7 @@ from abc import ABCMeta
 from numbers import Number
 
 # ODL imports
-from odl.set.space import LinearSpace
+from odl.set.space import LinearSpace, UniversalSpace
 from odl.set.sets import Set, UniversalSet
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
@@ -998,7 +998,7 @@ class OperatorRightScalarMult(Operator):
 
 
 def operator(call=None, apply=None, inv=None, deriv=None,
-             dom=UniversalSet(), ran=UniversalSet(), linear=False):
+             dom=None, ran=None, linear=False):
     """Create a simple operator.
 
     Mostly intended for simple prototyping rather than final use.
@@ -1022,10 +1022,10 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         Default: `None`
     dom : `Set`, optional
         The domain of the operator
-        Default: `UniversalSet`
+        Default: `UniversalSpace` if linear, else `UniversalSet`
     ran : `Set`, optional
         The range of the operator
-        Default: `UniversalSet`
+        Default: `UniversalSpace` if linear, else `UniversalSet`
     linear : `boolean`, optional
         True if the operator is linear
         Default: False
@@ -1052,6 +1052,11 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     if call is None and apply is None:
         raise ValueError('at least one argument `call` or `apply` must be '
                          'given.')
+
+    if linear:
+        dom = ran = UniversalSpace()
+    else:
+        dom = ran = UniversalSet()
 
     attrs = {'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran}
 

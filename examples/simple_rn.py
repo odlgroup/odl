@@ -44,14 +44,14 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
     def zero(self):
         return self.element(np.zeros(self.size))
 
-    def _lincomb(self, z, a, x, b, y):
-        z.data[:] = a * x.data + b * y.data
+    def _lincomb(self, a, x1, b, x2, out):
+        out.data[:] = a * x1.data + b * x2.data
 
-    def _inner(self, x, y):
-        return float(np.vdot(x.data, y.data))
+    def _inner(self, x1, x2):
+        return float(np.vdot(x1.data, x2.data))
 
-    def _multiply(self, z, x, y):
-        z.data[:] = x.data * y.data
+    def _multiply(self, x1, x2, out):
+        out.data[:] = x1.data * x2.data
 
     def element(self, *args, **kwargs):
         if not args and not kwargs:
@@ -83,7 +83,7 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
             return self.data(*args)
 
 r5 = SimpleRn(5)
-odl.test.SpaceTest(r5).run_tests()
+odl.diagnostics.SpaceTest(r5).run_tests()
 
 # Do some tests to compare
 n = 10**7
@@ -107,18 +107,18 @@ if odl.CUDA_AVAILABLE:
 print(" lincomb:")
 with Timer("SimpleRn"):
     for _ in range(iterations):
-        simpleX.lincomb(sz, 2.13, sx, 3.14, sy)
+        simpleX.lincomb(2.13, sx, 3.14, sy, out=sz)
 print("result: {}".format(sz[1:5]))
 
 with Timer("Rn"):
     for _ in range(iterations):
-        optX.lincomb(oz, 2.13, ox, 3.14, oy)
+        optX.lincomb(2.13, ox, 3.14, oy, out=oz)
 print("result: {}".format(oz[1:5]))
 
 if odl.CUDA_AVAILABLE:
     with Timer("CudaRn"):
         for _ in range(iterations):
-            cuX.lincomb(cz, 2.13, cx, 3.14, cy)
+            cuX.lincomb(2.13, cx, 3.14, cy, out=cz)
     print("result: {}".format(cz[1:5]))
 
 
