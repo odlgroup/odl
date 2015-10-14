@@ -92,17 +92,7 @@ class SimulatedCudaProjector3D(odl.Operator):
 
             projections[i][:] = -np.log(0.0001 +
                                         self._sim_result[i][0].asarray())
-        """
-        # Create projector
-        self._projector.setData(volume.ntuple.data_ptr)
 
-        # Project all geometries
-        for i in range(len(self.geometries)):
-           =A(A(A(x))) geo = self.geometries[i]
-
-            self._projector.project(geo.sourcePosition, geo.detectorOrigin,
-                                    geo.pixelDirectionU, geo.pixelDirectionV,
-                                    projection[i].ntuple.data_ptr)"""
 
     def derivative(self, point):
         return self._projector
