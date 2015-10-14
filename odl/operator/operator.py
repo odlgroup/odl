@@ -62,7 +62,7 @@ def _bound_method(function):
     return method
 
 
-def _default_call(self, x):
+def _default_call(self, x, *args, **kwargs):
     """Default out-of-place operator evaluation using `_apply()`.
 
     Parameters
@@ -78,11 +78,11 @@ def _default_call(self, x):
         evaluation.
     """
     out = self.range.element()
-    self._apply(x, out)
+    self._apply(x, out, *args, **kwargs)
     return out
 
 
-def _default_apply(self, x, out):
+def _default_apply(self, x, out, *args, **kwargs):
     """Default in-place operator evaluation using `_call()`.
 
     Parameters
@@ -99,7 +99,7 @@ def _default_apply(self, x, out):
     -------
     None
     """
-    out.assign(self._call(x))
+    out.assign(self._call(x, *args, **kwargs))
 
 
 class _OperatorMeta(ABCMeta):
@@ -290,7 +290,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         return self.inverse
 
     # Implicitly defined operators
-    def __call__(self, x, out=None):
+    def __call__(self, x, out=None, *args, **kwargs):
         """`op.__call__(x) <==> op(x)`.
 
         Implementation of the call pattern `op(x)` with the private
@@ -306,6 +306,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
+        *args, **kwargs : Further arguments to the function, optional
 
         Returns
         -------
@@ -344,11 +345,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                                 'of {!r}.'
                                 ''.format(out, self.range, self))
 
-            self._apply(x, out)
+            self._apply(x, out, *args, **kwargs)
             return out
 
         else:  # Out-of-place evaluation
-            result = self._call(x)
+            result = self._call(x, *args, **kwargs)
 
             if result not in self.range:
                 raise TypeError('result {!r} not an element of the range {!r} '
