@@ -285,7 +285,7 @@ class GetSetTest(ODLTestCase):
 
 class NumpyInteractionTest(ODLTestCase):
     def test_multiply_by_scalar(self):
-        """Verifies that multiplying with numpy scalars 
+        """Verifies that multiplying with numpy scalars
         does not change the type of the array
         """
 
@@ -303,7 +303,7 @@ class NumpyInteractionTest(ODLTestCase):
         x = r3.zero()
 
         arr = x.__array__()
-        
+
         self.assertIsInstance(arr, np.ndarray)
         self.assertAllAlmostEquals(arr, [0.0, 0.0, 0.0])
 
@@ -316,7 +316,7 @@ class NumpyInteractionTest(ODLTestCase):
         x = r3.element([0.0, 1.0, 2.0])
         y_h = np.sin(x_h)
         y = np.sin(x)
-        
+
         self.assertAllAlmostEquals(y, y_h)
         self.assertIn(y, r3)
 
@@ -326,11 +326,11 @@ class NumpyInteractionTest(ODLTestCase):
         x = r3_f32.element(x_h)
         y_h = np.sin(x_h)
         y = np.sin(x)
-        
+
         self.assertAllAlmostEquals(y, y_h)
         self.assertIn(y, r3_f32)
 
-        
+
 
 class FnMatrixWeightingTest(ODLTestCase):
     @staticmethod
