@@ -40,6 +40,11 @@ from odl.set.space import LinearSpace
 __all__ = ('FunctionSet', 'FunctionSpace')
 
 
+def _apply_not_impl(x, out):
+    """Dummy function to be used when apply function is not given."""
+    raise NotImplementedError('no `_apply` method defined.')
+
+
 class FunctionSet(Set):
 
     """A general set of functions with common domain and range."""
@@ -222,7 +227,7 @@ class FunctionSet(Set):
                                 'got {!r}.'.format(fset.domain))
             self._space = fset
             self._call = fcall
-            self._apply = fapply
+            self._apply = fapply if fapply is not None else _apply_not_impl
 
             super().__init__(self.space.domain, self.space.range,
                              linear=False)
@@ -338,9 +343,10 @@ class FunctionSet(Set):
 
             out = self._call(x)
 
-            if self.vectorization == 'none' and out not in self.range:
-                raise TypeError('output {!r} not in range {}.'
-                                ''.format(self.range))
+            if self.vectorization == 'none':
+                if out not in self.range:
+                    raise TypeError('output {!r} not in range {}.'
+                                    ''.format(self.range))
             else:
                 if not (isinstance(out, np.ndarray) and
                         out.flat[0] in self.range):
@@ -524,7 +530,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             The new element.
         """
         if fcall is None:
-            return self.zero()
+            return self.zero(vectorization=vectorization)
         else:
             return super().element(fcall, fapply, vectorization=vectorization)
 
@@ -538,12 +544,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Different vectorization types are not allowed.
         """
-        print(repr(out))
-
-        if not x1.vectorization == x2.vecorization == out.vectorization:
+        if not x1.vectorization == x2.vectorization == out.vectorization:
             raise ValueError('functions have different vectorization types '
                              '({}, {}, {})'
-                             ''.format(x1.vectorization, x2.vecorization,
+                             ''.format(x1.vectorization, x2.vectorization,
                                        out.vectorization))
         # Store to allow aliasing
         x1_old_call = x1._call
@@ -602,41 +606,39 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 out += tmp
 
         out._call = lincomb_call
-        out._apply = lincomb_apply
+        # If one of the summands' apply method is undefined, it will not be
+        # defined in the result either
+        if _apply_not_impl in (x1._apply, x2._apply):
+            out._apply = _apply_not_impl
+        else:
+            out._apply = lincomb_apply
 
     def lincomb(self, a, x1, b=None, x2=None, out=None):
         """Same as in LinearSpace.Vector, but with vectorization."""
         if out is None:
             out = self.element(vectorization=x1.vectorization)
-
         if out not in self:
             raise TypeError('output vector {!r} not in space {!r}.'
                             ''.format(out, self))
-
         if a not in self.field:
             raise TypeError('first scalar {!r} not in the field {!r} of the '
                             'space {!r}.'.format(a, self.field, self))
-
         if x1 not in self:
             raise TypeError('first input vector {!r} not in space {!r}.'
                             ''.format(x1, self))
-
         if b is None:  # Single argument
             if x2 is not None:
                 raise ValueError('second input vector provided but no '
                                  'second scalar.')
-
             # Call method
             return self._lincomb(a, x1, 0, x1, out)
         else:  # Two arguments
             if b not in self.field:
                 raise TypeError('second scalar {!r} not in the field {!r} of '
                                 'the space {!r}.'.format(b, self.field, self))
-
             if x2 not in self:
                 raise TypeError('second input vector {!r} not in space {!r}.'
                                 ''.format(x2, self))
-
             # Call method
             return self._lincomb(a, x1, b, x2, out)
 
@@ -703,7 +705,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
             `True` if `other` is a `FunctionSpace` with same `domain`
             and `range`, `False` otherwise.
         """
-        # TODO: equality also for FunctionSet instances?
         if other is self:
             return True
 
@@ -711,7 +712,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 self.domain == other.domain and
                 self.range == other.range)
 
-    def _multiply(x1, x2, out):
+    def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two functions.
 
         Note
@@ -719,10 +720,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
         The multiplication is implemented with a simple Python
         function, so the resulting function object is probably slow.
         """
-        if not x1.vectorization == x2.vecorization == out.vectorization:
+        if not x1.vectorization == x2.vectorization == out.vectorization:
             raise ValueError('functions have different vectorization types '
                              '({}, {}, {})'
-                             ''.format(x1.vectorization, x2.vecorization,
+                             ''.format(x1.vectorization, x2.vectorization,
                                        out.vectorization))
         x1_old_call = x1._call
         x1_old_apply = x1._apply
@@ -740,10 +741,15 @@ class FunctionSpace(FunctionSet, LinearSpace):
             x2_old_apply(x, tmp)
             out *= tmp
 
-        out._fcall = product_call
-        out._fapply = product_apply
+        out._call = product_call
+        # If one of the factors' apply method is undefined, it will not be
+        # defined in the result either
+        if _apply_not_impl in (x1._apply, x2._apply):
+            out._apply = _apply_not_impl
+        else:
+            out._apply = product_apply
 
-    class Vector(FunctionSet.Vector, LinearSpace.Vector):
+    class Vector(LinearSpace.Vector, FunctionSet.Vector):
 
         """Representation of a `FunctionSpace` element."""
 
@@ -782,12 +788,44 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 raise TypeError('function space {} not a `FunctionSpace` '
                                 'instance.'.format(fspace))
 
-            super().__init__(fspace, fcall, fapply,
-                             vectorization=vectorization)
+            super().__init__(fspace)
+            FunctionSet.Vector.__init__(self, fspace, fcall, fapply,
+                                        vectorization=vectorization)
 
-        # TODO: fix magic methods involving element calls
-        __add__ = LinearSpace.Vector.__add__
-        __sub__ = LinearSpace.Vector.__sub__
+        # Convenience functions using element() need to be adapted
+        def copy(self):
+            """Create an identical (deep) copy of this vector."""
+            result = self.space.element(vectorization=self.vectorization)
+            result.assign(self)
+            return result
+
+        def __add__(self, other):
+            """Implementation of 'self + other'."""
+            tmp = self.space.element(vectorization=self.vectorization)
+            self.space.lincomb(1, self, 1, other, out=tmp)
+            return tmp
+
+        def __sub__(self, other):
+            """Implementation of 'self - other'."""
+            tmp = self.space.element(vectorization=self.vectorization)
+            self.space.lincomb(1, self, -1, other, out=tmp)
+            return tmp
+
+        def __mul__(self, other):
+            """Implementation of 'self * other'."""
+            tmp = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.multiply(other, self, out=tmp)
+            else:
+                self.space.lincomb(other, self, out=tmp)
+            return tmp
+
+        def __neg__(self):
+            """Implementation of '-self'."""
+            tmp = self.space.element(vectorization=self.vectorization)
+            self.space.lincomb(-1.0, self, out=tmp)
+            return tmp
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
