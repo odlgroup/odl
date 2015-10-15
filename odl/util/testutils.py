@@ -118,9 +118,10 @@ class FailCounter(object):
 
     def __init__(self, err_msg=None):
         self.num_failed = 0
+        self.err_msg = err_msg
 
     def __enter__(self):
-        pass
+        return self
         
     def fail(self, string=None):
         self.num_failed += 1

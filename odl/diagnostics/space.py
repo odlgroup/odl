@@ -40,6 +40,9 @@ def _apprimately_equal(x, y):
 class SpaceTest(object):
     def __init__(self, space):
         self.space = space
+        self.metric = None
+        self.normed = None
+        self.hilbert = None
 
     def _associativity_of_addition(self):
         print('\nAssociativity of addition, '
@@ -52,7 +55,7 @@ class SpaceTest(object):
                 ok = _apprimately_equal(x + (y + z), (x + y) + z)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
-                                    ''.format(n_x, n_y, n_z))
+                                 ''.format(n_x, n_y, n_z))
 
     def _commutativity_of_addition(self):
         print('\nCommutativity of addition, x + y = y + x')
@@ -63,7 +66,7 @@ class SpaceTest(object):
                 ok = _apprimately_equal(x + y, y + x)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s}'
-                                    ''.format(n_x, n_y))
+                                 ''.format(n_x, n_y))
 
     def _identity_of_addition(self):
         print('\nIdentity element of addition, x + 0 = x')
@@ -100,7 +103,7 @@ class SpaceTest(object):
                 ok = _apprimately_equal(a * (b * x), (a * b) * x)
                 if not ok:
                     counter.fail('failed with x={:25s}, a={}, b={}'
-                                    ''.format(n_x, a, b))
+                                 ''.format(n_x, a, b))
 
     def _identity_of_mult(self):
         print('\nIdentity element of multiplication, 1 * x = x')
@@ -122,7 +125,7 @@ class SpaceTest(object):
                 ok = _apprimately_equal(a * (x + y), a * x + a * y)
                 if not ok:
                     counter.fail('failed with x={:25s}, y={:25s}, a={}'
-                                    ''.format(n_x, n_y, a))
+                                 ''.format(n_x, n_y, a))
 
     def _distributivity_of_mult_scalar(self):
         print('\nDistributivity of multiplication wrt scalar add, '
@@ -135,7 +138,7 @@ class SpaceTest(object):
                 ok = _apprimately_equal((a + b) * x, a * x + b * x)
                 if not ok:
                     counter.fail('failed with x={:25s}, a={}, b={}'
-                                    ''.format(n_x, a, b))
+                                 ''.format(n_x, a, b))
 
     def _subtraction(self):
         print('\nSubtraction, x - y = x + (-1 * y)')
@@ -147,7 +150,7 @@ class SpaceTest(object):
                         _apprimately_equal(x - y, x + (-y)))
                 if not ok:
                     counter.fail('failed with x={:25s}, y={:25s}'
-                                    ''.format(n-x, n_y))
+                                 ''.format(n-x, n_y))
 
     def _division(self):
         print('\nDivision, x / a = x * (1/a)')
@@ -159,7 +162,7 @@ class SpaceTest(object):
                     ok = _apprimately_equal(x / a, x * (1.0/a))
                     if not ok:
                         counter.fail('failed with x={:25s}, a={}'
-                                        ''.format(n_x, a))
+                                     ''.format(n_x, a))
 
     def linearity(self):
         print('\n== Verifying linear space properties ==\n')
@@ -174,15 +177,6 @@ class SpaceTest(object):
         self._distributivity_of_mult_scalar()
         self._subtraction()
         self._division()
-
-    def _dist_non_negative(self):
-        pass
-
-    def _dist_symmetric(self):
-        pass
-
-    def _dist_subadditive(self):
-        pass
 
     def _norm_positive(self):
         print('\ntesting positivity, ||x|| >= 0\n')
@@ -239,6 +233,85 @@ class SpaceTest(object):
         self._norm_subadditive()
         self._norm_homogeneity()
 
+    
+    def _dist_positivity(self):
+        print('\ntesting positivity, d(x, y) >= 0')
+
+        with FailCounter() as counter:
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                dist = x.dist(y)
+
+                if n_x == n_y and dist != 0:
+                    counter.fail('d(x, x) != 0.0, x={:25s}: dist={}'
+                                 ''.format(n_x, dist))
+                elif n_x != n_y and dist <= 0:
+                    counter.fail('d(x, y) <= 0,   x={:25s} y={:25s}: dist={}'
+                                 ''.format(n_x, n_y, dist))
+
+    def _dist_symmetric(self):
+        print('\ntesting symmetry, d(x, y) = d(y, x)')
+
+        with FailCounter('error = |d(x, y) - d(y, x)|') as counter:
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                dist_1 = x.dist(y)
+                dist_2 = y.dist(x)
+                error = abs(dist_1 - dist_2)
+
+                if error > 0.00001:
+                    counter.fail('x={:25s}, y={:25s}: error={}'
+                                 ''.format(n_x, n_y, error))
+
+    def _dist_subadditive(self):
+        print('\ntesting subadditivity, d(x, y) = d(y, x)')
+
+        with FailCounter('error = d(x,z) - (d(x, y) + d(y, z))') as counter:
+            for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
+                                                        self.space,
+                                                        self.space):
+                dxz = x.dist(z)
+                dxy = x.dist(y)
+                dyz = y.dist(z)
+                error = dxz - (dxy + dyz)
+
+                if error > 0.00001:
+                    counter.fail('x={:25s}, y={:25s}, z={:25s}: error={}'
+                                 ''.format(n_x, n_y, n_z, error))
+
+    def _dist_norm_compatible(self):
+        print('\ntesting norm compability, d(x, y) = ||x-y||')
+
+        try:
+            self.space.zero().norm()
+        except NotImplementedError:
+            print('Space is not normed')
+            return
+
+        with FailCounter('error = |d(x, y) - ||x-y|| |') as counter:
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                error = abs(x.dist(y) - (x-y).norm())
+                
+                if error > 0.00001:
+                    counter.fail('x={:25s}, y={:25s}: error={}'
+                                 ''.format(n_x, n_y, error))
+
+    def dist(self):
+        print('\n== Verifying dist ==\n')
+
+        try:
+            zero = self.space.zero()
+            self.space.dist(zero, zero)
+        except NotImplementedError:
+            print('Space is not metric')
+            return
+
+        self._dist_positivity()
+        self._dist_symmetric()
+        self._dist_subadditive()
+        self._dist_norm_compatible()
+
     def run_tests(self):
         """Run all tests on this space."""
         print('\n== RUNNING ALL TESTS ==\n')
@@ -246,6 +319,7 @@ class SpaceTest(object):
 
         self.linearity()
         self.norm()
+        self.dist()
 
     def __str__(self):
         return 'SpaceTest({})'.format(self.space)

@@ -82,14 +82,15 @@ def vector_examples(space):
         yield ('Cube', space.element(uspace.element(_cube_fun)))
 
         # Indicator function on hypersphere
-        def _sphere_fun(*args):
-            r = np.zeros(_arg_shape(*args))
+        if space.grid.ndim > 1: #Only if dimension > 1, don't duplicate cube
+            def _sphere_fun(*args):
+                r = np.zeros(_arg_shape(*args))
 
-            for points, mean, std in zip(args, means, stds):
-                r += (points - mean)**2 / std**2
-            return (r < 1.0).astype(space.dtype)
+                for points, mean, std in zip(args, means, stds):
+                    r += (points - mean)**2 / std**2
+                return (r < 1.0).astype(space.dtype)
 
-        yield ('Sphere', space.element(uspace.element(_sphere_fun)))
+            yield ('Sphere', space.element(uspace.element(_sphere_fun)))
 
         # Gaussian function
         def _gaussian_fun(*args):
@@ -114,15 +115,16 @@ def vector_examples(space):
                    space.element(uspace.element(_gradient_fun)))
 
         # Gradient in all dimensions
-        def _all_gradient_fun(*args):
-            s = np.zeros(_arg_shape(*args))
+        if space.grid.ndim > 1: #Only if dimension > 1, don't duplicate grad 0
+            def _all_gradient_fun(*args):
+                s = np.zeros(_arg_shape(*args))
 
-            for points, minv, maxv in zip(args, mins, maxs):
-                s += (points - minv) / (maxv-minv)
+                for points, minv, maxv in zip(args, mins, maxs):
+                    s += (points - minv) / (maxv-minv)
 
-            return s
+                return s
 
-        yield ('Grad all', space.element(uspace.element(_all_gradient_fun)))
+            yield ('Grad all', space.element(uspace.element(_all_gradient_fun)))
 
     elif isinstance(space, FnBase):
         yield ('Linspaced', space.element(np.linspace(0, 1, space.size)))
