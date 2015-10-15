@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+from odl.set.sets import Set
 from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
 from copy import copy, deepcopy
@@ -58,6 +59,58 @@ class SpaceTest(object):
             print('*** space.element() not in space ***')
         else:
             print('space.element() OK')
+
+    def field(self):
+        print('\n== Verifying field property ==\n')
+
+        try:
+            field = self.space.field
+        except NotImplementedError:
+            print('*** field failed ***')
+            return
+
+        if not isinstance(field, Set):
+            print('*** space.element() not in space ***')
+            return
+        
+        #Zero
+        try:
+            zero = field.element(0)
+        except NotImplementedError:
+            print('*** field.element(0) failed ***')
+            return
+
+        if not zero == 0:
+            print('*** field.element(0) != 0 ***')
+
+        if not zero == 0.0:
+            print('*** field.element(0) != 0.0 ***')
+
+        #one
+        try:
+            one = field.element(1)
+        except NotImplementedError:
+            print('*** field.element(1) failed ***')
+            return
+
+        if not one == 1:
+            print('*** field.element(1) != 1 ***')
+
+        if not one == 1.0:
+            print('*** field.element(1) != 1.0 ***')
+
+        #minus one
+        try:
+            minus_one = field.element(-1)
+        except NotImplementedError:
+            print('*** field.element(-1) failed ***')
+            return
+
+        if not minus_one == -1:
+            print('*** field.element(-1) != -1 ***')
+
+        if not minus_one == -1.0:
+            print('*** field.element(-1) != -1.0 ***')
 
     def _associativity_of_addition(self):
         print('\nAssociativity of addition, '
@@ -614,6 +667,15 @@ class SpaceTest(object):
                                      ''.format(n_x, n_y))
 
 
+    def _vector_space(self):
+        print('\nVector.space')
+
+        with FailCounter() as counter:
+            for [n_x, x] in samples(self.space):
+                if not x.space == self.space:
+                    counter.fail('failed with x={:25s}'
+                                 ''.format(n_x, n_y))
+
     def vector(self):
         print('\n== Verifying Vector ==\n')
         
@@ -621,12 +683,14 @@ class SpaceTest(object):
         self._vector_copy()
         self._vector_set_zero()
         self._vector_equals()
+        self._vector_space()
 
     def run_tests(self):
         """Run all tests on this space."""
         print('\n== RUNNING ALL TESTS ==\n')
         print('Space = {}'.format(self.space))
         
+        self.field()
         self.element()
         self.linearity()
         self.element()
