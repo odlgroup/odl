@@ -44,33 +44,33 @@ class FunctionSet(Set):
 
     """A general set of functions with common domain and range."""
 
-    def __init__(self, dom, ran):
+    def __init__(self, domain, range):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `Set`
+        domain : `Set`
             The domain of the functions.
-        ran : `Set`
+        range : `Set`
             The range of the functions.
         """
-        if not isinstance(dom, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
+        if not isinstance(domain, Set):
+            raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
 
-        if not isinstance(ran, Set):
-            raise TypeError('range {!r} not a `Set` instance.'.format(dom))
+        if not isinstance(range, Set):
+            raise TypeError('range {!r} not a `Set` instance.'.format(range))
 
-        self._domain = dom
-        self._range = ran
+        self._domain = domain
+        self._range = range
 
     @property
     def domain(self):
-        """Return `domain` attribute."""
+        """Common domain of all functions in this set."""
         return self._domain
 
     @property
     def range(self):
-        """Return `range` attribute."""
+        """Common range of all functions in this set."""
         return self._range
 
     def element(self, fcall, fapply=None, vectorization='none'):
@@ -85,21 +85,18 @@ class FunctionSet(Set):
             explicitly given
         fapply : callable, optional
             The actual instruction for in-place evaluation
-        vectorization : {'none', 'array', 'meshgrid', 'all'}
-            Type of vectorization to be allowed in the function
-            evaluation
+        vectorization : {'none', 'array', 'meshgrid'}
+            Vectorization type of this function.
 
-            'none' : no vectorization; this is equivalent to the plain
-            `Operator` evaluation where the argument must be a domain
-            element.
+            'none' : no vectorized evaluation
 
-            'array' : allow function argument to be a NumPy array of
-            domain elements.
+            'array' : vectorized evaluation on an array of
+            domain elements. Requires domain to be an
+            `IntervalProd` instance.
 
-            'meshgrid' : allow function argument to be a tuple of
-            arrays comprising a sparse evaluation grid.
-
-            'all' : allow all mentioned types of vectorization
+            'meshgrid' : vectorized evaluation on a meshgrid
+            tuple of arrays. Requires domain to be an
+            `IntervalProd` instance.
 
         *At least one of the arguments `fcall` and `fapply` must
         be provided.*
@@ -122,9 +119,11 @@ class FunctionSet(Set):
                     vectorization = fcall.vectorization
                     fapply = fcall._apply
                     fcall = fcall._call
-                    return self.Vector(fcall, fapply, vectorization)
+                    return self.Vector(self, fcall, fapply,
+                                       vectorization=vectorization)
         else:
-            return self.Vector(fcall, fapply, vectorization)
+            return self.Vector(self, fcall, fapply,
+                               vectorization=vectorization)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
@@ -156,18 +155,19 @@ class FunctionSet(Set):
 
     def __repr__(self):
         """`s.__repr__() <==> repr(s)`."""
-        return 'FunctionSet({!r}, {!r})'.format(self.domain, self.range)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.range)
 
     def __str__(self):
         """`s.__str__() <==> str(s)`."""
-        return 'FunctionSet({}, {})'.format(self.domain, self.range)
+        return '{}({}, {})'.format(self.__class__.__name__,
+                                   self.domain, self.range)
 
     class Vector(Operator):
 
         """Representation of a `FunctionSet` element."""
 
-        def __init__(self, fset, fcall=None, fapply=None,
-                     vectorization='none'):
+        def __init__(self, fset, fcall, fapply=None, vectorization='none'):
             """Initialize a new instance.
 
             Parameters
@@ -178,27 +178,21 @@ class FunctionSet(Set):
                 The actual instruction for out-of-place evaluation. If
                 `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
                 and `vectorization` are used for initialization unless
-                explicitly given
+                explicitly given as arguments
             fapply : callable, optional
                 The actual instruction for in-place evaluation
-            vectorization : {'none', 'array', 'meshgrid', 'all'}
-                Type of vectorization to be allowed in the function
-                evaluation
+            vectorization : {'none', 'array', 'meshgrid'}
+                Vectorization type of this function.
 
-                'none' : no vectorization; this is equivalent to the
-                plain `Operator` evaluation where the argument must be a
-                domain element.
+                'none' : no vectorized evaluation
 
-                'array' : allow function argument to be a NumPy array of
-                domain elements.
+                'array' : vectorized evaluation on an array of
+                domain elements. Requires domain to be an
+                `IntervalProd` instance.
 
-                'meshgrid' : allow function argument to be a tuple of
-                arrays comprising a sparse evaluation grid.
-
-                'all' : allow all mentioned types of vectorization
-
-            *At least one of the arguments `fcall` and `fapply` must
-            be provided.*
+                'meshgrid' : vectorized evaluation on a meshgrid
+                tuple of arrays. Requires domain to be an
+                `IntervalProd` instance.
 
             See also
             --------
@@ -208,21 +202,24 @@ class FunctionSet(Set):
             if not isinstance(fset, FunctionSet):
                 raise TypeError('function set {!r} is not a `FunctionSet` '
                                 'instance.'.format(fset))
-
-            if fcall is None and fapply is None:
-                raise ValueError('call function and apply function cannot '
-                                 'both be `None`.')
-
-            if fcall is not None and not callable(fcall):
+            if not callable(fcall):
                 raise TypeError('call function {} is not callable.'
                                 ''.format(fcall))
-
             if fapply is not None and not callable(fapply):
                 raise TypeError('apply function {} is not callable.'
                                 ''.format(fapply))
+            self._vectorization = str(vectorization).lower()
+            if self._vectorization not in ('none', 'array', 'meshgrid'):
+                raise ValueError('vectorization type {!r} not understood.'
+                                 ''.format(vectorization))
 
             super().__init__(fset.domain, fset.range, linear=False)
-            self._vectorization = str(vectorization).lower()
+
+            if (self._vectorization != 'none' and
+                    not isinstance(fset.domain, IntervalProd)):
+                raise TypeError('vectorization requires the function set '
+                                'domain to be an `IntervalProd` instance, '
+                                'got {!r}.'.format(fset.domain))
             self._space = fset
             self._call = fcall
             self._apply = fapply
@@ -250,6 +247,179 @@ class FunctionSet(Set):
             """Vectorization type of this function."""
             return self._vectorization
 
+        def _vectorized_input_check(self, x, vec_bounds_check):
+            """Check if vectorized `x` lies in `domain`."""
+            if self.vectorization == 'array':
+                # Expected: (N, d) array of points, where d = dimension
+                if not isinstance(x, np.ndarray):
+                    raise TypeError('input {!r} not a `numpy.ndarray` '
+                                    'instance'.format(x))
+                if not (x.ndim == 2 and x.shape[1] == self.domain.ndim):
+                    raise ValueError('expected input shape (n, {}) for '
+                                     'some n, got {}.'
+                                     ''.format(self.domain.ndim, x.shape))
+                if vec_bounds_check:
+                    # Can be expensive for large arrays
+                    min_coords = np.min(x, axis=0)
+                    max_coords = np.max(x, axis=0)
+
+            elif self.vectorization == 'meshgrid':
+                # Expected: d meshgrid type arrays
+                if not all(isinstance(xi, np.ndarray) for xi in x):
+                    raise TypeError('input {!r} not a `numpy.ndarray` '
+                                    'sequence.')
+                if len(x) != self.domain.ndim:
+                    raise ValueError('expected {} meshgrid arrays, got {}.'
+                                     ''.format(self.domain.ndim, len(x)))
+                if vec_bounds_check:
+                    # This is comparably cheap
+                    min_coords = [np.min(vec) for vec in x]
+                    max_coords = [np.max(vec) for vec in x]
+
+            else:
+                raise TypeError('invalid vectorized input {}.'.format(x))
+
+            if vec_bounds_check:
+                if (min_coords not in self.domain or
+                        max_coords not in self.domain):
+                    raise ValueError('input contains points outside the '
+                                     'valid domain {}.'.format(self.domain))
+
+        def __call__(self, x, **kwargs):
+            """Out-of-place evaluation.
+
+            Parameters
+            ----------
+            x : object
+                Input argument for the function evaluation. Conditions
+                on `x` depend on the type of vectorization:
+
+                'none' : `x` must be a domain element
+
+                'array' : `x` must be a `numpy.ndarray` with `x[i]`
+                being a domain element for each `i`
+
+                'meshgrid' : `x` must be a sequence of `numpy.ndarray`
+                with length `space.ndim`, and each array must lie within
+                the boundaries of the interval for the corresponding
+                axis in `space.domain`.
+
+            kwargs : {'vec_bounds_check'}
+                'vec_bounds_check' : bool
+                    Whether or not to check if all input points lie in
+                    the function domain in the case of vectorized
+                    evaluation.
+                    Default: `True`
+
+            Returns
+            -------
+            out : range element or array of elements
+                Result of the function evaluation
+
+            Raises
+            ------
+            TypeError
+                If `x` is not a valid vectorized evaluation argument
+
+                If `out` is not a range element or a `numpy.ndarray`
+                of range elements
+
+            ValueError
+                If evaluation points fall outside the valid domain
+            """
+            vec_bounds_check = kwargs.pop('vec_bounds_check', True)
+
+            if self.vectorization == 'none':
+                if x not in self.domain:
+                    raise TypeError('input {!r} not in domain '
+                                    '{}.'.format(x, self.domain))
+            else:
+                self._vectorized_input_check(x, vec_bounds_check)
+
+            out = self._call(x)
+
+            if self.vectorization == 'none' and out not in self.range:
+                raise TypeError('output {!r} not in range {}.'
+                                ''.format(self.range))
+            else:
+                if not (isinstance(out, np.ndarray) and
+                        out.flat[0] in self.range):
+                    raise TypeError('output {!r} not an array of elements '
+                                    'of the function range {}.'
+                                    ''.format(out, self.range))
+            return out
+
+        def apply(self, x, out, **kwargs):
+            """Vectorized and multi-argument in-place evaluation.
+
+            Parameters
+            ----------
+            x : object
+                Input argument for the function evaluation. Conditions
+                on `x` depend on the type of vectorization:
+
+                'none' : `x` must be a domain element
+
+                'array' : `x` must be a `numpy.ndarray` with `x[i]`
+                being a domain element for each `i`
+
+                'meshgrid' : `x` must be a sequence of `numpy.ndarray`
+                with length `space.ndim`, and each array must lie within
+                the boundaries of the interval for the corresponding
+                axis in `space.domain`.
+
+            out : object
+                Outuput argument holding the result of the function
+                evaluation. Conditions on `out` depend on whether this
+                function allows vectorization:
+
+                'none' : `out` must be a range element
+
+                'array' or 'meshgrid' : `out` is a `numpy.ndarray`
+                with size `n`, where `n` is the total number of
+                evaluation points represented by `x`.
+
+
+            kwargs : {'vec_bounds_check'}
+                'vec_bounds_check' : bool
+                    Whether or not to check if all input points lie in
+                    the function domain in the case of vectorized
+                    evaluation.
+                    Default: `True`
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            TypeError
+                If `x` is not a valid vectorized evaluation argument
+
+                If `out` is not a range element or a `numpy.ndarray`
+                of range elements
+
+            ValueError
+                If evaluation points fall outside the valid domain
+            """
+            vec_bounds_check = kwargs.pop('vec_bounds_check', True)
+
+            if self.vectorization == 'none':
+                if x not in self.domain:
+                    raise TypeError('input {!r} not in domain '
+                                    '{}.'.format(x, self.domain))
+                if out not in self.range:
+                    raise TypeError('output {!r} not in range {}.'
+                                    ''.format(self.range))
+            else:
+                self._vectorized_input_check(x, vec_bounds_check)
+                if not (isinstance(out, np.ndarray) and
+                        out.flat[0] in self.range):
+                    raise TypeError('output {!r} not an array of elements '
+                                    'of the function range {}.'
+                                    ''.format(out, self.range))
+            self._apply(x, out)
+
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`.
 
@@ -270,102 +440,6 @@ class FunctionSet(Set):
                     self._apply == other._apply and
                     self.vectorization == other.vectorization)
 
-        # FIXME: this is a bad hack bypassing the operator default
-        # pattern for apply and call
-        def __call__(self, *x):
-            """Vectorized and multi-argument out-of-place evaluation.
-
-            Parameters
-            ----------
-            x1,...,xN : `object`
-                Input arguments for the function evaluation.
-
-            Returns
-            -------
-            out : `range` element or array of elements
-                Result of the function evaluation.
-
-            Raises
-            ------
-            If `out` is not a `range` element or a `numpy.ndarray`
-            with `out[0] in range`, a `TypeError` is raised.
-            """
-            if x in self.domain:
-                # single value list: f(0, 1, 2)
-                pass
-            elif x[0] in self.domain:
-                # single array: f([0, 1, 2])
-                pass
-            else:  # Try vectorization
-                if not isinstance(self.domain, IntervalProd):
-                    raise TypeError('vectorized evaluation only possible for '
-                                    '`IntervalProd` domains.')
-                # Vectorization only allowed in this case
-
-                # First case: (N, d) array of points, where d = dimension
-                if (isinstance(x[0], np.ndarray) and
-                        x[0].ndim == 2 and
-                        x[0].shape[1] == self.domain.ndim):
-                    min_coords = np.min(x[0], axis=0)
-                    max_coords = np.max(x[0], axis=0)
-
-                # Second case: d meshgrid type arrays
-                elif (len(x) == self.domain.ndim and
-                      all(isinstance(vec, np.ndarray) for vec in x)):
-                    min_coords = [np.min(vec) for vec in x]
-                    max_coords = [np.max(vec) for vec in x]
-
-                else:
-                    raise TypeError('input is neither an element of the '
-                                    'function domain {} nor an array or '
-                                    'meshgrid-type coordinate list.'
-                                    ''.format(self.domain))
-
-                if (min_coords not in self.domain or
-                        max_coords not in self.domain):
-                    raise ValueError('input contains points outside '
-                                     '`domain` {}.'.format(self.domain))
-
-            out = self._call(*x)
-
-            if not (out in self.range or
-                    (isinstance(out, np.ndarray) and
-                     out.flat[0] in self.range)):
-                raise TypeError('result {!r} not an element or an array of '
-                                'elements of the function range {}.'
-                                ''.format(out, self.range))
-
-            return out
-
-        def apply(self, out, *x):
-            """Vectorized and multi-argument in-place evaluation.
-
-            Parameters
-            ----------
-            out : `range` element or array of elements
-                Element(s) to which the result is written.
-            inp1,...,inpN : `object`
-                Input arguments for the function evaluation.
-
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-            If `out` is not a `range` element or a `numpy.ndarray`
-            with `out[0] in range`, a `TypeError` is raised.
-            """
-            if not (out in self.range or
-                    (isinstance(out, np.ndarray) and
-                     out.flat[0] in self.range)):
-                raise TypeError('result {!r} not an element or an array of '
-                                'elements of the function range {}.'
-                                ''.format(out, self.range))
-
-            # TODO: no checks on input so far
-            return self._apply(out, *x)
-
         def __ne__(self, other):
             """`vec.__ne__(other) <==> vec != other`"""
             return not self.__eq__(other)
@@ -377,36 +451,40 @@ class FunctionSet(Set):
                 return str(self._apply_impl)
 
         def __repr__(self):
-            # TODO: add vectorization
-            if self._call is not None:
-                return '{!r}.element({!r})'.format(self.space, self._call)
-            else:
-                return '{!r}.element({!r})'.format(self.space,
-                                                   self._apply_impl)
+            inner_fstr = '{!r}'
+            if self._apply is not None:
+                inner_fstr += ', fapply={fapply!r}'
+            if self.vectorization != 'none':
+                inner_fstr += ', vectorization={vect!r}'
+
+            inner_str = inner_fstr.format(self._call, fapply=self._apply,
+                                          vect=self.vectorization)
+
+            return '{!r}.element({})'.format(self.space, inner_str)
 
 
 class FunctionSpace(FunctionSet, LinearSpace):
 
     """A vector space of functions."""
 
-    def __init__(self, dom, field):
+    def __init__(self, domain, field):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `Set`
+        domain : `Set`
             The domain of the functions.
         field : `RealNumbers` or `ComplexNumbers`
             The range of the functions.
         """
-        if not isinstance(dom, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
+        if not isinstance(domain, Set):
+            raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
 
         if not (isinstance(field, (RealNumbers, ComplexNumbers))):
             raise TypeError('field {!r} not a `RealNumbers` or '
                             '`ComplexNumbers` instance.'.format(field))
 
-        super().__init__(dom, field)
+        super().__init__(domain, field)
         self._field = field
 
     @property
@@ -414,96 +492,108 @@ class FunctionSpace(FunctionSet, LinearSpace):
         """Return `field` attribute."""
         return self._field
 
-    def element(self, fcall=None, fapply=None):
+    def element(self, fcall=None, fapply=None, vectorization='none'):
         """Create a `FunctionSet` element.
 
         Parameters
         ----------
         fcall : callable, optional
-            The actual instruction for out-of-place evaluation.
-            It must return an `fset.range` element or a
-            `numpy.ndarray` of such (vectorized call).
-
-            If `fcall` is a `FunctionSet.Vector`, it is wrapped
-            as a new `FunctionSpace.Vector`.
-
+            The actual instruction for out-of-place evaluation. If
+            `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
+            and `vectorization` are used for initialization unless
+            explicitly given.
+            If `fcall` is `None`, the zero function is created.
         fapply : callable, optional
-            The actual instruction for in-place evaluation.
-            Its first argument must be the `fset.range` element
-            or the array of such (vectorization) to which the
-            result is written.
+            The actual instruction for in-place evaluation
+        vectorization : {'none', 'array', 'meshgrid'}
+            Vectorization type of this function.
 
-            If `fapply` is a `FunctionSet.Vector`, it is wrapped
-            as a new `FunctionSpace.Vector`.
+            'none' : no vectorized evaluation
+
+            'array' : vectorized evaluation on an array of
+            domain elements. Requires domain to be an
+            `IntervalProd` instance.
+
+            'meshgrid' : vectorized evaluation on a meshgrid
+            tuple of arrays. Requires domain to be an
+            `IntervalProd` instance.
 
         Returns
         -------
         `element` : `FunctionSpace.Vector`
             The new element.
         """
-        if fcall is None and fapply is None:
+        if fcall is None:
             return self.zero()
         else:
-            return super().element(fcall, fapply)
+            return super().element(fcall, fapply, vectorization=vectorization)
 
-    def _lincomb(self, z, a, x, b, y):
-        """Raw linear combination of `x` and `y`.
+    def _lincomb(self, a, x1, b, x2, out):
+        """Raw linear combination of `x1` and `x2`.
 
         Note
         ----
         The additions and multiplications are implemented via a simple
         Python function, so the resulting function is probably slow.
-        """
-        # Store to allow aliasing
-        x_old_call = x._call
-        x_old_apply = x._apply
-        y_old_call = y._call
-        y_old_apply = y._apply
 
-        def lincomb_call(*x):
+        Different vectorization types are not allowed.
+        """
+        print(repr(out))
+
+        if not x1.vectorization == x2.vecorization == out.vectorization:
+            raise ValueError('functions have different vectorization types '
+                             '({}, {}, {})'
+                             ''.format(x1.vectorization, x2.vecorization,
+                                       out.vectorization))
+        # Store to allow aliasing
+        x1_old_call = x1._call
+        x1_old_apply = x1._apply
+        x2_old_call = x2._call
+        x2_old_apply = x2._apply
+
+        def lincomb_call(x):
             """Linear combination, call version."""
             # Due to vectorization, at least one call must be made to
             # ensure the correct final shape. The rest is optimized as
             # far as possible.
             if a == 0 and b != 0:
-                out = y_old_call(*x)
+                out = x2_old_call(x)
                 if b != 1:
                     out *= b
             elif b == 0:  # Contains the case a == 0
-                out = x_old_call(*x)
+                out = x1_old_call(x)
                 if a != 1:
                     out *= a
             else:
-                out = x_old_call(*x)
+                out = x1_old_call(x)
                 if a != 1:
                     out *= a
-                tmp = y_old_call(*x)
+                tmp = x2_old_call(x)
                 if b != 1:
                     tmp *= b
                 out += tmp
 
             return out
 
-        def lincomb_apply(out, *x):
+        def lincomb_apply(x, out):
             """Linear combination, apply version."""
-            # TODO: allow also CudaRn-like container types
             if not isinstance(out, np.ndarray):
                 raise TypeError('in-place evaluation only possible if output '
                                 'is of type `numpy.ndarray`.')
             if a == 0 and b == 0:
                 out *= 0
             elif a == 0 and b != 0:
-                y_old_apply(out, *x)
+                x2_old_apply(x, out)
                 if b != 1:
                     out *= b
             elif b == 0 and a != 0:
-                x_old_apply(out, *x)
+                x1_old_apply(x, out)
                 if a != 1:
                     out *= a
             else:
                 tmp = np.empty_like(out)
-                x_old_apply(out, *x)
-                y_old_apply(tmp, *x)
+                x1_old_apply(x, out)
+                x2_old_apply(x, tmp)
                 if a != 1:
                     out *= a
                 if b != 1:
@@ -511,18 +601,98 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
                 out += tmp
 
-        z._call = lincomb_call
-        z._apply = lincomb_apply
+        out._call = lincomb_call
+        out._apply = lincomb_apply
 
-    def zero(self):
+    def lincomb(self, a, x1, b=None, x2=None, out=None):
+        """Same as in LinearSpace.Vector, but with vectorization."""
+        if out is None:
+            out = self.element(vectorization=x1.vectorization)
+
+        if out not in self:
+            raise TypeError('output vector {!r} not in space {!r}.'
+                            ''.format(out, self))
+
+        if a not in self.field:
+            raise TypeError('first scalar {!r} not in the field {!r} of the '
+                            'space {!r}.'.format(a, self.field, self))
+
+        if x1 not in self:
+            raise TypeError('first input vector {!r} not in space {!r}.'
+                            ''.format(x1, self))
+
+        if b is None:  # Single argument
+            if x2 is not None:
+                raise ValueError('second input vector provided but no '
+                                 'second scalar.')
+
+            # Call method
+            return self._lincomb(a, x1, 0, x1, out)
+        else:  # Two arguments
+            if b not in self.field:
+                raise TypeError('second scalar {!r} not in the field {!r} of '
+                                'the space {!r}.'.format(b, self.field, self))
+
+            if x2 not in self:
+                raise TypeError('second input vector {!r} not in space {!r}.'
+                                ''.format(x2, self))
+
+            # Call method
+            return self._lincomb(a, x1, b, x2, out)
+
+    def zero(self, vectorization='none'):
         """The function mapping everything to zero.
 
         Since `lincomb` is slow, we implement this function directly.
+
+        Parameters
+        ----------
+        vectorization : {'none', 'array', 'meshgrid'}
+            Vectorization type of this function.
+
+            'none' : no vectorized evaluation
+
+            'array' : vectorized evaluation on an array of
+            domain elements. Requires domain to be an
+            `IntervalProd` instance.
+
+            'meshgrid' : vectorized evaluation on a meshgrid
+            tuple of arrays. Requires domain to be an
+            `IntervalProd` instance.
         """
-        def zero_(*_):
-            """The zero function."""
-            return self.field.element(0.0)
-        return self.element(zero_)
+        dtype = float if self.field == RealNumbers() else complex
+        vectorization = str(vectorization).lower()
+        if vectorization not in ('none', 'array', 'meshgrid'):
+            raise ValueError('vectorization type {!r} not understood.'
+                             ''.format(vectorization))
+
+        def zero_novec(_):
+            """The zero function, non-vectorized."""
+            return dtype(0.0)
+
+        def zero_arr(x):
+            """The zero function, vectorized for arrays."""
+            return np.zeros(x.shape[0], dtype=dtype)
+
+        def zero_mg(x):
+            """The zero function, vectorized for meshgrids."""
+            bc = np.broadcast(*x)
+            if all(xi.flags.c_contiguous for xi in x):
+                order = 'C'
+            elif all(xi.flags.f_contiguous for xi in x):
+                order = 'F'
+            else:
+                raise ValueError('inconsistent ordering of meshgrid '
+                                 'arrays.')
+            return np.zeros(bc.shape, dtype=dtype, order=order)
+
+        if vectorization == 'none':
+            zero_func = zero_novec
+        elif vectorization == 'array':
+            zero_func = zero_arr
+        else:
+            zero_func = zero_mg
+        return self.element(zero_func, vectorization=vectorization)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
@@ -541,7 +711,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 self.domain == other.domain and
                 self.range == other.range)
 
-    def _multiply(x, y):
+    def _multiply(x1, x2, out):
         """Raw pointwise multiplication of two functions.
 
         Note
@@ -549,42 +719,61 @@ class FunctionSpace(FunctionSet, LinearSpace):
         The multiplication is implemented with a simple Python
         function, so the resulting function object is probably slow.
         """
-        x_old = x.function
-        y_old = y.function
+        if not x1.vectorization == x2.vecorization == out.vectorization:
+            raise ValueError('functions have different vectorization types '
+                             '({}, {}, {})'
+                             ''.format(x1.vectorization, x2.vecorization,
+                                       out.vectorization))
+        x1_old_call = x1._call
+        x1_old_apply = x1._apply
+        x2_old_call = x2._call
+        x2_old_apply = x2._apply
 
-        def product(arg):
-            """The actual product function."""
-            return x_old(arg) * y_old(arg)
-        y._function = product
+        def product_call(x):
+            """The product call function."""
+            return x1_old_call(x) * x2_old_call(x)
 
-    def __repr__(self):
-        """`s.__repr__() <==> repr(s)`."""
-        return 'FunctionSpace({!r}, {!r})'.format(self.domain, self.range)
+        def product_apply(x, out):
+            """The product apply function."""
+            tmp = np.empty_like(out)
+            x1_old_apply(x, out)
+            x2_old_apply(x, tmp)
+            out *= tmp
 
-    def __str__(self):
-        """`s.__str__() <==> str(s)`."""
-        return 'FunctionSpace({}, {})'.format(self.domain, self.range)
+        out._fcall = product_call
+        out._fapply = product_apply
 
     class Vector(FunctionSet.Vector, LinearSpace.Vector):
 
         """Representation of a `FunctionSpace` element."""
 
-        def __init__(self, fspace, fcall=None, fapply=None):
+        def __init__(self, fspace, fcall=None, fapply=None,
+                     vectorization='none'):
             """Initialize a new instance.
 
             Parameters
             ----------
             fspace : `FunctionSpace`
                 The set of functions this element lives in
-            fcall : callable, optional
-                The actual instruction for out-of-place evaluation.
-                It must return an `fset.range` element or a
-                `numpy.ndarray` of such (vectorized call).
+            fcall : callable
+                The actual instruction for out-of-place evaluation. If
+                `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
+                and `vectorization` are used for initialization unless
+                explicitly given
             fapply : callable, optional
-                The actual instruction for in-place evaluation.
-                Its first argument must be the `fset.range` element
-                or the array of such (vectorization) to which the
-                result is written.
+                The actual instruction for in-place evaluation
+            vectorization : {'none', 'array', 'meshgrid'}
+                Vectorization type of this function.
+
+                'none' : no vectorized evaluation
+
+                'array' : vectorized evaluation on an array of
+                domain elements. Requires domain to be an
+                `IntervalProd` instance.
+
+                'meshgrid' : vectorized evaluation on a meshgrid
+                tuple of arrays. Requires domain to be an
+                `IntervalProd` instance.
 
             *At least one of the arguments `fcall` and `fapply` must
             be provided.*
@@ -593,8 +782,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 raise TypeError('function space {} not a `FunctionSpace` '
                                 'instance.'.format(fspace))
 
-            super().__init__(fspace, fcall, fapply)
+            super().__init__(fspace, fcall, fapply,
+                             vectorization=vectorization)
 
+        # TODO: fix magic methods involving element calls
+        __add__ = LinearSpace.Vector.__add__
+        __sub__ = LinearSpace.Vector.__sub__
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
