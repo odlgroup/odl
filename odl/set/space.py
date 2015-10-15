@@ -299,8 +299,8 @@ class LinearSpace(Set):
         raise NotImplementedError('inner product not implemented in space {!r}'
                                   ''.format(self))
 
-    def _multiply(self, z, x, y):
-        """Calculate the pointwise multiplication z = x * y.
+    def _multiply(self, x1, x2, out):
+        """Calculate the pointwise multiplication out = x1 * x2.
 
         This method is intended to be private, public callers should
         resort to `multiply` which is type-checked.
