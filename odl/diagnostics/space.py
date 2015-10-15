@@ -461,8 +461,8 @@ class SpaceTest(object):
                 ok = _apprimately_equal(a * (x * y), (a * x) * y)
                 ok = _apprimately_equal(a * (x * y), x * (a * y))
                 if not ok:
-                    counter.fail('failed with x={:25s} y={:25s} z={:25s}'
-                                 ''.format(n_x, n_y, n_z))
+                    counter.fail('failed with x={:25s} y={:25s} a={}'
+                                 ''.format(n_x, n_y, a))
 
     def _multiply_distributive_vec(self):
         print('\nMultiplication associative wrt vec, x * (y * z) = (x * y) * z')
@@ -473,7 +473,7 @@ class SpaceTest(object):
                                                         self.space):
                 ok = _apprimately_equal(x * (y * z), (x * y) * z)
                 if not ok:
-                    counter.fail('failed with x={:2s5s} y={:25s} z={:25s}'
+                    counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
 
     def multiply(self):
@@ -539,6 +539,89 @@ class SpaceTest(object):
                     counter.fail('not obj not in space,  with obj={}'
                                  ''.format(obj))
 
+    def _vector_assign(self):
+        print('\nVector.assign()')
+
+        with FailCounter() as counter:
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                x.assign(y)
+                ok = _apprimately_equal(x, y)
+                if not ok:
+                    counter.fail('failed with x={:25s} y={:25s}'
+                                 ''.format(n_x, n_y))
+
+    def _vector_copy(self):
+        print('\nVector.copy()')
+
+        with FailCounter() as counter:
+            for [n_x, x] in samples(self.space):
+                #equal after copy
+                y = x.copy()
+                ok = _apprimately_equal(x, y)
+                if not ok:
+                    counter.fail('failed with x={:s5s}'
+                                 ''.format(n_x))
+
+                #modify y, x stays the same
+                y *= 2.0
+                ok = n_x == 'Zero' or not _apprimately_equal(x, y)
+                if not ok:
+                    counter.fail('modified y, x changed with x={:25s}'
+                                 ''.format(n_x))
+
+    
+    def _vector_set_zero(self):
+        print('\nVector.set_zero()')
+
+        zero = self.space.zero()
+        with FailCounter() as counter:
+            for [n_x, x] in samples(self.space):
+                x.set_zero()
+                ok = _apprimately_equal(x, zero)
+                if not ok:
+                    counter.fail('failed with x={:25s}'
+                                 ''.format(n_x, n_y))
+
+    def _vector_equals(self):
+        print('\nVector.__eq__()')
+
+        try:
+            zero = self.space.zero()
+            zero == zero
+        except NotImplementedError:
+            print('Vector has no __eq__')
+            return
+
+        with FailCounter() as counter:
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                if n_x == n_y:
+                    if not x == y:
+                        counter.fail('failed x == x with x={:25s}'
+                                     ''.format(n_x))
+
+                    if x != y:
+                        counter.fail('failed not x != x with x={:25s}'
+                                     ''.format(n_x))
+                else:
+                    if x == y:
+                        counter.fail('failed not x == y with x={:25s}, x={:25s}'
+                                     ''.format(n_x, n_y))
+
+                    if not x != y:
+                        counter.fail('failed x != y with x={:25s}, x={:25s}'
+                                     ''.format(n_x, n_y))
+
+
+    def vector(self):
+        print('\n== Verifying Vector ==\n')
+        
+        self._vector_assign()
+        self._vector_copy()
+        self._vector_set_zero()
+        self._vector_equals()
+
     def run_tests(self):
         """Run all tests on this space."""
         print('\n== RUNNING ALL TESTS ==\n')
@@ -553,6 +636,7 @@ class SpaceTest(object):
         self.multiply()
         self.equals()
         self.contains()
+        self.vector()
 
     def __str__(self):
         return 'SpaceTest({})'.format(self.space)
