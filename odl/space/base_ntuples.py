@@ -183,7 +183,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         @property
         def shape(self):
             """Shape of this vector, equals `(size,)`."""
-            return (self.space,)
+            return (self.size,)
 
         @property
         def itemsize(self):
