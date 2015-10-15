@@ -20,12 +20,13 @@ import numpy as np
 from itertools import product
 
 from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.space import LinearSpace
 from odl.set.pspace import ProductSpace
 from odl.space.base_ntuples import FnBase
 from odl.discr.l2_discr import DiscreteL2
 
 
-__all__ = ('scalar_examples', 'vector_examples')
+__all__ = ('scalar_examples', 'vector_examples', 'samples')
 
 
 def _arg_shape(*args):
@@ -35,12 +36,11 @@ def _arg_shape(*args):
         return np.broadcast(*args).shape
 
 
-def scalar_examples(space):
-    if space.field == RealNumbers():
+def scalar_examples(field):
+    if field == RealNumbers():
         return [-1.0, 0.5, 0.0, 0.01, 1.0, 100.0]
-    if space.field == ComplexNumbers():
+    if field == ComplexNumbers():
         return [-1.0, 0.5, 0.0+2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0, 100.0]
-
 
 def vector_examples(space):
     # All spaces should yield the zero element
@@ -136,6 +136,19 @@ def vector_examples(space):
 
     else:
         warnings.warn('No known examples in this space')
+
+def samples(*sets):
+    if len(sets) == 1:
+        if isinstance(sets[0], LinearSpace):
+            for vec in vector_examples(sets[0]):
+                yield vec
+        else:
+            for scal in scalar_examples(sets[0]):
+                yield scal
+    else:
+        generators = [vector_examples(set) if isinstance(set, LinearSpace) else scalar_examples(set) for set in sets]
+        for examples in product(*generators):
+            yield examples
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

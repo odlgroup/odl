@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-from odl.diagnostics.examples import scalar_examples, vector_examples
+from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
 
 __all__ = ('SpaceTest',)
@@ -42,31 +42,31 @@ class SpaceTest(object):
         self.space = space
 
     def _associativity_of_addition(self):
-        print('\ntesting Associativity of addition, '
-              'x + (y + z) = (x + y) + z\n')
+        print('\nAssociativity of addition, '
+              'x + (y + z) = (x + y) + z')
 
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
-                for [n_y, y] in vector_examples(self.space):
-                    for [n_z, z] in vector_examples(self.space):
-                        ok = _apprimately_equal(x + (y + z), (x + y) + z)
-                        if not ok:
-                            counter.fail('failed with x={:25s} y={:25s} z={:25s}'
-                                         ''.format(n_x, n_y, n_z))
+            for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
+                                                        self.space,
+                                                        self.space):
+                ok = _apprimately_equal(x + (y + z), (x + y) + z)
+                if not ok:
+                    counter.fail('failed with x={:25s} y={:25s} z={:25s}'
+                                    ''.format(n_x, n_y, n_z))
 
     def _commutativity_of_addition(self):
-        print('\ntesting Commutativity of addition, x + y = y + x\n')
+        print('\nCommutativity of addition, x + y = y + x')
         
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
-                for [n_y, y] in vector_examples(self.space):
-                    ok = _apprimately_equal(x + y, y + x)
-                    if not ok:
-                        counter.fail('failed with x={:25s} y={:25s}'
-                                     ''.format(n_x, n_y))
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                ok = _apprimately_equal(x + y, y + x)
+                if not ok:
+                    counter.fail('failed with x={:25s} y={:25s}'
+                                    ''.format(n_x, n_y))
 
     def _identity_of_addition(self):
-        print('\ntesting Identity element of addition, x + 0 = x\n')
+        print('\nIdentity element of addition, x + 0 = x')
 
         try:
             zero = self.space.zero()
@@ -74,92 +74,92 @@ class SpaceTest(object):
             print('*** SPACE HAS NO ZERO VECTOR ***')
             
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
+            for [n_x, x] in samples(self.space):
                 ok = _apprimately_equal(x + zero, x)
                 if not ok:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
     def _inverse_element_of_addition(self):
-        print('\ntesting Inverse element of addition, x + (-x) = 0\n')
+        print('\nInverse element of addition, x + (-x) = 0')
         zero = self.space.zero()
         
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
+            for [n_x, x] in samples(self.space):
                 ok = _apprimately_equal(x + (-x), zero)
                 if not ok:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
     def _commutativity_of_scalar_mult(self):
-        print('\ntesting Commutativity of scalar multiplication, '
-              'a * (b * x) = (a * b) * x\n')
+        print('\nCommutativity of scalar multiplication, '
+              'a * (b * x) = (a * b) * x')
         
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
-                for a in scalar_examples(self.space):
-                    for b in scalar_examples(self.space):
-                        ok = _apprimately_equal(a * (b * x), (a * b) * x)
-                        if not ok:
-                            counter.fail('failed with x={:25s}, a={}, b={}'
-                                         ''.format(n_x, a, b))
+            for [n_x, x], a, b in samples(self.space,
+                                          self.space.field,
+                                          self.space.field):
+                ok = _apprimately_equal(a * (b * x), (a * b) * x)
+                if not ok:
+                    counter.fail('failed with x={:25s}, a={}, b={}'
+                                    ''.format(n_x, a, b))
 
     def _identity_of_mult(self):
-        print('\ntesting Identity element of multiplication, 1 * x = x\n')
+        print('\nIdentity element of multiplication, 1 * x = x')
         
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
+            for [n_x, x] in samples(self.space):
                 ok = _apprimately_equal(1 * x, x)
                 if not ok:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
     def _distributivity_of_mult_vector(self):
-        print('\ntesting Distributivity of multiplication wrt vector add, '
-              'a * (x + y) = a * x + a * y\n')
+        print('\nDistributivity of multiplication wrt vector add, '
+              'a * (x + y) = a * x + a * y')
         
         with FailCounter() as counter:
-            for a in scalar_examples(self.space):
-                for [n_x, x] in vector_examples(self.space):
-                    for [n_y, y] in vector_examples(self.space):
-                        ok = _apprimately_equal(a * (x + y), a * x + a * y)
-                        if not ok:
-                            counter.fail('failed with x={:25s}, y={:25s}, a={}'
-                                         ''.format(n_x, n_y, a))
+            for [n_x, x], [n_y, y], a in samples(self.space,
+                                                 self.space,
+                                                 self.space.field):
+                ok = _apprimately_equal(a * (x + y), a * x + a * y)
+                if not ok:
+                    counter.fail('failed with x={:25s}, y={:25s}, a={}'
+                                    ''.format(n_x, n_y, a))
 
     def _distributivity_of_mult_scalar(self):
-        print('\ntesting Distributivity of multiplication wrt scalar add, '
-              '(a + b) * x = a * x + b * x\n')
+        print('\nDistributivity of multiplication wrt scalar add, '
+              '(a + b) * x = a * x + b * x')
         
         with FailCounter() as counter:
-            for a in scalar_examples(self.space):
-                for b in scalar_examples(self.space):
-                    for [n_x, x] in vector_examples(self.space):
-                        ok = _apprimately_equal((a + b) * x, a * x + b * x)
-                        if not ok:
-                            counter.fail('failed with x={:25s}, a={}, b={}'
-                                         ''.format(n_x, a, b))
+            for [n_x, x], a, b in samples(self.space,
+                                          self.space.field,
+                                          self.space.field):
+                ok = _apprimately_equal((a + b) * x, a * x + b * x)
+                if not ok:
+                    counter.fail('failed with x={:25s}, a={}, b={}'
+                                    ''.format(n_x, a, b))
 
     def _subtraction(self):
-        print('\ntesting Subtraction, x - y = x + (-1 * y)\n')
+        print('\nSubtraction, x - y = x + (-1 * y)')
         
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
-                for [n_y, y] in vector_examples(self.space):
-                    ok = (_apprimately_equal(x - y, x + (-1 * y)) and
-                          _apprimately_equal(x - y, x + (-y)))
-                    if not ok:
-                        counter.fail('failed with x={:25s}, y={:25s}'
-                                     ''.format(n_x, n_y))
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                ok = (_apprimately_equal(x - y, x + (-1 * y)) and
+                        _apprimately_equal(x - y, x + (-y)))
+                if not ok:
+                    counter.fail('failed with x={:25s}, y={:25s}'
+                                    ''.format(n-x, n_y))
 
     def _division(self):
-        print('\ntesting Division, x / a = x * (1/a) \n')
+        print('\nDivision, x / a = x * (1/a)')
         
         with FailCounter() as counter:
-            for [n_x, x] in vector_examples(self.space):
-                for a in scalar_examples(self.space):
-                    if a != 0:
-                        ok = _apprimately_equal(x / a, x * (1.0/a))
-                        if not ok:
-                            counter.fail('failed with x={:25s}, a={}'
-                                         ''.format(n_x, a))
+            for [n_x, x], a in samples(self.space,
+                                       self.space.field):
+                if a != 0:
+                    ok = _apprimately_equal(x / a, x * (1.0/a))
+                    if not ok:
+                        counter.fail('failed with x={:25s}, a={}'
+                                        ''.format(n_x, a))
 
     def linearity(self):
         print('\n== Verifying linear space properties ==\n')
@@ -188,7 +188,7 @@ class SpaceTest(object):
         print('\ntesting positivity, ||x|| >= 0\n')
         
         with FailCounter('error = -||x||') as counter:
-            for [name, vec] in vector_examples(self.space):
+            for [name, vec] in samples(self.space):
                 norm = vec.norm()
 
                 if norm < 0 or (norm == 0 and name != 'Zero'):
@@ -199,11 +199,11 @@ class SpaceTest(object):
         print('\ntesting subadditivity, ||x+y|| <= ||x|| + ||y||\n')
         
         with FailCounter('error = ||x+y|| - ||x|| + ||y||') as counter:
-            for [name_x, vec_x] in vector_examples(self.space):
-                norm_x = vec_x.norm()
-                for [name_y, vec_y] in vector_examples(self.space):
-                    norm_xy = (vec_x + vec_y).norm()
-                    norm_y = vec_y.norm()
+            for [n_x, x], [n_y, y] in samples(self.space,
+                                              self.space):
+                norm_x = x.norm()
+                norm_y = y.norm()
+                norm_xy = (x + y).norm()
 
                 error = norm_xy - norm_x - norm_y
 
@@ -216,12 +216,12 @@ class SpaceTest(object):
         print('error = abs(||a*x|| - |a| ||x||)')
         
         with FailCounter('error = abs(||a*x|| - |a| ||x||)') as counter:
-            for [name, vec] in vector_examples(self.space):
-                for scalar in scalar_examples(self.space):
-                    error = abs((scalar * vec).norm() - abs(scalar) * vec.norm())
-                    if error > 0.00001:
-                        counter.fail('x={:25s} a={}: ||x||={}'
-                                     ''.format(name, scalar, error))
+            for [name, vec], scalar in samples(self.space,
+                                               self.space.field):
+                error = abs((scalar * vec).norm() - abs(scalar) * vec.norm())
+                if error > 0.00001:
+                    counter.fail('x={:25s} a={}: ||x||={}'
+                                    ''.format(name, scalar, error))
 
     def norm(self):
         """Run all norm-related tests on this space."""
