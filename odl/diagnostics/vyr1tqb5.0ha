@@ -23,7 +23,7 @@ from copy import copy, deepcopy
 __all__ = ('SpaceTest',)
 
 
-def _apprimately_equal(x, y, eps):
+def _apprimately_equal(x, y):
     if x.space != y.space:
         return False
 
@@ -31,7 +31,7 @@ def _apprimately_equal(x, y, eps):
         return True
 
     try:
-        return x.dist(y) < eps
+        return x.dist(y) < 0.0001
     except NotImplementedError:
         try:
             return x == y
@@ -40,7 +40,7 @@ def _apprimately_equal(x, y, eps):
 
 
 class SpaceTest(object):
-    def __init__(self, space, eps=0.00001):
+    def __init__(self, space, eps=0.0000001):
         self.space = space
         self.eps = eps
 
@@ -118,7 +118,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                ok = _apprimately_equal(x + (y + z), (x + y) + z, self.eps)
+                ok = _apprimately_equal(x + (y + z), (x + y) + z)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
@@ -129,7 +129,7 @@ class SpaceTest(object):
         with FailCounter() as counter:
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
-                ok = _apprimately_equal(x + y, y + x, self.eps)
+                ok = _apprimately_equal(x + y, y + x)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
@@ -144,7 +144,7 @@ class SpaceTest(object):
             
         with FailCounter() as counter:
             for [n_x, x] in samples(self.space):
-                ok = _apprimately_equal(x + zero, x, self.eps)
+                ok = _apprimately_equal(x + zero, x)
                 if not ok:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
@@ -154,7 +154,7 @@ class SpaceTest(object):
         
         with FailCounter() as counter:
             for [n_x, x] in samples(self.space):
-                ok = _apprimately_equal(x + (-x), zero, self.eps)
+                ok = _apprimately_equal(x + (-x), zero)
                 if not ok:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
@@ -166,7 +166,7 @@ class SpaceTest(object):
             for [n_x, x], a, b in samples(self.space,
                                           self.space.field,
                                           self.space.field):
-                ok = _apprimately_equal(a * (b * x), (a * b) * x, self.eps)
+                ok = _apprimately_equal(a * (b * x), (a * b) * x)
                 if not ok:
                     counter.fail('failed with x={:25s}, a={}, b={}'
                                  ''.format(n_x, a, b))
@@ -176,7 +176,7 @@ class SpaceTest(object):
         
         with FailCounter() as counter:
             for [n_x, x] in samples(self.space):
-                ok = _apprimately_equal(1 * x, x, self.eps)
+                ok = _apprimately_equal(1 * x, x)
                 if not ok:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
@@ -188,7 +188,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], a in samples(self.space,
                                                  self.space,
                                                  self.space.field):
-                ok = _apprimately_equal(a * (x + y), a * x + a * y, self.eps)
+                ok = _apprimately_equal(a * (x + y), a * x + a * y)
                 if not ok:
                     counter.fail('failed with x={:25s}, y={:25s}, a={}'
                                  ''.format(n_x, n_y, a))
@@ -201,7 +201,7 @@ class SpaceTest(object):
             for [n_x, x], a, b in samples(self.space,
                                           self.space.field,
                                           self.space.field):
-                ok = _apprimately_equal((a + b) * x, a * x + b * x, self.eps)
+                ok = _apprimately_equal((a + b) * x, a * x + b * x)
                 if not ok:
                     counter.fail('failed with x={:25s}, a={}, b={}'
                                  ''.format(n_x, a, b))
@@ -212,8 +212,8 @@ class SpaceTest(object):
         with FailCounter() as counter:
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
-                ok = (_apprimately_equal(x - y, x + (-1 * y), self.eps) and
-                        _apprimately_equal(x - y, x + (-y), self.eps))
+                ok = (_apprimately_equal(x - y, x + (-1 * y)) and
+                        _apprimately_equal(x - y, x + (-y)))
                 if not ok:
                     counter.fail('failed with x={:25s}, y={:25s}'
                                  ''.format(n-x, n_y))
@@ -225,7 +225,7 @@ class SpaceTest(object):
             for [n_x, x], a in samples(self.space,
                                        self.space.field):
                 if a != 0:
-                    ok = _apprimately_equal(x / a, x * (1.0/a), self.eps)
+                    ok = _apprimately_equal(x / a, x * (1.0/a))
                     if not ok:
                         counter.fail('failed with x={:25s}, a={}'
                                      ''.format(n_x, a))
@@ -432,7 +432,7 @@ class SpaceTest(object):
                 dyz = y.dist(z)
                 error = dxz - (dxy + dyz)
 
-                if error > self.eps:
+                if error > 0.00001:
                     counter.fail('x={:25s}, y={:25s}, z={:25s}: error={}'
                                  ''.format(n_x, n_y, n_z, error))
 
@@ -450,7 +450,7 @@ class SpaceTest(object):
                                               self.space):
                 error = abs(x.dist(y) - (x-y).norm())
                 
-                if error > self.eps:
+                if error > 0.00001:
                     counter.fail('x={:25s}, y={:25s}: error={}'
                                  ''.format(n_x, n_y, error))
 
@@ -478,7 +478,7 @@ class SpaceTest(object):
             for [n_x, x] in samples(self.space):
                 error = (zero * x).norm()
 
-                if error > self.eps:
+                if error > 0.00001:
                     counter.fail('x={:25s},: error={}'
                                  ''.format(n_x, error))
 
@@ -489,7 +489,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                ok = _apprimately_equal(x * y, y * x, self.eps)
+                ok = _apprimately_equal(x * y, y * x)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
@@ -501,7 +501,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                ok = _apprimately_equal(x * (y * z), (x * y) * z, self.eps)
+                ok = _apprimately_equal(x * (y * z), (x * y) * z)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
@@ -513,8 +513,8 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], a in samples(self.space,
                                                  self.space,
                                                  self.space.field):
-                ok = _apprimately_equal(a * (x * y), (a * x) * y, self.eps)
-                ok = _apprimately_equal(a * (x * y), x * (a * y), self.eps)
+                ok = _apprimately_equal(a * (x * y), (a * x) * y)
+                ok = _apprimately_equal(a * (x * y), x * (a * y))
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s} a={}'
                                  ''.format(n_x, n_y, a))
@@ -526,7 +526,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                ok = _apprimately_equal(x * (y * z), (x * y) * z, self.eps)
+                ok = _apprimately_equal(x * (y * z), (x * y) * z)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
@@ -601,7 +601,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
                 x.assign(y)
-                ok = _apprimately_equal(x, y, self.eps)
+                ok = _apprimately_equal(x, y)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
@@ -613,14 +613,14 @@ class SpaceTest(object):
             for [n_x, x] in samples(self.space):
                 #equal after copy
                 y = x.copy()
-                ok = _apprimately_equal(x, y, self.eps)
+                ok = _apprimately_equal(x, y)
                 if not ok:
                     counter.fail('failed with x={:s5s}'
                                  ''.format(n_x))
 
                 #modify y, x stays the same
                 y *= 2.0
-                ok = n_x == 'Zero' or not _apprimately_equal(x, y, self.eps)
+                ok = n_x == 'Zero' or not _apprimately_equal(x, y)
                 if not ok:
                     counter.fail('modified y, x changed with x={:25s}'
                                  ''.format(n_x))
@@ -633,7 +633,7 @@ class SpaceTest(object):
         with FailCounter() as counter:
             for [n_x, x] in samples(self.space):
                 x.set_zero()
-                ok = _apprimately_equal(x, zero, self.eps)
+                ok = _apprimately_equal(x, zero)
                 if not ok:
                     counter.fail('failed with x={:25s}'
                                  ''.format(n_x, n_y))

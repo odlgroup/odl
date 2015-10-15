@@ -38,9 +38,9 @@ def _arg_shape(*args):
 
 def scalar_examples(field):
     if field == RealNumbers():
-        return [-1.0, 0.5, 0.0, 0.01, 1.0, 100.0]
+        return [-1.0, 0.5, 0.0, 0.01, 1.0]
     if field == ComplexNumbers():
-        return [-1.0, 0.5, 0.0+2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0, 100.0]
+        return [-1.0, 0.5, 0.0+2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0]
 
 def vector_examples(space):
     # All spaces should yield the zero element
@@ -127,6 +127,9 @@ def vector_examples(space):
             yield ('Grad all', space.element(uspace.element(_all_gradient_fun)))
 
     elif isinstance(space, FnBase):
+        rand_state = np.random.get_state()
+        np.random.seed(1337)
+
         yield ('Linspaced', space.element(np.linspace(0, 1, space.size)))
 
         yield ('Ones', space.element(np.ones(space.size)))
@@ -136,6 +139,7 @@ def vector_examples(space):
         yield ('Normally distributed random noise',
                space.element(np.random.randn(space.size)))
 
+        np.random.set_state(rand_state)
     else:
         warnings.warn('No known examples in this space')
 
