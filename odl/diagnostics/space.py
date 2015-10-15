@@ -44,6 +44,20 @@ class SpaceTest(object):
         self.normed = None
         self.hilbert = None
 
+    def element(self):
+        print('\n== Verifying element method ==\n')
+
+        try:
+            el = self.space.element()
+        except NotImplementedError:
+            print('*** element failed ***')
+            return
+
+        if el not in self.space:
+            print('*** space.element() not in space ***')
+        else:
+            print('space.element() ok'
+
     def _associativity_of_addition(self):
         print('\nAssociativity of addition, '
               'x + (y + z) = (x + y) + z')
@@ -179,7 +193,7 @@ class SpaceTest(object):
         self._division()
 
     def _norm_positive(self):
-        print('\ntesting positivity, ||x|| >= 0\n')
+        print('\ntesting positivity, ||x|| >= 0')
         
         with FailCounter('error = -||x||') as counter:
             for [name, vec] in samples(self.space):
@@ -190,7 +204,7 @@ class SpaceTest(object):
                                  ''.format(name, norm))
 
     def _norm_subadditive(self):
-        print('\ntesting subadditivity, ||x+y|| <= ||x|| + ||y||\n')
+        print('\ntesting subadditivity, ||x+y|| <= ||x|| + ||y||')
         
         with FailCounter('error = ||x+y|| - ||x|| + ||y||') as counter:
             for [n_x, x], [n_y, y] in samples(self.space,
@@ -206,7 +220,7 @@ class SpaceTest(object):
                                  ''.format(name_x, name_y, error))
 
     def _norm_homogeneity(self):
-        print('\ntesting homogeneity, ||a*x|| = |a| ||x||\n')
+        print('\ntesting homogeneity, ||a*x|| = |a| ||x||')
         print('error = abs(||a*x|| - |a| ||x||)')
         
         with FailCounter('error = abs(||a*x|| - |a| ||x||)') as counter:
@@ -316,8 +330,10 @@ class SpaceTest(object):
         """Run all tests on this space."""
         print('\n== RUNNING ALL TESTS ==\n')
         print('Space = {}'.format(self.space))
-
+        
+        self.element()
         self.linearity()
+        self.element()
         self.norm()
         self.dist()
 
