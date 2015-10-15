@@ -227,7 +227,7 @@ class FunctionSet(Set):
                                 'got {!r}.'.format(fset.domain))
             self._space = fset
             self._call = fcall
-            self._apply = fapply
+            self._apply = fapply if fapply is not None else _apply_not_impl
 
         @property
         def space(self):
@@ -540,10 +540,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Different vectorization types are not allowed.
         """
-        if not x1.vectorization == x2.vecorization == out.vectorization:
+        if not x1.vectorization == x2.vectorization == out.vectorization:
             raise ValueError('functions have different vectorization types '
                              '({}, {}, {})'
-                             ''.format(x1.vectorization, x2.vecorization,
+                             ''.format(x1.vectorization, x2.vectorization,
                                        out.vectorization))
         # Store to allow aliasing
         x1_old_call = x1._call
