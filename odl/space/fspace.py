@@ -32,6 +32,7 @@ import numpy as np
 
 # ODL imports
 from odl.operator.operator import Operator
+from odl.set.domain import IntervalProd
 from odl.set.sets import RealNumbers, ComplexNumbers, Set
 from odl.set.space import LinearSpace
 
@@ -89,21 +90,18 @@ class FunctionSet(Set):
             explicitly given
         fapply : callable, optional
             The actual instruction for in-place evaluation
-        vectorization : {'none', 'array', 'meshgrid', 'all'}
-            Type of vectorization to be allowed in the function
-            evaluation
+        vectorization : {'none', 'array', 'meshgrid'}
+            Vectorization type of this function.
 
-            'none' : no vectorization; this is equivalent to the plain
-            `Operator` evaluation where the argument must be a domain
-            element.
+            'none' : no vectorized evaluation
 
-            'array' : allow function argument to be a NumPy array of
-            domain elements.
+            'array' : vectorized evaluation on an array of
+            domain elements. Requires domain to be an
+            `IntervalProd` instance.
 
-            'meshgrid' : allow function argument to be a tuple of
-            arrays comprising a sparse evaluation grid.
-
-            'all' : allow all mentioned types of vectorization
+            'meshgrid' : vectorized evaluation on a meshgrid
+            tuple of arrays. Requires domain to be an
+            `IntervalProd` instance.
 
         *At least one of the arguments `fcall` and `fapply` must
         be provided.*
@@ -126,9 +124,11 @@ class FunctionSet(Set):
                     vectorization = fcall.vectorization
                     fapply = fcall._apply
                     fcall = fcall._call
-                    return self.Vector(fcall, fapply, vectorization)
+                    return self.Vector(self, fcall, fapply,
+                                       vectorization=vectorization)
         else:
-            return self.Vector(fcall, fapply, vectorization)
+            return self.Vector(self, fcall, fapply,
+                               vectorization=vectorization)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
@@ -172,8 +172,7 @@ class FunctionSet(Set):
 
         """Representation of a `FunctionSet` element."""
 
-        def __init__(self, fset, fcall=None, fapply=None,
-                     vectorization='none'):
+        def __init__(self, fset, fcall, fapply=None, vectorization='none'):
             """Initialize a new instance.
 
             Parameters
@@ -184,27 +183,21 @@ class FunctionSet(Set):
                 The actual instruction for out-of-place evaluation. If
                 `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
                 and `vectorization` are used for initialization unless
-                explicitly given
+                explicitly given as arguments
             fapply : callable, optional
                 The actual instruction for in-place evaluation
-            vectorization : {'none', 'array', 'meshgrid', 'all'}
-                Type of vectorization to be allowed in the function
-                evaluation
+            vectorization : {'none', 'array', 'meshgrid'}
+                Vectorization type of this function.
 
-                'none' : no vectorization; this is equivalent to the
-                plain `Operator` evaluation where the argument must be a
-                domain element.
+                'none' : no vectorized evaluation
 
-                'array' : allow function argument to be a NumPy array of
-                domain elements.
+                'array' : vectorized evaluation on an array of
+                domain elements. Requires domain to be an
+                `IntervalProd` instance.
 
-                'meshgrid' : allow function argument to be a tuple of
-                arrays comprising a sparse evaluation grid.
-
-                'all' : allow all mentioned types of vectorization
-
-            *At least one of the arguments `fcall` and `fapply` must
-            be provided.*
+                'meshgrid' : vectorized evaluation on a meshgrid
+                tuple of arrays. Requires domain to be an
+                `IntervalProd` instance.
 
             See also
             --------
@@ -220,9 +213,18 @@ class FunctionSet(Set):
             if fapply is not None and not callable(fapply):
                 raise TypeError('apply function {} is not callable.'
                                 ''.format(fapply))
+            self._vectorization = str(vectorization).lower()
+            if self._vectorization not in ('none', 'array', 'meshgrid'):
+                raise ValueError('vectorization type {!r} not understood.'
+                                 ''.format(vectorization))
 
             super().__init__(fset.domain, fset.range, linear=False)
-            self._vectorization = str(vectorization).lower()
+
+            if (self._vectorization != 'none' and
+                    not isinstance(fset.domain, IntervalProd)):
+                raise TypeError('vectorization requires the function set '
+                                'domain to be an `IntervalProd` instance, '
+                                'got {!r}.'.format(fset.domain))
             self._space = fset
             self._call = fcall
             self._apply = fapply
@@ -451,12 +453,16 @@ class FunctionSet(Set):
                 return str(self._apply_impl)
 
         def __repr__(self):
-            # TODO: add vectorization
-            if self._call is not None:
-                return '{!r}.element({!r})'.format(self.space, self._call)
-            else:
-                return '{!r}.element({!r})'.format(self.space,
-                                                   self._apply_impl)
+            inner_fstr = '{!r}'
+            if self._apply is not None:
+                inner_fstr += ', fapply={fapply!r}'
+            if self.vectorization != 'none':
+                inner_fstr += ', vectorization={vect!r}'
+
+            inner_str = inner_fstr.format(self._call, fapply=self._apply,
+                                          vect=self.vectorization)
+
+            return '{!r}.element({})'.format(self.space, inner_str)
 
 
 class FunctionSpace(FunctionSet, LinearSpace):
@@ -534,10 +540,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Different vectorization types are not allowed.
         """
-        if not x1.vectorization == x2.vectorization == out.vectorization:
+        if not x1.vectorization == x2.vecorization == out.vectorization:
             raise ValueError('functions have different vectorization types '
                              '({}, {}, {})'
-                             ''.format(x1.vectorization, x2.vectorization,
+                             ''.format(x1.vectorization, x2.vecorization,
                                        out.vectorization))
         # Store to allow aliasing
         x1_old_call = x1._call
