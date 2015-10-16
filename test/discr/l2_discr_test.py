@@ -28,8 +28,7 @@ import pytest
 import numpy as np
 
 import odl
-
-from odl.util.testutils import almost_equal, all_almost_equal, skip_if_no_cuda
+from odl.util.testutils import all_almost_equal, skip_if_no_cuda
 
 
 def test_init():
@@ -39,26 +38,27 @@ def test_init():
     unit_interval = odl.L2(odl.Interval(0, 1))
     grid = odl.uniform_sampling(unit_interval.domain, 10)
     R10 = odl.Rn(10)
-    discr = odl.DiscreteL2(unit_interval, grid, R10)
+    odl.DiscreteL2(unit_interval, grid, R10)
 
     # Normal discretization of unit interval with complex
     complex_unit_interval = odl.L2(odl.Interval(0, 1),
                                    field=odl.ComplexNumbers())
     C10 = odl.Cn(10)
-    discr = odl.DiscreteL2(complex_unit_interval, grid, C10)
+    odl.DiscreteL2(complex_unit_interval, grid, C10)
 
     # Real space should not work with complex
     with pytest.raises(ValueError):
-        discr = odl.DiscreteL2(unit_interval, grid, C10)
+        odl.DiscreteL2(unit_interval, grid, C10)
 
     # Complex space should not work with reals
     with pytest.raises(ValueError):
-        discr = odl.DiscreteL2(complex_unit_interval, grid, R10)
+        odl.DiscreteL2(complex_unit_interval, grid, R10)
 
     # Wrong size of underlying space
     R20 = odl.Rn(20)
     with pytest.raises(ValueError):
-        discr = odl.DiscreteL2(unit_interval, grid, R20)
+        odl.DiscreteL2(unit_interval, grid, R20)
+
 
 @skip_if_no_cuda
 def test_init_cuda():
@@ -66,7 +66,8 @@ def test_init_cuda():
     unit_interval = odl.L2(odl.Interval(0, 1))
     grid = odl.uniform_sampling(unit_interval.domain, 10)
     R10 = odl.CudaRn(10)
-    discr = odl.DiscreteL2(unit_interval, grid, R10)
+    odl.DiscreteL2(unit_interval, grid, R10)
+
 
 def test_factory():
     # using numpy
@@ -81,6 +82,7 @@ def test_factory():
 
     assert isinstance(discr.dspace, odl.Cn)
 
+
 @skip_if_no_cuda
 def test_factory_cuda():
     # using cuda
@@ -93,6 +95,7 @@ def test_factory_cuda():
     unit_interval = odl.L2(odl.Interval(0, 1), field=odl.ComplexNumbers())
     with pytest.raises(NotImplementedError):
         odl.l2_uniform_discretization(unit_interval, 10, impl='cuda')
+
 
 def test_factory_dtypes():
     # Using numpy
@@ -114,6 +117,7 @@ def test_factory_dtypes():
                                                   impl='numpy',
                                                   dtype=dtype)
 
+
 @skip_if_no_cuda
 def test_factory_dtypes_cuda():
     # Using numpy
@@ -126,18 +130,19 @@ def test_factory_dtypes_cuda():
         assert isinstance(discr.dspace, odl.CudaFn)
         assert discr.dspace.element().space.dtype == dtype
 
+
 def test_factory_nd():
     # 2d
     unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.l2_uniform_discretization(unit_square, (5, 5))
+    odl.l2_uniform_discretization(unit_square, (5, 5))
 
     # 3d
     unit_cube = odl.L2(odl.Cuboid([0, 0, 0], [1, 1, 1]))
-    discr = odl.l2_uniform_discretization(unit_cube, (5, 5, 5))
+    odl.l2_uniform_discretization(unit_cube, (5, 5, 5))
 
     # nd
     unit_10_cube = odl.L2(odl.IntervalProd([0]*10, [1]*10))
-    discr = odl.l2_uniform_discretization(unit_10_cube, (5,)*10)
+    odl.l2_uniform_discretization(unit_10_cube, (5,)*10)
 
 
 def test_element_1d():
@@ -147,6 +152,7 @@ def test_element_1d():
     assert isinstance(vec, discr.Vector)
     assert isinstance(vec.ntuple, odl.Rn.Vector)
 
+
 def test_element_2d():
     unit_interval = odl.L2(odl.Rectangle([0, 0], [1, 1]))
     discr = odl.l2_uniform_discretization(unit_interval, (3, 3),
@@ -154,6 +160,7 @@ def test_element_2d():
     vec = discr.element()
     assert isinstance(vec, discr.Vector)
     assert isinstance(vec.ntuple, odl.Rn.Vector)
+
 
 def test_element_from_array_1d():
     unit_interval = odl.L2(odl.Interval(0, 1))
@@ -163,6 +170,7 @@ def test_element_from_array_1d():
     assert isinstance(vec, discr.Vector)
     assert isinstance(vec.ntuple, odl.Rn.Vector)
     assert all_almost_equal(vec.ntuple, [1, 2, 3])
+
 
 def test_element_from_array_2d():
     # assert orderings work properly with 2d
@@ -182,7 +190,7 @@ def test_element_from_array_2d():
     linear_vec = discr.element([1, 2, 3, 4])
     assert all_almost_equal(vec.ntuple, [1, 2, 3, 4])
 
-    #Fortran order
+    # Fortran order
     discr = odl.l2_uniform_discretization(unit_square, (2, 2),
                                           impl='numpy', order='F')
     vec = discr.element([[1, 2],
@@ -195,26 +203,28 @@ def test_element_from_array_2d():
     linear_vec = discr.element([1, 2, 3, 4])
     assert all_almost_equal(linear_vec.ntuple, [1, 2, 3, 4])
 
+
 def test_element_from_array_2d_shape():
     # Verify that the shape is correctly tested for
     unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
     discr = odl.l2_uniform_discretization(unit_square, (3, 2),
                                           impl='numpy', order='C')
 
-    #Correct order
+    # Correct order
     discr.element([[1, 2],
                    [3, 4],
                    [5, 6]])
 
-    #Wrong order, should throw
+    # Wrong order, should throw
     with pytest.raises(ValueError):
         discr.element([[1, 2, 3],
                        [4, 5, 6]])
 
-    #Wrong number of elements, should throw
+    # Wrong number of elements, should throw
     with pytest.raises(ValueError):
         discr.element([[1, 2],
                        [3, 4]])
+
 
 def test_zero():
     discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
@@ -224,11 +234,13 @@ def test_zero():
     assert isinstance(vec.ntuple, odl.Rn.Vector)
     assert all_almost_equal(vec, [0, 0, 0])
 
+
 def test_getitem():
     discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
     vec = discr.element([1, 2, 3])
 
     assert all_almost_equal(vec, [1, 2, 3])
+
 
 def test_getslice():
     discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
@@ -245,6 +257,7 @@ def test_getslice():
     assert isinstance(vec[:], odl.Cn.Vector)
     assert all_almost_equal(vec[:], [1+2j, 2-2j, 3])
 
+
 def test_setitem():
     discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
     vec = discr.element([1, 2, 3])
@@ -253,6 +266,7 @@ def test_setitem():
     vec[2] = 6
 
     assert all_almost_equal(vec, [4, 5, 6])
+
 
 def test_setitem_nd():
 
@@ -282,12 +296,12 @@ def test_setitem_nd():
     discr = odl.l2_uniform_discretization(
         odl.L2(odl.Rectangle([0, 0], [1, 1])), [3, 2])
 
-    vec = discr.element([[1, 2], 
-                         [3, 4], 
+    vec = discr.element([[1, 2],
+                         [3, 4],
                          [5, 6]])
 
-    vec[:] = [[-1, -2], 
-              [-3, -4], 
+    vec[:] = [[-1, -2],
+              [-3, -4],
               [-5, -6]]
     assert all_almost_equal(vec, [-1, -2, -3, -4, -5, -6])
 
@@ -336,12 +350,14 @@ def test_setitem_nd():
         # Reversed shape -> bad
         vec[:] = np.arange(ntotal).reshape((4,)*3 + (3,)*3)
 
+
 def test_setslice():
     discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
     vec = discr.element([1, 2, 3])
 
     vec[:] = [4, 5, 6]
     assert all_almost_equal(vec, [4, 5, 6])
+
 
 def test_asarray_2d():
     unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
@@ -351,22 +367,22 @@ def test_asarray_2d():
 
     # Verify that returned array equals input data
     assert all_almost_equal(vec_F.asarray(), [[1, 2],
-                                                 [3, 4]])
+                                              [3, 4]])
     # Check order of out array
     assert vec_F.asarray().flags['F_CONTIGUOUS']
-
 
     # Also check with C ordering
     discr_C = odl.l2_uniform_discretization(unit_square, (2, 2), order='C')
     vec_C = discr_C.element([[1, 2],
                              [3, 4]])
-    
+
     # Verify that returned array equals input data
     assert all_almost_equal(vec_C.asarray(), [[1, 2],
-                                                 [3, 4]])
+                                              [3, 4]])
 
     # Check order of out array
     assert vec_C.asarray().flags['C_CONTIGUOUS']
+
 
 def test_transpose():
     unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
@@ -382,4 +398,4 @@ def test_transpose():
     assert all_almost_equal(x.T.adjoint(1.0), x)
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/')) + ' -v')
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
