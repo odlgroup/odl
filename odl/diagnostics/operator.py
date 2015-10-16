@@ -142,7 +142,7 @@ class OperatorTest(object):
                 expected_step = deriv(dx*step)
                 denom = step * dx.norm() * self.operator_norm
                 error = (0 if denom == 0
-                            else (exact_step-expected_step).norm() / denom)
+                         else (exact_step-expected_step).norm() / denom)
 
                 if error > 0.00001:
                     counter.fail('x={:15s} dx={:15s} c={}: error={:6.5f}'
@@ -186,11 +186,11 @@ class OperatorTest(object):
 
                 denom = self.operator_norm * scale * x.norm()
                 error = (0 if denom == 0
-                            else (scaled_opx - opx * scale).norm() / denom)
+                         else (scaled_opx - opx * scale).norm() / denom)
 
                 if error > 0.00001:
                     counter.fail('x={:25s} scale={:7.2f} error={:6.5f}'
-                                    ''.format(n_x, scale, error))
+                                 ''.format(n_x, scale, error))
 
     def _addition_invariance(self):
         print("\nCalculating invariance under addition")
@@ -206,7 +206,7 @@ class OperatorTest(object):
 
                 denom = self.operator_norm * (x.norm() + y.norm())
                 error = (0 if denom == 0
-                            else (opxy - opx - opy).norm() / denom)
+                         else (opxy - opx - opy).norm() / denom)
 
                 if error > 0.00001:
                     counter.fail('x={:25s} y={:25s} error={:6.5f}'

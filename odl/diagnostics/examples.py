@@ -42,6 +42,7 @@ def scalar_examples(field):
     if field == ComplexNumbers():
         return [-1.0, 0.5, 0.0+2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0]
 
+
 def vector_examples(space):
     # All spaces should yield the zero element
     yield ('Zero', space.zero())
@@ -82,7 +83,7 @@ def vector_examples(space):
         yield ('Cube', space.element(uspace.element(_cube_fun)))
 
         # Indicator function on hypersphere
-        if space.grid.ndim > 1: #Only if dimension > 1, don't duplicate cube
+        if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate cube
             def _sphere_fun(*args):
                 r = np.zeros(_arg_shape(*args))
 
@@ -115,7 +116,7 @@ def vector_examples(space):
                    space.element(uspace.element(_gradient_fun)))
 
         # Gradient in all dimensions
-        if space.grid.ndim > 1: #Only if dimension > 1, don't duplicate grad 0
+        if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
             def _all_gradient_fun(*args):
                 s = np.zeros(_arg_shape(*args))
 
@@ -143,6 +144,7 @@ def vector_examples(space):
     else:
         warnings.warn('No known examples in this space')
 
+
 def samples(*sets):
     if len(sets) == 1:
         if isinstance(sets[0], LinearSpace):
@@ -152,7 +154,8 @@ def samples(*sets):
             for scal in scalar_examples(sets[0]):
                 yield scal
     else:
-        generators = [vector_examples(set) if isinstance(set, LinearSpace) else scalar_examples(set) for set in sets]
+        generators = [vector_examples(set) if isinstance(set, LinearSpace)
+                      else scalar_examples(set) for set in sets]
         for examples in product(*generators):
             yield examples
 
