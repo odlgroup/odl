@@ -31,7 +31,7 @@ from itertools import zip_longest
 import sys
 from time import time
 
-__all__ = ('almost_equal', 'all_almost_equal', 'skip_if_no_cuda', 
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda', 
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
 def almost_equal(a, b, places=7):    
@@ -52,6 +52,29 @@ def almost_equal(a, b, places=7):
     else:
         print(complex(a), complex(b))
         return False
+
+def all_equal(iter1, iter2, places=7):
+    # Sentinel object used to check that both iterators are the same length
+    different_length_sentinel = object()
+
+    if iter1 is None and iter2 is None:
+        return True
+
+    for [ip1, ip2] in zip_longest(iter1, iter2,
+                                  fillvalue=different_length_sentinel):
+        # Verify that none of the lists has ended (then they are not the
+        # same size)
+        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+            return False
+            
+        try:
+            if not all_almost_equal(iter(ip1), iter(ip2), places):
+                return False
+        except TypeError:
+            if ip1 != ip2:
+                return False
+    
+    return True
 
 def all_almost_equal(iter1, iter2, places=7):
     # Sentinel object used to check that both iterators are the same length
