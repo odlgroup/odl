@@ -38,7 +38,20 @@ def almost_equal(a, b, places=7):
     if a is None and b is None:
         return True
         
-    return round(abs(a - b), places) == 0
+    try:
+        a = complex(a)
+        b = complex(b) 
+    except TypeError:
+        return False
+        
+    if abs(a) == float('inf') and abs(b) == float('inf'):
+        return a == b
+        
+    if round(abs(complex(a) - complex(b)), places) == 0:
+        return True
+    else:
+        print(complex(a), complex(b))
+        return False
 
 def all_almost_equal(iter1, iter2, places=7):
     # Sentinel object used to check that both iterators are the same length
