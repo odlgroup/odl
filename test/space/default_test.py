@@ -23,35 +23,34 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External module imports
-import unittest
+import pytest
 from math import pi, sqrt
 import numpy as np
 
 # ODL imports
 import odl
 from odl import L2
-from odl.util.testutils import ODLTestCase
+from odl.util.testutils import almost_equal
 
 
-class L2Test(ODLTestCase):
-    def test_interval(self):
-        l2space = L2(odl.Interval(0, pi))
-        l2discr = odl.l2_uniform_discretization(l2space, 10)
+def test_interval():
+    l2space = L2(odl.Interval(0, pi))
+    l2discr = odl.l2_uniform_discretization(l2space, 10)
 
-        l2sin = l2space.element(np.sin)
-        discr_sin = l2discr.element(l2sin)
+    l2sin = l2space.element(np.sin)
+    discr_sin = l2discr.element(l2sin)
 
-        self.assertAlmostEqual(discr_sin.norm(), sqrt(pi/2))
+    assert almost_equal(discr_sin.norm(), sqrt(pi/2))
 
-    def test_rectangle(self):
-        l2space = L2(odl.Rectangle((0, 0), (pi, 2*pi)))
-        n, m = 10, 10
-        l2discr = odl.l2_uniform_discretization(l2space, (n, m))
+def test_rectangle():
+    l2space = L2(odl.Rectangle((0, 0), (pi, 2*pi)))
+    n, m = 10, 10
+    l2discr = odl.l2_uniform_discretization(l2space, (n, m))
 
-        l2sin2 = l2space.element(lambda x, y: np.sin(x) * np.sin(y))
-        discr_sin2 = l2discr.element(l2sin2)
+    l2sin2 = l2space.element(lambda x, y: np.sin(x) * np.sin(y))
+    discr_sin2 = l2discr.element(l2sin2)
 
-        self.assertAlmostEqual(discr_sin2.norm(), pi / sqrt(2))
+    assert almost_equal(discr_sin2.norm(), pi / sqrt(2))
 
 if __name__ == '__main__':
-    unittest.main(exit=False)
+    pytest.main(str(__file__))

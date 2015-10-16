@@ -19,7 +19,8 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object, super
+from builtins import object
+import pytest
 from future import standard_library
 standard_library.install_aliases()
 
@@ -27,74 +28,79 @@ standard_library.install_aliases()
 # pylint: disable=no-name-in-module
 from numpy import ravel_multi_index, prod
 from itertools import zip_longest
-import unittest
 import sys
 from time import time
-from future.utils import with_metaclass
 
-__all__ = ('ODLTestCase', 'skip_all', 'Timer', 'timeit', 'ProgressBar',
-           'ProgressRange')
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda', 
+           'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
+def almost_equal(a, b, places=7):    
+    if a is None and b is None:
+        return True
+        
+    try:
+        a = complex(a)
+        b = complex(b) 
+    except TypeError:
+        return False
+        
+    if abs(a) == float('inf') and abs(b) == float('inf'):
+        return a == b
+        
+    if round(abs(complex(a) - complex(b)), places) == 0:
+        return True
+    else:
+        print(complex(a), complex(b))
+        return False
 
-class ODLTestCase(unittest.TestCase):
-    # Use names compatible with unittest
-    # pylint: disable=invalid-name
-    def assertAlmostEqual(self, f1, f2, *args, **kwargs):
-        unittest.TestCase.assertAlmostEqual(self, complex(f1), complex(f2),
-                                            *args, **kwargs)
+def all_equal(iter1, iter2, places=7):
+    # Sentinel object used to check that both iterators are the same length
+    different_length_sentinel = object()
 
-    # pylint: disable=invalid-name
-    def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
-        """ Assert thaat all elements in iter1 and iter2 are almost equal.
+    if iter1 is None and iter2 is None:
+        return True
 
-        The iterators may be nested lists or varying types
+    for [ip1, ip2] in zip_longest(iter1, iter2,
+                                  fillvalue=different_length_sentinel):
+        # Verify that none of the lists has ended (then they are not the
+        # same size)
+        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+            return False
+            
+        try:
+            if not all_almost_equal(iter(ip1), iter(ip2), places):
+                return False
+        except TypeError:
+            if ip1 != ip2:
+                return False
+    
+    return True
 
-        assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
-        """
-        # Sentinel object used to check that both iterators are the same length
-        different_length_sentinel = object()
+def all_almost_equal(iter1, iter2, places=7):
+    # Sentinel object used to check that both iterators are the same length
+    different_length_sentinel = object()
 
-        if iter1 is None and iter2 is None:
-            return
+    if iter1 is None and iter2 is None:
+        return True
 
-        for [ip1, ip2] in zip_longest(iter1, iter2,
-                                      fillvalue=different_length_sentinel):
-            # Verify that none of the lists has ended (then they are not the
-            # same size)
-            self.assertIsNot(ip1, different_length_sentinel)
-            self.assertIsNot(ip2, different_length_sentinel)
-            try:
-                self.assertAllAlmostEquals(iter(ip1), iter(ip2), *args,
-                                           **kwargs)
-            except TypeError:
-                self.assertAlmostEqual(ip1, ip2, *args, **kwargs)
-
-    def assertAllEquals(self, iter1, iter2, *args, **kwargs):
-        """ Assert thaat all elements in iter1 and iter2 are equal.
-
-        The iterators may be nested lists or varying types
-        """
-        kwargs['delta'] = 0
-        self.assertAllAlmostEquals(iter1, iter2, *args, **kwargs)
-
-
-def skip_all(reason=None):
-    """Create a TestCase replacement class where all tests are skipped."""
-    if reason is None:
-        reason = ''
-
-    class SkipAllTestsMeta(type):
-        def __new__(mcs, name, bases, local):
-            for attr in local:
-                value = local[attr]
-                if attr.startswith('test') and callable(value):
-                    local[attr] = unittest.skip(reason)(value)
-            return super().__new__(mcs, name, bases, local)
-
-    class SkipAllTestCase(with_metaclass(SkipAllTestsMeta, unittest.TestCase)):
-        pass
-
-    return SkipAllTestCase
+    for [ip1, ip2] in zip_longest(iter1, iter2,
+                                  fillvalue=different_length_sentinel):
+        # Verify that none of the lists has ended (then they are not the
+        # same size)
+        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+            return False
+            
+        try:
+            if not all_almost_equal(iter(ip1), iter(ip2), places):
+                return False
+        except TypeError:
+            if not almost_equal(ip1, ip2, places):
+                return False
+    
+    return True
+    
+    
+skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
 
 class FailCounter(object):
     """ Used to count the number of failures of something
@@ -204,20 +210,23 @@ class ProgressBar(object):
     -----
 
     >>> progress = ProgressBar('Reading data', 10)
-    >>> progress.update(5) #halfway, zero indexing
-    Reading data [#######         ] 50%
+    \rReading data: [                              ] Starting
+    >>> progress.update(4) #halfway, zero indexing
+    \rReading data: [###############               ] 50.0%   
 
     Also supports multiple index, from slowest varying to fastest
 
     >>> progress = ProgressBar('Reading data', 10, 10)
+    \rReading data: [                              ] Starting
     >>> progress.update(9, 8)
-    Reading data [################] 99%
+    \rReading data: [############################# ] 99.0%   
 
     Also supports simply calling update, which moves the counter forward
 
     >>> progress = ProgressBar('Reading data', 10, 10)
+    \rReading data: [                              ] Starting
     >>> progress.update()
-    Reading data [################] 99%
+    \rReading data: [                              ]  1.0%   
     """
 
     def __init__(self, text='progress', *njobs):

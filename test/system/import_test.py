@@ -23,29 +23,22 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External module imports
-import unittest
-
-# ODL imports
-from odl.util.testutils import ODLTestCase
+import pytest
 
 
-class ImportStarTest(ODLTestCase):
-    def test_all(self):
-        import odl
-        # Create Cn
-        C1 = odl.Cn(3)
-        C2 = odl.space.Cn(3)
-        C3 = odl.space.ntuples.Cn(3)
+def test_all_imports():
+    import odl
+    # Create Cn
+    odl.Cn(3)
+    odl.space.Cn(3)
+    C3=odl.space.ntuples.Cn(3)
 
-        # Three ways of creating the identity
-        I1 = odl.IdentityOperator(C3)
-        I2 = odl.operator.IdentityOperator(C3)
-        I3 = odl.operator.default_ops.IdentityOperator(C3)
+    # Three ways of creating the identity
+    odl.IdentityOperator(C3)
+    odl.operator.IdentityOperator(C3)
+    odl.operator.default_ops.IdentityOperator(C3)
 
-        # Test that utility needs to be explicitly imported
-        x = odl.util.utility.array1d_repr
-        with self.assertRaises(AttributeError):
-            x = odl.array1d_repr
-
-if __name__ == '__main__':
-    unittest.main(exit=False)
+    # Test that utility needs to be explicitly imported
+    odl.util.utility.array1d_repr
+    with pytest.raises(AttributeError):
+        odl.array1d_repr

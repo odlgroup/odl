@@ -24,13 +24,13 @@ standard_library.install_aliases()
 from builtins import super
 
 # External module imports
-import unittest
+import pytest
 import numpy as np
 
 # ODL imports
 import odl
 import odl.operator.solvers as solvers
-from odl.util.testutils import ODLTestCase
+from odl.util.testutils import all_almost_equal
 
 
 class MultiplyOp(odl.Operator):
@@ -58,75 +58,74 @@ class MultiplyOp(odl.Operator):
         return MultiplyOp(self.matrix.T, self.range, self.domain)
 
 
-class TestMatrixSolve(ODLTestCase):
-
     """Test solutions of the linear equation Ax = b with dense A."""
 
-    def test_landweber(self):
-        n = 3
+def test_landweber():
+    n = 3
 
-        # Np as validation
-        A = np.random.rand(n, n)
-        x = np.random.rand(n)
-        # Landweber is slow and needs a decent initial guess
-        b = np.dot(A, x) + 0.1 * np.random.rand(n)
+    # Np as validation
+    A = np.random.rand(n, n)
+    x = np.random.rand(n)
+    # Landweber is slow and needs a decent initial guess
+    b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
-        # Vector representation
-        rn = odl.Rn(n)
-        xvec = rn.element(x)
-        bvec = rn.element(b)
+    # Vector representation
+    rn = odl.Rn(n)
+    xvec = rn.element(x)
+    bvec = rn.element(b)
 
-        # Make operator
-        norm = np.linalg.norm(A, ord=2)
-        Aop = MultiplyOp(A)
+    # Make operator
+    norm = np.linalg.norm(A, ord=2)
+    Aop = MultiplyOp(A)
 
-        # Solve using landweber
-        solvers.landweber(Aop, xvec, bvec, niter=n*50, omega=1/norm**2)
+    # Solve using landweber
+    solvers.landweber(Aop, xvec, bvec, niter=n*50, omega=1/norm**2)
 
-        self.assertAllAlmostEquals(xvec, x, places=2)
+    assert all_almost_equal(xvec, x, places=2)
 
-    def test_conjugate_gradient(self):
-        n = 3
+def test_conjugate_gradient():
+    n = 3
 
-        # Np as validation
-        A = np.random.rand(n, n)
-        x = np.random.rand(n)
-        b = np.dot(A, x) + 0.1 * np.random.rand(n)
+    # Np as validation
+    A = np.random.rand(n, n)
+    x = np.random.rand(n)
+    b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
-        # Vector representation
-        rn = odl.Rn(n)
-        xvec = rn.element(x)
-        bvec = rn.element(b)
+    # Vector representation
+    rn = odl.Rn(n)
+    xvec = rn.element(x)
+    bvec = rn.element(b)
 
-        # Make operator
-        Aop = MultiplyOp(A)
+    # Make operator
+    Aop = MultiplyOp(A)
 
-        # Solve using conjugate gradient
-        solvers.conjugate_gradient(Aop, xvec, bvec, niter=n)
+    # Solve using conjugate gradient
+    solvers.conjugate_gradient(Aop, xvec, bvec, niter=n)
 
-        self.assertAllAlmostEquals(xvec, x, places=2)
+    assert all_almost_equal(xvec, x, places=2)
 
-    def test_gauss_newton(self):
-        n = 10
+def test_gauss_newton():
+    n = 10
 
-        # Np as validation
-        A = np.random.rand(n, n)
-        x = np.random.rand(n)
-        b = np.dot(A, x) + 0.1 * np.random.rand(n)
+    # Np as validation
+    A = np.random.rand(n, n)
+    x = np.random.rand(n)
+    b = np.dot(A, x) + 0.1 * np.random.rand(n)
 
-        # Vector representation
-        rn = odl.Rn(n)
-        xvec = rn.element(x)
-        bvec = rn.element(b)
+    # Vector representation
+    rn = odl.Rn(n)
+    xvec = rn.element(x)
+    bvec = rn.element(b)
 
-        # Make operator
-        Aop = MultiplyOp(A)
+    # Make operator
+    Aop = MultiplyOp(A)
 
-        # Solve using conjugate gradient
-        solvers.gauss_newton(Aop, xvec, bvec, niter=n)
+    # Solve using conjugate gradient
+    solvers.gauss_newton(Aop, xvec, bvec, niter=n)
 
-        self.assertAllAlmostEquals(xvec, x, places=2)
-
+    assert all_almost_equal(xvec, x, places=2)
+    
 
 if __name__ == '__main__':
-    unittest.main(exit=False)
+    pytest.main(str(__file__))
+

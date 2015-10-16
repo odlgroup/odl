@@ -456,8 +456,7 @@ class ProductSpace(LinearSpace):
             The result is readable:
 
             >>> x
-            ProductSpace(Rn(2), Rn(3)).element(
-            [
+            ProductSpace(Rn(2), Rn(3)).element([
                 [1.0, 2.0],
                 [3.0, 4.0, 5.0]
             ])
@@ -469,8 +468,7 @@ class ProductSpace(LinearSpace):
             >>> eval(repr(x)) == x
             True
             >>> x
-            ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element(
-            [
+            ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element([
                 [
                     [1.0, 2.0],
                     [3.0, 4.0, 5.0]
@@ -481,7 +479,7 @@ class ProductSpace(LinearSpace):
                 ]
             ])
             """
-            inner_str = '\n[\n'
+            inner_str = '[\n'
             if len(self) < 5:
                 inner_str += ',\n'.join('{}'.format(
                     _indent(_strip_space(part))) for part in self.parts)

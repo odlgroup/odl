@@ -24,189 +24,188 @@ standard_library.install_aliases()
 
 # External module imports
 import numpy as np
-import unittest
+import pytest
 
 # ODL imports
 import odl
-from odl.util.testutils import ODLTestCase
+from odl.util.testutils import all_almost_equal, almost_equal
 
 
-class ProductTest(ODLTestCase):
-    def test_RxR(self):
-        H = odl.Rn(2)
-        HxH = odl.ProductSpace(H, H)
-        self.assertTrue(len(HxH) == 2)
+def test_product_RxR():
+    H = odl.Rn(2)
+    HxH = odl.ProductSpace(H, H)
+    assert len(HxH) == 2
 
-        v1 = H.element([1, 2])
-        v2 = H.element([3, 4])
-        v = HxH.element([v1, v2])
-        u = HxH.element([[1, 2], [3, 4]])
+    v1 = H.element([1, 2])
+    v2 = H.element([3, 4])
+    v = HxH.element([v1, v2])
+    u = HxH.element([[1, 2], [3, 4]])
 
-        self.assertAllAlmostEquals([v1, v2], v)
-        self.assertAllAlmostEquals([v1, v2], u)
+    assert all_almost_equal([v1, v2], v)
+    assert all_almost_equal([v1, v2], u)
 
-    def test_lincomb(self):
-        H = odl.Rn(2)
-        HxH = odl.ProductSpace(H, H)
+def test_product_lincomb():
+    H = odl.Rn(2)
+    HxH = odl.ProductSpace(H, H)
 
-        v1 = H.element([1, 2])
-        v2 = H.element([5, 3])
-        u1 = H.element([-1, 7])
-        u2 = H.element([2, 1])
+    v1 = H.element([1, 2])
+    v2 = H.element([5, 3])
+    u1 = H.element([-1, 7])
+    u2 = H.element([2, 1])
 
-        v = HxH.element([v1, v2])
-        u = HxH.element([u1, u2])
-        z = HxH.element()
+    v = HxH.element([v1, v2])
+    u = HxH.element([u1, u2])
+    z = HxH.element()
 
-        a = 3.12
-        b = 1.23
+    a = 3.12
+    b = 1.23
 
-        expected = [a*v1 + b*u1, a*v2 + b*u2]
-        HxH.lincomb(a, v, b, u, out=z)
+    expected = [a*v1 + b*u1, a*v2 + b*u2]
+    HxH.lincomb(a, v, b, u, out=z)
 
-        self.assertAllAlmostEquals(z, expected)
+    assert all_almost_equal(z, expected)
 
-    def test_metric(self):
-        H = odl.Rn(2)
-        v11 = H.element([1, 2])
-        v12 = H.element([5, 3])
+def test_product_metric():
+    H = odl.Rn(2)
+    v11 = H.element([1, 2])
+    v12 = H.element([5, 3])
 
-        v21 = H.element([1, 2])
-        v22 = H.element([8, 9])
+    v21 = H.element([1, 2])
+    v22 = H.element([8, 9])
 
-        # 1-norm
-        HxH = odl.ProductSpace(H, H, ord=1.0)
-        w1 = HxH.element([v11, v12])
-        w2 = HxH.element([v21, v22])
-        self.assertAlmostEquals(HxH.dist(w1, w2),
-                                H.dist(v11, v21) + H.dist(v12, v22))
+    # 1-norm
+    HxH = odl.ProductSpace(H, H, ord=1.0)
+    w1 = HxH.element([v11, v12])
+    w2 = HxH.element([v21, v22])
+    assert almost_equal(HxH.dist(w1, w2),
+                            H.dist(v11, v21) + H.dist(v12, v22))
 
-        # 2-norm
-        HxH = odl.ProductSpace(H, H, ord=2.0)
-        w1 = HxH.element([v11, v12])
-        w2 = HxH.element([v21, v22])
-        self.assertAlmostEquals(
-            HxH.dist(w1, w2),
-            (H.dist(v11, v21)**2 + H.dist(v12, v22)**2)**(1/2.0))
+    # 2-norm
+    HxH = odl.ProductSpace(H, H, ord=2.0)
+    w1 = HxH.element([v11, v12])
+    w2 = HxH.element([v21, v22])
+    assert almost_equal(
+        HxH.dist(w1, w2),
+        (H.dist(v11, v21)**2 + H.dist(v12, v22)**2)**(1/2.0))
 
-        # -inf norm
-        HxH = odl.ProductSpace(H, H, ord=-float('inf'))
-        w1 = HxH.element([v11, v12])
-        w2 = HxH.element([v21, v22])
-        self.assertAlmostEquals(
-            HxH.dist(w1, w2),
-            min(H.dist(v11, v21), H.dist(v12, v22)))
+    # -inf norm
+    HxH = odl.ProductSpace(H, H, ord=-float('inf'))
+    w1 = HxH.element([v11, v12])
+    w2 = HxH.element([v21, v22])
+    assert almost_equal(
+        HxH.dist(w1, w2),
+        min(H.dist(v11, v21), H.dist(v12, v22)))
 
-        # inf norm
-        HxH = odl.ProductSpace(H, H, ord=float('inf'))
-        w1 = HxH.element([v11, v12])
-        w2 = HxH.element([v21, v22])
-        self.assertAlmostEquals(
-            HxH.dist(w1, w2),
-            max(H.dist(v11, v21), H.dist(v12, v22)))
+    # inf norm
+    HxH = odl.ProductSpace(H, H, ord=float('inf'))
+    w1 = HxH.element([v11, v12])
+    w2 = HxH.element([v21, v22])
+    assert almost_equal(
+        HxH.dist(w1, w2),
+        max(H.dist(v11, v21), H.dist(v12, v22)))
 
-        # Custom norm
-        def my_norm(x):
-            return np.sum(x)  # Same as 1-norm
-        HxH = odl.ProductSpace(H, H, prod_dist=my_norm)
-        w1 = HxH.element([v11, v12])
-        w2 = HxH.element([v21, v22])
-        self.assertAlmostEquals(
-            HxH.dist(w1, w2),
-            H.dist(v11, v21) + H.dist(v12, v22))
+    # Custom norm
+    def my_norm(x):
+        return np.sum(x)  # Same as 1-norm
+    HxH = odl.ProductSpace(H, H, prod_dist=my_norm)
+    w1 = HxH.element([v11, v12])
+    w2 = HxH.element([v21, v22])
+    assert almost_equal(
+        HxH.dist(w1, w2),
+        H.dist(v11, v21) + H.dist(v12, v22))
 
-    def test_norm(self):
-        H = odl.Rn(2)
-        v1 = H.element([1, 2])
-        v2 = H.element([5, 3])
+def test_product_norm():
+    H = odl.Rn(2)
+    v1 = H.element([1, 2])
+    v2 = H.element([5, 3])
 
-        # 1-norm
-        HxH = odl.ProductSpace(H, H, ord=1.0)
-        w = HxH.element([v1, v2])
-        self.assertAlmostEquals(HxH.norm(w), H.norm(v1) + H.norm(v2))
+    # 1-norm
+    HxH = odl.ProductSpace(H, H, ord=1.0)
+    w = HxH.element([v1, v2])
+    assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
-        # 2-norm
-        HxH = odl.ProductSpace(H, H, ord=2.0)
-        w = HxH.element([v1, v2])
-        self.assertAlmostEquals(
-            HxH.norm(w), (H.norm(v1)**2 + H.norm(v2)**2)**(1/2.0))
+    # 2-norm
+    HxH = odl.ProductSpace(H, H, ord=2.0)
+    w = HxH.element([v1, v2])
+    assert almost_equal(
+        HxH.norm(w), (H.norm(v1)**2 + H.norm(v2)**2)**(1/2.0))
 
-        # -inf norm
-        HxH = odl.ProductSpace(H, H, ord=-float('inf'))
-        w = HxH.element([v1, v2])
-        self.assertAlmostEquals(HxH.norm(w), min(H.norm(v1), H.norm(v2)))
+    # -inf norm
+    HxH = odl.ProductSpace(H, H, ord=-float('inf'))
+    w = HxH.element([v1, v2])
+    assert almost_equal(HxH.norm(w), min(H.norm(v1), H.norm(v2)))
 
-        # inf norm
-        HxH = odl.ProductSpace(H, H, ord=float('inf'))
-        w = HxH.element([v1, v2])
-        self.assertAlmostEquals(HxH.norm(w), max(H.norm(v1), H.norm(v2)))
+    # inf norm
+    HxH = odl.ProductSpace(H, H, ord=float('inf'))
+    w = HxH.element([v1, v2])
+    assert almost_equal(HxH.norm(w), max(H.norm(v1), H.norm(v2)))
 
-        # Custom norm
-        def my_norm(x):
-            return np.sum(x)  # Same as 1-norm
-        HxH = odl.ProductSpace(H, H, prod_norm=my_norm)
-        w = HxH.element([v1, v2])
-        self.assertAlmostEquals(HxH.norm(w), H.norm(v1) + H.norm(v2))
+    # Custom norm
+    def my_norm(x):
+        return np.sum(x)  # Same as 1-norm
+    HxH = odl.ProductSpace(H, H, prod_norm=my_norm)
+    w = HxH.element([v1, v2])
+    assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
 
-class PowerTest(ODLTestCase):
-    def test_RxR(self):
-        H = odl.Rn(2)
-        HxH = odl.ProductSpace(H, 2)
-        self.assertTrue(len(HxH) == 2)
+def test_power_RxR():
+    H = odl.Rn(2)
+    HxH = odl.ProductSpace(H, 2)
+    assert len(HxH) == 2
 
-        v1 = H.element([1, 2])
-        v2 = H.element([3, 4])
-        v = HxH.element([v1, v2])
-        u = HxH.element([[1, 2], [3, 4]])
+    v1 = H.element([1, 2])
+    v2 = H.element([3, 4])
+    v = HxH.element([v1, v2])
+    u = HxH.element([[1, 2], [3, 4]])
 
-        self.assertAllAlmostEquals([v1, v2], v)
-        self.assertAllAlmostEquals([v1, v2], u)
+    assert all_almost_equal([v1, v2], v)
+    assert all_almost_equal([v1, v2], u)
 
-    def test_lincomb(self):
-        H = odl.Rn(2)
-        HxH = odl.ProductSpace(H, 2)
+def test_power_lincomb():
+    H = odl.Rn(2)
+    HxH = odl.ProductSpace(H, 2)
 
-        v1 = H.element([1, 2])
-        v2 = H.element([5, 3])
-        u1 = H.element([-1, 7])
-        u2 = H.element([2, 1])
+    v1 = H.element([1, 2])
+    v2 = H.element([5, 3])
+    u1 = H.element([-1, 7])
+    u2 = H.element([2, 1])
 
-        v = HxH.element([v1, v2])
-        u = HxH.element([u1, u2])
-        z = HxH.element()
+    v = HxH.element([v1, v2])
+    u = HxH.element([u1, u2])
+    z = HxH.element()
 
-        a = 3.12
-        b = 1.23
+    a = 3.12
+    b = 1.23
 
-        expected = [a*v1 + b*u1, a*v2 + b*u2]
-        HxH.lincomb(a, v, b, u, out=z)
+    expected = [a*v1 + b*u1, a*v2 + b*u2]
+    HxH.lincomb(a, v, b, u, out=z)
 
-        self.assertAllAlmostEquals(z, expected)
+    assert all_almost_equal(z, expected)
 
-    def test_inplace_modify(self):
-        H = odl.Rn(2)
-        HxH = odl.ProductSpace(H, 2)
+def test_power_inplace_modify():
+    H = odl.Rn(2)
+    HxH = odl.ProductSpace(H, 2)
 
-        v1 = H.element([1, 2])
-        v2 = H.element([5, 3])
-        u1 = H.element([-1, 7])
-        u2 = H.element([2, 1])
-        z1 = H.element()
-        z2 = H.element()
+    v1 = H.element([1, 2])
+    v2 = H.element([5, 3])
+    u1 = H.element([-1, 7])
+    u2 = H.element([2, 1])
+    z1 = H.element()
+    z2 = H.element()
 
-        v = HxH.element([v1, v2])
-        u = HxH.element([u1, u2])
-        z = HxH.element([z1, z2])  # z is simply a wrapper for z1 and z2
+    v = HxH.element([v1, v2])
+    u = HxH.element([u1, u2])
+    z = HxH.element([z1, z2])  # z is simply a wrapper for z1 and z2
 
-        a = 3.12
-        b = 1.23
+    a = 3.12
+    b = 1.23
 
-        HxH.lincomb(a, v, b, u, out=z)
+    HxH.lincomb(a, v, b, u, out=z)
 
-        # Assert that z1 and z2 has been modified as well
-        self.assertAllAlmostEquals(z, [z1, z2])
+    # Assert that z1 and z2 has been modified as well
+    assert all_almost_equal(z, [z1, z2])
 
 
 if __name__ == '__main__':
-    unittest.main(exit=False)
+    pytest.main(str(__file__))
+

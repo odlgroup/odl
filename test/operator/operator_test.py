@@ -24,14 +24,14 @@ from builtins import super
 standard_library.install_aliases()
 
 # External module imports
-import unittest
+import pytest
 import numpy as np
 
 # ODL imports
 import odl
 from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult)
-from odl.util.testutils import ODLTestCase
+from odl.util.testutils import almost_equal, all_almost_equal
 
 
 class MultiplyAndSquareOp(Operator):
@@ -60,106 +60,105 @@ def mult_sq_np(A, x):
     return np.dot(A, x)**2
 
 
-class TestOperator(ODLTestCase):
-    def test_mult_sq_op(self):
-        # Verify that the operator does indeed work as expected
-        A = np.random.rand(4, 3)
-        x = np.random.rand(3)
-        Aop = MultiplyAndSquareOp(A)
-        xvec = Aop.domain.element(x)
+def test_nonlinear_op():
+    # Verify that the operator does indeed work as expected
+    A = np.random.rand(4, 3)
+    x = np.random.rand(3)
+    Aop = MultiplyAndSquareOp(A)
+    xvec = Aop.domain.element(x)
 
-        self.assertAllAlmostEquals(Aop(xvec), mult_sq_np(A, x))
+    assert all_almost_equal(Aop(xvec), mult_sq_np(A, x))
 
-    def test_addition(self):
-        # Test operator addition
-        A = np.random.rand(4, 3)
-        B = np.random.rand(4, 3)
-        x = np.random.rand(3)
+def test_nonlinear_addition():
+    # Test operator addition
+    A = np.random.rand(4, 3)
+    B = np.random.rand(4, 3)
+    x = np.random.rand(3)
 
-        Aop = MultiplyAndSquareOp(A)
-        Bop = MultiplyAndSquareOp(B)
-        xvec = Aop.domain.element(x)
+    Aop = MultiplyAndSquareOp(A)
+    Bop = MultiplyAndSquareOp(B)
+    xvec = Aop.domain.element(x)
 
-        # Explicit instantiation
-        C = OperatorSum(Aop, Bop)
+    # Explicit instantiation
+    C = OperatorSum(Aop, Bop)
+    
+    assert not C.is_linear
+    
+    assert all_almost_equal(C(xvec),
+                               mult_sq_np(A, x) + mult_sq_np(B, x))
+
+    # Using operator overloading
+    assert all_almost_equal((Aop + Bop)(xvec),
+                               mult_sq_np(A, x) + mult_sq_np(B, x))
+
+    # Verify that unmatched operators domains fail
+    C = np.random.rand(4, 4)
+    Cop = MultiplyAndSquareOp(C)
+
+    with pytest.raises(TypeError):
+        C = OperatorSum(Aop, Cop)
+
+def test_nonlinear_scale():
+    A = np.random.rand(4, 3)
+    x = np.random.rand(3)
+
+    Aop = MultiplyAndSquareOp(A)
+    xvec = Aop.domain.element(x)
+
+    # Test a range of scalars (scalar multiplication could implement
+    # optimizations for (-1, 0, 1)).
+    scalars = [-1.432, -1, 0, 1, 3.14]
+    for scale in scalars:
+        lscaled = OperatorLeftScalarMult(Aop, scale)
+        rscaled = OperatorRightScalarMult(Aop, scale)
         
-        self.assertFalse(C.is_linear)        
-        
-        self.assertAllAlmostEquals(C(xvec),
-                                   mult_sq_np(A, x) + mult_sq_np(B, x))
+        assert not lscaled.is_linear
+        assert not rscaled.is_linear
+
+        assert all_almost_equal(lscaled(xvec),
+                                   scale * mult_sq_np(A, x))
+        assert all_almost_equal(rscaled(xvec),
+                                   mult_sq_np(A, scale*x))
 
         # Using operator overloading
-        self.assertAllAlmostEquals((Aop + Bop)(xvec),
-                                   mult_sq_np(A, x) + mult_sq_np(B, x))
+        assert all_almost_equal((scale * Aop)(xvec),
+                                   scale * mult_sq_np(A, x))
+        assert all_almost_equal((Aop * scale)(xvec),
+                                   mult_sq_np(A, scale*x))
 
-        # Verify that unmatched operators domains fail
-        C = np.random.rand(4, 4)
-        Cop = MultiplyAndSquareOp(C)
+    # Fail when scaling by wrong scalar type (A complex number)
+    nonscalars = [1j, [1, 2]]
+    for nonscalar in nonscalars:
+        with pytest.raises(TypeError):
+            OperatorLeftScalarMult(Aop, nonscalar)
 
-        with self.assertRaises(TypeError):
-            C = OperatorSum(Aop, Cop)
+        with pytest.raises(TypeError):
+            OperatorRightScalarMult(Aop, nonscalar)
 
-    def test_scale(self):
-        A = np.random.rand(4, 3)
-        x = np.random.rand(3)
+        with pytest.raises(TypeError):
+            Aop * nonscalar
 
-        Aop = MultiplyAndSquareOp(A)
-        xvec = Aop.domain.element(x)
+        with pytest.raises(TypeError):
+            nonscalar * Aop
 
-        # Test a range of scalars (scalar multiplication could implement
-        # optimizations for (-1, 0, 1)).
-        scalars = [-1.432, -1, 0, 1, 3.14]
-        for scale in scalars:
-            lscaled = OperatorLeftScalarMult(Aop, scale)
-            rscaled = OperatorRightScalarMult(Aop, scale)
-            
-            self.assertFalse(lscaled.is_linear)
-            self.assertFalse(rscaled.is_linear)
+def test_composition():
+    A = np.random.rand(5, 4)
+    B = np.random.rand(4, 3)
+    x = np.random.rand(3)
 
-            self.assertAllAlmostEquals(lscaled(xvec),
-                                       scale * mult_sq_np(A, x))
-            self.assertAllAlmostEquals(rscaled(xvec),
-                                       mult_sq_np(A, scale*x))
+    Aop = MultiplyAndSquareOp(A)
+    Bop = MultiplyAndSquareOp(B)
+    xvec = Bop.domain.element(x)
 
-            # Using operator overloading
-            self.assertAllAlmostEquals((scale * Aop)(xvec),
-                                       scale * mult_sq_np(A, x))
-            self.assertAllAlmostEquals((Aop * scale)(xvec),
-                                       mult_sq_np(A, scale*x))
+    C = OperatorComp(Aop, Bop)
+    
+    assert not C.is_linear
 
-        # Fail when scaling by wrong scalar type (A complex number)
-        nonscalars = [1j, [1, 2]]
-        for nonscalar in nonscalars:
-            with self.assertRaises(TypeError):
-                C = OperatorLeftScalarMult(Aop, nonscalar)
+    assert all_almost_equal(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
 
-            with self.assertRaises(TypeError):
-                C = OperatorRightScalarMult(Aop, nonscalar)
-
-            with self.assertRaises(TypeError):
-                C = Aop * nonscalar
-
-            with self.assertRaises(TypeError):
-                C = nonscalar * Aop
-
-    def test_composition(self):
-        A = np.random.rand(5, 4)
-        B = np.random.rand(4, 3)
-        x = np.random.rand(3)
-
-        Aop = MultiplyAndSquareOp(A)
-        Bop = MultiplyAndSquareOp(B)
-        xvec = Bop.domain.element(x)
-
-        C = OperatorComp(Aop, Bop)
-        
-        self.assertFalse(C.is_linear)
-
-        self.assertAllAlmostEquals(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
-
-        # Verify that incorrect order fails
-        with self.assertRaises(TypeError):
-            C = OperatorComp(Bop, Aop)
+    # Verify that incorrect order fails
+    with pytest.raises(TypeError):
+        C = OperatorComp(Bop, Aop)
 
 
 class MultiplyOp(Operator):
@@ -179,185 +178,176 @@ class MultiplyOp(Operator):
         np.dot(self.matrix, rhs.data, out=out.data)
 
     @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def range(self):
-        return self._range
-
-    @property
     def adjoint(self):
         return MultiplyOp(self.matrix.T, self.range, self.domain)
 
 
-class TestLinearOperator(ODLTestCase):
-    def test_MultiplyOp(self):
-        # Verify that the multiply op does indeed work as expected
+def test_linear_Op():
+    # Verify that the multiply op does indeed work as expected
 
-        A = np.random.rand(3, 3)
-        x = np.random.rand(3)
-        out = np.random.rand(3)
+    A = np.random.rand(3, 3)
+    x = np.random.rand(3)
+    out = np.random.rand(3)
 
-        Aop = MultiplyOp(A)
-        xvec = Aop.domain.element(x)
-        outvec = Aop.range.element()
+    Aop = MultiplyOp(A)
+    xvec = Aop.domain.element(x)
+    outvec = Aop.range.element()
 
-        # Using out parameter
-        Aop(xvec, outvec)
-        np.dot(A, x, out)
-        self.assertAllAlmostEquals(out, outvec)
+    # Using out parameter
+    Aop(xvec, outvec)
+    np.dot(A, x, out)
+    assert all_almost_equal(out, outvec)
 
-        # Using return value
-        self.assertAllAlmostEquals(Aop(xvec), np.dot(A, x))
+    # Using return value
+    assert all_almost_equal(Aop(xvec), np.dot(A, x))
 
-    def test_MultiplyOp_nonsquare(self):
-        # Verify that the multiply op does indeed work as expected
-        A = np.random.rand(4, 3)
-        x = np.random.rand(3)
-        out = np.random.rand(4)
+def test_linear_op_nonsquare():
+    # Verify that the multiply op does indeed work as expected
+    A = np.random.rand(4, 3)
+    x = np.random.rand(3)
+    out = np.random.rand(4)
 
-        Aop = MultiplyOp(A)
-        xvec = Aop.domain.element(x)
-        outvec = Aop.range.element()
+    Aop = MultiplyOp(A)
+    xvec = Aop.domain.element(x)
+    outvec = Aop.range.element()
 
-        # Using out parameter
-        Aop(xvec, outvec)
-        np.dot(A, x, out)
-        self.assertAllAlmostEquals(out, outvec)
+    # Using out parameter
+    Aop(xvec, outvec)
+    np.dot(A, x, out)
+    assert all_almost_equal(out, outvec)
 
-        # Using return value
-        self.assertAllAlmostEquals(Aop(xvec), np.dot(A, x))
+    # Using return value
+    assert all_almost_equal(Aop(xvec), np.dot(A, x))
 
-    def test_adjoint(self):
-        A = np.random.rand(4, 3)
-        x = np.random.rand(4)
-        out = np.random.rand(3)
+def test_linear_adjoint():
+    A = np.random.rand(4, 3)
+    x = np.random.rand(4)
+    out = np.random.rand(3)
 
-        Aop = MultiplyOp(A)
-        xvec = Aop.range.element(x)
-        outvec = Aop.domain.element()
+    Aop = MultiplyOp(A)
+    xvec = Aop.range.element(x)
+    outvec = Aop.domain.element()
 
-        # Using adjoint
-        Aop.adjoint(xvec, outvec)
-        np.dot(A.T, x, out)
-        self.assertAllAlmostEquals(out, outvec)
+    # Using adjoint
+    Aop.adjoint(xvec, outvec)
+    np.dot(A.T, x, out)
+    assert all_almost_equal(out, outvec)
 
-        # Using T method
-        self.assertAllAlmostEquals(Aop.T(xvec), np.dot(A.T, x))
+    # Using T method
+    assert all_almost_equal(Aop.T(xvec), np.dot(A.T, x))
 
-    def test_addition(self):
-        A = np.random.rand(4, 3)
-        B = np.random.rand(4, 3)
-        x = np.random.rand(3)
-        y = np.random.rand(4)
+def test_linear_addition():
+    A = np.random.rand(4, 3)
+    B = np.random.rand(4, 3)
+    x = np.random.rand(3)
+    y = np.random.rand(4)
 
-        Aop = MultiplyOp(A)
-        Bop = MultiplyOp(B)
-        xvec = Aop.domain.element(x)
-        yvec = Aop.range.element(y)
+    Aop = MultiplyOp(A)
+    Bop = MultiplyOp(B)
+    xvec = Aop.domain.element(x)
+    yvec = Aop.range.element(y)
 
-        # Explicit instantiation
-        C = OperatorSum(Aop, Bop)
+    # Explicit instantiation
+    C = OperatorSum(Aop, Bop)
 
-        self.assertTrue(C.is_linear)
+    assert C.is_linear
 
-        self.assertAllAlmostEquals(C(xvec), np.dot(A, x) + np.dot(B, x))
-        self.assertAllAlmostEquals(C.T(yvec), np.dot(A.T, y) + np.dot(B.T, y))
+    assert all_almost_equal(C(xvec), np.dot(A, x) + np.dot(B, x))
+    assert all_almost_equal(C.T(yvec), np.dot(A.T, y) + np.dot(B.T, y))
+
+    # Using operator overloading
+    assert all_almost_equal((Aop + Bop)(xvec),
+                               np.dot(A, x) + np.dot(B, x))
+    assert all_almost_equal((Aop + Bop).T(yvec),
+                               np.dot(A.T, y) + np.dot(B.T, y))
+
+def test_linear_scale():
+    A = np.random.rand(4, 3)
+    x = np.random.rand(3)
+    y = np.random.rand(4)
+
+    Aop = MultiplyOp(A)
+    xvec = Aop.domain.element(x)
+    yvec = Aop.range.element(y)
+
+    # Test a range of scalars (scalar multiplication could implement
+    # optimizations for (-1, 0, 1).
+    scalars = [-1.432, -1, 0, 1, 3.14]
+    for scale in scalars:
+        C = OperatorRightScalarMult(Aop, scale)
+        
+        assert C.is_linear
+
+        assert all_almost_equal(C(xvec), scale * np.dot(A, x))
+        assert all_almost_equal(C.T(yvec), scale * np.dot(A.T, y))
 
         # Using operator overloading
-        self.assertAllAlmostEquals((Aop + Bop)(xvec),
-                                   np.dot(A, x) + np.dot(B, x))
-        self.assertAllAlmostEquals((Aop + Bop).T(yvec),
-                                   np.dot(A.T, y) + np.dot(B.T, y))
+        assert all_almost_equal((scale * Aop)(xvec),
+                                   scale * np.dot(A, x))
+        assert all_almost_equal((Aop * scale)(xvec),
+                                   np.dot(A, scale * x))
+        assert all_almost_equal((scale * Aop).T(yvec),
+                                   scale * np.dot(A.T, y))
+        assert all_almost_equal((Aop * scale).T(yvec),
+                                   np.dot(A.T, scale * y))
 
-    def test_scale(self):
-        A = np.random.rand(4, 3)
-        x = np.random.rand(3)
-        y = np.random.rand(4)
+def test_linear_composition():
+    A = np.random.rand(5, 4)
+    B = np.random.rand(4, 3)
+    x = np.random.rand(3)
+    y = np.random.rand(5)
 
-        Aop = MultiplyOp(A)
-        xvec = Aop.domain.element(x)
-        yvec = Aop.range.element(y)
+    Aop = MultiplyOp(A)
+    Bop = MultiplyOp(B)
+    xvec = Bop.domain.element(x)
+    yvec = Aop.range.element(y)
 
-        # Test a range of scalars (scalar multiplication could implement
-        # optimizations for (-1, 0, 1).
-        scalars = [-1.432, -1, 0, 1, 3.14]
-        for scale in scalars:
-            C = OperatorRightScalarMult(Aop, scale)
-            
-            self.assertTrue(C.is_linear)
+    C = OperatorComp(Aop, Bop)
 
-            self.assertAllAlmostEquals(C(xvec), scale * np.dot(A, x))
-            self.assertAllAlmostEquals(C.T(yvec), scale * np.dot(A.T, y))
+    assert C.is_linear
 
-            # Using operator overloading
-            self.assertAllAlmostEquals((scale * Aop)(xvec),
-                                       scale * np.dot(A, x))
-            self.assertAllAlmostEquals((Aop * scale)(xvec),
-                                       np.dot(A, scale * x))
-            self.assertAllAlmostEquals((scale * Aop).T(yvec),
-                                       scale * np.dot(A.T, y))
-            self.assertAllAlmostEquals((Aop * scale).T(yvec),
-                                       np.dot(A.T, scale * y))
+    assert all_almost_equal(C(xvec), np.dot(A, np.dot(B, x)))
+    assert all_almost_equal(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))
 
-    def test_composition(self):
-        A = np.random.rand(5, 4)
-        B = np.random.rand(4, 3)
-        x = np.random.rand(3)
-        y = np.random.rand(5)
+def test_type_errors():
+    r3 = odl.Rn(3)
+    r4 = odl.Rn(4)
 
-        Aop = MultiplyOp(A)
-        Bop = MultiplyOp(B)
-        xvec = Bop.domain.element(x)
-        yvec = Aop.range.element(y)
+    Aop = MultiplyOp(np.random.rand(3, 3))
+    r3Vec1 = r3.zero()
+    r3Vec2 = r3.zero()
+    r4Vec1 = r4.zero()
+    r4Vec2 = r4.zero()
 
-        C = OperatorComp(Aop, Bop)
+    # Verify that correct usage works
+    Aop(r3Vec1, r3Vec2)
+    Aop.adjoint(r3Vec1, r3Vec2)
 
-        self.assertTrue(C.is_linear)
+    # Test that erroneous usage raises TypeError
+    with pytest.raises(TypeError):
+        Aop(r4Vec1)
 
-        self.assertAllAlmostEquals(C(xvec), np.dot(A, np.dot(B, x)))
-        self.assertAllAlmostEquals(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))
+    with pytest.raises(TypeError):
+        Aop.T(r4Vec1)
 
-    def test_type_errors(self):
-        r3 = odl.Rn(3)
-        r4 = odl.Rn(4)
+    with pytest.raises(TypeError):
+        Aop(r3Vec1, r4Vec1)
 
-        Aop = MultiplyOp(np.random.rand(3, 3))
-        r3Vec1 = r3.zero()
-        r3Vec2 = r3.zero()
-        r4Vec1 = r4.zero()
-        r4Vec2 = r4.zero()
+    with pytest.raises(TypeError):
+        Aop.adjoint(r3Vec1, r4Vec1)
 
-        # Verify that correct usage works
-        Aop(r3Vec1, r3Vec2)
-        Aop.adjoint(r3Vec1, r3Vec2)
+    with pytest.raises(TypeError):
+        Aop(r4Vec1, r3Vec1)
 
-        # Test that erroneous usage raises TypeError
-        with self.assertRaises(TypeError):
-            Aop(r4Vec1)
+    with pytest.raises(TypeError):
+        Aop.adjoint(r4Vec1, r3Vec1)
 
-        with self.assertRaises(TypeError):
-            Aop.T(r4Vec1)
+    with pytest.raises(TypeError):
+        Aop(r4Vec1, r4Vec2)
 
-        with self.assertRaises(TypeError):
-            Aop(r3Vec1, r4Vec1)
-
-        with self.assertRaises(TypeError):
-            Aop.adjoint(r3Vec1, r4Vec1)
-
-        with self.assertRaises(TypeError):
-            Aop(r4Vec1, r3Vec1)
-
-        with self.assertRaises(TypeError):
-            Aop.adjoint(r4Vec1, r3Vec1)
-
-        with self.assertRaises(TypeError):
-            Aop(r4Vec1, r4Vec2)
-
-        with self.assertRaises(TypeError):
-            Aop.adjoint(r4Vec1, r4Vec2)
+    with pytest.raises(TypeError):
+        Aop.adjoint(r4Vec1, r4Vec2)
 
 
 if __name__ == '__main__':
-    unittest.main(exit=False)
+    pytest.main(str(__file__))

@@ -22,23 +22,25 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import nose
 import sys
+import odl
+import pytest
+try:
+    import pytest_cov
+    PYTEST_COV_AVAILABLE = True
+except ImportError:
+    PYTEST_COV_AVAILABLE = False
 
-
-def run_tests():
-    arg = sys.argv[:1]
-    arg.append('--verbosity=2')
-    arg.append('--with-coverage')
-    arg.append('--cover-package=odl')
-    arg.append('--with-doctest')
-    arg.append('--doctest-options=+NORMALIZE_WHITESPACE,+ELLIPSIS'
-               ',+IGNORE_EXCEPTION_DETAIL')
-    from odl import CUDA_AVAILABLE
-    if not CUDA_AVAILABLE:
-        arg.append('--ignore-files=cu_ntuples.py')
-
-    nose.run(defaultTest=['./odl/', './test/.'], argv=arg)
 
 if __name__ == '__main__':
-    run_tests()
+    arg = sys.argv[:1]
+    arg.append('./test/')
+    arg.append('./odl/')
+    arg.append('--doctest-modules')
+    if PYTEST_COV_AVAILABLE:
+        arg.append('--cov=odl')
+        arg.append('--cov-report=term-missing')
+    if not odl.CUDA_AVAILABLE:
+        arg.append('--ignore=odl/space/cu_ntuples.py')
+
+    pytest.main(arg)
