@@ -32,53 +32,57 @@ import sys
 from time import time
 import numpy as np
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda', 
+
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
+
 
 def _places(a, b, default=5):
     try:
         dtype1 = a.dtype
     except AttributeError:
         dtype1 = None
-        
+
     try:
         dtype2 = b.dtype
     except AttributeError:
         dtype2 = None
-        
-    if (dtype1 == np.float32 or 
-        dtype2 == np.float32 or
-        dtype1 == np.complex64 or 
-        dtype2 == np.complex64):
+
+    if (dtype1 == np.float32 or
+            dtype2 == np.float32 or
+            dtype1 == np.complex64 or
+            dtype2 == np.complex64):
         return 3
     else:
         return default
 
-def almost_equal(a, b, places=None):    
+
+def almost_equal(a, b, places=None):
     if a is None and b is None:
         return True
-        
+
     try:
         a = complex(a)
-        b = complex(b) 
+        b = complex(b)
     except TypeError:
         return False
-        
+
     if np.isnan(a) and np.isnan(b):
-        return True        
-        
+        return True
+
     if np.isinf(a) and np.isinf(b):
         return a == b
-        
+
     if places is None:
         places = _places(a, b)
-        
-    eps = 10**-places        
-        
+
+    eps = 10**-places
+
     if abs(complex(b)) < eps:
         return abs(complex(a) - complex(b)) < eps
     else:
         return abs(a/b - 1) < eps
+
 
 def all_equal(iter1, iter2):
     # Sentinel object used to check that both iterators are the same length
@@ -97,18 +101,20 @@ def all_equal(iter1, iter2):
                                   fillvalue=different_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
-        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+        if (ip1 is different_length_sentinel or
+                ip2 is different_length_sentinel):
             return False
-            
+
         if not all_equal(ip1, ip2):
             return False
-    
+
     return True
+
 
 def all_almost_equal(iter1, iter2, places=None):
     # Sentinel object used to check that both iterators are the same length
     different_length_sentinel = object()
-    
+
     if places is None:
         places = _places(iter1, iter2, None)
 
@@ -125,35 +131,35 @@ def all_almost_equal(iter1, iter2, places=None):
                                   fillvalue=different_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
-        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+        if (ip1 is different_length_sentinel or
+                ip2 is different_length_sentinel):
             return False
-            
+
         if not all_almost_equal(ip1, ip2, places):
             return False
-    
+
     return True
-    
-    
-skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
+
+
+skip_if_no_cuda = pytest.mark.skipif('not odl.CUDA_AVAILABLE',
+                                     reason='CUDA not available')
+
 
 class FailCounter(object):
-    """ Used to count the number of failures of something
+
+    """Counter class for the number of failures of something.
 
     Usage
     -----
 
     with FailCounter() as counter:
         # Do stuff
-    
-        counter.fail()
-        
-    #when done
-        
-    *** FAILED 1 TEST CASE(S) ***
-    
-        
 
-    Prints the time stuff took to execute.
+        counter.fail()
+
+    #when done
+
+    *** FAILED 1 TEST CASE(S) ***
     """
 
     def __init__(self, err_msg=None):
@@ -162,11 +168,11 @@ class FailCounter(object):
 
     def __enter__(self):
         return self
-        
+
     def fail(self, string=None):
         self.num_failed += 1
-        
-        #Todo: possibly limit number of printed strings
+
+        # Todo: possibly limit number of printed strings
         if string is not None:
             print(string)
 
@@ -177,6 +183,7 @@ class FailCounter(object):
             if self.err_msg is not None:
                 print(self.err_msg)
             print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
+
 
 class Timer(object):
 
@@ -246,21 +253,21 @@ class ProgressBar(object):
     >>> progress = ProgressBar('Reading data', 10)
     \rReading data: [                              ] Starting
     >>> progress.update(4) #halfway, zero indexing
-    \rReading data: [###############               ] 50.0%   
+    \rReading data: [###############               ] 50.0%
 
     Also supports multiple index, from slowest varying to fastest
 
     >>> progress = ProgressBar('Reading data', 10, 10)
     \rReading data: [                              ] Starting
     >>> progress.update(9, 8)
-    \rReading data: [############################# ] 99.0%   
+    \rReading data: [############################# ] 99.0%
 
     Also supports simply calling update, which moves the counter forward
 
     >>> progress = ProgressBar('Reading data', 10, 10)
     \rReading data: [                              ] Starting
     >>> progress.update()
-    \rReading data: [                              ]  1.0%   
+    \rReading data: [                              ]  1.0%
     """
 
     def __init__(self, text='progress', *njobs):
