@@ -24,350 +24,350 @@ standard_library.install_aliases()
 
 
 # External module imports
-import unittest
+import pytest
 import numpy as np
 
 import odl
 
+from odl.util.testutils import almost_equal, all_almost_equal, skip_if_no_cuda
 
-class TestDiscreteL2(odl.util.testutils.ODLTestCase):
-    def test_init(self):
-        # Validate that the different init patterns work and do not crash.
 
-        # Normal discretization of unit interval
-        unit_interval = odl.L2(odl.Interval(0, 1))
-        grid = odl.uniform_sampling(unit_interval.domain, 10)
-        R10 = odl.Rn(10)
-        discr = odl.DiscreteL2(unit_interval, grid, R10)
+def test_init():
+    # Validate that the different init patterns work and do not crash.
 
-        # Normal discretization of unit interval with complex
-        complex_unit_interval = odl.L2(odl.Interval(0, 1),
-                                       field=odl.ComplexNumbers())
-        C10 = odl.Cn(10)
-        discr = odl.DiscreteL2(complex_unit_interval, grid, C10)
+    # Normal discretization of unit interval
+    unit_interval = odl.L2(odl.Interval(0, 1))
+    grid = odl.uniform_sampling(unit_interval.domain, 10)
+    R10 = odl.Rn(10)
+    discr = odl.DiscreteL2(unit_interval, grid, R10)
 
-        # Real space should not work with complex
-        with self.assertRaises(ValueError):
-            discr = odl.DiscreteL2(unit_interval, grid, C10)
+    # Normal discretization of unit interval with complex
+    complex_unit_interval = odl.L2(odl.Interval(0, 1),
+                                   field=odl.ComplexNumbers())
+    C10 = odl.Cn(10)
+    discr = odl.DiscreteL2(complex_unit_interval, grid, C10)
 
-        # Complex space should not work with reals
-        with self.assertRaises(ValueError):
-            discr = odl.DiscreteL2(complex_unit_interval, grid, R10)
+    # Real space should not work with complex
+    with pytest.raises(ValueError):
+        discr = odl.DiscreteL2(unit_interval, grid, C10)
 
-        # Wrong size of underlying space
-        R20 = odl.Rn(20)
-        with self.assertRaises(ValueError):
-            discr = odl.DiscreteL2(unit_interval, grid, R20)
+    # Complex space should not work with reals
+    with pytest.raises(ValueError):
+        discr = odl.DiscreteL2(complex_unit_interval, grid, R10)
 
-    @unittest.skipIf(not odl.CUDA_AVAILABLE, "cuda not available")
-    def test_init_cuda(self):
-        # Normal discretization of unit interval
-        unit_interval = odl.L2(odl.Interval(0, 1))
-        grid = odl.uniform_sampling(unit_interval.domain, 10)
-        R10 = odl.CudaRn(10)
-        discr = odl.DiscreteL2(unit_interval, grid, R10)
+    # Wrong size of underlying space
+    R20 = odl.Rn(20)
+    with pytest.raises(ValueError):
+        discr = odl.DiscreteL2(unit_interval, grid, R20)
 
-    def test_factory(self):
-        # using numpy
-        unit_interval = odl.L2(odl.Interval(0, 1))
-        discr = odl.l2_uniform_discretization(unit_interval, 10, impl='numpy')
+@skip_if_no_cuda
+def test_init_cuda():
+    # Normal discretization of unit interval
+    unit_interval = odl.L2(odl.Interval(0, 1))
+    grid = odl.uniform_sampling(unit_interval.domain, 10)
+    R10 = odl.CudaRn(10)
+    discr = odl.DiscreteL2(unit_interval, grid, R10)
 
-        self.assertIsInstance(discr.dspace, odl.Rn)
+def test_factory():
+    # using numpy
+    unit_interval = odl.L2(odl.Interval(0, 1))
+    discr = odl.l2_uniform_discretization(unit_interval, 10, impl='numpy')
 
-        # Complex
-        unit_interval = odl.L2(odl.Interval(0, 1), field=odl.ComplexNumbers())
-        discr = odl.l2_uniform_discretization(unit_interval, 10, impl='numpy')
+    assert isinstance(discr.dspace, odl.Rn)
 
-        self.assertIsInstance(discr.dspace, odl.Cn)
+    # Complex
+    unit_interval = odl.L2(odl.Interval(0, 1), field=odl.ComplexNumbers())
+    discr = odl.l2_uniform_discretization(unit_interval, 10, impl='numpy')
 
-    @unittest.skipIf(not odl.CUDA_AVAILABLE, "cuda not available")
-    def test_factory_cuda(self):
-        # using cuda
+    assert isinstance(discr.dspace, odl.Cn)
 
-        unit_interval = odl.L2(odl.Interval(0, 1))
-        discr = odl.l2_uniform_discretization(unit_interval, 10, impl='cuda')
-        self.assertIsInstance(discr.dspace, odl.CudaRn)
+@skip_if_no_cuda
+def test_factory_cuda():
+    # using cuda
 
-        # Cuda currently does not support complex numbers, check error
-        unit_interval = odl.L2(odl.Interval(0, 1), field=odl.ComplexNumbers())
-        with self.assertRaises(NotImplementedError):
-            odl.l2_uniform_discretization(unit_interval, 10, impl='cuda')
+    unit_interval = odl.L2(odl.Interval(0, 1))
+    discr = odl.l2_uniform_discretization(unit_interval, 10, impl='cuda')
+    assert isinstance(discr.dspace, odl.CudaRn)
 
-    def test_factory_dtypes(self):
-        # Using numpy
-        unit_interval = odl.L2(odl.Interval(0, 1))
+    # Cuda currently does not support complex numbers, check error
+    unit_interval = odl.L2(odl.Interval(0, 1), field=odl.ComplexNumbers())
+    with pytest.raises(NotImplementedError):
+        odl.l2_uniform_discretization(unit_interval, 10, impl='cuda')
 
-        # valid types
-        for dtype in [np.int8, np.int16, np.int32, np.int64,
-                      np.uint8, np.uint16, np.uint32, np.uint64,
-                      np.float32, np.float64]:
+def test_factory_dtypes():
+    # Using numpy
+    unit_interval = odl.L2(odl.Interval(0, 1))
+
+    # valid types
+    for dtype in [np.int8, np.int16, np.int32, np.int64,
+                  np.uint8, np.uint16, np.uint32, np.uint64,
+                  np.float32, np.float64]:
+        discr = odl.l2_uniform_discretization(unit_interval, 10,
+                                              impl='numpy', dtype=dtype)
+        assert isinstance(discr.dspace, odl.Fn)
+        assert discr.dspace.element().space.dtype == dtype
+
+    # in-valid types
+    for dtype in [np.complex64, np.complex128]:
+        with pytest.raises(TypeError):
             discr = odl.l2_uniform_discretization(unit_interval, 10,
-                                                  impl='numpy', dtype=dtype)
-            self.assertIsInstance(discr.dspace, odl.Fn)
-            self.assertEquals(discr.dspace.element().space.dtype, dtype)
+                                                  impl='numpy',
+                                                  dtype=dtype)
 
-        # in-valid types
-        for dtype in [np.complex64, np.complex128]:
-            with self.assertRaises(TypeError):
-                discr = odl.l2_uniform_discretization(unit_interval, 10,
-                                                      impl='numpy',
-                                                      dtype=dtype)
+@skip_if_no_cuda
+def test_factory_dtypes_cuda():
+    # Using numpy
+    unit_interval = odl.L2(odl.Interval(0, 1))
 
-    @unittest.skipIf(not odl.CUDA_AVAILABLE, "cuda not available")
-    def test_factory_dtypes_cuda(self):
-        # Using numpy
-        unit_interval = odl.L2(odl.Interval(0, 1))
+    # valid types
+    for dtype in odl.space.cu_ntuples.CUDA_DTYPES:
+        discr = odl.l2_uniform_discretization(unit_interval, 10,
+                                              impl='cuda', dtype=dtype)
+        assert isinstance(discr.dspace, odl.CudaFn)
+        assert discr.dspace.element().space.dtype == dtype
 
-        # valid types
-        for dtype in odl.space.cu_ntuples.CUDA_DTYPES:
-            discr = odl.l2_uniform_discretization(unit_interval, 10,
-                                                  impl='cuda', dtype=dtype)
-            self.assertIsInstance(discr.dspace, odl.CudaFn)
-            self.assertEquals(discr.dspace.element().space.dtype, dtype)
+def test_factory_nd():
+    # 2d
+    unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.l2_uniform_discretization(unit_square, (5, 5))
 
-    def test_factory_nd(self):
-        # 2d
-        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr = odl.l2_uniform_discretization(unit_square, (5, 5))
+    # 3d
+    unit_cube = odl.L2(odl.Cuboid([0, 0, 0], [1, 1, 1]))
+    discr = odl.l2_uniform_discretization(unit_cube, (5, 5, 5))
 
-        # 3d
-        unit_cube = odl.L2(odl.Cuboid([0, 0, 0], [1, 1, 1]))
-        discr = odl.l2_uniform_discretization(unit_cube, (5, 5, 5))
-
-        # nd
-        unit_10_cube = odl.L2(odl.IntervalProd([0]*10, [1]*10))
-        discr = odl.l2_uniform_discretization(unit_10_cube, (5,)*10)
+    # nd
+    unit_10_cube = odl.L2(odl.IntervalProd([0]*10, [1]*10))
+    discr = odl.l2_uniform_discretization(unit_10_cube, (5,)*10)
 
 
-class TestDiscreteL2Vector(odl.util.testutils.ODLTestCase):
-    def test_element_1d(self):
-        unit_interval = odl.L2(odl.Interval(0, 1))
-        discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
-        vec = discr.element()
-        self.assertIsInstance(vec, discr.Vector)
-        self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
+def test_element_1d():
+    unit_interval = odl.L2(odl.Interval(0, 1))
+    discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
+    vec = discr.element()
+    assert isinstance(vec, discr.Vector)
+    assert isinstance(vec.ntuple, odl.Rn.Vector)
 
-    def test_element_2d(self):
-        unit_interval = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr = odl.l2_uniform_discretization(unit_interval, (3, 3),
-                                              impl='numpy')
-        vec = discr.element()
-        self.assertIsInstance(vec, discr.Vector)
-        self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
+def test_element_2d():
+    unit_interval = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.l2_uniform_discretization(unit_interval, (3, 3),
+                                          impl='numpy')
+    vec = discr.element()
+    assert isinstance(vec, discr.Vector)
+    assert isinstance(vec.ntuple, odl.Rn.Vector)
 
-    def test_element_from_array_1d(self):
-        unit_interval = odl.L2(odl.Interval(0, 1))
-        discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
-        vec = discr.element([1, 2, 3])
+def test_element_from_array_1d():
+    unit_interval = odl.L2(odl.Interval(0, 1))
+    discr = odl.l2_uniform_discretization(unit_interval, 3, impl='numpy')
+    vec = discr.element([1, 2, 3])
 
-        self.assertIsInstance(vec, discr.Vector)
-        self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
-        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3])
+    assert isinstance(vec, discr.Vector)
+    assert isinstance(vec.ntuple, odl.Rn.Vector)
+    assert all_almost_equal(vec.ntuple, [1, 2, 3])
 
-    def test_element_from_array_2d(self):
-        # assert orderings work properly with 2d
-        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr = odl.l2_uniform_discretization(unit_square, (2, 2),
-                                              impl='numpy', order='C')
-        vec = discr.element([[1, 2],
-                             [3, 4]])
+def test_element_from_array_2d():
+    # assert orderings work properly with 2d
+    unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.l2_uniform_discretization(unit_square, (2, 2),
+                                          impl='numpy', order='C')
+    vec = discr.element([[1, 2],
+                         [3, 4]])
 
-        self.assertIsInstance(vec, discr.Vector)
-        self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
+    assert isinstance(vec, discr.Vector)
+    assert isinstance(vec.ntuple, odl.Rn.Vector)
 
-        # Check ordering
-        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3, 4])
+    # Check ordering
+    assert all_almost_equal(vec.ntuple, [1, 2, 3, 4])
 
-        # Linear creation works aswell
-        linear_vec = discr.element([1, 2, 3, 4])
-        self.assertAllAlmostEquals(vec.ntuple, [1, 2, 3, 4])
+    # Linear creation works aswell
+    linear_vec = discr.element([1, 2, 3, 4])
+    assert all_almost_equal(vec.ntuple, [1, 2, 3, 4])
 
-        #Fortran order
-        discr = odl.l2_uniform_discretization(unit_square, (2, 2),
-                                              impl='numpy', order='F')
-        vec = discr.element([[1, 2],
-                             [3, 4]])
+    #Fortran order
+    discr = odl.l2_uniform_discretization(unit_square, (2, 2),
+                                          impl='numpy', order='F')
+    vec = discr.element([[1, 2],
+                         [3, 4]])
 
-        # Check ordering
-        self.assertAllAlmostEquals(vec.ntuple, [1, 3, 2, 4])
+    # Check ordering
+    assert all_almost_equal(vec.ntuple, [1, 3, 2, 4])
 
-        # Linear creation works aswell
-        linear_vec = discr.element([1, 2, 3, 4])
-        self.assertAllAlmostEquals(linear_vec.ntuple, [1, 2, 3, 4])
+    # Linear creation works aswell
+    linear_vec = discr.element([1, 2, 3, 4])
+    assert all_almost_equal(linear_vec.ntuple, [1, 2, 3, 4])
 
-    def test_element_from_array_2d_shape(self):
-        # Verify that the shape is correctly tested for
-        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr = odl.l2_uniform_discretization(unit_square, (3, 2),
-                                              impl='numpy', order='C')
+def test_element_from_array_2d_shape():
+    # Verify that the shape is correctly tested for
+    unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.l2_uniform_discretization(unit_square, (3, 2),
+                                          impl='numpy', order='C')
 
-        #Correct order
-        vec = discr.element([[1, 2],
-                             [3, 4],
-                             [5, 6]])
+    #Correct order
+    discr.element([[1, 2],
+                   [3, 4],
+                   [5, 6]])
 
-        #Wrong order, should throw
-        with self.assertRaises(ValueError):
-            vec = discr.element([[1, 2, 3],
-                                 [4, 5, 6]])
+    #Wrong order, should throw
+    with pytest.raises(ValueError):
+        discr.element([[1, 2, 3],
+                       [4, 5, 6]])
 
-        #Wrong number of elements, should throw
-        with self.assertRaises(ValueError):
-            vec = discr.element([[1, 2],
-                                 [3, 4]])
+    #Wrong number of elements, should throw
+    with pytest.raises(ValueError):
+        discr.element([[1, 2],
+                       [3, 4]])
 
-    def test_zero(self):
-        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
-        vec = discr.zero()
+def test_zero():
+    discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+    vec = discr.zero()
 
-        self.assertIsInstance(vec, discr.Vector)
-        self.assertIsInstance(vec.ntuple, odl.Rn.Vector)
-        self.assertAllAlmostEquals(vec, [0, 0, 0])
+    assert isinstance(vec, discr.Vector)
+    assert isinstance(vec.ntuple, odl.Rn.Vector)
+    assert all_almost_equal(vec, [0, 0, 0])
 
-    def test_getitem(self):
-        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
-        vec = discr.element([1, 2, 3])
+def test_getitem():
+    discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+    vec = discr.element([1, 2, 3])
 
-        self.assertAllAlmostEquals(vec, [1, 2, 3])
+    assert all_almost_equal(vec, [1, 2, 3])
 
-    def test_getslice(self):
-        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
-        vec = discr.element([1, 2, 3])
+def test_getslice():
+    discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+    vec = discr.element([1, 2, 3])
 
-        self.assertIsInstance(vec[:], odl.Rn.Vector)
-        self.assertAllAlmostEquals(vec[:], [1, 2, 3])
+    assert isinstance(vec[:], odl.Rn.Vector)
+    assert all_almost_equal(vec[:], [1, 2, 3])
 
-        discr = odl.l2_uniform_discretization(
-            odl.L2(odl.Interval(0, 1), field=odl.ComplexNumbers()),
-            3)
-        vec = discr.element([1+2j, 2-2j, 3])
+    discr = odl.l2_uniform_discretization(
+        odl.L2(odl.Interval(0, 1), field=odl.ComplexNumbers()),
+        3)
+    vec = discr.element([1+2j, 2-2j, 3])
 
-        self.assertIsInstance(vec[:], odl.Cn.Vector)
-        self.assertAllAlmostEquals(vec[:], [1+2j, 2-2j, 3])
+    assert isinstance(vec[:], odl.Cn.Vector)
+    assert all_almost_equal(vec[:], [1+2j, 2-2j, 3])
 
-    def test_setitem(self):
-        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
-        vec = discr.element([1, 2, 3])
-        vec[0] = 4
-        vec[1] = 5
-        vec[2] = 6
+def test_setitem():
+    discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+    vec = discr.element([1, 2, 3])
+    vec[0] = 4
+    vec[1] = 5
+    vec[2] = 6
 
-        self.assertAllAlmostEquals(vec, [4, 5, 6])
+    assert all_almost_equal(vec, [4, 5, 6])
 
-    def test_setitem_nd(self):
+def test_setitem_nd():
 
-        # 1D
-        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
-        vec = discr.element([1, 2, 3])
+    # 1D
+    discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+    vec = discr.element([1, 2, 3])
 
-        vec[:] = [4, 5, 6]
-        self.assertAllEquals(vec, [4, 5, 6])
+    vec[:] = [4, 5, 6]
+    assert all_almost_equal(vec, [4, 5, 6])
 
-        vec[:] = np.array([3, 2, 1])
-        self.assertAllEquals(vec, [3, 2, 1])
+    vec[:] = np.array([3, 2, 1])
+    assert all_almost_equal(vec, [3, 2, 1])
 
-        vec[:] = 0
-        self.assertAllEquals(vec, [0, 0, 0])
+    vec[:] = 0
+    assert all_almost_equal(vec, [0, 0, 0])
 
-        vec[:] = [1]
-        self.assertAllEquals(vec, [1, 1, 1])
+    vec[:] = [1]
+    assert all_almost_equal(vec, [1, 1, 1])
 
-        with self.assertRaises(ValueError):
-            vec[:] = [0, 0]  # bad shape
+    with pytest.raises(ValueError):
+        vec[:] = [0, 0]  # bad shape
 
-        with self.assertRaises(ValueError):
-            vec[:] = [0, 0, 1, 2]  # bad shape
+    with pytest.raises(ValueError):
+        vec[:] = [0, 0, 1, 2]  # bad shape
 
-        # 2D
-        discr = odl.l2_uniform_discretization(
-            odl.L2(odl.Rectangle([0, 0], [1, 1])), [3, 2])
+    # 2D
+    discr = odl.l2_uniform_discretization(
+        odl.L2(odl.Rectangle([0, 0], [1, 1])), [3, 2])
 
-        vec = discr.element([[1, 2], 
-                             [3, 4], 
-                             [5, 6]])
+    vec = discr.element([[1, 2], 
+                         [3, 4], 
+                         [5, 6]])
 
-        vec[:] = [[-1, -2], 
-                  [-3, -4], 
-                  [-5, -6]]
-        self.assertAllEquals(vec, [-1, -2, -3, -4, -5, -6])
+    vec[:] = [[-1, -2], 
+              [-3, -4], 
+              [-5, -6]]
+    assert all_almost_equal(vec, [-1, -2, -3, -4, -5, -6])
 
+    arr = np.arange(6, 12).reshape([3, 2])
+    vec[:] = arr
+    assert all_almost_equal(vec, np.arange(6, 12))
+
+    vec[:] = 0
+    assert all_almost_equal(vec, [0]*6)
+
+    vec[:] = [1]
+    assert all_almost_equal(vec, [1]*6)
+
+    with pytest.raises(ValueError):
+        vec[:] = [0, 0]  # bad shape
+
+    with pytest.raises(ValueError):
+        vec[:] = [0, 0, 0]  # bad shape
+
+    with pytest.raises(ValueError):
+        vec[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
+
+    with pytest.raises(ValueError):
         arr = np.arange(6, 12).reshape([3, 2])
-        vec[:] = arr
-        self.assertAllEquals(vec, np.arange(6, 12))
+        vec[:] = arr.T  # bad shape (2, 3)
 
-        vec[:] = 0
-        self.assertAllEquals(vec, [0]*6)
+    # nD
+    unit_10_cube = odl.L2(odl.IntervalProd([0]*6, [1]*6))
+    shape = (3,)*3 + (4,)*3
+    discr = odl.l2_uniform_discretization(unit_10_cube, shape)
+    ntotal = np.prod(shape)
+    vec = discr.element(np.zeros(shape))
 
-        vec[:] = [1]
-        self.assertAllEquals(vec, [1]*6)
+    arr = np.arange(ntotal).reshape(shape)
 
-        with self.assertRaises(ValueError):
-            vec[:] = [0, 0]  # bad shape
+    vec[:] = arr
+    assert all_almost_equal(vec, np.arange(ntotal))
 
-        with self.assertRaises(ValueError):
-            vec[:] = [0, 0, 0]  # bad shape
+    vec[:] = 0
+    assert all_almost_equal(vec, np.zeros(ntotal))
 
-        with self.assertRaises(ValueError):
-            vec[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
+    vec[:] = [1]
+    assert all_almost_equal(vec, np.ones(ntotal))
 
-        with self.assertRaises(ValueError):
-            arr = np.arange(6, 12).reshape([3, 2])
-            vec[:] = arr.T  # bad shape (2, 3)
+    with pytest.raises(ValueError):
+        # Reversed shape -> bad
+        vec[:] = np.arange(ntotal).reshape((4,)*3 + (3,)*3)
 
-        # nD
-        unit_10_cube = odl.L2(odl.IntervalProd([0]*6, [1]*6))
-        shape = (3,)*3 + (4,)*3
-        discr = odl.l2_uniform_discretization(unit_10_cube, shape)
-        ntotal = np.prod(shape)
-        vec = discr.element(np.zeros(shape))
+def test_setslice():
+    discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
+    vec = discr.element([1, 2, 3])
 
-        arr = np.arange(ntotal).reshape(shape)
+    vec[:] = [4, 5, 6]
+    assert all_almost_equal(vec, [4, 5, 6])
 
-        vec[:] = arr
-        self.assertAllEquals(vec, np.arange(ntotal))
+def test_asarray_2d():
+    unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    discr_F = odl.l2_uniform_discretization(unit_square, (2, 2), order='F')
+    vec_F = discr_F.element([[1, 2],
+                             [3, 4]])
 
-        vec[:] = 0
-        self.assertAllEquals(vec, np.zeros(ntotal))
-
-        vec[:] = [1]
-        self.assertAllEquals(vec, np.ones(ntotal))
-
-        with self.assertRaises(ValueError):
-            # Reversed shape -> bad
-            vec[:] = np.arange(ntotal).reshape((4,)*3 + (3,)*3)
-
-    def test_setslice(self):
-        discr = odl.l2_uniform_discretization(odl.L2(odl.Interval(0, 1)), 3)
-        vec = discr.element([1, 2, 3])
-
-        vec[:] = [4, 5, 6]
-        self.assertAllAlmostEquals(vec, [4, 5, 6])
-
-    def test_asarray_2d(self):
-        unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-        discr_F = odl.l2_uniform_discretization(unit_square, (2, 2), order='F')
-        vec_F = discr_F.element([[1, 2],
-                                 [3, 4]])
-
-        # Verify that returned array equals input data
-        self.assertAllAlmostEquals(vec_F.asarray(), [[1, 2],
-                                                     [3, 4]])
-        # Check order of out array
-        self.assertTrue(vec_F.asarray().flags['F_CONTIGUOUS'])
+    # Verify that returned array equals input data
+    assert all_almost_equal(vec_F.asarray(), [[1, 2],
+                                                 [3, 4]])
+    # Check order of out array
+    assert vec_F.asarray().flags['F_CONTIGUOUS']
 
 
-        # Also check with C ordering
-        discr_C = odl.l2_uniform_discretization(unit_square, (2, 2), order='C')
-        vec_C = discr_C.element([[1, 2],
-                                 [3, 4]])
-        
-        # Verify that returned array equals input data
-        self.assertAllAlmostEquals(vec_C.asarray(), [[1, 2],
-                                                     [3, 4]])
+    # Also check with C ordering
+    discr_C = odl.l2_uniform_discretization(unit_square, (2, 2), order='C')
+    vec_C = discr_C.element([[1, 2],
+                             [3, 4]])
+    
+    # Verify that returned array equals input data
+    assert all_almost_equal(vec_C.asarray(), [[1, 2],
+                                                 [3, 4]])
 
-        # Check order of out array
-        self.assertTrue(vec_C.asarray().flags['C_CONTIGUOUS'])
+    # Check order of out array
+    assert vec_C.asarray().flags['C_CONTIGUOUS']
 
 
 if __name__ == '__main__':
-    unittest.main(exit=False)
+    pytest.main(str(__file__))
