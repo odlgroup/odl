@@ -32,7 +32,7 @@ from odl import L2
 from odl.util.testutils import all_equal, all_almost_equal, almost_equal
 
 
-# Define a selection of example functions
+# Define a bunch of example functions with different vectorization
 def func_1d(x):
     return x**2
 
@@ -485,8 +485,18 @@ def test_l2_lincomb():
     g_novec = l2.element(other_func_2d_novec)
     out_novec = l2.element()
 
-    # Test different optimized cases and alignments
+    # Special cases and alignment is tested in the magic methods
     l2.lincomb(a, f_novec, b, g_novec, out_novec)
+    true_result = a * func_2d_novec(point) + b * other_func_2d_novec(point)
+    assert almost_equal(out_novec(point), true_result)
+
+    f_array = l2.element(func_2d_array, vectorization='array')
+    g_array = l2.element(other_func_2d_array, vectorization='array')
+    out_array = l2.element(vectorization='array')
+
+    l2.lincomb(a, f_array, b, g_array, out_array)
+    true_result = (a * func_2d_array(points) + b * other_func_2d_array(points))
+    assert all_almost_equal(out_array(points), true_result)
 
 
 if __name__ == '__main__':
