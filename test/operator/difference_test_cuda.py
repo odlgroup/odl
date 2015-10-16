@@ -18,17 +18,17 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import super
 from future import standard_library
 standard_library.install_aliases()
 
 
 # External module imports
-import unittest
+import pytest
 
 # ODL imports
 import odl
-from odl.util.testutils import ODLTestCase
+from odl.util.testutils import almost_equal, all_almost_equal, skip_if_no_cuda
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -36,180 +36,165 @@ except ImportError:
     cuda = None
 
 
-@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
 class ForwardDiff(odl.Operator):
     def __init__(self, space):
-        if not isinstance(space, odl.CudaRn):
-            raise TypeError("space must be CudaRn")
         super().__init__(space, space, linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff(rhs.data, out.data)
+        cuda.forward_diff(rhs.ntuple.data, out.ntuple.data)
 
     @property
     def adjoint(self):
         return ForwardDiffAdjoint(self.domain)
 
 
-@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
 class ForwardDiffAdjoint(odl.Operator):
     def __init__(self, space):
-        if not isinstance(space, odl.CudaRn):
-            raise TypeError("space must be CudaRn")
         super().__init__(space, space, linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_adj(rhs.data, out.data)
+        cuda.forward_diff_adj(rhs.ntuple.data, out.ntuple.data)
 
     @property
     def adjoint(self):
         return ForwardDiff(self.domain)
 
 
-@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
 class ForwardDiff2D(odl.Operator):
     def __init__(self, space):
-        if not isinstance(space, odl.CudaRn):
-            raise TypeError("space must be CudaPixelDiscretization")
         super().__init__(space, odl.ProductSpace(space, space), linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_2d(rhs.data, out[0].data, out[1].data,
-                             self.domain.shape[0], self.domain.shape[1])
+        cuda.forward_diff_2d(rhs.ntuple.data, 
+                             out[0].ntuple.data, out[1].ntuple.data,
+                             rhs.shape[0], rhs.shape[1])
 
     @property
     def adjoint(self):
         return ForwardDiff2DAdjoint(self.domain)
 
 
-@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
 class ForwardDiff2DAdjoint(odl.Operator):
     """ Calculates the circular convolution of two CUDA vectors
     """
 
     def __init__(self, space):
-        if not isinstance(space, odl.CudaRn):
-            raise TypeError("space must be CudaPixelDiscretization")
         super().__init__(odl.ProductSpace(space, space), space, linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_2d_adj(rhs[0].data, rhs[1].data, out.data,
-                                 self.range.shape[0], self.range.shape[1])
+        cuda.forward_diff_2d_adj(rhs[0].ntuple.data, rhs[1].ntuple.data, 
+                                 out.ntuple.data,
+                                 out.shape[0], out.shape[1])
 
     @property
     def adjoint(self):
         return ForwardDiff2D(self.range)
 
 
-@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
-class TestCudaForwardDifference(ODLTestCase):
-    @unittest.skip('TODO: update to new discretization')
-    def test_fwd_diff(self):
-        # Continuous definition of problem
-        space = odl.L2(odl.Interval(0, 1))
+@skip_if_no_cuda
+def test_fwd_diff():
+    # Continuous definition of problem
+    space = odl.L2(odl.Interval(0, 1))
 
-        # Discretization
-        n = 6
-        d = odl.l2_uniform_discretization(space, n, impl='cuda')
-        fun = d.element([1, 2, 5, 3, 2, 1])
+    # Discretization
+    n = 6
+    d = odl.l2_uniform_discretization(space, n, impl='cuda')
+    fun = d.element([1, 2, 5, 3, 2, 1])
 
-        # Create operator
-        diff = ForwardDiff(d)
+    # Create operator
+    diff = ForwardDiff(d)
 
-        self.assertAllAlmostEquals(diff(fun), [0, 3, -2, -1, -1, 0])
-        self.assertAllAlmostEquals(diff.T(fun), [0, -1, -3, 2, 1, 0])
-        self.assertAllAlmostEquals(diff.T(diff(fun)), [0, -3, 5, -1, 0, 0])
+    assert all_almost_equal(diff(fun), [0, 3, -2, -1, -1, 0])
+    assert all_almost_equal(diff.T(fun), [0, -1, -3, 2, 1, 0])
+    assert all_almost_equal(diff.T(diff(fun)), [0, -3, 5, -1, 0, 0])
 
+@skip_if_no_cuda
+def test_square():
+    # Continuous definition of problem
+    space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
 
-@unittest.skipIf(not odl.CUDA_AVAILABLE, 'CUDA not available.')
-class TestCudaForwardDifference2D(ODLTestCase):
-    @unittest.skip('TODO: update to new discretization')
-    def test_square(self):
-        # Continuous definition of problem
-        space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    # Discretization
+    n = 5
+    m = 5
+    d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
 
-        # Discretization
-        n = 5
-        m = 5
-        d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
-        x, y = d.points()
-        fun = d.element([[0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0],
-                         [0, 0, 1, 0, 0],
-                         [0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0]])
+    fun = d.element([[0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0],
+                     [0, 0, 1, 0, 0],
+                     [0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0]])
 
-        diff = ForwardDiff2D(d)
-        derivative = diff(fun)
-        self.assertAllAlmostEquals(derivative[0][:].reshape(n, m),
-                                   [[0, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0],
-                                    [0, 1, -1, 0, 0],
-                                    [0, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0]])
+    diff = ForwardDiff2D(d)
+    derivative = diff(fun)
+    assert all_almost_equal(derivative[0].asarray(),
+                            [[0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 1, -1, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0]])
+                             
+    assert all_almost_equal(derivative[1].asarray(),
+                            [[0, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0],
+                             [0, 0, -1, 0, 0],
+                             [0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0]])
 
-        self.assertAllAlmostEquals(derivative[1][:].reshape(n, m),
-                                   [[0, 0, 0, 0, 0],
-                                    [0, 0, 1, 0, 0],
-                                    [0, 0, -1, 0, 0],
-                                    [0, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0]])
+    # Verify that the adjoint is ok
+    # -gradient.T(gradient(x)) is the laplacian
+    laplacian = -diff.T(derivative)
+    assert all_almost_equal(laplacian.asarray(),
+                            [[0, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0],
+                             [0, 1, -4, 1, 0],
+                             [0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0]])
 
-        # Verify that the adjoint is ok
-        # -gradient.T(gradient(x)) is the laplacian
-        laplacian = -diff.T(derivative)
-        self.assertAllAlmostEquals(laplacian[:].reshape(n, m),
-                                   [[0, 0, 0, 0, 0],
-                                    [0, 0, 1, 0, 0],
-                                    [0, 1, -4, 1, 0],
-                                    [0, 0, 1, 0, 0],
-                                    [0, 0, 0, 0, 0]])
+@skip_if_no_cuda
+def test_rectangle():
+    # Continuous definition of problem
+    space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
 
-    @unittest.skip('TODO: update to new discretization')
-    def test_rectangle(self):
-        # Continuous definition of problem
-        space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    # Complicated functions to check performance
+    n = 5
+    m = 7
 
-        # Complicated functions to check performance
-        n = 5
-        m = 7
+    # Discretization
+    d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
 
-        # Discretization
-        d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
-        x, y = d.points()
-        fun = d.element([[0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 1, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0]])
+    fun = d.element([[0, 0, 0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 0, 0],
+                     [0, 0, 1, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0, 0, 0]])
 
-        diff = ForwardDiff2D(d)
-        derivative = diff(fun)
+    diff = ForwardDiff2D(d)
+    derivative = diff(fun)
 
-        self.assertAllAlmostEquals(derivative[0][:].reshape(n, m),
-                                   [[0, 0, 0, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0, 0, 0],
-                                    [0, 1, -1, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0, 0, 0]])
+    assert all_almost_equal(derivative[0].asarray(),
+                            [[0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0],
+                             [0, 1, -1, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0]])
 
-        self.assertAllAlmostEquals(derivative[1][:].reshape(n, m),
-                                   [[0, 0, 0, 0, 0, 0, 0],
-                                    [0, 0, 1, 0, 0, 0, 0],
-                                    [0, 0, -1, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0, 0, 0]])
+    assert all_almost_equal(derivative[1].asarray(),
+                            [[0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0, 0, 0],
+                             [0, 0, -1, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0]])
 
-        # Verify that the adjoint is ok
-        # -gradient.T(gradient(x)) is the laplacian
-        laplacian = -diff.T(derivative)
-        self.assertAllAlmostEquals(laplacian[:].reshape(n, m),
-                                   [[0, 0, 0, 0, 0, 0, 0],
-                                    [0, 0, 1, 0, 0, 0, 0],
-                                    [0, 1, -4, 1, 0, 0, 0],
-                                    [0, 0, 1, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0, 0, 0]])
+    # Verify that the adjoint is ok
+    # -gradient.T(gradient(x)) is the laplacian
+    laplacian = -diff.T(derivative)
+    assert all_almost_equal(laplacian.asarray(),
+                            [[0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0, 0, 0],
+                             [0, 1, -4, 1, 0, 0, 0],
+                             [0, 0, 1, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0, 0]])
 
 
 if __name__ == '__main__':
-    unittest.main(exit=False)
+    pytest.main(str(__file__))
