@@ -90,7 +90,7 @@ class TensorGrid(Set):
 
         >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> g[0, 0, 0, 0]
-        array([-1., 2., 5., 2.])
+        array([-1.,  2.,  5.,  2.])
 
         Slices and ellipsis are also supported:
 
@@ -188,7 +188,7 @@ class TensorGrid(Set):
         --------
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max_pt
-        array([ 5., 2.])
+        array([ 5.,  2.])
         """
         return np.array([vec[-1] for vec in self.coord_vectors])
 
@@ -227,7 +227,7 @@ class TensorGrid(Set):
         --------
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2], as_midp=False)
         >>> g.max()
-        array([ 5., 2.])
+        array([ 5.,  2.])
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2], as_midp=True)
         >>> g.max()
         array([ 6.5 ,  2.25])
@@ -631,7 +631,7 @@ class TensorGrid(Set):
         --------
         >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> g[0, 0, 0, 0]
-        array([-1., 2., 5., 2.])
+        array([-1.,  2.,  5.,  2.])
         >>> g[:, 0, 0, 0]
         TensorGrid([-1.0, 0.0, 3.0], [2.0], [5.0], [2.0])
         >>> g[0, ..., 1:]

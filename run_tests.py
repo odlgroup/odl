@@ -22,9 +22,9 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import nose
+import pytest
 import sys
-
+import odl
 
 def run_tests():
     arg = sys.argv[:1]
@@ -41,4 +41,11 @@ def run_tests():
     nose.run(defaultTest=['./odl/', './test/.'], argv=arg)
 
 if __name__ == '__main__':
-    run_tests()
+    arg = sys.argv[:1]
+    arg.append('./test/')
+    arg.append('./odl/')
+    arg.append('--doctest-modules')
+    if not odl.CUDA_AVAILABLE:
+        arg.append('--ignore-files=cu_ntuples.py')
+        
+    pytest.main(arg)
