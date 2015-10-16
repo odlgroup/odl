@@ -745,7 +745,5 @@ def test_constant_str():
     print_str = 'Weighting: const = 1.5'
     assert str(w_const) == print_str
 
-
 if __name__ == '__main__':
-    pass
-    #TODO: unittest.main(exit=False)
+    pytest.main(str(__file__))

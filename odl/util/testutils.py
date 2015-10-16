@@ -19,7 +19,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object, super
+from builtins import object
 from future import standard_library
 standard_library.install_aliases()
 
@@ -27,13 +27,11 @@ standard_library.install_aliases()
 # pylint: disable=no-name-in-module
 from numpy import ravel_multi_index, prod
 from itertools import zip_longest
-import unittest
 import sys
 from time import time
-from future.utils import with_metaclass
 
-__all__ = ('ODLTestCase', 'skip_all', 'Timer', 'timeit', 'ProgressBar',
-           'ProgressRange')
+__all__ = ('almost_equal', 'all_almost_equal', 'Timer', 
+           'timeit', 'ProgressBar', 'ProgressRange')
 
 def almost_equal(a, b, places=7):    
     if a is None and b is None:
@@ -59,70 +57,10 @@ def all_almost_equal(iter1, iter2, places=7):
             if not all_almost_equal(iter(ip1), iter(ip2), places):
                 return False
         except TypeError:
-            if not almost_equal(ip1, ip2):
+            if not almost_equal(ip1, ip2, places):
                 return False
     
     return True
-
-class ODLTestCase(unittest.TestCase):
-    # Use names compatible with unittest
-    # pylint: disable=invalid-name
-    def assertAlmostEqual(self, f1, f2, *args, **kwargs):
-        unittest.TestCase.assertAlmostEqual(self, complex(f1), complex(f2),
-                                            *args, **kwargs)
-
-    # pylint: disable=invalid-name
-    def assertAllAlmostEquals(self, iter1, iter2, *args, **kwargs):
-        """ Assert thaat all elements in iter1 and iter2 are almost equal.
-
-        The iterators may be nested lists or varying types
-
-        assertAllAlmostEquals([[1,2],[3,4]],np.array([[1,2],[3,4]]) == True
-        """
-        # Sentinel object used to check that both iterators are the same length
-        different_length_sentinel = object()
-
-        if iter1 is None and iter2 is None:
-            return
-
-        for [ip1, ip2] in zip_longest(iter1, iter2,
-                                      fillvalue=different_length_sentinel):
-            # Verify that none of the lists has ended (then they are not the
-            # same size)
-            self.assertIsNot(ip1, different_length_sentinel)
-            self.assertIsNot(ip2, different_length_sentinel)
-            try:
-                self.assertAllAlmostEquals(iter(ip1), iter(ip2), *args,
-                                           **kwargs)
-            except TypeError:
-                self.assertAlmostEqual(ip1, ip2, *args, **kwargs)
-
-    def assertAllEquals(self, iter1, iter2, *args, **kwargs):
-        """ Assert thaat all elements in iter1 and iter2 are equal.
-
-        The iterators may be nested lists or varying types
-        """
-        kwargs['delta'] = 0
-        self.assertAllAlmostEquals(iter1, iter2, *args, **kwargs)
-
-
-def skip_all(reason=None):
-    """Create a TestCase replacement class where all tests are skipped."""
-    if reason is None:
-        reason = ''
-
-    class SkipAllTestsMeta(type):
-        def __new__(mcs, name, bases, local):
-            for attr in local:
-                value = local[attr]
-                if attr.startswith('test') and callable(value):
-                    local[attr] = unittest.skip(reason)(value)
-            return super().__new__(mcs, name, bases, local)
-
-    class SkipAllTestCase(with_metaclass(SkipAllTestsMeta, unittest.TestCase)):
-        pass
-
-    return SkipAllTestCase
 
 class FailCounter(object):
     """ Used to count the number of failures of something
