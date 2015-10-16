@@ -177,14 +177,14 @@ def test_slice_of_slice():
 def test_slice_is_view():
     # Verify that modifications of a view modify the original data
     r10 = odl.CudaRn(10)
-    xh = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    xh = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     xd = r10.element(xh)
 
     yh = xh[1:8:2]
-    yh[:] = [1, 3, 5, 7]
+    yh[:] = [0, 0, 0, 0]
 
     yd = xd[1:8:2]
-    yd[:] = [1, 3, 5, 7]
+    yd[:] = [0, 0, 0, 0]
 
     assert all_almost_equal(xh, xd)
     assert all_almost_equal(yh, yd)
