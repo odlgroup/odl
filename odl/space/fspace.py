@@ -40,7 +40,7 @@ from odl.set.space import LinearSpace
 __all__ = ('FunctionSet', 'FunctionSpace')
 
 
-def _apply_not_impl(x, out):
+def _apply_not_impl(*_):
     """Dummy function to be used when apply function is not given."""
     raise NotImplementedError('no `_apply` method defined.')
 
@@ -185,7 +185,8 @@ class FunctionSet(Set):
                 and `vectorization` are used for initialization unless
                 explicitly given as arguments
             fapply : callable, optional
-                The actual instruction for in-place evaluation
+                The actual instruction for in-place evaluation. This is
+                possible only for vectorized functions.
             vectorization : {'none', 'array', 'meshgrid'}
                 Vectorization type of this function.
 
@@ -217,14 +218,16 @@ class FunctionSet(Set):
             if self._vectorization not in ('none', 'array', 'meshgrid'):
                 raise ValueError('vectorization type {!r} not understood.'
                                  ''.format(vectorization))
-
-            super().__init__(fset.domain, fset.range, linear=False)
-
+            if self._vectorization == 'none' and fapply is not None:
+                raise ValueError('in-place function evaluation only possible '
+                                 'for vectorized functions.')
             if (self._vectorization != 'none' and
                     not isinstance(fset.domain, IntervalProd)):
                 raise TypeError('vectorization requires the function set '
                                 'domain to be an `IntervalProd` instance, '
                                 'got {!r}.'.format(fset.domain))
+
+            super().__init__(fset.domain, fset.range, linear=False)
             self._space = fset
             self._call = fcall
             self._apply = fapply if fapply is not None else _apply_not_impl
@@ -342,7 +345,7 @@ class FunctionSet(Set):
             if self.vectorization == 'none':
                 if out not in self.range:
                     raise TypeError('output {!r} not in range {}.'
-                                    ''.format(self.range))
+                                    ''.format(out, self.range))
             else:
                 if not (isinstance(out, np.ndarray) and
                         out.flat[0] in self.range):
@@ -412,7 +415,7 @@ class FunctionSet(Set):
                                     '{}.'.format(x, self.domain))
                 if out not in self.range:
                     raise TypeError('output {!r} not in range {}.'
-                                    ''.format(self.range))
+                                    ''.format(out, self.range))
             else:
                 self._vectorized_input_check(x, vec_bounds_check)
                 if not (isinstance(out, np.ndarray) and
@@ -421,6 +424,21 @@ class FunctionSet(Set):
                                     'of the function range {}.'
                                     ''.format(out, self.range))
             self._apply(x, out)
+
+        def assign(self, other):
+            """Assign `other` to this vector.
+
+            This is implemented without `lincomb` to ensure that
+            `vec == other` evaluates to `True` after
+            `vec.assign(other)`.
+            """
+            if other not in self.space:
+                raise TypeError('vector {!r} is not an element of the space '
+                                '{} of this vector.'
+                                ''.format(other, self.space))
+            self._call = other._call
+            self._apply = other._apply
+            self._vectorization = other._vectorization
 
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`.
@@ -481,8 +499,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         """
         if not isinstance(domain, Set):
             raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
-
-        if not (isinstance(field, (RealNumbers, ComplexNumbers))):
+        if not isinstance(field, (RealNumbers, ComplexNumbers)):
             raise TypeError('field {!r} not a `RealNumbers` or '
                             '`ComplexNumbers` instance.'.format(field))
 
@@ -530,6 +547,131 @@ class FunctionSpace(FunctionSet, LinearSpace):
         else:
             return super().element(fcall, fapply, vectorization=vectorization)
 
+    def zero(self, vectorization='none'):
+        """The function mapping everything to zero.
+
+        Since `lincomb` is slow, we implement this function directly.
+        This function is the additive unit in the function space.
+
+        Parameters
+        ----------
+        vectorization : {'none', 'array', 'meshgrid'}
+            Vectorization type of this function.
+
+            'none' : no vectorized evaluation
+
+            'array' : vectorized evaluation on an array of
+            domain elements. Requires domain to be an
+            `IntervalProd` instance.
+
+            'meshgrid' : vectorized evaluation on a meshgrid
+            tuple of arrays. Requires domain to be an
+            `IntervalProd` instance.
+        """
+        dtype = float if self.field == RealNumbers() else complex
+        vectorization = str(vectorization).lower()
+        if vectorization not in ('none', 'array', 'meshgrid'):
+            raise ValueError('vectorization type {!r} not understood.'
+                             ''.format(vectorization))
+
+        def zero_novec(_):
+            """The zero function, non-vectorized."""
+            return dtype(0.0)
+
+        def zero_arr(x):
+            """The zero function, vectorized for arrays."""
+            return np.zeros(x.shape[0], dtype=dtype)
+
+        def zero_mg(x):
+            """The zero function, vectorized for meshgrids."""
+            bc = np.broadcast(*x)
+            if all(xi.flags.c_contiguous for xi in x):
+                order = 'C'
+            elif all(xi.flags.f_contiguous for xi in x):
+                order = 'F'
+            else:
+                raise ValueError('inconsistent ordering of meshgrid '
+                                 'arrays.')
+            return np.zeros(bc.shape, dtype=dtype, order=order)
+
+        if vectorization == 'none':
+            zero_func = zero_novec
+        elif vectorization == 'array':
+            zero_func = zero_arr
+        else:
+            zero_func = zero_mg
+        return self.element(zero_func, vectorization=vectorization)
+
+    def one(self, vectorization='none'):
+        """The function mapping everything to one.
+
+        This function is the multiplicative unit in the function space.
+
+        Parameters
+        ----------
+        vectorization : {'none', 'array', 'meshgrid'}
+            Vectorization type of this function.
+
+            'none' : no vectorized evaluation
+
+            'array' : vectorized evaluation on an array of
+            domain elements. Requires domain to be an
+            `IntervalProd` instance.
+
+            'meshgrid' : vectorized evaluation on a meshgrid
+            tuple of arrays. Requires domain to be an
+            `IntervalProd` instance.
+        """
+        dtype = float if self.field == RealNumbers() else complex
+        vectorization = str(vectorization).lower()
+        if vectorization not in ('none', 'array', 'meshgrid'):
+            raise ValueError('vectorization type {!r} not understood.'
+                             ''.format(vectorization))
+
+        def one_novec(_):
+            """The one function, non-vectorized."""
+            return dtype(1.0)
+
+        def one_arr(x):
+            """The one function, vectorized for arrays."""
+            return np.ones(x.shape[0], dtype=dtype)
+
+        def one_mg(x):
+            """The one function, vectorized for meshgrids."""
+            bc = np.broadcast(*x)
+            if all(xi.flags.c_contiguous for xi in x):
+                order = 'C'
+            elif all(xi.flags.f_contiguous for xi in x):
+                order = 'F'
+            else:
+                raise ValueError('inconsistent ordering of meshgrid '
+                                 'arrays.')
+            return np.ones(bc.shape, dtype=dtype, order=order)
+
+        if vectorization == 'none':
+            one_func = one_novec
+        elif vectorization == 'array':
+            one_func = one_arr
+        else:
+            one_func = one_mg
+        return self.element(one_func, vectorization=vectorization)
+
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if `other` is a `FunctionSpace` with same `domain`
+            and `range`, `False` otherwise.
+        """
+        if other is self:
+            return True
+
+        return (isinstance(other, FunctionSpace) and
+                self.domain == other.domain and
+                self.range == other.range)
+
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination of `x1` and `x2`.
 
@@ -540,11 +682,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Different vectorization types are not allowed.
         """
-        if not x1.vectorization == x2.vectorization == out.vectorization:
-            raise ValueError('functions have different vectorization types '
-                             '({}, {}, {})'
-                             ''.format(x1.vectorization, x2.vectorization,
-                                       out.vectorization))
         # Store to allow aliasing
         x1_old_call = x1._call
         x1_old_apply = x1._apply
@@ -611,17 +748,24 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def lincomb(self, a, x1, b=None, x2=None, out=None):
         """Same as in LinearSpace.Vector, but with vectorization."""
-        if out is None:
-            out = self.element(vectorization=x1.vectorization)
-        if out not in self:
-            raise TypeError('output vector {!r} not in space {!r}.'
-                            ''.format(out, self))
         if a not in self.field:
             raise TypeError('first scalar {!r} not in the field {!r} of the '
                             'space {!r}.'.format(a, self.field, self))
         if x1 not in self:
             raise TypeError('first input vector {!r} not in space {!r}.'
                             ''.format(x1, self))
+        if out is None:
+            out = self.element(vectorization=x1.vectorization)
+        else:
+            if out not in self:
+                raise TypeError('output vector {!r} not in space {!r}.'
+                                ''.format(out, self))
+            if out.vectorization != x1.vectorization:
+                raise ValueError('incompatible vectorization types in first '
+                                 'input vector {!r} and output vector {!r} '
+                                 '({!r} != {!r}).'
+                                 ''.format(x1, out, x1.vectorization,
+                                           out.vectorization))
         if b is None:  # Single argument
             if x2 is not None:
                 raise ValueError('second input vector provided but no '
@@ -635,78 +779,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if x2 not in self:
                 raise TypeError('second input vector {!r} not in space {!r}.'
                                 ''.format(x2, self))
+            if x2.vectorization != x1.vectorization:
+                raise ValueError('incompatible vectorization types in first '
+                                 'input vector {!r} and second input vector '
+                                 '{!r} ({!r} != {!r}).'
+                                 ''.format(x1, x2, x1.vectorization,
+                                           x2.vectorization))
             # Call method
             return self._lincomb(a, x1, b, x2, out)
-
-    def zero(self, vectorization='none'):
-        """The function mapping everything to zero.
-
-        Since `lincomb` is slow, we implement this function directly.
-
-        Parameters
-        ----------
-        vectorization : {'none', 'array', 'meshgrid'}
-            Vectorization type of this function.
-
-            'none' : no vectorized evaluation
-
-            'array' : vectorized evaluation on an array of
-            domain elements. Requires domain to be an
-            `IntervalProd` instance.
-
-            'meshgrid' : vectorized evaluation on a meshgrid
-            tuple of arrays. Requires domain to be an
-            `IntervalProd` instance.
-        """
-        dtype = float if self.field == RealNumbers() else complex
-        vectorization = str(vectorization).lower()
-        if vectorization not in ('none', 'array', 'meshgrid'):
-            raise ValueError('vectorization type {!r} not understood.'
-                             ''.format(vectorization))
-
-        def zero_novec(_):
-            """The zero function, non-vectorized."""
-            return dtype(0.0)
-
-        def zero_arr(x):
-            """The zero function, vectorized for arrays."""
-            return np.zeros(x.shape[0], dtype=dtype)
-
-        def zero_mg(x):
-            """The zero function, vectorized for meshgrids."""
-            bc = np.broadcast(*x)
-            if all(xi.flags.c_contiguous for xi in x):
-                order = 'C'
-            elif all(xi.flags.f_contiguous for xi in x):
-                order = 'F'
-            else:
-                raise ValueError('inconsistent ordering of meshgrid '
-                                 'arrays.')
-            return np.zeros(bc.shape, dtype=dtype, order=order)
-
-        if vectorization == 'none':
-            zero_func = zero_novec
-        elif vectorization == 'array':
-            zero_func = zero_arr
-        else:
-            zero_func = zero_mg
-        return self.element(zero_func, vectorization=vectorization)
-
-    def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
-
-        Returns
-        -------
-        equals : `bool`
-            `True` if `other` is a `FunctionSpace` with same `domain`
-            and `range`, `False` otherwise.
-        """
-        if other is self:
-            return True
-
-        return (isinstance(other, FunctionSpace) and
-                self.domain == other.domain and
-                self.range == other.range)
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two functions.
@@ -716,11 +796,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
         The multiplication is implemented with a simple Python
         function, so the resulting function object is probably slow.
         """
-        if not x1.vectorization == x2.vectorization == out.vectorization:
-            raise ValueError('functions have different vectorization types '
-                             '({}, {}, {})'
-                             ''.format(x1.vectorization, x2.vectorization,
-                                       out.vectorization))
         x1_old_call = x1._call
         x1_old_apply = x1._apply
         x2_old_call = x2._call
@@ -745,7 +820,89 @@ class FunctionSpace(FunctionSet, LinearSpace):
         else:
             out._apply = product_apply
 
-    class Vector(LinearSpace.Vector, FunctionSet.Vector):
+    def multiply(self, x1, x2, out=None):
+        """Same as in LinearSpace.Vector, but with vectorization."""
+        if x1 not in self:
+            raise TypeError('first vector {!r} not in space {!r}'
+                            ''.format(x1, self))
+        if x2 not in self:
+            raise TypeError('second vector {!r} not in space {!r}'
+                            ''.format(x2, self))
+        if x2.vectorization != x1.vectorization:
+            raise ValueError('incompatible vectorization types in first '
+                             'input vector {!r} and second input vector '
+                             '{!r} ({!r} != {!r}).'
+                             ''.format(x1, x2, x1.vectorization,
+                                       x2.vectorization))
+        if out is None:
+            out = self.element(vectorization=x1.vectorization)
+        else:
+            if out not in self:
+                raise TypeError('ouput vector {!r} not in space {!r}'
+                                ''.format(out, self))
+            if out.vectorization != x1.vectorization:
+                raise ValueError('incompatible vectorization types in first '
+                                 'input vector {!r} and output vector {!r} '
+                                 '({!r} != {!r}).'
+                                 ''.format(x1, out, x1.vectorization,
+                                           out.vectorization))
+        self._multiply(x1, x2, out)
+
+    def _divide(self, x1, x2, out):
+        """Raw pointwise division of two functions."""
+        x1_old_call = x1._call
+        x1_old_apply = x1._apply
+        x2_old_call = x2._call
+        x2_old_apply = x2._apply
+
+        def quotient_call(x):
+            """The quotient call function."""
+            return x1_old_call(x) / x2_old_call(x)
+
+        def quotient_apply(x, out):
+            """The quotient apply function."""
+            tmp = np.empty_like(out)
+            x1_old_apply(x, out)
+            x2_old_apply(x, tmp)
+            out /= tmp
+
+        out._call = quotient_call
+        # If one of the factors' apply method is undefined, it will not be
+        # defined in the result either
+        if _apply_not_impl in (x1._apply, x2._apply):
+            out._apply = _apply_not_impl
+        else:
+            out._apply = quotient_apply
+
+    def divide(self, x1, x2, out=None):
+        """Same as in LinearSpace.Vector, but with vectorization."""
+        if x1 not in self:
+            raise TypeError('first vector {!r} not in space {!r}'
+                            ''.format(x1, self))
+        if x2 not in self:
+            raise TypeError('second vector {!r} not in space {!r}'
+                            ''.format(x2, self))
+        if x2.vectorization != x1.vectorization:
+            raise ValueError('incompatible vectorization types in first '
+                             'input vector {!r} and second input vector '
+                             '{!r} ({!r} != {!r}).'
+                             ''.format(x1, x2, x1.vectorization,
+                                       x2.vectorization))
+        if out is None:
+            out = self.element(vectorization=x1.vectorization)
+        else:
+            if out not in self:
+                raise TypeError('ouput vector {!r} not in space {!r}'
+                                ''.format(out, self))
+            if out.vectorization != x1.vectorization:
+                raise ValueError('incompatible vectorization types in first '
+                                 'input vector {!r} and output vector {!r} '
+                                 '({!r} != {!r}).'
+                                 ''.format(x1, out, x1.vectorization,
+                                           out.vectorization))
+        self._divide(x1, x2, out)
+
+    class Vector(FunctionSet.Vector, LinearSpace.Vector):
 
         """Representation of a `FunctionSpace` element."""
 
@@ -784,9 +941,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 raise TypeError('function space {} not a `FunctionSpace` '
                                 'instance.'.format(fspace))
 
-            super().__init__(fspace)
-            FunctionSet.Vector.__init__(self, fspace, fcall, fapply,
-                                        vectorization=vectorization)
+            super().__init__(fspace, fcall, fapply,
+                             vectorization=vectorization)
 
         # Convenience functions using element() need to be adapted
         def copy(self):
@@ -796,31 +952,160 @@ class FunctionSpace(FunctionSet, LinearSpace):
             return result
 
         def __add__(self, other):
-            """Implementation of 'self + other'."""
-            tmp = self.space.element(vectorization=self.vectorization)
-            self.space.lincomb(1, self, 1, other, out=tmp)
-            return tmp
+            """`f.__add__(other) <==> f + other`."""
+            out = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.lincomb(1, self, 1, other, out=out)
+            else:
+                one = self.space.one(vectorization=self.vectorization)
+                self.space.lincomb(1, self, 1, other * one, out=out)
+            return out
+
+        def __radd__(self, other):
+            """`f.__radd__(other) <==> other + f`."""
+            out = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.lincomb(1, other, 1, self, out=out)
+            else:
+                one = self.space.one(vectorization=self.vectorization)
+                self.space.lincomb(1, other * one, 1, self, out=out)
+            return out
+
+        def __iadd__(self, other):
+            """`f.__iadd__(other) <==> f += other`."""
+            if other in self.space:
+                self.space.lincomb(1, self, 1, other, out=self)
+            else:
+                one = self.space.one(vectorization=self.vectorization)
+                self.space.lincomb(1, self, 1, other * one, out=self)
+            return self
 
         def __sub__(self, other):
             """Implementation of 'self - other'."""
-            tmp = self.space.element(vectorization=self.vectorization)
-            self.space.lincomb(1, self, -1, other, out=tmp)
-            return tmp
+            out = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.lincomb(1, self, -1, other, out=out)
+            else:
+                one = self.space.one(vectorization=self.vectorization)
+                self.space.lincomb(1, self, 1, -other * one, out=out)
+            return out
+
+        def __rsub__(self, other):
+            """`f.__rsub__(other) <==> other - f`."""
+            out = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.lincomb(1, other, -1, self, out=out)
+            else:
+                one = self.space.one(vectorization=self.vectorization)
+                self.space.lincomb(1, other * one, -1, self, out=out)
+            return out
+
+        def __isub__(self, other):
+            """`f.__isub__(other) <==> f -= other`."""
+            if other in self.space:
+                self.space.lincomb(1, self, -1, other, out=self)
+            else:
+                one = self.space.one(vectorization=self.vectorization)
+                self.space.lincomb(1, self, 1, -other * one, out=self)
+            return self
 
         def __mul__(self, other):
-            """Implementation of 'self * other'."""
-            tmp = self.space.element(vectorization=self.vectorization)
+            """`f.__mul__(other) <==> f * other`."""
+            out = self.space.element(vectorization=self.vectorization)
             if other in self.space:
-                self.space.multiply(other, self, out=tmp)
+                self.space.multiply(self, other, out=out)
             else:
-                self.space.lincomb(other, self, out=tmp)
+                self.space.lincomb(other, self, out=out)
+            return out
+
+        def __rmul__(self, other):
+            """`f.__rmul__(other) <==> other * f`."""
+            return self.__mul__(other)
+            out = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.multiply(other, self, out=out)
+            else:
+                self.space.lincomb(other, self, out=out)
+            return out
+
+        def __imul__(self, other):
+            """`f.__imul__(other) <==> f *= other`."""
+            if other in self.space:
+                self.space.multiply(self, other, out=self)
+            else:
+                self.space.lincomb(other, self, out=self)
+            return self
+
+        def __truediv__(self, other):
+            """`f.__truediv__(other) <==> f / other` (true division)."""
+            out = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.divide(self, other, out=out)
+            else:
+                self.space.lincomb(1./other, self, out=out)
+            return out
+
+        def __div__(self, other):
+            """`f.__div__(other) <==> f / other`."""
+            return self.__truediv__(other)
+
+        def __rtruediv__(self, other):
+            """`f.__rtruediv__(other) <==> other / f` (true division)."""
+            out = self.space.element(vectorization=self.vectorization)
+            if other in self.space:
+                self.space.divide(other, self, out=out)
+            else:
+                one = self.space.one(vectorization=self.vectorization)
+                self.space.divide(other * one, self, out=out)
+            return out
+
+        def __rdiv__(self, other):
+            """`f.__rdiv__(other) <==> other / f`."""
+            return self.__rtruediv__(other)
+
+        def __itruediv__(self, other):
+            """`f.__itruediv__(other) <==> f /= other` (true division)."""
+            if other in self.space:
+                self.space.divide(self, other, out=self)
+            else:
+                self.space.lincomb(1./other, self, out=self)
+            return self
+
+        def __idiv__(self, other):
+            """`f.__idiv__(other) <==> f /= other`."""
+            return self.__itruediv__(other)
+
+        def __pow__(self, n):
+            """`f.__pow__(n) <==> f ** n`."""
+            n = int(n)
+            tmp = self.copy()
+            for i in range(n):
+                self.space.multiply(tmp, self, out=tmp)
             return tmp
 
+        def __ipow__(self, n):
+            """`f.__ipow__(n) <==> f **= n`."""
+            n = int(n)
+            if n == 1:
+                return self
+            elif n % 2 == 0:
+                self.space.multiply(self, self, out=self)
+                return self.__ipow__(n//2)
+            else:
+                tmp = self.copy()
+                for i in range(n):
+                    self.space.multiply(tmp, self, out=tmp)
+                return tmp
+
         def __neg__(self):
-            """Implementation of '-self'."""
-            tmp = self.space.element(vectorization=self.vectorization)
-            self.space.lincomb(-1.0, self, out=tmp)
-            return tmp
+            """`f.__neg__() <==> -f`."""
+            out = self.space.element(vectorization=self.vectorization)
+            self.space.lincomb(-1.0, self, out=out)
+            return out
+
+        def __pos__(self):
+            """`f.__pos__() <==> +f`."""
+            return self.copy()
 
 
 if __name__ == '__main__':
