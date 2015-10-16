@@ -381,26 +381,22 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        a : Scalar in the field of this space
-            Scalar to multiply `x` with.
-        x1 : Vector
-            The first of the summands
-        b : Scalar, optional
-            Scalar to multiply `y` with.
-        x2 : Vector, optional
-            The second of the summands
-        out : Vector, optional
-            The Vector that the result should be written to.
+        a, b : field elements
+            Multiplicative factors
+        x1, x2 : `LinearSpace.Vector`
+            Summands in the linear combination
+        out : `LinearSpace.Vector`, optional
+            Vector to which the result is written
 
         Returns
         -------
-        out : Vector
+        out : `LinearSpace.Vector`
 
         Notes
         -----
         The vectors `out`, `x1` and `x2` may be aligned, thus a call
 
-        space.lincomb(x, 2, x, 3.14, out=x)
+        lincomb(x, 2, x, 3.14, out=x)
 
         is (mathematically) equivalent to
 
@@ -412,31 +408,25 @@ class LinearSpace(Set):
         if out not in self:
             raise TypeError('output vector {!r} not in space {!r}.'
                             ''.format(out, self))
-
         if a not in self.field:
             raise TypeError('first scalar {!r} not in the field {!r} of the '
                             'space {!r}.'.format(a, self.field, self))
-
         if x1 not in self:
             raise TypeError('first input vector {!r} not in space {!r}.'
                             ''.format(x1, self))
-
         if b is None:  # Single argument
             if x2 is not None:
                 raise ValueError('second input vector provided but no '
                                  'second scalar.')
-
             # Call method
             return self._lincomb(a, x1, 0, x1, out)
         else:  # Two arguments
             if b not in self.field:
                 raise TypeError('second scalar {!r} not in the field {!r} of '
                                 'the space {!r}.'.format(b, self.field, self))
-
             if x2 not in self:
                 raise TypeError('second input vector {!r} not in space {!r}.'
                                 ''.format(x2, self))
-
             # Call method
             return self._lincomb(a, x1, b, x2, out)
 
@@ -497,7 +487,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise TypeError('x2 {!r} not in space {!r}'
                             ''.format(x2, self))
-
         self._multiply(x1, x2, out)
 
     def divide(self, x1, x2, out=None):
