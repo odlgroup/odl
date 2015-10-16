@@ -34,9 +34,7 @@ from odl.space.ntuples import _FnConstWeighting
 if odl.CUDA_AVAILABLE:
     from odl.space.cu_ntuples import _CudaFnConstWeighting
 
-skip_if_no_cuda = pytest.mark.skipif(not odl.CUDA_AVAILABLE, reason='CUDA not available')
-
-from odl.util.testutils import all_almost_equal, almost_equal
+from odl.util.testutils import all_almost_equal, almost_equal, skip_if_no_cuda
 
 
 # TODO:

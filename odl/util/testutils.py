@@ -20,6 +20,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import object
+import pytest
 from future import standard_library
 standard_library.install_aliases()
 
@@ -30,8 +31,8 @@ from itertools import zip_longest
 import sys
 from time import time
 
-__all__ = ('almost_equal', 'all_almost_equal', 'Timer', 
-           'timeit', 'ProgressBar', 'ProgressRange')
+__all__ = ('almost_equal', 'all_almost_equal', 'skip_if_no_cuda', 
+           'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
 def almost_equal(a, b, places=7):    
     if a is None and b is None:
@@ -61,6 +62,9 @@ def all_almost_equal(iter1, iter2, places=7):
                 return False
     
     return True
+    
+    
+skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
 
 class FailCounter(object):
     """ Used to count the number of failures of something
