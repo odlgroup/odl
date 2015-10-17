@@ -737,7 +737,8 @@ class Fn(FnBase, Ntuples):
         >>> x = c3.element([1+1j, 2-1j, 3])
         >>> y = c3.element([4+0j, 5, 6+0.5j])
         >>> out = c3.element()
-        >>> c3.lincomb(2j, x, 3-1j, y, out)
+        >>> c3.lincomb(2j, x, 3-1j, y, out)  # out is returned
+        Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         >>> out
         Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         """
@@ -861,7 +862,8 @@ class Fn(FnBase, Ntuples):
         >>> x = c3.element([5+1j, 3, 2-2j])
         >>> y = c3.element([1, 2+1j, 3-1j])
         >>> out = c3.element()
-        >>> c3.multiply(x, y, out)
+        >>> c3.multiply(x, y, out)  # out is returned
+        Cn(3).element([(5+1j), (6+3j), (4-8j)])
         >>> out
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
