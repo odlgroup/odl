@@ -391,6 +391,7 @@ class LinearSpace(Set):
         Returns
         -------
         out : `LinearSpace.Vector`
+            The result of the linear combination
 
         Notes
         -----
@@ -418,8 +419,7 @@ class LinearSpace(Set):
             if x2 is not None:
                 raise ValueError('second input vector provided but no '
                                  'second scalar.')
-            # Call method
-            return self._lincomb(a, x1, 0, x1, out)
+            self._lincomb(a, x1, 0, x1, out)
         else:  # Two arguments
             if b not in self.field:
                 raise TypeError('second scalar {!r} not in the field {!r} of '
@@ -427,8 +427,9 @@ class LinearSpace(Set):
             if x2 not in self:
                 raise TypeError('second input vector {!r} not in space {!r}.'
                                 ''.format(x2, self))
-            # Call method
-            return self._lincomb(a, x1, b, x2, out)
+            self._lincomb(a, x1, b, x2, out)
+
+        return out
 
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
