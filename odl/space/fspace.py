@@ -440,6 +440,12 @@ class FunctionSet(Set):
             self._apply = other._apply
             self._vectorization = other._vectorization
 
+        def copy(self):
+            """Create an identical (deep) copy of this vector."""
+            result = self.space.element(vectorization=self.vectorization)
+            result.assign(self)
+            return result
+
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`.
 
@@ -594,13 +600,20 @@ class FunctionSpace(FunctionSet, LinearSpace):
                                  'arrays.')
             return np.zeros(bc.shape, dtype=dtype, order=order)
 
+        def zero_apply(_, out):
+            """The in-place zero function."""
+            out.fill(0.0)
+
         if vectorization == 'none':
             zero_func = zero_novec
+            zero_a = None
         elif vectorization == 'array':
             zero_func = zero_arr
+            zero_a = zero_apply
         else:
             zero_func = zero_mg
-        return self.element(zero_func, vectorization=vectorization)
+            zero_a = zero_apply
+        return self.element(zero_func, zero_a,  vectorization=vectorization)
 
     def one(self, vectorization='none'):
         """The function mapping everything to one.
@@ -648,13 +661,20 @@ class FunctionSpace(FunctionSet, LinearSpace):
                                  'arrays.')
             return np.ones(bc.shape, dtype=dtype, order=order)
 
+        def one_apply(_, out):
+            """The in-place one function."""
+            out.fill(1.0)
+
         if vectorization == 'none':
             one_func = one_novec
+            one_a = None
         elif vectorization == 'array':
             one_func = one_arr
+            one_a = one_apply
         else:
             one_func = one_mg
-        return self.element(one_func, vectorization=vectorization)
+            one_a = one_apply
+        return self.element(one_func, one_a, vectorization=vectorization)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
@@ -770,8 +790,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if x2 is not None:
                 raise ValueError('second input vector provided but no '
                                  'second scalar.')
-            # Call method
-            return self._lincomb(a, x1, 0, x1, out)
+            self._lincomb(a, x1, 0, x1, out)
         else:  # Two arguments
             if b not in self.field:
                 raise TypeError('second scalar {!r} not in the field {!r} of '
@@ -785,8 +804,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
                                  '{!r} ({!r} != {!r}).'
                                  ''.format(x1, x2, x1.vectorization,
                                            x2.vectorization))
-            # Call method
-            return self._lincomb(a, x1, b, x2, out)
+            self._lincomb(a, x1, b, x2, out)
+
+        return out
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two functions.
@@ -847,6 +867,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                                  ''.format(x1, out, x1.vectorization,
                                            out.vectorization))
         self._multiply(x1, x2, out)
+        return out
 
     def _divide(self, x1, x2, out):
         """Raw pointwise division of two functions."""
@@ -901,6 +922,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                                  ''.format(x1, out, x1.vectorization,
                                            out.vectorization))
         self._divide(x1, x2, out)
+        return out
 
     class Vector(FunctionSet.Vector, LinearSpace.Vector):
 
@@ -945,12 +967,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
                              vectorization=vectorization)
 
         # Convenience functions using element() need to be adapted
-        def copy(self):
-            """Create an identical (deep) copy of this vector."""
-            result = self.space.element(vectorization=self.vectorization)
-            result.assign(self)
-            return result
-
         def __add__(self, other):
             """`f.__add__(other) <==> f + other`."""
             out = self.space.element(vectorization=self.vectorization)
@@ -964,11 +980,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def __radd__(self, other):
             """`f.__radd__(other) <==> other + f`."""
             out = self.space.element(vectorization=self.vectorization)
-            if other in self.space:
-                self.space.lincomb(1, other, 1, self, out=out)
-            else:
-                one = self.space.one(vectorization=self.vectorization)
-                self.space.lincomb(1, other * one, 1, self, out=out)
+            # the `other in self.space` case can never happen!
+            one = self.space.one(vectorization=self.vectorization)
+            self.space.lincomb(1, other * one, 1, self, out=out)
             return out
 
         def __iadd__(self, other):
@@ -993,11 +1007,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def __rsub__(self, other):
             """`f.__rsub__(other) <==> other - f`."""
             out = self.space.element(vectorization=self.vectorization)
-            if other in self.space:
-                self.space.lincomb(1, other, -1, self, out=out)
-            else:
-                one = self.space.one(vectorization=self.vectorization)
-                self.space.lincomb(1, other * one, -1, self, out=out)
+            # the `other in self.space` case can never happen!
+            one = self.space.one(vectorization=self.vectorization)
+            self.space.lincomb(1, other * one, -1, self, out=out)
             return out
 
         def __isub__(self, other):
@@ -1020,12 +1032,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def __rmul__(self, other):
             """`f.__rmul__(other) <==> other * f`."""
-            return self.__mul__(other)
             out = self.space.element(vectorization=self.vectorization)
-            if other in self.space:
-                self.space.multiply(other, self, out=out)
-            else:
-                self.space.lincomb(other, self, out=out)
+            # the `other in self.space` case can never happen!
+            self.space.lincomb(other, self, out=out)
             return out
 
         def __imul__(self, other):
@@ -1045,23 +1054,17 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 self.space.lincomb(1./other, self, out=out)
             return out
 
-        def __div__(self, other):
-            """`f.__div__(other) <==> f / other`."""
-            return self.__truediv__(other)
+        __div__ = __truediv__
 
         def __rtruediv__(self, other):
             """`f.__rtruediv__(other) <==> other / f` (true division)."""
             out = self.space.element(vectorization=self.vectorization)
-            if other in self.space:
-                self.space.divide(other, self, out=out)
-            else:
-                one = self.space.one(vectorization=self.vectorization)
-                self.space.divide(other * one, self, out=out)
+            # the `other in self.space` case can never happen!
+            one = self.space.one(vectorization=self.vectorization)
+            self.space.divide(other * one, self, out=out)
             return out
 
-        def __rdiv__(self, other):
-            """`f.__rdiv__(other) <==> other / f`."""
-            return self.__rtruediv__(other)
+        __rdiv__ = __rtruediv__
 
         def __itruediv__(self, other):
             """`f.__itruediv__(other) <==> f /= other` (true division)."""
@@ -1071,9 +1074,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 self.space.lincomb(1./other, self, out=self)
             return self
 
-        def __idiv__(self, other):
-            """`f.__idiv__(other) <==> f /= other`."""
-            return self.__itruediv__(other)
+        __idiv__ = __itruediv__
 
         def __pow__(self, n):
             """`f.__pow__(n) <==> f ** n`."""
