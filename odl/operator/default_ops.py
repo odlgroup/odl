@@ -312,6 +312,136 @@ class MultiplyOperator(Operator):
         return "x * y"
 
 
+class InnerProductOperator(Operator):
+    """Operator taking the inner product with a fixed vector.
+
+    The multiply operator calculates:
+
+    out = vec.inner(x)
+
+    This is only applicable in inner product spaces.
+    """
+
+    # pylint: disable=abstract-method
+    def __init__(self, vector):
+        """Initialize a InnerProductOperator instance.
+
+        Parameters
+        ----------
+        vec : LinearSpace.Vector with `inner`
+            The vector to take the inner product with
+        """
+        self.vector = vector
+        super().__init__(vector.space, vector.space.field, linear=True)
+
+    def _call(self, x):
+        """Multiply the input and write to output.
+
+        Parameters
+        ----------
+        x : domain element
+            An element in the space of the vector
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = InnerProductOperator(x)
+        >>> op(r3.element([1, 2, 3]))
+        14.0
+        """
+        return self.vector.inner(x)
+
+    @property
+    def adjoint(self):
+        return InnerProductAdjointOperator(self.vector)
+
+    def __repr__(self):
+        """op.__repr__() <==> repr(op)."""
+        return 'InnerProductOperator({!r})'.format(self.vector)
+
+    def __str__(self):
+        """op.__str__() <==> str(op)."""
+        return "({} , . )".format(self.vector)
+
+class InnerProductAdjointOperator(Operator):
+    """Operator taking the scalar product with a fixed vector.
+
+    The multiply operator calculates:
+
+    out = x * vec
+    """
+
+    # pylint: disable=abstract-method
+    def __init__(self, vector):
+        """Initialize a InnerProductOperator instance.
+
+        Parameters
+        ----------
+        vec : LinearSpace.Vector with `inner`
+            The vector to take the inner product with
+        """
+        self.vector = vector
+        super().__init__(vector.space.field, vector.space, linear=True)
+
+    def _call(self, x):
+        """Multiply by the input.
+
+        Parameters
+        ----------
+        x : domain element
+            An element in the field of the vector
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = InnerProductAdjointOperator(x)
+        >>> op(3.0)
+        Rn(3).element([ 3.0,  6.0,  9.0])
+        """
+        return x * self.vector
+
+    def _apply(self, x, out):
+        """Multiply the input and write to output.
+
+        Parameters
+        ----------
+        x : domain element
+            An element in the operator domain (2-tuple of space
+            elements) whose elementwise product is calculated
+        out : range element
+            Vector to which the result is written
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = InnerProductAdjointOperator(x)
+        >>> out = r3.element()
+        >>> result = op(3.0, out=out)
+        Rn(3).element([ 3.0,  6.0,  9.0])
+        >>> result is out
+        True
+        """
+        return x * self.vector
+    
+    @property
+    def adjoint(self):
+        return InnerProductOperator(self.vector)
+
+    def __repr__(self):
+        """op.__repr__() <==> repr(op)."""
+        return 'InnerProductAdjointOperator({!r})'.format(self.vector)
+
+    def __str__(self):
+        """op.__str__() <==> str(op)."""
+        return "({} , . )".format(self.vector)
+
+
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

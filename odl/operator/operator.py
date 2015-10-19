@@ -997,6 +997,177 @@ class OperatorRightScalarMult(Operator):
         return '{} * {}'.format(self._op, self._scalar)
 
 
+
+class OperatorLeftVectorMult(Operator):
+
+    """Expression type for the operator left vector multiplication.
+
+    `OperatorLeftVectorMult(op, vector)(x) <==> vector * op(x)`
+
+    The scalar multiplication is well-defined only if `op.range` is
+    a `vector.space.field`.
+    """
+
+    def __init__(self, op, vector):
+        """Initialize a new `OperatorLeftVectorMult` instance.
+
+        Parameters
+        ----------
+        op : `Operator`
+            The range of `op` must be a `LinearSpace`.
+        vector : `LinearSpace.Vector` with `field` same as `op.range.field`
+            The vector to multiply by
+        """
+        if not isinstance(vector, LinearSpace.Vector):
+            raise TypeError('Vector {!r} not is not a LinearSpace.Vector'
+                ''.format(vector))
+
+        if op.range != vector.space.field:
+            raise TypeError('range {!r} not is not vector.space.field {!r}'
+                            ''.format(op.range, vector.space.field))
+
+        super().__init__(op.domain, vector.space, linear=op.is_linear)
+        self._op = op
+        self._vector = vector.copy()
+
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`."""
+        # pylint: disable=protected-access
+        return self._vector * self._op._call(x)
+
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`."""
+        # pylint: disable=protected-access
+        scalar = self._op._call(x)
+        out.lincomb(scalar, self._vector)
+
+    def derivative(self, x):
+        """Return the derivative at 'x'.
+
+        Left scalar multiplication and derivative are commutative:
+
+        OperatorLeftVectorMult(op, vector).derivative(x) <==>
+        OperatorLeftVectorMult(op.derivative(x), vector)
+
+        See also
+        --------
+        OperatorLeftScalarMult : the result
+        """
+        return OperatorLeftVectorMult(self._op.derivative(x), self._vector)
+
+    @property
+    def adjoint(self):
+        """The operator adjoint.
+
+        The adjoint of the operator scalar multiplication is the
+        scalar multiplication of the operator adjoint:
+
+        `OperatorLeftVectorMult(op, vector).adjoint ==
+        `OperatorRightVectorMult(op.adjoint, vector)`
+        """
+
+        if not self.is_linear:
+            raise NotImplementedError('Nonlinear operators have no adjoint')
+
+        #TODO: handle complex vectors
+        #TODO: VERIFY
+        return OperatorRightVectorMult(self._op.adjoint, self._vector)
+
+    def __repr__(self):
+        """`op.__repr__() <==> repr(op)`."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op, self._vector)
+
+    def __str__(self):
+        """`op.__str__() <==> str(op)`."""
+        return '{} * {}'.format(self._vector, self._op)
+
+
+class OperatorRightVectorMult(Operator):
+
+    """Expression type for the operator right vector multiplication.
+
+    `OperatorLeftVectorMult(op, vector)(x) <==> op(vector * x)`
+
+    The scalar multiplication is well-defined only if `op.domain` is
+    a `vector.space`.
+    """
+
+    def __init__(self, op, vector):
+        """Initialize a new `OperatorRightVectorMult` instance.
+
+        Parameters
+        ----------
+        op : `Operator`
+            The domain of `op` must be a `vector.space`.
+        vector : `LinearSpace.Vector`
+            The vector to multiply by
+        """
+        if not isinstance(vector, LinearSpace.Vector):
+            raise TypeError('Vector {!r} not is not a LinearSpace.Vector'
+                ''.format(vector))
+
+        if op.domain != vector.space:
+            raise TypeError('domain {!r} not is not vector.space {!r}'
+                            ''.format(op.domain, vector.space))
+
+        super().__init__(op.range, vector.space.field, linear=op.is_linear)
+        self._op = op
+        self._vector = vector.copy()
+
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`."""
+        # pylint: disable=protected-access
+        return self._op._call(self._vector * x)
+
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`."""
+        # pylint: disable=protected-access
+        tmp = self.domain.element()
+        tmp.lincomb(x, self._vector)
+        scalar = self._op._apply(tmp, out)
+
+    def derivative(self, x):
+        """Return the derivative at 'x'.
+
+        Left vector multiplication and derivative are commutative:
+
+        OperatorRightVectorMult(op, vector).derivative(x) <==>
+        OperatorRightVectorMult(op.derivative(x), vector)
+
+        See also
+        --------
+        OperatorRightVectorMult : the result
+        """
+        return OperatorRightVectorMult(self._op.derivative(x), self._vector)
+
+    @property
+    def adjoint(self):
+        """The operator adjoint.
+
+        The adjoint of the operator vector multiplication is the
+        vector multiplication of the operator adjoint:
+
+        `OperatorRightVectorMult(op, vector).adjoint ==
+        `OperatorLeftScalarMult(op.adjoint, vector)`
+        """
+
+        if not self.is_linear:
+            raise NotImplementedError('Nonlinear operators have no adjoint')
+
+        #TODO: handle complex vectors
+        #TODO: VERIFY
+        return OperatorLeftVectorMult(self._op.adjoint, self._vector)
+
+    def __repr__(self):
+        """`op.__repr__() <==> repr(op)`."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op, self._vector)
+
+    def __str__(self):
+        """`op.__str__() <==> str(op)`."""
+        return '{} * {}'.format(self._vector, self._op)
+
 def operator(call=None, apply=None, inv=None, deriv=None,
              dom=None, ran=None, linear=False):
     """Create a simple operator.

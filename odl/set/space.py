@@ -688,6 +688,30 @@ class LinearSpace(Set):
         def multiply(self, x, y):
             return self.space.multiply(x, y, out=self)
 
+        @property
+        def T(self):
+            """The transpose of a vector, the functional given by (self, .)
+
+            Returns
+            -------
+            transpose : InnerProductOperator
+
+            Note
+            ----
+            This function is only defined in inner product spaces
+
+            Examples
+            --------
+            >>> from odl import Rn
+            >>> rn = Rn(3, norm=np.linalg.norm)
+            >>> x = rn.element([1, 2, 3])
+            >>> x = rn.element([2, 1, 3])
+            >>> x.T(y)
+            13.0
+            """
+            from odl.operator.default_ops import InnerProductOperator
+            return InnerProductOperator(self.copy())
+
 
 class UniversalSpace(LinearSpace):
 
