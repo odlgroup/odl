@@ -703,16 +703,6 @@ def _test_l2_vector_op(op_str, pattern):
     array_out = np.empty((5,), dtype=float)
     mg_out = np.empty((2, 3), dtype=float)
 
-    # In Python 3, exec will not alter the global namespace, so we have to
-    # define our variables here
-    f_novec = f_array = f_array_a = f_mg = f_mg_a = None
-    g_novec = g_array = g_array_a = g_mg = g_mg_a = None
-    out_novec = out_array = out_array_a = out_mg = out_mg_a = None
-    result_novec = result_array = result_mg = None
-    true_novec = true_array = true_mg = None
-
-    args = {'novec': 'point', 'array': 'points', 'mg': 'mg'}
-    vtypes = {'novec': 'none', 'array': 'array', 'mg': 'meshgrid'}
     f_novec = l2.element(func_2d_novec, vectorization='none')
     f_array = l2.element(func_2d_array, vectorization='array')
     f_array_a = l2.element(func_2d_array, func_2d_array_apply,
@@ -734,57 +724,119 @@ def _test_l2_vector_op(op_str, pattern):
     out_mg = l2.element(vectorization='meshgrid')
     out_mg_a = l2.element(vectorization='meshgrid')
 
-
-    for vec_str in ('novec', 'array', 'mg'):
-
-    # Left operand: f_<vec> for 'v', out_<vec> for 'i', a for 's'
     if pattern[0] in ('v', 'i'):
+        true_l_novec = func_2d_novec(point)
+        true_l_array = func_2d_array(points)
+        true_l_mg = func_2d_mg(mg)
 
-        true_lstr = 'func_2d_{}({})'.format(vec_str, args[vec_str])
-        test_lstr = 'f_{}'.format(vec_str, args[vec_str])
-        test_lstr_a = 'f_{}_a'.format(vec_str)
-    else:
-        true_lstr = test_lstr = test_lstr_a = 'a'
+        test_l_novec = f_novec
+        test_l_array = f_array
+        test_l_array_a = f_array_a
+        test_l_mg = f_mg
+        test_l_mg_a = f_mg_a
+    else:  # 's'
+        true_l_novec = true_l_array = true_l_mg = a
+        test_l_novec = test_l_array = test_l_array_a = test_l_mg = test_l_mg_a = a
 
-    # Left operand: g_<vec> for 'v', b for 's'
     if pattern[1] == 'v':
-        true_rstr = 'other_func_2d_{}({})'.format(vec_str, args[vec_str])
-        test_rstr = 'g_{}'.format(vec_str)
-        test_rstr_a = 'g_{}_a'.format(vec_str)
+        true_r_novec = other_func_2d_novec(point)
+        true_r_array = other_func_2d_array(points)
+        true_r_mg = other_func_2d_mg(mg)
+
+        test_r_novec = g_novec
+        test_r_array = g_array
+        test_r_array_a = g_array_a
+        test_r_mg = g_mg
+        test_r_mg_a = g_mg_a
+    else:  # 's'
+        true_r_novec = true_r_array = true_r_mg = b
+        test_r_novec = test_r_array = test_r_array_a = test_r_mg = test_r_mg_a = a
+
+    if op_str == '+':
+        if pattern[0] == 'i':
+            true_novec = true_l_novec + true_r_novec
+            true_array = true_l_array + true_r_array
+            true_mg = true_l_mg + true_r_mg
+
+            test_l_novec += test_r_novec
+            test_l_array += test_r_array
+            test_l_array_a += test_r_array_a
+            test_l_mg += test_r_mg
+            test_l_mg_a += test_r_mg_a
+        else:
+            out_novec = test_l_novec + test_r_novec
+            out_array = test_l_array + test_r_array
+            out_array_a = test_l_array_a + test_r_array_a
+            out_mg = test_l_mg + test_r_mg
+            out_mg_a = test_l_mg_a + test_r_mg_a
+    elif op_str == '-':
+        if pattern[0] == 'i':
+            true_novec = true_l_novec - true_r_novec
+            true_array = true_l_array - true_r_array
+            true_mg = true_l_mg - true_r_mg
+
+            test_l_novec -= test_r_novec
+            test_l_array -= test_r_array
+            test_l_array_a -= test_r_array_a
+            test_l_mg -= test_r_mg
+            test_l_mg_a -= test_r_mg_a
+        else:
+            out_novec = test_l_novec - test_r_novec
+            out_array = test_l_array - test_r_array
+            out_array_a = test_l_array_a - test_r_array_a
+            out_mg = test_l_mg - test_r_mg
+            out_mg_a = test_l_mg_a - test_r_mg_a
+    elif op_str == '*':
+        if pattern[0] == 'i':
+            true_novec = true_l_novec * true_r_novec
+            true_array = true_l_array * true_r_array
+            true_mg = true_l_mg * true_r_mg
+
+            test_l_novec *= test_r_novec
+            test_l_array *= test_r_array
+            test_l_array_a *= test_r_array_a
+            test_l_mg *= test_r_mg
+            test_l_mg_a *= test_r_mg_a
+        else:
+            out_novec = test_l_novec * test_r_novec
+            out_array = test_l_array * test_r_array
+            out_array_a = test_l_array_a * test_r_array_a
+            out_mg = test_l_mg * test_r_mg
+            out_mg_a = test_l_mg_a * test_r_mg_a
+    elif op_str == '/':
+        if pattern[0] == 'i':
+            true_novec = true_l_novec / true_r_novec
+            true_array = true_l_array / true_r_array
+            true_mg = true_l_mg / true_r_mg
+
+            test_l_novec /= test_r_novec
+            test_l_array /= test_r_array
+            test_l_array_a /= test_r_array_a
+            test_l_mg /= test_r_mg
+            test_l_mg_a /= test_r_mg_a
+        else:
+            out_novec = test_l_novec / test_r_novec
+            out_array = test_l_array / test_r_array
+            out_array_a = test_l_array_a / test_r_array_a
+            out_mg = test_l_mg / test_r_mg
+            out_mg_a = test_l_mg_a / test_r_mg_a
+
+    if pattern[0] == 'i':
+        assert test_l_novec(point) == true_novec
+        assert all_equal(test_l_array(points), true_array)
+        test_l_array.apply(points, out=array_out)
+        assert all_equal(array_out, true_array)
+        assert all_equal(test_l_mg(mg), true_mg)
+        test_l_mg.apply(mg, out=mg_out)
+        assert all_equal(mg_out, true_mg)
     else:
-        true_rstr = test_rstr = test_rstr_a = 'b'
-
-        # Create true answer: func(arg) <op> other_func(arg)
-        exec('true_{} = {} {} {}'.format(vec_str, true_lstr, op_str,
-                                         true_rstr), globals(), locals())
-
-        # Execute op to create new / augment old vectors
-        if pattern[0] == 'i':  # In-place
-            exec('out_{} {}= {}'.format(vec_str, op_str, test_rstr),
-                 globals(), locals())
-            if vec_str != 'novec':
-                exec('out_{}_a {}= {}'.format(vec_str, op_str, test_rstr_a),
-                     globals(), locals())
-        else:  # Out-of-place
-            exec('out_{} = {} {} {}'.format(vec_str, test_lstr, op_str,
-                                            test_rstr), globals(), locals())
-            if vec_str != 'novec':
-                exec('out_{}_a = {} {} {}'.format(vec_str, test_lstr_a, op_str,
-                                                  test_rstr_a),
-                     globals(), locals())
-
-        # Evaluate the new vectors at input, out-of- and in-place
-        exec('result_{v} = out_{v}({t})'.format(v=vec_str, t=args[vec_str]),
-             globals(), locals())
-        if vec_str != 'novec':
-            exec('out_{v}_a.apply({t}, {v}_out)'.format(
-                v=vec_str, t=args[vec_str]), globals(), locals())
-
-    assert result_novec == true_novec
-    assert all_equal(result_array, true_array)
-    assert all_equal(array_out, true_array)
-    assert all_equal(result_mg, true_mg)
-    assert all_equal(mg_out, true_mg)
+        assert out_novec(point) == true_novec
+        assert all_equal(out_array(points), true_array)
+        out_array_a.apply(points, out=array_out)
+        assert all_equal(array_out, true_array)
+        assert all_equal(out_mg(mg), true_mg)
+        out_mg_a.apply(mg, out=mg_out)
+        assert all_equal(mg_out, true_mg)
 
 
 def test_l2_vector_add():
