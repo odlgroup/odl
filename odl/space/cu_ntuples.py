@@ -69,8 +69,8 @@ _add_if_exists(np.int16, 'CudaVectorInt16')
 _add_if_exists(np.int32, 'CudaVectorInt32')
 _add_if_exists(np.int64, 'CudaVectorInt64')
 _add_if_exists(np.uint8, 'CudaVectorUInt8')
-_add_if_exists(np.uint16, 'CudaVectorInt64')
-_add_if_exists(np.uint32, 'CudaVectorUInt16')
+_add_if_exists(np.uint16, 'CudaVectorUInt16')
+_add_if_exists(np.uint32, 'CudaVectorUInt32')
 _add_if_exists(np.uint64, 'CudaVectorUInt64')
 
 
@@ -93,9 +93,11 @@ class CudaNtuples(NtuplesBase):
 
             Check `CUDA_DTYPES` for a list of available data types.
         """
-        super().__init__(size, dtype)
-        if self._dtype not in _TYPE_MAP_NPY2CUDA.keys():
+
+        if dtype not in _TYPE_MAP_NPY2CUDA.keys():
             raise TypeError('data type {} not supported in CUDA'.format(dtype))
+
+        super().__init__(size, dtype)
 
         self._vector_impl = _TYPE_MAP_NPY2CUDA[self._dtype]
 
@@ -165,7 +167,7 @@ class CudaNtuples(NtuplesBase):
                     elem[:] = inp
                     return elem
             else:
-                raise TypeError('cannot provide both inp and data_ptr.')
+                raise ValueError('cannot provide both inp and data_ptr.')
 
     class Vector(NtuplesBase.Vector):
 
@@ -399,7 +401,7 @@ class CudaNtuples(NtuplesBase):
             else:
                 if isinstance(indices, slice):
                     # Convert value to the correct type if needed
-                    value_array = np.asarray(values, dtype=self.space._dtype)
+                    value_array = np.asarray(values, dtype=self.space.dtype)
 
                     if (value_array.ndim == 0):
                         self.data.fill(values)
@@ -683,7 +685,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            super().__init__(space, data)
+            CudaNtuples.Vector.__init__(self, space, data)
             if not isinstance(data, self._space._vector_impl):
                 return TypeError('data {!r} is not an instance of '
                                  '{}.'.format(data, self._space._vector_impl))

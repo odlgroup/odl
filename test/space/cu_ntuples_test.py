@@ -53,12 +53,35 @@ def _vectors(fn, n=1):
     vecs = [fn.element(arr) for arr in arrs]
     return arrs + vecs
     
+@pytest.mark.skipif("np.float32 not in odl.CUDA_DTYPES")
+def test_init_cudantuples_f32():
+    #verify that the code runs
+    r3 = odl.CudaNtuples(3, dtype='float32')
+    r3.element()
+
 @skip_if_no_cuda
-def test_empty():
+def test_init_cudantuples_bad_dtype():
+    with pytest.raises(TypeError):
+        r3 = odl.CudaNtuples(3, dtype=np.ndarray)
+    with pytest.raises(TypeError):
+        r3 = odl.CudaNtuples(3, dtype=str)
+    with pytest.raises(TypeError):
+        r3 = odl.CudaNtuples(3, dtype=np.matrix)
+
+@skip_if_no_cuda
+def test_element():
     r3 = odl.CudaRn(3)
     x = r3.element()
     assert x in r3
-    # Nothing to test, simply check that code runs
+
+    y = r3.element(inp=[1, 2, 3])
+    assert y in r3
+
+    z = r3.element(data_ptr=y.data_ptr)
+    assert z in r3
+
+    with pytest.raises(ValueError):
+        w = r3.element(inp=[1, 2, 3], data_ptr=y.data_ptr)
 
 @skip_if_no_cuda
 def test_zero():
