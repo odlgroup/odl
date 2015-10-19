@@ -250,24 +250,24 @@ class ProgressBar(object):
     Usage
     -----
 
-    >>> progress = ProgressBar('Reading data', 10)
-    \rReading data: [                              ] Starting
-    >>> progress.update(4) #halfway, zero indexing
-    \rReading data: [###############               ] 50.0%
+    progress = ProgressBar('Reading data', 10)
+    Reading data: [                              ] Starting
+    progress.update(4)  # halfway, zero indexing
+    Reading data: [###############               ] 50.0%
 
-    Also supports multiple index, from slowest varying to fastest
+    Multi-indices, from slowest to fastest:
 
-    >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
-    >>> progress.update(9, 8)
-    \rReading data: [############################# ] 99.0%
+    progress = ProgressBar('Reading data', 10, 10)
+    Reading data: [                              ] Starting
+    progress.update(9, 8)
+    Reading data: [############################# ] 99.0%
 
-    Also supports simply calling update, which moves the counter forward
+    Calling update simply moves the counter forward:
 
-    >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
-    >>> progress.update()
-    \rReading data: [                              ]  1.0%
+    progress = ProgressBar('Reading data', 10, 10)
+    Reading data: [                              ] Starting
+    progress.update()
+    Reading data: [                              ]  1.0%
     """
 
     def __init__(self, text='progress', *njobs):
@@ -331,3 +331,8 @@ class ProgressRange(object):
             return val
         else:
             raise StopIteration()
+
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)
