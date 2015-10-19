@@ -392,7 +392,7 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
-        
+
         if out not in self:
             raise TypeError('output vector {!r} not in space {!r}.'
                             ''.format(out, self))
@@ -471,14 +471,14 @@ class LinearSpace(Set):
         """Calculate the pointwise product of x and y, and assign to z."""
         if out is None:
             out = self.element()
-        
+
         if x1 not in self:
             raise TypeError('first vector {!r} not in space {!r}'
                             ''.format(x1, self))
         if x2 not in self:
             raise TypeError('second vector {!r} not in space {!r}'
                             ''.format(x2, self))
-                            
+
         if out not in self:
             raise TypeError('ouput vector {!r} not in space {!r}'
                             ''.format(out, self))
@@ -703,6 +703,7 @@ class LinearSpace(Set):
             Examples
             --------
             >>> from odl import Rn
+            >>> import numpy as np
             >>> rn = Rn(3, norm=np.linalg.norm)
             >>> x = rn.element([1, 2, 3])
             >>> x = rn.element([2, 1, 3])
