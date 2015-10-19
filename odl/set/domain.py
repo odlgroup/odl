@@ -339,11 +339,6 @@ class IntervalProd(Set):
         IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
         IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
-        >>> rbox.collapse([1, 2], [0, 3.5])
-        Traceback (most recent call last):
-            ...
-        ValueError: values [ 0.   3.5] not below the upper interval
-        boundaries [ 1.  3.].
         """
         indices = np.atleast_1d(indices)
         values = np.atleast_1d(values)
