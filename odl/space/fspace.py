@@ -471,10 +471,7 @@ class FunctionSet(Set):
             return not self.__eq__(other)
 
         def __str__(self):
-            if self._call is not None:
-                return str(self._call)
-            else:
-                return str(self._apply_impl)
+            return str(self._call)  # TODO: better solution?
 
         def __repr__(self):
             inner_fstr = '{!r}'
@@ -780,6 +777,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if out not in self:
                 raise TypeError('output vector {!r} not in space {!r}.'
                                 ''.format(out, self))
+
+            # TODO: overwrite instead of complaining?
             if out.vectorization != x1.vectorization:
                 raise ValueError('incompatible vectorization types in first '
                                  'input vector {!r} and output vector {!r} '
