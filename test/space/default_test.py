@@ -18,9 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from builtins import range, str
 
 # External module imports
 import pytest
@@ -150,6 +150,17 @@ def other_cfunc_2d_mg_apply(x, out):
     x0, x1 = x
     out[:] = 1j*x0 + abs(x1)
 
+
+#func_names = {'func_2d_novec': func_2d_novec,
+#              'func_2d_array': func_2d_array,
+#              'func_2d_array_apply': func_2d_array_apply,
+#              'func_2d_mg': func_2d_mg,
+#              'func_2d_mg_apply': func_2d_mg_apply,
+#              'other_func_2d_novec': other_func_2d_novec,
+#              'other_func_2d_array': other_func_2d_array,
+#              'other_func_2d_array_apply': other_func_2d_array_apply,
+#              'other_func_2d_mg': other_func_2d_mg,
+#              'other_func_2d_mg_apply': other_func_2d_mg_apply}
 
 # -------- Here the actual tests begin --------
 
@@ -692,31 +703,46 @@ def _test_l2_vector_op(op_str, pattern):
     array_out = np.empty((5,), dtype=float)
     mg_out = np.empty((2, 3), dtype=float)
 
+    # In Python 3, exec will not alter the global namespace, so we have to
+    # define our variables here
+    f_novec = f_array = f_array_a = f_mg = f_mg_a = None
+    g_novec = g_array = g_array_a = g_mg = g_mg_a = None
+    out_novec = out_array = out_array_a = out_mg = out_mg_a = None
+    result_novec = result_array = result_mg = None
+    true_novec = true_array = true_mg = None
+
     args = {'novec': 'point', 'array': 'points', 'mg': 'mg'}
     vtypes = {'novec': 'none', 'array': 'array', 'mg': 'meshgrid'}
     for vec_str in ('novec', 'array', 'mg'):
         # Initialize vectors with call only
+        print('f_novec' in globals())
         exec('f_{v} = l2.element(func_2d_{v}, vectorization={t!r})'.format(
-            v=vec_str, t=vtypes[vec_str]))
+            v=vec_str, t=vtypes[vec_str]), globals(), locals())
+        print(f_novec is not None)
         exec('''g_{v} = l2.element(other_func_2d_{v},
-             vectorization={t!r})'''.format(v=vec_str, t=vtypes[vec_str]))
+             vectorization={t!r})'''.format(v=vec_str, t=vtypes[vec_str]),
+             globals(), locals())
         exec('out_{v} = l2.element(func_2d_{v}, vectorization={t!r})'.format(
+            v=vec_str, t=vtypes[vec_str]), globals(), locals())
+        print('f_{v} = l2.element(func_2d_{v}, vectorization={t!r})'.format(
             v=vec_str, t=vtypes[vec_str]))
-
         # Initialize vectors with apply
         if vec_str != 'novec':
             exec('''f_{v}_a = l2.element(
                         func_2d_{v}, func_2d_{v}_apply,
                         vectorization={t!r})
-                        '''.format(v=vec_str, t=vtypes[vec_str]))
+                        '''.format(v=vec_str, t=vtypes[vec_str]),
+                 globals(), locals())
             exec('''g_{v}_a = l2.element(
                         other_func_2d_{v}, other_func_2d_{v}_apply,
                         vectorization={t!r})
-                        '''.format(v=vec_str, t=vtypes[vec_str]))
+                        '''.format(v=vec_str, t=vtypes[vec_str]),
+                 globals(), locals())
             exec('''out_{v}_a = l2.element(
                         func_2d_{v}, func_2d_{v}_apply,
                         vectorization={t!r})
-                        '''.format(v=vec_str, t=vtypes[vec_str]))
+                        '''.format(v=vec_str, t=vtypes[vec_str]),
+                 globals(), locals())
 
         # Left operand: f_<vec> for 'v', out_<vec> for 'i', a for 's'
         if pattern[0] in ('v', 'i'):
@@ -736,25 +762,29 @@ def _test_l2_vector_op(op_str, pattern):
 
         # Create true answer: func(arg) <op> other_func(arg)
         exec('true_{} = {} {} {}'.format(vec_str, true_lstr, op_str,
-                                         true_rstr))
+                                         true_rstr), globals(), locals())
 
         # Execute op to create new / augment old vectors
         if pattern[0] == 'i':  # In-place
-            exec('out_{} {}= {}'.format(vec_str, op_str, test_rstr))
+            exec('out_{} {}= {}'.format(vec_str, op_str, test_rstr),
+                 globals(), locals())
             if vec_str != 'novec':
-                exec('out_{}_a {}= {}'.format(vec_str, op_str, test_rstr_a))
+                exec('out_{}_a {}= {}'.format(vec_str, op_str, test_rstr_a),
+                     globals(), locals())
         else:  # Out-of-place
             exec('out_{} = {} {} {}'.format(vec_str, test_lstr, op_str,
-                                            test_rstr))
+                                            test_rstr), globals(), locals())
             if vec_str != 'novec':
                 exec('out_{}_a = {} {} {}'.format(vec_str, test_lstr_a, op_str,
-                                                  test_rstr_a))
+                                                  test_rstr_a),
+                     globals(), locals())
 
         # Evaluate the new vectors at input, out-of- and in-place
-        exec('result_{v} = out_{v}({t})'.format(v=vec_str, t=args[vec_str]))
+        exec('result_{v} = out_{v}({t})'.format(v=vec_str, t=args[vec_str]),
+             globals(), locals())
         if vec_str != 'novec':
             exec('out_{v}_a.apply({t}, {v}_out)'.format(
-                v=vec_str, t=args[vec_str]))
+                v=vec_str, t=args[vec_str]), globals(), locals())
 
     assert result_novec == true_novec
     assert all_equal(result_array, true_array)
