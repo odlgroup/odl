@@ -713,52 +713,46 @@ def _test_l2_vector_op(op_str, pattern):
 
     args = {'novec': 'point', 'array': 'points', 'mg': 'mg'}
     vtypes = {'novec': 'none', 'array': 'array', 'mg': 'meshgrid'}
+    f_novec = l2.element(func_2d_novec, vectorization='none')
+    f_array = l2.element(func_2d_array, vectorization='array')
+    f_array_a = l2.element(func_2d_array, func_2d_array_apply,
+                           vectorization='array')
+    f_mg = l2.element(func_2d_mg, vectorization='meshgrid')
+    f_mg_a = l2.element(func_2d_mg, func_2d_mg_apply,
+                        vectorization='meshgrid')
+    g_novec = l2.element(other_func_2d_novec, vectorization='none')
+    g_array = l2.element(other_func_2d_array, vectorization='array')
+    g_array_a = l2.element(other_func_2d_array, other_func_2d_array_apply,
+                           vectorization='array')
+    g_mg = l2.element(other_func_2d_mg, vectorization='meshgrid')
+    g_mg_a = l2.element(other_func_2d_mg, other_func_2d_mg_apply,
+                        vectorization='meshgrid')
+
+    out_novec = l2.element(vectorization='novec')
+    out_array = l2.element(vectorization='array')
+    out_array_a = l2.element(vectorization='array')
+    out_mg = l2.element(vectorization='meshgrid')
+    out_mg_a = l2.element(vectorization='meshgrid')
+
+
     for vec_str in ('novec', 'array', 'mg'):
-        # Initialize vectors with call only
-        print('f_novec' in globals())
-        exec('f_{v} = l2.element(func_2d_{v}, vectorization={t!r})'.format(
-            v=vec_str, t=vtypes[vec_str]), globals(), locals())
-        print(f_novec is not None)
-        exec('''g_{v} = l2.element(other_func_2d_{v},
-             vectorization={t!r})'''.format(v=vec_str, t=vtypes[vec_str]),
-             globals(), locals())
-        exec('out_{v} = l2.element(func_2d_{v}, vectorization={t!r})'.format(
-            v=vec_str, t=vtypes[vec_str]), globals(), locals())
-        print('f_{v} = l2.element(func_2d_{v}, vectorization={t!r})'.format(
-            v=vec_str, t=vtypes[vec_str]))
-        # Initialize vectors with apply
-        if vec_str != 'novec':
-            exec('''f_{v}_a = l2.element(
-                        func_2d_{v}, func_2d_{v}_apply,
-                        vectorization={t!r})
-                        '''.format(v=vec_str, t=vtypes[vec_str]),
-                 globals(), locals())
-            exec('''g_{v}_a = l2.element(
-                        other_func_2d_{v}, other_func_2d_{v}_apply,
-                        vectorization={t!r})
-                        '''.format(v=vec_str, t=vtypes[vec_str]),
-                 globals(), locals())
-            exec('''out_{v}_a = l2.element(
-                        func_2d_{v}, func_2d_{v}_apply,
-                        vectorization={t!r})
-                        '''.format(v=vec_str, t=vtypes[vec_str]),
-                 globals(), locals())
 
-        # Left operand: f_<vec> for 'v', out_<vec> for 'i', a for 's'
-        if pattern[0] in ('v', 'i'):
-            true_lstr = 'func_2d_{}({})'.format(vec_str, args[vec_str])
-            test_lstr = 'f_{}'.format(vec_str, args[vec_str])
-            test_lstr_a = 'f_{}_a'.format(vec_str)
-        else:
-            true_lstr = test_lstr = test_lstr_a = 'a'
+    # Left operand: f_<vec> for 'v', out_<vec> for 'i', a for 's'
+    if pattern[0] in ('v', 'i'):
 
-        # Left operand: g_<vec> for 'v', b for 's'
-        if pattern[1] == 'v':
-            true_rstr = 'other_func_2d_{}({})'.format(vec_str, args[vec_str])
-            test_rstr = 'g_{}'.format(vec_str)
-            test_rstr_a = 'g_{}_a'.format(vec_str)
-        else:
-            true_rstr = test_rstr = test_rstr_a = 'b'
+        true_lstr = 'func_2d_{}({})'.format(vec_str, args[vec_str])
+        test_lstr = 'f_{}'.format(vec_str, args[vec_str])
+        test_lstr_a = 'f_{}_a'.format(vec_str)
+    else:
+        true_lstr = test_lstr = test_lstr_a = 'a'
+
+    # Left operand: g_<vec> for 'v', b for 's'
+    if pattern[1] == 'v':
+        true_rstr = 'other_func_2d_{}({})'.format(vec_str, args[vec_str])
+        test_rstr = 'g_{}'.format(vec_str)
+        test_rstr_a = 'g_{}_a'.format(vec_str)
+    else:
+        true_rstr = test_rstr = test_rstr_a = 'b'
 
         # Create true answer: func(arg) <op> other_func(arg)
         exec('true_{} = {} {} {}'.format(vec_str, true_lstr, op_str,
