@@ -151,17 +151,6 @@ def other_cfunc_2d_mg_apply(x, out):
     out[:] = 1j*x0 + abs(x1)
 
 
-#func_names = {'func_2d_novec': func_2d_novec,
-#              'func_2d_array': func_2d_array,
-#              'func_2d_array_apply': func_2d_array_apply,
-#              'func_2d_mg': func_2d_mg,
-#              'func_2d_mg_apply': func_2d_mg_apply,
-#              'other_func_2d_novec': other_func_2d_novec,
-#              'other_func_2d_array': other_func_2d_array,
-#              'other_func_2d_array_apply': other_func_2d_array_apply,
-#              'other_func_2d_mg': other_func_2d_mg,
-#              'other_func_2d_mg_apply': other_func_2d_mg_apply}
-
 # -------- Here the actual tests begin --------
 
 
