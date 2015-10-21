@@ -718,7 +718,7 @@ def _test_l2_vector_op(op_str, pattern):
     g_mg_a = l2.element(other_func_2d_mg, other_func_2d_mg_apply,
                         vectorization='meshgrid')
 
-    out_novec = l2.element(vectorization='novec')
+    out_novec = l2.element(vectorization='none')
     out_array = l2.element(vectorization='array')
     out_array_a = l2.element(vectorization='array')
     out_mg = l2.element(vectorization='meshgrid')
@@ -750,14 +750,14 @@ def _test_l2_vector_op(op_str, pattern):
         test_r_mg_a = g_mg_a
     else:  # 's'
         true_r_novec = true_r_array = true_r_mg = b
-        test_r_novec = test_r_array = test_r_array_a = test_r_mg = test_r_mg_a = a
+        test_r_novec = test_r_array = test_r_array_a = test_r_mg = test_r_mg_a = b
 
     if op_str == '+':
-        if pattern[0] == 'i':
-            true_novec = true_l_novec + true_r_novec
-            true_array = true_l_array + true_r_array
-            true_mg = true_l_mg + true_r_mg
+        true_novec = true_l_novec + true_r_novec
+        true_array = true_l_array + true_r_array
+        true_mg = true_l_mg + true_r_mg
 
+        if pattern[0] == 'i':
             test_l_novec += test_r_novec
             test_l_array += test_r_array
             test_l_array_a += test_r_array_a
@@ -770,11 +770,11 @@ def _test_l2_vector_op(op_str, pattern):
             out_mg = test_l_mg + test_r_mg
             out_mg_a = test_l_mg_a + test_r_mg_a
     elif op_str == '-':
-        if pattern[0] == 'i':
-            true_novec = true_l_novec - true_r_novec
-            true_array = true_l_array - true_r_array
-            true_mg = true_l_mg - true_r_mg
+        true_novec = true_l_novec - true_r_novec
+        true_array = true_l_array - true_r_array
+        true_mg = true_l_mg - true_r_mg
 
+        if pattern[0] == 'i':
             test_l_novec -= test_r_novec
             test_l_array -= test_r_array
             test_l_array_a -= test_r_array_a
@@ -787,11 +787,11 @@ def _test_l2_vector_op(op_str, pattern):
             out_mg = test_l_mg - test_r_mg
             out_mg_a = test_l_mg_a - test_r_mg_a
     elif op_str == '*':
-        if pattern[0] == 'i':
-            true_novec = true_l_novec * true_r_novec
-            true_array = true_l_array * true_r_array
-            true_mg = true_l_mg * true_r_mg
+        true_novec = true_l_novec * true_r_novec
+        true_array = true_l_array * true_r_array
+        true_mg = true_l_mg * true_r_mg
 
+        if pattern[0] == 'i':
             test_l_novec *= test_r_novec
             test_l_array *= test_r_array
             test_l_array_a *= test_r_array_a
@@ -804,11 +804,11 @@ def _test_l2_vector_op(op_str, pattern):
             out_mg = test_l_mg * test_r_mg
             out_mg_a = test_l_mg_a * test_r_mg_a
     elif op_str == '/':
-        if pattern[0] == 'i':
-            true_novec = true_l_novec / true_r_novec
-            true_array = true_l_array / true_r_array
-            true_mg = true_l_mg / true_r_mg
+        true_novec = true_l_novec / true_r_novec
+        true_array = true_l_array / true_r_array
+        true_mg = true_l_mg / true_r_mg
 
+        if pattern[0] == 'i':
             test_l_novec /= test_r_novec
             test_l_array /= test_r_array
             test_l_array_a /= test_r_array_a
@@ -824,10 +824,10 @@ def _test_l2_vector_op(op_str, pattern):
     if pattern[0] == 'i':
         assert test_l_novec(point) == true_novec
         assert all_equal(test_l_array(points), true_array)
-        test_l_array.apply(points, out=array_out)
+        test_l_array_a.apply(points, out=array_out)
         assert all_equal(array_out, true_array)
         assert all_equal(test_l_mg(mg), true_mg)
-        test_l_mg.apply(mg, out=mg_out)
+        test_l_mg_a.apply(mg, out=mg_out)
         assert all_equal(mg_out, true_mg)
     else:
         assert out_novec(point) == true_novec
