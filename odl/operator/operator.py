@@ -39,7 +39,7 @@ from numbers import Number
 
 # ODL imports
 from odl.set.space import LinearSpace, UniversalSpace
-from odl.set.sets import Set, UniversalSet
+from odl.set.sets import Set, UniversalSet, Field
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
            'OperatorRightScalarMult', 'OperatorPointwiseProduct')
@@ -237,11 +237,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         self._is_linear = bool(linear)
 
         if self.is_linear:
-            if not isinstance(domain, LinearSpace):
-                raise TypeError('domain {!r} not a `LinearSpace` instance.'
+            if not (isinstance(domain, LinearSpace) or isinstance(domain, Field)):
+                raise TypeError('domain {!r} not a `LinearSpace` or `Field` instance.'
                                 ''.format(domain))
-            if not isinstance(range, LinearSpace):
-                raise TypeError('range {!r} not a `LinearSpace` instance.'
+            if not (isinstance(range, LinearSpace) or isinstance(range, Field)):
+                raise TypeError('range {!r} not a `LinearSpace` or `Field` instance.'
                                 ''.format(range))
 
     @property
@@ -344,6 +344,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 raise TypeError('output {!r} not an element of the range {!r} '
                                 'of {!r}.'
                                 ''.format(out, self.range, self))
+
+            if isinstance(self.range, Field):
+                raise TypeError('`out` parameter cannot be used when range is a field')
 
             self._apply(x, out, *args, **kwargs)
             return out
@@ -472,7 +475,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorComp(other, self)
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
-        elif isinstance(other, LinearSpace.Vector) and other.field in self.range:
+        elif isinstance(other, LinearSpace.Vector) and other.field == self.range:
             return OperatorLeftVectorMult(self, other)
         else:
             raise NotImplementedError('multiplicant {!r} is neither operator nor '
@@ -495,6 +498,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         """
         return self.__class__.__name__
 
+    # Give a `Operator` a higher priority than any NumPy array type. This
+    # forces the usage of `__op__` of `Operator` if the other operand
+    # is a NumPy object (applies also to scalars!).
+    __array_priority__ = 1000000.0
+
 
 class OperatorSum(Operator):
 
@@ -514,7 +522,7 @@ class OperatorSum(Operator):
         Parameters
         ----------
         op1 : `Operator`
-            The first summand. Its `range` must be a `LinearSpace`.
+            The first summand. Its `range` must be a `LinearSpace` or `Field`.
         op2 : `Operator`
             The second summand. Must have the same `domain` and `range` as
             `op1`.
@@ -529,7 +537,7 @@ class OperatorSum(Operator):
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
 
-        if not isinstance(op1.range, LinearSpace):
+        if not (isinstance(op1.range, LinearSpace) or isinstance(op1.range, Field)):
             raise TypeError('range {!r} not a `LinearSpace` instance.'
                             ''.format(op1.range))
 
@@ -757,8 +765,8 @@ class OperatorPointwiseProduct(Operator):
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
 
-        if not isinstance(op1.range, LinearSpace):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
+        if not (isinstance(op1.range, LinearSpace) or isinstance(op1.range, Field)):
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op1.range))
 
         if op1.domain != op2.domain:
@@ -808,13 +816,13 @@ class OperatorLeftScalarMult(Operator):
         Parameters
         ----------
         op : `Operator`
-            The range of `op` must be a `LinearSpace`.
+            The range of `op` must be a `LinearSpace` or `Field`.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
             the range.
         """
-        if not isinstance(op.range, LinearSpace):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
+        if not (isinstance(op.range, LinearSpace) or isinstance(op1.range, Field)):
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op.range))
 
         if scalar not in op.range.field:
@@ -908,7 +916,7 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         op : `Operator`
-            The domain of `op` must be a `LinearSpace`.
+            The domain of `op` must be a `LinearSpace` or `Field`.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
             the operator domain.
@@ -916,8 +924,8 @@ class OperatorRightScalarMult(Operator):
             Used to avoid the creation of a temporary when applying the
             operator.
         """
-        if not isinstance(op.domain, LinearSpace):
-            raise TypeError('domain {!r} not a `LinearSpace` instance.'
+        if not (isinstance(op.domain, LinearSpace) or isinstance(op1.range, Field)):
+            raise TypeError('domain {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op.domain))
 
         if scalar not in op.domain.field:

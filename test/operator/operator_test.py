@@ -127,19 +127,33 @@ def test_nonlinear_scale():
                                    mult_sq_np(A, scale*x))
 
     # Fail when scaling by wrong scalar type (A complex number)
-    nonscalars = [1j, [1, 2]]
+    wrongscalars = [1j]
+    for wrongscalar in wrongscalars:
+        with pytest.raises(TypeError):
+            print(OperatorLeftScalarMult(Aop, wrongscalar))
+
+        with pytest.raises(TypeError):
+            print(OperatorRightScalarMult(Aop, wrongscalar))
+
+        with pytest.raises(TypeError):
+            print(Aop * wrongscalar)
+
+        with pytest.raises(TypeError):
+            print(wrongscalar * Aop)
+
+    nonscalars = [[1, 2], (1, 2), np.array([1,2,3,4])]
     for nonscalar in nonscalars:
         with pytest.raises(TypeError):
-            OperatorLeftScalarMult(Aop, nonscalar)
+            print(OperatorLeftScalarMult(Aop, nonscalar))
 
         with pytest.raises(TypeError):
-            OperatorRightScalarMult(Aop, nonscalar)
+            print(OperatorRightScalarMult(Aop, nonscalar))
 
-        with pytest.raises(TypeError):
-            Aop * nonscalar
+        with pytest.raises(NotImplementedError):
+            print(Aop * nonscalar)
 
-        with pytest.raises(TypeError):
-            nonscalar * Aop
+        with pytest.raises(NotImplementedError):
+            print(nonscalar * Aop)
 
 def test_composition():
     A = np.random.rand(5, 4)
@@ -353,5 +367,45 @@ def test_test_left_vector_mult():
     Aop = MultiplyOp(np.random.rand(3, 3))
 
     x = r3.element([1, 2, 3])
+
+
+### FUNCTIONAL TEST ###
+class SumFunctional(Operator):
+    """Multiply with matrix.
+    """
+
+    def __init__(self, domain):
+        super().__init__(domain, domain.field, linear=True)
+
+    def _call(self, x):
+        return np.sum(x)
+
+    @property
+    def adjoint(self):
+        return ConstantVector(self.domain)
+
+class ConstantVector(Operator):
+    """Multiply with matrix.
+    """
+
+    def __init__(self, domain):
+        super().__init__(domain.field, domain, linear=True)
+
+    def _call(self, x):
+        return self.range.element(np.ones(self.range.size) * x)
+
+    @property
+    def adjoint(self):
+        return SumFunctional(self.domain)
+
+def test_functional():
+    r3 = odl.Rn(3)
+    x = r3.element([1, 2, 3])
+
+    op = SumFunctional(r3)
+
+    assert op(x) == 6
+    assert op.T(3) == r3.element([3, 3, 3])
+
 if __name__ == '__main__':
-    pytest.main(str(__file__))
+    pytest.main(__file__.replace('\\','/'))
