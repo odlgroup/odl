@@ -42,3 +42,6 @@ def test_all_imports():
     odl.util.utility.array1d_repr
     with pytest.raises(AttributeError):
         odl.array1d_repr
+
+if __name__ == '__main__':
+    pytest.main(__file__.replace('\\','/') + ' -v')
