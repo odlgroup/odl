@@ -704,9 +704,9 @@ class LinearSpace(Set):
             --------
             >>> from odl import Rn
             >>> import numpy as np
-            >>> rn = Rn(3, norm=np.linalg.norm)
+            >>> rn = Rn(3)
             >>> x = rn.element([1, 2, 3])
-            >>> x = rn.element([2, 1, 3])
+            >>> y = rn.element([2, 1, 3])
             >>> x.T(y)
             13.0
             """
