@@ -45,6 +45,48 @@ def _apply_not_impl(*_):
     raise NotImplementedError('no `_apply` method defined.')
 
 
+def _meshgrid_input_order(x):
+    """Determine the ordering of a meshgrid argument."""
+    # Case 1: all elements have the same shape -> non-sparse
+    if all(xi.shape == x[0].shape for xi in x):
+        # Contiguity check only works for meshgrid created with copy=True.
+        # Otherwise, there is no way to find out the intended ordering.
+        if all(xi.flags.f_contiguous for xi in x):
+            return 'F'
+        else:
+            return 'C'
+    # Case 2: sparse meshgrid, each member's shape has at most one non-one
+    # entry (corner case of all ones is included)
+    elif all(xi.shape.count(1) >= len(x) - 1 for xi in x):
+        # Reversed ordering of dimensions in the meshgrid tuple indicates
+        # 'F' ordering intention
+        if all(xi.shape[-1-i] != 1 for i, xi in enumerate(x)):
+            return 'F'
+        else:
+            return 'C'
+    else:
+        return 'C'
+
+
+def _is_valid_input_array(x, d):
+    """Test whether `x` is a correctly shaped array of points in R^d."""
+    if not isinstance(x, np.ndarray):
+        return False
+    if d == 1:
+        return x.ndim == 1 or x.ndim == 2 and x.shape[0] == 1
+    else:
+        return x.ndim == 2 and x.shape[0] == d
+
+
+def _is_valid_input_meshgrid(x, d):
+    """Test whether `x` is a meshgrid for points in R^d."""
+    try:
+        np.broadcast(*x)
+    except ValueError:  # cannot be broadcast
+        return False
+    return len(x) == d and all(isinstance(xi, np.ndarray) for xi in x)
+
+
 class FunctionSet(Set):
 
     """A general set of functions with common domain and range."""
@@ -86,7 +128,7 @@ class FunctionSet(Set):
         fcall : callable
             The actual instruction for out-of-place evaluation. If
             `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
-            and `vectorization` are used for initialization unless
+            and `vectorized` are used for initialization unless
             explicitly given
         fapply : callable, optional
             The actual instruction for in-place evaluation
@@ -272,27 +314,32 @@ class FunctionSet(Set):
             ----------
             x : object
                 Input argument for the function evaluation. Conditions
-                on `x` depend on the type of vectorization:
+                on `x` depend on vectorization:
 
-                'none' : `x` must be a domain element
+                `False` : `x` must be a domain element
 
-                'array' : `x` must be a `numpy.ndarray` with `x[i]`
-                being a domain element for each `i`
-
-                'meshgrid' : `x` must be a sequence of `numpy.ndarray`
-                with length `space.ndim`, and each array must lie within
-                the boundaries of the interval for the corresponding
-                axis in `space.domain`.
+                `True` : `x` must be a `numpy.ndarray` with shape
+                `(d, N)`, where `d` is the number of dimensions of
+                the function domain
+                OR
+                `x` is a sequence of `numpy.ndarray` with length
+                `space.ndim`, and the arrays can be broadcast
+                against each other.
 
             out : `numpy.ndarray`, optional
                 Output argument holding the result of the function
-                evaluation. This can only be used for vectorized
-                functions. If `out` is given, it is returned.
+                evaluation, can only be used for vectorized
+                functions. Its shape must be equal to
+                `np.broadcast(*x).shape`.
+                If `out` is given, it is returned.
 
             kwargs : {'bounds_check'}
-                'vec_bounds_check' : bool
+                'bounds_check' : bool
                     Whether or not to check if all input points lie in
-                    the function domain.
+                    the function domain. For vectorized evaluation,
+                    this requires the domain to implement
+                    `contains_all`.
+
                     Default: `True`
 
             Returns
@@ -312,7 +359,7 @@ class FunctionSet(Set):
                 If evaluation points fall outside the valid domain
             """
             bounds_check = kwargs.pop('bounds_check', True)
-
+            # TODO: adapt checks on input and output
             if bounds_check:
                 if self.vectorized:
                     self._vectorized_input_check(x)
@@ -487,28 +534,26 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def zero_vec(x):
             """The zero function, vectorized."""
-            bc = np.broadcast(*x)
-            # TODO: replace this check by something better
-            if all(xi.flags.f_contiguous for xi in x):
-                order = 'F'
-            else:  # default, let surrounding code handle the flattening
+            if _is_valid_input_array(x, self.domain.ndim):
                 order = 'C'
-            return np.zeros(bc.shape, dtype=dtype, order=order)
+            elif _is_valid_input_meshgrid(x, self.domain.ndim):
+                order = _meshgrid_input_order(x)
+            else:
+                raise ValueError('invalid vectorized function argument.')
+            bcast = np.broadcast(*x)
+            return np.zeros(bcast.shape, dtype=dtype, order=order)
 
         def zero_apply(_, out):
             """The in-place zero function."""
             out.fill(0.0)
 
-        if vectorization == 'none':
-            zero_func = zero_novec
-            zero_a = None
-        elif vectorization == 'array':
-            zero_func = zero_arr
+        if vectorized:
+            zero_func = zero_vec
             zero_a = zero_apply
         else:
-            zero_func = zero_mg
-            zero_a = zero_apply
-        return self.element(zero_func, zero_a,  vectorization=vectorization)
+            zero_func = zero_novec
+            zero_a = None
+        return self.element(zero_func, zero_a, vectorized=vectorized)
 
     def one(self, vectorized=True):
         """The function mapping everything to one.
@@ -517,59 +562,39 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Parameters
         ----------
-        vectorization : {'none', 'array', 'meshgrid'}
-            Vectorization type of this function.
-
-            'none' : no vectorized evaluation
-
-            'array' : vectorized evaluation on an array of
-            domain elements. Requires domain to be an
-            `IntervalProd` instance.
-
-            'meshgrid' : vectorized evaluation on a meshgrid
-            tuple of arrays. Requires domain to be an
-            `IntervalProd` instance.
+        vectorized : bool
+            Whether or not the function supports vectorized
+            evaluation.
         """
         dtype = float if self.field == RealNumbers() else complex
-        vectorization = str(vectorization).lower()
-        if vectorization not in ('none', 'array', 'meshgrid'):
-            raise ValueError('vectorization type {!r} not understood.'
-                             ''.format(vectorization))
+        vectorized = bool(vectorized)
 
         def one_novec(_):
             """The one function, non-vectorized."""
             return dtype(1.0)
 
-        def one_arr(x):
-            """The one function, vectorized for arrays."""
-            return np.ones(x.shape[0], dtype=dtype)
-
-        def one_mg(x):
-            """The one function, vectorized for meshgrids."""
-            bc = np.broadcast(*x)
-            if all(xi.flags.c_contiguous for xi in x):
+        def one_vec(x):
+            """The one function, vectorized."""
+            if _is_valid_input_array(x, self.domain.ndim):
                 order = 'C'
-            elif all(xi.flags.f_contiguous for xi in x):
-                order = 'F'
+            elif _is_valid_input_meshgrid(x, self.domain.ndim):
+                order = _meshgrid_input_order(x)
             else:
-                raise ValueError('inconsistent ordering of meshgrid '
-                                 'arrays.')
-            return np.ones(bc.shape, dtype=dtype, order=order)
+                raise ValueError('invalid vectorized function argument.')
+            bcast = np.broadcast(*x)
+            return np.ones(bcast.shape, dtype=dtype, order=order)
 
         def one_apply(_, out):
             """The in-place one function."""
-            out.fill(1.0)
+            out.fill(0.0)
 
-        if vectorization == 'none':
-            one_func = one_novec
-            one_a = None
-        elif vectorization == 'array':
-            one_func = one_arr
+        if vectorized:
+            one_func = one_vec
             one_a = one_apply
         else:
-            one_func = one_mg
-            one_a = one_apply
-        return self.element(one_func, one_a, vectorization=vectorization)
+            one_func = one_novec
+            one_a = None
+        return self.element(one_func, one_a, vectorized=vectorized)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
