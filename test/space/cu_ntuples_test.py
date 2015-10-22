@@ -459,6 +459,19 @@ def test_incompatible_operations():
         xA - xB
 
 @skip_if_no_cuda
+def test_transpose():
+    r3 = odl.CudaRn(3)
+    x = r3.element([1, 2, 3])
+    y = r3.element([5, 3, 8])
+    
+    # Assert linear operator
+    assert isinstance(x.T, odl.Operator)
+    assert x.T.is_linear
+
+    # Check result
+    assert almost_equal(x.T(y), x.inner(y))
+
+@skip_if_no_cuda
 def test_modify():
     r3 = odl.CudaRn(3)
     xd = r3.element([1, 2, 3])

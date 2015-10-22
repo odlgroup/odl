@@ -31,6 +31,7 @@ from textwrap import dedent
 
 # ODL imports
 from odl import Rn, Cn
+from odl.operator.operator import Operator
 from odl.space.ntuples import _FnConstWeighting, _FnMatrixWeighting
 from odl.util.testutils import almost_equal, all_almost_equal
 
@@ -270,6 +271,19 @@ def test_setslice():
         for end in ends:
             for step in steps:
                 _test_setslice(slice(start, end, step))
+
+def test_transpose():
+    r3 = Rn(3)
+    x = r3.element([1, 2, 3])
+    y = r3.element([5, 3, 8])
+    
+    # Assert linear operator
+    assert isinstance(x.T, Operator)
+    assert x.T.is_linear
+
+    # Check result
+    assert almost_equal(x.T(y), x.inner(y))
+    assert all_almost_equal(x.T.T(1.0), x)
 
 def test_setslice_index_error():
     r3 = Rn(3)
