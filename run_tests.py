@@ -23,10 +23,9 @@ from future import standard_library
 standard_library.install_aliases()
 
 import sys
-import odl
 import pytest
 try:
-    import pytest_cov
+    import coverage
     PYTEST_COV_AVAILABLE = True
 except ImportError:
     PYTEST_COV_AVAILABLE = False
@@ -38,9 +37,16 @@ if __name__ == '__main__':
     arg.append('./odl/')
     arg.append('--doctest-modules')
     if PYTEST_COV_AVAILABLE:
-        arg.append('--cov=odl')
-        arg.append('--cov-report=term-missing')
-    if not odl.CUDA_AVAILABLE:
+        cov = coverage.Coverage()
+        cov.start()
+        
+    from odl import CUDA_AVAILABLE
+    if not CUDA_AVAILABLE:
         arg.append('--ignore=odl/space/cu_ntuples.py')
 
     pytest.main(arg)
+    
+    if PYTEST_COV_AVAILABLE:
+        cov.stop()
+        cov.save()
+        cov.html_report()

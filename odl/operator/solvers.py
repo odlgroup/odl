@@ -218,6 +218,58 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         if partial is not None:
             partial.send(x)
 
+class BacktrackingLineSearch(object):
+    """ Backtracking line search, 
+    a search scheme based on the Armijo-Goldstein condition.
+    """
+    def __init__(self, function, tau=0.8, c=0.7):
+        self.function = function
+        self.tau = tau
+        self.c = c
+
+    def __call__(self, x, direction, gradf):
+        alpha = 1.0
+        decrease = gradf.inner(direction)
+        fx = self.function(x)
+        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c:
+            alpha *= self.tau
+        return alpha
+
+class ConstantLineSearch(object):
+    def __init__(self, constant):
+        self.constant = constant
+
+    def __call__(self, x, direction, gradf):
+        return self.constant
+
+def quasi_newton(op, x, line_search, niter=1, partial=None):
+    """ General implementation of the quasi newton method for solving
+
+    op(x) == 0
+    """
+    I = IdentityOperator(op.range)
+    Bi = IdentityOperator(op.range)
+    # Reusable temporaries
+    for _ in range(niter):
+        opx = op(x)
+        print(opx.norm())
+        p = Bi(-opx)
+        alpha = line_search(x, p, opx)
+        x_old = x.copy()
+        s = alpha * p
+        x += s
+        y = op(x) - op(x_old)
+        x_old = x
+        ys = y.inner(s)
+
+        if ys == 0.0:
+            return
+
+        Bi = (I - s * y.T / ys) * Bi *  (I - y * s.T / ys) + s * s.T / ys
+
+        if partial is not None:
+            partial.send(x)
+
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

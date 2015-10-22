@@ -363,7 +363,7 @@ class InnerProductOperator(Operator):
 
     def __str__(self):
         """op.__str__() <==> str(op)."""
-        return "({} , . )".format(self.vector)
+        return "{}.T".format(self.vector)
 
 class InnerProductAdjointOperator(Operator):
     """Operator taking the scalar product with a fixed vector.
@@ -440,7 +440,7 @@ class InnerProductAdjointOperator(Operator):
 
     def __str__(self):
         """op.__str__() <==> str(op)."""
-        return "({} , . )".format(self.vector)
+        return "{}".format(self.vector)
 
 
 if __name__ == '__main__':

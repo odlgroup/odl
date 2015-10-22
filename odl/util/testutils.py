@@ -50,7 +50,6 @@ def almost_equal(a, b, places=7):
     if round(abs(complex(a) - complex(b)), places) == 0:
         return True
     else:
-        print(complex(a), complex(b))
         return False
 
 def all_equal(iter1, iter2):

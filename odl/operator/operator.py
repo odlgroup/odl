@@ -424,7 +424,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             else:
                 return OperatorRightScalarMult(self, other)
         elif isinstance(other, LinearSpace.Vector) and other in self.domain:
-            return OperatorRightVectorMult(self, other)
+            return OperatorRightVectorMult(self, other.copy())
         else:
             return NotImplemented
 
@@ -477,7 +477,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
         elif isinstance(other, LinearSpace.Vector) and other.space.field == self.range:
-            return OperatorLeftVectorMult(self, other)
+            return OperatorLeftVectorMult(self, other.copy())
         else:
             return NotImplemented
 
@@ -669,7 +669,7 @@ class OperatorSum(Operator):
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
-        return '{} + {}'.format(self._op1, self._op2)
+        return '({} + {})'.format(self._op1, self._op2)
 
 
 class OperatorComp(Operator):
@@ -1079,7 +1079,7 @@ class OperatorLeftVectorMult(Operator):
 
         super().__init__(op.domain, vector.space, linear=op.is_linear)
         self._op = op
-        self._vector = vector.copy()
+        self._vector = vector
 
     def _call(self, x):
         """`op.__call__(x) <==> op(x)`."""
@@ -1160,7 +1160,7 @@ class OperatorRightVectorMult(Operator):
 
         super().__init__(op.domain.field, op.range, linear=op.is_linear)
         self._op = op
-        self._vector = vector.copy()
+        self._vector = vector
 
     def _call(self, x):
         """`op.__call__(x) <==> op(x)`."""
