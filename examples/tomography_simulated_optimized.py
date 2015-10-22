@@ -72,13 +72,14 @@ class SimulatedCudaProjector3D(odl.Operator):
         self._sim_domain_el[1] = self._simulator.domain[1].element(
             np.ones(nVoxels))
         
-        
         super().__init__(self._simulator.domain[0], self._simulator.range)
 
     @odl.util.timeit("Simulate")
     def _apply(self, volume, projections):
         # simulated result
-        self._sim_domain_el[0][:] = volume
+        self._sim_domain_el[0][:] = np.fmax(volume, 0.01)
+        self._sim_domain_el[1][:] = np.fmax(np.fmin(np.round(volume), 2), 0)
+        #self._sim_domain_el[1][:] = np.fmin(np.round(volume), 2)
         self._simulator(self._sim_domain_el,
                         projections)
 
@@ -141,31 +142,31 @@ class CudaBackProjector3D(odl.Operator):
                 geo.pixelDirectionV, proj.ntuple.data_ptr, out.ntuple.data_ptr)
 
         # correct for unmatched projectors
-        out *= 8.0*0.00030612127705988737
+        out *= (4332708.48529 / 16369556775.5)
 
 # Set geometry parameters
 volumeSize = np.array([224.0, 224.0, 135.0])
-volumeOrigin = np.array([-112.0, -112.0, 10.0])  # -volumeSize/2.0
+volumeOrigin = -volumeSize/2.0 + np.array([0.035, 0.035, 0.01643])
 
 detectorSize = np.array([287.04, 264.94])*1.5
-detectorOrigin = np.array([-143.52, 0.0])*1.5
+detectorOrigin = np.array([-143.52, -132.0])*1.5
 
 sourceAxisDistance = 790.0
 detectorAxisDistance = 210.0
 
 # Discretization parameters
-nVoxels, nPixels = np.array([44, 44, 27])*7, np.array([78, 72])*7
+nVoxels, nPixels = np.array([44, 44, 27])*5, np.array([78, 72])*5
 #nVoxels, nPixels = np.array([448, 448, 270]), np.array([780, 720])
 nProjection = 332
 
 # Scale factors
 voxelSize = volumeSize/nVoxels
 pixelSize = detectorSize/nPixels
-stepSize = voxelSize.max()/1.0
+stepSize = voxelSize.min()/1.0
 
 # Define projection geometries
 geometries = []
-for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
+for theta in np.linspace(0, -2*pi, nProjection, endpoint=False):
     x0 = np.array([cos(theta), sin(theta), 0.0])
     y0 = np.array([-sin(theta), cos(theta), 0.0])
     z0 = np.array([0.0, 0.0, 1.0])
@@ -181,14 +182,14 @@ for theta in np.linspace(0, 2*pi, nProjection, endpoint=False):
 
 # Create a phantom
 phantom = SR.SRPyUtils.phantom(nVoxels[0:2],
-                               SR.SRPyUtils.PhantomType.modifiedSheppLogan)
+                               SR.SRPyUtils.PhantomType.sheppLogan)
 phantom = np.repeat(phantom, nVoxels[-1]).reshape(nVoxels)
 
 
 gain = np.ones(nPixels)
-energies = np.array([0.09])
-spectrum = np.array([10.0])
-n_materials = 2
+energies = np.array([0.03, 0.09])
+spectrum = np.array([5.0, 5.0])
+n_materials = 3
 
 # Make the operator
 projector = SimulatedCudaProjector3D(volumeOrigin, 
@@ -198,20 +199,23 @@ projector = SimulatedCudaProjector3D(volumeOrigin,
                                      energies, spectrum, 
                                      n_materials, blur_radius=30.0)
                                      
-                                     
+projector = projector.derivative(projector.domain.element())             
 phantomVec = projector.domain.element(phantom)
 
 projections = projector(phantomVec)
-p2 = projector(phantomVec)
-projections *= p2.norm()/projections.norm()  # Fix scaling
 
 # Apply once to find norm estimate
-recon = projector.derivative(phantomVec).adjoint(projector(phantomVec))
+recon = projector.derivative(phantomVec).adjoint(projections)
 normEst = recon.norm() / phantomVec.norm()
+plt.imshow(recon.asarray().copy()[:, :, 0])
+plt.clim(0,2)
+plt.colorbar()
+
+print(recon.inner(phantomVec), phantomVec.inner(phantomVec))
 #print('normEst', normEst)
 #print('const = ', projections.inner(projector(phantomVec))/ phantomVec.inner(projector.derivative(phantomVec).adjoint(projections)))
 #raise Exception()
-del recon
+#del recon
 #del phantomVec
 
 
@@ -219,15 +223,22 @@ del recon
 @odl.util.timeit('plotting')
 def plotResult(x):
     plt.figure()
-    plt.imshow(x.asarray()[:, :, nVoxels[2]//2])
-    #plt.clim(0, 1)
+    plt.imshow(x.asarray()[:, :, 20])
+    plt.clim(0, 2)
     plt.colorbar()
+    
+    plt.figure()
+    plt.plot(x.asarray()[nVoxels[0]//2, :, nVoxels[2]//2])
+    plt.plot(phantomVec.asarray()[nVoxels[0]//2, :, nVoxels[2]//2])
+    
     plt.show()
+    
+
 
 # Solve using landweber
 x = projector.domain.zero()
 odl.operator.solvers.landweber(
     projector, x, projections, 100, omega=0.5/normEst,
     partial=odl.operator.solvers.ForEachPartial(plotResult))
-odl.operator.solvers.conjugate_gradient_normal(projector, x, projections, 100,
-                                               partial=odl.operator.solvers.ForEachPartial(plotResult))
+#odl.operator.solvers.conjugate_gradient_normal(projector, x, projections, 100,
+#                                               partial=odl.operator.solvers.ForEachPartial(plotResult))
