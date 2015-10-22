@@ -418,9 +418,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 return OperatorLeftScalarMult(self, other)
             else:
                 return OperatorRightScalarMult(self, other)
+        elif isinstance(other, LinearSpace.Vector) and other in self.domain:
+            return OperatorRightScalarMult(self, other)
         else:
-            raise TypeError('multiplicant {!r} is neither operator nor '
-                            'scalar.'.format(other))
+            raise NotImplementedError('multiplicant {!r} is neither operator nor '
+                                      'scalar.'.format(other))
 
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
@@ -470,9 +472,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorComp(other, self)
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
+        elif isinstance(other, LinearSpace.Vector) and other.field in self.range:
+            return OperatorLeftVectorMult(self, other)
         else:
-            raise TypeError('multiplicant {!r} is neither operator nor '
-                            'scalar.'.format(other))
+            raise NotImplementedError('multiplicant {!r} is neither operator nor '
+                                      'scalar.'.format(other))
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`.

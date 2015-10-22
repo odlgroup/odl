@@ -348,6 +348,10 @@ def test_type_errors():
     with pytest.raises(TypeError):
         Aop.adjoint(r4Vec1, r4Vec2)
 
+def test_test_left_vector_mult():
+    r3 = odl.Rn(3)
+    Aop = MultiplyOp(np.random.rand(3, 3))
 
+    x = r3.element([1, 2, 3])
 if __name__ == '__main__':
     pytest.main(str(__file__))
