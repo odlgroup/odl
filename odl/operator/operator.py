@@ -41,8 +41,10 @@ from numbers import Number
 from odl.set.space import LinearSpace, UniversalSpace
 from odl.set.sets import Set, UniversalSet, Field
 
-__all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
-           'OperatorRightScalarMult', 'OperatorPointwiseProduct')
+__all__ = ('Operator', 'OperatorComp', 'OperatorSum', 
+           'OperatorLeftScalarMult', 'OperatorRightScalarMult', 
+           'OperatorLeftVectorMult', 'OperatorRightVectorMult', 
+           'OperatorPointwiseProduct')
 
 
 def _bound_method(function):
@@ -422,10 +424,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             else:
                 return OperatorRightScalarMult(self, other)
         elif isinstance(other, LinearSpace.Vector) and other in self.domain:
-            return OperatorRightScalarMult(self, other)
+            return OperatorRightVectorMult(self, other)
         else:
-            raise NotImplementedError('multiplicant {!r} is neither operator nor '
-                                      'scalar.'.format(other))
+            return NotImplemented
 
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
@@ -475,11 +476,10 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorComp(other, self)
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
-        elif isinstance(other, LinearSpace.Vector) and other.field == self.range:
+        elif isinstance(other, LinearSpace.Vector) and other.space.field == self.range:
             return OperatorLeftVectorMult(self, other)
         else:
-            raise NotImplementedError('multiplicant {!r} is neither operator nor '
-                                      'scalar.'.format(other))
+            return NotImplemented
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`.
@@ -501,8 +501,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     # Give a `Operator` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Operator` if the other operand
     # is a NumPy object (applies also to scalars!).
-    __array_priority__ = 1000000.0
-
+    # Set higher than Space.Vector.__array_priority__ to handle mult with vector properly
+    __array_priority__ = 2000000.0
+     
 
 class OperatorSum(Operator):
 
@@ -1075,15 +1076,15 @@ class OperatorLeftVectorMult(Operator):
         scalar multiplication of the operator adjoint:
 
         `OperatorLeftVectorMult(op, vector).adjoint ==
-        `OperatorRightVectorMult(op.adjoint, vector)`
+        `OperatorComp(op.adjoint, vector.T)`
+        
+        `(x * A)^T = A^T * x^T`
         """
 
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
-        #TODO: handle complex vectors
-        #TODO: VERIFY
-        return OperatorRightVectorMult(self._op.adjoint, self._vector)
+        return OperatorComp(self._op.adjoint, self._vector.T)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -1115,15 +1116,11 @@ class OperatorRightVectorMult(Operator):
         vector : `LinearSpace.Vector`
             The vector to multiply by
         """
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('Vector {!r} not is not a LinearSpace.Vector'
-                ''.format(vector))
+        if vector not in op.domain:
+            raise TypeError('vector {!r} not in op.domain {!r}'
+                            ''.format(vector.space, op.domain))
 
-        if op.domain != vector.space:
-            raise TypeError('domain {!r} not is not vector.space {!r}'
-                            ''.format(op.domain, vector.space))
-
-        super().__init__(op.range, vector.space.field, linear=op.is_linear)
+        super().__init__(op.domain.field, op.range, linear=op.is_linear)
         self._op = op
         self._vector = vector.copy()
 
@@ -1161,15 +1158,16 @@ class OperatorRightVectorMult(Operator):
         vector multiplication of the operator adjoint:
 
         `OperatorRightVectorMult(op, vector).adjoint ==
-        `OperatorLeftScalarMult(op.adjoint, vector)`
+        `OperatorComp(vector.T, op.adjoint)`
+
+        `(A x)^T = x^T * A^T`
         """
 
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
         #TODO: handle complex vectors
-        #TODO: VERIFY
-        return OperatorLeftVectorMult(self._op.adjoint, self._vector)
+        return OperatorComp(self._vector.T, self._op.adjoint)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -1178,7 +1176,7 @@ class OperatorRightVectorMult(Operator):
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
-        return '{} * {}'.format(self._vector, self._op)
+        return '{} * {}'.format(self._op, self._vector)
 
 def operator(call=None, apply=None, inv=None, deriv=None,
              dom=None, ran=None, linear=False):
