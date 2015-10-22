@@ -481,6 +481,44 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         else:
             return NotImplemented
 
+    def __truediv__(self, other):
+        """`op.__rmul__(s) <==> op / other`.
+
+        If `other` is a scalar, this corresponds to right
+        division of operators with scalars:
+
+        `op / scalar <==> (x --> op(x / scalar))`
+
+        Note that left and right multiplications are usually different.
+
+        Parameters
+        ----------
+        other : Scalar
+            If `self.range` is a `LinearSpace`, 
+            `scalar` must be an element of `self.range.field`.
+
+        Returns
+        -------
+        rmul : `OperatorRightScalarMult`
+            The "divided" operator.
+
+        Examples
+        --------
+        >>> from odl import Rn, IdentityOperator
+        >>> rn = Rn(3)
+        >>> op = IdentityOperator(rn)
+        >>> x = rn.element([3, 6, 9])
+        >>> op(x)
+        Rn(3).element([3.0, 6.0, 9.0])
+        >>> Scaled = op / 3.0
+        >>> Scaled(x)
+        Rn(3).element([1.0, 2.0, 3.0])
+        """
+        if isinstance(other, Number):
+            return OperatorRightScalarMult(self, 1.0 / other)
+        else:
+            return NotImplemented
+
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`.
 

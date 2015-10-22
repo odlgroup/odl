@@ -636,13 +636,12 @@ def test_nonlinear_functional_operators():
 
     assert not C.is_linear
     assert almost_equal(C(x), A(x * 2.0))
-
+    
     # right divide
     C = A / 2.0
 
     assert not C.is_linear
     assert almost_equal(C(x), A(x / 2.0))
-
 
 if __name__ == '__main__':
     pytest.main(__file__.replace('\\','/') + ' -v')
