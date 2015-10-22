@@ -821,7 +821,7 @@ class OperatorLeftScalarMult(Operator):
             A real or complex number, depending on the field of
             the range.
         """
-        if not (isinstance(op.range, LinearSpace) or isinstance(op1.range, Field)):
+        if not (isinstance(op.range, LinearSpace) or isinstance(op.range, Field)):
             raise TypeError('range {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op.range))
 
@@ -924,7 +924,7 @@ class OperatorRightScalarMult(Operator):
             Used to avoid the creation of a temporary when applying the
             operator.
         """
-        if not (isinstance(op.domain, LinearSpace) or isinstance(op1.range, Field)):
+        if not (isinstance(op.domain, LinearSpace) or isinstance(op.domain, Field)):
             raise TypeError('domain {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op.domain))
 

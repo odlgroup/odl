@@ -396,7 +396,7 @@ class ConstantVector(Operator):
 
     @property
     def adjoint(self):
-        return SumFunctional(self.domain)
+        return SumFunctional(self.range)
 
 def test_functional():
     r3 = odl.Rn(3)
@@ -405,7 +405,89 @@ def test_functional():
     op = SumFunctional(r3)
 
     assert op(x) == 6
+
+def test_linear_adjoint():
+    r3 = odl.Rn(3)
+
+    op = SumFunctional(r3)
+
+    assert op.adjoint(3) == r3.element([3, 3, 3])
     assert op.T(3) == r3.element([3, 3, 3])
 
+    x = r3.element([1, 2, 3])
+    assert op.T.T(x) == op(x)
+
+def test_linear_addition():
+    r3 = odl.Rn(3)
+
+    Aop = SumFunctional(r3)
+    Bop = SumFunctional(r3)
+    x = Aop.domain.element([1, 2, 3])
+    y = 1
+
+    # Explicit instantiation
+    C = OperatorSum(Aop, Bop)
+
+    assert C.is_linear
+
+    assert C(x) == 2 * np.sum(x)
+
+    #Test adjoint
+    assert all_almost_equal(C.T(y), y * 2 * np.ones(3))
+
+    # Using operator overloading
+    assert (Aop + Bop)(x) == 2 * np.sum(x)
+    assert all_almost_equal((Aop + Bop).T(y), y * 2 * np.ones(3))
+
+def test_linear_scale():
+    r3 = odl.Rn(3)
+
+    Aop = SumFunctional(r3)
+    x = Aop.domain.element([1, 2, 3])
+    y = 1
+
+    # Test a range of scalars (scalar multiplication could implement
+    # optimizations for (-1, 0, 1).
+    scalars = [-1.432, -1, 0, 1, 3.14]
+    for scale in scalars:
+        C = OperatorRightScalarMult(Aop, scale)
+        
+        assert C.is_linear
+
+        assert C(x) == scale * np.sum(x)
+        assert all_almost_equal(C.T(y), scale * y * np.ones(3))
+
+        # Using operator overloading
+        assert (scale * Aop)(x) == scale * np.sum(x)
+        assert (Aop * scale)(x) == scale * np.sum(x)
+        assert all_almost_equal((scale * Aop).T(y),
+                                scale * y * np.ones(3))
+        assert all_almost_equal((Aop * scale).T(y),
+                                scale * y * np.ones(3))
+
+def test_linear_composition():
+    r3 = odl.Rn(3)
+
+    Aop = SumFunctional(r3)
+    Bop = ConstantVector(r3)
+    x = Aop.domain.element([1, 2, 3])
+    y = 1
+
+    C = OperatorComp(Bop, Aop)
+
+    assert C.is_linear
+
+    assert all_almost_equal(C(x), np.sum(x) * np.ones(3))
+    assert all_almost_equal(C.T(x), np.sum(x) * np.ones(3))
+
+    # Using operator overloading
+    assert (Aop * Bop)(y) == y * 3
+    assert (Aop * Bop).T(y) == y * 3
+    assert all_almost_equal((Bop * Aop)(x),
+                            np.sum(x) * np.ones(3))
+    assert all_almost_equal((Bop * Aop).T(x),
+                            np.sum(x) * np.ones(3))
+
+
 if __name__ == '__main__':
-    pytest.main(__file__.replace('\\','/'))
+    pytest.main(__file__.replace('\\','/') + ' -v')
