@@ -400,7 +400,7 @@ class InnerProductAdjointOperator(Operator):
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductAdjointOperator(x)
         >>> op(3.0)
-        Rn(3).element([ 3.0,  6.0,  9.0])
+        Rn(3).element([3.0, 6.0, 9.0])
         """
         return x * self.vector
 
@@ -423,11 +423,12 @@ class InnerProductAdjointOperator(Operator):
         >>> op = InnerProductAdjointOperator(x)
         >>> out = r3.element()
         >>> result = op(3.0, out=out)
-        Rn(3).element([ 3.0,  6.0,  9.0])
+        >>> result
+        Rn(3).element([3.0,  6.0,  9.0])
         >>> result is out
         True
         """
-        return x * self.vector
+        return out.lincomb(x, self.vector)
     
     @property
     def adjoint(self):
