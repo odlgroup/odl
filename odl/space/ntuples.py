@@ -1207,7 +1207,7 @@ class MatVecOperator(Operator):
         if isinstance(matrix, sp.sparse.spmatrix):
             self._matrix = matrix
         else:
-            self._matrix = np.asmatrix(matrix)
+            self._matrix = np.asarray(matrix)
 
         if self._matrix.shape != (ran.size, dom.size):
             raise ValueError('matrix shape {} does not match the required '
@@ -1238,19 +1238,19 @@ class MatVecOperator(Operator):
                                       'of domain and range differ ({} != {}).'
                                       ''.format(self.domain.field,
                                                 self.range.field))
-        return MatVecOperator(self.range, self.domain, self.matrix.H)
+        return MatVecOperator(self.range, self.domain,
+                              np.asarray(np.asmatrix(self.matrix).H))
 
     def _call(self, x):
         """Raw call method on input, producing a new output."""
-        return self.range.element(
-            np.asarray(self.matrix.dot(x.data)).squeeze())
+        return self.range.element(self.matrix.dot(x.data))
 
     def _apply(self, x, out):
         """Raw apply method on input, writing to given output."""
         if self.matrix_issparse:
             # Unfortunately, there is no native in-place dot product for
             # sparse matrices
-            out.data[:] = np.asarray(self.matrix.dot(x.data)).squeeze()
+            out.data[:] = self.matrix.dot(x.data)
         else:
             self.matrix.dot(x.data, out=out.data)
 
