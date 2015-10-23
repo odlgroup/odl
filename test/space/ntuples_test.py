@@ -300,6 +300,22 @@ def test_multiply_by_scalar():
     assert x * np.float32(1.0) in r3
     assert 1.0 * x in r3
     assert np.float32(1.0) * x in r3
+    
+def test_copy():
+    import copy
+    
+    r3 = Rn(3)
+    x = r3.element([1, 2, 3])
+    
+    y = copy.copy(x)
+    
+    assert x == y
+    assert y is not x
+    
+    z = copy.deepcopy(x)
+
+    assert x == z
+    assert z is not x
 
 def test_array_method():
     """ Verifies that the __array__ method works

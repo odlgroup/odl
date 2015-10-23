@@ -457,6 +457,23 @@ def test_incompatible_operations():
 
     with pytest.raises(TypeError):
         xA - xB
+        
+@skip_if_no_cuda
+def test_copy():
+    import copy
+    
+    r3 = odl.CudaRn(3)
+    x = r3.element([1, 2, 3])
+    
+    y = copy.copy(x)
+    
+    assert x == y
+    assert y is not x
+    
+    z = copy.deepcopy(x)
+
+    assert x == z
+    assert z is not x
 
 @skip_if_no_cuda
 def test_modify():
