@@ -511,7 +511,7 @@ class LinearSpace(Set):
         # Convenience functions
         def assign(self, other):
             """Assign the values of other to this vector."""
-            self.space.lincomb(1, other, out=self)
+            return self.space.lincomb(1, other, out=self)
 
         def copy(self):
             """Create an identical (deep) copy of this vector."""
@@ -524,29 +524,37 @@ class LinearSpace(Set):
 
             Implemented as `space.lincomb(a, x1, b, x2)`.
             """
-            self.space.lincomb(a, x1, b, x2, out=self)
+            return self.space.lincomb(a, x1, b, x2, out=self)
 
         def set_zero(self):
             """Set this vector to the zero vector."""
-            self.space.lincomb(0, self, 0, self, out=self)
+            return self.space.lincomb(0, self, 0, self, out=self)
 
         # Convenience operators
         def __iadd__(self, other):
             """Implementation of 'self += other'."""
-            self.space.lincomb(1, self, 1, other, out=self)
-            return self
+            if other in self.space:
+                self.space.lincomb(1, self, 1, other, out=self)
+                return self
+            else:
+                return NotImplemented
 
         def __isub__(self, other):
             """Implementation of 'self -= other'."""
-            self.space.lincomb(1, self, -1, other, out=self)
-            return self
+            if other in self.space:
+                self.space.lincomb(1, self, -1, other, out=self)
+                return self            
+            else:
+                return NotImplemented
 
         def __imul__(self, other):
             """Implementation of 'self *= other'."""
             if other in self.space:
                 self.space.multiply(other, self, out=self)
+            elif other in self.space.field:
+                self.space.lincomb(other, self, out=self)            
             else:
-                self.space.lincomb(other, self, out=self)
+                return NotImplemented
             return self
 
         def __itruediv__(self, other):
@@ -559,23 +567,31 @@ class LinearSpace(Set):
 
         def __add__(self, other):
             """Implementation of 'self + other'."""
-            tmp = self.space.element()
-            self.space.lincomb(1, self, 1, other, out=tmp)
-            return tmp
+            if other in self.space:
+                tmp = self.space.element()
+                self.space.lincomb(1, self, 1, other, out=tmp)
+                return tmp            
+            else:
+                return NotImplemented
 
         def __sub__(self, other):
             """Implementation of 'self - other'."""
-            tmp = self.space.element()
-            self.space.lincomb(1, self, -1, other, out=tmp)
-            return tmp
+            if other in self.space:
+                tmp = self.space.element()
+                self.space.lincomb(1, self, -1, other, out=tmp)
+                return tmp            
+            else:
+                return NotImplemented
 
         def __mul__(self, other):
             """Implementation of 'self * other'."""
             tmp = self.space.element()
             if other in self.space:
                 self.space.multiply(other, self, out=tmp)
-            else:
+            elif other in self.space.field:
                 self.space.lincomb(other, self, out=tmp)
+            else:
+                return NotImplemented
             return tmp
 
         def __ipow__(self, n):
@@ -704,9 +720,9 @@ class LinearSpace(Set):
             --------
             >>> from odl import Rn
             >>> import numpy as np
-            >>> rn = Rn(3, norm=np.linalg.norm)
+            >>> rn = Rn(3)
             >>> x = rn.element([1, 2, 3])
-            >>> x = rn.element([2, 1, 3])
+            >>> y = rn.element([2, 1, 3])
             >>> x.T(y)
             13.0
             """

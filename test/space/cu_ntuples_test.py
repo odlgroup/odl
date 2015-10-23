@@ -459,6 +459,23 @@ def test_incompatible_operations():
         xA - xB
 
 @skip_if_no_cuda
+def test_transpose():
+    r3 = odl.CudaRn(3)
+    x = r3.element([1, 2, 3])
+    y = r3.element([5, 3, 8])
+    
+    # Assert linear operator
+    assert isinstance(x.T, odl.Operator)
+    assert x.T.is_linear
+
+    # Check result
+    assert almost_equal(x.T(y), x.inner(y))
+    assert all_almost_equal(x.T.adjoint(1.0), x)
+    
+    # x.T.T returns self    
+    assert x.T.T == x
+
+@skip_if_no_cuda
 def test_modify():
     r3 = odl.CudaRn(3)
     xd = r3.element([1, 2, 3])
@@ -743,4 +760,4 @@ def test_const_str():
     assert str(weighting) == print_str
 
 if __name__ == '__main__':
-    pytest.main(str(__file__))
+    pytest.main(__file__.replace('\\','/') + ' -v')

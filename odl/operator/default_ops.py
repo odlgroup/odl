@@ -317,7 +317,7 @@ class InnerProductOperator(Operator):
 
     The multiply operator calculates:
 
-    out = vec.inner(x)
+    InnerProductOperator(vec)(x) == x.inner(vec)
 
     This is only applicable in inner product spaces.
     """
@@ -351,11 +351,15 @@ class InnerProductOperator(Operator):
         >>> op(r3.element([1, 2, 3]))
         14.0
         """
-        return self.vector.inner(x)
+        return x.inner(self.vector)
 
     @property
     def adjoint(self):
         return InnerProductAdjointOperator(self.vector)
+
+    @property
+    def T(self):
+        return self.vector
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
@@ -363,14 +367,14 @@ class InnerProductOperator(Operator):
 
     def __str__(self):
         """op.__str__() <==> str(op)."""
-        return "({} , . )".format(self.vector)
+        return "{}.T".format(self.vector)
 
 class InnerProductAdjointOperator(Operator):
     """Operator taking the scalar product with a fixed vector.
 
     The multiply operator calculates:
 
-    out = x * vec
+    InnerProductAdjointOperator(vec)(x) == x * vec
     """
 
     # pylint: disable=abstract-method
@@ -400,7 +404,7 @@ class InnerProductAdjointOperator(Operator):
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductAdjointOperator(x)
         >>> op(3.0)
-        Rn(3).element([ 3.0,  6.0,  9.0])
+        Rn(3).element([3.0, 6.0, 9.0])
         """
         return x * self.vector
 
@@ -423,11 +427,12 @@ class InnerProductAdjointOperator(Operator):
         >>> op = InnerProductAdjointOperator(x)
         >>> out = r3.element()
         >>> result = op(3.0, out=out)
-        Rn(3).element([ 3.0,  6.0,  9.0])
+        >>> result
+        Rn(3).element([3.0,  6.0,  9.0])
         >>> result is out
         True
         """
-        return x * self.vector
+        out.lincomb(x, self.vector)
     
     @property
     def adjoint(self):
@@ -439,7 +444,7 @@ class InnerProductAdjointOperator(Operator):
 
     def __str__(self):
         """op.__str__() <==> str(op)."""
-        return "({} , . )".format(self.vector)
+        return "{}".format(self.vector)
 
 
 if __name__ == '__main__':

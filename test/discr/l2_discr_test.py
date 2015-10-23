@@ -368,6 +368,18 @@ def test_asarray_2d():
     # Check order of out array
     assert vec_C.asarray().flags['C_CONTIGUOUS']
 
+def test_transpose():
+    unit_square = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.l2_uniform_discretization(unit_square, (2, 2), order='F')
+    x = discr.element([[1, 2], [3, 4]])
+    y = discr.element([[5, 6], [7, 8]])
+
+    assert isinstance(x.T, odl.Operator)
+    assert x.T.is_linear
+
+    assert x.T(y) == x.inner(y)
+    assert x.T.T == x
+    assert all_almost_equal(x.T.adjoint(1.0), x)
 
 if __name__ == '__main__':
-    pytest.main(str(__file__))
+    pytest.main(__file__.replace('\\','/') + ' -v')

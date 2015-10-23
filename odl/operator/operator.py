@@ -39,10 +39,12 @@ from numbers import Number
 
 # ODL imports
 from odl.set.space import LinearSpace, UniversalSpace
-from odl.set.sets import Set, UniversalSet
+from odl.set.sets import Set, UniversalSet, Field
 
-__all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorLeftScalarMult',
-           'OperatorRightScalarMult', 'OperatorPointwiseProduct')
+__all__ = ('Operator', 'OperatorComp', 'OperatorSum', 
+           'OperatorLeftScalarMult', 'OperatorRightScalarMult', 
+           'OperatorLeftVectorMult', 'OperatorRightVectorMult', 
+           'OperatorPointwiseProduct')
 
 
 def _bound_method(function):
@@ -237,11 +239,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         self._is_linear = bool(linear)
 
         if self.is_linear:
-            if not isinstance(domain, LinearSpace):
-                raise TypeError('domain {!r} not a `LinearSpace` instance.'
+            if not (isinstance(domain, LinearSpace) or isinstance(domain, Field)):
+                raise TypeError('domain {!r} not a `LinearSpace` or `Field` instance.'
                                 ''.format(domain))
-            if not isinstance(range, LinearSpace):
-                raise TypeError('range {!r} not a `LinearSpace` instance.'
+            if not (isinstance(range, LinearSpace) or isinstance(range, Field)):
+                raise TypeError('range {!r} not a `LinearSpace` or `Field` instance.'
                                 ''.format(range))
 
     @property
@@ -265,11 +267,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         raise NotImplementedError('adjoint not implemented for operator {!r}.'
                                   ''.format(self))
 
-    @property
-    def T(self):
-        """Shorthand for `adjoint`."""
-        return self.adjoint
-
     def derivative(self, point):
         """Return the operator derivative at `point`."""
         if self.is_linear:
@@ -283,11 +280,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         """Return the operator inverse."""
         raise NotImplementedError('inverse not implemented for operator '
                                   '{!r}'.format(self))
-
-    @property
-    def I(self):
-        """Shorthand for `inverse`."""
-        return self.inverse
 
     # Implicitly defined operators
     def __call__(self, x, out=None, *args, **kwargs):
@@ -344,6 +336,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 raise TypeError('output {!r} not an element of the range {!r} '
                                 'of {!r}.'
                                 ''.format(out, self.range, self))
+
+            if isinstance(self.range, Field):
+                raise TypeError('`out` parameter cannot be used when range is a field')
 
             self._apply(x, out, *args, **kwargs)
             return out
@@ -419,10 +414,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             else:
                 return OperatorRightScalarMult(self, other)
         elif isinstance(other, LinearSpace.Vector) and other in self.domain:
-            return OperatorRightScalarMult(self, other)
+            return OperatorRightVectorMult(self, other.copy())
         else:
-            raise NotImplementedError('multiplicant {!r} is neither operator nor '
-                                      'scalar.'.format(other))
+            return NotImplemented
 
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
@@ -472,11 +466,48 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorComp(other, self)
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
-        elif isinstance(other, LinearSpace.Vector) and other.field in self.range:
-            return OperatorLeftVectorMult(self, other)
+        elif isinstance(other, LinearSpace.Vector) and other.space.field == self.range:
+            return OperatorLeftVectorMult(self, other.copy())
         else:
-            raise NotImplementedError('multiplicant {!r} is neither operator nor '
-                                      'scalar.'.format(other))
+            return NotImplemented
+
+    def __truediv__(self, other):
+        """`op.__rmul__(s) <==> op / other`.
+
+        If `other` is a scalar, this corresponds to right
+        division of operators with scalars:
+
+        `op / scalar <==> (x --> op(x / scalar))`
+
+        Note that left and right multiplications are usually different.
+
+        Parameters
+        ----------
+        other : Scalar
+            If `self.range` is a `LinearSpace`, 
+            `scalar` must be an element of `self.range.field`.
+
+        Returns
+        -------
+        rmul : `OperatorRightScalarMult`
+            The "divided" operator.
+
+        Examples
+        --------
+        >>> from odl import Rn, IdentityOperator
+        >>> rn = Rn(3)
+        >>> op = IdentityOperator(rn)
+        >>> x = rn.element([3, 6, 9])
+        >>> op(x)
+        Rn(3).element([3.0, 6.0, 9.0])
+        >>> Scaled = op / 3.0
+        >>> Scaled(x)
+        Rn(3).element([1.0, 2.0, 3.0])
+        """
+        if isinstance(other, Number):
+            return OperatorRightScalarMult(self, 1.0 / other)
+        else:
+            return NotImplemented
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`.
@@ -495,6 +526,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         """
         return self.__class__.__name__
 
+    # Give a `Operator` a higher priority than any NumPy array type. This
+    # forces the usage of `__op__` of `Operator` if the other operand
+    # is a NumPy object (applies also to scalars!).
+    # Set higher than Space.Vector.__array_priority__ to handle mult with vector properly
+    __array_priority__ = 2000000.0
+     
 
 class OperatorSum(Operator):
 
@@ -514,7 +551,7 @@ class OperatorSum(Operator):
         Parameters
         ----------
         op1 : `Operator`
-            The first summand. Its `range` must be a `LinearSpace`.
+            The first summand. Its `range` must be a `LinearSpace` or `Field`.
         op2 : `Operator`
             The second summand. Must have the same `domain` and `range` as
             `op1`.
@@ -529,7 +566,7 @@ class OperatorSum(Operator):
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
 
-        if not isinstance(op1.range, LinearSpace):
+        if not (isinstance(op1.range, LinearSpace) or isinstance(op1.range, Field)):
             raise TypeError('range {!r} not a `LinearSpace` instance.'
                             ''.format(op1.range))
 
@@ -622,7 +659,7 @@ class OperatorSum(Operator):
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
-        return '{} + {}'.format(self._op1, self._op2)
+        return '({} + {})'.format(self._op1, self._op2)
 
 
 class OperatorComp(Operator):
@@ -757,8 +794,8 @@ class OperatorPointwiseProduct(Operator):
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
 
-        if not isinstance(op1.range, LinearSpace):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
+        if not (isinstance(op1.range, LinearSpace) or isinstance(op1.range, Field)):
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op1.range))
 
         if op1.domain != op2.domain:
@@ -808,13 +845,13 @@ class OperatorLeftScalarMult(Operator):
         Parameters
         ----------
         op : `Operator`
-            The range of `op` must be a `LinearSpace`.
+            The range of `op` must be a `LinearSpace` or `Field`.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
             the range.
         """
-        if not isinstance(op.range, LinearSpace):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
+        if not (isinstance(op.range, LinearSpace) or isinstance(op.range, Field)):
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op.range))
 
         if scalar not in op.range.field:
@@ -908,7 +945,7 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         op : `Operator`
-            The domain of `op` must be a `LinearSpace`.
+            The domain of `op` must be a `LinearSpace` or `Field`.
         scalar : `op.range.field` element
             A real or complex number, depending on the field of
             the operator domain.
@@ -916,8 +953,8 @@ class OperatorRightScalarMult(Operator):
             Used to avoid the creation of a temporary when applying the
             operator.
         """
-        if not isinstance(op.domain, LinearSpace):
-            raise TypeError('domain {!r} not a `LinearSpace` instance.'
+        if not (isinstance(op.domain, LinearSpace) or isinstance(op.domain, Field)):
+            raise TypeError('domain {!r} not a `LinearSpace` or `Field` instance.'
                             ''.format(op.domain))
 
         if scalar not in op.domain.field:
@@ -1032,7 +1069,7 @@ class OperatorLeftVectorMult(Operator):
 
         super().__init__(op.domain, vector.space, linear=op.is_linear)
         self._op = op
-        self._vector = vector.copy()
+        self._vector = vector
 
     def _call(self, x):
         """`op.__call__(x) <==> op(x)`."""
@@ -1067,15 +1104,15 @@ class OperatorLeftVectorMult(Operator):
         scalar multiplication of the operator adjoint:
 
         `OperatorLeftVectorMult(op, vector).adjoint ==
-        `OperatorRightVectorMult(op.adjoint, vector)`
+        `OperatorComp(op.adjoint, vector.T)`
+        
+        `(x * A)^T = A^T * x^T`
         """
 
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
-        #TODO: handle complex vectors
-        #TODO: VERIFY
-        return OperatorRightVectorMult(self._op.adjoint, self._vector)
+        return OperatorComp(self._op.adjoint, self._vector.T)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -1107,17 +1144,13 @@ class OperatorRightVectorMult(Operator):
         vector : `LinearSpace.Vector`
             The vector to multiply by
         """
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('Vector {!r} not is not a LinearSpace.Vector'
-                ''.format(vector))
+        if vector not in op.domain:
+            raise TypeError('vector {!r} not in op.domain {!r}'
+                            ''.format(vector.space, op.domain))
 
-        if op.domain != vector.space:
-            raise TypeError('domain {!r} not is not vector.space {!r}'
-                            ''.format(op.domain, vector.space))
-
-        super().__init__(op.range, vector.space.field, linear=op.is_linear)
+        super().__init__(op.domain.field, op.range, linear=op.is_linear)
         self._op = op
-        self._vector = vector.copy()
+        self._vector = vector
 
     def _call(self, x):
         """`op.__call__(x) <==> op(x)`."""
@@ -1153,15 +1186,16 @@ class OperatorRightVectorMult(Operator):
         vector multiplication of the operator adjoint:
 
         `OperatorRightVectorMult(op, vector).adjoint ==
-        `OperatorLeftScalarMult(op.adjoint, vector)`
+        `OperatorComp(vector.T, op.adjoint)`
+
+        `(A x)^T = x^T * A^T`
         """
 
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
         #TODO: handle complex vectors
-        #TODO: VERIFY
-        return OperatorLeftVectorMult(self._op.adjoint, self._vector)
+        return OperatorComp(self._vector.T, self._op.adjoint)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -1170,7 +1204,7 @@ class OperatorRightVectorMult(Operator):
 
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
-        return '{} * {}'.format(self._vector, self._op)
+        return '{} * {}'.format(self._op, self._vector)
 
 def operator(call=None, apply=None, inv=None, deriv=None,
              dom=None, ran=None, linear=False):

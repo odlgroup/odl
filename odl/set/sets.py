@@ -233,98 +233,21 @@ class Strings(Set):
         """s.__repr__() <==> repr(s)."""
         return 'Strings({})'.format(self.length)
 
+    
+class Field(with_metaclass(ABCMeta, Set)):
+    """Any set that satisfies the field axioms
 
-class Integers(Set):
+    For example RealNumbers, ComplexNumbers or the finite field F2
+    """
 
-    """The set of integers."""
-
-    def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`."""
-        return isinstance(other, Integers)
-
-    def __contains__(self, other):
-        """Test if `other` is an integer."""
-        return isinstance(other, Integral)
-
-    def contains_set(self, other):
-        """Test if `other` is a subset of the real numbers
-
-        Returns
-        -------
-        contained : bool
-            `True` if  other is `Integers`, `False` otherwise.
-
-        Examples
-        --------
-        >>> Z = Integers()
-        >>> Z.contains_set(RealNumbers())
-        False
+    @property
+    def field(self):
+        """ The field of scalars for a field is itself
         """
-        return isinstance(other, Integers)
-
-    def element(self, inp=None):
-        """Return an integer from `inp` or from scratch."""
-        if inp is not None:
-            return int(inp)
-        else:
-            return 0
-
-    def __str__(self):
-        """s.__str__() <==> str(s)."""
-        return "Integers"
-
-    def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
-        return "Integers()"
+        return self
 
 
-class RealNumbers(Set):
-
-    """The set of real numbers."""
-
-    def __contains__(self, other):
-        """Test if `other` is a real number."""
-        return isinstance(other, Real)
-
-    def contains_set(self, other):
-        """Test if `other` is a subset of the real numbers
-
-        Returns
-        -------
-        contained : boolean
-            True if  other is a `RealNumbers` or `Integers`
-            False else.
-
-        Examples
-        --------
-        >>> R = RealNumbers()
-        >>> R.contains_set(RealNumbers())
-        True
-        """
-        return (isinstance(other, RealNumbers) or
-                isinstance(other, Integers))
-
-    def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`."""
-        return isinstance(other, RealNumbers)
-
-    def element(self, inp=None):
-        """Return a real number from `inp` or from scratch."""
-        if inp is not None:
-            return float(inp)
-        else:
-            return 0.0
-
-    def __str__(self):
-        """s.__str__() <==> str(s)."""
-        return "RealNumbers"
-
-    def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
-        return "RealNumbers()"
-
-
-class ComplexNumbers(Set):
+class ComplexNumbers(Field):
 
     """The set of complex numbers."""
 
@@ -369,6 +292,95 @@ class ComplexNumbers(Set):
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
         return "ComplexNumbers()"
+
+    
+class RealNumbers(Field):
+    """The set of real numbers."""
+
+    def __contains__(self, other):
+        """Test if `other` is a real number."""
+        return isinstance(other, Real)
+
+    def contains_set(self, other):
+        """Test if `other` is a subset of the real numbers
+
+        Returns
+        -------
+        contained : boolean
+            True if  other is a `RealNumbers` or `Integers`
+            False else.
+
+        Examples
+        --------
+        >>> R = RealNumbers()
+        >>> R.contains_set(RealNumbers())
+        True
+        """
+        return (isinstance(other, RealNumbers) or
+                isinstance(other, Integers))
+
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, RealNumbers)
+
+    def element(self, inp=None):
+        """Return a real number from `inp` or from scratch."""
+        if inp is not None:
+            return float(inp)
+        else:
+            return 0.0
+
+    def __str__(self):
+        """s.__str__() <==> str(s)."""
+        return "RealNumbers"
+
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        return "RealNumbers()"
+
+
+class Integers(Set):
+
+    """The set of integers."""
+
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`."""
+        return isinstance(other, Integers)
+
+    def __contains__(self, other):
+        """Test if `other` is an integer."""
+        return isinstance(other, Integral)
+
+    def contains_set(self, other):
+        """Test if `other` is a subset of the real numbers
+
+        Returns
+        -------
+        contained : bool
+            `True` if  other is `Integers`, `False` otherwise.
+
+        Examples
+        --------
+        >>> Z = Integers()
+        >>> Z.contains_set(RealNumbers())
+        False
+        """
+        return isinstance(other, Integers)
+
+    def element(self, inp=None):
+        """Return an integer from `inp` or from scratch."""
+        if inp is not None:
+            return int(inp)
+        else:
+            return 0
+
+    def __str__(self):
+        """s.__str__() <==> str(s)."""
+        return "Integers"
+
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        return "Integers()"
 
 
 class CartesianProduct(Set):
