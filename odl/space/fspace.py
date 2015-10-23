@@ -22,13 +22,13 @@ TODO: document properly
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
 # External imports
 import numpy as np
+from functools import partial
 
 # ODL imports
 from odl.operator.operator import Operator
@@ -333,7 +333,7 @@ class FunctionSet(Set):
                 `np.broadcast(*x).shape`.
                 If `out` is given, it is returned.
 
-            kwargs : {'bounds_check'}
+            kwargs : {'vec_bounds_check'}
                 'bounds_check' : bool
                     Whether or not to check if all input points lie in
                     the function domain. For vectorized evaluation,
@@ -358,43 +358,57 @@ class FunctionSet(Set):
             ValueError
                 If evaluation points fall outside the valid domain
             """
-            bounds_check = kwargs.pop('bounds_check', True)
-            # TODO: adapt checks on input and output
-            if bounds_check:
-                if self.vectorized:
-                    self._vectorized_input_check(x)
-                else:
-                    if x not in self.domain:
-                        raise TypeError('input {!r} not in domain '
-                                        '{}.'.format(x, self.domain))
+            vec_bounds_check = kwargs.pop('vec_bounds_check', True)
+
+            if self.vectorized:
+                if not (_is_valid_input_array(x, self.domain.ndim) or
+                        _is_valid_input_meshgrid(x, self.domain.ndim)):
+                    raise TypeError('argument {!r} not a valid vectorized '
+                                    'input. Expected a ({d}, n) array '
+                                    'or a length-{d} meshgrid sequence.'
+                                    ''.format(x, d=self.domain.ndim))
+
+                out_shape = np.broadcast(*x).shape
+
+                if vec_bounds_check:
+                    if not self.domain.contains_all(x):
+                        raise ValueError('input contains points outside '
+                                         'the domain {}.'.format(self.domain))
+            else:  # not self.vectorized
+                if x not in self.domain:
+                    raise TypeError('input {!r} not in domain '
+                                    '{}.'.format(x, self.domain))
 
             if out is None:
                 out = self._call(x)
-                if bounds_check:
-                    if self.vectorized:
-                        if not (isinstance(out, np.ndarray) and
-                                out.flat[0] in self.range):
-                            raise TypeError('output {!r} not an array of '
-                                            'elements of the function range '
-                                            '{}.'.format(out, self.range))
-                    else:
-                        if out not in self.range:
-                            raise TypeError('output {!r} not in range {}.'
-                                            ''.format(out, self.range))
-
-            else:
-                if bounds_check:
-                    if self.vectorized:
-                        if not (isinstance(out, np.ndarray) and
-                                out.flat[0] in self.range):
-                            raise TypeError('output {!r} not an array of '
-                                            'elements of the function range '
-                                            '{}.'.format(out, self.range))
-                    else:
-                        if out not in self.range:
-                            raise TypeError('output {!r} not in range {}.'
-                                            ''.format(out, self.range))
-                self._apply(x, out)
+                if self.vectorized:
+                    if out.shape != out_shape:
+                        raise ValueError('output shape {} not equal to shape '
+                                         '{} expected from input.'
+                                         ''.format(out.shape, out_shape))
+                    if vec_bounds_check:
+                        if not self.range.contains_all(out):
+                            raise ValueError('output contains points outside '
+                                             'the range {}.'
+                                             ''.format(self.domain))
+            else:  # out is not None
+                if self.vectorized:
+                    if not isinstance(out, np.ndarray):
+                        raise TypeError('output {!r} not a `numpy.ndarray` '
+                                        'instance.')
+                    if out.shape != out_shape:
+                        raise ValueError('output shape {} not equal to shape '
+                                         '{} expected from input.'
+                                         ''.format(out.shape, out_shape))
+                    self._apply(x, out)
+                    if vec_bounds_check:
+                        if not self.range.contains_all(out):
+                            raise ValueError('output contains points outside '
+                                             'the range {}.'
+                                             ''.format(self.domain))
+                else:  # not self.vectorized
+                    raise ValueError('output parameter can only be specified '
+                                     'for vectorized functions.')
 
             return out
 
@@ -525,7 +539,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             Whether or not the function supports vectorized
             evaluation.
         """
-        dtype = float if self.field == RealNumbers() else complex
+        dtype = complex if self.field == ComplexNumbers() else float
         vectorized = bool(vectorized)
 
         def zero_novec(_):
@@ -534,12 +548,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def zero_vec(x):
             """The zero function, vectorized."""
-            if _is_valid_input_array(x, self.domain.ndim):
-                order = 'C'
-            elif _is_valid_input_meshgrid(x, self.domain.ndim):
+            if _is_valid_input_meshgrid(x, self.domain.ndim):
                 order = _meshgrid_input_order(x)
             else:
-                raise ValueError('invalid vectorized function argument.')
+                order = 'C'
+
             bcast = np.broadcast(*x)
             return np.zeros(bcast.shape, dtype=dtype, order=order)
 
@@ -566,7 +579,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             Whether or not the function supports vectorized
             evaluation.
         """
-        dtype = float if self.field == RealNumbers() else complex
+        dtype = complex if self.field == ComplexNumbers() else float
         vectorized = bool(vectorized)
 
         def one_novec(_):
@@ -575,12 +588,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def one_vec(x):
             """The one function, vectorized."""
-            if _is_valid_input_array(x, self.domain.ndim):
-                order = 'C'
-            elif _is_valid_input_meshgrid(x, self.domain.ndim):
+            if _is_valid_input_meshgrid(x, self.domain.ndim):
                 order = _meshgrid_input_order(x)
             else:
-                raise ValueError('invalid vectorized function argument.')
+                order = 'C'
+
             bcast = np.broadcast(*x)
             return np.ones(bcast.shape, dtype=dtype, order=order)
 
@@ -617,16 +629,16 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Note
         ----
-        The additions and multiplications are implemented via a simple
-        Python function, so the resulting function is probably slow.
-
-        Different vectorization types are not allowed.
+        The additions and multiplications are implemented via simple
+        Python functions, so non-vectorized versions are slow.
         """
         # Store to allow aliasing
         x1_old_call = x1._call
         x1_old_apply = x1._apply
         x2_old_call = x2._call
         x2_old_apply = x2._apply
+
+        vec_out = x1.vectorized or x2.vectorized
 
         def lincomb_call(x):
             """Linear combination, call version."""
