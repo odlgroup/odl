@@ -357,6 +357,10 @@ class InnerProductOperator(Operator):
     def adjoint(self):
         return InnerProductAdjointOperator(self.vector)
 
+    @property
+    def T(self):
+        return self.vector
+
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
         return 'InnerProductOperator({!r})'.format(self.vector)

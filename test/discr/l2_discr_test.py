@@ -378,7 +378,8 @@ def test_transpose():
     assert x.T.is_linear
 
     assert x.T(y) == x.inner(y)
-    assert all_almost_equal(x.T.T(1.0), x)
+    assert x.T.T == x
+    assert all_almost_equal(x.T.adjoint(1.0), x)
 
 if __name__ == '__main__':
     pytest.main(__file__.replace('\\','/') + ' -v')

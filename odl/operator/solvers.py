@@ -206,7 +206,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx
-        A = OperatorSum(OperatorComp(deriv.T, deriv),
+        A = OperatorSum(OperatorComp(deriv.adjoint, deriv),
                         tm * I, tmp_dom)
 
         # TODO: allow user to select other method

@@ -148,7 +148,6 @@ def test_nonlinear_right_vector_mult():
     Aop = MultiplyAndSquareOp(A)
     vec = Aop.domain.element([1, 2, 3])
     x = 1.0
-    y = Aop.range.element([5, 6, 7, 8])
 
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
@@ -250,13 +249,13 @@ def test_linear_adjoint():
     xvec = Aop.range.element(x)
     outvec = Aop.domain.element()
 
-    # Using adjoint
+    # Using inplace adjoint
     Aop.adjoint(xvec, outvec)
     np.dot(A.T, x, out)
     assert all_almost_equal(out, outvec)
 
-    # Using T method
-    assert all_almost_equal(Aop.T(xvec), np.dot(A.T, x))
+    # Using out of place method
+    assert all_almost_equal(Aop.adjoint(xvec), np.dot(A.T, x))
 
 def test_linear_addition():
     A = np.random.rand(4, 3)
@@ -273,14 +272,15 @@ def test_linear_addition():
     C = OperatorSum(Aop, Bop)
 
     assert C.is_linear
+    assert C.adjoint.is_linear
 
     assert all_almost_equal(C(xvec), np.dot(A, x) + np.dot(B, x))
-    assert all_almost_equal(C.T(yvec), np.dot(A.T, y) + np.dot(B.T, y))
+    assert all_almost_equal(C.adjoint(yvec), np.dot(A.T, y) + np.dot(B.T, y))
 
     # Using operator overloading
     assert all_almost_equal((Aop + Bop)(xvec),
                                np.dot(A, x) + np.dot(B, x))
-    assert all_almost_equal((Aop + Bop).T(yvec),
+    assert all_almost_equal((Aop + Bop).adjoint(yvec),
                                np.dot(A.T, y) + np.dot(B.T, y))
 
 def test_linear_scale():
@@ -299,18 +299,19 @@ def test_linear_scale():
         C = OperatorRightScalarMult(Aop, scale)
         
         assert C.is_linear
+        assert C.adjoint.is_linear
 
         assert all_almost_equal(C(xvec), scale * np.dot(A, x))
-        assert all_almost_equal(C.T(yvec), scale * np.dot(A.T, y))
+        assert all_almost_equal(C.adjoint(yvec), scale * np.dot(A.T, y))
 
         # Using operator overloading
         assert all_almost_equal((scale * Aop)(xvec),
                                    scale * np.dot(A, x))
         assert all_almost_equal((Aop * scale)(xvec),
                                    np.dot(A, scale * x))
-        assert all_almost_equal((scale * Aop).T(yvec),
+        assert all_almost_equal((scale * Aop).adjoint(yvec),
                                    scale * np.dot(A.T, y))
-        assert all_almost_equal((Aop * scale).T(yvec),
+        assert all_almost_equal((Aop * scale).adjoint(yvec),
                                    np.dot(A.T, scale * y))
 
 
@@ -327,15 +328,16 @@ def test_linear_right_vector_mult():
     C = OperatorRightVectorMult(Aop, vec)
         
     assert C.is_linear
+    assert C.adjoint.is_linear
 
     assert all_almost_equal(C(x), x * np.dot(A, vec))
-    assert all_almost_equal(C.T(y), np.dot(vec, np.dot(A.T, y)))
-    assert all_almost_equal(C.T.T(x), C(x))
+    assert all_almost_equal(C.adjoint(y), np.dot(vec, np.dot(A.T, y)))
+    assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert all_almost_equal((Aop * vec)(x),
                             np.dot(A, vec) * x)
-    assert all_almost_equal((Aop * vec).T(y),
+    assert all_almost_equal((Aop * vec).adjoint(y),
                             np.dot(vec, np.dot(A.T, y)))
 
 def test_linear_composition():
@@ -352,9 +354,10 @@ def test_linear_composition():
     C = OperatorComp(Aop, Bop)
 
     assert C.is_linear
+    assert C.adjoint.is_linear
 
     assert all_almost_equal(C(xvec), np.dot(A, np.dot(B, x)))
-    assert all_almost_equal(C.T(yvec), np.dot(B.T, np.dot(A.T, y)))
+    assert all_almost_equal(C.adjoint(yvec), np.dot(B.T, np.dot(A.T, y)))
 
 def test_type_errors():
     r3 = odl.Rn(3)
@@ -375,7 +378,7 @@ def test_type_errors():
         Aop(r4Vec1)
 
     with pytest.raises(TypeError):
-        Aop.T(r4Vec1)
+        Aop.adjoint(r4Vec1)
 
     with pytest.raises(TypeError):
         Aop(r3Vec1, r4Vec1)
@@ -449,10 +452,9 @@ def test_functional_adjoint():
     op = SumFunctional(r3)
 
     assert op.adjoint(3) == r3.element([3, 3, 3])
-    assert op.T(3) == r3.element([3, 3, 3])
 
     x = r3.element([1, 2, 3])
-    assert op.T.T(x) == op(x)
+    assert op.adjoint.adjoint(x) == op(x)
 
 def test_functional_addition():
     r3 = odl.Rn(3)
@@ -466,16 +468,17 @@ def test_functional_addition():
     C = OperatorSum(Aop, Bop)
 
     assert C.is_linear
+    assert C.adjoint.is_linear
 
     assert C(x) == 2 * np.sum(x)
 
     #Test adjoint
-    assert all_almost_equal(C.T(y), y * 2 * np.ones(3))
-    assert all_almost_equal(C.T.T(x), C(x))
+    assert all_almost_equal(C.adjoint(y), y * 2 * np.ones(3))
+    assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert (Aop + Bop)(x) == 2 * np.sum(x)
-    assert all_almost_equal((Aop + Bop).T(y), y * 2 * np.ones(3))
+    assert all_almost_equal((Aop + Bop).adjoint(y), y * 2 * np.ones(3))
 
 def test_functional_scale():
     r3 = odl.Rn(3)
@@ -491,17 +494,18 @@ def test_functional_scale():
         C = OperatorRightScalarMult(Aop, scale)
         
         assert C.is_linear
+        assert C.adjoint.is_linear
 
         assert C(x) == scale * np.sum(x)
-        assert all_almost_equal(C.T(y), scale * y * np.ones(3))
-        assert all_almost_equal(C.T.T(x), C(x))
+        assert all_almost_equal(C.adjoint(y), scale * y * np.ones(3))
+        assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
         # Using operator overloading
         assert (scale * Aop)(x) == scale * np.sum(x)
         assert (Aop * scale)(x) == scale * np.sum(x)
-        assert all_almost_equal((scale * Aop).T(y),
+        assert all_almost_equal((scale * Aop).adjoint(y),
                                 scale * y * np.ones(3))
-        assert all_almost_equal((Aop * scale).T(y),
+        assert all_almost_equal((Aop * scale).adjoint(y),
                                 scale * y * np.ones(3))
 
 def test_functional_left_vector_mult():
@@ -517,20 +521,20 @@ def test_functional_left_vector_mult():
     C = OperatorLeftVectorMult(Aop, y)
         
     assert C.is_linear
+    assert C.adjoint.is_linear
 
     assert all_almost_equal(C(x), y * np.sum(x))
-    assert all_almost_equal(C.T(y), y.inner(y) * np.ones(3))
-    assert all_almost_equal(C.T.T(x), C(x))
+    assert all_almost_equal(C.adjoint(y), y.inner(y) * np.ones(3))
+    assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert all_almost_equal((y * Aop)(x),
                             y * np.sum(x))
-    assert all_almost_equal((y * Aop).T(y),
+    assert all_almost_equal((y * Aop).adjoint(y),
                             y.inner(y) * np.ones(3))
 
 def test_functional_right_vector_mult():
     r3 = odl.Rn(3)
-    r4 = odl.Rn(4)
 
     Aop = SumFunctional(r3)
     vec = r3.element([5, 6, 7])
@@ -542,15 +546,16 @@ def test_functional_right_vector_mult():
     C = OperatorRightVectorMult(Aop, vec)
         
     assert C.is_linear
+    assert C.adjoint.is_linear
 
     assert all_almost_equal(C(x), x * np.sum(vec))
-    assert all_almost_equal(C.T(y), y * np.sum(vec))
-    assert all_almost_equal(C.T.T(x), C(x))
+    assert all_almost_equal(C.adjoint(y), y * np.sum(vec))
+    assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert all_almost_equal((Aop * vec)(x),
                             x * np.sum(vec))
-    assert all_almost_equal((Aop * vec).T(y),
+    assert all_almost_equal((Aop * vec).adjoint(y),
                             y * np.sum(vec))
 
 def test_functional_composition():
@@ -564,17 +569,18 @@ def test_functional_composition():
     C = OperatorComp(Bop, Aop)
 
     assert C.is_linear
+    assert C.adjoint.is_linear
 
     assert all_almost_equal(C(x), np.sum(x) * np.ones(3))
-    assert all_almost_equal(C.T(x), np.sum(x) * np.ones(3))
-    assert all_almost_equal(C.T.T(x), C(x))
+    assert all_almost_equal(C.adjoint(x), np.sum(x) * np.ones(3))
+    assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert (Aop * Bop)(y) == y * 3
-    assert (Aop * Bop).T(y) == y * 3
+    assert (Aop * Bop).adjoint(y) == y * 3
     assert all_almost_equal((Bop * Aop)(x),
                             np.sum(x) * np.ones(3))
-    assert all_almost_equal((Bop * Aop).T(x),
+    assert all_almost_equal((Bop * Aop).adjoint(x),
                             np.sum(x) * np.ones(3))
 
 class SumSquaredFunctional(Operator):

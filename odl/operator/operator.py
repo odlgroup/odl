@@ -267,11 +267,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         raise NotImplementedError('adjoint not implemented for operator {!r}.'
                                   ''.format(self))
 
-    @property
-    def T(self):
-        """Shorthand for `adjoint`."""
-        return self.adjoint
-
     def derivative(self, point):
         """Return the operator derivative at `point`."""
         if self.is_linear:
@@ -285,11 +280,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         """Return the operator inverse."""
         raise NotImplementedError('inverse not implemented for operator '
                                   '{!r}'.format(self))
-
-    @property
-    def I(self):
-        """Shorthand for `inverse`."""
-        return self.inverse
 
     # Implicitly defined operators
     def __call__(self, x, out=None, *args, **kwargs):

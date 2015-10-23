@@ -283,7 +283,10 @@ def test_transpose():
 
     # Check result
     assert almost_equal(x.T(y), x.inner(y))
-    assert all_almost_equal(x.T.T(1.0), x)
+    assert all_almost_equal(x.T.adjoint(1.0), x)
+    
+    # x.T.T returns self    
+    assert x.T.T == x
 
 def test_setslice_index_error():
     r3 = Rn(3)
