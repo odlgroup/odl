@@ -317,7 +317,7 @@ class InnerProductOperator(Operator):
 
     The multiply operator calculates:
 
-    out = vec.inner(x)
+    InnerProductOperator(vec)(x) == x.inner(vec)
 
     This is only applicable in inner product spaces.
     """
@@ -351,7 +351,7 @@ class InnerProductOperator(Operator):
         >>> op(r3.element([1, 2, 3]))
         14.0
         """
-        return self.vector.inner(x)
+        return x.inner(self.vector)
 
     @property
     def adjoint(self):
@@ -370,7 +370,7 @@ class InnerProductAdjointOperator(Operator):
 
     The multiply operator calculates:
 
-    out = x * vec
+    InnerProductAdjointOperator(vec)(x) == x * vec
     """
 
     # pylint: disable=abstract-method
@@ -428,7 +428,7 @@ class InnerProductAdjointOperator(Operator):
         >>> result is out
         True
         """
-        return out.lincomb(x, self.vector)
+        out.lincomb(x, self.vector)
     
     @property
     def adjoint(self):
