@@ -51,6 +51,16 @@ def test_rectangle():
     discr_sin2 = l2discr.element(l2sin2)
 
     assert almost_equal(discr_sin2.norm(), pi / sqrt(2))
+    
+def test_addition():
+    l2space = L2(odl.Interval(0, pi))
+    l2sin = l2space.element(np.sin)
+    l2cos = l2space.element(np.cos)
+    
+    sum_func = l2sin + l2cos
+
+    for x in [0.0, 0.2, 1.0]:
+        assert almost_equal(sum_func(x), np.sin(x) + np.cos(x))
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\','/') + ' -v'))

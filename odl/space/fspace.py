@@ -104,9 +104,9 @@ class FunctionSet(Set):
             The new element created from `func`
         """
         if isinstance(fcall, self.Vector):  # no double wrapping
-            return self.element(fcall._call_impl, fcall._apply)
+            return self.element(fcall._call, fcall._apply)
         elif isinstance(fapply, self.Vector):
-            return self.element(fapply._call_impl, fapply._apply)
+            return self.element(fapply._call, fapply._apply)
         else:
             return self.Vector(self, fcall, fapply)
 
@@ -187,23 +187,16 @@ class FunctionSet(Set):
                                 ''.format(fapply))
 
             self._space = fset
-            self._call_impl = fcall
+            self._call = fcall
             self._apply = fapply
+            
+            #Todo: allow users to specify linear
+            super().__init__(self.space.domain, self.space.range, linear=False)
 
         @property
         def space(self):
             """Return `space` attribute."""
             return self._space
-
-        @property
-        def domain(self):
-            """The function domain (abstract in `Operator`)."""
-            return self.space.domain
-
-        @property
-        def range(self):
-            """The function range (abstract in `Operator`)."""
-            return self.space.range
 
         def __eq__(self, other):
             """`vec.__eq__(other) <==> vec == other`.
@@ -280,7 +273,7 @@ class FunctionSet(Set):
                     raise ValueError('input contains points outside '
                                      '`domain` {}.'.format(self.domain))
 
-            out = self._call_impl(*x)
+            out = self._call(*x)
 
             if not (out in self.range or
                     (isinstance(out, np.ndarray) and
@@ -325,14 +318,14 @@ class FunctionSet(Set):
             return not self.__eq__(other)
 
         def __str__(self):
-            if self._call_impl is not None:
-                return str(self._call_impl)
+            if self._call is not None:
+                return str(self._call)
             else:
                 return str(self._apply_impl)
 
         def __repr__(self):
-            if self._call_impl is not None:
-                return '{!r}.element({!r})'.format(self.space, self._call_impl)
+            if self._call is not None:
+                return '{!r}.element({!r})'.format(self.space, self._call)
             else:
                 return '{!r}.element({!r})'.format(self.space,
                                                    self._apply_impl)
