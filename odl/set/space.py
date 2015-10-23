@@ -674,6 +674,12 @@ class LinearSpace(Set):
         def __str__(self):
             """Implementation of str()."""
             return str(self.space) + ".Vector"
+            
+        def __copy__(self):
+            return self.copy()
+            
+        def __deepcopy__(self, memo):
+            return self.copy()
 
         # TODO: DOCUMENT
         def norm(self):
