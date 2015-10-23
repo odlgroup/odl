@@ -965,4 +965,4 @@ def test_regular_str():
 
 
 if __name__ == '__main__':
-    pytest.main(__file__.replace('\\','/') + ' -v')
+    pytest.main(str(__file__.replace('\\','/')) + ' -v')

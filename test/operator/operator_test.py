@@ -650,4 +650,4 @@ def test_nonlinear_functional_operators():
     assert almost_equal(C(x), A(x / 2.0))
 
 if __name__ == '__main__':
-    pytest.main(__file__.replace('\\','/') + ' -v')
+    pytest.main(str(__file__.replace('\\','/')) + ' -v')

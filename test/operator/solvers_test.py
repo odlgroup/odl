@@ -163,5 +163,5 @@ def test_quasi_newton():
     assert Res(xvec).norm() < 10**-2
 
 if __name__ == '__main__':
-    pytest.main(__file__.replace('\\','/') + ' -v')
+    pytest.main(str(__file__.replace('\\','/')) + ' -v')
 

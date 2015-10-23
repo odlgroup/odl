@@ -382,4 +382,4 @@ def test_transpose():
     assert all_almost_equal(x.T.adjoint(1.0), x)
 
 if __name__ == '__main__':
-    pytest.main(__file__.replace('\\','/') + ' -v')
+    pytest.main(str(__file__.replace('\\','/')) + ' -v')

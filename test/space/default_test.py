@@ -53,4 +53,4 @@ def test_rectangle():
     assert almost_equal(discr_sin2.norm(), pi / sqrt(2))
 
 if __name__ == '__main__':
-    pytest.main(__file__.replace('\\','/') + ' -v')
+    pytest.main(str(__file__.replace('\\','/') + ' -v'))

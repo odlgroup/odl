@@ -105,8 +105,8 @@ def test_fwd_diff():
     diff = ForwardDiff(d)
 
     assert all_almost_equal(diff(fun), [0, 3, -2, -1, -1, 0])
-    assert all_almost_equal(diff.T(fun), [0, -1, -3, 2, 1, 0])
-    assert all_almost_equal(diff.T(diff(fun)), [0, -3, 5, -1, 0, 0])
+    assert all_almost_equal(diff.adjoint(fun), [0, -1, -3, 2, 1, 0])
+    assert all_almost_equal(diff.adjoint(diff(fun)), [0, -3, 5, -1, 0, 0])
 
 @skip_if_no_cuda
 def test_square():
@@ -142,7 +142,7 @@ def test_square():
 
     # Verify that the adjoint is ok
     # -gradient.T(gradient(x)) is the laplacian
-    laplacian = -diff.T(derivative)
+    laplacian = -diff.adjoint(derivative)
     assert all_almost_equal(laplacian.asarray(),
                             [[0, 0, 0, 0, 0],
                              [0, 0, 1, 0, 0],
@@ -187,7 +187,7 @@ def test_rectangle():
 
     # Verify that the adjoint is ok
     # -gradient.T(gradient(x)) is the laplacian
-    laplacian = -diff.T(derivative)
+    laplacian = -diff.adjoint(derivative)
     assert all_almost_equal(laplacian.asarray(),
                             [[0, 0, 0, 0, 0, 0, 0],
                              [0, 0, 1, 0, 0, 0, 0],
@@ -197,4 +197,4 @@ def test_rectangle():
 
 
 if __name__ == '__main__':
-    pytest.main(__file__.replace('\\','/') + ' -v')
+    pytest.main(str(__file__.replace('\\','/') + ' -v'))
