@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Use nose to find all tests in the 'test' folder and run them."""
+"""Use pytest to find all tests in the 'test' folder and all doctests in 'odl' and run them."""
 
 from __future__ import print_function, division, absolute_import
 
