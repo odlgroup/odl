@@ -229,6 +229,34 @@ class SpaceTest(object):
                     if not ok:
                         counter.fail('failed with x={:25s}, a={}'
                                      ''.format(n_x, a))
+                     
+    def _lincomb_aliased(self):
+        print('\nAliased input in lincomb')
+
+        with FailCounter() as counter:
+            for [n_x, x_in], [n_y, y] in samples(self.space,
+                                              self.space):
+                
+                x = x_in.copy()                  
+                x.lincomb(1, x, 1, y)
+                ok = _apprimately_equal(x, x_in + y, self.eps)
+                if not ok:
+                    counter.fail('failed with x.lincomb(1, x, 1, y),'
+                                 'x={:25s} y={:25s} '
+                                 ''.format(n_x, n_y))
+                                 
+                x = x_in.copy()
+                x.lincomb(1, x, 1, x)
+                ok = _apprimately_equal(x, x_in + x_in, self.eps)
+                if not ok:
+                    counter.fail('failed with x.lincomb(1, x, 1, x),'
+                                 'x={:25s} '
+                                 ''.format(n_x))
+
+    def _lincomb(self):
+        print('\nTesting lincomb')
+
+        self._lincomb_aliased()
 
     def linearity(self):
         print('\n== Verifying linear space properties ==\n')
@@ -243,6 +271,7 @@ class SpaceTest(object):
         self._distributivity_of_mult_scalar()
         self._subtraction()
         self._division()
+        self._lincomb()
 
     def _inner_linear_scalar(self):
         print('\nLinearity scalar, (a*x, y) = a*(x, y)')
@@ -707,5 +736,5 @@ class SpaceTest(object):
         return 'SpaceTest({!r})'.format(self.space)
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    from odl.space.ntuples import Rn
+    SpaceTest(Rn(10)).run_tests()
