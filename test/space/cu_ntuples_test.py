@@ -524,201 +524,42 @@ def test_offset_sub_vector():
 
     assert all_almost_equal([1, 2, 3, 7, 8, 9], xd)
 
-# Simple tests for the various dtypes
-@pytest.mark.skipif("np.int8 not in odl.CUDA_DTYPES")
-def test_int8():
-    r3 = odl.CudaFn(3, np.int8)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.int16 not in odl.CUDA_DTYPES")
-def test_int16():
-    r3 = odl.CudaFn(3, np.int16)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.int32 not in odl.CUDA_DTYPES")
-def test_int32():
-    r3 = odl.CudaFn(3, np.int32)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.int64 not in odl.CUDA_DTYPES")
-def test_int64():
-    r3 = odl.CudaFn(3, np.int64)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.uint8 not in odl.CUDA_DTYPES")
-def test_uint8():
-    r3 = odl.CudaFn(3, np.uint8)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.uint16 not in odl.CUDA_DTYPES")
-def test_uint16():
-    r3 = odl.CudaFn(3, np.uint16)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.uint32 not in odl.CUDA_DTYPES")
-def test_uint32():
-    r3 = odl.CudaFn(3, np.uint32)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.uint64 not in odl.CUDA_DTYPES")
-def test_uint64():
-    r3 = odl.CudaFn(3, np.uint64)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.float32 not in odl.CUDA_DTYPES")
-def test_float32():
-    r3 = odl.CudaFn(3, np.float32)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.float64 not in odl.CUDA_DTYPES")
-def test_float64():
-    r3 = odl.CudaFn(3, np.float64)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.float not in odl.CUDA_DTYPES")
-def test_float():
-    r3 = odl.CudaFn(3, np.float)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
-
-@pytest.mark.skipif("np.int not in odl.CUDA_DTYPES")
-def test_int():
-    r3 = odl.CudaFn(3, np.int)
-    x = r3.element([1, 2, 3])
-    y = r3.element([4, 5, 6])
-    z = x + y
-    assert all_almost_equal(z, [5, 7, 9])
+def _test_dtype(dtype):
+    if dtype not in odl.CUDA_DTYPES:
+        with pytest.raises(TypeError):
+            r3 = odl.CudaFn(3, dtype)
+    else:
+        r3 = odl.CudaFn(3, dtype)
+        x = r3.element([1, 2, 3])
+        y = r3.element([4, 5, 6])
+        z = x + y
+        assert all_almost_equal(z, [5, 7, 9])
 
 @skip_if_no_cuda
-def test_sin():
-    r3 = odl.CudaRn(3)
-    x_host = [0.1, 0.3, 10.0]
-    y_host = np.sin(x_host)
+def test_dtypes():
+    for dtype in [np.int8, np.int16, np.int32, np.int64, np.int,
+                  np.uint8, np.uint16, np.uint32, np.uint64, np.uint,
+                  np.float32, np.float64, np.float,
+                  np.complex64, np.complex128, np.complex]:
+        yield _test_dtype, dtype
+
+def _test_ufunc(ufunc):
+    r3 = odl.CudaRn(5)
+    x_host = [-1.0, 0, 0.1, 0.3, 10.0]
+    y_host = getattr(np, ufunc)(x_host)
 
     x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.sin(x_dev)
+    y_dev = getattr(odl.space.cu_ntuples, ufunc)(x_dev)
 
     assert all_almost_equal(y_host, y_dev, places=5)
 
 @skip_if_no_cuda
-def test_cos():
-    r3 = odl.CudaRn(3)
-    x_host = [0.1, 0.3, 10.0]
-    y_host = np.cos(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.cos(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
-
-@skip_if_no_cuda
-def test_arcsin():
-    r3 = odl.CudaRn(3)
-    x_host = [0.1, 0.3, 0.5]
-    y_host = np.arcsin(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.arcsin(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
-
-@skip_if_no_cuda
-def test_arccos():
-    r3 = odl.CudaRn(3)
-    x_host = [0.1, 0.3, 0.5]
-    y_host = np.arccos(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.arccos(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
-
-@skip_if_no_cuda
-def test_log():
-    r3 = odl.CudaRn(3)
-    x_host = [0.1, 0.3, 0.5]
-    y_host = np.log(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.log(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
-
-@skip_if_no_cuda
-def test_exp():
-    r3 = odl.CudaRn(3)
-    x_host = [-1.0, 0.0, 1.0]
-    y_host = np.exp(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.exp(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
-
-@skip_if_no_cuda
-def test_abs():
-    r3 = odl.CudaRn(3)
-    x_host = [-1.0, 0.0, 1.0]
-    y_host = np.abs(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.abs(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
-
-@skip_if_no_cuda
-def test_sign():
-    r3 = odl.CudaRn(3)
-    x_host = [-1.0, 0.0, 1.0]
-    y_host = np.sign(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.sign(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
-
-@skip_if_no_cuda
-def test_sqrt():
-    r3 = odl.CudaRn(3)
-    x_host = [0.1, 0.3, 0.5]
-    y_host = np.sqrt(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = odl.space.cu_ntuples.sqrt(x_dev)
-
-    assert all_almost_equal(y_host, y_dev, places=5)
+def test_ufuncs():
+    for ufunc in ['sin', 'cos', 
+                  'arcsin', 'arccos',
+                  'log', 'exp',
+                  'abs', 'sign', 'sqrt']:
+        yield _test_ufunc, ufunc
 
 @skip_if_no_cuda
 def test_const_init():

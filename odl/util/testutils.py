@@ -30,6 +30,7 @@ from numpy import ravel_multi_index, prod
 from itertools import zip_longest
 import sys
 from time import time
+import numpy as np
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda', 
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
@@ -44,13 +45,18 @@ def almost_equal(a, b, places=7):
     except TypeError:
         return False
         
-    if abs(a) == float('inf') and abs(b) == float('inf'):
+    if np.isnan(a) and np.isnan(b):
+        return True        
+        
+    if np.isinf(a) and np.isinf(b):
         return a == b
         
-    if round(abs(complex(a) - complex(b)), places) == 0:
-        return True
+    eps = 10**-places        
+        
+    if abs(complex(b)) < eps:
+        return abs(complex(a) - complex(b)) < eps
     else:
-        return False
+        return abs(a/b - 1) < eps
 
 def all_equal(iter1, iter2):
     # Sentinel object used to check that both iterators are the same length
