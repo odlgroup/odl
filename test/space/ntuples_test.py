@@ -408,7 +408,7 @@ def _test_matrix_equals(n):
     assert w_dense != w_different_dense
 
 def test_matrix_equals():
-    for n in range(1, 20):
+    for n in [1, 20]:
         _test_matrix_equals(n)
 
 def _test_matrix_equiv(n):
@@ -569,7 +569,7 @@ def _test_matrix_dist_complex(n):
     assert almost_equal(result_dense, true_result_dense)
 
 def test_matrix_methods():
-    for n in range(2, 20):
+    for n in [2, 20]:
         _test_matrix_inner_real(n)
         _test_matrix_norm_real(n)
         _test_matrix_dist_real(n)
@@ -756,7 +756,7 @@ def _test_constant_dist_complex(n):
     assert almost_equal(result_const, true_result_const)
 
 def test_constant_methods():
-    for n in range(2, 20):
+    for n in [2, 20]:
         _test_constant_inner_real(n)
         _test_constant_norm_real(n)
         _test_constant_dist_real(n)
