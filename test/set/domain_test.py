@@ -246,6 +246,20 @@ def test_contains_set():
 
 
 # Set arithmetic
+def test_pos():
+    interv = Interval(1, 2)
+    assert +interv == interv
+
+    interv = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    assert +interv == interv
+
+def test_neg():
+    interv = Interval(1, 2)
+    assert -interv == Interval(-2, -1)
+
+    interv = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    assert -interv == IntervalProd([-2, -3, -4, -5, -6],
+                                   [-1, -2, -3, -4, -5])
 
 def test_add():
     interv1 = Interval(1, 2)
@@ -291,6 +305,7 @@ def test_div():
     interv2 = Interval(3, 4)
     
     assert interv1 / 2.0 == Interval(1/2.0, 2/2.0)
+    assert 2.0 / interv1 == Interval(2/2.0, 2/1.0)
     assert interv1 / interv2 == Interval(1/4.0, 2.0/3.0)
 
     interv_with_zero = Interval(-1, 1)
