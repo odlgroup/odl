@@ -160,7 +160,7 @@ def test_quasi_newton():
     solvers.quasi_newton(Res, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
-    assert Res(xvec).norm() < 10**-2
+    assert Res(xvec).norm() < 10**-1
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\','/')) + ' -v')

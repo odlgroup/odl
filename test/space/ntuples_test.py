@@ -30,7 +30,7 @@ from math import sqrt, ceil
 from textwrap import dedent
 
 # ODL imports
-from odl import Rn, Cn
+from odl import Ntuples, Fn, Rn, Cn
 from odl.operator.operator import Operator
 from odl.space.ntuples import _FnConstWeighting, _FnMatrixWeighting
 from odl.util.testutils import almost_equal, all_almost_equal
@@ -69,6 +69,51 @@ def _dense_matrix(fn):
     mat = np.asmatrix(np.random.rand(fn.size, fn.size), dtype=float)
     # Make symmetric and positive definite
     return mat + mat.T + fn.size * np.eye(fn.size)
+
+def test_init():
+    #Test run
+    z3 = Ntuples(3, int)
+    r3 = Ntuples(3, float)
+    c3 = Ntuples(3, complex)
+    s3 = Ntuples(3, str)
+
+    #Fn
+    z3 = Fn(3, int)
+    r3 = Fn(3, float)
+    c3 = Fn(3, complex)
+
+    #Fn only works on scalars
+    with pytest.raises(TypeError):
+        s3 = Fn(3, str)
+
+    #Rn
+    r3 = Rn(3, float)
+    z3 = Rn(3, int)
+
+    #Rn only works on reals    
+    with pytest.raises(TypeError):
+        c3 = Rn(3, complex)
+    with pytest.raises(TypeError):
+        s3 = Rn(3, str)
+
+def test_vector_init():
+    #Test that code runs
+    r3 = Rn(3)
+    vec = Rn.Vector(r3, np.array([1.0, 2.0, 3.0]))
+
+    #Space has to be an actual space
+    for non_space in [1, complex, np.array([1,2])]:
+        with pytest.raises(TypeError):
+            vec = r3.Vector(non_space, [1.0, 2.0, 3.0])
+
+    #Data has to be a numpy array
+    with pytest.raises(TypeError):
+        vec = r3.Vector(r3, [1.0, 2.0, 3.0])
+
+    #Data has to be a numpy array
+    with pytest.raises(TypeError):
+        vec = r3.Vector(r3, np.array([1.0, 2.0, 3.0], dtype=int))
+
 
 def _test_lincomb(a, b, n=10):
     # Validates lincomb against the result on host with randomized
@@ -333,6 +378,44 @@ def test_copy():
 
     assert x == z
     assert z is not x
+
+# Vector property tests
+
+def test_space():
+    r3 = Rn(3)
+    x = r3.element()
+    assert x.space is r3
+
+def test_dtype():
+    r3 = Rn(3)
+    x = r3.element()
+    assert x.dtype == r3.dtype
+
+def test_size():
+    r3 = Rn(3)
+    x = r3.element()
+    assert x.size == 3
+
+def test_shape():
+    r3 = Rn(3)
+    x = r3.element()
+    assert x.shape == (3,)
+
+def test_itemsize():
+    r3_32 = Rn(3, np.float32)
+    x_32 = r3_32.element()
+    assert x_32.itemsize == 4
+
+    r3_64 = Rn(3, np.float64)
+    x_64 = r3_64.element()
+    assert x_64.itemsize == 8
+
+def test_nbytes():
+    r3 = Rn(3, np.float32)
+    x = r3.element()
+    assert x.nbytes == 3 * 4
+
+# Numpy Array tests
 
 def test_array_method():
     """ Verifies that the __array__ method works

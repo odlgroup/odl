@@ -686,9 +686,6 @@ class CudaFn(FnBase, CudaNtuples):
         def __init__(self, space, data):
             """Initialize a new instance."""
             CudaNtuples.Vector.__init__(self, space, data)
-            if not isinstance(data, self._space._vector_impl):
-                return TypeError('data {!r} is not an instance of '
-                                 '{}.'.format(data, self._space._vector_impl))
 
 
 class CudaRn(CudaFn):
