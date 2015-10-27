@@ -34,14 +34,14 @@ class Reals(odl.LinearSpace):
     def __init__(self):
         self._field = odl.RealNumbers()
 
-    def _inner(self, x, y):
-        return x.__val__ * y.__val__
+    def _inner(self, x1, x2):
+        return x1.__val__ * x2.__val__
 
-    def _lincomb(self, z, a, x, b, y):
-        z.__val__ = a*x.__val__ + b*y.__val__
+    def _lincomb(self, a, x1, b, x2, out):
+        out.__val__ = a*x1.__val__ + b*x2.__val__
 
-    def _multiply(self, z, x, y):
-        z.__val__ = y.__val__ * x.__val__
+    def _multiply(self, x1, x2, out):
+        out.__val__ = x1.__val__ * x2.__val__
 
     @property
     def field(self):
@@ -74,8 +74,9 @@ if __name__ == '__main__':
     x = R.element(5.0)
     y = R.element(10.0)
 
+    print(x)
+    print(y)
     print(x+y)
     print(x*y)
     print(x-y)
-    print(x)
-    print(y)
+    print(3.14 * x)

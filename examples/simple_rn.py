@@ -89,6 +89,7 @@ odl.diagnostics.SpaceTest(r5).run_tests()
 n = 10**7
 iterations = 10
 
+#Perform some benchmarks with Rn adn CudaRn
 
 optX = odl.Rn(n)
 simpleX = SimpleRn(n)
@@ -102,7 +103,6 @@ if odl.CUDA_AVAILABLE:
     cuX = odl.CudaRn(n)
     cx, cy, cz = (cuX.element(x.copy()), cuX.element(y.copy()),
                   cuX.element(z.copy()))
-
 
 print(" lincomb:")
 with Timer("SimpleRn"):

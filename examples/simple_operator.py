@@ -31,7 +31,7 @@ class AddOp(odl.Operator):
         self.x = x
 
     def _apply(self, rhs, out):
-        out.data[:] = rhs.data[:] + self.x
+        out[:] = rhs.data + self.x
 
 n = 3
 rn = odl.Rn(n)

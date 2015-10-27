@@ -27,7 +27,7 @@ def landweberBase(operator, x, rhs, iterations=1, omega=1):
     """ Straightforward implementation of Landweber iteration
     """
     for _ in range(iterations):
-        x = x - omega * operator.T(operator(x)-rhs)
+        x = x - omega * operator.adjoint(operator(x)-rhs)
 
     return x
 
@@ -36,7 +36,7 @@ def conjugate_gradient_base(op, x, rhs, iterations=1):
     """ Non-optimized CGN
     """
     d = rhs - op(x)
-    p = op.T(d)
+    p = op.adjoint(d)
     s = p.copy()
 
     for _ in range(iterations):
@@ -45,6 +45,6 @@ def conjugate_gradient_base(op, x, rhs, iterations=1):
         a = norms2 / q.norm()**2
         x = x + a*p
         d = d - a*q
-        s = op.T(d)
+        s = op.adjoint(d)
         b = s.norm()**2/norms2
         p = s + b*p
