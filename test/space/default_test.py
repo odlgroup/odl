@@ -55,23 +55,12 @@ def func_2d_novec(x):
     return x[0]**2 + x[1]
 
 
-def func_2d_array(x):
-    x0, x1 = x[:, 0], x[:, 1]
-    return x0**2 + x1
-
-
-def func_2d_array_apply(x, out):
-    x0, x1 = x[:, 0], x[:, 1]
-    out[:] = x0**2
-    out += x1
-
-
-def func_2d_mg(x):
+def func_2d_vec(x):
     x0, x1 = x
     return x0**2 + x1
 
 
-def func_2d_mg_apply(x, out):
+def func_2d_vec_apply(x, out):
     x0, x1 = x
     out[:] = x0**2 + x1
 
@@ -80,23 +69,12 @@ def cfunc_2d_novec(x):
     return x[0]**2 + 1j*x[1]
 
 
-def cfunc_2d_array(x):
-    x0, x1 = x[:, 0], x[:, 1]
-    return x0**2 + 1j*x1
-
-
-def cfunc_2d_array_apply(x, out):
-    x0, x1 = x[:, 0], x[:, 1]
-    out[:] = x0**2
-    out += 1j*x1
-
-
-def cfunc_2d_mg(x):
+def cfunc_2d_vec(x):
     x0, x1 = x
     return x0**2 + 1j*x1
 
 
-def cfunc_2d_mg_apply(x, out):
+def cfunc_2d_vec_apply(x, out):
     x0, x1 = x
     out[:] = x0**2 + 1j*x1
 
@@ -105,23 +83,12 @@ def other_func_2d_novec(x):
     return x[0] + abs(x[1])
 
 
-def other_func_2d_array(x):
-    x0, x1 = x[:, 0], x[:, 1]
-    return x0 + abs(x1)
-
-
-def other_func_2d_array_apply(x, out):
-    x0, x1 = x[:, 0], x[:, 1]
-    out[:] = abs(x1)
-    out += x0
-
-
-def other_func_2d_mg(x):
+def other_func_2d_vec(x):
     x0, x1 = x
     return x0 + abs(x1)
 
 
-def other_func_2d_mg_apply(x, out):
+def other_func_2d_vec_apply(x, out):
     x0, x1 = x
     out[:] = x0 + abs(x1)
 
@@ -130,23 +97,12 @@ def other_cfunc_2d_novec(x):
     return 1j*x[0] + abs(x[1])
 
 
-def other_cfunc_2d_array(x):
-    x0, x1 = x[:, 0], x[:, 1]
-    return 1j*x0 + abs(x1)
-
-
-def other_cfunc_2d_array_apply(x, out):
-    x0, x1 = x[:, 0], x[:, 1]
-    out[:] = abs(x1)
-    out += 1j*x0
-
-
-def other_cfunc_2d_mg(x):
+def other_cfunc_2d_vec(x):
     x0, x1 = x
     return 1j*x0 + abs(x1)
 
 
-def other_cfunc_2d_mg_apply(x, out):
+def other_cfunc_2d_vec_apply(x, out):
     x0, x1 = x
     out[:] = 1j*x0 + abs(x1)
 
@@ -205,9 +161,9 @@ def _points(domain, num):
     beg = domain.begin
     end = domain.end
     ndim = domain.ndim
-    points = np.random.uniform(low=0, high=1, size=(num, ndim))
+    points = np.random.uniform(low=0, high=1, size=(ndim, num))
     for i in range(ndim):
-        points[:, i] = beg[i] + (end[i] - beg[i]) * points[:, i]
+        points[i, :] = beg[i] + (end[i] - beg[i]) * points[i]
     return points
 
 
@@ -229,143 +185,117 @@ def test_l2_vector_init():
     intv = odl.Interval(0, 1)
     l2 = L2(intv)
     l2.element(func_1d)
-    l2.element(func_1d, vectorization='none')
-    l2.element(func_1d, vectorization='array')
-    l2.element(func_1d, vectorization='meshgrid')
-    l2.element(func_1d, func_1d_apply, vectorization='array')
-    l2.element(func_1d, func_1d_apply, vectorization='meshgrid')
+    l2.element(func_1d, vectorized=False)
+    l2.element(func_1d, vectorized=True)
+    l2.element(func_1d, func_1d_apply, vectorized=True)
 
     with pytest.raises(ValueError):
-        l2.element(func_1d, func_1d_apply, vectorization='none')
+        l2.element(func_1d, func_1d_apply, vectorized=False)
 
     # 2d, real
     rect = odl.Rectangle([0, 0], [1, 2])
     l2 = L2(rect)
-    l2.element(func_2d_novec)
-    l2.element(func_2d_novec, vectorization='none')
-    l2.element(func_2d_array, vectorization='array')
-    l2.element(func_2d_mg, vectorization='meshgrid')
-    l2.element(func_2d_array, func_2d_array_apply, vectorization='array')
-    l2.element(func_2d_mg, func_2d_mg_apply, vectorization='meshgrid')
+    l2.element(func_2d_novec, vectorized=False)
+    l2.element(func_2d_vec)
+    l2.element(func_2d_vec, vectorized=True)
+    l2.element(func_2d_vec, func_2d_vec_apply, vectorized=True)
 
     with pytest.raises(ValueError):
-        l2.element(func_2d_novec, func_2d_array_apply,
-                   vectorization='none')
+        l2.element(func_2d_novec, func_2d_vec_apply, vectorized=False)
 
     # 2d, complex
     l2 = L2(rect, field=odl.ComplexNumbers())
-    l2.element(cfunc_2d_novec)
-    l2.element(cfunc_2d_novec, vectorization='none')
-    l2.element(cfunc_2d_array, vectorization='array')
-    l2.element(cfunc_2d_mg, vectorization='meshgrid')
-    l2.element(cfunc_2d_array, cfunc_2d_array_apply, vectorization='array')
-    l2.element(cfunc_2d_mg, cfunc_2d_mg_apply, vectorization='meshgrid')
+    l2.element(cfunc_2d_novec, vectorized=False)
+    l2.element(cfunc_2d_vec)
+    l2.element(cfunc_2d_vec, vectorized=True)
+    l2.element(cfunc_2d_vec, cfunc_2d_vec_apply, vectorized=True)
+
+
+def _standard_setup_2d(small=False):
+    rect = odl.Rectangle([0, 0], [1, 2])
+    if small:
+        points = _points(rect, num=5)
+        mg = _meshgrid(rect, shape=(2, 3))
+    else:
+        points = _points(rect, num=50)
+        mg = _meshgrid(rect, shape=(5, 10))
+    return rect, points, mg
 
 
 def test_l2_vector_assign():
-    rect = odl.Rectangle([0, 0], [1, 2])
-    points = _points(rect, num=50)
-    mg = _meshgrid(rect, shape=(5, 10))
+    rect, points, mg = _standard_setup_2d()
 
     l2 = L2(rect)
-    f_novec = l2.element(func_2d_novec)
-    f_array = l2.element(func_2d_array, vectorization='array')
-    f_mg = l2.element(func_2d_mg, vectorization='meshgrid')
+    f_novec = l2.element(func_2d_novec, vectorized=False)
+    f_vec = l2.element(func_2d_vec, vectorized=True)
 
-    # No vectorization
+    # Not vectorized
     f_out = l2.element()
     f_out.assign(f_novec)
     assert f_out == f_novec
-    for point in points:
+    for point in points.T:
         assert f_out(point) == f_novec(point)
 
-    # Array vectorization
-    f_out = l2.element(vectorization='array')
-    f_out.assign(f_array)
-    assert f_out == f_array
-    assert all_equal(f_out(points), f_array(points))
-
-    # Meshgrid vectorization
-    f_out = l2.element(vectorization='meshgrid')
-    f_out.assign(f_mg)
-    assert f_out == f_mg
-    assert all_equal(f_out(mg), f_mg(mg))
+    # Vectorized
+    f_out.assign(f_vec)  # Overwrites old `vectorized`
+    assert f_out == f_vec
+    assert all_equal(f_out(mg), f_vec(mg))
+    assert all_equal(f_out(points), f_vec(points))
 
 
 def test_l2_vector_copy():
-    rect = odl.Rectangle([0, 0], [1, 2])
-    points = _points(rect, num=50)
-    mg = _meshgrid(rect, shape=(5, 10))
+    rect, points, mg = _standard_setup_2d()
 
     l2 = L2(rect)
-    f_novec = l2.element(func_2d_novec)
-    f_array = l2.element(func_2d_array, vectorization='array')
-    f_mg = l2.element(func_2d_mg, vectorization='meshgrid')
+    f_novec = l2.element(func_2d_novec, vectorized=False)
+    f_vec = l2.element(func_2d_vec, vectorized=True)
 
-    # No vectorization
+    # Not vectorized
     f_out = f_novec.copy()
     assert f_out == f_novec
-    for point in points:
+    for point in points.T:
         assert f_out(point) == f_novec(point)
 
-    # Array vectorization
-    f_out = f_array.copy()
-    assert f_out == f_array
-    assert all_equal(f_out(points), f_array(points))
-
-    # Meshgrid vectorization
-    f_out = f_mg.copy()
-    assert f_out == f_mg
-    assert all_equal(f_out(mg), f_mg(mg))
+    # Vectorized
+    f_out = f_vec.copy()
+    assert f_out == f_vec
+    assert all_equal(f_out(mg), f_vec(mg))
+    assert all_equal(f_out(points), f_vec(points))
 
 
 def test_l2_vector_call():
-    rect = odl.Rectangle([0, 0], [1, 2])
-    points = _points(rect, num=50)
-    mg = _meshgrid(rect, shape=(5, 10))
+    rect, points, mg = _standard_setup_2d()
 
     # real
     l2 = L2(rect)
-    f_novec = l2.element(func_2d_novec)
-    f_array = l2.element(func_2d_array, vectorization='array')
-    f_mg = l2.element(func_2d_mg, vectorization='meshgrid')
+    f_novec = l2.element(func_2d_novec, vectorized=False)
+    f_vec = l2.element(func_2d_vec)  # Default: vectorized
 
-    # non-vectorized
-    for p in points:
-        assert almost_equal(f_novec(p), func_2d_novec(p))
-    # array version
-    assert all_almost_equal(f_array(points), func_2d_array(points))
-    # meshgrid version
-    assert all_almost_equal(f_mg(mg), func_2d_mg(mg))
+    # Not vectorized
+    for point in points.T:
+        assert almost_equal(f_novec(point), func_2d_novec(point))
+    # Vectorized
+    assert all_almost_equal(f_vec(points), func_2d_vec(points))
+    assert all_almost_equal(f_vec(mg), func_2d_vec(mg))
 
     with pytest.raises(TypeError):
         f_novec(points)
     with pytest.raises(TypeError):
         f_novec(mg)
-
-    with pytest.raises(ValueError):  # ValueError: wrong shape
-        f_array(points[0])
-    with pytest.raises(TypeError):
-        f_array(mg)
-
-    with pytest.raises(TypeError):
-        f_mg(points[0])
-    with pytest.raises(ValueError):  # ValueError: wrong number of vecs
-        f_mg(points)
+    with pytest.raises(TypeError):  # ValueError: invalid vectorized input
+        f_vec(points[0])
 
     # complex
     l2 = L2(rect, field=odl.ComplexNumbers())
-    f_novec = l2.element(cfunc_2d_novec)
-    f_array = l2.element(cfunc_2d_array, vectorization='array')
-    f_mg = l2.element(cfunc_2d_mg, vectorization='meshgrid')
+    f_novec = l2.element(cfunc_2d_novec, vectorized=False)
+    f_vec = l2.element(cfunc_2d_vec, vectorized=True)
 
-    # non-vectorized
-    for p in points:
-        assert almost_equal(f_novec(p), cfunc_2d_novec(p))
-    # array version
-    assert all_almost_equal(f_array(points), cfunc_2d_array(points))
-    # meshgrid version
-    assert all_almost_equal(f_mg(mg), cfunc_2d_mg(mg))
+    # Not vectorized
+    for point in points.T:
+        assert almost_equal(f_novec(point), cfunc_2d_novec(point))
+    # Vectorized
+    assert all_almost_equal(f_vec(points), cfunc_2d_vec(points))
+    assert all_almost_equal(f_vec(mg), cfunc_2d_vec(mg))
 
     # Test bounds check
     points_outside_1 = np.array([[-1., 0], [0, 0]])
@@ -380,169 +310,132 @@ def test_l2_vector_call():
     with pytest.raises(TypeError):
         f_novec([0, 2.5])
     with pytest.raises(ValueError):
-        f_array(points_outside_1)
+        f_vec(points_outside_1)
     with pytest.raises(ValueError):
-        f_array(points_outside_2)
+        f_vec(points_outside_2)
     with pytest.raises(ValueError):
-        f_mg(mg_outside_1)
+        f_vec(mg_outside_1)
     with pytest.raises(ValueError):
-        f_mg(mg_outside_2)
+        f_vec(mg_outside_2)
 
     # Test disabling vectorized bounds check
-    f_array(points_outside_1, vec_bounds_check=False)
-    f_mg(mg_outside_1, vec_bounds_check=False)
+    f_vec(points_outside_1, vec_bounds_check=False)
+    f_vec(mg_outside_1, vec_bounds_check=False)
 
 
 def test_l2_vector_apply():
-    rect = odl.Rectangle([0, 0], [1, 2])
-    points = _points(rect, num=50)
-    mg = _meshgrid(rect, shape=(5, 10))
+    rect, points, mg = _standard_setup_2d()
 
     # real
     l2 = L2(rect)
-    f_array = l2.element(func_2d_array, func_2d_array_apply,
-                         vectorization='array')
-    f_mg = l2.element(func_2d_mg, func_2d_mg_apply,
-                      vectorization='meshgrid')
+    f_vec = l2.element(func_2d_vec, func_2d_vec_apply, vectorized=True)
 
-    # array version
     out = np.empty((50,), dtype=float)
-    f_array.apply(points, out)
-    assert all_almost_equal(out, func_2d_array(points))
-    # meshgrid version
+    f_vec(points, out=out)
+    assert all_almost_equal(out, func_2d_vec(points))
     out = np.empty((5, 10), dtype=float)
-    f_mg.apply(mg, out)
-    assert all_almost_equal(out, func_2d_mg(mg))
+    f_vec(mg, out=out)
+    assert all_almost_equal(out, func_2d_vec(mg))
 
     out = np.empty((5,), dtype=float)  # wrong shape
     with pytest.raises(ValueError):
-        f_array.apply(points, out)
+        f_vec(points, out=out)
     with pytest.raises(ValueError):
-        f_mg.apply(mg, out)
+        f_vec(mg, out=out)
 
     # complex
     l2 = L2(rect, field=odl.ComplexNumbers())
-    f_array = l2.element(cfunc_2d_array, cfunc_2d_array_apply,
-                         vectorization='array')
-    f_mg = l2.element(cfunc_2d_mg, cfunc_2d_mg_apply,
-                      vectorization='meshgrid')
+    f_vec = l2.element(cfunc_2d_vec, cfunc_2d_vec_apply, vectorized=True)
 
-    # array version
     out = np.empty((50,), dtype=complex)
-    f_array.apply(points, out)
-    assert all_almost_equal(out, cfunc_2d_array(points))
-    # meshgrid version
+    f_vec(points, out=out)
+    assert all_almost_equal(out, cfunc_2d_vec(points))
     out = np.empty((5, 10), dtype=complex)
-    f_mg.apply(mg, out)
-    assert all_almost_equal(out, cfunc_2d_mg(mg))
+    f_vec(mg, out=out)
+    assert all_almost_equal(out, cfunc_2d_vec(mg))
 
 
 def test_l2_vector_equality():
     rect = odl.Rectangle([0, 0], [1, 2])
     l2 = L2(rect)
 
-    f_novec = l2.element(func_2d_novec)
-    f_novec_2 = l2.element(func_2d_novec)
+    f_novec = l2.element(func_2d_novec, vectorized=False)
+    f_novec_2 = l2.element(func_2d_novec, vectorized=False)
 
-    f_array = l2.element(func_2d_array, vectorization='array')
-    f_array_2 = l2.element(func_2d_array, vectorization='array')
-    f_array_a = l2.element(func_2d_array, func_2d_array_apply,
-                           vectorization='array')
-    f_array_a_2 = l2.element(func_2d_array, func_2d_array_apply,
-                             vectorization='array')
-
-    f_mg = l2.element(func_2d_mg, vectorization='meshgrid')
-    f_mg_2 = l2.element(func_2d_mg, vectorization='meshgrid')
-    f_mg_a = l2.element(func_2d_mg, func_2d_mg_apply,
-                        vectorization='meshgrid')
-    f_mg_a_2 = l2.element(func_2d_mg, func_2d_mg_apply,
-                          vectorization='meshgrid')
+    f_vec = l2.element(func_2d_vec, vectorized=True)
+    f_vec_2 = l2.element(func_2d_vec, vectorized=True)
+    f_vec_a = l2.element(func_2d_vec, func_2d_vec_apply, vectorized=True)
+    f_vec_a_2 = l2.element(func_2d_vec, func_2d_vec_apply, vectorized=True)
 
     assert f_novec == f_novec
     assert f_novec == f_novec_2
-    assert f_novec != f_array
-    assert f_novec != f_mg
+    assert f_novec != f_vec
 
-    assert f_array == f_array_2
-    assert f_array_a == f_array_a_2
-    assert f_array != f_array_a
-    assert f_array != f_mg
-
-    assert f_mg == f_mg_2
-    assert f_mg_a == f_mg_a_2
-    assert f_mg != f_mg_a
-    assert f_mg != f_array
+    assert f_vec == f_vec_2
+    assert f_vec_a == f_vec_a_2
+    assert f_vec != f_vec_a
+    assert f_vec != f_novec
 
 
 def test_l2_zero():
-    rect = odl.Rectangle([0, 0], [1, 2])
-    points = _points(rect, num=5)
-    mg = _meshgrid(rect, shape=(2, 3))
+    rect, points, mg = _standard_setup_2d(small=True)
 
     # real
     l2 = L2(rect)
 
-    zero_novec = l2.zero()
-    zero_array = l2.zero(vectorization='array')
-    zero_mg = l2.zero(vectorization='meshgrid')
+    zero_novec = l2.zero(vectorized=False)
+    zero_vec = l2.zero(vectorized=True)
 
-    for p in points:
-        assert zero_novec(p) == 0.0
+    for point in points.T:
+        assert zero_novec(point) == 0.0
 
-    assert all_equal(zero_array(points), np.zeros(5, dtype=float))
-    assert all_equal(zero_mg(mg), np.zeros((2, 3), dtype=float))
+    assert all_equal(zero_vec(points), np.zeros(5, dtype=float))
+    assert all_equal(zero_vec(mg), np.zeros((2, 3), dtype=float))
 
     # complex
     l2 = L2(rect, field=odl.ComplexNumbers())
 
-    zero_novec = l2.zero()
-    zero_array = l2.zero(vectorization='array')
-    zero_mg = l2.zero(vectorization='meshgrid')
+    zero_novec = l2.zero(vectorized=False)
+    zero_vec = l2.zero()
 
-    for p in points:
-        assert zero_novec(p) == 0.0 + 1j*0.0
+    for point in points.T:
+        assert zero_novec(point) == 0.0 + 1j*0.0
 
-    assert all_equal(zero_array(points), np.zeros(5, dtype=complex))
-    assert all_equal(zero_mg(mg), np.zeros((2, 3), dtype=complex))
+    assert all_equal(zero_vec(points), np.zeros(5, dtype=complex))
+    assert all_equal(zero_vec(mg), np.zeros((2, 3), dtype=complex))
 
 
 def test_l2_one():
-    rect = odl.Rectangle([0, 0], [1, 2])
-    points = _points(rect, num=5)
-    mg = _meshgrid(rect, shape=(2, 3))
+    rect, points, mg = _standard_setup_2d(small=True)
 
     # real
     l2 = L2(rect)
 
-    one_novec = l2.one()
-    one_array = l2.one(vectorization='array')
-    one_mg = l2.one(vectorization='meshgrid')
+    one_novec = l2.one(vectorized=False)
+    one_vec = l2.one(vectorized=True)
 
-    for p in points:
-        assert one_novec(p) == 1.0
+    for point in points.T:
+        assert one_novec(point) == 1.0
 
-    assert all_equal(one_array(points), np.ones(5, dtype=float))
-    assert all_equal(one_mg(mg), np.ones((2, 3), dtype=float))
+    assert all_equal(one_vec(points), np.ones(5, dtype=float))
+    assert all_equal(one_vec(mg), np.ones((2, 3), dtype=float))
 
     # complex
     l2 = L2(rect, field=odl.ComplexNumbers())
 
-    one_novec = l2.one()
-    one_array = l2.one(vectorization='array')
-    one_mg = l2.one(vectorization='meshgrid')
+    one_novec = l2.one(vectorized=False)
+    one_vec = l2.one()
 
-    for p in points:
-        assert one_novec(p) == 1.0 + 1j*0.0
+    for point in points.T:
+        assert one_novec(point) == 1.0 + 1j*0.0
 
-    assert all_equal(one_array(points), np.ones(5, dtype=complex))
-    assert all_equal(one_mg(mg), np.ones((2, 3), dtype=complex))
+    assert all_equal(one_vec(points), np.ones(5, dtype=complex))
+    assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
 
 
 def test_l2_lincomb():
-    rect = odl.Rectangle([0, 0], [1, 2])
-    points = _points(rect, num=5)
-    point = points[0]
-    mg = _meshgrid(rect, shape=(2, 3))
+    rect, points, mg = _standard_setup_2d(small=True)
+    point = points.T[0]
 
     # REAL
     l2 = L2(rect)
@@ -551,65 +444,57 @@ def test_l2_lincomb():
 
     # Note: Special cases and alignment are tested later in the magic methods
 
-    # No vectorization
+    # Not vectorized
     true_novec = a * func_2d_novec(point) + b * other_func_2d_novec(point)
-    f_novec = l2.element(func_2d_novec)
-    g_novec = l2.element(other_func_2d_novec)
+    f_novec = l2.element(func_2d_novec, vectorized=False)
+    g_novec = l2.element(other_func_2d_novec, vectorized=False)
     out_novec = l2.element()
     l2.lincomb(a, f_novec, b, g_novec, out_novec)
     assert out_novec(point) == true_novec
 
-    # Array vectorization
-    true_array = (a * func_2d_array(points) + b * other_func_2d_array(points))
-    f_array = l2.element(func_2d_array, vectorization='array')
-    g_array = l2.element(other_func_2d_array, vectorization='array')
-    out_array = l2.element(vectorization='array')
+    # Vectorized
+    true_arr = (a * func_2d_vec(points) + b * other_func_2d_vec(points))
+    true_mg = (a * func_2d_vec(mg) + b * other_func_2d_vec(mg))
+    f_vec = l2.element(func_2d_vec, vectorized=True)
+    g_vec = l2.element(other_func_2d_vec, vectorized=True)
+    out_vec = l2.element(vectorized=True)
+    l2.lincomb(a, f_vec, b, g_vec, out_vec)
 
-    l2.lincomb(a, f_array, b, g_array, out_array)
-    assert all_equal(out_array(points), true_array)
+    assert all_equal(out_vec(points), true_arr)
+    assert all_equal(out_vec(mg), true_mg)
+    assert out_vec(point) == true_novec  # should work, too
 
-    f_array_a = l2.element(func_2d_array, func_2d_array_apply,
-                           vectorization='array')
-    g_array_a = l2.element(other_func_2d_array, other_func_2d_array_apply,
-                           vectorization='array')
-    out_array_a = l2.element(vectorization='array')
-
-    l2.lincomb(a, f_array_a, b, g_array_a, out_array_a)
+    f_vec_a = l2.element(func_2d_vec, func_2d_vec_apply)
+    g_vec_a = l2.element(other_func_2d_vec, other_func_2d_vec_apply)
+    out_vec_a = l2.element()
+    l2.lincomb(a, f_vec_a, b, g_vec_a, out_vec_a)
     # Check if out-of-place still works
-    assert all_equal(out_array(points), true_array)
-    # In-place
-    out = np.empty((5,), dtype=float)
-    out_array_a.apply(points, out=out)
-    assert all_equal(out, true_array)
-
-    # Meshgrid vectorization
-    true_mg = (a * func_2d_mg(mg) + b * other_func_2d_mg(mg))
-    f_mg = l2.element(func_2d_mg, vectorization='meshgrid')
-    g_mg = l2.element(other_func_2d_mg, vectorization='meshgrid')
-    out_mg = l2.element(vectorization='meshgrid')
-
-    l2.lincomb(a, f_mg, b, g_mg, out_mg)
-    assert all_equal(out_mg(mg), true_mg)
-
-    f_mg_a = l2.element(func_2d_mg, func_2d_mg_apply, vectorization='meshgrid')
-    g_mg_a = l2.element(other_func_2d_mg, other_func_2d_mg_apply,
-                        vectorization='meshgrid')
-    out_mg_a = l2.element(vectorization='meshgrid')
-
-    l2.lincomb(a, f_mg_a, b, g_mg_a, out_mg_a)
-    # Check if out-of-place still works
-    assert all_equal(out_mg(mg), true_mg)
+    assert all_equal(out_vec(mg), true_mg)
     # In-place
     out = np.empty((2, 3), dtype=float)
-    out_mg_a.apply(mg, out=out)
+    out_vec_a(mg, out=out)
     assert all_equal(out, true_mg)
+    out = np.empty((5,), dtype=float)
+    out_vec_a(points, out=out)
+    assert all_equal(out, true_arr)
+
+    # Mix of vectorized and non-vectorized -> manual vectorization
+    l2.lincomb(a, f_vec_a, b, g_novec, out_vec_a)
+    assert all_equal(out_vec_a(points), true_arr)
+    assert all_equal(out_vec_a(mg), true_mg)
+    out = np.empty((2, 3), dtype=float)
+    out_vec_a(mg, out=out)
+    assert all_equal(out, true_mg)
+    out = np.empty((5,), dtype=float)
+    out_vec_a(points, out=out)
+    assert all_equal(out, true_arr)
 
     # COMPLEX
     l2 = L2(rect, field=odl.ComplexNumbers())
     a = -1.5 + 1j*7
     b = 2.0 - 1j
 
-    # No vectorization
+    # Not vectorized
     true_novec = a * cfunc_2d_novec(point) + b * other_cfunc_2d_novec(point)
     f_novec = l2.element(cfunc_2d_novec)
     g_novec = l2.element(other_cfunc_2d_novec)
@@ -617,58 +502,31 @@ def test_l2_lincomb():
     l2.lincomb(a, f_novec, b, g_novec, out_novec)
     assert out_novec(point) == true_novec
 
-    # Array vectorization
-    true_array = (a * cfunc_2d_array(points) +
-                  b * other_cfunc_2d_array(points))
-    f_array = l2.element(cfunc_2d_array, vectorization='array')
-    g_array = l2.element(other_cfunc_2d_array, vectorization='array')
-    out_array = l2.element(vectorization='array')
+    # Vectorized
+    true_arr = (a * cfunc_2d_vec(points) + b * other_cfunc_2d_vec(points))
+    true_mg = (a * cfunc_2d_vec(mg) + b * other_cfunc_2d_vec(mg))
+    f_vec = l2.element(cfunc_2d_vec, vectorized=True)
+    g_vec = l2.element(other_cfunc_2d_vec, vectorized=True)
+    out_vec = l2.element(vectorized=True)
+    l2.lincomb(a, f_vec, b, g_vec, out_vec)
 
-    l2.lincomb(a, f_array, b, g_array, out_array)
-    assert all_equal(out_array(points), true_array)
+    assert all_equal(out_vec(points), true_arr)
+    assert all_equal(out_vec(mg), true_mg)
 
-    f_array_a = l2.element(cfunc_2d_array, cfunc_2d_array_apply,
-                           vectorization='array')
-    g_array_a = l2.element(other_cfunc_2d_array, other_cfunc_2d_array_apply,
-                           vectorization='array')
-    out_array_a = l2.element(vectorization='array')
-
-    l2.lincomb(a, f_array_a, b, g_array_a, out_array_a)
+    f_vec_a = l2.element(cfunc_2d_vec, cfunc_2d_vec_apply, vectorized=True)
+    g_vec_a = l2.element(other_cfunc_2d_vec, other_cfunc_2d_vec_apply,
+                         vectorized=True)
+    out_vec_a = l2.element()
+    l2.lincomb(a, f_vec_a, b, g_vec_a, out_vec_a)
     # Check if out-of-place still works
-    assert all_equal(out_array(points), true_array)
+    assert all_equal(out_vec(mg), true_mg)
     # In-place
-    out = np.empty((5,), dtype=complex)
-    out_array_a.apply(points, out=out)
-    assert all_equal(out, true_array)
-
-    # Meshgrid vectorization
-    true_mg = a * cfunc_2d_mg(mg) + b * other_cfunc_2d_mg(mg)
-    f_mg = l2.element(cfunc_2d_mg, vectorization='meshgrid')
-    g_mg = l2.element(other_cfunc_2d_mg, vectorization='meshgrid')
-    out_mg = l2.element(vectorization='meshgrid')
-
-    l2.lincomb(a, f_mg, b, g_mg, out_mg)
-    assert all_equal(out_mg(mg), true_mg)
-
-    f_mg_a = l2.element(cfunc_2d_mg, cfunc_2d_mg_apply,
-                        vectorization='meshgrid')
-    g_mg_a = l2.element(other_cfunc_2d_mg, other_cfunc_2d_mg_apply,
-                        vectorization='meshgrid')
-    out_mg_a = l2.element(vectorization='meshgrid')
-
-    l2.lincomb(a, f_mg_a, b, g_mg_a, out_mg_a)
-    # Check if out-of-place still works
-    assert all_equal(out_mg(mg), true_mg)
-    # In-place
-    out = np.empty((2, 3), dtype=complex)
-    out_mg_a.apply(mg, out=out)
+    out = np.empty((2, 3), dtype=float)
+    out_vec_a(mg, out=out)
     assert all_equal(out, true_mg)
-
-    with pytest.raises(ValueError):
-        l2.lincomb(a, f_mg, b, g_array, out_mg)
-
-    with pytest.raises(ValueError):
-        l2.lincomb(a, f_novec, b, g_novec, out_mg)
+    out = np.empty((5,), dtype=float)
+    out_vec_a(points, out=out)
+    assert all_equal(out, true_arr)
 
 
 # NOTE: multiply and divide are tested via magic methods
@@ -685,146 +543,118 @@ def _test_l2_vector_op(op_str, pattern):
     rect = odl.Rectangle([0, 0], [1, 2])
     l2 = L2(rect)
     points = _points(rect, num=5)
-    point = points[0]
+    point = points.T[0]
     mg = _meshgrid(rect, shape=(2, 3))
     a = -1.5
     b = 2.0
     array_out = np.empty((5,), dtype=float)
     mg_out = np.empty((2, 3), dtype=float)
 
-    f_novec = l2.element(func_2d_novec, vectorization='none')
-    f_array = l2.element(func_2d_array, vectorization='array')
-    f_array_a = l2.element(func_2d_array, func_2d_array_apply,
-                           vectorization='array')
-    f_mg = l2.element(func_2d_mg, vectorization='meshgrid')
-    f_mg_a = l2.element(func_2d_mg, func_2d_mg_apply,
-                        vectorization='meshgrid')
-    g_novec = l2.element(other_func_2d_novec, vectorization='none')
-    g_array = l2.element(other_func_2d_array, vectorization='array')
-    g_array_a = l2.element(other_func_2d_array, other_func_2d_array_apply,
-                           vectorization='array')
-    g_mg = l2.element(other_func_2d_mg, vectorization='meshgrid')
-    g_mg_a = l2.element(other_func_2d_mg, other_func_2d_mg_apply,
-                        vectorization='meshgrid')
+    # Initialize a bunch of elements
+    f_novec = l2.element(func_2d_novec, vectorized=False)
+    f_vec = l2.element(func_2d_vec, vectorized=True)
+    f_vec_a = l2.element(func_2d_vec, func_2d_vec_apply, vectorized=True)
+    g_novec = l2.element(other_func_2d_novec, vectorized=False)
+    g_vec = l2.element(other_func_2d_vec, vectorized=True)
+    g_vec_a = l2.element(other_func_2d_vec, other_func_2d_vec_apply,
+                         vectorized=True)
 
-    out_novec = l2.element(vectorization='none')
-    out_array = l2.element(vectorization='array')
-    out_array_a = l2.element(vectorization='array')
-    out_mg = l2.element(vectorization='meshgrid')
-    out_mg_a = l2.element(vectorization='meshgrid')
+    out_novec = l2.element(vectorized=False)
+    out_vec = l2.element(vectorized=True)
+    out_vec_a = l2.element(vectorized=True)
 
     if pattern[0] in ('v', 'i'):
         true_l_novec = func_2d_novec(point)
-        true_l_array = func_2d_array(points)
-        true_l_mg = func_2d_mg(mg)
+        true_l_arr = func_2d_vec(points)
+        true_l_mg = func_2d_vec(mg)
 
         test_l_novec = f_novec
-        test_l_array = f_array
-        test_l_array_a = f_array_a
-        test_l_mg = f_mg
-        test_l_mg_a = f_mg_a
+        test_l_vec = f_vec
+        test_l_vec_a = f_vec_a
     else:  # 's'
-        true_l_novec = true_l_array = true_l_mg = a
-        test_l_novec = test_l_array = test_l_array_a = test_l_mg = test_l_mg_a = a
+        true_l_novec = true_l_arr = true_l_mg = a
+        test_l_novec = test_l_vec = test_l_vec_a = a
 
     if pattern[1] == 'v':
         true_r_novec = other_func_2d_novec(point)
-        true_r_array = other_func_2d_array(points)
-        true_r_mg = other_func_2d_mg(mg)
+        true_r_arr = other_func_2d_vec(points)
+        true_r_mg = other_func_2d_vec(mg)
 
         test_r_novec = g_novec
-        test_r_array = g_array
-        test_r_array_a = g_array_a
-        test_r_mg = g_mg
-        test_r_mg_a = g_mg_a
+        test_r_vec = g_vec
+        test_r_vec_a = g_vec_a
     else:  # 's'
-        true_r_novec = true_r_array = true_r_mg = b
-        test_r_novec = test_r_array = test_r_array_a = test_r_mg = test_r_mg_a = b
+        true_r_novec = true_r_arr = true_r_mg = b
+        test_r_novec = test_r_vec = test_r_vec_a = b
 
     if op_str == '+':
         true_novec = true_l_novec + true_r_novec
-        true_array = true_l_array + true_r_array
+        true_arr = true_l_arr + true_r_arr
         true_mg = true_l_mg + true_r_mg
 
         if pattern[0] == 'i':
             test_l_novec += test_r_novec
-            test_l_array += test_r_array
-            test_l_array_a += test_r_array_a
-            test_l_mg += test_r_mg
-            test_l_mg_a += test_r_mg_a
+            test_l_vec += test_r_vec
+            test_l_vec_a += test_r_vec_a
         else:
             out_novec = test_l_novec + test_r_novec
-            out_array = test_l_array + test_r_array
-            out_array_a = test_l_array_a + test_r_array_a
-            out_mg = test_l_mg + test_r_mg
-            out_mg_a = test_l_mg_a + test_r_mg_a
+            out_vec = test_l_vec + test_r_vec
+            out_vec_a = test_l_vec_a + test_r_vec_a
     elif op_str == '-':
         true_novec = true_l_novec - true_r_novec
-        true_array = true_l_array - true_r_array
+        true_arr = true_l_arr - true_r_arr
         true_mg = true_l_mg - true_r_mg
 
         if pattern[0] == 'i':
             test_l_novec -= test_r_novec
-            test_l_array -= test_r_array
-            test_l_array_a -= test_r_array_a
-            test_l_mg -= test_r_mg
-            test_l_mg_a -= test_r_mg_a
+            test_l_vec -= test_r_vec
+            test_l_vec_a -= test_r_vec_a
         else:
             out_novec = test_l_novec - test_r_novec
-            out_array = test_l_array - test_r_array
-            out_array_a = test_l_array_a - test_r_array_a
-            out_mg = test_l_mg - test_r_mg
-            out_mg_a = test_l_mg_a - test_r_mg_a
+            out_vec = test_l_vec - test_r_vec
+            out_vec_a = test_l_vec_a - test_r_vec_a
     elif op_str == '*':
         true_novec = true_l_novec * true_r_novec
-        true_array = true_l_array * true_r_array
+        true_arr = true_l_arr * true_r_arr
         true_mg = true_l_mg * true_r_mg
 
         if pattern[0] == 'i':
             test_l_novec *= test_r_novec
-            test_l_array *= test_r_array
-            test_l_array_a *= test_r_array_a
-            test_l_mg *= test_r_mg
-            test_l_mg_a *= test_r_mg_a
+            test_l_vec *= test_r_vec
+            test_l_vec_a *= test_r_vec_a
         else:
             out_novec = test_l_novec * test_r_novec
-            out_array = test_l_array * test_r_array
-            out_array_a = test_l_array_a * test_r_array_a
-            out_mg = test_l_mg * test_r_mg
-            out_mg_a = test_l_mg_a * test_r_mg_a
+            out_vec = test_l_vec * test_r_vec
+            out_vec_a = test_l_vec_a * test_r_vec_a
     elif op_str == '/':
         true_novec = true_l_novec / true_r_novec
-        true_array = true_l_array / true_r_array
+        true_arr = true_l_arr / true_r_arr
         true_mg = true_l_mg / true_r_mg
 
         if pattern[0] == 'i':
             test_l_novec /= test_r_novec
-            test_l_array /= test_r_array
-            test_l_array_a /= test_r_array_a
-            test_l_mg /= test_r_mg
-            test_l_mg_a /= test_r_mg_a
+            test_l_vec /= test_r_vec
+            test_l_vec_a /= test_r_vec_a
         else:
             out_novec = test_l_novec / test_r_novec
-            out_array = test_l_array / test_r_array
-            out_array_a = test_l_array_a / test_r_array_a
-            out_mg = test_l_mg / test_r_mg
-            out_mg_a = test_l_mg_a / test_r_mg_a
+            out_vec = test_l_vec / test_r_vec
+            out_vec_a = test_l_vec_a / test_r_vec_a
 
     if pattern[0] == 'i':
         assert test_l_novec(point) == true_novec
-        assert all_equal(test_l_array(points), true_array)
-        test_l_array_a.apply(points, out=array_out)
-        assert all_equal(array_out, true_array)
-        assert all_equal(test_l_mg(mg), true_mg)
-        test_l_mg_a.apply(mg, out=mg_out)
+        assert all_equal(test_l_vec(points), true_arr)
+        test_l_vec_a(points, out=array_out)
+        assert all_equal(array_out, true_arr)
+        assert all_equal(test_l_vec(mg), true_mg)
+        test_l_vec_a(mg, out=mg_out)
         assert all_equal(mg_out, true_mg)
     else:
         assert out_novec(point) == true_novec
-        assert all_equal(out_array(points), true_array)
-        out_array_a.apply(points, out=array_out)
-        assert all_equal(array_out, true_array)
-        assert all_equal(out_mg(mg), true_mg)
-        out_mg_a.apply(mg, out=mg_out)
+        assert all_equal(out_vec(points), true_arr)
+        out_vec_a(points, out=array_out)
+        assert all_equal(array_out, true_arr)
+        assert all_equal(out_vec(mg), true_mg)
+        out_vec_a(mg, out=mg_out)
         assert all_equal(mg_out, true_mg)
 
 

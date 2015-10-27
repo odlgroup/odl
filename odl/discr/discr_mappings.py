@@ -23,10 +23,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str, zip
-from future.utils import with_metaclass
 
 # External imports
-from abc import ABCMeta
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
@@ -37,6 +35,7 @@ from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.set.domain import IntervalProd
+from odl.util.utility import is_valid_input_array, is_valid_input_meshgrid
 
 
 __all__ = ('FunctionSetMapping',
@@ -239,7 +238,7 @@ class GridCollocation(FunctionSetMapping):
         >>> def func(mg_tuple):
         ...     x1, x2 = mg_tuple  # unwrap the coordinate arrays
         ...     return x1 - x2
-        >>> func_elem = funcset.element(func, vectorization='meshgrid')
+        >>> func_elem = funcset.element(func)
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
@@ -247,7 +246,7 @@ class GridCollocation(FunctionSetMapping):
         >>> def func(array):
         ...     x1, x2 = array[:, 0], array[:, 1]  # views
         ...     return x1 - x2
-        >>> func_elem = funcset.element(func, vectorization='array')
+        >>> func_elem = funcset.element(func)
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
@@ -257,17 +256,14 @@ class GridCollocation(FunctionSetMapping):
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        if x.vectorization == 'meshgrid':
+        if x.vectorized:
             mg_tuple = self.grid.meshgrid()
             values = x(mg_tuple).ravel(order=self.order)
         else:
             points = self.grid.points(order=self.order)
-            if x.vectorization == 'array':
-                values = x(points)
-            else:
-                values = np.empty(points.shape[0], dtype=self.range.dtype)
-                for i, point in enumerate(points):
-                    values[i] = x(point)
+            values = np.empty(points.shape[1], dtype=self.range.dtype)
+            for i, point in enumerate(points):
+                values[i] = x(point)
         return self.range.element(values)
 
 
@@ -305,23 +301,13 @@ class NearestInterpolation(FunctionSetMapping):
 
     # TODO: Implement _apply()
 
-    def _call(self, x, vectorization='meshgrid'):
+    def _call(self, x):
         """The raw `call` method for out-of-place evaluation.
 
         Parameters
         ----------
         x : `Ntuples.Vector`
             The array of numbers to be interpolated
-        vectorization : {'none', 'array', 'meshgrid'}
-            Vectorization type of the returned function.
-
-            'none' : no vectorized evaluation
-
-            'array' : vectorized evaluation on an array of
-            domain elements
-
-            'meshgrid' : vectorized evaluation on a meshgrid
-            tuple of arrays
 
         Returns
         -------
@@ -365,45 +351,26 @@ class NearestInterpolation(FunctionSetMapping):
         >>> import numpy as np
         >>> val_arr = np.array([c for c in 'mystring'])
         >>> values = dspace.element(val_arr)
-        >>> function = interp_op(values, vectorization='none')
+        >>> function = interp_op(values)
         >>> val = function([0.3, 0.6])  # closest to index (1, 1) -> 3
         >>> print(val)
         t
         """
-        def nn_novec(arg):
-            """Interpolating function, no vectorization."""
-            # Make a (1, 1) array
-            arg = np.atleast_2d(arg)
-            interp = _NearestPointwiseInterpolator(
-                self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order))
-            return interp(arg)[0]
-
-        def nn_array(arg):
-            """Interpolating function, array vectorization."""
-            interp = _NearestPointwiseInterpolator(
-                self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order))
+        def nearest(arg):
+            """Interpolating function with vectorization."""
+            print(arg)
+            if is_valid_input_meshgrid(arg, self.grid.ndim):
+                # TODO: check if this works for 'F' ordering
+                interp = _NearestMeshgridInterpolator(
+                    self.grid.coord_vectors,
+                    x.data.reshape(self.grid.shape, order=self.order))
+            else:
+                interp = _NearestPointwiseInterpolator(
+                    self.grid.coord_vectors,
+                    x.data.reshape(self.grid.shape, order=self.order))
             return interp(arg)
 
-        def nn_mg(arg):
-            """Interpolating function, meshgrid vectorization."""
-            interp = _NearestMeshgridInterpolator(
-                self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order))
-            return interp(arg)
-
-        if vectorization == 'none':
-            func = nn_novec
-        elif vectorization == 'array':
-            func = nn_array
-        elif vectorization == 'meshgrid':
-            func = nn_mg
-        else:
-            raise ValueError('vectorization {!r} not understood.'
-                             ''.format(vectorization))
-
-        return self.range.element(func, vectorization=vectorization)
+        return self.range.element(nearest, vectorized=True)
 
 
 class LinearInterpolation(FunctionSetMapping):
@@ -586,7 +553,11 @@ class _NearestMeshgridInterpolator(_NearestPointwiseInterpolator):
             raise ValueError('number of vectors in `xi` is {} instead of {}, '
                              'the grid dimension.'.format(xi.shape[1],
                                                           len(self.grid)))
-        ntotal = np.prod(np.broadcast(*xi).shape)
+
+        if len(xi) == 1:
+            ntotal = xi[0].size
+        else:
+            ntotal = np.prod(np.broadcast(*xi).shape)
         if out is not None:
             if not isinstance(out, np.ndarray):
                 raise TypeError('`out` {!r} not a `numpy.ndarray` '

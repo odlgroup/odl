@@ -36,6 +36,8 @@ from odl.operator.operator import Operator
 from odl.set.domain import IntervalProd
 from odl.set.sets import RealNumbers, ComplexNumbers, Set
 from odl.set.space import LinearSpace
+from odl.util.utility import (is_valid_input_array, is_valid_input_meshgrid,
+                              meshgrid_input_order, vecs_from_meshgrid)
 
 
 __all__ = ('FunctionSet', 'FunctionSpace')
@@ -44,63 +46,6 @@ __all__ = ('FunctionSet', 'FunctionSpace')
 def _apply_not_impl(*_):
     """Dummy function to be used when apply function is not given."""
     raise NotImplementedError('no `_apply` method defined.')
-
-
-def _meshgrid_input_order(x):
-    """Determine the ordering of a meshgrid argument."""
-    # Case 1: all elements have the same shape -> non-sparse
-    if all(xi.shape == x[0].shape for xi in x):
-        # Contiguity check only works for meshgrid created with copy=True.
-        # Otherwise, there is no way to find out the intended ordering.
-        if all(xi.flags.f_contiguous for xi in x):
-            return 'F'
-        else:
-            return 'C'
-    # Case 2: sparse meshgrid, each member's shape has at most one non-one
-    # entry (corner case of all ones is included)
-    elif all(xi.shape.count(1) >= len(x) - 1 for xi in x):
-        # Reversed ordering of dimensions in the meshgrid tuple indicates
-        # 'F' ordering intention
-        if all(xi.shape[-1-i] != 1 for i, xi in enumerate(x)):
-            return 'F'
-        else:
-            return 'C'
-    else:
-        return 'C'
-
-
-# TODO: some of the following functions can be useful elswhere, too.
-# Consider moving them to odl.util.utility
-def _is_valid_input_array(x, d):
-    """Test whether `x` is a correctly shaped array of points in R^d."""
-    if not isinstance(x, np.ndarray):
-        return False
-    if d == 1:
-        return x.ndim == 1 or x.ndim == 2 and x.shape[0] == 1
-    else:
-        return x.ndim == 2 and x.shape[0] == d
-
-
-def _is_valid_input_meshgrid(x, d):
-    """Test whether `x` is a meshgrid for points in R^d."""
-    try:
-        np.broadcast(*x)
-    except ValueError:  # cannot be broadcast
-        return False
-    return len(x) == d and all(isinstance(xi, np.ndarray) for xi in x)
-
-
-def _vecs_from_meshgrid(mg, order):
-    """Get the coordinate vectors from a meshgrid (as a tuple)."""
-    vecs = []
-    for ax in range(len(mg)):
-        select = [0] * len(mg)
-        if str(order).upper() == 'F':
-            select[-ax] = np.s_[:]
-        else:
-            select[ax] = np.s_[:]
-        vecs.append(mg[ax][select])
-    return tuple(vecs)
 
 
 def enforce_defaults_as_kwargs(func):
@@ -198,8 +143,8 @@ def vectorize(dtype, outarg='none'):
     array([  7.,   9.,  11.,  13.,  15.])
     """
     def vect_decorator(func):
-
         def _vect_wrapper(x, out, **kwargs):
+            print('at top: ', x, out)
             if isinstance(x, np.ndarray):  # array
                 if x.ndim == 1:
                     dim = 1
@@ -214,33 +159,42 @@ def vectorize(dtype, outarg='none'):
                 dim = len(x)
                 if dim == 1:
                     x = x[0]
-
+            print('dim = ', dim)
             if dim == 1:
                 if out is None:
                     out = np.empty(x.size, dtype=dtype)
                 for i, xi in enumerate(x):
+                    print(i, xi)
                     out[i] = func(xi, **kwargs)
                 return out
             else:
-                if _is_valid_input_array(x, dim):
+                if is_valid_input_array(x, dim):
+                    print(x.shape)
                     if out is None:
                         out = np.empty(x.shape[1], dtype=dtype)
                     for i, pt in enumerate(x.T):
+                        print(i, pt)
                         out[i] = func(pt, **kwargs)
                     return out
-                elif _is_valid_input_meshgrid(x, dim):
-                    order = _meshgrid_input_order(x)
+                elif is_valid_input_meshgrid(x, dim):
+                    order = meshgrid_input_order(x)
                     if out is None:
                         out_shape = np.broadcast(*x).shape
                         out = np.empty(out_shape, dtype=dtype, order=order)
 
                     # TODO: find a better way to iterate
-                    vecs = _vecs_from_meshgrid(x, order=order)
+                    vecs = vecs_from_meshgrid(x, order=order)
                     for i, pt in enumerate(product(*vecs)):
                         out.flat[i] = func(pt, **kwargs)
                     return out
                 else:
-                    raise ValueError('invalid vectorized input type.')
+                    if out is None:
+                        try:
+                            return func(x)
+                        except (TypeError, ValueError, IndexError):
+                            raise TypeError('invalid vectorized input type.')
+                    else:
+                        raise TypeError('invalid vectorized input type.')
 
         @wraps(func)
         def vect_wrapper_no_out(x, **kwargs):
@@ -428,6 +382,7 @@ class FunctionSet(Set):
             if not self._vectorized and fapply is not None:
                 raise ValueError('in-place function evaluation only possible '
                                  'for vectorized functions.')
+            # TODO: is that really needed? Actually just for bounds_check..
             if (self._vectorized and
                     not isinstance(fset.domain, IntervalProd)):
                 raise TypeError('vectorization requires the function set '
@@ -512,14 +467,27 @@ class FunctionSet(Set):
                 If evaluation points fall outside the valid domain
             """
             vec_bounds_check = kwargs.pop('vec_bounds_check', True)
-
+            scalar_out = False
             if self.vectorized:
-                if not (_is_valid_input_array(x, self.domain.ndim) or
-                        _is_valid_input_meshgrid(x, self.domain.ndim)):
+                if x in self.domain:  # Allow also non-vectorized evaluation
+                    x = np.atleast_2d(x).T  # make a (d, 1) array
+                    scalar_out = (out is None)
+
+                if is_valid_input_array(x, self.domain.ndim):
+                    out_shape = (x.shape[1],)
+                elif is_valid_input_meshgrid(x, self.domain.ndim):
+                    if self.domain.ndim == 1:
+                        out_shape = (x[0].shape[1],)
+                    else:
+                        out_shape = np.broadcast(*x).shape
+                elif x in self.domain:  # Allow also non-vectorized evaluation
+                    x = np.atleast_2d(x).T  # make a (d, 1) array
+                else:
                     raise TypeError('argument {!r} not a valid vectorized '
-                                    'input. Expected a ({d}, n) array '
-                                    'or a length-{d} meshgrid sequence.'
-                                    ''.format(x, d=self.domain.ndim))
+                                    'input. Expected an element of the domain '
+                                    '{dom}, a ({dom.ndim}, n) array '
+                                    'or a length-{dom.ndim} meshgrid sequence.'
+                                    ''.format(x, dom=self.domain))
 
                 out_shape = np.broadcast(*x).shape
 
@@ -563,7 +531,7 @@ class FunctionSet(Set):
                     raise ValueError('output parameter can only be specified '
                                      'for vectorized functions.')
 
-            return out
+            return out[0] if scalar_out else out
 
         def assign(self, other):
             """Assign `other` to this vector.
@@ -701,8 +669,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def zero_vec(x):
             """The zero function, vectorized."""
-            if _is_valid_input_meshgrid(x, self.domain.ndim):
-                order = _meshgrid_input_order(x)
+            if is_valid_input_meshgrid(x, self.domain.ndim):
+                order = meshgrid_input_order(x)
             else:
                 order = 'C'
 
@@ -712,6 +680,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def zero_apply(_, out):
             """The in-place zero function."""
             out.fill(0.0)
+            return out
 
         if vectorized:
             zero_func = zero_vec
@@ -741,8 +710,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def one_vec(x):
             """The one function, vectorized."""
-            if _is_valid_input_meshgrid(x, self.domain.ndim):
-                order = _meshgrid_input_order(x)
+            if is_valid_input_meshgrid(x, self.domain.ndim):
+                order = meshgrid_input_order(x)
             else:
                 order = 'C'
 
@@ -752,6 +721,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def one_apply(_, out):
             """The in-place one function."""
             out.fill(0.0)
+            return out
 
         if vectorized:
             one_func = one_vec
@@ -821,7 +791,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 if b != 1:
                     tmp *= b
                 out += tmp
-
             return out
 
         def lincomb_apply(x, out):
@@ -847,48 +816,19 @@ class FunctionSpace(FunctionSet, LinearSpace):
                     out *= a
                 if b != 1:
                     tmp *= b
-
                 out += tmp
+            return out
 
         out._call = lincomb_call
         out._vectorized = lincomb_vect
         # If one of the summands' apply method is undefined, it will not be
         # defined in the result either
-        if _apply_not_impl in (x1._apply, x2._apply):
+        if _apply_not_impl in (x1_apply, x2_apply):
             out._apply = _apply_not_impl
         else:
             out._apply = lincomb_apply
 
-#    def lincomb(self, a, x1, b=None, x2=None, out=None):
-#        """Same as in LinearSpace.Vector, but with vectorization."""
-#        if a not in self.field:
-#            raise TypeError('first scalar {!r} not in the field {!r} of the '
-#                            'space {!r}.'.format(a, self.field, self))
-#        if x1 not in self:
-#            raise TypeError('first input vector {!r} not in space {!r}.'
-#                            ''.format(x1, self))
-#        if out is None:
-#            out = self.element(vectorization=x1.vectorization)
-#        else:
-#            if out not in self:
-#                raise TypeError('output vector {!r} not in space {!r}.'
-#                                ''.format(out, self))
-#
-#        if b is None:  # Single argument
-#            if x2 is not None:
-#                raise ValueError('second input vector provided but no '
-#                                 'second scalar.')
-#            self._lincomb(a, x1, 0, x1, out)
-#        else:  # Two arguments
-#            if b not in self.field:
-#                raise TypeError('second scalar {!r} not in the field {!r} of '
-#                                'the space {!r}.'.format(b, self.field, self))
-#            if x2 not in self:
-#                raise TypeError('second input vector {!r} not in space {!r}.'
-#                                ''.format(x2, self))
-#            self._lincomb(a, x1, b, x2, out)
-#
-#        return out
+        return out
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two functions.
@@ -922,6 +862,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             x1_apply(x, out)
             x2_apply(x, tmp)
             out *= tmp
+            return out
 
         out._call = product_call
         out._vectorized = product_vect
@@ -932,22 +873,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         else:
             out._apply = product_apply
 
-#    def multiply(self, x1, x2, out=None):
-#        """Same as in LinearSpace.Vector, but with vectorization."""
-#        if out is None:
-#            out = self.element()
-#        else:
-#            if out not in self:
-#                raise TypeError('ouput vector {!r} not in space {!r}'
-#                                ''.format(out, self))
-#        if x1 not in self:
-#            raise TypeError('first vector {!r} not in space {!r}'
-#                            ''.format(x1, self))
-#        if x2 not in self:
-#            raise TypeError('second vector {!r} not in space {!r}'
-#                            ''.format(x2, self))
-#        self._multiply(x1, x2, out)
-#        return out
+        return out
 
     def _divide(self, x1, x2, out):
         """Raw pointwise division of two functions."""
@@ -975,6 +901,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             x1_apply(x, out)
             x2_apply(x, tmp)
             out /= tmp
+            return out
 
         out._call = quotient_call
         out._vectorized = quotient_vect
@@ -984,6 +911,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             out._apply = _apply_not_impl
         else:
             out._apply = quotient_apply
+
+        return out
 
     def divide(self, x1, x2, out=None):
         """Same as in LinearSpace.Vector, but with vectorization."""
@@ -1000,8 +929,57 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if out not in self:
                 raise TypeError('ouput vector {!r} not in space {!r}'
                                 ''.format(out, self))
-        self._divide(x1, x2, out)
-        return out
+        return self._divide(x1, x2, out)
+
+    def _scalar_power(self, x, p, out):
+        """Raw p-th power of a function, p integer or general scalar."""
+        x_call = x._call
+        x_apply = x._apply
+
+        def pow_posint(x, n):
+            """Recursion to calculate the n-th power out-of-place."""
+            if isinstance(x, np.ndarray):
+                y = x.copy()
+                return ipow_posint(y, n)
+            else:
+                return x**n
+
+        def ipow_posint(x, n):
+            """Recursion to calculate the n-th power in-place."""
+            if n == 1:
+                return x
+            elif n % 2 == 0:
+                x *= x
+                return ipow_posint(x, n//2)
+            else:
+                tmp = x.copy()
+                x *= x
+                ipow_posint(x, n//2)
+                x *= tmp
+                return x
+
+        def power_call(x):
+            """The power call function."""
+            if p == int(p) and p >= 1:
+                return pow_posint(x_call(x), int(p))
+            else:
+                return x_call(x)**p
+
+        def power_apply(x, out):
+            """The power apply function."""
+            x_apply(x, out)
+            if p == int(p) and p >= 1:
+                return ipow_posint(out, int(p))
+            else:
+                out **= p
+                return out
+
+        out._call = power_call
+        out._vectorized = x.vectorized
+        if x_apply == _apply_not_impl:
+            out._apply = _apply_not_impl
+        else:
+            out._apply = power_apply
 
     class Vector(FunctionSet.Vector, LinearSpace.Vector):
 
@@ -1036,19 +1014,19 @@ class FunctionSpace(FunctionSet, LinearSpace):
         # Convenience functions using element() need to be adapted
         def __add__(self, other):
             """`f.__add__(other) <==> f + other`."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element()
             if other in self.space:
                 self.space.lincomb(1, self, 1, other, out=out)
             else:
-                one = self.space.one(vectorization=self.vectorization)
+                one = self.space.one(vectorized=self.vectorized)
                 self.space.lincomb(1, self, 1, other * one, out=out)
             return out
 
         def __radd__(self, other):
             """`f.__radd__(other) <==> other + f`."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element(vectorized=self.vectorized)
             # the `other in self.space` case can never happen!
-            one = self.space.one(vectorization=self.vectorization)
+            one = self.space.one(vectorized=self.vectorized)
             self.space.lincomb(1, other * one, 1, self, out=out)
             return out
 
@@ -1057,25 +1035,25 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if other in self.space:
                 self.space.lincomb(1, self, 1, other, out=self)
             else:
-                one = self.space.one(vectorization=self.vectorization)
+                one = self.space.one(vectorized=self.vectorized)
                 self.space.lincomb(1, self, 1, other * one, out=self)
             return self
 
         def __sub__(self, other):
             """Implementation of 'self - other'."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element(vectorized=self.vectorized)
             if other in self.space:
                 self.space.lincomb(1, self, -1, other, out=out)
             else:
-                one = self.space.one(vectorization=self.vectorization)
+                one = self.space.one(vectorized=self.vectorized)
                 self.space.lincomb(1, self, 1, -other * one, out=out)
             return out
 
         def __rsub__(self, other):
             """`f.__rsub__(other) <==> other - f`."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element(vectorized=self.vectorized)
             # the `other in self.space` case can never happen!
-            one = self.space.one(vectorization=self.vectorization)
+            one = self.space.one(vectorized=self.vectorized)
             self.space.lincomb(1, other * one, -1, self, out=out)
             return out
 
@@ -1084,13 +1062,13 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if other in self.space:
                 self.space.lincomb(1, self, -1, other, out=self)
             else:
-                one = self.space.one(vectorization=self.vectorization)
+                one = self.space.one(vectorized=self.vectorized)
                 self.space.lincomb(1, self, 1, -other * one, out=self)
             return self
 
         def __mul__(self, other):
             """`f.__mul__(other) <==> f * other`."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element(vectorized=self.vectorized)
             if other in self.space:
                 self.space.multiply(self, other, out=out)
             else:
@@ -1099,7 +1077,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def __rmul__(self, other):
             """`f.__rmul__(other) <==> other * f`."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element(vectorized=self.vectorized)
             # the `other in self.space` case can never happen!
             self.space.lincomb(other, self, out=out)
             return out
@@ -1114,7 +1092,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def __truediv__(self, other):
             """`f.__truediv__(other) <==> f / other` (true division)."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element(vectorized=self.vectorized)
             if other in self.space:
                 self.space.divide(self, other, out=out)
             else:
@@ -1125,9 +1103,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def __rtruediv__(self, other):
             """`f.__rtruediv__(other) <==> other / f` (true division)."""
-            out = self.space.element(vectorization=self.vectorization)
+            out = self.space.element(vectorized=self.vectorized)
             # the `other in self.space` case can never happen!
-            one = self.space.one(vectorization=self.vectorization)
+            one = self.space.one(vectorized=self.vectorized)
             self.space.divide(other * one, self, out=out)
             return out
 
@@ -1143,27 +1121,15 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         __idiv__ = __itruediv__
 
-        def __pow__(self, n):
-            """`f.__pow__(n) <==> f ** n`."""
-            n = int(n)
-            tmp = self.copy()
-            for i in range(n):
-                self.space.multiply(tmp, self, out=tmp)
-            return tmp
+        def __pow__(self, p):
+            """`f.__pow__(p) <==> f ** p`."""
+            out = self.space.element(vectorized=self.vectorized)
+            self.space._scalar_power(self, p, out=out)
+            return out
 
-        def __ipow__(self, n):
-            """`f.__ipow__(n) <==> f **= n`."""
-            n = int(n)
-            if n == 1:
-                return self
-            elif n % 2 == 0:
-                self.space.multiply(self, self, out=self)
-                return self.__ipow__(n//2)
-            else:
-                tmp = self.copy()
-                for i in range(n):
-                    self.space.multiply(tmp, self, out=tmp)
-                return tmp
+        def __ipow__(self, p):
+            """`f.__ipow__(p) <==> f **= p`."""
+            return self.space._scalar_power(self, p, out=self)
 
         def __neg__(self):
             """`f.__neg__() <==> -f`."""
