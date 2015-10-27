@@ -27,7 +27,9 @@ import numpy as np
 
 # ODL imports
 from odl.set.sets import Set, RealNumbers
-from odl.util.utility import array1d_repr
+from odl.util.utility import (array1d_repr, is_valid_input_array,
+                              is_valid_input_meshgrid, meshgrid_input_order,
+                              vecs_from_meshgrid)
 
 
 __all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')
@@ -232,6 +234,35 @@ class IntervalProd(Set):
             raise AttributeError('cannot test {!r} without `min()` and `max()`'
                                  'methods.'.format(other))
 
+    def contains_all(self, other):
+        """Test if all points defined by `other` are contained.
+
+        Parameters
+        ----------
+        other : object
+            Can be a single point, a `(d, N)` array where `d` is the number of
+            dimensions or a lenght-`d` meshgrid sequence
+
+        Returns
+        -------
+        contains : bool
+            `True` if all points are contained, `False` otherwise
+        """
+        if other in self:
+            return True
+        elif is_valid_input_meshgrid(other, self.ndim):
+            order = meshgrid_input_order(other)
+            vecs = vecs_from_meshgrid(other, order)
+            mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
+            maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
+            return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+        elif is_valid_input_array(other, self.ndim):
+            mins = np.min(other, axis=1)
+            maxs = np.max(other, axis=1)
+            return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+        else:
+            return False
+
     # Additional property-like methods
     def measure(self, ndim=None):
         """The (Lebesgue) measure of this interval product.
@@ -239,8 +270,8 @@ class IntervalProd(Set):
         Parameters
         ----------
         ndim : int, optional
-              The dimension of the measure to apply.
-              Default: `true_ndim`
+            The dimension of the measure to apply.
+            Default: `true_ndim`
 
         Examples
         --------
