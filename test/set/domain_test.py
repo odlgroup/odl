@@ -84,7 +84,7 @@ def test_end():
     assert almost_equal(set_.end, 2)
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert (set_.end, [5, 6, 7])
+    assert all_almost_equal(set_.end, [5, 6, 7])
 
 def test_ndim():
     set_ = IntervalProd(1, 2)
