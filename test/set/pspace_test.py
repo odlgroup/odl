@@ -31,7 +31,7 @@ import odl
 from odl.util.testutils import all_almost_equal, almost_equal
 
 
-def test_product_RxR():
+def test_RxR():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, H)
     assert len(HxH) == 2
@@ -44,7 +44,7 @@ def test_product_RxR():
     assert all_almost_equal([v1, v2], v)
     assert all_almost_equal([v1, v2], u)
 
-def test_product_lincomb():
+def test_lincomb():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, H)
 
@@ -65,7 +65,25 @@ def test_product_lincomb():
 
     assert all_almost_equal(z, expected)
 
-def test_product_metric():
+def test_multiply():
+    H = odl.Rn(2)
+    HxH = odl.ProductSpace(H, H)
+
+    v1 = H.element([1, 2])
+    v2 = H.element([5, 3])
+    u1 = H.element([-1, 7])
+    u2 = H.element([2, 1])
+
+    v = HxH.element([v1, v2])
+    u = HxH.element([u1, u2])
+    z = HxH.element()
+
+    expected = [v1*u1, v2*u2]
+    HxH.multiply(v, u, out=z)
+
+    assert all_almost_equal(z, expected)
+
+def test_metric():
     H = odl.Rn(2)
     v11 = H.element([1, 2])
     v12 = H.element([5, 3])
@@ -114,7 +132,7 @@ def test_product_metric():
         HxH.dist(w1, w2),
         H.dist(v11, v21) + H.dist(v12, v22))
 
-def test_product_norm():
+def test_norm():
     H = odl.Rn(2)
     v1 = H.element([1, 2])
     v2 = H.element([5, 3])
@@ -147,6 +165,18 @@ def test_product_norm():
     w = HxH.element([v1, v2])
     assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
+def test_inner():
+    H = odl.Rn(2)
+    v1 = H.element([1, 2])
+    v2 = H.element([5, 3])
+
+    u1 = H.element([2, 3])
+    u2 = H.element([6, 4])
+
+    HxH = odl.ProductSpace(H, H)
+    v = HxH.element([v1, v2])
+    u = HxH.element([u1, u2])
+    assert almost_equal(HxH.inner(v, u), H.inner(v1, u1) + H.inner(v2, u2))
 
 def test_power_RxR():
     H = odl.Rn(2)
@@ -205,6 +235,17 @@ def test_power_inplace_modify():
     # Assert that z1 and z2 has been modified as well
     assert all_almost_equal(z, [z1, z2])
 
+def test_getitem():
+    H = odl.Rn(2)
+    HxH = odl.ProductSpace(H, 2)
+    
+    assert HxH[-2] == H
+    assert HxH[-1] == H
+    assert HxH[0] == H
+    assert HxH[1] == H
+    with pytest.raises(IndexError):
+        HxH[-3]
+        HxH[2]
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\','/') + ' -v'))
