@@ -31,7 +31,7 @@ from numbers import Integral, Real, Complex
 import numpy as np
 
 # ODL
-from odl.util.utility import is_int_dtype, is_real_dtype, is_complex_dtype
+from odl.util.utility import (is_int_dtype, is_real_dtype, is_complex_dtype)
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Integers', 'RealNumbers',
@@ -293,7 +293,9 @@ class ComplexNumbers(Field):
     def contains_all(self, array):
         """Test if `array` is an array of real or complex numbers."""
         array = np.asarray(array)  # allow seqence type input
-        return is_real_dtype(array.dtype) or is_complex_dtype(array.dtype)
+        return (is_complex_dtype(array.dtype) or
+                is_real_dtype(array.dtype) or
+                is_int_dtype(array.dtype))
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`."""
@@ -343,7 +345,7 @@ class RealNumbers(Field):
     def contains_all(self, array):
         """Test if `array` is an array of real numbers."""
         array = np.asarray(array)  # allow seqence type input
-        return is_real_dtype(array.dtype)
+        return is_real_dtype(array.dtype) or is_int_dtype(array.dtype)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`."""
