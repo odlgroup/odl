@@ -35,7 +35,7 @@ from future.utils import with_metaclass
 
 # External module imports
 from abc import ABCMeta
-from numbers import Number
+from numbers import Number, Integral
 
 # ODL imports
 from odl.set.space import LinearSpace, UniversalSpace
@@ -468,6 +468,52 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorLeftScalarMult(self, other)
         elif isinstance(other, LinearSpace.Vector) and other.space.field == self.range:
             return OperatorLeftVectorMult(self, other.copy())
+        else:
+            return NotImplemented
+
+    def __pow__(self, n):
+        """`op.__pow__(s) <==> op**s`.
+
+        This corresponds to the power of a operator:
+
+        `op ** 1 <==> (x --> op(x))`
+        `op ** 2 <==> (x --> op(op(x)))`
+        `op ** 3 <==> (x --> op(op(op(x))))`
+        etc...
+
+        Parameters
+        ----------
+        n : `Integral`
+            The power the operator should be taken to.
+
+        Returns
+        -------
+        pow : `Operator`
+            The power of this operator. 
+            If n=1 this is self
+            If n>1 this is a `OperatorComp`
+
+        Examples
+        --------
+        >>> from odl import Rn, ScalingOperator
+        >>> rn = Rn(3)
+        >>> op = ScalingOperator(rn, 3)
+        >>> x = rn.element([1, 2, 3])
+        >>> op(x)
+        Rn(3).element([3.0, 6.0, 9.0])
+        >>> squared = op**2
+        >>> squared(x)
+        Rn(3).element([9.0, 18.0, 27.0])
+        >>> squared = op**3
+        >>> squared(x)
+        Rn(3).element([27.0, 54.0, 81.0])
+        """
+        if isinstance(n, Integral) and n > 0:
+            op = self
+            while n > 1:
+                op = OperatorComp(self, op)
+                n -= 1
+            return op
         else:
             return NotImplemented
 
