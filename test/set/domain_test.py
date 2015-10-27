@@ -27,8 +27,8 @@ import pytest
 import numpy as np
 
 # ODL imports
-from odl.set.domain import IntervalProd, Interval, Rectangle
-from odl.util.testutils import almost_equal, all_almost_equal
+from odl.set.domain import IntervalProd, Interval, Rectangle, Cuboid
+from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 
 
 # TODO:
@@ -153,6 +153,26 @@ def test_volume():
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
     assert almost_equal(set_.volume, (5-1)*(6-2)*(7-3))
 
+def test_modpoint():
+    set_ = IntervalProd(1, 2)
+    assert set_.midpoint == 1.5
+
+    set_ = IntervalProd(0, np.inf)
+    assert set_.midpoint == np.inf
+
+    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert all_almost_equal(set_.midpoint, [3, 4, 5])
+
+def test_element():
+    set_ = IntervalProd(1, 2)
+    assert set_.element() in set_
+
+    set_ = IntervalProd(0, np.inf)
+    assert set_.element() in set_
+
+    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert set_.element() in set_
+
 def test_equals():
     interval1 = IntervalProd(1, 2)
     interval2 = IntervalProd(1, 2)
@@ -182,6 +202,11 @@ def test_equals():
     assert positive_reals == positive_reals
     assert positive_reals != r1_1
 
+    #non interval
+    for non_interval in [1, 1j, np.array([1, 2])]:
+        assert interval1 != non_interval
+        assert rectangle1 != non_interval
+
 def test_contains():
     set_ = IntervalProd(1, 2)
 
@@ -196,6 +221,89 @@ def test_contains():
     assert np.inf in positive_reals
     assert not -1 in positive_reals
 
+
+def test_contains_set():
+    set_ = IntervalProd(1, 2)
+
+    for sub_set in [np.array([1, 1.1, 1.2, 1.3, 1.4]),
+                    IntervalProd(1.2, 2),
+                    IntervalProd(1, 1.5),
+                    IntervalProd(1.2, 1.2)]:
+        assert set_.contains_set(sub_set)
+
+    for non_sub_set in [np.array([0, 1, 1.1, 1.2, 1.3, 1.4]),
+                        np.array([np.nan, 1.1, 1.3]),
+                        IntervalProd(1.2, 3),
+                        IntervalProd(0, 1.5),
+                        IntervalProd(3, 4)]:
+        assert not set_.contains_set(non_sub_set)
+
+    for non_set in [1, 
+                    [1, 2], 
+                    {'hello' : 1.0}]:
+        with pytest.raises(AttributeError):
+            set_.contains_set(non_set)
+
+
+# Set arithmetic
+
+def test_add():
+    interv1 = Interval(1, 2)
+    interv2 = Interval(3, 4)
+    
+    assert interv1 + 2.0 == Interval(3, 4)
+    assert interv1 + interv2 == Interval(4, 6)
+
+    interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    
+    assert interv1 + interv2 == IntervalProd([2, 4, 6, 8, 10], 
+                                             [4, 6, 8, 10, 12])
+
+def test_sub():
+    interv1 = Interval(1, 2)
+    interv2 = Interval(3, 4)
+    
+    assert interv1 - 2.0 == Interval(-1, 0)
+    assert interv1 - interv2 == Interval(-3, -1)
+
+    interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    
+    assert interv1 - interv2 == IntervalProd([-1, -1, -1, -1, -1], 
+                                             [1, 1, 1, 1, 1])
+
+def test_mul():
+    interv1 = Interval(1, 2)
+    interv2 = Interval(3, 4)
+    
+    assert interv1 * 2.0 == Interval(2, 4)
+    assert interv1 * interv2 == Interval(3, 8)
+
+    interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    
+    assert interv1 * interv2 == IntervalProd([1, 4, 9, 16, 25], 
+                                             [4, 9, 16, 25, 36])
+
+def test_div():
+    interv1 = Interval(1, 2)
+    interv2 = Interval(3, 4)
+    
+    assert interv1 / 2.0 == Interval(1/2.0, 2/2.0)
+    assert interv1 / interv2 == Interval(1/4.0, 2.0/3.0)
+
+    interv_with_zero = Interval(-1, 1)
+    with pytest.raises(ValueError):
+        interv1 / interv_with_zero
+
+
+    interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+    quotient = IntervalProd([1/2., 2/3., 3/4., 4/5., 5/6.], 
+                            [2/1., 3/2., 4/3., 5/4., 6/5.])
+
+    assert (interv1 / interv2).approx_equals(quotient, tol=10**-10)
 
 def test_interval_init():
     Interval(1, 2)
@@ -223,6 +331,16 @@ def test_rectangle_area():
     set_ = Rectangle([1, 2], [3, 4])
     assert set_.area == set_.volume
     assert set_.area == (3-1)*(4-2)
+
+
+def test_cuboid_init():
+    Cuboid([1, 2, 3], [2, 3, 4])
+
+    with pytest.raises(ValueError):
+        Cuboid(1, 2)
+
+    with pytest.raises(ValueError):
+        Cuboid([1, 2, 3, 4], [4, 5, 6 , 7])
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\','/') + ' -v'))

@@ -122,6 +122,14 @@ class IntervalProd(Set):
         midp[self._ideg] = self.begin[self._ideg]
         return midp
 
+    def min(self):
+        """The minimum value in this interval product"""
+        return self.begin
+
+    def max(self):
+        """The maximum value in this interval product"""
+        return self.end
+
     def element(self):
         """An arbitrary element, the midpoint."""
         return self.midpoint
@@ -188,6 +196,8 @@ class IntervalProd(Set):
         True
         """
         point = np.atleast_1d(point)
+        if np.any(np.isnan(point)):
+            return False
         if point.ndim > 1:
             return False
         if len(point) != self.ndim:
@@ -499,39 +509,36 @@ class IntervalProd(Set):
         """`ip.__len__() <==> len(ip)`."""
         return self.ndim
 
+    def __pos__(self):
+        """`ip.__pos__(other) <==> +ip`."""
+        return self
+
+    def __neg__(self):
+        """`ip.__pos__(other) <==> +ip`."""
+        return type(self)(-self.end, -self.begin)
+
     def __add__(self, other):
         """`ip.__add__(other) <==> ip + other`."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
-                raise ValueError('addition not possible for {} and {}: '
+                raise ValueError('Addition not possible for {} and {}: '
                                  'dimension mismatch ({} != {}).'
                                  ''.format(self, other, self.ndim, other.ndim))
             return type(self)(self.begin + other.begin, self.end + other.end)
         elif np.isscalar(other):
             return type(self)(self.begin + other, self.end + other)
-        else:  # TODO: more supported types of `other`?
-            raise TypeError('addition not supported for type {}.'
-                            ''.format(type(other)))
+        else:
+            return NotImplemented
 
     def __sub__(self, other):
         """`ip.__sub__(other) <==> ip - other`."""
-        if isinstance(other, IntervalProd):
-            if self.ndim != other.ndim:
-                raise ValueError('subtraction not possible for {} and {}: '
-                                 'dimension mismatch ({} != {}).'
-                                 ''.format(self, other, self.ndim, other.ndim))
-            return type(self)(self.begin - other.end, self.end - other.begin)
-        elif np.isscalar(other):
-            return type(self)(self.begin - other, self.end - other)
-        else:  # TODO: more supported types of `other`?
-            raise TypeError('subtraction not supported for type {}.'
-                            ''.format(type(other)))
+        return self + (-other)
 
     def __mul__(self, other):
         """`ip.__mul__(other) <==> ip * other`."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
-                raise ValueError('multiplication not possible for {} and {}: '
+                raise ValueError('Multiplication not possible for {!r} and {!r}: '
                                  'dimension mismatch ({} != {}).'
                                  ''.format(self, other, self.ndim, other.ndim))
 
@@ -547,9 +554,31 @@ class IntervalProd(Set):
             vec1 = self.begin * other
             vec2 = self.end * other
             return type(self)(np.minimum(vec1, vec2), np.maximum(vec1, vec2))
-        else:  # TODO: more supported types of `other`?
-            raise TypeError('subtraction not supported for type {}.'
-                            ''.format(type(other)))
+        else:
+            return NotImplemented
+
+    def __div__(self, other):
+        """`ip.__mul__(other) <==> ip / other`."""
+        return self * (1.0 / other)
+
+    __truediv__ = __div__
+
+    def __rdiv__(self, other):
+        """`ip.__rdiv__(other) <==> other / ip`."""
+        if np.isscalar(other):
+            contains_zero = np.any(np.logical_and(self.begin <= 0, self.end>= 0))
+            if contains_zero:
+                raise ValueError('Division by other {!r} not possible:'
+                                 'Interval contains 0.'
+                                 ''.format(other))
+
+            vec1 = other / self.begin
+            vec2 = other / self.end
+            return type(self)(np.minimum(vec1, vec2), np.maximum(vec1, vec2))
+        else:
+            return NotImplemented
+        
+    __rtruediv__ = __rdiv__
 
     def __repr__(self):
         """`ip.__repr__() <==> repr(ip)`."""
