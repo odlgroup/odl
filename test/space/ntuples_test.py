@@ -386,6 +386,11 @@ def test_space():
     x = r3.element()
     assert x.space is r3
 
+def test_space():
+    r3 = Rn(3)
+    x = r3.element()
+    assert x.ndim == 1
+
 def test_dtype():
     r3 = Rn(3)
     x = r3.element()
@@ -584,6 +589,20 @@ def _test_matrix_dist_real(n):
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
 
+def _test_matrix_dist_squared_real(n):
+    rn = Rn(n)
+    xarr, yarr, x, y = _vectors(rn, 2)
+    mat = _dense_matrix(rn)
+
+    w = _FnMatrixWeighting(mat, dist_using_inner=True)
+
+    result = w.dist(x, y)
+
+    true_result = np.sqrt(np.dot(
+        xarr-yarr, np.asarray(np.dot(mat, xarr-yarr)).squeeze()))
+
+    assert almost_equal(result, true_result)
+
 def _test_matrix_inner_complex(n):
     cn = Cn(n)
     xarr, yarr, x, y = _vectors(cn, 2)
@@ -656,6 +675,7 @@ def test_matrix_methods():
         _test_matrix_inner_real(n)
         _test_matrix_norm_real(n)
         _test_matrix_dist_real(n)
+        _test_matrix_dist_squared_real(n)
         _test_matrix_inner_complex(n)
         _test_matrix_norm_complex(n)
         _test_matrix_dist_complex(n)
