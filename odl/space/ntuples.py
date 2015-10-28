@@ -1110,6 +1110,16 @@ class Cn(Fn):
             """
             self.imag.data[:] = newimag
 
+        def asconj(self):
+            """Map this vector to its complex conjugate."""
+            self.imag *= -1
+
+        def conj(self):
+            """Return the complex conjugate of this vector as a copy."""
+            conjugate = self.copy()
+            conjugate.asconj()
+            return conjugate
+
 
 class Rn(Fn):
 
