@@ -840,15 +840,7 @@ class Fn(FnBase, Ntuples):
         >>> out
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
-        if out is x1 and out is x2:  # out = out*out
-            out.data[:] *= out.data
-        elif out is x1:  # out = out*x2
-            out.data[:] *= x2.data
-        elif out is x2:  # out = out*x1
-            out.data[:] *= x1.data
-        else:  # out = x1*x2
-            out.data[:] = x1.data
-            out.data[:] *= x2.data
+        np.multiply(x1.data, x2.data, out=out.data)
 
     def zero(self):
         """Create a vector of zeros.

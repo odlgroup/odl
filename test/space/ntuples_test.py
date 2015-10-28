@@ -325,6 +325,7 @@ def test_setslice():
         for end in ends:
             for step in steps:
                 _test_setslice(slice(start, end, step))
+    
 
 def test_transpose(fn):
     x = _element(fn)

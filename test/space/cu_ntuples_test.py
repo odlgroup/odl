@@ -272,7 +272,7 @@ def test_norm():
     correct_norm = math.sqrt(correct_norm_squared)
 
     # Space function
-    assert almost_equal(r3.norm(xd), correct_norm, places=5)
+    assert almost_equal(r3.norm(xd), correct_norm)
 
 @skip_if_no_cuda
 def test_inner():
@@ -297,35 +297,35 @@ def _test_lincomb(a, b, n=100):
 
     z_arr[:] = a * x_arr + b * y_arr
     rn.lincomb(a, x, b, y, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=4)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # First argument aliased with output
     x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
 
     z_arr[:] = a * z_arr + b * y_arr
     rn.lincomb(a, z, b, y, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=4)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # Second argument aliased with output
     x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
 
     z_arr[:] = a * x_arr + b * z_arr
     rn.lincomb(a, x, b, z, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=4)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # Both arguments aliased with each other
     x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
 
     z_arr[:] = a * x_arr + b * x_arr
     rn.lincomb(a, x, b, x, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=4)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # All aliased
     x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
 
     z_arr[:] = a * z_arr + b * z_arr
     rn.lincomb(a, z, b, z, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=4)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 @skip_if_no_cuda
 def test_lincomb():
@@ -354,7 +354,7 @@ def _test_member_lincomb(a, n=100):
     y_device.lincomb(a, x_device)
 
     # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(y_device, y_host, places=5)
+    assert all_almost_equal(y_device, y_host)
 
 @skip_if_no_cuda
 def test_member_lincomb():
@@ -382,25 +382,25 @@ def test_multiply():
     r3.multiply(x_device, y_device, out=z_device)
 
     # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(z_device, z_host, places=5)
+    assert all_almost_equal(z_device, z_host)
 
     # Assert input was not modified
-    assert all_almost_equal(x_device, x_host, places=5)
-    assert all_almost_equal(y_device, y_host, places=5)
+    assert all_almost_equal(x_device, x_host)
+    assert all_almost_equal(y_device, y_host)
 
     # Aliased
     z_host[:] = z_host * x_host
     r3.multiply(z_device, x_device, out=z_device)
 
     # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(z_device, z_host, places=5)
+    assert all_almost_equal(z_device, z_host)
 
     # Aliased
     z_host[:] = z_host * z_host
     r3.multiply(z_device, z_device, out=z_device)
 
     # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(z_device, z_host, places=5)
+    assert all_almost_equal(z_device, z_host)
 
 @skip_if_no_cuda
 def test_member_multiply():
@@ -421,7 +421,7 @@ def test_member_multiply():
     y_device *= x_device
 
     # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(y_device, y_host, places=5)
+    assert all_almost_equal(y_device, y_host)
 
 @skip_if_no_cuda
 def test_addition():
@@ -551,7 +551,7 @@ def _test_ufunc(ufunc):
     x_dev = r3.element(x_host)
     y_dev = getattr(odl.space.cu_ntuples, ufunc)(x_dev)
 
-    assert all_almost_equal(y_host, y_dev, places=5)
+    assert all_almost_equal(y_host, y_dev)
 
 @skip_if_no_cuda
 def test_ufuncs():
@@ -594,7 +594,7 @@ def _test_const_call_real(n):
     result_const = weighting.inner(x, y)
     true_result_const = constant * np.dot(yarr, xarr)
 
-    assert almost_equal(result_const, true_result_const, places=5)
+    assert almost_equal(result_const, true_result_const)
 
 @skip_if_no_cuda
 def test_const_call():
