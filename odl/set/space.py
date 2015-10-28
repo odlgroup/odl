@@ -392,8 +392,7 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
-
-        if out not in self:
+        elif out not in self:
             raise TypeError('output vector {!r} not in space {!r}.'
                             ''.format(out, self))
 
@@ -586,10 +585,10 @@ class LinearSpace(Set):
         def __mul__(self, other):
             """Implementation of 'self * other'."""
             tmp = self.space.element()
-            if other in self.space:
-                self.space.multiply(other, self, out=tmp)
-            elif other in self.space.field:
+            if other in self.space.field:
                 self.space.lincomb(other, self, out=tmp)
+            elif other in self.space:
+                self.space.multiply(other, self, out=tmp)
             else:
                 return NotImplemented
             return tmp

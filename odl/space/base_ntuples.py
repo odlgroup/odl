@@ -92,7 +92,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         >>> long_3.element() in Ntuples(3, dtype='float64')
         False
         """
-        return isinstance(other, NtuplesBase.Vector) and other.space == self
+        return getattr(other, 'space', None) == self
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.

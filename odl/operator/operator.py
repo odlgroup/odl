@@ -237,6 +237,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         self._domain = domain
         self._range = range
         self._is_linear = bool(linear)
+        self._is_functional = isinstance(range, Field)
 
         if self.is_linear:
             if not (isinstance(domain, LinearSpace) or isinstance(domain, Field)):
@@ -260,6 +261,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def is_linear(self):
         """True if this operator is linear."""
         return self._is_linear
+        
+    @property
+    def is_functional(self):
+        """True if the range of this operator is a field."""
+        return self._is_functional
 
     @property
     def adjoint(self):
@@ -337,8 +343,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                                 'of {!r}.'
                                 ''.format(out, self.range, self))
 
-            if isinstance(self.range, Field):
-                raise TypeError('`out` parameter cannot be used when range is a field')
+            if self.is_functional:
+                raise TypeError('`out` parameter cannot be used'
+                                'when range is a field')
 
             self._apply(x, out, *args, **kwargs)
             return out

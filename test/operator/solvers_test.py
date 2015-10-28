@@ -167,10 +167,8 @@ def test_quasi_newton():
 class QPGradientOp(odl.Operator):
     """Gradient operator for a QP, so returns Hx + c."""
 
-    def __init__(self, H, c, domain=None, range=None):
-        dom = odl.Rn(H.shape[1]) if domain is None else domain
-        ran = odl.Rn(H.shape[0]) if range is None else range
-        super().__init__(dom, ran)#, linear=True)
+    def __init__(self, H, c, domain, range):
+        super().__init__(domain, range)
         self.H = H
         self.c = c
 
@@ -199,7 +197,7 @@ def test_steepest_decent():
     # Create derivative operator operator
     print('H:', H)
     print('c:', c)
-    deriv_op = QPGradientOp(H,c)
+    deriv_op = QPGradientOp(H, c, rn, rn)
 
     # Solve using steepest decent
     line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(deriv_op(x)) )

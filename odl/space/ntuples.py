@@ -160,10 +160,7 @@ class Ntuples(NtuplesBase):
                 return self.Vector(self, arr)
         else:
             if data_ptr is None:
-                if isinstance(inp, Ntuples.Vector):
-                    inp = inp.data.astype(self.dtype, copy=True)
-                else:
-                    inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
+                inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
 
                 if inp.shape == (1,):
                     arr = np.empty(self.size, dtype=self.dtype)
@@ -455,9 +452,6 @@ def _blas_is_applicable(*args):
     """
     if len(args) == 0:
         return False
-        
-    if args[0].size < 100: #small array optimization
-        return False
 
     return (all(x.dtype == args[0].dtype for x in args) and
             all(x.dtype in _BLAS_DTYPES for x in args) and
@@ -466,6 +460,13 @@ def _blas_is_applicable(*args):
 
 def _lincomb(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
+    
+    #Shortcut for small problems
+    if x1.size < 100: #small array optimization
+        out.data[:] = a * x1.data + b * x2.data
+        return
+    
+    #Use blas for larger problems
     def fallback_axpy(x1, x2, n, a):
         """Fallback axpy implementation avoiding copy."""
         if a != 0:
@@ -496,19 +497,19 @@ def _lincomb(a, x1, b, x2, out, dtype):
         _lincomb(a+b, x1, 0, x1, out, dtype)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a+b, out.data, len(out))
+        scal(a+b, out.data, out.size)
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
-            scal(a, out.data, len(out))
+            scal(a, out.data, out.size)
         if b != 0:
-            axpy(x2.data, out.data, len(out), b)
+            axpy(x2.data, out.data, out.size, b)
     elif out is x2:
         # out is aligned with x2 -> out = a*x1 + b*out
         if b != 1:
-            scal(b, out.data, len(out))
+            scal(b, out.data, out.size)
         if a != 0:
-            axpy(x1.data, out.data, len(out), a)
+            axpy(x1.data, out.data, out.size, a)
     else:
         # We have exhausted all alignment options, so x1 != x2 != out
         # We now optimize for various values of a and b
@@ -516,23 +517,23 @@ def _lincomb(a, x1, b, x2, out, dtype):
             if a == 0:  # Zero assignment -> out = 0
                 out.data[:] = 0
             else:  # Scaled copy -> out = a*x1
-                copy(x1.data, out.data, len(out))
+                copy(x1.data, out.data, out.size)
                 if a != 1:
-                    scal(a, out.data, len(out))
+                    scal(a, out.data, out.size)
         else:
             if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2.data, out.data, len(out))
+                copy(x2.data, out.data, out.size)
                 if b != 1:
-                    scal(b, out.data, len(out))
+                    scal(b, out.data, out.size)
 
             elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1.data, out.data, len(out))
-                axpy(x2.data, out.data, len(out), b)
+                copy(x1.data, out.data, out.size)
+                axpy(x2.data, out.data, out.size, b)
             else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2.data, out.data, len(out))
+                copy(x2.data, out.data, out.size)
                 if b != 1:
-                    scal(b, out.data, len(out))
-                axpy(x1.data, out.data, len(out), a)
+                    scal(b, out.data, out.size)
+                axpy(x1.data, out.data, out.size, a)
 
 
 def _repr_space_funcs(space):
@@ -939,9 +940,6 @@ class Fn(FnBase, Ntuples):
                 raise TypeError('{!r} not an `Fn` instance.'
                                 ''.format(space))
 
-            if not isinstance(data, np.ndarray):
-                raise TypeError('data {!r} not a `numpy.ndarray` instance.'
-                                ''.format(data))
             Ntuples.Vector.__init__(self, space, data)
 
 
@@ -1518,6 +1516,9 @@ class _FnConstWeighting(_FnWeighting):
             `True` if `other` is an `FnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
+        if other is self:
+            return True
+        
         # TODO: make symmetric
         return (isinstance(other, _FnConstWeighting) and
                 self.const == other.const)
@@ -1620,6 +1621,14 @@ class _FnNoWeighting(_FnConstWeighting):
     with :math:`b^H` standing for transposed complex conjugate.
     This is the CPU implementation using NumPy.
     """
+    
+    #Implements singleton pattern for efficiency
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(_FnNoWeighting, cls).__new__(
+                                  cls, *args, **kwargs)
+        return cls._instance
 
     def __init__(self, dist_using_inner=False):
         """Initialize a new instance.

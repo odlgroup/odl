@@ -270,12 +270,18 @@ class ComplexNumbers(Field):
         >>> C.contains_set(RealNumbers())
         True
         """
+        if other is self:
+            return True
+            
         return (isinstance(other, ComplexNumbers) or
                 isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`."""
+        if other is self:
+            return True
+            
         return isinstance(other, ComplexNumbers)
 
     def element(self, inp=None):
@@ -316,11 +322,17 @@ class RealNumbers(Field):
         >>> R.contains_set(RealNumbers())
         True
         """
+        if other is self:
+            return True
+        
         return (isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`."""
+        if other is self:
+            return True
+            
         return isinstance(other, RealNumbers)
 
     def element(self, inp=None):
@@ -344,7 +356,11 @@ class Integers(Set):
     """The set of integers."""
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`."""
+        """`s.__eq__(other) <==> s == other`."""        
+        
+        if other is self:
+            return True
+            
         return isinstance(other, Integers)
 
     def __contains__(self, other):
@@ -365,6 +381,9 @@ class Integers(Set):
         >>> Z.contains_set(RealNumbers())
         False
         """
+        if other is self:
+            return True
+            
         return isinstance(other, Integers)
 
     def element(self, inp=None):
