@@ -26,7 +26,7 @@ standard_library.install_aliases()
 import pytest
 import numpy as np
 import scipy as sp
-from math import sqrt, ceil
+from math import ceil
 from textwrap import dedent
 
 # ODL imports
@@ -182,10 +182,9 @@ def _test_unary_operator(fn, function):
     results to Numpy.
     """
 
-    x_arr = _array(fn)
+    x_arr, x = _vectors(fn)
+    
     y_arr = function(x_arr)
-
-    x = fn.element(x_arr)
     y = function(x)
 
     assert all_almost_equal([x, y], [x_arr, y_arr])
@@ -195,12 +194,9 @@ def _test_binary_operator(fn, function):
     results to Numpy.
     """
 
-    x_arr = _array(fn)
-    y_arr = _array(fn)
+    x_arr, y_arr, x, y = _vectors(fn, 2)
+    
     z_arr = function(x_arr, y_arr)
-
-    x = fn.element(x_arr)
-    y = fn.element(y_arr)
     z = function(x, y)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
@@ -442,10 +438,9 @@ def test_array_wrap_method(fn):
     assert all_almost_equal(y, y_h)
     assert y in fn
 
-def test_matrix_init():
-    rn = Rn(10)
-    sparse_mat = _sparse_matrix(rn)
-    dense_mat = _dense_matrix(rn)
+def test_matrix_init(fn):
+    sparse_mat = _sparse_matrix(fn)
+    dense_mat = _dense_matrix(fn)
 
     # Just test if the code runs
     _FnMatrixWeighting(sparse_mat)
