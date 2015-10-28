@@ -288,7 +288,8 @@ def steepest_decent(deriv_op, x, line_search, niter=1, print_iter_num=None):
         if print_iter_num is not None:
             print('Iteration', _)
         grad = deriv_op(x)
-        x -= line_search(x, -grad, grad)*grad
+        step = line_search(x, -grad, grad)
+        x.lincomb(1, x, -step, grad)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
