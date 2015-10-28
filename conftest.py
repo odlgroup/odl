@@ -15,5 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function, division, absolute_import
+"""Test configuration file."""
 
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+
+from odl import CUDA_AVAILABLE
+collect_ignore = ['setup.py', 'run_tests.py']
+if not CUDA_AVAILABLE:
+    collect_ignore.append('test/space/cu_ntuples_test.py')

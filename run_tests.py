@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Use pytest to find all tests in the 'test' folder and all doctests in 'odl' and run them."""
+"""Use pytest to find all tests in the 'test' folder and all doctests in
+'odl' and run them."""
 
 from __future__ import print_function, division, absolute_import
 
@@ -26,27 +27,37 @@ import sys
 import pytest
 try:
     import coverage
-    PYTEST_COV_AVAILABLE = True
+    COVERAGE_AVAILABLE = True
 except ImportError:
-    PYTEST_COV_AVAILABLE = False
+    COVERAGE_AVAILABLE = False
 
 
 if __name__ == '__main__':
+    from distutils.version import StrictVersion
+    from warnings import warn
+
     arg = sys.argv[:1]
     arg.append('./test/')
-    arg.append('./odl/')
-    arg.append('--doctest-modules')
-    if PYTEST_COV_AVAILABLE:
+
+    # Use doctests only for pytest >= 2.7.0, otherwise we get whitespace errors
+    if StrictVersion(pytest.__version__) >= '2.7.0':
+        arg.append('./odl/')
+        arg.append('--doctest-modules')
+    else:
+        warn('Ignoring doctests due to deprecated pytest version {}. '
+             'Required support for doctest option flags was added in 2.7.0.'
+             ''.format(pytest.__version__))
+    if COVERAGE_AVAILABLE:
         cov = coverage.Coverage()
         cov.start()
-        
+
     from odl import CUDA_AVAILABLE
     if not CUDA_AVAILABLE:
         arg.append('--ignore=odl/space/cu_ntuples.py')
 
     pytest.main(arg)
-    
-    if PYTEST_COV_AVAILABLE:
+
+    if COVERAGE_AVAILABLE:
         cov.stop()
         cov.save()
         cov.html_report()
