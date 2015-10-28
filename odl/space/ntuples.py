@@ -204,7 +204,7 @@ class Ntuples(NtuplesBase):
 
             self._data = data
 
-            super().__init__(space)
+            NtuplesBase.Vector.__init__(self, space)
 
         @property
         def data(self):
@@ -912,7 +912,7 @@ class Fn(FnBase, Ntuples):
         if other is self:
             return True
 
-        return (super().__eq__(other) and
+        return (Ntuples.__eq__(self, other) and
                 self._space_funcs == other._space_funcs)
 
     def __repr__(self):
@@ -939,7 +939,7 @@ class Fn(FnBase, Ntuples):
             if not isinstance(data, np.ndarray):
                 raise TypeError('data {!r} not a `numpy.ndarray` instance.'
                                 ''.format(data))
-            super().__init__(space, data)
+            Ntuples.Vector.__init__(self, space, data)
 
 
 class Cn(Fn):

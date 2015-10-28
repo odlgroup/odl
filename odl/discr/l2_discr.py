@@ -36,7 +36,6 @@ from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.default import L2
-from odl.util.graphics import show_discrete_function
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
     from odl.space.cu_ntuples import CudaFn
@@ -309,6 +308,8 @@ class DiscreteL2(Discretization):
 
             matplotlib.pyplot.scatter : Show scattered 3d points
             """
+            
+            from odl.util.graphics import show_discrete_function
             show_discrete_function(self, method=method, title=title,
                                    **kwargs)
 
