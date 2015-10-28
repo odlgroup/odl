@@ -173,38 +173,31 @@ class QPGradientOp(odl.Operator):
         self.c = c
 
     def _call(self, x):
-        return self.range.element(np.dot(self.H, x.data) + self.c.ravel())
-
-#    @property
-#    def adjoint(self):
-#        # TODO: is this correct? 
-#        return QPGradientOp(self.H.T, self.c)
+        return self.range.element(np.dot(self.H, x.data)) + self.c
 
 def test_steepest_decent():
-    """ Solving a quadracit problem min x^T H x + c^T x, where H > 0. Solution
+    """ Solving a quadracit problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
     is given by solving Hx + c = 0, and solving this with np is used as reference. """   
     n = 5
     H = np.random.rand(n, n)
     H = np.dot(H.T, H) + np.eye(n) * n
-    c = np.random.rand(n,1)
     
     # Vector representation
     rn = odl.Rn(n)
-    xvec = rn.element([3.4])#rn.element([1,1,1,1,1])#rn.zero()
+    xvec = rn.zero()
+    c = rn.element(np.random.rand(n))
 
+    # Optimal solution, found by solving 0 = gradf(x) = Hx + c
     x_opt = np.linalg.solve(H, -c)
     
     # Create derivative operator operator
-    print('H:', H)
-    print('c:', c)
     deriv_op = QPGradientOp(H, c, rn, rn)
 
     # Solve using steepest decent
-    line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(deriv_op(x)) )
-    solvers.steepest_decent(deriv_op , xvec, line_search, niter=200)
+    line_search = solvers.BacktrackingLineSearch(lambda x: 1/2*x.inner(deriv_op(x)) + 1/2*x.inner(c), 0.5, 0.05, 10)
+    solvers.steepest_decent(deriv_op , xvec, line_search, niter=20)
     
     assert all_almost_equal(x_opt, xvec, places=2)
-    
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\','/')) + ' -v')
-

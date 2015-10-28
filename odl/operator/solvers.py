@@ -22,6 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import next, object, range
+from math import log, ceil
 
 # ODL imports
 from odl.operator.operator import OperatorComp, OperatorSum
@@ -222,19 +223,26 @@ class BacktrackingLineSearch(object):
     """ Backtracking line search, 
     a search scheme based on the Armijo-Goldstein condition.
     """
-    def __init__(self, function, tau=0.8, c=0.7):
+    def __init__(self, function, tau=0.8, c=0.7, max_num_iter=0):
         self.function = function
         self.tau = tau
         self.c = c
+        self.total_num_iter = 0
+        #If max_num_iter is specified it sets this value, otherwise sets a value that allows the shortest step to be < 0.0001 of original step length
+        if max_num_iter == 0:
+            self.max_num_iter = ceil(log(0.0001/self.tau))
+        else:
+            self.max_num_iter = max_num_iter
 
     def __call__(self, x, direction, gradf):
         alpha = 1.0
         decrease = gradf.inner(direction)
         fx = self.function(x)
-        num_iter = 0
-        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and num_iter <= 20:
+        num_iter = 0        
+        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and num_iter <= self.max_num_iter:
             num_iter += 1
             alpha *= self.tau
+        self.total_num_iter += num_iter
         return alpha
 
 class ConstantLineSearch(object):
@@ -272,16 +280,19 @@ def quasi_newton(op, x, line_search, niter=1, partial=None):
         if partial is not None:
             partial.send(x)
 
-def steepest_decent(deriv_op, x, line_search, niter=1):
+def steepest_decent(deriv_op, x, line_search, niter=1, print_iter_num=None):
     """ General implementation of steepest decent for solving min f(x)
     for x in C, where we define f(x) = infty if x is not in C. Needs to
     be done in the line search.
     """
     
+    grad = deriv_op.range.element()
     for _ in range(niter):
-        print('Iteration', _)
-        grad = deriv_op(x)
-        x -= line_search(x, -grad, grad)*grad
+        if print_iter_num is not None:
+            print('Iteration', _)
+        deriv_op(x, out = grad)
+        step = line_search(x, -grad, grad)
+        x.lincomb(1, x, -step, grad)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
