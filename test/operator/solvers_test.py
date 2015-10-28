@@ -155,58 +155,13 @@ def test_quasi_newton():
 
     x_opt = np.linalg.solve(A, rhs)
 
-    # Solve using quasi newton
+    # Solve using conjugate gradient
     line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 - rhs))
     solvers.quasi_newton(Res, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
     assert Res(xvec).norm() < 10**-1
 
-""" Test on a small QP """
-
-class QPGradientOp(odl.Operator):
-    """Gradient operator for a QP, so returns Hx + c."""
-
-    def __init__(self, H, c, domain=None, range=None):
-        dom = odl.Rn(H.shape[1]) if domain is None else domain
-        ran = odl.Rn(H.shape[0]) if range is None else range
-        super().__init__(dom, ran)#, linear=True)
-        self.H = H
-        self.c = c
-
-    def _call(self, x):
-        return self.range.element(np.dot(self.H, x.data) + self.c.ravel())
-
-#    @property
-#    def adjoint(self):
-#        # TODO: is this correct? 
-#        return QPGradientOp(self.H.T, self.c)
-
-def test_steepest_decent():
-    """ Solving a quadracit problem min x^T H x + c^T x, where H > 0. Solution
-    is given by solving Hx + c = 0, and solving this with np is used as reference. """   
-    n = 5
-    H = np.random.rand(n, n)
-    H = np.dot(H.T, H) + np.eye(n) * n
-    c = np.random.rand(n,1)
-    
-    # Vector representation
-    rn = odl.Rn(n)
-    xvec = rn.element([3.4])#rn.element([1,1,1,1,1])#rn.zero()
-
-    x_opt = np.linalg.solve(H, -c)
-    
-    # Create derivative operator operator
-    print('H:', H)
-    print('c:', c)
-    deriv_op = QPGradientOp(H,c)
-
-    # Solve using steepest decent
-    line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(deriv_op(x)) )
-    solvers.steepest_decent(deriv_op , xvec, line_search, niter=200)
-    
-    assert all_almost_equal(x_opt, xvec, places=2)
-    
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\','/')) + ' -v')
 

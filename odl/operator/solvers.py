@@ -231,9 +231,7 @@ class BacktrackingLineSearch(object):
         alpha = 1.0
         decrease = gradf.inner(direction)
         fx = self.function(x)
-        num_iter = 0
-        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and num_iter <= 20:
-            num_iter += 1
+        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c:
             alpha *= self.tau
         return alpha
 
@@ -271,17 +269,6 @@ def quasi_newton(op, x, line_search, niter=1, partial=None):
 
         if partial is not None:
             partial.send(x)
-
-def steepest_decent(deriv_op, x, line_search, niter=1):
-    """ General implementation of steepest decent for solving min f(x)
-    for x in C, where we define f(x) = infty if x is not in C. Needs to
-    be done in the line search.
-    """
-    
-    for _ in range(niter):
-        print('Iteration', _)
-        grad = deriv_op(x)
-        x -= line_search(x, -grad, grad)*grad
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
