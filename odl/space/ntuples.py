@@ -455,6 +455,9 @@ def _blas_is_applicable(*args):
     """
     if len(args) == 0:
         return False
+        
+    if args[0].size < 100: #small array optimization
+        return False
 
     return (all(x.dtype == args[0].dtype for x in args) and
             all(x.dtype in _BLAS_DTYPES for x in args) and
