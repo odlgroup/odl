@@ -280,7 +280,7 @@ def quasi_newton(op, x, line_search, niter=1, partial=None):
         if partial is not None:
             partial.send(x)
 
-def steepest_decent(deriv_op, x, line_search, niter=1, print_iter_num=None):
+def steepest_decent(deriv_op, x, line_search, niter=1, partial=None):
     """ General implementation of steepest decent for solving min f(x)
     for x in C, where we define f(x) = infty if x is not in C. Needs to
     be done in the line search.
@@ -288,11 +288,12 @@ def steepest_decent(deriv_op, x, line_search, niter=1, print_iter_num=None):
     
     grad = deriv_op.range.element()
     for _ in range(niter):
-        if print_iter_num is not None:
-            print('Iteration', _)
-        deriv_op(x, out = grad)
+        deriv_op(x, out=grad)
         step = line_search(x, -grad, grad)
         x.lincomb(1, x, -step, grad)
+        
+        if partial is not None:
+            partial.send(x)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
