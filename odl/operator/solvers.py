@@ -238,8 +238,9 @@ class BacktrackingLineSearch(object):
         alpha = 1.0
         decrease = gradf.inner(direction)
         fx = self.function(x)
-        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and self.num_iter <= 20:
-            self.num_iter += 1
+        num_iter = 0        
+        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and self.num_iter <= self.max_num_iter:
+            num_iter += 1
             alpha *= self.tau
         return alpha
 
