@@ -180,7 +180,7 @@ class QPGradientOp(odl.Operator):
 def test_steepest_decent():
     """ Solving a quadracit problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
     is given by solving Hx + c = 0, and solving this with np is used as reference. """   
-    n = 2
+    n = 5
     H = np.random.rand(n, n)
     H = np.dot(H.T, H) + np.eye(n) * n
     c = np.random.rand(n,1)
