@@ -22,6 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import next, object, range
+from math import log, ceil
 
 # ODL imports
 from odl.operator.operator import OperatorComp, OperatorSum
@@ -222,10 +223,15 @@ class BacktrackingLineSearch(object):
     """ Backtracking line search, 
     a search scheme based on the Armijo-Goldstein condition.
     """
-    def __init__(self, function, tau=0.8, c=0.7):
+    def __init__(self, function, tau=0.8, c=0.7, max_num_iter=0):
         self.function = function
         self.tau = tau
         self.c = c
+        #If max_num_iter is specified it sets this value, otherwise sets a value that allows the shortest step to be < 0.0001 of original step length
+        if max_num_iter == 0:
+            self.max_num_iter = ceil(log(0.0001/self.tau))
+        else:
+            self.max_num_iter = max_num_iter
 
     def __call__(self, x, direction, gradf):
         alpha = 1.0
