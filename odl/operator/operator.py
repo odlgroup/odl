@@ -43,6 +43,7 @@ from odl.set.sets import Set, UniversalSet, Field
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 
            'OperatorLeftScalarMult', 'OperatorRightScalarMult', 
+           'FunctionalLeftVectorMult',
            'OperatorLeftVectorMult', 'OperatorRightVectorMult', 
            'OperatorPointwiseProduct')
 
@@ -466,8 +467,10 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorComp(other, self)
         elif isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
-        elif isinstance(other, LinearSpace.Vector) and other.space.field == self.range:
+        elif other in self.range:
             return OperatorLeftVectorMult(self, other.copy())
+        elif isinstance(other, LinearSpace.Vector) and other.space.field == self.range:
+            return FunctionalLeftVectorMult(self, other.copy())
         else:
             return NotImplemented
 
@@ -1084,9 +1087,7 @@ class OperatorRightScalarMult(Operator):
         return '{} * {}'.format(self._op, self._scalar)
 
 
-
-class OperatorLeftVectorMult(Operator):
-
+class FunctionalLeftVectorMult(Operator):
     """Expression type for the operator left vector multiplication.
 
     `OperatorLeftVectorMult(op, vector)(x) <==> vector * op(x)`
@@ -1140,7 +1141,7 @@ class OperatorLeftVectorMult(Operator):
         --------
         OperatorLeftScalarMult : the result
         """
-        return OperatorLeftVectorMult(self._op.derivative(x), self._vector)
+        return FunctionalLeftVectorMult(self._op.derivative(x), self._vector)
 
     @property
     def adjoint(self):
@@ -1168,6 +1169,86 @@ class OperatorLeftVectorMult(Operator):
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
         return '{} * {}'.format(self._vector, self._op)
+        
+
+class OperatorLeftVectorMult(Operator):
+    """Expression type for the operator left vector multiplication.
+
+    `OperatorLeftVectorMult(op, vector)(x) <==> vector * op(x)`
+
+    The scalar multiplication is well-defined only if `op.range` is
+    a `vector.space.field`.
+    """
+
+    def __init__(self, op, vector):
+        """Initialize a new `OperatorLeftVectorMult` instance.
+
+        Parameters
+        ----------
+        op : `Operator`
+            The range of `op` must be a `LinearSpace`.
+        vector : `LinearSpace.Vector` with `field` same as `op.range.field`
+            The vector to multiply by
+        """
+        if vector not in op.range:
+            raise TypeError('vector {!r} not in op.range {!r}'
+                            ''.format(vector, op.range))
+
+        super().__init__(op.domain, op.range, linear=op.is_linear)
+        self._op = op
+        self._vector = vector
+
+    def _call(self, x):
+        """`op.__call__(x) <==> op(x)`."""
+        # pylint: disable=protected-access
+        return self._vector * self._op._call(x)
+
+    def _apply(self, x, out):
+        """`op._apply(x, out) <==> out <-- op(x)`."""
+        # pylint: disable=protected-access
+        self._op._apply(x, out)
+        out *= self._vector
+
+    def derivative(self, x):
+        """Return the derivative at 'x'.
+
+        Left scalar multiplication and derivative are commutative:
+
+        OperatorLeftVectorMult(op, vector).derivative(x) <==>
+        OperatorLeftVectorMult(op.derivative(x), vector)
+
+        See also
+        --------
+        OperatorLeftScalarMult : the result
+        """
+        return OperatorLeftVectorMult(self._op.derivative(x), self._vector)
+
+    @property
+    def adjoint(self):
+        """The operator adjoint.
+
+        The adjoint of the operator scalar multiplication is the
+        scalar multiplication of the operator adjoint:
+
+        `OperatorLeftVectorMult(op, vector).adjoint ==
+        `OperatorComp(op.adjoint, vector.T)`
+        
+        `(x * A)^T = A^T * x^T`
+        """
+
+        if not self.is_linear:
+            raise NotImplementedError('Nonlinear operators have no adjoint')
+
+        return OperatorRightVectorMult(self._op.adjoint, self._vector)
+
+    def __repr__(self):
+        """`op.__repr__() <==> repr(op)`."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self._op, self._vector)
+
+    def __str__(self):
+        """`op.__str__() <==> str(op)`."""
+        return '{} * {}'.format(self._vector, self._op)
 
 
 class OperatorRightVectorMult(Operator):
@@ -1176,8 +1257,7 @@ class OperatorRightVectorMult(Operator):
 
     `OperatorLeftVectorMult(op, vector)(x) <==> op(vector * x)`
 
-    The scalar multiplication is well-defined only if `op.domain` is
-    a `vector.space`.
+    The scalar multiplication is well-defined only if `vector in op.domain`.
     """
 
     def __init__(self, op, vector):
@@ -1194,7 +1274,7 @@ class OperatorRightVectorMult(Operator):
             raise TypeError('vector {!r} not in op.domain {!r}'
                             ''.format(vector.space, op.domain))
 
-        super().__init__(op.domain.field, op.range, linear=op.is_linear)
+        super().__init__(op.domain, op.range, linear=op.is_linear)
         self._op = op
         self._vector = vector
 
@@ -1207,8 +1287,8 @@ class OperatorRightVectorMult(Operator):
         """`op._apply(x, out) <==> out <-- op(x)`."""
         # pylint: disable=protected-access
         tmp = self.domain.element()
-        tmp.lincomb(x, self._vector)
-        scalar = self._op._apply(tmp, out)
+        tmp.multiply(self._vector, x)
+        self._op._apply(tmp, out)
 
     def derivative(self, x):
         """Return the derivative at 'x'.
@@ -1241,7 +1321,7 @@ class OperatorRightVectorMult(Operator):
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
         #TODO: handle complex vectors
-        return OperatorComp(self._vector.T, self._op.adjoint)
+        return OperatorLeftVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`."""
@@ -1251,6 +1331,7 @@ class OperatorRightVectorMult(Operator):
     def __str__(self):
         """`op.__str__() <==> str(op)`."""
         return '{} * {}'.format(self._op, self._vector)
+        
 
 def operator(call=None, apply=None, inv=None, deriv=None,
              dom=None, ran=None, linear=False):
