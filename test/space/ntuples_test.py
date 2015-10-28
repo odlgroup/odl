@@ -43,13 +43,20 @@ from odl.util.testutils import almost_equal, all_almost_equal
 # * vector multiplication
 # * MatVecOperator
 # * Custom inner/norm/dist
+def _array(fn):
+    # Generate numpy vectors, real or complex or int
+    if np.issubdtype(fn.dtype, np.floating):
+        return np.random.randn(fn.size).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.integer):
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
+    else:
+        return (np.random.randn(fn.size) + 1j * np.random.randn(fn.size)).astype(fn.dtype)
+        
+def _element(fn):
+    return fn.element(_array(fn))
 
 def _vectors(fn, n=1):
-    # Generate numpy vectors, real or complex
-    if isinstance(fn, Rn):
-        arrs = [np.random.rand(fn.size) for _ in range(n)]
-    else:
-        arrs = [np.random.rand(fn.size) + 1j * np.random.rand(fn.size) for _ in range(n)]
+    arrs = [_array(fn) for _ in range(n)]
 
     # Make Fn vectors
     vecs = [fn.element(arr) for arr in arrs]
@@ -69,6 +76,14 @@ def _dense_matrix(fn):
     mat = np.asmatrix(np.random.rand(fn.size, fn.size), dtype=float)
     # Make symmetric and positive definite
     return mat + mat.T + fn.size * np.eye(fn.size)
+    
+@pytest.fixture(scope="module", 
+                ids=['Rn float64', 'Rn float32', 
+                     'Cn complex128', 'Cn complex64'],
+                params=[Rn(10, np.float64), Rn(10, np.float32), 
+                        Cn(10, np.complex128), Cn(10, np.complex64)])
+def fn(request):
+    return request.param
 
 def test_init():
     #Test run
@@ -96,122 +111,121 @@ def test_init():
     with pytest.raises(TypeError):
         s3 = Rn(3, str)
 
-def test_vector_init():
+def test_vector_init(fn):
     #Test that code runs
-    r3 = Rn(3)
-    vec = Rn.Vector(r3, np.array([1.0, 2.0, 3.0]))
+    arr = _array(fn)    
+    
+    vec = fn.Vector(fn, arr)
 
     #Space has to be an actual space
     for non_space in [1, complex, np.array([1,2])]:
         with pytest.raises(TypeError):
-            vec = r3.Vector(non_space, [1.0, 2.0, 3.0])
+            vec = fn.Vector(non_space, arr)
 
     #Data has to be a numpy array
     with pytest.raises(TypeError):
-        vec = r3.Vector(r3, [1.0, 2.0, 3.0])
+        vec = fn.Vector(fn, list(arr))
 
-    #Data has to be a numpy array
+    #Data has to be a numpy array or correct dtype
     with pytest.raises(TypeError):
-        vec = r3.Vector(r3, np.array([1.0, 2.0, 3.0], dtype=int))
+        vec = fn.Vector(fn, arr.astype(int))
 
 
-def _test_lincomb(a, b, n=10):
+
+def _test_lincomb(fn, a, b):
     # Validates lincomb against the result on host with randomized
     # data and given a,b
-    rn = Rn(n)
 
     # Unaliased arguments
-    x, y, z, xVec, yVec, zVec = _vectors(rn, 3)
+    x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
     z[:] = a*x + b*y
-    rn.lincomb(a, xVec, b, yVec, out=zVec)
+    fn.lincomb(a, xVec, b, yVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # First argument aliased with output
-    x, y, z, xVec, yVec, zVec = _vectors(rn, 3)
+    x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
     z[:] = a*z + b*y
-    rn.lincomb(a, zVec, b, yVec, out=zVec)
+    fn.lincomb(a, zVec, b, yVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # Second argument aliased with output
-    x, y, z, xVec, yVec, zVec = _vectors(rn, 3)
+    x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
     z[:] = a*x + b*z
-    rn.lincomb(a, xVec, b, zVec, out=zVec)
+    fn.lincomb(a, xVec, b, zVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # Both arguments aliased with each other
-    x, y, z, xVec, yVec, zVec = _vectors(rn, 3)
+    x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
     z[:] = a*x + b*x
-    rn.lincomb(a, xVec, b, xVec, out=zVec)
+    fn.lincomb(a, xVec, b, xVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # All aliased
-    x, y, z, xVec, yVec, zVec = _vectors(rn, 3)
+    x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
     z[:] = a*z + b*z
-    rn.lincomb(a, zVec, b, zVec, out=zVec)
+    fn.lincomb(a, zVec, b, zVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
-def test_lincomb():
+def test_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
         for b in scalar_values:
-            _test_lincomb(a, b)
+            _test_lincomb(fn, a, b)
 
 
-def _test_unary_operator(function, n=10):
+def _test_unary_operator(fn, function):
     """ Verifies that the statement y=function(x) gives equivalent
     results to Numpy.
     """
-    rn = Rn(n)
 
-    x_arr = np.random.rand(n)
+    x_arr = _array(fn)
     y_arr = function(x_arr)
 
-    x = rn.element(x_arr)
+    x = fn.element(x_arr)
     y = function(x)
 
     assert all_almost_equal([x, y], [x_arr, y_arr])
 
-def _test_binary_operator(function, n=10):
+def _test_binary_operator(fn, function):
     """ Verifies that the statement z=function(x,y) gives equivalent
     results to Numpy.
     """
-    rn = Rn(n)
 
-    x_arr = np.random.rand(n)
-    y_arr = np.random.rand(n)
+    x_arr = _array(fn)
+    y_arr = _array(fn)
     z_arr = function(x_arr, y_arr)
 
-    x = rn.element(x_arr)
-    y = rn.element(y_arr)
+    x = fn.element(x_arr)
+    y = fn.element(y_arr)
     z = function(x, y)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
-def test_operators():
+def test_operators(fn):
     """ Test of all operator overloads against the corresponding
     Numpy implementation
     """
     # Unary operators
-    _test_unary_operator(lambda x: +x)
-    _test_unary_operator(lambda x: -x)
+    _test_unary_operator(fn, lambda x: +x)
+    _test_unary_operator(fn, lambda x: -x)
 
     # Scalar multiplication
     for scalar in [-31.2, -1, 0, 1, 2.13]:
         def imul(x):
             x *= scalar
-        _test_unary_operator(imul)
-        _test_unary_operator(lambda x: x*scalar)
+        _test_unary_operator(fn, imul)
+        _test_unary_operator(fn, lambda x: x*scalar)
 
     # Scalar division
     for scalar in [-31.2, -1, 1, 2.13]:
         def idiv(x):
             x /= scalar
-        _test_unary_operator(idiv)
-        _test_unary_operator(lambda x: x/scalar)
+        _test_unary_operator(fn, idiv)
+        _test_unary_operator(fn, lambda x: x/scalar)
 
     # Incremental operations
     def iadd(x, y):
@@ -220,8 +234,8 @@ def test_operators():
     def isub(x, y):
         x -= y
 
-    _test_binary_operator(iadd)
-    _test_binary_operator(isub)
+    _test_binary_operator(fn, iadd)
+    _test_binary_operator(fn, isub)
 
     # Incremental operators with aliased inputs
     def iadd_aliased(x):
@@ -229,52 +243,51 @@ def test_operators():
 
     def isub_aliased(x):
         x -= x
-    _test_unary_operator(iadd_aliased)
-    _test_unary_operator(isub_aliased)
+    _test_unary_operator(fn, iadd_aliased)
+    _test_unary_operator(fn, isub_aliased)
 
     # Binary operators
-    _test_binary_operator(lambda x, y: x + y)
-    _test_binary_operator(lambda x, y: x - y)
+    _test_binary_operator(fn, lambda x, y: x + y)
+    _test_binary_operator(fn, lambda x, y: x - y)
 
     # Binary with aliased inputs
-    _test_unary_operator(lambda x: x + x)
-    _test_unary_operator(lambda x: x - x)
+    _test_unary_operator(fn, lambda x: x + x)
+    _test_unary_operator(fn, lambda x: x - x)
 
 
-def test_norm():
-    r3 = Rn(3)
-    xd = r3.element([1, 2, 3])
+def test_norm(fn):
+    xd = _element(fn)
 
-    correct_norm = sqrt(1**2 + 2**2 + 3**2)
-    assert almost_equal(r3.norm(xd), correct_norm)
-
-
-def test_inner():
-    r3 = Rn(3)
-    xd = r3.element([1, 2, 3])
-    yd = r3.element([5, -3, 9])
-
-    correct_inner = 1*5 + 2*(-3) + 3*9
-    assert almost_equal(r3.inner(xd, yd), correct_inner)
+    correct_norm = np.linalg.norm(xd.asarray())
+    
+    assert almost_equal(fn.norm(xd), correct_norm)
+    assert almost_equal(xd.norm(), correct_norm)
 
 
-def test_setitem():
-    r3 = Rn(3)
-    x = r3.element([42, 42, 42])
+def test_inner(fn):
+    xd = _element(fn)
+    yd = _element(fn)
+
+    correct_inner = np.vdot(yd, xd)
+    assert almost_equal(fn.inner(xd, yd), correct_inner)
+    assert almost_equal(xd.inner(yd), correct_inner)
+
+
+def test_setitem(fn):
+    x = _element(fn)
 
     for index in [0, 1, 2, -1, -2, -3]:
         x[index] = index
         assert almost_equal(x[index], index)
 
-def test_setitem_index_error():
-    r3 = Rn(3)
-    x = r3.element([1, 2, 3])
+def test_setitem_index_error(fn):
+    x = _element(fn)
 
     with pytest.raises(IndexError):
-        x[-4] = 0
+        x[-fn.size-1] = 0
 
     with pytest.raises(IndexError):
-        x[3] = 0
+        x[fn.size] = 0
 
 def _test_getslice(slice):
     # Validate get against python list behaviour
@@ -317,17 +330,16 @@ def test_setslice():
             for step in steps:
                 _test_setslice(slice(start, end, step))
 
-def test_transpose():
-    r3 = Rn(3)
-    x = r3.element([1, 2, 3])
-    y = r3.element([5, 3, 8])
+def test_transpose(fn):
+    x = _element(fn)
+    y = _element(fn)
     
     # Assert linear operator
     assert isinstance(x.T, Operator)
     assert x.T.is_linear
 
     # Check result
-    assert almost_equal(x.T(y), x.inner(y))
+    assert almost_equal(x.T(y), y.inner(x))
     assert all_almost_equal(x.T.adjoint(1.0), x)
     
     # x.T.T returns self    
@@ -351,23 +363,21 @@ def test_setslice_index_error():
     with pytest.raises(ValueError):
         xd[:] = [1, 2, 3, 4]
 
-def test_multiply_by_scalar():
+def test_multiply_by_scalar(fn):
     """Verifies that multiplying with numpy scalars
     does not change the type of the array
     """
 
-    r3 = Rn(3)
-    x = r3.zero()
-    assert x * 1.0 in r3
-    assert x * np.float32(1.0) in r3
-    assert 1.0 * x in r3
-    assert np.float32(1.0) * x in r3
+    x = fn.zero()
+    assert x * 1.0 in fn
+    assert x * np.float32(1.0) in fn
+    assert 1.0 * x in fn
+    assert np.float32(1.0) * x in fn
     
-def test_copy():
+def test_copy(fn):
     import copy
     
-    r3 = Rn(3)
-    x = r3.element([1, 2, 3])
+    x = _element(fn)
     
     y = copy.copy(x)
     
@@ -381,80 +391,56 @@ def test_copy():
 
 # Vector property tests
 
-def test_space():
-    r3 = Rn(3)
-    x = r3.element()
-    assert x.space is r3
+def test_space(fn):
+    x = fn.element()
+    assert x.space is fn
 
-def test_space():
-    r3 = Rn(3)
-    x = r3.element()
+def test_ndim(fn):
+    x = fn.element()
     assert x.ndim == 1
 
-def test_dtype():
-    r3 = Rn(3)
-    x = r3.element()
-    assert x.dtype == r3.dtype
+def test_dtype(fn):
+    x = fn.element()
+    assert x.dtype == fn.dtype
 
-def test_size():
-    r3 = Rn(3)
-    x = r3.element()
-    assert x.size == 3
+def test_size(fn):
+    x = fn.element()
+    assert x.size == fn.size
 
-def test_shape():
-    r3 = Rn(3)
-    x = r3.element()
-    assert x.shape == (3,)
+def test_shape(fn):
+    x = fn.element()
+    assert x.shape == (x.size,)
 
-def test_itemsize():
-    r3_32 = Rn(3, np.float32)
-    x_32 = r3_32.element()
-    assert x_32.itemsize == 4
+def test_itemsize(fn):
+    x = fn.element()
+    assert x.itemsize == fn.dtype.itemsize
 
-    r3_64 = Rn(3, np.float64)
-    x_64 = r3_64.element()
-    assert x_64.itemsize == 8
-
-def test_nbytes():
-    r3 = Rn(3, np.float32)
-    x = r3.element()
-    assert x.nbytes == 3 * 4
+def test_nbytes(fn):
+    x = fn.element()
+    assert x.nbytes == x.itemsize * x.size
 
 # Numpy Array tests
 
-def test_array_method():
+def test_array_method(fn):
     """ Verifies that the __array__ method works
     """
-    r3 = Rn(3)
-    x = r3.zero()
+    x = fn.zero()
 
     arr = x.__array__()
 
     assert isinstance(arr, np.ndarray)
-    assert all_almost_equal(arr, [0.0, 0.0, 0.0])
+    assert all_almost_equal(arr, np.zeros(x.size))
 
-def test_array_wrap_method():
+def test_array_wrap_method(fn):
     """ Verifies that the __array_wrap__ method works
     This enables us to use numpy ufuncs on vectors
     """
-    r3 = Rn(3)
-    x_h = [0.0, 1.0, 2.0]
-    x = r3.element([0.0, 1.0, 2.0])
+    x_h, x = _vectors(fn)
     y_h = np.sin(x_h)
     y = np.sin(x)
 
     assert all_almost_equal(y, y_h)
-    assert y in r3
-
-    #Test with a non-standard dtype
-    r3_f32 = Rn(3, dtype=np.float32)
-    x_h = [0.0, 1.0, 2.0]
-    x = r3_f32.element(x_h)
-    y_h = np.sin(x_h)
-    y = np.sin(x)
-
-    assert all_almost_equal(y, y_h)
-    assert y in r3_f32
+    assert y in fn
 
 def test_matrix_init():
     rn = Rn(10)

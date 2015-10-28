@@ -35,7 +35,7 @@ import numpy as np
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda', 
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
-def almost_equal(a, b, places=7):    
+def almost_equal(a, b, places=None):    
     if a is None and b is None:
         return True
         
@@ -50,6 +50,9 @@ def almost_equal(a, b, places=7):
         
     if np.isinf(a) and np.isinf(b):
         return a == b
+        
+    if places == None:
+        places = 7
         
     eps = 10**-places        
         
@@ -83,9 +86,26 @@ def all_equal(iter1, iter2):
     
     return True
 
-def all_almost_equal(iter1, iter2, places=7):
+def all_almost_equal(iter1, iter2, places=None):
     # Sentinel object used to check that both iterators are the same length
     different_length_sentinel = object()
+    
+    if places is None:
+        try:
+            dtype1 = iter1.dtype
+        except AttributeError:
+            dtype1 = None
+            
+        try:
+            dtype2 = iter2.dtype
+        except AttributeError:
+            dtype2 = None
+            
+        if (dtype1 == np.float32 or 
+            dtype2 == np.float32 or
+            dtype1 == np.complex64 or 
+            dtype2 == np.complex64):
+            places = 4
 
     if iter1 is None and iter2 is None:
         return True
@@ -96,7 +116,7 @@ def all_almost_equal(iter1, iter2, places=7):
     except TypeError:
         return almost_equal(iter1, iter2, places)
 
-    for [ip1, ip2] in zip_longest(iter1, iter2,
+    for [ip1, ip2] in zip_longest(i1, i2,
                                   fillvalue=different_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
