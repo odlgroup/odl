@@ -223,23 +223,22 @@ class BacktrackingLineSearch(object):
     """ Backtracking line search, 
     a search scheme based on the Armijo-Goldstein condition.
     """
-    def __init__(self, function, tau=0.8, c=0.7, max_num_iter=0):
+    def __init__(self, function, tau=0.8, c=0.7, max_num_iter=None):
         self.function = function
         self.tau = tau
         self.c = c
         self.total_num_iter = 0
         #If max_num_iter is specified it sets this value, otherwise sets a value that allows the shortest step to be < 0.0001 of original step length
-        if max_num_iter == 0:
+        if max_num_iter is None:
             self.max_num_iter = ceil(log(0.0001/self.tau))
         else:
             self.max_num_iter = max_num_iter
 
-    def __call__(self, x, direction, gradf):
+    def __call__(self, x, direction, dir_derivative):
         alpha = 1.0
-        decrease = gradf.inner(direction)
         fx = self.function(x)
         num_iter = 0        
-        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and num_iter <= self.max_num_iter:
+        while self.function(x + alpha * direction) >= fx + alpha * dir_derivative * self.c and num_iter <= self.max_num_iter:
             num_iter += 1
             alpha *= self.tau
         self.total_num_iter += num_iter
@@ -264,7 +263,8 @@ def quasi_newton(op, x, line_search, niter=1, partial=None):
         opx = op(x)
         print(opx.norm())
         p = Bi(-opx)
-        alpha = line_search(x, p, opx)
+        dir_derivative = p.inner(opx)
+        alpha = line_search(x, p, dir_derivative)
         x_old = x.copy()
         s = alpha * p
         x += s
@@ -289,7 +289,8 @@ def steepest_decent(deriv_op, x, line_search, niter=1, partial=None):
     grad = deriv_op.range.element()
     for _ in range(niter):
         deriv_op(x, out=grad)
-        step = line_search(x, -grad, grad)
+        dir_derivative = -grad.norm()**2
+        step = line_search(x, -grad, dir_derivative)
         x.lincomb(1, x, -step, grad)
         
         if partial is not None:
