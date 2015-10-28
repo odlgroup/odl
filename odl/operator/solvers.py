@@ -227,6 +227,7 @@ class BacktrackingLineSearch(object):
         self.function = function
         self.tau = tau
         self.c = c
+        self.num_iter = 0
         #If max_num_iter is specified it sets this value, otherwise sets a value that allows the shortest step to be < 0.0001 of original step length
         if max_num_iter == 0:
             self.max_num_iter = ceil(log(0.0001/self.tau))
@@ -237,9 +238,8 @@ class BacktrackingLineSearch(object):
         alpha = 1.0
         decrease = gradf.inner(direction)
         fx = self.function(x)
-        num_iter = 0
-        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and num_iter <= 20:
-            num_iter += 1
+        while self.function(x + alpha * direction) >= fx + alpha * decrease * self.c and self.num_iter <= 20:
+            self.num_iter += 1
             alpha *= self.tau
         return alpha
 
