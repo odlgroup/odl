@@ -345,23 +345,23 @@ def test_transpose(fn):
     # x.T.T returns self    
     assert x.T.T == x
 
-def test_setslice_index_error():
-    r3 = Rn(3)
-    xd = r3.element([1, 2, 3])
+def test_setslice_index_error(fn):
+    xd = fn.element()
+    n = fn.size
 
     # Bad slice
     with pytest.raises(ValueError):
-        xd[10:13] = [1, 2, 3]
+        xd[n:n+3] = [1, 2, 3]
 
     # Bad size of rhs
     with pytest.raises(ValueError):
         xd[:] = []
 
     with pytest.raises(ValueError):
-        xd[:] = [1, 2]
+        xd[:] = np.zeros(n-1)
 
     with pytest.raises(ValueError):
-        xd[:] = [1, 2, 3, 4]
+        xd[:] = np.zeros(n+1)
 
 def test_multiply_by_scalar(fn):
     """Verifies that multiplying with numpy scalars
@@ -455,11 +455,10 @@ def test_matrix_init():
     with pytest.raises(ValueError):
         _FnMatrixWeighting(nonsquare_mat)
 
-def _test_matrix_equals(n):
-    rn = Rn(n)
-    sparse_mat = _sparse_matrix(rn)
+def test_matrix_equals(fn):
+    sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(rn)
+    dense_mat = _dense_matrix(fn)
     different_dense_mat = dense_mat.copy()
     different_dense_mat[0, 0] = -10
 
@@ -481,26 +480,19 @@ def _test_matrix_equals(n):
     # Not equivalent -> False
     assert w_dense != w_different_dense
 
-def test_matrix_equals():
-    for n in [1, 20]:
-        _test_matrix_equals(n)
-
-def _test_matrix_equiv(n):
-    rn = Rn(n)
-    sparse_mat = _sparse_matrix(rn)
+def test_matrix_equiv(fn):
+    sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(rn)
+    dense_mat = _dense_matrix(fn)
     different_dense_mat = dense_mat.copy()
     different_dense_mat[0, 0] = -10
 
     w_sparse = _FnMatrixWeighting(sparse_mat)
     w_sparse2 = _FnMatrixWeighting(sparse_mat)
-    w_sparse_as_dense = _FnMatrixWeighting(
-        rn, sparse_mat_as_dense)
+    w_sparse_as_dense = _FnMatrixWeighting(sparse_mat_as_dense)
     w_dense = _FnMatrixWeighting(dense_mat)
     w_dense_copy = _FnMatrixWeighting(dense_mat.copy())
-    w_different_dense = _FnMatrixWeighting(
-        rn, different_dense_mat)
+    w_different_dense = _FnMatrixWeighting(different_dense_mat)
 
     # Equal -> True
     assert w_sparse.equiv(w_sparse)
@@ -511,90 +503,11 @@ def _test_matrix_equiv(n):
     # Different matrices -> False
     assert not w_dense.equiv(w_different_dense)
 
-def _test_matrix_inner_real(n):
-    rn = Rn(n)
-    xarr, yarr, x, y = _vectors(rn, 2)
-    sparse_mat = _sparse_matrix(rn)
+def test_matrix_inner(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
+    sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(rn)
-
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
-
-    result_sparse = w_sparse.inner(x, y)
-    result_dense = w_dense.inner(x, y)
-
-    true_result_sparse = np.dot(
-        yarr, np.asarray(np.dot(sparse_mat_as_dense, xarr)).squeeze())
-    true_result_dense = np.dot(
-        yarr, np.asarray(np.dot(dense_mat, xarr)).squeeze())
-
-    assert almost_equal(result_sparse, true_result_sparse)
-    assert almost_equal(result_dense, true_result_dense)
-
-def _test_matrix_norm_real(n):
-    rn = Rn(n)
-    xarr, yarr, x, y = _vectors(rn, 2)
-    sparse_mat = _sparse_matrix(rn)
-    sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(rn)
-
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
-
-    result_sparse = w_sparse.norm(x)
-    result_dense = w_dense.norm(x)
-
-    true_result_sparse = np.sqrt(np.dot(
-        xarr, np.asarray(np.dot(sparse_mat_as_dense, xarr)).squeeze()))
-    true_result_dense = np.sqrt(np.dot(
-        xarr, np.asarray(np.dot(dense_mat, xarr)).squeeze()))
-
-    assert almost_equal(result_sparse, true_result_sparse)
-    assert almost_equal(result_dense, true_result_dense)
-
-def _test_matrix_dist_real(n):
-    rn = Rn(n)
-    xarr, yarr, x, y = _vectors(rn, 2)
-    sparse_mat = _sparse_matrix(rn)
-    sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(rn)
-
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
-
-    result_sparse = w_sparse.dist(x, y)
-    result_dense = w_dense.dist(x, y)
-
-    true_result_sparse = np.sqrt(np.dot(
-        xarr-yarr,
-        np.asarray(np.dot(sparse_mat_as_dense, xarr-yarr)).squeeze()))
-    true_result_dense = np.sqrt(np.dot(
-        xarr-yarr, np.asarray(np.dot(dense_mat, xarr-yarr)).squeeze()))
-
-    assert almost_equal(result_sparse, true_result_sparse)
-    assert almost_equal(result_dense, true_result_dense)
-
-def _test_matrix_dist_squared_real(n):
-    rn = Rn(n)
-    xarr, yarr, x, y = _vectors(rn, 2)
-    mat = _dense_matrix(rn)
-
-    w = _FnMatrixWeighting(mat, dist_using_inner=True)
-
-    result = w.dist(x, y)
-
-    true_result = np.sqrt(np.dot(
-        xarr-yarr, np.asarray(np.dot(mat, xarr-yarr)).squeeze()))
-
-    assert almost_equal(result, true_result)
-
-def _test_matrix_inner_complex(n):
-    cn = Cn(n)
-    xarr, yarr, x, y = _vectors(cn, 2)
-    sparse_mat = _sparse_matrix(cn)
-    sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(cn)
+    dense_mat = _dense_matrix(fn)
 
     w_sparse = _FnMatrixWeighting(sparse_mat)
     w_dense = _FnMatrixWeighting(dense_mat)
@@ -603,20 +516,18 @@ def _test_matrix_inner_complex(n):
     result_dense = w_dense.inner(x, y)
 
     true_result_sparse = np.vdot(
-        yarr,
-        np.asarray(np.dot(sparse_mat_as_dense, xarr)).squeeze())
+        yarr, np.asarray(np.dot(sparse_mat_as_dense, xarr)).squeeze())
     true_result_dense = np.vdot(
         yarr, np.asarray(np.dot(dense_mat, xarr)).squeeze())
 
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
 
-def _test_matrix_norm_complex(n):
-    cn = Cn(n)
-    xarr, yarr, x, y = _vectors(cn, 2)
-    sparse_mat = _sparse_matrix(cn)
+def test_matrix_norm(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
+    sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(cn)
+    dense_mat = _dense_matrix(fn)
 
     w_sparse = _FnMatrixWeighting(sparse_mat)
     w_dense = _FnMatrixWeighting(dense_mat)
@@ -625,20 +536,18 @@ def _test_matrix_norm_complex(n):
     result_dense = w_dense.norm(x)
 
     true_result_sparse = np.sqrt(np.vdot(
-        xarr,
-        np.asarray(np.dot(sparse_mat_as_dense, xarr)).squeeze()))
+        xarr, np.asarray(np.dot(sparse_mat_as_dense, xarr)).squeeze()))
     true_result_dense = np.sqrt(np.vdot(
         xarr, np.asarray(np.dot(dense_mat, xarr)).squeeze()))
 
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
 
-def _test_matrix_dist_complex(n):
-    cn = Cn(n)
-    xarr, yarr, x, y = _vectors(cn, 2)
-    sparse_mat = _sparse_matrix(cn)
+def test_matrix_dist(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
+    sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
-    dense_mat = _dense_matrix(cn)
+    dense_mat = _dense_matrix(fn)
 
     w_sparse = _FnMatrixWeighting(sparse_mat)
     w_dense = _FnMatrixWeighting(dense_mat)
@@ -650,21 +559,24 @@ def _test_matrix_dist_complex(n):
         xarr-yarr,
         np.asarray(np.dot(sparse_mat_as_dense, xarr-yarr)).squeeze()))
     true_result_dense = np.sqrt(np.vdot(
-        xarr-yarr,
-        np.asarray(np.dot(dense_mat, xarr-yarr)).squeeze()))
+        xarr-yarr, np.asarray(np.dot(dense_mat, xarr-yarr)).squeeze()))
 
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
 
-def test_matrix_methods():
-    for n in [2, 20]:
-        _test_matrix_inner_real(n)
-        _test_matrix_norm_real(n)
-        _test_matrix_dist_real(n)
-        _test_matrix_dist_squared_real(n)
-        _test_matrix_inner_complex(n)
-        _test_matrix_norm_complex(n)
-        _test_matrix_dist_complex(n)
+def test_matrix_dist_squared(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
+    mat = _dense_matrix(fn)
+
+    w = _FnMatrixWeighting(mat, dist_using_inner=True)
+
+    result = w.dist(x, y)
+
+    true_result = np.sqrt(np.vdot(
+        xarr-yarr, np.asarray(np.dot(mat, xarr-yarr)).squeeze()))
+
+    assert almost_equal(result, true_result)
+
 
 def test_matrix_repr():
     n = 5
@@ -772,45 +684,8 @@ def test_constant_equiv():
     w_different_const = _FnConstWeighting(2.5)
     assert not w_const.equiv(w_different_const)
 
-def _test_constant_inner_real( n):
-    rn = Rn(n)
-    xarr, yarr, x, y = _vectors(rn, 2)
-
-    constant = 1.5
-    w_const = _FnConstWeighting(constant)
-
-    result_const = w_const.inner(x, y)
-    true_result_const = constant * np.dot(yarr, xarr)
-
-    assert almost_equal(result_const, true_result_const)
-
-def _test_constant_norm_real(n):
-    rn = Rn(n)
-    xarr, yarr, x, y = _vectors(rn, 2)
-
-    constant = 1.5
-    w_const = _FnConstWeighting(constant)
-
-    result_const = w_const.norm(x)
-    true_result_const = np.sqrt(constant * np.dot(xarr, xarr))
-
-    assert almost_equal(result_const, true_result_const)
-
-def _test_constant_dist_real(n):
-    rn = Rn(n)
-    xarr, yarr, x, y = _vectors(rn, 2)
-
-    constant = 1.5
-    w_const = _FnConstWeighting(constant)
-
-    result_const = w_const.dist(x, y)
-    true_result_const = np.sqrt(constant * np.dot(xarr-yarr, xarr-yarr))
-
-    assert almost_equal(result_const, true_result_const)
-
-def _test_constant_inner_complex(n):
-    cn = Cn(n)
-    xarr, yarr, x, y = _vectors(cn, 2)
+def test_constant_inner(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
     w_const = _FnConstWeighting(constant)
@@ -820,9 +695,8 @@ def _test_constant_inner_complex(n):
 
     assert almost_equal(result_const, true_result_const)
 
-def _test_constant_norm_complex(n):
-    cn = Cn(n)
-    xarr, yarr, x, y = _vectors(cn, 2)
+def test_constant_norm(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
     w_const = _FnConstWeighting(constant)
@@ -832,9 +706,8 @@ def _test_constant_norm_complex(n):
 
     assert almost_equal(result_const, true_result_const)
 
-def _test_constant_dist_complex(n):
-    cn = Cn(n)
-    xarr, yarr, x, y = _vectors(cn, 2)
+def test_constant_dist(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
     w_const = _FnConstWeighting(constant)
@@ -843,15 +716,6 @@ def _test_constant_dist_complex(n):
     true_result_const = np.sqrt(constant * np.vdot(xarr-yarr, xarr-yarr))
 
     assert almost_equal(result_const, true_result_const)
-
-def test_constant_methods():
-    for n in [2, 20]:
-        _test_constant_inner_real(n)
-        _test_constant_norm_real(n)
-        _test_constant_dist_real(n)
-        _test_constant_inner_complex(n)
-        _test_constant_norm_complex(n)
-        _test_constant_dist_complex(n)
 
 def test_constant_repr():
     constant = 1.5

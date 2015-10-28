@@ -35,6 +35,25 @@ import numpy as np
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda', 
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
+def _places(a, b):
+    try:
+        dtype1 = a.dtype
+    except AttributeError:
+        dtype1 = None
+        
+    try:
+        dtype2 = b.dtype
+    except AttributeError:
+        dtype2 = None
+        
+    if (dtype1 == np.float32 or 
+        dtype2 == np.float32 or
+        dtype1 == np.complex64 or 
+        dtype2 == np.complex64):
+        return 3
+    else:
+        return 5
+
 def almost_equal(a, b, places=None):    
     if a is None and b is None:
         return True
@@ -51,8 +70,8 @@ def almost_equal(a, b, places=None):
     if np.isinf(a) and np.isinf(b):
         return a == b
         
-    if places == None:
-        places = 7
+    if places is None:
+        places = _places(a, b)
         
     eps = 10**-places        
         
@@ -91,21 +110,7 @@ def all_almost_equal(iter1, iter2, places=None):
     different_length_sentinel = object()
     
     if places is None:
-        try:
-            dtype1 = iter1.dtype
-        except AttributeError:
-            dtype1 = None
-            
-        try:
-            dtype2 = iter2.dtype
-        except AttributeError:
-            dtype2 = None
-            
-        if (dtype1 == np.float32 or 
-            dtype2 == np.float32 or
-            dtype1 == np.complex64 or 
-            dtype2 == np.complex64):
-            places = 4
+        places = _places(iter1, iter2)
 
     if iter1 is None and iter2 is None:
         return True
