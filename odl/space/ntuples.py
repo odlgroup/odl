@@ -68,7 +68,9 @@ from odl.util.utility import dtype_repr
 from odl.util.utility import is_real_dtype, is_complex_dtype
 
 
-__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn', 'MatVecOperator')
+__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
+           'MatVecOperator',
+           'FnMatrixWeighting', 'FnConstWeighting')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -544,11 +546,11 @@ def _repr_space_funcs(space):
         inner_str += ', norm=<custom norm>'
     elif isinstance(space._space_funcs, _FnCustomDist):
         inner_str += ', norm=<custom dist>'
-    elif isinstance(space._space_funcs, _FnConstWeighting):
+    elif isinstance(space._space_funcs, FnConstWeighting):
         weight = space._space_funcs.const
         if weight != 1.0:
             inner_str += ', weight={}'.format(weight)
-    elif isinstance(space._space_funcs, _FnMatrixWeighting):
+    elif isinstance(space._space_funcs, FnMatrixWeighting):
         weight = space._space_funcs.matrix
         inner_str += ', weight={!r}'.format(weight)
 
@@ -670,12 +672,12 @@ class Fn(FnBase, Ntuples):
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
             if np.isscalar(weight):
-                self._space_funcs = _FnConstWeighting(
+                self._space_funcs = FnConstWeighting(
                     weight, dist_using_inner=dist_using_inner)
             elif weight is None:
                 pass
             elif isinstance(weight, sp.sparse.spmatrix):
-                self._space_funcs = _FnMatrixWeighting(
+                self._space_funcs = FnMatrixWeighting(
                     weight, dist_using_inner=dist_using_inner)
             else:  # last possibility: make a matrix
                 mat = np.asarray(weight)
@@ -687,7 +689,7 @@ class Fn(FnBase, Ntuples):
                     raise ValueError('array-like input {} is not '
                                      '2-dimensional.'.format(weight))
 
-                self._space_funcs = _FnMatrixWeighting(
+                self._space_funcs = FnMatrixWeighting(
                     mat, dist_using_inner=dist_using_inner)
 
         elif dist is not None:
@@ -1337,7 +1339,7 @@ class _FnWeighting(with_metaclass(ABCMeta, _FnWeightingBase)):
     """Abstract base class for `Fn` weighting."""
 
 
-class _FnMatrixWeighting(_FnWeighting):
+class FnMatrixWeighting(_FnWeighting):
 
     """Matrix-weighting for `Fn`.
 
@@ -1412,7 +1414,7 @@ class _FnMatrixWeighting(_FnWeighting):
         if other is self:
             return True
 
-        return (isinstance(other, _FnMatrixWeighting) and
+        return (isinstance(other, FnMatrixWeighting) and
                 self.matrix is other.matrix)
 
     def equiv(self, other):
@@ -1431,7 +1433,7 @@ class _FnMatrixWeighting(_FnWeighting):
         if self == other:
             return True
 
-        elif isinstance(other, _FnMatrixWeighting):
+        elif isinstance(other, FnMatrixWeighting):
             if self.matrix_issparse:
                 if other.matrix_issparse:
                     # Optimization for different number of nonzero elements
@@ -1448,7 +1450,7 @@ class _FnMatrixWeighting(_FnWeighting):
                 else:
                     return np.array_equal(self.matrix, other.matrix)
 
-        elif isinstance(other, _FnConstWeighting):
+        elif isinstance(other, FnConstWeighting):
             return np.array_equiv(self.matrix.diagonal(), other.const)
 
         else:
@@ -1529,7 +1531,7 @@ class _FnMatrixWeighting(_FnWeighting):
         return 'Weighting: matrix =\n{}'.format(self.matrix)
 
 
-class _FnConstWeighting(_FnWeighting):
+class FnConstWeighting(_FnWeighting):
 
     """Weighting of `Fn` by a constant.
 
@@ -1577,7 +1579,7 @@ class _FnConstWeighting(_FnWeighting):
             instance with the same constant, `False` otherwise.
         """
         # TODO: make symmetric
-        return (isinstance(other, _FnConstWeighting) and
+        return (isinstance(other, FnConstWeighting) and
                 self.const == other.const)
 
     def equiv(self, other):
@@ -1593,7 +1595,7 @@ class _FnConstWeighting(_FnWeighting):
             by entry-wise comparison of this inner product's constant
             with the matrix of `other`.
         """
-        if isinstance(other, _FnConstWeighting):
+        if isinstance(other, FnConstWeighting):
             return self == other
         elif isinstance(other, _FnWeighting):
             return other.equiv(self)
@@ -1667,7 +1669,7 @@ class _FnConstWeighting(_FnWeighting):
         return 'Weighting: const = {:.4}'.format(self.const)
 
 
-class _FnNoWeighting(_FnConstWeighting):
+class _FnNoWeighting(FnConstWeighting):
 
     """Weighting of `Fn` with constant 1.
 
