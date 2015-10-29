@@ -309,6 +309,22 @@ class LinearSpace(Set):
         raise NotImplementedError('multiplication not implemented in space '
                                   '{!r}'.format(self))
 
+    def one(self):
+        """A one vector in this space.
+
+        The one vector is defined as the multiplicative unit of a space.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        v : Vector
+            The one vector of this space
+        """
+        raise NotImplementedError('This space has no one')
+
     @abstractproperty
     def field(self):
         """The field of this vector space."""

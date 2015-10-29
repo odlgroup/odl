@@ -886,6 +886,18 @@ class Fn(FnBase, Ntuples):
         """
         return self.element(np.zeros(self.size, dtype=self.dtype))
 
+    def one(self):
+        """Create a vector of zeros.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.one()
+        >>> x
+        Cn(3).element([(1+0j), (1+0j), (1+0j)])
+        """
+        return self.element(np.ones(self.size, dtype=self.dtype))
+
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
 
