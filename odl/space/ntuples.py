@@ -1559,9 +1559,13 @@ class FnMatrixWeighting(_FnWeighting):
                     np.array_equal(self.matrix.asformat('dia').offsets,
                                    np.array([0])))
         elif isinstance(other, FnConstWeighting):
-            return (np.array_equiv(self.matrix.diagonal(), other.const) and
-                    np.array_equal(self.matrix.asformat('dia').offsets,
-                                   np.array([0])))
+            if self.matrix_issparse:
+                return (np.array_equiv(self.matrix.diagonal(), other.const) and
+                        np.array_equal(self.matrix.asformat('dia').offsets,
+                                       np.array([0])))
+            else:
+                return np.array_equal(
+                    self.matrix, other.const * np.eye(self.matrix.shape[0]))
         else:
             return False
 
