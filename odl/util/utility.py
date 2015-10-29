@@ -121,6 +121,8 @@ def is_valid_input_array(x, d):
 
 def is_valid_input_meshgrid(x, d):
     """Test whether `x` is a meshgrid sequence for points in R^d."""
+    if isinstance(x, np.ndarray):
+        return False
     if d > 1:
         try:
             np.broadcast(*x)
