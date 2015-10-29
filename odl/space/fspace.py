@@ -270,8 +270,8 @@ class FunctionSet(Set):
         ----------
         fcall : callable
             The actual instruction for out-of-place evaluation. If
-            `fcall` is a `FunctionSet.Vector`, its `_call`, `_apply`
-            and `vectorized` are used for initialization unless
+            `fcall` is a `FunctionSet.Vector`, its `_call` and
+            `_apply` are used for initialization unless `fapply` is
             explicitly given
         fapply : callable, optional
             The actual instruction for in-place evaluation
@@ -290,18 +290,16 @@ class FunctionSet(Set):
         evaluation
         """
         if isinstance(fcall, self.Vector):  # no double wrapping
+            if vectorized and not fcall.vectorized:
+                raise ValueError('non-vectorized call function {} cannot be '
+                                 'combined with `vectorized=True`.'
+                                 ''.format(fcall))
             if fapply is None:
-                if vectorized == fcall.vectorized:
-                    return fcall
-                else:
-                    vectorized = fcall.vectorized
-                    fapply = fcall._apply
-                    fcall = fcall._call
-                    return self.Vector(self, fcall, fapply,
-                                       vectorized=vectorized)
-        else:
-            return self.Vector(self, fcall, fapply,
-                               vectorized=vectorized)
+                fapply = fcall._apply
+            fcall = fcall._call
+
+        return self.Vector(self, fcall, fapply,
+                           vectorized=vectorized)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
