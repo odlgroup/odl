@@ -349,6 +349,10 @@ class FnBase(NtuplesBase, LinearSpace):
     def zero(self):
         """Create a vector of zeros."""
 
+    @abstractmethod
+    def one(self):
+        """Create a vector of ones."""
+
     @property
     def field(self):
         """The field of this space."""
@@ -357,6 +361,10 @@ class FnBase(NtuplesBase, LinearSpace):
     @abstractmethod
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two vectors, assigned to `out`."""
+
+    @abstractmethod
+    def _divide(self, z, x1, x2, out):
+        """The entry-wise division of two vectors, assigned to `out`."""
 
     class Vector(NtuplesBase.Vector, LinearSpace.Vector):
 
