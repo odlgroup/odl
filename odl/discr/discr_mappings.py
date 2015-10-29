@@ -481,6 +481,7 @@ class _NearestPointwiseInterpolator(RegularGridInterpolator):
         shape (n, dim), where n is the number of points.
         """
         ndim = len(self.grid)
+        print('xi = ', xi)
         if xi.ndim != 2:
             raise ValueError('`xi` has {} axes instead of 2.'.format(xi.ndim))
 
