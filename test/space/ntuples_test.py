@@ -32,7 +32,7 @@ from textwrap import dedent
 # ODL imports
 from odl import Ntuples, Fn, Rn, Cn
 from odl.operator.operator import Operator
-from odl.space.ntuples import _FnConstWeighting, _FnMatrixWeighting
+from odl.space.ntuples import FnConstWeighting, FnMatrixWeighting
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 
 # TODO: add tests for:
@@ -55,8 +55,10 @@ def _array(fn):
         return (np.random.randn(fn.size) +
                 1j * np.random.randn(fn.size)).astype(fn.dtype)
 
+
 def _element(fn):
     return fn.element(_array(fn))
+
 
 def _vectors(fn, n=1):
     arrs = [_array(fn) for _ in range(n)]
@@ -78,7 +80,7 @@ def _sparse_matrix(fn):
 
 
 def _dense_matrix(fn):
-    mat = np.asmatrix(np.random.rand(fn.size, fn.size), dtype=float)
+    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=float)
     # Make symmetric and positive definite
     return mat + mat.T + fn.size * np.eye(fn.size)
 
@@ -518,12 +520,12 @@ def test_matrix_init(fn):
     dense_mat = _dense_matrix(fn)
 
     # Just test if the code runs
-    _FnMatrixWeighting(sparse_mat)
-    _FnMatrixWeighting(dense_mat)
+    FnMatrixWeighting(sparse_mat)
+    FnMatrixWeighting(dense_mat)
 
     nonsquare_mat = np.eye(10, 5)
     with pytest.raises(ValueError):
-        _FnMatrixWeighting(nonsquare_mat)
+        FnMatrixWeighting(nonsquare_mat)
 
 
 def test_matrix_equals(fn):
@@ -533,12 +535,12 @@ def test_matrix_equals(fn):
     different_dense_mat = dense_mat.copy()
     different_dense_mat[0, 0] = -10
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_sparse2 = _FnMatrixWeighting(sparse_mat)
-    w_sparse_as_dense = _FnMatrixWeighting(sparse_mat_as_dense)
-    w_dense = _FnMatrixWeighting(dense_mat)
-    w_dense2 = _FnMatrixWeighting(dense_mat)
-    w_different_dense = _FnMatrixWeighting(different_dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_sparse2 = FnMatrixWeighting(sparse_mat)
+    w_sparse_as_dense = FnMatrixWeighting(sparse_mat_as_dense)
+    w_dense = FnMatrixWeighting(dense_mat)
+    w_dense2 = FnMatrixWeighting(dense_mat)
+    w_different_dense = FnMatrixWeighting(different_dense_mat)
 
     # Identical objects -> True
     assert w_sparse == w_sparse
@@ -559,12 +561,12 @@ def test_matrix_equiv(fn):
     different_dense_mat = dense_mat.copy()
     different_dense_mat[0, 0] = -10
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_sparse2 = _FnMatrixWeighting(sparse_mat)
-    w_sparse_as_dense = _FnMatrixWeighting(sparse_mat_as_dense)
-    w_dense = _FnMatrixWeighting(dense_mat)
-    w_dense_copy = _FnMatrixWeighting(dense_mat.copy())
-    w_different_dense = _FnMatrixWeighting(different_dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_sparse2 = FnMatrixWeighting(sparse_mat)
+    w_sparse_as_dense = FnMatrixWeighting(sparse_mat_as_dense)
+    w_dense = FnMatrixWeighting(dense_mat)
+    w_dense_copy = FnMatrixWeighting(dense_mat.copy())
+    w_different_dense = FnMatrixWeighting(different_dense_mat)
 
     # Equal -> True
     assert w_sparse.equiv(w_sparse)
@@ -582,8 +584,8 @@ def test_matrix_inner(fn):
     sparse_mat_as_dense = sparse_mat.todense()
     dense_mat = _dense_matrix(fn)
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_dense = FnMatrixWeighting(dense_mat)
 
     result_sparse = w_sparse.inner(x, y)
     result_dense = w_dense.inner(x, y)
@@ -603,8 +605,8 @@ def test_matrix_norm(fn):
     sparse_mat_as_dense = sparse_mat.todense()
     dense_mat = _dense_matrix(fn)
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_dense = FnMatrixWeighting(dense_mat)
 
     result_sparse = w_sparse.norm(x)
     result_dense = w_dense.norm(x)
@@ -624,8 +626,8 @@ def test_matrix_dist(fn):
     sparse_mat_as_dense = sparse_mat.todense()
     dense_mat = _dense_matrix(fn)
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_dense = FnMatrixWeighting(dense_mat)
 
     result_sparse = w_sparse.dist(x, y)
     result_dense = w_dense.dist(x, y)
@@ -644,7 +646,7 @@ def test_matrix_dist_squared(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
     mat = _dense_matrix(fn)
 
-    w = _FnMatrixWeighting(mat, dist_using_inner=True)
+    w = FnMatrixWeighting(mat, dist_using_inner=True)
 
     result = w.dist(x, y)
 
@@ -654,81 +656,25 @@ def test_matrix_dist_squared(fn):
     assert almost_equal(result, true_result)
 
 
-def test_matrix_repr():
-    n = 5
-    sparse_mat = sp.sparse.dia_matrix((np.arange(n, dtype=float), [0]),
-                                      shape=(n, n))
-    dense_mat = sparse_mat.todense()
-
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
-
-    mat_str_sparse = ("<(5, 5) sparse matrix, format 'dia', "
-                      "5 stored entries>")
-    mat_str_dense = dedent('''
-    matrix([[ 0.,  0.,  0.,  0.,  0.],
-            [ 0.,  1.,  0.,  0.,  0.],
-            [ 0.,  0.,  2.,  0.,  0.],
-            [ 0.,  0.,  0.,  3.,  0.],
-            [ 0.,  0.,  0.,  0.,  4.]])
-    ''')
-
-    repr_str_sparse = ('_FnMatrixWeighting({})'
-                       ''.format(mat_str_sparse))
-    repr_str_dense = '_FnMatrixWeighting({})'.format(mat_str_dense)
-    assert repr(w_sparse) == repr_str_sparse
-    assert repr(w_dense) == repr_str_dense
-
-
-def test_matrix_str():
-    n = 5
-    sparse_mat = sp.sparse.dia_matrix((np.arange(n, dtype=float), [0]),
-                                      shape=(n, n))
-    dense_mat = sparse_mat.todense()
-
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
-
-    mat_str_sparse = '''
-  (1, 1)\t1.0
-  (2, 2)\t2.0
-  (3, 3)\t3.0
-  (4, 4)\t4.0'''
-    mat_str_dense = dedent('''
-    [[ 0.  0.  0.  0.  0.]
-     [ 0.  1.  0.  0.  0.]
-     [ 0.  0.  2.  0.  0.]
-     [ 0.  0.  0.  3.  0.]
-     [ 0.  0.  0.  0.  4.]]''')
-
-    print_str_sparse = ('Weighting: matrix ={}'
-                        ''.format(mat_str_sparse))
-    assert str(w_sparse) == print_str_sparse
-
-    print_str_dense = ('Weighting: matrix ={}'
-                       ''.format(mat_str_dense))
-    assert str(w_dense) == print_str_dense
-
-
 def test_constant_init():
     constant = 1.5
 
     # Just test if the code runs
-    _FnConstWeighting(constant)
+    FnConstWeighting(constant)
 
 
 def test_constant_equals():
     n = 10
     constant = 1.5
 
-    w_const = _FnConstWeighting(constant)
-    w_const2 = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
+    w_const2 = FnConstWeighting(constant)
 
     const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
-    w_matrix_sp = _FnMatrixWeighting(const_sparse_mat)
-    w_matrix_de = _FnMatrixWeighting(const_dense_mat)
+    w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
+    w_matrix_de = FnMatrixWeighting(const_dense_mat)
 
     assert w_const == w_const
     assert w_const == w_const2
@@ -737,7 +683,7 @@ def test_constant_equals():
     assert w_const != w_matrix_sp
     assert w_const != w_matrix_de
 
-    w_different_const = _FnConstWeighting(2.5)
+    w_different_const = FnConstWeighting(2.5)
     assert w_const != w_different_const
 
 
@@ -745,14 +691,14 @@ def test_constant_equiv():
     n = 10
     constant = 1.5
 
-    w_const = _FnConstWeighting(constant)
-    w_const2 = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
+    w_const2 = FnConstWeighting(constant)
 
     const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
-    w_matrix_sp = _FnMatrixWeighting(const_sparse_mat)
-    w_matrix_de = _FnMatrixWeighting(const_dense_mat)
+    w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
+    w_matrix_de = FnMatrixWeighting(const_dense_mat)
 
     # Equal -> True
     assert w_const.equiv(w_const)
@@ -761,7 +707,7 @@ def test_constant_equiv():
     assert w_const.equiv(w_matrix_sp)
     assert w_const.equiv(w_matrix_de)
 
-    w_different_const = _FnConstWeighting(2.5)
+    w_different_const = FnConstWeighting(2.5)
     assert not w_const.equiv(w_different_const)
 
 
@@ -769,7 +715,7 @@ def test_constant_inner(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     result_const = w_const.inner(x, y)
     true_result_const = constant * np.vdot(yarr, xarr)
@@ -781,7 +727,7 @@ def test_constant_norm(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     result_const = w_const.norm(x)
     true_result_const = np.sqrt(constant * np.vdot(xarr, xarr))
@@ -793,7 +739,7 @@ def test_constant_dist(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     result_const = w_const.dist(x, y)
     true_result_const = np.sqrt(constant * np.vdot(xarr-yarr, xarr-yarr))
@@ -803,15 +749,15 @@ def test_constant_dist(fn):
 
 def test_constant_repr():
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
-    repr_str = '_FnConstWeighting(1.5)'
+    repr_str = 'FnConstWeighting(1.5)'
     assert repr(w_const) == repr_str
 
 
 def test_constant_str():
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     print_str = 'Weighting: const = 1.5'
     assert str(w_const) == print_str

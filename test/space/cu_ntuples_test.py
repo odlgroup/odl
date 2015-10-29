@@ -30,7 +30,7 @@ from numpy import float64
 
 # ODL imports
 import odl
-from odl.space.ntuples import _FnConstWeighting
+from odl.space.ntuples import FnConstWeighting
 if odl.CUDA_AVAILABLE:
     from odl.space.cu_ntuples import _CudaFnConstWeighting
 
@@ -67,7 +67,7 @@ def _vectors(fn, n=1):
                 params=[odl.CudaRn(100)])
 def fn(request):
     return request.param
-    
+
 @pytest.mark.skipif("np.float32 not in odl.CUDA_DTYPES")
 def test_init_cudantuples_f32():
     #verify that the code runs
@@ -379,20 +379,20 @@ def test_multiply():
     # Device side calculation
     rn.multiply(x_device, y_device, out=z_device)
 
-    assert all_almost_equal([x_device, y_device, z_device], 
+    assert all_almost_equal([x_device, y_device, z_device],
                             [x_host, y_host, z_host])
 
     # Aliased
     z_host[:] = z_host * x_host
     rn.multiply(z_device, x_device, out=z_device)
 
-    assert all_almost_equal([x_device, z_device], 
+    assert all_almost_equal([x_device, z_device],
                             [x_host, z_host])
 
     # Aliased
     z_host[:] = z_host * z_host
     rn.multiply(z_device, z_device, out=z_device)
-    
+
     assert all_almost_equal(z_device, z_host)
 
 @skip_if_no_cuda
@@ -527,17 +527,17 @@ def test_incompatible_operations():
 
     with pytest.raises(TypeError):
         xA - xB
-        
+
 @skip_if_no_cuda
 def test_copy(fn):
     import copy
-    
+
     x = _element(fn)
     y = copy.copy(x)
-    
+
     assert x == y
     assert y is not x
-    
+
     z = copy.deepcopy(x)
 
     assert x == z
@@ -548,7 +548,7 @@ def test_transpose(fn):
     r3 = odl.CudaRn(3)
     x = _element(fn)
     y = _element(fn)
-    
+
     # Assert linear operator
     assert isinstance(x.T, odl.Operator)
     assert x.T.is_linear
@@ -556,8 +556,8 @@ def test_transpose(fn):
     # Check result
     assert almost_equal(x.T(y), x.inner(y))
     assert all_almost_equal(x.T.adjoint(1.0), x)
-    
-    # x.T.T returns self    
+
+    # x.T.T returns self
     assert x.T.T == x
 
 @skip_if_no_cuda
@@ -623,7 +623,7 @@ def _test_ufunc(ufunc):
 
 @skip_if_no_cuda
 def test_ufuncs():
-    for ufunc in ['sin', 'cos', 
+    for ufunc in ['sin', 'cos',
                   'arcsin', 'arccos',
                   'log', 'exp',
                   'abs', 'sign', 'sqrt']:
@@ -643,7 +643,7 @@ def test_const_equals():
     weighting = _CudaFnConstWeighting(constant)
     weighting2 = _CudaFnConstWeighting(constant)
     other_weighting = _CudaFnConstWeighting(2.5)
-    weighting_npy = _FnConstWeighting(constant)
+    weighting_npy = FnConstWeighting(constant)
 
     assert weighting == weighting
     assert weighting == weighting2
@@ -651,7 +651,7 @@ def test_const_equals():
 
     assert weighting != other_weighting
     assert weighting != weighting_npy
-    
+
 def _test_const_call_real(n):
     rn = odl.CudaRn(n)
     xarr, yarr, x, y = _vectors(rn, 2)
