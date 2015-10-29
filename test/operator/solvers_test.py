@@ -138,23 +138,22 @@ class ResidualOp(odl.Operator):
         return self.op.derivative(x)
 
 def test_quasi_newton_bfgs():
-    n = 3
-
     # Np as validation
-    #A = np.random.rand(n, n)
-    #A = np.dot(A.T, A) + np.eye(n) * n
-    A = np.array([[3, 1, 1], [1, 2, 1/2], [1, 1/2, 5]])
+    A = np.array([[3, 1, 1], 
+                  [1, 2, 1/2], 
+                  [1, 1/2, 5]])
 
     # Vector representation
+    n = A.shape[0]
     rn = odl.Rn(n)
     xvec = rn.zero()
     rhs = rn.element(np.random.rand(n))
 
     # Make operator
     Aop = MultiplyOp(A)
-    Res = ResidualOp(Aop, rhs)
+    Res = ResidualOp(Aop, -rhs)
 
-    x_opt = np.linalg.solve(A, rhs)
+    x_opt = np.linalg.solve(A, -rhs)
 
     # Solve using quasi newton
     line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 - rhs))
@@ -163,29 +162,17 @@ def test_quasi_newton_bfgs():
     assert all_almost_equal(x_opt, xvec, places=2)
     assert Res(xvec).norm() < 10**-1
 
-""" Test on a small QP """
-
-class QPGradientOp(odl.Operator):
-    """Gradient operator for a QP, so returns Hx + c."""
-
-    def __init__(self, H, c, domain, range):
-        super().__init__(domain, range)
-        self.H = H
-        self.c = c
-
-    def _call(self, x):
-        return self.range.element(np.dot(self.H, x.data)) + self.c
-
 def test_steepest_decent():
-    """ Solving a quadracit problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
+    """ Solving a quadratic problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
     is given by solving Hx + c = 0, and solving this with np is used as reference. """   
-    n = 3
-    
-    #H = np.random.rand(n, n)
-    #H = np.dot(H.T, H) + np.eye(n) * n
-    H = np.array([[3, 1, 1], [1, 2, 1/2], [1, 1/2, 5]])
+
+    # Fixed array
+    H = np.array([[3, 1, 1], 
+                  [1, 2, 1/2], 
+                  [1, 1/2, 5]])
 
     # Vector representation
+    n = H.shape[0]
     rn = odl.Rn(n)
     xvec = rn.zero()
     c = rn.element(np.random.rand(n))
@@ -194,11 +181,13 @@ def test_steepest_decent():
     x_opt = np.linalg.solve(H, -c)
     
     # Create derivative operator operator
-    deriv_op = QPGradientOp(H, c, rn, rn)
+    Aop = MultiplyOp(H)
+    deriv_op = ResidualOp(Aop, -c)
 
     # Solve using steepest decent
-    line_search = solvers.BacktrackingLineSearch(lambda x: 1/2*x.inner(deriv_op(x)) + 1/2*x.inner(c), 0.5, 0.05, 10)
-    solvers.steepest_decent(deriv_op , xvec, line_search, niter=20)
+    line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 + c), 
+                                                 0.5, 0.05, 10)
+    solvers.steepest_decent(deriv_op, xvec, line_search, niter=20)
     
     assert all_almost_equal(x_opt, xvec, places=2)
 
