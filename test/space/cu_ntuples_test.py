@@ -42,16 +42,31 @@ from odl.util.testutils import all_almost_equal, almost_equal, skip_if_no_cuda
 # * custom dist/norm/inner
 
 
-def _vectors(fn, n=1):
-    # Generate numpy vectors, real or complex
-    if isinstance(fn.field, odl.RealNumbers):
-        arrs = [np.random.rand(fn.size) for _ in range(n)]
+def _array(fn):
+    # Generate numpy vectors, real or complex or int
+    if np.issubdtype(fn.dtype, np.floating):
+        return np.random.randn(fn.size).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.integer):
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
     else:
-        arrs = [np.random.rand(fn.size) + 1j * np.random.rand(fn.size) for _ in range(n)]
+        return (np.random.randn(fn.size) +
+                1j * np.random.randn(fn.size)).astype(fn.dtype)
+
+def _element(fn):
+    return fn.element(_array(fn))
+
+def _vectors(fn, n=1):
+    arrs = [_array(fn) for _ in range(n)]
 
     # Make Fn vectors
     vecs = [fn.element(arr) for arr in arrs]
     return arrs + vecs
+
+@pytest.fixture(scope="module",
+                ids=['CudaRn float32'],
+                params=[odl.CudaRn(100)])
+def fn(request):
+    return request.param
     
 @pytest.mark.skipif("np.float32 not in odl.CUDA_DTYPES")
 def test_init_cudantuples_f32():
@@ -69,30 +84,28 @@ def test_init_cudantuples_bad_dtype():
         r3 = odl.CudaNtuples(3, dtype=np.matrix)
 
 @skip_if_no_cuda
-def test_element():
-    r3 = odl.CudaRn(3)
-    x = r3.element()
-    assert x in r3
+def test_element(fn):
+    x = fn.element()
+    assert x in fn
 
-    y = r3.element(inp=[1, 2, 3])
-    assert y in r3
+    y = fn.element(inp=[0]*fn.size)
+    assert y in fn
 
-    z = r3.element(data_ptr=y.data_ptr)
-    assert z in r3
+    z = fn.element(data_ptr=y.data_ptr)
+    assert z in fn
 
     with pytest.raises(ValueError):
-        w = r3.element(inp=[1, 2, 3], data_ptr=y.data_ptr)
+        w = fn.element(inp=[0]*fn.size, data_ptr=y.data_ptr)
 
 @skip_if_no_cuda
-def test_zero():
-    r3 = odl.CudaRn(3)
-    assert all_almost_equal(r3.zero(), [0, 0, 0])
+def test_zero(fn):
+    assert all_almost_equal(fn.zero(), [0]*fn.size)
 
 @skip_if_no_cuda
-def test_list_init():
-    r3 = odl.CudaRn(3)
-    x = r3.element([1, 2, 3])
-    assert all_almost_equal(x, [1, 2, 3])
+def test_list_init(fn):
+    x_list = list(range(fn.size))
+    x = fn.element(x_list)
+    assert all_almost_equal(x, x_list)
 
 @skip_if_no_cuda
 def test_ndarray_init():
@@ -297,6 +310,9 @@ def _test_lincomb(a, b, n=100):
 
     z_arr[:] = a * x_arr + b * y_arr
     rn.lincomb(a, x, b, y, out=z)
+    for v in [np.max(x-x_arr), np.max(y-y_arr), np.max(z-z_arr)]:
+        print(v)
+
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # First argument aliased with output
@@ -337,15 +353,10 @@ def test_lincomb():
 def _test_member_lincomb(a, n=100):
     # Validates vector member lincomb against the result on host with
     # randomized data
-    n = 100
+    r3 = odl.CudaRn(n)
 
     # Generate vectors
-    y_host = np.random.rand(n)
-    x_host = np.random.rand(n)
-
-    r3 = odl.CudaRn(n)
-    y_device = r3.element(y_host)
-    x_device = r3.element(x_host)
+    x_host, y_host, x_device, y_device = _vectors(r3, 2)
 
     # Host side calculation
     y_host[:] = a * x_host
@@ -365,54 +376,37 @@ def test_member_lincomb():
 @skip_if_no_cuda
 def test_multiply():
     # Validates multiply against the result on host with randomized data
-    n = 100
-    x_host = np.random.rand(n)
-    y_host = np.random.rand(n)
-    z_host = np.empty(n)
-
-    r3 = odl.CudaRn(n)
-    x_device = r3.element(x_host)
-    y_device = r3.element(y_host)
-    z_device = r3.element()
+    rn = odl.CudaRn(100)
+    x_host, y_host, z_host, x_device, y_device, z_device = _vectors(rn, 3)
 
     # Host side calculation
     z_host[:] = x_host * y_host
 
     # Device side calculation
-    r3.multiply(x_device, y_device, out=z_device)
+    rn.multiply(x_device, y_device, out=z_device)
 
-    # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(z_device, z_host)
-
-    # Assert input was not modified
-    assert all_almost_equal(x_device, x_host)
-    assert all_almost_equal(y_device, y_host)
+    assert all_almost_equal([x_device, y_device, z_device], 
+                            [x_host, y_host, z_host])
 
     # Aliased
     z_host[:] = z_host * x_host
-    r3.multiply(z_device, x_device, out=z_device)
+    rn.multiply(z_device, x_device, out=z_device)
 
-    # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(z_device, z_host)
+    assert all_almost_equal([x_device, z_device], 
+                            [x_host, z_host])
 
     # Aliased
     z_host[:] = z_host * z_host
-    r3.multiply(z_device, z_device, out=z_device)
-
-    # Cuda only uses floats, so require 5 places
+    rn.multiply(z_device, z_device, out=z_device)
+    
     assert all_almost_equal(z_device, z_host)
 
 @skip_if_no_cuda
 def test_member_multiply():
     # Validates vector member multiply against the result on host
     # with randomized data
-    n = 100
-    y_host = np.random.rand(n)
-    x_host = np.random.rand(n)
-
-    r3 = odl.CudaRn(n)
-    y_device = r3.element(y_host)
-    x_device = r3.element(x_host)
+    rn = odl.CudaRn(100)
+    x_host, y_host, x_device, y_device = _vectors(rn, 2)
 
     # Host side calculation
     y_host[:] = x_host * y_host
@@ -423,21 +417,101 @@ def test_member_multiply():
     # Cuda only uses floats, so require 5 places
     assert all_almost_equal(y_device, y_host)
 
-@skip_if_no_cuda
-def test_addition():
-    r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-    yd = r3.element([5, 3, 7])
 
-    assert all_almost_equal(xd + yd, [6, 5, 10])
+def _test_unary_operator(fn, function):
+    """ Verifies that the statement y=function(x) gives equivalent
+    results to Numpy.
+    """
 
-@skip_if_no_cuda
-def test_scalar_mult():
-    r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-    C = 5
+    x_arr, x = _vectors(fn)
 
-    assert all_almost_equal(C * xd, [5, 10, 15])
+    y_arr = function(x_arr)
+    y = function(x)
+
+    assert all_almost_equal([x, y], [x_arr, y_arr])
+
+
+def _test_binary_operator(fn, function):
+    """ Verifies that the statement z=function(x,y) gives equivalent
+    results to Numpy.
+    """
+
+    x_arr, y_arr, x, y = _vectors(fn, 2)
+
+    z_arr = function(x_arr, y_arr)
+    z = function(x, y)
+
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+
+
+def test_operators(fn):
+    """ Test of all operator overloads against the corresponding
+    Numpy implementation
+    """
+    # Unary operators
+    _test_unary_operator(fn, lambda x: +x)
+    _test_unary_operator(fn, lambda x: -x)
+
+    # Scalar multiplication
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        def imul(x):
+            x *= scalar
+        _test_unary_operator(fn, imul)
+        _test_unary_operator(fn, lambda x: x*scalar)
+
+    # Scalar division
+    for scalar in [-31.2, -1, 1, 2.13]:
+        def idiv(x):
+            x /= scalar
+        _test_unary_operator(fn, idiv)
+        _test_unary_operator(fn, lambda x: x/scalar)
+
+    # Incremental operations
+    def iadd(x, y):
+        x += y
+
+    def isub(x, y):
+        x -= y
+
+    def imul(x, y):
+        x *= y
+
+    def idiv(x, y):
+        x /= y
+
+    _test_binary_operator(fn, iadd)
+    _test_binary_operator(fn, isub)
+    _test_binary_operator(fn, imul)
+    _test_binary_operator(fn, idiv)
+
+    # Incremental operators with aliased inputs
+    def iadd_aliased(x):
+        x += x
+
+    def isub_aliased(x):
+        x -= x
+
+    def imul_aliased(x):
+        x += x
+
+    def idiv_aliased(x):
+        x -= x
+
+    _test_unary_operator(fn, iadd_aliased)
+    _test_unary_operator(fn, isub_aliased)
+    _test_unary_operator(fn, imul_aliased)
+    _test_unary_operator(fn, idiv_aliased)
+
+    # Binary operators
+    _test_binary_operator(fn, lambda x, y: x + y)
+    _test_binary_operator(fn, lambda x, y: x - y)
+    _test_binary_operator(fn, lambda x, y: x * y)
+    _test_binary_operator(fn, lambda x, y: x / y)
+
+    # Binary with aliased inputs
+    _test_unary_operator(fn, lambda x: x + x)
+    _test_unary_operator(fn, lambda x: x - x)
+
 
 @skip_if_no_cuda
 def test_incompatible_operations():

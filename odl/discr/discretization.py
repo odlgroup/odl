@@ -404,6 +404,10 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
         """Create a vector of zeros."""
         return self.Vector(self, self.dspace.zero())
 
+    def one(self):
+        """Create a vector of ones."""
+        return self.Vector(self, self.dspace.one())
+
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
         self.dspace._lincomb(a, x1.ntuple, b, x2.ntuple, out.ntuple)
@@ -429,6 +433,10 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two vectors."""
         self.dspace._multiply(x1.ntuple, x2.ntuple, out.ntuple)
+
+    def _divide(self, x1, x2, out):
+        """Raw pointwise multiplication of two vectors."""
+        self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
 
     class Vector(RawDiscretization.Vector, FnBase.Vector):
 

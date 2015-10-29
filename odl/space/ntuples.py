@@ -785,12 +785,12 @@ class Fn(FnBase, Ntuples):
         Parameters
         ----------
 
-        x1, x2 : `Cn.Vector`
+        x1, x2 : `Fn.Vector`
             The vectors whose inner product is calculated
 
         Returns
         -------
-        inner : `complex`
+        inner : `self.field` element
             Inner product of `x1` and `x2`.
 
         Examples
@@ -819,11 +819,13 @@ class Fn(FnBase, Ntuples):
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two vectors, assigned to `out`.
 
+        out = x1 * x2
+
         Parameters
         ----------
-        x1, x2 : `Cn.Vector`
+        x1, x2 : `Fn.Vector`
             Factors in the product
-        out : `Cn.Vector`
+        out : `Fn.Vector`
             The result vector
 
         Returns
@@ -841,6 +843,36 @@ class Fn(FnBase, Ntuples):
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
         np.multiply(x1.data, x2.data, out=out.data)
+
+    def _divide(self, x1, x2, out):
+        """The entry-wise division of two vectors, assigned to `out`.
+            
+        out = x1 / x2
+
+        Parameters
+        ----------
+        x1 : `Fn.Vector`
+            Dividend
+        x1 : `Fn.Vector`
+            Divisior
+        out : `Fn.Vector`
+            The result vector, quotient
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> r3 = Rn(3)
+        >>> x = r3.element([3, 5, 6])
+        >>> y = r3.element([1, 2, 2])
+        >>> out = r3.element()
+        >>> r3.divide(x, y, out)
+        >>> out
+        Rn(3).element([3.0, 2.5, 3.0])
+        """
+        np.divide(x1.data, x2.data, out=out.data)
 
     def zero(self):
         """Create a vector of zeros.

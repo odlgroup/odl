@@ -55,10 +55,8 @@ def _array(fn):
         return (np.random.randn(fn.size) +
                 1j * np.random.randn(fn.size)).astype(fn.dtype)
 
-
 def _element(fn):
     return fn.element(_array(fn))
-
 
 def _vectors(fn, n=1):
     arrs = [_array(fn) for _ in range(n)]
@@ -186,6 +184,21 @@ def test_lincomb(fn):
         for b in scalar_values:
             _test_lincomb(fn, a, b)
 
+def test_multiply(fn):
+    #space method
+    x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
+    out_arr = x_arr * y_arr
+
+    fn.multiply(x, y, out)
+    assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
+
+    #member method
+    x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
+    out_arr = x_arr * y_arr
+
+    out.multiply(x, y)
+    assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
+
 
 def _test_unary_operator(fn, function):
     """ Verifies that the statement y=function(x) gives equivalent
@@ -242,8 +255,16 @@ def test_operators(fn):
     def isub(x, y):
         x -= y
 
+    def imul(x, y):
+        x *= y
+
+    def idiv(x, y):
+        x /= y
+
     _test_binary_operator(fn, iadd)
     _test_binary_operator(fn, isub)
+    _test_binary_operator(fn, imul)
+    _test_binary_operator(fn, idiv)
 
     # Incremental operators with aliased inputs
     def iadd_aliased(x):
@@ -251,12 +272,23 @@ def test_operators(fn):
 
     def isub_aliased(x):
         x -= x
+
+    def imul_aliased(x):
+        x += x
+
+    def idiv_aliased(x):
+        x -= x
+
     _test_unary_operator(fn, iadd_aliased)
     _test_unary_operator(fn, isub_aliased)
+    _test_unary_operator(fn, imul_aliased)
+    _test_unary_operator(fn, idiv_aliased)
 
     # Binary operators
     _test_binary_operator(fn, lambda x, y: x + y)
     _test_binary_operator(fn, lambda x, y: x - y)
+    _test_binary_operator(fn, lambda x, y: x * y)
+    _test_binary_operator(fn, lambda x, y: x / y)
 
     # Binary with aliased inputs
     _test_unary_operator(fn, lambda x: x + x)

@@ -241,7 +241,7 @@ class CudaNtuples(NtuplesBase):
             elif other not in self.space:
                 return False
             else:
-                return self.data.equals(other.data)
+                return self.data == other.data
 
         def copy(self):
             """Create an identical (deep) copy of this vector.
@@ -618,21 +618,21 @@ class CudaFn(FnBase, CudaNtuples):
         7.0
         """
         return self._space_funcs.norm(x)
-
+    
     def _multiply(self, x1, x2, out):
-        """The pointwise product of two vectors, assigned to `z`.
+        """The pointwise sum of two vectors, assigned to `out`.
 
         This is defined as:
 
-        multiply(z, x, y) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
+        multiply(x, y, out) := [x[0]*y[0], x[1]*y[1], ..., x[n-1]*y[n-1]]
 
         Parameters
         ----------
 
-        z : CudaRn.Vector
-            Write to
-        x1, x2 : CudaRn.Vector
-            Read from
+        x1, x2 : CudaFn.Vector
+            Factors in product
+        out : CudaFn.Vector
+            Result
 
         Returns
         -------
@@ -642,18 +642,54 @@ class CudaFn(FnBase, CudaNtuples):
         --------
 
         >>> rn = CudaRn(3)
-        >>> x = rn.element([5, 3, 2])
-        >>> y = rn.element([1, 2, 3])
-        >>> z = rn.element()
-        >>> rn.multiply(x, y, z)
-        >>> z
+        >>> x1 = rn.element([5, 3, 2])
+        >>> x2 = rn.element([1, 2, 3])
+        >>> out = rn.element()
+        >>> rn.multiply(x1, x2, out)
+        >>> out
         CudaRn(3).element([5.0, 6.0, 6.0])
         """
         out.data.multiply(x1.data, x2.data)
+        
+    def _divide(self, x1, x2, out):
+        """The pointwise division of two vectors, assigned to `out`.
+
+        This is defined as:
+
+        multiply(z, x, y) := [x[0]/y[0], x[1]/y[1], ..., x[n-1]/y[n-1]]
+
+        Parameters
+        ----------
+
+        x1, x2 : CudaFn.Vector
+            Read from
+        out : CudaFn.Vector
+            Write to
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> rn = CudaRn(3)
+        >>> x1 = rn.element([5, 3, 2])
+        >>> x2 = rn.element([1, 2, 2])
+        >>> out = rn.element()
+        >>> rn.divide(x1, x2, out)
+        >>> out
+        CudaRn(3).element([5.0, 1.5, 1.0])
+        """
+        out.data.divide(x1.data, x2.data)
 
     def zero(self):
         """Create a vector of zeros."""
         return self.Vector(self, self._vector_impl(self.size, 0))
+
+    def one(self):
+        """Create a vector of ones."""
+        return self.Vector(self, self._vector_impl(self.size, 1))
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""

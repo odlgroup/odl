@@ -355,8 +355,12 @@ class FnBase(NtuplesBase, LinearSpace):
         return self._field
 
     @abstractmethod
-    def _multiply(self, z, x1, x2):
-        """The entry-wise product of two vectors, assigned to `z`."""
+    def _multiply(self, x1, x2, out):
+        """The entry-wise product of two vectors, assigned to `out`."""
+
+    @abstractmethod
+    def _divide(self, z, x1, x2, out):
+        """The entry-wise division of two vectors, assigned to `out`."""
 
     class Vector(NtuplesBase.Vector, LinearSpace.Vector):
 
