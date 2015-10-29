@@ -1693,8 +1693,8 @@ class FnVectorWeighting(_FnWeighting):
         Returns
         -------
         equals : bool
-            `True` if `other` is an `FnMatrixWeighting` instance with
-            **identical** matrix, `False` otherwise.
+            `True` if `other` is an `FnVectorWeighting` instance with
+            **identical** vector, `False` otherwise.
 
         See also
         --------
@@ -1729,7 +1729,7 @@ class FnVectorWeighting(_FnWeighting):
             return False
 
     def inner(self, x1, x2):
-        """Calculate the matrix-weighted inner product of two vectors.
+        """Calculate the vector weighted inner product of two vectors.
 
         Parameters
         ----------
