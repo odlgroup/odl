@@ -856,7 +856,7 @@ class Fn(FnBase, Ntuples):
 
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to `out`.
-            
+
         out = x1 / x2
 
         Parameters
@@ -1375,7 +1375,12 @@ class _FnMatrixWeighting(_FnWeighting):
         if isinstance(matrix, sp.sparse.spmatrix):
             self._matrix = matrix
         else:
-            self._matrix = np.asmatrix(matrix)
+            self._matrix = np.asarray(matrix)
+            if self._matrix.dtype == object:
+                raise ValueError('invalid matrix {}.'.format(matrix))
+            elif self._matrix.ndim != 2:
+                raise ValueError('matrix {} is not 2-dimensional.'
+                                 ''.format(matrix))
 
         if self._matrix.shape[0] != self._matrix.shape[1]:
             raise ValueError('matrix with shape {} not square.'
@@ -1438,7 +1443,7 @@ class _FnMatrixWeighting(_FnWeighting):
 
             else:  # matrix of `self` is dense
                 if other.matrix_issparse:
-                    #TODO: optimize with size checks etc.
+                    # TODO: optimize with size checks etc.
                     return np.array_equal(self.matrix, other.matrix.todense())
                 else:
                     return np.array_equal(self.matrix, other.matrix)
