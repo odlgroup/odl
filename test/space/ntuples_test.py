@@ -39,6 +39,7 @@ from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 # * metric, normed, Hilbert space variants
 # * MatVecOperator
 # * inner, norm, dist as free functions
+# * Vector weighting
 # * Custom inner/norm/dist
 
 

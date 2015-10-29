@@ -271,7 +271,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             """
 
         def __array__(self, dtype=None):
-            """ Returns a numpy array of this ntuple.
+            """Return a numpy array of this ntuple.
 
             Parameters
             ----------
@@ -288,7 +288,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 return self.asarray().astype(dtype)
 
         def __array_wrap__(self, obj):
-            """ Returns a new vector from the data in obj
+            """Return a new vector from the data in obj.
 
             Parameters
             ----------
