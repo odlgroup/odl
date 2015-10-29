@@ -70,7 +70,8 @@ from odl.util.utility import is_real_dtype, is_complex_dtype
 
 __all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
            'MatVecOperator',
-           'FnMatrixWeighting', 'FnConstWeighting')
+           'FnMatrixWeighting', 'FnConstWeighting',
+           'weighted_dist', 'weighted_norm', 'weighted_inner')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -1313,6 +1314,106 @@ class MatVecOperator(Operator):
             self.matrix.dot(x.data, out=out.data)
 
     # TODO: repr and str
+
+
+def _weighted(weight, attr, dist_using_inner=False):
+    if np.isscalar(weight):
+        weighting = FnConstWeighting(
+            weight, dist_using_inner=dist_using_inner)
+    else:
+        weight_ = np.asarray(weight)
+        if weight_.dtype == object:
+            raise ValueError('bad weight {}'.format(weight))
+        if weight_.ndim == 1:
+            raise NotImplementedError('weighting with vector not yet '
+                                      'supported.')
+        elif weight_.ndim == 2:
+            weighting = FnMatrixWeighting(
+                weight_, dist_using_inner=dist_using_inner)
+        else:
+            raise ValueError('array-like weight must have 1 or 2 dimensions, '
+                             'but {} has {} dimensions.'
+                             ''.format(weight, weight_.ndim))
+    return getattr(weighting, attr)
+
+
+def weighted_inner(weight):
+    """Weighted inner product on `Fn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar or array-like
+        Weight of the inner product. A scalar is interpreted as a
+        constant weight, a 2-dimensional array as a weighting matrix.
+        1-dimensional arrays (vector weights) are not yet supported.
+    Returns
+    -------
+    inner : callable
+        Inner product function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    FnConstWeighting, FnMatrixWeighting
+    """
+    return _weighted(weight, 'inner')
+
+
+def weighted_norm(weight):
+    """Weighted norm on `Fn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar or array-like
+        Weight of the norm. A scalar is interpreted as a
+        constant weight, a 2-dimensional array as a weighting matrix.
+        1-dimensional arrays (vector weights) are not yet supported.
+    Returns
+    -------
+    inner : callable
+        Norm function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    FnConstWeighting, FnMatrixWeighting
+    """
+    return _weighted(weight, 'norm')
+
+
+def weighted_dist(weight, use_inner=False):
+    """Weighted distance on `Fn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar or array-like
+        Weight of the distance. A scalar is interpreted as a
+        constant weight, a 2-dimensional array as a weighting matrix.
+        1-dimensional arrays (vector weights) are not yet supported.
+    use_inner : bool, optional
+        Calculate `dist(x, y)` as
+
+        `sqrt(norm(x)**2 + norm(y)**2 - 2 * inner(x, y).real)`
+
+        This avoids the creation of new arrays and is thus
+        faster for large arrays. On the downside, it will not
+        evaluate to exactly zero for equal (but not identical)
+        `x` and `y`.
+
+    Returns
+    -------
+    inner : callable
+        Distance function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    FnConstWeighting, FnMatrixWeighting
+    """
+    return _weighted(weight, 'dist', dist_using_inner=use_inner)
 
 
 def _norm_default(x):

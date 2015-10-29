@@ -27,7 +27,6 @@ import pytest
 import numpy as np
 import scipy as sp
 from math import ceil
-from textwrap import dedent
 
 # ODL imports
 from odl import Ntuples, Fn, Rn, Cn
@@ -38,10 +37,8 @@ from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 # TODO: add tests for:
 # * Ntuples (different data types)
 # * metric, normed, Hilbert space variants
-# * Cn
-# * Rn, Cn with non-standard data types
-# * vector multiplication
 # * MatVecOperator
+# * inner, norm, dist as free functions
 # * Custom inner/norm/dist
 
 
@@ -186,15 +183,16 @@ def test_lincomb(fn):
         for b in scalar_values:
             _test_lincomb(fn, a, b)
 
+
 def test_multiply(fn):
-    #space method
+    # space method
     x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
     out_arr = x_arr * y_arr
 
     fn.multiply(x, y, out)
     assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
 
-    #member method
+    # member method
     x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
     out_arr = x_arr * y_arr
 
