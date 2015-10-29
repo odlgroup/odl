@@ -300,63 +300,57 @@ def test_inner():
 
 
 @skip_if_no_cuda
-def _test_lincomb(a, b, n=100):
+def _test_lincomb(fn, a, b):
     # Validates lincomb against the result on host with randomized
     # data and given a,b
-    rn = odl.CudaRn(n)
 
     # Unaliased arguments
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * y_arr
-    rn.lincomb(a, x, b, y, out=z)
-    for v in [np.max(x-x_arr), np.max(y-y_arr), np.max(z-z_arr)]:
-        print(v)
-
+    fn.lincomb(a, x, b, y, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # First argument aliased with output
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * z_arr + b * y_arr
-    rn.lincomb(a, z, b, y, out=z)
+    fn.lincomb(a, z, b, y, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # Second argument aliased with output
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * z_arr
-    rn.lincomb(a, x, b, z, out=z)
+    fn.lincomb(a, x, b, z, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # Both arguments aliased with each other
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * x_arr
-    rn.lincomb(a, x, b, x, out=z)
+    fn.lincomb(a, x, b, x, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # All aliased
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * z_arr + b * z_arr
-    rn.lincomb(a, z, b, z, out=z)
+    fn.lincomb(a, z, b, z, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 @skip_if_no_cuda
-def test_lincomb():
+def test_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
         for b in scalar_values:
-            _test_lincomb(a, b)
+            _test_lincomb(fn, a, b)
 
-def _test_member_lincomb(a, n=100):
-    # Validates vector member lincomb against the result on host with
-    # randomized data
-    r3 = odl.CudaRn(n)
+def _test_member_lincomb(fn, a):
+    # Validates vector member lincomb against the result on host
 
     # Generate vectors
-    x_host, y_host, x_device, y_device = _vectors(r3, 2)
+    x_host, y_host, x_device, y_device = _vectors(fn, 2)
 
     # Host side calculation
     y_host[:] = a * x_host
@@ -368,10 +362,10 @@ def _test_member_lincomb(a, n=100):
     assert all_almost_equal(y_device, y_host)
 
 @skip_if_no_cuda
-def test_member_lincomb():
+def test_member_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
     for a in scalar_values:
-        _test_member_lincomb(a)
+        _test_member_lincomb(fn, a)
 
 @skip_if_no_cuda
 def test_multiply():
@@ -535,12 +529,10 @@ def test_incompatible_operations():
         xA - xB
         
 @skip_if_no_cuda
-def test_copy():
+def test_copy(fn):
     import copy
     
-    r3 = odl.CudaRn(3)
-    x = r3.element([1, 2, 3])
-    
+    x = _element(fn)
     y = copy.copy(x)
     
     assert x == y
@@ -552,10 +544,10 @@ def test_copy():
     assert z is not x
 
 @skip_if_no_cuda
-def test_transpose():
+def test_transpose(fn):
     r3 = odl.CudaRn(3)
-    x = r3.element([1, 2, 3])
-    y = r3.element([5, 3, 8])
+    x = _element(fn)
+    y = _element(fn)
     
     # Assert linear operator
     assert isinstance(x.T, odl.Operator)
