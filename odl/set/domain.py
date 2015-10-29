@@ -198,6 +198,8 @@ class IntervalProd(Set):
         True
         """
         point = np.atleast_1d(point)
+        if point.dtype == object:
+            return False
         if np.any(np.isnan(point)):
             return False
         if point.ndim > 1:
@@ -614,7 +616,7 @@ class IntervalProd(Set):
             return type(self)(np.minimum(vec1, vec2), np.maximum(vec1, vec2))
         else:
             return NotImplemented
-        
+
     __rtruediv__ = __rdiv__
 
     def __repr__(self):
