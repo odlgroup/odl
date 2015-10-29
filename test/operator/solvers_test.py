@@ -137,12 +137,13 @@ class ResidualOp(odl.Operator):
     def derivative(self, x):
         return self.op.derivative(x)
 
-def test_quasi_newton():
-    n = 5
+def test_quasi_newton_bfgs():
+    n = 3
 
     # Np as validation
-    A = np.random.rand(n, n)
-    A = np.dot(A.T, A) + np.eye(n) * n
+    #A = np.random.rand(n, n)
+    #A = np.dot(A.T, A) + np.eye(n) * n
+    A = np.array([[3, 1, 1], [1, 2, 1/2], [1, 1/2, 5]])
 
     # Vector representation
     rn = odl.Rn(n)
@@ -157,7 +158,7 @@ def test_quasi_newton():
 
     # Solve using quasi newton
     line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 - rhs))
-    solvers.quasi_newton(Res, xvec, line_search, niter=10)
+    solvers.quasi_newton_bfgs(Res, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
     assert Res(xvec).norm() < 10**-1
@@ -178,10 +179,12 @@ class QPGradientOp(odl.Operator):
 def test_steepest_decent():
     """ Solving a quadracit problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
     is given by solving Hx + c = 0, and solving this with np is used as reference. """   
-    n = 5
-    H = np.random.rand(n, n)
-    H = np.dot(H.T, H) + np.eye(n) * n
+    n = 3
     
+    #H = np.random.rand(n, n)
+    #H = np.dot(H.T, H) + np.eye(n) * n
+    H = np.array([[3, 1, 1], [1, 2, 1/2], [1, 1/2, 5]])
+
     # Vector representation
     rn = odl.Rn(n)
     xvec = rn.zero()

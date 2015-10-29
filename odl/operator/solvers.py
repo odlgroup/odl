@@ -251,7 +251,7 @@ class ConstantLineSearch(object):
     def __call__(self, x, direction, gradf):
         return self.constant
 
-def quasi_newton(op, x, line_search, niter=1, partial=None):
+def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
     """ General implementation of the quasi newton method for solving
 
     op(x) == 0
