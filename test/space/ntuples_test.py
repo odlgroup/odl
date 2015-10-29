@@ -274,10 +274,10 @@ def test_operators(fn):
         x -= x
 
     def imul_aliased(x):
-        x += x
+        x *= x
 
     def idiv_aliased(x):
-        x -= x
+        x /= x
 
     _test_unary_operator(fn, iadd_aliased)
     _test_unary_operator(fn, isub_aliased)
@@ -293,6 +293,8 @@ def test_operators(fn):
     # Binary with aliased inputs
     _test_unary_operator(fn, lambda x: x + x)
     _test_unary_operator(fn, lambda x: x - x)
+    _test_unary_operator(fn, lambda x: x * x)
+    _test_unary_operator(fn, lambda x: x / x)
 
 
 def test_norm(fn):

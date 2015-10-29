@@ -620,7 +620,7 @@ class CudaFn(FnBase, CudaNtuples):
         return self._space_funcs.norm(x)
     
     def _multiply(self, x1, x2, out):
-        """The pointwise sum of two vectors, assigned to `out`.
+        """The pointwise product of two vectors, assigned to `out`.
 
         This is defined as:
 
