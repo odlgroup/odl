@@ -665,21 +665,31 @@ class Fn(FnBase, Ntuples):
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        if (dist, norm, inner, weight).count(None) < 3:
+        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
             if np.isscalar(weight):
                 self._space_funcs = _FnConstWeighting(
                     weight, dist_using_inner=dist_using_inner)
-            elif isinstance(weight, (np.matrix, sp.sparse.spmatrix)):
-                self._space_funcs = _FnMatrixWeighting(
-                    weight, dist_using_inner=dist_using_inner)
             elif weight is None:
                 pass
-            else:
-                raise ValueError('invalid weight argument {!r}.'
-                                 ''.format(weight))
+            elif isinstance(weight, sp.sparse.spmatrix):
+                self._space_funcs = _FnMatrixWeighting(
+                    weight, dist_using_inner=dist_using_inner)
+            else:  # last possibility: make a matrix
+                mat = np.asarray(weight)
+                if mat.dtype == object:
+                    raise ValueError('invalid weight argument {}.'
+                                     ''.format(weight))
+                # later, we can distinguish ndim == 1 or 2
+                elif mat.ndim != 2:
+                    raise ValueError('array-like input {} is not '
+                                     '2-dimensional.'.format(weight))
+
+                self._space_funcs = _FnMatrixWeighting(
+                    mat, dist_using_inner=dist_using_inner)
+
         elif dist is not None:
             self._space_funcs = _FnCustomDist(dist)
         elif norm is not None:

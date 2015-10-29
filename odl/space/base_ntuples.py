@@ -348,7 +348,7 @@ class FnBase(NtuplesBase, LinearSpace):
     @abstractmethod
     def zero(self):
         """Create a vector of zeros."""
-        
+
     @abstractmethod
     def one(self):
         """Create a vector of ones."""

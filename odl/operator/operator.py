@@ -365,34 +365,49 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __mul__(self, other):
         """`op.__mul__(other) <==> op * other`.
 
-        If `other` is an operator, this corresponds to the pointwise
-        operator product:
+        If `other` is an operator, this corresponds to 
+        operator composition:
 
-        `op1 * op2 <==> (x --> (op1(x) * op2(x)))`
+        `op1 * op2 <==> (x --> op1(op2(x))`
 
         If `other` is a scalar, this corresponds to right
         multiplication of scalars with operators:
 
         `op * scalar <==> (x --> op(scalar * x))`
 
-        Note that left and right multiplications are usually different.
+        If `other` is a vector, this corresponds to right
+        multiplication of vectors with operators:
+
+        `op * vector <==> (x --> op(vector * x))`
+
+        Note that left and right multiplications are generally different.
 
         Parameters
         ----------
-        other : `Operator` or scalar
-            If `other` is an `Operator`, their `domain` and `range`
-            must be equal, and `range` must be an `Algebra`.
+        other : `Operator`, `Vector` or scalar
+            If `other` is an `Operator`, the `domain` of `other`
+            must match `range` of `self`.
 
             If `other` is a scalar and `self.domain` is a
-            `LinearSpace`, `scalar` must be an element of
+            `LinearSpace`, `other` must be an element of
             `self.domain.field`.
+
+            If `other` is a vector, `other` must be an element of
+            `self.domain`.
 
         Returns
         -------
         mul : `Operator`
-            The multiplication operator. If `other` is a scalar, a
-            `OperatorRightScalarMult` is returned. If `other` is
-            an operator, an `OperatorPointwiseProduct` is returned.
+            The multiplication operator. 
+
+            If `other` is an operator, 
+            mul is a `OperatorComp`.
+            
+            If `other` is a scalar
+            mul is a `OperatorRightScalarMult`.
+
+            If `other` is a vector
+            mul is a `OperatorRightVectorMult`.
 
         Examples
         --------
@@ -423,34 +438,49 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
 
-        If `other` is an operator, this corresponds to the pointwise
-        operator product:
+        If `other` is an operator, this corresponds to 
+        operator composition:
 
-        `op1 * op2 <==> (x --> (op1(x) * op2(x)))`
+        `op1 * op2 <==> (x --> op1(op2(x)))`
 
         If `other` is a scalar, this corresponds to left
         multiplication of scalars with operators:
 
-        `op * scalar <==> (x --> scalar * op(x))`
+        `scalar * op <==> (x --> scalar * op(x))`
 
-        Note that left and right multiplications are usually different.
+        If `other` is a vector, this corresponds to left
+        multiplication of vector with operators:
+
+        `vector * op <==> (x --> vector * op(x))`
+
+        Note that left and right multiplications are generally different.
 
         Parameters
         ----------
-        other : `Operator` or scalar
-            If `other` is an `Operator`, their `domain` and `range`
-            must be equal, and `range` must be an `Algebra`.
+        other : `Operator`, `Vector` or scalar
+            If `other` is an `Operator`, the `range` of `other`
+            must match `domain` of `self`.
 
             If `other` is a scalar and `self.range` is a
-            `LinearSpace`, `scalar` must be an element of
+            `LinearSpace`, `other` must be an element of
             `self.range.field`.
+
+            If `other` is a vector, `other` must be an element of
+            `self.range`.
 
         Returns
         -------
-        rmul : `Operator`
-            The multiplication operator. If `other` is a scalar, a
-            `OperatorLeftScalarMult` is returned. If `other` is
-            an operator, an `OperatorPointwiseProduct` is returned.
+        mul : `Operator`
+            The multiplication operator.
+
+            If `other` is an operator, 
+            mul is a `OperatorComp`.
+            
+            If `other` is a scalar
+            mul is a `OperatorLeftScalarMult`.
+
+            If `other` is a vector
+            mul is a `OperatorLeftVectorMult`.
 
         Examples
         --------
@@ -883,7 +913,6 @@ class OperatorPointwiseProduct(Operator):
 
 
 class OperatorLeftScalarMult(Operator):
-
     """Expression type for the operator left scalar multiplication.
 
     `OperatorLeftScalarMult(op, scalar) <==> (x --> scalar * op(x))`
@@ -984,7 +1013,6 @@ class OperatorLeftScalarMult(Operator):
 
 
 class OperatorRightScalarMult(Operator):
-
     """Expression type for the operator right scalar multiplication.
 
     OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))
@@ -1094,22 +1122,21 @@ class OperatorRightScalarMult(Operator):
 
 
 class FunctionalLeftVectorMult(Operator):
-    """Expression type for the operator left vector multiplication.
+    """Expression type for the functional left vector multiplication.
 
-    `OperatorLeftVectorMult(op, vector)(x) <==> vector * op(x)`
+    A functional is a `Operator` whose `range` is a `Field`.
 
-    The scalar multiplication is well-defined only if `op.range` is
-    a `vector.space.field`.
+    `FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)`
     """
 
     def __init__(self, op, vector):
-        """Initialize a new `OperatorLeftVectorMult` instance.
+        """Initialize a new `FunctionalLeftVectorMult` instance.
 
         Parameters
         ----------
         op : `Operator`
-            The range of `op` must be a `LinearSpace`.
-        vector : `LinearSpace.Vector` with `field` same as `op.range.field`
+            The range of `op` must be a `Field`.
+        vector : `LinearSpace.Vector` with `field` same as `op.range`
             The vector to multiply by
         """
         if not isinstance(vector, LinearSpace.Vector):
@@ -1140,12 +1167,12 @@ class FunctionalLeftVectorMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        OperatorLeftVectorMult(op, vector).derivative(x) <==>
-        OperatorLeftVectorMult(op.derivative(x), vector)
+        FunctionalLeftVectorMult(op, vector).derivative(x) <==>
+        FunctionalLeftVectorMult(op.derivative(x), vector)
 
         See also
         --------
-        OperatorLeftScalarMult : the result
+        FunctionalLeftVectorMult : the result
         """
         return FunctionalLeftVectorMult(self._op.derivative(x), self._vector)
 
@@ -1156,7 +1183,7 @@ class FunctionalLeftVectorMult(Operator):
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
 
-        `OperatorLeftVectorMult(op, vector).adjoint ==
+        `FunctionalLeftVectorMult(op, vector).adjoint ==
         `OperatorComp(op.adjoint, vector.T)`
 
         `(x * A)^T = A^T * x^T`
@@ -1193,7 +1220,7 @@ class OperatorLeftVectorMult(Operator):
         ----------
         op : `Operator`
             The range of `op` must be a `LinearSpace`.
-        vector : `LinearSpace.Vector` with `field` same as `op.range.field`
+        vector : `LinearSpace.Vector` in `op.range`
             The vector to multiply by
         """
         if vector not in op.range:
@@ -1225,7 +1252,7 @@ class OperatorLeftVectorMult(Operator):
 
         See also
         --------
-        OperatorLeftScalarMult : the result
+        OperatorLeftVectorMult : the result
         """
         return OperatorLeftVectorMult(self._op.derivative(x), self._vector)
 
@@ -1233,13 +1260,13 @@ class OperatorLeftVectorMult(Operator):
     def adjoint(self):
         """The operator adjoint.
 
-        The adjoint of the operator scalar multiplication is the
-        scalar multiplication of the operator adjoint:
+        The adjoint of the operator vector multiplication is the
+        vector multiplication of the operator adjoint:
 
         `OperatorLeftVectorMult(op, vector).adjoint ==
-        `OperatorComp(op.adjoint, vector.T)`
+        `OperatorRightVectorMult(op.adjoint, vector)`
 
-        `(x * A)^T = A^T * x^T`
+        `(x * A)^T = A^T * x`
         """
 
         if not self.is_linear:
@@ -1261,7 +1288,7 @@ class OperatorRightVectorMult(Operator):
 
     """Expression type for the operator right vector multiplication.
 
-    `OperatorLeftVectorMult(op, vector)(x) <==> op(vector * x)`
+    `OperatorRightVectorMult(op, vector)(x) <==> op(vector * x)`
 
     The scalar multiplication is well-defined only if `vector in op.domain`.
     """
@@ -1273,7 +1300,7 @@ class OperatorRightVectorMult(Operator):
         ----------
         op : `Operator`
             The domain of `op` must be a `vector.space`.
-        vector : `LinearSpace.Vector`
+        vector : `LinearSpace.Vector` in `op.domain`
             The vector to multiply by
         """
         if vector not in op.domain:
@@ -1318,9 +1345,9 @@ class OperatorRightVectorMult(Operator):
         vector multiplication of the operator adjoint:
 
         `OperatorRightVectorMult(op, vector).adjoint ==
-        `OperatorComp(vector.T, op.adjoint)`
+        `OperatorLeftVectorMult(op.adjoint, vector)`
 
-        `(A x)^T = x^T * A^T`
+        `(A x)^T = x * A^T`
         """
 
         if not self.is_linear:
