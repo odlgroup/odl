@@ -468,6 +468,33 @@ class FunctionSet(Set):
             """
             vec_bounds_check = kwargs.pop('vec_bounds_check', True)
             scalar_out = False
+
+            # A. Pre-checks and preparations
+            # 1. vectorized? (a/b)
+            # 2a. x = domain element (1), array (2), meshgrid (3)
+            # 2a1. make x a (d, 1) array; set a flag that output shall be
+            #      scalar; apply case 2a2
+            # 2a2. out_shape = (x.shape[1],)
+            # 2a3. out_shape = (x[0].shape[1],) if ndim == 1 else
+            #      np.broadcast(*x).shape
+            # 2a. (cont.) If vec_bounds_check, check domain.contains_all(x)
+            # 2b. x in domain? -> yes ok, no error; out is None? yes -> ok,
+            #     no -> error
+            #
+            # B. Evaluation and post-checks
+            # 1. out is None? (a/b)
+            # 1a. out = call(x)
+            #     vectorized? (1/2)
+            # 1a1. out.shape == out_shape? -> error if no
+            #      If vec_bounds_check, check range.contains_all(out)
+            # 1a2. nothing
+            # 2b. vectorized? (1/2)
+            # 2b1. out is array and out.shape == out_shape? -> error if no;
+            #     apply(x, out=out);
+            #     If vec_bounds_check, check range.contains_all(out)
+            # 2b2. error (out given but not vectorized)
+
+            # TODO: simplify logic in second part
             if self.vectorized:
                 if x in self.domain:  # Allow also non-vectorized evaluation
                     x = np.atleast_2d(x).T  # make a (d, 1) array
@@ -476,12 +503,11 @@ class FunctionSet(Set):
                 if is_valid_input_array(x, self.domain.ndim):
                     out_shape = (x.shape[1],)
                 elif is_valid_input_meshgrid(x, self.domain.ndim):
+                    # Broadcasting fails for only one vector (ndim == 1)
                     if self.domain.ndim == 1:
                         out_shape = (x[0].shape[1],)
                     else:
                         out_shape = np.broadcast(*x).shape
-                elif x in self.domain:  # Allow also non-vectorized evaluation
-                    x = np.atleast_2d(x).T  # make a (d, 1) array
                 else:
                     raise TypeError('argument {!r} not a valid vectorized '
                                     'input. Expected an element of the domain '
