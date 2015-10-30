@@ -107,27 +107,27 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     """
     if op.domain != op.range:
         raise TypeError('Operator needs to be self adjoint')
-    
+
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
     p = r.copy()
     Ap = op.domain.element() #Extra storage for storing A x
-    
+
     sqnorm_r_old = r.norm()**2  # Only recalculate norm after update
 
     for _ in range(niter):
         op(p, out=Ap)  # Ap = A p
-        
+
         alpha = sqnorm_r_old / p.inner(Ap)
-        
+
         if alpha == 0.0:  # Return if residual is 0
             return
-            
+
         x.lincomb(1, x, alpha, p)            # x = x + alpha*p
         r.lincomb(1, r, -alpha, Ap)           # r = r - alpha*p
-        
-        sqnorm_r_new = r.norm()**2    
-        
+
+        sqnorm_r_new = r.norm()**2
+
         beta = sqnorm_r_new / sqnorm_r_old
         sqnorm_r_old = sqnorm_r_new
 
@@ -220,8 +220,19 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
             partial.send(x)
 
 class BacktrackingLineSearch(object):
-    """ Backtracking line search, 
-    a search scheme based on the Armijo-Goldstein condition.
+    """ Implements backtracking line search; an in-exact line search scheme
+    based on the armijo-goldstein condition. In this scheme one approximately
+    finds the longest step fulfilling the condition.
+
+    Sources:
+    - Page 464 in Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
+    Cambridge university press, 2004. Available at
+    http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf
+
+    - Pages 378-379 in Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
+    and nonlinear optimization. Siam, 2009.
+
+    - https://en.wikipedia.org/wiki/Backtracking_line_search
     """
     def __init__(self, function, tau=0.8, c=0.7, max_num_iter=None):
         self.function = function
@@ -237,7 +248,7 @@ class BacktrackingLineSearch(object):
     def __call__(self, x, direction, dir_derivative):
         alpha = 1.0
         fx = self.function(x)
-        num_iter = 0        
+        num_iter = 0
         while self.function(x + alpha * direction) >= fx + alpha * dir_derivative * self.c and num_iter <= self.max_num_iter:
             num_iter += 1
             alpha *= self.tau
@@ -252,9 +263,17 @@ class ConstantLineSearch(object):
         return self.constant
 
 def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
-    """ General implementation of the quasi newton method for solving
+    """ General implementation of the quasi newton method with bfgs update for,
+    solving the equation op(x) == 0. The qn method is an approximate newton
+    method, where hessian is approximated and gradually updated in each step.
+    This implementation uses the rank-one bfgs update schema where the inverse
+    of the hessian is updated in each iteration.
 
-    op(x) == 0
+    Sources:
+    - Section 12.3 in Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
+    and nonlinear optimization. Siam, 2009.
+
+    - https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm
     """
     I = IdentityOperator(op.range)
     Bi = IdentityOperator(op.range)
@@ -281,18 +300,30 @@ def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
             partial.send(x)
 
 def steepest_decent(deriv_op, x, line_search, niter=1, partial=None):
-    """ General implementation of steepest decent for solving min f(x)
-    for x in C, where we define f(x) = infty if x is not in C. Needs to
-    be done in the line search.
+    """ General implementation of steepest decent (also known as gradient
+    decent) for solving min f(x). The algorithm is intended for unconstrained
+    problems, but also works for problems where one wants x in C, for some give
+    set C, if one define f(x) = infty if x is not in C. The method needs line
+    search in order to be converge.
+
+    Sources:
+    - Section 9.3-9.4 in Boyd, Stephen, and Lieven Vandenberghe. Convex
+    optimization. Cambridge university press, 2004. Available at
+    http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf
+
+    - Section 12.2 in Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
+    and nonlinear optimization. Siam, 2009.
+
+    - https://en.wikipedia.org/wiki/Gradient_descent
     """
-    
+
     grad = deriv_op.range.element()
     for _ in range(niter):
         deriv_op(x, out=grad)
         dir_derivative = -grad.norm()**2
         step = line_search(x, -grad, dir_derivative)
         x.lincomb(1, x, -step, grad)
-        
+
         if partial is not None:
             partial.send(x)
 
