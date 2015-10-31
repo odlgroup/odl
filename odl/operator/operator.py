@@ -560,8 +560,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         `op / scalar <==> (x --> op(x / scalar))`
 
-        Note that left and right multiplications are usually different.
-
         Parameters
         ----------
         other : Scalar
@@ -589,6 +587,24 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorRightScalarMult(self, 1.0 / other)
         else:
             return NotImplemented
+            
+    def __neg__(self):
+        """`op.__neg__(s) <==> -op`.
+        
+        Negate this operator
+        
+        `-op <==> (x --> -op(x))`
+        """
+        return -1 * self
+        
+    def __pos__(self):
+        """`op.__pos__(s) <==> op`.
+        
+        Pos operator, the identity.
+        
+        `+op <==> (x --> op(x))`
+        """
+        return self
 
     def __repr__(self):
         """`op.__repr__() <==> repr(op)`.
