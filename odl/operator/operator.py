@@ -435,6 +435,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         else:
             return NotImplemented
 
+    __matmul__ = __mul__
+
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
 
