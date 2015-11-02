@@ -507,6 +507,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return FunctionalLeftVectorMult(self, other.copy())
         else:
             return NotImplemented
+        
+    __rmatmul__ = __rmul__
 
     def __pow__(self, n):
         """`op.__pow__(s) <==> op**s`.
