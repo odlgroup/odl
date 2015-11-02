@@ -30,7 +30,7 @@ from numpy import float64
 
 # ODL imports
 import odl
-from odl.space.ntuples import _FnConstWeighting
+from odl.space.ntuples import FnConstWeighting
 if odl.CUDA_AVAILABLE:
     from odl.space.cu_ntuples import _CudaFnConstWeighting
 
@@ -42,17 +42,32 @@ from odl.util.testutils import all_almost_equal, almost_equal, skip_if_no_cuda
 # * custom dist/norm/inner
 
 
-def _vectors(fn, n=1):
-    # Generate numpy vectors, real or complex
-    if isinstance(fn.field, odl.RealNumbers):
-        arrs = [np.random.rand(fn.size) for _ in range(n)]
+def _array(fn):
+    # Generate numpy vectors, real or complex or int
+    if np.issubdtype(fn.dtype, np.floating):
+        return np.random.randn(fn.size).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.integer):
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
     else:
-        arrs = [np.random.rand(fn.size) + 1j * np.random.rand(fn.size) for _ in range(n)]
+        return (np.random.randn(fn.size) +
+                1j * np.random.randn(fn.size)).astype(fn.dtype)
+
+def _element(fn):
+    return fn.element(_array(fn))
+
+def _vectors(fn, n=1):
+    arrs = [_array(fn) for _ in range(n)]
 
     # Make Fn vectors
     vecs = [fn.element(arr) for arr in arrs]
     return arrs + vecs
-    
+
+@pytest.fixture(scope="module",
+                ids=['CudaRn float32'],
+                params=[odl.CudaRn(100)])
+def fn(request):
+    return request.param
+
 @pytest.mark.skipif("np.float32 not in odl.CUDA_DTYPES")
 def test_init_cudantuples_f32():
     #verify that the code runs
@@ -69,30 +84,28 @@ def test_init_cudantuples_bad_dtype():
         r3 = odl.CudaNtuples(3, dtype=np.matrix)
 
 @skip_if_no_cuda
-def test_element():
-    r3 = odl.CudaRn(3)
-    x = r3.element()
-    assert x in r3
+def test_element(fn):
+    x = fn.element()
+    assert x in fn
 
-    y = r3.element(inp=[1, 2, 3])
-    assert y in r3
+    y = fn.element(inp=[0]*fn.size)
+    assert y in fn
 
-    z = r3.element(data_ptr=y.data_ptr)
-    assert z in r3
+    z = fn.element(data_ptr=y.data_ptr)
+    assert z in fn
 
     with pytest.raises(ValueError):
-        w = r3.element(inp=[1, 2, 3], data_ptr=y.data_ptr)
+        w = fn.element(inp=[0]*fn.size, data_ptr=y.data_ptr)
 
 @skip_if_no_cuda
-def test_zero():
-    r3 = odl.CudaRn(3)
-    assert all_almost_equal(r3.zero(), [0, 0, 0])
+def test_zero(fn):
+    assert all_almost_equal(fn.zero(), [0]*fn.size)
 
 @skip_if_no_cuda
-def test_list_init():
-    r3 = odl.CudaRn(3)
-    x = r3.element([1, 2, 3])
-    assert all_almost_equal(x, [1, 2, 3])
+def test_list_init(fn):
+    x_list = list(range(fn.size))
+    x = fn.element(x_list)
+    assert all_almost_equal(x, x_list)
 
 @skip_if_no_cuda
 def test_ndarray_init():
@@ -287,65 +300,57 @@ def test_inner():
 
 
 @skip_if_no_cuda
-def _test_lincomb(a, b, n=100):
+def _test_lincomb(fn, a, b):
     # Validates lincomb against the result on host with randomized
     # data and given a,b
-    rn = odl.CudaRn(n)
 
     # Unaliased arguments
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * y_arr
-    rn.lincomb(a, x, b, y, out=z)
+    fn.lincomb(a, x, b, y, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # First argument aliased with output
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * z_arr + b * y_arr
-    rn.lincomb(a, z, b, y, out=z)
+    fn.lincomb(a, z, b, y, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # Second argument aliased with output
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * z_arr
-    rn.lincomb(a, x, b, z, out=z)
+    fn.lincomb(a, x, b, z, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # Both arguments aliased with each other
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * x_arr
-    rn.lincomb(a, x, b, x, out=z)
+    fn.lincomb(a, x, b, x, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # All aliased
-    x_arr, y_arr, z_arr, x, y, z = _vectors(rn, 3)
+    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * z_arr + b * z_arr
-    rn.lincomb(a, z, b, z, out=z)
+    fn.lincomb(a, z, b, z, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 @skip_if_no_cuda
-def test_lincomb():
+def test_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
         for b in scalar_values:
-            _test_lincomb(a, b)
+            _test_lincomb(fn, a, b)
 
-def _test_member_lincomb(a, n=100):
-    # Validates vector member lincomb against the result on host with
-    # randomized data
-    n = 100
+def _test_member_lincomb(fn, a):
+    # Validates vector member lincomb against the result on host
 
     # Generate vectors
-    y_host = np.random.rand(n)
-    x_host = np.random.rand(n)
-
-    r3 = odl.CudaRn(n)
-    y_device = r3.element(y_host)
-    x_device = r3.element(x_host)
+    x_host, y_host, x_device, y_device = _vectors(fn, 2)
 
     # Host side calculation
     y_host[:] = a * x_host
@@ -357,62 +362,45 @@ def _test_member_lincomb(a, n=100):
     assert all_almost_equal(y_device, y_host)
 
 @skip_if_no_cuda
-def test_member_lincomb():
+def test_member_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
     for a in scalar_values:
-        _test_member_lincomb(a)
+        _test_member_lincomb(fn, a)
 
 @skip_if_no_cuda
 def test_multiply():
     # Validates multiply against the result on host with randomized data
-    n = 100
-    x_host = np.random.rand(n)
-    y_host = np.random.rand(n)
-    z_host = np.empty(n)
-
-    r3 = odl.CudaRn(n)
-    x_device = r3.element(x_host)
-    y_device = r3.element(y_host)
-    z_device = r3.element()
+    rn = odl.CudaRn(100)
+    x_host, y_host, z_host, x_device, y_device, z_device = _vectors(rn, 3)
 
     # Host side calculation
     z_host[:] = x_host * y_host
 
     # Device side calculation
-    r3.multiply(x_device, y_device, out=z_device)
+    rn.multiply(x_device, y_device, out=z_device)
 
-    # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(z_device, z_host)
-
-    # Assert input was not modified
-    assert all_almost_equal(x_device, x_host)
-    assert all_almost_equal(y_device, y_host)
+    assert all_almost_equal([x_device, y_device, z_device],
+                            [x_host, y_host, z_host])
 
     # Aliased
     z_host[:] = z_host * x_host
-    r3.multiply(z_device, x_device, out=z_device)
+    rn.multiply(z_device, x_device, out=z_device)
 
-    # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(z_device, z_host)
+    assert all_almost_equal([x_device, z_device],
+                            [x_host, z_host])
 
     # Aliased
     z_host[:] = z_host * z_host
-    r3.multiply(z_device, z_device, out=z_device)
+    rn.multiply(z_device, z_device, out=z_device)
 
-    # Cuda only uses floats, so require 5 places
     assert all_almost_equal(z_device, z_host)
 
 @skip_if_no_cuda
 def test_member_multiply():
     # Validates vector member multiply against the result on host
     # with randomized data
-    n = 100
-    y_host = np.random.rand(n)
-    x_host = np.random.rand(n)
-
-    r3 = odl.CudaRn(n)
-    y_device = r3.element(y_host)
-    x_device = r3.element(x_host)
+    rn = odl.CudaRn(100)
+    x_host, y_host, x_device, y_device = _vectors(rn, 2)
 
     # Host side calculation
     y_host[:] = x_host * y_host
@@ -423,21 +411,103 @@ def test_member_multiply():
     # Cuda only uses floats, so require 5 places
     assert all_almost_equal(y_device, y_host)
 
-@skip_if_no_cuda
-def test_addition():
-    r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-    yd = r3.element([5, 3, 7])
 
-    assert all_almost_equal(xd + yd, [6, 5, 10])
+def _test_unary_operator(fn, function):
+    """ Verifies that the statement y=function(x) gives equivalent
+    results to Numpy.
+    """
 
-@skip_if_no_cuda
-def test_scalar_mult():
-    r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-    C = 5
+    x_arr, x = _vectors(fn)
 
-    assert all_almost_equal(C * xd, [5, 10, 15])
+    y_arr = function(x_arr)
+    y = function(x)
+
+    assert all_almost_equal([x, y], [x_arr, y_arr])
+
+
+def _test_binary_operator(fn, function):
+    """ Verifies that the statement z=function(x,y) gives equivalent
+    results to Numpy.
+    """
+
+    x_arr, y_arr, x, y = _vectors(fn, 2)
+
+    z_arr = function(x_arr, y_arr)
+    z = function(x, y)
+
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+
+
+def test_operators(fn):
+    """ Test of all operator overloads against the corresponding
+    Numpy implementation
+    """
+    # Unary operators
+    _test_unary_operator(fn, lambda x: +x)
+    _test_unary_operator(fn, lambda x: -x)
+
+    # Scalar multiplication
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        def imul(x):
+            x *= scalar
+        _test_unary_operator(fn, imul)
+        _test_unary_operator(fn, lambda x: x*scalar)
+
+    # Scalar division
+    for scalar in [-31.2, -1, 1, 2.13]:
+        def idiv(x):
+            x /= scalar
+        _test_unary_operator(fn, idiv)
+        _test_unary_operator(fn, lambda x: x/scalar)
+
+    # Incremental operations
+    def iadd(x, y):
+        x += y
+
+    def isub(x, y):
+        x -= y
+
+    def imul(x, y):
+        x *= y
+
+    def idiv(x, y):
+        x /= y
+
+    _test_binary_operator(fn, iadd)
+    _test_binary_operator(fn, isub)
+    _test_binary_operator(fn, imul)
+    _test_binary_operator(fn, idiv)
+
+    # Incremental operators with aliased inputs
+    def iadd_aliased(x):
+        x += x
+
+    def isub_aliased(x):
+        x -= x
+
+    def imul_aliased(x):
+        x *= x
+
+    def idiv_aliased(x):
+        x /= x
+
+    _test_unary_operator(fn, iadd_aliased)
+    _test_unary_operator(fn, isub_aliased)
+    _test_unary_operator(fn, imul_aliased)
+    _test_unary_operator(fn, idiv_aliased)
+
+    # Binary operators
+    _test_binary_operator(fn, lambda x, y: x + y)
+    _test_binary_operator(fn, lambda x, y: x - y)
+    _test_binary_operator(fn, lambda x, y: x * y)
+    _test_binary_operator(fn, lambda x, y: x / y)
+
+    # Binary with aliased inputs
+    _test_unary_operator(fn, lambda x: x + x)
+    _test_unary_operator(fn, lambda x: x - x)
+    _test_unary_operator(fn, lambda x: x * x)
+    _test_unary_operator(fn, lambda x: x / x)
+
 
 @skip_if_no_cuda
 def test_incompatible_operations():
@@ -457,30 +527,28 @@ def test_incompatible_operations():
 
     with pytest.raises(TypeError):
         xA - xB
-        
+
 @skip_if_no_cuda
-def test_copy():
+def test_copy(fn):
     import copy
-    
-    r3 = odl.CudaRn(3)
-    x = r3.element([1, 2, 3])
-    
+
+    x = _element(fn)
     y = copy.copy(x)
-    
+
     assert x == y
     assert y is not x
-    
+
     z = copy.deepcopy(x)
 
     assert x == z
     assert z is not x
 
 @skip_if_no_cuda
-def test_transpose():
+def test_transpose(fn):
     r3 = odl.CudaRn(3)
-    x = r3.element([1, 2, 3])
-    y = r3.element([5, 3, 8])
-    
+    x = _element(fn)
+    y = _element(fn)
+
     # Assert linear operator
     assert isinstance(x.T, odl.Operator)
     assert x.T.is_linear
@@ -488,8 +556,8 @@ def test_transpose():
     # Check result
     assert almost_equal(x.T(y), x.inner(y))
     assert all_almost_equal(x.T.adjoint(1.0), x)
-    
-    # x.T.T returns self    
+
+    # x.T.T returns self
     assert x.T.T == x
 
 @skip_if_no_cuda
@@ -555,7 +623,7 @@ def _test_ufunc(ufunc):
 
 @skip_if_no_cuda
 def test_ufuncs():
-    for ufunc in ['sin', 'cos', 
+    for ufunc in ['sin', 'cos',
                   'arcsin', 'arccos',
                   'log', 'exp',
                   'abs', 'sign', 'sqrt']:
@@ -575,7 +643,7 @@ def test_const_equals():
     weighting = _CudaFnConstWeighting(constant)
     weighting2 = _CudaFnConstWeighting(constant)
     other_weighting = _CudaFnConstWeighting(2.5)
-    weighting_npy = _FnConstWeighting(constant)
+    weighting_npy = FnConstWeighting(constant)
 
     assert weighting == weighting
     assert weighting == weighting2
@@ -583,7 +651,7 @@ def test_const_equals():
 
     assert weighting != other_weighting
     assert weighting != weighting_npy
-    
+
 def _test_const_call_real(n):
     rn = odl.CudaRn(n)
     xarr, yarr, x, y = _vectors(rn, 2)

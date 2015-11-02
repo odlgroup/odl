@@ -44,6 +44,9 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
     def zero(self):
         return self.element(np.zeros(self.size))
 
+    def one(self):
+        return self.element(np.ones(self.size))
+
     def _lincomb(self, a, x1, b, x2, out):
         out.data[:] = a * x1.data + b * x2.data
 
@@ -52,6 +55,9 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
 
     def _multiply(self, x1, x2, out):
         out.data[:] = x1.data * x2.data
+
+    def _divide(self, x1, x2, out):
+        out.data[:] = x1.data / x2.data
 
     def element(self, *args, **kwargs):
         if not args and not kwargs:

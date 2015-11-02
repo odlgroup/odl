@@ -35,7 +35,7 @@ import numpy as np
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda', 
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
-def _places(a, b):
+def _places(a, b, default=5):
     try:
         dtype1 = a.dtype
     except AttributeError:
@@ -52,7 +52,7 @@ def _places(a, b):
         dtype2 == np.complex64):
         return 3
     else:
-        return 5
+        return default
 
 def almost_equal(a, b, places=None):    
     if a is None and b is None:
@@ -110,7 +110,7 @@ def all_almost_equal(iter1, iter2, places=None):
     different_length_sentinel = object()
     
     if places is None:
-        places = _places(iter1, iter2)
+        places = _places(iter1, iter2, None)
 
     if iter1 is None and iter2 is None:
         return True
