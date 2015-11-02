@@ -512,7 +512,6 @@ def test_conj(fn):
         y = x.copy()  # Otherwise we change the wrapped array
         y.asconj()
         assert all_equal(y, xarr.conj())
-        assert y.asconj() is y
 
 
 def test_matrix_init(fn):
