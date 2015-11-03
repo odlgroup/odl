@@ -989,74 +989,7 @@ class Fn(FnBase, Ntuples):
                 raise TypeError('data {!r} not a `numpy.ndarray` instance.'
                                 ''.format(data))
             super().__init__(space, data)
-
-
-class Cn(Fn):
-
-    """The complex vector space :math:`C^n` with vector multiplication.
-
-    Its elements are represented as instances of the inner `Cn.Vector`
-    class.
-
-    See also
-    --------
-    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
-    """
-
-    def __init__(self, size, dtype=np.complex128, **kwargs):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        size : positive int
-            The number of dimensions of the space
-        dtype : object
-            The data type of the storage array. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-
-            Only complex floating-point data types are allowed.
-        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See `Fn`
-        """
-        super().__init__(size, dtype, **kwargs)
-
-        if not is_complex_dtype(self._dtype):
-            raise TypeError('data type {} not a complex floating-point type.'
-                            ''.format(dtype))
-        self._real_dtype = _TYPE_MAP_C2R[self._dtype]
-
-    @property
-    def real_dtype(self):
-        """The corresponding real data type of this space."""
-        return self._real_dtype
-
-    def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
-        inner_fstr = '{}'
-        if self.dtype != np.complex128:
-            inner_fstr += ', {dtype}'
-
-        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype))
-        inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """`cn.__str__() <==> str(cn)`."""
-        if self.dtype == np.complex128:
-            return 'Cn({})'.format(self.size)
-        else:
-            return 'Cn({}, {})'.format(self.size, self.dtype)
-
-    class Vector(Fn.Vector):
-        """Representation of a `Cn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
-
+            
         @property
         def real(self):
             """The real part of this vector.
@@ -1200,6 +1133,65 @@ class Cn(Fn):
             else:
                 self.data.conj(out.data)
                 return out
+
+
+class Cn(Fn):
+
+    """The complex vector space :math:`C^n` with vector multiplication.
+
+    Its elements are represented as instances of the inner `Cn.Vector`
+    class.
+
+    See also
+    --------
+    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
+    """
+
+    def __init__(self, size, dtype=np.complex128, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        size : positive int
+            The number of dimensions of the space
+        dtype : object
+            The data type of the storage array. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+
+            Only complex floating-point data types are allowed.
+        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
+            See `Fn`
+        """
+        super().__init__(size, dtype, **kwargs)
+
+        if not is_complex_dtype(self._dtype):
+            raise TypeError('data type {} not a complex floating-point type.'
+                            ''.format(dtype))
+        self._real_dtype = _TYPE_MAP_C2R[self._dtype]
+
+    @property
+    def real_dtype(self):
+        """The corresponding real data type of this space."""
+        return self._real_dtype
+
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        inner_fstr = '{}'
+        if self.dtype != np.complex128:
+            inner_fstr += ', {dtype}'
+
+        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype))
+        inner_str += _repr_space_funcs(self)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """`cn.__str__() <==> str(cn)`."""
+        if self.dtype == np.complex128:
+            return 'Cn({})'.format(self.size)
+        else:
+            return 'Cn({}, {})'.format(self.size, self.dtype)
 
 
 class Rn(Fn):

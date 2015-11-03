@@ -505,14 +505,13 @@ def test_array_wrap_method(fn):
 
 
 def test_conj(fn):
-    if isinstance(fn, Cn):
-        xarr, x = _vectors(fn)
-        xconj = x.conj()
-        assert all_equal(xconj, xarr.conj())
-        y = x.copy()
-        xconj = x.conj(out=y)
-        assert xconj is y
-        assert all_equal(y, xarr.conj())
+    xarr, x = _vectors(fn)
+    xconj = x.conj()
+    assert all_equal(xconj, xarr.conj())
+    y = x.copy()
+    xconj = x.conj(out=y)
+    assert xconj is y
+    assert all_equal(y, xarr.conj())
 
 
 def test_matrix_init(fn):
