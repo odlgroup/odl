@@ -575,7 +575,7 @@ class LinearSpace(Set):
             """Implementation of 'self -= other'."""
             if other in self.space:
                 self.space.lincomb(1, self, -1, other, out=self)
-                return self            
+                return self
             else:
                 return NotImplemented
 
@@ -584,7 +584,7 @@ class LinearSpace(Set):
             if other in self.space:
                 self.space.multiply(other, self, out=self)
             elif other in self.space.field:
-                self.space.lincomb(other, self, out=self)            
+                self.space.lincomb(other, self, out=self)
             else:
                 return NotImplemented
             return self
@@ -606,7 +606,7 @@ class LinearSpace(Set):
             if other in self.space:
                 tmp = self.space.element()
                 self.space.lincomb(1, self, 1, other, out=tmp)
-                return tmp            
+                return tmp
             else:
                 return NotImplemented
 
@@ -615,7 +615,7 @@ class LinearSpace(Set):
             if other in self.space:
                 tmp = self.space.element()
                 self.space.lincomb(1, self, -1, other, out=tmp)
-                return tmp            
+                return tmp
             else:
                 return NotImplemented
 
@@ -639,14 +639,14 @@ class LinearSpace(Set):
                 return self.__ipow__(n//2)
             else:
                 tmp = self.copy()
-                for i in range(n):
+                for i in range(n-1):
                     self.space.multiply(tmp, self, out=tmp)
                 return tmp
 
         def __pow__(self, n):
             """Take the n:th power of self, only defined for integer n"""
             tmp = self.copy()
-            for i in range(n):
+            for i in range(n-1):
                 self.space.multiply(tmp, self, out=tmp)
             return tmp
 
@@ -731,10 +731,10 @@ class LinearSpace(Set):
         def __str__(self):
             """Implementation of str()."""
             return str(self.space) + ".Vector"
-            
+
         def __copy__(self):
             return self.copy()
-            
+
         def __deepcopy__(self, memo):
             return self.copy()
 
@@ -804,7 +804,7 @@ class UniversalSpace(LinearSpace):
     def _multiply(self, x1, x2, out):
         """Dummy multiplication method, raises `NotImplementedError`."""
         raise NotImplementedError
-    
+
     def _divide(self, x1, x2, out):
         """Dummy division method, raises `NotImplementedError`."""
         raise NotImplementedError
