@@ -1167,15 +1167,39 @@ class Cn(Fn):
             """
             self.imag.data[:] = newimag
 
-        def asconj(self):
-            """Map this vector to its complex conjugate."""
-            self.imag *= -1
+        def conj(self, out=None):
+            """The complex conjugate of this vector.
+            
+            Parameters
+            ----------
+            out : array-like or scalar
+                The new imaginary part for this vector.
 
-        def conj(self):
-            """Return the complex conjugate of this vector as a copy."""
-            conjugate = self.copy()
-            conjugate.asconj()
-            return conjugate
+            Examples
+            --------
+            >>> x = Cn(3).element([5+1j, 3, 2-2j])
+            >>> y = x.conj(); print(y)
+            [(5-1j), (3-0j), (2+2j)]
+
+            The out parameter allows you to avoid a copy
+
+            >>> z = Cn(3).element()
+            >>> z_out = x.conj(out=z); print(z)
+            [(5-1j), (3-0j), (2+2j)]
+            >>> z_out is z
+            True
+            
+            It can also be used for inplace conj
+            >>> x_out = x.conj(out=x); print(x)
+            [(5-1j), (3-0j), (2+2j)]
+            >>> x_out is x
+            True
+            """
+            if out is None:
+                return self.space.element(self.data.conj())
+            else:
+                self.data.conj(out.data)
+                return out
 
 
 class Rn(Fn):

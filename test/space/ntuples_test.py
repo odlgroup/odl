@@ -509,8 +509,9 @@ def test_conj(fn):
         xarr, x = _vectors(fn)
         xconj = x.conj()
         assert all_equal(xconj, xarr.conj())
-        y = x.copy()  # Otherwise we change the wrapped array
-        y.asconj()
+        y = x.copy()
+        xconj = x.conj(out=y)
+        assert xconj is y
         assert all_equal(y, xarr.conj())
 
 
