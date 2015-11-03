@@ -701,6 +701,12 @@ class Fn(FnBase, Ntuples):
             self._space_funcs = _FnCustomInnerProduct(inner)
         else:  # all None -> no weighing
             self._space_funcs = _FnNoWeighting()
+        self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+
+    @property
+    def real_dtype(self):
+        """The corresponding real data type of this space."""
+        return self._real_dtype
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of `x` and `y`.
@@ -1169,12 +1175,6 @@ class Cn(Fn):
         if not is_complex_dtype(self._dtype):
             raise TypeError('data type {} not a complex floating-point type.'
                             ''.format(dtype))
-        self._real_dtype = _TYPE_MAP_C2R[self._dtype]
-
-    @property
-    def real_dtype(self):
-        """The corresponding real data type of this space."""
-        return self._real_dtype
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
