@@ -236,24 +236,24 @@ class BacktrackingLineSearch(object):
     """
     
     def __init__(self, function, tau=0.8, c=0.7, max_num_iter=None):
-    """
-    Parameters
-    ----------
-    function : python function
-        The cost function of the optimization problem to be solved.
-    tau : float, optional
-        The amount the step length is decreased in each iteration, as long as
-        it does not fulfill the decrease condition. The step length is updated
-        as step_length *= tau
-    c : float, optional
-        The 'discount factor' on the step length * direction derivative, which
-        the new point needs to be smaller than in order to fulfill the
-        condition and be accepted (see the references).
-    max_num_iter : int, optional
-        Maximum number of iterations allowed each time the line search method
-        is called. If not set, this is calculated to allow a shortest step
-        length of 0.0001. 
-    """
+        """
+        Parameters
+        ----------
+        function : python function
+            The cost function of the optimization problem to be solved.
+        tau : float, optional
+            The amount the step length is decreased in each iteration, as long as
+            it does not fulfill the decrease condition. The step length is updated
+            as step_length *= tau
+        c : float, optional
+            The 'discount factor' on the step length * direction derivative, which
+            the new point needs to be smaller than in order to fulfill the
+            condition and be accepted (see the references).
+        max_num_iter : int, optional
+            Maximum number of iterations allowed each time the line search method
+            is called. If not set, this is calculated to allow a shortest step
+            length of 0.0001. 
+        """
         self.function = function
         self.tau = tau
         self.c = c
@@ -265,21 +265,21 @@ class BacktrackingLineSearch(object):
             self.max_num_iter = max_num_iter
 
     def __call__(self, x, direction, dir_derivative):
-    """
-    Parameters
-    ----------
-    x : domain element
-        The current point.
-    direction : domain element
-        The search direction in which the line search should be computed.
-    dir_derivative : float
-        The directional derivative along the direction 'direction'. 
+        """
+        Parameters
+        ----------
+        x : domain element
+            The current point.
+        direction : domain element
+            The search direction in which the line search should be computed.
+        dir_derivative : float
+            The directional derivative along the direction 'direction'. 
 
-    Returns
-    -------
-    alpha : float
-        The computed step length.
-    """
+        Returns
+        -------
+        alpha : float
+            The computed step length.
+        """
         alpha = 1.0
         fx = self.function(x)
         num_iter = 0
@@ -376,6 +376,19 @@ def steepest_decent(deriv_op, x, line_search, niter=1, partial=None):
 
     - https://en.wikipedia.org/wiki/Gradient_descent
 
+    Parameters
+    ----------
+    deriv_op : odl operator
+        An operator that evaluates the gradient of the objectiv function; op(x)
+        should return the gradient, an element in the same set as x.
+    x : domain element
+        The current point.
+    line_search : line search object
+        An object that takes as input current point x, the search direction,
+        and the directional derivative, and returns the step length as a float.
+    niter : int, optional
+        The number of iterations to perform.
+    TODO: partial : ???
     """
 
     grad = deriv_op.range.element()
