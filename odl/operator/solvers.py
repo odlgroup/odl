@@ -334,7 +334,22 @@ def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
     and nonlinear optimization. Siam, 2009.
 
     - https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm
-    """
+
+    Parameters
+    ----------
+    op : odl operator
+        An operator that evaluates the gradient of the objectiv function; op(x)
+        should return the gradient, an element in the same set as x.
+    x : domain element
+        The current point.
+    line_search : line search object
+        An object that takes as input current point x, the search direction,
+        and the directional derivative, and returns the step length as a float.
+    niter : int, optional
+        The number of iterations to perform.
+    TODO: partial : ???
+    """    
+
     I = IdentityOperator(op.range)
     Bi = IdentityOperator(op.range)
     # Reusable temporaries
