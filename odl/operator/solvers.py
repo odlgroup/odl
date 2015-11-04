@@ -290,10 +290,36 @@ class BacktrackingLineSearch(object):
         return alpha
 
 class ConstantLineSearch(object):
+    """A 'linear search' object that returns a constant step length. """
+    
     def __init__(self, constant):
+        """
+        Parameters
+        ----------
+        constant : float
+            The constant step length that the 'line search' object should
+            return.
+        """
         self.constant = constant
 
     def __call__(self, x, direction, gradf):
+        """
+        Parameters
+        ----------
+        (Can in theory be skipped since a constant step length will be returned
+        no matter their values)
+        x : domain element
+            The current point.
+        direction : domain element
+            The search direction in which the line search should be computed.
+        dir_derivative : float
+            The directional derivative along the direction 'direction'. 
+
+        Returns
+        -------
+        alpha : float
+            The step length.
+        """
         return self.constant
 
 def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
