@@ -528,7 +528,10 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
         delta_f = opx - opx_old
 
         v = Hi(delta_x)
-        u = (delta_x + Hi(delta_f))/(v.inner(delta_f))
+        v_delta_f = v.inner(delta_f)
+        if v_delta_f == 0:
+            return
+        u = (delta_x + Hi(delta_f))/(v_delta_f)
         Hi -= u * v.T
 
         if partial is not None:

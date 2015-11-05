@@ -50,7 +50,8 @@ class MultiplyOp(odl.Operator):
         return MultiplyOp(self.matrix.T, self.range, self.domain)
 
 
-"""Test solutions of the linear equation Ax = b with dense A."""
+# Test solutions of the linear equation Ax = b with dense A
+
 
 def test_landweber():
     n = 3
@@ -72,9 +73,10 @@ def test_landweber():
 
     # Solve using landweber
     solvers.landweber(Aop, xvec, bvec, niter=n*10, omega=1/norm**2)
-    
+
     assert all_almost_equal(x, xvec, places=2)
     assert all_almost_equal(Aop(xvec), b, places=2)
+
 
 def test_conjugate_gradient():
     n = 3
@@ -94,9 +96,10 @@ def test_conjugate_gradient():
 
     # Solve using conjugate gradient
     solvers.conjugate_gradient_normal(Aop, xvec, bvec, niter=n)
-    
+
     assert all_almost_equal(x, xvec, places=2)
     assert all_almost_equal(Aop(xvec), b, places=2)
+
 
 def test_gauss_newton():
     n = 10
@@ -116,10 +119,10 @@ def test_gauss_newton():
 
     # Solve using conjugate gradient
     solvers.gauss_newton(Aop, xvec, bvec, niter=n*3)
-    
+
     assert all_almost_equal(x, xvec, places=2)
     assert all_almost_equal(Aop(xvec), b, places=2)
-    
+
 
 class ResidualOp(odl.Operator):
     """Calculates op(x) - rhs."""
@@ -137,10 +140,11 @@ class ResidualOp(odl.Operator):
     def derivative(self, x):
         return self.op.derivative(x)
 
+
 def test_quasi_newton_bfgs():
     # Np as validation
-    A = np.array([[3, 1, 1], 
-                  [1, 2, 1/2], 
+    A = np.array([[3, 1, 1],
+                  [1, 2, 1/2],
                   [1, 1/2, 5]])
 
     # Vector representation
@@ -156,19 +160,21 @@ def test_quasi_newton_bfgs():
     x_opt = np.linalg.solve(A, -rhs)
 
     # Solve using conjugate gradient
-    line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 - rhs))
+    line_search = solvers.BacktrackingLineSearch(
+        lambda x: x.inner(Aop(x)/2.0 - rhs))
     solvers.quasi_newton_bfgs(Res, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
     assert Res(xvec).norm() < 10**-1
 
+
 def test_steepest_decent():
     """ Solving a quadratic problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
-    is given by solving Hx + c = 0, and solving this with np is used as reference. """   
+    is given by solving Hx + c = 0, and solving this with np is used as reference. """
 
     # Fixed array
-    H = np.array([[3, 1, 1], 
-                  [1, 2, 1/2], 
+    H = np.array([[3, 1, 1],
+                  [1, 2, 1/2],
                   [1, 1/2, 5]])
 
     # Vector representation
@@ -179,17 +185,49 @@ def test_steepest_decent():
 
     # Optimal solution, found by solving 0 = gradf(x) = Hx + c
     x_opt = np.linalg.solve(H, -c)
-    
-    # Create derivative operator operator
+
+    # Create derivative operator
     Aop = MultiplyOp(H)
     deriv_op = ResidualOp(Aop, -c)
 
     # Solve using steepest decent
-    line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 + c), 
-                                                 0.5, 0.05, 10)
+    line_search = solvers.BacktrackingLineSearch(
+        lambda x: x.inner(Aop(x)/2.0 + c), 0.5, 0.05, 10)
     solvers.steepest_decent(deriv_op, xvec, line_search, niter=20)
-    
+
     assert all_almost_equal(x_opt, xvec, places=2)
 
+
+def test_broydens_first_method_test_one():
+    """ Solving min f(x), for f(x) a strictly convex qp-problem, by finding
+    the point such that grad f(x) = 0 (effectively meaning that it solves
+    Ax + b = 0). """
+
+    # Fixed array
+
+    H = np.array([[3, 1, 1],
+                  [1, 2, 1/2],
+                  [1, 1/2, 5]])
+
+    # Vector representation
+    n = H.shape[0]
+    rn = odl.Rn(n)
+    xvec = rn.zero()
+    c = rn.element(np.random.rand(n))
+
+    # Optimal solution, found by solving 0 = gradf(x) = Hx + c
+    x_opt = np.linalg.solve(H, -c)
+
+    # Create derivative operator
+    Aop = MultiplyOp(H)
+    deriv_op = ResidualOp(Aop, -c)
+
+    # Solve using Broyden's first method
+    line_search = solvers.ConstantLineSearch(1)
+    solvers.broydens_first_method(deriv_op, xvec, line_search, niter=10)
+
+    assert all_almost_equal(x_opt, xvec, places=2)
+
+
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/')) + ' -v')
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
