@@ -65,20 +65,20 @@ Requirements
 
 - [numpy](https://github.com/numpy/numpy) >= 1.8
 - [scipy](https://github.com/scipy/scipy) >= 0.14
-- [python-future](https://pypi.python.org/pypi/future/) as Python 2/3 compatibility layer.
+- [python-future](https://pypi.python.org/pypi/future/)
+
+Optional
+--------
+
 - [odlpp](https://gits-15.sys.kth.se/LCR/ODLpp) (not yet available) for GPU support (optional).
-
-#### For unittests (`run_tests.py`)
-
-- [pytest](https://pypi.python.org/pypi/pytest) >= 2.7.0
-- [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0
+- [pytest](https://pypi.python.org/pypi/pytest) >= 2.7.0 for unit tests
+- [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0 for test coverage report
 
 Code guidelines
 --------------------
-The code is written in python 2/3 through the *future* library. It is intended to work on
-all major platforms (GNU/Linux / Mac / Windows).
+The code is written in python 2/3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
 
-Current status (2015-09-16) is
+Current status (2015-11-05) is
 
 | Platform     | Python | Works | CUDA  |
 |--------------|--------|-------|-------|
