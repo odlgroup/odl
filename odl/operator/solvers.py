@@ -111,7 +111,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
     p = r.copy()
-    Ap = op.domain.element() #Extra storage for storing A x
+    Ap = op.domain.element()  # Extra storage for storing A x
 
     sqnorm_r_old = r.norm()**2  # Only recalculate norm after update
 
@@ -135,6 +135,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
         if partial is not None:
             partial.send(x)
+
 
 def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
     """ Optimized version of CGN, uses no temporaries etc.
@@ -219,6 +220,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         if partial is not None:
             partial.send(x)
 
+
 class BacktrackingLineSearch(object):
     """ Implements backtracking line search; an in-exact line search scheme
     based on the armijo-goldstein condition. In this scheme one approximately
@@ -234,7 +236,7 @@ class BacktrackingLineSearch(object):
 
     - https://en.wikipedia.org/wiki/Backtracking_line_search
     """
-    
+
     def __init__(self, function, tau=0.8, c=0.7, max_num_iter=None):
         """
         Parameters
@@ -242,23 +244,25 @@ class BacktrackingLineSearch(object):
         function : python function
             The cost function of the optimization problem to be solved.
         tau : float, optional
-            The amount the step length is decreased in each iteration, as long as
-            it does not fulfill the decrease condition. The step length is updated
-            as step_length *= tau
+            The amount the step length is decreased in each iteration, as long
+            as it does not fulfill the decrease condition. The step length is
+            updated as step_length *= tau
         c : float, optional
-            The 'discount factor' on the step length * direction derivative, which
-            the new point needs to be smaller than in order to fulfill the
-            condition and be accepted (see the references).
+            The 'discount factor' on the step length * direction derivative,
+            which the new point needs to be smaller than in order to fulfill
+            the condition and be accepted (see the references).
         max_num_iter : int, optional
-            Maximum number of iterations allowed each time the line search method
-            is called. If not set, this is calculated to allow a shortest step
-            length of 0.0001. 
+            Maximum number of iterations allowed each time the line search
+            method is called. If not set, this is calculated to allow a
+            shortest step length of 0.0001.
         """
         self.function = function
         self.tau = tau
         self.c = c
         self.total_num_iter = 0
-        #If max_num_iter is specified it sets this value, otherwise sets a value that allows the shortest step to be < 0.0001 of original step length
+        # If max_num_iter is specified it sets this value, otherwise sets a
+        # value that allows the shortest step to be < 0.0001 of original
+        # step length
         if max_num_iter is None:
             self.max_num_iter = ceil(log(0.0001/self.tau))
         else:
@@ -273,7 +277,7 @@ class BacktrackingLineSearch(object):
         direction : domain element
             The search direction in which the line search should be computed.
         dir_derivative : float
-            The directional derivative along the direction 'direction'. 
+            The directional derivative along the direction 'direction'.
 
         Returns
         -------
@@ -289,9 +293,10 @@ class BacktrackingLineSearch(object):
         self.total_num_iter += num_iter
         return alpha
 
+
 class ConstantLineSearch(object):
-    """A 'linear search' object that returns a constant step length. """
-    
+    """A 'line search' object that returns a constant step length. """
+
     def __init__(self, constant):
         """
         Parameters
@@ -313,7 +318,7 @@ class ConstantLineSearch(object):
         direction : domain element
             The search direction in which the line search should be computed.
         dir_derivative : float
-            The directional derivative along the direction 'direction'. 
+            The directional derivative along the direction 'direction'.
 
         Returns
         -------
@@ -322,12 +327,13 @@ class ConstantLineSearch(object):
         """
         return self.constant
 
+
 def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
     """ General implementation of the quasi newton method with bfgs update for,
-    solving the equation op(x) == 0. The qn method is an approximate newton
-    method, where hessian is approximated and gradually updated in each step.
-    This implementation uses the rank-one bfgs update schema where the inverse
-    of the hessian is updated in each iteration.
+    solving an optimization problem min f(x). The qn method is an approximate
+    newton method, where hessian is approximated and gradually updated in each
+    step. This implementation uses the rank-one bfgs update schema where the
+    inverse of the hessian is updated in each iteration.
 
     Sources:
     - Section 12.3 in Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
@@ -338,8 +344,8 @@ def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
     Parameters
     ----------
     op : odl operator
-        An operator that evaluates the gradient of the objectiv function; op(x)
-        should return the gradient, an element in the same set as x.
+        An operator that evaluates the gradient of the objectiv function f(x);
+        op(x) should return the gradient, an element in the same set as x.
     x : domain element
         The current point.
     line_search : line search object
@@ -348,7 +354,7 @@ def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
     niter : int, optional
         The number of iterations to perform.
     TODO: partial : ???
-    """    
+    """
 
     I = IdentityOperator(op.range)
     Bi = IdentityOperator(op.range)
@@ -369,10 +375,11 @@ def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
         if ys == 0.0:
             return
 
-        Bi = (I - s * y.T / ys) * Bi *  (I - y * s.T / ys) + s * s.T / ys
+        Bi = (I - s * y.T / ys) * Bi * (I - y * s.T / ys) + s * s.T / ys
 
         if partial is not None:
             partial.send(x)
+
 
 def steepest_decent(deriv_op, x, line_search, niter=1, partial=None):
     """ General implementation of steepest decent (also known as gradient
