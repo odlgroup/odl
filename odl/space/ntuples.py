@@ -701,7 +701,11 @@ class Fn(FnBase, Ntuples):
             self._space_funcs = _FnCustomInnerProduct(inner)
         else:  # all None -> no weighing
             self._space_funcs = _FnNoWeighting()
-        self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+
+        if is_complex_dtype(self.dtype):
+            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+        else:
+            self._real_dtype = self.dtype
 
     @property
     def real_dtype(self):
@@ -995,7 +999,7 @@ class Fn(FnBase, Ntuples):
                 raise TypeError('data {!r} not a `numpy.ndarray` instance.'
                                 ''.format(data))
             super().__init__(space, data)
-            
+
         @property
         def real(self):
             """The real part of this vector.
@@ -1108,7 +1112,7 @@ class Fn(FnBase, Ntuples):
 
         def conj(self, out=None):
             """The complex conjugate of this vector.
-            
+
             Parameters
             ----------
             out : array-like or scalar
@@ -1127,7 +1131,7 @@ class Fn(FnBase, Ntuples):
             [(5-1j), (3-0j), (2+2j)]
             >>> z_out is z
             True
-            
+
             It can also be used for inplace conj
             >>> x_out = x.conj(out=x); print(x)
             [(5-1j), (3-0j), (2+2j)]
