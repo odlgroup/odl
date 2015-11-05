@@ -63,9 +63,10 @@ From here follow the instructions in [odlpp](https://gits-15.sys.kth.se/LCR/ODLp
 Requirements
 ------------
 
-- [numpy](https://github.com/numpy/numpy) for numerics.
+- [numpy](https://github.com/numpy/numpy) >= 1.8
+- [scipy](https://github.com/scipy/scipy) >= 0.14
 - [python-future](https://pypi.python.org/pypi/future/) as Python 2/3 compatibility layer.
-- [odlpp](https://gits-14.sys.kth.se/LCR/ODLpp) for GPU support (optional).
+- [odlpp](https://gits-15.sys.kth.se/LCR/ODLpp) (not yet available) for GPU support (optional).
 
 #### For unittests (`run_tests.py`)
 
@@ -74,18 +75,20 @@ Requirements
 
 Code guidelines
 --------------------
-The code is written in python 2/3 through the future library. It is intended to work on
+The code is written in python 2/3 through the *future* library. It is intended to work on
 all major platforms (GNU/Linux / Mac / Windows).
 
 Current status (2015-09-16) is
 
-| Platform     | Python | Works |
-|--------------|--------|-------|
-| Windows 7    | 2.7    | ✔     |
-| Ubuntu 14.04 | 2.7    | ✔     |
-| Fedora 22    | 2.7    | ✔     |
-| Fedora 22    | 3.4    | ✔     |
-| Mac OSX      | ??     | ??    |
+| Platform     | Python | Works | CUDA  |
+|--------------|--------|-------|-------|
+| Windows 7    | 2.7    | ✔     | ✔     |
+| Ubuntu 14.04 | 2.7    | ✔     | ✔     |
+| Fedora 22    | 2.7    | ✔     | x (1) |
+| Fedora 22    | 3.4    | ✔     | x (1) |
+| Mac OSX      | ??     | ??    | ??    |
+
+(1) The GCC 5.x compiler is not compatible with current CUDA (7.5)
 
 ### Formating
 The code is supposed to be formated according to the python style guide [PEP8](https://www.python.org/dev/peps/pep-0008/). A useful tool to enforce this is [autopep8](https://pypi.python.org/pypi/autopep8/).
@@ -101,5 +104,5 @@ developers.
 Main developers
 ---------------
 
-- Jonas Adler (jonas-at-kth-dot-se)
-- Holger Kohr (kohr-at-kth-dot-se)
+- Jonas Adler (jonas-<ätt>-kth-<dot>-se)
+- Holger Kohr (kohr-<ätt>-kth-<dot>-se)
