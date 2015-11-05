@@ -483,6 +483,58 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
         if partial is not None:
             partial.send(x)
 
+
+def broydens_first_method(op, x, line_search, niter=1, partial=None):
+    """ General implementation of broyden's first (or 'good') method; a quasi
+    newton ethod for solving op(x) = 0.
+
+    Sources:
+    - Broyden, Charles G. "A class of methods for solving nonlinear
+    simultaneous equations." Mathematics of computation (1965): 577-593.
+
+    - Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
+    (1991): 369-372.
+
+    - https://en.wikipedia.org/wiki/Broyden's_method
+
+    Parameters
+    ----------
+    op : odl operator
+        An operator that evaluates the system of equations that one wants to
+        solve; finding x_0 so that op(x_0) = 0 is the goal.
+    x : domain element
+        The current point.
+    line_search : line search object
+        An object that takes as input current point x, the search direction,
+        and the directional derivative, and returns the step length as a float.
+    niter : int, optional
+        The number of iterations to perform.
+    TODO: partial : ???
+    """
+
+    Hi = IdentityOperator(op.range)
+    opx = op(x)
+    # Reusable temporaries
+    for _ in range(niter):
+        p = Hi(opx)
+        t = line_search(x, p, opx)
+
+        x_old = x.copy()
+        x += t*p
+        delta_x = x - x_old
+
+        opx_old = opx.copy()
+        opx = op(x)
+        delta_f = opx - opx_old
+
+        v = Hi(delta_x)
+        u = (delta_x + Hi(delta_f))/(v.inner(delta_f))
+        Hi -= u * v.T
+
+        if partial is not None:
+            partial.send(x)
+
+
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)
