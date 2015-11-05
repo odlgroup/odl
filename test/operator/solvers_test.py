@@ -198,7 +198,7 @@ def test_steepest_decent():
     assert all_almost_equal(x_opt, xvec, places=2)
 
 
-def test_broydens_first_method_test_one():
+def test_broydens_first_method():
     """ Solving min f(x), for f(x) a strictly convex qp-problem, by finding
     the point such that grad f(x) = 0 (effectively meaning that it solves
     Ax + b = 0). """
@@ -225,6 +225,37 @@ def test_broydens_first_method_test_one():
     # Solve using Broyden's first method
     line_search = solvers.ConstantLineSearch(1)
     solvers.broydens_first_method(deriv_op, xvec, line_search, niter=10)
+
+    assert all_almost_equal(x_opt, xvec, places=2)
+
+
+def test_broydens_second_method():
+    """ Solving min f(x), for f(x) a strictly convex qp-problem, by finding
+    the point such that grad f(x) = 0 (effectively meaning that it solves
+    Ax + b = 0). """
+
+    # Fixed array
+
+    H = np.array([[3, 1, 1],
+                  [1, 2, 1/2],
+                  [1, 1/2, 5]])
+
+    # Vector representation
+    n = H.shape[0]
+    rn = odl.Rn(n)
+    xvec = rn.zero()
+    c = rn.element(np.random.rand(n))
+
+    # Optimal solution, found by solving 0 = gradf(x) = Hx + c
+    x_opt = np.linalg.solve(H, -c)
+
+    # Create derivative operator operator
+    Aop = MultiplyOp(H)
+    deriv_op = ResidualOp(Aop, -c)
+
+    # Solve using Broyden's first method
+    line_search = solvers.ConstantLineSearch(1)
+    solvers.broydens_second_method(deriv_op, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
 
