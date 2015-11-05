@@ -23,7 +23,7 @@ Installation
 To get ODL, clone the repository with the command
 
 ```bash
-$ git clone <repo>
+ $ git clone <repo>
 ```
 
 where `<repo>` is the clone link from the right navigation bar on the [ODL GitHub page](https://gits-15.sys.kth.se/LCR/ODL).
@@ -31,13 +31,13 @@ where `<repo>` is the clone link from the right navigation bar on the [ODL GitHu
 For installation in a local user folder, go to the ODL folder and run
 
 ```bash
-$ pip install --user .
+ $ pip install --user .
 ```
 
 in the root folder of the package. For system-wide installation, run (as root)
 
 ```bash
-/# pip install .
+ # pip install .
 ```
 
 If you intend to make changes to the code, you should add the `--editable` option to the `pip` command.
@@ -46,7 +46,7 @@ This way, a link to your working directory is installed in your Python installat
 After installing, you should check that everything was installed properly by running
 
 ```
-$ python run_tests.py
+ $ python run_tests.py
 ```
 
 ##### CUDA
@@ -54,8 +54,8 @@ $ python run_tests.py
 If you also wish to use the (optional) CUDA extensions you need to run
 
 ```bash
-$ git submodule update --init --recursive
-$ cd odlpp
+ $ git submodule update --init --recursive
+ $ cd odlpp
 ```
 
 From here follow the instructions in [odlpp](https://gits-15.sys.kth.se/LCR/ODLpp) and install it. You then need to re-install ODL.
@@ -74,8 +74,8 @@ Optional
 - [pytest](https://pypi.python.org/pypi/pytest) >= 2.7.0 for unit tests
 - [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0 for test coverage report
 
-Code guidelines
---------------------
+Compatibility
+-------------
 The code is written in python 2/3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
 
 Current status (2015-11-05) is
@@ -89,9 +89,6 @@ Current status (2015-11-05) is
 | Mac OSX      | ??     | ??    | ??    |
 
 (1) The GCC 5.x compiler is not compatible with current CUDA (7.5)
-
-### Formating
-The code is supposed to be formated according to the python style guide [PEP8](https://www.python.org/dev/peps/pep-0008/). A useful tool to enforce this is [autopep8](https://pypi.python.org/pypi/autopep8/).
 
 License
 -------
