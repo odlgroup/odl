@@ -67,6 +67,11 @@ Requirements
 - [python-future](https://pypi.python.org/pypi/future/) as Python 2/3 compatibility layer.
 - [odlpp](https://gits-14.sys.kth.se/LCR/ODLpp) for GPU support (optional).
 
+#### For unittests (`run_tests.py`)
+
+- [pytest](https://pypi.python.org/pypi/pytest) >= 2.7.0
+- [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0
+
 Code guidelines
 --------------------
 The code is written in python 2/3 through the future library. It is intended to work on
