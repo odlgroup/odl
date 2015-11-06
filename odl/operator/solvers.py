@@ -512,6 +512,8 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
     TODO: partial : ???
     """
 
+    #TODO: One Hi call can be removed using linearity
+
     Hi = IdentityOperator(op.range)
     opx = op(x)
     # Reusable temporaries
@@ -525,7 +527,7 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
         opx, opx_old = op(x), opx
         delta_f = opx - opx_old
 
-        v = Hi(delta_x) #TODO: this call can be removed using linearity
+        v = Hi(delta_x)
         v_delta_f = v.inner(delta_f)
         if v_delta_f == 0:
             return

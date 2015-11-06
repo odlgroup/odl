@@ -210,20 +210,18 @@ def test_broydens_first_method():
                   [1, 1/2, 5]])
 
     # Vector representation
-    n = H.shape[0]
-    rn = odl.Rn(n)
-    xvec = rn.zero()
-    c = rn.element(np.random.rand(n))
+    rn = odl.Rn(3)
+    c = rn.element([1, 1, 1])
 
     # Optimal solution, found by solving 0 = gradf(x) = Hx + c
     x_opt = np.linalg.solve(H, -c)
 
     # Create derivative operator
-    Aop = MultiplyOp(H)
-    deriv_op = ResidualOp(Aop, -c)
+    deriv_op = ResidualOp(MultiplyOp(H), -c)
 
     # Solve using Broyden's first method
     line_search = solvers.ConstantLineSearch(1)
+    xvec = rn.zero()
     solvers.broydens_first_method(deriv_op, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
@@ -241,20 +239,18 @@ def test_broydens_second_method():
                   [1, 1/2, 5]])
 
     # Vector representation
-    n = H.shape[0]
-    rn = odl.Rn(n)
-    xvec = rn.zero()
-    c = rn.element(np.random.rand(n))
+    rn = odl.Rn(3)
+    c = rn.element([1, 1, 1])
 
     # Optimal solution, found by solving 0 = gradf(x) = Hx + c
     x_opt = np.linalg.solve(H, -c)
 
     # Create derivative operator operator
-    Aop = MultiplyOp(H)
-    deriv_op = ResidualOp(Aop, -c)
+    deriv_op = ResidualOp(MultiplyOp(H), -c)
 
     # Solve using Broyden's first method
     line_search = solvers.ConstantLineSearch(1)
+    xvec = rn.zero()
     solvers.broydens_second_method(deriv_op, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
