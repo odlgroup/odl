@@ -488,35 +488,40 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
     """ General implementation of broyden's first (or 'good') method; a quasi
     newton ethod for solving op(x) = 0.
 
-    Sources:
-    - Broyden, Charles G. "A class of methods for solving nonlinear
-    simultaneous equations." Mathematics of computation (1965): 577-593.
-
-    - Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
-    (1991): 369-372.
-
-    - https://en.wikipedia.org/wiki/Broyden's_method
+    The algorithm is described in [1]_ and [2]_, and in the `Wikipedia article
+    <https://en.wikipedia.org/wiki/Broyden's_method>_`
 
     Parameters
     ----------
-    op : odl operator
+    op : Operator
         An operator that evaluates the system of equations that one wants to
         solve; finding x_0 so that op(x_0) = 0 is the goal.
-    x : domain element
-        The current point.
+    x : op.domain element
+        The current point, the result is written inplace here.
     line_search : line search object
         An object that takes as input current point x, the search direction,
         and the directional derivative, and returns the step length as a float.
     niter : int, optional
         The number of iterations to perform.
-    TODO: partial : ???
+    partial : `Partial`
+        Object executing code per iteration.
+
+    References
+    ----------
+    .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
+       simultaneous equations." Mathematics of computation (1965): 577-593.
+
+    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
+       (1991): 369-372.
+
+    - https://en.wikipedia.org/wiki/Broyden's_method
     """
 
     #TODO: One Hi call can be removed using linearity
 
     Hi = IdentityOperator(op.range)
     opx = op(x)
-    # Reusable temporaries
+
     for _ in range(niter):
         p = Hi(opx)
         t = line_search(x, p, opx)
@@ -542,36 +547,39 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
     """ General implementation of broyden's second (or 'bad') method; a quasi
     newton ethod for solving op(x) = 0.
 
-    Sources:
-    - Broyden, Charles G. "A class of methods for solving nonlinear
-    simultaneous equations." Mathematics of computation (1965): 577-593.
-
-    - Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
-    (1991): 369-372.
-
-    - https://en.wikipedia.org/wiki/Broyden's_method
+    The algorithm is described in [1]_ and [2]_, and in the `Wikipedia article
+    <https://en.wikipedia.org/wiki/Broyden's_method>_`
 
     Parameters
     ----------
-    op : odl operator
+    op : Operator
         An operator that evaluates the system of equations that one wants to
         solve; finding x_0 so that op(x_0) = 0 is the goal.
-    x : domain element
-        The current point.
+    x : op.domain element
+        The current point, the result is written inplace here.
     line_search : line search object
         An object that takes as input current point x, the search direction,
         and the directional derivative, and returns the step length as a float.
     niter : int, optional
         The number of iterations to perform.
-    TODO: partial : ???
+    partial : `Partial`
+        Object executing code per iteration.
 
-    TODO: potentially make the implementation faster by considering performance
-    optimization according to Kvaalen.
+    References
+    ----------
+    .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
+       simultaneous equations." Mathematics of computation (1965): 577-593.
+
+    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
+       (1991): 369-372.
     """
+
+    # TODO: potentially make the implementation faster by considering
+    # performance optimization according to Kvaalen.
 
     Hi = IdentityOperator(op.range)
     opx = op(x)
-    # Reusable temporaries
+
     for _ in range(niter):
         p = Hi(opx)
         t = line_search(x, p, opx)
