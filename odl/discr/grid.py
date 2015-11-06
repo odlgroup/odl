@@ -825,6 +825,11 @@ class RegularGrid(TensorGrid):
         """
         return self._stride
 
+    @property
+    def cell_volume(self):
+        """The volume of a grid cell."""
+        return float(np.prod(self.stride))
+
     def is_subgrid(self, other, tol=0.0):
         """Test if this grid is contained in another grid.
 

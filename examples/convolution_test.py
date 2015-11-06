@@ -32,7 +32,7 @@ from scipy import ndimage
 import odl
 import odl.operator.solvers as solvers
 from odl.util.testutils import Timer
-import solver_examples
+from . import solver_examples
 
 
 class Convolution(odl.Operator):
@@ -64,12 +64,12 @@ cont_space = odl.L2(odl.Interval(0, 10))
 
 # Complicated functions to check performance
 cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
-cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
+cont_phantom = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
 discr_space = odl.l2_uniform_discretization(cont_space, 500, impl='numpy')
 kernel = discr_space.element(cont_kernel)
-data = discr_space.element(cont_data)
+phantom = discr_space.element(cont_phantom)
 
 # Create operator
 conv = Convolution(kernel)
@@ -83,28 +83,32 @@ partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result)[:]))
 
 # Test CGN
 plt.figure()
-plt.plot(data)
-solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations, partial)
+plt.plot(phantom)
+solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
+                                  iterations, partial)
 
 # Landweber
 plt.figure()
-plt.plot(data)
-solvers.landweber(conv, discr_space.zero(), data, iterations, omega, partial)
+plt.plot(phantom)
+solvers.landweber(conv, discr_space.zero(), phantom,
+                  iterations, omega, partial)
 
 # testTimingCG
 with Timer("Optimized CG"):
-    solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations)
+    solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
+                                      iterations)
 
 with Timer("Base CG"):
-    solver_examples.conjugate_gradient_base(conv, discr_space.zero(), data,
+    solver_examples.conjugate_gradient_base(conv, discr_space.zero(), phantom,
                                             iterations)
 
 # Landweber timing
 with Timer("Optimized LW"):
-    solvers.landweber(conv, discr_space.zero(), data, iterations, omega)
+    solvers.landweber(conv, discr_space.zero(), phantom,
+                      iterations, omega)
 
 with Timer("Basic LW"):
-    solver_examples.landweberBase(conv, discr_space.zero(), data, iterations,
-                                  omega)
+    solver_examples.landweberBase(conv, discr_space.zero(), phantom,
+                                  iterations, omega)
 
 plt.show()

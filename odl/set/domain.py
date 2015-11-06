@@ -399,7 +399,7 @@ class IntervalProd(Set):
         e_new = self._end[self._inondeg]
         return IntervalProd(b_new, e_new)
 
-    def insert(self, other, index):
+    def insert(self, other, index=None):
         """Insert another interval product before the given index.
 
         The given interval product (`ndim=m`) is inserted into the
@@ -413,7 +413,7 @@ class IntervalProd(Set):
         other : `IntervalProd`, float or array-like
             The set to be inserted. A float or array a is
             treated as an `IntervalProd(a, a)`.
-        index : int
+        index : int, Optional (default = `ndim`)
             The index of the dimension before which `other` is to
             be inserted. Must fulfill `0 <= index <= ndim`.
 
@@ -431,12 +431,23 @@ class IntervalProd(Set):
         IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
         >>> rbox.insert([-1.0, 0.0], 2)
         IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+
+        Without index, inserts at the end
+
+        >>> rbox.insert([-1.0, 0.0])
+        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+
+        Can also insert by array
+
         >>> rbox.insert(0, 1).squeeze() == rbox
         True
         """
-        if not 0 <= index <= self.ndim:
+        if index is None:
+            index = self.ndim
+        elif not 0 <= index <= self.ndim:
             raise IndexError('Index ({}) out of range'.format(index))
 
+        #TODO: do we want this?
         if not isinstance(other, IntervalProd):
             other = IntervalProd(other, other)
 

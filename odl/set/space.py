@@ -309,6 +309,22 @@ class LinearSpace(Set):
         raise NotImplementedError('multiplication not implemented in space '
                                   '{!r}'.format(self))
 
+    def one(self):
+        """A one vector in this space.
+
+        The one vector is defined as the multiplicative unit of a space.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        v : Vector
+            The one vector of this space
+        """
+        raise NotImplementedError('This space has no one')
+
     @abstractproperty
     def field(self):
         """The field of this vector space."""
@@ -467,22 +483,38 @@ class LinearSpace(Set):
         return self.field.element(self._inner(x1, x2))
 
     def multiply(self, x1, x2, out=None):
-        """Calculate the pointwise product of x and y, and assign to z."""
+        """Calculate the pointwise product of x1 and x2, and assign to out."""
         if out is None:
             out = self.element()
-
-        if x1 not in self:
-            raise TypeError('first vector {!r} not in space {!r}'
-                            ''.format(x1, self))
-        if x2 not in self:
-            raise TypeError('second vector {!r} not in space {!r}'
-                            ''.format(x2, self))
-
-        if out not in self:
-            raise TypeError('ouput vector {!r} not in space {!r}'
+        elif out not in self:
+            raise TypeError('out {!r} not in space {!r}'
                             ''.format(out, self))
 
+        if x1 not in self:
+            raise TypeError('x1 {!r} not in space {!r}'
+                            ''.format(x1, self))
+        if x2 not in self:
+            raise TypeError('x2 {!r} not in space {!r}'
+                            ''.format(x2, self))
+
         self._multiply(x1, x2, out)
+
+    def divide(self, x1, x2, out=None):
+        """Calculate the pointwise division of x1 and x2, and assign to out."""
+        if out is None:
+            out = self.element()
+        elif out not in self:
+            raise TypeError('out {!r} not in space {!r}'
+                            ''.format(out, self))
+
+        if x1 not in self:
+            raise TypeError('x1 {!r} not in space {!r}'
+                            ''.format(x1, self))
+        if x2 not in self:
+            raise TypeError('x2 {!r} not in space {!r}'
+                            ''.format(x2, self))
+
+        self._divide(x1, x2, out)
 
     class Vector(with_metaclass(ABCMeta, object)):
 
@@ -542,34 +574,38 @@ class LinearSpace(Set):
             """Implementation of 'self -= other'."""
             if other in self.space:
                 self.space.lincomb(1, self, -1, other, out=self)
-                return self            
+                return self
             else:
                 return NotImplemented
 
         def __imul__(self, other):
             """Implementation of 'self *= other'."""
-            if other in self.space:
+            if other in self.space.field:
+                self.space.lincomb(other, self, out=self)
+            elif other in self.space:
                 self.space.multiply(other, self, out=self)
-            elif other in self.space.field:
-                self.space.lincomb(other, self, out=self)            
             else:
                 return NotImplemented
             return self
 
         def __itruediv__(self, other):
             """Implementation of 'self /= other' (true division)."""
-            return self.__imul__(1.0 / other)
+            if other in self.space.field:
+                self.space.lincomb(1.0 / other, self, out=self)
+            elif other in self.space:
+                self.space.divide(self, other, out=self)
+            else:
+                return NotImplemented
+            return self
 
-        def __idiv__(self, other):
-            """Implementation of 'self /= other'."""
-            return self.__itruediv__(other)
+        __idiv__ = __itruediv__
 
         def __add__(self, other):
             """Implementation of 'self + other'."""
             if other in self.space:
                 tmp = self.space.element()
                 self.space.lincomb(1, self, 1, other, out=tmp)
-                return tmp            
+                return tmp
             else:
                 return NotImplemented
 
@@ -578,7 +614,7 @@ class LinearSpace(Set):
             if other in self.space:
                 tmp = self.space.element()
                 self.space.lincomb(1, self, -1, other, out=tmp)
-                return tmp            
+                return tmp
             else:
                 return NotImplemented
 
@@ -602,14 +638,14 @@ class LinearSpace(Set):
                 return self.__ipow__(n//2)
             else:
                 tmp = self.copy()
-                for i in range(n):
+                for i in range(n-1):
                     self.space.multiply(tmp, self, out=tmp)
                 return tmp
 
         def __pow__(self, n):
             """Take the n:th power of self, only defined for integer n"""
             tmp = self.copy()
-            for i in range(n):
+            for i in range(n-1):
                 self.space.multiply(tmp, self, out=tmp)
             return tmp
 
@@ -619,11 +655,16 @@ class LinearSpace(Set):
 
         def __truediv__(self, other):
             """Implementation of 'self / other' (true division)."""
-            return self.__mul__(1.0 / other)
+            tmp = self.space.element()            
+            if other in self.space.field:
+                self.space.lincomb(1.0 / other, self, out=tmp)
+            elif other in self.space:
+                self.space.divide(self, other, out=tmp)
+            else:
+                return NotImplemented
+            return tmp
 
-        def __div__(self, other):
-            """Implementation of 'self / scalar'."""
-            return self.__truediv__(other)
+        __div__ = __truediv__
 
         def __neg__(self):
             """Implementation of '-self'."""
@@ -689,10 +730,10 @@ class LinearSpace(Set):
         def __str__(self):
             """Implementation of str()."""
             return str(self.space) + ".Vector"
-            
+
         def __copy__(self):
             return self.copy()
-            
+
         def __deepcopy__(self, memo):
             return self.copy()
 
@@ -761,6 +802,10 @@ class UniversalSpace(LinearSpace):
 
     def _multiply(self, x1, x2, out):
         """Dummy multiplication method, raises `NotImplementedError`."""
+        raise NotImplementedError
+
+    def _divide(self, x1, x2, out):
+        """Dummy division method, raises `NotImplementedError`."""
         raise NotImplementedError
 
     @property

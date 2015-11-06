@@ -1,12 +1,12 @@
 # .coveragerc to control coverage.py
 [run]
 branch = False
-omit = 
+include =
+    odl/*
+omit =
     */__init__.py
     odl/diagnostics/*
     odl/util/*
-    test/*
-    run_tests.py
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -15,7 +15,7 @@ exclude_lines =
     pragma: no cover
 
     # Don't complain about missing debug-only code:
-    def __str__    
+    def __str__
     def __repr__
     if self\.debug
 
@@ -24,9 +24,17 @@ exclude_lines =
     raise NotImplementedError
     return NotImplemented
 
+    # Skip imports and __all__
+    import *
+    standard_library.install_aliases()
+    __all__
+
+    # Decorators
+    @property
+
     # Don't complain if non-runnable code isn't run:
     if 0:
-    if __name__ == '__main__': 
+    if __name__ == '__main__':
 
 ignore_errors = True
 

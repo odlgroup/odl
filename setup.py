@@ -70,5 +70,6 @@ setup(name='odl',
       extras_require={
           'testing': [
               'pytest >= 2.7.0'
+              'coverage >= 4.0'
               ]
       })

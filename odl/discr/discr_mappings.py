@@ -139,6 +139,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         """The axis ordering."""
         return self._order
 
+
 class RawGridCollocation(FunctionSetMapping):
 
     """Function evaluation at grid points.
@@ -246,30 +247,7 @@ class RawGridCollocation(FunctionSetMapping):
         >>> coll_op = RawGridCollocation(funcset, grid, rn, order='F')
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
-
-        Use all free variables in functions you supply, otherwise
-        the automatic broadcasting will yield a wrong shape:
-
-        >>> func_elem = funcset.element(lambda x, y: 2 * x)
-        >>> coll_op(func_elem)
-        Traceback (most recent call last):
-        ...
-        ValueError: input shape (2,) not broadcastable to shape (6,).
-
-        Do this instead:
-
-        >>> func_elem = funcset.element(lambda x, y: 2 * x + 0 * y)
-        >>> coll_op(func_elem)
-        Rn(6).element([2.0, 4.0, 2.0, 4.0, 2.0, 4.0])
-
-        This is what happens internally:
-
-        >>> xx, yy = grid.meshgrid()
-        >>> vals = 2 * xx
-        >>> vals.shape == (2, 1) # Cannot be assigned to an Rn(6) vector
-        True
         """
-        # TODO: update after vectorization issue is sorted out
         try:
             mg_tuple = self.grid.meshgrid()
             values = inp(*mg_tuple).ravel(order=self.order)
