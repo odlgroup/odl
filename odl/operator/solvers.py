@@ -237,7 +237,7 @@ class BacktrackingLineSearch(object):
     - https://en.wikipedia.org/wiki/Backtracking_line_search
     """
 
-    def __init__(self, function, tau=0.8, c=0.7, max_num_iter=None):
+    def __init__(self, function, tau=0.5, c=0.01, max_num_iter=None):
         """
         Parameters
         ----------
