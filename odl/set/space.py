@@ -655,7 +655,7 @@ class LinearSpace(Set):
 
         def __truediv__(self, other):
             """Implementation of 'self / other' (true division)."""
-            tmp = self.space.element()            
+            tmp = self.space.element()
             if other in self.space.field:
                 self.space.lincomb(1.0 / other, self, out=tmp)
             elif other in self.space:

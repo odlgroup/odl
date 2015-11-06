@@ -463,13 +463,13 @@ def _blas_is_applicable(*args):
 
 def _lincomb(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
-    
-    #Shortcut for small problems
-    if x1.size < 100: #small array optimization
+
+    # Shortcut for small problems
+    if x1.size < 100:  # small array optimization
         out.data[:] = a * x1.data + b * x2.data
         return
-    
-    #Use blas for larger problems
+
+    # Use blas for larger problems
     def fallback_axpy(x1, x2, n, a):
         """Fallback axpy implementation avoiding copy."""
         if a != 0:
@@ -1835,7 +1835,7 @@ class FnConstWeighting(_FnWeighting):
         """
         if other is self:
             return True
-        
+
         # TODO: make symmetric
         return (isinstance(other, FnConstWeighting) and
                 self.const == other.const)
@@ -1938,13 +1938,13 @@ class _FnNoWeighting(FnConstWeighting):
     with :math:`b^H` standing for transposed complex conjugate.
     This is the CPU implementation using NumPy.
     """
-    
-    #Implements singleton pattern for efficiency
+
+    # Implement singleton pattern for efficiency
     _instance = None
+
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(_FnNoWeighting, cls).__new__(
-                                  cls, *args, **kwargs)
+            cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
     def __init__(self, dist_using_inner=False):

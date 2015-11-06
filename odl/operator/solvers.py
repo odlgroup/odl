@@ -22,68 +22,73 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import next, object, range
+from future.utils import with_metaclass
+
+# External
+from abc import ABCMeta, abstractmethod
 from math import log, ceil
 
-# ODL imports
+# Internal
 from odl.operator.operator import OperatorComp, OperatorSum
 from odl.operator.default_ops import IdentityOperator
 
 
-class StorePartial(object):
-    """ Simple object for storing all partial results of the solvers
-    """
+class Partial(with_metaclass(ABCMeta, object)):
+
+    """Abstract base class for sending partial results of iterations."""
+
+    @abstractmethod
+    def send(self, result):
+        """Send the result to the partial object."""
+
+
+class StorePartial(Partial):
+    """Simple object for storing all partial results of the solvers."""
     def __init__(self):
         self.results = []
 
     def send(self, result):
-        """ append result to results list
-        """
+        """Append result to results list."""
         self.results.append(result.copy())
 
     def __iter__(self):
         return self.results.__iter__()
 
 
-class ForEachPartial(object):
-    """ Simple object for applying a function to each iterate
-    """
+class ForEachPartial(Partial):
+    """Simple object for applying a function to each iterate."""
     def __init__(self, function):
         self.function = function
 
     def send(self, result):
-        """ Applies function to result
-        """
+        """Applies function to result."""
         self.function(result)
 
 
-class PrintIterationPartial(object):
-    """ Prints the interation count
-    """
+class PrintIterationPartial(Partial):
+    """Prints the interation count."""
     def __init__(self):
         self.iter = 0
 
     def send(self, _):
-        """ Print the current iteration
-        """
+        """Print the current iteration."""
         print("iter = {}".format(self.iter))
         self.iter += 1
 
 
-class PrintStatusPartial(object):
-    """ Prints the interation count and current norm of each iterate
-    """
+class PrintStatusPartial(Partial):
+    """Prints the interation count and current norm of each iterate."""
     def __init__(self):
         self.iter = 0
 
     def send(self, result):
-        """ Print the current iteration and norm
-        """
+        """Print the current iteration and norm."""
         print("iter = {}, norm = {}".format(self.iter, result.norm()))
         self.iter += 1
 
 
 def landweber(op, x, rhs, niter=1, omega=1, partial=None):
-    """ General and efficient implementation of Landweber iteration
+    """General and efficient implementation of Landweber iteration.
 
     x <- x - omega * (A')^* (Ax - rhs)
     """
@@ -221,81 +226,116 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
             partial.send(x)
 
 
-class BacktrackingLineSearch(object):
-    """ Implements backtracking line search; an in-exact line search scheme
-    based on the armijo-goldstein condition. In this scheme one approximately
-    finds the longest step fulfilling the condition.
+class LineSearch(object):
 
-    Sources:
-    - Page 464 in Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
-    Cambridge university press, 2004. Available at
-    http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf
+    """Base class for line search methods to calculate step lenghts. """
 
-    - Pages 378-379 in Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
-    and nonlinear optimization. Siam, 2009.
+    def __call__(self, x, direction, gradf):
+        """
+        Parameters
+        ----------
+        x : domain element
+            The current point
+        direction : domain element
+            Search direction in which the line search should be computed
+        dir_derivative : float
+            Directional derivative along the `direction`
 
-    - https://en.wikipedia.org/wiki/Backtracking_line_search
+        Returns
+        -------
+        alpha : float
+            The step length
+        """
+        raise NotImplementedError
+
+
+class BacktrackingLineSearch(LineSearch):
+
+    """Backtracking line search for step length calculation.
+
+    This methods approximately finds the longest step lenght fulfilling
+    the Armijo-Goldstein condition.
+
+    The line search algorithm is described in [1]_, page 464
+    (`book available online
+    <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
+    [2]_, pages 378--379. See also the
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
+
+    References
+    ----------
+    .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
+       Cambridge university press, 2004. Available at
+
+    .. [2] Pages 378-379 in Griva, Igor, Stephen G. Nash, and
+       Ariela Sofer. Linear and nonlinear optimization. Siam, 2009.
     """
 
     def __init__(self, function, tau=0.5, c=0.01, max_num_iter=None):
-        """
+        """Initialize a new instance.
+
         Parameters
         ----------
         function : python function
             The cost function of the optimization problem to be solved.
         tau : float, optional
-            The amount the step length is decreased in each iteration, as long
-            as it does not fulfill the decrease condition. The step length is
-            updated as step_length *= tau
+            The amount the step length is decreased in each iteration,
+            as long as it does not fulfill the decrease condition.
+            The step length is updated as step_length *= tau
         c : float, optional
-            The 'discount factor' on the step length * direction derivative,
-            which the new point needs to be smaller than in order to fulfill
-            the condition and be accepted (see the references).
+            The 'discount factor' on the
+            `step length * direction derivative`,
+            which the new point needs to be smaller than in order to
+            fulfill the condition and be accepted (see the references).
         max_num_iter : int, optional
-            Maximum number of iterations allowed each time the line search
-            method is called. If not set, this is calculated to allow a
-            shortest step length of 0.0001.
+            Maximum number of iterations allowed each time the line
+            search method is called. If not set, this number  is
+            calculated to allow a shortest step length of 0.0001.
         """
         self.function = function
         self.tau = tau
         self.c = c
         self.total_num_iter = 0
-        # If max_num_iter is specified it sets this value, otherwise sets a
-        # value that allows the shortest step to be < 0.0001 of original
-        # step length
+        # Use a default value that allows the shortest step to be < 0.0001
+        # times the original step length
         if max_num_iter is None:
             self.max_num_iter = ceil(log(0.0001/self.tau))
         else:
             self.max_num_iter = max_num_iter
 
     def __call__(self, x, direction, dir_derivative):
-        """
+        """Calculate the optimal step length along a line.
+
         Parameters
         ----------
         x : domain element
-            The current point.
+            The current point
         direction : domain element
-            The search direction in which the line search should be computed.
+            Search direction in which the line search should be computed
         dir_derivative : float
-            The directional derivative along the direction 'direction'.
+            Directional derivative along the `direction`
 
         Returns
         -------
         alpha : float
-            The computed step length.
+            The computed step length
         """
         alpha = 1.0
         fx = self.function(x)
         num_iter = 0
-        while self.function(x + alpha * direction) >= fx + alpha * dir_derivative * self.c and num_iter <= self.max_num_iter:
+        while ((self.function(x + alpha * direction) >=
+                fx + alpha * dir_derivative * self.c) and
+               num_iter <= self.max_num_iter):
             num_iter += 1
             alpha *= self.tau
         self.total_num_iter += num_iter
         return alpha
 
 
-class ConstantLineSearch(object):
-    """A 'line search' object that returns a constant step length. """
+class ConstantLineSearch(LineSearch):
+
+    """Line search object that returns a constant step length."""
 
     def __init__(self, constant):
         """
@@ -311,111 +351,132 @@ class ConstantLineSearch(object):
         """
         Parameters
         ----------
-        (Can in theory be skipped since a constant step length will be returned
-        no matter their values)
         x : domain element
-            The current point.
+            The current point
         direction : domain element
-            The search direction in which the line search should be computed.
+            Search direction in which the line search should be computed
         dir_derivative : float
-            The directional derivative along the direction 'direction'.
+            Directional derivative along the `direction`
 
         Returns
         -------
         alpha : float
-            The step length.
+            The constant step length
         """
         return self.constant
 
 
-def quasi_newton_bfgs(op, x, line_search, niter=1, partial=None):
-    """ General implementation of the quasi newton method with bfgs update for,
-    solving an optimization problem min f(x). The qn method is an approximate
-    newton method, where hessian is approximated and gradually updated in each
-    step. This implementation uses the rank-one bfgs update schema where the
-    inverse of the hessian is updated in each iteration.
+def quasi_newton_bfgs(deriv, x, line_search, niter=1, partial=None):
+    """Quasi-Newton method to minimize an objective function.
 
-    Sources:
-    - Section 12.3 in Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
-    and nonlinear optimization. Siam, 2009.
+    General implementation of the Quasi-Newton method with BFGS update
+    for solving a general optimization problem
 
-    - https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm
+    `min f(x)`
+
+    The QN method is an approximate newton method, where the Hessian
+    is approximated and gradually updated in each step. This
+    implementation uses the rank-one BFGS update schema where the
+    inverse of the Hessian is recalculated in each iteration.
+
+    The algorithm is described in [1]_, Section 12.3 and in the
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\
+Goldfarb%E2%80%93Shanno_algorithm>`_
 
     Parameters
     ----------
-    op : odl operator
-        An operator that evaluates the gradient of the objectiv function f(x);
-        op(x) should return the gradient, an element in the same set as x.
-    x : domain element
-        The current point.
-    line_search : line search object
-        An object that takes as input current point x, the search direction,
-        and the directional derivative, and returns the step length as a float.
+    deriv : `odl.Operator`
+        Derivative of the objective function
+    x : element in the domain of `grad_f`
+        Starting point of the iteration
+    line_search : `LineSearch`
+        Strategy to choose the step length
     niter : int, optional
-        The number of iterations to perform.
-    TODO: partial : ???
-    """
+        Number of iterations to perform.
+    partial : `Partial`
+        Object executing code per iteration.
 
-    I = IdentityOperator(op.range)
-    Bi = IdentityOperator(op.range)
+    References
+    ----------
+    .. [1] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
+       and nonlinear optimization. Siam, 2009
+    """
     # Reusable temporaries
+    ident = IdentityOperator(deriv.range)
+    hess = IdentityOperator(deriv.range)  # approximation of the Hessian
+
     for _ in range(niter):
-        opx = op(x)
-        print(opx.norm())
-        p = Bi(-opx)
-        dir_derivative = p.inner(opx)
-        alpha = line_search(x, p, dir_derivative)
+        grad = deriv(x)
+        search_dir = hess(-grad)
+        dir_deriv = search_dir.inner(grad)
+        step = line_search(x, search_dir, dir_deriv)
         x_old = x.copy()
-        s = alpha * p
-        x += s
-        y = op(x) - op(x_old)
+        update = step * search_dir
+        x += update
+        grad_update = deriv(x) - deriv(x_old)
         x_old = x
-        ys = y.inner(s)
+        ys = grad_update.inner(update)
 
         if ys == 0.0:
             return
 
-        Bi = (I - s * y.T / ys) * Bi * (I - y * s.T / ys) + s * s.T / ys
+        # Update Hessian
+        hess = ((ident - update * grad_update.T / ys) *
+                hess *
+                (ident - grad_update * update.T / ys) +
+                update * update.T / ys)
 
         if partial is not None:
             partial.send(x)
 
 
-def steepest_decent(deriv_op, x, line_search, niter=1, partial=None):
-    """ General implementation of steepest decent (also known as gradient
-    decent) for solving min f(x). The algorithm is intended for unconstrained
-    problems, but also works for problems where one wants x in C, for some give
-    set C, if one define f(x) = infty if x is not in C. The method needs line
-    search in order to be converge.
+def steepest_decent(deriv, x, line_search, niter=1, partial=None):
+    """Steepest decent method to minimize an objective function.
 
-    Sources:
-    - Section 9.3-9.4 in Boyd, Stephen, and Lieven Vandenberghe. Convex
-    optimization. Cambridge university press, 2004. Available at
-    http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf
+    General implementation of steepest decent (also known as gradient
+    decent) for solving
 
-    - Section 12.2 in Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
-    and nonlinear optimization. Siam, 2009.
+    `min f(x)`
 
-    - https://en.wikipedia.org/wiki/Gradient_descent
+    The algorithm is intended for unconstrained problems, but also works
+    for problems where one wants to minimize over some given set C,
+    if one defines `f(x) = infty` if x is not in C. The method needs line
+    search in order to converge.
+
+
+    The algorithm is described in [1]_, section 9.3--9.4
+    (`book available online
+    <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
+    [2]_, Section 12.2, and the
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
     Parameters
     ----------
-    deriv_op : odl operator
-        An operator that evaluates the gradient of the objectiv function; op(x)
-        should return the gradient, an element in the same set as x.
-    x : domain element
-        The current point.
-    line_search : line search object
-        An object that takes as input current point x, the search direction,
-        and the directional derivative, and returns the step length as a float.
+    deriv : `odl.Operator`
+        Derivative of the objective function
+    x : element in the domain of `grad_f`
+        Starting point of the iteration
+    line_search : `LineSearch`
+        Strategy to choose the step length
     niter : int, optional
-        The number of iterations to perform.
-    TODO: partial : ???
+        Number of iterations to perform.
+    partial : `Partial`
+        Object executing code per iteration.
+
+    References
+    ----------
+    .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
+       Cambridge university press, 2004. Available at
+
+    .. [2] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
+       and nonlinear optimization. Siam, 2009
     """
 
-    grad = deriv_op.range.element()
+    grad = deriv.range.element()
     for _ in range(niter):
-        deriv_op(x, out=grad)
+        deriv(x, out=grad)
         dir_derivative = -grad.norm()**2
         step = line_search(x, -grad, dir_derivative)
         x.lincomb(1, x, -step, grad)
