@@ -519,15 +519,13 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
         p = Hi(opx)
         t = line_search(x, p, opx)
 
-        x_old = x.copy()
-        x += t*p
-        delta_x = x - x_old
+        delta_x = t*p
+        x += delta_x
 
-        opx_old = opx.copy()
-        opx = op(x)
+        opx, opx_old = op(x), opx
         delta_f = opx - opx_old
 
-        v = Hi(delta_x)
+        v = Hi(delta_x) #TODO: this call can be removed using linearity
         v_delta_f = v.inner(delta_f)
         if v_delta_f == 0:
             return
@@ -576,20 +574,17 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
         p = Hi(opx)
         t = line_search(x, p, opx)
 
-        x_old = x.copy()
-        x += t*p
-        delta_x = x - x_old
+        delta_x = t*p
+        x += delta_x
 
-        opx_old = opx.copy()
-        opx = op(x)
+        opx, opx_old = op(x), opx
         delta_f = opx - opx_old
 
-        v = delta_f
-        v_delta_f = v.inner(delta_f)
-        if v_delta_f == 0:
+        delta_f_norm2 = delta_f.norm()**2
+        if delta_f_norm2 == 0:
             return
-        u = (delta_x + Hi(delta_f))/(v_delta_f)
-        Hi -= u * v.T
+        u = (delta_x + Hi(delta_f))/(delta_f_norm2)
+        Hi -= u * delta_f.T
 
         if partial is not None:
             partial.send(x)
