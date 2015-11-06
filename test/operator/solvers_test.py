@@ -137,31 +137,59 @@ class ResidualOp(odl.Operator):
     def derivative(self, x):
         return self.op.derivative(x)
 
-def test_quasi_newton():
-    n = 5
-
+def test_quasi_newton_bfgs():
     # Np as validation
-    A = np.random.rand(n, n)
-    A = np.dot(A.T, A) + np.eye(n) * n
+    A = np.array([[3, 1, 1], 
+                  [1, 2, 1/2], 
+                  [1, 1/2, 5]])
 
     # Vector representation
+    n = A.shape[0]
     rn = odl.Rn(n)
     xvec = rn.zero()
     rhs = rn.element(np.random.rand(n))
 
     # Make operator
     Aop = MultiplyOp(A)
-    Res = ResidualOp(Aop, rhs)
+    Res = ResidualOp(Aop, -rhs)
 
-    x_opt = np.linalg.solve(A, rhs)
+    x_opt = np.linalg.solve(A, -rhs)
 
     # Solve using conjugate gradient
     line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 - rhs))
-    solvers.quasi_newton(Res, xvec, line_search, niter=10)
+    solvers.quasi_newton_bfgs(Res, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
     assert Res(xvec).norm() < 10**-1
 
+def test_steepest_decent():
+    """ Solving a quadratic problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
+    is given by solving Hx + c = 0, and solving this with np is used as reference. """   
+
+    # Fixed array
+    H = np.array([[3, 1, 1], 
+                  [1, 2, 1/2], 
+                  [1, 1/2, 5]])
+
+    # Vector representation
+    n = H.shape[0]
+    rn = odl.Rn(n)
+    xvec = rn.zero()
+    c = rn.element(np.random.rand(n))
+
+    # Optimal solution, found by solving 0 = gradf(x) = Hx + c
+    x_opt = np.linalg.solve(H, -c)
+    
+    # Create derivative operator operator
+    Aop = MultiplyOp(H)
+    deriv_op = ResidualOp(Aop, -c)
+
+    # Solve using steepest decent
+    line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 + c), 
+                                                 0.5, 0.05, 10)
+    solvers.steepest_decent(deriv_op, xvec, line_search, niter=20)
+    
+    assert all_almost_equal(x_opt, xvec, places=2)
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\','/')) + ' -v')
-

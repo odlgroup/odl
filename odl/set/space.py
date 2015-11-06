@@ -408,8 +408,7 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
-
-        if out not in self:
+        elif out not in self:
             raise TypeError('output vector {!r} not in space {!r}.'
                             ''.format(out, self))
 
@@ -581,20 +580,20 @@ class LinearSpace(Set):
 
         def __imul__(self, other):
             """Implementation of 'self *= other'."""
-            if other in self.space:
-                self.space.multiply(other, self, out=self)
-            elif other in self.space.field:
+            if other in self.space.field:
                 self.space.lincomb(other, self, out=self)
+            elif other in self.space:
+                self.space.multiply(other, self, out=self)
             else:
                 return NotImplemented
             return self
 
         def __itruediv__(self, other):
             """Implementation of 'self /= other' (true division)."""
-            if other in self.space:
-                self.space.divide(self, other, out=self)
-            elif other in self.space.field:
+            if other in self.space.field:
                 self.space.lincomb(1.0 / other, self, out=self)
+            elif other in self.space:
+                self.space.divide(self, other, out=self)
             else:
                 return NotImplemented
             return self
@@ -622,10 +621,10 @@ class LinearSpace(Set):
         def __mul__(self, other):
             """Implementation of 'self * other'."""
             tmp = self.space.element()
-            if other in self.space:
-                self.space.multiply(self, other, out=tmp)
-            elif other in self.space.field:
+            if other in self.space.field:
                 self.space.lincomb(other, self, out=tmp)
+            elif other in self.space:
+                self.space.multiply(other, self, out=tmp)
             else:
                 return NotImplemented
             return tmp
@@ -657,10 +656,10 @@ class LinearSpace(Set):
         def __truediv__(self, other):
             """Implementation of 'self / other' (true division)."""
             tmp = self.space.element()
-            if other in self.space:
-                self.space.divide(self, other, out=tmp)
-            elif other in self.space.field:
+            if other in self.space.field:
                 self.space.lincomb(1.0 / other, self, out=tmp)
+            elif other in self.space:
+                self.space.divide(self, other, out=tmp)
             else:
                 return NotImplemented
             return tmp
