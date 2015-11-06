@@ -439,10 +439,10 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
 
     `min f(x)`
 
-    The algorithm is intended for unconstrained problems, but also works
-    for problems where one wants to minimize over some given set C,
-    if one defines `f(x) = infty` if x is not in C. The method needs line
-    search in order to converge.
+    The algorithm is intended for unconstrained problems. The method needs line
+    search in order guarantee convergence. With appropriate line search it can
+    also be used for constrained problems where one wants to minimize over some
+    given set C. This is done by defining `f(x) = infty` if x is not in C.
 
 
     The algorithm is described in [1]_, section 9.3--9.4
