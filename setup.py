@@ -59,7 +59,7 @@ setup(name='odl',
       version=__version__,
       author='ODL development group',
       author_email='kohr@kth.se, jonasadl@kth.se',
-      url='https://gits-14.sys.kth.se/LCR/ODL',
+      url='https://github.com/odlgroup/odl',
       description='Operator Discretization Library',
       license='GPLv3',
       packages=find_packages(exclude=['*test*']),
@@ -69,7 +69,7 @@ setup(name='odl',
       cmdclass={'test': PyTest},
       extras_require={
           'testing': [
-              'pytest >= 2.7.0'
+              'pytest >= 2.7.0',
               'coverage >= 4.0'
               ]
       })
