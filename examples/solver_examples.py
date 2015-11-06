@@ -23,9 +23,8 @@ from future import standard_library
 standard_library.install_aliases()
 
 
-def landweberBase(operator, x, rhs, iterations=1, omega=1):
-    """ Straightforward implementation of Landweber iteration
-    """
+def landweber_base(operator, x, rhs, iterations=1, omega=1):
+    """Straightforward implementation of Landweber's iteration"""
     for _ in range(iterations):
         x = x - omega * operator.adjoint(operator(x)-rhs)
 
@@ -33,8 +32,7 @@ def landweberBase(operator, x, rhs, iterations=1, omega=1):
 
 
 def conjugate_gradient_base(op, x, rhs, iterations=1):
-    """ Non-optimized CGN
-    """
+    """Non-optimized CGN."""
     d = rhs - op(x)
     p = op.adjoint(d)
     s = p.copy()

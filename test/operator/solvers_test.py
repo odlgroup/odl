@@ -155,7 +155,7 @@ def test_quasi_newton_bfgs():
 
     x_opt = np.linalg.solve(A, -rhs)
 
-    # Solve using quasi newton
+    # Solve using conjugate gradient
     line_search = solvers.BacktrackingLineSearch(lambda x: x.inner(Aop(x)/2.0 - rhs))
     solvers.quasi_newton_bfgs(Res, xvec, line_search, niter=10)
 

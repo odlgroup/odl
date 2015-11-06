@@ -31,6 +31,7 @@ import numpy as np
 import odl
 from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult,
+                 FunctionalLeftVectorMult,
                  OperatorLeftVectorMult, OperatorRightVectorMult)
 from odl.util.testutils import almost_equal, all_almost_equal
 
@@ -147,7 +148,7 @@ def test_nonlinear_right_vector_mult():
 
     Aop = MultiplyAndSquareOp(A)
     vec = Aop.domain.element([1, 2, 3])
-    x = 1.0
+    x = Aop.domain.element([4, 5, 6])
 
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
@@ -320,7 +321,7 @@ def test_linear_right_vector_mult():
 
     Aop = MultiplyOp(A)
     vec = Aop.domain.element([1, 2, 3])
-    x = 1.0
+    x = Aop.domain.element([4, 5, 6])
     y = Aop.range.element([5, 6, 7, 8])
 
     # Test a range of scalars (scalar multiplication could implement
@@ -330,15 +331,15 @@ def test_linear_right_vector_mult():
     assert C.is_linear
     assert C.adjoint.is_linear
 
-    assert all_almost_equal(C(x), x * np.dot(A, vec))
-    assert all_almost_equal(C.adjoint(y), np.dot(vec, np.dot(A.T, y)))
+    assert all_almost_equal(C(x), np.dot(A, vec * x))
+    assert all_almost_equal(C.adjoint(y), vec * np.dot(A.T, y))
     assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert all_almost_equal((Aop * vec)(x),
-                            np.dot(A, vec) * x)
+                            np.dot(A, vec * x))
     assert all_almost_equal((Aop * vec).adjoint(y),
-                            np.dot(vec, np.dot(A.T, y)))
+                            vec * np.dot(A.T, y))
 
 def test_linear_composition():
     A = np.random.rand(5, 4)
@@ -518,7 +519,7 @@ def test_functional_left_vector_mult():
 
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
-    C = OperatorLeftVectorMult(Aop, y)
+    C = FunctionalLeftVectorMult(Aop, y)
         
     assert C.is_linear
     assert C.adjoint.is_linear
@@ -537,8 +538,8 @@ def test_functional_right_vector_mult():
     r3 = odl.Rn(3)
 
     Aop = SumFunctional(r3)
-    vec = r3.element([5, 6, 7])
-    x = 1.0
+    vec = r3.element([1, 2, 3])
+    x = r3.element([4, 5, 6])
     y = 2.0
 
     # Test a range of scalars (scalar multiplication could implement
@@ -548,15 +549,15 @@ def test_functional_right_vector_mult():
     assert C.is_linear
     assert C.adjoint.is_linear
 
-    assert all_almost_equal(C(x), x * np.sum(vec))
-    assert all_almost_equal(C.adjoint(y), y * np.sum(vec))
+    assert all_almost_equal(C(x), np.sum(vec * x))
+    assert all_almost_equal(C.adjoint(y), vec * y)
     assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert all_almost_equal((Aop * vec)(x),
-                            x * np.sum(vec))
+                            np.sum(vec * x))
     assert all_almost_equal((Aop * vec).adjoint(y),
-                            y * np.sum(vec))
+                            vec * y)
 
 def test_functional_composition():
     r3 = odl.Rn(3)

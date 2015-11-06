@@ -271,7 +271,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             """
 
         def __array__(self, dtype=None):
-            """ Returns a numpy array of this ntuple.
+            """Return a numpy array of this ntuple.
 
             Parameters
             ----------
@@ -288,7 +288,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 return self.asarray().astype(dtype)
 
         def __array_wrap__(self, obj):
-            """ Returns a new vector from the data in obj
+            """Return a new vector from the data in obj.
 
             Parameters
             ----------
@@ -349,14 +349,22 @@ class FnBase(NtuplesBase, LinearSpace):
     def zero(self):
         """Create a vector of zeros."""
 
+    @abstractmethod
+    def one(self):
+        """Create a vector of ones."""
+
     @property
     def field(self):
         """The field of this space."""
         return self._field
 
     @abstractmethod
-    def _multiply(self, z, x1, x2):
-        """The entry-wise product of two vectors, assigned to `z`."""
+    def _multiply(self, x1, x2, out):
+        """The entry-wise product of two vectors, assigned to `out`."""
+
+    @abstractmethod
+    def _divide(self, z, x1, x2, out):
+        """The entry-wise division of two vectors, assigned to `out`."""
 
     class Vector(NtuplesBase.Vector, LinearSpace.Vector):
 

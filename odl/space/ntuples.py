@@ -68,7 +68,10 @@ from odl.util.utility import dtype_repr
 from odl.util.utility import is_real_dtype, is_complex_dtype
 
 
-__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn', 'MatVecOperator')
+__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
+           'MatVecOperator',
+           'FnMatrixWeighting', 'FnVectorWeighting', 'FnConstWeighting',
+           'weighted_dist', 'weighted_norm', 'weighted_inner')
 
 
 _TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
@@ -548,11 +551,11 @@ def _repr_space_funcs(space):
         inner_str += ', norm=<custom norm>'
     elif isinstance(space._space_funcs, _FnCustomDist):
         inner_str += ', norm=<custom dist>'
-    elif isinstance(space._space_funcs, _FnConstWeighting):
+    elif isinstance(space._space_funcs, FnConstWeighting):
         weight = space._space_funcs.const
         if weight != 1.0:
             inner_str += ', weight={}'.format(weight)
-    elif isinstance(space._space_funcs, _FnMatrixWeighting):
+    elif isinstance(space._space_funcs, FnMatrixWeighting):
         weight = space._space_funcs.matrix
         inner_str += ', weight={!r}'.format(weight)
 
@@ -669,21 +672,31 @@ class Fn(FnBase, Ntuples):
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        if (dist, norm, inner, weight).count(None) < 3:
+        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
             if np.isscalar(weight):
-                self._space_funcs = _FnConstWeighting(
-                    weight, dist_using_inner=dist_using_inner)
-            elif isinstance(weight, (np.matrix, sp.sparse.spmatrix)):
-                self._space_funcs = _FnMatrixWeighting(
+                self._space_funcs = FnConstWeighting(
                     weight, dist_using_inner=dist_using_inner)
             elif weight is None:
                 pass
-            else:
-                raise ValueError('invalid weight argument {!r}.'
-                                 ''.format(weight))
+            elif isinstance(weight, sp.sparse.spmatrix):
+                self._space_funcs = FnMatrixWeighting(
+                    weight, dist_using_inner=dist_using_inner)
+            else:  # last possibility: make a matrix
+                mat = np.asarray(weight)
+                if mat.dtype == object:
+                    raise ValueError('invalid weight argument {}.'
+                                     ''.format(weight))
+                # later, we can distinguish ndim == 1 or 2
+                elif mat.ndim != 2:
+                    raise ValueError('array-like input {} is not '
+                                     '2-dimensional.'.format(weight))
+
+                self._space_funcs = FnMatrixWeighting(
+                    mat, dist_using_inner=dist_using_inner)
+
         elif dist is not None:
             self._space_funcs = _FnCustomDist(dist)
         elif norm is not None:
@@ -692,6 +705,16 @@ class Fn(FnBase, Ntuples):
             self._space_funcs = _FnCustomInnerProduct(inner)
         else:  # all None -> no weighing
             self._space_funcs = _FnNoWeighting()
+
+        if is_complex_dtype(self.dtype):
+            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+        else:
+            self._real_dtype = self.dtype
+
+    @property
+    def real_dtype(self):
+        """The corresponding real data type of this space."""
+        return self._real_dtype
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of `x` and `y`.
@@ -789,12 +812,12 @@ class Fn(FnBase, Ntuples):
         Parameters
         ----------
 
-        x1, x2 : `Cn.Vector`
+        x1, x2 : `Fn.Vector`
             The vectors whose inner product is calculated
 
         Returns
         -------
-        inner : `complex`
+        inner : `self.field` element
             Inner product of `x1` and `x2`.
 
         Examples
@@ -823,11 +846,13 @@ class Fn(FnBase, Ntuples):
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two vectors, assigned to `out`.
 
+        out = x1 * x2
+
         Parameters
         ----------
-        x1, x2 : `Cn.Vector`
+        x1, x2 : `Fn.Vector`
             Factors in the product
-        out : `Cn.Vector`
+        out : `Fn.Vector`
             The result vector
 
         Returns
@@ -844,15 +869,37 @@ class Fn(FnBase, Ntuples):
         >>> out
         Cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
-        if out is x1 and out is x2:  # out = out*out
-            out.data[:] *= out.data
-        elif out is x1:  # out = out*x2
-            out.data[:] *= x2.data
-        elif out is x2:  # out = out*x1
-            out.data[:] *= x1.data
-        else:  # out = x1*x2
-            out.data[:] = x1.data
-            out.data[:] *= x2.data
+        np.multiply(x1.data, x2.data, out=out.data)
+
+    def _divide(self, x1, x2, out):
+        """The entry-wise division of two vectors, assigned to `out`.
+
+        out = x1 / x2
+
+        Parameters
+        ----------
+        x1 : `Fn.Vector`
+            Dividend
+        x1 : `Fn.Vector`
+            Divisior
+        out : `Fn.Vector`
+            The result vector, quotient
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> r3 = Rn(3)
+        >>> x = r3.element([3, 5, 6])
+        >>> y = r3.element([1, 2, 2])
+        >>> out = r3.element()
+        >>> r3.divide(x, y, out)
+        >>> out
+        Rn(3).element([3.0, 2.5, 3.0])
+        """
+        np.divide(x1.data, x2.data, out=out.data)
 
     def zero(self):
         """Create a vector of zeros.
@@ -865,6 +912,18 @@ class Fn(FnBase, Ntuples):
         Cn(3).element([0j, 0j, 0j])
         """
         return self.element(np.zeros(self.size, dtype=self.dtype))
+
+    def one(self):
+        """Create a vector of zeros.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.one()
+        >>> x
+        Cn(3).element([(1+0j), (1+0j), (1+0j)])
+        """
+        return self.element(np.ones(self.size, dtype=self.dtype))
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
@@ -941,73 +1000,6 @@ class Fn(FnBase, Ntuples):
                                 ''.format(space))
 
             Ntuples.Vector.__init__(self, space, data)
-
-
-class Cn(Fn):
-
-    """The complex vector space :math:`C^n` with vector multiplication.
-
-    Its elements are represented as instances of the inner `Cn.Vector`
-    class.
-
-    See also
-    --------
-    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
-    """
-
-    def __init__(self, size, dtype=np.complex128, **kwargs):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        size : positive int
-            The number of dimensions of the space
-        dtype : object
-            The data type of the storage array. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-
-            Only complex floating-point data types are allowed.
-        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See `Fn`
-        """
-        super().__init__(size, dtype, **kwargs)
-
-        if not is_complex_dtype(self._dtype):
-            raise TypeError('data type {} not a complex floating-point type.'
-                            ''.format(dtype))
-        self._real_dtype = _TYPE_MAP_C2R[self._dtype]
-
-    @property
-    def real_dtype(self):
-        """The corresponding real data type of this space."""
-        return self._real_dtype
-
-    def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
-        inner_fstr = '{}'
-        if self.dtype != np.complex128:
-            inner_fstr += ', {dtype}'
-
-        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype))
-        inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """`cn.__str__() <==> str(cn)`."""
-        if self.dtype == np.complex128:
-            return 'Cn({})'.format(self.size)
-        else:
-            return 'Cn({}, {})'.format(self.size, self.dtype)
-
-    class Vector(Fn.Vector):
-        """Representation of a `Cn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
 
         @property
         def real(self):
@@ -1118,6 +1110,93 @@ class Cn(Fn):
             [(5+0j), (3+2j), (2-1j)]
             """
             self.imag.data[:] = newimag
+
+        def conj(self, out=None):
+            """The complex conjugate of this vector.
+
+            Parameters
+            ----------
+            out : array-like or scalar
+                The new imaginary part for this vector.
+
+            Examples
+            --------
+            >>> x = Cn(3).element([5+1j, 3, 2-2j])
+            >>> y = x.conj(); print(y)
+            [(5-1j), (3-0j), (2+2j)]
+
+            The out parameter allows you to avoid a copy
+
+            >>> z = Cn(3).element()
+            >>> z_out = x.conj(out=z); print(z)
+            [(5-1j), (3-0j), (2+2j)]
+            >>> z_out is z
+            True
+
+            It can also be used for inplace conj
+            >>> x_out = x.conj(out=x); print(x)
+            [(5-1j), (3-0j), (2+2j)]
+            >>> x_out is x
+            True
+            """
+            if out is None:
+                return self.space.element(self.data.conj())
+            else:
+                self.data.conj(out.data)
+                return out
+
+
+class Cn(Fn):
+
+    """The complex vector space :math:`C^n` with vector multiplication.
+
+    Its elements are represented as instances of the inner `Cn.Vector`
+    class.
+
+    See also
+    --------
+    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
+    """
+
+    def __init__(self, size, dtype=np.complex128, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        size : positive int
+            The number of dimensions of the space
+        dtype : object
+            The data type of the storage array. Can be provided in any
+            way the `numpy.dtype()` function understands, most notably
+            as built-in type, as one of NumPy's internal datatype
+            objects or as string.
+
+            Only complex floating-point data types are allowed.
+        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
+            See `Fn`
+        """
+        super().__init__(size, dtype, **kwargs)
+
+        if not is_complex_dtype(self._dtype):
+            raise TypeError('data type {} not a complex floating-point type.'
+                            ''.format(dtype))
+
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        inner_fstr = '{}'
+        if self.dtype != np.complex128:
+            inner_fstr += ', {dtype}'
+
+        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype))
+        inner_str += _repr_space_funcs(self)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """`cn.__str__() <==> str(cn)`."""
+        if self.dtype == np.complex128:
+            return 'Cn({})'.format(self.size)
+        else:
+            return 'Cn({}, {})'.format(self.size, self.dtype)
 
 
 class Rn(Fn):
@@ -1258,6 +1337,108 @@ class MatVecOperator(Operator):
     # TODO: repr and str
 
 
+def _weighted(weight, attr, dist_using_inner=False):
+    if np.isscalar(weight):
+        weighting = FnConstWeighting(
+            weight, dist_using_inner=dist_using_inner)
+    else:
+        weight_ = np.asarray(weight)
+        if weight_.dtype == object:
+            raise ValueError('bad weight {}'.format(weight))
+        if weight_.ndim == 1:
+            weighting = FnVectorWeighting(
+                weight_, dist_using_inner=dist_using_inner)
+        elif weight_.ndim == 2:
+            weighting = FnMatrixWeighting(
+                weight_, dist_using_inner=dist_using_inner)
+        else:
+            raise ValueError('array-like weight must have 1 or 2 dimensions, '
+                             'but {} has {} dimensions.'
+                             ''.format(weight, weight_.ndim))
+    return getattr(weighting, attr)
+
+
+def weighted_inner(weight):
+    """Weighted inner product on `Fn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar or array-like
+        Weight of the inner product. A scalar is interpreted as a
+        constant weight, a 1-dim. array as a weighting vector and a
+        2-dimensional array as a weighting matrix.
+
+    Returns
+    -------
+    inner : callable
+        Inner product function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    """
+    return _weighted(weight, 'inner')
+
+
+def weighted_norm(weight):
+    """Weighted norm on `Fn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar or array-like
+        Weight of the norm. A scalar is interpreted as a
+        constant weight, a 1-dim. array as a weighting vector and a
+        2-dimensional array as a weighting matrix.
+
+    Returns
+    -------
+    inner : callable
+        Norm function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    """
+    return _weighted(weight, 'norm')
+
+
+def weighted_dist(weight, use_inner=False):
+    """Weighted distance on `Fn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar or array-like
+        Weight of the distance. A scalar is interpreted as a
+        constant weight, a 1-dim. array as a weighting vector and a
+        2-dimensional array as a weighting matrix.
+    use_inner : bool, optional
+        Calculate `dist(x, y)` as
+
+        `sqrt(norm(x)**2 + norm(y)**2 - 2 * inner(x, y).real)`
+
+        This avoids the creation of new arrays and is thus
+        faster for large arrays. On the downside, it will not
+        evaluate to exactly zero for equal (but not identical)
+        `x` and `y`.
+
+    Returns
+    -------
+    inner : callable
+        Distance function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    """
+    return _weighted(weight, 'dist', dist_using_inner=use_inner)
+
+
 def _norm_default(x):
     if _blas_is_applicable(x):
         norm = get_blas_funcs('nrm2', dtype=x.dtype)
@@ -1282,9 +1463,9 @@ class _FnWeighting(with_metaclass(ABCMeta, _FnWeightingBase)):
     """Abstract base class for `Fn` weighting."""
 
 
-class _FnMatrixWeighting(_FnWeighting):
+class FnMatrixWeighting(_FnWeighting):
 
-    """Matrix-weighting for `Fn`.
+    """Matrix weighting for `Fn`.
 
     The weighted inner product with matrix :math:`G` is defined as
 
@@ -1303,9 +1484,8 @@ class _FnMatrixWeighting(_FnWeighting):
 
         Parameters
         ----------
-        matrix : array-like or scipy.sparse.spmatrix
-            Weighting matrix of the inner product. Its shape must be
-            `(n, n)`, where `n` is the size of `space`.
+        matrix : scipy.sparse.spmatrix or array-like, two-dim.
+            Square Weighting matrix of the inner product
         dist_using_inner : bool, optional
             Calculate `dist(x, y)` as
 
@@ -1320,7 +1500,13 @@ class _FnMatrixWeighting(_FnWeighting):
         if isinstance(matrix, sp.sparse.spmatrix):
             self._matrix = matrix
         else:
-            self._matrix = np.asmatrix(matrix)
+            self._matrix = np.asarray(matrix)
+            if self._matrix.dtype == object:
+                raise ValueError('invalid matrix {}.'.format(matrix))
+            elif self._matrix.ndim != 2:
+                raise ValueError('matrix {} is {}-dimensional instead of '
+                                 '2-dimensional.'
+                                 ''.format(matrix, self._matrix.ndim))
 
         if self._matrix.shape[0] != self._matrix.shape[1]:
             raise ValueError('matrix with shape {} not square.'
@@ -1352,7 +1538,7 @@ class _FnMatrixWeighting(_FnWeighting):
         if other is self:
             return True
 
-        return (isinstance(other, _FnMatrixWeighting) and
+        return (isinstance(other, FnMatrixWeighting) and
                 self.matrix is other.matrix)
 
     def equiv(self, other):
@@ -1371,26 +1557,36 @@ class _FnMatrixWeighting(_FnWeighting):
         if self == other:
             return True
 
-        elif isinstance(other, _FnMatrixWeighting):
+        elif isinstance(other, FnMatrixWeighting):
+            if self.matrix.shape != other.matrix.shape:
+                return False
+
             if self.matrix_issparse:
                 if other.matrix_issparse:
                     # Optimization for different number of nonzero elements
                     if self.matrix.nnz != other.matrix.nnz:
                         return False
                     return (self.matrix != other.matrix).nnz == 0
-                else:
+                else:  # Worst case: compare against dense matrix
                     return np.array_equal(self.matrix.todense(), other.matrix)
 
             else:  # matrix of `self` is dense
                 if other.matrix_issparse:
-                    #TODO: optimize with size checks etc.
                     return np.array_equal(self.matrix, other.matrix.todense())
                 else:
                     return np.array_equal(self.matrix, other.matrix)
-
-        elif isinstance(other, _FnConstWeighting):
-            return np.array_equiv(self.matrix.diagonal(), other.const)
-
+        elif isinstance(other, FnVectorWeighting):
+            return (np.array_equiv(self.matrix.diagonal(), other.vector) and
+                    np.array_equal(self.matrix.asformat('dia').offsets,
+                                   np.array([0])))
+        elif isinstance(other, FnConstWeighting):
+            if self.matrix_issparse:
+                return (np.array_equiv(self.matrix.diagonal(), other.const) and
+                        np.array_equal(self.matrix.asformat('dia').offsets,
+                                       np.array([0])))
+            else:
+                return np.array_equal(
+                    self.matrix, other.const * np.eye(self.matrix.shape[0]))
         else:
             return False
 
@@ -1469,7 +1665,128 @@ class _FnMatrixWeighting(_FnWeighting):
         return 'Weighting: matrix =\n{}'.format(self.matrix)
 
 
-class _FnConstWeighting(_FnWeighting):
+class FnVectorWeighting(_FnWeighting):
+
+    """Vector weighting for `Fn`.
+
+    The weighted inner product with vector :math:`w` is defined as
+
+    :math:`<a, b> := b^H (w * a)`
+
+    with :math:`b^H` standing for transposed complex conjugate, and
+    `w * a` being element-wise multiplication. The vector may only have
+    positive entries, otherwise it does not define an inner product.
+    This is not checked during initialization.
+
+    Norm and distance are implemented as in the base class by default.
+    """
+
+    def __init__(self, vector, dist_using_inner=False):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vector : array-like, one-dim.
+            Weighting vector of the inner product
+        dist_using_inner : bool, optional
+            Calculate `dist(x, y)` as
+
+            `sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)`
+
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it is not guaranteed to
+            evaluate to exactly zero for equal (but not identical)
+            `x` and `y`.
+        """
+        super().__init__(dist_using_inner)
+        self._vector = np.asarray(vector)
+        if self._vector.dtype == object:
+            raise ValueError('invalid vector {}.'.format(vector))
+        elif self._vector.ndim != 1:
+            raise ValueError('vector {} is {}-dimensional instead of '
+                             '1-dimensional.'
+                             ''.format(vector, self._vector.ndim))
+
+    @property
+    def vector(self):
+        """Weighting vector of this inner product."""
+        return self._vector
+
+    def __eq__(self, other):
+        """`inner.__eq__(other) <==> inner == other`.
+
+        Returns
+        -------
+        equals : bool
+            `True` if `other` is an `FnVectorWeighting` instance with
+            **identical** vector, `False` otherwise.
+
+        See also
+        --------
+        equiv : test for equivalent inner products
+        """
+        if other is self:
+            return True
+
+        return (isinstance(other, FnVectorWeighting) and
+                self.vector is other.vector)
+
+    def equiv(self, other):
+        """Test if `other` is an equivalent weighting.
+
+        Returns
+        -------
+        equivalent : bool
+            `True` if `other` is an `FnWeighting` instance which
+            yields the same result as this inner product for any
+            input, `False` otherwise. This is checked by entry-wise
+            comparison of matrices/vectors/constant of this inner
+            product and `other`.
+        """
+        # Optimization for equality
+        if self == other:
+            return True
+        elif isinstance(other, FnMatrixWeighting):
+            return other.equiv(self)
+        elif isinstance(other, FnConstWeighting):
+            return np.array_equiv(self.vector, other.const)
+        else:
+            return False
+
+    def inner(self, x1, x2):
+        """Calculate the vector weighted inner product of two vectors.
+
+        Parameters
+        ----------
+        x1, x2 : `Fn.Vector`
+            Vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided vectors
+        """
+        inner = _inner_default(x1 * self.vector, x2)
+        if is_real_dtype(x1.dtype):
+            return float(inner)
+        else:
+            return complex(inner)
+
+    def __repr__(self):
+        """`w.__repr__() <==> repr(w)`."""
+        inner_fstr = '{vector!r}'
+        if self._dist_using_inner:
+            inner_fstr += ', dist_using_inner=True'
+
+        inner_str = inner_fstr.format(vector=self.vector)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """`inner.__repr__() <==> repr(inner)`."""
+        return 'Weighting: vector =\n{}'.format(self.vector)
+
+
+class FnConstWeighting(_FnWeighting):
 
     """Weighting of `Fn` by a constant.
 
@@ -1520,7 +1837,7 @@ class _FnConstWeighting(_FnWeighting):
             return True
         
         # TODO: make symmetric
-        return (isinstance(other, _FnConstWeighting) and
+        return (isinstance(other, FnConstWeighting) and
                 self.const == other.const)
 
     def equiv(self, other):
@@ -1536,7 +1853,7 @@ class _FnConstWeighting(_FnWeighting):
             by entry-wise comparison of this inner product's constant
             with the matrix of `other`.
         """
-        if isinstance(other, _FnConstWeighting):
+        if isinstance(other, FnConstWeighting):
             return self == other
         elif isinstance(other, _FnWeighting):
             return other.equiv(self)
@@ -1610,7 +1927,7 @@ class _FnConstWeighting(_FnWeighting):
         return 'Weighting: const = {:.4}'.format(self.const)
 
 
-class _FnNoWeighting(_FnConstWeighting):
+class _FnNoWeighting(FnConstWeighting):
 
     """Weighting of `Fn` with constant 1.
 

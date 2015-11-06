@@ -26,23 +26,23 @@ standard_library.install_aliases()
 import pytest
 import numpy as np
 import scipy as sp
-from math import sqrt, ceil
-from textwrap import dedent
+from math import ceil
 
 # ODL imports
 from odl import Ntuples, Fn, Rn, Cn
 from odl.operator.operator import Operator
-from odl.space.ntuples import _FnConstWeighting, _FnMatrixWeighting
-from odl.util.testutils import almost_equal, all_almost_equal
+from odl.space.ntuples import FnConstWeighting, FnMatrixWeighting
+from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 
 # TODO: add tests for:
 # * Ntuples (different data types)
 # * metric, normed, Hilbert space variants
-# * Cn
-# * Rn, Cn with non-standard data types
-# * vector multiplication
 # * MatVecOperator
+# * inner, norm, dist as free functions
+# * Vector weighting
 # * Custom inner/norm/dist
+
+
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
@@ -50,10 +50,13 @@ def _array(fn):
     elif np.issubdtype(fn.dtype, np.integer):
         return np.random.randint(0, 10, fn.size).astype(fn.dtype)
     else:
-        return (np.random.randn(fn.size) + 1j * np.random.randn(fn.size)).astype(fn.dtype)
-        
+        return (np.random.randn(fn.size) +
+                1j * np.random.randn(fn.size)).astype(fn.dtype)
+
+
 def _element(fn):
     return fn.element(_array(fn))
+
 
 def _vectors(fn, n=1):
     arrs = [_array(fn) for _ in range(n)]
@@ -61,6 +64,7 @@ def _vectors(fn, n=1):
     # Make Fn vectors
     vecs = [fn.element(arr) for arr in arrs]
     return arrs + vecs
+
 
 def _sparse_matrix(fn):
     nnz = np.random.randint(0, int(ceil(fn.size**2/2)))
@@ -72,64 +76,67 @@ def _sparse_matrix(fn):
     # Make symmetric and positive definite
     return mat + mat.T + fn.size * sp.sparse.eye(fn.size)
 
+
 def _dense_matrix(fn):
-    mat = np.asmatrix(np.random.rand(fn.size, fn.size), dtype=float)
+    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=float)
     # Make symmetric and positive definite
     return mat + mat.T + fn.size * np.eye(fn.size)
-    
-@pytest.fixture(scope="module", 
-                ids=['Rn float64', 'Rn float32', 
+
+
+@pytest.fixture(scope="module",
+                ids=['Rn float64', 'Rn float32',
                      'Cn complex128', 'Cn complex64'],
-                params=[Rn(10, np.float64), Rn(10, np.float32), 
+                params=[Rn(10, np.float64), Rn(10, np.float32),
                         Cn(10, np.complex128), Cn(10, np.complex64)])
 def fn(request):
     return request.param
 
+
 def test_init():
-    #Test run
-    z3 = Ntuples(3, int)
-    r3 = Ntuples(3, float)
-    c3 = Ntuples(3, complex)
-    s3 = Ntuples(3, str)
+    # Test run
+    Ntuples(3, int)
+    Ntuples(3, float)
+    Ntuples(3, complex)
+    Ntuples(3, 'S1')
 
-    #Fn
-    z3 = Fn(3, int)
-    r3 = Fn(3, float)
-    c3 = Fn(3, complex)
+    # Fn
+    Fn(3, int)
+    Fn(3, float)
+    Fn(3, complex)
 
-    #Fn only works on scalars
+    # Fn only works on scalars
     with pytest.raises(TypeError):
-        s3 = Fn(3, str)
+        Fn(3, 'S1')
 
-    #Rn
-    r3 = Rn(3, float)
-    z3 = Rn(3, int)
+    # Rn
+    Rn(3, float)
+    Rn(3, int)
 
-    #Rn only works on reals    
+    # Rn only works on reals
     with pytest.raises(TypeError):
-        c3 = Rn(3, complex)
+        Rn(3, complex)
     with pytest.raises(TypeError):
-        s3 = Rn(3, str)
+        Rn(3, 'S1')
+
 
 def test_vector_init(fn):
-    #Test that code runs
-    arr = _array(fn)    
-    
-    vec = fn.Vector(fn, arr)
+    # Test that code runs
+    arr = _array(fn)
 
-    #Space has to be an actual space
-    for non_space in [1, complex, np.array([1,2])]:
+    fn.Vector(fn, arr)
+
+    # Space has to be an actual space
+    for non_space in [1, complex, np.array([1, 2])]:
         with pytest.raises(TypeError):
-            vec = fn.Vector(non_space, arr)
+            fn.Vector(non_space, arr)
 
-    #Data has to be a numpy array
+    # Data has to be a numpy array
     with pytest.raises(TypeError):
-        vec = fn.Vector(fn, list(arr))
+        fn.Vector(fn, list(arr))
 
-    #Data has to be a numpy array or correct dtype
+    # Data has to be a numpy array or correct dtype
     with pytest.raises(TypeError):
-        vec = fn.Vector(fn, arr.astype(int))
-
+        fn.Vector(fn, arr.astype(int))
 
 
 def _test_lincomb(fn, a, b):
@@ -170,6 +177,7 @@ def _test_lincomb(fn, a, b):
     fn.lincomb(a, zVec, b, zVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
+
 def test_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
@@ -177,33 +185,47 @@ def test_lincomb(fn):
             _test_lincomb(fn, a, b)
 
 
+def test_multiply(fn):
+    # space method
+    x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
+    out_arr = x_arr * y_arr
+
+    fn.multiply(x, y, out)
+    assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
+
+    # member method
+    x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
+    out_arr = x_arr * y_arr
+
+    out.multiply(x, y)
+    assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
+
+
 def _test_unary_operator(fn, function):
     """ Verifies that the statement y=function(x) gives equivalent
     results to Numpy.
     """
 
-    x_arr = _array(fn)
-    y_arr = function(x_arr)
+    x_arr, x = _vectors(fn)
 
-    x = fn.element(x_arr)
+    y_arr = function(x_arr)
     y = function(x)
 
     assert all_almost_equal([x, y], [x_arr, y_arr])
+
 
 def _test_binary_operator(fn, function):
     """ Verifies that the statement z=function(x,y) gives equivalent
     results to Numpy.
     """
 
-    x_arr = _array(fn)
-    y_arr = _array(fn)
-    z_arr = function(x_arr, y_arr)
+    x_arr, y_arr, x, y = _vectors(fn, 2)
 
-    x = fn.element(x_arr)
-    y = fn.element(y_arr)
+    z_arr = function(x_arr, y_arr)
     z = function(x, y)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+
 
 def test_operators(fn):
     """ Test of all operator overloads against the corresponding
@@ -234,8 +256,16 @@ def test_operators(fn):
     def isub(x, y):
         x -= y
 
+    def imul(x, y):
+        x *= y
+
+    def idiv(x, y):
+        x /= y
+
     _test_binary_operator(fn, iadd)
     _test_binary_operator(fn, isub)
+    _test_binary_operator(fn, imul)
+    _test_binary_operator(fn, idiv)
 
     # Incremental operators with aliased inputs
     def iadd_aliased(x):
@@ -243,23 +273,36 @@ def test_operators(fn):
 
     def isub_aliased(x):
         x -= x
+
+    def imul_aliased(x):
+        x *= x
+
+    def idiv_aliased(x):
+        x /= x
+
     _test_unary_operator(fn, iadd_aliased)
     _test_unary_operator(fn, isub_aliased)
+    _test_unary_operator(fn, imul_aliased)
+    _test_unary_operator(fn, idiv_aliased)
 
     # Binary operators
     _test_binary_operator(fn, lambda x, y: x + y)
     _test_binary_operator(fn, lambda x, y: x - y)
+    _test_binary_operator(fn, lambda x, y: x * y)
+    _test_binary_operator(fn, lambda x, y: x / y)
 
     # Binary with aliased inputs
     _test_unary_operator(fn, lambda x: x + x)
     _test_unary_operator(fn, lambda x: x - x)
+    _test_unary_operator(fn, lambda x: x * x)
+    _test_unary_operator(fn, lambda x: x / x)
 
 
 def test_norm(fn):
     xd = _element(fn)
 
     correct_norm = np.linalg.norm(xd.asarray())
-    
+
     assert almost_equal(fn.norm(xd), correct_norm)
     assert almost_equal(xd.norm(), correct_norm)
 
@@ -280,6 +323,7 @@ def test_setitem(fn):
         x[index] = index
         assert almost_equal(x[index], index)
 
+
 def test_setitem_index_error(fn):
     x = _element(fn)
 
@@ -289,13 +333,15 @@ def test_setitem_index_error(fn):
     with pytest.raises(IndexError):
         x[fn.size] = 0
 
+
 def _test_getslice(slice):
     # Validate get against python list behaviour
     r6 = Rn(6)
     y = [0, 1, 2, 3, 4, 5]
     x = r6.element(y)
 
-    assert all_almost_equal(x[slice].data, y[slice])
+    assert all_equal(x[slice].data, y[slice])
+
 
 def test_getslice():
     # Tests getting all combinations of slices
@@ -308,6 +354,7 @@ def test_getslice():
             for step in steps:
                 _test_getslice(slice(start, end, step))
 
+
 def _test_setslice(slice):
     # Validate set against python list behaviour
     r6 = Rn(6)
@@ -317,7 +364,8 @@ def _test_setslice(slice):
 
     x[slice] = z[slice]
     y[slice] = z[slice]
-    assert all_almost_equal(x, y)
+    assert all_equal(x, y)
+
 
 def test_setslice():
     # Tests a range of combination of slices
@@ -330,20 +378,22 @@ def test_setslice():
             for step in steps:
                 _test_setslice(slice(start, end, step))
 
+
 def test_transpose(fn):
     x = _element(fn)
     y = _element(fn)
-    
+
     # Assert linear operator
     assert isinstance(x.T, Operator)
     assert x.T.is_linear
 
     # Check result
     assert almost_equal(x.T(y), y.inner(x))
-    assert all_almost_equal(x.T.adjoint(1.0), x)
-    
-    # x.T.T returns self    
+    assert all_equal(x.T.adjoint(1.0), x)
+
+    # x.T.T returns self
     assert x.T.T == x
+
 
 def test_setslice_index_error(fn):
     xd = fn.element()
@@ -363,6 +413,7 @@ def test_setslice_index_error(fn):
     with pytest.raises(ValueError):
         xd[:] = np.zeros(n+1)
 
+
 def test_multiply_by_scalar(fn):
     """Verifies that multiplying with numpy scalars
     does not change the type of the array
@@ -373,21 +424,23 @@ def test_multiply_by_scalar(fn):
     assert x * np.float32(1.0) in fn
     assert 1.0 * x in fn
     assert np.float32(1.0) * x in fn
-    
+
+
 def test_copy(fn):
     import copy
-    
+
     x = _element(fn)
-    
+
     y = copy.copy(x)
-    
+
     assert x == y
     assert y is not x
-    
+
     z = copy.deepcopy(x)
 
     assert x == z
     assert z is not x
+
 
 # Vector property tests
 
@@ -395,29 +448,36 @@ def test_space(fn):
     x = fn.element()
     assert x.space is fn
 
+
 def test_ndim(fn):
     x = fn.element()
     assert x.ndim == 1
+
 
 def test_dtype(fn):
     x = fn.element()
     assert x.dtype == fn.dtype
 
+
 def test_size(fn):
     x = fn.element()
     assert x.size == fn.size
+
 
 def test_shape(fn):
     x = fn.element()
     assert x.shape == (x.size,)
 
+
 def test_itemsize(fn):
     x = fn.element()
     assert x.itemsize == fn.dtype.itemsize
 
+
 def test_nbytes(fn):
     x = fn.element()
     assert x.nbytes == x.itemsize * x.size
+
 
 # Numpy Array tests
 
@@ -429,7 +489,8 @@ def test_array_method(fn):
     arr = x.__array__()
 
     assert isinstance(arr, np.ndarray)
-    assert all_almost_equal(arr, np.zeros(x.size))
+    assert all_equal(arr, np.zeros(x.size))
+
 
 def test_array_wrap_method(fn):
     """ Verifies that the __array_wrap__ method works
@@ -439,21 +500,32 @@ def test_array_wrap_method(fn):
     y_h = np.sin(x_h)
     y = np.sin(x)
 
-    assert all_almost_equal(y, y_h)
+    assert all_equal(y, y_h)
     assert y in fn
 
-def test_matrix_init():
-    rn = Rn(10)
-    sparse_mat = _sparse_matrix(rn)
-    dense_mat = _dense_matrix(rn)
+
+def test_conj(fn):
+    xarr, x = _vectors(fn)
+    xconj = x.conj()
+    assert all_equal(xconj, xarr.conj())
+    y = x.copy()
+    xconj = x.conj(out=y)
+    assert xconj is y
+    assert all_equal(y, xarr.conj())
+
+
+def test_matrix_init(fn):
+    sparse_mat = _sparse_matrix(fn)
+    dense_mat = _dense_matrix(fn)
 
     # Just test if the code runs
-    _FnMatrixWeighting(sparse_mat)
-    _FnMatrixWeighting(dense_mat)
+    FnMatrixWeighting(sparse_mat)
+    FnMatrixWeighting(dense_mat)
 
     nonsquare_mat = np.eye(10, 5)
     with pytest.raises(ValueError):
-        _FnMatrixWeighting(nonsquare_mat)
+        FnMatrixWeighting(nonsquare_mat)
+
 
 def test_matrix_equals(fn):
     sparse_mat = _sparse_matrix(fn)
@@ -462,12 +534,12 @@ def test_matrix_equals(fn):
     different_dense_mat = dense_mat.copy()
     different_dense_mat[0, 0] = -10
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_sparse2 = _FnMatrixWeighting(sparse_mat)
-    w_sparse_as_dense = _FnMatrixWeighting(sparse_mat_as_dense)
-    w_dense = _FnMatrixWeighting(dense_mat)
-    w_dense2 = _FnMatrixWeighting(dense_mat)
-    w_different_dense = _FnMatrixWeighting(different_dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_sparse2 = FnMatrixWeighting(sparse_mat)
+    w_sparse_as_dense = FnMatrixWeighting(sparse_mat_as_dense)
+    w_dense = FnMatrixWeighting(dense_mat)
+    w_dense2 = FnMatrixWeighting(dense_mat)
+    w_different_dense = FnMatrixWeighting(different_dense_mat)
 
     # Identical objects -> True
     assert w_sparse == w_sparse
@@ -480,6 +552,7 @@ def test_matrix_equals(fn):
     # Not equivalent -> False
     assert w_dense != w_different_dense
 
+
 def test_matrix_equiv(fn):
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
@@ -487,12 +560,12 @@ def test_matrix_equiv(fn):
     different_dense_mat = dense_mat.copy()
     different_dense_mat[0, 0] = -10
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_sparse2 = _FnMatrixWeighting(sparse_mat)
-    w_sparse_as_dense = _FnMatrixWeighting(sparse_mat_as_dense)
-    w_dense = _FnMatrixWeighting(dense_mat)
-    w_dense_copy = _FnMatrixWeighting(dense_mat.copy())
-    w_different_dense = _FnMatrixWeighting(different_dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_sparse2 = FnMatrixWeighting(sparse_mat)
+    w_sparse_as_dense = FnMatrixWeighting(sparse_mat_as_dense)
+    w_dense = FnMatrixWeighting(dense_mat)
+    w_dense_copy = FnMatrixWeighting(dense_mat.copy())
+    w_different_dense = FnMatrixWeighting(different_dense_mat)
 
     # Equal -> True
     assert w_sparse.equiv(w_sparse)
@@ -503,14 +576,15 @@ def test_matrix_equiv(fn):
     # Different matrices -> False
     assert not w_dense.equiv(w_different_dense)
 
+
 def test_matrix_inner(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
     dense_mat = _dense_matrix(fn)
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_dense = FnMatrixWeighting(dense_mat)
 
     result_sparse = w_sparse.inner(x, y)
     result_dense = w_dense.inner(x, y)
@@ -523,14 +597,15 @@ def test_matrix_inner(fn):
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
 
+
 def test_matrix_norm(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
     dense_mat = _dense_matrix(fn)
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_dense = FnMatrixWeighting(dense_mat)
 
     result_sparse = w_sparse.norm(x)
     result_dense = w_dense.norm(x)
@@ -543,14 +618,15 @@ def test_matrix_norm(fn):
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
 
+
 def test_matrix_dist(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
     dense_mat = _dense_matrix(fn)
 
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
+    w_sparse = FnMatrixWeighting(sparse_mat)
+    w_dense = FnMatrixWeighting(dense_mat)
 
     result_sparse = w_sparse.dist(x, y)
     result_dense = w_dense.dist(x, y)
@@ -564,11 +640,12 @@ def test_matrix_dist(fn):
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
 
+
 def test_matrix_dist_squared(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
     mat = _dense_matrix(fn)
 
-    w = _FnMatrixWeighting(mat, dist_using_inner=True)
+    w = FnMatrixWeighting(mat, dist_using_inner=True)
 
     result = w.dist(x, y)
 
@@ -578,78 +655,25 @@ def test_matrix_dist_squared(fn):
     assert almost_equal(result, true_result)
 
 
-def test_matrix_repr():
-    n = 5
-    sparse_mat = sp.sparse.dia_matrix((np.arange(n, dtype=float), [0]),
-                                      shape=(n, n))
-    dense_mat = sparse_mat.todense()
-
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
-
-    mat_str_sparse = ("<(5, 5) sparse matrix, format 'dia', "
-                      "5 stored entries>")
-    mat_str_dense = dedent('''
-    matrix([[ 0.,  0.,  0.,  0.,  0.],
-            [ 0.,  1.,  0.,  0.,  0.],
-            [ 0.,  0.,  2.,  0.,  0.],
-            [ 0.,  0.,  0.,  3.,  0.],
-            [ 0.,  0.,  0.,  0.,  4.]])
-    ''')
-
-    repr_str_sparse = ('_FnMatrixWeighting({})'
-                       ''.format(mat_str_sparse))
-    repr_str_dense = '_FnMatrixWeighting({})'.format(mat_str_dense)
-    assert repr(w_sparse) == repr_str_sparse
-    assert repr(w_dense) == repr_str_dense
-
-def test_matrix_str():
-    n = 5
-    sparse_mat = sp.sparse.dia_matrix((np.arange(n, dtype=float), [0]),
-                                      shape=(n, n))
-    dense_mat = sparse_mat.todense()
-
-    w_sparse = _FnMatrixWeighting(sparse_mat)
-    w_dense = _FnMatrixWeighting(dense_mat)
-
-    mat_str_sparse = '''
-  (1, 1)\t1.0
-  (2, 2)\t2.0
-  (3, 3)\t3.0
-  (4, 4)\t4.0'''
-    mat_str_dense = dedent('''
-    [[ 0.  0.  0.  0.  0.]
-     [ 0.  1.  0.  0.  0.]
-     [ 0.  0.  2.  0.  0.]
-     [ 0.  0.  0.  3.  0.]
-     [ 0.  0.  0.  0.  4.]]''')
-
-    print_str_sparse = ('Weighting: matrix ={}'
-                        ''.format(mat_str_sparse))
-    assert str(w_sparse) == print_str_sparse
-
-    print_str_dense = ('Weighting: matrix ={}'
-                       ''.format(mat_str_dense))
-    assert str(w_dense) == print_str_dense
-
 def test_constant_init():
     constant = 1.5
 
     # Just test if the code runs
-    _FnConstWeighting(constant)
+    FnConstWeighting(constant)
+
 
 def test_constant_equals():
     n = 10
     constant = 1.5
 
-    w_const = _FnConstWeighting(constant)
-    w_const2 = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
+    w_const2 = FnConstWeighting(constant)
 
     const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
-    w_matrix_sp = _FnMatrixWeighting(const_sparse_mat)
-    w_matrix_de = _FnMatrixWeighting(const_dense_mat)
+    w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
+    w_matrix_de = FnMatrixWeighting(const_dense_mat)
 
     assert w_const == w_const
     assert w_const == w_const2
@@ -658,21 +682,22 @@ def test_constant_equals():
     assert w_const != w_matrix_sp
     assert w_const != w_matrix_de
 
-    w_different_const = _FnConstWeighting(2.5)
+    w_different_const = FnConstWeighting(2.5)
     assert w_const != w_different_const
+
 
 def test_constant_equiv():
     n = 10
     constant = 1.5
 
-    w_const = _FnConstWeighting(constant)
-    w_const2 = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
+    w_const2 = FnConstWeighting(constant)
 
     const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
-    w_matrix_sp = _FnMatrixWeighting(const_sparse_mat)
-    w_matrix_de = _FnMatrixWeighting(const_dense_mat)
+    w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
+    w_matrix_de = FnMatrixWeighting(const_dense_mat)
 
     # Equal -> True
     assert w_const.equiv(w_const)
@@ -681,55 +706,60 @@ def test_constant_equiv():
     assert w_const.equiv(w_matrix_sp)
     assert w_const.equiv(w_matrix_de)
 
-    w_different_const = _FnConstWeighting(2.5)
+    w_different_const = FnConstWeighting(2.5)
     assert not w_const.equiv(w_different_const)
+
 
 def test_constant_inner(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     result_const = w_const.inner(x, y)
     true_result_const = constant * np.vdot(yarr, xarr)
 
     assert almost_equal(result_const, true_result_const)
 
+
 def test_constant_norm(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     result_const = w_const.norm(x)
     true_result_const = np.sqrt(constant * np.vdot(xarr, xarr))
 
     assert almost_equal(result_const, true_result_const)
 
+
 def test_constant_dist(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     result_const = w_const.dist(x, y)
     true_result_const = np.sqrt(constant * np.vdot(xarr-yarr, xarr-yarr))
 
     assert almost_equal(result_const, true_result_const)
 
+
 def test_constant_repr():
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
-    repr_str = '_FnConstWeighting(1.5)'
+    repr_str = 'FnConstWeighting(1.5)'
     assert repr(w_const) == repr_str
+
 
 def test_constant_str():
     constant = 1.5
-    w_const = _FnConstWeighting(constant)
+    w_const = FnConstWeighting(constant)
 
     print_str = 'Weighting: const = 1.5'
     assert str(w_const) == print_str
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
