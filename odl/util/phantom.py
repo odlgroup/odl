@@ -23,15 +23,15 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
 
-# External module imports
+# External
 import numpy as np
 
-__all__ = ('shepp_logan', )
+__all__ = ('shepp_logan',)
 
-def _shepp_logan_ellipse ():
-    #  Modified Shepp Logan 
+
+def _shepp_logan_ellipse():
+    # Modified Shepp Logan
     return [[   1, .6900, .9200,    0,      0,   0          ],
             [-.80, .6624, .8740,    0, -.0184,   0          ],
             [-.20, .1100, .3100,  .22,      0, -18*np.pi/180],
@@ -42,13 +42,12 @@ def _shepp_logan_ellipse ():
             [ .10, .0460, .0230, -.08, -.6050,   0          ],
             [ .10, .0230, .0230,    0, -.6060,   0          ],
             [ .10, .0230, .0460,  .06, -.6050,   0          ]]
-            
+
+
 def shepp_logan(space):
-    """
-    Create a shepp logan phantom in space
-    """
+    """Create a shepp logan phantom in space."""
     ellipses = _shepp_logan_ellipse()
-    
+
     # Blank image
     p = np.zeros(space.size)
 
@@ -56,26 +55,26 @@ def shepp_logan(space):
     points = space.points()
 
     for ellip in ellipses:
-        I   = ellip[0]
-        a2  = ellip[1]**2
-        b2  = ellip[2]**2
-        x0  = ellip[3]
-        y0  = ellip[4]
+        I = ellip[0]
+        a2 = ellip[1]**2
+        b2 = ellip[2]**2
+        x0 = ellip[3]
+        y0 = ellip[4]
         phi = ellip[5]
-        
+
         # Create the offset x and y values for the grid
         offset_points = points - [x0, y0]
-        
-        cos_p = np.cos(phi) 
+
+        cos_p = np.cos(phi)
         sin_p = np.sin(phi)
-        
+
         # Find the pixels within the ellipse
         scales = [1/a2, 1/b2]
-        mat = [[ cos_p, sin_p],
+        mat = [[cos_p, sin_p],
                [-sin_p, cos_p]]
         radius = np.dot(scales, np.dot(mat, offset_points.T)**2)
         inside = radius <= 1
-        
+
         # Add the ellipse intensity to those pixels
         p[inside] += I
 
