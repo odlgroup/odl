@@ -542,9 +542,10 @@ class CudaFn(FnBase, CudaNtuples):
         >>> r3 = CudaFn(3, 'float32')
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([4, 5, 6])
-        >>> z = r3.element()
-        >>> r3.lincomb(2, x, 3, y, z)
-        >>> z
+        >>> out = r3.element()
+        >>> r3.lincomb(2, x, 3, y, out)  # out is returned
+        CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
+        >>> out
         CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
         """
         out.data.lincomb(a, x1.data, b, x2.data)
@@ -618,7 +619,7 @@ class CudaFn(FnBase, CudaNtuples):
         7.0
         """
         return self._space_funcs.norm(x)
-    
+
     def _multiply(self, x1, x2, out):
         """The pointwise product of two vectors, assigned to `out`.
 
@@ -645,12 +646,13 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x1 = rn.element([5, 3, 2])
         >>> x2 = rn.element([1, 2, 3])
         >>> out = rn.element()
-        >>> rn.multiply(x1, x2, out)
+        >>> rn.multiply(x1, x2, out)  # out is returned
+        CudaRn(3).element([5.0, 6.0, 6.0])
         >>> out
         CudaRn(3).element([5.0, 6.0, 6.0])
         """
         out.data.multiply(x1.data, x2.data)
-        
+
     def _divide(self, x1, x2, out):
         """The pointwise division of two vectors, assigned to `out`.
 
@@ -677,7 +679,8 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x1 = rn.element([5, 3, 2])
         >>> x2 = rn.element([1, 2, 2])
         >>> out = rn.element()
-        >>> rn.divide(x1, x2, out)
+        >>> rn.divide(x1, x2, out)  # out is returned
+        CudaRn(3).element([5.0, 1.5, 1.0])
         >>> out
         CudaRn(3).element([5.0, 1.5, 1.0])
         """
