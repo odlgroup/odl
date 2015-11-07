@@ -189,7 +189,7 @@ class FunctionSet(Set):
             self._space = fset
             self._call = fcall
             self._apply = fapply
-            
+
             #Todo: allow users to specify linear
             super().__init__(self.space.domain, self.space.range, linear=False)
 
@@ -335,14 +335,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     """A vector space of functions."""
 
-    def __init__(self, dom, field):
+    def __init__(self, dom, field=RealNumbers()):
         """Initialize a new instance.
 
         Parameters
         ----------
         dom : `Set`
             The domain of the functions.
-        field : `RealNumbers` or `ComplexNumbers`
+        field : {`RealNumbers`, `ComplexNumbers`}, optional
             The range of the functions.
         """
         if not isinstance(dom, Set):
@@ -502,6 +502,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
             """The actual product function."""
             return x_old(arg) * y_old(arg)
         y._function = product
+
+    def _inner(self, x1, x2):
+        """Inner product, not computable in continuous spaces."""
+        raise NotImplementedError('inner product not computable in the '
+                                  'non-discretized space {}.'.format(self))
 
     def __repr__(self):
         """`s.__repr__() <==> repr(s)`."""

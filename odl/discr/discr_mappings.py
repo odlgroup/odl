@@ -442,9 +442,9 @@ class NearestInterpolation(RawNearestInterpolation,
         Let's define the complex function space :math:`L^2` on a
         rectangle:
 
-        >>> from odl import Rectangle, L2, ComplexNumbers
+        >>> from odl import Rectangle, FunctionSpace, ComplexNumbers
         >>> rect = Rectangle([0, 0], [1, 1])
-        >>> space = L2(rect, field=ComplexNumbers())
+        >>> space = FunctionSpace(rect, field=ComplexNumbers())
 
         The grid is defined by uniform sampling (`as_midp` indicates
         that the points will be cell midpoints instead of corners).

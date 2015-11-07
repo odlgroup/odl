@@ -65,14 +65,14 @@ class CudaConvolution(odl.Operator):
 
 
 # Continuous definition of problem
-cont_space = odl.L2(odl.Interval(0, 10))
+cont_space = odl.FunctionSpace(odl.Interval(0, 10))
 
 # Complicated functions to check performance
 cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = odl.uniform_discr(cont_space, 5000, impl='cuda')
+discr_space = odl.l2_uniform_discr(cont_space, 5000, impl='cuda')
 kernel = discr_space.element(cont_kernel)
 data = discr_space.element(cont_data)
 

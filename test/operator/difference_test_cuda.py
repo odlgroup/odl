@@ -28,7 +28,7 @@ import pytest
 
 # ODL imports
 import odl
-from odl.util.testutils import almost_equal, all_almost_equal, skip_if_no_cuda
+from odl.util.testutils import all_almost_equal, skip_if_no_cuda
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -65,7 +65,7 @@ class ForwardDiff2D(odl.Operator):
         super().__init__(space, odl.ProductSpace(space, space), linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_2d(rhs.ntuple.data, 
+        cuda.forward_diff_2d(rhs.ntuple.data,
                              out[0].ntuple.data, out[1].ntuple.data,
                              rhs.shape[0], rhs.shape[1])
 
@@ -82,7 +82,7 @@ class ForwardDiff2DAdjoint(odl.Operator):
         super().__init__(odl.ProductSpace(space, space), space, linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_2d_adj(rhs[0].ntuple.data, rhs[1].ntuple.data, 
+        cuda.forward_diff_2d_adj(rhs[0].ntuple.data, rhs[1].ntuple.data,
                                  out.ntuple.data,
                                  out.shape[0], out.shape[1])
 
@@ -94,7 +94,7 @@ class ForwardDiff2DAdjoint(odl.Operator):
 @skip_if_no_cuda
 def test_fwd_diff():
     # Continuous definition of problem
-    space = odl.L2(odl.Interval(0, 1))
+    space = odl.FunctionSpace(odl.Interval(0, 1))
 
     # Discretization
     n = 6
@@ -108,10 +108,11 @@ def test_fwd_diff():
     assert all_almost_equal(diff.adjoint(fun), [0, -1, -3, 2, 1, 0])
     assert all_almost_equal(diff.adjoint(diff(fun)), [0, -3, 5, -1, 0, 0])
 
+
 @skip_if_no_cuda
 def test_square():
     # Continuous definition of problem
-    space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
 
     # Discretization
     n = 5
@@ -132,7 +133,7 @@ def test_square():
                              [0, 1, -1, 0, 0],
                              [0, 0, 0, 0, 0],
                              [0, 0, 0, 0, 0]])
-                             
+
     assert all_almost_equal(derivative[1].asarray(),
                             [[0, 0, 0, 0, 0],
                              [0, 0, 1, 0, 0],
@@ -150,10 +151,11 @@ def test_square():
                              [0, 0, 1, 0, 0],
                              [0, 0, 0, 0, 0]])
 
+
 @skip_if_no_cuda
 def test_rectangle():
     # Continuous definition of problem
-    space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
 
     # Complicated functions to check performance
     n = 5

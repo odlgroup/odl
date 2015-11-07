@@ -59,15 +59,15 @@ class Convolution(odl.Operator):
         return self.norm
 
 
-# Continuous definition of problem
-cont_space = odl.L2(odl.Interval(0, 10))
+# Continuous definition of the problem
+cont_space = odl.FunctionSpace(odl.Interval(0, 10))
 
 # Complicated functions to check performance
 cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_phantom = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = odl.uniform_discr(cont_space, 500, impl='numpy')
+discr_space = odl.l2_uniform_discr(cont_space, 500, impl='numpy')
 kernel = discr_space.element(cont_kernel)
 phantom = discr_space.element(cont_phantom)
 

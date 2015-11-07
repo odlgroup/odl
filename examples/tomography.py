@@ -60,18 +60,18 @@ class BackProjector(odl.Operator):
 square = odl.Rectangle([-1, -1], [1, 1])
 sinogram = odl.Rectangle([0, 0], [1, np.pi])
 
-dom = odl.uniform_discr(odl.L2(square), [200, 200])
-ran = odl.uniform_discr(odl.L2(sinogram), [283, 200])
+dom = odl.l2_uniform_discr(odl.FunctionSpace(square), [100, 100])
+ran = odl.l2_uniform_discr(odl.FunctionSpace(sinogram), [142, 100])
 
-proj = ForwardProjector(dom, ran)
+proj_op = ForwardProjector(dom, ran)
 
 phantom = odl.util.shepp_logan(dom)
-data = proj(phantom)
+data = proj_op(phantom)
 
 x = dom.zero()
 
 for i in range(50):
-    x = x - proj.adjoint(proj(x) - data) / 200
+    x = x - proj_op.adjoint(proj_op(x) - data) / 200
     print(i)
 
 x.show()

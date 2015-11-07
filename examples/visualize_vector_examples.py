@@ -29,14 +29,14 @@ import matplotlib.pyplot as plt
 import odl
 
 
-spc = odl.L2(odl.Interval(0, 1))
-disc = odl.uniform_discr(spc, 100)
+spc = odl.FunctionSpace(odl.Interval(0, 1))
+disc = odl.l2_uniform_discr(spc, 100)
 
 for name, vec in odl.diagnostics.vector_examples(disc):
     vec.show(title=name)
 
-spc = odl.L2(odl.Rectangle([0, 0], [1, 1]))
-disc = odl.uniform_discr(spc, [100, 100])
+spc = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+disc = odl.l2_uniform_discr(spc, [100, 100])
 
 for name, vec in odl.diagnostics.vector_examples(disc):
     vec.show(title=name)

@@ -22,14 +22,15 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+# Internal
 import odl
 
 print('\n\n TESTING FOR L2 SPACE \n\n')
 
-spc = odl.L2(odl.Interval(0, 1))
-disc = odl.uniform_discr(spc, 10)
+spc = odl.FunctionSpace(odl.Interval(0, 1))
+discr = odl.l2_uniform_discr(spc, 10)
 
-odl.diagnostics.SpaceTest(disc).run_tests()
+odl.diagnostics.SpaceTest(discr).run_tests()
 
 print('\n\n TESTING FOR Rn SPACE \n\n')
 

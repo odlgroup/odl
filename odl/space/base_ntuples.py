@@ -391,11 +391,14 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
     of the `LinearSpace` instance where these functions used.
     """
 
-    def __init__(self, dist_using_inner=False):
+    def __init__(self, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
+        exponent : float
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
@@ -404,8 +407,21 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
             exactly zero for equal (but not identical) `x` and `y`.
+            Can only be used with `exponent == 2.0`.
         """
         self._dist_using_inner = bool(dist_using_inner)
+        self._exponent = float(exponent)
+        if self._exponent <= 0:
+            raise ValueError('only positive exponents or inf supported, '
+                             'got {}.'.format(exponent))
+        elif self._exponent == 2.0 and self._dist_using_inner:
+            raise ValueError('`dist_using_inner` can only be used if the '
+                             'exponent is 2.0.')
+
+    @property
+    def exponent(self):
+        """Exponent of this weighting."""
+        return self._exponent
 
     @abstractmethod
     def __eq__(self, other):
@@ -414,8 +430,7 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
         Returns
         -------
         equal : bool
-            `True` if `other` is a `FnWeightingBase` instance
-            represented by the **identical** matrix, `False` otherwise.
+            `True` if `other` is the same weighting, `False` otherwise.
 
         Notes
         -----

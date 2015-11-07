@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Discretizations of L2 spaces."""
+"""L^p type discretizations of function spaces."""
+
+# TODO: write some introduction doc
 
 # pylint: disable=abstract-method
 
@@ -34,36 +36,42 @@ from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
-from odl.space.default import L2
+from odl.space.fspace import FunctionSpace
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
     from odl.space.cu_ntuples import CudaFn
 else:
     CudaFn = type(None)
 
-__all__ = ('DiscreteL2', 'uniform_discr')
+__all__ = ('DiscreteLp', 'lp_uniform_discr')
 
 _SUPPORTED_INTERP = ('nearest',)
 
 
-class DiscreteL2(Discretization):
+# TODO: other types of discrete spaces
 
-    """Discretization of an :math:`L^2` space."""
+class DiscreteLp(Discretization):
 
-    def __init__(self, l2space, grid, dspace, interp='nearest', **kwargs):
+    """Discretization of a Lebesgue :math:`L^p` space."""
+
+    def __init__(self, fspace, grid, dspace, exponent=2.0, interp='nearest',
+                 **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        l2space : `L2`
-            The continuous space to be discretized
-        dspace : `FnBase`, same `field` as `l2space`
-            The space of elements used for data storage
+        fspace : `FunctionSpace`
+            Continuous space to be discretized
+        dspace : `FnBase`, same `field` as `fspace`
+            Space of elements used for data storage
         grid : `TensorGrid`
-            The sampling grid for the discretization. Must be contained
-            in `l2space.domain`.
+            Sampling grid for the discretization. Must be contained
+            in `fspace.domain`.
+        exponent : float, optional
+            The parameter `p` in :math:`L^p`. If the exponent is not
+            equal to the default 2.0, the space has no inner product.
         interp : string, optional
-            The interpolation type to be used for discretization.
+            Interpolation type to be used for discretization.
 
             'nearest' : use nearest-neighbor interpolation (default)
 
@@ -74,28 +82,34 @@ class DiscreteL2(Discretization):
                 means the first grid axis varies fastest, the last most
                 slowly, 'F' vice versa.
         """
-        if not isinstance(l2space, L2):
-            raise TypeError('{} is not an `L2` type space.'.format(l2space))
+        if not isinstance(fspace, FunctionSpace):
+            raise TypeError('{} is not a `FunctionSpace` instance.'
+                            ''.format(fspace))
 
-        if not isinstance(l2space.domain, IntervalProd):
-            raise TypeError('L2 space domain {} is not an `IntervalProd` '
-                            'instance.'.format(l2space.domain))
+        if not isinstance(fspace.domain, IntervalProd):
+            raise TypeError('Function space domain {} is not an `IntervalProd`'
+                            ' instance.'.format(fspace.domain))
 
-        interp = str(interp).lower()
-        if interp not in _SUPPORTED_INTERP:
+        if str(interp).lower() not in _SUPPORTED_INTERP:
             raise TypeError('{} is not among the supported interpolation'
                             'types {}.'.format(interp, _SUPPORTED_INTERP))
 
         self._order = str(kwargs.pop('order', 'C')).upper()
-        restriction = GridCollocation(l2space, grid, dspace, order=self.order)
+        restriction = GridCollocation(fspace, grid, dspace, order=self.order)
         if interp == 'nearest':
-            extension = NearestInterpolation(l2space, grid, dspace,
+            extension = NearestInterpolation(fspace, grid, dspace,
                                              order=self.order)
         else:
             raise NotImplementedError
 
-        super().__init__(l2space, dspace, restriction, extension)
-        self._interp = interp
+        super().__init__(fspace, dspace, restriction, extension)
+        self._interp = str(interp).lower()
+        self._exponent = float(exponent)
+
+    @property
+    def exponent(self):
+        """The exponent `p` in :math:`L^p`."""
+        return self._exponent
 
     def element(self, inp=None):
         """Create an element from `inp` or from scratch.
@@ -109,7 +123,7 @@ class DiscreteL2(Discretization):
 
         Returns
         -------
-        element : `DiscreteL2.Vector`
+        element : `DiscreteLp.Vector`
             The discretized element, calculated as
             `dspace.element(inp)` or
             `restriction(uspace.element(inp))`, tried in this order.
@@ -134,6 +148,10 @@ class DiscreteL2(Discretization):
         """Sampling grid of the discretization mappings."""
         return self.restriction.grid
 
+    def points(self):
+        """All points in the sampling grid."""
+        return self.grid.points(order=self.order)
+
     @property
     def order(self):
         """Axis ordering for array flattening."""
@@ -144,11 +162,15 @@ class DiscreteL2(Discretization):
         """Interpolation type of this discretization."""
         return self._interp
 
-    def points(self):
-        return self.grid.points(order=self.order)
+    def _inner(self, x1, x2):
+        """Raw inner product of two vectors."""
+        if self.exponent != 2.0:
+            raise NotImplementedError('L^p with p={} has no inner product.'
+                                      ''.format(self.exponent))
+        return super()._inner(x1, x2)
 
     def __repr__(self):
-        """l2.__repr__() <==> repr(l2)."""
+        """lp.__repr__() <==> repr(lp)."""
         # Check if the factory repr can be used
         if (uniform_sampling(self.uspace.domain, self.grid.shape,
                              as_midp=True) == self.grid):
@@ -165,9 +187,11 @@ class DiscreteL2(Discretization):
                 arg_fstr += ', impl={impl!r}'
             if self.order != 'C':
                 arg_fstr += ', order={order!r}'
-            return 'uniform_discr({})'.format(arg_fstr.format(
+
+            arg_str = arg_fstr.format(
                 self.uspace, self.grid.shape, interp=self.interp,
-                impl=impl, order=self.order))
+                impl=impl, order=self.order)
+            return 'l2_uniform_discr({})'.format(arg_str)
         else:
             arg_fstr = '''
     {!r},
@@ -178,17 +202,18 @@ class DiscreteL2(Discretization):
             if self.order != 'C':
                 arg_fstr += ', order={order!r}'
 
-            return 'DiscreteL2({})'.format(arg_fstr.format(
+            arg_str = arg_fstr.format(
                 self.uspace, self.grid, self.dspace, interp=self.interp,
-                order=self.order))
+                order=self.order)
+            return '{}({})'.format(self.__class__.__name__, arg_str)
 
     def __str__(self):
-        """l2.__str__() <==> str(l2)."""
+        """lp.__str__() <==> str(lp)."""
         return self.__repr__()
 
     class Vector(Discretization.Vector):
 
-        """Representation of a `DiscreteL2` element."""
+        """Representation of a `DiscreteLp` element."""
 
         def asarray(self, out=None):
             """Extract the data of this array as a numpy array.
@@ -313,18 +338,21 @@ class DiscreteL2(Discretization):
                                    **kwargs)
 
 
-def uniform_discr(l2space, nsamples, interp='nearest',
-                  impl='numpy', ord=None, **kwargs):
-    """Discretize a Lp space by uniform sampling.
+def lp_uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
+                     impl='numpy', **kwargs):
+    """Discretize an Lp function space by uniform sampling.
 
     Parameters
     ----------
-    l2space : `L2`
-        Continuous :math:`L^2` type space. Its domain must be an
+    fspace : `FunctionSpace`
+        Continuous function space. Its domain must be an
         `IntervalProd` instance.
     nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
+    exponent : float, optional
+        The parameter `p` in :math:`L^p`. If the exponent is not equal
+        to the default 2.0, the space has no inner product.
     interp : string, optional
             Interpolation type to be used for discretization.
 
@@ -333,8 +361,6 @@ def uniform_discr(l2space, nsamples, interp='nearest',
             'linear' : use linear interpolation (not implemented)
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
-    ord : float, optional
-        The order (p) of the space
     kwargs : {'order', 'dtype', 'weighting'}
             'order' : {'C', 'F'}  (Default: 'C')
                 Axis ordering in the data storage
@@ -344,7 +370,7 @@ def uniform_discr(l2space, nsamples, interp='nearest',
                 Default for 'numpy': 'float64' / 'complex128'
                 Default for 'cuda': 'float32' / TODO
             'weighting' : {'simple', 'consistent'}
-                Weighting of the discretized inner product.
+                Weighting of the discretized space functions.
 
                 'simple': weight is a constant (cell volume)
 
@@ -353,29 +379,24 @@ def uniform_discr(l2space, nsamples, interp='nearest',
 
     Returns
     -------
-    l2discr : `DiscreteL2`
+    discr : `DiscreteLp`
         The uniformly discretized L2 space
     """
-    if not isinstance(l2space, L2):
-        raise TypeError('space {!r} is not an L2 instance.'.format(l2space))
+    if not isinstance(fspace, FunctionSpace):
+        raise TypeError('space {!r} is not a `FunctionSpace` instance.'
+                        ''.format(fspace))
 
-    if not isinstance(l2space.domain, IntervalProd):
-        raise TypeError('domain {!r} of the L2 space is not an `IntervalProd` '
-                        'instance.'.format(l2space.domain))
+    if not isinstance(fspace.domain, IntervalProd):
+        raise TypeError('domain {!r} of the function space is not an '
+                        '`IntervalProd` instance.'.format(fspace.domain))
 
     if impl == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA not available.')
-        
-    if ord is None:
-        ord = 2
-        
-    if ord != 2:
-        raise ValueError('Only L2 spaces currently available')
 
-    ds_type = dspace_type(l2space, impl)
+    ds_type = dspace_type(fspace, impl)
     dtype = kwargs.pop('dtype', None)
 
-    grid = uniform_sampling(l2space.domain, nsamples, as_midp=True)
+    grid = uniform_sampling(fspace.domain, nsamples, as_midp=True)
 
     weighting = kwargs.pop('weighting', 'simple')
     if weighting not in ('simple', 'consistent'):
@@ -394,7 +415,7 @@ def uniform_discr(l2space, nsamples, interp='nearest',
 
     order = kwargs.pop('order', 'C')
 
-    return DiscreteL2(l2space, grid, dspace, interp=interp, order=order)
+    return DiscreteLp(fspace, grid, dspace, interp=interp, order=order)
 
 
 if __name__ == '__main__':

@@ -15,59 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Concrete vector spaces.
+"""Concrete vector spaces."""
 
-Spaces of n-tuples (modules `ntuples`, `cu_ntuples`)
-====================================================
-
-NumPy implementation (module `ntuples`)
----------------------------------------
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`Ntuples`             |Set of n-tuples of any NumPy supported type    |
-+----------------------+-----------------------------------------------+
-|`FnBase`              |**Abstract** base class for spaces of n-tuples |
-|                      |over the real or complex numbers               |
-+----------------------+-----------------------------------------------+
-|`Fn`                  |Space of n-tuples over the real or complex     |
-|                      |numbers allowing any adequate scalar data type |
-+----------------------+-----------------------------------------------+
-|`Cn`                  |Space of n-tuples of complex numbers           |
-+----------------------+-----------------------------------------------+
-|`Rn`                  |Space of n-tuples of real numbers              |
-+----------------------+-----------------------------------------------+
-
-CUDA implementation (module `cu_ntuples`)
------------------------------------------
-
-Requires the compiled extension `odlpp`
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`CudaNtuples`         |Set of n-tuples of any type supported by the   |
-|                      |`odlpp` backend                                |
-+----------------------+-----------------------------------------------+
-|`CudaFn`              |Space of n-tuples over the real or complex     |
-|                      |numbers allowing any adequate scalar data type |
-+----------------------+-----------------------------------------------+
-|(`CudaCn`)            |Space of n-tuples of complex numbers (TODO)    |
-+----------------------+-----------------------------------------------+
-|`CudaRn`              |Space of n-tuples of real numbers              |
-+----------------------+-----------------------------------------------+
-
-Function spaces (module `fspace`)
-=================================
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`L2`                  |Square-integrable functions taking real or     |
-|                      |complex values                                 |
-+----------------------+-----------------------------------------------+
-"""
+# TODO: write an introduction
 
 from __future__ import absolute_import
 
