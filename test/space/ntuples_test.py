@@ -86,10 +86,10 @@ def _dense_matrix(fn):
 @pytest.fixture(scope="module",
                 ids=['R10 float64', 'R10 float32',
                      'C10 complex128', 'C10 complex64',
-                     'R1000'],
+                     'R100'],
                 params=[Rn(10, np.float64), Rn(10, np.float32),
                         Cn(10, np.complex128), Cn(10, np.complex64),
-                        Rn(1000)])
+                        Rn(100)])
 def fn(request):
     return request.param
 

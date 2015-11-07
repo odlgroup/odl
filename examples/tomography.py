@@ -59,9 +59,15 @@ x = dom.element(volume)
 
 proj = ForwardProjector(dom, ran)
 
+a = dom.one()
+
+a+a
+"""
+
 data = proj(x)
 
 x0 = dom.zero()
 for i in range(50):
     x0 = x0 - proj.adjoint(proj(x0) - data) / 100
     x0.show()
+"""

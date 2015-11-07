@@ -491,7 +491,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
     if _blas_is_applicable(x1, x2, out):
         # pylint: disable=unbalanced-tuple-unpacking
         axpy, scal, copy = get_blas_funcs(
-            ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data))
+            ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
 
@@ -537,7 +537,6 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 if b != 1:
                     scal(b, out.data, out.size)
                 axpy(x1.data, out.data, out.size, a)
-
 
 def _repr_space_funcs(space):
     inner_str = ''

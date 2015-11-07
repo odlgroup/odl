@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int, super
+from builtins import super
 from future.utils import with_metaclass
 
 # External module imports
