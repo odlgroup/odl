@@ -15,16 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""An example of a very simple SART tomography solver.
+
+Requires scikit-image (http://scikit-image.org/)
+"""
+
+# Imports for common Python 2/3 codebase
 from __future__ import print_function, division
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import super, range
 
+# External
 from skimage.transform import radon, iradon
 import numpy as np
-import odl
 
-"""An example of a very simple SART tomography solver."""
+# Internal
+import odl
 
 
 class ForwardProjector(odl.Operator):

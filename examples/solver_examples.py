@@ -15,16 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=abstract-method
+"""Non-optimized versions of two solvers."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import range
 
 
 def landweber_base(operator, x, rhs, iterations=1, omega=1):
-    """Straightforward implementation of Landweber's iteration"""
+    """Straightforward implementation of Landweber's iteration."""
     for _ in range(iterations):
         x = x - omega * operator.adjoint(operator(x)-rhs)
 
@@ -32,7 +33,7 @@ def landweber_base(operator, x, rhs, iterations=1, omega=1):
 
 
 def conjugate_gradient_base(op, x, rhs, iterations=1):
-    """Non-optimized CGN."""
+    """Non-optimized conjugate gradient for the normal equation."""
     d = rhs - op(x)
     p = op.adjoint(d)
     s = p.copy()

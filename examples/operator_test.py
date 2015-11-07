@@ -15,14 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Run the standardized test suite on a convolution operator."""
+
+# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+# External
 import numpy as np
 import scipy
 import scipy.ndimage
+
+# Internal
 import odl
 
 

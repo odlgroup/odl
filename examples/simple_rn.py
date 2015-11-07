@@ -15,24 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""An example of a very simple space, the space Rn.
+
+Including some benchmarks with an optimized version.
+"""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import super, range
 
-# External module imports
+# External
 import numpy as np
-from numbers import Integral
 
-# ODL imports
+# Internal
 import odl
 from odl.util.testutils import Timer
-
-
-"""An example of a very simple space, the space Rn, as well as benchmarks
-with an optimized version.
-"""
 
 
 class SimpleRn(odl.space.base_ntuples.FnBase):
@@ -95,36 +94,35 @@ odl.diagnostics.SpaceTest(r5).run_tests()
 n = 10**7
 iterations = 10
 
-#Perform some benchmarks with Rn adn CudaRn
-
-optX = odl.Rn(n)
-simpleX = SimpleRn(n)
+# Perform some benchmarks with Rn adn CudaRn
+opt_spc = odl.Rn(n)
+simple_spc = SimpleRn(n)
 
 x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
-ox, oy, oz = (optX.element(x.copy()), optX.element(y.copy()),
-              optX.element(z.copy()))
-sx, sy, sz = (simpleX.element(x.copy()), simpleX.element(y.copy()),
-              simpleX.element(z.copy()))
+ox, oy, oz = (opt_spc.element(x.copy()), opt_spc.element(y.copy()),
+              opt_spc.element(z.copy()))
+sx, sy, sz = (simple_spc.element(x.copy()), simple_spc.element(y.copy()),
+              simple_spc.element(z.copy()))
 if odl.CUDA_AVAILABLE:
-    cuX = odl.CudaRn(n)
-    cx, cy, cz = (cuX.element(x.copy()), cuX.element(y.copy()),
-                  cuX.element(z.copy()))
+    cu_spc = odl.CudaRn(n)
+    cx, cy, cz = (cu_spc.element(x.copy()), cu_spc.element(y.copy()),
+                  cu_spc.element(z.copy()))
 
 print(" lincomb:")
 with Timer("SimpleRn"):
     for _ in range(iterations):
-        simpleX.lincomb(2.13, sx, 3.14, sy, out=sz)
+        simple_spc.lincomb(2.13, sx, 3.14, sy, out=sz)
 print("result: {}".format(sz[1:5]))
 
 with Timer("Rn"):
     for _ in range(iterations):
-        optX.lincomb(2.13, ox, 3.14, oy, out=oz)
+        opt_spc.lincomb(2.13, ox, 3.14, oy, out=oz)
 print("result: {}".format(oz[1:5]))
 
 if odl.CUDA_AVAILABLE:
     with Timer("CudaRn"):
         for _ in range(iterations):
-            cuX.lincomb(2.13, cx, 3.14, cy, out=cz)
+            cu_spc.lincomb(2.13, cx, 3.14, cy, out=cz)
     print("result: {}".format(cz[1:5]))
 
 

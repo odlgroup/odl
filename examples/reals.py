@@ -15,21 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""An example of a very simple space, the real numbers."""
+
 # pylint: disable=abstract-method
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import str
 
 import odl
 
-"""An example of a very simple space, the real numbers."""
-
 
 class Reals(odl.LinearSpace):
-    """The real numbers
-    """
+    """The real numbers."""
 
     def __init__(self):
         self._field = odl.RealNumbers()

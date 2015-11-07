@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Speed comparison between CPU and GPU spaces."""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import range
 
 import numpy as np
 import odl
@@ -26,28 +29,28 @@ from odl.util.testutils import Timer
 
 n = 10**7
 iterations = 100
-deviceSpace = odl.CudaRn(n)
-hostSpace = odl.Rn(n)
+device_space = odl.CudaRn(n)
+host_space = odl.Rn(n)
 x = np.random.rand(n)
 y = np.random.rand(n)
 z = np.empty(n)
 
-xDevice = deviceSpace.element(x)
-yDevice = deviceSpace.element(y)
-zDevice = deviceSpace.element(z)
-xHost = hostSpace.element(x)
-yHost = hostSpace.element(y)
-zHost = hostSpace.element(z)
+x_dev = device_space.element(x)
+y_dev = device_space.element(y)
+z_dev = device_space.element(z)
+x_host = host_space.element(x)
+y_host = host_space.element(y)
+z_host = host_space.element(z)
 
 
 def run_test(function, message):
     with Timer('+GPU ' + message):
         for _ in range(iterations):
-            function(zDevice, xDevice, yDevice)
+            function(z_dev, x_dev, y_dev)
 
     with Timer('-CPU ' + message):
         for _ in range(iterations):
-            function(zHost, xHost, yHost)
+            function(z_host, x_host, y_host)
 
 # lincomb tests
 run_test(lambda z, x, y: x.space.lincomb(0, x, 0, y, z), "z = 0")

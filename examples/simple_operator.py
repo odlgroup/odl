@@ -15,14 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""An example of a very simple operator on Rn."""
+
+# Imports for common Python 2/3 codebase
 from __future__ import print_function, division
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+# Internal
 import odl
-
-"""An example of a very simple operator on Rn."""
 
 
 class AddOp(odl.Operator):

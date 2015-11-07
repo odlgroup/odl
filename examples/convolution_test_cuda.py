@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Example of a deconvolution problem with different solvers (CUDA)."""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -50,7 +52,7 @@ class CudaConvolution(odl.Operator):
         super().__init__(self.space, self.space, linear=True)
 
     def _apply(self, rhs, out):
-        odlpp_cuda.conv(rhs.ntuple.data, 
+        odlpp_cuda.conv(rhs.ntuple.data,
                         self.kernel.ntuple.data,
                         out.ntuple.data)
 
@@ -88,7 +90,8 @@ partial = solvers.ForEachPartial(
 # Test CGN
 plt.figure()
 plt.plot(data)
-solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations, partial)
+solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations,
+                                  partial)
 
 # Landweber
 plt.figure()
@@ -97,7 +100,8 @@ solvers.landweber(conv, discr_space.zero(), data, iterations, omega, partial)
 
 # testTimingCG
 with Timer("Optimized CG"):
-    solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations)
+    solvers.conjugate_gradient_normal(conv, discr_space.zero(), data,
+                                      iterations)
 
 with Timer("Base CG"):
     solver_examples.conjugate_gradient_base(conv, discr_space.zero(), data,

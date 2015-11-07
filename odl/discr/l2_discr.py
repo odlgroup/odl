@@ -21,7 +21,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str
@@ -308,7 +307,7 @@ class DiscreteL2(Discretization):
 
             matplotlib.pyplot.scatter : Show scattered 3d points
             """
-            
+
             from odl.util.graphics import show_discrete_function
             show_discrete_function(self, method=method, title=title,
                                    **kwargs)
