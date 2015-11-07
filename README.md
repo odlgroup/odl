@@ -22,22 +22,22 @@ Installation
 
 To get ODL, clone the repository with the command
 
-```bash
- $ git clone <repo>
+```sh
+user$ git clone <repo>
 ```
 
 where `<repo>` is the clone link from the right navigation bar on the [ODL GitHub page](https://gits-15.sys.kth.se/LCR/ODL).
 
 For installation in a local user folder, go to the ODL folder and run
 
-```bash
- $ pip install --user .
+```sh
+user$ pip install --user .
 ```
 
 in the root folder of the package. For system-wide installation, run (as root)
 
-```bash
- # pip install .
+```sh
+root# pip install .
 ```
 
 If you intend to make changes to the code, you should add the `--editable` option to the `pip` command.
@@ -45,17 +45,17 @@ This way, a link to your working directory is installed in your Python installat
 
 After installing, you should check that everything was installed properly by running
 
-```
- $ python run_tests.py
+```sh
+user$ python run_tests.py
 ```
 
 ##### CUDA
 
 If you also wish to use the (optional) CUDA extensions you need to run
 
-```bash
- $ git submodule update --init --recursive
- $ cd odlpp
+```sh
+user$ git submodule update --init --recursive
+user$ cd odlpp
 ```
 
 From here follow the instructions in [odlpp](https://gits-15.sys.kth.se/LCR/ODLpp) and install it. You then need to re-install ODL.

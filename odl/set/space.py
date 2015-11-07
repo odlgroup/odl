@@ -408,8 +408,7 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
-
-        if out not in self:
+        elif out not in self:
             raise TypeError('output vector {!r} not in space {!r}.'
                             ''.format(out, self))
 
@@ -427,7 +426,8 @@ class LinearSpace(Set):
                                  'second scalar.')
 
             # Call method
-            return self._lincomb(a, x1, 0, x1, out)
+            self._lincomb(a, x1, 0, x1, out)
+            return out
         else:  # Two arguments
             if b not in self.field:
                 raise TypeError('second scalar {!r} not in the field {!r} of '
@@ -438,7 +438,8 @@ class LinearSpace(Set):
                                 ''.format(x2, self))
 
             # Call method
-            return self._lincomb(a, x1, b, x2, out)
+            self._lincomb(a, x1, b, x2, out)
+            return out
 
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
@@ -499,6 +500,7 @@ class LinearSpace(Set):
                             ''.format(x2, self))
 
         self._multiply(x1, x2, out)
+        return out
 
     def divide(self, x1, x2, out=None):
         """Calculate the pointwise division of x1 and x2, and assign to out."""
@@ -516,6 +518,7 @@ class LinearSpace(Set):
                             ''.format(x2, self))
 
         self._divide(x1, x2, out)
+        return out
 
     class Vector(with_metaclass(ABCMeta, object)):
 
@@ -566,69 +569,81 @@ class LinearSpace(Set):
         def __iadd__(self, other):
             """Implementation of 'self += other'."""
             if other in self.space:
-                self.space.lincomb(1, self, 1, other, out=self)
-                return self
+                return self.space.lincomb(1, self, 1, other, out=self)
             else:
                 return NotImplemented
-
-        def __isub__(self, other):
-            """Implementation of 'self -= other'."""
-            if other in self.space:
-                self.space.lincomb(1, self, -1, other, out=self)
-                return self
-            else:
-                return NotImplemented
-
-        def __imul__(self, other):
-            """Implementation of 'self *= other'."""
-            if other in self.space:
-                self.space.multiply(other, self, out=self)
-            elif other in self.space.field:
-                self.space.lincomb(other, self, out=self)
-            else:
-                return NotImplemented
-            return self
-
-        def __itruediv__(self, other):
-            """Implementation of 'self /= other' (true division)."""
-            if other in self.space:
-                self.space.divide(self, other, out=self)
-            elif other in self.space.field:
-                self.space.lincomb(1.0 / other, self, out=self)
-            else:
-                return NotImplemented
-            return self
-
-        __idiv__ = __itruediv__
 
         def __add__(self, other):
             """Implementation of 'self + other'."""
+            # Instead of using __iadd__ we duplicate code here for performance
             if other in self.space:
                 tmp = self.space.element()
-                self.space.lincomb(1, self, 1, other, out=tmp)
-                return tmp
+                return self.space.lincomb(1, self, 1, other, out=tmp)
+            else:
+                return NotImplemented
+                
+        def __isub__(self, other):
+            """Implementation of 'self -= other'."""
+            if other in self.space:
+                return self.space.lincomb(1, self, -1, other, out=self)
             else:
                 return NotImplemented
 
         def __sub__(self, other):
             """Implementation of 'self - other'."""
+            # Instead of using __isub__ we duplicate code here for performance
             if other in self.space:
                 tmp = self.space.element()
-                self.space.lincomb(1, self, -1, other, out=tmp)
-                return tmp
+                return self.space.lincomb(1, self, -1, other, out=tmp)
+            else:
+                return NotImplemented
+
+        def __imul__(self, other):
+            """Implementation of 'self *= other'."""
+            if other in self.space.field:
+                return self.space.lincomb(other, self, out=self)
+            elif other in self.space:
+                return self.space.multiply(other, self, out=self)
             else:
                 return NotImplemented
 
         def __mul__(self, other):
             """Implementation of 'self * other'."""
-            tmp = self.space.element()
-            if other in self.space:
-                self.space.multiply(self, other, out=tmp)
-            elif other in self.space.field:
-                self.space.lincomb(other, self, out=tmp)
+            # Instead of using __imul__ we duplicate code here for performance
+            if other in self.space.field:
+                tmp = self.space.element()
+                return self.space.lincomb(other, self, out=tmp)
+            elif other in self.space:                
+                tmp = self.space.element()
+                return self.space.multiply(other, self, out=tmp)
             else:
                 return NotImplemented
-            return tmp
+
+        __rmul__ = __mul__
+
+        def __itruediv__(self, other):
+            """Implementation of 'self /= other' (true division)."""
+            if other in self.space.field:
+                return self.space.lincomb(1.0 / other, self, out=self)
+            elif other in self.space:
+                return self.space.divide(self, other, out=self)
+            else:
+                return NotImplemented
+
+        __idiv__ = __itruediv__
+
+        def __truediv__(self, other):
+            """Implementation of 'self / other' (true division)."""
+            if other in self.space.field:
+                tmp = self.space.element()
+                return self.space.lincomb(1.0 / other, self, out=tmp)
+            elif other in self.space:
+                tmp = self.space.element()
+                return self.space.divide(self, other, out=tmp)
+            else:
+                return NotImplemented
+
+        __div__ = __truediv__
 
         def __ipow__(self, n):
             """Take the n:th power of self, only defined for integer n"""
@@ -646,33 +661,13 @@ class LinearSpace(Set):
         def __pow__(self, n):
             """Take the n:th power of self, only defined for integer n"""
             tmp = self.copy()
-            for i in range(n-1):
-                self.space.multiply(tmp, self, out=tmp)
+            tmp **= n
             return tmp
-
-        def __rmul__(self, other):
-            """Implementation of 'other * self'."""
-            return self.__mul__(other)
-
-        def __truediv__(self, other):
-            """Implementation of 'self / other' (true division)."""
-            tmp = self.space.element()
-            if other in self.space:
-                self.space.divide(self, other, out=tmp)
-            elif other in self.space.field:
-                self.space.lincomb(1.0 / other, self, out=tmp)
-            else:
-                return NotImplemented
-            return tmp
-
-        __div__ = __truediv__
 
         def __neg__(self):
             """Implementation of '-self'."""
-            tmp = self.space.element()
-            self.space.lincomb(-1.0, self, out=tmp)
-            return tmp
-
+            return (-1) * self
+            
         def __pos__(self):
             """Implementation of '+self'."""
             return self.copy()
