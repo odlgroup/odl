@@ -251,7 +251,7 @@ def quasi_newton(op, x, line_search, niter=1, partial=None):
     Bi = I = IdentityOperator(op.range)
     opx = op(x)
     for _ in range(niter):
-        p = Bi(-opx)
+        p = -Bi(opx)
         alpha = line_search(x, direction=p, gradf=opx)
 
         s = alpha * p
