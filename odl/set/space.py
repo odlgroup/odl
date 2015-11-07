@@ -753,7 +753,7 @@ class LinearSpace(Set):
 
         @property
         def T(self):
-            """The transpose of a vector, the functional given by (self, .)
+            """The transpose of a vector, the functional given by (. , self)
 
             Returns
             -------
@@ -761,7 +761,10 @@ class LinearSpace(Set):
 
             Note
             ----
-            This function is only defined in inner product spaces
+            This function is only defined in inner product spaces.
+            
+            In a complex space, this takes the conjugate transpose of the 
+            vector.
 
             Examples
             --------
