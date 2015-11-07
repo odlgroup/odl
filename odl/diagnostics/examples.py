@@ -23,7 +23,7 @@ from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.set.pspace import ProductSpace
 from odl.space.base_ntuples import FnBase
-from odl.discr.l2_discr import DiscreteL2
+from odl.discr.lp_discr import DiscreteL2
 
 
 __all__ = ('scalar_examples', 'vector_examples', 'samples')

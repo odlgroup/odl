@@ -41,7 +41,7 @@ if CUDA_AVAILABLE:
 else:
     CudaFn = type(None)
 
-__all__ = ('DiscreteL2', 'l2_uniform_discretization')
+__all__ = ('DiscreteL2', 'uniform_discr')
 
 _SUPPORTED_INTERP = ('nearest',)
 
@@ -165,7 +165,7 @@ class DiscreteL2(Discretization):
                 arg_fstr += ', impl={impl!r}'
             if self.order != 'C':
                 arg_fstr += ', order={order!r}'
-            return 'l2_uniform_discretization({})'.format(arg_fstr.format(
+            return 'uniform_discr({})'.format(arg_fstr.format(
                 self.uspace, self.grid.shape, interp=self.interp,
                 impl=impl, order=self.order))
         else:
@@ -313,9 +313,9 @@ class DiscreteL2(Discretization):
                                    **kwargs)
 
 
-def l2_uniform_discretization(l2space, nsamples, interp='nearest',
-                              impl='numpy', **kwargs):
-    """Discretize an L2 space by uniform sampling.
+def uniform_discr(l2space, nsamples, interp='nearest',
+                  impl='numpy', ord=None, **kwargs):
+    """Discretize a Lp space by uniform sampling.
 
     Parameters
     ----------
@@ -333,6 +333,8 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
             'linear' : use linear interpolation (not implemented)
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
+    ord : float, optional
+        The order (p) of the space
     kwargs : {'order', 'dtype', 'weighting'}
             'order' : {'C', 'F'}  (Default: 'C')
                 Axis ordering in the data storage
@@ -363,6 +365,12 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     if impl == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA not available.')
+        
+    if ord is None:
+        ord = 2
+        
+    if ord != 2:
+        raise ValueError('Only L2 spaces currently available')
 
     ds_type = dspace_type(l2space, impl)
     dtype = kwargs.pop('dtype', None)

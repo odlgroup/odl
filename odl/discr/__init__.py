@@ -29,7 +29,7 @@ Abstract discretization classes (Module `discretization`)
 |                     |linear spaces                                   |
 +---------------------+------------------------------------------------+
 
-Discretizations of L2 spaces (Module `l2_discr`)
+Discretizations of L2 spaces (Module `lp_discr`)
 ================================================
 
 +--------------+-------------------------------------------------------+
@@ -45,7 +45,7 @@ Factory functions
 +-----------------------------+----------------------------------------+
 |Name                         |Description                             |
 +=============================+========================================+
-|`l2_uniform_discretization()`|Discretize an L2 space based on uniform |
+|`uniform_discr()`            |Discretize an Lp space based on uniform |
 |                             |sampling and interpolation between      |
 |                             |samples                                 |
 +-----------------------------+----------------------------------------+
@@ -97,9 +97,9 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import l2_discr
-from .l2_discr import *
-__all__ += l2_discr.__all__
+from . import lp_discr
+from .lp_discr import *
+__all__ += lp_discr.__all__
 
 from . import discretization
 from .discretization import *

@@ -98,7 +98,7 @@ def test_fwd_diff():
 
     # Discretization
     n = 6
-    d = odl.l2_uniform_discretization(space, n, impl='cuda')
+    d = odl.uniform_discr(space, n, impl='cuda')
     fun = d.element([1, 2, 5, 3, 2, 1])
 
     # Create operator
@@ -116,7 +116,7 @@ def test_square():
     # Discretization
     n = 5
     m = 5
-    d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
+    d = odl.uniform_discr(space, (n, m), impl='cuda')
 
     fun = d.element([[0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0],
@@ -160,7 +160,7 @@ def test_rectangle():
     m = 7
 
     # Discretization
-    d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
+    d = odl.uniform_discr(space, (n, m), impl='cuda')
 
     fun = d.element([[0, 0, 0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0, 0, 0],

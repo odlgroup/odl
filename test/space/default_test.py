@@ -35,7 +35,7 @@ from odl.util.testutils import almost_equal
 
 def test_interval():
     l2space = L2(odl.Interval(0, pi))
-    l2discr = odl.l2_uniform_discretization(l2space, 10)
+    l2discr = odl.uniform_discr(l2space, 10)
 
     l2sin = l2space.element(np.sin)
     discr_sin = l2discr.element(l2sin)
@@ -45,7 +45,7 @@ def test_interval():
 def test_rectangle():
     l2space = L2(odl.Rectangle((0, 0), (pi, 2*pi)))
     n, m = 10, 10
-    l2discr = odl.l2_uniform_discretization(l2space, (n, m))
+    l2discr = odl.uniform_discr(l2space, (n, m))
 
     l2sin2 = l2space.element(lambda x, y: np.sin(x) * np.sin(y))
     discr_sin2 = l2discr.element(l2sin2)
