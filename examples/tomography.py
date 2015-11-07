@@ -24,7 +24,8 @@ from skimage.transform import radon, iradon
 import numpy as np
 import odl
 
-"""An example of a very SART tomography solver."""
+"""An example of a very simple SART tomography solver."""
+
 
 class ForwardProjector(odl.Operator):
     def __init__(self, dom, ran):
@@ -38,6 +39,7 @@ class ForwardProjector(odl.Operator):
     def adjoint(self):
         return BackProjector(self.range, self.domain)
 
+
 class BackProjector(odl.Operator):
     def __init__(self, dom, ran):
         self.theta = dom.grid.meshgrid()[1][0] * 180 / np.pi
@@ -45,29 +47,24 @@ class BackProjector(odl.Operator):
         super().__init__(dom, ran, True)
 
     def _call(self, x):
-        return self.range.element(iradon(x.asarray(), self.theta, self.npoint, filter=None))
+        return self.range.element(iradon(x.asarray(), self.theta, self.npoint,
+                                         filter=None))
 
-square = odl.Rectangle([-1, -1],[1, 1])
-sinogram = odl.Rectangle([0, 0],[1, np.pi])
+square = odl.Rectangle([-1, -1], [1, 1])
+sinogram = odl.Rectangle([0, 0], [1, np.pi])
 
-dom = odl.l2_uniform_discretization(odl.L2(square), [100, 100])
-ran = odl.l2_uniform_discretization(odl.L2(sinogram), [142, 100])
-
-volume = np.zeros([100, 100])
-volume[40:-40,40:-40] = 1
-x = dom.element(volume)
+dom = odl.l2_uniform_discretization(odl.L2(square), [200, 200])
+ran = odl.l2_uniform_discretization(odl.L2(sinogram), [283, 200])
 
 proj = ForwardProjector(dom, ran)
 
-a = dom.one()
+phantom = odl.util.shepp_logan(dom)
+data = proj(phantom)
 
-a+a
-"""
+x = dom.zero()
 
-data = proj(x)
-
-x0 = dom.zero()
 for i in range(50):
-    x0 = x0 - proj.adjoint(proj(x0) - data) / 100
-    x0.show()
-"""
+    x = x - proj.adjoint(proj(x) - data) / 200
+    print(i)
+
+x.show()

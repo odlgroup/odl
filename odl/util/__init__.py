@@ -28,3 +28,7 @@ __all__ += testutils.__all__
 from . import utility
 from .utility import *
 __all__ += utility.__all__
+
+from . import phantom
+from .phantom import *
+__all__ += phantom.__all__
