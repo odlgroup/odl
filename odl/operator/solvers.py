@@ -247,21 +247,20 @@ def quasi_newton(op, x, line_search, niter=1, partial=None):
 
     op(x) == 0
     """
-    I = IdentityOperator(op.range)
-    Bi = IdentityOperator(op.range)
-    # Reusable temporaries
+
+    Bi = I = IdentityOperator(op.range)
+    opx = op(x)
     for _ in range(niter):
-        opx = op(x)
-        print(opx.norm())
         p = Bi(-opx)
-        alpha = line_search(x, p, opx)
-        x_old = x.copy()
+        alpha = line_search(x, direction=p, gradf=opx)
+
         s = alpha * p
         x += s
-        y = op(x) - op(x_old)
-        x_old = x
-        ys = y.inner(s)
 
+        opx, opx_old = op(x), opx
+        y = opx - opx_old
+
+        ys = y.inner(s)
         if ys == 0.0:
             return
 
