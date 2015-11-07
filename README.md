@@ -26,7 +26,7 @@ To get ODL, clone the repository with the command
 user$ git clone <repo>
 ```
 
-where `<repo>` is the clone link from the right navigation bar on the [ODL GitHub page](https://gits-15.sys.kth.se/LCR/ODL).
+where `<repo>` is the clone link from the right navigation bar on the [ODL GitHub page](https://github.com/odlgroup/odl).
 
 For installation in a local user folder, go to the ODL folder and run
 
@@ -58,7 +58,7 @@ user$ git submodule update --init --recursive
 user$ cd odlpp
 ```
 
-From here follow the instructions in [odlpp](https://gits-15.sys.kth.se/LCR/ODLpp) and install it. You then need to re-install ODL.
+From here follow the instructions in [odlpp](https://github.com/odlgroup/odlpp) and install it. You then need to re-install ODL.
 
 Requirements
 ------------
@@ -70,7 +70,7 @@ Requirements
 Optional
 --------
 
-- [odlpp](https://gits-15.sys.kth.se/LCR/ODLpp) (not yet available) for GPU support (optional).
+- [odlpp](https://github.com/odlgroup/odlpp) for GPU support (optional).
 - [pytest](https://pypi.python.org/pypi/pytest) >= 2.7.0 for unit tests
 - [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0 for test coverage report
 
