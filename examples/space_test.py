@@ -28,7 +28,7 @@ import odl
 print('\n\n TESTING FOR L2 SPACE \n\n')
 
 spc = odl.FunctionSpace(odl.Interval(0, 1))
-discr = odl.l2_uniform_discr(spc, 10)
+discr = odl.uniform_discr(spc, 10)
 
 odl.diagnostics.SpaceTest(discr).run_tests()
 

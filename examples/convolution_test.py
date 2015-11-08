@@ -64,7 +64,7 @@ cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_phantom = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = odl.l2_uniform_discr(cont_space, 500, impl='numpy')
+discr_space = odl.uniform_discr(cont_space, 500, impl='numpy')
 kernel = discr_space.element(cont_kernel)
 phantom = discr_space.element(cont_phantom)
 

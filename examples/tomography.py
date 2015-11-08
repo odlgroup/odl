@@ -60,8 +60,8 @@ class BackProjector(odl.Operator):
 square = odl.Rectangle([-1, -1], [1, 1])
 sinogram = odl.Rectangle([0, 0], [1, np.pi])
 
-dom = odl.l2_uniform_discr(odl.FunctionSpace(square), [100, 100])
-ran = odl.l2_uniform_discr(odl.FunctionSpace(sinogram), [142, 100])
+dom = odl.uniform_discr(odl.FunctionSpace(square), [100, 100])
+ran = odl.uniform_discr(odl.FunctionSpace(sinogram), [142, 100])
 
 proj_op = ForwardProjector(dom, ran)
 

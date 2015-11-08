@@ -43,7 +43,7 @@ if CUDA_AVAILABLE:
 else:
     CudaFn = type(None)
 
-__all__ = ('DiscreteLp', 'lp_uniform_discr')
+__all__ = ('DiscreteLp', 'uniform_discr')
 
 _SUPPORTED_INTERP = ('nearest',)
 
@@ -191,7 +191,7 @@ class DiscreteLp(Discretization):
             arg_str = arg_fstr.format(
                 self.uspace, self.grid.shape, interp=self.interp,
                 impl=impl, order=self.order)
-            return 'l2_uniform_discr({})'.format(arg_str)
+            return 'uniform_discr({})'.format(arg_str)
         else:
             arg_fstr = '''
     {!r},
@@ -338,7 +338,7 @@ class DiscreteLp(Discretization):
                                    **kwargs)
 
 
-def lp_uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
+def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
                      impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
