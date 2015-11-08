@@ -69,7 +69,7 @@ setup(name='odl',
       cmdclass={'test': PyTest},
       extras_require={
           'testing': [
-              'pytest >= 2.7.0',
+              'pytest >= 2.8.0',
               'coverage >= 4.0'
               ]
       })
