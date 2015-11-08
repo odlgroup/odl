@@ -18,9 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from builtins import range, str
 
 # External module imports
 import pytest
@@ -31,13 +31,14 @@ from math import ceil
 # ODL imports
 from odl import Ntuples, Fn, Rn, Cn
 from odl.operator.operator import Operator
-from odl.space.ntuples import FnConstWeighting, FnMatrixWeighting
+from odl.set.sets import ComplexNumbers
+from odl.space.ntuples import (
+    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting,
+    weighted_inner, weighted_norm, weighted_dist,
+    MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 
 # TODO: add tests for:
-# * Ntuples (different data types)
-# * metric, normed, Hilbert space variants
-# * MatVecOperator
 # * inner, norm, dist as free functions
 # * Vector weighting
 # * Custom inner/norm/dist
@@ -59,6 +60,10 @@ def _element(fn):
 
 
 def _vectors(fn, n=1):
+    """Create a list of arrays and vectors in `fn`.
+
+    First arrays, then vectors.
+    """
     arrs = [_array(fn) for _ in range(n)]
 
     # Make Fn vectors
@@ -67,30 +72,44 @@ def _vectors(fn, n=1):
 
 
 def _sparse_matrix(fn):
+    """Create a sparse positive definite Hermitian matrix for `fn`."""
     nnz = np.random.randint(0, int(ceil(fn.size**2/2)))
     coo_r = np.random.randint(0, fn.size, size=nnz)
     coo_c = np.random.randint(0, fn.size, size=nnz)
-    values = np.random.rand(nnz)
+    values = np.random.rand(nnz).astype(fn.dtype)
+    if fn.field == ComplexNumbers():
+        values += 1j * np.random.rand(nnz).astype(fn.dtype)
     mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
-                               shape=(fn.size, fn.size))
+                               shape=(fn.size, fn.size),
+                               dtype=fn.dtype)
     # Make symmetric and positive definite
-    return mat + mat.T + fn.size * sp.sparse.eye(fn.size)
+    return mat + mat.conj().T + fn.size * sp.sparse.eye(fn.size,
+                                                        dtype=fn.dtype)
 
 
 def _dense_matrix(fn):
-    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=float)
+    """Create a dense positive definite Hermitian matrix for `fn`."""
+    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=fn.dtype)
     # Make symmetric and positive definite
-    return mat + mat.T + fn.size * np.eye(fn.size)
+    return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
 
 
 @pytest.fixture(scope="module",
-                ids=['R10 float64', 'R10 float32',
-                     'C10 complex128', 'C10 complex64',
-                     'R100'],
+                ids=[' R10 float64 ', ' R10 float32 ',
+                     ' C10 complex128 ', ' C10 complex64 ',
+                     ' R100 '],
                 params=[Rn(10, np.float64), Rn(10, np.float32),
                         Cn(10, np.complex128), Cn(10, np.complex64),
                         Rn(100)])
 def fn(request):
+    return request.param
+
+
+@pytest.fixture(scope="module",
+                ids=[' p = 2 ', ' p = 1 ', ' p = inf ', ' p = 0.5 ',
+                     ' p = 1.5 '],
+                params=[2.0, 1.0, float('inf'), 0.5, 1.5])
+def exponent(request):
     return request.param
 
 
@@ -142,7 +161,7 @@ def test_vector_init(fn):
 
 
 def _test_lincomb(fn, a, b):
-    # Validates lincomb against the result on host with randomized
+    # Validate lincomb against the result on host with randomized
     # data and given a,b
 
     # Unaliased arguments
@@ -204,10 +223,8 @@ def test_multiply(fn):
 
 
 def _test_unary_operator(fn, function):
-    """ Verifies that the statement y=function(x) gives equivalent
-    results to Numpy.
-    """
-
+    # Verify that the statement y=function(x) gives equivalent results
+    # to NumPy
     x_arr, x = _vectors(fn)
 
     y_arr = function(x_arr)
@@ -217,10 +234,8 @@ def _test_unary_operator(fn, function):
 
 
 def _test_binary_operator(fn, function):
-    """ Verifies that the statement z=function(x,y) gives equivalent
-    results to Numpy.
-    """
-
+    # Verify that the statement z=function(x,y) gives equivalent results
+    # to NumPy
     x_arr, y_arr, x, y = _vectors(fn, 2)
 
     z_arr = function(x_arr, y_arr)
@@ -230,9 +245,9 @@ def _test_binary_operator(fn, function):
 
 
 def test_operators(fn):
-    """ Test of all operator overloads against the corresponding
-    Numpy implementation
-    """
+    # Test of all operator overloads against the corresponding NumPy
+    # implementation
+
     # Unary operators
     _test_unary_operator(fn, lambda x: +x)
     _test_unary_operator(fn, lambda x: -x)
@@ -417,10 +432,8 @@ def test_setslice_index_error(fn):
 
 
 def test_multiply_by_scalar(fn):
-    """Verifies that multiplying with numpy scalars
-    does not change the type of the array
-    """
-
+    # Verify that multiplying with numpy scalars does not change the type
+    # of the array
     x = fn.zero()
     assert x * 1.0 in fn
     assert x * np.float32(1.0) in fn
@@ -484,8 +497,7 @@ def test_nbytes(fn):
 # Numpy Array tests
 
 def test_array_method(fn):
-    """ Verifies that the __array__ method works
-    """
+    # Verify that the __array__ method works
     x = fn.zero()
 
     arr = x.__array__()
@@ -495,9 +507,8 @@ def test_array_method(fn):
 
 
 def test_array_wrap_method(fn):
-    """ Verifies that the __array_wrap__ method works
-    This enables us to use numpy ufuncs on vectors
-    """
+    # Verify that the __array_wrap__ method works. This enables numpy ufuncs
+    # on vectors
     x_h, x = _vectors(fn)
     y_h = np.sin(x_h)
     y = np.sin(x)
@@ -514,6 +525,153 @@ def test_conj(fn):
     xconj = x.conj(out=y)
     assert xconj is y
     assert all_equal(y, xarr.conj())
+
+
+# MatVecOperator
+
+
+def test_matvec_init(fn):
+    # Square matrices, sparse and dense
+    sparse_mat = _sparse_matrix(fn)
+    dense_mat = _dense_matrix(fn)
+
+    MatVecOperator(fn, fn, sparse_mat)
+    MatVecOperator(fn, fn, dense_mat)
+
+    # Rectangular
+    rect_mat = 2 * np.eye(2, 3)
+    r2 = Rn(2)
+    r3 = Rn(3)
+
+    MatVecOperator(r3, r2, rect_mat)
+
+    with pytest.raises(ValueError):
+        MatVecOperator(r2, r2, rect_mat)
+
+    with pytest.raises(ValueError):
+        MatVecOperator(r3, r3, rect_mat)
+
+    with pytest.raises(ValueError):
+        MatVecOperator(r2, r3, rect_mat)
+
+    # Rn to Cn okay
+    MatVecOperator(r3, Cn(2), rect_mat)
+
+    # Cn to Rn not okay (no safe cast)
+    with pytest.raises(TypeError):
+        MatVecOperator(Cn(3), r2)
+
+    # Complex matrix between real spaces not okay
+    rect_complex_mat = rect_mat + 1j
+    with pytest.raises(TypeError):
+        MatVecOperator(r3, r2, rect_complex_mat)
+
+    # Init with array-like structure (including numpy.matrix)
+    MatVecOperator(r3, r2, rect_mat.tolist())
+    MatVecOperator(r3, r2, np.asmatrix(rect_mat))
+
+
+def test_matvec_simple_properties():
+    # Matrix - always ndarray in for dense input, scipy.sparse.spmatrix else
+    rect_mat = 2 * np.eye(2, 3)
+    r2 = Rn(2)
+    r3 = Rn(3)
+
+    op = MatVecOperator(r3, r2, rect_mat)
+    assert isinstance(op.matrix, np.ndarray)
+
+    op = MatVecOperator(r3, r2, np.asmatrix(rect_mat))
+    assert isinstance(op.matrix, np.ndarray)
+
+    op = MatVecOperator(r3, r2, rect_mat.tolist())
+    assert isinstance(op.matrix, np.ndarray)
+    assert not op.matrix_issparse
+
+    sparse_mat = _sparse_matrix(Rn(5))
+    op = MatVecOperator(Rn(5), Rn(5), sparse_mat)
+    assert isinstance(op.matrix, sp.sparse.spmatrix)
+    assert op.matrix_issparse
+
+
+def test_matvec_adjoint(fn):
+    # Square cases
+    sparse_mat = _sparse_matrix(fn)
+    dense_mat = _dense_matrix(fn)
+
+    op_sparse = MatVecOperator(fn, fn, sparse_mat)
+    op_dense = MatVecOperator(fn, fn, dense_mat)
+
+    # Just test if it runs, nothing interesting to test here
+    op_sparse.adjoint
+    op_dense.adjoint
+
+    # Rectangular case
+    rect_mat = 2 * np.eye(2, 3)
+    r2, r3 = Rn(2), Rn(3)
+    c2 = Cn(2)
+
+    op = MatVecOperator(r3, r2, rect_mat)
+    op_adj = op.adjoint
+    assert op_adj.domain == op.range
+    assert op_adj.range == op.domain
+    assert np.array_equal(op_adj.matrix, op.matrix.conj().T)
+    assert np.array_equal(op_adj.adjoint.matrix, op.matrix)
+
+    # The operator Rn -> Cn has no adjoint
+    op_noadj = MatVecOperator(r3, c2, rect_mat)
+    with pytest.raises(NotImplementedError):
+        op_noadj.adjoint
+
+
+def test_matvec_call(fn):
+    # Square cases
+    sparse_mat = _sparse_matrix(fn)
+    dense_mat = _dense_matrix(fn)
+    xarr, x = _vectors(fn)
+
+    op_sparse = MatVecOperator(fn, fn, sparse_mat)
+    op_dense = MatVecOperator(fn, fn, dense_mat)
+
+    yarr_sparse = sparse_mat.dot(xarr)
+    yarr_dense = dense_mat.dot(xarr)
+
+    # Out-of-place
+    y = op_sparse(x)
+    assert all_almost_equal(y, yarr_sparse)
+
+    y = op_dense(x)
+    assert all_almost_equal(y, yarr_dense)
+
+    # In-place
+    y = fn.element()
+    op_sparse(x, out=y)
+    assert all_almost_equal(y, yarr_sparse)
+
+    y = fn.element()
+    op_dense(x, out=y)
+    assert all_almost_equal(y, yarr_dense)
+
+    # Rectangular case
+    rect_mat = 2 * np.eye(2, 3)
+    r2, r3 = Rn(2), Rn(3)
+
+    op = MatVecOperator(r3, r2, rect_mat)
+    xarr = np.arange(3, dtype=float)
+    x = r3.element(xarr)
+
+    yarr = rect_mat.dot(xarr)
+
+    # Out-of-place
+    y = op(x)
+    assert all_almost_equal(y, yarr)
+
+    # In-place
+    y = r2.element()
+    op(x, out=y)
+    assert all_almost_equal(y, yarr)
+
+
+# Weighting tests
 
 
 def test_matrix_init(fn):
