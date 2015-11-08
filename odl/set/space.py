@@ -221,7 +221,7 @@ See Wikipedia's mathematical overview articles
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
-from builtins import object, str
+from builtins import object, range, str
 from future import standard_library
 standard_library.install_aliases()
 from odl.util.utility import with_metaclass
@@ -579,7 +579,7 @@ class LinearSpace(Set):
                 return self.space.lincomb(1, self, 1, other, out=tmp)
             else:
                 return NotImplemented
-                
+
         def __isub__(self, other):
             """Implementation of 'self -= other'."""
             if other in self.space:
@@ -611,7 +611,7 @@ class LinearSpace(Set):
             if other in self.space.field:
                 tmp = self.space.element()
                 return self.space.lincomb(other, self, out=tmp)
-            elif other in self.space:                
+            elif other in self.space:
                 tmp = self.space.element()
                 return self.space.multiply(other, self, out=tmp)
             else:
@@ -665,7 +665,7 @@ class LinearSpace(Set):
         def __neg__(self):
             """Implementation of '-self'."""
             return (-1) * self
-            
+
         def __pos__(self):
             """Implementation of '+self'."""
             return self.copy()
@@ -755,8 +755,8 @@ class LinearSpace(Set):
             Note
             ----
             This function is only defined in inner product spaces.
-            
-            In a complex space, this takes the conjugate transpose of the 
+
+            In a complex space, this takes the conjugate transpose of the
             vector.
 
             Examples

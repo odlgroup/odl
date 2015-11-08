@@ -23,7 +23,7 @@ TODO: document public interface
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
-from builtins import str, zip, super
+from builtins import range, str, super, zip
 from future import standard_library
 standard_library.install_aliases()
 

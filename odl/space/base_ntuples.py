@@ -22,8 +22,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
-from odl.util.utility import with_metaclass
+from builtins import int, super
 
 # External module imports
 from abc import ABCMeta, abstractmethod
@@ -33,8 +32,8 @@ import numpy as np
 # ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.util.utility import array1d_repr, array1d_str, dtype_repr
-from odl.util.utility import is_real_dtype
+from odl.util.utility import (array1d_repr, array1d_str, dtype_repr,
+                              is_real_dtype, with_metaclass)
 
 
 __all__ = ('NtuplesBase', 'FnBase', '_FnWeightingBase')

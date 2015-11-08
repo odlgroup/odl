@@ -50,21 +50,22 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import int, super
-from odl.util.utility import with_metaclass
+from future.utils import native
 
 # External module imports
 from abc import ABCMeta
+import ctypes
+from functools import partial
 from math import sqrt
 import numpy as np
-import scipy as sp
-import ctypes
 import platform
+import scipy as sp
 
 # ODL imports
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
-from odl.util.utility import dtype_repr
-from odl.util.utility import is_real_dtype, is_complex_dtype
+from odl.util.utility import (dtype_repr, is_real_dtype, is_complex_dtype,
+                              with_metaclass)
 
 
 __all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
@@ -500,19 +501,19 @@ def _lincomb(a, x1, b, x2, out, dtype):
         _lincomb(a+b, x1, 0, x1, out, dtype)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a+b, out.data, out.size)
+        scal(a+b, out.data, native(out.size))
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
-            scal(a, out.data, out.size)
+            scal(a, out.data, native(out.size))
         if b != 0:
-            axpy(x2.data, out.data, out.size, b)
+            axpy(x2.data, out.data, native(out.size), b)
     elif out is x2:
         # out is aligned with x2 -> out = a*x1 + b*out
         if b != 1:
-            scal(b, out.data, out.size)
+            scal(b, out.data, native(out.size))
         if a != 0:
-            axpy(x1.data, out.data, out.size, a)
+            axpy(x1.data, out.data, native(out.size), a)
     else:
         # We have exhausted all alignment options, so x1 != x2 != out
         # We now optimize for various values of a and b
@@ -520,23 +521,23 @@ def _lincomb(a, x1, b, x2, out, dtype):
             if a == 0:  # Zero assignment -> out = 0
                 out.data[:] = 0
             else:  # Scaled copy -> out = a*x1
-                copy(x1.data, out.data, out.size)
+                copy(x1.data, out.data, native(out.size))
                 if a != 1:
-                    scal(a, out.data, out.size)
+                    scal(a, out.data, native(out.size))
         else:
             if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2.data, out.data, out.size)
+                copy(x2.data, out.data, native(out.size))
                 if b != 1:
-                    scal(b, out.data, out.size)
+                    scal(b, out.data, native(out.size))
 
             elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1.data, out.data, out.size)
-                axpy(x2.data, out.data, out.size, b)
+                copy(x1.data, out.data, native(out.size))
+                axpy(x2.data, out.data, native(out.size), b)
             else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2.data, out.data, out.size)
+                copy(x2.data, out.data, native(out.size))
                 if b != 1:
-                    scal(b, out.data, out.size)
-                axpy(x1.data, out.data, out.size, a)
+                    scal(b, out.data, native(out.size))
+                axpy(x1.data, out.data, native(out.size), a)
 
 
 def _repr_space_funcs(space):
@@ -1256,9 +1257,8 @@ class Rn(Fn):
 
 
 class MatVecOperator(Operator):
-    # TODO: move to some default operator place
 
-    """Operator :math:`F^n -> F^m` represented by a matrix."""
+    """Linear operator :math:`F^n -> F^m` represented by a matrix."""
 
     def __init__(self, dom, ran, matrix):
         """Initialize a new instance.
@@ -1322,7 +1322,7 @@ class MatVecOperator(Operator):
                                       ''.format(self.domain.field,
                                                 self.range.field))
         return MatVecOperator(self.range, self.domain,
-                              np.asarray(np.asmatrix(self.matrix).H))
+                              self.matrix.conj().T)
 
     def _call(self, x):
         """Raw call method on input, producing a new output."""
@@ -1453,7 +1453,8 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
 
 def _norm_default(x):
     if _blas_is_applicable(x):
-        norm = sp.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
+        nrm2 = sp.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
+        norm = partial(nrm2, n=native(x.size))
     else:
         norm = np.linalg.norm
     return norm(x.data)
@@ -1480,7 +1481,8 @@ def _pnorm_diagweight(x, p, w):
 
 def _inner_default(x1, x2):
     if _blas_is_applicable(x1, x2):
-        dot = sp.linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
+        dotc = sp.linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
+        dot = partial(dotc, n=native(x1.size))
     elif is_real_dtype(x1.dtype):
         dot = np.dot  # still much faster than vdot
     else:

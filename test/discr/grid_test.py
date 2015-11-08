@@ -18,10 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
-
+from builtins import range, str, zip
 
 # External module imports
 import pytest
@@ -813,6 +812,7 @@ def test_regular_is_subgrid():
 #                    grid.is_subgrid(fuzzy_sup_grid2, tol=fac*tol),
 #                    grid.is_subgrid(fuzzy_sup_tensor_grid2, tol=fac*tol))
 
+
 def test_regular_getitem():
     minpt = (0.75, 0, -5, 4)
     maxpt = (1.25, 0, 1, 13)
@@ -849,41 +849,41 @@ def test_regular_getitem():
 
     test_slice = np.s_[1, :, ::2, ::3]
     assert all_equal(grid[test_slice].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[1:2, :, ::2, ::3].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[1:2, :, ::2, ..., ::3].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
 
     test_slice = np.s_[0:1, :, :, 2:4]
     assert all_equal(grid[test_slice].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[:1, :, :, 2:].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[:-1, ..., 2:].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
 
     test_slice = np.s_[:, 0, :, :]
     assert all_equal(grid[test_slice].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[:, 0, ...].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[0:2, :, ...].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[...].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
 
     test_slice = np.s_[:, :, 0::2, :]
     assert all_equal(grid[test_slice].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[..., 0::2, :].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
 
     test_slice = np.s_[..., 1, :]
     assert all_equal(grid[test_slice].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[:, :, 1, :].coord_vectors,
-                         tensor_grid[test_slice].coord_vectors)
+                     tensor_grid[test_slice].coord_vectors)
 
     with pytest.raises(IndexError):
         grid[1:1, :, 0, 0]
@@ -910,33 +910,6 @@ def test_regular_getitem():
     sub_grid = RegularGrid(1, 5, 3)
     assert grid[::2], sub_grid
 
-def test_regular_repr():
-    minpt = (0.75, 0)
-    maxpt = (1.25, 0)
-    shape = (2, 1)
-
-    grid = RegularGrid(minpt, maxpt, shape)
-    repr_string = 'RegularGrid([0.75, 0.0], [1.25, 0.0], [2, 1])'
-    assert repr(grid) == repr_string
-
-    grid = RegularGrid(minpt, maxpt, shape, as_midp=True)
-    repr_string = ('RegularGrid([0.75, 0.0], [1.25, 0.0], [2, 1], '
-                   'as_midp=True)')
-    assert repr(grid) == repr_string
-
-def test_regular_str():
-    minpt = (0, 0)
-    maxpt = (1, 0)
-    shape = (5, 1)
-
-    grid = RegularGrid(minpt, maxpt, shape)
-    str_string = 'regular grid [0.0, 0.25, ..., 1.0] x [0.0]'
-    assert str(grid) == str_string
-
-    grid = RegularGrid(minpt, maxpt, shape, as_midp=True)
-    str_string = 'midp regular grid [0.0, 0.25, ..., 1.0] x [0.0]'
-    assert str(grid) == str_string
-
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/')) + ' -v')
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')

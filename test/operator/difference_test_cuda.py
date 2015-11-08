@@ -18,10 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 from future import standard_library
 standard_library.install_aliases()
-
+from builtins import str, super
 
 # External module imports
 import pytest
@@ -199,4 +198,4 @@ def test_rectangle():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))

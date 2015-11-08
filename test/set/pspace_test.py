@@ -18,9 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from builtins import str
 
 # External module imports
 import numpy as np
@@ -28,7 +28,7 @@ import pytest
 
 # ODL imports
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal
+from odl.util.testutils import all_equal, all_almost_equal, almost_equal
 
 
 def test_RxR():
@@ -41,8 +41,9 @@ def test_RxR():
     v = HxH.element([v1, v2])
     u = HxH.element([[1, 2], [3, 4]])
 
-    assert all_almost_equal([v1, v2], v)
-    assert all_almost_equal([v1, v2], u)
+    assert all_equal([v1, v2], v)
+    assert all_equal([v1, v2], u)
+
 
 def test_lincomb():
     H = odl.Rn(2)
@@ -65,6 +66,7 @@ def test_lincomb():
 
     assert all_almost_equal(z, expected)
 
+
 def test_multiply():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, H)
@@ -83,6 +85,7 @@ def test_multiply():
 
     assert all_almost_equal(z, expected)
 
+
 def test_metric():
     H = odl.Rn(2)
     v11 = H.element([1, 2])
@@ -96,7 +99,7 @@ def test_metric():
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(HxH.dist(w1, w2),
-                            H.dist(v11, v21) + H.dist(v12, v22))
+                        H.dist(v11, v21) + H.dist(v12, v22))
 
     # 2-norm
     HxH = odl.ProductSpace(H, H, ord=2.0)
@@ -132,6 +135,7 @@ def test_metric():
         HxH.dist(w1, w2),
         H.dist(v11, v21) + H.dist(v12, v22))
 
+
 def test_norm():
     H = odl.Rn(2)
     v1 = H.element([1, 2])
@@ -165,6 +169,7 @@ def test_norm():
     w = HxH.element([v1, v2])
     assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
+
 def test_inner():
     H = odl.Rn(2)
     v1 = H.element([1, 2])
@@ -178,6 +183,7 @@ def test_inner():
     u = HxH.element([u1, u2])
     assert almost_equal(HxH.inner(v, u), H.inner(v1, u1) + H.inner(v2, u2))
 
+
 def test_power_RxR():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, 2)
@@ -188,8 +194,9 @@ def test_power_RxR():
     v = HxH.element([v1, v2])
     u = HxH.element([[1, 2], [3, 4]])
 
-    assert all_almost_equal([v1, v2], v)
-    assert all_almost_equal([v1, v2], u)
+    assert all_equal([v1, v2], v)
+    assert all_equal([v1, v2], u)
+
 
 def test_power_lincomb():
     H = odl.Rn(2)
@@ -211,6 +218,7 @@ def test_power_lincomb():
     HxH.lincomb(a, v, b, u, out=z)
 
     assert all_almost_equal(z, expected)
+
 
 def test_power_inplace_modify():
     H = odl.Rn(2)
@@ -235,10 +243,11 @@ def test_power_inplace_modify():
     # Assert that z1 and z2 has been modified as well
     assert all_almost_equal(z, [z1, z2])
 
+
 def test_getitem():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, 2)
-    
+
     assert HxH[-2] == H
     assert HxH[-1] == H
     assert HxH[0] == H
@@ -248,4 +257,4 @@ def test_getitem():
         HxH[2]
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))

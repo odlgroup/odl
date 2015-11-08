@@ -233,7 +233,7 @@ class Strings(Set):
         """s.__repr__() <==> repr(s)."""
         return 'Strings({})'.format(self.length)
 
-    
+
 class Field(with_metaclass(ABCMeta, Set)):
     """Any set that satisfies the field axioms
 
@@ -272,7 +272,7 @@ class ComplexNumbers(Field):
         """
         if other is self:
             return True
-            
+
         return (isinstance(other, ComplexNumbers) or
                 isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
@@ -281,7 +281,7 @@ class ComplexNumbers(Field):
         """`s.__eq__(other) <==> s == other`."""
         if other is self:
             return True
-            
+
         return isinstance(other, ComplexNumbers)
 
     def element(self, inp=None):
@@ -299,7 +299,7 @@ class ComplexNumbers(Field):
         """s.__repr__() <==> repr(s)."""
         return "ComplexNumbers()"
 
-    
+
 class RealNumbers(Field):
     """The set of real numbers."""
 
@@ -324,7 +324,7 @@ class RealNumbers(Field):
         """
         if other is self:
             return True
-        
+
         return (isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
@@ -332,7 +332,7 @@ class RealNumbers(Field):
         """`s.__eq__(other) <==> s == other`."""
         if other is self:
             return True
-            
+
         return isinstance(other, RealNumbers)
 
     def element(self, inp=None):
@@ -356,11 +356,11 @@ class Integers(Set):
     """The set of integers."""
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`."""        
-        
+        """`s.__eq__(other) <==> s == other`."""
+
         if other is self:
             return True
-            
+
         return isinstance(other, Integers)
 
     def __contains__(self, other):
@@ -383,7 +383,7 @@ class Integers(Set):
         """
         if other is self:
             return True
-            
+
         return isinstance(other, Integers)
 
     def element(self, inp=None):

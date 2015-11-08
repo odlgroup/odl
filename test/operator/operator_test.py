@@ -18,10 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
-from builtins import super
 standard_library.install_aliases()
+from builtins import str, super
 
 # External module imports
 import pytest
@@ -83,9 +82,9 @@ def test_nonlinear_addition():
 
     # Explicit instantiation
     C = OperatorSum(Aop, Bop)
-    
+
     assert not C.is_linear
-    
+
     assert all_almost_equal(C(xvec),
                             mult_sq_np(A, x) + mult_sq_np(B, x))
 
@@ -113,7 +112,7 @@ def test_nonlinear_scale():
     for scale in scalars:
         lscaled = OperatorLeftScalarMult(Aop, scale)
         rscaled = OperatorRightScalarMult(Aop, scale)
-        
+
         assert not lscaled.is_linear
         assert not rscaled.is_linear
 
@@ -153,7 +152,7 @@ def test_nonlinear_right_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = OperatorRightVectorMult(Aop, vec)
-        
+
     assert not C.is_linear
 
     assert all_almost_equal(C(x), mult_sq_np(A, vec * x))
@@ -173,7 +172,7 @@ def test_nonlinear_composition():
     xvec = Bop.domain.element(x)
 
     C = OperatorComp(Aop, Bop)
-    
+
     assert not C.is_linear
 
     assert all_almost_equal(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
@@ -298,7 +297,7 @@ def test_linear_scale():
     scalars = [-1.432, -1, 0, 1, 3.14]
     for scale in scalars:
         C = OperatorRightScalarMult(Aop, scale)
-        
+
         assert C.is_linear
         assert C.adjoint.is_linear
 
@@ -327,7 +326,7 @@ def test_linear_right_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = OperatorRightVectorMult(Aop, vec)
-        
+
     assert C.is_linear
     assert C.adjoint.is_linear
 
@@ -493,7 +492,7 @@ def test_functional_scale():
     scalars = [-1.432, -1, 0, 1, 3.14]
     for scale in scalars:
         C = OperatorRightScalarMult(Aop, scale)
-        
+
         assert C.is_linear
         assert C.adjoint.is_linear
 
@@ -520,7 +519,7 @@ def test_functional_left_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = FunctionalLeftVectorMult(Aop, y)
-        
+
     assert C.is_linear
     assert C.adjoint.is_linear
 
@@ -545,7 +544,7 @@ def test_functional_right_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = OperatorRightVectorMult(Aop, vec)
-        
+
     assert C.is_linear
     assert C.adjoint.is_linear
 
@@ -643,7 +642,7 @@ def test_nonlinear_functional_operators():
 
     assert not C.is_linear
     assert almost_equal(C(x), A(x * 2.0))
-    
+
     # right divide
     C = A / 2.0
 

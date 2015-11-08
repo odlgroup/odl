@@ -240,7 +240,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         self._is_linear = bool(linear)
         self._is_functional = isinstance(range, Field)
 
-        if self.is_linear:
+        if self._is_linear:
             if not isinstance(domain, (LinearSpace, Field)):
                 raise TypeError('domain {!r} not a `LinearSpace` or `Field` '
                                 'instance.'.format(domain))
@@ -262,7 +262,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def is_linear(self):
         """True if this operator is linear."""
         return self._is_linear
-        
+
     @property
     def is_functional(self):
         """True if the range of this operator is a field."""
@@ -348,7 +348,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 raise TypeError('`out` parameter cannot be used'
                                 'when range is a field')
 
-
             self._apply(x, out, *args, **kwargs)
             return out
 
@@ -372,7 +371,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __mul__(self, other):
         """`op.__mul__(other) <==> op * other`.
 
-        If `other` is an operator, this corresponds to 
+        If `other` is an operator, this corresponds to
         operator composition:
 
         `op1 * op2 <==> (x --> op1(op2(x))`
@@ -405,11 +404,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Returns
         -------
         mul : `Operator`
-            The multiplication operator. 
+            The multiplication operator.
 
-            If `other` is an operator, 
+            If `other` is an operator,
             mul is a `OperatorComp`.
-            
+
             If `other` is a scalar
             mul is a `OperatorRightScalarMult`.
 
@@ -447,7 +446,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __rmul__(self, other):
         """`op.__rmul__(s) <==> s * op`.
 
-        If `other` is an operator, this corresponds to 
+        If `other` is an operator, this corresponds to
         operator composition:
 
         `op1 * op2 <==> (x --> op1(op2(x)))`
@@ -482,9 +481,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         mul : `Operator`
             The multiplication operator.
 
-            If `other` is an operator, 
+            If `other` is an operator,
             mul is a `OperatorComp`.
-            
+
             If `other` is a scalar
             mul is a `OperatorLeftScalarMult`.
 
@@ -514,7 +513,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return FunctionalLeftVectorMult(self, other.copy())
         else:
             return NotImplemented
-        
+
     __rmatmul__ = __rmul__
 
     def __pow__(self, n):
@@ -598,21 +597,21 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorRightScalarMult(self, 1.0 / other)
         else:
             return NotImplemented
-            
+
     def __neg__(self):
         """`op.__neg__(s) <==> -op`.
-        
+
         Negate this operator
-        
+
         `-op <==> (x --> -op(x))`
         """
         return -1 * self
-        
+
     def __pos__(self):
         """`op.__pos__(s) <==> op`.
-        
+
         Pos operator, the identity.
-        
+
         `+op <==> (x --> op(x))`
         """
         return self

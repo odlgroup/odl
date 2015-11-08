@@ -18,9 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from builtins import str
 
 # External module imports
 import pytest
@@ -31,7 +31,7 @@ def test_all_imports():
     # Create Cn
     odl.Cn(3)
     odl.space.Cn(3)
-    C3=odl.space.ntuples.Cn(3)
+    C3 = odl.space.ntuples.Cn(3)
 
     # Three ways of creating the identity
     odl.IdentityOperator(C3)
@@ -44,4 +44,4 @@ def test_all_imports():
         odl.array1d_repr
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))

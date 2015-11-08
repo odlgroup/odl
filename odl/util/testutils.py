@@ -19,20 +19,21 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object
 from future import standard_library
 standard_library.install_aliases()
+from builtins import int, object, str
 
-# External module imports
+# External
 # pylint: disable=no-name-in-module
-from numpy import ravel_multi_index, prod
 from itertools import zip_longest
+import numpy as np
+from numpy import ravel_multi_index, prod
 import sys
 from time import time
-import numpy as np
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
+
 
 def _places(a, b, default=5):
     try:
@@ -46,12 +47,13 @@ def _places(a, b, default=5):
         dtype2 = None
 
     if (dtype1 == np.float32 or
-        dtype2 == np.float32 or
-        dtype1 == np.complex64 or
-        dtype2 == np.complex64):
+            dtype2 == np.float32 or
+            dtype1 == np.complex64 or
+            dtype2 == np.complex64):
         return 3
     else:
         return default
+
 
 def almost_equal(a, b, places=None):
     if a is None and b is None:
@@ -79,6 +81,7 @@ def almost_equal(a, b, places=None):
     else:
         return abs(a/b - 1) < eps
 
+
 def all_equal(iter1, iter2):
     # Sentinel object used to check that both iterators are the same length
     different_length_sentinel = object()
@@ -96,13 +99,15 @@ def all_equal(iter1, iter2):
                                   fillvalue=different_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
-        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+        if (ip1 is different_length_sentinel or
+                ip2 is different_length_sentinel):
             return False
 
         if not all_equal(ip1, ip2):
             return False
 
     return True
+
 
 def all_almost_equal(iter1, iter2, places=None):
     # Sentinel object used to check that both iterators are the same length
@@ -124,7 +129,8 @@ def all_almost_equal(iter1, iter2, places=None):
                                   fillvalue=different_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
-        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+        if (ip1 is different_length_sentinel or
+                ip2 is different_length_sentinel):
             return False
 
         if not all_almost_equal(ip1, ip2, places):
@@ -136,15 +142,17 @@ def all_almost_equal(iter1, iter2, places=None):
 def is_subdict(subdict, dict_):
     return all(item in dict_.items() for item in subdict.items())
 
-try:  
+try:
     import pytest
-    skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
+    skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
+                                         reason='CUDA not available')
 except ImportError:
     def skip_if_no_cuda(function):
         return function
 
+
 class FailCounter(object):
-    """ Used to count the number of failures of something
+    """Used to count the number of failures of something.
 
     Usage
     -----
@@ -173,7 +181,7 @@ class FailCounter(object):
     def fail(self, string=None):
         self.num_failed += 1
 
-        #Todo: possibly limit number of printed strings
+        # Todo: possibly limit number of printed strings
         if string is not None:
             print(string)
 
@@ -184,6 +192,7 @@ class FailCounter(object):
             if self.err_msg is not None:
                 print(self.err_msg)
             print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
+
 
 class Timer(object):
 
@@ -323,7 +332,7 @@ class ProgressRange(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.current < self.n:
             val = self.current
             self.current += 1

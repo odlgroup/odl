@@ -19,11 +19,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
-from builtins import int, super
 from future import standard_library
 standard_library.install_aliases()
-from odl.util.utility import with_metaclass
+from builtins import int, super
 
 # External module imports
 import numpy as np
@@ -31,7 +29,7 @@ from abc import ABCMeta
 
 # ODL imports
 from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
-from odl.util.utility import is_real_dtype, dtype_repr
+from odl.util.utility import is_real_dtype, dtype_repr, with_metaclass
 import odlpp.odlpp_cuda as cuda
 
 

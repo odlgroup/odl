@@ -18,10 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import str, super
 
 # External module imports
 import pytest
@@ -61,6 +60,7 @@ def test_landweber():
     assert all_almost_equal(op(xvec), b, places=2)
 
 
+
 def test_conjugate_gradient():
     n = 3
 
@@ -82,6 +82,7 @@ def test_conjugate_gradient():
 
     assert all_almost_equal(x, xvec, places=2)
     assert all_almost_equal(op(xvec), b, places=2)
+
 
 
 def test_gauss_newton():
