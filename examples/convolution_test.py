@@ -37,9 +37,6 @@ from . import solver_examples
 
 class Convolution(odl.Operator):
     def __init__(self, kernel, adjkernel=None):
-        if not isinstance(kernel.space, odl.DiscreteL2):
-            raise TypeError("Kernel must be a DiscreteL2 vector")
-
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
                           else kernel.space.element(kernel[::-1].copy()))

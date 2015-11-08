@@ -41,9 +41,6 @@ class CudaConvolution(odl.Operator):
     """Calculates the circular convolution of two CUDA vectors."""
 
     def __init__(self, kernel, adjointkernel=None):
-        if not isinstance(kernel.space, odl.DiscreteL2):
-            raise TypeError("Kernel must be DiscreteL2 vector")
-
         self.space = kernel.space
         self.kernel = kernel
         self.adjkernel = (adjointkernel if adjointkernel is not None
