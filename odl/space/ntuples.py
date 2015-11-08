@@ -59,7 +59,6 @@ import numpy as np
 import scipy as sp
 import ctypes
 import platform
-from functools import partial
 
 # ODL imports
 from odl.operator.operator import Operator
@@ -456,9 +455,10 @@ def _blas_is_applicable(*args):
     if len(args) == 0:
         return False
 
-    return (all(x.dtype == args[0].dtype for x in args) and
-            all(x.dtype in _BLAS_DTYPES for x in args) and
-            all(x.data.flags.contiguous for x in args))
+    return (all(x.dtype == args[0].dtype and
+                x.dtype in _BLAS_DTYPES and
+                x.data.flags.contiguous
+                for x in args))
 
 
 def _lincomb(a, x1, b, x2, out, dtype):
@@ -1340,20 +1340,20 @@ class MatVecOperator(Operator):
     # TODO: repr and str
 
 
-def _weighted(weight, attr, dist_using_inner=False):
+def _weighted(weight, attr, exponent, dist_using_inner=False):
     if np.isscalar(weight):
         weighting = FnConstWeighting(
-            weight, dist_using_inner=dist_using_inner)
+            weight, exponent, dist_using_inner=dist_using_inner)
     else:
         weight_ = np.asarray(weight)
         if weight_.dtype == object:
             raise ValueError('bad weight {}'.format(weight))
         if weight_.ndim == 1:
             weighting = FnVectorWeighting(
-                weight_, dist_using_inner=dist_using_inner)
+                weight_, exponent, dist_using_inner=dist_using_inner)
         elif weight_.ndim == 2:
             weighting = FnMatrixWeighting(
-                weight_, dist_using_inner=dist_using_inner)
+                weight_, exponent, dist_using_inner=dist_using_inner)
         else:
             raise ValueError('array-like weight must have 1 or 2 dimensions, '
                              'but {} has {} dimensions.'
@@ -1382,10 +1382,10 @@ def weighted_inner(weight):
     --------
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
     """
-    return _weighted(weight, 'inner')
+    return _weighted(weight, 'inner', exponent=2.0)
 
 
-def weighted_norm(weight):
+def weighted_norm(weight, exponent=2.0):
     """Weighted norm on `Fn` spaces as free function.
 
     Parameters
@@ -1394,10 +1394,13 @@ def weighted_norm(weight):
         Weight of the norm. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
+    exponent : positive float
+        Exponent of the norm. If `weight` is a sparse matrix, only
+        1.0, 2.0 and `inf` are allowed.
 
     Returns
     -------
-    inner : callable
+    norm : callable
         Norm function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1406,10 +1409,10 @@ def weighted_norm(weight):
     --------
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
     """
-    return _weighted(weight, 'norm')
+    return _weighted(weight, 'norm', exponent=exponent)
 
 
-def weighted_dist(weight, use_inner=False):
+def weighted_dist(weight, exponent=2.0, use_inner=False):
     """Weighted distance on `Fn` spaces as free function.
 
     Parameters
@@ -1418,6 +1421,9 @@ def weighted_dist(weight, use_inner=False):
         Weight of the distance. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
+    exponent : positive float
+        Exponent of the norm. If `weight` is a sparse matrix, only
+        1.0, 2.0 and `inf` are allowed.
     use_inner : bool, optional
         Calculate `dist(x, y)` as
 
@@ -1428,9 +1434,11 @@ def weighted_dist(weight, use_inner=False):
         evaluate to exactly zero for equal (but not identical)
         `x` and `y`.
 
+        Can only be used if `exponent` is 2.0.
+
     Returns
     -------
-    inner : callable
+    dist : callable
         Distance function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1439,7 +1447,8 @@ def weighted_dist(weight, use_inner=False):
     --------
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
     """
-    return _weighted(weight, 'dist', dist_using_inner=use_inner)
+    return _weighted(weight, 'dist', exponent=exponent,
+                     dist_using_inner=use_inner)
 
 
 def _norm_default(x):
@@ -1489,16 +1498,25 @@ class FnMatrixWeighting(_FnWeighting):
 
     """Matrix weighting for `Fn`.
 
-    The weighted inner product with matrix :math:`G` is defined as
+    For exponent 2.0, a new weighted inner product with matrix :math:`G`
+    is defined as
 
-    :math:`<a, b> := b^H G a`
+    :math:`<a, b>_G := b^H G a`
 
-    with :math:`b^H` standing for transposed complex conjugate. The
-    matrix must be Hermitian and posivive definite, otherwise it does
-    not define an inner product. This is not checked during
-    initialization.
+    with :math:`b^H` standing for transposed complex conjugate.
 
-    Norm and distance are implemented as in the base class by default.
+    For other exponents, only norm and dist are defined. In the case of
+    exponent `inf`, the new norm is equal to the unweighted one,
+
+    :math:`||a||_{G, \infty} := ||a||_\infty`,
+
+    otherwise it is
+
+    :math:`||a||_{G, p} := ||G^{1/p} a||_p`.
+
+    The matrix must be Hermitian and posivive definite, otherwise it
+    does not define an inner product or norm, respectively. This is not
+    checked during initialization.
     """
 
     def __init__(self, matrix, exponent=2.0, dist_using_inner=False, **kwargs):
@@ -1506,17 +1524,38 @@ class FnMatrixWeighting(_FnWeighting):
 
         Parameters
         ----------
-        matrix : scipy.sparse.spmatrix or array-like, two-dim.
+        matrix : `scipy.sparse.spmatrix` or array-like, 2-dim.
             Square Weighting matrix of the inner product
+        exponent : positive float
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
+            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
+            are allowed.
         dist_using_inner : bool, optional
-            Calculate `dist(x, y)` as
+            Calculate `dist` using the formula
 
-            `sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)`
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
 
             This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it is not guaranteed to
-            evaluate to exactly zero for equal (but not identical)
-            `x` and `y`.
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
+
+            Can only be used if `exponent` is 2.0.
+        kwargs : {'precomp_mat_pow', 'cache_mat_pow'}
+
+            'precomp_mat_pow' : bool
+                If `True`, precompute the matrix power `m^(1/p)` during
+                initialization. This has no effect if `exponent` is
+                1.0, 2.0 or `inf`.
+
+                Default: `False`
+
+            'cache_mat_pow' : bool
+                If `True`, cache the matrix power `m^(1/p)` during the
+                first call to `norm` or `dist`. This has no effect if
+                `exponent` is 1.0, 2.0 or `inf`.
+
+                Default: `False`
         """
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)
@@ -1540,11 +1579,11 @@ class FnMatrixWeighting(_FnWeighting):
         if (isinstance(self._matrix, sp.sparse.spmatrix) and
                 self._exponent not in (1.0, 2.0, float('inf'))):
             raise NotImplementedError('sparse matrices only supported for '
-                                      'exponent 1.0, 2.0 or inf.')
+                                      'exponent 1.0, 2.0 or `inf`.')
 
-        if self._exponent in (1.0, 2.0, float('inf')):
+        if self._exponent == 1.0:
             self._mat_pow = self._matrix
-        elif precomp_mat_pow:
+        elif precomp_mat_pow and self._exponent not in (2.0, float('inf')):
             eigval, eigvec = sp.linalg.eigh(self._matrix)
             eigval **= 1.0/self._exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
@@ -1562,14 +1601,19 @@ class FnMatrixWeighting(_FnWeighting):
         return isinstance(self.matrix, sp.sparse.spmatrix)
 
     def matrix_isvalid(self):
-        """Test if the matrix is positive definite Hermitian."""
+        """Test if the matrix is positive definite Hermitian.
+
+        This test tries to calculate a Cholesky decomposition and can
+        be very time-consuming for large matrices. Sparse matrices are
+        not supported.
+        """
         if self.matrix_issparse:
             raise NotImplementedError('validation not supported for sparse '
                                       'matrices.')
         try:
-            sp.linalg.cholesky(self.matrix)
-            return True
-        except sp.linalg.LinAlgError:
+            np.linalg.cholesky(self.matrix)
+            return np.array_equal(self.matrix, self.matrix.conj().T)
+        except np.linalg.LinAlgError:
             return False
 
     def __eq__(self, other):
@@ -1646,34 +1690,6 @@ class FnMatrixWeighting(_FnWeighting):
         else:
             return False
 
-    def matvec(self, x, out=None):
-        """The matvec operation of this inner product.
-
-        Parameters
-        ----------
-        x : `FnBase.Vector`
-            Input vector in the matrix-vector product
-        out : `FnBase.Vector`, optional
-            Output vector which the result is written to
-
-        Returns
-        -------
-        out : `FnBase.Vector`
-            The result of the matrix-vector multiplication. If `out`
-            was provided as argument, it is returned again.
-        """
-        if out is not None:
-            if self.matrix_issparse:
-                # Unfortunately, there is no native in-place dot product for
-                # sparse matrices
-                out.data[:] = np.asarray(self.matrix.dot(x.data))
-            else:
-                self.matrix.dot(x.data, out=out.data)
-        else:
-            out = x.space.element(self.matrix.dot(x.data))
-
-        return out
-
     def inner(self, x1, x2):
         """Calculate the matrix-weighted inner product of two vectors.
 
@@ -1692,7 +1708,7 @@ class FnMatrixWeighting(_FnWeighting):
                                       'exponent != 2 (got {}).'
                                       ''.format(self.exponent))
         else:
-            inner = _inner_default(self.matvec(x1), x2)
+            inner = _inner_default(x1.space.element(self.matrix.dot(x1)), x2)
             if is_real_dtype(x1.dtype):
                 return float(inner)
             else:
@@ -1713,6 +1729,8 @@ class FnMatrixWeighting(_FnWeighting):
         """
         if self.exponent == 2.0:
             return super().norm(x)
+        elif self.exponent == float('inf'):  # Weighting is irrelevant
+            return float(_pnorm_default(x, float('inf')))
         else:
             if not hasattr(self, '_mat_pow'):
                 # This case can only be reached if p != 1,2,inf
@@ -1771,16 +1789,26 @@ class FnVectorWeighting(_FnWeighting):
 
     """Vector weighting for `Fn`.
 
-    The weighted inner product with vector :math:`w` is defined as
+    For exponent 2.0, a new weighted inner product with vector :math:`w`
+    is defined as
 
-    :math:`<a, b> := b^H (w * a)`
+    :math:`<a, b>_w := b^H (w * a)`
 
     with :math:`b^H` standing for transposed complex conjugate, and
-    `w * a` being element-wise multiplication. The vector may only have
-    positive entries, otherwise it does not define an inner product.
-    This is not checked during initialization.
+    `w * a` being element-wise multiplication.
 
-    Norm and distance are implemented as in the base class by default.
+    For other exponents, only norm and dist are defined. In the case of
+    exponent `inf`, the new norm is equal to the unweighted one,
+
+    :math:`||a||_{w, \infty} := ||a||_\infty`,
+
+    otherwise it is
+
+    :math:`||a||_{w, p} := ||w^{1/p} * a||_p`.
+
+    The vector may only have positive entries, otherwise it does not
+    define an inner product or norm, respectively. This is not checked
+    during initialization.
     """
 
     def __init__(self, vector, exponent=2.0, dist_using_inner=False):
@@ -1790,15 +1818,21 @@ class FnVectorWeighting(_FnWeighting):
         ----------
         vector : array-like, one-dim.
             Weighting vector of the inner product
+        exponent : positive float
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
+            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
+            are allowed.
         dist_using_inner : bool, optional
-            Calculate `dist(x, y)` as
+            Calculate `dist` using the formula
 
-            `sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)`
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
 
             This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it is not guaranteed to
-            evaluate to exactly zero for equal (but not identical)
-            `x` and `y`.
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
+
+            Can only be used if `exponent` is 2.0.
         """
         super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
         self._vector = np.asarray(vector)
@@ -1809,17 +1843,14 @@ class FnVectorWeighting(_FnWeighting):
                              '1-dimensional.'
                              ''.format(vector, self._vector.ndim))
 
-        self._exponent = float(exponent)
-        if self._exponent <= 0:
-            raise ValueError('Negative exponents not supported.')
-        elif self._exponent != 2.0 and self._dist_using_inner:
-            raise ValueError('dist_using_inner can only be used for '
-                             'exponent 2.0.')
-
     @property
     def vector(self):
         """Weighting vector of this inner product."""
         return self._vector
+
+    def vector_is_valid(self):
+        """Test if the vector is a valid weight, i.e. positive."""
+        return np.all(self.vector > 0)
 
     def __eq__(self, other):
         """`inner.__eq__(other) <==> inner == other`.
@@ -1905,6 +1936,8 @@ class FnVectorWeighting(_FnWeighting):
         """
         if self.exponent == 2.0:
             return super().norm(x)
+        elif self.exponent == float('inf'):
+            return _pnorm_default(x, float('inf'))
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
@@ -1932,11 +1965,24 @@ class FnConstWeighting(_FnWeighting):
 
     """Weighting of `Fn` by a constant.
 
-    The weighted inner product with constant `c` is defined as
+    For exponent 2.0, a new weighted inner product with constant `c`
+    is defined as
 
-    :math:`<a, b> := b^H c a`
+    :math:`<a, b>_c := c * b^H a`
 
-    with :math:`b^H` standing for transposed complex conjugate.
+    with :math:`b^H` standing for transposed complex conjugate, and
+    `w * a` being element-wise multiplication.
+
+    For other exponents, only norm and dist are defined. In the case of
+    exponent `inf`, the new norm is equal to the unweighted one,
+
+    :math:`||a||_{c, \infty} := ||a||_\infty`,
+
+    otherwise it is
+
+    :math:`||a||_{c, p} := c^{1/p} * ||a||_p`.
+
+    The constant `c` must be positive.
     """
 
     def __init__(self, constant, exponent=2.0, dist_using_inner=False):
@@ -1946,15 +1992,21 @@ class FnConstWeighting(_FnWeighting):
         ----------
         constant : positive float
             Weighting constant of the inner product.
+        exponent : positive float
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
+            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
+            are allowed.
         dist_using_inner : bool, optional
-            Calculate `dist(x, y)` as
+            Calculate `dist` using the formula
 
-            `sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)`
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
 
             This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it is not guaranteed to
-            evaluate to exactly zero for equal (but not identical)
-            `x` and `y`.
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
+
+            Can only be used if `exponent` is 2.0.
         """
         super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
         self._const = float(constant)
@@ -1978,7 +2030,7 @@ class FnConstWeighting(_FnWeighting):
         if other is self:
             return True
 
-        # TODO: make symmetric
+        # TODO: make symmetric?
         return (isinstance(other, FnConstWeighting) and
                 self.const == other.const and
                 self.exponent == other.exponent)
@@ -2039,6 +2091,8 @@ class FnConstWeighting(_FnWeighting):
         """
         if self.exponent == 2.0:
             return sqrt(self.const) * float(_norm_default(x))
+        elif self.exponent == float('inf'):
+            return float(_pnorm_default(x, float('inf')))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
@@ -2064,6 +2118,8 @@ class FnConstWeighting(_FnWeighting):
             return sqrt(self.const) * float(sqrt(dist_squared))
         elif self.exponent == 2.0:
             return sqrt(self.const) * _norm_default(x1 - x2)
+        elif self.exponent == float('inf'):
+            return float(_pnorm_default(x1 - x2, float('inf')))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x1 - x2, self.exponent)))
@@ -2101,11 +2157,20 @@ class _FnNoWeighting(FnConstWeighting):
     """
 
     # Implement singleton pattern for efficiency in the default case
+    # TODO: test if this still gives a speedup
     _instance = None
 
     def __new__(cls, *args, **kwargs):
-        exponent = kwargs.pop('exponent', 2.0)
-        dist_using_inner = kwargs.pop('dist_using_inner', False)
+        if len(args) == 0:
+            exponent = kwargs.pop('exponent', 2.0)
+            dist_using_inner = kwargs.pop('dist_using_inner', False)
+        elif len(args) == 1:
+            exponent = args[0]
+            dist_using_inner = kwargs.pop('dist_using_inner', False)
+        else:
+            exponent = args[0]
+            dist_using_inner = args[1]
+
         if exponent == 2.0 and not dist_using_inner:
             if not cls._instance:
                 cls._instance = super().__new__(cls, *args, **kwargs)
@@ -2118,6 +2183,11 @@ class _FnNoWeighting(FnConstWeighting):
 
         Parameters
         ----------
+        exponent : positive float
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
+            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
+            are allowed.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
@@ -2126,6 +2196,8 @@ class _FnNoWeighting(FnConstWeighting):
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
             exactly zero for equal (but not identical) `x` and `y`.
+
+            Can only be used if `exponent` is 2.0.
         """
         super().__init__(1.0, exponent=exponent,
                          dist_using_inner=dist_using_inner)
