@@ -32,31 +32,34 @@ import odl
 from odl.util.testutils import all_equal, skip_if_no_cuda
 
 
+# TODO: Lp for p != 2
+
+
 def test_init():
     # Validate that the different init patterns work and do not crash.
     space = odl.FunctionSpace(odl.Interval(0, 1))
     grid = odl.uniform_sampling(space.domain, 10)
     R10 = odl.Rn(10)
-    odl.DiscreteL2(space, grid, R10)
+    odl.DiscreteLp(space, grid, R10)
 
     # Normal discretization of unit interval with complex
     complex_space = odl.FunctionSpace(odl.Interval(0, 1),
                                       field=odl.ComplexNumbers())
     C10 = odl.Cn(10)
-    odl.DiscreteL2(complex_space, grid, C10)
+    odl.DiscreteLp(complex_space, grid, C10)
 
     # Real space should not work with complex
     with pytest.raises(ValueError):
-        odl.DiscreteL2(space, grid, C10)
+        odl.DiscreteLp(space, grid, C10)
 
     # Complex space should not work with reals
     with pytest.raises(ValueError):
-        odl.DiscreteL2(complex_space, grid, R10)
+        odl.DiscreteLp(complex_space, grid, R10)
 
     # Wrong size of underlying space
     R20 = odl.Rn(20)
     with pytest.raises(ValueError):
-        odl.DiscreteL2(space, grid, R20)
+        odl.DiscreteLp(space, grid, R20)
 
 
 @skip_if_no_cuda
@@ -65,7 +68,7 @@ def test_init_cuda():
     space = odl.FunctionSpace(odl.Interval(0, 1))
     grid = odl.uniform_sampling(space.domain, 10)
     R10 = odl.CudaRn(10)
-    odl.DiscreteL2(space, grid, R10)
+    odl.DiscreteLp(space, grid, R10)
 
 
 def test_factory():

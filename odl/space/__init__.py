@@ -27,10 +27,6 @@ from . import ntuples
 from .ntuples import *
 __all__ += ntuples.__all__
 
-from . import default
-from .default import *
-__all__ += default.__all__
-
 from . import fspace
 from .fspace import *
 __all__ += fspace.__all__

@@ -23,7 +23,7 @@ from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.set.pspace import ProductSpace
 from odl.space.base_ntuples import FnBase
-from odl.discr.lp_discr import DiscreteL2
+from odl.discr.lp_discr import DiscreteLp
 
 
 __all__ = ('scalar_examples', 'vector_examples', 'samples')
@@ -53,7 +53,7 @@ def vector_examples(space):
             vector = space.element([vec for _, vec in examples])
             yield (name, space.element(vector))
 
-    elif isinstance(space, DiscreteL2):
+    elif isinstance(space, DiscreteLp):
         uspace = space.uspace
 
         # Get the points and calculate some statistics on them
