@@ -560,6 +560,10 @@ def _repr_space_funcs(space):
         weight = space._space_funcs.matrix
         inner_str += ', weight={!r}'.format(weight)
 
+    exponent = space._space_funcs.exponent
+    if exponent != 2.0:
+        inner_str += ', exponent={}'.format(exponent)
+
     return inner_str
 
 
@@ -593,7 +597,8 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
+        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner',
+                  'dist_using_inner'}
             'weight' : matrix, float or `None`
                 Use weighted inner product, norm, and dist.
 
@@ -607,6 +612,17 @@ class Fn(FnBase, Ntuples):
 
                 This option cannot be combined with `dist`, `norm` or
                 `inner`.
+
+            'exponent' : positive float
+                Exponent of the norm. For values other than 2.0, no
+                inner product is defined.
+                If `weight` is a sparse matrix, only 1.0, 2.0 and `inf`
+                are allowed.
+
+                This option is ignored if `dist`, `norm` or `inner`
+                is given.
+
+                Default: 2.0
 
             'dist' : callable, optional
                 The distance function defining a metric on :math:`F^n`.
@@ -663,6 +679,8 @@ class Fn(FnBase, Ntuples):
                 faster for large arrays. On the downside, it will not
                 evaluate to exactly zero for equal (but not identical)
                 `x` and `y`.
+
+                This option can only be used if `exponent` is 2.0.
         """
         super().__init__(size, dtype)
 
@@ -670,6 +688,7 @@ class Fn(FnBase, Ntuples):
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
         weight = kwargs.pop('weight', None)
+        exponent = kwargs.pop('exponent', 2.0)
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
@@ -679,24 +698,26 @@ class Fn(FnBase, Ntuples):
         if weight is not None:
             if np.isscalar(weight):
                 self._space_funcs = FnConstWeighting(
-                    weight, dist_using_inner=dist_using_inner)
+                    weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
                 pass
             elif isinstance(weight, sp.sparse.spmatrix):
                 self._space_funcs = FnMatrixWeighting(
-                    weight, dist_using_inner=dist_using_inner)
+                    weight, exponent, dist_using_inner=dist_using_inner)
             else:  # last possibility: make a matrix
-                mat = np.asarray(weight)
-                if mat.dtype == object:
+                arr = np.asarray(weight)
+                if arr.dtype == object:
                     raise ValueError('invalid weight argument {}.'
                                      ''.format(weight))
-                # later, we can distinguish ndim == 1 or 2
-                elif mat.ndim != 2:
-                    raise ValueError('array-like input {} is not '
+                if arr.ndim == 1:
+                    self._space_funcs = FnVectorWeighting(
+                        arr, exponent, dist_using_inner=dist_using_inner)
+                elif arr.ndim == 2:
+                    self._space_funcs = FnMatrixWeighting(
+                        arr, exponent, dist_using_inner=dist_using_inner)
+                else:
+                    raise ValueError('array-like input {} is not 1- or '
                                      '2-dimensional.'.format(weight))
-
-                self._space_funcs = FnMatrixWeighting(
-                    mat, dist_using_inner=dist_using_inner)
 
         elif dist is not None:
             self._space_funcs = _FnCustomDist(dist)
@@ -705,12 +726,18 @@ class Fn(FnBase, Ntuples):
         elif inner is not None:
             self._space_funcs = _FnCustomInnerProduct(inner)
         else:  # all None -> no weighing
-            self._space_funcs = _FnNoWeighting()
+            self._space_funcs = _FnNoWeighting(
+                exponent, dist_using_inner=dist_using_inner)
 
         if is_complex_dtype(self.dtype):
             self._real_dtype = _TYPE_MAP_C2R[self.dtype]
         else:
             self._real_dtype = self.dtype
+
+    @property
+    def exponent(self):
+        """Exponent of the norm and distance."""
+        return self._space_funcs.exponent
 
     @property
     def real_dtype(self):
@@ -1997,8 +2024,6 @@ class FnConstWeighting(_FnWeighting):
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
-            are allowed.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
@@ -2150,16 +2175,16 @@ class _FnNoWeighting(FnConstWeighting):
 
     """Weighting of `Fn` with constant 1.
 
-    The unweighted inner product is defined as
+    For exponent 2.0, the unweighted inner product is defined as
 
     :math:`<a, b> := b^H a`
 
     with :math:`b^H` standing for transposed complex conjugate.
-    This is the CPU implementation using NumPy.
+
+    For other exponents, only norm and dist are defined.
     """
 
     # Implement singleton pattern for efficiency in the default case
-    # TODO: test if this still gives a speedup
     _instance = None
 
     def __new__(cls, *args, **kwargs):
