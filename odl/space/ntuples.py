@@ -205,7 +205,7 @@ class Ntuples(NtuplesBase):
 
             self._data = data
 
-            NtuplesBase.Vector.__init__(self, space)
+            super().__init__(space)
 
         @property
         def data(self):
@@ -1030,8 +1030,7 @@ class Fn(FnBase, Ntuples):
             if not isinstance(space, Fn):
                 raise TypeError('{!r} not an `Fn` instance.'
                                 ''.format(space))
-            super().__init__(space)
-            Ntuples.Vector.__init__(self, space, data)
+            super().__init__(space, data)
 
         @property
         def real(self):

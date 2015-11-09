@@ -32,7 +32,7 @@ from numpy import float64
 import odl
 from odl.space.ntuples import FnConstWeighting
 if odl.CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import _CudaFnConstWeighting
+    from odl.space.cu_ntuples import CudaFnConstWeighting
 
 from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
                                 skip_if_no_cuda)
@@ -669,16 +669,16 @@ def test_const_init():
     constant = 1.5
 
     # Just test if the code runs
-    _CudaFnConstWeighting(constant)
+    CudaFnConstWeighting(constant)
 
 
 @skip_if_no_cuda
 def test_const_equals():
     constant = 1.5
 
-    weighting = _CudaFnConstWeighting(constant)
-    weighting2 = _CudaFnConstWeighting(constant)
-    other_weighting = _CudaFnConstWeighting(2.5)
+    weighting = CudaFnConstWeighting(constant)
+    weighting2 = CudaFnConstWeighting(constant)
+    other_weighting = CudaFnConstWeighting(2.5)
     weighting_npy = FnConstWeighting(constant)
 
     assert weighting == weighting
@@ -694,7 +694,7 @@ def _test_const_call_real(n):
     xarr, yarr, x, y = _vectors(rn, 2)
 
     constant = 1.5
-    weighting = _CudaFnConstWeighting(constant)
+    weighting = CudaFnConstWeighting(constant)
 
     result_const = weighting.inner(x, y)
     true_result_const = constant * np.dot(yarr, xarr)

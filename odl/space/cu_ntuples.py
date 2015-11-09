@@ -679,9 +679,9 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x2 = rn.element([1, 2, 3])
         >>> out = rn.element()
         >>> rn.multiply(x1, x2, out)  # out is returned
-        CudaRn(3).element([5.0, 6.0, 6.0])
+        CudaRn(3, 'float32').element([5.0, 6.0, 6.0])
         >>> out
-        CudaRn(3).element([5.0, 6.0, 6.0])
+        CudaRn(3, 'float32').element([5.0, 6.0, 6.0])
         """
         out.data.multiply(x1.data, x2.data)
 
@@ -712,9 +712,9 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x2 = rn.element([1, 2, 2])
         >>> out = rn.element()
         >>> rn.divide(x1, x2, out)  # out is returned
-        CudaRn(3).element([5.0, 1.5, 1.0])
+        CudaRn(3, 'float32').element([5.0, 1.5, 1.0])
         >>> out
-        CudaRn(3).element([5.0, 1.5, 1.0])
+        CudaRn(3, 'float32').element([5.0, 1.5, 1.0])
         """
         out.data.divide(x1.data, x2.data)
 
@@ -741,7 +741,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         def __init__(self, space, data):
             """Initialize a new instance."""
-            CudaNtuples.Vector.__init__(self, space, data)
+            super().__init__(space, data)
 
 
 class CudaRn(CudaFn):
