@@ -17,8 +17,9 @@
 
 """Setup script for ODL.
 
-Install usage:
->>> python setup.py install
+Installation command:
+
+	pip install [--user] [--editable] .
 """
 
 from __future__ import print_function, absolute_import
