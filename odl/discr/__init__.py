@@ -98,9 +98,9 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import l2_discr
-from .l2_discr import *
-__all__ += l2_discr.__all__
+from . import lp_discr
+from .lp_discr import *
+__all__ += lp_discr.__all__
 
 from . import discretization
 from .discretization import *
