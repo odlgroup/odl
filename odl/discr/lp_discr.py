@@ -67,7 +67,7 @@ class DiscreteLp(Discretization):
         grid : `TensorGrid`
             Sampling grid for the discretization. Must be contained
             in `fspace.domain`.
-        exponent : float, optional
+        exponent : positive float, optional
             The parameter `p` in :math:`L^p`. If the exponent is not
             equal to the default 2.0, the space has no inner product.
         interp : string, optional
@@ -105,6 +105,10 @@ class DiscreteLp(Discretization):
         super().__init__(fspace, dspace, restriction, extension)
         self._interp = str(interp).lower()
         self._exponent = float(exponent)
+        if (hasattr(self._dspace, 'exponent') and
+                self._exponent != dspace.exponent):
+            raise ValueError('exponent {} not equal to data space exponent '
+                             '{}.'.format(self._exponent, dspace.exponent))
 
     @property
     def exponent(self):
@@ -181,6 +185,8 @@ class DiscreteLp(Discretization):
             else:  # This should never happen
                 raise RuntimeError('unable to determine data space impl.')
             arg_fstr = '{!r}, {!r}'
+            if self.exponent != 2.0:
+                arg_fstr += ', exponent={ex}'
             if self.interp != 'nearest':
                 arg_fstr += ', interp={interp!r}'
             if impl != 'numpy':
@@ -196,7 +202,10 @@ class DiscreteLp(Discretization):
             arg_fstr = '''
     {!r},
     {!r},
-    {!r}'''
+    {!r}
+    '''
+            if self.exponent != 2.0:
+                arg_fstr += ', exponent={ex}'
             if self.interp != 'nearest':
                 arg_fstr += ', interp={interp!r}'
             if self.order != 'C':
@@ -204,7 +213,7 @@ class DiscreteLp(Discretization):
 
             arg_str = arg_fstr.format(
                 self.uspace, self.grid, self.dspace, interp=self.interp,
-                order=self.order)
+                order=self.order, ex=self.exponent)
             return '{}({})'.format(self.__class__.__name__, arg_str)
 
     def __str__(self):
@@ -339,7 +348,7 @@ class DiscreteLp(Discretization):
 
 
 def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
-                     impl='numpy', **kwargs):
+                  impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
@@ -350,7 +359,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
     nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
-    exponent : float, optional
+    exponent : positive float, optional
         The parameter `p` in :math:`L^p`. If the exponent is not equal
         to the default 2.0, the space has no inner product.
     interp : string, optional
@@ -380,7 +389,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
     Returns
     -------
     discr : `DiscreteLp`
-        The uniformly discretized L2 space
+        The uniformly discretized Lp space
     """
     if not isinstance(fspace, FunctionSpace):
         raise TypeError('space {!r} is not a `FunctionSpace` instance.'
@@ -409,13 +418,15 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
         raise NotImplemented
 
     if dtype is not None:
-        dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight)
+        dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight,
+                         exponent=exponent)
     else:
-        dspace = ds_type(grid.ntotal, weight=weight)
+        dspace = ds_type(grid.ntotal, weight=weight, exponent=exponent)
 
     order = kwargs.pop('order', 'C')
 
-    return DiscreteLp(fspace, grid, dspace, interp=interp, order=order)
+    return DiscreteLp(fspace, grid, dspace, exponent=exponent, interp=interp,
+                      order=order)
 
 
 if __name__ == '__main__':

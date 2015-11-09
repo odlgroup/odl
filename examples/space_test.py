@@ -25,7 +25,7 @@ standard_library.install_aliases()
 # Internal
 import odl
 
-print('\n\n TESTING FOR L2 SPACE \n\n')
+print('\n\n TESTING FOR Lp SPACE \n\n')
 
 spc = odl.FunctionSpace(odl.Interval(0, 1))
 discr = odl.uniform_discr(spc, 10)

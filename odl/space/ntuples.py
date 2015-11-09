@@ -53,6 +53,7 @@ from builtins import int, super
 from future.utils import native
 
 # External module imports
+# pylint: disable=no-name-in-module
 from abc import ABCMeta
 import ctypes
 from functools import partial
@@ -1029,7 +1030,7 @@ class Fn(FnBase, Ntuples):
             if not isinstance(space, Fn):
                 raise TypeError('{!r} not an `Fn` instance.'
                                 ''.format(space))
-
+            super().__init__(space)
             Ntuples.Vector.__init__(self, space, data)
 
         @property
@@ -1518,7 +1519,7 @@ def _inner_default(x1, x2):
     return dot(x2.data, x1.data)
 
 
-class _FnWeighting(with_metaclass(ABCMeta, _FnWeightingBase)):
+class _FnWeighting(_FnWeightingBase):
 
     """Abstract base class for `Fn` weighting."""
 
@@ -2167,8 +2168,8 @@ class FnConstWeighting(_FnWeighting):
         if self.exponent == 2.0:
             return 'Weighting: const = {:.4}'.format(self.const)
         else:
-            return 'Weighting: p = {}, const = {:.4}'.format(self.exponent,
-                                                             self.const)
+            return 'Weighting: p = {}, const = {:.4}'.format(
+                self.exponent, self.const)
 
 
 class _FnNoWeighting(FnConstWeighting):
