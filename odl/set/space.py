@@ -57,28 +57,28 @@ initialized**, thus it can contain *any* value.
     element : `LinearSpace.Vector`
         The new vector
 
-`_lincomb(z, a, x, b, y)`
--------------------------
+`_lincomb(a, x1, b, x2, out)`
+-----------------------------
 This private method is the raw implementation (i.e. without error
-checking) of the linear combination `z <-- a * x + b * y`.
+checking) of the linear combination `out = a * x1 + b * x2`.
 `_lincomb` and its public counterpart `lincomb` are used to cover
 a range of convenience functions, see below.
 
 **Parameters:**
-    z : `LinearSpace.Vector`
-        Element to which the result of the computation is written
-    a,b : scalars, must be members of the space's `field`
-        Multiplicative scalar factors for input vector `x` or `y`,
+    a, b : scalars, must be members of the space's `field`
+        Multiplicative scalar factors for input vector `x1` or `x2`,
         respectively
-    x,y : `LinearSpace.Vector`
+    x1, x2 : `LinearSpace.Vector`
         Input vectors
+    out : `LinearSpace.Vector`
+        Element to which the result of the computation is written
 
 **Returns:** `None`
 
 **Requirements:**
- * Aliasing of `x`, `y` and `z` **must** be allowed.
- * The input vectors `x` and `y` **must not** be modified.
- * The initial state of the output vector `z` **must not**
+ * Aliasing of `x1`, `x2` and `out` **must** be allowed.
+ * The input vectors `x1` and `x2` **must not** be modified.
+ * The initial state of the output vector `out` **must not**
    influence the result.
 
 `field`
@@ -106,20 +106,20 @@ purpose is to check two `LinearSpace` instances for equality.
 Optional methods
 ================
 
-`_dist(x, y)`
+`_dist(x1, x2)`
 -------------
 A raw (not type-checking) private method measuring the distance
-between two vectors `x` and `y`.
+between two vectors `x1` and `x2`.
 
 A space with a distance is called a **metric space**.
 
 **Parameters:**
-    x,y : `LinearSpace.Vector`
+    x1,x2 : `LinearSpace.Vector`
         Vectors whose mutual distance to calculate
 
 **Returns:**
     distance : float
-        The distance between `x` and `y`, measured in the space's
+        The distance between `x1` and `x2`, measured in the space's
         metric
 
 **Requirements:**
@@ -182,25 +182,25 @@ A Hilbert space is automatically a normed space with the norm function
 with the distance function `_dist(x, y) = _norm(x - y)`.
 
 
-`_multiply(z, x, y)`
---------------------
+`_multiply(x1, x2, out)`
+------------------------
 A raw (not type-checking) private method multiplying two vectors
-`x` and `y` element-wise and storing the result in `z`.
+`x1` and `x2` element-wise and storing the result in `out`.
 
 **Parameters:**
-    z : `LinearSpace.Vector`
-        Vector to store the result
-    x,y : `LinearSpace.Vector`
+    x1, x2 : `LinearSpace.Vector`
         Vectors whose element-wise product to calculate
+    out : `LinearSpace.Vector`
+        Vector to store the result
 
 **Returns:** `None`
 
 **Requirements:**
- * `_multiply(z, x, y) <==> _multiply(z, y, x)`
- * `_multiply(z, s * x, y) <==> _multiply(z, x, y); z *= s  <==>
-    _multiply(z, x, s * y)` for any scalar `s`
+ * `_multiply(x, y, out) <==> _multiply(y, x, out)`
+ * `_multiply(s * x, y, out) <==> _multiply(x, y, out); out *= s  <==>
+    _multiply(x, s * y, out)` for any scalar `s`
  * There is a space element `one` with
-   `z` after `_multiply(z, one, x)` or `_multiply(z, x, one)`
+   `out` after `_multiply(one, x, out)` or `_multiply(x, one, out)`
    equals `x`.
 
 Note
@@ -238,7 +238,6 @@ __all__ = ('LinearSpace',)
 
 
 class LinearSpace(Set):
-
     """Abstract linear vector space.
 
     Its elements are represented as instances of the inner
@@ -299,8 +298,8 @@ class LinearSpace(Set):
         raise NotImplementedError('inner product not implemented in space {!r}'
                                   ''.format(self))
 
-    def _multiply(self, z, x, y):
-        """Calculate the pointwise multiplication z = x * y.
+    def _multiply(self, x1, x2, out):
+        """Calculate the pointwise multiplication out = x1 * x2.
 
         This method is intended to be private, public callers should
         resort to `multiply` which is type-checked.
@@ -371,11 +370,11 @@ class LinearSpace(Set):
 
         Calculates
 
-        z = a * x
+        out = a * x1
 
         or, if b and y are given,
 
-        z = a*x + b*y
+        out = a*x1 + b*x2
 
         with error checking of types.
 
@@ -521,7 +520,6 @@ class LinearSpace(Set):
         return out
 
     class Vector(with_metaclass(ABCMeta, object)):
-
         """Abstract `LinearSpace` element.
 
         Not intended for creation of vectors, use the space's
@@ -776,7 +774,6 @@ class LinearSpace(Set):
 
 
 class UniversalSpace(LinearSpace):
-
     """A dummy linear space class mostly raising `NotImplementedError`."""
 
     def element(self, inp=None):
