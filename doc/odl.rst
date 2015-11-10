@@ -6,9 +6,10 @@ Subpackages
 
 .. toctree::
 
+    odl.diagnostics
     odl.discr
-    odl.geometry
     odl.operator
+    odl.set
     odl.space
     odl.util
 

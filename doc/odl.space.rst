@@ -4,62 +4,37 @@ odl.space package
 Submodules
 ----------
 
-odl.space.cartesian module
---------------------------
+odl.space.base_ntuples module
+-----------------------------
 
-.. automodule:: odl.space.cartesian
+.. automodule:: odl.space.base_ntuples
     :members:
     :undoc-members:
     :show-inheritance:
 
-odl.space.cuda module
----------------------
+odl.space.cu_ntuples module
+---------------------------
 
-.. automodule:: odl.space.cuda
+.. automodule:: odl.space.cu_ntuples
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+odl.space.default module
+------------------------
+
+.. automodule:: odl.space.default
     :members:
     :undoc-members:
     :show-inheritance:
 
 odl.space.fspace module
------------------------
+------------------------
 
 .. automodule:: odl.space.fspace
     :members:
     :undoc-members:
     :show-inheritance:
-
-odl.space.product module
-------------------------
-
-.. automodule:: odl.space.product
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-odl.space.sequence module
--------------------------
-
-.. automodule:: odl.space.sequence
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-odl.space.set module
---------------------
-
-.. automodule:: odl.space.set
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-odl.space.space module
-----------------------
-
-.. automodule:: odl.space.space
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
