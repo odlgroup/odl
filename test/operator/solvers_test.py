@@ -33,23 +33,6 @@ import odl.operator.solvers as solvers
 from odl.util.testutils import all_almost_equal
 
 
-class MultiplyOp(odl.Operator):
-    """Multiply with a matrix."""
-
-    def __init__(self, matrix, domain=None, range=None):
-        dom = odl.Rn(matrix.shape[1]) if domain is None else domain
-        ran = odl.Rn(matrix.shape[0]) if range is None else range
-        super().__init__(dom, ran, linear=True)
-        self.matrix = matrix
-
-    def _apply(self, rhs, out):
-        np.dot(self.matrix, rhs.data, out=out.data)
-
-    @property
-    def adjoint(self):
-        return MultiplyOp(self.matrix.T, self.range, self.domain)
-
-
 # Test solutions of the linear equation Ax = b with dense A
 
 
@@ -69,13 +52,13 @@ def test_landweber():
 
     # Make operator
     norm = np.linalg.norm(A, ord=2)
-    Aop = MultiplyOp(A)
+    op = odl.MatVecOperator(dom=rn, ran=rn, matrix=A)
 
     # Solve using landweber
-    solvers.landweber(Aop, xvec, bvec, niter=n*10, omega=1/norm**2)
+    solvers.landweber(op, xvec, bvec, niter=n*10, omega=1/norm**2)
 
     assert all_almost_equal(x, xvec, places=2)
-    assert all_almost_equal(Aop(xvec), b, places=2)
+    assert all_almost_equal(op(xvec), b, places=2)
 
 
 def test_conjugate_gradient():
@@ -92,13 +75,13 @@ def test_conjugate_gradient():
     bvec = rn.element(b)
 
     # Make operator
-    Aop = MultiplyOp(A)
+    op = odl.MatVecOperator(dom=rn, ran=rn, matrix=A)
 
     # Solve using conjugate gradient
-    solvers.conjugate_gradient_normal(Aop, xvec, bvec, niter=n)
+    solvers.conjugate_gradient_normal(op, xvec, bvec, niter=n)
 
     assert all_almost_equal(x, xvec, places=2)
-    assert all_almost_equal(Aop(xvec), b, places=2)
+    assert all_almost_equal(op(xvec), b, places=2)
 
 
 def test_gauss_newton():
@@ -115,17 +98,18 @@ def test_gauss_newton():
     bvec = rn.element(b)
 
     # Make operator
-    Aop = MultiplyOp(A)
+    op = odl.MatVecOperator(dom=rn, ran=rn, matrix=A)
 
     # Solve using conjugate gradient
-    solvers.gauss_newton(Aop, xvec, bvec, niter=n*3)
+    solvers.gauss_newton(op, xvec, bvec, niter=n*3)
 
     assert all_almost_equal(x, xvec, places=2)
-    assert all_almost_equal(Aop(xvec), b, places=2)
+    assert all_almost_equal(op(xvec), b, places=2)
 
 
 class ResidualOp(odl.Operator):
-    """Calculates op(x) - rhs."""
+
+    """Calculate op(x) - rhs."""
 
     def __init__(self, op, rhs):
         super().__init__(op.domain, op.range, linear=False)
@@ -154,23 +138,24 @@ def test_quasi_newton_bfgs():
     rhs = rn.element(np.random.rand(n))
 
     # Make operator
-    Aop = MultiplyOp(A)
-    Res = ResidualOp(Aop, -rhs)
+    op = odl.MatVecOperator(dom=rn, ran=rn, matrix=A)
+    res_op = ResidualOp(op, -rhs)
 
     x_opt = np.linalg.solve(A, -rhs)
 
     # Solve using conjugate gradient
     line_search = solvers.BacktrackingLineSearch(
-        lambda x: x.inner(Aop(x)/2.0 - rhs))
-    solvers.quasi_newton_bfgs(Res, xvec, line_search, niter=10)
+        lambda x: x.inner(op(x)/2.0 - rhs))
+    solvers.quasi_newton_bfgs(res_op, xvec, line_search, niter=10)
 
     assert all_almost_equal(x_opt, xvec, places=2)
-    assert Res(xvec).norm() < 10**-1
+    assert res_op(xvec).norm() < 10**-1
 
 
 def test_steepest_decent():
-    """ Solving a quadratic problem min 1/2 * x^T H x + c^T x, where H > 0. Solution
-    is given by solving Hx + c = 0, and solving this with np is used as reference. """
+    # Solving a quadratic problem min 1/2 * x^T H x + c^T x, where H is a
+    # symmetric positive definite matrix. The solution is given by solving
+    # Hx + c = 0, and solving this with NumPy is used as reference
 
     # Fixed array
     H = np.array([[3, 1, 1],
@@ -187,24 +172,23 @@ def test_steepest_decent():
     x_opt = np.linalg.solve(H, -c)
 
     # Create derivative operator
-    Aop = MultiplyOp(H)
-    deriv_op = ResidualOp(Aop, -c)
+    op = odl.MatVecOperator(dom=rn, ran=rn, matrix=H)
+    deriv_op = ResidualOp(op, -c)
 
     # Solve using steepest decent
     line_search = solvers.BacktrackingLineSearch(
-        lambda x: x.inner(Aop(x)/2.0 + c), 0.5, 0.05, 10)
+        lambda x: x.inner(op(x)/2.0 + c), 0.5, 0.05, 10)
     solvers.steepest_decent(deriv_op, xvec, line_search, niter=20)
 
     assert all_almost_equal(x_opt, xvec, places=2)
 
 
 def test_broydens_first_method():
-    """ Solving min f(x), for f(x) a strictly convex qp-problem, by finding
-    the point such that grad f(x) = 0 (effectively meaning that it solves
-    Ax + b = 0). """
+    # Solving a quadratic problem min 1/2 * x^T H x + c^T x, where H is a
+    # symmetric positive definite matrix. The solution is given by solving
+    # Hx + c = 0, and solving this with NumPy is used as reference
 
     # Fixed array
-
     H = np.array([[3, 1, 1],
                   [1, 2, 1/2],
                   [1, 1/2, 5]])
@@ -217,7 +201,7 @@ def test_broydens_first_method():
     x_opt = np.linalg.solve(H, -c)
 
     # Create derivative operator
-    deriv_op = ResidualOp(MultiplyOp(H), -c)
+    deriv_op = ResidualOp(odl.MatVecOperator(dom=rn, ran=rn, matrix=H), -c)
 
     # Solve using Broyden's first method
     line_search = solvers.ConstantLineSearch(1)
@@ -228,9 +212,9 @@ def test_broydens_first_method():
 
 
 def test_broydens_second_method():
-    """ Solving min f(x), for f(x) a strictly convex qp-problem, by finding
-    the point such that grad f(x) = 0 (effectively meaning that it solves
-    Ax + b = 0). """
+    # Solving a quadratic problem min 1/2 * x^T H x + c^T x, where H is a
+    # symmetric positive definite matrix. The solution is given by solving
+    # Hx + c = 0, and solving this with NumPy is used as reference
 
     # Fixed array
 
@@ -246,7 +230,7 @@ def test_broydens_second_method():
     x_opt = np.linalg.solve(H, -c)
 
     # Create derivative operator operator
-    deriv_op = ResidualOp(MultiplyOp(H), -c)
+    deriv_op = ResidualOp(odl.MatVecOperator(dom=rn, ran=rn, matrix=H), -c)
 
     # Solve using Broyden's first method
     line_search = solvers.ConstantLineSearch(1)
