@@ -483,6 +483,122 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
         if partial is not None:
             partial.send(x)
 
+
+def broydens_first_method(op, x, line_search, niter=1, partial=None):
+    """ General implementation of broyden's first (or 'good') method; a quasi
+    newton ethod for solving op(x) = 0.
+
+    The algorithm is described in [1]_ and [2]_, and in the `Wikipedia article
+    <https://en.wikipedia.org/wiki/Broyden's_method>_`
+
+    Parameters
+    ----------
+    op : Operator
+        An operator that evaluates the system of equations that one wants to
+        solve; finding x_0 so that op(x_0) = 0 is the goal.
+    x : op.domain element
+        The current point, the result is written inplace here.
+    line_search : line search object
+        An object that takes as input current point x, the search direction,
+        and the directional derivative, and returns the step length as a float.
+    niter : int, optional
+        The number of iterations to perform.
+    partial : `Partial`
+        Object executing code per iteration.
+
+    References
+    ----------
+    .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
+       simultaneous equations." Mathematics of computation (1965): 577-593.
+
+    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
+       (1991): 369-372.
+
+    - https://en.wikipedia.org/wiki/Broyden's_method
+    """
+
+    #TODO: One Hi call can be removed using linearity
+
+    Hi = IdentityOperator(op.range)
+    opx = op(x)
+
+    for _ in range(niter):
+        p = Hi(opx)
+        t = line_search(x, p, opx)
+
+        delta_x = t*p
+        x += delta_x
+
+        opx, opx_old = op(x), opx
+        delta_f = opx - opx_old
+
+        v = Hi(delta_x)
+        v_delta_f = v.inner(delta_f)
+        if v_delta_f == 0:
+            return
+        u = (delta_x + Hi(delta_f))/(v_delta_f)
+        Hi -= u * v.T
+
+        if partial is not None:
+            partial.send(x)
+
+
+def broydens_second_method(op, x, line_search, niter=1, partial=None):
+    """ General implementation of broyden's second (or 'bad') method; a quasi
+    newton ethod for solving op(x) = 0.
+
+    The algorithm is described in [1]_ and [2]_, and in the `Wikipedia article
+    <https://en.wikipedia.org/wiki/Broyden's_method>_`
+
+    Parameters
+    ----------
+    op : Operator
+        An operator that evaluates the system of equations that one wants to
+        solve; finding x_0 so that op(x_0) = 0 is the goal.
+    x : op.domain element
+        The current point, the result is written inplace here.
+    line_search : line search object
+        An object that takes as input current point x, the search direction,
+        and the directional derivative, and returns the step length as a float.
+    niter : int, optional
+        The number of iterations to perform.
+    partial : `Partial`
+        Object executing code per iteration.
+
+    References
+    ----------
+    .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
+       simultaneous equations." Mathematics of computation (1965): 577-593.
+
+    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
+       (1991): 369-372.
+    """
+
+    # TODO: potentially make the implementation faster by considering
+    # performance optimization according to Kvaalen.
+
+    Hi = IdentityOperator(op.range)
+    opx = op(x)
+
+    for _ in range(niter):
+        p = Hi(opx)
+        t = line_search(x, p, opx)
+
+        delta_x = t*p
+        x += delta_x
+
+        opx, opx_old = op(x), opx
+        delta_f = opx - opx_old
+
+        delta_f_norm2 = delta_f.norm()**2
+        if delta_f_norm2 == 0:
+            return
+        u = (delta_x + Hi(delta_f))/(delta_f_norm2)
+        Hi -= u * delta_f.T
+
+        if partial is not None:
+            partial.send(x)
+
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)
