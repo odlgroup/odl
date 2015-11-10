@@ -43,7 +43,9 @@ class Partial(with_metaclass(ABCMeta, object)):
 
 
 class StorePartial(Partial):
+
     """Simple object for storing all partial results of the solvers."""
+
     def __init__(self):
         self.results = []
 
@@ -56,7 +58,9 @@ class StorePartial(Partial):
 
 
 class ForEachPartial(Partial):
+
     """Simple object for applying a function to each iterate."""
+
     def __init__(self, function):
         self.function = function
 
@@ -66,7 +70,9 @@ class ForEachPartial(Partial):
 
 
 class PrintIterationPartial(Partial):
-    """Prints the interation count."""
+
+    """Print the interation count."""
+
     def __init__(self):
         self.iter = 0
 
@@ -77,7 +83,9 @@ class PrintIterationPartial(Partial):
 
 
 class PrintStatusPartial(Partial):
-    """Prints the interation count and current norm of each iterate."""
+
+    """Print the interation count and current norm of each iterate."""
+
     def __init__(self):
         self.iter = 0
 
@@ -88,10 +96,49 @@ class PrintStatusPartial(Partial):
 
 
 def landweber(op, x, rhs, niter=1, omega=1, partial=None):
-    """General and efficient implementation of Landweber iteration.
+    """Optimized implementation of Landweber's method.
 
-    x <- x - omega * (A')^* (Ax - rhs)
+    This method solves the inverse problem (of the first kind)
+
+    :math:`A (x) = y`
+
+    for a (Frechet-) differentiable operator `A` using the iteration
+
+    :math:`x <- x - \omega * (A')^* (A(x) - y)`
+
+    It uses a minimum amount of memory copies by applying re-usable
+    temporaries and in-place evaluation.
+
+    The method is described in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Landweber_iteration>`_.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Operator in the inverse problem. It must have a `derivative`
+        property, which returns a new operator which in turn has an
+        `adjoint` property, i.e. `op.derivative(x).adjoint` must be
+        well-defined for `x` in the operator domain.
+    x : element of the domain of `op`
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    rhs : element of the range of `op`
+        Right-hand side of the equation defining the inverse problem
+    niter : int, optional
+        Maximum number of iterations
+    omega : positive float
+        Relaxation parameter, must lie between 0 and :math:`2/||A||`,
+        the operator norm of `A`, to guarantee convergence.
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    None
     """
+    # TODO: add a book reference
 
     # Reusable temporaries
     tmp_ran = op.range.element()
@@ -108,8 +155,44 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
 
 
 def conjugate_gradient(op, x, rhs, niter=1, partial=None):
-    """ Optimized version of CGN, uses no temporaries etc.
+    """Optimized implementation of CG for self-adjoint operators.
+
+    This method solves the inverse problem (of the first kind)
+
+    :math:`A x = y`
+
+    for a linear and self-adjoint operator `A`.
+
+    It uses a minimum amount of memory copies by applying re-usable
+    temporaries and in-place evaluation.
+
+    The method is described (for linear systems) in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Operator in the inverse problem. It must be linear and
+        self-adjoint. This implies in particular that its domain and
+        range are equal.
+    x : element of the domain of `op`
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    rhs : element of the range of `op`
+        Right-hand side of the equation defining the inverse problem
+    niter : int, optional
+        Maximum number of iterations
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    None
     """
+    # TODO: add a book reference
+
     if op.domain != op.range:
         raise TypeError('Operator needs to be self adjoint')
 
@@ -143,8 +226,48 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
 
 def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
-    """ Optimized version of CGN, uses no temporaries etc.
+    """Optimized implementation of CG for the normal equation.
+
+    This method solves the normal equation
+
+    :math:`A^* A x = A^* y`
+
+    to the inverse problem (of the first kind)
+
+    :math:`A x = y`
+
+    with a linear operator `A`.
+
+    It uses a minimum amount of memory copies by applying re-usable
+    temporaries and in-place evaluation.
+
+    The method is described (for linear systems) in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Conjugate_gradient_method#\
+Conjugate_gradient_on_the_normal_equations>`_.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Operator in the inverse problem. It must be linear and implement
+        the `adjoint` property.
+    x : element of the domain of `op`
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    rhs : element of the range of `op`
+        Right-hand side of the equation defining the inverse problem
+    niter : int, optional
+        Maximum number of iterations
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    None
     """
+    # TODO: add a book reference
+
     d = op(x)
     d.lincomb(1, rhs, -1, d)       # d = rhs - A x
     p = op.derivative(x).adjoint(d)
@@ -173,20 +296,78 @@ def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
             partial.send(x)
 
 
-def exp_zero_seq(scale):
-    """ The default zero sequence given by:
-        t_m = scale ^ (-m-1)
+def exp_zero_seq(base):
+    """The default exponential zero sequence.
+
+    It is defined by
+
+        t_0 = 1.0
+        t_m = t_(m-1) / base
+
+    or, in closed form
+
+        t_m = base^(-m-1)
+
+    Parameters
+    ----------
+    base : float
+        Base of the sequence. Its absolute value must be larger than
+        1.
+
+    Yields
+    ------
+    val : float
+        The next value in the exponential sequence
     """
     value = 1.0
     while True:
-        value /= scale
+        value /= base
         yield value
 
 
 def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
                  partial=None):
-    """ Solves op(x) = rhs using the gauss newton method. The inner-solver
-    uses conjugate gradient.
+    """Optimized implementation of a Gauss-Newton method.
+
+    This method solves the inverse problem (of the first kind)
+
+    :math:`A (x) = y`
+
+    for a (Frechet-) differentiable operator `A` using a
+    Gauss-Newton iteration.
+
+    It uses a minimum amount of memory copies by applying re-usable
+    temporaries and in-place evaluation.
+
+    A variant of the method applied to a specific problem is described
+    in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm>`_.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Operator in the inverse problem. It must have a `derivative`
+        property, which returns a new operator which in turn has an
+        `adjoint` property, i.e. `op.derivative(x).adjoint` must be
+        well-defined for `x` in the operator domain.
+    x : element of the domain of `op`
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    rhs : element of the range of `op`
+        Right-hand side of the equation defining the inverse problem
+    niter : int, optional
+        Maximum number of iterations
+    zero_seq : iterable, optional
+        Zero sequence whose values are used for the regularization of
+        the linearized problem in each Newton step
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    None
     """
     x0 = x.copy()
     I = IdentityOperator(op.domain)
@@ -204,12 +385,12 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
         # v = rhs - op(x) - deriv(x0-x)
         # u = deriv.T(v)
-        op(x, out=tmp_ran)      # eval        op(x)
-        v.lincomb(1, rhs, -1, tmp_ran)  # assign      v = rhs - op(x)
-        tmp_dom.lincomb(1, x0, -1, x)  # assign temp  tmp_dom = x0 - x
-        deriv(tmp_dom, out=tmp_ran)   # eval        deriv(x0-x)
-        v -= tmp_ran                    # assign      v = rhs-op(x)-deriv(x0-x)
-        deriv_adjoint(v, out=u)       # eval/assign u = deriv.T(v)
+        op(x, out=tmp_ran)              # eval  op(x)
+        v.lincomb(1, rhs, -1, tmp_ran)  # assign  v = rhs - op(x)
+        tmp_dom.lincomb(1, x0, -1, x)   # assign temp  tmp_dom = x0 - x
+        deriv(tmp_dom, out=tmp_ran)     # eval  deriv(x0-x)
+        v -= tmp_ran                    # assign  v = rhs-op(x)-deriv(x0-x)
+        deriv_adjoint(v, out=u)         # eval/assign  u = deriv.T(v)
 
         # Solve equation system
         # (deriv.T o deriv + tm * I)^-1 u = dx
@@ -379,7 +560,7 @@ def quasi_newton_bfgs(deriv, x, line_search, niter=1, partial=None):
     implementation uses the rank-one BFGS update schema where the
     inverse of the Hessian is recalculated in each iteration.
 
-    The algorithm is described in [1]_, Section 12.3 and in the
+    The algorithm is described in [1]_, Section 12.3 and in a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\
 Goldfarb%E2%80%93Shanno_algorithm>`_
@@ -393,9 +574,9 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     line_search : `LineSearch`
         Strategy to choose the step length
     niter : int, optional
-        Number of iterations to perform.
-    partial : `Partial`
-        Object executing code per iteration.
+        Number of iterations
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
 
     References
     ----------
@@ -436,33 +617,34 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
     General implementation of steepest decent (also known as gradient
     decent) for solving
 
-    `min f(x)`
+    :math:`min f(x)`
 
-    The algorithm is intended for unconstrained problems. The method needs line
-    search in order guarantee convergence. With appropriate line search it can
-    also be used for constrained problems where one wants to minimize over some
-    given set C. This is done by defining `f(x) = infty` if x is not in C.
+    The algorithm is intended for unconstrained problems. It needs line
+    search in order guarantee convergence. With appropriate line search,
+    it can also be used for constrained problems where one wants to
+    minimize over some given set `C`. This is done by defining
+    :math:`f(x) = \infty` for `x` outside `C`.
 
 
     The algorithm is described in [1]_, section 9.3--9.4
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [2]_, Section 12.2, and the
+    [2]_, Section 12.2, and a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
     Parameters
     ----------
     deriv : `odl.Operator`
-        Derivative of the objective function
-    x : element in the domain of `grad_f`
+        Gradient of the objective function, :math:`x \mapsto grad f(x)`
+    x : element in the domain of `deriv`
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
     niter : int, optional
-        Number of iterations to perform.
-    partial : `Partial`
-        Object executing code per iteration.
+        Number of iterations
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
 
     References
     ----------
@@ -485,39 +667,45 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
 
 
 def broydens_first_method(op, x, line_search, niter=1, partial=None):
-    """ General implementation of broyden's first (or 'good') method; a quasi
-    newton ethod for solving op(x) = 0.
+    """General implementation of Broyden's first (or 'good') method.
 
-    The algorithm is described in [1]_ and [2]_, and in the `Wikipedia article
-    <https://en.wikipedia.org/wiki/Broyden's_method>_`
+    It determines a solution to the equation
+
+    :math:`A(x) = 0`
+
+    for a general (not necessarily differentiable) operator `A`
+    using a quasi-Newton approach with approximate Hessian.
+
+    The algorithm is described in [1]_ and [2]_, and in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Broyden's_method>`_.
 
     Parameters
     ----------
     op : Operator
-        An operator that evaluates the system of equations that one wants to
-        solve; finding x_0 so that op(x_0) = 0 is the goal.
-    x : op.domain element
-        The current point, the result is written inplace here.
-    line_search : line search object
-        An object that takes as input current point x, the search direction,
-        and the directional derivative, and returns the step length as a float.
+        Operator for which a zero is computed
+    x : element of the domain of `op`
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    line_search : `LineSearch`
+        Strategy to choose the step length
     niter : int, optional
-        The number of iterations to perform.
-    partial : `Partial`
-        Object executing code per iteration.
+        Number of iterations
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
 
     References
     ----------
     .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
-       simultaneous equations." Mathematics of computation (1965): 577-593.
+       simultaneous equations." Mathematics of computation (1965):
+       577-593.
 
-    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
-       (1991): 369-372.
-
-    - https://en.wikipedia.org/wiki/Broyden's_method
+    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical
+       Mathematics 31.2 (1991): 369-372.
     """
 
-    #TODO: One Hi call can be removed using linearity
+    # TODO: One Hi call can be removed using linearity
 
     Hi = IdentityOperator(op.range)
     opx = op(x)
@@ -544,34 +732,42 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
 
 
 def broydens_second_method(op, x, line_search, niter=1, partial=None):
-    """ General implementation of broyden's second (or 'bad') method; a quasi
-    newton ethod for solving op(x) = 0.
+    """General implementation of Broyden's second (or 'bad') method.
 
-    The algorithm is described in [1]_ and [2]_, and in the `Wikipedia article
-    <https://en.wikipedia.org/wiki/Broyden's_method>_`
+    It determines a solution to the equation
+
+    :math:`A(x) = 0`
+
+    for a general (not necessarily differentiable) operator `A`
+    using a quasi-Newton approach with approximate Hessian.
+
+    The algorithm is described in [1]_ and [2]_, and in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Broyden's_method>`_
 
     Parameters
     ----------
     op : Operator
-        An operator that evaluates the system of equations that one wants to
-        solve; finding x_0 so that op(x_0) = 0 is the goal.
-    x : op.domain element
-        The current point, the result is written inplace here.
-    line_search : line search object
-        An object that takes as input current point x, the search direction,
-        and the directional derivative, and returns the step length as a float.
+        Operator for which a zero is computed
+    x : element of the domain of `op`
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    line_search : `LineSearch`
+        Strategy to choose the step length
     niter : int, optional
-        The number of iterations to perform.
-    partial : `Partial`
-        Object executing code per iteration.
+        Number of iterations
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
 
     References
     ----------
     .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
-       simultaneous equations." Mathematics of computation (1965): 577-593.
+       simultaneous equations." Mathematics of computation (1965):
+       577-593.
 
-    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical Mathematics 31.2
-       (1991): 369-372.
+    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical
+       Mathematics 31.2 (1991): 369-372.
     """
 
     # TODO: potentially make the implementation faster by considering
