@@ -47,12 +47,12 @@ from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.randn(fn.size).astype(fn.dtype)
+        return np.random.uniform(-1, 1, fn.size).astype(fn.dtype)
     elif np.issubdtype(fn.dtype, np.integer):
         return np.random.randint(0, 10, fn.size).astype(fn.dtype)
     else:
-        return (np.random.randn(fn.size) +
-                1j * np.random.randn(fn.size)).astype(fn.dtype)
+        return (np.random.uniform(-1, 1, fn.size) +
+                1j * np.random.uniform(-1, 1, fn.size)).astype(fn.dtype)
 
 
 def _element(fn):
@@ -69,6 +69,11 @@ def _vectors(fn, n=1):
     # Make Fn vectors
     vecs = [fn.element(arr) for arr in arrs]
     return arrs + vecs
+
+
+def _pos_array(fn):
+    """Create an array with positive real entries as weight in `fn`."""
+    return np.abs(_array(fn)) + 0.1
 
 
 def _sparse_matrix(fn):
@@ -113,6 +118,9 @@ def exponent(request):
     return request.param
 
 
+# ---- Ntuples, Rn and Cn ---- #
+
+
 def test_init():
     # Test run
     Ntuples(3, int)
@@ -131,13 +139,52 @@ def test_init():
 
     # Rn
     Rn(3, float)
-    Rn(3, int)
+    Rn(3, int)  # TODO: do we want this??
 
     # Rn only works on reals
     with pytest.raises(TypeError):
         Rn(3, complex)
     with pytest.raises(TypeError):
         Rn(3, 'S1')
+
+    # Cn
+    Cn(3, complex)
+
+    # Cn only works on reals
+    with pytest.raises(TypeError):
+        Cn(3, float)
+    with pytest.raises(TypeError):
+        Cn(3, 'S1')
+
+    # Init with weights or custom space functions
+    const = 1.5
+    weight_vec = _pos_array(Rn(3, float))
+    weight_mat = _dense_matrix(Rn(3, float))
+
+    Rn(3, weight=const)
+    Rn(3, weight=weight_vec)
+    Rn(3, weight=weight_mat)
+
+    # Different exponents
+    exponents = [0.5, 1.0, 2.0, 5.0, float('inf')]
+    for exponent in exponents:
+        Cn(3, exponent=exponent)
+
+
+def test_space_funcs(exponent):
+    const = 1.5
+    weight_vec = _pos_array(Rn(3, float))
+    weight_mat = _dense_matrix(Rn(3, float))
+
+    spaces = [Fn(3, complex, exponent=exponent, weight=const),
+              Fn(3, complex, exponent=exponent, weight=weight_vec),
+              Fn(3, complex, exponent=exponent, weight=weight_mat)]
+    weightings = [FnConstWeighting(const, exponent=exponent),
+                  FnVectorWeighting(weight_vec, exponent=exponent),
+                  FnMatrixWeighting(weight_mat, exponent=exponent)]
+
+    for spc, weight in zip(spaces, weightings):
+        assert spc._space_funcs == weight
 
 
 def test_vector_init(fn):
@@ -315,6 +362,15 @@ def test_operators(fn):
     _test_unary_operator(fn, lambda x: x / x)
 
 
+def test_inner(fn):
+    xd = _element(fn)
+    yd = _element(fn)
+
+    correct_inner = np.vdot(yd, xd)
+    assert almost_equal(fn.inner(xd, yd), correct_inner)
+    assert almost_equal(xd.inner(yd), correct_inner)
+
+
 def test_norm(fn):
     xd = _element(fn)
 
@@ -324,13 +380,35 @@ def test_norm(fn):
     assert almost_equal(xd.norm(), correct_norm)
 
 
-def test_inner(fn):
+def test_pnorm(exponent):
+    for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
+        xd = _element(fn)
+        correct_norm = np.linalg.norm(xd.asarray(), ord=exponent)
+
+        assert almost_equal(fn.norm(xd), correct_norm)
+        assert almost_equal(xd.norm(), correct_norm)
+
+
+def test_dist(fn):
     xd = _element(fn)
     yd = _element(fn)
 
-    correct_inner = np.vdot(yd, xd)
-    assert almost_equal(fn.inner(xd, yd), correct_inner)
-    assert almost_equal(xd.inner(yd), correct_inner)
+    correct_dist = np.linalg.norm(xd.asarray() - yd.asarray())
+
+    assert almost_equal(fn.dist(xd, yd), correct_dist)
+    assert almost_equal(xd.dist(yd), correct_dist)
+
+
+def test_pdist(exponent):
+    for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
+        xd = _element(fn)
+        yd = _element(fn)
+
+        correct_dist = np.linalg.norm(xd.asarray() - yd.asarray(),
+                                      ord=exponent)
+
+        assert almost_equal(fn.dist(xd, yd), correct_dist)
+        assert almost_equal(xd.dist(yd), correct_dist)
 
 
 def test_setitem(fn):
@@ -527,7 +605,7 @@ def test_conj(fn):
     assert all_equal(y, xarr.conj())
 
 
-# MatVecOperator
+# ---- MatVecOperator ---- #
 
 
 def test_matvec_init(fn):
@@ -671,7 +749,7 @@ def test_matvec_call(fn):
     assert all_almost_equal(y, yarr)
 
 
-# Weighting tests
+# --- Weighting tests --- #
 
 
 def test_matrix_init(fn):

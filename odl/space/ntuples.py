@@ -54,7 +54,6 @@ from future.utils import native
 
 # External module imports
 # pylint: disable=no-name-in-module
-from abc import ABCMeta
 import ctypes
 from functools import partial
 from math import sqrt
