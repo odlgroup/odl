@@ -28,8 +28,8 @@ from odl.util.utility import with_metaclass
 # External imports
 from abc import ABCMeta
 import numpy as np
+import scipy as sp
 from scipy.interpolate import interpnd, RegularGridInterpolator
-from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 
 # ODL imports
 from odl.discr.grid import TensorGrid
@@ -529,18 +529,18 @@ class LinearInterpolation(FunctionSetMapping):
         """
         def func(*x):
             x = np.atleast_1d(x).squeeze()
-            values = interpnd(points=self.grid.coord_vectors,
-                             values=inp.data.reshape(self.grid.shape,
-                                                     order=self.order),
-                             method='nearest',
-                             xi=x,
-                             fill_value=None)  # Allow points outside
+            values = sp.interpolate.interpnd(points=self.grid.coord_vectors,
+                                            values=inp.data.reshape(self.grid.shape,
+                                                                    order=self.order),
+                                            method='nearest',
+                                            xi=x,
+                                            fill_value=None)  # Allow points outside
             return values[0] if values.shape == (1,) else values
 
         return self.range.element(func)
 
 
-class _NearestPointwiseInterpolator(RegularGridInterpolator):
+class _NearestPointwiseInterpolator(sp.interpolate.interpolate.RegularGridInterpolator):
 
     """Own version of SciPy's grid interpolator by point.
 
@@ -605,7 +605,7 @@ class _NearestPointwiseInterpolator(RegularGridInterpolator):
                                  'n={} is the total number of evaluation '
                                  'points.'.format(outp.shape, xi.shape[0]))
 
-        xi = _ndim_coords_from_arrays(xi, ndim=ndim)
+        xi = sp.interpolate.interpnd._ndim_coords_from_arrays(xi, ndim=ndim)
         if xi.shape[-1] != ndim:
             raise ValueError('The requested sample points xi have dimension '
                              '{}, but this _NearestInterpolator has '
