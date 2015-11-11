@@ -37,9 +37,10 @@ else:
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
-            return Mock()
+        return Mock()
 
-MOCK_MODULES = ['scipy', 'numpy', 'odlpp']
+MOCK_MODULES = ['builtins', 'future', 'scipy', 
+                'numpy', 'odlpp', 'numpy.distutils']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # Add any Sphinx extension module names here, as strings. They can be
