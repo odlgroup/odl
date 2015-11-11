@@ -24,46 +24,81 @@ from builtins import range, str
 
 # External module imports
 import pytest
-import math
+from math import ceil
 import numpy as np
 from numpy import float64
+import scipy as sp
 
 # ODL imports
 import odl
+from odl import ComplexNumbers
 from odl.space.ntuples import FnConstWeighting
 if odl.CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaFnConstWeighting
+    from odl.space.cu_ntuples import (
+        _CudaFnNoWeighting, CudaFnConstWeighting, CudaFnVectorWeighting,
+        _CudaFnCustomInnerProduct, _CudaFnCustomNorm, _CudaFnCustomDist)
 
 from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
                                 skip_if_no_cuda)
 
 
 # TODO:
-# * weighted spaces
 # * custom dist/norm/inner
 
 
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.randn(fn.size).astype(fn.dtype)
+        return np.random.uniform(-1, 1, fn.size).astype(fn.dtype)
     elif np.issubdtype(fn.dtype, np.integer):
         return np.random.randint(0, 10, fn.size).astype(fn.dtype)
     else:
-        return (np.random.randn(fn.size) +
-                1j * np.random.randn(fn.size)).astype(fn.dtype)
-
-
-def _element(fn):
-    return fn.element(_array(fn))
+        return (np.random.uniform(-1, 1, fn.size) +
+                1j * np.random.uniform(-1, 1, fn.size)).astype(fn.dtype)
 
 
 def _vectors(fn, n=1):
+    """Create a list of arrays and vectors in `fn`.
+
+    First arrays, then vectors.
+    """
     arrs = [_array(fn) for _ in range(n)]
 
     # Make Fn vectors
     vecs = [fn.element(arr) for arr in arrs]
     return arrs + vecs
+
+
+def _pos_array(fn):
+    """Create an array with positive real entries as weight in `fn`."""
+    return np.abs(_array(fn)) + 0.1
+
+
+def _sparse_matrix(fn):
+    """Create a sparse positive definite Hermitian matrix for `fn`."""
+    nnz = np.random.randint(0, int(ceil(fn.size**2/2)))
+    coo_r = np.random.randint(0, fn.size, size=nnz)
+    coo_c = np.random.randint(0, fn.size, size=nnz)
+    values = np.random.rand(nnz).astype(fn.dtype)
+    if fn.field == ComplexNumbers():
+        values += 1j * np.random.rand(nnz).astype(fn.dtype)
+    mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
+                               shape=(fn.size, fn.size),
+                               dtype=fn.dtype)
+    # Make symmetric and positive definite
+    return mat + mat.conj().T + fn.size * sp.sparse.eye(fn.size,
+                                                        dtype=fn.dtype)
+
+
+def _dense_matrix(fn):
+    """Create a dense positive definite Hermitian matrix for `fn`."""
+    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=fn.dtype)
+    # Make symmetric and positive definite
+    return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
+
+
+def _element(fn):
+    return fn.element(_array(fn))
 
 
 @pytest.fixture(scope="module",
@@ -73,11 +108,27 @@ def fn(request):
     return request.param
 
 
-@pytest.mark.skipif("np.float32 not in odl.CUDA_DTYPES")
-def test_init_cudantuples_f32():
+@pytest.fixture(scope="module",
+                ids=[' p = 2 ', ' p = 1 ', ' p = inf ', ' p = 0.5 ',
+                     ' p = 1.5 ', ' p = 3 '],
+                params=[2.0, 1.0, float('inf'), 0.5, 1.5, 3.0])
+def exponent(request):
+    return request.param
+
+
+# --- CUDA space tests --- #
+
+
+def test_init_cudantuples_dtypes():
     # verify that the code runs
-    r3 = odl.CudaNtuples(3, dtype='float32')
-    r3.element()
+    for dtype in odl.CUDA_DTYPES:
+        odl.CudaNtuples(3, dtype=dtype).element()
+        odl.CudaFn(3, dtype=dtype).element()
+
+
+def test_init_exponent(exponent):
+    for dtype in odl.CUDA_DTYPES:
+        odl.CudaFn(3, dtype='float32', exponent=exponent)
 
 
 @skip_if_no_cuda
@@ -88,6 +139,29 @@ def test_init_cudantuples_bad_dtype():
         odl.CudaNtuples(3, dtype=str)
     with pytest.raises(TypeError):
         odl.CudaNtuples(3, dtype=np.matrix)
+
+
+def test_init_spacefuncs(exponent):
+    const = 1.5
+    weight_vec = _pos_array(odl.CudaRn(3))
+    weight_elem = odl.CudaFn(3, dtype='float32').element(weight_vec)
+
+    f3_none = odl.CudaFn(3, dtype='float32', exponent=exponent)
+    f3_const = odl.CudaFn(3, dtype='float32', weight=const, exponent=exponent)
+    f3_vec = odl.CudaFn(3, dtype='float32', weight=weight_vec,
+                        exponent=exponent)
+    f3_elem = odl.CudaFn(3, dtype='float32', weight=weight_elem,
+                         exponent=exponent)
+
+    weighting_none = _CudaFnNoWeighting(exponent=exponent)
+    weighting_const = CudaFnConstWeighting(const, exponent=exponent)
+    weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
+    weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
+
+    assert f3_none._space_funcs == weighting_none
+    assert f3_const._space_funcs == weighting_const
+    assert f3_vec._space_funcs == weighting_vec
+    assert f3_elem._space_funcs == weighting_elem
 
 
 @skip_if_no_cuda
@@ -101,6 +175,10 @@ def test_element(fn):
     z = fn.element(data_ptr=y.data_ptr)
     assert z in fn
 
+    # Rewrap
+    z2 = fn.element(z)
+    assert z2 in fn
+
     with pytest.raises(ValueError):
         fn.element(inp=[0]*fn.size, data_ptr=y.data_ptr)
 
@@ -108,6 +186,11 @@ def test_element(fn):
 @skip_if_no_cuda
 def test_zero(fn):
     assert all_almost_equal(fn.zero(), [0]*fn.size)
+
+
+@skip_if_no_cuda
+def test_one(fn):
+    assert all_almost_equal(fn.one(), [1]*fn.size)
 
 
 @skip_if_no_cuda
@@ -301,27 +384,60 @@ def test_setslice_index_error():
 
 
 @skip_if_no_cuda
-def test_norm():
-    r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-
-    correct_norm_squared = 1 ** 2 + 2 ** 2 + 3 ** 2
-    correct_norm = math.sqrt(correct_norm_squared)
-
-    # Space function
-    assert almost_equal(r3.norm(xd), correct_norm)
-
-
-@skip_if_no_cuda
 def test_inner():
     r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-    yd = r3.element([5, 3, 9])
+    x = r3.element([1, 2, 3])
+    y = r3.element([5, 3, 9])
 
     correct_inner = 1 * 5 + 2 * 3 + 3 * 9
 
     # Space function
-    assert almost_equal(r3.inner(xd, yd), correct_inner)
+    assert almost_equal(r3.inner(x, y), correct_inner)
+
+    # Exponent != 2 -> no inner product
+    r3 = odl.CudaRn(3, exponent=1)
+    x = r3.element([1, 2, 3])
+    y = r3.element([5, 3, 9])
+
+    with pytest.raises(NotImplementedError):
+        r3.inner(x, y)
+    with pytest.raises(NotImplementedError):
+        x.inner(y)
+
+
+@skip_if_no_cuda
+def test_norm(exponent):
+    r3 = odl.CudaRn(3, exponent=exponent)
+    xarr, x = _vectors(r3)
+
+    correct_norm = np.linalg.norm(xarr, ord=exponent)
+
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            r3.norm(x)
+            x.norm()
+    else:
+        assert almost_equal(r3.norm(x), correct_norm)
+        assert almost_equal(x.norm(), correct_norm)
+
+
+@skip_if_no_cuda
+def test_dist(exponent):
+    r3 = odl.CudaRn(3, exponent=exponent)
+    xarr, yarr, x, y = _vectors(r3, n=2)
+
+    correct_dist = np.linalg.norm(xarr - yarr, ord=exponent)
+
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            r3.dist(x, y)
+        with pytest.raises(NotImplementedError):
+            x.dist(y)
+    else:
+        assert almost_equal(r3.dist(x, y), correct_dist)
+        assert almost_equal(x.dist(y), correct_dist)
 
 
 @skip_if_no_cuda
@@ -664,48 +780,239 @@ def test_ufuncs():
         yield _test_ufunc, ufunc
 
 
-@skip_if_no_cuda
-def test_const_init():
-    constant = 1.5
-
-    # Just test if the code runs
-    CudaFnConstWeighting(constant)
+# --- Weighting tests --- #
 
 
 @skip_if_no_cuda
-def test_const_equals():
+def test_const_init(exponent):
+    const = 1.5
+    CudaFnConstWeighting(const, exponent=exponent)
+
+
+@skip_if_no_cuda
+def test_const_equals(exponent):
     constant = 1.5
 
-    weighting = CudaFnConstWeighting(constant)
-    weighting2 = CudaFnConstWeighting(constant)
-    other_weighting = CudaFnConstWeighting(2.5)
-    weighting_npy = FnConstWeighting(constant)
+    weighting = CudaFnConstWeighting(constant, exponent=exponent)
+    weighting2 = CudaFnConstWeighting(constant, exponent=exponent)
+    other_weighting = CudaFnConstWeighting(2.5, exponent=exponent)
+    wrong_exp = FnConstWeighting(constant, exponent=exponent+1)
 
     assert weighting == weighting
     assert weighting == weighting2
     assert weighting2 == weighting
 
     assert weighting != other_weighting
-    assert weighting != weighting_npy
+    assert weighting != wrong_exp
 
 
-def _test_const_call_real(n):
-    rn = odl.CudaRn(n)
+@skip_if_no_cuda
+def test_const_inner():
+    rn = odl.CudaRn(5)
     xarr, yarr, x, y = _vectors(rn, 2)
 
     constant = 1.5
     weighting = CudaFnConstWeighting(constant)
 
-    result_const = weighting.inner(x, y)
-    true_result_const = constant * np.dot(yarr, xarr)
-
-    assert almost_equal(result_const, true_result_const)
+    true_inner = constant * np.vdot(yarr, xarr)
+    assert almost_equal(weighting.inner(x, y), true_inner)
 
 
 @skip_if_no_cuda
-def test_const_call():
-    for n in range(20):
-        _test_const_call_real(n)
+def test_const_norm(exponent):
+    rn = odl.CudaRn(5)
+    xarr, x = _vectors(rn)
+
+    constant = 1.5
+    weighting = CudaFnConstWeighting(constant, exponent=exponent)
+
+    factor = 1 if exponent == float('inf') else constant**(1/exponent)
+    true_norm = factor * np.linalg.norm(xarr, ord=exponent)
+
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            weighting.norm(x)
+    else:
+        assert almost_equal(weighting.norm(x), true_norm)
+
+    # Same with free function
+    pnorm = odl.cu_weighted_norm(constant, exponent=exponent)
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            pnorm(x)
+    else:
+        assert almost_equal(pnorm(x), true_norm)
+
+
+@skip_if_no_cuda
+def test_const_dist(exponent):
+    rn = odl.CudaRn(5)
+    xarr, yarr, x, y = _vectors(rn, n=2)
+
+    constant = 1.5
+    weighting = CudaFnConstWeighting(constant, exponent=exponent)
+
+    factor = 1 if exponent == float('inf') else constant**(1/exponent)
+    true_dist = factor * np.linalg.norm(xarr-yarr, ord=exponent)
+
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            weighting.dist(x, y)
+    else:
+        assert almost_equal(weighting.dist(x, y), true_dist)
+
+    # Same with free function
+    pdist = odl.cu_weighted_dist(constant, exponent=exponent)
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            pdist(x, y)
+    else:
+        assert almost_equal(pdist(x, y), true_dist)
+
+
+@skip_if_no_cuda
+def test_vector_init():
+    weight_vec = _pos_array(odl.CudaRn(5))
+
+    CudaFnVectorWeighting(weight_vec)
+    CudaFnVectorWeighting(odl.CudaRn(5).element(weight_vec))
+
+
+@skip_if_no_cuda
+def test_vector_vector():
+    r5 = odl.CudaRn(5)
+    weight_vec = _pos_array(odl.CudaRn(5))
+    weight_elem = r5.element(weight_vec)
+
+    weighting_vec = CudaFnVectorWeighting(weight_vec)
+    weighting_elem = CudaFnVectorWeighting(weight_elem)
+
+    assert isinstance(weighting_vec.vector, np.ndarray)
+    assert isinstance(weighting_elem.vector, odl.CudaFn.Vector)
+
+
+@skip_if_no_cuda
+def test_vector_equals():
+    rn = odl.CudaRn(5)
+    weight_vec = _pos_array(odl.CudaRn(5))
+    weight_elem = rn.element(weight_vec)
+
+    weighting_vec = CudaFnVectorWeighting(weight_vec)
+    weighting_vec2 = CudaFnVectorWeighting(weight_vec)
+    weighting_elem = CudaFnVectorWeighting(weight_elem)
+    weighting_elem2 = CudaFnVectorWeighting(weight_elem)
+
+    assert weighting_vec == weighting_vec2
+    assert weighting_vec != weighting_elem
+    assert weighting_elem == weighting_elem2
+
+
+@skip_if_no_cuda
+def test_vector_inner():
+    rn = odl.CudaRn(5)
+    xarr, yarr, x, y = _vectors(rn, 2)
+
+    weight_vec = _pos_array(odl.Rn(5))
+    weight_elem = rn.element(weight_vec)
+
+    weighting_vec = CudaFnVectorWeighting(weight_vec)
+    weighting_elem = CudaFnVectorWeighting(weight_elem)
+
+    true_inner = np.vdot(yarr, xarr * weight_vec)
+
+    assert almost_equal(weighting_vec.inner(x, y), true_inner)
+    assert almost_equal(weighting_elem.inner(x, y), true_inner)
+
+    # Same with free function
+    inner_vec = odl.cu_weighted_inner(weight_vec)
+    inner_elem = odl.cu_weighted_inner(weight_elem)
+
+    assert almost_equal(inner_vec(x, y), true_inner)
+    assert almost_equal(inner_elem(x, y), true_inner)
+
+    # Exponent != 2 -> no inner product, should raise
+    with pytest.raises(NotImplementedError):
+        CudaFnVectorWeighting(weight_vec, exponent=1.0).inner(x, y)
+
+
+@skip_if_no_cuda
+def test_vector_norm(exponent):
+    rn = odl.CudaRn(5)
+    xarr, x = _vectors(rn)
+
+    weight_vec = _pos_array(odl.Rn(5))
+    weight_elem = rn.element(weight_vec)
+
+    weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
+    weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
+
+    true_norm = np.sum(np.abs(xarr)**exponent * weight_vec)**(1/exponent)
+
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            weighting_vec.norm(x)
+        with pytest.raises(NotImplementedError):
+            weighting_elem.norm(x)
+    else:
+        assert almost_equal(weighting_vec.norm(x), true_norm)
+        assert almost_equal(weighting_elem.norm(x), true_norm)
+
+    # Same with free function
+    pnorm_vec = odl.cu_weighted_norm(weight_vec, exponent=exponent)
+    pnorm_elem = odl.cu_weighted_norm(weight_elem, exponent=exponent)
+
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            pnorm_vec(x)
+        with pytest.raises(NotImplementedError):
+            pnorm_elem(x)
+    else:
+        assert almost_equal(pnorm_vec(x), true_norm)
+        assert almost_equal(pnorm_elem(x), true_norm)
+
+
+@skip_if_no_cuda
+def test_vector_dist(exponent):
+    rn = odl.CudaRn(5)
+    xarr, yarr, x, y = _vectors(rn, n=2)
+
+    weight_vec = _pos_array(odl.Rn(5))
+    weight_elem = rn.element(weight_vec)
+
+    weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
+    weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
+
+    true_dist = np.sum(np.abs(xarr-yarr)**exponent * weight_vec)**(1/exponent)
+
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            weighting_vec.dist(x, y)
+        with pytest.raises(NotImplementedError):
+            weighting_elem.dist(x, y)
+    else:
+        assert almost_equal(weighting_vec.dist(x, y), true_dist)
+        assert almost_equal(weighting_elem.dist(x, y), true_dist)
+
+    pdist_vec = odl.cu_weighted_dist(weight_vec, exponent=exponent)
+    pdist_elem = odl.cu_weighted_dist(weight_elem, exponent=exponent)
+
+    # Same with free function
+    if exponent == float('inf') or int(exponent) != exponent:
+        # Not yet implemented, should raise
+        with pytest.raises(NotImplementedError):
+            pdist_vec(x, y)
+        with pytest.raises(NotImplementedError):
+            pdist_elem(x, y)
+    else:
+        assert almost_equal(pdist_vec(x, y), true_dist)
+        assert almost_equal(pdist_elem(x, y), true_dist)
 
 
 if __name__ == '__main__':

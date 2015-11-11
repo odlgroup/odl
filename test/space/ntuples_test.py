@@ -372,43 +372,40 @@ def test_inner(fn):
 
 
 def test_norm(fn):
-    xd = _element(fn)
+    xarr, x = _vectors(fn)
 
-    correct_norm = np.linalg.norm(xd.asarray())
+    correct_norm = np.linalg.norm(xarr)
 
-    assert almost_equal(fn.norm(xd), correct_norm)
-    assert almost_equal(xd.norm(), correct_norm)
+    assert almost_equal(fn.norm(x), correct_norm)
+    assert almost_equal(x.norm(), correct_norm)
 
 
 def test_pnorm(exponent):
     for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
-        xd = _element(fn)
-        correct_norm = np.linalg.norm(xd.asarray(), ord=exponent)
+        xarr, x = _vectors(fn)
+        correct_norm = np.linalg.norm(xarr, ord=exponent)
 
-        assert almost_equal(fn.norm(xd), correct_norm)
-        assert almost_equal(xd.norm(), correct_norm)
+        assert almost_equal(fn.norm(x), correct_norm)
+        assert almost_equal(x.norm(), correct_norm)
 
 
 def test_dist(fn):
-    xd = _element(fn)
-    yd = _element(fn)
+    xarr, yarr, x, y = _vectors(fn, n=2)
 
-    correct_dist = np.linalg.norm(xd.asarray() - yd.asarray())
+    correct_dist = np.linalg.norm(xarr - yarr)
 
-    assert almost_equal(fn.dist(xd, yd), correct_dist)
-    assert almost_equal(xd.dist(yd), correct_dist)
+    assert almost_equal(fn.dist(x, y), correct_dist)
+    assert almost_equal(x.dist(y), correct_dist)
 
 
 def test_pdist(exponent):
     for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
-        xd = _element(fn)
-        yd = _element(fn)
+        xarr, yarr, x, y = _vectors(fn, n=2)
 
-        correct_dist = np.linalg.norm(xd.asarray() - yd.asarray(),
-                                      ord=exponent)
+        correct_dist = np.linalg.norm(xarr - yarr, ord=exponent)
 
-        assert almost_equal(fn.dist(xd, yd), correct_dist)
-        assert almost_equal(xd.dist(yd), correct_dist)
+        assert almost_equal(fn.dist(x, y), correct_dist)
+        assert almost_equal(x.dist(y), correct_dist)
 
 
 def test_setitem(fn):
@@ -983,21 +980,6 @@ def test_constant_dist(fn):
 
     assert almost_equal(result_const, true_result_const)
 
-
-def test_constant_repr():
-    constant = 1.5
-    w_const = FnConstWeighting(constant)
-
-    repr_str = 'FnConstWeighting(1.5)'
-    assert repr(w_const) == repr_str
-
-
-def test_constant_str():
-    constant = 1.5
-    w_const = FnConstWeighting(constant)
-
-    print_str = 'Weighting: const = 1.5'
-    assert str(w_const) == print_str
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
