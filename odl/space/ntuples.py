@@ -599,15 +599,16 @@ class Fn(FnBase, Ntuples):
 
         kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner',
                   'dist_using_inner'}
-            'weight' : matrix, float or `None`
+            'weight' : array-like, float or `None`
                 Use weighted inner product, norm, and dist.
 
-                `None` (default) : Use the standard unweighted functions
+                `None` (default) : No weighting, use standard functions
 
-                float : Use functions weighted by a constant
+                float : Weighting by a constant
 
-                matrix : Use functions weighted by a matrix. The matrix
-                can be dense (`numpy.matrix`) or sparse
+                array-like : Weighting by a matrix (2-dim. array) or a
+                vector (1-dim. array, corresponds to a diagonal matrix).
+                A matrix can also be given as a sparse matrix
                 (`scipy.sparse.spmatrix`).
 
                 This option cannot be combined with `dist`, `norm` or
