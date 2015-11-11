@@ -21,7 +21,7 @@
 from __future__ import print_function, division, absolute_import
 
 from builtins import int, object, str, zip
-from future.utils import with_metaclass
+from odl.util.utility import with_metaclass
 from future import standard_library
 standard_library.install_aliases()
 

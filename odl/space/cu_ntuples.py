@@ -23,7 +23,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import int, super
 from future import standard_library
 standard_library.install_aliases()
-from future.utils import with_metaclass
+from odl.util.utility import with_metaclass
 
 # External module imports
 import numpy as np

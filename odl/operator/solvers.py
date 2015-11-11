@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import next, object, range
-from future.utils import with_metaclass
+from odl.util.utility import with_metaclass
 
 # External
 from abc import ABCMeta, abstractmethod
