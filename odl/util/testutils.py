@@ -26,7 +26,10 @@ standard_library.install_aliases()
 # External module imports
 # pylint: disable=no-name-in-module
 from numpy import ravel_multi_index, prod
-from itertools import zip_longest
+try:
+    from itertools import zip_longest
+except ImportError:
+    zip_longest = None
 import sys
 from time import time
 import numpy as np

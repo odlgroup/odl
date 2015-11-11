@@ -40,8 +40,9 @@ class Mock(MagicMock):
         return Mock()
 
 MOCK_MODULES = ['future', 'future.utils', 'scipy', 'scipy.linalg',
-                'numpy', 'numpy.linalg', 'odlpp', 'numpy.distutils',
-                'scipy.interpolate', 'scipy.interpolate.interpnd']
+                'numpy', 'numpy.linalg', 'odlpp', 'odlpp.odlpp_cuda',
+                'numpy.distutils', 'scipy.interpolate', 
+                'scipy.interpolate.interpnd']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # Add any Sphinx extension module names here, as strings. They can be
