@@ -70,6 +70,7 @@ _add_if_exists(np.uint8, 'CudaVectorUInt8')
 _add_if_exists(np.uint16, 'CudaVectorUInt16')
 _add_if_exists(np.uint32, 'CudaVectorUInt32')
 _add_if_exists(np.uint64, 'CudaVectorUInt64')
+CUDA_DTYPES = tuple(set(CUDA_DTYPES))  # Remove duplicates
 
 
 class CudaNtuples(NtuplesBase):
