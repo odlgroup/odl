@@ -27,6 +27,7 @@ from __future__ import print_function, absolute_import
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import os
+import sys
 
 if os.environ.get('READTHEDOCS', None) == 'True':
     if sys.version_info < (3, 3):
@@ -61,7 +62,6 @@ class PyTest(TestCommand):
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import pytest
-        import sys
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
