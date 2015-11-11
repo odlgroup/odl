@@ -180,13 +180,12 @@ class CudaNtuples(NtuplesBase):
                 raise TypeError('{!r} not a `CudaNtuples` instance.'
                                 ''.format(space))
 
-            self._data = data
-
             super().__init__(space)
 
             if not isinstance(data, self._space._vector_impl):
                 raise TypeError('data {!r} not a `{}` instance.'
                                 ''.format(data, self._space._vector_impl))
+            self._data = data
 
         @property
         def data(self):
@@ -541,18 +540,25 @@ class CudaFn(FnBase, CudaNtuples):
         exponent = kwargs.pop('exponent', 2.0)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        if (dist, norm, inner, weight).count(None) < 3:
+        from builtins import sum
+        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
             if np.isscalar(weight):
                 self._space_funcs = CudaFnConstWeighting(
-                    exponent, weight)
-            elif weight is None:
-                pass
+                    weight, exponent=exponent)
+            elif isinstance(weight, CudaFn.Vector):
+                self._space_funcs = CudaFnVectorWeighting(
+                    weight, exponent=exponent, copy_to_gpu=True)
             else:
-                raise ValueError('invalid weight argument {!r}.'
-                                 ''.format(weight))
+                weight_ = np.asarray(weight)
+                if weight_.ndim == 1:
+                    self._space_funcs = CudaFnVectorWeighting(
+                        weight_, exponent=exponent, copy_to_gpu=False)
+                else:
+                    raise ValueError('invalid weight argument {!r}.'
+                                     ''.format(weight))
         elif dist is not None:
             self._space_funcs = _CudaFnCustomDist(dist)
         elif norm is not None:
