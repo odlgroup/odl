@@ -57,8 +57,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'odl'
-copyright = u'2015, Jonas Adler'
-author = u'Jonas Adler'
+copyright = u'2015, odl group, KTH'
+author = u'Jonas Adler, Holger Kohr, Ozan Öktem'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
