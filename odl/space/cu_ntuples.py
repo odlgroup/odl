@@ -979,6 +979,8 @@ def _norm_default(x):
 def _pnorm_default(x, p):
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
+    elif int(p) != p:
+        raise NotImplementedError('non-integer powers not implemented')
     # TODO: optimized version in C++ code?
     xp = abs(x)
     xp **= p
@@ -988,6 +990,8 @@ def _pnorm_default(x, p):
 def _pnorm_diagweight(x, p, w):
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
+    elif int(p) != p:
+        raise NotImplementedError('non-integer powers not implemented')
     # TODO: optimized version in C++ code?
     xp = abs(x)
     xp **= p
