@@ -161,6 +161,8 @@ class CudaNtuples(NtuplesBase):
             if data_ptr is None:
                 if isinstance(inp, self._vector_impl):
                     return self.Vector(self, inp)
+                elif isinstance(inp, self.Vector) and inp.dtype == self.dtype:
+                    return self.Vector(self, inp.data)
                 else:
                     elem = self.element()
                     elem[:] = inp
@@ -458,12 +460,21 @@ class CudaFn(FnBase, CudaNtuples):
             Only scalar data types are allowed.
 
         kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            'weight' : float or `None`
+            'weight' : array-like, `CudaFn.Vector`, float or `None`
                 Use weighted inner product, norm, and dist.
 
-                `None` (default) : Use the standard unweighted functions
+                `None` (default) : No weighting, use standard functions
 
-                float : Use functions weighted by a constant
+                float : Weighting by a constant
+
+                array-like : Weighting by a vector (1-dim. array,
+                corresponds to a diagonal matrix). Note that the array
+                is stored in main memory, which results in slower
+                space functions due to a copy during evaluation.
+
+                `CudaFn.Vector` : same as 1-dim. array-like, except
+                that copying is avoided if the `dtype` of the vector
+                is the same as this space's `dtype`.
 
                 This option cannot be combined with `dist`, `norm` or
                 `inner`.
