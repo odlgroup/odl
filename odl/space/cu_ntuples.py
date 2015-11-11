@@ -1345,11 +1345,11 @@ class CudaFnConstWeighting(_CudaFnWeighting):
             return sqrt(self.const) * float(_dist_default(x1, x2))
         elif self.exponent == float('inf'):
             # TODO: implement and optimize!
-            return float(_pnorm_default(x1 - x2), float('inf'))
+            return float(_pnorm_default(x1 - x2, float('inf')))
         else:
             # TODO: optimize!
             return (self.const**(1/self.exponent) *
-                    _pnorm_default(x1 - x2), self.exponent)
+                    _pnorm_default(x1 - x2, self.exponent))
 
     def __repr__(self):
         """`w.__repr__() <==> repr(w)`."""
