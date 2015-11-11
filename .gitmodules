@@ -1,3 +1,6 @@
 [submodule "odlpp"]
 	path = odlpp
 	url = https://github.com/odlgroup/odlpp.git
+[submodule "doc/sphinxext"]
+	path = doc/sphinxext
+	url = https://github.com/numpy/numpydoc
