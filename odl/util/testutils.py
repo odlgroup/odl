@@ -20,7 +20,6 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import object
-import pytest
 from future import standard_library
 standard_library.install_aliases()
 
@@ -137,8 +136,12 @@ def all_almost_equal(iter1, iter2, places=None):
 def is_subdict(subdict, dict_):
     return all(item in dict_.items() for item in subdict.items())
 
-
-skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
+try:  
+    import pytest
+    skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
+except ImportError:
+    def skip_if_no_cuda(function):
+        return function
 
 class FailCounter(object):
     """ Used to count the number of failures of something
