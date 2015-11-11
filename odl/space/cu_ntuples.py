@@ -33,7 +33,8 @@ import odlpp.odlpp_cuda as cuda
 
 
 __all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CUDA_DTYPES',
-           'CudaFnConstWeighting')
+           'CudaFnConstWeighting', 'CudaFnVectorWeighting',
+           'cu_weighted_inner', 'cu_weighted_norm', 'cu_weighted_dist')
 
 
 def _get_int_type():
@@ -800,6 +801,122 @@ exp = _make_unary_fun('exp')
 abs = _make_unary_fun('abs')
 sign = _make_unary_fun('sign')
 sqrt = _make_unary_fun('sqrt')
+
+
+def _weighted(weight, attr, exponent, dist_using_inner=False):
+    if np.isscalar(weight):
+        weighting = CudaFnConstWeighting(
+            weight, exponent)
+    elif isinstance(weight, CudaFn.Vector):
+        weighting = CudaFnVectorWeighting(
+            weight, exponent=exponent, dist_using_inner=dist_using_inner,
+            copy_to_gpu=True)
+    else:
+        weight_ = np.asarray(weight)
+        if weight_.dtype == object:
+            raise ValueError('bad weight {}'.format(weight))
+        if weight_.ndim == 1:
+            weighting = CudaFnVectorWeighting(
+                weight_, exponent, dist_using_inner=dist_using_inner)
+        elif weight_.ndim == 2:
+            raise NotImplementedError('matrix weighting not implemented '
+                                      'for CUDA spaces.')
+#            weighting = CudaFnMatrixWeighting(
+#                weight_, exponent, dist_using_inner=dist_using_inner)
+        else:
+            raise ValueError('array-like weight must have 1 or 2 dimensions, '
+                             'but {} has {} dimensions.'
+                             ''.format(weight, weight_.ndim))
+    return getattr(weighting, attr)
+
+
+def cu_weighted_inner(weight):
+    """Weighted inner product on `CudaFn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar, array-like or `CudaFn.Vector`
+        Weight of the inner product. A scalar is interpreted as a
+        constant weight and a 1-dim. array or a `CudaFn.Vector` as a
+        weighting vector.
+
+    Returns
+    -------
+    inner : callable
+        Inner product function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    CudaFnConstWeighting, CudaFnVectorWeighting
+    """
+    return _weighted(weight, 'inner', exponent=2.0)
+
+
+def cu_weighted_norm(weight, exponent=2.0):
+    """Weighted norm on `CudaFn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar, array-like or `CudaFn.Vector`
+        Weight of the inner product. A scalar is interpreted as a
+        constant weight and a 1-dim. array or a `CudaFn.Vector` as a
+        weighting vector.
+    exponent : positive float
+        Exponent of the norm. If `weight` is a sparse matrix, only
+        1.0, 2.0 and `inf` are allowed.
+
+    Returns
+    -------
+    norm : callable
+        Norm function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    CudaFnConstWeighting, CudaFnVectorWeighting
+    """
+    return _weighted(weight, 'norm', exponent=exponent)
+
+
+def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
+    """Weighted distance on `CudaFn` spaces as free function.
+
+    Parameters
+    ----------
+    weight : scalar, array-like or `CudaFn.Vector`
+        Weight of the inner product. A scalar is interpreted as a
+        constant weight and a 1-dim. array or a `CudaFn.Vector` as a
+        weighting vector.
+    exponent : positive float
+        Exponent of the distance
+    use_inner : bool, optional
+        Calculate `dist(x, y)` as
+
+        `sqrt(norm(x)**2 + norm(y)**2 - 2 * inner(x, y).real)`
+
+        This avoids the creation of new arrays and is thus
+        faster for large arrays. On the downside, it will not
+        evaluate to exactly zero for equal (but not identical)
+        `x` and `y`.
+
+        Can only be used if `exponent` is 2.0.
+
+    Returns
+    -------
+    dist : callable
+        Distance function with given weight. Constant weightings
+        are applicable to spaces of any size, for arrays the sizes
+        of the weighting and the space must match.
+
+    See also
+    --------
+    CudaFnConstWeighting, CudaFnVectorWeighting
+    """
+    return _weighted(weight, 'dist', exponent=exponent,
+                     dist_using_inner=use_inner)
 
 
 def add_scalar(x, scal, out=None):
