@@ -1034,7 +1034,8 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
     during initialization.
     """
 
-    def __init__(self, vector, exponent=2.0, store_on_gpu=False):
+    def __init__(self, vector, exponent=2.0, dist_using_inner=False,
+                 copy_to_gpu=False):
         """Initialize a new instance.
 
         Parameters
@@ -1046,21 +1047,36 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
             product is not defined.
             If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
             are allowed.
-        store_on_gpu : bool
-            If `True`, the weights are stored as `CudaFn` vectors,
+        dist_using_inner : bool, optional
+            Calculate `dist` using the formula
+
+            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) `x` and `y`.
+
+            Can only be used if `exponent` is 2.0.
+        copy_to_gpu : bool
+            If `True`, the weights are stored as `CudaFn.Vector`,
             which consumes GPU memory but results in faster
             evaluation. If `False`, weights are stored as a NumPy
             array on the main memory.
         """
-        super().__init__(exponent=exponent, dist_using_inner=False)
-        self._vector = np.asarray(vector)
+        # TODO: remove dist_using_inner in favor of a native dist
+        # implementation
+        super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
+        if not isinstance(vector, CudaFn.Vector):
+            self._vector = np.asarray(vector)
+        else:
+            self._vector = vector
         if self._vector.dtype == object:
             raise ValueError('invalid vector {}.'.format(vector))
         elif self._vector.ndim != 1:
             raise ValueError('vector {} is {}-dimensional instead of '
                              '1-dimensional.'
                              ''.format(vector, self._vector.ndim))
-        if store_on_gpu:
+        if copy_to_gpu and not isinstance(self._vector, CudaFn.Vector):
             self._vector = CudaFn(self._vector.size,
                                   self._vector.dtype).element(self._vector)
 
@@ -1376,7 +1392,7 @@ class _CudaFnNoWeighting(CudaFnConstWeighting):
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
         inner_str = inner_fstr.format(ex=self.exponent).lstrip(', ')
-        return '{}()'.format(self.__class__.__name__)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """`w.__str__() <==> str(w)`."""
@@ -1390,7 +1406,7 @@ class _CudaFnCustomInnerProduct(_CudaFnWeighting):
 
     """Custom inner product on `CudaFn`."""
 
-    def __init__(self, inner, dist_using_inner=False):
+    def __init__(self, inner, dist_using_inner=True):
         """Initialize a new instance.
 
         Parameters
