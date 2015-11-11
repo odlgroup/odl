@@ -39,7 +39,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return Mock()
 
-MOCK_MODULES = ['builtins', 'future', 'scipy', 
+MOCK_MODULES = ['future', 'scipy', 
                 'numpy', 'odlpp', 'numpy.distutils']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
