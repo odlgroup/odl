@@ -58,7 +58,6 @@ from math import sqrt
 import numpy as np
 import scipy as sp
 import ctypes
-from scipy.linalg.blas import get_blas_funcs
 import platform
 
 # ODL imports
@@ -490,7 +489,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
 
     if _blas_is_applicable(x1, x2, out):
         # pylint: disable=unbalanced-tuple-unpacking
-        axpy, scal, copy = get_blas_funcs(
+        axpy, scal, copy = sp.linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
@@ -1443,7 +1442,7 @@ def weighted_dist(weight, use_inner=False):
 
 def _norm_default(x):
     if _blas_is_applicable(x):
-        norm = get_blas_funcs('nrm2', dtype=x.dtype)
+        norm = sp.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
     else:
         norm = np.linalg.norm
     return norm(x.data)
@@ -1451,7 +1450,7 @@ def _norm_default(x):
 
 def _inner_default(x1, x2):
     if _blas_is_applicable(x1, x2):
-        dot = get_blas_funcs('dotc', dtype=x1.dtype)
+        dot = sp.linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
     elif is_real_dtype(x1.dtype):
         dot = np.dot  # still much faster than vdot
     else:
