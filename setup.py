@@ -29,6 +29,8 @@ from setuptools.command.test import test as TestCommand
 import os
 import sys
 
+__version__ = '0.9b1'
+
 if os.environ.get('READTHEDOCS', None) == 'True':
     if sys.version_info < (3, 3):
         from mock import Mock as MagicMock
@@ -38,14 +40,17 @@ if os.environ.get('READTHEDOCS', None) == 'True':
     class Mock(MagicMock):
         @classmethod
         def __getattr__(cls, name):
-                return Mock()
+            return Mock()
 
-    MOCK_MODULES = ['scipy', 'numpy', 'odlpp']
+    MOCK_MODULES = ['scipy', 'numpy', 'odlpp', 'numpy.distutils']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-
-__version__ = '0.9b1'
-
+    requires = ''
+else:
+    requires = """
+    future >= 0.14
+    numpy >= 1.8
+    scipy >= 0.14
+    """
 
 class PyTest(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
@@ -64,12 +69,6 @@ class PyTest(TestCommand):
         import pytest
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
-
-requires = """
-future >= 0.14
-numpy >= 1.8
-scipy >= 0.14
-"""
 
 setup(name='odl',
       version=__version__,
