@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -109,7 +109,7 @@ class _OperatorMeta(ABCMeta):
 
     """Metaclass used by Operator to ensure correct methods.
 
-    If either `_apply` or `_call` does not exist in the class to be
+    If either ``_apply`` or ``_call`` does not exist in the class to be
     created, this metaclass attempts to add a default implmentation.
     This only works if the :attr:`range` is a :class:`LinearSpace`.
     """
@@ -165,7 +165,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     provided by :class:`Operator`.
 
     In addition, **any subclass needs to implement at least one of the
-    methods `_call()` and `_apply()`.**
+    methods ``_call()`` and ``_apply()``.**
     These are explained in the following.
 
     Out-of-place evaluation: `_call()`
@@ -174,7 +174,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     and the result is written to a new element which is returned.
     In this case, a subclass has to implement the method
 
-    `_call(self, x)  <==>  operator(x)`
+    ``_call(self, x)  <==>  operator(x)``
 
     **Parameters:**
 
@@ -194,7 +194,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     result is written to an existing element provided as an additional
     argument. In this case, a subclass has to implement the method
 
-    `_apply(self, x, out)  <==>  out <-- operator(x)`
+    ``_apply(self, x, out)  <==>  out <-- operator(x)``
 
     **Parameters:**
 
@@ -293,11 +293,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         """``op.__call__(x) <==> op(x)``.
 
         Implementation of the call pattern ``op(x)`` with the private
-        `_call()` method and added error checking.
+        ``_call()`` method and added error checking.
 
         Parameters
         ----------
-        x : domain element
+        x : :attr:`domain` element
             An object in the operator domain to which the operator is
             applied. The object is treated as immutable, hence it is
             not modified during evaluation.
@@ -309,7 +309,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Returns
         -------
-        elem : range element
+        elem : :attr:`range` element
             An object in the operator range, the result of the operator
             evaluation. It is identical to ``out`` if provided.
 
@@ -391,7 +391,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        other : :class:`Operator`, `Vector` or scalar
+        other : :class:`Operator`, :class:`LinearSpace.Vector` or scalar
             If ``other`` is an :class:`Operator`, the :attr:`domain` of ``other``
             must match :attr:`range` of `self`.
 
@@ -1405,11 +1405,11 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     call : `callable`
         A function taking one argument and returning the result.
         It will be used for the operator call pattern
-        `out = op(x)`.
+        ``out = op(x)``.
     apply : `callable`
         A function taking two arguments.
         It will be used for the operator apply pattern
-        `op._apply(x, out) <==> out <-- op(x)`. Return value
+        ``op._apply(x, out) <==> out <-- op(x)``. Return value
         is assumed to be `None` and is ignored.
     inv : :class:`Operator`, optional
         The operator inverse
@@ -1425,7 +1425,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         Default: `UniversalSpace` if linear, else `UniversalSet`
     linear : `bool`, optional
         True if the operator is linear
-        Default: False
+        Default: `False`
 
     Returns
     -------

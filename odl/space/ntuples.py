@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -714,9 +714,9 @@ class Fn(FnBase, Ntuples):
         return self._real_dtype
 
     def _lincomb(self, a, x1, b, x2, out):
-        """Linear combination of x and y.
+        """Linear combination of ``x1`` and ``x2``.
 
-        Calculate `out = a * x1 + b * x2` using optimized BLAS routines if
+        Calculate ``out = a * x1 + b * x2`` using optimized BLAS routines if
         possible.
 
         Parameters

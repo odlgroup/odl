@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -126,7 +126,7 @@ class EmptySet(Set):
     """The empty set.
 
     `None` is considered as "no element", i.e.
-    `None in EmptySet() is True`
+    ``None in EmptySet() is True``
     """
 
     def __contains__(self, other):
@@ -146,11 +146,11 @@ class EmptySet(Set):
         return None
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return "EmptySet"
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return "EmptySet()"
 
 
@@ -178,11 +178,11 @@ class UniversalSet(Set):
         return inp
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return "UniversalSet"
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return "UniversalSet()"
 
 
@@ -207,11 +207,11 @@ class Strings(Set):
 
     @property
     def length(self):
-        """The `length` attribute."""
+        """The length attribute."""
         return self._length
 
     def __contains__(self, other):
-        """Test if ``other`` is a string of at max `length` characters."""
+        """Test if ``other`` is a string of at max :attr:`length` characters."""
         return isinstance(other, str) and len(other) <= self.length
 
     def __eq__(self, other):
@@ -226,11 +226,11 @@ class Strings(Set):
             return ''
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return 'Strings({})'.format(self.length)
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return 'Strings({})'.format(self.length)
 
     
@@ -293,11 +293,11 @@ class ComplexNumbers(Field):
             return complex(0.0, 0.0)
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return "ComplexNumbers"
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return "ComplexNumbers()"
 
     
@@ -344,11 +344,11 @@ class RealNumbers(Field):
             return 0.0
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return "RealNumbers"
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return "RealNumbers()"
 
 
@@ -374,7 +374,7 @@ class Integers(Set):
         Returns
         -------
         contained : `bool`
-            `True` if  other is `Integers`, `False` otherwise.
+            `True` if  other is :class:`Integers`, `False` otherwise.
 
         Examples
         --------
@@ -395,11 +395,11 @@ class Integers(Set):
             return 0
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return "Integers"
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return "Integers()"
 
 
@@ -479,11 +479,11 @@ class CartesianProduct(Set):
         return tpl
 
     def __len__(self):
-        """s.__len__() <==> len(s)."""
+        """``s.__len__() <==> len(s)``."""
         return len(self.sets)
 
     def __getitem__(self, indcs):
-        """s.__getitem__(indcs) <==> s[indcs].
+        """``s.__getitem__(indcs) <==> s[indcs]``.
 
         Examples
         --------
@@ -500,11 +500,11 @@ class CartesianProduct(Set):
             return self.sets[indcs]
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return ' x '.join(str(set_) for set_ in self.sets)
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s).
+        """``s.__repr__() <==> repr(s)``.
 
         Examples
         --------

@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -136,7 +136,7 @@ class IntervalProd(Set):
 
     # Overrides of the abstract base class methods
     def approx_equals(self, other, tol):
-        """Test if ``other`` is equal to this set up to `tol`.
+        """Test if ``other`` is equal to this set up to ``tol``.
 
         Parameters
         ----------
@@ -166,7 +166,7 @@ class IntervalProd(Set):
                 np.allclose(self.end, other.end, atol=tol, rtol=0.0))
 
     def __eq__(self, other):
-        """`g.__eq__(other) <==> g == other`."""
+        """``g.__eq__(other) <==> g == other``."""
         return self.approx_equals(other, tol=0.0)
 
     def approx_contains(self, point, tol):
@@ -174,11 +174,11 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or float
+        point : array-like or `float`
             The point to be tested. Its length must be equal
             to the set's dimension. In the 1d case, 'point'
-            can be given as a float.
-        tol : float
+            can be given as a `float`.
+        tol : `float`
             The maximum allowed distance in 'inf'-norm between the
             point and the set.
             Default: 0.0
@@ -209,7 +209,7 @@ class IntervalProd(Set):
         return True
 
     def __contains__(self, other):
-        """`g.__contains__(other) <==> other in g`."""
+        """``g.__contains__(other) <==> other in g``."""
         return self.approx_contains(other, tol=0)
 
     def contains_set(self, other, tol=0.0):
@@ -218,8 +218,8 @@ class IntervalProd(Set):
         Parameters
         ----------
         other : :class:`Set`
-            The set to be tested. It must implement a `min()` and a
-            `max()` method, otherwise a `TypeError` is raised.
+            The set to be tested. It must implement a ``min()`` and a
+            ``max()`` method, otherwise a `TypeError` is raised.
         tol : float, optional
             The maximum allowed distance in 'inf'-norm between the
             other set and this interval product.
@@ -238,9 +238,9 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        ndim : int, optional
+        ndim : `int`, optional
               The dimension of the measure to apply.
-              Default: `true_ndim`
+              Default: :attr:`true_ndim`
 
         Examples
         --------
@@ -275,11 +275,11 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or float
+        point : array-like or `float`
                 The point. Its length must be equal to the set's
                 dimension. Can be a `float` in the 1d case.
         ord : non-zero int or float('inf'), optional
-              The order of the norm (see numpy.linalg.norm).
+              The order of the norm (see `numpy.linalg.norm`).
               Default: 2.0
 
         Examples
@@ -318,7 +318,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        indices : int or tuple of ints
+        indices : `int` or `tuple` of ints
             The indices of the dimensions along which to collapse
         values : `float` or array-like
             The values to which to collapse. Must have the same
@@ -402,9 +402,9 @@ class IntervalProd(Set):
     def insert(self, other, index=None):
         """Insert another interval product before the given index.
 
-        The given interval product (`ndim=m`) is inserted into the
-        current one (`ndim=n`) before the given index, resulting in a
-        new interval product with `n+m` dimensions.
+        The given interval product (``ndim=m``) is inserted into the
+        current one (``ndim=n``) before the given index, resulting in a
+        new interval product with ``n+m`` dimensions.
 
         No changes are made in-place.
 
@@ -412,10 +412,10 @@ class IntervalProd(Set):
         ----------
         other : :class:`IntervalProd`, `float` or array-like
             The set to be inserted. A `float` or array a is
-            treated as an `IntervalProd(a, a)`.
-        index : int, Optional (default = `ndim`)
+            treated as an ``IntervalProd(a, a)``.
+        index : int, Optional (default = :attr:`ndim`)
             The index of the dimension before which ``other`` is to
-            be inserted. Must fulfill `0 <= index <= ndim`.
+            be inserted. Must fulfill ``0 <= index <= ndim``.
 
         Returns
         -------
@@ -476,8 +476,8 @@ class IntervalProd(Set):
 
         Returns
         -------
-        out : numpy.ndarray
-            The size of the array is `2^m * ndim`, where `m` is the number
+        out : `numpy.ndarray`
+            The size of the array is ``2^m * ndim``, where ``m`` is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 
         Examples
@@ -517,19 +517,19 @@ class IntervalProd(Set):
 
     # Magic methods
     def __len__(self):
-        """`ip.__len__() <==> len(ip)`."""
+        """``ip.__len__() <==> len(ip)``."""
         return self.ndim
 
     def __pos__(self):
-        """`ip.__pos__(other) <==> +ip`."""
+        """``ip.__pos__(other) <==> +ip``."""
         return self
 
     def __neg__(self):
-        """`ip.__pos__(other) <==> +ip`."""
+        """``ip.__pos__(other) <==> -ip``."""
         return type(self)(-self.end, -self.begin)
 
     def __add__(self, other):
-        """`ip.__add__(other) <==> ip + other`."""
+        """``ip.__add__(other) <==> ip + other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
                 raise ValueError('Addition not possible for {} and {}: '
@@ -542,11 +542,11 @@ class IntervalProd(Set):
             return NotImplemented
 
     def __sub__(self, other):
-        """`ip.__sub__(other) <==> ip - other`."""
+        """``ip.__sub__(other) <==> ip - other``."""
         return self + (-other)
 
     def __mul__(self, other):
-        """`ip.__mul__(other) <==> ip * other`."""
+        """``ip.__mul__(other) <==> ip * other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
                 raise ValueError('Multiplication not possible for {!r} and {!r}: '
@@ -569,13 +569,13 @@ class IntervalProd(Set):
             return NotImplemented
 
     def __div__(self, other):
-        """`ip.__mul__(other) <==> ip / other`."""
+        """``ip.__mul__(other) <==> ip / other``."""
         return self * (1.0 / other)
 
     __truediv__ = __div__
 
     def __rdiv__(self, other):
-        """`ip.__rdiv__(other) <==> other / ip`."""
+        """``ip.__rdiv__(other) <==> other / ip``."""
         if np.isscalar(other):
             contains_zero = np.any(np.logical_and(self.begin <= 0, self.end>= 0))
             if contains_zero:
@@ -592,12 +592,12 @@ class IntervalProd(Set):
     __rtruediv__ = __rdiv__
 
     def __repr__(self):
-        """`ip.__repr__() <==> repr(ip)`."""
+        """``ip.__repr__() <==> repr(ip)``."""
         return ('IntervalProd({}, {})'.format(
             array1d_repr(self.begin), array1d_repr(self._end)))
 
     def __str__(self):
-        """`ip.__str__() <==> str(ip)`."""
+        """``ip.__str__() <==> str(ip)``."""
         return ' x '.join('[{}, {}]'.format(b, e)
                           for (b, e) in zip(self.begin, self.end))
 

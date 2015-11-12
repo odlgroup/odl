@@ -61,10 +61,10 @@ extensions = [
 ]
 
 #Intersphinx to get numpy targets
-intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
-                       'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-                       'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-                       'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
+intersphinx_mapping = {'python': ('http://python.readthedocs.org/en/latest/', None),
+					   'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
+					   'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+					   'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
 					   
 #Stop autodoc from skipping __init__
 def skip(app, what, name, obj, skip, options):

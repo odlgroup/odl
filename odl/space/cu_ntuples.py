@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -520,13 +520,13 @@ class CudaFn(FnBase, CudaNtuples):
             self._space_funcs = _CudaFnNoWeighting()
 
     def _lincomb(self, a, x1, b, x2, out):
-        """Linear combination of ``x1`` and ``x2``, assigned to `out`.
+        """Linear combination of ``x1`` and ``x2``, assigned to ``out``.
 
         Calculate `z = a * x + b * y` using optimized CUDA routines.
 
         Parameters
         ----------
-        a, b : `field` element
+        a, b : :attr:`field` element
             Scalar to multiply ``x`` and ``y`` with.
         x, y : :class:`CudaFn.Vector`
             The summands
@@ -621,7 +621,7 @@ class CudaFn(FnBase, CudaNtuples):
         return self._space_funcs.norm(x)
 
     def _multiply(self, x1, x2, out):
-        """The pointwise product of two vectors, assigned to `out`.
+        """The pointwise product of two vectors, assigned to ``out``.
 
         This is defined as:
 
@@ -654,7 +654,7 @@ class CudaFn(FnBase, CudaNtuples):
         out.data.multiply(x1.data, x2.data)
 
     def _divide(self, x1, x2, out):
-        """The pointwise division of two vectors, assigned to `out`.
+        """The pointwise division of two vectors, assigned to ``out``.
 
         This is defined as:
 

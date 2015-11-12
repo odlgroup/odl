@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -575,7 +575,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References

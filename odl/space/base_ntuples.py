@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -360,11 +360,11 @@ class FnBase(NtuplesBase, LinearSpace):
 
     @abstractmethod
     def _multiply(self, x1, x2, out):
-        """The entry-wise product of two vectors, assigned to `out`."""
+        """The entry-wise product of two vectors, assigned to ``out``."""
 
     @abstractmethod
     def _divide(self, x1, x2, out):
-        """The entry-wise division of two vectors, assigned to `out`."""
+        """The entry-wise division of two vectors, assigned to ``out``."""
 
     class Vector(NtuplesBase.Vector, LinearSpace.Vector):
 

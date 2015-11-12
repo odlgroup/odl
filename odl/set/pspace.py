@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -105,18 +105,18 @@ class ProductSpace(LinearSpace):
         The following `float` values for `prod_norm` can be specified.
         Note that any value of ord < 1 only gives a pseudo-norm.
 
-        +----------+---------------------------+
-        |prod_norm |Distance Definition        |
-        +==========+===========================+
-        |'inf'     |`max(w * z)`               |
-        |'-inf'    |`min(w * z)`               |
-        |other     |`sum(w * z**ord)**(1/ord)` |
-        +==========+===========================+
+        +----------+-----------------------------+
+        |prod_norm |Distance Definition          |
+        +==========+=============================+
+        |'inf'     |``max(w * z)``               |
+        |'-inf'    |``min(w * z)``               |
+        |other     |``sum(w * z**ord)**(1/ord)`` |
+        +==========+=============================+
 
-        Here, z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1])) and
-        w = weights.
+        Here, ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))`` and
+        ``w = weights``.
 
-        Note that `0 <= ord < 1` are not allowed since these
+        Note that ``0 <= ord < 1`` are not allowed since these
         pseudo-norms are very unstable numerically.
 
 
@@ -335,12 +335,12 @@ class ProductSpace(LinearSpace):
             spc._multiply(xp, yp, outp)
 
     def __eq__(self, other):
-        """`ps.__eq__(other) <==> ps == other`.
+        """``ps.__eq__(other) <==> ps == other``.
 
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a `ProductSpace` instance, has
+            `True` if ``other`` is a :class:`ProductSpace` instance, has
             the same length and the same factors. `False` otherwise.
 
         Examples
@@ -370,22 +370,22 @@ class ProductSpace(LinearSpace):
                                                other.spaces)))
 
     def __len__(self):
-        """`ps.__len__() <==> len(ps)`."""
+        """``ps.__len__() <==> len(ps)``."""
         return self._size
 
     def __getitem__(self, indices):
-        """`ps.__getitem__(indices) <==> ps[indices]`."""
+        """``ps.__getitem__(indices) <==> ps[indices]``."""
         return self.spaces[indices]
 
     def __str__(self):
-        """`ps.__str__() <==> str(ps)`."""
+        """``ps.__str__() <==> str(ps)``."""
         if all(self.spaces[0] == space for space in self.spaces):
             return '{' + str(self.spaces[0]) + '}^' + str(self.size)
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
-        """`ps.__repr__() <==> repr(ps)`."""
+        """``ps.__repr__() <==> repr(ps)``."""
         if all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
                                                    self.size)
@@ -410,7 +410,7 @@ class ProductSpace(LinearSpace):
             return self.space.size
 
         def __eq__(self, other):
-            """`ps.__eq__(other) <==> ps == other`.
+            """``ps.__eq__(other) <==> ps == other``.
 
             Overrides the default :class:`LinearSpace` method since it is
             implemented with the distance function, which is prone to
@@ -425,24 +425,24 @@ class ProductSpace(LinearSpace):
                 return all(sp == op for sp, op in zip(self.parts, other.parts))
 
         def __len__(self):
-            """`v.__len__() <==> len(v)`."""
+            """``v.__len__() <==> len(v)``."""
             return len(self.space)
 
         def __getitem__(self, indices):
-            """`ps.__getitem__(indices) <==> ps[indices]`."""
+            """``ps.__getitem__(indices) <==> ps[indices]``."""
             return self.parts[indices]
 
         def __setitem__(self, indices, values):
-            """`ps.__setitem__(indcs, vals) <==> ps[indcs] = vals`."""
+            """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""
             self.parts[indices] = values
 
         def __str__(self):
-            """`ps.__str__() <==> str(ps)`."""
+            """``ps.__str__() <==> str(ps)``."""
             inner_str = ', '.join(str(part) for part in self.parts)
             return '{{{}}}'.format(inner_str)
 
         def __repr__(self):
-            """`s.__repr__() <==> repr(s)`.
+            """``s.__repr__() <==> repr(s)``.
 
             Examples
             --------

@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -57,7 +57,7 @@ class DiscreteL2(Discretization):
         ----------
         l2space : :class:`~odl.L2`
             The continuous space to be discretized
-        dspace : :class:`~odl.space.base_ntuples.FnBase`, same `field` as ``l2space``
+        dspace : :class:`~odl.space.base_ntuples.FnBase`, same :attr:`field` as ``l2space``
             The space of elements used for data storage
         grid : :class:`~odl.TensorGrid`
             The sampling grid for the discretization. Must be contained

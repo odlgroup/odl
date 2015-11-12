@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -385,7 +385,7 @@ class TensorGrid(Set):
             `TensorGrid(a)`.
         index : `Integral`
             The index of the dimension before which ``other`` is to
-            be inserted. Must fulfill `0 <= index <= ndim`.
+            be inserted. Must fulfill ``0 <= index <= ndim``.
 
         Returns
         -------

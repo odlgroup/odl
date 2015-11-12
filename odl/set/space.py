@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -60,12 +60,12 @@ initialized**, thus it can contain *any* value.
 ``_lincomb(a, x1, b, x2, out)``
 -------------------------------
 This private method is the raw implementation (i.e. without error
-checking) of the linear combination `out = a * x1 + b * x2`.
-`_lincomb` and its public counterpart `lincomb` are used to cover
+checking) of the linear combination ``out = a * x1 + b * x2``.
+``_lincomb`` and its public counterpart ``lincomb`` are used to cover
 a range of convenience functions, see below.
 
 **Parameters:**
-    a, b : scalars, must be members of the space's `field`
+    a, b : scalars, must be members of the space's ``field``
         Multiplicative scalar factors for input vector ``x1`` or ``x2``,
         respectively
     x1, x2 : :class:`LinearSpace.Vector`
@@ -76,16 +76,16 @@ a range of convenience functions, see below.
 **Returns:** `None`
 
 **Requirements:**
- * Aliasing of ``x1``, ``x2`` and `out` **must** be allowed.
+ * Aliasing of ``x1``, ``x2`` and ``out`` **must** be allowed.
  * The input vectors ``x1`` and ``x2`` **must not** be modified.
- * The initial state of the output vector `out` **must not**
+ * The initial state of the output vector ``out`` **must not**
    influence the result.
 
 ``field``
 ---------
 The public attribute determining the type of scalars which
 underlie the space. Can be instances of either :class:`RealNumbers` or
-`ComplexNumbers` (see `odl.set.sets`).
+:class:`ComplexNumbers` (see `odl.set.sets`).
 
 Should be implemented as a `@property` to make it immutable.
 
@@ -95,7 +95,7 @@ Should be implemented as a `@property` to make it immutable.
 purpose is to check two :class:`LinearSpace` instances for equality.
 
 **Parameters:**
-    other : object
+    other : `object`
         The object to compare to
 
 **Returns:**
@@ -185,7 +185,7 @@ with the distance function ``_dist(x, y) = _norm(x - y)``.
 ``_multiply(x1, x2, out)``
 --------------------------
 A raw (not type-checking) private method multiplying two vectors
-``x1`` and ``x2`` element-wise and storing the result in `out`.
+``x1`` and ``x2`` element-wise and storing the result in ``out``.
 
 **Parameters:**
     x1, x2 : :class:`LinearSpace.Vector`

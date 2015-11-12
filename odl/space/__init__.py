@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -48,7 +48,7 @@ Requires the compiled extension ``odlpp`` #TODO link
 |Name                  |Description                                    |
 +======================+===============================================+
 |:class:`CudaNtuples`  |Set of n-tuples of any type supported by the   |
-|                      |``odlpp`` backend                                |
+|                      |``odlpp`` backend                              |
 +----------------------+-----------------------------------------------+
 |:class:`CudaFn`       |Space of n-tuples over the real or `complex`   |
 |                      |numbers allowing any adequate scalar data type |

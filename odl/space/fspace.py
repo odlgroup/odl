@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -233,7 +233,7 @@ class FunctionSet(Set):
 
             Raises
             ------
-            If `out` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
+            If ``out`` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
             with `out[0] in range`, a `TypeError` is raised.
             """
             if x in self.domain:
@@ -299,8 +299,8 @@ class FunctionSet(Set):
 
             Raises
             ------
-            If `out` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
-            with `out[0] in range`, a `TypeError` is raised.
+            If ``out`` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
+            with ``out[0] in range``, a `TypeError` is raised.
             """
             if not (out in self.range or
                     (isinstance(out, np.ndarray) and
