@@ -53,7 +53,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             The number of entries per tuple
         dtype : object
             The data type for each tuple entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
+            way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
@@ -73,13 +73,13 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return self._size
 
     def __contains__(self, other):
-        """`s.__contains__(other) <==> other in s`.
+        """``s.__contains__(other) <==> other in s``.
 
         Returns
         -------
-        contains : bool
-            `True` if `other` is an `NtuplesBase.Vector` instance and
-            `other.space` is equal to this space, `False` otherwise.
+        contains : `bool`
+            `True` if ``other`` is an :class:`NtuplesBase.Vector` instance and
+            ``other.space`` is equal to this space, `False` otherwise.
 
         Examples
         --------
@@ -95,13 +95,13 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return getattr(other, 'space', None) == self
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """``s.__eq__(other) <==> s == other``.
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is an instance of this space's type
-            with the same `size` and `dtype`, otherwise `False`.
+        equals : `bool`
+            `True` if ``other`` is an instance of this space's type
+            with the same :attr:`size` and :attr:`dtype`, otherwise `False`.
 
         Examples
         --------
@@ -182,7 +182,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         @property
         def shape(self):
-            """Shape of this vector, equals `(size,)`."""
+            """Shape of this vector, equals ``(size,)``."""
             return (self.size,)
 
         @property
@@ -228,12 +228,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         @abstractmethod
         def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`.
+            """``vec.__eq__(other) <==> vec == other``.
 
             Returns
             -------
-            equals : bool
-                `True` if all entries of `other` are equal to this
+            equals : `bool`
+                `True` if all entries of ``other`` are equal to this
                 vector's entries, `False` otherwise.
             """
 
@@ -260,7 +260,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             ----------
             indices : int or slice
                 The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
+            values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
                 If `index` is an integer, `value` must be single value.
@@ -331,7 +331,7 @@ class FnBase(NtuplesBase, LinearSpace):
             The number of dimensions of the space
         dtype : object
             The data type of the storage array. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
+            way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
             Only scalar data types (numbers) are allowed.
@@ -380,15 +380,15 @@ class FnBase(NtuplesBase, LinearSpace):
 
 class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for weighting of `FnBase` spaces.
+    """Abstract base class for weighting of :class:`FnBase` spaces.
 
     This class and its subclasses serve as a simple means to evaluate
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to `Operator` but without
+    The functions are implemented similarly to :class:`Operator` but without
     extra type checks of input parameters - this is done in the callers
-    of the `LinearSpace` instance where these functions used.
+    of the :class:`LinearSpace` instance where these functions used.
     """
 
     def __init__(self, dist_using_inner=False):
@@ -396,25 +396,25 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            ``norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
         """
         self._dist_using_inner = bool(dist_using_inner)
 
     @abstractmethod
     def __eq__(self, other):
-        """`w.__eq__(other) <==> w == other`.
+        """``w.__eq__(other) <==> w == other``.
 
         Returns
         -------
-        equal : bool
-            `True` if `other` is a `FnWeightingBase` instance
+        equal : `bool`
+            `True` if ``other`` is a :class:`FnWeightingBase` instance
             represented by the **identical** matrix, `False` otherwise.
 
         Notes
@@ -425,16 +425,16 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
         """
 
     def equiv(self, other):
-        """Test if `other` is an equivalent inner product.
+        """Test if ``other`` is an equivalent inner product.
 
         Returns
         -------
-        equivalent : bool
-            `True` if `other` is a `FnWeightingBase` instance which
+        equivalent : `bool`
+            `True` if ``other`` is a :class:`FnWeightingBase` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this instance's matrix with the matrix of
-            `other`.
+            ``other``.
         """
         raise NotImplementedError
 
@@ -443,12 +443,12 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x1, x2 : `FnBase.Vector`
+        x1, x2 : :class:`FnBase.Vector`
             Vectors whose inner product is calculated
 
         Returns
         -------
-        inner : float or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         raise NotImplementedError
@@ -456,17 +456,17 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
     def norm(self, x):
         """Calculate the norm of a vector.
 
-        This is the standard implementation using `inner`. Subclasses
+        This is the standard implementation using ``inner``. Subclasses
         should override it for optimization purposes.
 
         Parameters
         ----------
-        x1 : `FnBase.Vector`
+        x1 : :class:`FnBase.Vector`
             Vector whose norm is calculated
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The norm of the vector
         """
         return float(sqrt(self.inner(x, x).real))
@@ -479,12 +479,12 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x1, x2 : `FnBase.Vector`
+        x1, x2 : :class:`FnBase.Vector`
             Vectors whose mutual distance is calculated
 
         Returns
         -------
-        dist : float
+        dist : `float`
             The distance between the vectors
         """
         if self._dist_using_inner:

@@ -17,8 +17,8 @@
 
 """Core Spaces and set support.
 
-Abstract and concrete sets (modules `set` and `domain`)
-=======================================================
+Abstract and concrete sets (modules :mod:`~odl.set.sets` and :mod:`~odl.set.domain`)
+====================================================================================
 
 Simple sets (module `set`)
 --------------------------
@@ -36,7 +36,7 @@ Simple sets (module `set`)
 +--------------------+-------------------------------------------------+
 |`RealNumbers`       |Set of real numbers                              |
 +--------------------+-------------------------------------------------+
-|`ComplexNumbers`    |Set of complex numbers                           |
+|`ComplexNumbers`    |Set of `complex` numbers                         |
 +--------------------+-------------------------------------------------+
 |`Strings`           |Set of fixed-length strings                      |
 +--------------------+-------------------------------------------------+
@@ -44,8 +44,8 @@ Simple sets (module `set`)
 |                    |element of the i-th factor (set)                 |
 +--------------------+-------------------------------------------------+
 
-More complex sets intended as function domains (module `domain`)
-----------------------------------------------------------------
+More `complex` sets intended as function domains (module :mod:`~odl.set.domain`)
+--------------------------------------------------------------------------------
 
 +-------------------+--------------------------------------------------+
 |Name               |Description                                       |
@@ -61,72 +61,18 @@ More complex sets intended as function domains (module `domain`)
 +-------------------+--------------------------------------------------+
 
 
-Abstract vector spaces (modules `space`, `pspace`)
-==================================================
+Abstract vector spaces (modules :mod:`~odl.set.space`, :mod:`~odl.set.pspace`)
+==============================================================================
 
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
 |`LinearSpace`         |**Abstract** base class for vector spaces over |
-|                      |the real or complex numbers with addition and  |
+|                      |the real or `complex` numbers with addition and|
 |                      |scalar multiplication                          |
 +----------------------+-----------------------------------------------+
 |`LinearProductSpace`  |Cartesian product of linear spaces             |
 +----------------------+----------------+------------------------------+
-
-Concrete vector spaces (modules 'ntuples', 'cu_ntuples', 'default')
-===================================================================
-
-:math:`R^n` type spaces, NumPy implementation (module 'ntuples')
-----------------------------------------------------------------
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-|                      |                                               |
-+======================+===============================================+
-|`NTuplesBase`         |Abstract base class for sets of n-tuples of    |
-|                      |various types                                  |
-+----------------------+-----------------------------------------------+
-|`Ntuples`             |Set of n-tuples of almost arbitrary type       |
-+----------------------+-----------------------------------------------+
-|`FnBase`              |Abstract base class for spaces of n-tuples over|
-|                      |a field                                        |
-+----------------------+-----------------------------------------------+
-|`Fn`                  |Space of n-tuples over a field allowing any    |
-|                      |scalar data type                               |
-+----------------------+-----------------------------------------------+
-|`Cn`                  |Space of n-tuples of complex numbers           |
-+----------------------+-----------------------------------------------+
-|`Rn`                  |Space of n-tuples of real numbers              |
-+----------------------+-----------------------------------------------+
-
-:math:`R^n` type spaces, CUDA implementation (module 'cu_ntuples')
-------------------------------------------------------------------
-
-Requires the compiled extension 'odlpp'
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`CudaNtuples`         |Set of n-tuples of almost arbitrary type       |
-+----------------------+-----------------------------------------------+
-|`CudaFn`              |Space of n-tuples over a field allowing any    |
-|                      |scalar data type                               |
-+----------------------+-----------------------------------------------+
-|`CudaCn`              |(Space of n-tuples of complex numbers) (TODO)  |
-+----------------------+-----------------------------------------------+
-|`CudaRn`              |Space of n-tuples of real numbers              |
-+----------------------+-----------------------------------------------+
-
-Function spaces (module 'default')
------------------------------------
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`L2`                  |Square-integrable functions taking real or     |
-|                      |complex values                                 |
-+----------------------+-----------------------------------------------+
 """
 
 from __future__ import absolute_import

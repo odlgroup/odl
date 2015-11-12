@@ -66,7 +66,7 @@ def _bound_method(function):
 
 
 def _default_call(self, x, *args, **kwargs):
-    """Default out-of-place operator evaluation using :meth:`Operator._apply()`.
+    """Default out-of-place operator evaluation using `_apply()`.
 
     Parameters
     ----------
@@ -86,7 +86,7 @@ def _default_call(self, x, *args, **kwargs):
 
 
 def _default_apply(self, x, out, *args, **kwargs):
-    """Default in-place operator evaluation using :meth:`Operator._call()`.
+    """Default in-place operator evaluation using `_call()`.
 
     Parameters
     ----------
@@ -265,7 +265,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         
     @property
     def is_functional(self):
-        """True if the range of this operator is a :class:`Field`."""
+        """True if the range of this operator is a field."""
         return self._is_functional
 
     @property
@@ -275,7 +275,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                                   ''.format(self))
 
     def derivative(self, point):
-        """Return the operator derivative at ``point``."""
+        """Return the operator derivative at `point`."""
         if self.is_linear:
             return self
         else:
@@ -292,7 +292,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __call__(self, x, out=None, *args, **kwargs):
         """``op.__call__(x) <==> op(x)``.
 
-        Implementation of the call pattern ``op(x)`` with the private
+        Implementation of the call pattern `op(x)` with the private
         `_call()` method and added error checking.
 
         Parameters
@@ -311,7 +311,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         -------
         elem : range element
             An object in the operator range, the result of the operator
-            evaluation. It is identical to ``out`` if provided.
+            evaluation. It is identical to `out` if provided.
 
         Examples
         --------
@@ -660,7 +660,7 @@ class OperatorSum(Operator):
         Parameters
         ----------
         op1 : :class:`Operator`
-            The first summand. Its :attr:`range` must be a :class:`LinearSpace` or :class:`Field`.
+            The first summand. Its :attr:`range` must be a `LinearSpace` or `Field`.
         op2 : :class:`Operator`
             The second summand. Must have the same :attr:`domain` and :attr:`range` as
             ``op1``.
@@ -791,8 +791,8 @@ class OperatorComp(Operator):
             The left ("outer") operator
         right : :class:`Operator`
             The right ("inner") operator. Its range must coincide with the
-            domain of ``left``.
-        tmp : element of the range of ``right``, optional
+            domain of `left`.
+        tmp : element of the range of `right`, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
@@ -954,13 +954,13 @@ class OperatorLeftScalarMult(Operator):
         Parameters
         ----------
         op : :class:`Operator`
-            The range of ``op`` must be a :class:`LinearSpace` or :class:`Field`.
-        scalar : ``op.range.field`` element
+            The range of `op` must be a :class:`LinearSpace` or `Field`.
+        scalar : `op.range.field` element
             A real or `complex` number, depending on the field of
             the range.
         """
         if not isinstance(op.range, (LinearSpace, Field)):
-            raise TypeError('range {!r} not a `LinearSpace` or :class:`Field` '
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                             'instance.'.format(op.range))
 
         if scalar not in op.range.field:
@@ -1042,9 +1042,9 @@ class OperatorLeftScalarMult(Operator):
 class OperatorRightScalarMult(Operator):
     """Expression type for the operator right scalar multiplication.
 
-    ``OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))``
+    OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))
 
-    The scalar multiplication is well-defined only if ``op.domain`` is
+    The scalar multiplication is well-defined only if `op.domain` is
     a :class:`LinearSpace`.
     """
 
@@ -1054,8 +1054,8 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         op : :class:`Operator`
-            The domain of ``op`` must be a :class:`LinearSpace` or :class:`Field`.
-        scalar : ``op.range.field`` element
+            The domain of `op` must be a :class:`LinearSpace` or `Field`.
+        scalar : `op.range.field` element
             A real or `complex` number, depending on the field of
             the operator domain.
         tmp : domain element, optional
@@ -1096,8 +1096,8 @@ class OperatorRightScalarMult(Operator):
     def inverse(self):
         """The inverse operator.
 
-        The inverse of ``op * scalar`` is given by
-        ``1/scalar * op.inverse`` if ``scalar != 0``. If ``scalar == 0``,
+        The inverse of `op * scalar` is given by
+        `1/scalar * op.inverse` if `scalar != 0`. If `scalar == 0`,
         the inverse is not defined.
 
         ``OperatorRightScalarMult(op, scalar).inverse <==>

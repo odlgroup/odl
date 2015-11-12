@@ -55,13 +55,13 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         ----------
         map_type : {'restriction', 'extension'}
             The type of operator
-        fset : `FunctionSet`
+        fset : :class:`FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized
-        grid : `TensorGrid`
+        grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `NtuplesBase`
+        dspace : :class:`NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points.
@@ -88,7 +88,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                             ''.format(dspace))
 
         # TODO: this method is expected to exist, which is the case for
-        # interval products. It could be a general optional `Set` method
+        # interval products. It could be a general optional :class:`Set` method
         if not fset.domain.contains_set(grid):
             raise ValueError('grid {} not contained in the domain {} of the '
                              'function set {}.'.format(grid, fset.domain,
@@ -144,7 +144,7 @@ class RawGridCollocation(FunctionSetMapping):
 
     """Function evaluation at grid points.
 
-    This is the raw `Operator` version of the default 'restriction'
+    This is the raw :class:`Operator` version of the default 'restriction'
     used by all core discretization classes.
     """
 
@@ -153,14 +153,14 @@ class RawGridCollocation(FunctionSetMapping):
 
         Parameters
         ----------
-        ip_fset : `FunctionSet`
+        ip_fset : :class:`FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must be an
-            `IntervalProd`.
-        grid : `TensorGrid`
+            :class:`IntervalProd`.
+        grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `NtuplesBase`
+        dspace : :class:`NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
@@ -186,15 +186,15 @@ class RawGridCollocation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : `FunctionSet.Vector`
+        inp : :class:`FunctionSet.Vector`
             The function to be evaluated. It must accept point
             coordinates in list form (`f(x, y, z)` rather than
             `f(point)`) and return either a NumPy array of the correct
-            type (defined by the `Ntuples` instance) or a single value.
+            type (defined by the :class:`Ntuples` instance) or a single value.
 
         Returns
         -------
-        outp : `Ntuples.Vector`
+        outp : :class:`Ntuples.Vector`
             The function values at the grid points.
 
         Note
@@ -213,7 +213,7 @@ class RawGridCollocation(FunctionSetMapping):
 
         See also
         --------
-        See the `meshgrid` method of `TensorGrid` in `odl.discr.grid`
+        See the `meshgrid` method of  :class:`~odl.TensorGrid` in `odl.discr.grid`
         or the `numpy.meshgrid` function for an explanation of
         meshgrids.
 
@@ -272,14 +272,14 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
 
         Parameters
         ----------
-        fspace : `FunctionSpace`
+        fspace : :class:`FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an `IntervalProd`.
-        grid : `TensorGrid`
+            space. Its :attr:`domain` must be an :class:`IntervalProd`.
+        grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `FnBase`
+        dspace : :class:`FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -296,21 +296,21 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
 
 class RawNearestInterpolation(FunctionSetMapping):
 
-    """Nearest neighbor interpolation as a raw `Operator`."""
+    """Nearest neighbor interpolation as a raw :class:`Operator`."""
 
     def __init__(self, ip_fset, grid, dspace, order='C'):
         """Initialize a new `NearestInterpolation` instance.
 
         Parameters
         ----------
-        ip_fset : `FunctionSet`
+        ip_fset : :class:`FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must be an
-            `IntervalProd`.
-        grid : `TensorGrid`
+            :class:`IntervalProd`.
+        grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `NtuplesBase`
+        dspace : :class:`NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
@@ -335,12 +335,12 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : `Ntuples.Vector`
+        inp : :class:`Ntuples.Vector`
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : `FunctionSet.Vector`
+        outp : :class:`FunctionSet.Vector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 
@@ -420,14 +420,14 @@ class NearestInterpolation(RawNearestInterpolation,
 
         Parameters
         ----------
-        fspace : `FunctionSpace`
+        fspace : :class:`FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an `IntervalProd`.
-        grid : `TensorGrid`
+            space. Its :attr:`domain` must be an :class:`IntervalProd`.
+        grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `FnBase`
+        dspace : :class:`FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -439,7 +439,7 @@ class NearestInterpolation(RawNearestInterpolation,
 
         Examples
         --------
-        Let's define the complex function space :math:`L^2` on a
+        Let's define the `complex` function space :math:`L^2` on a
         rectangle:
 
         >>> from odl import Rectangle, L2, ComplexNumbers
@@ -483,14 +483,14 @@ class LinearInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        fspace : `FunctionSpace`
+        fspace : :class:`FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `domain` must be an `IntervalProd`.
-        grid : `TensorGrid`
+            space. Its :attr:`domain` must be an :class:`IntervalProd`.
+        grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `FnBase`
+        dspace : :class:`FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -510,18 +510,18 @@ class LinearInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : `Ntuples.Vector`
+        inp : :class:`Ntuples.Vector`
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : `FunctionSet.Vector`
+        outp : :class:`FunctionSet.Vector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 
         Examples
         --------
-        Let's define the complex function space :math:`L^2` on a
+        Let's define the `complex` function space :math:`L^2` on a
         rectangle:
 
         TODO: implement an example!

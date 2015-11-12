@@ -115,18 +115,18 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
 
     Parameters
     ----------
-    op : `Operator`
+    op : :class:`Operator`
         Operator in the inverse problem. It must have a `derivative`
         property, which returns a new operator which in turn has an
         `adjoint` property, i.e. `op.derivative(x).adjoint` must be
-        well-defined for `x` in the operator domain.
-    x : element of the domain of `op`
+        well-defined for ``x`` in the operator domain.
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : `int`, optional
         Maximum number of iterations
     omega : positive float
         Relaxation parameter, must lie between 0 and :math:`2/||A||`,
@@ -172,17 +172,17 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     Parameters
     ----------
-    op : `Operator`
+    op : :class:`Operator`
         Operator in the inverse problem. It must be linear and
         self-adjoint. This implies in particular that its domain and
         range are equal.
-    x : element of the domain of `op`
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : `int`, optional
         Maximum number of iterations
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
@@ -236,7 +236,7 @@ def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
 
     :math:`A x = y`
 
-    with a linear operator `A`.
+    with a linear operator ``A``.
 
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
@@ -248,16 +248,16 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
     Parameters
     ----------
-    op : `Operator`
+    op : :class:`Operator`
         Operator in the inverse problem. It must be linear and implement
         the `adjoint` property.
-    x : element of the domain of `op`
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : `int`, optional
         Maximum number of iterations
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
@@ -346,20 +346,20 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
     Parameters
     ----------
-    op : `Operator`
+    op : :class:`Operator`
         Operator in the inverse problem. It must have a `derivative`
         property, which returns a new operator which in turn has an
         `adjoint` property, i.e. `op.derivative(x).adjoint` must be
-        well-defined for `x` in the operator domain.
-    x : element of the domain of `op`
+        well-defined for ``x`` in the operator domain.
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : `int`, optional
         Maximum number of iterations
-    zero_seq : iterable, optional
+    zero_seq : `iterable`, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
     partial : `Partial`, optional
@@ -419,12 +419,12 @@ class LineSearch(object):
             The current point
         direction : domain element
             Search direction in which the line search should be computed
-        dir_derivative : float
-            Directional derivative along the `direction`
+        dir_derivative : `float`
+            Directional derivative along the ``direction``
 
         Returns
         -------
-        alpha : float
+        alpha : `float`
             The step length
         """
         raise NotImplementedError
@@ -458,9 +458,9 @@ class BacktrackingLineSearch(LineSearch):
 
         Parameters
         ----------
-        function : python function
+        function : `callable`
             The cost function of the optimization problem to be solved.
-        tau : float, optional
+        tau : `float`, optional
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.
             The step length is updated as step_length *= tau
@@ -469,7 +469,7 @@ class BacktrackingLineSearch(LineSearch):
             `step length * direction derivative`,
             which the new point needs to be smaller than in order to
             fulfill the condition and be accepted (see the references).
-        max_num_iter : int, optional
+        max_num_iter : `int`, optional
             Maximum number of iterations allowed each time the line
             search method is called. If not set, this number  is
             calculated to allow a shortest step length of 0.0001.
@@ -573,7 +573,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
-    niter : int, optional
+    niter : `int`, optional
         Number of iterations
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
@@ -623,7 +623,7 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
     search in order guarantee convergence. With appropriate line search,
     it can also be used for constrained problems where one wants to
     minimize over some given set `C`. This is done by defining
-    :math:`f(x) = \infty` for `x` outside `C`.
+    :math:`f(x) = \infty` for ``x`` outside `C`.
 
 
     The algorithm is described in [1]_, section 9.3--9.4
@@ -641,7 +641,7 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
-    niter : int, optional
+    niter : `int`, optional
         Number of iterations
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
@@ -684,13 +684,13 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
     ----------
     op : Operator
         Operator for which a zero is computed
-    x : element of the domain of `op`
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     line_search : `LineSearch`
         Strategy to choose the step length
-    niter : int, optional
+    niter : `int`, optional
         Number of iterations
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
@@ -749,13 +749,13 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
     ----------
     op : Operator
         Operator for which a zero is computed
-    x : element of the domain of `op`
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     line_search : `LineSearch`
         Strategy to choose the step length
-    niter : int, optional
+    niter : `int`, optional
         Number of iterations
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate

@@ -62,7 +62,7 @@ class TensorGrid(Set):
             be sorted in ascending order and may not contain
             duplicates. Empty vectors are not allowed.
         kwargs : {'as_midp', 'order'}
-            'as_midp' : bool, optional  (Default: `False`)
+            'as_midp' : `bool`, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
                 This influences the behavior of `min`, `max` and
                 `cell_sizes`.
@@ -263,8 +263,8 @@ class TensorGrid(Set):
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is a `TensorGrid` instance with all
+        equals : `bool`
+            `True` if ``other`` is a :class:`~odl.TensorGrid` instance with all
             coordinate vectors equal (up to the given tolerance), to
             the ones of this grid, otherwise `False`.
 
@@ -293,7 +293,7 @@ class TensorGrid(Set):
         return self.approx_equals(other, tol=0.0)
 
     def approx_contains(self, other, tol):
-        """Test if `other` belongs to this grid up to a tolerance.
+        """Test if ``other`` belongs to this grid up to a tolerance.
 
         Parameters
         ----------
@@ -332,7 +332,7 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other : `TensorGrid`
+        other :  :class:`~odl.TensorGrid`
             The other grid which is supposed to contain this grid
         tol : float
             Allow deviations up to this number in absolute value
@@ -375,21 +375,21 @@ class TensorGrid(Set):
 
         The given grid (`m` dimensions) is inserted into the current
         one (`n` dimensions) before the given index, resulting in a new
-        `TensorGrid` with `n + m` dimensions.
+        :class:`~odl.TensorGrid` with `n + m` dimensions.
         Note that no changes are made in-place.
 
         Parameters
         ----------
-        other : `TensorGrid`, float or array-like
-            The grid to be inserted. A float or array `a` is treated as
+        other :  :class:`~odl.TensorGrid`, `float` or array-like
+            The grid to be inserted. A `float` or array `a` is treated as
             `TensorGrid(a)`.
         index : `Integral`
-            The index of the dimension before which `other` is to
+            The index of the dimension before which ``other`` is to
             be inserted. Must fulfill `0 <= index <= ndim`.
 
         Returns
         -------
-        newgrid : `TensorGrid`
+        newgrid : :class:`~odl.TensorGrid`
             The enlarged grid
 
         Examples
@@ -547,7 +547,7 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        sparse : bool, optional
+        sparse : `bool`, optional
             If True, the grid is not "fleshed out" to save memory.
 
         Returns
@@ -595,7 +595,7 @@ class TensorGrid(Set):
                                  sparse=sparse, copy=True))
 
     def convex_hull(self):
-        """The "inner" of the grid, an `IntervalProd`.
+        """The "inner" of the grid, an :class:`IntervalProd`.
 
         The convex hull of a set is the union of all line segments
         between points in the set. For a tensor grid, it is the
@@ -603,7 +603,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        chull : `IntervalProd`
+        chull : :class:`IntervalProd`
             Interval product defined by the minimum and maximum of
             the grid (depends on `as_midp`)
 
@@ -727,19 +727,20 @@ class RegularGrid(TensorGrid):
 
     def __init__(self, min_pt, max_pt, shape, **kwargs):
         """Initialize a new instance.
+
         Parameters
         ----------
-        min_pt : array-like or float
+        min_pt : array-like or `float`
             Grid point with minimum coordinates, can be a single float
             for 1D grids
-        max_pt : array-like or float
+        max_pt : array-like or `float`
             Grid point with maximum coordinates, can be a single float
             for 1D grids
-        shape : array-like or int
+        shape : array-like or `int`
             The number of grid points per axis, can be an integer for
             1D grids
         kwargs : {'as_midp'}
-            'as_midp' : bool, optional  (Default: `False`)
+            'as_midp' : `bool`, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
                 This influences the behavior of `min`, `max` and
                 `cell_sizes`.
@@ -1063,13 +1064,13 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
 
     Parameters
     ----------
-    intv_prod : `IntervalProd`
+    intv_prod : :class:`IntervalProd`
         Set to be sampled
     num_nodes : int or tuple of int
         Number of nodes per axis. For dimension >= 2, a tuple
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
-    as_midp : bool, optional
+    as_midp : `bool`, optional
         If True, the midpoints of an interval partition will be
         returned, which excludes the endpoints. Otherwise,
         equispaced nodes including the endpoints are generated.

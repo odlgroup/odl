@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cartesian products of `LinearSpace`'s.
+"""Cartesian products of :class:`LinearSpace`'s.
 
 TODO: document public interface
 """
@@ -102,7 +102,7 @@ class ProductSpace(LinearSpace):
                 the space to NOT be a Hilbert space.
                 Default: np.linalg.norm(x, ord=ord)
 
-        The following float values for `prod_norm` can be specified.
+        The following `float` values for `prod_norm` can be specified.
         Note that any value of ord < 1 only gives a pseudo-norm.
 
         +----------+---------------------------+
@@ -223,7 +223,7 @@ class ProductSpace(LinearSpace):
 
         The second is to wrap existing vectors:
 
-        args : tuple of `LinearSpace.Vector`s
+        args : tuple of :class:`LinearSpace.Vector`s
             A tuple of vectors in the underlying spaces.
             This will simply wrap the Vectors (not copy).
 
@@ -339,8 +339,8 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is a `ProductSpace` instance, has
+        equals : `bool`
+            `True` if ``other`` is a `ProductSpace` instance, has
             the same length and the same factors. `False` otherwise.
 
         Examples
@@ -412,7 +412,7 @@ class ProductSpace(LinearSpace):
         def __eq__(self, other):
             """`ps.__eq__(other) <==> ps == other`.
 
-            Overrides the default `LinearSpace` method since it is
+            Overrides the default :class:`LinearSpace` method since it is
             implemented with the distance function, which is prone to
             numerical errors. This function checks equality per
             component.

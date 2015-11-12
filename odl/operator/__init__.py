@@ -36,25 +36,25 @@ Operator compositions, sums etc.
 +----------------------------+-----------------------------------------+
 |Class name                  |Description                              |
 +============================+=========================================+
-|`OperatorSum`               |Sum of two operators, `S = A + B`,       |
+|`OperatorSum`               |Sum of two operators, ``S = A + B``,     |
 |                            |defined as                               |
-|                            |`x` --> `(A + B)(x) = A(x) + B(x)`       |
+|                            |``x`` --> ``(A + B)(x) = A(x) + B(x)``   |
 +----------------------------+-----------------------------------------+
 |`OperatorComp`              |Composition of two operators,            |
 |                            |`C = A o B` defined as                   |
-|                            |`x` --> `(A o B)(x) = A(B(x))`           |
+|                            |``x`` --> ``(A o B)(x) = A(B(x))``       |
 +----------------------------+-----------------------------------------+
 |`OperatorPointwiseProduct`  |Product of two operators,`P = A * B`,    |
 |                            |defined as                               |
-|                            |`x --> (A * B)(x) = A(x) * B(x)`.        |
+|                            |``x --> (A * B)(x) = A(x) * B(x)``.      |
 +----------------------------+-----------------------------------------+
 |`OperatorLeftScalarMult`    |Multiplication of an operator from left  |
 |                            |with a scalar, `L = c * A`, defined as   |
-|                            |`x --> (c * A)(x) = c * A(x)`            |
+|                            |``x --> (c * A)(x) = c * A(x)``          |
 +----------------------------+-----------------------------------------+
 |`OperatorRightScalarMult`   |Multiplication of an operator from right |
 |                            |with a scalar, `S = A * c`, defined by   |
-|                            |`x --> (A * c)(x) =  A(c * x)`           |
+|                            |``x --> (A * c)(x) =  A(c * x)``         |
 +----------------------------+-----------------------------------------+
 
 Factory functions
@@ -63,7 +63,7 @@ Factory functions
 +-------------------+--------------------------------------------------+
 |Name               |Description                                       |
 +===================+==================================================+
-|`operator()`       |Create an `Operator` by specifying either a       |
+|`operator()`       |Create an :class:`Operator` by specifying either a|
 |                   |`call` or an `apply` method (or both) for         |
 |                   |evaluation.                                       |
 +-------------------+--------------------------------------------------+
@@ -75,20 +75,20 @@ Default (standard) operators (modlule `default_ops`)
 |Class name          |Description                                      |
 +====================+=================================================+
 |`ScalingOperator`   |Multiplication with a scalar `s`, defined as     |
-|                    |`x` --> `s * x`                                  |
+|                    |``x`` --> ``s * x``                              |
 +--------------------+-------------------------------------------------+
 |`ZeroOperator`      |Multiplication with 0, defined as                |
-|                    |`x` --> `0 * x`                                  |
+|                    |``x`` --> ``0 * x``                              |
 +--------------------+-------------------------------------------------+
 |`IdentityOperator`  |Multiplication with 1, defined as                |
-|                    |`x` --> `1 * x`                                  |
+|                    |``x`` --> ``1 * x``                              |
 +--------------------+-------------------------------------------------+
 |`LinCombOperator`   |Linear combination of two space elements with two|
 |                    |fixed scalars `a` and `b`, defined as            |
-|                    |`(x, y)` --> `a * x + b * y`                     |
+|                    |``(x, y)`` --> ``a * x + b * y``                 |
 +--------------------+-------------------------------------------------+
 |`MultiplyOperator`  |Multiplication of two space elements, defined as |
-|                    |`(x, y)` --> `x * y`                             |
+|                    |``(x, y)`` --> ``x * y``                         |
 +--------------------+-------------------------------------------------+
 
 Equation system solvers (module `solvers`)

@@ -136,7 +136,7 @@ class IntervalProd(Set):
 
     # Overrides of the abstract base class methods
     def approx_equals(self, other, tol):
-        """Test if `other` is equal to this set up to `tol`.
+        """Test if ``other`` is equal to this set up to `tol`.
 
         Parameters
         ----------
@@ -217,7 +217,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : `Set`
+        other : :class:`Set`
             The set to be tested. It must implement a `min()` and a
             `max()` method, otherwise a `TypeError` is raised.
         tol : float, optional
@@ -277,7 +277,7 @@ class IntervalProd(Set):
         ----------
         point : array-like or float
                 The point. Its length must be equal to the set's
-                dimension. Can be a float in the 1d case.
+                dimension. Can be a `float` in the 1d case.
         ord : non-zero int or float('inf'), optional
               The order of the norm (see numpy.linalg.norm).
               Default: 2.0
@@ -320,14 +320,14 @@ class IntervalProd(Set):
         ----------
         indices : int or tuple of ints
             The indices of the dimensions along which to collapse
-        values : float or array-like
+        values : `float` or array-like
             The values to which to collapse. Must have the same
             lenght as 'indcs'. Values must lie within the interval
             boundaries.
 
         Returns
         -------
-        collapsed : `IntervalProd`
+        collapsed : :class:`IntervalProd`
             The collapsed set
 
         Examples
@@ -381,7 +381,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        squeezed : `IntervalProd`
+        squeezed : :class:`IntervalProd`
             The squeezed set
 
         Examples
@@ -410,16 +410,16 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : `IntervalProd`, float or array-like
-            The set to be inserted. A float or array a is
+        other : :class:`IntervalProd`, `float` or array-like
+            The set to be inserted. A `float` or array a is
             treated as an `IntervalProd(a, a)`.
         index : int, Optional (default = `ndim`)
-            The index of the dimension before which `other` is to
+            The index of the dimension before which ``other`` is to
             be inserted. Must fulfill `0 <= index <= ndim`.
 
         Returns
         -------
-        larger_set : `IntervalProd`
+        larger_set : :class:`IntervalProd`
             The enlarged set
 
         Examples

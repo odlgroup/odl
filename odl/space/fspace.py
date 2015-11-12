@@ -48,16 +48,16 @@ class FunctionSet(Set):
 
         Parameters
         ----------
-        dom : `Set`
+        dom : :class:`Set`
             The domain of the functions.
-        ran : `Set`
+        ran : :class:`Set`
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
+            raise TypeError('domain {!r} not a :class:`Set` instance.'.format(dom))
 
         if not isinstance(ran, Set):
-            raise TypeError('range {!r} not a `Set` instance.'.format(dom))
+            raise TypeError('range {!r} not a :class:`Set` instance.'.format(dom))
 
         self._domain = dom
         self._range = ran
@@ -110,12 +110,12 @@ class FunctionSet(Set):
             return self.Vector(self, fcall, fapply)
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """``s.__eq__(other) <==> s == other``.
 
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a :class:`FunctionSet` with same `domain`
+            `True` if ``other`` is a :class:`FunctionSet` with same :attr:`domain`
             and :attr:`range`, `False` otherwise.
         """
         if other is self:
@@ -126,12 +126,12 @@ class FunctionSet(Set):
                 self.range == other.range)
 
     def __contains__(self, other):
-        """`s.__contains__(other) <==> other in s`.
+        """``s.__contains__(other) <==> other in s``.
 
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a `FunctionSet.Vector` whose `space`
+            `True` if ``other`` is a :class:`FunctionSet.Vector` whose :attr:`space`
             attribute equals this space, `False` otherwise.
         """
         return (isinstance(other, FunctionSet.Vector) and
@@ -170,7 +170,7 @@ class FunctionSet(Set):
             be provided.*
             """
             if not isinstance(fset, FunctionSet):
-                raise TypeError('function set {} not a `FunctionSet` '
+                raise TypeError('function set {} not a :class:`FunctionSet` '
                                 'instance.'.format(fset))
 
             if fcall is None and fapply is None:
@@ -198,14 +198,14 @@ class FunctionSet(Set):
             return self._space
 
         def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`.
+            """``vec.__eq__(other) <==> vec == other``.
 
             Returns
             -------
             equals : `bool`
-                `True` if `other` is a `FunctionSet.Vector` with
-                `other.space` equal to this vector's space and
-                the call and apply implementations of `other` and
+                `True` if ``other`` is a :class:`FunctionSet.Vector` with
+                ``other.space`` equal to this vector's space and
+                the call and apply implementations of ``other`` and
                 this vector are equal. `False` otherwise.
             """
             if other is self:
@@ -338,17 +338,17 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Parameters
         ----------
-        dom : `Set`
+        dom : :class:`Set`
             The domain of the functions.
-        field : `RealNumbers` or `ComplexNumbers`
+        field : :class:`RealNumbers` or :class:`ComplexNumbers`
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
+            raise TypeError('domain {!r} not a Set instance.'.format(dom))
 
         if not (isinstance(field, (RealNumbers, ComplexNumbers))):
-            raise TypeError('field {!r} not a `RealNumbers` or '
-                            '`ComplexNumbers` instance.'.format(field))
+            raise TypeError('field {!r} not a RealNumbers or '
+                            'ComplexNumbers instance.'.format(field))
 
         super().__init__(dom, field)
         self._field = field
@@ -382,7 +382,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Returns
         -------
-        `element` : :class:`FunctionSpace.Vector`
+        element : :class:`FunctionSpace.Vector`
             The new element.
         """
         if fcall is None and fapply is None:
@@ -390,8 +390,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         else:
             return super().element(fcall, fapply)
 
-    def _lincomb(self, z, a, x, b, y):
-        """Raw linear combination of `x` and `y`.
+    def _lincomb(self, a, x, b, y, out):
+        """Raw linear combination of ``x`` and ``y``.
 
         Note
         ----
@@ -464,7 +464,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         Note
         ----
 
-        Since `FunctionSpace._lincomb` is slow, 
+        Since :class:`FunctionSpace._lincomb` is slow, 
         we implement this function directly.
         """
         def zero_(*_):
@@ -473,12 +473,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return self.element(zero_)
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """``s.__eq__(other) <==> s == other``.
 
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a :class:`FunctionSpace` with same `domain`
+            `True` if ``other`` is a :class:`FunctionSpace` with same :attr:`domain`
             and :attr:`range`, `False` otherwise.
         """
         # TODO: equality also for FunctionSet instances?
@@ -537,7 +537,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             be provided.*
             """
             if not isinstance(fspace, FunctionSpace):
-                raise TypeError('function space {} not a `FunctionSpace` '
+                raise TypeError('function space {} not a :class:`FunctionSpace` '
                                 'instance.'.format(fspace))
 
             super().__init__(fspace, fcall, fapply)

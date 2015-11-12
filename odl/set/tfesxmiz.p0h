@@ -314,7 +314,7 @@ class RealNumbers(Field):
         Returns
         -------
         contained : `bool`
-            `True` if other is a :class:`RealNumbers` or :class:`Integers`
+            True if  other is a :class:`RealNumbers` or :class:`Integers`
             `False` else.
 
         Examples
