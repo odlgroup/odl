@@ -54,7 +54,7 @@ class L2(FunctionSpace):
             return 'L2({!r}, {!r})'.format(self.domain, self.field)
 
     class Vector(FunctionSpace.Vector):
-        """Representation of an `L2` element."""
+        """Representation of an :class:`L2` element."""
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
