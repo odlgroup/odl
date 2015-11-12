@@ -64,6 +64,15 @@ intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy/', None),
                        'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
                        'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
+					   
+#Stop autodoc from skipping __init__
+def skip(app, what, name, obj, skip, options):
+    if name == "__init__":
+        return False
+    return skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
 
 #Stops WARNING: toctree contains reference to nonexisting document
 numpydoc_show_class_members = False
