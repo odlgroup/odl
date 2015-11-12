@@ -55,8 +55,15 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.pngmath',
+	'sphinx.ext.intersphinx',
     'numpydoc'
 ]
+
+#Intersphinx to get numpy targets
+intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
+                       'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+                       'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+                       'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
 
 #Stops WARNING: toctree contains reference to nonexisting document
 numpydoc_show_class_members = False
