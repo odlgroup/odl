@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cartesian products of :class:`LinearSpace`'s.
-
-TODO: document public interface
-"""
+"""Cartesian products of :class:`LinearSpace` instances."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -63,22 +60,22 @@ def _prod_inner_sum_not_defined(x):
 
 class ProductSpace(LinearSpace):
 
-    """
-    """
+    """Cartesian product of linear spaces."""
 
     def __init__(self, *spaces, **kwargs):
-        """Initialize a new ProductSpace
+        """Initialize a new instance.
 
-        The product X1 x ... x XN is itself a linear space, where the
-        linear combination is defined component-wise.
+        The Cartesian product
+        :math:`\mathcal{X}_1 \\times \dots \\times \mathcal{X}_n` for
+        linear spaces :math:`\mathcal{X}_i` is itself a linear space,
+        where the linear combination is defined component-wise.
 
         Parameters
         ----------
-        args : {:class:`LinearSpace` and `int` OR ``LinearSpace`` instances
-            Either a space and an integer,
-            in this case the power of the space is taken (R^n)
-            Otherwise, a set of spaces,
-            in this case the product is taken (RxRxRxC)
+        spaces : :class:`LinearSpace` or `int`
+            Can be specified either as a space and an integer, in which
+            case the power space ``space**n`` is created, or
+            an arbitrary number of spaces.
         kwargs : {'ord', 'weights', 'prod_norm'}
             'ord' : `float`, optional
                 Order of the product distance/norm, i.e.
@@ -88,10 +85,10 @@ class ProductSpace(LinearSpace):
                 ``norm(x) = np.linalg.norm(x, ord=ord)``
 
                 Default: 2.0
-                
+
                 The following `float` values for ``ord`` can be specified.
                 Note that any value of ``ord < 1`` only gives a pseudo-norm.
-        
+
                 +-------------+------------------------------+
                 | 'prod_norm' | Distance Definition          |
                 +=============+==============================+
@@ -102,28 +99,28 @@ class ProductSpace(LinearSpace):
                 | other       | ``sum(w * z**ord)**(1/ord)`` |
                 +-------------+------------------------------+
 
-                Here, 
-                
-                ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))`` 
-                
+                Here,
+
+                ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))``
+
                 and ``w = weights``.
-        
+
                 Note that ``0 <= ord < 1`` are not allowed since these
                 pseudo-norms are very unstable numerically.
             'weights' : array-like, optional, only usable with 'ord'
                 Array of weights, same size as number of space
                 components. All weights must be positive. It is
                 multiplied with the tuple of distances before
-                applying the Rn norm or 'prod_norm'.
-                
-                Default: (1.0,...,1.0)
+                applying the Rn norm or ``prod_norm``.
+
+                Default: ``(1.0,...,1.0)``
+
             'prod_norm' : `callable`, optional
                 Function that should be applied to the array of
                 distances/norms. Specifying a product norm causes
                 the space to NOT be a Hilbert space.
-                
-                Default: ``np.linalg.norm(x, ord=ord)``.
 
+                Default: ``np.linalg.norm(x, ord=ord)``.
 
         Returns
         -------
@@ -221,25 +218,18 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        The method has three call patterns, the first is:
-
-        args : None
-            Create a new vector from scratch.
-
-        The second is to wrap existing vectors:
-
-        args : tuple of :class:`LinearSpace.Vector`s
-            A tuple of vectors in the underlying spaces.
-            This will simply wrap the Vectors (not copy).
-
-        The third pattern is to create a new Vector from scratch, in
-        this case
-
-        args : tuple of array-like objects
+        inp : `object`, optional
+            If ``inp`` is `None`, a new element is created from
+            scratch by allocation in the spaces. If ``inp`` is
+            already an element in this space, it is re-wrapped.
+            Otherwise, a new element is created from the
+            components by calling the ``element()`` methods
+            in the component spaces.
 
         Returns
         -------
-        ProductSpace.Vector instance
+        element : :class:`ProductSpace.Vector`
+            The new element
 
         Examples
         --------
@@ -269,6 +259,7 @@ class ProductSpace(LinearSpace):
         if inp is None:
             inp = [space.element() for space in self.spaces]
 
+        # TODO: how does this differ from "if inp in self"?
         if (all(isinstance(v, LinearSpace.Vector) for v in inp) and
                 all(part.space == space
                     for part, space in zip(inp, self.spaces))):
@@ -311,7 +302,8 @@ class ProductSpace(LinearSpace):
 
     def _lincomb(self, a, x, b, y, out):
         # pylint: disable=protected-access
-        for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts, out.parts):
+        for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts,
+                                       out.parts):
             space._lincomb(a, xp, b, yp, outp)
 
     def _dist(self, x1, x2):
@@ -336,7 +328,8 @@ class ProductSpace(LinearSpace):
         return self._prod_inner_sum(inners)
 
     def _multiply(self, x1, x2, out):
-        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts, out.parts):
+        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
+                                     out.parts):
             spc._multiply(xp, yp, outp)
 
     def __eq__(self, other):
