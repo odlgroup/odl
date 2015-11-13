@@ -40,14 +40,13 @@ class Set(with_metaclass(ABCMeta, object)):
 
     """An abstract set.
 
-    Abstract Methods
-    ================
+    **Abstract Methods**
     Each subclass of :class:`Set` must implement two methods: one to check if
     an object is contained in the set and one to test if two sets are
     equal.
 
     ``__contains__(self, other)``
-    -----------------------------
+    
     Test if ``other`` is a member of this set. This function provides the
     operator overload for `in`.
 
@@ -62,10 +61,10 @@ class Set(with_metaclass(ABCMeta, object)):
 
 
     ``__eq__(self, other)``
-    -----------------------
+    
     Test if ``other`` is the same set as this set, i.e. both sets are
     of the same type and contain the same elements. This function
-    provides the operator overload for `==`.
+    provides the operator overload for ``==``.
 
     **Parameters:**
         other : `object`
@@ -76,11 +75,11 @@ class Set(with_metaclass(ABCMeta, object)):
             `True` if both sets are of the same type and contain the
             same elements, `False` otherwise.
 
-    A default implementation of the operator overload for `!=` via
-    `__ne__(self, other)` is provided as `not self.__eq__(other)`.
+    A default implementation of the operator overload for ``!=`` via
+    ``__ne__(self, other)`` is provided as ``not self.__eq__(other)``.
 
-    optional: `element(inp=None)`
-    -----------------------------
+    optional: ``element(inp=None)``
+    
     Create an element of this set, either from scratch or from an
     input parameter.
 
@@ -90,7 +89,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
     **Returns:**
         element : member of this set
-            If `inp == None`, return an arbitrary element.
+            If ``inp == None``, return an arbitrary element.
             Otherwise, return the element created from ``inp``.
     """
 

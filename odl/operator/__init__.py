@@ -17,7 +17,7 @@
 
 """Core Operator support for ODL.
 
-Operators (module `:mod:`~odl.operator`)
+Operators (module :mod:`~odl.operator`)
 ========================================
 
 Core operators

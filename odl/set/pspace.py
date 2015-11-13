@@ -63,16 +63,11 @@ def _prod_inner_sum_not_defined(x):
 
 class ProductSpace(LinearSpace):
 
-    """The Cartesian product of N :class:`LinearSpace`'s.
-
-    The product X1 x ... x XN is itself a linear space, where the
-    linear combination is defined component-wise.
-
-    TODO: document public interface
+    """
     """
 
     def __init__(self, *spaces, **kwargs):
-        """Initialize a new ProductSpace.
+        """Initialize a new ProductSpace
 
         The product X1 x ... x XN is itself a linear space, where the
         linear combination is defined component-wise.
@@ -87,10 +82,11 @@ class ProductSpace(LinearSpace):
         kwargs : {'ord', 'weights', 'prod_norm'}
             'ord' : `float`, optional
                 Order of the product distance/norm, i.e.
-                
+
                 ``dist(x, y) = np.linalg.norm(x-y, ord=ord)``
+
                 ``norm(x) = np.linalg.norm(x, ord=ord)``
-                
+
                 Default: 2.0
                 
                 The following `float` values for ``ord`` can be specified.
@@ -105,8 +101,7 @@ class ProductSpace(LinearSpace):
                 +-------------+------------------------------+
                 | other       | ``sum(w * z**ord)**(1/ord)`` |
                 +-------------+------------------------------+
-                
-        
+
                 Here, 
                 
                 ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))`` 
@@ -127,7 +122,7 @@ class ProductSpace(LinearSpace):
                 distances/norms. Specifying a product norm causes
                 the space to NOT be a Hilbert space.
                 
-                Default: ``np.linalg.norm(x, ord=ord)``
+                Default: ``np.linalg.norm(x, ord=ord)``.
 
 
         Returns
