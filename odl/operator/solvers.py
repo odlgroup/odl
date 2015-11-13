@@ -102,7 +102,7 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
 
     :math:`A (x) = y`
 
-    for a (Frechet-) differentiable operator `A` using the iteration
+    for a (Frechet-) differentiable operator ``A`` using the iteration
 
     :math:`x <- x - \omega * (A')^* (A(x) - y)`
 
@@ -116,9 +116,9 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     Parameters
     ----------
     op : :class:`Operator`
-        Operator in the inverse problem. It must have a `derivative`
+        Operator in the inverse problem. It must have a :meth:`Operator.derivative`
         property, which returns a new operator which in turn has an
-        `adjoint` property, i.e. `op.derivative(x).adjoint` must be
+        :attr:`Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
         well-defined for ``x`` in the operator domain.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
@@ -128,10 +128,10 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : `int`, optional
         Maximum number of iterations
-    omega : positive float
+    omega : positive `float`
         Relaxation parameter, must lie between 0 and :math:`2/||A||`,
-        the operator norm of `A`, to guarantee convergence.
-    partial : `Partial`, optional
+        the operator norm of ``A``, to guarantee convergence.
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -161,7 +161,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     :math:`A x = y`
 
-    for a linear and self-adjoint operator `A`.
+    for a linear and self-adjoint operator ``A``.
 
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
@@ -184,7 +184,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : `int`, optional
         Maximum number of iterations
-    partial : `Partial`, optional
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -250,7 +250,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
     ----------
     op : :class:`Operator`
         Operator in the inverse problem. It must be linear and implement
-        the `adjoint` property.
+        the :attr:`Operator.adjoint` property.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
@@ -259,7 +259,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         Right-hand side of the equation defining the inverse problem
     niter : `int`, optional
         Maximum number of iterations
-    partial : `Partial`, optional
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -333,7 +333,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
     :math:`A (x) = y`
 
-    for a (Frechet-) differentiable operator `A` using a
+    for a (Frechet-) differentiable operator ``A`` using a
     Gauss-Newton iteration.
 
     It uses a minimum amount of memory copies by applying re-usable
@@ -347,9 +347,9 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     Parameters
     ----------
     op : :class:`Operator`
-        Operator in the inverse problem. It must have a `derivative`
+        Operator in the inverse problem. It must have a :meth:`Operator.derivative`
         property, which returns a new operator which in turn has an
-        `adjoint` property, i.e. `op.derivative(x).adjoint` must be
+        :attr:`Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
         well-defined for ``x`` in the operator domain.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
@@ -362,7 +362,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     zero_seq : `iterable`, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
-    partial : `Partial`, optional
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -464,9 +464,9 @@ class BacktrackingLineSearch(LineSearch):
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.
             The step length is updated as step_length *= tau
-        c : float, optional
+        c : `float`, optional
             The 'discount factor' on the
-            `step length * direction derivative`,
+            ``step length * direction derivative``,
             which the new point needs to be smaller than in order to
             fulfill the condition and be accepted (see the references).
         max_num_iter : `int`, optional
@@ -553,7 +553,7 @@ def quasi_newton_bfgs(deriv, x, line_search, niter=1, partial=None):
     General implementation of the Quasi-Newton method with BFGS update
     for solving a general optimization problem
 
-    `min f(x)`
+    ``min f(x)``
 
     The QN method is an approximate newton method, where the Hessian
     is approximated and gradually updated in each step. This
@@ -567,11 +567,11 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
 
     Parameters
     ----------
-    deriv : `odl.Operator`
+    deriv : :class:`Operator`
         Derivative of the objective function
-    x : element in the domain of `grad_f`
+    x : element in the :attr:`Operator.domain` of ``deriv``
         Starting point of the iteration
-    line_search : `LineSearch`
+    line_search : :class:`LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
@@ -622,8 +622,8 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
     The algorithm is intended for unconstrained problems. It needs line
     search in order guarantee convergence. With appropriate line search,
     it can also be used for constrained problems where one wants to
-    minimize over some given set `C`. This is done by defining
-    :math:`f(x) = \infty` for ``x`` outside `C`.
+    minimize over some given set ``C``. This is done by defining
+    :math:`f(x) = \infty` for ``x`` outside ``C``.
 
 
     The algorithm is described in [1]_, section 9.3--9.4
@@ -635,15 +635,15 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
 
     Parameters
     ----------
-    deriv : `odl.Operator`
+    deriv : :class:`Operator`
         Gradient of the objective function, :math:`x \mapsto grad f(x)`
-    x : element in the domain of `deriv`
+    x : element in the :attr:`Operator.domain` of ``deriv``
         Starting point of the iteration
-    line_search : `LineSearch`
+    line_search : :class:`LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References
@@ -673,7 +673,7 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
 
     :math:`A(x) = 0`
 
-    for a general (not necessarily differentiable) operator `A`
+    for a general (not necessarily differentiable) operator ``A``
     using a quasi-Newton approach with approximate Hessian.
 
     The algorithm is described in [1]_ and [2]_, and in a
@@ -688,11 +688,11 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    line_search : `LineSearch`
+    line_search : :class:`LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References
@@ -738,7 +738,7 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
 
     :math:`A(x) = 0`
 
-    for a general (not necessarily differentiable) operator `A`
+    for a general (not necessarily differentiable) operator ``A``
     using a quasi-Newton approach with approximate Hessian.
 
     The algorithm is described in [1]_ and [2]_, and in a
@@ -753,11 +753,11 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    line_search : `LineSearch`
+    line_search : :class:`LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    partial : :class:`Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References

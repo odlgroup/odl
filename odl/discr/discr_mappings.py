@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -263,7 +263,7 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
 
     """Function evaluation at grid points.
 
-    This is the `LinearOperator` version of the default 'restriction'
+    This is the linear :class:`Operator` version of the default 'restriction'
     used by all core discretization classes.
     """
 
@@ -299,7 +299,7 @@ class RawNearestInterpolation(FunctionSetMapping):
     """Nearest neighbor interpolation as a raw :class:`Operator`."""
 
     def __init__(self, ip_fset, grid, dspace, order='C'):
-        """Initialize a new `NearestInterpolation` instance.
+        """Initialize a new :class:`RawNearestInterpolation` instance.
 
         Parameters
         ----------
@@ -359,7 +359,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         >>> from odl import FunctionSet
         >>> space = FunctionSet(rect, strings)
 
-        The grid is defined by uniform sampling (`as_midp` indicates
+        The grid is defined by uniform sampling (:attr:`as_midp` indicates
         that the points will be cell midpoints instead of corners).
 
         >>> from odl import uniform_sampling, Ntuples
@@ -413,10 +413,10 @@ class RawNearestInterpolation(FunctionSetMapping):
 class NearestInterpolation(RawNearestInterpolation,
                            FunctionSetMapping):
 
-    """Nearest neighbor interpolation as a `LinearOperator`."""
+    """Nearest neighbor interpolation as a linear :class:`Operator`."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
-        """Initialize a new `NearestInterpolation` instance.
+        """Initialize a new :class:`NearestInterpolation` instance.
 
         Parameters
         ----------
@@ -446,7 +446,7 @@ class NearestInterpolation(RawNearestInterpolation,
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> space = L2(rect, field=ComplexNumbers())
 
-        The grid is defined by uniform sampling (`as_midp` indicates
+        The grid is defined by uniform sampling (:attr:`as_midp` indicates
         that the points will be cell midpoints instead of corners).
 
         >>> from odl import uniform_sampling, Cn
@@ -476,10 +476,10 @@ class NearestInterpolation(RawNearestInterpolation,
 
 class LinearInterpolation(FunctionSetMapping):
     #TODO: this needs to be tested properly
-    """Linear interpolation interpolation as a `LinearOperator`."""
+    """Linear interpolation interpolation as a linear :class:`Operator`."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
-        """Initialize a new `NearestInterpolation` instance.
+        """Initialize a new :class:`LinearInterpolation` instance.
 
         Parameters
         ----------

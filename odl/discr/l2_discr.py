@@ -105,7 +105,7 @@ class DiscreteL2(Discretization):
         inp : `object`, optional
             The input data to create an element from. Must be
             recognizable by the :meth:`~odl.LinearSpace.element` method of 
-            either `dspace` or `uspace`.
+            either :attr:`dspace` or :attr:`uspace`.
 
         Returns
         -------
@@ -195,7 +195,7 @@ class DiscreteL2(Discretization):
 
             Parameters
             ----------
-            out : `ndarray`, Optional (default: `None`)
+            out : `numpy.ndarray`, Optional (default: `None`)
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype and
                 shape.
@@ -277,7 +277,7 @@ class DiscreteL2(Discretization):
 
             Parameters
             ----------
-            method : string, optional
+            method : `string`, optional
                 1d methods:
 
                 'plot' : graph plot
@@ -292,7 +292,7 @@ class DiscreteL2(Discretization):
 
                 'wireframe', 'plot_wireframe' : surface plot
 
-            title : string, optional
+            title : `string`, optional
                 Set the title of the figure
             kwargs : {'figsize', 'saveto', ...}
                 Extra keyword arguments passed on to display method
@@ -319,7 +319,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     Parameters
     ----------
-    l2space : `L2`
+    l2space : :class:`L2`
         Continuous :math:`L^2` type space. Its domain must be an
         :class:`IntervalProd` instance.
     nsamples : `int` or `tuple` of `int`
@@ -351,8 +351,8 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     Returns
     -------
-    l2discr : `DiscreteL2`
-        The uniformly discretized L2 space
+    l2discr : :class:`DiscreteL2`
+        The uniformly discretized :class:`L2` space
     """
     if not isinstance(l2space, L2):
         raise TypeError('space {!r} is not an L2 instance.'.format(l2space))

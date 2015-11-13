@@ -214,20 +214,20 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            start : int, optional (default: `None`)
+            start : `int`, optional (default: `None`)
                 Start position. None means the first element.
-            start : int, optional (default: `None`)
+            start : `int`, optional (default: `None`)
                 One element past the last element to be extracted.
                 None means the last element.
-            start : int, optional (default: `None`)
+            start : `int`, optional (default: `None`)
                 Step length. None means 1.
-            out : `ndarray`, optional (default: `None`)
+            out : `numpy.ndarray`, optional (default: `None`)
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
 
             Returns
             -------
-            asarray : `ndarray`
+            asarray : `numpy.ndarray`
                 Numpy array of the same type as the space.
 
             Examples
@@ -281,7 +281,7 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            equals :  `bool`
+            equals : `bool`
                 `True` if all entries of other are equal to this
                 vector's entries, `False` otherwise.
 
@@ -721,7 +721,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        a, b : `field` element
+        a, b : :attr:`field` element
             Scalar to multiply x and y with.
         x1, x2 : :class:`Fn.Vector`
             The summands

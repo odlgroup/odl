@@ -64,8 +64,8 @@ class TensorGrid(Set):
         kwargs : {'as_midp', 'order'}
             'as_midp' : `bool`, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of `min`, `max` and
-                `cell_sizes`.
+                This influences the behavior of :attr:`min`, :attr:`max` and
+                :attr:`cell_sizes`.
             'order' : {'C', 'F'}, optional
                 Ordering of the grid axes. 'C' means the first axis
                 varies slowest, the last axis fastest; vice versa for
@@ -169,6 +169,11 @@ class TensorGrid(Set):
         return self._order
 
     @property
+    def as_midp(self):
+        """If the grid is "pixel" centered."""
+        return self._as_midp
+
+    @property
     def min_pt(self):
         """Vector containing the minimal grid coordinates per axis.
 
@@ -196,7 +201,7 @@ class TensorGrid(Set):
         """Return vector with minimal cell coordinates per axis.
 
         This is relevant if the grid was initialized with
-        `as_midp=True`, in which case the minimum is half a cell
+        :attr:`as_midp` ``True``, in which case the minimum is half a cell
         smaller than the minimum grid point.
 
         Examples
@@ -220,7 +225,7 @@ class TensorGrid(Set):
         """Return vector with maximal cell coordinates per axis.
 
         This is relevant if the grid was initialized with
-        `as_midp=True`, in which case the maximum is half a cell
+        :attr:`as_midp` ``True``, in which case the maximum is half a cell
         larger than the maximum grid point.
 
         Examples
@@ -289,7 +294,7 @@ class TensorGrid(Set):
                                               other.coord_vectors)))
 
     def __eq__(self, other):
-        """`g.__eq__(other) <==> g == other`."""
+        """``g.__eq__(other) <==> g == other``."""
         return self.approx_equals(other, tol=0.0)
 
     def approx_contains(self, other, tol):
@@ -321,7 +326,7 @@ class TensorGrid(Set):
                     for vector, coord in zip(self.coord_vectors, other)))
 
     def __contains__(self, other):
-        """`g.__contains__(other) <==> other in g`."""
+        """``g.__contains__(other) <==> other in g``."""
         other = np.atleast_1d(other)
         return (other.shape == (self.ndim,) and
                 all(coord in vector
@@ -373,17 +378,17 @@ class TensorGrid(Set):
     def insert(self, other, index):
         """Insert another grid before the given index.
 
-        The given grid (`m` dimensions) is inserted into the current
-        one (`n` dimensions) before the given index, resulting in a new
-        :class:`~odl.TensorGrid` with `n + m` dimensions.
+        The given grid (``m`` dimensions) is inserted into the current
+        one (``n`` dimensions) before the given index, resulting in a new
+        :class:`~odl.TensorGrid` with ``n + m`` dimensions.
         Note that no changes are made in-place.
 
         Parameters
         ----------
         other :  :class:`~odl.TensorGrid`, `float` or array-like
-            The grid to be inserted. A `float` or array `a` is treated as
-            `TensorGrid(a)`.
-        index : `Integral`
+            The grid to be inserted. A `float` or array ``a`` is treated as
+            ``TensorGrid(a)``.
+        index : `numbers.Integral`
             The index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
 
@@ -513,7 +518,7 @@ class TensorGrid(Set):
         -------
         csizes : tuple of numpy.ndarray
             The cell sizes per axis. The length of the vectors will be
-            one less than `coord_vectors` if `as_midp == False`,
+            one less than :attr:`coord_vectors` if :attr:`as_midp` is ``False``,
             otherwise they will have the same length.
             For axes with 1 grid point, cell size is set to 0.
 
@@ -552,14 +557,14 @@ class TensorGrid(Set):
 
         Returns
         -------
-        meshgrid : tuple of numpy.ndarray's
-            Function evaluation grid with size-1 axes if `sparse=True`,
+        meshgrid : `tuple` of `numpy.ndarray`'s
+            Function evaluation grid with size-1 axes if ``sparse=True``,
             otherwise with "fleshed out" axes
 
         See also
         --------
         numpy.meshgrid : coordinate matrices from coordinate vectors
-            We use `indexing='ij'` and `copy=True`
+            We use ``indexing='ij'`` and ``copy=True``
 
         Examples
         --------
@@ -605,7 +610,7 @@ class TensorGrid(Set):
         -------
         chull : :class:`IntervalProd`
             Interval product defined by the minimum and maximum of
-            the grid (depends on `as_midp`)
+            the grid (depends on :attr:`as_midp`)
 
         Examples
         --------
@@ -742,8 +747,8 @@ class RegularGrid(TensorGrid):
         kwargs : {'as_midp'}
             'as_midp' : `bool`, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of `min`, `max` and
-                `cell_sizes`.
+                This influences the behavior of :meth:`min`, :meth:`max` and
+                :meth:`cell_sizes`.
 
         Examples
         --------
@@ -893,22 +898,22 @@ class RegularGrid(TensorGrid):
     def insert(self, grid, index):
         """Insert another regular grid before the given index.
 
-        The given grid (`m` dimensions) is inserted into the current
-        one (`n` dimensions) before the given index, resulting in a new
-        `RegularGrid` with `n + m` dimensions.
+        The given grid (``m`` dimensions) is inserted into the current
+        one (``n`` dimensions) before the given index, resulting in a new
+        :class:`RegularGrid` with ``n + m`` dimensions.
         Note that no changes are made in-place.
 
         Parameters
         ----------
-        grid : `RegularGrid`
+        grid : :class:`RegularGrid`
             The grid to be inserted.
-        index : `Integral`
+        index : `numbers.Integral`
             The index of the dimension before which 'other' is to
-            be inserted. Must fulfill 0 <= index <= ndim.
+            be inserted. Must fulfill ``0 <= index <= ndim``.
 
         Returns
         -------
-        newgrid : `RegularGrid`
+        newgrid : class:`RegularGrid`
             The enlarged grid
 
         Examples
@@ -1066,7 +1071,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
     ----------
     intv_prod : :class:`IntervalProd`
         Set to be sampled
-    num_nodes : int or tuple of int
+    num_nodes : `int` or `tuple` of int
         Number of nodes per axis. For dimension >= 2, a tuple
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
@@ -1079,7 +1084,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
 
     Returns
     -------
-    sampling : `RegularGrid`
+    sampling : :class:`RegularGrid`
         Uniform sampling grid for the interval product
 
     Examples

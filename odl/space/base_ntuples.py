@@ -205,12 +205,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            start : int, optional
+            start : `int`, optional
                 Start position. `None` means the first element.
-            start : int, optional
+            start : `int`, optional
                 One element past the last element to be extracted.
                 `None` means the last element.
-            start : int, optional
+            start : `int`, optional
                 Step length. `None` means 1.
 
             Returns
@@ -243,12 +243,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be accessed
 
             Returns
             -------
-            values : `space.dtype` or `space.Vector`
+            values : :attr:`NtuplesBase.dtype` or :class:`NtuplesBase.Vector`
                 The value(s) at the index (indices)
             """
 
@@ -258,14 +258,14 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be set
             values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `index` is an integer, `value` must be single value.
+                If ``index`` is an integer, ``value`` must be single value.
 
-                If `index` is a slice, `value` must be broadcastable
+                If ``index`` is a slice, ``value`` must be broadcastable
                 to the size of the slice (same size, shape (1,)
                 or single value).
             """
@@ -275,12 +275,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            dtype : numpy.dtype, Optional (default: self.dtype)
+            dtype : `numpy.dtype`, Optional (default: ``self.dtype``)
                 The dtype of the output array
 
             Returns
             -------
-            array : ndarray
+            array : `numpy.ndarray`
             """
             if dtype is None:
                 return self.asarray()
@@ -292,12 +292,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            obj : ndarray
+            obj : `numpy.ndarray`
                 The array that should be wrapped
 
             Returns
             -------
-                vector : self.space.Vector
+                vector : :class:`NtuplesBase.Vector`
             """
             if obj.ndim == 0:
                 return self.space.field.element(obj)
@@ -327,9 +327,9 @@ class FnBase(NtuplesBase, LinearSpace):
 
         Parameters
         ----------
-        size : int
+        size : `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype

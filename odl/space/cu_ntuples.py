@@ -322,7 +322,7 @@ class CudaNtuples(NtuplesBase):
 
             Returns
             -------
-            values : `space.dtype` or `space.Vector`
+            values : :attr:`CudaNtuples.dtype` or :class:`CudaNtuples.Vector`
                 The value(s) at the index (indices)
 
 
@@ -860,7 +860,7 @@ class _CudaFnConstWeighting(_CudaFnWeighting):
 
     """Weighting of :class:`CudaFn` by a constant.
 
-    The weighted inner product with constant `c` is defined as
+    The weighted inner product with constant ``c`` is defined as
 
     :math:`<a, b> := b^H c a`
 
@@ -872,7 +872,7 @@ class _CudaFnConstWeighting(_CudaFnWeighting):
 
         Parameters
         ----------
-        constant : float
+        constant : `float`
             Weighting constant of the inner product.
         """
         super().__init__(dist_using_inner=False)
@@ -925,7 +925,7 @@ class _CudaFnConstWeighting(_CudaFnWeighting):
 
         Returns
         -------
-        inner : `float` or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         return self.const * float(_inner_default(x1, x2))
@@ -940,7 +940,7 @@ class _CudaFnConstWeighting(_CudaFnWeighting):
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The norm of the vector
         """
         from math import sqrt
@@ -1009,7 +1009,7 @@ class _CudaFnCustomInnerProduct(_CudaFnWeighting):
 
         Parameters
         ----------
-        inner : callable
+        inner : `callable`
             The inner product implementation. It must accept two
             :class:`CudaFn.Vector` arguments, return a `complex` number and
             satisfy the following conditions for all vectors ``x``,
@@ -1078,7 +1078,7 @@ class _CudaFnCustomNorm(_CudaFnWeighting):
 
         Parameters
         ----------
-        norm : callable
+        norm : `callable`
             The norm implementation. It must accept an :class:``CudaFn.Vector``
             argument, return a `float` and satisfy the
             following properties:
@@ -1132,7 +1132,7 @@ class _CudaFnCustomDist(_CudaFnWeighting):
 
         Parameters
         ----------
-        dist : callable
+        dist : `callable`
             The distance function defining a metric on :math:`F^n`.
             It must accept two :class:``CudaFn.Vector`` arguments and fulfill the
             following conditions for any vectors ``x``, ``y`` and ``z``:

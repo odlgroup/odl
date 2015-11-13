@@ -49,7 +49,7 @@ __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
 
 
 def _bound_method(function):
-    """Add a `self` argument to a function.
+    """Add a ``self`` argument to a function.
 
     This way, the decorated function may be used as a bound method.
     """
@@ -158,8 +158,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     range : :class:`Set`
         The set this operator maps to
 
-    It is **highly** recommended to call `super().__init__(dom, ran)` in
-    the `__init__()` method of any subclass, where `dom` and `ran` are
+    It is **highly** recommended to call ``super().__init__(dom, ran)`` in
+    the ``__init__()`` method of any subclass, where ``dom`` and ``ran`` are
     the arguments specifying domain and range of the new operator. In
     that case, the attributes :attr:`domain` and :attr:`range` are automatically
     provided by :class:`Operator`.
@@ -212,7 +212,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     Notes
     -----
-    If not both `_apply()` and `_call()` are implemented and the
+    If not both ``_apply()`` and ``_call()`` are implemented and the
     :attr:`range` is a :class:`~odl.set.space.LinearSpace`, a default implementation of the
     respective other is provided.
     """
@@ -362,30 +362,30 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return result
 
     def __add__(self, other):
-        """`op.__add__(other) <==> op + other`."""
+        """``op.__add__(other) <==> op + other``."""
         return OperatorSum(self, other)
 
     def __sub__(self, other):
-        """`op.__add__(other) <==> op - other`."""
+        """``op.__add__(other) <==> op - other``."""
         return OperatorSum(self, -1 * other)
 
     def __mul__(self, other):
-        """`op.__mul__(other) <==> op * other`.
+        """``op.__mul__(other) <==> op * other``.
 
         If ``other`` is an operator, this corresponds to 
         operator composition:
 
-        `op1 * op2 <==> (x --> op1(op2(x))`
+        ``op1 * op2 <==> (x --> op1(op2(x))``
 
         If ``other`` is a scalar, this corresponds to right
         multiplication of scalars with operators:
 
-        `op * scalar <==> (x --> op(scalar * x))`
+        ``op * scalar <==> (x --> op(scalar * x))``
 
         If ``other`` is a vector, this corresponds to right
         multiplication of vectors with operators:
 
-        `op * vector <==> (x --> op(vector * x))`
+        ``op * vector <==> (x --> op(vector * x))``
 
         Note that left and right multiplications are generally different.
 
@@ -393,14 +393,14 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         ----------
         other : :class:`Operator`, :class:`LinearSpace.Vector` or scalar
             If ``other`` is an :class:`Operator`, the :attr:`domain` of ``other``
-            must match :attr:`range` of `self`.
+            must match :attr:`range` of ``self``.
 
-            If ``other`` is a scalar and `self.domain` is a
+            If ``other`` is a scalar and :attr:`domain` is a
             :class:`LinearSpace`, ``other`` must be an element of
-            `self.domain.field`.
+            ``self.domain.field``.
 
             If ``other`` is a vector, ``other`` must be an element of
-            `self.domain`.
+            :attr:`domain`.
 
         Returns
         -------
@@ -445,7 +445,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     __matmul__ = __mul__
 
     def __rmul__(self, other):
-        """`op.__rmul__(s) <==> s * op`.
+        """``op.__rmul__(s) <==> s * op``.
 
         If ``other`` is an operator, this corresponds to 
         operator composition:
@@ -470,12 +470,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             If ``other`` is an :class:`Operator`, the :attr:`range` of ``other``
             must match :attr:`domain` of ``self``.
 
-            If ``other`` is a scalar and `self.range` is a
+            If ``other`` is a scalar and :attr:`range` is a
             :class:`LinearSpace`, ``other`` must be an element of
             ``self.range.field``.
 
             If ``other`` is a vector, ``other`` must be an element of
-            ``self.range``.
+            :attr:`range``.
 
         Returns
         -------
@@ -518,18 +518,18 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     __rmatmul__ = __rmul__
 
     def __pow__(self, n):
-        """`op.__pow__(s) <==> op**s`.
+        """``op.__pow__(s) <==> op**s``.
 
         This corresponds to the power of a operator:
 
-        `op ** 1 <==> (x --> op(x))`
-        `op ** 2 <==> (x --> op(op(x)))`
-        `op ** 3 <==> (x --> op(op(op(x))))`
+        ``op ** 1 <==> (x --> op(x))``
+        ``op ** 2 <==> (x --> op(op(x)))``
+        ``op ** 3 <==> (x --> op(op(op(x))))``
         etc...
 
         Parameters
         ----------
-        n : `Integral`
+        n : `numbers.Integral`
             The power the operator should be taken to.
 
         Returns
@@ -564,7 +564,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return NotImplemented
 
     def __truediv__(self, other):
-        """`op.__rmul__(s) <==> op / other`.
+        """``op.__rmul__(s) <==> op / other``.
 
         If ``other`` is a scalar, this corresponds to right
         division of operators with scalars:
@@ -574,7 +574,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Parameters
         ----------
         other : Scalar
-            If `self.range` is a :class:`LinearSpace`,
+            If :attr:`range` is a :class:`LinearSpace`,
             ``scalar`` must be an element of ``self.range.field``.
 
         Returns
@@ -600,20 +600,20 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return NotImplemented
             
     def __neg__(self):
-        """`op.__neg__(s) <==> -op`.
+        """``op.__neg__(s) <==> -op``.
         
         Negate this operator
         
-        `-op <==> (x --> -op(x))`
+        ``-op <==> (x --> -op(x))``
         """
         return -1 * self
         
     def __pos__(self):
-        """`op.__pos__(s) <==> op`.
+        """``op.__pos__(s) <==> op``.
         
         Pos operator, the identity.
         
-        `+op <==> (x --> op(x))`
+        ``+op <==> (x --> op(x))``
         """
         return self
 
@@ -1435,8 +1435,8 @@ def operator(call=None, apply=None, inv=None, deriv=None,
 
     Notes
     -----
-    It suffices to supply one of the functions `call` and `apply`.
-    If `dom` is a :class:`LinearSpace`, a default implementation of the
+    It suffices to supply one of the functions ``call`` and ``apply``.
+    If ``dom`` is a :class:`LinearSpace`, a default implementation of the
     respective other method is automatically provided; if not, a
     `NotImplementedError` is raised when the other method is called.
 

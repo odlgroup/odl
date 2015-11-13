@@ -41,10 +41,10 @@ Abstract methods
 ``element(inp=None)``
 ---------------------
 This public method is the factory for the inner
-`LinearSpace.Vector` class. It creates a new element of the space,
+:class:`LinearSpace.Vector` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
 simplest possible case, it just delegates the construction to the
-`Vector` class.
+:class:`Vector` class.
 
 If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
@@ -61,8 +61,9 @@ initialized**, thus it can contain *any* value.
 -------------------------------
 This private method is the raw implementation (i.e. without error
 checking) of the linear combination ``out = a * x1 + b * x2``.
-``_lincomb`` and its public counterpart ``lincomb`` are used to cover
-a range of convenience functions, see below.
+:meth:`LinearSpace._lincomb` and its public counterpart 
+:meth:`LinearSpace.lincomb` are used to covera range of convenience
+functions, see below.
 
 **Parameters:**
     a, b : scalars, must be members of the space's ``field``
@@ -85,13 +86,13 @@ a range of convenience functions, see below.
 ---------
 The public attribute determining the type of scalars which
 underlie the space. Can be instances of either :class:`RealNumbers` or
-:class:`ComplexNumbers` (see `odl.set.sets`).
+:class:`ComplexNumbers` (see :mod:`odl.set.sets`).
 
-Should be implemented as a `@property` to make it immutable.
+Should be implemented as a ``@property`` to make it immutable.
 
 ``__eq__(other)``
 -----------------
-`LinearSpace` inherits this abstract method from :class:`Set`. Its
+:class:`LinearSpace` inherits this abstract method from :class:`Set`. Its
 purpose is to check two :class:`LinearSpace` instances for equality.
 
 **Parameters:**
@@ -166,7 +167,7 @@ product of two space elements ``x`` and ``y``.
 
 **Returns:**
     inner : `float` or `complex`
-        The inner product of ``x`` and ``y``. If `field` is the real
+        The inner product of ``x`` and ``y``. If :attr:`field` is the real
         numbers, ``inner`` is a `float`, otherwise `complex`.
 
 **Requirements:**
