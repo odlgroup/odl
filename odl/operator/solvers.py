@@ -109,8 +109,8 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
 
-    The method is described in a
-    `Wikipedia article
+    The method is described in a wikipedia article on
+    `Landweber iteration
     <https://en.wikipedia.org/wiki/Landweber_iteration>`_.
 
     Parameters
@@ -166,8 +166,8 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
 
-    The method is described (for linear systems) in a
-    `Wikipedia article
+    The method is described (for linear systems) in a wikipedia article on
+    `Conjugate gradient method
     <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.
 
     Parameters
@@ -241,8 +241,8 @@ def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
 
-    The method is described (for linear systems) in a
-    `Wikipedia article
+    The method is described (for linear systems) in a wikipedia article on
+    `Conjugate gradient on normal equations
     <https://en.wikipedia.org/wiki/Conjugate_gradient_method#\
 Conjugate_gradient_on_the_normal_equations>`_.
 
@@ -340,8 +340,8 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     temporaries and in-place evaluation.
 
     A variant of the method applied to a specific problem is described
-    in a
-    `Wikipedia article
+    in a wikipedia article on
+    `Gauss-newton algorithm
     <https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm>`_.
 
     Parameters
@@ -438,11 +438,9 @@ class BacktrackingLineSearch(LineSearch):
     the Armijo-Goldstein condition.
 
     The line search algorithm is described in [1]_, page 464
-    (`book available online
-    <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
-    [2]_, pages 378--379. See also the
-    `Wikipedia article
-    <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
+    (`book available online <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
+    [2]_, pages 378--379. See also the wikipedia article on
+    `Backtracking line search <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
 
     References
     ----------
@@ -463,10 +461,9 @@ class BacktrackingLineSearch(LineSearch):
         tau : `float`, optional
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.
-            The step length is updated as step_length *= tau
+            The step length is updated as ``step_length *= tau``
         c : `float`, optional
-            The 'discount factor' on the
-            ``step length * direction derivative``,
+            The 'discount factor' on the ``step length * dir_derivative``,
             which the new point needs to be smaller than in order to
             fulfill the condition and be accepted (see the references).
         max_num_iter : `int`, optional
@@ -560,8 +557,9 @@ def quasi_newton_bfgs(deriv, x, line_search, niter=1, partial=None):
     implementation uses the rank-one BFGS update schema where the
     inverse of the Hessian is recalculated in each iteration.
 
-    The algorithm is described in [1]_, Section 12.3 and in a
-    `Wikipedia article
+    The algorithm is described in [1]_, Section 12.3 and in a wikipedia article
+    on the
+    `BFGS algorithm
     <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\
 Goldfarb%E2%80%93Shanno_algorithm>`_
 
@@ -629,8 +627,8 @@ def steepest_decent(deriv, x, line_search, niter=1, partial=None):
     The algorithm is described in [1]_, section 9.3--9.4
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [2]_, Section 12.2, and a
-    `Wikipedia article
+    [2]_, Section 12.2, and a wikipedia article on
+    `Gradient descent
     <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
     Parameters
@@ -676,8 +674,8 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
     for a general (not necessarily differentiable) operator ``A``
     using a quasi-Newton approach with approximate Hessian.
 
-    The algorithm is described in [1]_ and [2]_, and in a
-    `Wikipedia article
+    The algorithm is described in [1]_ and [2]_, and in a wikipedia article on
+    `Broyden's first method
     <https://en.wikipedia.org/wiki/Broyden's_method>`_.
 
     Parameters
@@ -741,8 +739,8 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
     for a general (not necessarily differentiable) operator ``A``
     using a quasi-Newton approach with approximate Hessian.
 
-    The algorithm is described in [1]_ and [2]_, and in a
-    `Wikipedia article
+    The algorithm is described in [1]_ and [2]_, and in a wikipedia article on
+    `Broyden's second method.
     <https://en.wikipedia.org/wiki/Broyden's_method>`_
 
     Parameters

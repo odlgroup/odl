@@ -35,8 +35,7 @@ and numerous attributes and methods for convenience.
 
 In the following, the abstract methods are explained in detail.
 
-Abstract methods
-================
+**Abstract methods**
 
 ``element(inp=None)``
 ---------------------
@@ -150,8 +149,8 @@ A space with a norm is called a **normed space**.
  * ``_norm(x) >= 0``
  * ``_norm(x) == 0`` (approx.) if and only if ``x == 0`` (approx.)
 
-Note
-----
+Notes
+-----
 A normed space is automatically a metric space with the distance
 function ``_dist(x, y) = _norm(x - y)``.
 
@@ -198,8 +197,8 @@ A raw (not type-checking) private method multiplying two vectors
 
 **Requirements:**
  * ``_multiply(x, y, out) <==> _multiply(y, x, out)``
- * ``_multiply(s * x, y, out) <==> _multiply(x, y, out); out *= s  <==>
-    _multiply(x, s * y, out)`` for any scalar ``s``
+ * ``_multiply(s * x, y, out) <==> _multiply(x, y, out); out *= s  <==>``
+    ``_multiply(x, s * y, out)`` for any scalar ``s``
  * There is a space element ``one`` with
    ``out`` after ``_multiply(one, x, out)`` or ``_multiply(x, one, out)``
    equals ``x``.
@@ -696,8 +695,8 @@ class LinearSpace(Set):
             equals : `bool`
                 True if the vectors are equal, else false.
 
-            Note
-            ----
+            Notes
+            -----
             Equality is very sensitive to numerical errors, thus any
             operations on a vector should be expected to break equality
             testing.
@@ -798,8 +797,8 @@ class LinearSpace(Set):
             -------
             transpose : :class:`~odl.operator.default_ops.InnerProductOperator`
 
-            Note
-            ----
+            Notes
+            -----
             This function is only defined in inner product spaces.
             
             In a `complex` space, this takes the conjugate transpose of the 

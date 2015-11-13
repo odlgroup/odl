@@ -17,8 +17,8 @@
 
 """Discretizations in ODL.
 
-Abstract discretization classes (Module `discretization`)
-=========================================================
+Abstract discretization classes (Module :mod:`~odl.discr.discretization`)
+=========================================================================
 
 +----------------------------+------------------------------------------------+
 |Class name                  |Description                                     |
@@ -29,8 +29,8 @@ Abstract discretization classes (Module `discretization`)
 |                            |linear spaces                                   |
 +----------------------------+------------------------------------------------+
 
-Discretizations of L2 spaces (Module `l2_discr`)
-================================================
+Discretizations of L2 spaces (Module :mod:`~odl.discr.l2_discr`)
+================================================================
 
 +---------------------+-------------------------------------------------------+
 |Class name           |Description                                            |
@@ -50,8 +50,8 @@ Factory functions
 |                                    |samples                                 |
 +------------------------------------+----------------------------------------+
 
-Sampling grids (Module `grid`)
-==============================
+Sampling grids (Module :mod:`~odl.discr.grid`)
+==============================================
 
 +----------------------------+------------------------------------------------+
 |Class name                  |Description                                     |
@@ -65,15 +65,15 @@ Sampling grids (Module `grid`)
 Factory functions
 -----------------
 
-+--------------------+-------------------------------------------------+
-|Name                |Description                                      |
-+====================+=================================================+
-|`uniform_sampling()`|Create a regular grid from an interval product   |
-|                    |by uniform sampling                              |
-+--------------------+-------------------------------------------------+
++--------------------------+-------------------------------------------------+
+|Name                      |Description                                      |
++==========================+=================================================+
+|:func:`uniform_sampling()`|Create a regular grid from an interval product   |
+|                          |by uniform sampling                              |
++--------------------------+-------------------------------------------------+
 
-Restriction and Extension operators (Module `discr_mappings`)
-=============================================================
+Restriction and Extension operators (Module :mod:`~odl.discr.discr_mappings`)
+=============================================================================
 
 +----------------------------------+------------------------------------------+
 |Class name                        |Description                               |

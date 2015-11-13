@@ -188,7 +188,7 @@ class DiscreteL2(Discretization):
 
     class Vector(Discretization.Vector):
 
-        """Representation of a `DiscreteL2` element."""
+        """Representation of a :class:`DiscreteL2` element."""
 
         def asarray(self, out=None):
             """Extract the data of this array as a numpy array.

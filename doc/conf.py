@@ -16,6 +16,7 @@ import sys
 import os
 import shlex
 import sphinx_rtd_theme
+import odl
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -29,22 +30,28 @@ import sphinx_rtd_theme
 
 # Mock modules for Read The Docs to enable autodoc
 
+MOCK_MODULES = []
 if os.environ.get('READTHEDOCS', None) == 'True':
-    if sys.version_info < (3, 3):
-        from mock import Mock as MagicMock
-    else:
-        from unittest.mock import MagicMock
+    MOCK_MODULES += ['future', 'future.utils', 'scipy', 'scipy.linalg',
+                     'numpy', 'numpy.linalg',
+                     'numpy.distutils', 'scipy.interpolate', 
+                     'scipy.interpolate.interpnd']
 
-    class Mock(MagicMock):
-        @classmethod
-        def __getattr__(cls, name):
-            return Mock()
+if not odl.CUDA_AVAILABLE:
+    MOCK_MODULES += ['odlpp', 'odlpp.odlpp_cuda']
 
-    MOCK_MODULES = ['future', 'future.utils', 'scipy', 'scipy.linalg',
-                    'numpy', 'numpy.linalg', 'odlpp', 'odlpp.odlpp_cuda',
-                    'numpy.distutils', 'scipy.interpolate', 
-                    'scipy.interpolate.interpnd']
-    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+if sys.version_info < (3, 3):
+    from mock import Mock as MagicMock
+else:
+    from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return Mock()
+
+
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom

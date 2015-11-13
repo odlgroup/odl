@@ -54,10 +54,10 @@ class FunctionSet(Set):
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError('domain {!r} not a :class:`Set` instance.'.format(dom))
+            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
 
         if not isinstance(ran, Set):
-            raise TypeError('range {!r} not a :class:`Set` instance.'.format(dom))
+            raise TypeError('range {!r} not a `Set` instance.'.format(dom))
 
         self._domain = dom
         self._range = ran
@@ -393,8 +393,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
     def _lincomb(self, a, x, b, y, out):
         """Raw linear combination of ``x`` and ``y``.
 
-        Note
-        ----
+        Notes
+        -----
         The additions and multiplications are implemented via a simple
         Python function, so the resulting function is probably slow.
         """
@@ -461,8 +461,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
     def zero(self):
         """The function mapping everything to zero.
 
-        Note
-        ----
+        Notes
+        -----
 
         Since :class:`FunctionSpace._lincomb` is slow, 
         we implement this function directly.
@@ -492,8 +492,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
     def _multiply(x, y):
         """Raw pointwise multiplication of two functions.
 
-        Note
-        ----
+        Notes
+        -----
         The multiplication is implemented with a simple Python
         function, so the resulting function object is probably slow.
         """

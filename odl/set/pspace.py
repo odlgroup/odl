@@ -63,7 +63,7 @@ def _prod_inner_sum_not_defined(x):
 
 class ProductSpace(LinearSpace):
 
-    """The Cartesian product of N linear spaces.
+    """The Cartesian product of N :class:`LinearSpace`'s.
 
     The product X1 x ... x XN is itself a linear space, where the
     linear combination is defined component-wise.
@@ -79,50 +79,60 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        args : {'LinearSpace' and 'int' OR 'LinearSpace' instances
+        args : {:class:`LinearSpace` and `int` OR ``LinearSpace`` instances
             Either a space and an integer,
             in this case the power of the space is taken (R^n)
             Otherwise, a set of spaces,
             in this case the product is taken (RxRxRxC)
         kwargs : {'ord', 'weights', 'prod_norm'}
-            'ord' : float, optional
+            'ord' : `float`, optional
                 Order of the product distance/norm, i.e.
-                dist(x, y) = np.linalg.norm(x-y, ord=ord)
-                norm(x) = np.linalg.norm(x, ord=ord)
+                
+                ``dist(x, y) = np.linalg.norm(x-y, ord=ord)``
+                ``norm(x) = np.linalg.norm(x, ord=ord)``
+                
                 Default: 2.0
+                
+                The following `float` values for ``ord`` can be specified.
+                Note that any value of ``ord < 1`` only gives a pseudo-norm.
+        
+                +-------------+------------------------------+
+                | 'prod_norm' | Distance Definition          |
+                +=============+==============================+
+                | 'inf'       | ``max(w * z)``               |
+                +-------------+------------------------------+
+                | '-inf'      | ``min(w * z)``               |
+                +-------------+------------------------------+
+                | other       | ``sum(w * z**ord)**(1/ord)`` |
+                +-------------+------------------------------+
+                
+        
+                Here, 
+                
+                ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))`` 
+                
+                and ``w = weights``.
+        
+                Note that ``0 <= ord < 1`` are not allowed since these
+                pseudo-norms are very unstable numerically.
             'weights' : array-like, optional, only usable with 'ord'
                 Array of weights, same size as number of space
                 components. All weights must be positive. It is
                 multiplied with the tuple of distances before
                 applying the Rn norm or 'prod_norm'.
+                
                 Default: (1.0,...,1.0)
-            'prod_norm' : callable, optional
+            'prod_norm' : `callable`, optional
                 Function that should be applied to the array of
                 distances/norms. Specifying a product norm causes
                 the space to NOT be a Hilbert space.
-                Default: np.linalg.norm(x, ord=ord)
-
-        The following `float` values for `prod_norm` can be specified.
-        Note that any value of ord < 1 only gives a pseudo-norm.
-
-        +----------+-----------------------------+
-        |prod_norm |Distance Definition          |
-        +==========+=============================+
-        |'inf'     |``max(w * z)``               |
-        |'-inf'    |``min(w * z)``               |
-        |other     |``sum(w * z**ord)**(1/ord)`` |
-        +==========+=============================+
-
-        Here, ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))`` and
-        ``w = weights``.
-
-        Note that ``0 <= ord < 1`` are not allowed since these
-        pseudo-norms are very unstable numerically.
+                
+                Default: ``np.linalg.norm(x, ord=ord)``
 
 
         Returns
         -------
-        prodspace : ProductSpace instance
+        prodspace : :class:`ProductSpace`
 
         Examples
         --------

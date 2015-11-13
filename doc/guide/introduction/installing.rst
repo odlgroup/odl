@@ -21,13 +21,15 @@ To install Anaconda
 
 1. Download Anaconda from `anaconda's webpage <https://www.continuum.io/downloads>`_
 2. Once installed run in a console
+
 		``user$ conda update --all``
+		
 	to make sure you have the latest versions of all packages
 	
 Install Git
 ===========
 
-You also need to install Git to be able to download `odl`
+You also need to install Git to be able to download odl.
 
 Overview
 --------
@@ -67,7 +69,7 @@ For installation in a local user folder run
 
 	``user$ pip install --user .``
 
-For system-wide installation, run (as root, e.g. using `sudo` or equivalent)
+For system-wide installation, run (as root, e.g. using ``sudo`` or equivalent)
 
 	``root# pip install .``
 

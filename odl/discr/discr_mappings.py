@@ -197,8 +197,8 @@ class RawGridCollocation(FunctionSetMapping):
         outp : :class:`Ntuples.Vector`
             The function values at the grid points.
 
-        Note
-        ----
+        Notes
+        -----
         The code of this call tries to make use of vectorization of
         the input function, which makes execution much faster and
         memory-saving. If this fails, it falls back to a slow

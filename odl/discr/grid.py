@@ -913,7 +913,7 @@ class RegularGrid(TensorGrid):
 
         Returns
         -------
-        newgrid : class:`RegularGrid`
+        newgrid : :class:`RegularGrid`
             The enlarged grid
 
         Examples

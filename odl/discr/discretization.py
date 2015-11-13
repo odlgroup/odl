@@ -438,7 +438,7 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
 
     class Vector(RawDiscretization.Vector, FnBase.Vector):
 
-        """Representation of a `Discretization` element."""
+        """Representation of a :class:`Discretization` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""

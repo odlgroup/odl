@@ -63,7 +63,7 @@ Factory functions
 +--------------------------+--------------------------------------------------+
 |Name                      |Description                                       |
 +==========================+==================================================+
-|:function:`operator()`    |Create an :class:`Operator` by specifying either a|
+|:func:`operator()`        |Create an :class:`Operator` by specifying either a|
 |                          |``call`` or an ``apply`` method (or both) for     |
 |                          |evaluation.                                       |
 +--------------------------+--------------------------------------------------+
@@ -97,12 +97,12 @@ Equation system solvers (module :mod:`~odl.operator.solvers`)
 +------------------------------------------------------+-------------------------------+
 |Name                                                  |Description                    |
 +======================================================+===============================+
-|:function:`~odl.operator.solvers.landweber()`         |Landweber's iterative method   |
+|:func:`~odl.operator.solvers.landweber()`             |Landweber's iterative method   |
 +------------------------------------------------------+-------------------------------+
-|:function:`~odl.operator.solvers.conjugate_gradient()`|Conjugate gradient method for  |
-                                                       |the normal equation            |
+|:func:`~odl.operator.solvers.conjugate_gradient()`    |Conjugate gradient method for  |
+|                                                      |the normal equation            |
 +------------------------------------------------------+-------------------------------+
-|:function:`~odl.operator.solvers.gauss_newton()`      |Gauss-Newton iterative method  |
+|:func:`~odl.operator.solvers.gauss_newton()`          |Gauss-Newton iterative method  |
 +------------------------------------------------------+-------------------------------+
 """
 

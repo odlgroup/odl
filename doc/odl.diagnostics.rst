@@ -1,5 +1,5 @@
 odl.diagnostics package
-=================
+=======================
 
 Submodules
 ----------
@@ -24,14 +24,6 @@ odl.diagnostics.space module
 ----------------------------
 
 .. automodule:: odl.diagnostics.space
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: odl.diagnostics
     :members:
     :undoc-members:
     :show-inheritance:

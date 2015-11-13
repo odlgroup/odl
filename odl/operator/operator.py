@@ -17,9 +17,9 @@
 
 """Abstract mathematical (linear) operators.
 
-Operators are in the most general sense mappings from one set (`Set`)
+Operators are in the most general sense mappings from one set (:class:`Set`)
 to another. More common and useful are operators mapping a vector
-space (`LinearSpace`) into another. Many of those are linear, and
+space (:class:`LinearSpace`) into another. Many of those are linear, and
 as such, they have additional properties. See the class documentation
 for further details.
 In addition, this module defines classes for sums, compositions and
@@ -70,13 +70,13 @@ def _default_call(self, x, *args, **kwargs):
 
     Parameters
     ----------
-    x : domain element
+    x : :attr:`Operator.domain` element
         An object in the operator domain. The operator is applied
         to it.
 
     Returns
     -------
-    out : range element
+    out : :attr:`Operator.range` element
         An object in the operator range. The result of an operator
         evaluation.
     """
@@ -90,11 +90,11 @@ def _default_apply(self, x, out, *args, **kwargs):
 
     Parameters
     ----------
-    x : domain element
+    x : :attr:`Operator.domain` element
         An object in the operator domain. The operator is applied
         to it.
 
-    out : range element
+    out : :attr:`Operator.range` element
         An object in the operator range. The result of an operator
         evaluation.
 
@@ -145,8 +145,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     """Abstract operator.
 
-    Abstract attributes and methods
-    -------------------------------
+    **Abstract attributes and methods**
     :class:`Operator` is an **abstract** class, i.e. it can only be
     subclassed, not used directly.
 
@@ -168,8 +167,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     methods ``_call()`` and ``_apply()``.**
     These are explained in the following.
 
-    Out-of-place evaluation: `_call()`
-    ----------------------------------
+    **Out-of-place evaluation: `_call()`**
     Out-of-place evaluation means that the operator is applied,
     and the result is written to a new element which is returned.
     In this case, a subclass has to implement the method
@@ -188,8 +186,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         An object in the operator range, the result of the operator
         evaluation.
 
-    In-place evaluation: `_apply()`
-    -------------------------------
+    **In-place evaluation: `_apply()`**
     In-place evaluation means that the operator is applied, and the
     result is written to an existing element provided as an additional
     argument. In this case, a subclass has to implement the method
@@ -753,8 +750,8 @@ class OperatorSum(Operator):
         The adjoint of the operator sum is the sum of the operator
         adjoints:
 
-        ``OperatorSum(op1, op2).adjoint ==
-        OperatorSum(op1.adjoint, op2.adjoint)``
+        ``OperatorSum(op1, op2).adjoint ==``
+        ``OperatorSum(op1.adjoint, op2.adjoint)``
         """
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
@@ -832,8 +829,8 @@ class OperatorComp(Operator):
         The inverse of the operator composition is the composition of
         the inverses in reverse order:
 
-        ``OperatorComp(left, right).inverse ==
-        OperatorComp(right.inverse, left.inverse)``
+        ``OperatorComp(left, right).inverse ==``
+        ``OperatorComp(right.inverse, left.inverse)``
         """
         return OperatorComp(self._right.inverse, self._left.inverse, self._tmp)
 
@@ -843,9 +840,8 @@ class OperatorComp(Operator):
         The derivative of the operator composition follows the chain
         rule:
 
-        ``OperatorComp(left, right).derivative(point) ==
-        OperatorComp(left.derivative(right(point)),
-                     right.derivative(point))``
+        ``OperatorComp(left, right).derivative(point) ==``
+        ``OperatorComp(left.derivative(right(point)), right.derivative(point))``
         """
         left_deriv = self._left.derivative(self._right(point))
         right_deriv = self._right.derivative(point)
@@ -859,8 +855,8 @@ class OperatorComp(Operator):
         The adjoint of the operator composition is the composition of
         the operator adjoints in reverse order:
 
-        ``OperatorComp(left, right).adjoint ==
-        OperatorComp(right.adjoint, left.adjoint)``
+        ``OperatorComp(left, right).adjoint ==``
+        ``OperatorComp(right.adjoint, left.adjoint)``
         """
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
@@ -991,8 +987,8 @@ class OperatorLeftScalarMult(Operator):
         ``op.inverse * 1/scalar`` if ``scalar != 0``. If ``scalar == 0``,
         the inverse is not defined.
 
-        ``OperatorLeftScalarMult(op, scalar).inverse <==>
-        OperatorRightScalarMult(op.inverse, 1.0/scalar)``
+        ``OperatorLeftScalarMult(op, scalar).inverse <==>``
+        ``OperatorRightScalarMult(op.inverse, 1.0/scalar)``
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
@@ -1003,8 +999,8 @@ class OperatorLeftScalarMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        ``OperatorLeftScalarMult(op, scalar).derivative(x) <==>
-        OperatorLeftScalarMult(op.derivative(x), scalar)``
+        ``OperatorLeftScalarMult(op, scalar).derivative(x) <==>``
+        ``OperatorLeftScalarMult(op.derivative(x), scalar)``
 
         See also
         --------
@@ -1019,8 +1015,8 @@ class OperatorLeftScalarMult(Operator):
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
 
-        ``OperatorLeftScalarMult(op, scalar).adjoint ==
-        OperatorLeftScalarMult(op.adjoint, scalar)``
+        ``OperatorLeftScalarMult(op, scalar).adjoint ==``
+        ``OperatorLeftScalarMult(op.adjoint, scalar)``
         """
 
         if not self.is_linear:
@@ -1100,8 +1096,8 @@ class OperatorRightScalarMult(Operator):
         ``1/scalar * op.inverse`` if ``scalar != 0``. If ``scalar == 0``,
         the inverse is not defined.
 
-        ``OperatorRightScalarMult(op, scalar).inverse <==>
-        OperatorLeftScalarMult(op.inverse, 1.0/scalar)``
+        ``OperatorRightScalarMult(op, scalar).inverse <==>``
+        ``OperatorLeftScalarMult(op.inverse, 1.0/scalar)``
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
@@ -1114,9 +1110,8 @@ class OperatorRightScalarMult(Operator):
         The derivative of the right scalar operator multiplication
         follows the chain rule:
 
-        ``OperatorRightScalarMult(op, scalar).derivative(x) <==>
-        OperatorLeftScalarMult(op.derivative(scalar * x),
-                               scalar)``
+        ``OperatorRightScalarMult(op, scalar).derivative(x) <==>``
+        ``OperatorLeftScalarMult(op.derivative(scalar * x), scalar)``
         """
         return OperatorLeftScalarMult(self._op.derivative(self._scalar * x),
                                       self._scalar)
@@ -1128,8 +1123,8 @@ class OperatorRightScalarMult(Operator):
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
 
-        ``OperatorLeftScalarMult(op, scalar).adjoint ==
-        OperatorLeftScalarMult(op.adjoint, scalar)``
+        ``OperatorLeftScalarMult(op, scalar).adjoint ==``
+        ``OperatorLeftScalarMult(op.adjoint, scalar)``
         """
 
         if not self.is_linear:
@@ -1154,6 +1149,7 @@ class FunctionalLeftVectorMult(Operator):
     A functional is a :class:`Operator` whose :attr:`range` is a :class:`Field`.
 
     ``FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)``
+    
     """
 
     def __init__(self, op, vector):
@@ -1164,7 +1160,7 @@ class FunctionalLeftVectorMult(Operator):
         op : :class:`Operator`
             The range of ``op`` must be a :class:`Field`.
         vector : :class:`LinearSpace.Vector` 
-                 with :attr:`~LinearSpace.Vector.field` same as ``op.range``
+            with :attr:`~LinearSpace.Vector.field` same as ``op.range``
             The vector to multiply by
         """
         if not isinstance(vector, LinearSpace.Vector):
@@ -1195,8 +1191,8 @@ class FunctionalLeftVectorMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        ``FunctionalLeftVectorMult(op, vector).derivative(x) <==>
-        FunctionalLeftVectorMult(op.derivative(x), vector)``
+        ``FunctionalLeftVectorMult(op, vector).derivative(x) <==>``
+        ``FunctionalLeftVectorMult(op.derivative(x), vector)``
 
         See also
         --------
@@ -1215,6 +1211,7 @@ class FunctionalLeftVectorMult(Operator):
         OperatorComp(op.adjoint, vector.T)``
 
         ``(x * A)^T = A^T * x^T``
+        
         """
 
         if not self.is_linear:
@@ -1275,8 +1272,8 @@ class OperatorLeftVectorMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        ``OperatorLeftVectorMult(op, vector).derivative(x) <==>
-        OperatorLeftVectorMult(op.derivative(x), vector)``
+        ``OperatorLeftVectorMult(op, vector).derivative(x) <==>``
+        ``OperatorLeftVectorMult(op.derivative(x), vector)``
 
         See also
         --------
@@ -1291,10 +1288,11 @@ class OperatorLeftVectorMult(Operator):
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:
 
-        ``OperatorLeftVectorMult(op, vector).adjoint ==
-        OperatorRightVectorMult(op.adjoint, vector)``
+        ``OperatorLeftVectorMult(op, vector).adjoint ==``
+        ``OperatorRightVectorMult(op.adjoint, vector)``
 
         ``(x * A)^T = A^T * x``
+        
         """
 
         if not self.is_linear:
@@ -1372,8 +1370,8 @@ class OperatorRightVectorMult(Operator):
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:
 
-        ``OperatorRightVectorMult(op, vector).adjoint ==
-        OperatorLeftVectorMult(op.adjoint, vector)``
+        ``OperatorRightVectorMult(op, vector).adjoint ==``
+        ``OperatorLeftVectorMult(op.adjoint, vector)``
 
         ``(A x)^T = x * A^T``
         """
@@ -1429,9 +1427,8 @@ def operator(call=None, apply=None, inv=None, deriv=None,
 
     Returns
     -------
-    op : `SimpleOperator`
+    op : :class:`Operator`
         An operator with the provided attributes and methods.
-        `SimpleOperator` is a subclass of :class:`Operator`.
 
     Notes
     -----

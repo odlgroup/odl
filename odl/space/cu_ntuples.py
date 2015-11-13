@@ -134,8 +134,8 @@ class CudaNtuples(NtuplesBase):
         element : :class:`CudaNtuples.Vector`
             The new element
 
-        Note
-        ----
+        Notes
+        -----
         This method preserves "array views" of correct size and type,
         see the examples below.
 

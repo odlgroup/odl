@@ -123,8 +123,8 @@ class Ntuples(NtuplesBase):
         element : :class:`NTuples.Vector`
             The new element created (from ``inp``).
 
-        Note
-        ----
+        Notes
+        -----
         This method preserves "array views" of correct size and type,
         see the examples below.
 
@@ -285,8 +285,8 @@ class Ntuples(NtuplesBase):
                 `True` if all entries of other are equal to this
                 vector's entries, `False` otherwise.
 
-            Note
-            ----
+            Notes
+            -----
             Space membership is not checked, hence vectors from
             different spaces can be equal.
 
@@ -442,7 +442,7 @@ def _blas_is_applicable(*args):
     """Whether BLAS routines can be applied or not.
 
     BLAS routines are available for single and double precision
-    `float`or `complex` data only. If the arrays are non-contiguous,
+    `float` or `complex` data only. If the arrays are non-contiguous,
     BLAS methods are usually slower, and array-writing routines do
     not work at all. Hence, only contiguous arrays are allowed.
 
@@ -579,13 +579,12 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        size : positive int
+        size : positive `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
+            as built-in type, as `numpy.dtype` or as `string`.
 
             Only scalar data types are allowed.
 
@@ -604,7 +603,7 @@ class Fn(FnBase, Ntuples):
                 This option cannot be combined with ``dist``, ``norm`` or
                 ``inner``.
 
-            'dist' : callable, optional
+            'dist' : `callable`, optional
                 The distance function defining a metric on :math:`F^n`.
                 It must accept two :class:`Fn.Vector` arguments and fulfill the
                 following conditions for any vectors x, y and z:
@@ -622,7 +621,7 @@ class Fn(FnBase, Ntuples):
                 This option cannot be combined with ``weight``, ``norm``
                 or ``inner``.
 
-            'norm' : callable, optional (Default: ``sqrt(inner(x,y))``)
+            'norm' : `callable`, optional (Default: ``sqrt(inner(x,y))``)
                 The norm implementation. It must accept an :class:`Fn.Vector`
                 argument, return a `float` and satisfy the
                 following properties:
@@ -635,7 +634,7 @@ class Fn(FnBase, Ntuples):
                 This option cannot be combined with ``weight``, ``dist``
                 or ``inner``.
 
-            'inner' : callable, optional
+            'inner' : `callable`, optional
                 The inner product implementation. It must accept two
                 :class:`Fn.Vector` arguments, return a `complex` number and
                 satisfy the following conditions for all vectors ``x``,
@@ -658,7 +657,7 @@ class Fn(FnBase, Ntuples):
                 This avoids the creation of new arrays and is thus
                 faster for large arrays. On the downside, it will not
                 evaluate to exactly zero for equal (but not identical)
-               `` x`` and ``y``.
+                ``x`` and ``y``.
         """
         super().__init__(size, dtype)
 
@@ -1757,7 +1756,7 @@ class FnVectorWeighting(_FnWeighting):
 
         Returns
         -------
-        inner : `float`or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         inner = _inner_default(x1 * self.vector, x2)
@@ -1864,7 +1863,7 @@ class FnConstWeighting(_FnWeighting):
 
         Returns
         -------
-        inner : `float`or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         inner = self.const * _inner_default(x1, x2)
@@ -1880,7 +1879,7 @@ class FnConstWeighting(_FnWeighting):
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The norm of the vector
         """
         return sqrt(self.const) * float(_norm_default(x))
@@ -1895,7 +1894,7 @@ class FnConstWeighting(_FnWeighting):
 
         Returns
         -------
-        dist : float
+        dist : `float`
             The distance between the vectors
         """
         if self._dist_using_inner:
