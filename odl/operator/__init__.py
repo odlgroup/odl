@@ -117,5 +117,3 @@ __all__ += default_ops.__all__
 from . import operator
 from .operator import *
 __all__ += operator.__all__
-
-from . import solvers
