@@ -44,8 +44,8 @@ Simple sets (module :mod:`~odl.set.sets`)
 |                           |element of the i-th factor (set)                 |
 +---------------------------+-------------------------------------------------+
 
-More `complex` sets intended as function domains (module :mod:`~odl.set.domain`)
---------------------------------------------------------------------------------
+More complex sets intended as function domains (module :mod:`~odl.set.domain`)
+------------------------------------------------------------------------------
 
 +---------------------+--------------------------------------------------+
 |Name                 |Description                                       |

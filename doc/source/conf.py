@@ -53,11 +53,12 @@ class Mock(MagicMock):
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
+#add numpydoc folder
+sys.path.insert(0, os.path.abspath('../sphinxext'))
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-sys.path.insert(0, os.path.abspath('../sphinxext'))
-
 extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
