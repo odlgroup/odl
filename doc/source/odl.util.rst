@@ -19,12 +19,3 @@ odl.util.utility module
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: odl.util
-    :members:
-    :undoc-members:
-    :show-inheritance:

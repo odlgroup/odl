@@ -1185,15 +1185,12 @@ class _CudaFnCustomDist(_CudaFnWeighting):
         """``w.__str__() <==> str(w)``."""
         return self.__repr__()  # TODO: prettify?
 
-
-import os
-if not os.environ.get('READTHEDOCS', None) == 'True':
-    try:
-        CudaRn(1).element()
-    except (MemoryError, RuntimeError, TypeError) as err:
-        print(err)
-        raise ImportError('Your GPU seems to be misconfigured. Skipping '
-                          'CUDA-dependent modules.')
+try:
+    CudaRn(1).element()
+except (MemoryError, RuntimeError, TypeError) as err:
+    print(err)
+    print('Your GPU seems to be misconfigured. Skipping '
+          'CUDA-dependent modules.')
 
 
 if __name__ == '__main__':

@@ -22,9 +22,11 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 3
+   :maxdepth: 3
     
-    odl
+   guide/guide
+   dev/dev
+   odl
 
 
 

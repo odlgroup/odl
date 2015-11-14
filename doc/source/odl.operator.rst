@@ -27,12 +27,3 @@ odl.operator.solvers module
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: odl.operator
-    :members:
-    :undoc-members:
-    :show-inheritance:

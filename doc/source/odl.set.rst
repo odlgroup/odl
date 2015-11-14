@@ -35,11 +35,3 @@ odl.set.space module
     :members:
     :undoc-members:
     :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: odl.set
-    :members:
-    :undoc-members:
-    :show-inheritance:
