@@ -883,14 +883,13 @@ sign = _make_unary_fun('sign')
 sqrt = _make_unary_fun('sqrt')
 
 
-def _weighted(weight, attr, exponent, dist_using_inner=False):
+def _weighting(weight, exponent, dist_using_inner=False):
     if np.isscalar(weight):
         weighting = CudaFnConstWeighting(
             weight, exponent)
     elif isinstance(weight, CudaFn.Vector):
         weighting = CudaFnVectorWeighting(
-            weight, exponent=exponent, dist_using_inner=dist_using_inner,
-            copy_to_gpu=True)
+            weight, exponent=exponent, dist_using_inner=dist_using_inner)
     else:
         weight_ = np.asarray(weight)
         if weight_.dtype == object:
@@ -907,7 +906,7 @@ def _weighted(weight, attr, exponent, dist_using_inner=False):
             raise ValueError('array-like weight must have 1 or 2 dimensions, '
                              'but {} has {} dimensions.'
                              ''.format(weight, weight_.ndim))
-    return getattr(weighting, attr)
+    return weighting
 
 
 def cu_weighted_inner(weight):
@@ -931,7 +930,7 @@ def cu_weighted_inner(weight):
     --------
     CudaFnConstWeighting, CudaFnVectorWeighting
     """
-    return _weighted(weight, 'inner', exponent=2.0)
+    return _weighting(weight, exponent=2.0).inner
 
 
 def cu_weighted_norm(weight, exponent=2.0):
@@ -958,7 +957,7 @@ def cu_weighted_norm(weight, exponent=2.0):
     --------
     CudaFnConstWeighting, CudaFnVectorWeighting
     """
-    return _weighted(weight, 'norm', exponent=exponent)
+    return _weighting(weight, exponent=exponent).norm
 
 
 def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
@@ -995,8 +994,8 @@ def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
     --------
     CudaFnConstWeighting, CudaFnVectorWeighting
     """
-    return _weighted(weight, 'dist', exponent=exponent,
-                     dist_using_inner=use_inner)
+    return _weighting(weight, exponent=exponent,
+                      dist_using_inner=use_inner).dist
 
 
 def add_scalar(x, scal, out=None):
