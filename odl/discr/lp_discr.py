@@ -90,22 +90,23 @@ class DiscreteLp(Discretization):
             raise TypeError('Function space domain {} is not an `IntervalProd`'
                             ' instance.'.format(fspace.domain))
 
-        if str(interp).lower() not in _SUPPORTED_INTERP:
+        self._interp = str(interp).lower()
+        if self.interp not in _SUPPORTED_INTERP:
             raise TypeError('{} is not among the supported interpolation'
                             'types {}.'.format(interp, _SUPPORTED_INTERP))
 
         self._order = str(kwargs.pop('order', 'C')).upper()
         restriction = GridCollocation(fspace, grid, dspace, order=self.order)
-        if interp == 'nearest':
+        if self.interp == 'nearest':
             extension = NearestInterpolation(fspace, grid, dspace,
                                              order=self.order)
         else:
             raise NotImplementedError
 
         super().__init__(fspace, dspace, restriction, extension)
-        self._interp = str(interp).lower()
+
         self._exponent = float(exponent)
-        if (hasattr(self._dspace, 'exponent') and
+        if (hasattr(self.dspace, 'exponent') and
                 self._exponent != dspace.exponent):
             raise ValueError('exponent {} not equal to data space exponent '
                              '{}.'.format(self._exponent, dspace.exponent))
@@ -165,13 +166,6 @@ class DiscreteLp(Discretization):
     def interp(self):
         """Interpolation type of this discretization."""
         return self._interp
-
-    def _inner(self, x1, x2):
-        """Raw inner product of two vectors."""
-        if self.exponent != 2.0:
-            raise NotImplementedError('L^p with p={} has no inner product.'
-                                      ''.format(self.exponent))
-        return super()._inner(x1, x2)
 
     def __repr__(self):
         """lp.__repr__() <==> repr(lp)."""
