@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
-from odl.util.utility import is_real_dtype, dtype_repr, with_metaclass
+from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
 import odlpp.odlpp_cuda as cuda
 
 
@@ -790,7 +790,7 @@ class CudaRn(CudaFn):
         """
         super().__init__(size, dtype, **kwargs)
 
-        if not is_real_dtype(self._dtype):
+        if not is_real_floating_dtype(self._dtype):
             raise TypeError('data type {} not a real floating-point type.'
                             ''.format(dtype))
 

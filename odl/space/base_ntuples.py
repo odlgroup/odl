@@ -32,8 +32,9 @@ import numpy as np
 # ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.util.utility import (array1d_repr, array1d_str, dtype_repr,
-                              is_real_dtype, with_metaclass)
+from odl.util.utility import (
+    array1d_repr, array1d_str, dtype_repr, with_metaclass,
+    is_scalar_dtype, is_real_dtype)
 
 
 __all__ = ('NtuplesBase', 'FnBase', '_FnWeightingBase')
@@ -57,7 +58,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             objects or as string.
         """
         self._size = int(size)
-        if self._size < 0:
+        if self.size < 0:
             raise TypeError('size {} is not non-negative.'.format(size))
         self._dtype = np.dtype(dtype)
 
@@ -336,10 +337,10 @@ class FnBase(NtuplesBase, LinearSpace):
             Only scalar data types (numbers) are allowed.
         """
         super().__init__(size, dtype)
-        if not np.issubsctype(self._dtype, np.number):
+        if not is_scalar_dtype(self.dtype):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 
-        if is_real_dtype(self._dtype):
+        if is_real_dtype(self.dtype):
             self._field = RealNumbers()
         else:
             self._field = ComplexNumbers()
