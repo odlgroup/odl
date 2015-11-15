@@ -148,13 +148,14 @@ def test_init():
 
     # Rn
     Rn(3, float)
-    Rn(3, int)  # TODO: do we want this??
 
     # Rn only works on reals
     with pytest.raises(TypeError):
         Rn(3, complex)
     with pytest.raises(TypeError):
         Rn(3, 'S1')
+    with pytest.raises(TypeError):
+        Rn(3, int)
 
     # Cn
     Cn(3, complex)
@@ -164,6 +165,11 @@ def test_init():
         Cn(3, float)
     with pytest.raises(TypeError):
         Cn(3, 'S1')
+
+    # Backported int from future fails (not recognized by numpy.dtype())
+    from builtins import int as future_int
+    with pytest.raises(TypeError):
+        Fn(3, future_int)
 
     # Init with weights or custom space functions
     const = 1.5
