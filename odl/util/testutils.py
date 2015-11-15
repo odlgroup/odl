@@ -139,31 +139,27 @@ def all_almost_equal(iter1, iter2, places=None):
 def is_subdict(subdict, dict_):
     return all(item in dict_.items() for item in subdict.items())
 
-try:  
+try:
     import pytest
     skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
 except ImportError:
     def skip_if_no_cuda(function):
         return function
 
+
 class FailCounter(object):
-    """ Used to count the number of failures of something
+    """Used to count the number of failures of something
 
-    Usage
-    -----
+    Useage::
 
-    with FailCounter() as counter:
-        # Do stuff
+        with FailCounter() as counter:
+            # Do stuff
 
-        counter.fail()
+            counter.fail()
 
-    #when done
+    When done, it prints
 
-    *** FAILED 1 TEST CASE(S) ***
-
-
-
-    Prints the time stuff took to execute.
+    ``*** FAILED 1 TEST CASE(S) ***``
     """
 
     def __init__(self, err_msg=None):
@@ -176,7 +172,7 @@ class FailCounter(object):
     def fail(self, string=None):
         self.num_failed += 1
 
-        #Todo: possibly limit number of printed strings
+        # Todo: possibly limit number of printed strings
         if string is not None:
             print(string)
 
@@ -188,15 +184,15 @@ class FailCounter(object):
                 print(self.err_msg)
             print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
 
+
 class Timer(object):
 
     """A timer context manager.
 
-    Usage
-    -----
+    Usage::
 
-    with Timer("name"):
-        # Do stuff
+        with Timer('name'):
+            # Do stuff
 
     Prints the time stuff took to execute.
     """
@@ -217,19 +213,17 @@ class Timer(object):
 
 
 def timeit(arg):
-
     """A timer decorator.
 
-    Usage
-    -----
+    Usage::
 
-    @timeit
-    def myfunction(...):
-        ...
+        @timeit
+        def myfunction(...):
+            ...
 
-    @timeit("info string")
-    def myfunction(...):
-        ...
+        @timeit('info string')
+        def myfunction(...):
+            ...
     """
 
     if callable(arg):
@@ -250,8 +244,7 @@ class ProgressBar(object):
 
     """A simple command-line progress bar.
 
-    Usage
-    -----
+    Usage:
 
     >>> progress = ProgressBar('Reading data', 10)
     \rReading data: [                              ] Starting
@@ -265,7 +258,7 @@ class ProgressBar(object):
     >>> progress.update(9, 8)
     \rReading data: [############################# ] 99.0%
 
-    Also supports simply calling update, which moves the counter forward
+    Supports simply calling update, which moves the counter forward:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
     \rReading data: [                              ] Starting
