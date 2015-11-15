@@ -550,12 +550,12 @@ class CudaFn(FnBase, CudaNtuples):
                     weight, exponent=exponent)
             elif isinstance(weight, CudaFn.Vector):
                 self._space_funcs = CudaFnVectorWeighting(
-                    weight, exponent=exponent, copy_to_gpu=True)
+                    weight, exponent=exponent)
             else:
                 weight_ = np.asarray(weight)
                 if weight_.ndim == 1:
                     self._space_funcs = CudaFnVectorWeighting(
-                        weight_, exponent=exponent, copy_to_gpu=False)
+                        weight_, exponent=exponent)
                 else:
                     raise ValueError('invalid weight argument {!r}.'
                                      ''.format(weight))
@@ -698,9 +698,9 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x2 = rn.element([1, 2, 3])
         >>> out = rn.element()
         >>> rn.multiply(x1, x2, out)  # out is returned
-        CudaRn(3, 'float32').element([5.0, 6.0, 6.0])
+        CudaRn(3).element([5.0, 6.0, 6.0])
         >>> out
-        CudaRn(3, 'float32').element([5.0, 6.0, 6.0])
+        CudaRn(3).element([5.0, 6.0, 6.0])
         """
         out.data.multiply(x1.data, x2.data)
 
@@ -731,9 +731,9 @@ class CudaFn(FnBase, CudaNtuples):
         >>> x2 = rn.element([1, 2, 2])
         >>> out = rn.element()
         >>> rn.divide(x1, x2, out)  # out is returned
-        CudaRn(3, 'float32').element([5.0, 1.5, 1.0])
+        CudaRn(3).element([5.0, 1.5, 1.0])
         >>> out
-        CudaRn(3, 'float32').element([5.0, 1.5, 1.0])
+        CudaRn(3).element([5.0, 1.5, 1.0])
         """
         out.data.divide(x1.data, x2.data)
 
@@ -744,6 +744,60 @@ class CudaFn(FnBase, CudaNtuples):
     def one(self):
         """Create a vector of ones."""
         return self.Vector(self, self._vector_impl(self.size, 1))
+
+    def __eq__(self, other):
+        """s.__eq__(other) <==> s == other.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if other is an instance of this space's type
+            with the same ``size``, ``dtype`` and space functions,
+            otherwise `False`.
+
+        Examples
+        --------
+        >>> from numpy.linalg import norm
+        >>> def dist(x, y, ord):
+        ...     return norm(x - y, ord)
+
+        >>> from functools import partial
+        >>> dist2 = partial(dist, ord=2)
+        >>> r3 = CudaRn(3, dist=dist2)
+        >>> r3_same = CudaRn(3, dist=dist2)
+        >>> r3  == r3_same
+        True
+
+        Different ``dist`` functions result in different spaces - the
+        same applies for ``norm`` and ``inner``:
+
+        >>> dist1 = partial(dist, ord=1)
+        >>> r3_1 = CudaRn(3, dist=dist1)
+        >>> r3_2 = CudaRn(3, dist=dist2)
+        >>> r3_1 == r3_2
+        False
+
+        Be careful with Lambdas - they result in non-identical function
+        objects:
+
+        >>> r3_lambda1 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
+        >>> r3_lambda2 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
+        >>> r3_lambda1 == r3_lambda2
+        False
+
+        A :class:`CudaFn` space with the same data type is considered
+        equal:
+
+        >>> r3 = CudaRn(3)
+        >>> f3_single = CudaFn(3, dtype='float32')
+        >>> r3 == f3_single
+        True
+        """
+        if other is self:
+            return True
+
+        return (CudaNtuples.__eq__(self, other) and
+                self._space_funcs == other._space_funcs)
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
@@ -793,6 +847,15 @@ class CudaRn(CudaFn):
         if not is_real_floating_dtype(self._dtype):
             raise TypeError('data type {} not a real floating-point type.'
                             ''.format(dtype))
+
+    def __repr__(self):
+        """s.__repr__() <==> repr(s)."""
+        if self.dtype == np.dtype('float32'):
+            inner_str = '{}'.format(self.size)
+        else:
+            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+            inner_str += _repr_space_funcs(self)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     class Vector(CudaFn.Vector):
         pass
@@ -1034,8 +1097,7 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
     during initialization.
     """
 
-    def __init__(self, vector, exponent=2.0, dist_using_inner=False,
-                 copy_to_gpu=False):
+    def __init__(self, vector, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
@@ -1070,15 +1132,12 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
             self._vector = np.asarray(vector)
         else:
             self._vector = vector
-        if self._vector.dtype == object:
+        if self.vector.dtype == object:
             raise ValueError('invalid vector {}.'.format(vector))
-        elif self._vector.ndim != 1:
+        elif self.vector.ndim != 1:
             raise ValueError('vector {} is {}-dimensional instead of '
                              '1-dimensional.'
                              ''.format(vector, self._vector.ndim))
-        if copy_to_gpu and not isinstance(self._vector, CudaFn.Vector):
-            self._vector = CudaFn(self._vector.size,
-                                  self._vector.dtype).element(self._vector)
 
     @property
     def vector(self):
@@ -1090,10 +1149,10 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
 
         Note
         ----
-        This operation copies the vector to the CPU memory and uses
-        `numpy.all`, which can be very time-consuming in total.
+        This operation copies the vector to the CPU memory if necessary
+        and uses `numpy.all`, which can be very time-consuming in total.
         """
-        return np.all(self.vector > 0)
+        return np.all(np.greater(self.vector, 0))
 
     def __eq__(self, other):
         """`inner.__eq__(other) <==> inner == other`.
@@ -1178,7 +1237,7 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
         if self.exponent == 2.0:
             return super().norm(x)
         elif self.exponent == float('inf'):
-            return _pnorm_default(x, float('inf'))
+            return _pnorm_default(x, self.exponent)
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
@@ -1322,7 +1381,7 @@ class CudaFnConstWeighting(_CudaFnWeighting):
             from math import sqrt
             return sqrt(self.const) * float(_norm_default(x))
         elif self.exponent == float('inf'):  # Weighting irrelevant
-            return float(_pnorm_default(x, float('inf')))
+            return float(_pnorm_default(x, self.exponent))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
@@ -1345,7 +1404,7 @@ class CudaFnConstWeighting(_CudaFnWeighting):
             return sqrt(self.const) * float(_dist_default(x1, x2))
         elif self.exponent == float('inf'):
             # TODO: implement and optimize!
-            return float(_pnorm_default(x1 - x2, float('inf')))
+            return float(_pnorm_default(x1 - x2, self.exponent))
         else:
             # TODO: optimize!
             return (self.const**(1/self.exponent) *
