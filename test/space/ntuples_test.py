@@ -44,15 +44,17 @@ from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 # * Custom inner/norm/dist
 
 
+# Helpers to generate data
+
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.uniform(-1, 1, fn.size).astype(fn.dtype)
+        return np.random.rand(fn.size).astype(fn.dtype)
     elif np.issubdtype(fn.dtype, np.integer):
         return np.random.randint(0, 10, fn.size).astype(fn.dtype)
     else:
-        return (np.random.uniform(-1, 1, fn.size) +
-                1j * np.random.uniform(-1, 1, fn.size)).astype(fn.dtype)
+        return (np.random.rand(fn.size) +
+                1j * np.random.rand(fn.size)).astype(fn.dtype)
 
 
 def _element(fn):
@@ -99,21 +101,28 @@ def _dense_matrix(fn):
     return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
 
 
-@pytest.fixture(scope="module",
-                ids=[' R10 float64 ', ' R10 float32 ',
-                     ' C10 complex128 ', ' C10 complex64 ',
-                     ' R100 '],
-                params=[Rn(10, np.float64), Rn(10, np.float32),
-                        Cn(10, np.complex128), Cn(10, np.complex64),
-                        Rn(100)])
+# Pytest fixtures
+
+# Simply modify spc_params to modify the fixture
+spc_params = [Rn(10, np.float64), Rn(10, np.float32),
+              Cn(10, np.complex128), Cn(10, np.complex64),
+              Rn(100)]
+spc_ids = [' {!r} '.format(spc) for spc in spc_params]
+spc_fixture = pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
+
+
+@spc_fixture
 def fn(request):
     return request.param
 
 
-@pytest.fixture(scope="module",
-                ids=[' p = 2 ', ' p = 1 ', ' p = inf ', ' p = 0.5 ',
-                     ' p = 1.5 '],
-                params=[2.0, 1.0, float('inf'), 0.5, 1.5])
+# Simply modify exp_params to modify the fixture
+exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
+exp_ids = [' p = {} '.format(p) for p in exp_params]
+exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
+
+
+@exp_fixture
 def exponent(request):
     return request.param
 
@@ -171,7 +180,7 @@ def test_init():
         Cn(3, exponent=exponent)
 
 
-def test_space_funcs(exponent):
+def test_init_space_funcs(exponent):
     const = 1.5
     weight_vec = _pos_array(Rn(3, float))
     weight_mat = _dense_matrix(Rn(3, float))
@@ -187,7 +196,7 @@ def test_space_funcs(exponent):
         assert spc._space_funcs == weight
 
 
-def test_vector_init(fn):
+def test_vector_class_init(fn):
     # Test that code runs
     arr = _array(fn)
 

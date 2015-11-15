@@ -46,15 +46,21 @@ from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
 # * custom dist/norm/inner
 
 
+# Helpers to generate data
+
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.uniform(-1, 1, fn.size).astype(fn.dtype)
+        return np.random.rand(fn.size).astype(fn.dtype)
     elif np.issubdtype(fn.dtype, np.integer):
         return np.random.randint(0, 10, fn.size).astype(fn.dtype)
     else:
-        return (np.random.uniform(-1, 1, fn.size) +
-                1j * np.random.uniform(-1, 1, fn.size)).astype(fn.dtype)
+        return (np.random.rand(fn.size) +
+                1j * np.random.rand(fn.size)).astype(fn.dtype)
+
+
+def _element(fn):
+    return fn.element(_array(fn))
 
 
 def _vectors(fn, n=1):
@@ -97,38 +103,55 @@ def _dense_matrix(fn):
     return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
 
 
-def _element(fn):
-    return fn.element(_array(fn))
+# Pytest fixtures
+
+# Simply modify spc_params to modify the fixture
+spc_params = [odl.CudaRn(100)]
+spc_ids = [' {!r} '.format(spc) for spc in spc_params]
+spc_fixture = pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
 
 
-@pytest.fixture(scope="module",
-                ids=['CudaRn float32'],
-                params=[odl.CudaRn(100)])
+@spc_fixture
 def fn(request):
     return request.param
 
 
-@pytest.fixture(scope="module",
-                ids=[' p = 2 ', ' p = 1 ', ' p = inf ', ' p = 0.5 ',
-                     ' p = 1.5 ', ' p = 3 '],
-                params=[2.0, 1.0, float('inf'), 0.5, 1.5, 3.0])
+# Simply modify exp_params to modify the fixture
+exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5, 3.0]
+exp_ids = [' p = {} '.format(p) for p in exp_params]
+exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
+
+
+@exp_fixture
 def exponent(request):
+    return request.param
+
+
+# Simply modify dtype_params to modify the fixture
+dtype_params = odl.CUDA_DTYPES
+dtype_ids = [' dtype = {} '.format(t) for t in dtype_params]
+dtype_fixture = pytest.fixture(scope="module", ids=dtype_ids,
+                               params=dtype_params)
+
+
+@dtype_fixture
+def dtype(request):
     return request.param
 
 
 # --- CUDA space tests --- #
 
 
-def test_init_cudantuples_dtypes():
+@skip_if_no_cuda
+def test_init_cudantuples(dtype):
     # verify that the code runs
-    for dtype in odl.CUDA_DTYPES:
-        odl.CudaNtuples(3, dtype=dtype).element()
-        odl.CudaFn(3, dtype=dtype).element()
+    odl.CudaNtuples(3, dtype=dtype).element()
+    odl.CudaFn(3, dtype=dtype).element()
 
 
-def test_init_exponent(exponent):
-    for dtype in odl.CUDA_DTYPES:
-        odl.CudaFn(3, dtype='float32', exponent=exponent)
+@skip_if_no_cuda
+def test_init_exponent(exponent, dtype):
+    odl.CudaFn(3, dtype=dtype, exponent=exponent)
 
 
 @skip_if_no_cuda
@@ -489,11 +512,11 @@ def test_lincomb(fn):
             _test_lincomb(fn, a, b)
 
 
-def _test_member_lincomb(fn, a):
+def _test_member_lincomb(spc, a):
     # Validates vector member lincomb against the result on host
 
     # Generate vectors
-    x_host, y_host, x_device, y_device = _vectors(fn, 2)
+    x_host, y_host, x_device, y_device = _vectors(spc, 2)
 
     # Host side calculation
     y_host[:] = a * x_host
@@ -558,10 +581,10 @@ def test_member_multiply():
     assert all_almost_equal(y_device, y_host)
 
 
-def _test_unary_operator(fn, function):
+def _test_unary_operator(spc, function):
     # Verify that the statement y=function(x) gives equivalent
     # results to Numpy.
-    x_arr, x = _vectors(fn)
+    x_arr, x = _vectors(spc)
 
     y_arr = function(x_arr)
     y = function(x)
@@ -569,10 +592,10 @@ def _test_unary_operator(fn, function):
     assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
-def _test_binary_operator(fn, function):
+def _test_binary_operator(spc, function):
     # Verify that the statement z=function(x,y) gives equivalent
     # results to Numpy.
-    x_arr, y_arr, x, y = _vectors(fn, 2)
+    x_arr, y_arr, x, y = _vectors(spc, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
@@ -739,12 +762,12 @@ def test_offset_sub_vector():
     assert all_equal([1, 2, 3, 7, 8, 9], xd)
 
 
-def _test_dtype(dtype):
-    if dtype not in odl.CUDA_DTYPES:
+def _test_dtype(dt):
+    if dt not in odl.CUDA_DTYPES:
         with pytest.raises(TypeError):
-            r3 = odl.CudaFn(3, dtype)
+            r3 = odl.CudaFn(3, dt)
     else:
-        r3 = odl.CudaFn(3, dtype)
+        r3 = odl.CudaFn(3, dt)
         x = r3.element([1, 2, 3])
         y = r3.element([4, 5, 6])
         z = x + y
@@ -753,11 +776,11 @@ def _test_dtype(dtype):
 
 @skip_if_no_cuda
 def test_dtypes():
-    for dtype in [np.int8, np.int16, np.int32, np.int64, np.int,
-                  np.uint8, np.uint16, np.uint32, np.uint64, np.uint,
-                  np.float32, np.float64, np.float,
-                  np.complex64, np.complex128, np.complex]:
-        yield _test_dtype, dtype
+    for dt in [np.int8, np.int16, np.int32, np.int64, np.int,
+               np.uint8, np.uint16, np.uint32, np.uint64, np.uint,
+               np.float32, np.float64, np.float,
+               np.complex64, np.complex128, np.complex]:
+        yield _test_dtype, dt
 
 
 def _test_ufunc(ufunc):
@@ -876,17 +899,18 @@ def test_const_dist(exponent):
 
 @skip_if_no_cuda
 def test_vector_init():
-    weight_vec = _pos_array(odl.CudaRn(5))
+    rn = odl.CudaRn(5)
+    weight_vec = _pos_array(rn)
 
     CudaFnVectorWeighting(weight_vec)
-    CudaFnVectorWeighting(odl.CudaRn(5).element(weight_vec))
+    CudaFnVectorWeighting(rn.element(weight_vec))
 
 
 @skip_if_no_cuda
 def test_vector_vector():
-    r5 = odl.CudaRn(5)
-    weight_vec = _pos_array(odl.CudaRn(5))
-    weight_elem = r5.element(weight_vec)
+    rn = odl.CudaRn(5)
+    weight_vec = _pos_array(rn)
+    weight_elem = rn.element(weight_vec)
 
     weighting_vec = CudaFnVectorWeighting(weight_vec)
     weighting_elem = CudaFnVectorWeighting(weight_elem)
