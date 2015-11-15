@@ -920,9 +920,32 @@ def test_vector_vector():
 
 
 @skip_if_no_cuda
+def test_vector_isvalid():
+    rn = odl.CudaRn(5)
+    weight_vec = _pos_array(rn)
+    weight_elem = rn.element(weight_vec)
+
+    weighting_vec = CudaFnVectorWeighting(weight_vec)
+    weighting_elem = CudaFnVectorWeighting(weight_elem)
+
+    assert weighting_vec.vector_is_valid()
+    assert weighting_elem.vector_is_valid()
+
+    # Invalid
+    weight_vec[0] = 0
+    weight_elem[0] = 0
+
+    weighting_vec = CudaFnVectorWeighting(weight_vec)
+    weighting_elem = CudaFnVectorWeighting(weight_elem)
+
+    assert not weighting_vec.vector_is_valid()
+    assert not weighting_elem.vector_is_valid()
+
+
+@skip_if_no_cuda
 def test_vector_equals():
     rn = odl.CudaRn(5)
-    weight_vec = _pos_array(odl.CudaRn(5))
+    weight_vec = _pos_array(rn)
     weight_elem = rn.element(weight_vec)
 
     weighting_vec = CudaFnVectorWeighting(weight_vec)
@@ -974,7 +997,12 @@ def test_vector_norm(exponent):
     weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
 
-    true_norm = np.sum(np.abs(xarr)**exponent * weight_vec)**(1/exponent)
+    if exponent == float('inf'):
+        # Weighting irrelevant
+        true_norm = np.linalg.norm(xarr, ord=float('inf'))
+    else:
+        true_norm = np.sum(np.abs(xarr)**exponent *
+                           weight_vec)**(1/exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
         # Not yet implemented, should raise
@@ -1012,7 +1040,12 @@ def test_vector_dist(exponent):
     weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
 
-    true_dist = np.sum(np.abs(xarr-yarr)**exponent * weight_vec)**(1/exponent)
+    if exponent == float('inf'):
+        # Weighting irrelevant
+        true_dist = np.linalg.norm(xarr-yarr, ord=float('inf'))
+    else:
+        true_dist = np.sum(np.abs(xarr-yarr)**exponent *
+                           weight_vec)**(1/exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
         # Not yet implemented, should raise
@@ -1024,10 +1057,10 @@ def test_vector_dist(exponent):
         assert almost_equal(weighting_vec.dist(x, y), true_dist)
         assert almost_equal(weighting_elem.dist(x, y), true_dist)
 
+    # Same with free function
     pdist_vec = odl.cu_weighted_dist(weight_vec, exponent=exponent)
     pdist_elem = odl.cu_weighted_dist(weight_elem, exponent=exponent)
 
-    # Same with free function
     if exponent == float('inf') or int(exponent) != exponent:
         # Not yet implemented, should raise
         with pytest.raises(NotImplementedError):
