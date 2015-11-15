@@ -240,7 +240,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         self._is_linear = bool(linear)
         self._is_functional = isinstance(range, Field)
 
-        if self._is_linear:
+        if self.is_linear:
             if not isinstance(domain, (LinearSpace, Field)):
                 raise TypeError('domain {!r} not a `LinearSpace` or `Field` '
                                 'instance.'.format(domain))
