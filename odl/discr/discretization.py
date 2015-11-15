@@ -32,15 +32,17 @@ from abc import ABCMeta
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
-from odl.space.ntuples import Ntuples, Rn, Cn
+from odl.space.ntuples import Ntuples, Fn, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaNtuples, CudaRn
+    from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
     CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
 else:
-    CudaRn = CudaCn = CudaNtuples = type(None)
+    CudaRn = CudaCn = CudaFn = CudaNtuples = type(None)
+from odl.util.utility import (
+    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
 __all__ = ('RawDiscretization', 'Discretization')
@@ -150,7 +152,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
     @property
     def dspace_type(self):
         """Data space type of this discretization."""
-        return type(self._dspace)
+        return type(self.dspace)
 
     @property
     def restriction(self):
@@ -221,7 +223,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
     @property
     def dtype(self):
         """The dtype of the representation space."""
-        return self.dspace.dtype
+        return self._dtype
 
     class Vector(NtuplesBase.Vector):
 
@@ -330,8 +332,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                                              arraynd_repr(self.asarray()))
 
 
-class Discretization(with_metaclass(ABCMeta, RawDiscretization,
-                                    FnBase)):
+class Discretization(RawDiscretization, FnBase):
 
     """Abstract class for discretizations of linear vector spaces.
 
@@ -450,39 +451,80 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
             super().__init__(space, data)
 
 
-def dspace_type(space, impl):
+def dspace_type(space, impl, dtype=None):
     """Select the correct corresponding n-tuples space.
 
     Parameters
     ----------
-    space : `LinearSpace`
-        The template space
+    space : `object`
+        The template space. If it has a :attr:`field` attribute,
+        :obj:`dtype` must be consistent with it
     impl : {'numpy', 'cuda'}
         The backend for the data space
+    dtype : `type`, optional
+        Data type which the space is supposed to use. If `None`, the
+        space type is purely determined from :obj:`space` and
+        :obj:`impl`. If given, it must be compatible with the
+        field of :obj:`space`. Non-floating types result in basic
+        :class:`Fn`-type spaces.
 
     Returns
     -------
-    dtype : type
-        Space type selected after the space's field and the chosen
-        backend
+    stype : `type`
+        Space type selected after the space's field, the backend and
+        the data type
     """
-    if impl not in ('numpy', 'cuda'):
+    impl_ = str(impl).lower()
+    if impl_ not in ('numpy', 'cuda'):
         raise ValueError('implementation type {} not understood.'
                          ''.format(impl))
 
-    if impl == 'cuda' and not CUDA_AVAILABLE:
+    if impl_ == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA implementation not available.')
 
+    basic_map = {'numpy': Fn, 'cuda': CudaFn}
+
     spacetype_map = {
-        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn, None: Ntuples},
-        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None, None: CudaNtuples}
+        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn,
+                  type(None): Ntuples},
+        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None,
+                 type(None): CudaNtuples}
     }
 
-    field_type = None if not hasattr(space, 'field') else type(space.field)
-    stype = spacetype_map[impl][field_type]
+    field_type = type(getattr(space, 'field', None))
+
+    if dtype is None:
+        stype = spacetype_map[impl_][field_type]
+    elif is_real_floating_dtype(dtype):
+        if field_type is None or field_type == ComplexNumbers:
+            raise TypeError('real floating data type {} requires space '
+                            'field to be of type `RealNumbers`, got {}.'
+                            ''.format(dtype, field_type))
+        stype = spacetype_map[impl_][field_type]
+    elif is_complex_floating_dtype(dtype):
+        if field_type is None or field_type == RealNumbers:
+            raise TypeError('complex floating data type {} requires space '
+                            'field to be of type `ComplexNumbers`, got {}.'
+                            ''.format(dtype, field_type))
+        stype = spacetype_map[impl_][field_type]
+    elif is_scalar_dtype(dtype):
+        if field_type == ComplexNumbers:
+            raise TypeError('non-floating data type {} requires space field '
+                            'to be of type `RealNumbers`, got {}.'
+                            .format(dtype, field_type))
+        elif field_type == RealNumbers:
+            stype = basic_map[impl_]
+        else:
+            stype = spacetype_map[impl_][field_type]
+    elif field_type is None:  # Only in this case are arbitrary types allowed
+        stype = spacetype_map[impl_][field_type]
+    else:
+        raise TypeError('non-scalar data type {} cannot be combined with '
+                        'a `LinearSpace`.'.format(dtype))
+
     if stype is None:
-        raise NotImplementedError('no corresponding data space available for '
-                                  'space {!r} and implementation {!r}.'
+        raise NotImplementedError('no corresponding data space available '
+                                  'for space {!r} and implementation {!r}.'
                                   ''.format(space, impl))
     return stype
 

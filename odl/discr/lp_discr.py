@@ -402,18 +402,19 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
     if impl == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA not available.')
 
-    ds_type = dspace_type(fspace, impl)
     dtype = kwargs.pop('dtype', None)
+    ds_type = dspace_type(fspace, impl, dtype)
 
     grid = uniform_sampling(fspace.domain, nsamples, as_midp=True)
 
     weighting = kwargs.pop('weighting', 'simple')
-    if weighting not in ('simple', 'consistent'):
+    weighting_ = weighting.lower()
+    if weighting_ not in ('simple', 'consistent'):
         raise ValueError('weighting {!r} not understood.'.format(weighting))
 
-    if weighting == 'simple':
+    if weighting_ == 'simple':
         weight = np.prod(grid.stride)
-    else:  # weighting == 'consistent'
+    else:  # weighting_ == 'consistent'
         # TODO: implement
         raise NotImplemented
 
