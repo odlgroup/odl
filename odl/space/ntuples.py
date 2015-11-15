@@ -955,7 +955,7 @@ class Fn(FnBase, Ntuples):
         True
 
         Different ``dist`` functions result in different spaces - the
-        same applies for `norm` and `inner`:
+        same applies for ``norm`` and ``inner``:
 
         >>> dist1 = partial(dist, ord=1)
         >>> c3_1 = Cn(3, dist=dist1)
@@ -1731,7 +1731,10 @@ class FnMatrixWeighting(_FnWeighting):
             The norm of the vector
         """
         if self.exponent == 2.0:
-            return self.inner(x, x)
+            norm_squared = self.inner(x, x).real  # TODO: optimize?
+            if norm_squared < 0:
+                norm_squared = 0.0  # Compensate for numerical error
+            return sqrt(norm_squared)
         elif self.exponent == float('inf'):  # Weighting is irrelevant
             return float(_pnorm_default(x, float('inf')))
         else:
@@ -1840,10 +1843,13 @@ class FnVectorWeighting(_FnWeighting):
             Can only be used if :obj:`exponent` is 2.0.
         """
         super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
-        self._vector = np.asarray(vector)
-        if self._vector.dtype == object:
+        if not isinstance(vector, Fn.Vector):
+            self._vector = np.asarray(vector)
+        else:
+            self._vector = vector
+        if self.vector.dtype == object:
             raise ValueError('invalid vector {}.'.format(vector))
-        elif self._vector.ndim != 1:
+        elif self.vector.ndim != 1:
             raise ValueError('vector {} is {}-dimensional instead of '
                              '1-dimensional.'
                              ''.format(vector, self._vector.ndim))
@@ -1940,9 +1946,12 @@ class FnVectorWeighting(_FnWeighting):
             The norm of the provided vector
         """
         if self.exponent == 2.0:
-            return self.inner(x, x)  # TODO: optimize?
+            norm_squared = self.inner(x, x).real  # TODO: optimize?!
+            if norm_squared < 0:
+                norm_squared = 0.0  # Compensate for numerical error
+            return sqrt(norm_squared)
         elif self.exponent == float('inf'):
-            return _pnorm_default(x, float('inf'))
+            return _pnorm_default(x, self.exponent)
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
@@ -2095,7 +2104,7 @@ class FnConstWeighting(_FnWeighting):
         if self.exponent == 2.0:
             return sqrt(self.const) * float(_norm_default(x))
         elif self.exponent == float('inf'):
-            return float(_pnorm_default(x, float('inf')))
+            return float(_pnorm_default(x, self.exponent))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
@@ -2122,7 +2131,7 @@ class FnConstWeighting(_FnWeighting):
         elif self.exponent == 2.0:
             return sqrt(self.const) * _norm_default(x1 - x2)
         elif self.exponent == float('inf'):
-            return float(_pnorm_default(x1 - x2, float('inf')))
+            return float(_pnorm_default(x1 - x2, self.exponent))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x1 - x2, self.exponent)))
