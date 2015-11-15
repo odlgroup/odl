@@ -51,6 +51,7 @@ else:
     future >= 0.14
     numpy >= 1.8
     scipy >= 0.14
+    matplotlib
     """
 
 class PyTest(TestCommand):

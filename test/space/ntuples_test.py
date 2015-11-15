@@ -100,7 +100,7 @@ def test_init():
     Ntuples(3, float)
     Ntuples(3, complex)
     Ntuples(3, 'S1')
-
+    
     # Fn
     Fn(3, int)
     Fn(3, float)
