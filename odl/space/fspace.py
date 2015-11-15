@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Spaces of functions with common domain and range.
-
-TODO: document properly
-"""
+"""Spaces of functions with common domain and range."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -463,7 +460,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         Note
         ----
 
-        Since `FunctionSpace._lincomb` is slow, 
+        Since `FunctionSpace._lincomb` is slow,
         we implement this function directly.
         """
         def zero_(*_):
@@ -503,11 +500,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
             """The actual product function."""
             return x_old(arg) * y_old(arg)
         y._function = product
-
-    def _inner(self, x1, x2):
-        """Inner product, not computable in continuous spaces."""
-        raise NotImplementedError('inner product not computable in the '
-                                  'non-discretized space {}.'.format(self))
 
     def __repr__(self):
         """`s.__repr__() <==> repr(s)`."""
