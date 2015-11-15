@@ -94,27 +94,38 @@ if __name__ == '__main__':
     doctest.testmod()
 
 
+def is_scalar_dtype(dtype):
+    """Whether a datatype is scalar or not."""
+    return np.issubsctype(dtype, np.number)
+
+
 def is_real_dtype(dtype):
-    """Whether a datatype is real or not."""
-    return np.isrealobj(np.empty(0, dtype=dtype))
+    """Whether a datatype is real (including integer) or not."""
+    return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
-def is_complex_dtype(dtype):
-    """Whether a datatype is complex or not."""
-    return np.iscomplexobj(np.empty(0, dtype=dtype))
+def is_real_floating_dtype(dtype):
+    """Whether a NumPy datatype is real complex-floating or not."""
+    return np.issubsctype(dtype, np.floating)
+
+
+def is_complex_floating_dtype(dtype):
+    """Whether a NumPy datatype is complex floating-point or not."""
+    return np.issubsctype(dtype, np.complexfloating)
+
 
 def with_metaclass(meta, *bases):
     """
     Function from jinja2/_compat.py. License: BSD.
 
     Use it like this::
-        
+
         class BaseForm(object):
             pass
-        
+
         class FormType(type):
             pass
-        
+
         class Form(with_metaclass(FormType, BaseForm)):
             pass
 
@@ -124,13 +135,14 @@ def with_metaclass(meta, *bases):
     we also need to make sure that we downgrade the custom metaclass
     for one level to something closer to type (that's why __call__ and
     __init__ comes back from type etc.).
-    
+
     This has the advantage over six.with_metaclass of not introducing
     dummy classes into the final MRO.
     """
     class metaclass(meta):
         __call__ = type.__call__
         __init__ = type.__init__
+
         def __new__(cls, name, this_bases, d):
             if this_bases is None:
                 return type.__new__(cls, name, (), d)
