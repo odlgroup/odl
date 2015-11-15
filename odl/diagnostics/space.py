@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -24,6 +24,8 @@ __all__ = ('SpaceTest',)
 
 
 def _apprimately_equal(x, y, eps):
+    #Tests if vectors x and y are approximately equal
+    #eps is an given error
     if x.space != y.space:
         return False
 
@@ -40,11 +42,19 @@ def _apprimately_equal(x, y, eps):
 
 
 class SpaceTest(object):
+    """ Automated tests for :class:`LinearSpace`'s
+
+    This class allows users to automatically test various
+    features of an ``LinearSpace`` such as linearity and the 
+    various operators.
+    """
+
     def __init__(self, space, eps=0.00001):
         self.space = space
         self.eps = eps
 
     def element(self):
+        """Verifying element method"""
         print('\n== Verifying element method ==\n')
 
         try:
@@ -59,6 +69,7 @@ class SpaceTest(object):
             print('space.element() OK')
 
     def field(self):
+        """Verifying field property"""
         print('\n== Verifying field property ==\n')
 
         try:
@@ -259,6 +270,21 @@ class SpaceTest(object):
         self._lincomb_aliased()
 
     def linearity(self):
+        """Verifies the linear space properties by examples
+
+        These properties include things such as associativity
+
+        ``x + y = y + x``
+
+        and identity of the :meth:`LinearSpace.zero` element
+
+        ``x + 0 = x``
+
+        References
+        ----------
+        Wikipedia article on `Vector space
+<https://en.wikipedia.org/wiki/Vector_space>`_.
+        """
         print('\n== Verifying linear space properties ==\n')
 
         self._associativity_of_addition()
@@ -328,6 +354,25 @@ class SpaceTest(object):
                                  ''.format(n_x, inner))
 
     def inner(self):
+        """ Verify inner product
+
+        The inner product satisfies properties such as
+
+        conjugate symmetry
+        ``(x, y) = (y, x)^*`` (^* complex conjugate)
+
+        linearity
+        ``(a * x, y) = a * (x, y)``
+        ``(x + y, z) = (x, z) + (y, z)``
+
+        positivity
+        ``(x, x) >= 0``
+
+        References
+        ----------
+        Wikipedia article on `inner product space
+<https://en.wikipedia.org/wiki/Inner_product_space>`_.
+        """
         print('\n== Verifying inner product ==\n')
 
         try:
@@ -402,8 +447,28 @@ class SpaceTest(object):
                     counter.fail('x={:25s}: error={}'
                                  ''.format(n_x, error))
 
-    def norm(self):
-        """Run all norm-related tests on this space."""
+    def norm(self):        
+        """ Verify norm
+
+        The norm satisfies properties
+
+        linearity
+        ``||a * x|| = |a| * ||x||``
+
+        triangle inequality
+        ``||x + y|| = ||x|| + ||y||``
+
+        separation
+        ``||x|| = 0`` iff ``x = 0``
+
+        positivity
+        ``||x|| >= 0``
+
+        References
+        ----------
+        Wikipedia article on `norm
+<https://en.wikipedia.org/wiki/Norm_(mathematics)>`_.
+        """
         print('\n== Verifying norm ==\n')
 
         try:
@@ -481,6 +546,27 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, error))
 
     def dist(self):
+        """ Verify dist
+
+        The dist satisfies properties
+
+        positivity
+        ``d(x, y) >= 0``
+
+        coincidence
+        ``d(x, y) = 0`` iff ``x = y``
+
+        symmetry
+        ``d(x, y) = d(y, x)``
+
+        triangle inequality
+        ``d(x, z) = d(x, y) + d(y, z)``
+
+        References
+        ----------
+        Wikipedia article on `metric
+<https://en.wikipedia.org/wiki/Metric_(mathematics)>`_.
+        """
         print('\n== Verifying dist ==\n')
 
         try:
@@ -533,33 +619,51 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, n_z))
 
     def _multiply_distributive_scalar(self):
-        print('\nMultiplication associative wrt scal, a * (y * z) = '
-              '(a * y) * z = y * (a * z)')
+        print('\nMultiplication distributive wrt scal, a * (x + y) = '
+              'a * x + a * y')
 
         with FailCounter() as counter:
             for [n_x, x], [n_y, y], a in samples(self.space,
                                                  self.space,
                                                  self.space.field):
-                ok = _apprimately_equal(a * (x * y), (a * x) * y, self.eps)
-                ok = _apprimately_equal(a * (x * y), x * (a * y), self.eps)
+                ok = _apprimately_equal(a * (x + y), a * x + a * y, self.eps)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s} a={}'
                                  ''.format(n_x, n_y, a))
 
     def _multiply_distributive_vec(self):
-        print('\nMultiplication associative wrt vec, x * (y * z) = '
-              '(x * y) * z')
+        print('\nMultiplication distributive wrt vec, x * (y + z) = '
+              'x * y + x * z')
 
         with FailCounter() as counter:
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                ok = _apprimately_equal(x * (y * z), (x * y) * z, self.eps)
+                ok = _apprimately_equal(x * (y + z), x * y + x * z, self.eps)
                 if not ok:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
 
     def multiply(self):
+        """Verify the multiplication of vectors
+
+        Multiplication satisfies
+
+        Zero element
+        ``0 * x = 0``
+
+        Commutativity
+        ``x * y = y * x``
+
+        Associativity
+        ``x * (y * z) = (x * y) * z``
+
+        Distributivity
+        ``a * (x + y) = a * x + a * y``
+        ``x * (y + z) = x * y + x * z``
+
+        """
+
         print('\n== Verifying multiplication ==\n')
 
         try:

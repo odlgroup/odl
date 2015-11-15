@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -37,13 +37,42 @@ def _arg_shape(*args):
 
 
 def scalar_examples(field):
+    """ Generate example vectors in ``space``
+
+    Parameters
+    ----------
+    space : :class:`LinearSpace`
+        The space to generate examples from
+
+    Returns
+    -------
+    examples : `generator`
+        Yields tuples (`string`, :class:`LinearSpace.Vector`) 
+        where ``string`` is a short description of the vector
+    """
     if field == RealNumbers():
         return [-1.0, 0.5, 0.0, 0.01, 1.0]
-    if field == ComplexNumbers():
+    elif field == ComplexNumbers():
         return [-1.0, 0.5, 0.0+2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0]
+    else:
+        raise NotImplementedError('field not supported')
 
 
 def vector_examples(space):
+    """ Generate example vectors in ``space``
+
+    Parameters
+    ----------
+    space : :class:`LinearSpace`
+        The space to generate examples from
+
+    Returns
+    -------
+    examples : `generator`
+        Yields tuples (`string`, :class:`LinearSpace.Vector`) 
+        where ``string`` is a short description of the vector
+    """
+
     # All spaces should yield the zero element
     yield ('Zero', space.zero())
 
@@ -146,6 +175,20 @@ def vector_examples(space):
 
 
 def samples(*sets):
+    """Generates some samples from the given sets.
+
+    Currently supports vectors according to `vector_examples`
+    and scalars according to `scalar_examples`.
+
+    Parameters
+    ----------
+    *sets : :class:`Set` instance(s)
+
+    Returns
+    -------
+    samples : `generator`
+        Generator that yields tuples of examples from the sets.
+    """
     if len(sets) == 1:
         if isinstance(sets[0], LinearSpace):
             for vec in vector_examples(sets[0]):
