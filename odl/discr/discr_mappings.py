@@ -540,7 +540,7 @@ class LinearInterpolation(FunctionSetMapping):
         return self.range.element(func)
 
 
-class _NearestPointwiseInterpolator(RegularGridInterpolator):
+class _NearestPointwiseInterpolator(object):
 
     """Own version of SciPy's grid interpolator by point.
 

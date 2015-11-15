@@ -19,29 +19,7 @@
 
 This is a default implementation of :math:`A^n` for an arbitrary set
 :math:`A` as well as the real and complex spaces :math:`R^n` and
-:math:`C^n`. The latter two each come in a basic version with vector
-multiplication only and as metric, normed, Hilbert and Euclidean space
-variants. The data is represented by NumPy arrays.
-
-List of classes
----------------
-
-+-------------+--------------+----------------------------------------+
-|Class name   |Direct        |Description                             |
-|             |Ancestors     |                                        |
-+=============+==============+========================================+
-|`Ntuples`    |`Set`         |Basic class of `n`-tuples where each    |
-|             |              |entry is of the same type               |
-+-------------+--------------+----------------------------------------+
-|`Fn`         |`EuclideanCn` |`HilbertRn` with the standard inner     |
-|             |              |(dot) product                           |
-+-------------+--------------+----------------------------------------+
-|`Cn`         |`Ntuples`,    |`n`-tuples of complex numbers with      |
-|             |`Algebra`     |vector-vector multiplication            |
-+-------------+--------------+----------------------------------------+
-|`Rn`         |`Cn`          |`n`-tuples of real numbers with         |
-|             |              |vector-vector multiplication            |
-+-------------+--------------+----------------------------------------+
+:math:`C^n`. The data is represented by NumPy arrays.
 """
 
 # Imports for common Python 2/3 codebase
@@ -64,8 +42,9 @@ import scipy as sp
 # ODL imports
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
-from odl.util.utility import (dtype_repr, is_real_dtype, is_complex_dtype,
-                              with_metaclass)
+from odl.util.utility import (
+    dtype_repr, is_real_dtype, is_real_floating_dtype,
+    is_complex_floating_dtype)
 
 
 __all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
@@ -94,12 +73,7 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
 
 class Ntuples(NtuplesBase):
 
-    """The set of `n`-tuples of arbitrary type.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
-    """
+    """The set of n-tuples of arbitrary type."""
 
     def element(self, inp=None, data_ptr=None):
         """Create a new element.
@@ -109,11 +83,11 @@ class Ntuples(NtuplesBase):
         inp : array-like or scalar, optional
             Input to initialize the new element.
 
-            If `inp` is `None`, an empty element is created with no
+            If :obj:`inp` is `None`, an empty element is created with no
             guarantee of its state (memory allocation only).
 
-            If `inp` is a `numpy.ndarray` of shape `(size,)` and the
-            same data type as this space, the array is wrapped, not
+            If :obj:`inp` is a `numpy.ndarray` of shape ``(size,)`` and
+            the same data type as this space, the array is wrapped, not
             copied.
             Other array-like objects are copied (with broadcasting
             if necessary).
@@ -122,8 +96,8 @@ class Ntuples(NtuplesBase):
 
         Returns
         -------
-        element : `Ntuples.Vector`
-            The new element created (from `inp`).
+        element : :class:`NTuples.Vector`
+            The new element created (from :obj:`inp`).
 
         Note
         ----
@@ -181,17 +155,12 @@ class Ntuples(NtuplesBase):
 
     class Vector(NtuplesBase.Vector):
 
-        """Representation of an `Ntuples` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
+        """Representation of an :class:`NTuples` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""
             if not isinstance(space, Ntuples):
-                raise TypeError('{!r} not an `Ntuples` instance.'
+                raise TypeError('{!r} not an `NTuples` instance.'
                                 ''.format(space))
 
             if not isinstance(data, np.ndarray):
@@ -279,12 +248,12 @@ class Ntuples(NtuplesBase):
             return self._data.ctypes.data
 
         def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`.
+            """vec.__eq__(other) <==> vec == other.
 
             Returns
             -------
-            equals :  bool
-                `True` if all entries of `other` are equal to this
+            equals : `bool`
+                `True` if all entries of other are equal to this
                 vector's entries, `False` otherwise.
 
             Note
@@ -320,7 +289,7 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            copy : `Ntuples.Vector`
+            copy : :class:`NTuples.Vector`
                 The deep copy
 
             Examples
@@ -341,14 +310,13 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be accessed
 
             Returns
             -------
-            values : `self.dtype.element` or `space.Vector`
+            values : scalar or :class:`Ntuples.Vector`
                 The value(s) at the index (indices)
-
 
             Examples
             --------
@@ -373,20 +341,21 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
+            values : {scalar, array-like, :class:`NTuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `indices` is an integer, `value` must be single value.
+                If :obj:`indices` is an integer, :obj:`value` must be
+                scalar.
 
-                If `indices` is a slice, `value` must be
+                If :obj:`indices` is a slice, :obj:`value` must be
                 broadcastable to the size of the slice (same size,
-                shape (1,) or single value).
+                shape ``(1,)`` or single value).
 
             Returns
             -------
-            None
+            `None`
 
             Examples
             --------
@@ -450,7 +419,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : `NtuplesBase.Vector`
+    x1,...,xN : :class:`NtuplesBase.Vector`
         The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
@@ -574,12 +543,8 @@ class Fn(FnBase, Ntuples):
     This space implements n-tuples of elements from a field :math:`F`,
     which can be the real or the complex numbers.
 
-    Its elements are represented as instances of the inner `Fn.Vector`
-    class.
-
-    See also
-    --------
-    See the module documentation for attributes, methods etc.
+    Its elements are represented as instances of the inner
+    :class:`Fn.Vector` class.
     """
 
     def __init__(self, size, dtype, **kwargs):
@@ -587,9 +552,9 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        size : positive int
+        size : positive `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -604,84 +569,97 @@ class Fn(FnBase, Ntuples):
 
                 `None` (default) : No weighting, use standard functions
 
-                float : Weighting by a constant
+                `float` : Weighting by a constant
 
                 array-like : Weighting by a matrix (2-dim. array) or a
                 vector (1-dim. array, corresponds to a diagonal matrix).
                 A matrix can also be given as a sparse matrix
                 (`scipy.sparse.spmatrix`).
 
-                This option cannot be combined with `dist`, `norm` or
-                `inner`.
+                This option cannot be combined with :obj:`dist`,
+                :obj:`norm` or :obj:`inner`.
 
-            'exponent' : positive float
+            'exponent' : positive `float`
                 Exponent of the norm. For values other than 2.0, no
                 inner product is defined.
                 If `weight` is a sparse matrix, only 1.0, 2.0 and `inf`
                 are allowed.
 
-                This option is ignored if `dist`, `norm` or `inner`
-                is given.
+                This option is ignored if :obj:`dist`, :obj:`norm` or
+                :obj:`inner` is given.
 
                 Default: 2.0
 
-            'dist' : callable, optional
+            'dist' : `callable`, optional
                 The distance function defining a metric on :math:`F^n`.
-                It must accept two `Fn.Vector` arguments and fulfill the
-                following conditions for any vectors `x`, `y` and `z`:
+                It must accept two :class:`Fn.Vector` arguments and
+                fulfill the following mathematical conditions for any
+                three vectors :math:`x, y, z`:
 
-                - `dist(x, y) == dist(y, x)`
-                - `dist(x, y) >= 0`
-                - `dist(x, y) == 0` (approx.) if and only if `x == y`
-                  (approx.)
-                - `dist(x, y) <= dist(x, z) + dist(z, y)`
+                - :math:`d(x, y) = d(y, x)`
+                - :math:`d(x, y) \geq 0`
+                - :math:`d(x, y) = 0 \Leftrightarrow x = y`
+                - :math:`d(x, y) \geq d(x, z) + d(z, y)`
 
-                By default, `dist(x, y)` is calculated as `norm(x - y)`.
-                This creates an intermediate array `x-y`, which can be
-                avoided by choosing `dist_using_inner=True`.
+                By default, ``dist(x, y)`` is calculated as
+                ``norm(x - y)``. This creates an intermediate array
+                ``x-y``, which can be
+                avoided by choosing ``dist_using_inner=True``.
 
-                This option cannot be combined with `weight`, `norm`
-                or `inner`.
+                This option cannot be combined with :obj:`weight`,
+                :obj:`norm` or :obj:`inner`.
 
-            'norm' : callable, optional (Default: `sqrt(inner(x,y))`)
-                The norm implementation. It must accept an `Fn.Vector`
-                argument, return a `RealNumber` and satisfy the
-                following properties:
+            'norm' : `callable`, optional
+                The norm implementation. It must accept an
+                :class:`Fn.Vector` argument, return a
+                :class:`RealNumber` and satisfy the following
+                conditions for all vectors :math:`x, y` and scalars
+                :math:`s`:
 
-                - `norm(x) >= 0`
-                - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
-                - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
-                - `norm(x + y) <= norm(x) + norm(y)`
+                - :math:`\lVert x\\rVert \geq 0`
+                - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
+                - :math:`\lVert s x\\rVert = \lvert s \\rvert
+                  \lVert x\\rVert`
+                - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
+                  \lVert y\\rVert`.
 
-                This option cannot be combined with `weight`, `dist`
-                or `inner`.
+                By default, ``norm(x)`` is calculated as
+                ``inner(x, x)``.
 
-            'inner' : callable, optional
+                This option cannot be combined with :obj:`weight`,
+                :obj:`dist` or :obj:`inner`.
+
+            'inner' : `callable`, optional
                 The inner product implementation. It must accept two
-                `Fn.Vector` arguments, return a complex number and
-                satisfy the following conditions for all vectors `x`,
-                `y` and `z` and scalars `s`:
+                :class:`Fn.Vector` arguments, return a element from
+                the field of the space (real or complex number) and
+                satisfy the following conditions for all vectors
+                :math:`x, y, z` and scalars :math:`s`:
 
-                 - `inner(x, y) == conjugate(inner(y, x))`
-                 - `inner(s * x, y) == s * inner(x, y)`
-                 - `inner(x + z, y) == inner(x, y) + inner(z, y)`
-                 - `inner(x, x) == 0` (approx.) only if `x == 0`
-                   (approx.)
+                - :math:`\langle x,y\\rangle =
+                  \overline{\langle y,x\\rangle}`
+                - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
+                - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
+                  \langle z,y\\rangle`
+                - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-                This option cannot be combined with `weight`, `dist`
-                or `norm`.
+                This option cannot be combined with :obj:`weight`,
+                :obj:`dist` or :obj:`norm`.
 
-            'dist_using_inner' : bool, optional  (Default: `False`)
-                Calculate `dist(x, y)` as
+            dist_using_inner : `bool`, optional
+                Calculate ``dist`` using the formula
 
-                `sqrt(norm(x)**2 + norm(y)**2 - 2 * inner(x, y).real)`
+                :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+                \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
-                This avoids the creation of new arrays and is thus
-                faster for large arrays. On the downside, it will not
-                evaluate to exactly zero for equal (but not identical)
-                `x` and `y`.
+                This avoids the creation of new arrays and is thus faster
+                for large arrays. On the downside, it will not evaluate to
+                exactly zero for equal (but not identical) :math:`x` and
+                :math:`y`.
 
-                This option can only be used if `exponent` is 2.0.
+                This option can only be used if :obj:`exponent` is 2.0.
+
+                Default: `False`.
         """
         super().__init__(size, dtype)
 
@@ -730,10 +708,10 @@ class Fn(FnBase, Ntuples):
             self._space_funcs = _FnNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
 
-        if is_complex_dtype(self.dtype):
-            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
-        else:
+        if is_real_dtype(self.dtype):
             self._real_dtype = self.dtype
+        else:
+            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
 
     @property
     def exponent(self):
@@ -746,23 +724,23 @@ class Fn(FnBase, Ntuples):
         return self._real_dtype
 
     def _lincomb(self, a, x1, b, x2, out):
-        """Linear combination of `x` and `y`.
+        """Linear combination of x and y.
 
-        Calculate `out = a * x1 + b * x2` using optimized BLAS routines if
-        possible.
+        Calculate ``out = a*x1 + b*x2`` using optimized BLAS
+        routines if possible.
 
         Parameters
         ----------
-        a, b : `field` element
-            Scalar to multiply `x` and `y` with.
-        x1, x2 : `Fn.Vector`
+        a, b : field element
+            Scalars to multiply x and y with
+        x1, x2 : :class:`Fn.Vector`
             The summands
-        out : `Fn.Vector`
-            The Vector that the result is written to.
+        out : :class:`Fn.Vector`
+            The vector to which the result is written
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -782,12 +760,12 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1, x2 : `Fn.Vector`
-            The vectors whose mutual distance is calculated
+        x1, x2 : :class:`Fn.Vector`
+            Vectors whose mutual distance is calculated
 
         Returns
         -------
-        dist : float
+        dist : `float`
             Distance between the vectors
 
         Examples
@@ -812,12 +790,12 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x : `Fn.Vector`
+        x : :class:`Fn.Vector`
             The vector whose norm is calculated
 
         Returns
         -------
-        norm : float
+        norm : `float`
             Norm of the vector
 
         Examples
@@ -842,13 +820,13 @@ class Fn(FnBase, Ntuples):
         Parameters
         ----------
 
-        x1, x2 : `Fn.Vector`
+        x1, x2 : :class:`Fn.Vector`
             The vectors whose inner product is calculated
 
         Returns
         -------
-        inner : `self.field` element
-            Inner product of `x1` and `x2`.
+        inner : field element
+            Inner product of the vectors
 
         Examples
         --------
@@ -874,15 +852,13 @@ class Fn(FnBase, Ntuples):
         return self._space_funcs.inner(x1, x2)
 
     def _multiply(self, x1, x2, out):
-        """The entry-wise product of two vectors, assigned to `out`.
-
-        out = x1 * x2
+        """The entry-wise product of two vectors, assigned to out.
 
         Parameters
         ----------
-        x1, x2 : `Fn.Vector`
+        x1, x2 : :class:`Fn.Vector`
             Factors in the product
-        out : `Fn.Vector`
+        out : :class:`Fn.Vector`
             The result vector
 
         Returns
@@ -903,17 +879,15 @@ class Fn(FnBase, Ntuples):
         np.multiply(x1.data, x2.data, out=out.data)
 
     def _divide(self, x1, x2, out):
-        """The entry-wise division of two vectors, assigned to `out`.
-
-        out = x1 / x2
+        """The entry-wise division of two vectors, assigned to out.
 
         Parameters
         ----------
-        x1 : `Fn.Vector`
+        x1 : :class:`Fn.Vector`
             Dividend
-        x1 : `Fn.Vector`
+        x1 : :class:`Fn.Vector`
             Divisior
-        out : `Fn.Vector`
+        out : :class:`Fn.Vector`
             The result vector, quotient
 
         Returns
@@ -962,10 +936,10 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is an instance of this space's type
-            with the same `size` and `dtype`, and **identical**
-            distance function, otherwise `False`.
+        equals : `bool`
+            `True` if other is an instance of this space's type
+            with the same ``size``, ``dtype`` and space functions,
+            otherwise `False`.
 
         Examples
         --------
@@ -980,7 +954,7 @@ class Fn(FnBase, Ntuples):
         >>> c3  == c3_same
         True
 
-        Different `dist` functions result in different spaces - the
+        Different ``dist`` functions result in different spaces - the
         same applies for `norm` and `inner`:
 
         >>> dist1 = partial(dist, ord=1)
@@ -997,7 +971,7 @@ class Fn(FnBase, Ntuples):
         >>> c3_lambda1 == c3_lambda2
         False
 
-        An `Fn` space with the same data type is considered equal:
+        An :class:`Fn` space with the same data type is considered equal:
 
         >>> c3 = Cn(3)
         >>> f3_cdouble = Fn(3, dtype='complex128')
@@ -1018,17 +992,12 @@ class Fn(FnBase, Ntuples):
 
     class Vector(FnBase.Vector, Ntuples.Vector):
 
-        """Representation of an `Fn` element.
-
-        See also
-        --------
-        See the module documentation for attributes, methods etc.
-        """
+        """Representation of an :class:`Fn` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""
             if not isinstance(space, Fn):
-                raise TypeError('{!r} not an `Fn` instance.'
+                raise TypeError('{!r} not an :class:`Fn` instance.'
                                 ''.format(space))
             super().__init__(space, data)
 
@@ -1038,8 +1007,8 @@ class Fn(FnBase, Ntuples):
 
             Returns
             -------
-            real : `Rn.Vector` view
-                The real part this vector as a vector in `Rn`
+            real : :class:`Rn.Vector` view
+                The real part this vector as a vector in :class:`Rn`
 
             Examples
             --------
@@ -1048,7 +1017,7 @@ class Fn(FnBase, Ntuples):
             >>> x.real
             Rn(3).element([5.0, 3.0, 2.0])
 
-            The `Rn` vector is really a view, so changes affect
+            The :class:`Rn` vector is really a view, so changes affect
             the original array:
 
             >>> x.real *= 2
@@ -1062,7 +1031,7 @@ class Fn(FnBase, Ntuples):
         def real(self, newreal):
             """The setter for the real part.
 
-            This method is invoked by `vec.real = other`.
+            This method is invoked by ``vec.real = other``.
 
             Parameters
             ----------
@@ -1095,8 +1064,8 @@ class Fn(FnBase, Ntuples):
 
             Returns
             -------
-            imag : `Rn.Vector`
-                The imaginary part this vector as a vector in `Rn`
+            imag : :class:`Rn.Vector`
+                The imaginary part this vector as a vector in :class:`Rn`
 
             Examples
             --------
@@ -1105,7 +1074,7 @@ class Fn(FnBase, Ntuples):
             >>> x.imag
             Rn(3).element([1.0, 0.0, -2.0])
 
-            The `Rn` vector is really a view, so changes affect
+            The :class:`Rn` vector is really a view, so changes affect
             the original array:
 
             >>> x.imag *= 2
@@ -1119,7 +1088,7 @@ class Fn(FnBase, Ntuples):
         def imag(self, newimag):
             """The setter for the imaginary part.
 
-            This method is invoked by `vec.imag = other`.
+            This method is invoked by ``vec.imag = other``.
 
             Parameters
             ----------
@@ -1147,8 +1116,16 @@ class Fn(FnBase, Ntuples):
 
             Parameters
             ----------
-            out : array-like or scalar
-                The new imaginary part for this vector.
+            out : :class:`Fn.Vector`, optional
+                Vector to which the complex conjugate is written.
+                Must be an element of this vector's space.
+
+            Returns
+            -------
+            out : :class:`Fn.Vector`
+                The complex conjugate vector. If :obj:`out` was
+                provided, it is returned. Otherwise, the complex
+                conjugate is returned as a new vector.
 
             Examples
             --------
@@ -1178,25 +1155,22 @@ class Fn(FnBase, Ntuples):
 
 
 class Cn(Fn):
-
     """The complex vector space :math:`C^n` with vector multiplication.
-
-    Its elements are represented as instances of the inner `Cn.Vector`
-    class.
 
     See also
     --------
-    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
+    :class:`Fn` : n-tuples over a field :math:`F` with arbitrary scalar
+    data type
     """
 
-    def __init__(self, size, dtype=np.complex128, **kwargs):
+    def __init__(self, size, dtype='complex128', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        size : positive int
+        size : positive `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -1204,11 +1178,11 @@ class Cn(Fn):
 
             Only complex floating-point data types are allowed.
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See `Fn`
+            See :class:`Fn`
         """
         super().__init__(size, dtype, **kwargs)
 
-        if not is_complex_dtype(self._dtype):
+        if not is_complex_floating_dtype(self._dtype):
             raise TypeError('data type {} not a complex floating-point type.'
                             ''.format(dtype))
 
@@ -1231,25 +1205,22 @@ class Cn(Fn):
 
 
 class Rn(Fn):
-
     """The real vector space :math:`R^n` with vector multiplication.
-
-    Its elements are represented as instances of the inner `Rn.Vector`
-    class.
 
     See also
     --------
-    Fn : n-tuples over a field :math:`F` with arbitrary scalar data type
+    :class:`Fn` : n-tuples over a field :math:`F` with arbitrary scalar
+    data type
     """
 
-    def __init__(self, size, dtype=np.float64, **kwargs):
+    def __init__(self, size, dtype='float64', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        size : positive int
+        size : positive `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype()` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -1257,18 +1228,18 @@ class Rn(Fn):
 
             Only real floating-point data types are allowed.
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See `Fn`
+            See :class:`Fn`
         """
         super().__init__(size, dtype, **kwargs)
 
-        if not is_real_dtype(self._dtype):
+        if not is_real_floating_dtype(self.dtype):
             raise TypeError('data type {} not a real floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
         inner_fstr = '{}'
-        if self.dtype != np.float64:
+        if self.dtype != 'float64':
             inner_fstr += ', {dtype}'
 
         inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype))
@@ -1292,10 +1263,10 @@ class MatVecOperator(Operator):
 
         Parameters
         ----------
-        dom : `Fn`
+        dom : :class:`Fn`
             Space on whose elements the matrix acts. Its dtype must be
             castable to the range dtype.
-        ran : `Fn`
+        ran : :class:`Fn`
             Space to which the matrix maps
         matrix : array-like or scipy.sparse.spmatrix
             Matrix representing the linear operator. Its shape must be
@@ -1367,7 +1338,7 @@ class MatVecOperator(Operator):
     # TODO: repr and str
 
 
-def _weighted(weight, attr, exponent, dist_using_inner=False):
+def _weighting(weight, exponent, dist_using_inner=False):
     if np.isscalar(weight):
         weighting = FnConstWeighting(
             weight, exponent, dist_using_inner=dist_using_inner)
@@ -1385,11 +1356,11 @@ def _weighted(weight, attr, exponent, dist_using_inner=False):
             raise ValueError('array-like weight must have 1 or 2 dimensions, '
                              'but {} has {} dimensions.'
                              ''.format(weight, weight_.ndim))
-    return getattr(weighting, attr)
+    return weighting
 
 
 def weighted_inner(weight):
-    """Weighted inner product on `Fn` spaces as free function.
+    """Weighted inner product on :class:`Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1400,7 +1371,7 @@ def weighted_inner(weight):
 
     Returns
     -------
-    inner : callable
+    inner : `callable`
         Inner product function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1409,11 +1380,11 @@ def weighted_inner(weight):
     --------
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
     """
-    return _weighted(weight, 'inner', exponent=2.0)
+    return _weighting(weight, exponent=2.0).inner
 
 
 def weighted_norm(weight, exponent=2.0):
-    """Weighted norm on `Fn` spaces as free function.
+    """Weighted norm on :class:`Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1421,13 +1392,13 @@ def weighted_norm(weight, exponent=2.0):
         Weight of the norm. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
-    exponent : positive float
+    exponent : positive `float`
         Exponent of the norm. If `weight` is a sparse matrix, only
         1.0, 2.0 and `inf` are allowed.
 
     Returns
     -------
-    norm : callable
+    norm : `callable`
         Norm function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1436,11 +1407,11 @@ def weighted_norm(weight, exponent=2.0):
     --------
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
     """
-    return _weighted(weight, 'norm', exponent=exponent)
+    return _weighting(weight, exponent=exponent).norm
 
 
 def weighted_dist(weight, exponent=2.0, use_inner=False):
-    """Weighted distance on `Fn` spaces as free function.
+    """Weighted distance on :class:`Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1448,24 +1419,25 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
         Weight of the distance. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
-    exponent : positive float
+    exponent : positive `float`
         Exponent of the norm. If `weight` is a sparse matrix, only
         1.0, 2.0 and `inf` are allowed.
-    use_inner : bool, optional
-        Calculate `dist(x, y)` as
+    use_inner : `bool`, optional
+        Calculate ``dist`` using the formula
 
-        `sqrt(norm(x)**2 + norm(y)**2 - 2 * inner(x, y).real)`
+        :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+        \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
-        This avoids the creation of new arrays and is thus
-        faster for large arrays. On the downside, it will not
-        evaluate to exactly zero for equal (but not identical)
-        `x` and `y`.
+        This avoids the creation of new arrays and is thus faster
+        for large arrays. On the downside, it will not evaluate to
+        exactly zero for equal (but not identical) :math:`x` and
+        :math:`y`.
 
-        Can only be used if `exponent` is 2.0.
+        Can only be used if :obj:`exponent` is 2.0.
 
     Returns
     -------
-    dist : callable
+    dist : `callable`
         Distance function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1474,8 +1446,8 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
     --------
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
     """
-    return _weighted(weight, 'dist', exponent=exponent,
-                     dist_using_inner=use_inner)
+    return _weighting(weight, exponent=exponent,
+                      dist_using_inner=use_inner).dist
 
 
 def _norm_default(x):
@@ -1520,28 +1492,28 @@ def _inner_default(x1, x2):
 
 class _FnWeighting(_FnWeightingBase):
 
-    """Abstract base class for `Fn` weighting."""
+    """Abstract base class for :class:`Fn` weighting."""
 
 
 class FnMatrixWeighting(_FnWeighting):
 
-    """Matrix weighting for `Fn`.
+    """Matrix weighting for :class:`Fn`.
 
     For exponent 2.0, a new weighted inner product with matrix :math:`G`
     is defined as
 
-    :math:`<a, b>_G := b^H G a`
+    :math:`\langle a, b\\rangle_G := b^H G a`
 
     with :math:`b^H` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent `inf`, the new norm is equal to the unweighted one,
+    exponent ``inf``, the new norm is equal to the unweighted one,
 
-    :math:`||a||_{G, \infty} := ||a||_\infty`,
+    :math:`\lVert a\\rVert_{G, \infty} := \lVert a\\rVert_\infty`,
 
     otherwise it is
 
-    :math:`||a||_{G, p} := ||G^{1/p} a||_p`.
+    :math:`\lVert a\\rVert_{G, p} := \lVert G^{1/p} a\\rVert_p`.
 
     The matrix must be Hermitian and posivive definite, otherwise it
     does not define an inner product or norm, respectively. This is not
@@ -1554,35 +1526,37 @@ class FnMatrixWeighting(_FnWeighting):
         Parameters
         ----------
         matrix : `scipy.sparse.spmatrix` or array-like, 2-dim.
-            Square Weighting matrix of the inner product
-        exponent : positive float
+            Square weighting matrix of the inner product
+        exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
+            If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-            Can only be used if `exponent` is 2.0.
+            Can only be used if :obj:`exponent` is 2.0.
         kwargs : {'precomp_mat_pow', 'cache_mat_pow'}
 
-            'precomp_mat_pow' : bool
-                If `True`, precompute the matrix power `m^(1/p)` during
-                initialization. This has no effect if `exponent` is
-                1.0, 2.0 or `inf`.
+            'precomp_mat_pow' : `bool`
+                If `True`, precompute the matrix power :math:`G^{1/p}`
+                during initialization. This has no effect if
+                :obj:`exponent` is 1.0, 2.0 or ``inf``.
 
                 Default: `False`
 
-            'cache_mat_pow' : bool
-                If `True`, cache the matrix power `m^(1/p)` during the
-                first call to `norm` or `dist`. This has no effect if
-                `exponent` is 1.0, 2.0 or `inf`.
+            'cache_mat_pow' : `bool`
+                If `True`, cache the matrix power :math:`G^{1/p}` during
+                the first call to ``norm`` or ``dist``. This has no
+                effect if :obj:`exponent` is 1.0, 2.0 or ``inf``.
 
                 Default: `False`
         """
@@ -1650,9 +1624,9 @@ class FnMatrixWeighting(_FnWeighting):
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is an `FnMatrixWeighting` instance with
-            **identical** matrix, `False` otherwise.
+        equals : `bool`
+            `True` if other is an :class:`FnMatrixWeighting` instance
+            with **identical** matrix, `False` otherwise.
 
         See also
         --------
@@ -1666,16 +1640,16 @@ class FnMatrixWeighting(_FnWeighting):
                 self.exponent == other.exponent)
 
     def equiv(self, other):
-        """Test if `other` is an equivalent weighting.
+        """Test if other is an equivalent weighting.
 
         Returns
         -------
-        equivalent : bool
-            `True` if `other` is an `FnWeighting` instance which
+        equivalent : `bool`
+            `True` if other is an :class:`FnWeighting` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this inner product's matrix with the matrix
-            or constant of `other`.
+            or constant of other.
         """
         # Optimization for equality
         if self == other:
@@ -1724,13 +1698,13 @@ class FnMatrixWeighting(_FnWeighting):
 
         Parameters
         ----------
-        x1, x2 : `Fn.Vector`
+        x1, x2 : :class:`Fn.Vector`
             Vectors whose inner product is calculated
 
         Returns
         -------
-        inner : float or complex
-            The inner product of the two provided vectors
+        inner : `float` or `complex`
+            The inner product of the vectors
         """
         if self.exponent != 2.0:
             raise NotImplementedError('No inner product defined for '
@@ -1748,16 +1722,16 @@ class FnMatrixWeighting(_FnWeighting):
 
         Parameters
         ----------
-        x : `Fn.Vector`
+        x : :class:`Fn.Vector`
             Vector whose norm is calculated
 
         Returns
         -------
         norm : float
-            The norm of the provided vector
+            The norm of the vector
         """
         if self.exponent == 2.0:
-            return super().norm(x)
+            return self.inner(x, x)
         elif self.exponent == float('inf'):  # Weighting is irrelevant
             return float(_pnorm_default(x, float('inf')))
         else:
@@ -1816,24 +1790,24 @@ class FnMatrixWeighting(_FnWeighting):
 
 class FnVectorWeighting(_FnWeighting):
 
-    """Vector weighting for `Fn`.
+    """Vector weighting for :class:`Fn`.
 
     For exponent 2.0, a new weighted inner product with vector :math:`w`
     is defined as
 
-    :math:`<a, b>_w := b^H (w * a)`
+    :math:`\langle a, b\\rangle_w := b^H (w \odot a)`
 
     with :math:`b^H` standing for transposed complex conjugate, and
-    `w * a` being element-wise multiplication.
+    :math:`w \odot a` being element-wise multiplication.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent `inf`, the new norm is equal to the unweighted one,
+    exponent ``inf``, the new norm is equal to the unweighted one,
 
-    :math:`||a||_{w, \infty} := ||a||_\infty`,
+    :math:`\lVert a\\rVert_{w, \infty} := \lVert a\\rVert_\infty`,
 
     otherwise it is
 
-    :math:`||a||_{w, p} := ||w^{1/p} * a||_p`.
+    :math:`\lVert a\\rVert_{w, p} := \lVert w^{1/p} \odot a\\rVert_p`.
 
     The vector may only have positive entries, otherwise it does not
     define an inner product or norm, respectively. This is not checked
@@ -1847,21 +1821,23 @@ class FnVectorWeighting(_FnWeighting):
         ----------
         vector : array-like, one-dim.
             Weighting vector of the inner product
-        exponent : positive float
+        exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
             If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
             are allowed.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-            Can only be used if `exponent` is 2.0.
+            Can only be used if :obj:`exponent` is 2.0.
         """
         super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
         self._vector = np.asarray(vector)
@@ -1886,9 +1862,9 @@ class FnVectorWeighting(_FnWeighting):
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is an `FnVectorWeighting` instance with
-            **identical** vector, `False` otherwise.
+        equals : `bool`
+            `True` if other is an :class:`FnVectorWeighting` instance
+            with **identical** vector, `False` otherwise.
 
         See also
         --------
@@ -1902,16 +1878,16 @@ class FnVectorWeighting(_FnWeighting):
                 self.exponent == other.exponent)
 
     def equiv(self, other):
-        """Test if `other` is an equivalent weighting.
+        """Test if other is an equivalent weighting.
 
         Returns
         -------
-        equivalent : bool
-            `True` if `other` is an `FnWeighting` instance which
-            yields the same result as this inner product for any
+        equivalent : `bool`
+            `True` if :obj:`other` is an :class:`FnWeighting` instance
+            which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
-            product and `other`.
+            product and :obj:`other`.
         """
         # Optimization for equality
         if self == other:
@@ -1931,12 +1907,12 @@ class FnVectorWeighting(_FnWeighting):
 
         Parameters
         ----------
-        x1, x2 : `Fn.Vector`
+        x1, x2 : :class:`Fn.Vector`
             Vectors whose inner product is calculated
 
         Returns
         -------
-        inner : float or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
@@ -1964,7 +1940,7 @@ class FnVectorWeighting(_FnWeighting):
             The norm of the provided vector
         """
         if self.exponent == 2.0:
-            return super().norm(x)
+            return self.inner(x, x)  # TODO: optimize?
         elif self.exponent == float('inf'):
             return _pnorm_default(x, float('inf'))
         else:
@@ -1992,24 +1968,23 @@ class FnVectorWeighting(_FnWeighting):
 
 class FnConstWeighting(_FnWeighting):
 
-    """Weighting of `Fn` by a constant.
+    """Weighting of :class:`Fn` by a constant.
 
-    For exponent 2.0, a new weighted inner product with constant `c`
-    is defined as
+    For exponent 2.0, a new weighted inner product with constant
+    :math:`c` is defined as
 
-    :math:`<a, b>_c := c * b^H a`
+    :math:`\langle a, b\\rangle_c := c\ b^H a`
 
-    with :math:`b^H` standing for transposed complex conjugate, and
-    `w * a` being element-wise multiplication.
+    with :math:`b^H` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent `inf`, the new norm is equal to the unweighted one,
+    exponent ``inf``, the new norm is equal to the unweighted one,
 
-    :math:`||a||_{c, \infty} := ||a||_\infty`,
+    :math:`\lVert a\\rVert_{c, \infty} := \lVert a\\rVert_\infty`,
 
     otherwise it is
 
-    :math:`||a||_{c, p} := c^{1/p} * ||a||_p`.
+    :math:`\lVert a\\rVert_{c, p} := c^{1/p}  \lVert a\\rVert_p`.
 
     The constant `c` must be positive.
     """
@@ -2019,21 +1994,23 @@ class FnConstWeighting(_FnWeighting):
 
         Parameters
         ----------
-        constant : positive float
+        constant : positive `float`
             Weighting constant of the inner product.
-        exponent : positive float
+        exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-            Can only be used if `exponent` is 2.0.
+            Can only be used if :obj:`exponent` is 2.0.
         """
         super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
         self._const = float(constant)
@@ -2050,8 +2027,8 @@ class FnConstWeighting(_FnWeighting):
 
         Returns
         -------
-        equal : bool
-            `True` if `other` is an `FnConstWeighting`
+        equal : `bool`
+            `True` if other is an :class:`FnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
         if other is self:
@@ -2063,17 +2040,16 @@ class FnConstWeighting(_FnWeighting):
                 self.exponent == other.exponent)
 
     def equiv(self, other):
-        """Test if `other` is an equivalent weighting.
+        """Test if other is an equivalent weighting.
 
         Returns
         -------
-        equivalent : bool
-            `True` if `other` is an `FnWeighting` instance which
+        equivalent : `bool`
+            `True` if other is an :class:`FnWeighting` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
-            if `other` is an `FnConstWeighting` instance, otherwise
-            by entry-wise comparison of this inner product's constant
-            with the matrix of `other`.
+            if :obj:`other` is an :class:`FnConstWeighting` instance,
+            otherwise the ``equiv()`` method of :obj:`other` is called.
         """
         if isinstance(other, FnConstWeighting):
             return self == other
@@ -2087,12 +2063,12 @@ class FnConstWeighting(_FnWeighting):
 
         Parameters
         ----------
-        x1, x2 : `Fn.Vector`
+        x1, x2 : :class:`Fn.Vector`
             Vectors whose inner product is calculated
 
         Returns
         -------
-        inner : float or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
@@ -2108,12 +2084,12 @@ class FnConstWeighting(_FnWeighting):
 
         Parameters
         ----------
-        x1 : `Fn.Vector`
+        x1 : :class:`Fn.Vector`
             Vector whose norm is calculated
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The norm of the vector
         """
         if self.exponent == 2.0:
@@ -2129,12 +2105,12 @@ class FnConstWeighting(_FnWeighting):
 
         Parameters
         ----------
-        x1, x2 : `Fn.Vector`
+        x1, x2 : :class:`Fn.Vector`
             Vectors whose mutual distance is calculated
 
         Returns
         -------
-        dist : float
+        dist : `float`
             The distance between the vectors
         """
         if self._dist_using_inner:
@@ -2173,11 +2149,11 @@ class FnConstWeighting(_FnWeighting):
 
 class _FnNoWeighting(FnConstWeighting):
 
-    """Weighting of `Fn` with constant 1.
+    """Weighting of :class:`Fn` with constant 1.
 
     For exponent 2.0, the unweighted inner product is defined as
 
-    :math:`<a, b> := b^H a`
+    :math:`\langle a, b\\rangle := b^H a`
 
     with :math:`b^H` standing for transposed complex conjugate.
 
@@ -2193,10 +2169,12 @@ class _FnNoWeighting(FnConstWeighting):
             dist_using_inner = kwargs.pop('dist_using_inner', False)
         elif len(args) == 1:
             exponent = args[0]
+            args = args[1:]
             dist_using_inner = kwargs.pop('dist_using_inner', False)
         else:
             exponent = args[0]
             dist_using_inner = args[1]
+            args = args[2:]
 
         if exponent == 2.0 and not dist_using_inner:
             if not cls._instance:
@@ -2210,21 +2188,21 @@ class _FnNoWeighting(FnConstWeighting):
 
         Parameters
         ----------
-        exponent : positive float
+        exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
-            are allowed.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-            Can only be used if `exponent` is 2.0.
+            Can only be used if :obj:`exponent` is 2.0.
         """
         super().__init__(1.0, exponent=exponent,
                          dist_using_inner=dist_using_inner)
@@ -2250,33 +2228,37 @@ class _FnNoWeighting(FnConstWeighting):
 
 class _FnCustomInnerProduct(_FnWeighting):
 
-    """Custom inner product on `Fn`."""
+    """Custom inner product on :class:`Fn`."""
 
     def __init__(self, inner, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        inner : callable
+        inner : `callable`
             The inner product implementation. It must accept two
-            `Fn.Vector` arguments, return a complex number and
-            satisfy the following conditions for all vectors `x`,
-            `y` and `z` and scalars `s`:
+            :class:`Fn.Vector` arguments, return a element from
+            the field of the space (real or complex number) and
+            satisfy the following conditions for all vectors
+            :math:`x, y, z` and scalars :math:`s`:
 
-             - `inner(x, y) == conjugate(inner(y, x))`
-             - `inner(s * x, y) == s * inner(x, y)`
-             - `inner(x + z, y) == inner(x, y) + inner(z, y)`
-             - `inner(x, x) == 0` (approx.) only if `x == 0`
-               (approx.)
+            - :math:`\langle x,y\\rangle =
+              \overline{\langle y,x\\rangle}`
+            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
+            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
+              \langle z,y\\rangle`
+            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
         """
         super().__init__(exponent=2.0, dist_using_inner=dist_using_inner)
 
@@ -2291,12 +2273,12 @@ class _FnCustomInnerProduct(_FnWeighting):
         return self._inner_impl
 
     def __eq__(self, other):
-        """`inner.__eq__(other) <==> inner == other`.
+        """inner.__eq__(other) <==> inner == other.
 
         Returns
         -------
-        equal : bool
-            `True` if `other` is an `FnCustomInnerProduct`
+        equal : `bool`
+            `True` if other is an :class:`FnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
         # TODO: make symmetric
@@ -2319,22 +2301,26 @@ class _FnCustomInnerProduct(_FnWeighting):
 
 class _FnCustomNorm(_FnWeighting):
 
-    """Custom norm on `Fn`, removes `inner`."""
+    """Custom norm on :class:`Fn`, removes ``inner``."""
 
     def __init__(self, norm):
         """Initialize a new instance.
 
         Parameters
         ----------
-        norm : callable
-            The norm implementation. It must accept an `Fn.Vector`
-            argument, return a `RealNumber` and satisfy the
-            following properties:
+        norm : `callable`
+            The norm implementation. It must accept an
+            :class:`Fn.Vector` argument, return a
+            :class:`RealNumber` and satisfy the following
+            conditions for all vectors :math:`x, y` and scalars
+            :math:`s`:
 
-            - `norm(x) >= 0`
-            - `norm(x) == 0` (approx.) only if `x == 0` (approx.)
-            - `norm(s * x) == abs(s) * norm(x)` for `s` scalar
-            - `norm(x + y) <= norm(x) + norm(y)`
+            - :math:`\lVert x\\rVert \geq 0`
+            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
+            - :math:`\lVert s x\\rVert = \lvert s \\rvert
+              \lVert x\\rVert`
+            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
+              \lVert y\\rVert`.
         """
         super().__init__(exponent=1.0, dist_using_inner=False)
 
@@ -2353,8 +2339,8 @@ class _FnCustomNorm(_FnWeighting):
 
         Returns
         -------
-        equal : bool
-            `True` if `other` is an `FnCustomNorm`
+        equal : `bool`
+            `True` if other is an :class:`FnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
         # TODO: make symmetric
@@ -2374,23 +2360,23 @@ class _FnCustomNorm(_FnWeighting):
 
 class _FnCustomDist(_FnWeighting):
 
-    """Custom distance on `Fn`, removes `norm` and `inner`."""
+    """Custom distance on :class:`Fn`, removes ``norm`` and ``inner``."""
 
     def __init__(self, dist):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dist : callable
+        dist : `callable`
             The distance function defining a metric on :math:`F^n`.
-            It must accept two `Fn.Vector` arguments and fulfill the
-            following conditions for any vectors `x`, `y` and `z`:
+            It must accept two :class:`Fn.Vector` arguments and
+            fulfill the following mathematical conditions for any
+            three vectors :math:`x, y, z`:
 
-            - `dist(x, y) == dist(y, x)`
-            - `dist(x, y) >= 0`
-            - `dist(x, y) == 0` (approx.) if and only if `x == y`
-              (approx.)
-            - `dist(x, y) <= dist(x, z) + dist(z, y)`
+            - :math:`d(x, y) = d(y, x)`
+            - :math:`d(x, y) \geq 0`
+            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
+            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
         """
         super().__init__(exponent=1.0, dist_using_inner=False)
 
@@ -2417,8 +2403,8 @@ class _FnCustomDist(_FnWeighting):
 
         Returns
         -------
-        equal : bool
-            `True` if `other` is an `FnCustomDist`
+        equal : `bool`
+            `True` if other is an :class:`FnCustomDist`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, _FnCustomDist) and

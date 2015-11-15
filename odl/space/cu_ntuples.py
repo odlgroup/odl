@@ -43,7 +43,7 @@ def _get_int_type():
     elif np.dtype(np.int).itemsize == 8:
         return 'CudaVectorInt64'
     else:
-        raise NotImplementedError("int size not implemented")
+        return 'CudaVectorIntNOT_AVAILABLE'
 
 
 def _add_if_exists(dtype, name):
@@ -1588,12 +1588,14 @@ class _CudaFnCustomDist(_CudaFnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-try:
-    CudaRn(1).element()
-except (MemoryError, RuntimeError) as err:
-    print(err)
-    raise ImportError('Your GPU seems to be misconfigured. Skipping '
-                      'CUDA-dependent modules.')
+import os
+if not os.environ.get('READTHEDOCS', None) == 'True':
+    try:
+        CudaRn(1).element()
+    except (MemoryError, RuntimeError, TypeError) as err:
+        print(err)
+        raise ImportError('Your GPU seems to be misconfigured. Skipping '
+                          'CUDA-dependent modules.')
 
 
 if __name__ == '__main__':
