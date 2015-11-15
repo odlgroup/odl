@@ -905,6 +905,117 @@ def test_matrix_dist_squared(fn):
     assert almost_equal(result, true_result)
 
 
+def test_vector_init():
+    rn = Rn(5)
+    weight_vec = _pos_array(rn)
+
+    FnVectorWeighting(weight_vec)
+    FnVectorWeighting(rn.element(weight_vec))
+
+
+def test_vector_vector():
+    rn = Rn(5)
+    weight_vec = _pos_array(rn)
+    weight_elem = rn.element(weight_vec)
+
+    weighting_vec = FnVectorWeighting(weight_vec)
+    weighting_elem = FnVectorWeighting(weight_elem)
+
+    assert isinstance(weighting_vec.vector, np.ndarray)
+    assert isinstance(weighting_elem.vector, Fn.Vector)
+
+
+def test_vector_isvalid():
+    rn = Rn(5)
+    weight_vec = _pos_array(rn)
+    weighting_vec = FnVectorWeighting(weight_vec)
+
+    assert weighting_vec.vector_is_valid()
+
+    # Invalid
+    weight_vec[0] = 0
+    weighting_vec = FnVectorWeighting(weight_vec)
+    assert not weighting_vec.vector_is_valid()
+
+
+def test_vector_equals():
+    rn = Rn(5)
+    weight_vec = _pos_array(rn)
+    weight_elem = rn.element(weight_vec)
+
+    weighting_vec = FnVectorWeighting(weight_vec)
+    weighting_vec2 = FnVectorWeighting(weight_vec)
+    weighting_elem = FnVectorWeighting(weight_elem)
+    weighting_elem2 = FnVectorWeighting(weight_elem)
+
+    assert weighting_vec == weighting_vec2
+    assert weighting_vec != weighting_elem
+    assert weighting_elem == weighting_elem2
+
+
+def test_vector_inner():
+    rn = Rn(5)
+    xarr, yarr, x, y = _vectors(rn, 2)
+
+    weight_vec = _pos_array(rn)
+    weighting_vec = FnVectorWeighting(weight_vec)
+
+    true_inner = np.vdot(yarr, xarr * weight_vec)
+
+    assert almost_equal(weighting_vec.inner(x, y), true_inner)
+
+    # Same with free function
+    inner_vec = weighted_inner(weight_vec)
+
+    assert almost_equal(inner_vec(x, y), true_inner)
+
+    # Exponent != 2 -> no inner product, should raise
+    with pytest.raises(NotImplementedError):
+        FnVectorWeighting(weight_vec, exponent=1.0).inner(x, y)
+
+
+def test_vector_norm(exponent):
+    rn = Rn(5)
+    xarr, x = _vectors(rn)
+
+    weight_vec = _pos_array(rn)
+    weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
+
+    if exponent == float('inf'):
+        # Weighting irrelevant
+        true_norm = np.linalg.norm(xarr, ord=float('inf'))
+    else:
+        true_norm = np.sum(np.abs(xarr)**exponent *
+                           weight_vec)**(1/exponent)
+
+    assert almost_equal(weighting_vec.norm(x), true_norm)
+
+    # Same with free function
+    pnorm_vec = weighted_norm(weight_vec, exponent=exponent)
+    assert almost_equal(pnorm_vec(x), true_norm)
+
+
+def test_vector_dist(exponent):
+    rn = Rn(5)
+    xarr, yarr, x, y = _vectors(rn, n=2)
+
+    weight_vec = _pos_array(rn)
+    weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
+
+    if exponent == float('inf'):
+        # Weighting irrelevant
+        true_dist = np.linalg.norm(xarr-yarr, ord=float('inf'))
+    else:
+        true_dist = np.sum(np.abs(xarr-yarr)**exponent *
+                           weight_vec)**(1/exponent)
+
+    assert almost_equal(weighting_vec.dist(x, y), true_dist)
+
+    # Same with free function
+    pdist_vec = weighted_dist(weight_vec, exponent=exponent)
+    assert almost_equal(pdist_vec(x, y), true_dist)
+
+
 def test_constant_init():
     constant = 1.5
 
