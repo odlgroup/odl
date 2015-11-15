@@ -96,31 +96,87 @@ def test_factory_cuda():
 
 
 def test_factory_dtypes():
-    space = odl.FunctionSpace(odl.Interval(0, 1))
+    real_float_dtypes = [np.float32, np.float64]
+    nonfloat_dtypes = [np.int8, np.int16, np.int32, np.int64,
+                       np.uint8, np.uint16, np.uint32, np.uint64]
+    complex_float_dtypes = [np.complex64, np.complex128]
 
-    # valid types
-    for dtype in [np.int8, np.int16, np.int32, np.int64,
-                  np.uint8, np.uint16, np.uint32, np.uint64,
-                  np.float32, np.float64]:
+    # Real
+    space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.RealNumbers())
+    invalid_dtypes = complex_float_dtypes
+
+    for dtype in real_float_dtypes:
+        discr = odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+        assert isinstance(discr.dspace, odl.Rn)
+        assert discr.dspace.element().space.dtype == dtype
+
+    for dtype in nonfloat_dtypes:
         discr = odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
         assert isinstance(discr.dspace, odl.Fn)
         assert discr.dspace.element().space.dtype == dtype
 
-    # invalid types
-    for dtype in [np.complex64, np.complex128]:
+    for dtype in invalid_dtypes:
+        with pytest.raises(TypeError):
+            odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+
+    # Complex
+    space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
+    invalid_dtypes = real_float_dtypes + nonfloat_dtypes
+
+    for dtype in complex_float_dtypes:
+        discr = odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+        assert isinstance(discr.dspace, odl.Cn)
+        assert discr.dspace.element().space.dtype == dtype
+
+    for dtype in invalid_dtypes:
         with pytest.raises(TypeError):
             odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
 
 
 @skip_if_no_cuda
 def test_factory_dtypes_cuda():
-    space = odl.FunctionSpace(odl.Interval(0, 1))
+    real_float_dtypes = [np.float32, np.float64]
+    nonfloat_dtypes = [np.int8, np.int16, np.int32, np.int64,
+                       np.uint8, np.uint16, np.uint32, np.uint64]
+    complex_float_dtypes = [np.complex64, np.complex128]
 
-    # valid types
-    for dtype in odl.space.cu_ntuples.CUDA_DTYPES:
-        discr = odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
-        assert isinstance(discr.dspace, odl.CudaFn)
-        assert discr.dspace.element().space.dtype == dtype
+    # Real
+    space = odl.FunctionSpace(odl.Interval(0, 1), odl.RealNumbers())
+    invalid_dtypes = complex_float_dtypes
+
+    for dtype in real_float_dtypes:
+        if dtype not in odl.CUDA_DTYPES:
+            with pytest.raises(TypeError):
+                odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+        else:
+            discr = odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+            assert isinstance(discr.dspace, odl.CudaRn)
+            assert discr.dspace.element().space.dtype == dtype
+
+    for dtype in nonfloat_dtypes:
+        if dtype not in odl.CUDA_DTYPES:
+            with pytest.raises(TypeError):
+                odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+        else:
+            discr = odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+            assert isinstance(discr.dspace, odl.CudaFn)
+            assert discr.dspace.element().space.dtype == dtype
+
+    for dtype in invalid_dtypes:
+        with pytest.raises(TypeError):
+            odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+
+    # Complex (not implemented)
+    space = odl.FunctionSpace(odl.Interval(0, 1), odl.ComplexNumbers())
+    invalid_dtypes = real_float_dtypes + nonfloat_dtypes
+
+    for dtype in complex_float_dtypes:
+        with pytest.raises(NotImplementedError):
+            odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+
+    for dtype in invalid_dtypes:
+        with pytest.raises(TypeError):
+            odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
 
 
 def test_factory_nd():
