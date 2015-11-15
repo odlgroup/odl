@@ -19,11 +19,3 @@ odl.operator.operator module
     :members:
     :undoc-members:
     :show-inheritance:
-
-odl.operator.solvers module
----------------------------
-
-.. automodule:: odl.operator.solvers
-    :members:
-    :undoc-members:
-    :show-inheritance:

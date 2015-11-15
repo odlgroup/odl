@@ -90,20 +90,6 @@ Default (standard) operators (modlule :mod:`~odl.operator.default_ops`)
 |:class:`MultiplyOperator`  |Multiplication of two space elements, defined as |
 |                           |``(x, y)`` --> ``x * y``                         |
 +---------------------------+-------------------------------------------------+
-
-Equation system solvers (module :mod:`~odl.operator.solvers`)
-=============================================================
-
-+------------------------------------------------------+-------------------------------+
-|Name                                                  |Description                    |
-+======================================================+===============================+
-|:func:`~odl.operator.solvers.landweber()`             |Landweber's iterative method   |
-+------------------------------------------------------+-------------------------------+
-|:func:`~odl.operator.solvers.conjugate_gradient()`    |Conjugate gradient method for  |
-|                                                      |the normal equation            |
-+------------------------------------------------------+-------------------------------+
-|:func:`~odl.operator.solvers.gauss_newton()`          |Gauss-Newton iterative method  |
-+------------------------------------------------------+-------------------------------+
 """
 
 from __future__ import absolute_import
