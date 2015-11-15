@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -17,115 +17,61 @@
 
 """Core Spaces and set support.
 
-Abstract and concrete sets (modules `set` and `domain`)
-=======================================================
+Abstract and concrete sets (modules :mod:`~odl.set.sets` and :mod:`~odl.set.domain`)
+====================================================================================
 
-Simple sets (module `set`)
---------------------------
+Simple sets (module :mod:`~odl.set.sets`)
+-----------------------------------------
 
-+--------------------+-------------------------------------------------+
-|Name                |Description                                      |
-+====================+=================================================+
-|`Set`               |**Abstract** base class for mathematical sets    |
-+--------------------+-------------------------------------------------+
-|`EmptySet`          |Empty set, contains only `None`                  |
-+--------------------+-------------------------------------------------+
-|`UniversalSet`      |Contains everything                              |
-+--------------------+-------------------------------------------------+
-|`Integers`          |Set of integers                                  |
-+--------------------+-------------------------------------------------+
-|`RealNumbers`       |Set of real numbers                              |
-+--------------------+-------------------------------------------------+
-|`ComplexNumbers`    |Set of complex numbers                           |
-+--------------------+-------------------------------------------------+
-|`Strings`           |Set of fixed-length strings                      |
-+--------------------+-------------------------------------------------+
-|`CartesianProduct`  |Set of tuples with the i-th entry being an       |
-|                    |element of the i-th factor (set)                 |
-+--------------------+-------------------------------------------------+
++---------------------------+-------------------------------------------------+
+|Name                       |Description                                      |
++===========================+=================================================+
+|:class:`Set`               |**Abstract** base class for mathematical sets    |
++---------------------------+-------------------------------------------------+
+|:class:`EmptySet`          |Empty set, contains only `None`                  |
++---------------------------+-------------------------------------------------+
+|:class:`UniversalSet`      |Contains everything                              |
++---------------------------+-------------------------------------------------+
+|:class:`Integers`          |Set of integers                                  |
++---------------------------+-------------------------------------------------+
+|:class:`RealNumbers`       |Set of real numbers                              |
++---------------------------+-------------------------------------------------+
+|:class:`ComplexNumbers`    |Set of complex numbers                           |
++---------------------------+-------------------------------------------------+
+|:class:`Strings`           |Set of fixed-length strings                      |
++---------------------------+-------------------------------------------------+
+|:class:`CartesianProduct`  |Set of tuples with the i-th entry being an       |
+|                           |element of the i-th factor (set)                 |
++---------------------------+-------------------------------------------------+
 
-More complex sets intended as function domains (module `domain`)
-----------------------------------------------------------------
+More complex sets intended as function domains (module :mod:`~odl.set.domain`)
+------------------------------------------------------------------------------
 
-+-------------------+--------------------------------------------------+
-|Name               |Description                                       |
-+===================+==================================================+
-|`IntervalProd`     |n-dimensional Cartesian product of intervals      |
-|                   |forming a rectangular box in :math_`R^n`          |
-+-------------------+--------------------------------------------------+
-|`Interval`         |1-D special case                                  |
-+-------------------+--------------------------------------------------+
-|`Rectangle`        |2-D special case                                  |
-+-------------------+--------------------------------------------------+
-|`Cuboid`           |3-D special case                                  |
-+-------------------+--------------------------------------------------+
++---------------------+--------------------------------------------------+
+|Name                 |Description                                       |
++=====================+==================================================+
+|:class:`IntervalProd`|n-dimensional Cartesian product of intervals      |
+|                     |forming a rectangular box in :math_`R^n`          |
++---------------------+--------------------------------------------------+
+|:class:`Interval`    |1-D special case                                  |
++---------------------+--------------------------------------------------+
+|:class:`Rectangle`   |2-D special case                                  |
++---------------------+--------------------------------------------------+
+|:class:`Cuboid`      |3-D special case                                  |
++---------------------+--------------------------------------------------+
 
 
-Abstract vector spaces (modules `space`, `pspace`)
-==================================================
+Abstract vector spaces (modules :mod:`~odl.set.space`, :mod:`~odl.set.pspace`)
+==============================================================================
 
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|`LinearSpace`         |**Abstract** base class for vector spaces over |
-|                      |the real or complex numbers with addition and  |
+|:class:`LinearSpace`  |**Abstract** base class for vector spaces over |
+|                      |the real or `complex` numbers with addition and|
 |                      |scalar multiplication                          |
 +----------------------+-----------------------------------------------+
-|`LinearProductSpace`  |Cartesian product of linear spaces             |
-+----------------------+----------------+------------------------------+
-
-Concrete vector spaces (modules 'ntuples', 'cu_ntuples', 'default')
-===================================================================
-
-:math:`R^n` type spaces, NumPy implementation (module 'ntuples')
-----------------------------------------------------------------
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-|                      |                                               |
-+======================+===============================================+
-|`NTuplesBase`         |Abstract base class for sets of n-tuples of    |
-|                      |various types                                  |
-+----------------------+-----------------------------------------------+
-|`Ntuples`             |Set of n-tuples of almost arbitrary type       |
-+----------------------+-----------------------------------------------+
-|`FnBase`              |Abstract base class for spaces of n-tuples over|
-|                      |a field                                        |
-+----------------------+-----------------------------------------------+
-|`Fn`                  |Space of n-tuples over a field allowing any    |
-|                      |scalar data type                               |
-+----------------------+-----------------------------------------------+
-|`Cn`                  |Space of n-tuples of complex numbers           |
-+----------------------+-----------------------------------------------+
-|`Rn`                  |Space of n-tuples of real numbers              |
-+----------------------+-----------------------------------------------+
-
-:math:`R^n` type spaces, CUDA implementation (module 'cu_ntuples')
-------------------------------------------------------------------
-
-Requires the compiled extension 'odlpp'
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`CudaNtuples`         |Set of n-tuples of almost arbitrary type       |
-+----------------------+-----------------------------------------------+
-|`CudaFn`              |Space of n-tuples over a field allowing any    |
-|                      |scalar data type                               |
-+----------------------+-----------------------------------------------+
-|`CudaCn`              |(Space of n-tuples of complex numbers) (TODO)  |
-+----------------------+-----------------------------------------------+
-|`CudaRn`              |Space of n-tuples of real numbers              |
-+----------------------+-----------------------------------------------+
-
-Function spaces (module 'default')
------------------------------------
-
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`L2`                  |Square-integrable functions taking real or     |
-|                      |complex values                                 |
+|:class:`ProductSpace` |Cartesian product of linear spaces             |
 +----------------------+-----------------------------------------------+
 """
 

@@ -35,11 +35,3 @@ odl.space.fspace module
     :members:
     :undoc-members:
     :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: odl.space
-    :members:
-    :undoc-members:
-    :show-inheritance:

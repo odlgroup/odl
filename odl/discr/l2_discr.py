@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -55,14 +55,14 @@ class DiscreteL2(Discretization):
 
         Parameters
         ----------
-        l2space : `L2`
+        l2space : :class:`~odl.L2`
             The continuous space to be discretized
-        dspace : `FnBase`, same `field` as `l2space`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`, same :attr:`field` as ``l2space``
             The space of elements used for data storage
-        grid : `TensorGrid`
+        grid : :class:`~odl.TensorGrid`
             The sampling grid for the discretization. Must be contained
-            in `l2space.domain`.
-        interp : string, optional
+            in ``l2space.domain``.
+        interp : `string`, optional
             The interpolation type to be used for discretization.
 
             'nearest' : use nearest-neighbor interpolation (default)
@@ -78,7 +78,7 @@ class DiscreteL2(Discretization):
             raise TypeError('{} is not an `L2` type space.'.format(l2space))
 
         if not isinstance(l2space.domain, IntervalProd):
-            raise TypeError('L2 space domain {} is not an `IntervalProd` '
+            raise TypeError('L2 space domain {} is not an :class:`IntervalProd` '
                             'instance.'.format(l2space.domain))
 
         interp = str(interp).lower()
@@ -98,21 +98,21 @@ class DiscreteL2(Discretization):
         self._interp = interp
 
     def element(self, inp=None):
-        """Create an element from `inp` or from scratch.
+        """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the `element()` method of either `dspace`
-            or `uspace`.
+            recognizable by the :meth:`~odl.LinearSpace.element` method of 
+            either :attr:`dspace` or :attr:`uspace`.
 
         Returns
         -------
-        element : `DiscreteL2.Vector`
+        element : :class:`DiscreteL2.Vector`
             The discretized element, calculated as
-            `dspace.element(inp)` or
-            `restriction(uspace.element(inp))`, tried in this order.
+            ``dspace.element(inp)`` or
+            ``restriction(uspace.element(inp))``, tried in this order.
         """
         if inp is None:
             return self.Vector(self, self.dspace.element())
@@ -148,7 +148,7 @@ class DiscreteL2(Discretization):
         return self.grid.points(order=self.order)
 
     def __repr__(self):
-        """l2.__repr__() <==> repr(l2)."""
+        """``l2.__repr__() <==> repr(l2).``"""
         # Check if the factory repr can be used
         if (uniform_sampling(self.uspace.domain, self.grid.shape,
                              as_midp=True) == self.grid):
@@ -188,14 +188,14 @@ class DiscreteL2(Discretization):
 
     class Vector(Discretization.Vector):
 
-        """Representation of a `DiscreteL2` element."""
+        """Representation of a :class:`DiscreteL2` element."""
 
         def asarray(self, out=None):
             """Extract the data of this array as a numpy array.
 
             Parameters
             ----------
-            out : `ndarray`, Optional (default: `None`)
+            out : `numpy.ndarray`, Optional (default: `None`)
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype and
                 shape.
@@ -245,7 +245,7 @@ class DiscreteL2(Discretization):
             ----------
             indices : int or slice
                 The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
+            values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
                 If `indices` is an `int`, `value` must be single value.
@@ -277,7 +277,7 @@ class DiscreteL2(Discretization):
 
             Parameters
             ----------
-            method : string, optional
+            method : `string`, optional
                 1d methods:
 
                 'plot' : graph plot
@@ -292,7 +292,7 @@ class DiscreteL2(Discretization):
 
                 'wireframe', 'plot_wireframe' : surface plot
 
-            title : string, optional
+            title : `string`, optional
                 Set the title of the figure
             kwargs : {'figsize', 'saveto', ...}
                 Extra keyword arguments passed on to display method
@@ -319,13 +319,13 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     Parameters
     ----------
-    l2space : `L2`
+    l2space : :class:`L2`
         Continuous :math:`L^2` type space. Its domain must be an
-        `IntervalProd` instance.
-    nsamples : int or tuple of int
+        :class:`IntervalProd` instance.
+    nsamples : `int` or `tuple` of `int`
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
-    interp : string, optional
+    interp : `string`, optional
             Interpolation type to be used for discretization.
 
             'nearest' : use nearest-neighbor interpolation (default)
@@ -336,7 +336,7 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     kwargs : {'order', 'dtype', 'weighting'}
             'order' : {'C', 'F'}  (Default: 'C')
                 Axis ordering in the data storage
-            'dtype' : type
+            'dtype' : dtype
                 Data type for the discretized space
 
                 Default for 'numpy': 'float64' / 'complex128'
@@ -351,14 +351,14 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     Returns
     -------
-    l2discr : `DiscreteL2`
-        The uniformly discretized L2 space
+    l2discr : :class:`DiscreteL2`
+        The uniformly discretized :class:`L2` space
     """
     if not isinstance(l2space, L2):
         raise TypeError('space {!r} is not an L2 instance.'.format(l2space))
 
     if not isinstance(l2space.domain, IntervalProd):
-        raise TypeError('domain {!r} of the L2 space is not an `IntervalProd` '
+        raise TypeError('domain {!r} of the L2 space is not an :class:`IntervalProd` '
                         'instance.'.format(l2space.domain))
 
     if impl == 'cuda' and not CUDA_AVAILABLE:
