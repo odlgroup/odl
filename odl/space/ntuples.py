@@ -1341,17 +1341,20 @@ class MatVecOperator(Operator):
 def _weighting(weight, exponent, dist_using_inner=False):
     if np.isscalar(weight):
         weighting = FnConstWeighting(
-            weight, exponent, dist_using_inner=dist_using_inner)
+            weight, exponent=exponent, dist_using_inner=dist_using_inner)
+    elif isinstance(weight, sp.sparse.spmatrix):
+        weighting = FnMatrixWeighting(
+            weight, exponent=exponent, dist_using_inner=dist_using_inner)
     else:
         weight_ = np.asarray(weight)
         if weight_.dtype == object:
             raise ValueError('bad weight {}'.format(weight))
         if weight_.ndim == 1:
             weighting = FnVectorWeighting(
-                weight_, exponent, dist_using_inner=dist_using_inner)
+                weight_, exponent=exponent, dist_using_inner=dist_using_inner)
         elif weight_.ndim == 2:
             weighting = FnMatrixWeighting(
-                weight_, exponent, dist_using_inner=dist_using_inner)
+                weight_, exponent=exponent, dist_using_inner=dist_using_inner)
         else:
             raise ValueError('array-like weight must have 1 or 2 dimensions, '
                              'but {} has {} dimensions.'
@@ -1655,7 +1658,7 @@ class FnMatrixWeighting(_FnWeighting):
         if self == other:
             return True
 
-        elif self.exponent != other.exponent:
+        elif self.exponent != getattr(other, 'exponent', -1):
             return False
 
         elif isinstance(other, FnMatrixWeighting):
@@ -1678,10 +1681,17 @@ class FnMatrixWeighting(_FnWeighting):
                     return np.array_equal(self.matrix, other.matrix.todense())
                 else:
                     return np.array_equal(self.matrix, other.matrix)
+
         elif isinstance(other, FnVectorWeighting):
-            return (np.array_equiv(self.matrix.diagonal(), other.vector) and
-                    np.array_equal(self.matrix.asformat('dia').offsets,
-                                   np.array([0])))
+            if self.matrix_issparse:
+                return (np.array_equiv(self.matrix.diagonal(),
+                                       other.vector) and
+                        np.array_equal(self.matrix.asformat('dia').offsets,
+                                       np.array([0])))
+            else:
+                return np.array_equal(
+                    self.matrix, other.vector * np.eye(self.matrix.shape[0]))
+
         elif isinstance(other, FnConstWeighting):
             if self.matrix_issparse:
                 return (np.array_equiv(self.matrix.diagonal(), other.const) and
@@ -1906,7 +1916,7 @@ class FnVectorWeighting(_FnWeighting):
         elif isinstance(other, FnConstWeighting):
             return np.array_equiv(self.vector, other.const)
         else:
-            return False
+            return np.array_equal(self.vector, other.vector)
 
     def inner(self, x1, x2):
         """Calculate the vector weighted inner product of two vectors.
@@ -2023,8 +2033,10 @@ class FnConstWeighting(_FnWeighting):
         """
         super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
         self._const = float(constant)
-        if self._const <= 0:
-            raise ValueError('constant {} is not positive'.format(constant))
+        if self.const <= 0:
+            raise ValueError('constant {} is not positive.'.format(constant))
+        if not np.isfinite(self.const):
+            raise ValueError('constant {} is invalid.'.format(constant))
 
     @property
     def const(self):
