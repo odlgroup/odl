@@ -15,95 +15,86 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Core Operator support for ODL.
+"""Mathematical operators in ODL.
 
-Operators (module `operator`)
-=============================
+Operators in ODL are represented by the abstract :class:`Operator`
+class. As an *abstract class*, it cannot be used directly but must be
+subclassed for concrete implementation. To define your own operator,
+you start by writing::
 
-Core operators
---------------
+    class MyOperator(odl.Operator):
+        ...
 
-+-----------------------+----------------------------------------------+
-|Class name             |Description                                   |
-+=======================+==============================================+
-|`Operator`             |**Abstract** basic class for (mathematical)   |
-|                       |operators                                     |
-+-----------------------+----------------------------------------------+
+:class:`Operator` has a couple of *abstract methods* which need to be
+explicitly overridden by any subclass, namely
 
-Operator compositions, sums etc.
---------------------------------
+:attr:`domain`: :class:`Set`
+    Set of elements to which the operator can be applied
+:attr:`range`: :class:`Set`
+    Set in which the operator takes values
 
-+----------------------------+-----------------------------------------+
-|Class name                  |Description                              |
-+============================+=========================================+
-|`OperatorSum`               |Sum of two operators, `S = A + B`,       |
-|                            |defined as                               |
-|                            |`x` --> `(A + B)(x) = A(x) + B(x)`       |
-+----------------------------+-----------------------------------------+
-|`OperatorComp`              |Composition of two operators,            |
-|                            |`C = A o B` defined as                   |
-|                            |`x` --> `(A o B)(x) = A(B(x))`           |
-+----------------------------+-----------------------------------------+
-|`OperatorPointwiseProduct`  |Product of two operators,`P = A * B`,    |
-|                            |defined as                               |
-|                            |`x --> (A * B)(x) = A(x) * B(x)`.        |
-+----------------------------+-----------------------------------------+
-|`OperatorLeftScalarMult`    |Multiplication of an operator from left  |
-|                            |with a scalar, `L = c * A`, defined as   |
-|                            |`x --> (c * A)(x) = c * A(x)`            |
-+----------------------------+-----------------------------------------+
-|`OperatorRightScalarMult`   |Multiplication of an operator from right |
-|                            |with a scalar, `S = A * c`, defined by   |
-|                            |`x --> (A * c)(x) =  A(c * x)`           |
-+----------------------------+-----------------------------------------+
+As a simple example, you can implement the matrix multiplication
+operator
 
-Factory functions
------------------
+    :math:`\mathcal{A}: \mathbb{R^m} \\to \mathbb{R^n}, \quad
+    \mathcal{A}(x) = Ax`
 
-+-------------------+--------------------------------------------------+
-|Name               |Description                                       |
-+===================+==================================================+
-|`operator()`       |Create an `Operator` by specifying either a       |
-|                   |`call` or an `apply` method (or both) for         |
-|                   |evaluation.                                       |
-+-------------------+--------------------------------------------------+
+for a matrix :math:`A\\in \mathbb{R}^{n\\times m}` as follows::
 
-Default (standard) operators (modlule `default_ops`)
-====================================================
+    class MatVecOperator(odl.Operator):
+        def __init__(self, matrix):
+            assert isinstance(matrix, np.ndarray)
+            self.matrix = matrix
+            self.domain = odl.Rn(matrix.shape[1])
+            self.range = odl.Rn(matrix.shape[0])
 
-+--------------------+-------------------------------------------------+
-|Class name          |Description                                      |
-+====================+=================================================+
-|`ScalingOperator`   |Multiplication with a scalar `s`, defined as     |
-|                    |`x` --> `s * x`                                  |
-+--------------------+-------------------------------------------------+
-|`ZeroOperator`      |Multiplication with 0, defined as                |
-|                    |`x` --> `0 * x`                                  |
-+--------------------+-------------------------------------------------+
-|`IdentityOperator`  |Multiplication with 1, defined as                |
-|                    |`x` --> `1 * x`                                  |
-+--------------------+-------------------------------------------------+
-|`LinCombOperator`   |Linear combination of two space elements with two|
-|                    |fixed scalars `a` and `b`, defined as            |
-|                    |`(x, y)` --> `a * x + b * y`                     |
-+--------------------+-------------------------------------------------+
-|`MultiplyOperator`  |Multiplication of two space elements, defined as |
-|                    |`(x, y)` --> `x * y`                             |
-+--------------------+-------------------------------------------------+
+In addition, an :class:`Operator` needs at least one way of evaluation,
+*in-place* or *out-of-place*.
 
-Equation system solvers (module `solvers`)
-==========================================
+- In-place evaluation means that the operator is evaluated on a
+  ``domain`` element, and the result is written to an *already existing*
+  ``range`` element. To implement this behavior, create the (private)
+  :attr:`_apply()` method, in the above example::
 
-+----------------------+-----------------------------------------------+
-|Name                  |Description                                    |
-+======================+===============================================+
-|`landweber()`         |Landweber's iterative method                   |
-+----------------------+-----------------------------------------------+
-|`conjugate_gradient()`|Conjugate gradient method for the normal       |
-|                      |equation                                       |
-+----------------------+-----------------------------------------------+
-|`gauss_newton()`      |Gauss-Newton iterative method                  |
-+----------------------+-----------------------------------------------+
+    class MatVecOperator(odl.Operator):
+        ...
+        def _apply(x, out):
+            self.matrix.dot(x, out=out)
+
+  In-place evaluation is usually more efficient and should be used
+  *whenever possible*.
+
+- Out-of-place evaluation means that the
+  operator is evaluated on a ``domain`` element, and the result is
+  written to a *newly allocated* ``range`` element. To implement this
+  behavior, create the (private) :obj:`_call()` method, in the above
+  example::
+
+    class MatVecOperator(odl.Operator):
+        ...
+        def _call(x):
+            return self.matrix.dot(x)
+
+  Out-of-place evaluation is usually less efficient since it requires
+  allocation of an array and a full copy and should be *generally
+  avoided*.
+
+**Important:** Do not call these methods directly. Use the call pattern
+``operator(x)`` or ``operator(x, out=y)``, e.g.::
+
+    matrix = 2 * np.eye(3)
+    operator = MatVecOperator(matrix)
+    x = odl.Rn(3).one()
+    y = odl.Rn(3).element()
+
+    # Out-of-place evaluation
+    y = operator(x)
+
+    # In-place evaluation
+    operator(x, out=y)
+
+This public calling interface is type-checked, so the private methods
+do not need to implement type checks.
 """
 
 from __future__ import absolute_import
