@@ -47,12 +47,8 @@ if os.environ.get('READTHEDOCS', None) == 'True':
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
     requires = ''
 else:
-    requires = """
-    future >= 0.14
-    numpy >= 1.8
-    scipy >= 0.14
-    matplotlib
-    """
+    requires = open(os.path.join(os.path.dirname(__file__), 'requirements.txt')).readlines()
+    test_requires = open(os.path.join(os.path.dirname(__file__), 'test_requirements.txt')).readlines()
 
 class PyTest(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
@@ -85,8 +81,5 @@ setup(name='odl',
       tests_require=['pytest'],
       cmdclass={'test': PyTest},
       extras_require={
-          'testing': [
-              'pytest >= 2.8.0',
-              'coverage >= 4.0'
-              ]
+          'testing': test_requires
       })

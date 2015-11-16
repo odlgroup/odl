@@ -24,4 +24,5 @@ standard_library.install_aliases()
 from odl import CUDA_AVAILABLE
 collect_ignore = ['setup.py', 'run_tests.py']
 if not CUDA_AVAILABLE:
+    collect_ignore.append('odl/space/cu_ntuples.py')
     collect_ignore.append('test/space/cu_ntuples_test.py')
