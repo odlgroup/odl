@@ -74,7 +74,7 @@ def skip(app, what, name, obj, skip, options):
                      '__doc__',
                      '__module__',
                      '__dict__',
-                     '__weakref__']:
+                     '__weakref__']):
         return False
     if name in ['_multiply',
                 '_divide',
