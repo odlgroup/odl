@@ -588,6 +588,11 @@ class CudaFn(FnBase, CudaNtuples):
         else:  # all None -> no weighing
             self._space_funcs = CudaFnNoWeighting(exponent)
 
+    @property
+    def exponent(self):
+        """Exponent of the norm and distance."""
+        return self._space_funcs.exponent
+
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``, assigned to ``out``.
 
