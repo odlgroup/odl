@@ -33,8 +33,8 @@ from odl import Ntuples, Fn, Rn, Cn
 from odl.operator.operator import Operator
 from odl.set.sets import ComplexNumbers
 from odl.space.ntuples import (
-    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting, _FnNoWeighting,
-    _FnCustomInnerProduct, _FnCustomNorm, _FnCustomDist,
+    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting, FnNoWeighting,
+    FnCustomInnerProduct, FnCustomNorm, FnCustomDist,
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
@@ -137,7 +137,7 @@ def test_init():
     Ntuples(3, float)
     Ntuples(3, complex)
     Ntuples(3, 'S1')
-    
+
     # Fn
     Fn(3, int)
     Fn(3, float)
@@ -1371,14 +1371,14 @@ def test_const_dist_using_inner(fn):
 
 
 def test_noweight():
-    w = _FnNoWeighting()
-    w_same1 = _FnNoWeighting()
-    w_same2 = _FnNoWeighting(2)
-    w_same3 = _FnNoWeighting(2, False)
-    w_same4 = _FnNoWeighting(2, dist_using_inner=False)
-    w_same5 = _FnNoWeighting(exponent=2, dist_using_inner=False)
-    w_other_exp = _FnNoWeighting(exponent=1)
-    w_dist_inner = _FnNoWeighting(dist_using_inner=True)
+    w = FnNoWeighting()
+    w_same1 = FnNoWeighting()
+    w_same2 = FnNoWeighting(2)
+    w_same3 = FnNoWeighting(2, False)
+    w_same4 = FnNoWeighting(2, dist_using_inner=False)
+    w_same5 = FnNoWeighting(exponent=2, dist_using_inner=False)
+    w_other_exp = FnNoWeighting(exponent=1)
+    w_dist_inner = FnNoWeighting(dist_using_inner=True)
 
     # Singleton pattern
     for same in (w_same1, w_same2, w_same3, w_same4, w_same5):
@@ -1397,10 +1397,10 @@ def test_custom_inner(fn):
     def inner(x, y):
         return np.vdot(y, x)
 
-    w = _FnCustomInnerProduct(inner)
-    w_same = _FnCustomInnerProduct(inner)
-    w_other = _FnCustomInnerProduct(np.dot)
-    w_d = _FnCustomInnerProduct(inner, dist_using_inner=True)
+    w = FnCustomInnerProduct(inner)
+    w_same = FnCustomInnerProduct(inner)
+    w_other = FnCustomInnerProduct(np.dot)
+    w_d = FnCustomInnerProduct(inner, dist_using_inner=True)
 
     assert w == w
     assert w == w_same
@@ -1420,7 +1420,7 @@ def test_custom_inner(fn):
     assert almost_equal(w_d.dist(x, x), 0)
 
     with pytest.raises(TypeError):
-        _FnCustomInnerProduct(1)
+        FnCustomInnerProduct(1)
 
 
 def test_custom_norm(fn):
@@ -1431,9 +1431,9 @@ def test_custom_norm(fn):
     def other_norm(x):
         return np.linalg.norm(x, ord=1)
 
-    w = _FnCustomNorm(norm)
-    w_same = _FnCustomNorm(norm)
-    w_other = _FnCustomNorm(other_norm)
+    w = FnCustomNorm(norm)
+    w_same = FnCustomNorm(norm)
+    w_other = FnCustomNorm(other_norm)
 
     assert w == w
     assert w == w_same
@@ -1450,7 +1450,7 @@ def test_custom_norm(fn):
     assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
-        _FnCustomNorm(1)
+        FnCustomNorm(1)
 
 
 def test_custom_dist(fn):
@@ -1462,9 +1462,9 @@ def test_custom_dist(fn):
     def other_dist(x, y):
         return np.linalg.norm(x-y, ord=1)
 
-    w = _FnCustomDist(dist)
-    w_same = _FnCustomDist(dist)
-    w_other = _FnCustomDist(other_dist)
+    w = FnCustomDist(dist)
+    w_same = FnCustomDist(dist)
+    w_other = FnCustomDist(other_dist)
 
     assert w == w
     assert w == w_same
@@ -1481,7 +1481,7 @@ def test_custom_dist(fn):
     assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
-        _FnCustomDist(1)
+        FnCustomDist(1)
 
 
 if __name__ == '__main__':

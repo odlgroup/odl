@@ -35,8 +35,8 @@ from odl import ComplexNumbers
 from odl.space.ntuples import FnConstWeighting
 if odl.CUDA_AVAILABLE:
     from odl.space.cu_ntuples import (
-        _CudaFnNoWeighting, CudaFnConstWeighting, CudaFnVectorWeighting,
-        _CudaFnCustomInnerProduct, _CudaFnCustomNorm, _CudaFnCustomDist)
+        CudaFnNoWeighting, CudaFnConstWeighting, CudaFnVectorWeighting,
+        CudaFnCustomInnerProduct, CudaFnCustomNorm, CudaFnCustomDist)
 
 from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
                                 skip_if_no_cuda)
@@ -176,7 +176,7 @@ def test_init_spacefuncs(exponent):
     f3_elem = odl.CudaFn(3, dtype='float32', weight=weight_elem,
                          exponent=exponent)
 
-    weighting_none = _CudaFnNoWeighting(exponent=exponent)
+    weighting_none = CudaFnNoWeighting(exponent=exponent)
     weighting_const = CudaFnConstWeighting(const, exponent=exponent)
     weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
