@@ -19,6 +19,8 @@ import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 # Mock modules for Read The Docs to enable autodoc
 def mock_modules(modules):
     if sys.version_info < (3, 3):
@@ -33,7 +35,7 @@ def mock_modules(modules):
 
     sys.modules.update((mod_name, Mock()) for mod_name in modules)
 
-if os.environ.get('READTHEDOCS', None) == 'True':
+if on_rtd:
     mock_modules(['future', 'future.utils', 'scipy', 'scipy.linalg',
                   'numpy', 'numpy.linalg',
                   'numpy.distutils', 'scipy.interpolate', 
@@ -52,15 +54,18 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.pngmath',
-	'sphinx.ext.intersphinx',
     'numpydoc'
 ]
 
-#Intersphinx to get numpy targets
-intersphinx_mapping = {'python': ('http://python.readthedocs.org/en/latest/', None),
-					   'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
-					   'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-					   'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
+if not on_rtd:
+    #TODO: fix this once RTD updates their intersphinx version
+    extensions += ['sphinx.ext.intersphinx']
+
+    #Intersphinx to get numpy targets
+    intersphinx_mapping = {'python': ('http://python.readthedocs.org/en/latest/', None),
+                           'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
+                           'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+                           'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
 					   
 #Stop autodoc from skipping __init__
 def skip(app, what, name, obj, skip, options):
