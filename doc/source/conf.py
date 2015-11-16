@@ -16,35 +16,31 @@ import sys
 import os
 import shlex
 import sphinx_rtd_theme
-import odl
 
 # -- General configuration ------------------------------------------------
 
 # Mock modules for Read The Docs to enable autodoc
-MOCK_MODULES = []
+def mock_modules(modules):
+    if sys.version_info < (3, 3):
+        from mock import Mock as MagicMock
+    else:
+        from unittest.mock import MagicMock
+
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+            return Mock()
+
+    sys.modules.update((mod_name, Mock()) for mod_name in modules)
+
 if os.environ.get('READTHEDOCS', None) == 'True':
-    MOCK_MODULES += ['future', 'future.utils', 'scipy', 'scipy.linalg',
-                     'numpy', 'numpy.linalg',
-                     'numpy.distutils', 'scipy.interpolate', 
-                     'matplotlib.pyplot',
-                     'scipy.interpolate.interpnd']
-
-if not odl.CUDA_AVAILABLE:
-    MOCK_MODULES += ['odlpp', 'odlpp.odlpp_cuda']
-
-if sys.version_info < (3, 3):
-    from mock import Mock as MagicMock
-else:
-    from unittest.mock import MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return Mock()
-
-
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
+    mock_modules(['future', 'future.utils', 'scipy', 'scipy.linalg',
+                  'numpy', 'numpy.linalg',
+                  'numpy.distutils', 'scipy.interpolate', 
+                  'matplotlib.pyplot',
+                  'scipy.interpolate.interpnd',
+                  'odlpp', 'odlpp.odlpp_cuda'])
+          
 #add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
 
