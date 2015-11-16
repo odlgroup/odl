@@ -44,7 +44,6 @@ try:
     __all__ += cu_ntuples.__all__
     CUDA_AVAILABLE = True
 except ImportError as e:
-    print(ellipsis)
     CUDA_AVAILABLE = False
     CUDA_DTYPES = []
 
