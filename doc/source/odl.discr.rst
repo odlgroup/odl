@@ -1,9 +1,6 @@
 odl.discr package
 =================
 
-Submodules
-----------
-
 odl.discr.discr_mappings module
 -------------------------------
 

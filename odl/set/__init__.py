@@ -67,8 +67,8 @@ Abstract vector spaces (modules :mod:`~odl.set.space`, :mod:`~odl.set.pspace`)
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|:class:`LinearSpace`  |**Abstract** base class for vector spaces over |
-|                      |the real or `complex` numbers with addition and|
+|:class:`LinearSpace`  |Abstract base class for vector spaces over     |
+|                      |the real or complex numbers with addition and  |
 |                      |scalar multiplication                          |
 +----------------------+-----------------------------------------------+
 |:class:`ProductSpace` |Cartesian product of linear spaces             |

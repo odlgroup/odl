@@ -64,8 +64,8 @@ class TensorGrid(Set):
         kwargs : {'as_midp', 'order'}
             'as_midp' : `bool`, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of :attr:`min`, :attr:`max` and
-                :attr:`cell_sizes`.
+                This influences the behavior of :meth:`min`, :meth:`max` and
+                :meth:`cell_sizes`.
             'order' : {'C', 'F'}, optional
                 Ordering of the grid axes. 'C' means the first axis
                 varies slowest, the last axis fastest; vice versa for
@@ -600,7 +600,7 @@ class TensorGrid(Set):
                                  sparse=sparse, copy=True))
 
     def convex_hull(self):
-        """The "inner" of the grid, an :class:`IntervalProd`.
+        """The "inner" of the grid, an :class:`~odl.IntervalProd`.
 
         The convex hull of a set is the union of all line segments
         between points in the set. For a tensor grid, it is the
@@ -608,7 +608,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        chull : :class:`IntervalProd`
+        chull : :class:`~odl.IntervalProd`
             Interval product defined by the minimum and maximum of
             the grid (depends on :attr:`as_midp`)
 
@@ -747,8 +747,8 @@ class RegularGrid(TensorGrid):
         kwargs : {'as_midp'}
             'as_midp' : `bool`, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of :meth:`min`, :meth:`max` and
-                :meth:`cell_sizes`.
+                This influences the behavior of :meth:`TensorGrid.min`, 
+                :meth:`TensorGrid.max` and :meth:`TensorGrid.cell_sizes`.
 
         Examples
         --------
@@ -1069,7 +1069,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
 
     Parameters
     ----------
-    intv_prod : :class:`IntervalProd`
+    intv_prod : :class:`~odl.IntervalProd`
         Set to be sampled
     num_nodes : `int` or `tuple` of int
         Number of nodes per axis. For dimension >= 2, a tuple

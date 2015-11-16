@@ -1,9 +1,6 @@
 odl.set package
 ===============
 
-Submodules
-----------
-
 odl.set.domain module
 ---------------------
 

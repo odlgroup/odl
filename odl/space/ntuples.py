@@ -22,26 +22,6 @@ This is a default implementation of :math:`A^n` for an arbitrary set
 :math:`C^n`. The latter two each come in a basic version with vector
 multiplication only and as metric, normed, Hilbert and Euclidean space
 variants. The data is represented by NumPy arrays.
-
-List of classes
----------------
-
-+-------------+--------------+----------------------------------------+
-|Class name   |Direct        |Description                             |
-|             |Ancestors     |                                        |
-+=============+==============+========================================+
-|`Ntuples`    |`Set`         |Basic class of ``n``-tuples where each    |
-|             |              |entry is of the same type               |
-+-------------+--------------+----------------------------------------+
-|`Fn`         |`EuclideanCn` |`HilbertRn` with the standard inner     |
-|             |              |(dot) product                           |
-+-------------+--------------+----------------------------------------+
-|`Cn`         |`Ntuples`,    |`n`-tuples of `complex` numbers with      |
-|             |`Algebra`     |vector-vector multiplication            |
-+-------------+--------------+----------------------------------------+
-|`Rn`         |`Cn`          |`n`-tuples of real numbers with         |
-|             |              |vector-vector multiplication            |
-+-------------+--------------+----------------------------------------+
 """
 
 # Imports for common Python 2/3 codebase
@@ -62,13 +42,13 @@ import platform
 
 # ODL imports
 from odl.operator.operator import Operator
-from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
+from odl.space.base_ntuples import NtuplesBase, FnBase, FnWeightingBase
 from odl.util.utility import dtype_repr
 from odl.util.utility import is_real_dtype, is_complex_dtype
 
 
 __all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
-           'MatVecOperator',
+           'MatVecOperator', 'FnWeighting',
            'FnMatrixWeighting', 'FnVectorWeighting', 'FnConstWeighting',
            'weighted_dist', 'weighted_norm', 'weighted_inner')
 
@@ -92,10 +72,11 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
 
 
 class Ntuples(NtuplesBase):
+
     """The set of n-tuples of arbitrary type.
 
-    See also
-    --------
+    Notes
+    -----
     See the module documentation for attributes, methods etc.
     """
 
@@ -120,7 +101,7 @@ class Ntuples(NtuplesBase):
 
         Returns
         -------
-        element : :class:`NTuples.Vector`
+        element : :class:`Ntuples.Vector`
             The new element created (from ``inp``).
 
         Notes
@@ -179,17 +160,17 @@ class Ntuples(NtuplesBase):
 
     class Vector(NtuplesBase.Vector):
 
-        """Representation of an :class:`NTuples` element.
+        """Representation of an :class:`Ntuples` element.
 
-        See also
-        --------
+        Notes
+        -----
         See the module documentation for attributes, methods etc.
         """
 
         def __init__(self, space, data):
             """Initialize a new instance."""
             if not isinstance(space, Ntuples):
-                raise TypeError('{!r} not an `NTuples` instance.'
+                raise TypeError('{!r} not an `Ntuples` instance.'
                                 ''.format(space))
 
             if not isinstance(data, np.ndarray):
@@ -318,7 +299,7 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            copy : :class:`NTuples.Vector`
+            copy : :class:`Ntuples.Vector`
                 The deep copy
 
             Examples
@@ -344,7 +325,7 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            values : :attr:`NtuplesBase.dtype` element or :class:`NtuplesBase.Vector`
+            values : :attr:`~odl.NtuplesBase.dtype` element or :class:`~odl.NtuplesBase.Vector`
                 The value(s) at the index (indices)
 
 
@@ -373,7 +354,7 @@ class Ntuples(NtuplesBase):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, :class:`NTuples.Vector`}
+            values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
                 If ``indices`` is an integer, ``value`` must be single value.
@@ -448,7 +429,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : :class:`NtuplesBase.Vector`
+    x1,...,xN : :class:`~odl.NtuplesBase.Vector`
         The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
@@ -564,13 +545,13 @@ class Fn(FnBase, Ntuples):
     """The vector space :math:`F^n` with vector multiplication.
 
     This space implements n-tuples of elements from a field :math:`F`,
-    which can be the real or the `complex` numbers.
+    which can be the real or the complex numbers.
 
     Its elements are represented as instances of the inner :class:`Fn.Vector`
     class.
 
-    See also
-    --------
+    Notes
+    -----
     See the module documentation for attributes, methods etc.
     """
 
@@ -598,7 +579,7 @@ class Fn(FnBase, Ntuples):
 
                 matrix : Use functions weighted by a matrix. The matrix
                 can be dense (:class:`numpy.matrix`) or sparse
-                (:class:`scipy.sparse.spmatrix`).
+                (``scipy.sparse.spmatrix``).
 
                 This option cannot be combined with ``dist``, ``norm`` or
                 ``inner``.
@@ -720,7 +701,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        a, b : :attr:`field` element
+        a, b : :attr:`~odl.FnBase.field` element
             Scalar to multiply x and y with.
         x1, x2 : :class:`Fn.Vector`
             The summands
@@ -931,7 +912,8 @@ class Fn(FnBase, Ntuples):
         -------
         equals : `bool`
             `True` if other is an instance of this space's type
-            with the same :attr:`size` and :attr:`dtype`, and identical
+            with the same :attr:`~odl.NtuplesBase.size` and 
+            :attr:`~odl.NtuplesBase.dtype`, and identical
             distance function, otherwise `False`.
 
         Examples
@@ -987,8 +969,8 @@ class Fn(FnBase, Ntuples):
 
         """Representation of an :class:`Fn` element.
 
-        See also
-        --------
+        Notes
+        -----
         See the module documentation for attributes, methods etc.
         """
 
@@ -1146,12 +1128,11 @@ class Fn(FnBase, Ntuples):
 
 
 class Cn(Fn):
-    """The `complex` vector space :math:`C^n` with vector multiplication.
+    """The complex vector space :math:`C^n` with vector multiplication.
 
     See also
     --------
-    :class:`Fn` : n-tuples over a field :math:`F` 
-                  with arbitrary scalar data type
+    Fn
     """
 
     def __init__(self, size, dtype='complex128', **kwargs):
@@ -1194,14 +1175,21 @@ class Cn(Fn):
         else:
             return 'Cn({}, {})'.format(self.size, self.dtype)
 
+    class Vector(Fn.Vector):
+        """A vector in a real :class:`Fn` space
+
+        See also
+        --------
+        Fn.Vector
+        """
+        pass
 
 class Rn(Fn):
     """The real vector space :math:`R^n` with vector multiplication.
 
     See also
     --------
-    :class:`Fn` : n-tuples over a field :math:`F` 
-                  with arbitrary scalar data type
+    Fn
     """
 
     def __init__(self, size, dtype='float64', **kwargs):
@@ -1244,6 +1232,15 @@ class Rn(Fn):
         else:
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
+    class Vector(Fn.Vector):
+        """A vector in a complex :class:`Fn` space
+
+        See also
+        --------
+        Fn.Vector
+        """
+        pass
+
 
 class MatVecOperator(Operator):
     # TODO: move to some default operator place
@@ -1260,7 +1257,7 @@ class MatVecOperator(Operator):
             castable to the range dtype.
         ran : :class:`Fn`
             Space to which the matrix maps
-        matrix : array-like or :class:`scipy.sparse.spmatrix`
+        matrix : array-like or ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``dom`` and ``m`` the size
             of ``ran``. Its dtype must be castable to the range dtype.
@@ -1451,12 +1448,14 @@ def _inner_default(x1, x2):
     return dot(x2.data, x1.data)
 
 
-class _FnWeighting(with_metaclass(ABCMeta, _FnWeightingBase)):
+class FnWeighting(with_metaclass(ABCMeta, FnWeightingBase)):
 
     """Abstract base class for :class:`Fn` weighting."""
 
+    def inner(self, x1, x2):
+        raise NotImplementedError
 
-class FnMatrixWeighting(_FnWeighting):
+class FnMatrixWeighting(FnWeighting):
 
     """Matrix weighting for :class:`Fn`.
 
@@ -1464,7 +1463,7 @@ class FnMatrixWeighting(_FnWeighting):
 
     :math:`<a, b> := b^H G a`
 
-    with :math:`b^H` standing for transposed `complex` conjugate. The
+    with :math:`b^H` standing for transposed complex conjugate. The
     matrix must be Hermitian and posivive definite, otherwise it does
     not define an inner product. This is not checked during
     initialization.
@@ -1596,7 +1595,7 @@ class FnMatrixWeighting(_FnWeighting):
         Returns
         -------
         out : :class:`Fn.Vector`
-            The result of the matrix-vector multiplication. If :obj:`out`
+            The result of the matrix-vector multiplication. If ``out``
             was provided as argument, it is returned again.
         """
         if out is not None:
@@ -1658,7 +1657,7 @@ class FnMatrixWeighting(_FnWeighting):
         return 'Weighting: matrix =\n{}'.format(self.matrix)
 
 
-class FnVectorWeighting(_FnWeighting):
+class FnVectorWeighting(FnWeighting):
 
     """Vector weighting for :class:`Fn`.
 
@@ -1779,7 +1778,7 @@ class FnVectorWeighting(_FnWeighting):
         return 'Weighting: vector =\n{}'.format(self.vector)
 
 
-class FnConstWeighting(_FnWeighting):
+class FnConstWeighting(FnWeighting):
 
     """Weighting of :class:`Fn` by a constant.
 
@@ -1787,7 +1786,7 @@ class FnConstWeighting(_FnWeighting):
 
     :math:`<a, b> := b^H c a`
 
-    with :math:`b^H` standing for transposed `complex` conjugate.
+    with :math:`b^H` standing for transposed complex conjugate.
     """
 
     def __init__(self, constant, dist_using_inner=False):
@@ -1795,17 +1794,17 @@ class FnConstWeighting(_FnWeighting):
 
         Parameters
         ----------
-        constant : positive float
+        constant : positive `float`
             Weighting constant of the inner product.
         dist_using_inner : `bool`, optional
-            Calculate dist(x, y) as
+            Calculate :meth:`dist` as
 
-            sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)
+            sqrt(norm(x)**2 + norm(y)**2 - 2*inner(x, y).real)``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it is not guaranteed to
             evaluate to exactly zero for equal (but not identical)
-            x and y.
+            ``x`` and ``y``.
         """
         super().__init__(dist_using_inner)
         self._const = float(constant)
@@ -1848,7 +1847,7 @@ class FnConstWeighting(_FnWeighting):
         """
         if isinstance(other, FnConstWeighting):
             return self == other
-        elif isinstance(other, _FnWeighting):
+        elif isinstance(other, FnWeighting):
             return other.equiv(self)
         else:
             return False
@@ -1970,7 +1969,7 @@ class _FnNoWeighting(FnConstWeighting):
         return self.__class__.__name__
 
 
-class _FnCustomInnerProduct(_FnWeighting):
+class _FnCustomInnerProduct(FnWeighting):
 
     """Custom inner product on :class:`Fn`."""
 
@@ -2039,7 +2038,7 @@ class _FnCustomInnerProduct(_FnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class _FnCustomNorm(_FnWeighting):
+class _FnCustomNorm(FnWeighting):
 
     """Custom norm on :class:`Fn`, removes ``inner``."""
 
@@ -2094,7 +2093,7 @@ class _FnCustomNorm(_FnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class _FnCustomDist(_FnWeighting):
+class _FnCustomDist(FnWeighting):
 
     """Custom distance on :class:`Fn`, removes ``norm`` and ``inner``."""
 

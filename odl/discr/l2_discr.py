@@ -57,7 +57,8 @@ class DiscreteL2(Discretization):
         ----------
         l2space : :class:`~odl.L2`
             The continuous space to be discretized
-        dspace : :class:`~odl.space.base_ntuples.FnBase`, same :attr:`field` as ``l2space``
+        dspace : :class:`~odl.space.base_ntuples.FnBase`, same 
+            :attr:`~odl.FnBase.field` as ``l2space``
             The space of elements used for data storage
         grid : :class:`~odl.TensorGrid`
             The sampling grid for the discretization. Must be contained
@@ -78,7 +79,7 @@ class DiscreteL2(Discretization):
             raise TypeError('{} is not an `L2` type space.'.format(l2space))
 
         if not isinstance(l2space.domain, IntervalProd):
-            raise TypeError('L2 space domain {} is not an :class:`IntervalProd` '
+            raise TypeError('L2 space domain {} is not an `IntervalProd` '
                             'instance.'.format(l2space.domain))
 
         interp = str(interp).lower()
@@ -105,7 +106,8 @@ class DiscreteL2(Discretization):
         inp : `object`, optional
             The input data to create an element from. Must be
             recognizable by the :meth:`~odl.LinearSpace.element` method of 
-            either :attr:`dspace` or :attr:`uspace`.
+            either :attr:`~odl.RawDiscretization.dspace` or 
+            :attr:`~odl.RawDiscretization.uspace`.
 
         Returns
         -------
@@ -245,7 +247,7 @@ class DiscreteL2(Discretization):
             ----------
             indices : int or slice
                 The position(s) that should be set
-            values : {scalar, array-like, :class:`Ntuples.Vector`}
+            values : {scalar, array-like, :class:`~odl.Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
                 If ``indices`` is an `int`, ``value`` must be single value.
@@ -319,9 +321,9 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
 
     Parameters
     ----------
-    l2space : :class:`L2`
+    l2space : :class:`~odl.L2`
         Continuous :math:`L^2` type space. Its domain must be an
-        :class:`IntervalProd` instance.
+        :class:`~odl.IntervalProd` instance.
     nsamples : `int` or `tuple` of `int`
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
@@ -352,13 +354,13 @@ def l2_uniform_discretization(l2space, nsamples, interp='nearest',
     Returns
     -------
     l2discr : :class:`DiscreteL2`
-        The uniformly discretized :class:`L2` space
+        The uniformly discretized :class:`~odl.L2` space
     """
     if not isinstance(l2space, L2):
         raise TypeError('space {!r} is not an L2 instance.'.format(l2space))
 
     if not isinstance(l2space.domain, IntervalProd):
-        raise TypeError('domain {!r} of the L2 space is not an :class:`IntervalProd` '
+        raise TypeError('domain {!r} of the L2 space is not an `IntervalProd` '
                         'instance.'.format(l2space.domain))
 
     if impl == 'cuda' and not CUDA_AVAILABLE:

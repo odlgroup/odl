@@ -1,9 +1,6 @@
 odl.util package
 ================
 
-Submodules
-----------
-
 odl.util.testutils module
 ----------------------------
 

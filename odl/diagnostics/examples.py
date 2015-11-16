@@ -2,7 +2,7 @@
 #
 # This file is part of ODL.
 #
-# ODL is free software: you can redistribute it and/or modify
+# ODL is free software: you can redistribute it and/or modify odl
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -37,18 +37,17 @@ def _arg_shape(*args):
 
 
 def scalar_examples(field):
-    """ Generate example vectors in ``space``
+    """ Generate example scalars in ``field``
 
     Parameters
     ----------
-    space : :class:`LinearSpace`
-        The space to generate examples from
+    field : :class:`~odl.Field`
+        The field to generate examples from
 
     Returns
     -------
     examples : `generator`
-        Yields tuples (`string`, :class:`LinearSpace.Vector`) 
-        where ``string`` is a short description of the vector
+        Yields elements in ``field``
     """
     if field == RealNumbers():
         return [-1.0, 0.5, 0.0, 0.01, 1.0]
@@ -63,13 +62,13 @@ def vector_examples(space):
 
     Parameters
     ----------
-    space : :class:`LinearSpace`
+    space : :class:`~odl.LinearSpace`
         The space to generate examples from
 
     Returns
     -------
     examples : `generator`
-        Yields tuples (`string`, :class:`LinearSpace.Vector`) 
+        Yields tuples (`string`, :class:`~odl.LinearSpace.Vector`) 
         where ``string`` is a short description of the vector
     """
 
@@ -182,7 +181,7 @@ def samples(*sets):
 
     Parameters
     ----------
-    *sets : :class:`Set` instance(s)
+    *sets : :class:`~odl.Set` instance(s)
 
     Returns
     -------

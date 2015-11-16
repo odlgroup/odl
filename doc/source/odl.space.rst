@@ -1,9 +1,6 @@
 odl.space package
 =================
 
-Submodules
-----------
-
 odl.space.base_ntuples module
 -----------------------------
 
@@ -12,6 +9,14 @@ odl.space.base_ntuples module
     :undoc-members:
     :show-inheritance:
 
+odl.space.ntuples module
+---------------------------
+
+.. automodule:: odl.space.ntuples
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    
 odl.space.cu_ntuples module
 ---------------------------
 

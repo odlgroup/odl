@@ -30,7 +30,7 @@ import numpy as np
 from abc import ABCMeta
 
 # ODL imports
-from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
+from odl.space.base_ntuples import NtuplesBase, FnBase, FnWeightingBase
 from odl.util.utility import is_real_dtype, dtype_repr
 import odlpp.odlpp_cuda as cuda
 
@@ -91,7 +91,7 @@ class CudaNtuples(NtuplesBase):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
 
-            Check :const:`CUDA_DTYPES` for a list of available data types.
+            Check ``CUDA_DTYPES`` for a list of available data types.
         """
 
         if dtype not in _TYPE_MAP_NPY2CUDA.keys():
@@ -322,7 +322,7 @@ class CudaNtuples(NtuplesBase):
 
             Returns
             -------
-            values : :attr:`CudaNtuples.dtype` or :class:`CudaNtuples.Vector`
+            values : :attr:`~odl.NtuplesBase.dtype` or :class:`CudaNtuples.Vector`
                 The value(s) at the index (indices)
 
 
@@ -522,11 +522,11 @@ class CudaFn(FnBase, CudaNtuples):
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``, assigned to ``out``.
 
-        Calculate `z = a * x + b * y` using optimized CUDA routines.
+        Calculate ``z = a * x + b * y`` using optimized CUDA routines.
 
         Parameters
         ----------
-        a, b : :attr:`field` element
+        a, b : :attr:`~odl.LinearSpace.field` element
             Scalar to multiply ``x`` and ``y`` with.
         x, y : :class:`CudaFn.Vector`
             The summands
@@ -851,7 +851,7 @@ def _inner_default(x1, x2):
     return x1.data.inner(x2.data)
 
 
-class _CudaFnWeighting(with_metaclass(ABCMeta, _FnWeightingBase)):
+class _CudaFnWeighting(with_metaclass(ABCMeta, FnWeightingBase)):
 
     """Abstract base class for :class:`CudaFn` weighting."""
 
