@@ -42,7 +42,7 @@ class ScalingOperator(Operator):
 
         Parameters
         ----------
-        space : `LinearSpace`
+        space : :class:`LinearSpace`
             The space of elements which the operator is acting on
         scalar : field element
             An element in the field of the space that the vectors are
@@ -328,7 +328,7 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        vec : LinearSpace.Vector with `inner`
+        vec : LinearSpace.Vector with ``inner``
             The vector to take the inner product with
         """
         self.vector = vector
@@ -374,7 +374,7 @@ class InnerProductAdjointOperator(Operator):
 
     The multiply operator calculates:
 
-    InnerProductAdjointOperator(vec)(x) == x * vec
+    ``InnerProductAdjointOperator(vec)(x) == x * vec``
     """
 
     # pylint: disable=abstract-method
@@ -383,7 +383,7 @@ class InnerProductAdjointOperator(Operator):
 
         Parameters
         ----------
-        vec : LinearSpace.Vector with `inner`
+        vec : LinearSpace.Vector with ``inner``
             The vector to take the inner product with
         """
         self.vector = vector

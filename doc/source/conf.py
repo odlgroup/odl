@@ -16,6 +16,7 @@ import sys
 import os
 import shlex
 import sphinx_rtd_theme
+import odl
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -29,6 +30,16 @@ import sphinx_rtd_theme
 
 # Mock modules for Read The Docs to enable autodoc
 
+MOCK_MODULES = []
+if os.environ.get('READTHEDOCS', None) == 'True':
+    MOCK_MODULES += ['future', 'future.utils', 'scipy', 'scipy.linalg',
+                     'numpy', 'numpy.linalg',
+                     'numpy.distutils', 'scipy.interpolate', 
+                     'scipy.interpolate.interpnd']
+
+if not odl.CUDA_AVAILABLE:
+    MOCK_MODULES += ['odlpp', 'odlpp.odlpp_cuda']
+
 if sys.version_info < (3, 3):
     from mock import Mock as MagicMock
 else:
@@ -39,17 +50,15 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return Mock()
 
-MOCK_MODULES = ['future', 'future.utils', 'scipy', 'scipy.linalg',
-                'numpy', 'numpy.linalg', 'odlpp', 'odlpp.odlpp_cuda',
-                'numpy.distutils', 'scipy.interpolate', 
-                'scipy.interpolate.interpnd']
+
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+#add numpydoc folder
+sys.path.insert(0, os.path.abspath('../sphinxext'))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-sys.path.insert(0, os.path.abspath('sphinxext'))
-
 extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
@@ -60,10 +69,10 @@ extensions = [
 ]
 
 #Intersphinx to get numpy targets
-intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
-                       'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-                       'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-                       'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
+intersphinx_mapping = {'python': ('http://python.readthedocs.org/en/latest/', None),
+					   'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
+					   'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+					   'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
 					   
 #Stop autodoc from skipping __init__
 def skip(app, what, name, obj, skip, options):
@@ -122,7 +131,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', 'sphinxext/*']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -168,10 +177,10 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+#html_title = 'Operator Discretization Library'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
+html_short_title = 'odl'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.

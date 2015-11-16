@@ -1,5 +1,5 @@
 odl.set package
-=================
+===============
 
 Submodules
 ----------
@@ -32,14 +32,6 @@ odl.set.space module
 --------------------
 
 .. automodule:: odl.set.space
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: odl.set
     :members:
     :undoc-members:
     :show-inheritance:

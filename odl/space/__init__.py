@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -17,54 +17,54 @@
 
 """Concrete vector spaces.
 
-Spaces of n-tuples (modules `ntuples`, `cu_ntuples`)
-====================================================
+Spaces of n-tuples (modules :mod:`odl.space.ntuples`, :mod:`~odl.space.cu_ntuples`)
+===================================================================================
 
-NumPy implementation (module `ntuples`)
----------------------------------------
+NumPy implementation (module :mod:`~odl.space.ntuples`)
+-------------------------------------------------------
 
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|`Ntuples`             |Set of n-tuples of any NumPy supported type    |
+|:class:`Ntuples`      |Set of n-tuples of any NumPy supported type    |
 +----------------------+-----------------------------------------------+
-|`FnBase`              |**Abstract** base class for spaces of n-tuples |
-|                      |over the real or complex numbers               |
+|:class:`FnBase`       |**Abstract** base class for spaces of n-tuples |
+|                      |over the real or `complex` numbers             |
 +----------------------+-----------------------------------------------+
-|`Fn`                  |Space of n-tuples over the real or complex     |
+|:class:`Fn`           |Space of n-tuples over the real or `complex`   |
 |                      |numbers allowing any adequate scalar data type |
 +----------------------+-----------------------------------------------+
-|`Cn`                  |Space of n-tuples of complex numbers           |
+|:class:`Cn`           |Space of n-tuples of `complex` numbers         |
 +----------------------+-----------------------------------------------+
-|`Rn`                  |Space of n-tuples of real numbers              |
+|:class:`Rn`           |Space of n-tuples of real numbers              |
 +----------------------+-----------------------------------------------+
 
-CUDA implementation (module `cu_ntuples`)
------------------------------------------
+CUDA implementation (module :mod:`~odl.space.cu_ntuples`)
+---------------------------------------------------------
 
-Requires the compiled extension `odlpp`
+Requires the compiled extension ``odlpp`` #TODO link
 
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|`CudaNtuples`         |Set of n-tuples of any type supported by the   |
-|                      |`odlpp` backend                                |
+|:class:`CudaNtuples`  |Set of n-tuples of any type supported by the   |
+|                      |``odlpp`` backend                              |
 +----------------------+-----------------------------------------------+
-|`CudaFn`              |Space of n-tuples over the real or complex     |
+|:class:`CudaFn`       |Space of n-tuples over the real or `complex`   |
 |                      |numbers allowing any adequate scalar data type |
 +----------------------+-----------------------------------------------+
-|(`CudaCn`)            |Space of n-tuples of complex numbers (TODO)    |
+|(``CudaCn``)          |Space of n-tuples of `complex` numbers (TODO)  |
 +----------------------+-----------------------------------------------+
-|`CudaRn`              |Space of n-tuples of real numbers              |
+|:class:`CudaRn`       |Space of n-tuples of real numbers              |
 +----------------------+-----------------------------------------------+
 
-Function spaces (module `fspace`)
-=================================
+Function spaces (module :mod:`~odl.space.fspace`)
+=================================================
 
 +----------------------+-----------------------------------------------+
 |Name                  |Description                                    |
 +======================+===============================================+
-|`L2`                  |Square-integrable functions taking real or     |
+|:class:`L2`           |Square-integrable functions taking real or     |
 |                      |complex values                                 |
 +----------------------+-----------------------------------------------+
 """
