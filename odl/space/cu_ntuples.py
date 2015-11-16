@@ -1133,11 +1133,6 @@ class CudaFnVectorWeighting(CudaFnWeighting):
             exactly zero for equal (but not identical) `x` and `y`.
 
             Can only be used if `exponent` is 2.0.
-        copy_to_gpu : bool
-            If `True`, the weights are stored as `CudaFn.Vector`,
-            which consumes GPU memory but results in faster
-            evaluation. If `False`, weights are stored as a NumPy
-            array on the main memory.
         """
         # TODO: remove dist_using_inner in favor of a native dist
         # implementation
@@ -1186,7 +1181,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
 
         return (isinstance(other, CudaFnVectorWeighting) and
                 self.vector is other.vector and
-                self.exponent == other.exponent)
+                super().__eq__(other))
 
     def equiv(self, other):
         """Test if `other` is an equivalent weighting.
@@ -1335,7 +1330,7 @@ class CudaFnConstWeighting(CudaFnWeighting):
         else:
             return (isinstance(other, CudaFnConstWeighting) and
                     self.const == other.const and
-                    self.exponent == other.exponent)
+                    super().__eq__(other))
 
     def equiv(self, other):
         """Test if ``other`` is an equivalent weighting.
@@ -1507,10 +1502,8 @@ class CudaFnCustomInnerProduct(CudaFnWeighting):
             for large arrays. On the downside, it will not evaluate to
             exactly zero for equal (but not identical) :math:`x` and
             :math:`y`.
-
-            Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(dist_using_inner)
+        super().__init__(exponent=2.0, dist_using_inner=dist_using_inner)
 
         if not callable(inner):
             raise TypeError('inner product function {!r} not callable.'
@@ -1528,11 +1521,12 @@ class CudaFnCustomInnerProduct(CudaFnWeighting):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is an :class:``CudaFnCustomInnerProduct``
+            `True` if ``other`` is a :class:`CudaFnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomInnerProduct) and
-                self.inner == other.inner)
+                self.inner == other.inner and
+                super().__eq__(other))
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -1571,12 +1565,16 @@ class CudaFnCustomNorm(CudaFnWeighting):
             - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
               \lVert y\\rVert`.
         """
-        super().__init__(dist_using_inner=False)
+        super().__init__(exponent=1.0, dist_using_inner=False)
 
         if not callable(norm):
             raise TypeError('norm function {!r} not callable.'
                             ''.format(norm))
         self._norm_impl = norm
+
+    def inner(self, x1, x2):
+        """Inner product is not defined for custom distance."""
+        raise NotImplementedError
 
     @property
     def norm(self):
@@ -1589,11 +1587,12 @@ class CudaFnCustomNorm(CudaFnWeighting):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is an `CudaFnCustomNorm`
+            `True` if ``other`` is a :class:`CudaFnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomNorm) and
-                self.norm == other.norm)
+                self.norm == other.norm and
+                super().__eq__(other))
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -1627,7 +1626,7 @@ class CudaFnCustomDist(CudaFnWeighting):
             - :math:`d(x, y) = 0 \Leftrightarrow x = y`
             - :math:`d(x, y) \geq d(x, z) + d(z, y)`
         """
-        super().__init__(dist_using_inner=False)
+        super().__init__(exponent=1.0, dist_using_inner=False)
 
         if not callable(dist):
             raise TypeError('distance function {!r} not callable.'

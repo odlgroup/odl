@@ -431,7 +431,6 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         """Exponent of this weighting."""
         return self._exponent
 
-    @abstractmethod
     def __eq__(self, other):
         """``w.__eq__(other) <==> w == other``.
 
@@ -447,6 +446,8 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         arrays may be compared element-wise. That is the task of the
         :meth:`equiv` method.
         """
+        return (self.exponent == other.exponent and
+                self._dist_using_inner == other._dist_using_inner)
 
     def equiv(self, other):
         """Test if ``other`` is an equivalent inner product.

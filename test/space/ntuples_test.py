@@ -23,10 +23,10 @@ standard_library.install_aliases()
 from builtins import range, str
 
 # External module imports
-import pytest
-import numpy as np
-import scipy as sp
 from math import ceil
+import numpy as np
+import pytest
+import scipy as sp
 
 # ODL imports
 from odl import Ntuples, Fn, Rn, Cn
@@ -168,9 +168,12 @@ def test_init():
         Cn(3, 'S1')
 
     # Backported int from future fails (not recognized by numpy.dtype())
+    # (Python 2 only)
     from builtins import int as future_int
-    with pytest.raises(TypeError):
-        Fn(3, future_int)
+    import sys
+    if sys.version_info.major != 3:
+        with pytest.raises(TypeError):
+            Fn(3, future_int)
 
     # Init with weights or custom space functions
     const = 1.5

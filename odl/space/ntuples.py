@@ -1215,6 +1215,7 @@ class Cn(Fn):
         """
         pass
 
+
 class Rn(Fn):
 
     """The real vector space :math:`R^n` with vector multiplication.
@@ -1661,7 +1662,7 @@ class FnMatrixWeighting(FnWeighting):
 
         return (isinstance(other, FnMatrixWeighting) and
                 self.matrix is other.matrix and
-                self.exponent == other.exponent)
+                super().__eq__(other))
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -1912,7 +1913,7 @@ class FnVectorWeighting(FnWeighting):
 
         return (isinstance(other, FnVectorWeighting) and
                 self.vector is other.vector and
-                self.exponent == other.exponent)
+                super().__eq__(other))
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -2079,7 +2080,7 @@ class FnConstWeighting(FnWeighting):
         # TODO: make symmetric?
         return (isinstance(other, FnConstWeighting) and
                 self.const == other.const and
-                self.exponent == other.exponent)
+                super().__eq__(other))
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -2325,7 +2326,8 @@ class FnCustomInnerProduct(FnWeighting):
         """
         # TODO: make symmetric
         return (isinstance(other, FnCustomInnerProduct) and
-                self.inner == other.inner)
+                self.inner == other.inner and
+                super().__eq__(other))
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -2370,6 +2372,10 @@ class FnCustomNorm(FnWeighting):
                             ''.format(norm))
         self._norm_impl = norm
 
+    def inner(self, x1, x2):
+        """Inner product is not defined for custom distance."""
+        raise NotImplementedError
+
     @property
     def norm(self):
         """Custom norm of this instance.."""
@@ -2386,7 +2392,8 @@ class FnCustomNorm(FnWeighting):
         """
         # TODO: make symmetric
         return (isinstance(other, FnCustomNorm) and
-                self.norm == other.norm)
+                self.norm == other.norm and
+                super().__eq__(other))
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -2450,7 +2457,8 @@ class FnCustomDist(FnWeighting):
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, FnCustomDist) and
-                self.dist == other.dist)
+                self.dist == other.dist and
+                super().__eq__(other))
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
