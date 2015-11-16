@@ -69,7 +69,18 @@ if not on_rtd:
 					   
 #Stop autodoc from skipping __init__
 def skip(app, what, name, obj, skip, options):
-    if name.startswith('__') and name.endswith('__'):
+    if (name.startswith('__') and name.endswith('__') and
+        name not in ['__abstractmethods__',
+                     '__doc__',
+                     '__module__',
+                     '__dict__',
+                     '__weakref__']:
+        return False
+    if name in ['_multiply',
+                '_divide',
+                '_lincomb',
+                '_apply',
+                '_call']:
         return False
     return skip
 
