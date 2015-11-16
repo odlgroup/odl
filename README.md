@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/odlgroup/odl.svg)](https://travis-ci.org/odlgroup/odl)
+[![Coverage Status](https://coveralls.io/repos/odlgroup/odl/badge.svg?branch=master&service=github)](https://coveralls.io/github/odlgroup/odl?branch=master)
 
 ODL
 ===
