@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -44,9 +44,9 @@ class FunctionSet(Set):
 
         Parameters
         ----------
-        dom : `Set`
+        dom : :class:`Set`
             The domain of the functions.
-        ran : `Set`
+        ran : :class:`Set`
             The range of the functions.
         """
         if not isinstance(dom, Set):
@@ -106,13 +106,13 @@ class FunctionSet(Set):
             return self.Vector(self, fcall, fapply)
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """``s.__eq__(other) <==> s == other``.
 
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a :class:`FunctionSet` with same `domain`
-            and :attr:`range`, `False` otherwise.
+            `True` if ``other`` is a :class:`FunctionSet` with same
+            :attr:`domain` and :attr:`range`, `False` otherwise.
         """
         if other is self:
             return True
@@ -122,23 +122,23 @@ class FunctionSet(Set):
                 self.range == other.range)
 
     def __contains__(self, other):
-        """`s.__contains__(other) <==> other in s`.
+        """``s.__contains__(other) <==> other in s``.
 
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a `FunctionSet.Vector` whose `space`
-            attribute equals this space, `False` otherwise.
+            `True` if ``other`` is a :class:`FunctionSet.Vector` whose
+            :attr:`space` attribute equals this space, `False` otherwise.
         """
         return (isinstance(other, FunctionSet.Vector) and
                 self == other.space)
 
     def __repr__(self):
-        """`s.__repr__() <==> repr(s)`."""
+        """``s.__repr__() <==> repr(s)``."""
         return 'FunctionSet({!r}, {!r})'.format(self.domain, self.range)
 
     def __str__(self):
-        """`s.__str__() <==> str(s)`."""
+        """``s.__str__() <==> str(s)``."""
         return 'FunctionSet({}, {})'.format(self.domain, self.range)
 
     class Vector(Operator):
@@ -158,15 +158,15 @@ class FunctionSet(Set):
                 `numpy.ndarray` of such (vectorized call).
             fapply : callable, optional
                 The actual instruction for in-place evaluation.
-                Its first argument must be the :attr:`FunctionSpace.range` element
-                or the array of such (vectorization) to which the
-                result is written.
+                Its first argument must be the
+                :attr:`FunctionSpace.range` element or the array of such
+                (vectorization) to which the result is written.
 
             *At least one of the arguments fcall and fapply` must
             be provided.*
             """
             if not isinstance(fset, FunctionSet):
-                raise TypeError('function set {} not a `FunctionSet` '
+                raise TypeError('function set {} not a :class:`FunctionSet` '
                                 'instance.'.format(fset))
 
             if fcall is None and fapply is None:
@@ -185,7 +185,7 @@ class FunctionSet(Set):
             self._call = fcall
             self._apply = fapply
 
-            #Todo: allow users to specify linear
+            # Todo: allow users to specify linear
             super().__init__(self.space.domain, self.space.range, linear=False)
 
         @property
@@ -194,14 +194,14 @@ class FunctionSet(Set):
             return self._space
 
         def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`.
+            """``vec.__eq__(other) <==> vec == other``.
 
             Returns
             -------
             equals : `bool`
-                `True` if `other` is a `FunctionSet.Vector` with
-                `other.space` equal to this vector's space and
-                the call and apply implementations of `other` and
+                `True` if ``other`` is a :class:`FunctionSet.Vector` with
+                ``other.space`` equal to this vector's space and
+                the call and apply implementations of ``other`` and
                 this vector are equal. `False` otherwise.
             """
             if other is self:
@@ -229,8 +229,8 @@ class FunctionSet(Set):
 
             Raises
             ------
-            If `out` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
-            with `out[0] in range`, a `TypeError` is raised.
+            If ``out`` is not a :attr:`FunctionSet.range` element or a
+             `numpy.ndarray` with `out[0] in range`, a `TypeError` is raised.
             """
             if x in self.domain:
                 # single value list: f(0, 1, 2)
@@ -295,8 +295,9 @@ class FunctionSet(Set):
 
             Raises
             ------
-            If `out` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
-            with `out[0] in range`, a `TypeError` is raised.
+            If ``out`` is not a :attr:`FunctionSet.range` element or a
+             `numpy.ndarray` with ``out[0] in range``, a `TypeError` is
+             raised.
             """
             if not (out in self.range or
                     (isinstance(out, np.ndarray) and
@@ -309,16 +310,18 @@ class FunctionSet(Set):
             return self._apply(out, *x)
 
         def __ne__(self, other):
-            """`vec.__ne__(other) <==> vec != other`"""
+            """``vec.__ne__(other) <==> vec != other``"""
             return not self.__eq__(other)
 
         def __str__(self):
+            """``vec.__str__() <==> str(vec)``"""
             if self._call is not None:
                 return str(self._call)
             else:
                 return str(self._apply_impl)
 
         def __repr__(self):
+            """``vec.__repr__() <==> repr(vec)``"""
             if self._call is not None:
                 return '{!r}.element({!r})'.format(self.space, self._call)
             else:
@@ -334,17 +337,17 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Parameters
         ----------
-        dom : `Set`
+        dom : :class:`Set`
             The domain of the functions.
-        field : {`RealNumbers`, `ComplexNumbers`}, optional
+        field : :class:`RealNumbers` or :class:`ComplexNumbers`
             The range of the functions.
         """
         if not isinstance(dom, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(dom))
+            raise TypeError('domain {!r} not a Set instance.'.format(dom))
 
         if not (isinstance(field, (RealNumbers, ComplexNumbers))):
-            raise TypeError('field {!r} not a `RealNumbers` or '
-                            '`ComplexNumbers` instance.'.format(field))
+            raise TypeError('field {!r} not a RealNumbers or '
+                            'ComplexNumbers instance.'.format(field))
 
         super().__init__(dom, field)
         self._field = field
@@ -378,7 +381,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Returns
         -------
-        `element` : :class:`FunctionSpace.Vector`
+        element : :class:`FunctionSpace.Vector`
             The new element.
         """
         if fcall is None and fapply is None:
@@ -386,11 +389,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
         else:
             return super().element(fcall, fapply)
 
-    def _lincomb(self, z, a, x, b, y):
-        """Raw linear combination of `x` and `y`.
+    def _lincomb(self, a, x, b, y, out):
+        """Raw linear combination of ``x`` and ``y``.
 
-        Note
-        ----
+        Notes
+        -----
         The additions and multiplications are implemented via a simple
         Python function, so the resulting function is probably slow.
         """
@@ -451,16 +454,16 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
                 out += tmp
 
-        z._call = lincomb_call
-        z._apply = lincomb_apply
+        out._call = lincomb_call
+        out._apply = lincomb_apply
 
     def zero(self):
         """The function mapping everything to zero.
 
-        Note
-        ----
+        Notes
+        -----
 
-        Since `FunctionSpace._lincomb` is slow,
+        Since :meth:`FunctionSpace._lincomb` is slow,
         we implement this function directly.
         """
         def zero_(*_):
@@ -469,13 +472,13 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return self.element(zero_)
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """``s.__eq__(other) <==> s == other``.
 
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a :class:`FunctionSpace` with same `domain`
-            and :attr:`range`, `False` otherwise.
+            `True` if ``other`` is a :class:`FunctionSpace` with
+            same :attr:`domain` and :attr:`range`, `False` otherwise.
         """
         # TODO: equality also for FunctionSet instances?
         if other is self:
@@ -488,8 +491,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
     def _multiply(x, y):
         """Raw pointwise multiplication of two functions.
 
-        Note
-        ----
+        Notes
+        -----
         The multiplication is implemented with a simple Python
         function, so the resulting function object is probably slow.
         """
@@ -502,11 +505,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
         y._function = product
 
     def __repr__(self):
-        """`s.__repr__() <==> repr(s)`."""
+        """``s.__repr__() <==> repr(s)``."""
         return 'FunctionSpace({!r}, {!r})'.format(self.domain, self.range)
 
     def __str__(self):
-        """`s.__str__() <==> str(s)`."""
+        """``s.__str__() <==> str(s)``."""
         return 'FunctionSpace({}, {})'.format(self.domain, self.range)
 
     class Vector(FunctionSet.Vector, LinearSpace.Vector):

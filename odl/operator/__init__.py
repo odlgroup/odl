@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -41,12 +41,16 @@ operator
 
 for a matrix :math:`A\\in \mathbb{R}^{n\\times m}` as follows::
 
+    from builtins import super
+    import numpy as np
+
     class MatVecOperator(odl.Operator):
         def __init__(self, matrix):
             assert isinstance(matrix, np.ndarray)
             self.matrix = matrix
-            self.domain = odl.Rn(matrix.shape[1])
-            self.range = odl.Rn(matrix.shape[0])
+            dom = odl.Rn(matrix.shape[1])
+            ran = odl.Rn(matrix.shape[0])
+            super().__init__(dom, ran)
 
 In addition, an :class:`Operator` needs at least one way of evaluation,
 *in-place* or *out-of-place*.
@@ -54,12 +58,13 @@ In addition, an :class:`Operator` needs at least one way of evaluation,
 - In-place evaluation means that the operator is evaluated on a
   ``domain`` element, and the result is written to an *already existing*
   ``range`` element. To implement this behavior, create the (private)
-  :attr:`_apply()` method, in the above example::
+  :attr:`_apply()` method with the following signature, here given
+  for the above example::
 
     class MatVecOperator(odl.Operator):
         ...
-        def _apply(x, out):
-            self.matrix.dot(x, out=out)
+        def _apply(self, x, out):
+            self.matrix.dot(x, out=out.asarray())
 
   In-place evaluation is usually more efficient and should be used
   *whenever possible*.
@@ -67,13 +72,13 @@ In addition, an :class:`Operator` needs at least one way of evaluation,
 - Out-of-place evaluation means that the
   operator is evaluated on a ``domain`` element, and the result is
   written to a *newly allocated* ``range`` element. To implement this
-  behavior, create the (private) :obj:`_call()` method, in the above
-  example::
+  behavior, create the (private) :obj:`_call()` methodwith the following
+  signature, here given for the above example::
 
     class MatVecOperator(odl.Operator):
         ...
-        def _call(x):
-            return self.matrix.dot(x)
+        def _call(self, x):
+            return self.range.element(self.matrix.dot(x))
 
   Out-of-place evaluation is usually less efficient since it requires
   allocation of an array and a full copy and should be *generally
@@ -82,9 +87,9 @@ In addition, an :class:`Operator` needs at least one way of evaluation,
 **Important:** Do not call these methods directly. Use the call pattern
 ``operator(x)`` or ``operator(x, out=y)``, e.g.::
 
-    matrix = 2 * np.eye(3)
+    matrix = np.array([[1, 0], [0, 1], [1, 1]])
     operator = MatVecOperator(matrix)
-    x = odl.Rn(3).one()
+    x = odl.Rn(2).one()
     y = odl.Rn(3).element()
 
     # Out-of-place evaluation

@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -33,11 +33,45 @@ __all__ = ('OperatorTest',)
 
 
 class OperatorTest(object):
+    """ Automated tests for :class:`Operator`'s
+
+    This class allows users to automatically test various
+    features of an Operator such as linearity and the 
+    adjoint definition.
+    """
+
     def __init__(self, operator, operator_norm=None):
+        """Create a new instance
+
+        Parameters
+        ----------
+        operator : :class:`Operator`
+            The operator to run tests on
+        operator_norm : `float`
+            The norm of the operator, used for error estimates
+            can be estimated otherwise.
+        """
         self.operator = operator
         self.operator_norm = operator_norm
 
     def norm(self):
+        """Estimate the operator norm of the operator.
+
+        The norm is estimated by calculating
+
+        ``A(x).norm() / x.norm()``
+
+        for some nonzero ``x``
+
+        Returns
+        -------
+        norm : `float`
+            Estimate of operator norm
+
+        References
+        ----------
+        Wikipedia article on `Operator norm <https://en.wikipedia.org/wiki/Operator_norm>`_.
+        """
         print('\n== Calculating operator norm ==\n')
 
         operator_norm = 0.0
@@ -53,6 +87,7 @@ class OperatorTest(object):
         return operator_norm
 
     def _adjoint_definition(self):
+        """Verify (Ax, y) = (x, A^T y)"""
         print('\nVerifying the identity (Ax, y) = (x, A^T y)')
 
         Axy_vals = []
@@ -83,7 +118,7 @@ class OperatorTest(object):
         print('(x, A^T y) / (Ax, y) = {}. Should be 1.0'.format(scale))
 
     def _adjoint_of_adjoint(self):
-        # Verify (A^*)^* = A
+        """Verify (A^*)^* = A"""
         try:
             self.operator.adjoint.adjoint
         except AttributeError:
@@ -109,7 +144,12 @@ class OperatorTest(object):
                                  ''.format(n_x, error))
 
     def adjoint(self):
-        """Verify that the adjoint works appropriately."""
+        """Verify that the adjoint works appropriately.
+        
+        References
+        ----------
+        Wikipedia article on `Adjoint <https://en.wikipedia.org/wiki/Adjoint>`_.
+        """
         try:
             self.operator.adjoint
         except NotImplementedError:
@@ -157,7 +197,13 @@ class OperatorTest(object):
                                  ''.format(n_x, n_dx, step, error))
 
     def derivative(self, step=0.0001):
-        """Verify that the derivative works appropriately."""
+        """Verify that the derivative works appropriately.
+                
+        References
+        ----------
+        Wikipedia article on `Derivative <https://en.wikipedia.org/wiki/Derivative>`_.
+        Wikipedia article on `Fréchet derivative <https://en.wikipedia.org/wiki/Fr%C3%A9chet_derivative>`_.
+        """
 
         print('\n==Verifying derivative of operator ==')
         try:
@@ -221,7 +267,7 @@ class OperatorTest(object):
                                  ''.format(n_x, n_y, error))
 
     def linear(self):
-        """Verify that the operator is actually linear."""
+        """Verify that the operator is actualy linear."""
         if not self.operator.is_linear:
             print('Operator is not linear')
             return

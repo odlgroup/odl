@@ -35,12 +35,3 @@ odl.discr.l2_discr module
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: odl.discr
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -60,18 +60,19 @@ class DiscreteLp(Discretization):
 
         Parameters
         ----------
-        fspace : `FunctionSpace`
-            Continuous space to be discretized
-        dspace : `FnBase`, same `field` as `fspace`
-            Space of elements used for data storage
-        grid : `TensorGrid`
-            Sampling grid for the discretization. Must be contained
-            in `fspace.domain`.
+        fspace : :class:`~odl.FunctionSpace`
+            The continuous space to be discretized
+        grid : :class:`~odl.TensorGrid`
+            The sampling grid for the discretization. Must be contained
+            in ``fspace.domain``.
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
+            Space of elements used for data storage. It must have the
+            same :attr:`field` as ``fspace``
         exponent : positive float, optional
             The parameter `p` in :math:`L^p`. If the exponent is not
             equal to the default 2.0, the space has no inner product.
-        interp : string, optional
-            Interpolation type to be used for discretization.
+        interp : `str`, optional
+            The interpolation type to be used for discretization.
 
             'nearest' : use nearest-neighbor interpolation (default)
 
@@ -85,7 +86,6 @@ class DiscreteLp(Discretization):
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{} is not a `FunctionSpace` instance.'
                             ''.format(fspace))
-
         if not isinstance(fspace.domain, IntervalProd):
             raise TypeError('Function space domain {} is not an `IntervalProd`'
                             ' instance.'.format(fspace.domain))
@@ -117,21 +117,21 @@ class DiscreteLp(Discretization):
         return self._exponent
 
     def element(self, inp=None):
-        """Create an element from `inp` or from scratch.
+        """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the `element()` method of either `dspace`
-            or `uspace`.
+            recognizable by the :meth:`~odl.LinearSpace.element` method
+            of either :attr:`dspace` or :attr:`uspace`.
 
         Returns
         -------
-        element : `DiscreteLp.Vector`
+        element : :class:`DiscreteLp.Vector`
             The discretized element, calculated as
-            `dspace.element(inp)` or
-            `restriction(uspace.element(inp))`, tried in this order.
+            ``dspace.element(inp)`` or
+            ``restriction(uspace.element(inp))``, tried in this order.
         """
         if inp is None:
             return self.Vector(self, self.dspace.element())
@@ -168,7 +168,7 @@ class DiscreteLp(Discretization):
         return self._interp
 
     def __repr__(self):
-        """lp.__repr__() <==> repr(lp)."""
+        """``lp.__repr__() <==> repr(lp).``"""
         # Check if the factory repr can be used
         if (uniform_sampling(self.uspace.domain, self.grid.shape,
                              as_midp=True) == self.grid):
@@ -216,14 +216,14 @@ class DiscreteLp(Discretization):
 
     class Vector(Discretization.Vector):
 
-        """Representation of a `DiscreteLp` element."""
+        """Representation of a :class:`DiscreteLp` element."""
 
         def asarray(self, out=None):
             """Extract the data of this array as a numpy array.
 
             Parameters
             ----------
-            out : `ndarray`, Optional (default: `None`)
+            out : `numpy.ndarray`, Optional (default: `None`)
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype and
                 shape.
@@ -258,7 +258,7 @@ class DiscreteLp(Discretization):
 
         @property
         def ndim(self):
-            """Number of dimensions, always 1."""
+            """Number of dimensions."""
             return self.space.grid.ndim
 
         @property
@@ -271,19 +271,20 @@ class DiscreteLp(Discretization):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
+            values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `indices` is an `int`, `value` must be single value.
+                If ``indices`` is an `int`, ``values`` must be a single
+                value.
 
-                If `indices` is a `slice`, `value` must be
+                If ``indices`` is a `slice`, ``values`` must be
                 broadcastable to the size of the slice (same size,
-                shape (1,) or single value).
-                For `indices=slice(None, None, None)`, i.e. in the call
-                `vec[:] = values`, a multi-dimensional array of correct
-                shape is allowed as `values`.
+                shape ``(1,)`` or single value).
+                For ``indices==slice(None, None, None)``, i.e. in the call
+                ``vec[:] = values``, a multi-dimensional array of correct
+                shape is allowed as ``values``.
             """
             if values in self.space:
                 self.ntuple.__setitem__(indices, values.ntuple)
@@ -305,7 +306,7 @@ class DiscreteLp(Discretization):
 
             Parameters
             ----------
-            method : string, optional
+            method : `str`, optional
                 1d methods:
 
                 'plot' : graph plot
@@ -320,7 +321,7 @@ class DiscreteLp(Discretization):
 
                 'wireframe', 'plot_wireframe' : surface plot
 
-            title : string, optional
+            title : `string`, optional
                 Set the title of the figure
             kwargs : {'figsize', 'saveto', ...}
                 Extra keyword arguments passed on to display method
@@ -347,15 +348,15 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    fspace : `FunctionSpace`
+    fspace : :class:`FunctionSpace`
         Continuous function space. Its domain must be an
-        `IntervalProd` instance.
-    nsamples : int or tuple of int
+        :class:`IntervalProd` instance.
+    nsamples : `int` or `tuple` of `int`
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
-    exponent : positive float, optional
-        The parameter `p` in :math:`L^p`. If the exponent is not equal
-        to the default 2.0, the space has no inner product.
+    exponent : positive `float`, optional
+        The parameter :math:`p` in :math:`L^p`. If the exponent is not
+        equal to the default 2.0, the space has no inner product.
     interp : string, optional
             Interpolation type to be used for discretization.
 
@@ -367,7 +368,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
     kwargs : {'order', 'dtype', 'weighting'}
             'order' : {'C', 'F'}  (Default: 'C')
                 Axis ordering in the data storage
-            'dtype' : type
+            'dtype' : dtype
                 Data type for the discretized space
 
                 Default for 'numpy': 'float64' / 'complex128'
@@ -382,13 +383,12 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Returns
     -------
-    discr : `DiscreteLp`
-        The uniformly discretized Lp space
+    discr : :class:`DiscreteLp`
+        The uniformly discretized function space
     """
     if not isinstance(fspace, FunctionSpace):
         raise TypeError('space {!r} is not a `FunctionSpace` instance.'
                         ''.format(fspace))
-
     if not isinstance(fspace.domain, IntervalProd):
         raise TypeError('domain {!r} of the function space is not an '
                         '`IntervalProd` instance.'.format(fspace.domain))

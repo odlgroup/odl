@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -53,7 +53,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             The number of entries per tuple
         dtype : object
             The data type for each tuple entry. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
+            way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
@@ -73,13 +73,13 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return self._size
 
     def __contains__(self, other):
-        """`s.__contains__(other) <==> other in s`.
+        """``s.__contains__(other) <==> other in s``.
 
         Returns
         -------
-        contains : bool
-            `True` if `other` is an `NtuplesBase.Vector` instance and
-            `other.space` is equal to this space, `False` otherwise.
+        contains : `bool`
+            `True` if ``other`` is an :class:`NtuplesBase.Vector` instance and
+            ``other.space`` is equal to this space, `False` otherwise.
 
         Examples
         --------
@@ -95,13 +95,13 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return getattr(other, 'space', None) == self
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """``s.__eq__(other) <==> s == other``.
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is an instance of this space's type
-            with the same `size` and `dtype`, otherwise `False`.
+        equals : `bool`
+            `True` if ``other`` is an instance of this space's type
+            with the same :attr:`size` and :attr:`dtype`, otherwise `False`.
 
         Examples
         --------
@@ -134,12 +134,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 self.dtype == other.dtype)
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
@@ -182,7 +182,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         @property
         def shape(self):
-            """Shape of this vector, equals `(size,)`."""
+            """Shape of this vector, equals ``(size,)``."""
             return (self.size,)
 
         @property
@@ -205,12 +205,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            start : int, optional
+            start : `int`, optional
                 Start position. `None` means the first element.
-            start : int, optional
+            start : `int`, optional
                 One element past the last element to be extracted.
                 `None` means the last element.
-            start : int, optional
+            start : `int`, optional
                 Step length. `None` means 1.
 
             Returns
@@ -220,7 +220,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             """
 
         def __len__(self):
-            """`v.__len__() <==> len(v)`.
+            """``v.__len__() <==> len(v)``.
 
             Return the number of space dimensions.
             """
@@ -228,12 +228,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
         @abstractmethod
         def __eq__(self, other):
-            """`vec.__eq__(other) <==> vec == other`.
+            """``vec.__eq__(other) <==> vec == other``.
 
             Returns
             -------
-            equals : bool
-                `True` if all entries of `other` are equal to this
+            equals : `bool`
+                `True` if all entries of ``other`` are equal to this
                 vector's entries, `False` otherwise.
             """
 
@@ -243,12 +243,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be accessed
 
             Returns
             -------
-            values : `space.dtype` or `space.Vector`
+            values : :attr:`NtuplesBase.dtype` or :class:`NtuplesBase.Vector`
                 The value(s) at the index (indices)
             """
 
@@ -258,14 +258,14 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, `Ntuples.Vector`}
+            values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `index` is an integer, `value` must be single value.
+                If ``index`` is an integer, ``value`` must be single value.
 
-                If `index` is a slice, `value` must be broadcastable
+                If ``index`` is a slice, ``value`` must be broadcastable
                 to the size of the slice (same size, shape (1,)
                 or single value).
             """
@@ -275,12 +275,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            dtype : numpy.dtype, Optional (default: self.dtype)
+            dtype : `numpy.dtype`, Optional (default: ``self.dtype``)
                 The dtype of the output array
 
             Returns
             -------
-            array : ndarray
+            array : `numpy.ndarray`
             """
             if dtype is None:
                 return self.asarray()
@@ -292,12 +292,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            obj : ndarray
+            obj : `numpy.ndarray`
                 The array that should be wrapped
 
             Returns
             -------
-                vector : self.space.Vector
+                vector : :class:`NtuplesBase.Vector`
             """
             if obj.ndim == 0:
                 return self.space.field.element(obj)
@@ -305,15 +305,15 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 return self.space.element(obj)
 
         def __ne__(self, other):
-            """`vec.__ne__(other) <==> vec != other`."""
+            """``vec.__ne__(other) <==> vec != other``."""
             return not self.__eq__(other)
 
         def __str__(self):
-            """`vec.__str__() <==> str(vec)`."""
+            """``vec.__str__() <==> str(vec)``."""
             return array1d_str(self)
 
         def __repr__(self):
-            """`vec.__repr__() <==> repr(vec)`."""
+            """``vec.__repr__() <==> repr(vec)``."""
             return '{!r}.element({})'.format(self.space,
                                              array1d_repr(self))
 
@@ -327,11 +327,11 @@ class FnBase(NtuplesBase, LinearSpace):
 
         Parameters
         ----------
-        size : int
+        size : `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
-            way the `numpy.dtype()` function understands, most notably
+            way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
             Only scalar data types (numbers) are allowed.
@@ -360,11 +360,11 @@ class FnBase(NtuplesBase, LinearSpace):
 
     @abstractmethod
     def _multiply(self, x1, x2, out):
-        """The entry-wise product of two vectors, assigned to `out`."""
+        """The entry-wise product of two vectors, assigned to ``out``."""
 
     @abstractmethod
     def _divide(self, x1, x2, out):
-        """The entry-wise division of two vectors, assigned to `out`."""
+        """The entry-wise division of two vectors, assigned to ``out``."""
 
     class Vector(NtuplesBase.Vector, LinearSpace.Vector):
 
@@ -378,17 +378,17 @@ class FnBase(NtuplesBase, LinearSpace):
         copy = LinearSpace.Vector.copy
 
 
-class _FnWeightingBase(with_metaclass(ABCMeta, object)):
+class FnWeightingBase(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for weighting of `FnBase` spaces.
+    """Abstract base class for weighting of :class:`FnBase` spaces.
 
     This class and its subclasses serve as a simple means to evaluate
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to `Operator` but without
+    The functions are implemented similarly to :class:`Operator` but without
     extra type checks of input parameters - this is done in the callers
-    of the `LinearSpace` instance where these functions used.
+    of the :class:`LinearSpace` instance where these functions used.
     """
 
     def __init__(self, exponent=2.0, dist_using_inner=False):
@@ -396,19 +396,23 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        exponent : float
+        exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-            Can only be used if `exponent` is 2.0.
+            This option can only be used if ``exponent`` is 2.0.
+
+            Default: `False`.
         """
         self._dist_using_inner = bool(dist_using_inner)
         self._exponent = float(exponent)
@@ -426,12 +430,13 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __eq__(self, other):
-        """`w.__eq__(other) <==> w == other`.
+        """``w.__eq__(other) <==> w == other``.
 
         Returns
         -------
-        equal : bool
-            `True` if `other` is the same weighting, `False` otherwise.
+        equal : `bool`
+            `True` if ``other`` is a the same weighting, `False`
+            otherwise.
 
         Notes
         -----
@@ -441,16 +446,16 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
         """
 
     def equiv(self, other):
-        """Test if `other` is an equivalent inner product.
+        """Test if ``other`` is an equivalent inner product.
 
         Returns
         -------
-        equivalent : bool
-            `True` if `other` is a `FnWeightingBase` instance which
+        equivalent : `bool`
+            `True` if ``other`` is a :class:`FnWeightingBase` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this instance's matrix with the matrix of
-            `other`.
+            ``other``.
         """
         raise NotImplementedError
 
@@ -459,12 +464,12 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x1, x2 : `FnBase.Vector`
+        x1, x2 : :class:`FnBase.Vector`
             Vectors whose inner product is calculated
 
         Returns
         -------
-        inner : float or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         raise NotImplementedError
@@ -472,17 +477,17 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
     def norm(self, x):
         """Calculate the norm of a vector.
 
-        This is the standard implementation using `inner`. Subclasses
+        This is the standard implementation using ``inner``. Subclasses
         should override it for optimization purposes.
 
         Parameters
         ----------
-        x1 : `FnBase.Vector`
+        x1 : :class:`FnBase.Vector`
             Vector whose norm is calculated
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The norm of the vector
         """
         return float(sqrt(self.inner(x, x).real))
@@ -495,12 +500,12 @@ class _FnWeightingBase(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x1, x2 : `FnBase.Vector`
+        x1, x2 : :class:`FnBase.Vector`
             Vectors whose mutual distance is calculated
 
         Returns
         -------
-        dist : float
+        dist : `float`
             The distance between the vectors
         """
         if self._dist_using_inner:

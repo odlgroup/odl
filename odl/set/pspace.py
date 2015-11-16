@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cartesian products of `LinearSpace`'s.
-
-TODO: document public interface
-"""
+"""Cartesian products of :class:`LinearSpace` instances."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -63,66 +60,71 @@ def _prod_inner_sum_not_defined(x):
 
 class ProductSpace(LinearSpace):
 
-    """The Cartesian product of N linear spaces.
-
-    The product X1 x ... x XN is itself a linear space, where the
-    linear combination is defined component-wise.
-
-    TODO: document public interface
-    """
+    """Cartesian product of linear spaces."""
 
     def __init__(self, *spaces, **kwargs):
-        """Initialize a new ProductSpace.
+        """Initialize a new instance.
 
-        The product X1 x ... x XN is itself a linear space, where the
-        linear combination is defined component-wise.
+        The Cartesian product
+        :math:`\mathcal{X}_1 \\times \dots \\times \mathcal{X}_n` for
+        linear spaces :math:`\mathcal{X}_i` is itself a linear space,
+        where the linear combination is defined component-wise.
 
         Parameters
         ----------
-        args : {'LinearSpace' and 'int' OR 'LinearSpace' instances
-            Either a space and an integer,
-            in this case the power of the space is taken (R^n)
-            Otherwise, a set of spaces,
-            in this case the product is taken (RxRxRxC)
+        spaces : :class:`LinearSpace` or `int`
+            Can be specified either as a space and an integer, in which
+            case the power space ``space**n`` is created, or
+            an arbitrary number of spaces.
         kwargs : {'ord', 'weights', 'prod_norm'}
-            'ord' : float, optional
+            'ord' : `float`, optional
                 Order of the product distance/norm, i.e.
-                dist(x, y) = np.linalg.norm(x-y, ord=ord)
-                norm(x) = np.linalg.norm(x, ord=ord)
+
+                ``dist(x, y) = np.linalg.norm(x-y, ord=ord)``
+
+                ``norm(x) = np.linalg.norm(x, ord=ord)``
+
                 Default: 2.0
+
+                The following `float` values for ``ord`` can be specified.
+                Note that any value of ``ord < 1`` only gives a pseudo-norm.
+
+                +-------------+------------------------------+
+                | 'prod_norm' | Distance Definition          |
+                +=============+==============================+
+                | 'inf'       | ``max(w * z)``               |
+                +-------------+------------------------------+
+                | '-inf'      | ``min(w * z)``               |
+                +-------------+------------------------------+
+                | other       | ``sum(w * z**ord)**(1/ord)`` |
+                +-------------+------------------------------+
+
+                Here,
+
+                ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))``
+
+                and ``w = weights``.
+
+                Note that ``0 <= ord < 1`` are not allowed since these
+                pseudo-norms are very unstable numerically.
             'weights' : array-like, optional, only usable with 'ord'
                 Array of weights, same size as number of space
                 components. All weights must be positive. It is
                 multiplied with the tuple of distances before
-                applying the Rn norm or 'prod_norm'.
-                Default: (1.0,...,1.0)
-            'prod_norm' : callable, optional
+                applying the Rn norm or ``prod_norm``.
+
+                Default: ``(1.0,...,1.0)``
+
+            'prod_norm' : `callable`, optional
                 Function that should be applied to the array of
                 distances/norms. Specifying a product norm causes
                 the space to NOT be a Hilbert space.
-                Default: np.linalg.norm(x, ord=ord)
 
-        The following float values for `prod_norm` can be specified.
-        Note that any value of ord < 1 only gives a pseudo-norm.
-
-        +----------+---------------------------+
-        |prod_norm |Distance Definition        |
-        +==========+===========================+
-        |'inf'     |`max(w * z)`               |
-        |'-inf'    |`min(w * z)`               |
-        |other     |`sum(w * z**ord)**(1/ord)` |
-        +==========+===========================+
-
-        Here, z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1])) and
-        w = weights.
-
-        Note that `0 <= ord < 1` are not allowed since these
-        pseudo-norms are very unstable numerically.
-
+                Default: ``np.linalg.norm(x, ord=ord)``.
 
         Returns
         -------
-        prodspace : ProductSpace instance
+        prodspace : :class:`ProductSpace`
 
         Examples
         --------
@@ -216,25 +218,18 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        The method has three call patterns, the first is:
-
-        args : None
-            Create a new vector from scratch.
-
-        The second is to wrap existing vectors:
-
-        args : tuple of `LinearSpace.Vector`s
-            A tuple of vectors in the underlying spaces.
-            This will simply wrap the Vectors (not copy).
-
-        The third pattern is to create a new Vector from scratch, in
-        this case
-
-        args : tuple of array-like objects
+        inp : `object`, optional
+            If ``inp`` is `None`, a new element is created from
+            scratch by allocation in the spaces. If ``inp`` is
+            already an element in this space, it is re-wrapped.
+            Otherwise, a new element is created from the
+            components by calling the ``element()`` methods
+            in the component spaces.
 
         Returns
         -------
-        ProductSpace.Vector instance
+        element : :class:`ProductSpace.Vector`
+            The new element
 
         Examples
         --------
@@ -264,6 +259,7 @@ class ProductSpace(LinearSpace):
         if inp is None:
             inp = [space.element() for space in self.spaces]
 
+        # TODO: how does this differ from "if inp in self"?
         if (all(isinstance(v, LinearSpace.Vector) for v in inp) and
                 all(part.space == space
                     for part, space in zip(inp, self.spaces))):
@@ -306,7 +302,8 @@ class ProductSpace(LinearSpace):
 
     def _lincomb(self, a, x, b, y, out):
         # pylint: disable=protected-access
-        for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts, out.parts):
+        for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts,
+                                       out.parts):
             space._lincomb(a, xp, b, yp, outp)
 
     def _dist(self, x1, x2):
@@ -331,16 +328,17 @@ class ProductSpace(LinearSpace):
         return self._prod_inner_sum(inners)
 
     def _multiply(self, x1, x2, out):
-        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts, out.parts):
+        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
+                                     out.parts):
             spc._multiply(xp, yp, outp)
 
     def __eq__(self, other):
-        """`ps.__eq__(other) <==> ps == other`.
+        """``ps.__eq__(other) <==> ps == other``.
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is a `ProductSpace` instance, has
+        equals : `bool`
+            `True` if ``other`` is a :class:`ProductSpace` instance, has
             the same length and the same factors. `False` otherwise.
 
         Examples
@@ -370,22 +368,22 @@ class ProductSpace(LinearSpace):
                                                other.spaces)))
 
     def __len__(self):
-        """`ps.__len__() <==> len(ps)`."""
+        """``ps.__len__() <==> len(ps)``."""
         return self._size
 
     def __getitem__(self, indices):
-        """`ps.__getitem__(indices) <==> ps[indices]`."""
+        """``ps.__getitem__(indices) <==> ps[indices]``."""
         return self.spaces[indices]
 
     def __str__(self):
-        """`ps.__str__() <==> str(ps)`."""
+        """``ps.__str__() <==> str(ps)``."""
         if all(self.spaces[0] == space for space in self.spaces):
             return '{' + str(self.spaces[0]) + '}^' + str(self.size)
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
-        """`ps.__repr__() <==> repr(ps)`."""
+        """``ps.__repr__() <==> repr(ps)``."""
         if all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
                                                    self.size)
@@ -410,9 +408,9 @@ class ProductSpace(LinearSpace):
             return self.space.size
 
         def __eq__(self, other):
-            """`ps.__eq__(other) <==> ps == other`.
+            """``ps.__eq__(other) <==> ps == other``.
 
-            Overrides the default `LinearSpace` method since it is
+            Overrides the default :class:`LinearSpace` method since it is
             implemented with the distance function, which is prone to
             numerical errors. This function checks equality per
             component.
@@ -425,24 +423,24 @@ class ProductSpace(LinearSpace):
                 return all(sp == op for sp, op in zip(self.parts, other.parts))
 
         def __len__(self):
-            """`v.__len__() <==> len(v)`."""
+            """``v.__len__() <==> len(v)``."""
             return len(self.space)
 
         def __getitem__(self, indices):
-            """`ps.__getitem__(indices) <==> ps[indices]`."""
+            """``ps.__getitem__(indices) <==> ps[indices]``."""
             return self.parts[indices]
 
         def __setitem__(self, indices, values):
-            """`ps.__setitem__(indcs, vals) <==> ps[indcs] = vals`."""
+            """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""
             self.parts[indices] = values
 
         def __str__(self):
-            """`ps.__str__() <==> str(ps)`."""
+            """``ps.__str__() <==> str(ps)``."""
             inner_str = ', '.join(str(part) for part in self.parts)
             return '{{{}}}'.format(inner_str)
 
         def __repr__(self):
-            """`s.__repr__() <==> repr(s)`.
+            """``s.__repr__() <==> repr(s)``.
 
             Examples
             --------

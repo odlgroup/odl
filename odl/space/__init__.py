@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -22,6 +22,8 @@
 from __future__ import absolute_import
 
 __all__ = ()
+
+from . import base_ntuples
 
 from . import ntuples
 from .ntuples import *

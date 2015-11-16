@@ -7,7 +7,7 @@ ODL is a Python library for inverse problems. It contains all the abstract mathe
 Set
 ===
 
-A :py:class:`~odl.set.sets.Set` is the fundamental building block of odl objects. It is intended to mirror the mathematical concept of a `real numbers
+A :py:class:`~odl.set.sets.Set` is the fundamental building block of odl objects. It is intended to mirror the mathematical concept of a `set
 <https://en.wikipedia.org/wiki/Set_(mathematics)>`_, and has methods to check if an element is contained in the set
 
 >>> interv = Interval(0, 1)

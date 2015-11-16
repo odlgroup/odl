@@ -55,9 +55,12 @@ if __name__ == '__main__':
     if not CUDA_AVAILABLE:
         arg.append('--ignore=odl/space/cu_ntuples.py')
 
-    pytest.main(arg)
+    result = pytest.main(arg)
 
     if COVERAGE_AVAILABLE:
         cov.stop()
         cov.save()
         cov.html_report()
+    
+    if result != 0:
+        sys.exit(1)
