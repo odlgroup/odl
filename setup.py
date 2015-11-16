@@ -34,6 +34,7 @@ __version__ = '0.9b1'
 if os.environ.get('READTHEDOCS', None) == 'True':
     #Mock requires in conf.py
     requires = ''
+    test_requires = []
 else:
     requires = open(os.path.join(os.path.dirname(__file__), 'requirements.txt')).readlines()
     test_requires = open(os.path.join(os.path.dirname(__file__), 'test_requirements.txt')).readlines()

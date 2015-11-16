@@ -26,6 +26,7 @@ if os.environ.get('READTHEDOCS', None) == 'True':
     MOCK_MODULES += ['future', 'future.utils', 'scipy', 'scipy.linalg',
                      'numpy', 'numpy.linalg',
                      'numpy.distutils', 'scipy.interpolate', 
+                     'matplotlib.pyplot',
                      'scipy.interpolate.interpnd']
 
 if not odl.CUDA_AVAILABLE:
