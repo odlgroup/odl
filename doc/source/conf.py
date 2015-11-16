@@ -38,11 +38,11 @@ def mock_modules(modules):
 if on_rtd:
     mock_modules(['future', 'future.utils', 'scipy', 'scipy.linalg',
                   'numpy', 'numpy.linalg',
-                  'numpy.distutils', 'scipy.interpolate', 
+                  'numpy.distutils', 'scipy.interpolate',
                   'matplotlib.pyplot',
                   'scipy.interpolate.interpnd',
                   'odlpp', 'odlpp.odlpp_cuda'])
-          
+
 #add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
 
@@ -66,7 +66,7 @@ if not on_rtd:
                            'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
                            'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
                            'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
-					   
+
 #Stop autodoc from skipping __init__
 def skip(app, what, name, obj, skip, options):
     if (name.startswith('__') and name.endswith('__') and
@@ -141,7 +141,7 @@ nitpicky = True
 nitpick_ignore = [('py:class','future.types.newobject.newobject'),
                   ('py:class','odl.set.space.Vector'),
                   ('py:class','odl.discr.discretization.Vector'),
-                  ('py:class','odl.discr.l2_discr.Vector'),
+                  ('py:class','odl.discr.lp_discr.Vector'),
                   ('py:class','odl.space.base_ntuples.Vector'),
                   ('py:class','odl.space.ntuples.Vector'),
                   ('py:class','odl.space.cu_ntuples.Vector'),
