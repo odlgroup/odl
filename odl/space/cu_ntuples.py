@@ -508,7 +508,7 @@ class CudaFn(FnBase, CudaNtuples):
                 ``x-y``, which can be
                 avoided by choosing ``dist_using_inner=True``.
 
-                This option cannot be combined with :obj:`weight`,
+                This option cannot be combined with ``weight``,
                 ``norm`` or ``inner``.
 
             'norm' : `callable`, optional
@@ -528,7 +528,7 @@ class CudaFn(FnBase, CudaNtuples):
                 By default, ``norm(x)`` is calculated as
                 ``inner(x, x)``.
 
-                This option cannot be combined with :obj:`weight`,
+                This option cannot be combined with ``weight``,
                 ``dist`` or ``inner``.
 
             'inner' : `callable`, optional
@@ -545,7 +545,7 @@ class CudaFn(FnBase, CudaNtuples):
                   \langle z,y\\rangle`
                 - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-                This option cannot be combined with :obj:`weight`,
+                This option cannot be combined with ``weight``,
                 ``dist`` or ``norm``.
         """
         super().__init__(size, dtype)
@@ -925,14 +925,14 @@ def _weighting(weight, exponent, dist_using_inner=False):
 
 
 def cu_weighted_inner(weight):
-    """Weighted inner product on `CudaFn` spaces as free function.
+    """Weighted inner product on :class:`CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or `CudaFn.Vector`
+    weight : scalar, array-like or :class:`CudaFn.Vector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a `CudaFn.Vector` as a
-        weighting vector.
+        constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
+        as a weighting vector.
 
     Returns
     -------
@@ -949,14 +949,14 @@ def cu_weighted_inner(weight):
 
 
 def cu_weighted_norm(weight, exponent=2.0):
-    """Weighted norm on `CudaFn` spaces as free function.
+    """Weighted norm on :class:`CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or `CudaFn.Vector`
+    weight : scalar, array-like or :class:`CudaFn.Vector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a `CudaFn.Vector` as a
-        weighting vector.
+        constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
+        as a weighting vector.
     exponent : positive float
         Exponent of the norm. If `weight` is a sparse matrix, only
         1.0, 2.0 and `inf` are allowed.
@@ -976,27 +976,28 @@ def cu_weighted_norm(weight, exponent=2.0):
 
 
 def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
-    """Weighted distance on `CudaFn` spaces as free function.
+    """Weighted distance on :class:`CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or `CudaFn.Vector`
+    weight : scalar, array-like or :class:`CudaFn.Vector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a `CudaFn.Vector` as a
-        weighting vector.
+        constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
+        as a weighting vector.
     exponent : positive float
         Exponent of the distance
-    use_inner : bool, optional
-        Calculate `dist(x, y)` as
+    use_inner : `bool`, optional
+        Calculate ``dist`` using the formula
 
-        `sqrt(norm(x)**2 + norm(y)**2 - 2 * inner(x, y).real)`
+        :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+        \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
-        This avoids the creation of new arrays and is thus
-        faster for large arrays. On the downside, it will not
-        evaluate to exactly zero for equal (but not identical)
-        `x` and `y`.
+        This avoids the creation of new arrays and is thus faster
+        for large arrays. On the downside, it will not evaluate to
+        exactly zero for equal (but not identical) :math:`x` and
+        :math:`y`.
 
-        Can only be used if `exponent` is 2.0.
+        Can only be used if ``exponent`` is 2.0.
 
     Returns
     -------
@@ -1087,7 +1088,7 @@ class CudaFnWeighting(FnWeightingBase):
 
 class CudaFnVectorWeighting(CudaFnWeighting):
 
-    """Vector weighting for `CudaFn`.
+    """Vector weighting for :class:`CudaFn`.
 
     For exponent 2.0, a new weighted inner product with vector :math:`w`
     is defined as
@@ -1169,8 +1170,8 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         Returns
         -------
         equals : bool
-            `True` if `other` is a `CudaFnVectorWeighting` instance
-            with **identical** vector, `False` otherwise.
+            `True` if `other` is a :class:`CudaFnVectorWeighting`
+            instance with **identical** vector, `False` otherwise.
 
         See also
         --------
@@ -1189,8 +1190,8 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         Returns
         -------
         equivalent : bool
-            `True` if `other` is a `CudaFnWeighting` instance which
-            yields the same result as this inner product for any
+            `True` if `other` is a :class:`CudaFnWeighting` instance
+            which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
             product and `other`.
@@ -1211,7 +1212,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
 
         Parameters
         ----------
-        x1, x2 : `Fn.Vector`
+        x1, x2 : :class:`CudaFn.Vector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1235,7 +1236,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
 
         Parameters
         ----------
-        x : `Fn.Vector`
+        x : :class:`CudaFn.Vector`
             Vector whose norm is calculated
 
         Returns
@@ -1322,7 +1323,7 @@ class CudaFnConstWeighting(CudaFnWeighting):
         Returns
         -------
         equal : `bool`
-            `True` if `other` is a :class:`CudaFnConstWeighting`
+            `True` if ``other`` is a :class:`CudaFnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
         if other is self:
@@ -1338,10 +1339,10 @@ class CudaFnConstWeighting(CudaFnWeighting):
         Returns
         -------
         equivalent : `bool`
-            `True` if ``other`` is a `CudaFnWeighting` instance which
-            yields the same result as this inner product for any
+            `True` if ``other`` is a :class:`CudaFnWeighting` instance
+            which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
-            if `other` is a :class:`CudaFnConstWeighting` instance,
+            if ``other`` is a :class:`CudaFnConstWeighting` instance,
             otherwise by entry-wise comparison of this inner product's
             constant with the matrix of ``other``.
         """
@@ -1652,7 +1653,7 @@ class CudaFnCustomDist(CudaFnWeighting):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is an `CudaFnCustomDist`
+            `True` if ``other`` is a :class:`CudaFnCustomDist`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomDist) and

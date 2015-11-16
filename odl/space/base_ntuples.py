@@ -389,9 +389,10 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to :class:`~odl.Operator` but without
-    extra type checks of input parameters - this is done in the callers
-    of the :class:`~odl.LinearSpace` instance where these functions used.
+    The functions are implemented similarly to :class:`~odl.Operator`,
+    but without extra type checks of input parameters - this is done in
+    the callers of the :class:`~odl.LinearSpace` instance where these
+    functions used.
     """
 
     def __init__(self, exponent=2.0, dist_using_inner=False):

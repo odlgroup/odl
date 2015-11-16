@@ -608,7 +608,7 @@ class Fn(FnBase, Ntuples):
                 ``x-y``, which can be
                 avoided by choosing ``dist_using_inner=True``.
 
-                This option cannot be combined with :obj:`weight`,
+                This option cannot be combined with ``weight``,
                 ``norm`` or ``inner``.
 
             'norm' : `callable`, optional
@@ -628,7 +628,7 @@ class Fn(FnBase, Ntuples):
                 By default, ``norm(x)`` is calculated as
                 ``inner(x, x)``.
 
-                This option cannot be combined with :obj:`weight`,
+                This option cannot be combined with ``weight``,
                 ``dist`` or ``inner``.
 
             'inner' : `callable`, optional
@@ -645,7 +645,7 @@ class Fn(FnBase, Ntuples):
                   \langle z,y\\rangle`
                 - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-                This option cannot be combined with :obj:`weight`,
+                This option cannot be combined with ``weight``,
                 ``dist`` or ``norm``.
 
             dist_using_inner : `bool`, optional
@@ -1125,7 +1125,7 @@ class Fn(FnBase, Ntuples):
             Returns
             -------
             out : :class:`Fn.Vector`
-                The complex conjugate vector. If :obj:`out` was
+                The complex conjugate vector. If ``out`` was
                 provided, it is returned. Otherwise, the complex
                 conjugate is returned as a new vector.
 
@@ -1969,7 +1969,7 @@ class FnVectorWeighting(FnWeighting):
 
         Parameters
         ----------
-        x : `Fn.Vector`
+        x : :class:`Fn.Vector`
             Vector whose norm is calculated
 
         Returns

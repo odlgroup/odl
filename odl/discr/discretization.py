@@ -461,7 +461,7 @@ def dspace_type(space, impl, dtype=None):
         The backend for the data space
     dtype : `type`, optional
         Data type which the space is supposed to use. If `None`, the
-        space type is purely determined from :obj:`space` and
+        space type is purely determined from ``space`` and
         ``impl``. If given, it must be compatible with the
         field of ``space``. Non-floating types result in basic
         :class:`Fn`-type spaces.

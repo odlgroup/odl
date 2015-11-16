@@ -17,7 +17,7 @@
 
 """Mathematical operators in ODL.
 
-Operators in ODL are represented by the abstract :class:`Operator`
+Operators in ODL are represented by the abstract :class:`~odl.Operator`
 class. As an *abstract class*, it cannot be used directly but must be
 subclassed for concrete implementation. To define your own operator,
 you start by writing::
@@ -25,12 +25,12 @@ you start by writing::
     class MyOperator(odl.Operator):
         ...
 
-:class:`Operator` has a couple of *abstract methods* which need to be
-explicitly overridden by any subclass, namely
+:class:`~odl.Operator` has a couple of *abstract methods* which need to
+be explicitly overridden by any subclass, namely
 
-:attr:`domain`: :class:`Set`
+:attr:`~odl.Operator.domain`: :class:`~odl.Set`
     Set of elements to which the operator can be applied
-:attr:`range`: :class:`Set`
+:attr:`~odl.Operator.range` :class:`~odl.Set`
     Set in which the operator takes values
 
 As a simple example, you can implement the matrix multiplication
@@ -52,14 +52,15 @@ for a matrix :math:`A\\in \mathbb{R}^{n\\times m}` as follows::
             ran = odl.Rn(matrix.shape[0])
             super().__init__(dom, ran)
 
-In addition, an :class:`Operator` needs at least one way of evaluation,
-*in-place* or *out-of-place*.
+In addition, an :class:`~odl.Operator` needs at least one way of
+evaluation, *in-place* or *out-of-place*.
 
 - In-place evaluation means that the operator is evaluated on a
-  ``domain`` element, and the result is written to an *already existing*
-  ``range`` element. To implement this behavior, create the (private)
-  :attr:`_apply()` method with the following signature, here given
-  for the above example::
+  :attr:`~odl.Operator.domain` element, and the result is written to an
+  *already existing* :attr:`~odl.Operator.range` element. To implement
+  this behavior, create the (private) :attr:`~odl.Operator._apply`
+  method with the following signature, here given for the above
+  example::
 
     class MatVecOperator(odl.Operator):
         ...
@@ -70,10 +71,11 @@ In addition, an :class:`Operator` needs at least one way of evaluation,
   *whenever possible*.
 
 - Out-of-place evaluation means that the
-  operator is evaluated on a ``domain`` element, and the result is
-  written to a *newly allocated* ``range`` element. To implement this
-  behavior, create the (private) :obj:`_call()` methodwith the following
-  signature, here given for the above example::
+  operator is evaluated on a :attr:`~odl.Operator.domain` element, and
+  the result is written to a *newly allocated*
+  :attr:`~odl.Operator.range` element. To implement this
+  behavior, create the (private) :meth:`~odl.Operator._call` method
+  with the following signature, here given for the above example::
 
     class MatVecOperator(odl.Operator):
         ...

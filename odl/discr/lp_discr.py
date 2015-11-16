@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""L^p type discretizations of function spaces."""
+""":math:`L^p` type discretizations of function spaces."""
 
 # TODO: write some introduction doc
 
@@ -213,7 +213,7 @@ class DiscreteLp(Discretization):
             return '{}({})'.format(self.__class__.__name__, arg_str)
 
     def __str__(self):
-        """lp.__str__() <==> str(lp)."""
+        """``lp.__str__() <==> str(lp)``."""
         return self.__repr__()
 
     class Vector(Discretization.Vector):
