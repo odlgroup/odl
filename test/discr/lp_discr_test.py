@@ -31,63 +31,80 @@ import odl
 from odl.util.testutils import all_equal, skip_if_no_cuda
 
 
-# TODO: Lp for p != 2
+# TODO: element from function - waiting for vectorization
 
 
-def test_init():
+# Pytest fixture
+
+
+# Simply modify exp_params to modify the fixture
+exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
+exp_ids = [' p = {} '.format(p) for p in exp_params]
+exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
+
+
+@exp_fixture
+def exponent(request):
+    return request.param
+
+
+def test_init(exponent):
     # Validate that the different init patterns work and do not crash.
     space = odl.FunctionSpace(odl.Interval(0, 1))
     grid = odl.uniform_sampling(space.domain, 10)
-    R10 = odl.Rn(10)
-    odl.DiscreteLp(space, grid, R10)
+    rn = odl.Rn(10, exponent=exponent)
+    odl.DiscreteLp(space, grid, rn, exponent=exponent)
 
     # Normal discretization of unit interval with complex
     complex_space = odl.FunctionSpace(odl.Interval(0, 1),
                                       field=odl.ComplexNumbers())
-    C10 = odl.Cn(10)
-    odl.DiscreteLp(complex_space, grid, C10)
+    cn = odl.Cn(10, exponent=exponent)
+    odl.DiscreteLp(complex_space, grid, cn, exponent=exponent)
 
     # Real space should not work with complex
     with pytest.raises(ValueError):
-        odl.DiscreteLp(space, grid, C10)
+        odl.DiscreteLp(space, grid, cn)
 
     # Complex space should not work with reals
     with pytest.raises(ValueError):
-        odl.DiscreteLp(complex_space, grid, R10)
+        odl.DiscreteLp(complex_space, grid, rn)
 
     # Wrong size of underlying space
-    R20 = odl.Rn(20)
+    rn_wrong_size = odl.Rn(20)
     with pytest.raises(ValueError):
-        odl.DiscreteLp(space, grid, R20)
+        odl.DiscreteLp(space, grid, rn_wrong_size)
 
 
 @skip_if_no_cuda
-def test_init_cuda():
+def test_init_cuda(exponent):
     # Normal discretization of unit interval
     space = odl.FunctionSpace(odl.Interval(0, 1))
     grid = odl.uniform_sampling(space.domain, 10)
-    R10 = odl.CudaRn(10)
-    odl.DiscreteLp(space, grid, R10)
+    rn = odl.CudaRn(10, exponent=exponent)
+    odl.DiscreteLp(space, grid, rn, exponent=exponent)
 
 
-def test_factory():
+def test_factory(exponent):
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    discr = odl.uniform_discr(space, 10, impl='numpy')
+    discr = odl.uniform_discr(space, 10, impl='numpy', exponent=exponent)
 
     assert isinstance(discr.dspace, odl.Rn)
+    assert discr.dspace.exponent == exponent
 
     # Complex
     space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
-    discr = odl.uniform_discr(space, 10, impl='numpy')
+    discr = odl.uniform_discr(space, 10, impl='numpy', exponent=exponent)
 
     assert isinstance(discr.dspace, odl.Cn)
+    assert discr.dspace.exponent == exponent
 
 
 @skip_if_no_cuda
-def test_factory_cuda():
+def test_factory_cuda(exponent):
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    discr = odl.uniform_discr(space, 10, impl='cuda')
+    discr = odl.uniform_discr(space, 10, impl='cuda', exponent=exponent)
     assert isinstance(discr.dspace, odl.CudaRn)
+    assert discr.dspace.exponent == exponent
 
     # Cuda currently does not support complex numbers, check error
     space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
@@ -179,34 +196,36 @@ def test_factory_dtypes_cuda():
             odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
 
 
-def test_factory_nd():
+def test_factory_nd(exponent):
     # 2d
     square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    odl.uniform_discr(square_space, (5, 5))
+    odl.uniform_discr(square_space, (5, 5), exponent=exponent)
 
     # 3d
     cube_space = odl.FunctionSpace(odl.Cuboid([0, 0, 0], [1, 1, 1]))
-    odl.uniform_discr(cube_space, (5, 5, 5))
+    odl.uniform_discr(cube_space, (5, 5, 5), exponent=exponent)
 
     # nd
     cube10_space = odl.FunctionSpace(odl.IntervalProd([0]*10, [1]*10))
-    odl.uniform_discr(cube10_space, (5,)*10)
+    odl.uniform_discr(cube10_space, (5,)*10, exponent=exponent)
 
 
-def test_element_1d():
+def test_element_1d(exponent):
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    discr = odl.uniform_discr(space, 3, impl='numpy')
+    discr = odl.uniform_discr(space, 3, impl='numpy', exponent=exponent)
+    dspace = odl.Rn(3, exponent=exponent, weight=discr.grid.cell_volume)
     vec = discr.element()
     assert isinstance(vec, discr.Vector)
-    assert isinstance(vec.ntuple, odl.Rn.Vector)
+    assert vec.ntuple in dspace
 
 
-def test_element_2d():
+def test_element_2d(exponent):
     space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(space, (3, 3), impl='numpy')
+    discr = odl.uniform_discr(space, (3, 3), impl='numpy', exponent=exponent)
+    dspace = odl.Rn(9, exponent=exponent, weight=discr.grid.cell_volume)
     vec = discr.element()
     assert isinstance(vec, discr.Vector)
-    assert isinstance(vec.ntuple, odl.Rn.Vector)
+    assert vec.ntuple in dspace
 
 
 def test_element_from_array_1d():
@@ -232,7 +251,7 @@ def test_element_from_array_2d():
     # Check ordering
     assert all_equal(vec.ntuple, [1, 2, 3, 4])
 
-    # Linear creation works aswell
+    # Linear creation works as well
     linear_vec = discr.element([1, 2, 3, 4])
     assert all_equal(vec.ntuple, [1, 2, 3, 4])
 
