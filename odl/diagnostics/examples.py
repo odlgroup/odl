@@ -177,8 +177,8 @@ def vector_examples(space):
 def samples(*sets):
     """Generates some samples from the given sets.
 
-    Currently supports vectors according to `vector_examples`
-    and scalars according to `scalar_examples`.
+    Currently supports vectors according to :func:`vector_examples`
+    and scalars according to :func:`scalar_examples`.
 
     Parameters
     ----------

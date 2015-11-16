@@ -453,7 +453,7 @@ class LinearSpace(Set):
 
         Returns
         -------
-        dist : RealNumber
+        dist : `float`
                Distance between vectors
         """
         if x1 not in self:
@@ -473,7 +473,7 @@ class LinearSpace(Set):
         return float(self._norm(x))
 
     def inner(self, x1, x2):
-        """Calculate the inner product of the vectors x and y."""
+        """Calculate the inner product of the vectors x1 and x2."""
         if x1 not in self:
             raise TypeError('first vector {!r} not in space {!r}'
                             ''.format(x1, self))
@@ -532,7 +532,7 @@ class LinearSpace(Set):
             All deriving classes must call this method to set space.
             """
             if not isinstance(space, LinearSpace):
-                raise TypeError('space {!r} is not a :class:`LinearSpace` instance'
+                raise TypeError('space {!r} is not a `LinearSpace` instance'
                                 ''.format(space))
             self._space = space
 
@@ -574,14 +574,14 @@ class LinearSpace(Set):
 
         # Convenience operators
         def __iadd__(self, other):
-            """Implementation of 'self += other'."""
+            """Implementation of ``self += other``."""
             if other in self.space:
                 return self.space.lincomb(1, self, 1, other, out=self)
             else:
                 return NotImplemented
 
         def __add__(self, other):
-            """Implementation of 'self + other'."""
+            """Implementation of ``self + other``."""
             # Instead of using __iadd__ we duplicate code here for performance
             if other in self.space:
                 tmp = self.space.element()
@@ -590,14 +590,14 @@ class LinearSpace(Set):
                 return NotImplemented
                 
         def __isub__(self, other):
-            """Implementation of 'self -= other'."""
+            """Implementation of ``self -= other``."""
             if other in self.space:
                 return self.space.lincomb(1, self, -1, other, out=self)
             else:
                 return NotImplemented
 
         def __sub__(self, other):
-            """Implementation of 'self - other'."""
+            """Implementation of ``self - other``."""
             # Instead of using __isub__ we duplicate code here for performance
             if other in self.space:
                 tmp = self.space.element()
@@ -606,7 +606,7 @@ class LinearSpace(Set):
                 return NotImplemented
 
         def __imul__(self, other):
-            """Implementation of 'self *= other'."""
+            """Implementation of ``self *= other``."""
             if other in self.space.field:
                 return self.space.lincomb(other, self, out=self)
             elif other in self.space:
@@ -615,7 +615,7 @@ class LinearSpace(Set):
                 return NotImplemented
 
         def __mul__(self, other):
-            """Implementation of 'self * other'."""
+            """Implementation of ``self * other``."""
             # Instead of using __imul__ we duplicate code here for performance
             if other in self.space.field:
                 tmp = self.space.element()
@@ -629,7 +629,7 @@ class LinearSpace(Set):
         __rmul__ = __mul__
 
         def __itruediv__(self, other):
-            """Implementation of 'self /= other' (true division)."""
+            """Implementation of ``self /= other`` (true division)."""
             if other in self.space.field:
                 return self.space.lincomb(1.0 / other, self, out=self)
             elif other in self.space:
@@ -640,7 +640,7 @@ class LinearSpace(Set):
         __idiv__ = __itruediv__
 
         def __truediv__(self, other):
-            """Implementation of 'self / other' (true division)."""
+            """Implementation of ``self / other`` (true division)."""
             if other in self.space.field:
                 tmp = self.space.element()
                 return self.space.lincomb(1.0 / other, self, out=tmp)
@@ -653,7 +653,7 @@ class LinearSpace(Set):
         __div__ = __truediv__
 
         def __ipow__(self, n):
-            """Take the n:th power of self, only defined for integer n"""
+            """Take the n:th power of self inplace, only defined for integer n"""
             if n == 1:
                 return self
             elif n % 2 == 0:
@@ -672,11 +672,11 @@ class LinearSpace(Set):
             return tmp
 
         def __neg__(self):
-            """Implementation of '-self'."""
+            """Implementation of ``-self``."""
             return (-1) * self
             
         def __pos__(self):
-            """Implementation of '+self'."""
+            """Implementation of ``+self``."""
             return self.copy()
 
         # Metric space method

@@ -138,11 +138,11 @@ class FunctionSet(Set):
                 self == other.space)
 
     def __repr__(self):
-        """`s.__repr__() <==> repr(s)`."""
+        """``s.__repr__() <==> repr(s)``."""
         return 'FunctionSet({!r}, {!r})'.format(self.domain, self.range)
 
     def __str__(self):
-        """`s.__str__() <==> str(s)`."""
+        """``s.__str__() <==> str(s)``."""
         return 'FunctionSet({}, {})'.format(self.domain, self.range)
 
     class Vector(Operator):
@@ -313,16 +313,18 @@ class FunctionSet(Set):
             return self._apply(out, *x)
 
         def __ne__(self, other):
-            """`vec.__ne__(other) <==> vec != other`"""
+            """``vec.__ne__(other) <==> vec != other``"""
             return not self.__eq__(other)
 
         def __str__(self):
+            """``vec.__str__() <==> str(vec)``"""
             if self._call is not None:
                 return str(self._call)
             else:
                 return str(self._apply_impl)
 
         def __repr__(self):
+            """``vec.__repr__() <==> repr(vec)``"""
             if self._call is not None:
                 return '{!r}.element({!r})'.format(self.space, self._call)
             else:
@@ -506,11 +508,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
         y._function = product
 
     def __repr__(self):
-        """`s.__repr__() <==> repr(s)`."""
+        """``s.__repr__() <==> repr(s)``."""
         return 'FunctionSpace({!r}, {!r})'.format(self.domain, self.range)
 
     def __str__(self):
-        """`s.__str__() <==> str(s)`."""
+        """``s.__str__() <==> str(s)``."""
         return 'FunctionSpace({}, {})'.format(self.domain, self.range)
 
     class Vector(FunctionSet.Vector, LinearSpace.Vector):

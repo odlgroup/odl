@@ -282,8 +282,7 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `Vector space
-<https://en.wikipedia.org/wiki/Vector_space>`_.
+        Wikipedia article on `Vector space <https://en.wikipedia.org/wiki/Vector_space>`_.
         """
         print('\n== Verifying linear space properties ==\n')
 
@@ -370,8 +369,7 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `inner product space
-<https://en.wikipedia.org/wiki/Inner_product_space>`_.
+        Wikipedia article on `inner product space <https://en.wikipedia.org/wiki/Inner_product_space>`_.
         """
         print('\n== Verifying inner product ==\n')
 
@@ -466,8 +464,7 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `norm
-<https://en.wikipedia.org/wiki/Norm_(mathematics)>`_.
+        Wikipedia article on `norm <https://en.wikipedia.org/wiki/Norm_(mathematics)>`_.
         """
         print('\n== Verifying norm ==\n')
 
@@ -564,8 +561,7 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `metric
-<https://en.wikipedia.org/wiki/Metric_(mathematics)>`_.
+        Wikipedia article on `metric <https://en.wikipedia.org/wiki/Metric_(mathematics)>`_.
         """
         print('\n== Verifying dist ==\n')
 

@@ -292,7 +292,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
             Returns
             -------
-            values : `dspace_type.Vector`
+            values : :class:`NtuplesBase.Vector`
                 The value(s) at the index (indices)
             """
             return self.ntuple.__getitem__(indices)
@@ -307,9 +307,9 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             values : {scalar, array-like, :class:`NtuplesBase.Vector`}
                 The value(s) that are to be assigned.
 
-                If `index` is an `int`, `value` must be single value.
+                If ``index`` is an `int`, ``value`` must be single value.
 
-                If `index` is a `slice`, `value` must be broadcastable
+                If ``index`` is a `slice`, ``value`` must be broadcastable
                 to the size of the slice (same size, shape (1,)
                 or single value).
             """
@@ -319,11 +319,11 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                 self.ntuple.__setitem__(indices, values)
 
         def __str__(self):
-            """`vec.__str__() <==> str(vec)`."""
+            """``vec.__str__() <==> str(vec)``."""
             return arraynd_str(self.asarray())
 
         def __repr__(self):
-            """`vec.__repr__() <==> repr(vec)`."""
+            """``vec.__repr__() <==> repr(vec)``."""
             return '{!r}.element({})'.format(self.space,
                                              arraynd_repr(self.asarray()))
 

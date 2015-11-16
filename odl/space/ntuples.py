@@ -339,12 +339,12 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be accessed
 
             Returns
             -------
-            values : `self.dtype.element` or `space.Vector`
+            values : :attr:`NtuplesBase.dtype` element or :class:`NtuplesBase.Vector`
                 The value(s) at the index (indices)
 
 
@@ -371,14 +371,14 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            indices : int or slice
+            indices : `int` or `slice`
                 The position(s) that should be set
             values : {scalar, array-like, :class:`NTuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `indices` is an integer, `value` must be single value.
+                If ``indices`` is an integer, ``value`` must be single value.
 
-                If `indices` is a slice, `value` must be
+                If ``indices`` is a slice, ``value`` must be
                 broadcastable to the size of the slice (same size,
                 shape (1,) or single value).
 
@@ -843,7 +843,7 @@ class Fn(FnBase, Ntuples):
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two vectors, assigned to out.
 
-        out = x1 * x2
+        ``out = x1 * x2``
 
         Parameters
         ----------
@@ -872,7 +872,7 @@ class Fn(FnBase, Ntuples):
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to out.
 
-        out = x1 / x2
+        ``out = x1 / x2``
 
         Parameters
         ----------
@@ -913,7 +913,7 @@ class Fn(FnBase, Ntuples):
         return self.element(np.zeros(self.size, dtype=self.dtype))
 
     def one(self):
-        """Create a vector of zeros.
+        """Create a vector of ones.
 
         Examples
         --------
@@ -931,7 +931,7 @@ class Fn(FnBase, Ntuples):
         -------
         equals : `bool`
             `True` if other is an instance of this space's type
-            with the same :attr:`size` and :attr:`dtype`, and **identical**
+            with the same :attr:`size` and :attr:`dtype`, and identical
             distance function, otherwise `False`.
 
         Examples
@@ -1178,7 +1178,7 @@ class Cn(Fn):
                             ''.format(dtype))
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         inner_fstr = '{}'
         if self.dtype != np.complex128:
             inner_fstr += ', {dtype}'
@@ -1188,7 +1188,7 @@ class Cn(Fn):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`cn.__str__() <==> str(cn)`."""
+        """``cn.__str__() <==> str(cn)``."""
         if self.dtype == np.complex128:
             return 'Cn({})'.format(self.size)
         else:
@@ -1228,7 +1228,7 @@ class Rn(Fn):
                             ''.format(dtype))
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         inner_fstr = '{}'
         if self.dtype != 'float64':
             inner_fstr += ', {dtype}'
@@ -1238,7 +1238,7 @@ class Rn(Fn):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`rn.__str__() <==> str(rn)`."""
+        """``rn.__str__() <==> str(rn)``."""
         if self.dtype == np.float64:
             return 'Rn({})'.format(self.size)
         else:
@@ -1654,7 +1654,7 @@ class FnMatrixWeighting(_FnWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`inner.__repr__() <==> repr(inner)`."""
+        """``inner.__str__() <==> str(inner)``."""
         return 'Weighting: matrix =\n{}'.format(self.matrix)
 
 
@@ -1775,7 +1775,7 @@ class FnVectorWeighting(_FnWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`inner.__repr__() <==> repr(inner)`."""
+        """``inner.__str__() <==> str(inner)``."""
         return 'Weighting: vector =\n{}'.format(self.vector)
 
 
@@ -1916,7 +1916,7 @@ class FnConstWeighting(_FnWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`w.__str__() <==> str(w)`."""
+        """``w.__str__() <==> str(w)``."""
         return 'Weighting: const = {:.4}'.format(self.const)
 
 

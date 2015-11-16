@@ -62,8 +62,7 @@ class OperatorTest(object):
 
         References
         ----------
-        Wikipedia article on `Operator norm
-<https://en.wikipedia.org/wiki/Operator_norm>`_.
+        Wikipedia article on `Operator norm <https://en.wikipedia.org/wiki/Operator_norm>`_.
         """
         print('\n== Calculating operator norm ==\n')
 
@@ -137,7 +136,12 @@ class OperatorTest(object):
                                  ''.format(n_x, error))
 
     def adjoint(self):
-        """Verify that the adjoint works appropriately."""
+        """Verify that the adjoint works appropriately.
+        
+        References
+        ----------
+        Wikipedia article on `Adjoint <https://en.wikipedia.org/wiki/Adjoint>`_.
+        """
         try:
             self.operator.adjoint
         except NotImplementedError:
@@ -185,7 +189,13 @@ class OperatorTest(object):
                                  ''.format(n_x, n_dx, step, error))
 
     def derivative(self, step=0.0001):
-        """Verify that the derivative works appropriately."""
+        """Verify that the derivative works appropriately.
+                
+        References
+        ----------
+        Wikipedia article on `Derivative <https://en.wikipedia.org/wiki/Derivative>`_.
+        Wikipedia article on `Fréchet derivative <https://en.wikipedia.org/wiki/Fr%C3%A9chet_derivative>`_.
+        """
 
         print('\n==Verifying derivative of operator ==')
         try:

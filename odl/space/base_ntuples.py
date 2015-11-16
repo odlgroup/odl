@@ -134,12 +134,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 self.dtype == other.dtype)
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """``s.__repr__() <==> repr(s)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
     def __str__(self):
-        """s.__str__() <==> str(s)."""
+        """``s.__str__() <==> str(s)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
@@ -220,7 +220,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             """
 
         def __len__(self):
-            """`v.__len__() <==> len(v)`.
+            """``v.__len__() <==> len(v)``.
 
             Return the number of space dimensions.
             """
@@ -305,15 +305,15 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
                 return self.space.element(obj)
 
         def __ne__(self, other):
-            """`vec.__ne__(other) <==> vec != other`."""
+            """``vec.__ne__(other) <==> vec != other``."""
             return not self.__eq__(other)
 
         def __str__(self):
-            """`vec.__str__() <==> str(vec)`."""
+            """``vec.__str__() <==> str(vec)``."""
             return array1d_str(self)
 
         def __repr__(self):
-            """`vec.__repr__() <==> repr(vec)`."""
+            """``vec.__repr__() <==> repr(vec)``."""
             return '{!r}.element({})'.format(self.space,
                                              array1d_repr(self))
 

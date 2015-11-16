@@ -248,14 +248,14 @@ class DiscreteL2(Discretization):
             values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
-                If `indices` is an `int`, `value` must be single value.
+                If ``indices`` is an `int`, ``value`` must be single value.
 
-                If `indices` is a `slice`, `value` must be
+                If ``indices`` is a `slice`, ``value`` must be
                 broadcastable to the size of the slice (same size,
                 shape (1,) or single value).
-                For `indices=slice(None, None, None)`, i.e. in the call
-                `vec[:] = values`, a multi-dimensional array of correct
-                shape is allowed as `values`.
+                For ``indices=slice(None, None, None)``, i.e. in the call
+                ``vec[:] = values``, a multi-dimensional array of correct
+                shape is allowed as ``values``.
             """
             if values in self.space:
                 self.ntuple.__setitem__(indices, values.ntuple)
