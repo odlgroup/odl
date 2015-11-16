@@ -33,7 +33,7 @@ __all__ = ('OperatorTest',)
 
 
 class OperatorTest(object):
-    """ Automated tests for :class:`Operator`'s
+    """ Automated tests for :class:`~odl.Operator`'s
 
     This class allows users to automatically test various
     features of an Operator such as linearity and the 
@@ -45,7 +45,7 @@ class OperatorTest(object):
 
         Parameters
         ----------
-        operator : :class:`Operator`
+        operator : :class:`~odl.Operator`
             The operator to run tests on
         operator_norm : `float`
             The norm of the operator, used for error estimates

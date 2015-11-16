@@ -43,7 +43,7 @@ This public method is the factory for the inner
 :class:`LinearSpace.Vector` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
 simplest possible case, it just delegates the construction to the
-:class:`Vector` class.
+:class:`LinearSpace.Vector` class.
 
 If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
@@ -84,14 +84,14 @@ functions, see below.
 ``field``
 ---------
 The public attribute determining the type of scalars which
-underlie the space. Can be instances of either :class:`RealNumbers` or
-:class:`ComplexNumbers` (see :mod:`odl.set.sets`).
+underlie the space. Can be instances of either :class:`~odl.RealNumbers` or
+:class:`~odl.ComplexNumbers` (see :mod:`~odl.set.sets`).
 
 Should be implemented as a ``@property`` to make it immutable.
 
 ``__eq__(other)``
 -----------------
-:class:`LinearSpace` inherits this abstract method from :class:`Set`. Its
+:class:`LinearSpace` inherits this abstract method from :class:`~odl.Set`. Its
 purpose is to check two :class:`LinearSpace` instances for equality.
 
 **Parameters:**
@@ -166,7 +166,7 @@ product of two space elements ``x`` and ``y``.
 
 **Returns:**
     inner : `float` or `complex`
-        The inner product of ``x`` and ``y``. If :attr:`field` is the real
+        The inner product of ``x`` and ``y``. If :attr:`LinearSpace.field` is the real
         numbers, ``inner`` is a `float`, otherwise `complex`.
 
 **Requirements:**
@@ -264,17 +264,17 @@ class LinearSpace(Set):
 
     @abstractmethod
     def _lincomb(self, a, x1, b, x2, out):
-        """Calculate out = a*x1 + b*x2.
+        """Calculate ``out = a*x1 + b*x2``.
 
         This method is intended to be private, public callers should
-        resort to lincomb which is type-checked.
+        resort to :meth:`lincomb` which is type-checked.
         """
 
     def _dist(self, x1, x2):
         """Calculate the distance between x1 and x2.
 
         This method is intended to be private, public callers should
-        resort to `dist` which is type-checked.
+        resort to :meth:`dist` which is type-checked.
         """
         # default implementation
         return self.norm(x1-x2)
@@ -283,7 +283,7 @@ class LinearSpace(Set):
         """Calculate the norm of x.
 
         This method is intended to be private, public callers should
-        resort to `norm` which is type-checked.
+        resort to :meth:`norm` which is type-checked.
         """
         # default implementation
         return m.sqrt(self.inner(x, x).real)
@@ -292,7 +292,7 @@ class LinearSpace(Set):
         """Calculate the inner product of x1 and x2.
 
         This method is intended to be private, public callers should
-        resort to `inner` which is type-checked.
+        resort to :meth:`inner` which is type-checked.
         """
         # No default implementation possible
         raise NotImplementedError('inner product not implemented in space {!r}'
@@ -302,7 +302,7 @@ class LinearSpace(Set):
         """Calculate the pointwise multiplication out = x1 * x2.
 
         This method is intended to be private, public callers should
-        resort to `multiply` which is type-checked.
+        resort to :meth:`multiply` which is type-checked.
         """
         # No default implementation possible
         raise NotImplementedError('multiplication not implemented in space '
@@ -626,7 +626,9 @@ class LinearSpace(Set):
             else:
                 return NotImplemented
 
-        __rmul__ = __mul__
+        def __rmul__(self, other):
+            """Implementation of ``other * self``."""
+            return self.__mul__(other)
 
         def __itruediv__(self, other):
             """Implementation of ``self /= other`` (true division)."""

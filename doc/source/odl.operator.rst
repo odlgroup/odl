@@ -1,9 +1,6 @@
 odl.operator package
 ====================
 
-Submodules
-----------
-
 odl.operator.default_ops module
 -------------------------------
 

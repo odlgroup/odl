@@ -24,6 +24,11 @@ from __future__ import absolute_import
 __all__ = ()
 
 from . import base_ntuples
+<<<<<<< HEAD
+=======
+from .base_ntuples import *
+__all__ += base_ntuples.__all__
+>>>>>>> master
 
 from . import ntuples
 from .ntuples import *
@@ -38,7 +43,7 @@ try:
     from .cu_ntuples import *
     __all__ += cu_ntuples.__all__
     CUDA_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     CUDA_AVAILABLE = False
     CUDA_DTYPES = ()
 

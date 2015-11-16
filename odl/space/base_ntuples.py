@@ -37,7 +37,7 @@ from odl.util.utility import (
     is_scalar_dtype, is_real_dtype)
 
 
-__all__ = ('NtuplesBase', 'FnBase', '_FnWeightingBase')
+__all__ = ('NtuplesBase', 'FnBase', 'FnWeightingBase')
 
 
 class NtuplesBase(with_metaclass(ABCMeta, Set)):
@@ -260,7 +260,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, :class:`Ntuples.Vector`}
+            values : {scalar, array-like, :class:`NtuplesBase.Vector`}
                 The value(s) that are to be assigned.
 
                 If ``index`` is an integer, ``value`` must be single value.
@@ -374,8 +374,11 @@ class FnBase(NtuplesBase, LinearSpace):
         independent of data representation.
         """
 
-        __eq__ = LinearSpace.Vector.__eq__
-        copy = LinearSpace.Vector.copy
+        def __eq__(self, other):
+            return LinearSpace.Vector.__eq__(self, other)
+
+        def copy(self):
+            return LinearSpace.Vector.copy(self)
 
 
 class FnWeightingBase(with_metaclass(ABCMeta, object)):
@@ -386,9 +389,9 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to :class:`Operator` but without
+    The functions are implemented similarly to :class:`~odl.Operator` but without
     extra type checks of input parameters - this is done in the callers
-    of the :class:`LinearSpace` instance where these functions used.
+    of the :class:`~odl.LinearSpace` instance where these functions used.
     """
 
     def __init__(self, exponent=2.0, dist_using_inner=False):
@@ -400,7 +403,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the formula
+            Calculate :meth:`dist` using the formula
 
             :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
             \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
@@ -442,7 +445,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         -----
         This operation must be computationally cheap, i.e. no large
         arrays may be compared element-wise. That is the task of the
-        `equiv` method.
+        :meth:`equiv` method.
         """
 
     def equiv(self, other):
@@ -477,8 +480,8 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def norm(self, x):
         """Calculate the norm of a vector.
 
-        This is the standard implementation using ``inner``. Subclasses
-        should override it for optimization purposes.
+        This is the standard implementation using :meth:`inner`.
+        Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
@@ -495,8 +498,8 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
 
-        This is the standard implementation using `norm`. Subclasses
-        should override it for optimization purposes.
+        This is the standard implementation using :meth:`norm`.
+        Subclasses should override it for optimization purposes.
 
         Parameters
         ----------

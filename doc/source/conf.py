@@ -136,6 +136,17 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# Warn on dead links
+nitpicky = True
+nitpick_ignore = [('py:class','future.types.newobject.newobject'),
+                  ('py:class','odl.set.space.Vector'),
+                  ('py:class','odl.discr.discretization.Vector'),
+                  ('py:class','odl.discr.l2_discr.Vector'),
+                  ('py:class','odl.space.base_ntuples.Vector'),
+                  ('py:class','odl.space.ntuples.Vector'),
+                  ('py:class','odl.space.cu_ntuples.Vector'),
+                  ('py:class','odl.space.fspace.Vector')]
+
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -181,7 +192,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   (master_doc, 'odl.tex', u'odl Documentation',
-   u'Jonas Adler', 'manual'),
+   u'Jonas Adler, Holger Kohr & Ozan Öktem', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

@@ -48,7 +48,7 @@ from odl.util.utility import (
 
 
 __all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
-           'MatVecOperator',
+           'MatVecOperator', 'FnWeighting',
            'FnMatrixWeighting', 'FnVectorWeighting', 'FnConstWeighting',
            'weighted_dist', 'weighted_norm', 'weighted_inner')
 
@@ -96,7 +96,7 @@ class Ntuples(NtuplesBase):
 
         Returns
         -------
-        element : :class:`NTuples.Vector`
+        element : :class:`Ntuples.Vector`
             The new element created (from ``inp``).
 
         Notes
@@ -160,7 +160,7 @@ class Ntuples(NtuplesBase):
         def __init__(self, space, data):
             """Initialize a new instance."""
             if not isinstance(space, Ntuples):
-                raise TypeError('{!r} not an `NTuples` instance.'
+                raise TypeError('{!r} not an `Ntuples` instance.'
                                 ''.format(space))
 
             if not isinstance(data, np.ndarray):
@@ -289,7 +289,7 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            copy : :class:`NTuples.Vector`
+            copy : :class:`Ntuples.Vector`
                 The deep copy
 
             Examples
@@ -333,8 +333,8 @@ class Ntuples(NtuplesBase):
                 return self.data[int(indices)]  # single index
             except TypeError:
                 arr = self.data[indices]
-                return type(self.space)(len(arr),
-                                        dtype=self.dtype).element(arr)
+                return type(self.space)(
+                    len(arr), dtype=self.dtype).element(arr)
 
         def __setitem__(self, indices, values):
             """Set values of this vector.
@@ -343,7 +343,7 @@ class Ntuples(NtuplesBase):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, :class:`NTuples.Vector`}
+            values : {scalar, array-like, :class:`Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
                 If ``indices`` is an integer, ``value`` must be scalar.
@@ -418,7 +418,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : :class:`NtuplesBase.Vector`
+    x1,...,xN : :class:`~odl.NtuplesBase.Vector`
         The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
@@ -539,10 +539,10 @@ class Fn(FnBase, Ntuples):
 
     """The vector space :math:`\mathbb{F}^n` with vector multiplication.
 
-    This space implements n-tuples of elements from a field :math:`\mathbb{F}`,
-    which can be the real or the `complex` numbers.
+    This space implements n-tuples of elements from a field
+    :math:`\mathbb{F}`, which can be the real or the complex numbers.
 
-    Its elements are represented as instances of the inner
+    Its elements are represented as instances of the
     :class:`Fn.Vector` class.
     """
 
@@ -583,7 +583,7 @@ class Fn(FnBase, Ntuples):
             'exponent' : positive `float`
                 Exponent of the norm. For values other than 2.0, no
                 inner product is defined.
-                If `weight` is a sparse matrix, only 1.0, 2.0 and `inf`
+                If `weight` is a sparse matrix, only 1.0, 2.0 and ``inf``
                 are allowed.
 
                 This option is ignored if ``dist``, ``norm`` or
@@ -733,8 +733,8 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        a, b : :attr:`field` element
-            Scalars to multiply x and y with
+        a, b : :attr:`~odl.FnBase.field`
+            Scalar to multiply x and y with.
         x1, x2 : :class:`Fn.Vector`
             The summands
         out : :class:`Fn.Vector`
@@ -939,8 +939,9 @@ class Fn(FnBase, Ntuples):
         -------
         equals : `bool`
             `True` if other is an instance of this space's type
-            with the same ``size``, ``dtype`` and space functions,
-            otherwise `False`.
+            with the same :attr:`~odl.NtuplesBase.size` and
+            :attr:`~odl.NtuplesBase.dtype`, and identical
+            distance function, otherwise `False`.
 
         Examples
         --------
@@ -1156,12 +1157,13 @@ class Fn(FnBase, Ntuples):
 
 
 class Cn(Fn):
-    """The `complex` vector space :math:`C^n` with vector multiplication.
+
+    """The complex vector space :math:`C^n` with vector multiplication.
 
     See also
     --------
-    :class:`Fn` : n-tuples over a field :math:`\mathbb{F}` with arbitrary
-    scalar data type
+    Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
+    data type
     """
 
     def __init__(self, size, dtype='complex128', **kwargs):
@@ -1204,14 +1206,23 @@ class Cn(Fn):
         else:
             return 'Cn({}, {})'.format(self.size, self.dtype)
 
+    class Vector(Fn.Vector):
+        """A vector in a real :class:`Fn` space
+
+        See also
+        --------
+        Fn.Vector
+        """
+        pass
 
 class Rn(Fn):
+
     """The real vector space :math:`R^n` with vector multiplication.
 
     See also
     --------
-    :class:`Fn` : n-tuples over a field :math:`\mathbb{F}` with
-    arbitrary scalar data type
+    Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
+    data type
     """
 
     def __init__(self, size, dtype='float64', **kwargs):
@@ -1254,6 +1265,15 @@ class Rn(Fn):
         else:
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
+    class Vector(Fn.Vector):
+        """A vector in a complex :class:`Fn` space
+
+        See also
+        --------
+        Fn.Vector
+        """
+        pass
+
 
 class MatVecOperator(Operator):
 
@@ -1269,7 +1289,7 @@ class MatVecOperator(Operator):
             castable to the range dtype.
         ran : :class:`Fn`
             Space to which the matrix maps
-        matrix : array-like or :class:`scipy.sparse.spmatrix`
+        matrix : array-like or ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``dom`` and ``m`` the size
             of ``ran``. Its dtype must be castable to the range dtype.
@@ -1398,7 +1418,7 @@ def weighted_norm(weight, exponent=2.0):
         2-dimensional array as a weighting matrix.
     exponent : positive `float`
         Exponent of the norm. If `weight` is a sparse matrix, only
-        1.0, 2.0 and `inf` are allowed.
+        1.0, 2.0 and ``inf`` are allowed.
 
     Returns
     -------
@@ -1425,7 +1445,7 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
         2-dimensional array as a weighting matrix.
     exponent : positive `float`
         Exponent of the norm. If ``weight`` is a sparse matrix, only
-        1.0, 2.0 and `inf` are allowed.
+        1.0, 2.0 and ``inf`` are allowed.
     use_inner : `bool`, optional
         Calculate ``dist`` using the formula
 
@@ -1838,7 +1858,7 @@ class FnVectorWeighting(FnWeighting):
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If ``matrix`` is a sparse matrix, only 1.0, 2.0 and `inf`
+            If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
         dist_using_inner : `bool`, optional
             Calculate ``dist`` using the formula

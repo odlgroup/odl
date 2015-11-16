@@ -217,7 +217,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : :class:`Set`
+        other : :class:`~odl.Set`
             The set to be tested. It must implement a ``min()`` and a
             ``max()`` method, otherwise a `TypeError` is raised.
         tol : float, optional

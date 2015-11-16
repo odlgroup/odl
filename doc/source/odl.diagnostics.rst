@@ -1,9 +1,6 @@
 odl.diagnostics package
 =======================
 
-Submodules
-----------
-
 odl.diagnostics.examples module
 -------------------------------
 

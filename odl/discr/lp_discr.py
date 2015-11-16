@@ -67,10 +67,11 @@ class DiscreteLp(Discretization):
             in ``fspace.domain``.
         dspace : :class:`~odl.space.base_ntuples.FnBase`
             Space of elements used for data storage. It must have the
-            same :attr:`field` as ``fspace``
+            same :attr:`~odl.FnBase.field` as ``fspace``
         exponent : positive float, optional
-            The parameter `p` in :math:`L^p`. If the exponent is not
-            equal to the default 2.0, the space has no inner product.
+            The parameter :math:`p` in :math:`L^p`. If the exponent is
+            not equal to the default 2.0, the space has no inner
+            product.
         interp : `str`, optional
             The interpolation type to be used for discretization.
 
@@ -124,7 +125,8 @@ class DiscreteLp(Discretization):
         inp : `object`, optional
             The input data to create an element from. Must be
             recognizable by the :meth:`~odl.LinearSpace.element` method
-            of either :attr:`dspace` or :attr:`uspace`.
+            of either :attr:`~odl.RawDiscretization.dspace` or
+            :attr:`~odl.RawDiscretization.uspace`.
 
         Returns
         -------
@@ -273,7 +275,7 @@ class DiscreteLp(Discretization):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, :class:`Ntuples.Vector`}
+            values : {scalar, array-like, :class:`~odl.Ntuples.Vector`}
                 The value(s) that are to be assigned.
 
                 If ``indices`` is an `int`, ``values`` must be a single
@@ -350,7 +352,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
     ----------
     fspace : :class:`FunctionSpace`
         Continuous function space. Its domain must be an
-        :class:`IntervalProd` instance.
+        :class:`~odl.IntervalProd` instance.
     nsamples : `int` or `tuple` of `int`
         Number of samples per axis. For dimension >= 2, a tuple is
         required.

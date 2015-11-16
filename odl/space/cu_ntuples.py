@@ -27,7 +27,7 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
-from odl.space.base_ntuples import NtuplesBase, FnBase, _FnWeightingBase
+from odl.space.base_ntuples import NtuplesBase, FnBase, FnWeightingBase
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
 import odlpp.odlpp_cuda as cuda
 
@@ -91,7 +91,7 @@ class CudaNtuples(NtuplesBase):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
 
-            Check :const:`CUDA_DTYPES` for a list of available data types.
+            Check ``CUDA_DTYPES`` for a list of available data types.
         """
 
         if dtype not in _TYPE_MAP_NPY2CUDA.keys():
@@ -322,7 +322,7 @@ class CudaNtuples(NtuplesBase):
 
             Returns
             -------
-            values : :attr:`CudaNtuples.dtype` or :class:`CudaNtuples.Vector`
+            values : scalar or :class:`CudaNtuples.Vector`
                 The value(s) at the index (indices)
 
 
@@ -418,11 +418,11 @@ def _repr_space_funcs(space):
     weight = 1.0
     if space._space_funcs._dist_using_inner:
         inner_str += ', dist_using_inner=True'
-    if isinstance(space._space_funcs, _CudaFnCustomInnerProduct):
+    if isinstance(space._space_funcs, CudaFnCustomInnerProduct):
         inner_str += ', inner=<custom inner>'
-    elif isinstance(space._space_funcs, _CudaFnCustomNorm):
+    elif isinstance(space._space_funcs, CudaFnCustomNorm):
         inner_str += ', norm=<custom norm>'
-    elif isinstance(space._space_funcs, _CudaFnCustomDist):
+    elif isinstance(space._space_funcs, CudaFnCustomDist):
         inner_str += ', norm=<custom dist>'
     elif isinstance(space._space_funcs, CudaFnConstWeighting):
         weight = space._space_funcs.const
@@ -578,24 +578,24 @@ class CudaFn(FnBase, CudaNtuples):
                     raise ValueError('invalid weight argument {!r}.'
                                      ''.format(weight))
         elif dist is not None:
-            self._space_funcs = _CudaFnCustomDist(dist)
+            self._space_funcs = CudaFnCustomDist(dist)
         elif norm is not None:
-            self._space_funcs = _CudaFnCustomNorm(norm)
+            self._space_funcs = CudaFnCustomNorm(norm)
         elif inner is not None:
             # Use fast dist implementation
-            self._space_funcs = _CudaFnCustomInnerProduct(
+            self._space_funcs = CudaFnCustomInnerProduct(
                 inner, dist_using_inner=True)
         else:  # all None -> no weighing
-            self._space_funcs = _CudaFnNoWeighting(exponent)
+            self._space_funcs = CudaFnNoWeighting(exponent)
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``, assigned to ``out``.
 
-        Calculate `z = a * x + b * y` using optimized CUDA routines.
+        Calculate ``z = a * x + b * y`` using optimized CUDA routines.
 
         Parameters
         ----------
-        a, b : :attr:`field` element
+        a, b : :attr:`~odl.LinearSpace.field` element
             Scalar to multiply ``x`` and ``y`` with.
         x, y : :class:`CudaFn.Vector`
             The summands
@@ -1080,12 +1080,12 @@ def _inner_default(x1, x2):
     return x1.data.inner(x2.data)
 
 
-class _CudaFnWeighting(_FnWeightingBase):
+class CudaFnWeighting(FnWeightingBase):
 
     """Abstract base class for :class:`CudaFn` weighting."""
 
 
-class CudaFnVectorWeighting(_CudaFnWeighting):
+class CudaFnVectorWeighting(CudaFnWeighting):
 
     """Vector weighting for `CudaFn`.
 
@@ -1203,7 +1203,7 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
         # Optimization for equality
         if self == other:
             return True
-        elif (not isinstance(other, _CudaFnWeighting) or
+        elif (not isinstance(other, CudaFnWeighting) or
               self.exponent != other.exponent):
             return False
         elif isinstance(other, CudaFnConstWeighting):
@@ -1275,7 +1275,7 @@ class CudaFnVectorWeighting(_CudaFnWeighting):
                                                             self.vector)
 
 
-class CudaFnConstWeighting(_CudaFnWeighting):
+class CudaFnConstWeighting(CudaFnWeighting):
 
     """Weighting of :class:`CudaFn` by a constant.
 
@@ -1343,7 +1343,7 @@ class CudaFnConstWeighting(_CudaFnWeighting):
         Returns
         -------
         equivalent : `bool`
-            `True` if ``other`` is a `_CudaFnWeighting` instance which
+            `True` if ``other`` is a `CudaFnWeighting` instance which
             yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
             if `other` is a :class:`CudaFnConstWeighting` instance,
@@ -1354,7 +1354,7 @@ class CudaFnConstWeighting(_CudaFnWeighting):
             return True
         elif isinstance(other, CudaFnConstWeighting):
             return self == other
-        elif isinstance(other, _CudaFnWeighting):
+        elif isinstance(other, CudaFnWeighting):
             return other.equiv(self)
         else:
             return False
@@ -1442,7 +1442,7 @@ class CudaFnConstWeighting(_CudaFnWeighting):
                 self.exponent, self.const)
 
 
-class _CudaFnNoWeighting(CudaFnConstWeighting):
+class CudaFnNoWeighting(CudaFnConstWeighting):
 
     """Weighting of :class:`CudaFn` with constant 1.
 
@@ -1475,7 +1475,7 @@ class _CudaFnNoWeighting(CudaFnConstWeighting):
             return 'NoWeighting: p = {}'.format(self.exponent)
 
 
-class _CudaFnCustomInnerProduct(_CudaFnWeighting):
+class CudaFnCustomInnerProduct(CudaFnWeighting):
 
     """Custom inner product on :class:`CudaFn`."""
 
@@ -1531,7 +1531,7 @@ class _CudaFnCustomInnerProduct(_CudaFnWeighting):
             `True` if ``other`` is an :class:``CudaFnCustomInnerProduct``
             instance with the same inner product, `False` otherwise.
         """
-        return (isinstance(other, _CudaFnCustomInnerProduct) and
+        return (isinstance(other, CudaFnCustomInnerProduct) and
                 self.inner == other.inner)
 
     def __repr__(self):
@@ -1549,7 +1549,7 @@ class _CudaFnCustomInnerProduct(_CudaFnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class _CudaFnCustomNorm(_CudaFnWeighting):
+class CudaFnCustomNorm(CudaFnWeighting):
 
     """Custom norm on :class:`CudaFn`, removes ``inner``."""
 
@@ -1592,7 +1592,7 @@ class _CudaFnCustomNorm(_CudaFnWeighting):
             `True` if ``other`` is an `CudaFnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
-        return (isinstance(other, _CudaFnCustomNorm) and
+        return (isinstance(other, CudaFnCustomNorm) and
                 self.norm == other.norm)
 
     def __repr__(self):
@@ -1606,7 +1606,7 @@ class _CudaFnCustomNorm(_CudaFnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class _CudaFnCustomDist(_CudaFnWeighting):
+class CudaFnCustomDist(CudaFnWeighting):
 
     """Custom distance on :class:`CudaFn`, removes ``norm`` and ``inner``."""
 
@@ -1656,7 +1656,7 @@ class _CudaFnCustomDist(_CudaFnWeighting):
             `True` if ``other`` is an `CudaFnCustomDist`
             instance with the same norm, `False` otherwise.
         """
-        return (isinstance(other, _CudaFnCustomDist) and
+        return (isinstance(other, CudaFnCustomDist) and
                 self.dist == other.dist)
 
     def __repr__(self):

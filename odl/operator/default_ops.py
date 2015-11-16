@@ -30,7 +30,8 @@ from odl.set.space import LinearSpace
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
-           'LinCombOperator', 'MultiplyOperator')
+           'LinCombOperator', 'MultiplyOperator',
+           'InnerProductOperator', 'InnerProductAdjointOperator')
 
 
 class ScalingOperator(Operator):
@@ -42,7 +43,7 @@ class ScalingOperator(Operator):
 
         Parameters
         ----------
-        space : :class:`LinearSpace`
+        space : :class:`~odl.LinearSpace`
             The space of elements which the operator is acting on
         scalar : field element
             An element in the field of the space that the vectors are
@@ -154,7 +155,7 @@ class ZeroOperator(ScalingOperator):
 
         Parameters
         ----------
-        space : LinearSpace
+        space : :class:`~odl.LinearSpace`
             The space of elements which the operator is acting on
         """
         super().__init__(space, 0)
@@ -183,11 +184,11 @@ class IdentityOperator(ScalingOperator):
         super().__init__(space, 1)
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """``op.__repr__() <==> repr(op)``."""
         return 'IdentityOperator({!r})'.format(self._space)
 
     def __str__(self):
-        """op.__str__() <==> str(op)."""
+        """``op.__str__() <==> str(op)``."""
         return "I"
 
 
@@ -197,7 +198,7 @@ class LinCombOperator(Operator):
 
     This opertor calculates:
 
-    out = a*x[0] + b*x[1]
+    ``out = a*x[0] + b*x[1]``
     """
 
     # pylint: disable=abstract-method
@@ -206,7 +207,7 @@ class LinCombOperator(Operator):
 
         Parameters
         ----------
-        space : LinearSpace
+        space : :class:`~odl.LinearSpace`
             The space of elements which the operator is acting on
         a : scalar
             Scalar to multiply x[0] with
@@ -245,12 +246,12 @@ class LinCombOperator(Operator):
         out.lincomb(self.a, x[0], self.b, x[1])
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """``op.__repr__() <==> repr(op)``."""
         return 'LinCombOperator({!r}, {!r}, {!r})'.format(
             self.range, self.a, self.b)
 
     def __str__(self):
-        """op.__str__() <==> str(op)."""
+        """``op.__str__() <==> str(op)``."""
         return "{}*x + {}*y".format(self.a, self.b)
 
 
@@ -304,11 +305,11 @@ class MultiplyOperator(Operator):
         out.space.multiply(x[0], x[1], out)
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """``op.__repr__() <==> repr(op)``."""
         return 'MultiplyOperator({!r})'.format(self.range)
 
     def __str__(self):
-        """op.__str__() <==> str(op)."""
+        """``op.__str__() <==> str(op)``."""
         return "x * y"
 
 
@@ -317,7 +318,7 @@ class InnerProductOperator(Operator):
 
     The multiply operator calculates:
 
-    InnerProductOperator(vec)(x) == x.inner(vec)
+    ``InnerProductOperator(vec)(x) == x.inner(vec)``
 
     This is only applicable in inner product spaces.
     """
@@ -328,7 +329,7 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        vec : LinearSpace.Vector with ``inner``
+        vec : :class:`~odl.LinearSpace.Vector` with ``inner``
             The vector to take the inner product with
         """
         self.vector = vector
@@ -362,11 +363,11 @@ class InnerProductOperator(Operator):
         return self.vector
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """``op.__repr__() <==> repr(op)``."""
         return 'InnerProductOperator({!r})'.format(self.vector)
 
     def __str__(self):
-        """op.__str__() <==> str(op)."""
+        """``op.__str__() <==> str(op)``."""
         return "{}.T".format(self.vector)
 
 class InnerProductAdjointOperator(Operator):
@@ -439,11 +440,11 @@ class InnerProductAdjointOperator(Operator):
         return InnerProductOperator(self.vector)
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """``op.__repr__() <==> repr(op)``."""
         return 'InnerProductAdjointOperator({!r})'.format(self.vector)
 
     def __str__(self):
-        """op.__str__() <==> str(op)."""
+        """``op.__str__() <==> str(op)``."""
         return "{}".format(self.vector)
 
 

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cartesian products of :class:`LinearSpace` instances."""
+"""Cartesian products of :class:`~odl.LinearSpace` instances."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -72,7 +72,7 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        spaces : :class:`LinearSpace` or `int`
+        spaces : :class:`~odl.LinearSpace` or `int`
             Can be specified either as a space and an integer, in which
             case the power space ``space**n`` is created, or
             an arbitrary number of spaces.
@@ -410,7 +410,7 @@ class ProductSpace(LinearSpace):
         def __eq__(self, other):
             """``ps.__eq__(other) <==> ps == other``.
 
-            Overrides the default :class:`LinearSpace` method since it is
+            Overrides the default :class:`~odl.LinearSpace` method since it is
             implemented with the distance function, which is prone to
             numerical errors. This function checks equality per
             component.

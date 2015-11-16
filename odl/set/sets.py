@@ -32,8 +32,8 @@ from numbers import Integral, Real, Complex
 # ODL
 
 
-__all__ = ('Set', 'EmptySet', 'UniversalSet', 'Integers', 'RealNumbers',
-           'ComplexNumbers', 'Strings', 'CartesianProduct')
+__all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
+           'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct')
 
 
 class Set(with_metaclass(ABCMeta, object)):
@@ -240,14 +240,13 @@ class Strings(Set):
 class Field(with_metaclass(ABCMeta, Set)):
     """Any set that satisfies the field axioms
 
-    For example :class:`RealNumbers`, :class::class:`ComplexNumbers` or
-    the finite field F2
+    For example :class:`RealNumbers`, :class:`ComplexNumbers` or
+    the finite field :math:`F_2`.
     """
 
     @property
     def field(self):
-        """ The field of scalars for a field is itself
-        """
+        """The field of scalars for a field is itself."""
         return self
 
 

@@ -44,9 +44,9 @@ class FunctionSet(Set):
 
         Parameters
         ----------
-        dom : :class:`Set`
+        dom : :class:`~odl.Set`
             The domain of the functions.
-        ran : :class:`Set`
+        ran : :class:`~odl.Set`
             The range of the functions.
         """
         if not isinstance(dom, Set):
@@ -112,7 +112,8 @@ class FunctionSet(Set):
         -------
         equals : `bool`
             `True` if ``other`` is a :class:`FunctionSet` with same
-            :attr:`domain` and :attr:`range`, `False` otherwise.
+            :attr:`FunctionSet.domain` and :attr:`FunctionSet.range`,
+            `False` otherwise.
         """
         if other is self:
             return True
@@ -127,8 +128,9 @@ class FunctionSet(Set):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`FunctionSet.Vector` whose
-            :attr:`space` attribute equals this space, `False` otherwise.
+            `True` if ``other`` is a :class:`FunctionSet.Vector`
+            whose :attr:`FunctionSet.Vector.space` attribute
+            equals this space, `False` otherwise.
         """
         return (isinstance(other, FunctionSet.Vector) and
                 self == other.space)
@@ -154,13 +156,14 @@ class FunctionSet(Set):
                 The set of functions this element lives in
             fcall : callable, optional
                 The actual instruction for out-of-place evaluation.
-                It must return an :attr:`FunctionSpace.range` element or a
+                It must return an :attr:`FunctionSet.range` element or a
                 `numpy.ndarray` of such (vectorized call).
             fapply : callable, optional
                 The actual instruction for in-place evaluation.
                 Its first argument must be the
-                :attr:`FunctionSpace.range` element or the array of such
-                (vectorization) to which the result is written.
+                :attr:`FunctionSet.range` element
+                or the array of such (vectorization) to which the
+                result is written.
 
             *At least one of the arguments fcall and fapply` must
             be provided.*
@@ -226,11 +229,6 @@ class FunctionSet(Set):
             -------
             out : :attr:`FunctionSet.range` element or array of elements
                 Result of the function evaluation.
-
-            Raises
-            ------
-            If ``out`` is not a :attr:`FunctionSet.range` element or a
-             `numpy.ndarray` with `out[0] in range`, a `TypeError` is raised.
             """
             if x in self.domain:
                 # single value list: f(0, 1, 2)
@@ -337,9 +335,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Parameters
         ----------
-        dom : :class:`Set`
+        dom : :class:`~odl.Set`
             The domain of the functions.
-        field : :class:`RealNumbers` or :class:`ComplexNumbers`
+        field : :class:`~odl.RealNumbers` or :class:`~odl.ComplexNumbers`
             The range of the functions.
         """
         if not isinstance(dom, Set):
@@ -462,7 +460,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Notes
         -----
-
         Since :meth:`FunctionSpace._lincomb` is slow,
         we implement this function directly.
         """
@@ -478,7 +475,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         -------
         equals : `bool`
             `True` if ``other`` is a :class:`FunctionSpace` with
-            same :attr:`domain` and :attr:`range`, `False` otherwise.
+            same :attr:`FunctionSet.domain` and :attr:`FunctionSet.range`,
+            `False` otherwise.
         """
         # TODO: equality also for FunctionSet instances?
         if other is self:
@@ -522,17 +520,17 @@ class FunctionSpace(FunctionSet, LinearSpace):
             ----------
             fspace : :class:`FunctionSpace`
                 The set of functions this element lives in
-            fcall : callable, optional
+            fcall : `callable`, optional
                 The actual instruction for out-of-place evaluation.
-                It must return an :attr:`FunctionSpace.range` element or a
+                It must return an :attr:`FunctionSet.range` element or a
                 `numpy.ndarray` of such (vectorized call).
-            fapply : callable, optional
+            fapply : `callable`, optional
                 The actual instruction for in-place evaluation.
-                Its first argument must be the :attr:`FunctionSpace.range`
+                Its first argument must be the :attr:`FunctionSet.range`
                 element or the array of such (vectorization) to which the
                 result is written.
 
-            *At least one of the arguments fcall and fapply` must
+            *At least one of the arguments ``fcall`` and ``fapply`` must
             be provided.*
             """
             if not isinstance(fspace, FunctionSpace):
