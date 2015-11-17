@@ -28,9 +28,9 @@ you start by writing::
 :class:`~odl.Operator` has a couple of *abstract methods* which need to
 be explicitly overridden by any subclass, namely
 
-:attr:`~odl.Operator.domain`: :class:`~odl.Set`
+``domain``: :class:`~odl.Set`
     Set of elements to which the operator can be applied
-:attr:`~odl.Operator.range` :class:`~odl.Set`
+``range`` :class:`~odl.Set`
     Set in which the operator takes values
 
 As a simple example, you can implement the matrix multiplication
@@ -56,8 +56,8 @@ In addition, an :class:`~odl.Operator` needs at least one way of
 evaluation, *in-place* or *out-of-place*.
 
 - In-place evaluation means that the operator is evaluated on a
-  :attr:`~odl.Operator.domain` element, and the result is written to an
-  *already existing* :attr:`~odl.Operator.range` element. To implement
+  ``domain`` element, and the result is written to an
+  *already existing* ``range`` element. To implement
   this behavior, create the (private) :meth:`~odl.Operator._apply`
   method with the following signature, here given for the above
   example::
@@ -71,9 +71,9 @@ evaluation, *in-place* or *out-of-place*.
   *whenever possible*.
 
 - Out-of-place evaluation means that the
-  operator is evaluated on a :attr:`~odl.Operator.domain` element, and
+  operator is evaluated on a ``domain`` element, and
   the result is written to a *newly allocated*
-  :attr:`~odl.Operator.range` element. To implement this
+  ``range`` element. To implement this
   behavior, create the (private) :meth:`~odl.Operator._call` method
   with the following signature, here given for the above example::
 

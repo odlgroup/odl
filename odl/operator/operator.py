@@ -61,13 +61,13 @@ def _default_call(self, x, *args, **kwargs):
 
     Parameters
     ----------
-    x : :attr:`~odl.Operator.domain` element
+    x : ``domain`` element
         An object in the operator domain. The operator is applied
         to it.
 
     Returns
     -------
-    out : :attr:`~odl.Operator.range` element
+    out : ``range`` element
         An object in the operator range. The result of an operator
         evaluation.
     """
@@ -81,11 +81,11 @@ def _default_apply(self, x, out, *args, **kwargs):
 
     Parameters
     ----------
-    x : :attr:`~odl.Operator.domain` element
+    x : ``domain`` element
         An object in the operator domain. The operator is applied
         to it.
 
-    out : :attr:`~odl.Operator.range` element
+    out : ``range`` element
         An object in the operator range. The result of an operator
         evaluation.
 
@@ -409,7 +409,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             If ``other`` is an operator, ``mul`` is an
             :class:`OperatorComp`.
 
-            If ``other`` is a scalar, `mul`` is an
+            If ``other`` is a scalar, ``mul`` is an
             :class:`OperatorRightScalarMult`.
 
             If ``other`` is a vector, ``mul`` is an
@@ -1215,7 +1215,7 @@ class FunctionalLeftVectorMult(Operator):
 
         See also
         --------
-        :class:`FunctionalLeftVectorMult` : the result
+        FunctionalLeftVectorMult : the result
         """
         return FunctionalLeftVectorMult(self._op.derivative(x), self._vector)
 
@@ -1296,7 +1296,7 @@ class OperatorLeftVectorMult(Operator):
 
         See also
         --------
-        :class:`OperatorLeftVectorMult` : the result
+        OperatorLeftVectorMult : the result
         """
         return OperatorLeftVectorMult(self._op.derivative(x), self._vector)
 
@@ -1399,7 +1399,7 @@ class OperatorRightVectorMult(Operator):
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
-        #TODO: handle complex vectors
+        # TODO: handle complex vectors
         return OperatorLeftVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):

@@ -109,7 +109,7 @@ class CudaNtuples(NtuplesBase):
         inp : array-like or scalar, optional
             Input to initialize the new element.
 
-            If ``inp`` is a :class:`numpy.ndarray` of shape ``(size,)``
+            If ``inp`` is a `numpy.ndarray` of shape ``(size,)``
             and the same data type as this space, the array is wrapped,
             not copied.
             Other array-like objects are copied (with broadcasting
@@ -120,10 +120,10 @@ class CudaNtuples(NtuplesBase):
         data_ptr : `int`, optional
             Memory address of a CUDA array container
 
-        Arguments ``inp`` and `data_ptr` cannot be given at the same
+        Arguments ``inp`` and ``data_ptr`` cannot be given at the same
         time.
 
-        If both ``inp`` and `data_ptr` are `None`, an empty element is
+        If both ``inp`` and ``data_ptr`` are `None`, an empty element is
         created with no guarantee of its state (memory allocation
         only).
 
@@ -276,13 +276,13 @@ class CudaNtuples(NtuplesBase):
                 None means the last element.
             start : `int`, optional
                 Step length. None means 1.
-            out : :class:`numpy.ndarray`
+            out : `numpy.ndarray`
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
 
             Returns
             -------
-            asarray : :class:`numpy.ndarray`
+            asarray : `numpy.ndarray`
                 Numpy array of the same type as the space.
 
             Examples
@@ -963,7 +963,7 @@ def cu_weighted_norm(weight, exponent=2.0):
         constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
         as a weighting vector.
     exponent : positive `float`
-        Exponent of the norm. If `weight` is a sparse matrix, only
+        Exponent of the norm. If ``weight`` is a sparse matrix, only
         1.0, 2.0 and ``inf`` are allowed.
 
     Returns

@@ -67,7 +67,8 @@ class DiscreteLp(Discretization):
             in ``fspace.domain``.
         dspace : :class:`~odl.space.base_ntuples.FnBase`
             Space of elements used for data storage. It must have the
-            same :attr:`~odl.FnBase.field` as ``fspace``
+            same :attr:`~odl.space.base_ntuples.FnBase.field` as
+            ``fspace``
         exponent : positive `float`, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
@@ -114,7 +115,7 @@ class DiscreteLp(Discretization):
 
     @property
     def exponent(self):
-        """The exponent `p` in :math:`L^p`."""
+        """The exponent :math:`p` in :math:`L^p`."""
         return self._exponent
 
     def element(self, inp=None):
@@ -225,7 +226,7 @@ class DiscreteLp(Discretization):
 
             Parameters
             ----------
-            out : :class:`numpy.ndarray`, optional
+            out : `numpy.ndarray`, optional
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype and
                 shape.
@@ -350,7 +351,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    fspace : :class:`FunctionSpace`
+    fspace : :class:`~odl.FunctionSpace`
         Continuous function space. Its domain must be an
         :class:`~odl.IntervalProd` instance.
     nsamples : `int` or `tuple` of `int`

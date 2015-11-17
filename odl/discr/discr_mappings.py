@@ -61,7 +61,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points.
@@ -160,7 +160,7 @@ class RawGridCollocation(FunctionSetMapping):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
@@ -275,12 +275,12 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an
+            space. Its ``domain`` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -311,7 +311,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
@@ -424,12 +424,12 @@ class NearestInterpolation(RawNearestInterpolation,
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an
+            space. Its ``domain`` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -488,12 +488,12 @@ class LinearInterpolation(FunctionSetMapping):
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an
+            space. Its ``domain`` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same

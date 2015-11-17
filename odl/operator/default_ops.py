@@ -64,7 +64,7 @@ class ScalingOperator(Operator):
         ----------
         x : :attr:`Operator.domain` element
             input vector to be scaled
-        out : :attr:`~odl.Operator.range` element
+        out : ``range`` element
             Output vector to which the result is written
 
         Returns
@@ -95,7 +95,7 @@ class ScalingOperator(Operator):
 
         Returns
         -------
-        scaled : :attr:`~odl.Operator.range` element
+        scaled : ``range`` element
             The scaled vector
 
         Examples
@@ -224,10 +224,10 @@ class LinCombOperator(Operator):
 
         Parameters
         ----------
-        x : :attr:`~odl.Operator.domain` element
+        x : ``domain`` element
             An element in the operator domain (2-tuple of space
             elements) whose linear combination is calculated
-        out : :attr:`:attr:`~odl.Operator.range` element
+        out : :attr:```range`` element
             Vector to which the result is written
 
         Examples
@@ -283,10 +283,10 @@ class MultiplyOperator(Operator):
 
         Parameters
         ----------
-        x : :attr:`~odl.Operator.domain` element
+        x : ``domain`` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : :attr:`~odl.Operator.range` element
+        out : ``range`` element
             Vector to which the result is written
 
         Examples
@@ -415,10 +415,10 @@ class InnerProductAdjointOperator(Operator):
 
         Parameters
         ----------
-        x : :attr:`~odl.Operator.domain` element
+        x : ``domain`` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : :attr:`~odl.Operator.range` element
+        out : ``range`` element
             Vector to which the result is written
 
         Examples

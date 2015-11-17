@@ -38,6 +38,7 @@ from math import sqrt
 import numpy as np
 import platform
 import scipy as sp
+from scipy.sparse.base import isspmatrix
 
 # ODL imports
 from odl.operator.operator import Operator
@@ -86,9 +87,9 @@ class Ntuples(NtuplesBase):
             If ``inp`` is `None`, an empty element is created with no
             guarantee of its state (memory allocation only).
 
-            If ``inp`` is a :class:`numpy.ndarray` of shape ``(size,)`` and the
-            same data type as this space, the array is wrapped, not
-            copied.
+            If ``inp`` is a `numpy.ndarray` of shape ``(size,)``
+            and the same data type as this space, the array is wrapped,
+            not copied.
             Other array-like objects are copied (with broadcasting
             if necessary).
 
@@ -155,7 +156,7 @@ class Ntuples(NtuplesBase):
 
     class Vector(NtuplesBase.Vector):
 
-        """Representation of an :class:`NTuples` element."""
+        """Representation of an :class:`Ntuples` element."""
 
         def __init__(self, space, data):
             """Initialize a new instance."""
@@ -177,7 +178,7 @@ class Ntuples(NtuplesBase):
 
         @property
         def data(self):
-            """The raw numpy array representing the data."""
+            """The raw `numpy.ndarray` representing the data."""
             return self._data
 
         def asarray(self, start=None, stop=None, step=None, out=None):
@@ -192,13 +193,13 @@ class Ntuples(NtuplesBase):
                 None means the last element.
             start : `int`, optional
                 Step length. None means 1.
-            out : :class:`numpy.ndarray`, optional
+            out : `numpy.ndarray`, optional
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
 
             Returns
             -------
-            asarray : :class:`numpy.ndarray`
+            asarray : `numpy.ndarray`
                 Numpy array of the same type as the space.
 
             Examples
@@ -418,7 +419,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : :class:`~odl.NtuplesBase.Vector`
+    x1,...,xN : :class:`~odl.space.base_ntuples.NtuplesBase.Vector`
         The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
@@ -560,7 +561,7 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner',
+        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner',\
                   'dist_using_inner'}
             'weight' : array-like, float or `None`
                 Use weighted inner product, norm, and dist.
@@ -583,8 +584,8 @@ class Fn(FnBase, Ntuples):
             'exponent' : positive `float`
                 Exponent of the norm. For values other than 2.0, no
                 inner product is defined.
-                If `weight` is a sparse matrix, only 1.0, 2.0 and ``inf``
-                are allowed.
+                If ``weight`` is a sparse matrix, only 1.0, 2.0 and
+                ``inf`` are allowed.
 
                 This option is ignored if ``dist``, ``norm`` or
                 ``inner`` is given.
@@ -614,7 +615,7 @@ class Fn(FnBase, Ntuples):
             'norm' : `callable`, optional
                 The norm implementation. It must accept an
                 :class:`Fn.Vector` argument, return a
-                :class:`RealNumber` and satisfy the following
+                `float` and satisfy the following
                 conditions for all vectors :math:`x, y` and scalars
                 :math:`s`:
 
@@ -682,7 +683,7 @@ class Fn(FnBase, Ntuples):
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
                 pass
-            elif isinstance(weight, sp.sparse.spmatrix):
+            elif isspmatrix(weight):
                 self._space_funcs = FnMatrixWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             else:  # last possibility: make a matrix
@@ -733,7 +734,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        a, b : :attr:`~odl.FnBase.field`
+        a, b : :attr:`~odl.space.base_ntuples.FnBase.field`
             Scalar to multiply x and y with.
         x1, x2 : :class:`Fn.Vector`
             The summands
@@ -939,9 +940,10 @@ class Fn(FnBase, Ntuples):
         -------
         equals : `bool`
             `True` if other is an instance of this space's type
-            with the same :attr:`~odl.NtuplesBase.size` and
-            :attr:`~odl.NtuplesBase.dtype`, and identical
-            distance function, otherwise `False`.
+            with the same
+            :attr:`~odl.space.base_ntuples.NtuplesBase.size` and
+            :attr:`~odl.space.base_ntuples.NtuplesBase.dtype`,
+            and identical distance function, otherwise `False`.
 
         Examples
         --------
@@ -1165,7 +1167,7 @@ class Cn(Fn):
     See also
     --------
     Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
-    data type
+        data type
     """
 
     def __init__(self, size, dtype='complex128', **kwargs):
@@ -1225,7 +1227,7 @@ class Rn(Fn):
     See also
     --------
     Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
-    data type
+        data type
     """
 
     def __init__(self, size, dtype='float64', **kwargs):
@@ -1292,7 +1294,7 @@ class MatVecOperator(Operator):
             castable to the range dtype.
         ran : :class:`Fn`
             Space to which the matrix maps
-        matrix : array-like or ``scipy.sparse.spmatrix``
+        matrix : array-like or `scipy.sparse.spmatrix`
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``dom`` and ``m`` the size
             of ``ran``. Its dtype must be castable to the range dtype.
@@ -1309,7 +1311,7 @@ class MatVecOperator(Operator):
                             'range data type {}.'
                             ''.format(dom.dtype, ran.dtype))
 
-        if isinstance(matrix, sp.sparse.spmatrix):
+        if isspmatrix(matrix):
             self._matrix = matrix
         else:
             self._matrix = np.asarray(matrix)
@@ -1333,7 +1335,7 @@ class MatVecOperator(Operator):
     @property
     def matrix_issparse(self):
         """Whether the representing matrix is sparse or not."""
-        return isinstance(self.matrix, sp.sparse.spmatrix)
+        return isspmatrix(self.matrix)
 
     @property
     def adjoint(self):
@@ -1366,7 +1368,7 @@ def _weighting(weight, exponent, dist_using_inner=False):
     if np.isscalar(weight):
         weighting = FnConstWeighting(
             weight, exponent=exponent, dist_using_inner=dist_using_inner)
-    elif isinstance(weight, sp.sparse.spmatrix):
+    elif isspmatrix(weight):
         weighting = FnMatrixWeighting(
             weight, exponent=exponent, dist_using_inner=dist_using_inner)
     else:
@@ -1420,7 +1422,7 @@ def weighted_norm(weight, exponent=2.0):
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
     exponent : positive `float`
-        Exponent of the norm. If `weight` is a sparse matrix, only
+        Exponent of the norm. If ``weight`` is a sparse matrix, only
         1.0, 2.0 and ``inf`` are allowed.
 
     Returns
@@ -1614,7 +1616,7 @@ class FnMatrixWeighting(FnWeighting):
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)
         super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
 
-        if isinstance(matrix, sp.sparse.spmatrix):
+        if isspmatrix(matrix):
             self._matrix = matrix
         else:
             self._matrix = np.asarray(matrix)
@@ -1629,7 +1631,7 @@ class FnMatrixWeighting(FnWeighting):
             raise ValueError('matrix with shape {} not square.'
                              ''.format(self._matrix.shape))
 
-        if (isinstance(self._matrix, sp.sparse.spmatrix) and
+        if (self.matrix_issparse and
                 self._exponent not in (1.0, 2.0, float('inf'))):
             raise NotImplementedError('sparse matrices only supported for '
                                       'exponent 1.0, 2.0 or `inf`.')
@@ -1651,7 +1653,7 @@ class FnMatrixWeighting(FnWeighting):
     @property
     def matrix_issparse(self):
         """Whether the representing matrix is sparse or not."""
-        return isinstance(self.matrix, sp.sparse.spmatrix)
+        return isspmatrix(self.matrix)
 
     def matrix_isvalid(self):
         """Test if the matrix is positive definite Hermitian.
@@ -1795,7 +1797,7 @@ class FnMatrixWeighting(FnWeighting):
         else:
             if not hasattr(self, '_mat_pow'):
                 # This case can only be reached if p != 1,2,inf
-                if isinstance(self._matrix, sp.sparse.spmatrix):
+                if self.matrix_issparse:
                     raise NotImplementedError('sparse matrix powers not '
                                               'suppoerted.')
                 else:

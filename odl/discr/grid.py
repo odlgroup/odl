@@ -427,7 +427,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        points : :class:`numpy.ndarray`
+        points : `numpy.ndarray`
             The size of the array is ntotal x ndim, i.e. the points are
             stored as rows.
 
@@ -477,7 +477,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        out : :class:`numpy.ndarray`
+        out : `numpy.ndarray`
             The size of the array is 2^m x ndim, where m is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 
@@ -516,7 +516,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        csizes : `tuple` of :class:`numpy.ndarray`
+        csizes : `tuple` of `numpy.ndarray`
             The cell sizes per axis. The length of the vectors will be
             one less than :attr:`coord_vectors` if :attr:`as_midp` is `False`,
             otherwise they will have the same length.
@@ -557,7 +557,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        meshgrid : `tuple` of :class:`numpy.ndarray`
+        meshgrid : `tuple` of `numpy.ndarray`
             Function evaluation grid with size-1 axes if ``sparse=True``,
             otherwise with "fleshed out" axes
 

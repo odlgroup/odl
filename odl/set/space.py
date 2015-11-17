@@ -658,7 +658,7 @@ class LinearSpace(Set):
         def __pow__(self, n):
             """Return the ``n``-th power of this vector.
 
-            This is only defined for integer `n``."""
+            This is only defined for integer ``n``."""
             tmp = self.copy()
             tmp **= n
             return tmp

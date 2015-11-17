@@ -76,7 +76,7 @@ class FunctionSet(Set):
         fcall : `callable`, optional
             The actual instruction for out-of-place evaluation.
             It must return an :attr:`range` element or a
-            :class:`numpy.ndarray` of such (vectorized call).
+            `numpy.ndarray` of such (vectorized call).
 
             If fcall is a :class:`FunctionSet.Vector`, it is wrapped
             as a new :class:`FunctionSet.Vector`.
@@ -157,7 +157,7 @@ class FunctionSet(Set):
             fcall : `callable`, optional
                 The actual instruction for out-of-place evaluation.
                 It must return an :attr:`FunctionSet.range` element or a
-                :class:`numpy.ndarray` of such (vectorized call).
+                `numpy.ndarray` of such (vectorized call).
             fapply : `callable`, optional
                 The actual instruction for in-place evaluation.
                 Its first argument must be the
@@ -294,7 +294,7 @@ class FunctionSet(Set):
             Raises
             ------
             If ``out`` is not a :attr:`FunctionSet.range` element or a
-             :class:`numpy.ndarray` with ``out[0] in range``, a `TypeError` is
+             `numpy.ndarray` with ``out[0] in range``, a `TypeError` is
              raised.
             """
             if not (out in self.range or
@@ -363,7 +363,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         fcall : `callable`, optional
             The actual instruction for out-of-place evaluation.
             It must return an :attr:`FunctionSet.range` element or a
-            :class:`numpy.ndarray` of such (vectorized call).
+            `numpy.ndarray` of such (vectorized call).
 
             If fcall is a :class:`FunctionSet.Vector`, it is wrapped
             as a new :class:`FunctionSpace.Vector`.
@@ -523,7 +523,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             fcall : `callable`, optional
                 The actual instruction for out-of-place evaluation.
                 It must return an :attr:`FunctionSet.range` element or a
-                :class:`numpy.ndarray` of such (vectorized call).
+                `numpy.ndarray` of such (vectorized call).
             fapply : `callable`, optional
                 The actual instruction for in-place evaluation.
                 Its first argument must be the :attr:`FunctionSet.range`

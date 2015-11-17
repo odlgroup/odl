@@ -215,7 +215,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Returns
             -------
-            asarray : :class:`numpy.ndarray`
+            asarray : `numpy.ndarray`
                 Numpy array of the same type as the space.
             """
 
@@ -280,7 +280,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Returns
             -------
-            array : :class:`numpy.ndarray`
+            array : `numpy.ndarray`
             """
             if dtype is None:
                 return self.asarray()
@@ -292,7 +292,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            obj : :class:`numpy.ndarray`
+            obj : `numpy.ndarray`
                 The array that should be wrapped
 
             Returns
@@ -458,9 +458,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         equivalent : `bool`
             `True` if ``other`` is a :class:`FnWeightingBase` instance which
             yields the same result as this inner product for any
-            input, `False` otherwise. This is checked by entry-wise
-            comparison of this instance's matrix with the matrix of
-            ``other``.
+            input, `False` otherwise.
         """
         raise NotImplementedError
 

@@ -82,7 +82,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         ----------
         uspace : :class:`~odl.Set`
             The undiscretized (abstract) set to be discretized
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object
         restr : :class:`~odl.Operator`, optional
@@ -268,7 +268,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
             Parameters
             ----------
-            out : :class:`numpy.ndarray`, optional
+            out : `numpy.ndarray`, optional
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
             """
@@ -296,7 +296,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
             Returns
             -------
-            values : :class:`~odl.NtuplesBase.Vector`
+            values : :class:`~odl.space.base_ntuples.NtuplesBase.Vector`
                 The value(s) at the index (indices)
             """
             return self.ntuple.__getitem__(indices)
@@ -308,7 +308,8 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, :class:`~odl.NtuplesBase.Vector`}
+            values : {scalar, array-like,\
+                      :class:`~odl.space.base_ntuples.NtuplesBase.Vector`}
                 The value(s) that are to be assigned.
 
                 If ``index`` is an `int`, ``value`` must be single value.
@@ -356,9 +357,10 @@ class Discretization(RawDiscretization, FnBase):
         ----------
         uspace : :class:`~odl.LinearSpace`
             The (abstract) space to be discretized
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
-            discretized object. Its :attr:`~odl.FnBase.field` attribute
+            discretized object. Its
+            :attr:`~odl.space.base_ntuples.FnBase.field` attribute
             must be the same as ``uspace.field``.
         restr : :class:`~odl.Operator`, linear, optional
             Operator mapping a :attr:`RawDiscretization.uspace` element

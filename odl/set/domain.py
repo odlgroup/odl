@@ -478,7 +478,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        out : :class:`numpy.ndarray`
+        out : `numpy.ndarray`
             The size of the array is ``2^m * ndim``, where ``m`` is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 
