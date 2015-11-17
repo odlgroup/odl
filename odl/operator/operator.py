@@ -1283,7 +1283,7 @@ class OperatorLeftVectorMult(Operator):
         out *= self._vector
 
     def derivative(self, x):
-        """Return the derivative at 'x'.
+        """Return the derivative at ``x``.
 
         Left scalar multiplication and derivative are commutative:
 
@@ -1339,7 +1339,7 @@ class OperatorRightVectorMult(Operator):
 
         Parameters
         ----------
-        op : _class_`Operator`
+        op : :class:`Operator`
             The domain of ``op`` must be a ``vector.space``.
         vector : :class:`~odl.LinearSpace.Vector` in ``op.domain``
             The vector to multiply by
