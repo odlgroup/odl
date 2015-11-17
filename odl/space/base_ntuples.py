@@ -395,11 +395,13 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     functions used.
     """
 
-    def __init__(self, exponent=2.0, dist_using_inner=False):
+    def __init__(self, impl, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
+        impl : `str`
+            Specifier for the implementation backend
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
@@ -420,12 +422,18 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         """
         self._dist_using_inner = bool(dist_using_inner)
         self._exponent = float(exponent)
+        self._impl = str(impl).lower()
         if self._exponent <= 0:
             raise ValueError('only positive exponents or inf supported, '
                              'got {}.'.format(exponent))
         elif self._exponent != 2.0 and self._dist_using_inner:
             raise ValueError('`dist_using_inner` can only be used if the '
                              'exponent is 2.0.')
+
+    @property
+    def impl(self):
+        """Implementation backend of this weighting."""
+        return self._impl
 
     @property
     def exponent(self):
@@ -448,7 +456,8 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         :meth:`equiv` method.
         """
         return (self.exponent == other.exponent and
-                self._dist_using_inner == other._dist_using_inner)
+                self._dist_using_inner == other._dist_using_inner and
+                self.impl == other.impl)
 
     def equiv(self, other):
         """Test if ``other`` is an equivalent inner product.

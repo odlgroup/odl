@@ -117,16 +117,14 @@ class CudaNtuples(NtuplesBase):
 
             If a single value is given, it is copied to all entries.
 
+            If both ``inp`` and ``data_ptr`` are `None`, an empty
+            element is created with no guarantee of its state
+            (memory allocation only).
+
         data_ptr : `int`, optional
             Memory address of a CUDA array container
 
-        Arguments ``inp`` and ``data_ptr`` cannot be given at the same
-        time.
-
-        If both ``inp`` and ``data_ptr`` are `None`, an empty element is
-        created with no guarantee of its state (memory allocation
-        only).
-
+            Cannot be combined with ``inp``.
 
         Returns
         -------
@@ -476,8 +474,8 @@ class CudaFn(FnBase, CudaNtuples):
 
                 :class:`CudaFn.Vector`:
                     same as 1-dim. array-like, except that copying is
-                    avoided if the :attr:`dtype` of the vector is the
-                    same as this space's :attr:`dtype`.
+                    avoided if the ``dtype`` of the vector is the
+                    same as this space's ``dtype``.
 
                 This option cannot be combined with ``dist``, ``norm``
                 or ``inner``.
@@ -494,7 +492,8 @@ class CudaFn(FnBase, CudaNtuples):
             'dist' : `callable`, optional
                 The distance function defining a metric on
                 :math:`\mathbb{F}^n`.
-                It must accept two :class:`CudaFn.Vector` arguments and
+                It must accept two :class:`CudaFn.Vector` arguments,
+                return a `float` and
                 fulfill the following mathematical conditions for any
                 three vectors :math:`x, y, z`:
 
@@ -514,7 +513,7 @@ class CudaFn(FnBase, CudaNtuples):
             'norm' : `callable`, optional
                 The norm implementation. It must accept an
                 :class:`CudaFn.Vector` argument, return a
-                :class:`RealNumber` and satisfy the following
+                `float` and satisfy the following
                 conditions for all vectors :math:`x, y` and scalars
                 :math:`s`:
 
@@ -1086,27 +1085,7 @@ def _inner_default(x1, x2):
     return x1.data.inner(x2.data)
 
 
-class CudaFnWeighting(FnWeightingBase):
-
-    """Abstract base class for :class:`CudaFn` weighting."""
-
-    def inner(self, x1, x2):
-        """Calculate the inner product of two vectors.
-
-        Parameters
-        ----------
-        x1, x2 : :class:`CudaFn.Vector`
-            Vectors whose inner product is calculated
-
-        Returns
-        -------
-        inner : `float` or `complex`
-            The inner product of the two provided vectors
-        """
-        raise NotImplementedError
-
-
-class CudaFnVectorWeighting(CudaFnWeighting):
+class CudaFnVectorWeighting(FnWeightingBase):
 
     """Vector weighting for :class:`CudaFn`.
 
@@ -1165,7 +1144,8 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         """
         # TODO: remove dist_using_inner in favor of a native dist
         # implementation
-        super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
+        super().__init__(impl='cuda', exponent=exponent,
+                         dist_using_inner=dist_using_inner)
         if not isinstance(vector, CudaFn.Vector):
             self._vector = np.asarray(vector)
         else:
@@ -1185,8 +1165,8 @@ class CudaFnVectorWeighting(CudaFnWeighting):
     def vector_is_valid(self):
         """Test if the vector is a valid weight, i.e. positive.
 
-        Note
-        ----
+        Notes
+        -----
         This operation copies the vector to the CPU memory if necessary
         and uses `numpy.all`, which can be very time-consuming in total.
         """
@@ -1218,7 +1198,8 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         Returns
         -------
         equivalent : `bool`
-            `True` if ``other`` is a :class:`CudaFnWeighting` instance
+            `True` if ``other`` is a
+            :class_`odl.space.base_ntuples.FnWeightingBase` instance
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
@@ -1227,7 +1208,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         # Optimization for equality
         if self == other:
             return True
-        elif (not isinstance(other, CudaFnWeighting) or
+        elif (not isinstance(other, FnWeightingBase) or
               self.exponent != other.exponent):
             return False
         elif isinstance(other, CudaFnConstWeighting):
@@ -1297,7 +1278,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
                                                             self.vector)
 
 
-class CudaFnConstWeighting(CudaFnWeighting):
+class CudaFnConstWeighting(FnWeightingBase):
 
     """Weighting of :class:`CudaFn` by a constant.
 
@@ -1339,7 +1320,8 @@ class CudaFnConstWeighting(CudaFnWeighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super().__init__(exponent=exponent, dist_using_inner=False)
+        super().__init__(impl='cuda', exponent=exponent,
+                         dist_using_inner=False)
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
@@ -1373,7 +1355,10 @@ class CudaFnConstWeighting(CudaFnWeighting):
         Returns
         -------
         equivalent : `bool`
-            `True` if ``other`` is a :class:`CudaFnWeighting` instance
+            `True` if ``other`` is a
+            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            with the same
+            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
             if ``other`` is a :class:`CudaFnConstWeighting` instance,
@@ -1384,7 +1369,7 @@ class CudaFnConstWeighting(CudaFnWeighting):
             return True
         elif isinstance(other, CudaFnConstWeighting):
             return self == other
-        elif isinstance(other, CudaFnWeighting):
+        elif isinstance(other, FnWeightingBase):
             return other.equiv(self)
         else:
             return False
@@ -1436,7 +1421,7 @@ class CudaFnConstWeighting(CudaFnWeighting):
 
         Parameters
         ----------
-        x1, x2 : :class:``CudaFn.Vector``
+        x1, x2 : :class:`CudaFn.Vector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -1505,7 +1490,7 @@ class CudaFnNoWeighting(CudaFnConstWeighting):
             return 'NoWeighting: p = {}'.format(self.exponent)
 
 
-class CudaFnCustomInnerProduct(CudaFnWeighting):
+class CudaFnCustomInnerProduct(FnWeightingBase):
 
     """Custom inner product on :class:`CudaFn`."""
 
@@ -1538,7 +1523,8 @@ class CudaFnCustomInnerProduct(CudaFnWeighting):
             exactly zero for equal (but not identical) :math:`x` and
             :math:`y`.
         """
-        super().__init__(exponent=2.0, dist_using_inner=dist_using_inner)
+        super().__init__(impl='cuda', exponent=2.0,
+                         dist_using_inner=dist_using_inner)
 
         if not callable(inner):
             raise TypeError('inner product function {!r} not callable.'
@@ -1578,7 +1564,7 @@ class CudaFnCustomInnerProduct(CudaFnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class CudaFnCustomNorm(CudaFnWeighting):
+class CudaFnCustomNorm(FnWeightingBase):
 
     """Custom norm on :class:`CudaFn`, removes ``inner``."""
 
@@ -1600,7 +1586,7 @@ class CudaFnCustomNorm(CudaFnWeighting):
             - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
               \lVert y\\rVert`.
         """
-        super().__init__(exponent=1.0, dist_using_inner=False)
+        super().__init__(impl='cuda', exponent=1.0, dist_using_inner=False)
 
         if not callable(norm):
             raise TypeError('norm function {!r} not callable.'
@@ -1640,7 +1626,7 @@ class CudaFnCustomNorm(CudaFnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class CudaFnCustomDist(CudaFnWeighting):
+class CudaFnCustomDist(FnWeightingBase):
 
     """Custom distance on :class:`CudaFn`, removes ``norm`` and ``inner``."""
 
@@ -1661,7 +1647,7 @@ class CudaFnCustomDist(CudaFnWeighting):
             - :math:`d(x, y) = 0 \Leftrightarrow x = y`
             - :math:`d(x, y) \geq d(x, z) + d(z, y)`
         """
-        super().__init__(exponent=1.0, dist_using_inner=False)
+        super().__init__(impl='cuda', exponent=1.0, dist_using_inner=False)
 
         if not callable(dist):
             raise TypeError('distance function {!r} not callable.'

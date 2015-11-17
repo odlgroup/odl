@@ -168,10 +168,6 @@ product of two space elements ``x`` and ``y``.
  * ``_inner(x + z, y) == _inner(x, y) + _inner(z, y)``
  * ``_inner(x, x) == 0`` (approx.) if and only if ``x == 0`` (approx.)
 
-Note
-----
-
-
 **Pointwise multiplication (optional):** ``_multiply(x1, x2, out)``
 
 A raw (not type-checking) private method multiplying two vectors
