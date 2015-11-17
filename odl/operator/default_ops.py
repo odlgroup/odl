@@ -62,7 +62,7 @@ class ScalingOperator(Operator):
 
         Parameters
         ----------
-        x : :attr:`Operator.domain` element
+        x : ``domain`` element
             input vector to be scaled
         out : ``range`` element
             Output vector to which the result is written

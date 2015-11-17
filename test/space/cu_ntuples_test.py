@@ -997,12 +997,11 @@ def test_vector_norm(exponent):
     weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
 
-    if exponent == float('inf'):
-        # Weighting irrelevant
-        true_norm = np.linalg.norm(xarr, ord=float('inf'))
+    if exponent in (1.0, float('inf')):
+        true_norm = np.linalg.norm(weight_vec * xarr, ord=exponent)
     else:
-        true_norm = np.sum(np.abs(xarr)**exponent *
-                           weight_vec)**(1/exponent)
+        true_norm = np.linalg.norm(weight_vec**(1/exponent) * xarr,
+                                   ord=exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
         # Not yet implemented, should raise
@@ -1040,12 +1039,11 @@ def test_vector_dist(exponent):
     weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
 
-    if exponent == float('inf'):
-        # Weighting irrelevant
-        true_dist = np.linalg.norm(xarr-yarr, ord=float('inf'))
+    if exponent in (1.0, float('inf')):
+        true_dist = np.linalg.norm(weight_vec * (xarr-yarr), ord=exponent)
     else:
-        true_dist = np.sum(np.abs(xarr-yarr)**exponent *
-                           weight_vec)**(1/exponent)
+        true_dist = np.linalg.norm(weight_vec**(1/exponent) * (xarr-yarr),
+                                   ord=exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
         # Not yet implemented, should raise

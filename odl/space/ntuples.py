@@ -49,7 +49,7 @@ from odl.util.utility import (
 
 
 __all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
-           'MatVecOperator', 'FnWeighting',
+           'MatVecOperator',
            'FnMatrixWeighting', 'FnVectorWeighting', 'FnConstWeighting',
            'weighted_dist', 'weighted_norm', 'weighted_inner')
 
@@ -1519,27 +1519,7 @@ def _inner_default(x1, x2):
     return dot(x2.data, x1.data)
 
 
-class FnWeighting(FnWeightingBase):
-
-    """Abstract base class for :class:`Fn` weighting."""
-
-    def inner(self, x1, x2):
-        """Calculate the inner product of two vectors.
-
-        Parameters
-        ----------
-        x1, x2 : :class:`Fn.Vector`
-            Vectors whose inner product is calculated
-
-        Returns
-        -------
-        inner : `float` or `complex`
-            The inner product of the two provided vectors
-        """
-        raise NotImplementedError
-
-
-class FnMatrixWeighting(FnWeighting):
+class FnMatrixWeighting(FnWeightingBase):
 
     """Matrix weighting for :class:`Fn`.
 
@@ -1614,7 +1594,8 @@ class FnMatrixWeighting(FnWeighting):
         """
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)
-        super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
+        super().__init__(impl='numpy', exponent=exponent,
+                         dist_using_inner=dist_using_inner)
 
         if isspmatrix(matrix):
             self._matrix = matrix
@@ -1697,8 +1678,11 @@ class FnMatrixWeighting(FnWeighting):
         Returns
         -------
         equivalent : `bool`
-            `True` if other is an :class:`FnWeighting` instance which
-            yields the same result as this inner product for any
+            `True` if other is an
+            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            with the same
+            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this inner product's matrix with the matrix
             or constant of other.
@@ -1848,7 +1832,7 @@ class FnMatrixWeighting(FnWeighting):
                                                             self.matrix)
 
 
-class FnVectorWeighting(FnWeighting):
+class FnVectorWeighting(FnWeightingBase):
 
     """Vector weighting for :class:`Fn`.
 
@@ -1907,7 +1891,8 @@ class FnVectorWeighting(FnWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
+        super().__init__(impl='numpy', exponent=exponent,
+                         dist_using_inner=dist_using_inner)
         if not isinstance(vector, Fn.Vector):
             self._vector = np.asarray(vector)
         else:
@@ -1954,7 +1939,10 @@ class FnVectorWeighting(FnWeighting):
         Returns
         -------
         equivalent : `bool`
-            `True` if ``other`` is an :class:`FnWeighting` instance
+            `True` if ``other`` is an
+            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            with the same
+            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
@@ -1963,7 +1951,7 @@ class FnVectorWeighting(FnWeighting):
         # Optimization for equality
         if self == other:
             return True
-        elif (not isinstance(other, FnWeighting) or
+        elif (not isinstance(other, FnWeightingBase) or
               self.exponent != other.exponent):
             return False
         elif isinstance(other, FnMatrixWeighting):
@@ -2038,7 +2026,7 @@ class FnVectorWeighting(FnWeighting):
                                                             self.vector)
 
 
-class FnConstWeighting(FnWeighting):
+class FnConstWeighting(FnWeightingBase):
 
     """Weighting of :class:`Fn` by a constant.
 
@@ -2092,7 +2080,8 @@ class FnConstWeighting(FnWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(exponent=exponent, dist_using_inner=dist_using_inner)
+        super().__init__(impl='numpy', exponent=exponent,
+                         dist_using_inner=dist_using_inner)
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
@@ -2127,15 +2116,18 @@ class FnConstWeighting(FnWeighting):
         Returns
         -------
         equivalent : `bool`
-            `True` if other is an :class:`FnWeighting` instance which
-            yields the same result as this inner product for any
+            `True` if other is an
+            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            with the same
+            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
             if ``other`` is an :class:`FnConstWeighting` instance,
             otherwise the :meth:`equiv` method of ``other`` is called.
         """
         if isinstance(other, FnConstWeighting):
             return self == other
-        elif isinstance(other, FnWeighting):
+        elif isinstance(other, FnWeightingBase):
             return other.equiv(self)
         else:
             return False
@@ -2286,7 +2278,7 @@ class FnNoWeighting(FnConstWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(1.0, exponent=exponent,
+        super().__init__(constant=1.0, exponent=exponent,
                          dist_using_inner=dist_using_inner)
 
     def __repr__(self):
@@ -2308,7 +2300,7 @@ class FnNoWeighting(FnConstWeighting):
             return 'NoWeighting: p = {}'.format(self.exponent)
 
 
-class FnCustomInnerProduct(FnWeighting):
+class FnCustomInnerProduct(FnWeightingBase):
 
     """Custom inner product on :class:`Fn`."""
 
@@ -2342,7 +2334,8 @@ class FnCustomInnerProduct(FnWeighting):
             exactly zero for equal (but not identical) :math:`x` and
             :math:`y`.
         """
-        super().__init__(exponent=2.0, dist_using_inner=dist_using_inner)
+        super().__init__(impl='numpy', exponent=2.0,
+                         dist_using_inner=dist_using_inner)
 
         if not callable(inner):
             raise TypeError('inner product function {!r} not callable.'
@@ -2382,7 +2375,7 @@ class FnCustomInnerProduct(FnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class FnCustomNorm(FnWeighting):
+class FnCustomNorm(FnWeightingBase):
 
     """Custom norm on :class:`Fn`, removes ``inner``."""
 
@@ -2404,7 +2397,7 @@ class FnCustomNorm(FnWeighting):
             - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
               \lVert y\\rVert`.
         """
-        super().__init__(exponent=1.0, dist_using_inner=False)
+        super().__init__(impl='numpy', exponent=1.0, dist_using_inner=False)
 
         if not callable(norm):
             raise TypeError('norm function {!r} not callable.'
@@ -2445,7 +2438,7 @@ class FnCustomNorm(FnWeighting):
         return self.__repr__()  # TODO: prettify?
 
 
-class FnCustomDist(FnWeighting):
+class FnCustomDist(FnWeightingBase):
 
     """Custom distance on :class:`Fn`, removes ``norm`` and ``inner``."""
 
@@ -2466,7 +2459,7 @@ class FnCustomDist(FnWeighting):
             - :math:`d(x, y) = 0 \Leftrightarrow x = y`
             - :math:`d(x, y) \geq d(x, z) + d(z, y)`
         """
-        super().__init__(exponent=1.0, dist_using_inner=False)
+        super().__init__(impl='numpy', exponent=1.0, dist_using_inner=False)
 
         if not callable(dist):
             raise TypeError('distance function {!r} not callable.'
