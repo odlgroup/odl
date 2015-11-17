@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.domain import IntervalProd, Interval, Rectangle, Cuboid
-from odl.util.testutils import almost_equal, all_almost_equal, all_equal
+from odl.util.testutils import almost_equal, all_almost_equal
 
 
 # TODO:
@@ -331,7 +331,7 @@ def test_div():
     quotient = IntervalProd([1 / 2., 2 / 3., 3 / 4., 4 / 5., 5 / 6.],
                             [2 / 1., 3 / 2., 4 / 3., 5 / 4., 6 / 5.])
 
-    assert (interv1 / interv2).approx_equals(quotient, tol=10**-10)
+    assert (interv1 / interv2).approx_equals(quotient, tol=10 ** -10)
 
 
 def test_interval_init():

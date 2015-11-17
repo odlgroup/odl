@@ -491,7 +491,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
             The distance between the vectors
         """
         if self._dist_using_inner:
-            dist_squared = (self.norm(x1)**2 + self.norm(x2)**2 -
+            dist_squared = (self.norm(x1) ** 2 + self.norm(x2) ** 2 -
                             2 * self.inner(x1, x2).real)
             if dist_squared < 0:  # Compensate for numerical error
                 dist_squared = 0.0

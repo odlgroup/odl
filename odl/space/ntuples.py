@@ -1130,6 +1130,7 @@ class Fn(FnBase, Ntuples):
 
 
 class Cn(Fn):
+
     """The complex vector space :math:`C^n` with vector multiplication.
 
     See also
@@ -1178,6 +1179,7 @@ class Cn(Fn):
             return 'Cn({}, {})'.format(self.size, self.dtype)
 
     class Vector(Fn.Vector):
+
         """A vector in a real :class:`Fn` space
 
         See also
@@ -1188,6 +1190,7 @@ class Cn(Fn):
 
 
 class Rn(Fn):
+
     """The real vector space :math:`R^n` with vector multiplication.
 
     See also
@@ -1236,6 +1239,7 @@ class Rn(Fn):
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
     class Vector(Fn.Vector):
+
         """A vector in a complex :class:`Fn` space
 
         See also
@@ -1901,7 +1905,7 @@ class FnConstWeighting(FnWeighting):
             The distance between the vectors
         """
         if self._dist_using_inner:
-            dist_squared = (_norm_default(x1)**2 + _norm_default(x2)**2 -
+            dist_squared = (_norm_default(x1) ** 2 + _norm_default(x2) ** 2 -
                             2 * _inner_default(x1, x2).real)
             if dist_squared < 0.0:  # Compensate for numerical error
                 dist_squared = 0.0

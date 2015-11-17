@@ -55,8 +55,8 @@ def shepp_logan(space):
 
     for ellip in ellipses:
         I = ellip[0]
-        a2 = ellip[1]**2
-        b2 = ellip[2]**2
+        a2 = ellip[1] ** 2
+        b2 = ellip[2] ** 2
         x0 = ellip[3]
         y0 = ellip[4]
         phi = ellip[5]
@@ -71,7 +71,7 @@ def shepp_logan(space):
         scales = [1 / a2, 1 / b2]
         mat = [[cos_p, sin_p],
                [-sin_p, cos_p]]
-        radius = np.dot(scales, np.dot(mat, offset_points.T)**2)
+        radius = np.dot(scales, np.dot(mat, offset_points.T) ** 2)
         inside = radius <= 1
 
         # Add the ellipse intensity to those pixels
