@@ -66,15 +66,14 @@ def _vectors(fn, n=1):
 
 
 if odl.CUDA_AVAILABLE:
-    ids=['CudaRn float32']
-    params=[odl.CudaRn(100)]
+    ids = ['CudaRn float32']
+    params = [odl.CudaRn(100)]
 else:
-    ids=['Cuda test']
-    params=[None]
+    ids = ['Cuda test']
+    params = [None]
 
-@pytest.fixture(scope="module",
-                ids=ids,
-                params=params)
+
+@pytest.fixture(scope="module", ids=ids, params=params)
 def fn(request):
     return request.param
 
@@ -101,19 +100,22 @@ def test_element(fn):
     x = fn.element()
     assert x in fn
 
-    y = fn.element(inp=[0]*fn.size)
+    y = fn.element(inp=[0] * fn.size)
     assert y in fn
 
     z = fn.element(data_ptr=y.data_ptr)
     assert z in fn
 
+    w = fn.element(inp=np.zeros(fn.size, fn.dtype))
+    assert w in fn
+
     with pytest.raises(ValueError):
-        fn.element(inp=[0]*fn.size, data_ptr=y.data_ptr)
+        fn.element(inp=[0] * fn.size, data_ptr=y.data_ptr)
 
 
 @skip_if_no_cuda
 def test_zero(fn):
-    assert all_almost_equal(fn.zero(), [0]*fn.size)
+    assert all_almost_equal(fn.zero(), [0] * fn.size)
 
 
 @skip_if_no_cuda
@@ -447,7 +449,7 @@ def test_member_multiply():
     # Cuda only uses floats, so require 5 places
     assert all_almost_equal(y_device, y_host)
 
-    
+
 @skip_if_no_cuda
 def _test_unary_operator(fn, function):
     """ Verifies that the statement y=function(x) gives equivalent
@@ -461,7 +463,7 @@ def _test_unary_operator(fn, function):
 
     assert all_almost_equal([x, y], [x_arr, y_arr])
 
-    
+
 @skip_if_no_cuda
 def _test_binary_operator(fn, function):
     """ Verifies that the statement z=function(x,y) gives equivalent
@@ -475,7 +477,7 @@ def _test_binary_operator(fn, function):
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
-    
+
 @skip_if_no_cuda
 def test_operators(fn):
     """ Test of all operator overloads against the corresponding
@@ -490,14 +492,14 @@ def test_operators(fn):
         def imul(x):
             x *= scalar
         _test_unary_operator(fn, imul)
-        _test_unary_operator(fn, lambda x: x*scalar)
+        _test_unary_operator(fn, lambda x: x * scalar)
 
     # Scalar division
     for scalar in [-31.2, -1, 1, 2.13]:
         def idiv(x):
             x /= scalar
         _test_unary_operator(fn, idiv)
-        _test_unary_operator(fn, lambda x: x/scalar)
+        _test_unary_operator(fn, lambda x: x / scalar)
 
     # Incremental operations
     def iadd(x, y):
@@ -630,12 +632,12 @@ def test_offset_sub_vector():
     r3 = odl.CudaRn(3)
     xd = r6.element([1, 2, 3, 4, 5, 6])
 
-    yd = r3.element(data_ptr=xd.data_ptr+3*xd.space.dtype.itemsize)
+    yd = r3.element(data_ptr=xd.data_ptr + 3 * xd.space.dtype.itemsize)
     yd[:] = [7, 8, 9]
 
     assert all_almost_equal([1, 2, 3, 7, 8, 9], xd)
 
-    
+
 @skip_if_no_cuda
 def _test_dtype(dtype):
     if dtype not in odl.CUDA_DTYPES:
@@ -657,7 +659,7 @@ def test_dtypes():
                   np.complex64, np.complex128, np.complex]:
         yield _test_dtype, dtype
 
-        
+
 @skip_if_no_cuda
 def _test_ufunc(ufunc):
     r3 = odl.CudaRn(5)
@@ -742,4 +744,3 @@ def test_const_str():
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
-
