@@ -68,7 +68,7 @@ class DiscreteLp(Discretization):
         dspace : :class:`~odl.space.base_ntuples.FnBase`
             Space of elements used for data storage. It must have the
             same :attr:`~odl.FnBase.field` as ``fspace``
-        exponent : positive float, optional
+        exponent : positive `float`, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
             product.
@@ -225,7 +225,7 @@ class DiscreteLp(Discretization):
 
             Parameters
             ----------
-            out : `numpy.ndarray`, Optional (default: `None`)
+            out : :class:`numpy.ndarray`, optional
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype and
                 shape.
@@ -323,7 +323,7 @@ class DiscreteLp(Discretization):
 
                 'wireframe', 'plot_wireframe' : surface plot
 
-            title : `string`, optional
+            title : `str`, optional
                 Set the title of the figure
             kwargs : {'figsize', 'saveto', ...}
                 Extra keyword arguments passed on to display method
@@ -359,7 +359,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
     exponent : positive `float`, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : string, optional
+    interp : `str`, optional
             Interpolation type to be used for discretization.
 
             'nearest' : use nearest-neighbor interpolation (default)

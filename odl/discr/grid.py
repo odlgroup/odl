@@ -260,9 +260,9 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other : object
+        other : `object`
             Object to be tested
-        tol : float
+        tol : `float`
             Allow deviations up to this number in absolute value
             per vector entry.
 
@@ -304,7 +304,7 @@ class TensorGrid(Set):
         ----------
         other : array-like or `float`
             The object to test for membership in this grid
-        tol : float
+        tol : `float`
             Allow deviations up to this number in absolute value
             per vector entry.
 
@@ -339,7 +339,7 @@ class TensorGrid(Set):
         ----------
         other :  :class:`~odl.TensorGrid`
             The other grid which is supposed to contain this grid
-        tol : float
+        tol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -427,7 +427,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        points : numpy.ndarray
+        points : :class:`numpy.ndarray`
             The size of the array is ntotal x ndim, i.e. the points are
             stored as rows.
 
@@ -477,7 +477,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        out : numpy.ndarray
+        out : :class:`numpy.ndarray`
             The size of the array is 2^m x ndim, where m is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 
@@ -516,9 +516,9 @@ class TensorGrid(Set):
 
         Returns
         -------
-        csizes : tuple of numpy.ndarray
+        csizes : `tuple` of :class:`numpy.ndarray`
             The cell sizes per axis. The length of the vectors will be
-            one less than :attr:`coord_vectors` if :attr:`as_midp` is ``False``,
+            one less than :attr:`coord_vectors` if :attr:`as_midp` is `False`,
             otherwise they will have the same length.
             For axes with 1 grid point, cell size is set to 0.
 
@@ -553,11 +553,11 @@ class TensorGrid(Set):
         Parameters
         ----------
         sparse : `bool`, optional
-            If True, the grid is not "fleshed out" to save memory.
+            If `True`, the grid is not "fleshed out" to save memory.
 
         Returns
         -------
-        meshgrid : `tuple` of `numpy.ndarray`'s
+        meshgrid : `tuple` of :class:`numpy.ndarray`
             Function evaluation grid with size-1 axes if ``sparse=True``,
             otherwise with "fleshed out" axes
 
@@ -629,7 +629,7 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        slc : int or slice
+        slc : `int` or slice
             Negative indices and `None` (new axis) are not supported.
 
         Examples
@@ -745,10 +745,12 @@ class RegularGrid(TensorGrid):
             The number of grid points per axis, can be an integer for
             1D grids
         kwargs : {'as_midp'}
-            'as_midp' : `bool`, optional  (Default: `False`)
+            'as_midp' : `bool`, optional
                 Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of :meth:`TensorGrid.min`, 
+                This influences the behavior of :meth:`TensorGrid.min`,
                 :meth:`TensorGrid.max` and :meth:`TensorGrid.cell_sizes`.
+
+                Default: `False`
 
         Examples
         --------
@@ -842,7 +844,7 @@ class RegularGrid(TensorGrid):
         Parameters
         ----------
 
-        tol : float
+        tol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -944,12 +946,11 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        slc : int or slice
-            Negative indices and 'None' (new axis) are not supported.
+        slc : `int` or slice
+            Negative indices and `None` (new axis) are not supported.
 
         Examples
         --------
-
         >>> g = RegularGrid([-1.5, -3, -1], [-0.5, 7, 3], (2, 3, 6))
         >>> g[0, 0, 0]
         array([-1.5, -3. , -1. ])
@@ -1071,12 +1072,12 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
     ----------
     intv_prod : :class:`~odl.IntervalProd`
         Set to be sampled
-    num_nodes : `int` or `tuple` of int
-        Number of nodes per axis. For dimension >= 2, a tuple
+    num_nodes : `int` or `tuple` of `int`
+        Number of nodes per axis. For dimension >= 2, a `tuple`
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
     as_midp : `bool`, optional
-        If True, the midpoints of an interval partition will be
+        If `True`, the midpoints of an interval partition will be
         returned, which excludes the endpoints. Otherwise,
         equispaced nodes including the endpoints are generated.
         Note that the resulting strides are different.

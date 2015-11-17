@@ -140,9 +140,9 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : object
+        other : `object`
             The object to be tested
-        tol : float
+        tol : `float`
             The maximum allowed difference in 'inf'-norm between the
             interval endpoints.
 
@@ -220,7 +220,7 @@ class IntervalProd(Set):
         other : :class:`~odl.Set`
             The set to be tested. It must implement a ``min()`` and a
             ``max()`` method, otherwise a `TypeError` is raised.
-        tol : float, optional
+        tol : `float`, optional
             The maximum allowed distance in 'inf'-norm between the
             other set and this interval product.
             Default: 0.0
@@ -318,7 +318,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        indices : `int` or `tuple` of ints
+        indices : `int` or `tuple` of `int`
             The indices of the dimensions along which to collapse
         values : `float` or array-like
             The values to which to collapse. Must have the same
@@ -413,9 +413,11 @@ class IntervalProd(Set):
         other : :class:`IntervalProd`, `float` or array-like
             The set to be inserted. A `float` or array a is
             treated as an ``IntervalProd(a, a)``.
-        index : int, Optional (default = :attr:`ndim`)
+        index : `int`, optional
             The index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
+
+            Default: :attr:`ndim`
 
         Returns
         -------
@@ -476,7 +478,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : :class:`numpy.ndarray`
             The size of the array is ``2^m * ndim``, where ``m`` is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 
@@ -588,7 +590,7 @@ class IntervalProd(Set):
             return type(self)(np.minimum(vec1, vec2), np.maximum(vec1, vec2))
         else:
             return NotImplemented
-        
+
     __rtruediv__ = __rdiv__
 
     def __repr__(self):

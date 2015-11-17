@@ -51,7 +51,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         ----------
         size : non-negative int
             The number of entries per tuple
-        dtype : object
+        dtype : `object`
             The data type for each tuple entry. Can be provided in any
             way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -215,7 +215,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Returns
             -------
-            asarray : `numpy.ndarray`
+            asarray : :class:`numpy.ndarray`
                 Numpy array of the same type as the space.
             """
 
@@ -275,12 +275,12 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            dtype : `numpy.dtype`, Optional (default: ``self.dtype``)
-                The dtype of the output array
+            dtype : `object`
+                Specifier for the data type of the output array
 
             Returns
             -------
-            array : `numpy.ndarray`
+            array : :class:`numpy.ndarray`
             """
             if dtype is None:
                 return self.asarray()
@@ -292,7 +292,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            obj : `numpy.ndarray`
+            obj : :class:`numpy.ndarray`
                 The array that should be wrapped
 
             Returns

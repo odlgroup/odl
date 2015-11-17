@@ -190,7 +190,7 @@ class RawGridCollocation(FunctionSetMapping):
             The function to be evaluated. It must accept point
             coordinates in list form (``f(x, y, z)`` rather than
             ``f(point)``) and return either a NumPy array of the correct
-            type (defined by the :class:`~odl.Ntuples` instance) or a 
+            type (defined by the :class:`~odl.Ntuples` instance) or a
             single value.
 
         Returns
@@ -275,7 +275,7 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an 
+            space. Its :attr:`~odl.Operator.domain` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
@@ -424,7 +424,7 @@ class NearestInterpolation(RawNearestInterpolation,
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an 
+            space. Its :attr:`~odl.Operator.domain` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
@@ -441,14 +441,14 @@ class NearestInterpolation(RawNearestInterpolation,
 
         Examples
         --------
-        Let's define the `complex` function space :math:`L^2` on a
+        Let's define the complex function space :math:`L^2` on a
         rectangle:
 
         >>> from odl import Rectangle, FunctionSpace, ComplexNumbers
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> space = FunctionSpace(rect, field=ComplexNumbers())
 
-        The grid is defined by uniform sampling (:attr:`~odl.TensorGrid.as_midp` 
+        The grid is defined by uniform sampling (:attr:`~odl.TensorGrid.as_midp`
         indicates that the points will be cell midpoints instead of corners).
 
         >>> from odl import uniform_sampling, Cn
@@ -488,7 +488,7 @@ class LinearInterpolation(FunctionSetMapping):
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an 
+            space. Its :attr:`~odl.Operator.domain` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
@@ -524,7 +524,7 @@ class LinearInterpolation(FunctionSetMapping):
 
         Examples
         --------
-        Let's define the `complex` function space :math:`L^2` on a
+        Let's define the complex function space :math:`L^2` on a
         rectangle:
 
         TODO: implement an example!

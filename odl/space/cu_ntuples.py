@@ -83,7 +83,7 @@ class CudaNtuples(NtuplesBase):
 
         Parameters
         ----------
-        size : int
+        size : `int`
             The number entries per tuple
         dtype : `object`
             The data type for each tuple entry. Can be provided in any
@@ -109,9 +109,9 @@ class CudaNtuples(NtuplesBase):
         inp : array-like or scalar, optional
             Input to initialize the new element.
 
-            If ``inp`` is a `numpy.ndarray` of shape ``(size,)`` and the
-            same data type as this space, the array is wrapped, not
-            copied.
+            If ``inp`` is a :class:`numpy.ndarray` of shape ``(size,)``
+            and the same data type as this space, the array is wrapped,
+            not copied.
             Other array-like objects are copied (with broadcasting
             if necessary).
 
@@ -269,14 +269,14 @@ class CudaNtuples(NtuplesBase):
 
             Parameters
             ----------
-            start : `int`, Optional (default: `None`)
+            start : `int`, optional
                 Start position. None means the first element.
-            start : `int`, Optional (default: `None`)
+            start : `int`, optional
                 One element past the last element to be extracted.
                 None means the last element.
-            start : `int`, Optional (default: `None`)
+            start : `int`, optional
                 Step length. None means 1.
-            out : :class:`numpy.ndarray`, Optional (default: `None`)
+            out : :class:`numpy.ndarray`
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
 
@@ -374,7 +374,7 @@ class CudaNtuples(NtuplesBase):
 
             Returns
             -------
-            None
+            `None`
 
             Examples
             --------
@@ -448,9 +448,9 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        size : positive int
+        size : positive `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -462,8 +462,8 @@ class CudaFn(FnBase, CudaNtuples):
             'weight' : {array-like, :class:`CudaFn.Vector`, `float`, `None`}
                 Use weighted inner product, norm, and dist.
 
-                `None` (default):
-                    No weighting, use standard functions
+                `None`:
+                    No weighting, use standard functions (default)
 
                 `float`:
                     Weighting by a constant
@@ -849,9 +849,9 @@ class CudaRn(CudaFn):
 
         Parameters
         ----------
-        size : positive int
+        size : positive `int`
             The number of dimensions of the space
-        dtype : object
+        dtype : `object`
             The data type of the storage array. Can be provided in any
             way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
@@ -941,7 +941,7 @@ def cu_weighted_inner(weight):
 
     Returns
     -------
-    inner : callable
+    inner : `callable`
         Inner product function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -962,13 +962,13 @@ def cu_weighted_norm(weight, exponent=2.0):
         Weight of the inner product. A scalar is interpreted as a
         constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
         as a weighting vector.
-    exponent : positive float
+    exponent : positive `float`
         Exponent of the norm. If `weight` is a sparse matrix, only
-        1.0, 2.0 and `inf` are allowed.
+        1.0, 2.0 and ``inf`` are allowed.
 
     Returns
     -------
-    norm : callable
+    norm : `callable`
         Norm function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -989,7 +989,7 @@ def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
         Weight of the inner product. A scalar is interpreted as a
         constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
         as a weighting vector.
-    exponent : positive float
+    exponent : positive `float`
         Exponent of the distance
     use_inner : `bool`, optional
         Calculate ``dist`` using the formula
@@ -1006,7 +1006,7 @@ def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
 
     Returns
     -------
-    dist : callable
+    dist : `callable`
         Distance function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1090,6 +1090,21 @@ class CudaFnWeighting(FnWeightingBase):
 
     """Abstract base class for :class:`CudaFn` weighting."""
 
+    def inner(self, x1, x2):
+        """Calculate the inner product of two vectors.
+
+        Parameters
+        ----------
+        x1, x2 : :class:`CudaFn.Vector`
+            Vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : `float` or `complex`
+            The inner product of the two provided vectors
+        """
+        raise NotImplementedError
+
 
 class CudaFnVectorWeighting(CudaFnWeighting):
 
@@ -1124,21 +1139,21 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         ----------
         vector : array-like, one-dim.
             Weighting vector of the inner product
-        exponent : positive float
+        exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If `matrix` is a sparse matrix, only 1.0, 2.0 and `inf`
-            are allowed.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-            norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) `x` and `y`.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-            Can only be used if `exponent` is 2.0.
+            Can only be used if ``exponent`` is 2.0.
         """
         # TODO: remove dist_using_inner in favor of a native dist
         # implementation
@@ -1170,12 +1185,12 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         return np.all(np.greater(self.vector, 0))
 
     def __eq__(self, other):
-        """`inner.__eq__(other) <==> inner == other`.
+        """``inner.__eq__(other) <==> inner == other``.
 
         Returns
         -------
-        equals : bool
-            `True` if `other` is a :class:`CudaFnVectorWeighting`
+        equals : `bool`
+            `True` if ``other`` is a :class:`CudaFnVectorWeighting`
             instance with **identical** vector, `False` otherwise.
 
         See also
@@ -1190,16 +1205,16 @@ class CudaFnVectorWeighting(CudaFnWeighting):
                 super().__eq__(other))
 
     def equiv(self, other):
-        """Test if `other` is an equivalent weighting.
+        """Test if ``other`` is an equivalent weighting.
 
         Returns
         -------
-        equivalent : bool
-            `True` if `other` is a :class:`CudaFnWeighting` instance
+        equivalent : `bool`
+            `True` if ``other`` is a :class:`CudaFnWeighting` instance
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
-            product and `other`.
+            product and ``other``.
         """
         # Optimization for equality
         if self == other:
@@ -1222,7 +1237,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
 
         Returns
         -------
-        inner : float or complex
+        inner : `float` or `complex`
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
@@ -1246,7 +1261,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The norm of the provided vector
         """
         if self.exponent == 2.0:
@@ -1257,7 +1272,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
     def __repr__(self):
-        """`w.__repr__() <==> repr(w)`."""
+        """``w.__repr__() <==> repr(w)``."""
         inner_fstr = '{vector!r}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
@@ -1268,7 +1283,7 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`w.__repr__() <==> repr(w)`."""
+        """``w.__repr__() <==> repr(w)``."""
         if self.exponent == 2.0:
             return 'Weighting: vector =\n{}'.format(self.vector)
         else:
@@ -1306,7 +1321,7 @@ class CudaFnConstWeighting(CudaFnWeighting):
         ----------
         constant : positive finite `float`
             Weighting constant of the inner product.
-        exponent : positive float
+        exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
@@ -1487,8 +1502,8 @@ class CudaFnCustomInnerProduct(CudaFnWeighting):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            :class:`CudaFn.Vector` arguments, return a `complex` number and
-            satisfy the following conditions for all vectors
+            :class:`CudaFn.Vector` arguments, return a complex number
+            and satisfy the following conditions for all vectors
             :math:`x, y, z` and scalars :math:`s`:
 
             - :math:`\langle x,y\\rangle =

@@ -86,7 +86,7 @@ class Ntuples(NtuplesBase):
             If ``inp`` is `None`, an empty element is created with no
             guarantee of its state (memory allocation only).
 
-            If ``inp`` is a `numpy.ndarray` of shape ``(size,)`` and the
+            If ``inp`` is a :class:`numpy.ndarray` of shape ``(size,)`` and the
             same data type as this space, the array is wrapped, not
             copied.
             Other array-like objects are copied (with broadcasting
@@ -168,7 +168,7 @@ class Ntuples(NtuplesBase):
                                 ''.format(data))
 
             if data.dtype != space.dtype:
-                raise TypeError('data {!r} not of dtype `{!r}`.'
+                raise TypeError('data {!r} not of dtype {!r}.'
                                 ''.format(data, space.dtype))
 
             self._data = data
@@ -185,20 +185,20 @@ class Ntuples(NtuplesBase):
 
             Parameters
             ----------
-            start : `int`, optional (default: `None`)
+            start : `int`, optional
                 Start position. None means the first element.
-            start : `int`, optional (default: `None`)
+            start : `int`, optional
                 One element past the last element to be extracted.
                 None means the last element.
-            start : `int`, optional (default: `None`)
+            start : `int`, optional
                 Step length. None means 1.
-            out : `numpy.ndarray`, optional (default: `None`)
+            out : :class:`numpy.ndarray`, optional
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
 
             Returns
             -------
-            asarray : `numpy.ndarray`
+            asarray : :class:`numpy.ndarray`
                 Numpy array of the same type as the space.
 
             Examples
@@ -864,7 +864,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -893,7 +893,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -973,7 +973,8 @@ class Fn(FnBase, Ntuples):
         >>> c3_lambda1 == c3_lambda2
         False
 
-        An :class:`Fn` space with the same data type is considered equal:
+        An :class:`Fn` space with the same data type is considered
+        equal:
 
         >>> c3 = Cn(3)
         >>> f3_cdouble = Fn(3, dtype='complex128')
@@ -999,7 +1000,7 @@ class Fn(FnBase, Ntuples):
         def __init__(self, space, data):
             """Initialize a new instance."""
             if not isinstance(space, Fn):
-                raise TypeError('{!r} not an :class:`Fn` instance.'
+                raise TypeError('{!r} not an `Fn` instance.'
                                 ''.format(space))
             super().__init__(space, data)
 
@@ -1067,7 +1068,8 @@ class Fn(FnBase, Ntuples):
             Returns
             -------
             imag : :class:`Rn.Vector`
-                The imaginary part this vector as a vector in :class:`Rn`
+                The imaginary part this vector as a vector in
+                :class:`Rn`
 
             Examples
             --------
@@ -1114,7 +1116,7 @@ class Fn(FnBase, Ntuples):
             self.imag.data[:] = newimag
 
         def conj(self, out=None):
-            """The `complex` conjugate of this vector.
+            """The complex conjugate of this vector.
 
             Parameters
             ----------
@@ -1179,7 +1181,7 @@ class Cn(Fn):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
 
-            Only `complex` floating-point data types are allowed.
+            Only complex floating-point data types are allowed.
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See :class:`Fn`
         """
@@ -1518,6 +1520,21 @@ def _inner_default(x1, x2):
 class FnWeighting(FnWeightingBase):
 
     """Abstract base class for :class:`Fn` weighting."""
+
+    def inner(self, x1, x2):
+        """Calculate the inner product of two vectors.
+
+        Parameters
+        ----------
+        x1, x2 : :class:`Fn.Vector`
+            Vectors whose inner product is calculated
+
+        Returns
+        -------
+        inner : `float` or `complex`
+            The inner product of the two provided vectors
+        """
+        raise NotImplementedError
 
 
 class FnMatrixWeighting(FnWeighting):
@@ -1974,7 +1991,7 @@ class FnVectorWeighting(FnWeighting):
 
         Returns
         -------
-        norm : float
+        norm : `float`
             The norm of the provided vector
         """
         if self.exponent == 2.0:
@@ -2092,7 +2109,7 @@ class FnConstWeighting(FnWeighting):
             yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
             if ``other`` is an :class:`FnConstWeighting` instance,
-            otherwise the ``equiv()`` method of ``other`` is called.
+            otherwise the :meth:`equiv` method of ``other`` is called.
         """
         if isinstance(other, FnConstWeighting):
             return self == other
@@ -2339,7 +2356,7 @@ class FnCustomInnerProduct(FnWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`w.__str__() <==> str(w)`."""
+        """``w.__str__() <==> str(w)``."""
         return self.__repr__()  # TODO: prettify?
 
 
@@ -2402,7 +2419,7 @@ class FnCustomNorm(FnWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """`w.__str__() <==> str(w)`."""
+        """``w.__str__() <==> str(w)``."""
         return self.__repr__()  # TODO: prettify?
 
 

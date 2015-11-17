@@ -37,8 +37,8 @@ In the following, the abstract methods are explained in detail.
 
 **Abstract methods**
 
-``element(inp=None)``
----------------------
+**Element creation:** ``element(inp=None)``
+
 This public method is the factory for the inner
 :class:`LinearSpace.Vector` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
@@ -49,15 +49,15 @@ If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
 
 **Parameters:**
-    inp : object, optional
+    inp : `object`, optional
         A container for values for the element initialization
 
 **Returns:**
     element : :class:`LinearSpace.Vector`
         The new vector
 
-``_lincomb(a, x1, b, x2, out)``
--------------------------------
+**Linear combination:** ``_lincomb(a, x1, b, x2, out)``
+
 This private method is the raw implementation (i.e. without error
 checking) of the linear combination ``out = a * x1 + b * x2``.
 :meth:`LinearSpace._lincomb` and its public counterpart
@@ -81,16 +81,16 @@ functions, see below.
  * The initial state of the output vector ``out`` **must not**
    influence the result.
 
-``field``
----------
+**Underlying scalar field:** ``field``
+
 The public attribute determining the type of scalars which
 underlie the space. Can be instances of either :class:`~odl.RealNumbers` or
 :class:`~odl.ComplexNumbers` (see :mod:`~odl.set.sets`).
 
 Should be implemented as a ``@property`` to make it immutable.
 
-``__eq__(other)``
------------------
+**Equality check:** ``__eq__(other)``
+
 :class:`LinearSpace` inherits this abstract method from :class:`~odl.Set`. Its
 purpose is to check two :class:`LinearSpace` instances for equality.
 
@@ -103,11 +103,9 @@ purpose is to check two :class:`LinearSpace` instances for equality.
         `True` if ``other`` is the same :class:`LinearSpace`, `False`
         otherwise
 
-Optional methods
-================
 
-``_dist(x1, x2)``
------------------
+**Distance (optional):** ``_dist(x1, x2)``
+
 A raw (not type-checking) private method measuring the distance
 between two vectors ``x1`` and ``x2``.
 
@@ -128,8 +126,8 @@ A space with a distance is called a **metric space**.
     * ``_dist(x, y) >= 0``
     * ``_dist(x, y) == 0`` (approx.) if and only if ``x == y`` (approx.)
 
-``_norm(x)``
-------------
+**Norm (optional):** ``_norm(x)``
+
 A raw (not type-checking) private method measuring the length of a
 space element ``x``.
 
@@ -149,14 +147,8 @@ A space with a norm is called a **normed space**.
  * ``_norm(x) >= 0``
  * ``_norm(x) == 0`` (approx.) if and only if ``x == 0`` (approx.)
 
-Notes
------
-A normed space is automatically a metric space with the distance
-function ``_dist(x, y) = _norm(x - y)``.
+**Inner product (optional):** ``_inner(x, y)``
 
-
-``_inner(x, y)``
-----------------
 A raw (not type-checking) private method calculating the inner
 product of two space elements ``x`` and ``y``.
 
@@ -166,24 +158,22 @@ product of two space elements ``x`` and ``y``.
 
 **Returns:**
     inner : `float` or `complex`
-        The inner product of ``x`` and ``y``. If :attr:`LinearSpace.field` is the real
+        The inner product of ``x`` and ``y``. If
+        :attr:`LinearSpace.field` is the set of real
         numbers, ``inner`` is a `float`, otherwise `complex`.
 
 **Requirements:**
- * ``_inner(x, y) == _inner(y, x)^*`` with '*' = `complex` conjugation
+ * ``_inner(x, y) == _inner(y, x)^*`` with '*' = complex conjugation
  * ``_inner(s * x, y) == s * _inner(x, y)`` for ``s`` scalar
  * ``_inner(x + z, y) == _inner(x, y) + _inner(z, y)``
  * ``_inner(x, x) == 0`` (approx.) if and only if ``x == 0`` (approx.)
 
 Note
 ----
-A Hilbert space is automatically a normed space with the norm function
-``_norm(x) = sqrt(_inner(x, x))``, and in consequence also a metric space
-with the distance function ``_dist(x, y) = _norm(x - y)``.
 
 
-``_multiply(x1, x2, out)``
---------------------------
+**Pointwise multiplication (optional):** ``_multiply(x1, x2, out)``
+
 A raw (not type-checking) private method multiplying two vectors
 ``x1`` and ``x2`` element-wise and storing the result in ``out``.
 
@@ -205,8 +195,12 @@ A raw (not type-checking) private method multiplying two vectors
 
 Notes
 -----
-The above conditions on the multiplication constitute a
-*unital commutative algebra* in the mathematical sense.
+- A normed space is automatically a metric space with the distance
+  function ``_dist(x, y) = _norm(x - y)``.
+- A Hilbert space (inner product space) is automatically a normed space
+  with the norm function ``_norm(x) = sqrt(_inner(x, x))``.
+- The conditions on the pointwise multiplication constitute a
+  *unital commutative algebra* in the mathematical sense.
 
 References
 ----------
@@ -313,10 +307,6 @@ class LinearSpace(Set):
 
         The one vector is defined as the multiplicative unit of a space.
 
-        Parameters
-        ----------
-        None
-
         Returns
         -------
         v : :class:`LinearSpace.Vector`
@@ -333,10 +323,6 @@ class LinearSpace(Set):
         """A zero vector in this space.
 
         The zero vector is defined as the additive unit of a space.
-
-        Parameters
-        ----------
-        None
 
         Returns
         -------

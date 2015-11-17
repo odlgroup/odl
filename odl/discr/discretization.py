@@ -99,7 +99,6 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         if not isinstance(uspace, Set):
             raise TypeError('undiscretized space {} not a `Set` instance.'
                             ''.format(uspace))
-
         if not isinstance(dspace, NtuplesBase):
             raise TypeError('data space {} not an `NtuplesBase` instance.'
                             ''.format(dspace))
@@ -269,7 +268,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
             Parameters
             ----------
-            out : `numpy.ndarray`, Optional (default: `None`)
+            out : :class:`numpy.ndarray`, optional
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
             """

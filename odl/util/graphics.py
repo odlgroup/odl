@@ -40,7 +40,7 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
 
     Parameters
     ----------
-    method : string, optional
+    method : `str`, optional
         1d methods:
 
         'plot' : graph plot
@@ -55,7 +55,7 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
 
         'wireframe', 'plot_wireframe' : surface plot
 
-    title : string, optional
+    title : `str`, optional
         Set the title of the figure
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method

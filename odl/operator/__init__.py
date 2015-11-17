@@ -58,7 +58,7 @@ evaluation, *in-place* or *out-of-place*.
 - In-place evaluation means that the operator is evaluated on a
   :attr:`~odl.Operator.domain` element, and the result is written to an
   *already existing* :attr:`~odl.Operator.range` element. To implement
-  this behavior, create the (private) :attr:`~odl.Operator._apply`
+  this behavior, create the (private) :meth:`~odl.Operator._apply`
   method with the following signature, here given for the above
   example::
 

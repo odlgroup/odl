@@ -91,7 +91,7 @@ def _default_apply(self, x, out, *args, **kwargs):
 
     Returns
     -------
-    None
+    `None`
     """
     out.assign(self._call(x, *args, **kwargs))
 
@@ -185,7 +185,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     **Returns:**
 
-    None
+    `None`
 
     **Out-of-place evaluation:** ``_call()``
 
@@ -255,12 +255,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     @property
     def is_linear(self):
-        """True if this operator is linear."""
+        """`True` if this operator is linear."""
         return self._is_linear
 
     @property
     def is_functional(self):
-        """True if the range of this operator is a :class:`~odl.Field`."""
+        """`True` if the this operator's range is a :class:`~odl.Field`."""
         return self._is_functional
 
     @property
@@ -894,9 +894,6 @@ class OperatorPointwiseProduct(Operator):
     """Expression type for the pointwise operator mulitplication.
 
     ``OperatorPointwiseProduct(op1, op2) <==> (x --> op1(x) * op2(x))``
-
-    The product is only well-defined for :class:`Operator` instances where
-    :attr:`Operator.range` is an ``Algebra``.
     """
 
     # pylint: disable=abstract-method
@@ -969,7 +966,7 @@ class OperatorLeftScalarMult(Operator):
             The range of ``op`` must be a :class:`~odl.LinearSpace`
             or :class:`~odl.Field`.
         scalar : ``op.range.field`` element
-            A real or `complex` number, depending on the field of
+            A real or complex number, depending on the field of
             the range.
         """
         if not isinstance(op.range, (LinearSpace, Field)):
@@ -1071,7 +1068,7 @@ class OperatorRightScalarMult(Operator):
             The domain of ``op`` must be a :class:`~odl.LinearSpace` or
             :class:`~odl.Field`.
         scalar : ``op.range.field`` element
-            A real or `complex` number, depending on the field of
+            A real or complex number, depending on the field of
             the operator domain.
         tmp : domain element, optional
             Used to avoid the creation of a temporary when applying the
@@ -1382,7 +1379,7 @@ class OperatorRightVectorMult(Operator):
 
         See also
         --------
-        :class:`OperatorRightVectorMult` : the result
+        OperatorRightVectorMult : the result
         """
         return OperatorRightVectorMult(self._op.derivative(x), self._vector)
 
@@ -1402,7 +1399,7 @@ class OperatorRightVectorMult(Operator):
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
-        #TODO: handle `complex` vectors
+        #TODO: handle complex vectors
         return OperatorLeftVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):
@@ -1434,10 +1431,8 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         is assumed to be `None` and is ignored.
     inv : :class:`Operator`, optional
         The operator inverse
-        Default: `None`
     deriv : :class:`Operator`, optional
         The operator derivative, linear
-        Default: `None`
     dom : :class:`~odl.Set`, optional
         The domain of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
@@ -1445,7 +1440,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         The range of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
     linear : `bool`, optional
-        True if the operator is linear
+        `True` if the operator is linear
         Default: `False`
 
     Returns

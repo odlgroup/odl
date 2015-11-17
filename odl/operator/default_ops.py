@@ -62,14 +62,14 @@ class ScalingOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : :attr:`Operator.domain` element
             input vector to be scaled
-        out : range element
+        out : :attr:`~odl.Operator.range` element
             Output vector to which the result is written
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -95,7 +95,7 @@ class ScalingOperator(Operator):
 
         Returns
         -------
-        scaled : range element
+        scaled : :attr:`~odl.Operator.range` element
             The scaled vector
 
         Examples
@@ -224,10 +224,10 @@ class LinCombOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : :attr:`~odl.Operator.domain` element
             An element in the operator domain (2-tuple of space
             elements) whose linear combination is calculated
-        out : range element
+        out : :attr:`:attr:`~odl.Operator.range` element
             Vector to which the result is written
 
         Examples
@@ -283,10 +283,10 @@ class MultiplyOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : :attr:`~odl.Operator.domain` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : range element
+        out : :attr:`~odl.Operator.range` element
             Vector to which the result is written
 
         Examples
@@ -329,7 +329,7 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        vec : :class:`~odl.LinearSpace.Vector` with ``inner``
+        vector : :class:`~odl.LinearSpace.Vector`
             The vector to take the inner product with
         """
         self.vector = vector
@@ -340,7 +340,7 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : ``vector.space`` element
             An element in the space of the vector
 
         Examples
@@ -370,6 +370,7 @@ class InnerProductOperator(Operator):
         """``op.__str__() <==> str(op)``."""
         return "{}.T".format(self.vector)
 
+
 class InnerProductAdjointOperator(Operator):
     """Operator taking the scalar product with a fixed vector.
 
@@ -384,7 +385,7 @@ class InnerProductAdjointOperator(Operator):
 
         Parameters
         ----------
-        vec : LinearSpace.Vector with ``inner``
+        vector : :class:`~odl.LinearSpace.Vector`
             The vector to take the inner product with
         """
         self.vector = vector
@@ -395,7 +396,7 @@ class InnerProductAdjointOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : ``vector.space.field`` element
             An element in the field of the vector
 
         Examples
@@ -414,10 +415,10 @@ class InnerProductAdjointOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : :attr:`~odl.Operator.domain` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : range element
+        out : :attr:`~odl.Operator.range` element
             Vector to which the result is written
 
         Examples
@@ -434,7 +435,7 @@ class InnerProductAdjointOperator(Operator):
         True
         """
         out.lincomb(x, self.vector)
-    
+
     @property
     def adjoint(self):
         return InnerProductOperator(self.vector)

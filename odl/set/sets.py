@@ -252,14 +252,14 @@ class Field(with_metaclass(ABCMeta, Set)):
 
 class ComplexNumbers(Field):
 
-    """The set of `complex` numbers."""
+    """The set of complex numbers."""
 
     def __contains__(self, other):
-        """Test if ``other`` is a `complex` number."""
+        """Test if ``other`` is a complex number."""
         return isinstance(other, Complex)
 
     def contains_set(self, other):
-        """Test if ``other`` is a subset of the `complex` numbers
+        """Test if ``other`` is a subset of the complex numbers
 
         Returns
         -------
@@ -288,7 +288,7 @@ class ComplexNumbers(Field):
         return isinstance(other, ComplexNumbers)
 
     def element(self, inp=None):
-        """Return a `complex` number from ``inp`` or from scratch."""
+        """Return a complex number from ``inp`` or from scratch."""
         if inp is not None:
             return complex(inp)
         else:
@@ -464,7 +464,7 @@ class CartesianProduct(Set):
         ----------
         inp : `iterable`, optional
             Collection of input values for the
-            :meth:`~odl.set.space.LinearSpace.element()` methods
+            :meth:`~odl.set.space.LinearSpace.element` methods
             of all sets in the Cartesian product.
         """
         if inp is None:
