@@ -576,7 +576,7 @@ class Fn(FnBase, Ntuples):
                     Weighting by a matrix (2-dim. array) or a vector
                     (1-dim. array, corresponds to a diagonal matrix).
                     A matrix can also be given as a sparse matrix
-                    (`scipy.sparse.spmatrix`).
+                    ( ``scipy.sparse.spmatrix``).
 
                 This option cannot be combined with ``dist``,
                 ``norm`` or ``inner``.
@@ -1296,7 +1296,7 @@ class MatVecOperator(Operator):
             castable to the range dtype.
         ran : :class:`Fn`
             Space to which the matrix maps
-        matrix : array-like or `scipy.sparse.spmatrix`
+        matrix : array-like or  ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``dom`` and ``m`` the size
             of ``ran``. Its dtype must be castable to the range dtype.
@@ -1559,7 +1559,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        matrix : `scipy.sparse.spmatrix` or array-like, 2-dim.
+        matrix :  ``scipy.sparse.spmatrix`` or array-like, 2-dim.
             Square weighting matrix of the inner product
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
