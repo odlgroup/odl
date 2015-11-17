@@ -36,6 +36,7 @@ from odl.util.testutils import almost_equal, all_almost_equal
 
 
 class MultiplyAndSquareOp(Operator):
+
     """ Example of a nonlinear operator, Calculates (A*x)**2
     """
 
@@ -58,7 +59,7 @@ class MultiplyAndSquareOp(Operator):
 
 def mult_sq_np(A, x):
     # The same as MultiplyAndSquareOp but only using numpy
-    return np.dot(A, x)**2
+    return np.dot(A, x) ** 2
 
 
 def test_nonlinear_op():
@@ -186,6 +187,7 @@ def test_nonlinear_composition():
 
 
 class MultiplyOp(Operator):
+
     """Multiply with matrix.
     """
 
@@ -410,6 +412,7 @@ def test_type_errors():
 
 # FUNCTIONAL TEST
 class SumFunctional(Operator):
+
     """ Sum of elements
     """
 
@@ -425,6 +428,7 @@ class SumFunctional(Operator):
 
 
 class ConstantVector(Operator):
+
     """ Vector times a scalar
     """
 
@@ -603,6 +607,7 @@ def test_functional_composition():
 
 
 class SumSquaredFunctional(Operator):
+
     """Sum of the squared elements
     """
 
@@ -610,7 +615,7 @@ class SumSquaredFunctional(Operator):
         super().__init__(domain, domain.field, linear=False)
 
     def _call(self, x):
-        return np.sum(x**2)
+        return np.sum(x ** 2)
 
 
 def test_nonlinear_functional():

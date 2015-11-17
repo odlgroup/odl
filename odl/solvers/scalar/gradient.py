@@ -79,7 +79,7 @@ def steepest_descent(deriv, x, line_search, niter=1, partial=None):
     grad = deriv.range.element()
     for _ in range(niter):
         deriv(x, out=grad)
-        dir_derivative = -grad.norm()**2
+        dir_derivative = -grad.norm() ** 2
         step = line_search(x, -grad, dir_derivative)
         x.lincomb(1, x, -step, grad)
 

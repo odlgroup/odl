@@ -81,7 +81,7 @@ def _pos_array(fn):
 
 def _sparse_matrix(fn):
     """Create a sparse positive definite Hermitian matrix for `fn`."""
-    nnz = np.random.randint(0, int(ceil(fn.size**2/2)))
+    nnz = np.random.randint(0, int(ceil(fn.size ** 2 / 2)))
     coo_r = np.random.randint(0, fn.size, size=nnz)
     coo_c = np.random.randint(0, fn.size, size=nnz)
     values = np.random.rand(nnz).astype(fn.dtype)
@@ -234,10 +234,10 @@ def _test_lincomb(fn, a, b):
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
     xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
     xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size/2, fn.dtype)
+    fnp = type(fn)(fn.size / 2, fn.dtype)
 
-    zarr[:] = a*xarr + b*yarr
-    zparr[:] = a*xparr + b*yparr
+    zarr[:] = a * xarr + b * yarr
+    zparr[:] = a * xparr + b * yparr
     fn.lincomb(a, x, b, y, out=z)
     fnp.lincomb(a, xp, b, yp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
@@ -247,10 +247,10 @@ def _test_lincomb(fn, a, b):
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
     xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
     xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size/2, fn.dtype)
+    fnp = type(fn)(fn.size / 2, fn.dtype)
 
-    zarr[:] = a*zarr + b*yarr
-    zparr[:] = a*zparr + b*yparr
+    zarr[:] = a * zarr + b * yarr
+    zparr[:] = a * zparr + b * yparr
     fn.lincomb(a, z, b, y, out=z)
     fnp.lincomb(a, zp, b, yp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
@@ -260,10 +260,10 @@ def _test_lincomb(fn, a, b):
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
     xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
     xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size/2, fn.dtype)
+    fnp = type(fn)(fn.size / 2, fn.dtype)
 
-    zarr[:] = a*xarr + b*zarr
-    zparr[:] = a*xparr + b*zparr
+    zarr[:] = a * xarr + b * zarr
+    zparr[:] = a * xparr + b * zparr
     fn.lincomb(a, x, b, z, out=z)
     fnp.lincomb(a, xp, b, zp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
@@ -273,10 +273,10 @@ def _test_lincomb(fn, a, b):
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
     xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
     xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size/2, fn.dtype)
+    fnp = type(fn)(fn.size / 2, fn.dtype)
 
-    zarr[:] = a*xarr + b*xarr
-    zparr[:] = a*xparr + b*xparr
+    zarr[:] = a * xarr + b * xarr
+    zparr[:] = a * xparr + b * xparr
     fn.lincomb(a, x, b, x, out=z)
     fnp.lincomb(a, xp, b, xp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
@@ -286,10 +286,10 @@ def _test_lincomb(fn, a, b):
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
     xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
     xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size/2, fn.dtype)
+    fnp = type(fn)(fn.size / 2, fn.dtype)
 
-    zarr[:] = a*zarr + b*zarr
-    zparr[:] = a*zparr + b*zparr
+    zarr[:] = a * zarr + b * zarr
+    zparr[:] = a * zparr + b * zparr
     fn.lincomb(a, z, b, z, out=z)
     fnp.lincomb(a, zp, b, zp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
@@ -986,7 +986,7 @@ def test_matrix_norm(fn, exponent):
     else:  # ||x||_{A,p} = ||A^{1/p} x||_p
         # Calculate matrix power
         eigval, eigvec = sp.linalg.eigh(dense_mat)
-        eigval **= 1.0/exponent
+        eigval **= 1.0 / exponent
         mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
         true_norm_dense = np.linalg.norm(np.dot(mat_pow, xarr), ord=exponent)
 
@@ -1018,25 +1018,25 @@ def test_matrix_dist(fn, exponent):
 
     if exponent == 1.0:  # d(x, y)_{A,1} = ||A(x-y)||_1
         true_dist_sparse = np.linalg.norm(
-            np.dot(sparse_mat_as_dense, xarr-yarr), ord=exponent)
+            np.dot(sparse_mat_as_dense, xarr - yarr), ord=exponent)
         true_dist_dense = np.linalg.norm(
-            np.dot(dense_mat, xarr-yarr), ord=exponent)
+            np.dot(dense_mat, xarr - yarr), ord=exponent)
     elif exponent == 2.0:  # d(x, y)_{A,2} = sqrt(<x-y, A(x-y)>)
         true_dist_sparse = np.sqrt(
-            np.vdot(xarr-yarr, np.dot(sparse_mat_as_dense, xarr-yarr)))
+            np.vdot(xarr - yarr, np.dot(sparse_mat_as_dense, xarr - yarr)))
         true_dist_dense = np.sqrt(
-            np.vdot(xarr-yarr, np.dot(dense_mat, xarr-yarr)))
+            np.vdot(xarr - yarr, np.dot(dense_mat, xarr - yarr)))
     elif exponent == float('inf'):  # d(x, y)_{A,inf} = ||A(x-y)||_inf
-        true_dist_sparse = np.linalg.norm(sparse_mat_as_dense.dot(xarr-yarr),
+        true_dist_sparse = np.linalg.norm(sparse_mat_as_dense.dot(xarr - yarr),
                                           ord=exponent)
-        true_dist_dense = np.linalg.norm(dense_mat.dot(xarr-yarr),
+        true_dist_dense = np.linalg.norm(dense_mat.dot(xarr - yarr),
                                          ord=exponent)
     else:  # d(x, y)_{A,p} = ||A^{1/p} (x-y)||_p
         # Calculate matrix power
         eigval, eigvec = sp.linalg.eigh(dense_mat)
-        eigval **= 1.0/exponent
+        eigval **= 1.0 / exponent
         mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
-        true_dist_dense = np.linalg.norm(np.dot(mat_pow, xarr-yarr),
+        true_dist_dense = np.linalg.norm(np.dot(mat_pow, xarr - yarr),
                                          ord=exponent)
 
     if exponent in (1.0, 2.0, float('inf')):
@@ -1061,7 +1061,7 @@ def test_matrix_dist_using_inner(fn):
 
     w = FnMatrixWeighting(mat, dist_using_inner=True)
 
-    true_dist = np.sqrt(np.vdot(xarr-yarr, np.dot(mat, xarr-yarr)))
+    true_dist = np.sqrt(np.vdot(xarr - yarr, np.dot(mat, xarr - yarr)))
     assert almost_equal(w.dist(x, y), true_dist)
 
     # Only possible for exponent=2
@@ -1116,8 +1116,8 @@ def test_vector_equals():
     weighting_vec2 = FnVectorWeighting(weight_vec)
     weighting_elem = FnVectorWeighting(weight_elem)
     weighting_elem2 = FnVectorWeighting(weight_elem)
-    weighting_other_vec = FnVectorWeighting(weight_vec-1)
-    weighting_other_exp = FnVectorWeighting(weight_vec-1, exponent=1)
+    weighting_other_vec = FnVectorWeighting(weight_vec - 1)
+    weighting_other_exp = FnVectorWeighting(weight_vec - 1, exponent=1)
 
     assert weighting_vec == weighting_vec2
     assert weighting_vec != weighting_elem
@@ -1131,7 +1131,7 @@ def test_vector_equiv():
     weight_vec = _pos_array(rn)
     weight_elem = rn.element(weight_vec)
     diag_mat = weight_vec * np.eye(5)
-    different_vec = weight_vec-1
+    different_vec = weight_vec - 1
 
     w_vec = FnVectorWeighting(weight_vec)
     w_elem = FnVectorWeighting(weight_elem)
@@ -1193,7 +1193,7 @@ def test_vector_norm(fn, exponent):
     if exponent == float('inf'):
         true_norm = np.linalg.norm(weight_vec * xarr, ord=float('inf'))
     else:
-        true_norm = np.linalg.norm(weight_vec**(1/exponent) * xarr,
+        true_norm = np.linalg.norm(weight_vec ** (1 / exponent) * xarr,
                                    ord=exponent)
 
     assert almost_equal(weighting_vec.norm(x), true_norm)
@@ -1210,10 +1210,11 @@ def test_vector_dist(fn, exponent):
     weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
 
     if exponent == float('inf'):
-        true_dist = np.linalg.norm(weight_vec * (xarr-yarr), ord=float('inf'))
+        true_dist = np.linalg.norm(
+            weight_vec * (xarr - yarr), ord=float('inf'))
     else:
-        true_dist = np.linalg.norm(weight_vec**(1/exponent) * (xarr-yarr),
-                                   ord=exponent)
+        true_dist = np.linalg.norm(
+            weight_vec ** (1 / exponent) * (xarr - yarr), ord=exponent)
 
     assert almost_equal(weighting_vec.dist(x, y), true_dist)
 
@@ -1228,7 +1229,7 @@ def test_vector_dist_using_inner(fn):
     weight_vec = _pos_array(fn)
     w = FnVectorWeighting(weight_vec)
 
-    true_dist = np.linalg.norm(np.sqrt(weight_vec) * (xarr-yarr))
+    true_dist = np.linalg.norm(np.sqrt(weight_vec) * (xarr - yarr))
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
 
@@ -1330,7 +1331,10 @@ def test_constant_norm(fn, exponent):
     xarr, x = _vectors(fn)
 
     constant = 1.5
-    factor = constant if exponent == float('inf') else constant**(1/exponent)
+    if exponent == float('inf'):
+        factor = constant
+    else:
+        factor = constant ** (1 / exponent)
     true_norm = factor * np.linalg.norm(xarr, ord=exponent)
 
     w_const = FnConstWeighting(constant, exponent=exponent)
@@ -1345,8 +1349,11 @@ def test_constant_dist(fn, exponent):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    factor = constant if exponent == float('inf') else constant**(1/exponent)
-    true_dist = factor * np.linalg.norm(xarr-yarr, ord=exponent)
+    if exponent == float('inf'):
+        factor = constant
+    else:
+        factor = constant ** (1 / exponent)
+    true_dist = factor * np.linalg.norm(xarr - yarr, ord=exponent)
 
     w_const = FnConstWeighting(constant, exponent=exponent)
     assert almost_equal(w_const.dist(x, y), true_dist)
@@ -1362,7 +1369,7 @@ def test_const_dist_using_inner(fn):
     constant = 1.5
     w = FnConstWeighting(constant)
 
-    true_dist = np.sqrt(constant) * np.linalg.norm(xarr-yarr)
+    true_dist = np.sqrt(constant) * np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
 
@@ -1418,7 +1425,7 @@ def test_custom_inner(fn):
     true_norm = np.linalg.norm(xarr)
     assert almost_equal(w.norm(x), true_norm)
 
-    true_dist = np.linalg.norm(xarr-yarr)
+    true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
     assert almost_equal(w_d.dist(x, y), true_dist)
@@ -1450,7 +1457,7 @@ def test_custom_norm(fn):
     true_norm = np.linalg.norm(xarr)
     assert almost_equal(w.norm(x), true_norm)
 
-    true_dist = np.linalg.norm(xarr-yarr)
+    true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
 
@@ -1462,10 +1469,10 @@ def test_custom_dist(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     def dist(x, y):
-        return np.linalg.norm(x-y)
+        return np.linalg.norm(x - y)
 
     def other_dist(x, y):
-        return np.linalg.norm(x-y, ord=1)
+        return np.linalg.norm(x - y, ord=1)
 
     w = FnCustomDist(dist)
     w_same = FnCustomDist(dist)
@@ -1481,7 +1488,7 @@ def test_custom_dist(fn):
     with pytest.raises(NotImplementedError):
         w.norm(x)
 
-    true_dist = np.linalg.norm(xarr-yarr)
+    true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
 

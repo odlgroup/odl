@@ -139,7 +139,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     p = r.copy()
     Ap = op.domain.element()  # Extra storage for storing A x
 
-    sqnorm_r_old = r.norm()**2  # Only recalculate norm after update
+    sqnorm_r_old = r.norm() ** 2  # Only recalculate norm after update
 
     for _ in range(niter):
         op(p, out=Ap)  # Ap = A p
@@ -152,7 +152,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         x.lincomb(1, x, alpha, p)            # x = x + alpha*p
         r.lincomb(1, r, -alpha, Ap)           # r = r - alpha*p
 
-        sqnorm_r_new = r.norm()**2
+        sqnorm_r_new = r.norm() ** 2
 
         beta = sqnorm_r_new / sqnorm_r_old
         sqnorm_r_old = sqnorm_r_new
@@ -211,11 +211,11 @@ Conjugate_gradient_on_the_normal_equations>`_.
     p = op.derivative(x).adjoint(d)
     s = p.copy()
     q = op.range.element()
-    sqnorm_s_old = s.norm()**2  # Only recalculate norm after update
+    sqnorm_s_old = s.norm() ** 2  # Only recalculate norm after update
 
     for _ in range(niter):
         op(p, out=q)                       # q = A p
-        sqnorm_q = q.norm()**2
+        sqnorm_q = q.norm() ** 2
         if sqnorm_q == 0.0:  # Return if residual is 0
             return
 
@@ -224,7 +224,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         d.lincomb(1, d, -a, q)              # d = d - a*Ap
         op.derivative(p).adjoint(d, out=s)  # s = A^T d
 
-        sqnorm_s_new = s.norm()**2
+        sqnorm_s_new = s.norm() ** 2
         b = sqnorm_s_new / sqnorm_s_old
         sqnorm_s_old = sqnorm_s_new
 

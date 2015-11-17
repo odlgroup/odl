@@ -114,9 +114,7 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
-
 def with_metaclass(meta, *bases):
-
     """
     Function from jinja2/_compat.py. License: BSD.
 

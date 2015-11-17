@@ -206,8 +206,8 @@ def test_factory_nd(exponent):
     odl.uniform_discr(cube_space, (5, 5, 5), exponent=exponent)
 
     # nd
-    cube10_space = odl.FunctionSpace(odl.IntervalProd([0]*10, [1]*10))
-    odl.uniform_discr(cube10_space, (5,)*10, exponent=exponent)
+    cube10_space = odl.FunctionSpace(odl.IntervalProd([0] * 10, [1] * 10))
+    odl.uniform_discr(cube10_space, (5,) * 10, exponent=exponent)
 
 
 def test_element_1d(exponent):
@@ -315,10 +315,10 @@ def test_getslice():
     discr = odl.uniform_discr(
         odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers()),
         3)
-    vec = discr.element([1+2j, 2-2j, 3])
+    vec = discr.element([1 + 2j, 2 - 2j, 3])
 
     assert isinstance(vec[:], odl.Cn.Vector)
-    assert all_equal(vec[:], [1+2j, 2-2j, 3])
+    assert all_equal(vec[:], [1 + 2j, 2 - 2j, 3])
 
 
 def test_setitem():
@@ -373,10 +373,10 @@ def test_setitem_nd():
     assert all_equal(vec, np.arange(6, 12))
 
     vec[:] = 0
-    assert all_equal(vec, [0]*6)
+    assert all_equal(vec, [0] * 6)
 
     vec[:] = [1]
-    assert all_equal(vec, [1]*6)
+    assert all_equal(vec, [1] * 6)
 
     with pytest.raises(ValueError):
         vec[:] = [0, 0]  # bad shape
@@ -392,8 +392,8 @@ def test_setitem_nd():
         vec[:] = arr.T  # bad shape (2, 3)
 
     # nD
-    cube10_space = odl.FunctionSpace(odl.IntervalProd([0]*6, [1]*6))
-    shape = (3,)*3 + (4,)*3
+    cube10_space = odl.FunctionSpace(odl.IntervalProd([0] * 6, [1] * 6))
+    shape = (3,) * 3 + (4,) * 3
     discr = odl.uniform_discr(cube10_space, shape)
     ntotal = np.prod(shape)
     vec = discr.element(np.zeros(shape))
@@ -411,7 +411,7 @@ def test_setitem_nd():
 
     with pytest.raises(ValueError):
         # Reversed shape -> bad
-        vec[:] = np.arange(ntotal).reshape((4,)*3 + (3,)*3)
+        vec[:] = np.arange(ntotal).reshape((4,) * 3 + (3,) * 3)
 
 
 def test_setslice():

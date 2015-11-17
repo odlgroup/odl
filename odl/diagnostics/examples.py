@@ -125,7 +125,7 @@ def vector_examples(space):
                 r = np.zeros(_arg_shape(*args))
 
                 for points, mean, std in zip(args, means, stds):
-                    r += (points - mean)**2 / std**2
+                    r += (points - mean) ** 2 / std ** 2
                 return (r < 1.0).astype(space.dtype)
 
             yield ('Sphere', element(_sphere_fun))
@@ -135,7 +135,7 @@ def vector_examples(space):
             r2 = np.zeros(_arg_shape(*args))
 
             for points, mean, std in zip(args, means, stds):
-                r2 += (points - mean)**2 / ((std / 2)**2)
+                r2 += (points - mean) ** 2 / ((std / 2) ** 2)
 
             return np.exp(-r2)
 

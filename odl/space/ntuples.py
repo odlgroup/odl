@@ -470,7 +470,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
         _lincomb(a + b, x1, 0, x1, out, dtype)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a+b, out.data, native(out.size))
+        scal(a + b, out.data, native(out.size))
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
@@ -507,7 +507,6 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 if b != 1:
                     scal(b, out.data, native(out.size))
                 axpy(x1.data, out.data, native(out.size), a)
-
 
 
 def _repr_space_funcs(space):
@@ -1212,6 +1211,7 @@ class Cn(Fn):
             return 'Cn({}, {})'.format(self.size, self.dtype)
 
     class Vector(Fn.Vector):
+
         """A vector in a real :class:`Fn` space
 
         See also
@@ -1272,6 +1272,7 @@ class Rn(Fn):
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
     class Vector(Fn.Vector):
+
         """A vector in a complex :class:`Fn` space
 
         See also
@@ -1502,7 +1503,7 @@ def _pnorm_diagweight(x, p, w):
     if np.isfinite(p):
         xp = np.power(xp, p, out=xp)
         xp *= w  # w is a plain NumPy array
-        return np.sum(xp)**(1/p)
+        return np.sum(xp) ** (1 / p)
     else:
         xp *= w
         return np.max(xp)
@@ -1641,7 +1642,7 @@ class FnMatrixWeighting(FnWeighting):
             self._mat_pow = self._matrix
         elif precomp_mat_pow and self._exponent != 2.0:
             eigval, eigvec = sp.linalg.eigh(self._matrix)
-            eigval **= 1.0/self._exponent
+            eigval **= 1.0 / self._exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
 
         self._cache_mat_pow = bool(cache_mat_pow)
@@ -1803,7 +1804,7 @@ class FnMatrixWeighting(FnWeighting):
                                               'suppoerted.')
                 else:
                     eigval, eigvec = sp.linalg.eigh(self.matrix)
-                    eigval **= 1.0/self.exponent
+                    eigval **= 1.0 / self.exponent
                     mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
                     if self._cache_mat_pow:
                         self._mat_pow = mat_pow
@@ -2180,7 +2181,7 @@ class FnConstWeighting(FnWeighting):
         elif self.exponent == float('inf'):
             return self.const * float(_pnorm_default(x, self.exponent))
         else:
-            return (self.const**(1/self.exponent) *
+            return (self.const ** (1 / self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
 
     def dist(self, x1, x2):
@@ -2197,7 +2198,7 @@ class FnConstWeighting(FnWeighting):
             The distance between the vectors
         """
         if self._dist_using_inner:
-            dist_squared = (_norm_default(x1)**2 + _norm_default(x2)**2 -
+            dist_squared = (_norm_default(x1) ** 2 + _norm_default(x2) ** 2 -
                             2 * _inner_default(x1, x2).real)
             if dist_squared < 0.0:  # Compensate for numerical error
                 dist_squared = 0.0
@@ -2207,7 +2208,7 @@ class FnConstWeighting(FnWeighting):
         elif self.exponent == float('inf'):
             return self.const * float(_pnorm_default(x1 - x2, self.exponent))
         else:
-            return (self.const**(1/self.exponent) *
+            return (self.const ** (1 / self.exponent) *
                     float(_pnorm_default(x1 - x2, self.exponent)))
 
     def __repr__(self):

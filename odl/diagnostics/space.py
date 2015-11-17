@@ -51,6 +51,7 @@ def _apprimately_equal(x, y, eps):
 
 
 class SpaceTest(object):
+
     """ Automated tests for :class:`~odl.LinearSpace`'s
 
     This class allows users to automatically test various
@@ -450,7 +451,7 @@ class SpaceTest(object):
 
         with FailCounter('error = | ||x||^2 = (x, x) |') as counter:
             for [n_x, x] in samples(self.space):
-                error = abs(x.norm()**2 - x.inner(x))
+                error = abs(x.norm() ** 2 - x.inner(x))
 
                 if error > self.eps:
                     counter.fail('x={:25s}: error={}'

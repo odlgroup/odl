@@ -22,4 +22,3 @@ __all__ = ()
 from . import iterative
 from .iterative import *
 __all__ += iterative.__all__
-
