@@ -91,6 +91,9 @@ def setup(app):
 #Stops WARNING: toctree contains reference to nonexisting document
 numpydoc_show_class_members = False
 
+# Set order to mirror source
+autodoc_member_order = 'bysource'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
