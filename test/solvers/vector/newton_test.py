@@ -29,7 +29,6 @@ import pytest
 # Internal module imports
 import odl
 from odl.util.testutils import all_almost_equal
-import odl_solvers
 
 
 class ResidualOp(odl.Operator):
@@ -95,11 +94,11 @@ def test_newton_solver_quadratic():
 
     # Create line search object
     # TODO: Update this call when solvers are moved completely
-    line_search = odl_solvers.BacktrackingLineSearch(
+    line_search = odl.solvers.BacktrackingLineSearch(
         lambda x: x.inner(Aop(x)/2.0 + c), 0.5, 0.05, 10)
 
     # Solve using Newton's method
-    odl_solvers.newtons_method(deriv_op, xvec, line_search, num_iter=20,
+    odl.solvers.newtons_method(deriv_op, xvec, line_search, num_iter=20,
                                cg_iter=3)
 
     assert all_almost_equal(xvec, x_opt, places=6)
@@ -118,14 +117,14 @@ def test_newton_solver_rosenbrock():
 
     # Create derivative operator and line search object
     ros_deriv_op = RosenbrockDerivOp()
-    line_search = odl_solvers.BacktrackingLineSearch(
+    line_search = odl.solvers.BacktrackingLineSearch(
         rosenbrock_function, 0.5, 0.05, 10)
 
     # Initial guess
     x = rn.element([-1, 1])
 
     # Solving the problem
-    odl_solvers.newtons_method(ros_deriv_op, x, line_search, num_iter=20)
+    odl.solvers.newtons_method(ros_deriv_op, x, line_search, num_iter=20)
 
     assert all_almost_equal(x, x_opt, places=6)
 
