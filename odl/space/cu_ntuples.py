@@ -1119,13 +1119,21 @@ class CudaFnVectorWeighting(CudaFnWeighting):
     :math:`w \odot a` being element-wise multiplication.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the new norm is equal to the unweighted one,
+    exponent ``inf``, the weighted norm is
 
-    :math:`\lVert a\\rVert_{w, \infty} := \lVert a\\rVert_\infty`,
+    :math:`\lVert a\\rVert_{w,\infty}:=\lVert w\odot a\\rVert_\infty`,
 
     otherwise it is
 
-    :math:`\lVert a\\rVert_{w, p} := \lVert w^{1/p} \odot a\\rVert_p`.
+    :math:`\lVert a\\rVert_{w, p} := \lVert w^{1/p}\odot a\\rVert_p`.
+
+    Not that this definition does **not** fulfill the limit property
+    in :math:`p`, i.e.
+
+    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{w,p} =
+    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{w,\infty}`
+
+    unless :math:`w = (1,\dots,1)`.
 
     The vector may only have positive entries, otherwise it does not
     define an inner product or norm, respectively. This is not checked
@@ -1266,8 +1274,6 @@ class CudaFnVectorWeighting(CudaFnWeighting):
         """
         if self.exponent == 2.0:
             return super().norm(x)
-        elif self.exponent == float('inf'):
-            return _pnorm_default(x, self.exponent)
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
@@ -1303,13 +1309,21 @@ class CudaFnConstWeighting(CudaFnWeighting):
     with :math:`b^H` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the new norm is equal to the unweighted one,
+    exponent ``inf``, the weighted norm is defined as
 
-    :math:`\lVert a\\rVert_{c, \infty} := \lVert a\\rVert_\infty`,
+    :math:`\lVert a\\rVert_{c, \infty} := c \lVert a\\rVert_\infty`,
 
     otherwise it is
 
     :math:`\lVert a\\rVert_{c, p} := c^{1/p}  \lVert a\\rVert_p`.
+
+    Not that this definition does **not** fulfill the limit property
+    in :math:`p`, i.e.
+
+    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{c,p} =
+    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{c,\infty}`
+
+    unless :math:`c = 1`.
 
     The constant :math:`c` must be positive.
     """
@@ -1412,7 +1426,7 @@ class CudaFnConstWeighting(CudaFnWeighting):
             from math import sqrt
             return sqrt(self.const) * float(_norm_default(x))
         elif self.exponent == float('inf'):  # Weighting irrelevant
-            return float(_pnorm_default(x, self.exponent))
+            return self.const * float(_pnorm_default(x, self.exponent))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
@@ -1435,7 +1449,7 @@ class CudaFnConstWeighting(CudaFnWeighting):
             return sqrt(self.const) * float(_dist_default(x1, x2))
         elif self.exponent == float('inf'):
             # TODO: implement and optimize!
-            return float(_pnorm_default(x1 - x2, self.exponent))
+            return self.const * float(_pnorm_default(x1 - x2, self.exponent))
         else:
             # TODO: optimize!
             return (self.const**(1/self.exponent) *

@@ -1072,5 +1072,98 @@ def test_vector_dist(exponent):
         assert almost_equal(pdist_elem(x, y), true_dist)
 
 
+def test_custom_inner(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
+
+    def inner(x, y):
+        return np.vdot(y, x)
+
+    w = CudaFnCustomInnerProduct(inner)
+    w_same = CudaFnCustomInnerProduct(inner)
+    w_other = CudaFnCustomInnerProduct(np.dot)
+    w_d = CudaFnCustomInnerProduct(inner, dist_using_inner=True)
+
+    assert w == w
+    assert w == w_same
+    assert w != w_other
+    assert w != w_d
+
+    true_inner = inner(xarr, yarr)
+    assert almost_equal(w.inner(x, y), true_inner)
+
+    true_norm = np.linalg.norm(xarr)
+    assert almost_equal(w.norm(x), true_norm)
+
+    true_dist = np.linalg.norm(xarr-yarr)
+    assert almost_equal(w.dist(x, y), true_dist)
+    assert almost_equal(w.dist(x, x), 0)
+    assert almost_equal(w_d.dist(x, y), true_dist)
+    assert almost_equal(w_d.dist(x, x), 0)
+
+    with pytest.raises(TypeError):
+        CudaFnCustomInnerProduct(1)
+
+
+def test_custom_norm(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
+
+    norm = np.linalg.norm
+
+    def other_norm(x):
+        return np.linalg.norm(x, ord=1)
+
+    w = CudaFnCustomNorm(norm)
+    w_same = CudaFnCustomNorm(norm)
+    w_other = CudaFnCustomNorm(other_norm)
+
+    assert w == w
+    assert w == w_same
+    assert w != w_other
+
+    with pytest.raises(NotImplementedError):
+        w.inner(x, y)
+
+    true_norm = np.linalg.norm(xarr)
+    assert almost_equal(w.norm(x), true_norm)
+
+    true_dist = np.linalg.norm(xarr-yarr)
+    assert almost_equal(w.dist(x, y), true_dist)
+    assert almost_equal(w.dist(x, x), 0)
+
+    with pytest.raises(TypeError):
+        CudaFnCustomNorm(1)
+
+
+def test_custom_dist(fn):
+    xarr, yarr, x, y = _vectors(fn, 2)
+
+    def dist(x, y):
+        return np.linalg.norm(x-y)
+
+    def other_dist(x, y):
+        return np.linalg.norm(x-y, ord=1)
+
+    w = CudaFnCustomDist(dist)
+    w_same = CudaFnCustomDist(dist)
+    w_other = CudaFnCustomDist(other_dist)
+
+    assert w == w
+    assert w == w_same
+    assert w != w_other
+
+    with pytest.raises(NotImplementedError):
+        w.inner(x, y)
+
+    with pytest.raises(NotImplementedError):
+        w.norm(x)
+
+    true_dist = np.linalg.norm(xarr-yarr)
+    assert almost_equal(w.dist(x, y), true_dist)
+    assert almost_equal(w.dist(x, x), 0)
+
+    with pytest.raises(TypeError):
+        CudaFnCustomDist(1)
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

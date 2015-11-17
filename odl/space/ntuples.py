@@ -1541,21 +1541,29 @@ class FnMatrixWeighting(FnWeighting):
 
     """Matrix weighting for :class:`Fn`.
 
-    For exponent 2.0, a new weighted inner product with matrix :math:`G`
+    For exponent 2.0, a new weighted inner product with matrix :math:`W`
     is defined as
 
-    :math:`\langle a, b\\rangle_G := b^H G a`
+    :math:`\langle a, b\\rangle_W := b^H W a`
 
     with :math:`b^H` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the new norm is equal to the unweighted one,
+    exponent ``inf``, the weighted norm is
 
-    :math:`\lVert a\\rVert_{G, \infty} := \lVert a\\rVert_\infty`,
+    :math:`\lVert a\\rVert_{W, \infty} := \lVert W a\\rVert_\infty`,
 
     otherwise it is
 
-    :math:`\lVert a\\rVert_{G, p} := \lVert G^{1/p} a\\rVert_p`.
+    :math:`\lVert a\\rVert_{W, p} := \lVert W^{1/p} a\\rVert_p`.
+
+    Not that this definition does **not** fulfill the limit property
+    in :math:`p`, i.e.
+
+    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{W,p} =
+    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{W,\infty}`
+
+    unless :math:`W` is the identity matrix.
 
     The matrix must be Hermitian and posivive definite, otherwise it
     does not define an inner product or norm, respectively. This is not
@@ -1589,14 +1597,14 @@ class FnMatrixWeighting(FnWeighting):
         kwargs : {'precomp_mat_pow', 'cache_mat_pow'}
 
             'precomp_mat_pow' : `bool`
-                If `True`, precompute the matrix power :math:`G^{1/p}`
+                If `True`, precompute the matrix power :math:`W^{1/p}`
                 during initialization. This has no effect if
                 ``exponent`` is 1.0, 2.0 or ``inf``.
 
                 Default: `False`
 
             'cache_mat_pow' : `bool`
-                If `True`, cache the matrix power :math:`G^{1/p}` during
+                If `True`, cache the matrix power :math:`W^{1/p}` during
                 the first call to ``norm`` or ``dist``. This has no
                 effect if ``exponent`` is 1.0, 2.0 or ``inf``.
 
@@ -1626,9 +1634,9 @@ class FnMatrixWeighting(FnWeighting):
             raise NotImplementedError('sparse matrices only supported for '
                                       'exponent 1.0, 2.0 or `inf`.')
 
-        if self._exponent == 1.0:
+        if self._exponent in (1.0, float('inf')):
             self._mat_pow = self._matrix
-        elif precomp_mat_pow and self._exponent not in (2.0, float('inf')):
+        elif precomp_mat_pow and self._exponent != 2.0:
             eigval, eigvec = sp.linalg.eigh(self._matrix)
             eigval **= 1.0/self._exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
@@ -1784,8 +1792,6 @@ class FnMatrixWeighting(FnWeighting):
             if norm_squared < 0:
                 norm_squared = 0.0  # Compensate for numerical error
             return sqrt(norm_squared)
-        elif self.exponent == float('inf'):  # Weighting is irrelevant
-            return float(_pnorm_default(x, float('inf')))
         else:
             if not hasattr(self, '_mat_pow'):
                 # This case can only be reached if p != 1,2,inf
@@ -1849,17 +1855,25 @@ class FnVectorWeighting(FnWeighting):
 
     :math:`\langle a, b\\rangle_w := b^H (w \odot a)`
 
-    with :math:`b^H` standing for transposed complex conjugate, and
-    :math:`w \odot a` being element-wise multiplication.
+    with :math:`b^H` standing for transposed complex conjugate and
+    :math:`w \odot a` for element-wise multiplication.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the new norm is equal to the unweighted one,
+    exponent ``inf``, the weighted norm is
 
-    :math:`\lVert a\\rVert_{w, \infty} := \lVert a\\rVert_\infty`,
+    :math:`\lVert a\\rVert_{w,\infty}:=\lVert w\odot a\\rVert_\infty`,
 
     otherwise it is
 
-    :math:`\lVert a\\rVert_{w, p} := \lVert w^{1/p} \odot a\\rVert_p`.
+    :math:`\lVert a\\rVert_{w, p} := \lVert w^{1/p}\odot a\\rVert_p`.
+
+    Not that this definition does **not** fulfill the limit property
+    in :math:`p`, i.e.
+
+    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{w,p} =
+    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{w,\infty}`
+
+    unless :math:`w = (1,\dots,1)`.
 
     The vector may only have positive entries, otherwise it does not
     define an inner product or norm, respectively. This is not checked
@@ -1999,8 +2013,6 @@ class FnVectorWeighting(FnWeighting):
             if norm_squared < 0:
                 norm_squared = 0.0  # Compensate for numerical error
             return sqrt(norm_squared)
-        elif self.exponent == float('inf'):
-            return _pnorm_default(x, self.exponent)
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
@@ -2036,13 +2048,21 @@ class FnConstWeighting(FnWeighting):
     with :math:`b^H` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the new norm is equal to the unweighted one,
+    exponent ``inf``, the weighted norm is defined as
 
-    :math:`\lVert a\\rVert_{c, \infty} := \lVert a\\rVert_\infty`,
+    :math:`\lVert a\\rVert_{c, \infty} := c \lVert a\\rVert_\infty`,
 
     otherwise it is
 
     :math:`\lVert a\\rVert_{c, p} := c^{1/p}  \lVert a\\rVert_p`.
+
+    Not that this definition does **not** fulfill the limit property
+    in :math:`p`, i.e.
+
+    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{c,p} =
+    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{c,\infty}`
+
+    unless :math:`c = 1`.
 
     The constant :math:`c` must be positive.
     """
@@ -2155,7 +2175,7 @@ class FnConstWeighting(FnWeighting):
         if self.exponent == 2.0:
             return sqrt(self.const) * float(_norm_default(x))
         elif self.exponent == float('inf'):
-            return float(_pnorm_default(x, self.exponent))
+            return self.const * float(_pnorm_default(x, self.exponent))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
@@ -2182,7 +2202,7 @@ class FnConstWeighting(FnWeighting):
         elif self.exponent == 2.0:
             return sqrt(self.const) * _norm_default(x1 - x2)
         elif self.exponent == float('inf'):
-            return float(_pnorm_default(x1 - x2, self.exponent))
+            return self.const * float(_pnorm_default(x1 - x2, self.exponent))
         else:
             return (self.const**(1/self.exponent) *
                     float(_pnorm_default(x1 - x2, self.exponent)))

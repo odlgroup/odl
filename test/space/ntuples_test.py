@@ -979,8 +979,10 @@ def test_matrix_norm(fn, exponent):
         true_norm_sparse = np.sqrt(
             np.vdot(xarr, np.dot(sparse_mat_as_dense, xarr)))
         true_norm_dense = np.sqrt(np.vdot(xarr, np.dot(dense_mat, xarr)))
-    elif exponent == float('inf'):  # ||x||_{A,inf} = ||x||_inf
-        true_norm_sparse = true_norm_dense = np.linalg.norm(xarr, ord=exponent)
+    elif exponent == float('inf'):  # ||x||_{A,inf} = ||Ax||_inf
+        true_norm_sparse = np.linalg.norm(sparse_mat_as_dense.dot(xarr),
+                                          ord=exponent)
+        true_norm_dense = np.linalg.norm(dense_mat.dot(xarr), ord=exponent)
     else:  # ||x||_{A,p} = ||A^{1/p} x||_p
         # Calculate matrix power
         eigval, eigvec = sp.linalg.eigh(dense_mat)
@@ -1024,9 +1026,11 @@ def test_matrix_dist(fn, exponent):
             np.vdot(xarr-yarr, np.dot(sparse_mat_as_dense, xarr-yarr)))
         true_dist_dense = np.sqrt(
             np.vdot(xarr-yarr, np.dot(dense_mat, xarr-yarr)))
-    elif exponent == float('inf'):  # d(x, y)_{A,inf} = ||x-y||_inf
-        true_dist_sparse = true_dist_dense = np.linalg.norm(xarr-yarr,
-                                                            ord=exponent)
+    elif exponent == float('inf'):  # d(x, y)_{A,inf} = ||A(x-y)||_inf
+        true_dist_sparse = np.linalg.norm(sparse_mat_as_dense.dot(xarr-yarr),
+                                          ord=exponent)
+        true_dist_dense = np.linalg.norm(dense_mat.dot(xarr-yarr),
+                                         ord=exponent)
     else:  # d(x, y)_{A,p} = ||A^{1/p} (x-y)||_p
         # Calculate matrix power
         eigval, eigvec = sp.linalg.eigh(dense_mat)
@@ -1187,8 +1191,7 @@ def test_vector_norm(fn, exponent):
     weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
 
     if exponent == float('inf'):
-        # Weighting irrelevant
-        true_norm = np.linalg.norm(xarr, ord=float('inf'))
+        true_norm = np.linalg.norm(weight_vec * xarr, ord=float('inf'))
     else:
         true_norm = np.linalg.norm(weight_vec**(1/exponent) * xarr,
                                    ord=exponent)
@@ -1207,8 +1210,7 @@ def test_vector_dist(fn, exponent):
     weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
 
     if exponent == float('inf'):
-        # Weighting irrelevant
-        true_dist = np.linalg.norm(xarr-yarr, ord=float('inf'))
+        true_dist = np.linalg.norm(weight_vec * (xarr-yarr), ord=float('inf'))
     else:
         true_dist = np.linalg.norm(weight_vec**(1/exponent) * (xarr-yarr),
                                    ord=exponent)
@@ -1328,7 +1330,7 @@ def test_constant_norm(fn, exponent):
     xarr, x = _vectors(fn)
 
     constant = 1.5
-    factor = 1 if exponent == float('inf') else constant**(1/exponent)
+    factor = constant if exponent == float('inf') else constant**(1/exponent)
     true_norm = factor * np.linalg.norm(xarr, ord=exponent)
 
     w_const = FnConstWeighting(constant, exponent=exponent)
@@ -1343,7 +1345,7 @@ def test_constant_dist(fn, exponent):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     constant = 1.5
-    factor = 1 if exponent == float('inf') else constant**(1/exponent)
+    factor = constant if exponent == float('inf') else constant**(1/exponent)
     true_dist = factor * np.linalg.norm(xarr-yarr, ord=exponent)
 
     w_const = FnConstWeighting(constant, exponent=exponent)
