@@ -38,13 +38,6 @@ from . import fspace
 from .fspace import *
 __all__ += fspace.__all__
 
-try:
-    from . import cu_ntuples
-    from .cu_ntuples import *
-    __all__ += cu_ntuples.__all__
-    CUDA_AVAILABLE = True
-except ImportError as e:
-    CUDA_AVAILABLE = False
-    CUDA_DTYPES = []
-
-__all__ += ('CUDA_AVAILABLE', 'CUDA_DTYPES')
+from . import cu_ntuples
+from .cu_ntuples import *
+__all__ += cu_ntuples.__all__

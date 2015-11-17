@@ -32,10 +32,16 @@ from abc import ABCMeta
 # ODL imports
 from odl.space.base_ntuples import NtuplesBase, FnBase, FnWeightingBase
 from odl.util.utility import is_real_dtype, dtype_repr
-import odlpp.odlpp_cuda as cuda
+
+CUDA_AVAILABLE = True
+try:
+    import odlpp.odlpp_cuda as cuda
+except ImportError:
+    cuda = None
+    CUDA_AVAILABLE = False
 
 
-__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CUDA_DTYPES')
+__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CUDA_DTYPES', 'CUDA_AVAILABLE')
 
 
 def _get_int_type():
@@ -1191,6 +1197,7 @@ except (MemoryError, RuntimeError, TypeError) as err:
     print(err)
     print('Your GPU seems to be misconfigured. Skipping '
           'CUDA-dependent modules.')
+    CUDA_AVAILABLE = False
 
 
 if __name__ == '__main__':

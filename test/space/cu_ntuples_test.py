@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -65,9 +65,16 @@ def _vectors(fn, n=1):
     return arrs + vecs
 
 
+if odl.CUDA_AVAILABLE:
+    ids=['CudaRn float32']
+    params=[odl.CudaRn(100)]
+else:
+    ids=['Cuda test']
+    params=[None]
+
 @pytest.fixture(scope="module",
-                ids=['CudaRn float32'],
-                params=[odl.CudaRn(100)])
+                ids=ids,
+                params=params)
 def fn(request):
     return request.param
 
@@ -440,7 +447,8 @@ def test_member_multiply():
     # Cuda only uses floats, so require 5 places
     assert all_almost_equal(y_device, y_host)
 
-
+    
+@skip_if_no_cuda
 def _test_unary_operator(fn, function):
     """ Verifies that the statement y=function(x) gives equivalent
     results to Numpy.
@@ -453,7 +461,8 @@ def _test_unary_operator(fn, function):
 
     assert all_almost_equal([x, y], [x_arr, y_arr])
 
-
+    
+@skip_if_no_cuda
 def _test_binary_operator(fn, function):
     """ Verifies that the statement z=function(x,y) gives equivalent
     results to Numpy.
@@ -466,7 +475,8 @@ def _test_binary_operator(fn, function):
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
-
+    
+@skip_if_no_cuda
 def test_operators(fn):
     """ Test of all operator overloads against the corresponding
     Numpy implementation
@@ -625,7 +635,8 @@ def test_offset_sub_vector():
 
     assert all_almost_equal([1, 2, 3, 7, 8, 9], xd)
 
-
+    
+@skip_if_no_cuda
 def _test_dtype(dtype):
     if dtype not in odl.CUDA_DTYPES:
         with pytest.raises(TypeError):
@@ -646,7 +657,8 @@ def test_dtypes():
                   np.complex64, np.complex128, np.complex]:
         yield _test_dtype, dtype
 
-
+        
+@skip_if_no_cuda
 def _test_ufunc(ufunc):
     r3 = odl.CudaRn(5)
     x_host = [-1.0, 0, 0.1, 0.3, 10.0]
