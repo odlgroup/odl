@@ -72,6 +72,7 @@ def skip(app, what, name, obj, skip, options):
     if (name.startswith('__') and name.endswith('__') and
         name not in ['__abstractmethods__',
                      '__doc__',
+                     '__hash__',
                      '__module__',
                      '__dict__',
                      '__weakref__']):
