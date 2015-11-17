@@ -22,4 +22,3 @@ __all__ = ()
 from . import newton
 from .newton import *
 __all__ += newton.__all__
-

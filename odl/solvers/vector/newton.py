@@ -92,7 +92,7 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
         # Solving A*x = b for x, in this case f'(x)*p = -f(x)
         # TODO: Let the user provide/choose method for how to solve this?
         conjugate_gradient(hessian, search_direction,
-                           -1*deriv_in_point, cg_iter)
+                           -1 * deriv_in_point, cg_iter)
 
         # Computing step length
         dir_deriv = search_direction.inner(deriv_in_point)

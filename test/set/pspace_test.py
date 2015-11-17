@@ -107,7 +107,7 @@ def test_metric():
     w2 = HxH.element([v21, v22])
     assert almost_equal(
         HxH.dist(w1, w2),
-        (H.dist(v11, v21)**2 + H.dist(v12, v22)**2)**(1 / 2.0))
+        (H.dist(v11, v21) ** 2 + H.dist(v12, v22) ** 2) ** (1 / 2.0))
 
     # -inf norm
     HxH = odl.ProductSpace(H, H, ord=-float('inf'))
@@ -150,7 +150,7 @@ def test_norm():
     HxH = odl.ProductSpace(H, H, ord=2.0)
     w = HxH.element([v1, v2])
     assert almost_equal(
-        HxH.norm(w), (H.norm(v1)**2 + H.norm(v2)**2)**(1 / 2.0))
+        HxH.norm(w), (H.norm(v1) ** 2 + H.norm(v2) ** 2) ** (1 / 2.0))
 
     # -inf norm
     HxH = odl.ProductSpace(H, H, ord=-float('inf'))

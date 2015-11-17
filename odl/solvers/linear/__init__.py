@@ -18,8 +18,3 @@
 from __future__ import absolute_import
 
 __all__ = ()
-
-#from . import simple
-#from .simple import *
-#__all__ += simple.__all__
-

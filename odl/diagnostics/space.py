@@ -443,7 +443,7 @@ class SpaceTest(object):
 
         with FailCounter('error = | ||x||^2 = (x, x) |') as counter:
             for [n_x, x] in samples(self.space):
-                error = abs(x.norm()**2 - x.inner(x))
+                error = abs(x.norm() ** 2 - x.inner(x))
 
                 if error > self.eps:
                     counter.fail('x={:25s}: error={}'

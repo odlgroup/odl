@@ -54,7 +54,7 @@ class ResidualOp(odl.Operator):
 
 
 def rosenbrock_function(x):
-    return 100*(x[1] - x[0]**2)**2 + (1 - x[0])**2
+    return 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
 
 
 class RosenbrockDerivOp(odl.Operator):
@@ -63,11 +63,12 @@ class RosenbrockDerivOp(odl.Operator):
         super().__init__(domain=dom, range=ran)
 
     def _apply(self, x, out):
-        out[:] = [-400*(x[1]-x[0]**2)*x[0]-2*(1-x[0]), 200*(x[1]-x[0]**2)]
+        out[:] = [-400 * (x[1] - x[0] ** 2) * x[0] - 2 * (1 - x[0]),
+                  200 * (x[1] - x[0] ** 2)]
 
     def derivative(self, x):
-        matrix = np.array([[2 - 400*x[1] + 1200*x[0]**2, -400*x[0]],
-                           [-400*x[0], 200]])
+        matrix = np.array([[2 - 400 * x[1] + 1200 * x[0] ** 2, -400 * x[0]],
+                           [-400 * x[0], 200]])
         return odl.MatVecOperator(self.domain, self.range, matrix)
 
 
@@ -76,8 +77,8 @@ def test_newton_solver_quadratic():
 
     # Fixed matrix
     H = np.array([[3, 1, 1],
-                  [1, 2, 1/2],
-                  [1, 1/2, 5]])
+                  [1, 2, 0.5],
+                  [1, 0.5, 5]])
 
     # Vector representation
     n = H.shape[0]
@@ -95,7 +96,7 @@ def test_newton_solver_quadratic():
     # Create line search object
     # TODO: Update this call when solvers are moved completely
     line_search = odl.solvers.BacktrackingLineSearch(
-        lambda x: x.inner(Aop(x)/2.0 + c), 0.5, 0.05, 10)
+        lambda x: x.inner(Aop(x) / 2.0 + c), 0.5, 0.05, 10)
 
     # Solve using Newton's method
     odl.solvers.newtons_method(deriv_op, xvec, line_search, num_iter=20,

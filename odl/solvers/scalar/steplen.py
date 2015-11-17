@@ -133,7 +133,7 @@ class BacktrackingLineSearch(LineSearch):
         # Use a default value that allows the shortest step to be < 0.0001
         # times the original step length
         if max_num_iter is None:
-            self.max_num_iter = ceil(log(0.0001/self.tau))
+            self.max_num_iter = ceil(log(0.0001 / self.tau))
         else:
             self.max_num_iter = max_num_iter
 
@@ -254,5 +254,5 @@ class BarzilaiBorweinStep(object):
 
         errx = x - x0
         grad_diff = gradx - self.gradf(x0)
-        recip_step = grad_diff.inner(errx) / errx.norm()**2
+        recip_step = grad_diff.inner(errx) / errx.norm() ** 2
         return 1.0 / recip_step

@@ -75,7 +75,7 @@ def almost_equal(a, b, places=None):
     if places is None:
         places = _places(a, b)
 
-    eps = 10**-places
+    eps = 10 ** -places
 
     if abs(complex(b)) < eps:
         return abs(complex(a) - complex(b)) < eps
@@ -316,6 +316,7 @@ class ProgressBar(object):
 
 
 class ProgressRange(object):
+
     def __init__(self, text, n):
         self.current = 0
         self.n = n

@@ -25,15 +25,15 @@ standard_library.install_aliases()
 # External
 
 # Internal
-import odl
+from odl.operator.default_ops import IdentityOperator
 
-__all__ = ()
+__all__ = ('bfgs_method', 'broydens_first_method', 'broydens_second_method')
 
 
 # TODO: update all docs
 
 
-def bfgs(deriv, x, line_search, niter=1, partial=None):
+def bfgs_method(deriv, x, line_search, niter=1, partial=None):
     """Quasi-Newton BFGS method to minimize an objective function.
 
     General implementation of the Quasi-Newton method with BFGS update
@@ -69,7 +69,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     .. [1] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
        and nonlinear optimization. Siam, 2009
     """
-    hess = ident = odl.IdentityOperator(deriv.range)
+    hess = ident = IdentityOperator(deriv.range)
     grad = deriv(x)
     for _ in range(niter):
         search_dir = -hess(grad)
@@ -137,25 +137,25 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
 
     # TODO: One Hi call can be removed using linearity
 
-    Hi = IdentityOperator(op.range)
+    hess = IdentityOperator(op.range)
     opx = op(x)
 
     for _ in range(niter):
-        p = Hi(opx)
+        p = hess(opx)
         t = line_search(x, p, opx)
 
-        delta_x = t*p
+        delta_x = t * p
         x += delta_x
 
         opx, opx_old = op(x), opx
         delta_f = opx - opx_old
 
-        v = Hi(delta_x)
+        v = hess(delta_x)
         v_delta_f = v.inner(delta_f)
         if v_delta_f == 0:
             return
-        u = (delta_x + Hi(delta_f))/(v_delta_f)
-        Hi -= u * v.T
+        u = (delta_x + hess(delta_f)) / (v_delta_f)
+        hess -= u * v.T
 
         if partial is not None:
             partial.send(x)
@@ -203,24 +203,24 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
     # TODO: potentially make the implementation faster by considering
     # performance optimization according to Kvaalen.
 
-    Hi = IdentityOperator(op.range)
+    hess = IdentityOperator(op.range)
     opx = op(x)
 
     for _ in range(niter):
-        p = Hi(opx)
+        p = hess(opx)
         t = line_search(x, p, opx)
 
-        delta_x = t*p
+        delta_x = t * p
         x += delta_x
 
         opx, opx_old = op(x), opx
         delta_f = opx - opx_old
 
-        delta_f_norm2 = delta_f.norm()**2
+        delta_f_norm2 = delta_f.norm() ** 2
         if delta_f_norm2 == 0:
             return
-        u = (delta_x + Hi(delta_f))/(delta_f_norm2)
-        Hi -= u * delta_f.T
+        u = (delta_x + hess(delta_f)) / (delta_f_norm2)
+        hess -= u * delta_f.T
 
         if partial is not None:
             partial.send(x)

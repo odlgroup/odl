@@ -22,4 +22,3 @@ __all__ = ()
 from . import partial
 from .partial import *
 __all__ += partial.__all__
-
