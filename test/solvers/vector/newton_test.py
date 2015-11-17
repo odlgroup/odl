@@ -94,7 +94,6 @@ def test_newton_solver_quadratic():
     deriv_op = ResidualOp(Aop, -c)
 
     # Create line search object
-    # TODO: Update this call when solvers are moved completely
     line_search = odl.solvers.BacktrackingLineSearch(
         lambda x: x.inner(Aop(x) / 2.0 + c), 0.5, 0.05, 10)
 
