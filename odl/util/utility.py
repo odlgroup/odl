@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -103,18 +103,20 @@ def is_complex_dtype(dtype):
     """Whether a datatype is complex or not."""
     return np.iscomplexobj(np.empty(0, dtype=dtype))
 
+
 def with_metaclass(meta, *bases):
+
     """
     Function from jinja2/_compat.py. License: BSD.
 
     Use it like this::
-        
+
         class BaseForm(object):
             pass
-        
+
         class FormType(type):
             pass
-        
+
         class Form(with_metaclass(FormType, BaseForm)):
             pass
 
@@ -124,13 +126,14 @@ def with_metaclass(meta, *bases):
     we also need to make sure that we downgrade the custom metaclass
     for one level to something closer to type (that's why __call__ and
     __init__ comes back from type etc.).
-    
+
     This has the advantage over six.with_metaclass of not introducing
     dummy classes into the final MRO.
     """
     class metaclass(meta):
         __call__ = type.__call__
         __init__ = type.__init__
+
         def __new__(cls, name, this_bases, d):
             if this_bases is None:
                 return type.__new__(cls, name, (), d)

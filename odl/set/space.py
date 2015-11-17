@@ -60,7 +60,7 @@ initialized**, thus it can contain *any* value.
 -------------------------------
 This private method is the raw implementation (i.e. without error
 checking) of the linear combination ``out = a * x1 + b * x2``.
-:meth:`LinearSpace._lincomb` and its public counterpart 
+:meth:`LinearSpace._lincomb` and its public counterpart
 :meth:`LinearSpace.lincomb` are used to covera range of convenience
 functions, see below.
 
@@ -166,8 +166,8 @@ product of two space elements ``x`` and ``y``.
 
 **Returns:**
     inner : `float` or `complex`
-        The inner product of ``x`` and ``y``. If :attr:`LinearSpace.field` is the real
-        numbers, ``inner`` is a `float`, otherwise `complex`.
+        The inner product of ``x`` and ``y``. If :attr:`LinearSpace.field`
+        is the real numbers, ``inner`` is a `float`, otherwise `complex`.
 
 **Requirements:**
  * ``_inner(x, y) == _inner(y, x)^*`` with '*' = `complex` conjugation
@@ -277,7 +277,7 @@ class LinearSpace(Set):
         resort to :meth:`dist` which is type-checked.
         """
         # default implementation
-        return self.norm(x1-x2)
+        return self.norm(x1 - x2)
 
     def _norm(self, x):
         """Calculate the norm of x.
@@ -565,7 +565,7 @@ class LinearSpace(Set):
 
         def set_zero(self):
             """Set this vector to the zero vector.
-            
+
             See also
             --------
             LinearSpace.zero
@@ -588,7 +588,7 @@ class LinearSpace(Set):
                 return self.space.lincomb(1, self, 1, other, out=tmp)
             else:
                 return NotImplemented
-                
+
         def __isub__(self, other):
             """Implementation of ``self -= other``."""
             if other in self.space:
@@ -620,7 +620,7 @@ class LinearSpace(Set):
             if other in self.space.field:
                 tmp = self.space.element()
                 return self.space.lincomb(other, self, out=tmp)
-            elif other in self.space:                
+            elif other in self.space:
                 tmp = self.space.element()
                 return self.space.multiply(other, self, out=tmp)
             else:
@@ -655,20 +655,30 @@ class LinearSpace(Set):
         __div__ = __truediv__
 
         def __ipow__(self, n):
-            """Take the n:th power of self inplace, only defined for integer n"""
+            """Take the n:th power of self inplace.
+
+            Notes
+            -----
+            Only defined for integer n
+            """
             if n == 1:
                 return self
             elif n % 2 == 0:
                 self.space.multiply(self, self, out=self)
-                return self.__ipow__(n//2)
+                return self.__ipow__(n // 2)
             else:
                 tmp = self.copy()
-                for i in range(n-1):
+                for i in range(n - 1):
                     self.space.multiply(tmp, self, out=tmp)
                 return tmp
 
         def __pow__(self, n):
-            """Take the n:th power of self, only defined for integer n"""
+            """Take the n:th power of self.
+
+            Notes
+            -----
+            Only defined for integer n
+            """
             tmp = self.copy()
             tmp **= n
             return tmp
@@ -676,7 +686,7 @@ class LinearSpace(Set):
         def __neg__(self):
             """Implementation of ``-self``."""
             return (-1) * self
-            
+
         def __pos__(self):
             """Implementation of ``+self``."""
             return self.copy()
@@ -802,8 +812,8 @@ class LinearSpace(Set):
             Notes
             -----
             This function is only defined in inner product spaces.
-            
-            In a `complex` space, this takes the conjugate transpose of the 
+
+            In a `complex` space, this takes the conjugate transpose of the
             vector.
 
             Examples

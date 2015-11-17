@@ -325,7 +325,8 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            values : :attr:`~odl.NtuplesBase.dtype` element or :class:`~odl.NtuplesBase.Vector`
+            values : :attr:`~odl.NtuplesBase.dtype` element or
+                     :class:`~odl.NtuplesBase.Vector`
                 The value(s) at the index (indices)
 
 
@@ -476,10 +477,10 @@ def _lincomb(a, x1, b, x2, out, dtype):
 
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 -> out = (a+b)*x1
-        _lincomb(a+b, x1, 0, x1, out, dtype)
+        _lincomb(a + b, x1, 0, x1, out, dtype)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a+b, out.data, out.size)
+        scal(a + b, out.data, out.size)
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
@@ -516,6 +517,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 if b != 1:
                     scal(b, out.data, out.size)
                 axpy(x1.data, out.data, out.size, a)
+
 
 def _repr_space_funcs(space):
     inner_str = ''
@@ -912,7 +914,7 @@ class Fn(FnBase, Ntuples):
         -------
         equals : `bool`
             `True` if other is an instance of this space's type
-            with the same :attr:`~odl.NtuplesBase.size` and 
+            with the same :attr:`~odl.NtuplesBase.size` and
             :attr:`~odl.NtuplesBase.dtype`, and identical
             distance function, otherwise `False`.
 
@@ -1184,6 +1186,7 @@ class Cn(Fn):
         """
         pass
 
+
 class Rn(Fn):
     """The real vector space :math:`R^n` with vector multiplication.
 
@@ -1454,6 +1457,7 @@ class FnWeighting(with_metaclass(ABCMeta, FnWeightingBase)):
 
     def inner(self, x1, x2):
         raise NotImplementedError
+
 
 class FnMatrixWeighting(FnWeighting):
 

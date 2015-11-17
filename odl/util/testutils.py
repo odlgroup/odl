@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -37,7 +37,9 @@ import numpy as np
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
+
 def _places(a, b, default=5):
+
     try:
         dtype1 = a.dtype
     except AttributeError:
@@ -48,13 +50,11 @@ def _places(a, b, default=5):
     except AttributeError:
         dtype2 = None
 
-    if (dtype1 == np.float32 or
-        dtype2 == np.float32 or
-        dtype1 == np.complex64 or
-        dtype2 == np.complex64):
+    if any(dtype in [np.float32, np.complex64] for dtype in [dtype1, dtype2]):
         return 3
     else:
         return default
+
 
 def almost_equal(a, b, places=None):
     if a is None and b is None:
@@ -80,11 +80,12 @@ def almost_equal(a, b, places=None):
     if abs(complex(b)) < eps:
         return abs(complex(a) - complex(b)) < eps
     else:
-        return abs(a/b - 1) < eps
+        return abs(a / b - 1) < eps
+
 
 def all_equal(iter1, iter2):
     # Sentinel object used to check that both iterators are the same length
-    different_length_sentinel = object()
+    diff_length_sentinel = object()
 
     if iter1 is None and iter2 is None:
         return True
@@ -96,10 +97,10 @@ def all_equal(iter1, iter2):
         return iter1 == iter2
 
     for [ip1, ip2] in zip_longest(i1, i2,
-                                  fillvalue=different_length_sentinel):
+                                  fillvalue=diff_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
-        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+        if ip1 is diff_length_sentinel or ip2 is diff_length_sentinel:
             return False
 
         if not all_equal(ip1, ip2):
@@ -107,9 +108,10 @@ def all_equal(iter1, iter2):
 
     return True
 
+
 def all_almost_equal(iter1, iter2, places=None):
     # Sentinel object used to check that both iterators are the same length
-    different_length_sentinel = object()
+    diff_length_sentinel = object()
 
     if places is None:
         places = _places(iter1, iter2, None)
@@ -124,10 +126,10 @@ def all_almost_equal(iter1, iter2, places=None):
         return almost_equal(iter1, iter2, places)
 
     for [ip1, ip2] in zip_longest(i1, i2,
-                                  fillvalue=different_length_sentinel):
+                                  fillvalue=diff_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
-        if ip1 is different_length_sentinel or ip2 is different_length_sentinel:
+        if ip1 is diff_length_sentinel or ip2 is diff_length_sentinel:
             return False
 
         if not all_almost_equal(ip1, ip2, places):
@@ -139,15 +141,18 @@ def all_almost_equal(iter1, iter2, places=None):
 def is_subdict(subdict, dict_):
     return all(item in dict_.items() for item in subdict.items())
 
+
 try:
     import pytest
-    skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE", reason='CUDA not available')
+    skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
+                                         reason='CUDA not available')
 except ImportError:
     def skip_if_no_cuda(function):
         return function
 
 
 class FailCounter(object):
+
     """Used to count the number of failures of something
 
     Useage::
@@ -278,7 +283,7 @@ class ProgressBar(object):
 
     def start(self):
         sys.stdout.write('\r{0}: [{1:30s}] Starting'.format(self.text,
-                                                            ' '*30))
+                                                            ' ' * 30))
 
         sys.stdout.flush()
 
@@ -297,14 +302,14 @@ class ProgressBar(object):
         # Write a progressbar and percent
         if progress < 1.0:
             # Only update on 0.1% intervals
-            if progress > self.current_progress+0.001:
+            if progress > self.current_progress + 0.001:
                 sys.stdout.write('\r{0}: [{1:30s}] {2:4.1f}%   '.format(
-                    self.text, '#'*int(30*progress), 100*progress))
+                    self.text, '#' * int(30 * progress), 100 * progress))
                 self.current_progress = progress
         else:  # Special message when done
             if not self.done:
                 sys.stdout.write('\r{0}: [{1:30s}] Done      \n'.format(
-                    self.text, '#'*30))
+                    self.text, '#' * 30))
                 self.done = True
 
         sys.stdout.flush()

@@ -40,10 +40,11 @@ def test_interval():
     l2sin = l2space.element(np.sin)
     discr_sin = l2discr.element(l2sin)
 
-    assert almost_equal(discr_sin.norm(), sqrt(pi/2))
+    assert almost_equal(discr_sin.norm(), sqrt(pi / 2))
+
 
 def test_rectangle():
-    l2space = L2(odl.Rectangle((0, 0), (pi, 2*pi)))
+    l2space = L2(odl.Rectangle((0, 0), (pi, 2 * pi)))
     n, m = 10, 10
     l2discr = odl.l2_uniform_discretization(l2space, (n, m))
 
@@ -51,16 +52,17 @@ def test_rectangle():
     discr_sin2 = l2discr.element(l2sin2)
 
     assert almost_equal(discr_sin2.norm(), pi / sqrt(2))
-    
+
+
 def test_addition():
     l2space = L2(odl.Interval(0, pi))
     l2sin = l2space.element(np.sin)
     l2cos = l2space.element(np.cos)
-    
+
     sum_func = l2sin + l2cos
 
     for x in [0.0, 0.2, 1.0]:
         assert almost_equal(sum_func(x), np.sin(x) + np.cos(x))
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))

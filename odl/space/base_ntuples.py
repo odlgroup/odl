@@ -389,8 +389,8 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to :class:`~odl.Operator` but without
-    extra type checks of input parameters - this is done in the callers
+    The functions are implemented similarly to :class:`~odl.Operator` but
+    without extra type checks of input parameters, this is done in the callers
     of the :class:`~odl.LinearSpace` instance where these functions used.
     """
 
@@ -459,7 +459,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def norm(self, x):
         """Calculate the norm of a vector.
 
-        This is the standard implementation using :meth:`inner`. 
+        This is the standard implementation using :meth:`inner`.
         Subclasses should override it for optimization purposes.
 
         Parameters
@@ -477,7 +477,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
 
-        This is the standard implementation using :meth:`norm`. 
+        This is the standard implementation using :meth:`norm`.
         Subclasses should override it for optimization purposes.
 
         Parameters

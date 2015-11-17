@@ -57,7 +57,7 @@ class DiscreteL2(Discretization):
         ----------
         l2space : :class:`~odl.L2`
             The continuous space to be discretized
-        dspace : :class:`~odl.space.base_ntuples.FnBase`, same 
+        dspace : :class:`~odl.space.base_ntuples.FnBase`, same
             :attr:`~odl.FnBase.field` as ``l2space``
             The space of elements used for data storage
         grid : :class:`~odl.TensorGrid`
@@ -105,8 +105,8 @@ class DiscreteL2(Discretization):
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the :meth:`~odl.LinearSpace.element` method of 
-            either :attr:`~odl.RawDiscretization.dspace` or 
+            recognizable by the :meth:`~odl.LinearSpace.element` method of
+            either :attr:`~odl.RawDiscretization.dspace` or
             :attr:`~odl.RawDiscretization.uspace`.
 
         Returns

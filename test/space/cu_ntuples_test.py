@@ -52,8 +52,10 @@ def _array(fn):
         return (np.random.randn(fn.size) +
                 1j * np.random.randn(fn.size)).astype(fn.dtype)
 
+
 def _element(fn):
     return fn.element(_array(fn))
+
 
 def _vectors(fn, n=1):
     arrs = [_array(fn) for _ in range(n)]
@@ -62,26 +64,30 @@ def _vectors(fn, n=1):
     vecs = [fn.element(arr) for arr in arrs]
     return arrs + vecs
 
+
 @pytest.fixture(scope="module",
                 ids=['CudaRn float32'],
                 params=[odl.CudaRn(100)])
 def fn(request):
     return request.param
 
+
 @pytest.mark.skipif("np.float32 not in odl.CUDA_DTYPES")
 def test_init_cudantuples_f32():
-    #verify that the code runs
+    # verify that the code runs
     r3 = odl.CudaNtuples(3, dtype='float32')
     r3.element()
+
 
 @skip_if_no_cuda
 def test_init_cudantuples_bad_dtype():
     with pytest.raises(TypeError):
-        r3 = odl.CudaNtuples(3, dtype=np.ndarray)
+        odl.CudaNtuples(3, dtype=np.ndarray)
     with pytest.raises(TypeError):
-        r3 = odl.CudaNtuples(3, dtype=str)
+        odl.CudaNtuples(3, dtype=str)
     with pytest.raises(TypeError):
-        r3 = odl.CudaNtuples(3, dtype=np.matrix)
+        odl.CudaNtuples(3, dtype=np.matrix)
+
 
 @skip_if_no_cuda
 def test_element(fn):
@@ -95,17 +101,20 @@ def test_element(fn):
     assert z in fn
 
     with pytest.raises(ValueError):
-        w = fn.element(inp=[0]*fn.size, data_ptr=y.data_ptr)
+        fn.element(inp=[0]*fn.size, data_ptr=y.data_ptr)
+
 
 @skip_if_no_cuda
 def test_zero(fn):
     assert all_almost_equal(fn.zero(), [0]*fn.size)
+
 
 @skip_if_no_cuda
 def test_list_init(fn):
     x_list = list(range(fn.size))
     x = fn.element(x_list)
     assert all_almost_equal(x, x_list)
+
 
 @skip_if_no_cuda
 def test_ndarray_init():
@@ -123,6 +132,7 @@ def test_ndarray_init():
     x = r3.element(x0)
     assert all_almost_equal(x, x0)
 
+
 @skip_if_no_cuda
 def test_getitem():
     r3 = odl.CudaRn(3)
@@ -132,6 +142,7 @@ def test_getitem():
     for index in [0, 1, 2, -1, -2, -3]:
         assert almost_equal(x[index], y[index])
 
+
 @skip_if_no_cuda
 def test_iterator():
     r3 = odl.CudaRn(3)
@@ -140,16 +151,18 @@ def test_iterator():
 
     assert all_almost_equal([a for a in x], [b for b in y])
 
+
 @skip_if_no_cuda
 def test_getitem_index_error():
     r3 = odl.CudaRn(3)
     x = r3.element([1, 2, 3])
 
-    with  pytest.raises(IndexError):
+    with pytest.raises(IndexError):
         x[-4]
 
-    with  pytest.raises(IndexError):
+    with pytest.raises(IndexError):
         x[3]
+
 
 @skip_if_no_cuda
 def test_setitem():
@@ -159,6 +172,7 @@ def test_setitem():
     for index in [0, 1, 2, -1, -2, -3]:
         x[index] = index
         assert almost_equal(x[index], index)
+
 
 @skip_if_no_cuda
 def test_setitem_index_error():
@@ -171,6 +185,7 @@ def test_setitem_index_error():
     with pytest.raises(IndexError):
         x[3] = 0
 
+
 @skip_if_no_cuda
 def _test_getslice(slice):
     # Validate get against python list behaviour
@@ -179,6 +194,7 @@ def _test_getslice(slice):
     x = r6.element(y)
 
     assert all_almost_equal(x[slice], y[slice])
+
 
 @skip_if_no_cuda
 def test_getslice():
@@ -191,6 +207,7 @@ def test_getslice():
         for end in ends:
             for step in steps:
                 _test_getslice(slice(start, end, step))
+
 
 @skip_if_no_cuda
 def test_slice_of_slice():
@@ -209,6 +226,7 @@ def test_slice_of_slice():
 
     assert all_almost_equal(zh, zd)
 
+
 @skip_if_no_cuda
 def test_slice_is_view():
     # Verify that modifications of a view modify the original data
@@ -225,14 +243,16 @@ def test_slice_is_view():
     assert all_almost_equal(xh, xd)
     assert all_almost_equal(yh, yd)
 
+
 @skip_if_no_cuda
 def test_getslice_index_error():
     r3 = odl.CudaRn(3)
     xd = r3.element([1, 2, 3])
 
     # Bad slice
-    with  pytest.raises(IndexError):
+    with pytest.raises(IndexError):
         xd[10:13]
+
 
 def _test_setslice(slice):
     # Validate set against python list behaviour
@@ -245,6 +265,7 @@ def _test_setslice(slice):
     y[slice] = z[slice]
     assert all_almost_equal(x, y)
 
+
 @skip_if_no_cuda
 def test_setslice():
     # Tests a range of combination of slices
@@ -256,6 +277,7 @@ def test_setslice():
         for end in ends:
             for step in steps:
                 _test_setslice(slice(start, end, step))
+
 
 @skip_if_no_cuda
 def test_setslice_index_error():
@@ -276,6 +298,7 @@ def test_setslice_index_error():
     with pytest.raises(IndexError):
         xd[:] = [1, 2, 3, 4]
 
+
 @skip_if_no_cuda
 def test_norm():
     r3 = odl.CudaRn(3)
@@ -286,6 +309,7 @@ def test_norm():
 
     # Space function
     assert almost_equal(r3.norm(xd), correct_norm)
+
 
 @skip_if_no_cuda
 def test_inner():
@@ -339,12 +363,14 @@ def _test_lincomb(fn, a, b):
     fn.lincomb(a, z, b, z, out=z)
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
+
 @skip_if_no_cuda
 def test_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
         for b in scalar_values:
             _test_lincomb(fn, a, b)
+
 
 def _test_member_lincomb(fn, a):
     # Validates vector member lincomb against the result on host
@@ -361,11 +387,13 @@ def _test_member_lincomb(fn, a):
     # Cuda only uses floats, so require 5 places
     assert all_almost_equal(y_device, y_host)
 
+
 @skip_if_no_cuda
 def test_member_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
     for a in scalar_values:
         _test_member_lincomb(fn, a)
+
 
 @skip_if_no_cuda
 def test_multiply():
@@ -394,6 +422,7 @@ def test_multiply():
     rn.multiply(z_device, z_device, out=z_device)
 
     assert all_almost_equal(z_device, z_host)
+
 
 @skip_if_no_cuda
 def test_member_multiply():
@@ -528,6 +557,7 @@ def test_incompatible_operations():
     with pytest.raises(TypeError):
         xA - xB
 
+
 @skip_if_no_cuda
 def test_copy(fn):
     import copy
@@ -543,9 +573,9 @@ def test_copy(fn):
     assert x == z
     assert z is not x
 
+
 @skip_if_no_cuda
 def test_transpose(fn):
-    r3 = odl.CudaRn(3)
     x = _element(fn)
     y = _element(fn)
 
@@ -560,6 +590,7 @@ def test_transpose(fn):
     # x.T.T returns self
     assert x.T.T == x
 
+
 @skip_if_no_cuda
 def test_modify():
     r3 = odl.CudaRn(3)
@@ -569,6 +600,7 @@ def test_modify():
     yd[:] = [5, 6, 7]
 
     assert all_almost_equal(xd, yd)
+
 
 @skip_if_no_cuda
 def test_sub_vector():
@@ -581,6 +613,7 @@ def test_sub_vector():
 
     assert all_almost_equal([7, 8, 9, 4, 5, 6], xd)
 
+
 @skip_if_no_cuda
 def test_offset_sub_vector():
     r6 = odl.CudaRn(6)
@@ -591,6 +624,7 @@ def test_offset_sub_vector():
     yd[:] = [7, 8, 9]
 
     assert all_almost_equal([1, 2, 3, 7, 8, 9], xd)
+
 
 def _test_dtype(dtype):
     if dtype not in odl.CUDA_DTYPES:
@@ -603,6 +637,7 @@ def _test_dtype(dtype):
         z = x + y
         assert all_almost_equal(z, [5, 7, 9])
 
+
 @skip_if_no_cuda
 def test_dtypes():
     for dtype in [np.int8, np.int16, np.int32, np.int64, np.int,
@@ -610,6 +645,7 @@ def test_dtypes():
                   np.float32, np.float64, np.float,
                   np.complex64, np.complex128, np.complex]:
         yield _test_dtype, dtype
+
 
 def _test_ufunc(ufunc):
     r3 = odl.CudaRn(5)
@@ -621,6 +657,7 @@ def _test_ufunc(ufunc):
 
     assert all_almost_equal(y_host, y_dev)
 
+
 @skip_if_no_cuda
 def test_ufuncs():
     for ufunc in ['sin', 'cos',
@@ -629,12 +666,14 @@ def test_ufuncs():
                   'abs', 'sign', 'sqrt']:
         yield _test_ufunc, ufunc
 
+
 @skip_if_no_cuda
 def test_const_init():
     constant = 1.5
 
     # Just test if the code runs
     _CudaFnConstWeighting(constant)
+
 
 @skip_if_no_cuda
 def test_const_equals():
@@ -652,6 +691,7 @@ def test_const_equals():
     assert weighting != other_weighting
     assert weighting != weighting_npy
 
+
 def _test_const_call_real(n):
     rn = odl.CudaRn(n)
     xarr, yarr, x, y = _vectors(rn, 2)
@@ -664,10 +704,12 @@ def _test_const_call_real(n):
 
     assert almost_equal(result_const, true_result_const)
 
+
 @skip_if_no_cuda
 def test_const_call():
     for n in range(20):
         _test_const_call_real(n)
+
 
 @skip_if_no_cuda
 def test_const_repr():
@@ -676,6 +718,7 @@ def test_const_repr():
 
     repr_str = '_CudaFnConstWeighting(1.5)'
     assert repr(weighting) == repr_str
+
 
 @skip_if_no_cuda
 def test_const_str():
@@ -686,4 +729,5 @@ def test_const_str():
     assert str(weighting) == print_str
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+
