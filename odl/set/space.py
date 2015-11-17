@@ -271,7 +271,7 @@ class LinearSpace(Set):
         resort to :meth:`dist` which is type-checked.
         """
         # default implementation
-        return self.norm(x1-x2)
+        return self.norm(x1 - x2)
 
     def _norm(self, x):
         """Calculate the norm of x.
@@ -648,10 +648,10 @@ class LinearSpace(Set):
                 return self
             elif n % 2 == 0:
                 self.space.multiply(self, self, out=self)
-                return self.__ipow__(n//2)
+                return self.__ipow__(n // 2)
             else:
                 tmp = self.copy()
-                for i in range(n-1):
+                for i in range(n - 1):
                     self.space.multiply(tmp, self, out=tmp)
                 return tmp
 
@@ -793,8 +793,8 @@ class LinearSpace(Set):
             -----
             This function is only defined in inner product spaces.
 
-            In a complex space, this takes the conjugate transpose of the
-            vector.
+            In a complex space, this takes the conjugate transpose of
+            the vector.
 
             Examples
             --------

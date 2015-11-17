@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -114,7 +114,9 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
+
 def with_metaclass(meta, *bases):
+
     """
     Function from jinja2/_compat.py. License: BSD.
 

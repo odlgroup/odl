@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 Jonas Adler
+﻿# Copyright 2014, 2015 Jonas Adler
 #
 # This file is part of ODL.
 #
@@ -128,13 +128,13 @@ class ScalingOperator(Operator):
         if self._scal == 0.0:
             raise ZeroDivisionError('scaling operator not invertible for '
                                     'scalar==0')
-        return ScalingOperator(self._space, 1.0/self._scal)
+        return ScalingOperator(self._space, 1.0 / self._scal)
 
     @property
     def adjoint(self):
         """ The adjoint is given by taking the conjugate of the scalar
         """
-        #TODO: optimize to self if `scal` is real
+        # TODO: optimize to self if `scal` is real
         return ScalingOperator(self._space, self._scal.conjugate())
 
     def __repr__(self):

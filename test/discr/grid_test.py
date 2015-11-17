@@ -266,7 +266,7 @@ def test_tensor_is_subgrid():
     sup_grid = TensorGrid(vec1_sup, scalar, vec2_sup)
     assert grid.is_subgrid(sup_grid)
 
-    fuzzy_sup_grid = TensorGrid(vec1, scalar+0.1, vec2)
+    fuzzy_sup_grid = TensorGrid(vec1, scalar + 0.1, vec2)
     assert grid.is_subgrid(fuzzy_sup_grid, tol=0.15)
 
 
@@ -551,16 +551,19 @@ def test_convex_hull():
     cs1 = (2, 2)
     cs2 = (1, 1, 1)
     cs3 = (2, 1.5, 3, 5)
-    begin = (vec1[0] - cs1[0]/2., vec2[0] - cs2[0]/2., vec3[0] - cs3[0]/2.)
-    end = (vec1[-1] + cs1[-1]/2., vec2[-1] + cs2[-1]/2.,
-           vec3[-1] + cs3[-1]/2.)
+    begin = (vec1[0] - cs1[0] / 2.,
+             vec2[0] - cs2[0] / 2.,
+             vec3[0] - cs3[0] / 2.)
+    end = (vec1[-1] + cs1[-1] / 2.,
+           vec2[-1] + cs2[-1] / 2.,
+           vec3[-1] + cs3[-1] / 2.)
     chull = odl.IntervalProd(begin, end)
     assert grid.convex_hull() == chull
 
     # With degenerate axis
     grid = TensorGrid(vec1, vec2, scalar, as_midp=True)
-    begin = (vec1[0] - cs1[0]/2., vec2[0] - cs2[0]/2., scalar)
-    end = (vec1[-1] + cs1[-1]/2., vec2[-1] + cs2[-1]/2., scalar)
+    begin = (vec1[0] - cs1[0] / 2., vec2[0] - cs2[0] / 2., scalar)
+    end = (vec1[-1] + cs1[-1] / 2., vec2[-1] + cs2[-1] / 2., scalar)
     chull = odl.IntervalProd(begin, end)
     assert grid.convex_hull() == chull
 
@@ -782,35 +785,6 @@ def test_regular_is_subgrid():
                                  shape_sup)
     assert grid.is_subgrid(fuzzy_sup_grid, tol=0.015)
     assert not grid.is_subgrid(fuzzy_sup_grid, tol=0.005)
-
-    # TODO: make modules for automated randomized tests
-    # Some more randomized tests
-#        for _ in range(50):
-#            tol = 0.01
-#            center_fuzzy_sup = center + tol * np.random.uniform(-1, 1, size=3)
-#            shape_fuzzy_sup = (6, 2, 5)
-#            # Approximately same stride
-#            stride1_fuzzy_sup = stride + tol * np.random.uniform(-1, 1, size=3)
-#            # Approximately 1/3 stride
-#            stride2_fuzzy_sup = (stride +
-#                                 3*tol * np.random.uniform(-1, 1, size=3)) / 3
-#
-#            fuzzy_sup_grid1 = RegularGrid(shape_fuzzy_sup, center_fuzzy_sup,
-#                                          stride1_fuzzy_sup)
-#            fuzzy_sup_grid2 = RegularGrid(shape_fuzzy_sup, center_fuzzy_sup,
-#                                          stride2_fuzzy_sup)
-#            fuzzy_sup_tensor_grid1 = TensorGrid(*fuzzy_sup_grid1.coord_vectors)
-#            fuzzy_sup_tensor_grid2 = TensorGrid(*fuzzy_sup_grid2.coord_vectors)
-#
-#            # Test against element-by-element comparison for various levels
-#            # of tolerance (includes ridiculously large tolerance)
-#            for fac in range(1, 51, 2):
-#                assert
-#                    grid.is_subgrid(fuzzy_sup_grid1, tol=fac*tol),
-#                    grid.is_subgrid(fuzzy_sup_tensor_grid1, tol=fac*tol))
-#                assert
-#                    grid.is_subgrid(fuzzy_sup_grid2, tol=fac*tol),
-#                    grid.is_subgrid(fuzzy_sup_tensor_grid2, tol=fac*tol))
 
 
 def test_regular_getitem():

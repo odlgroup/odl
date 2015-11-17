@@ -449,7 +449,7 @@ class IntervalProd(Set):
         elif not 0 <= index <= self.ndim:
             raise IndexError('Index ({}) out of range'.format(index))
 
-        #TODO: do we want this?
+        # TODO: do we want this?
         if not isinstance(other, IntervalProd):
             other = IntervalProd(other, other)
 
@@ -458,11 +458,11 @@ class IntervalProd(Set):
 
         new_beg[: index] = self._begin[: index]
         new_end[: index] = self._end[: index]
-        new_beg[index: index+other.ndim] = other.begin
-        new_end[index: index+other.ndim] = other.end
+        new_beg[index: index + other.ndim] = other.begin
+        new_end[index: index + other.ndim] = other.end
         if index < self.ndim:  # Avoid IndexError
-            new_beg[index+other.ndim:] = self._begin[index:]
-            new_end[index+other.ndim:] = self._end[index:]
+            new_beg[index + other.ndim:] = self._begin[index:]
+            new_end[index + other.ndim:] = self._end[index:]
 
         return IntervalProd(new_beg, new_end)
 
@@ -551,8 +551,8 @@ class IntervalProd(Set):
         """``ip.__mul__(other) <==> ip * other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
-                raise ValueError('Multiplication not possible for {!r} and {!r}: '
-                                 'dimension mismatch ({} != {}).'
+                raise ValueError('Multiplication not possible for {!r} and'
+                                 '{!r}: dimension mismatch ({} != {}).'
                                  ''.format(self, other, self.ndim, other.ndim))
 
             comp_mat = np.empty([self.ndim, 4])
@@ -579,7 +579,8 @@ class IntervalProd(Set):
     def __rdiv__(self, other):
         """``ip.__rdiv__(other) <==> other / ip``."""
         if np.isscalar(other):
-            contains_zero = np.any(np.logical_and(self.begin <= 0, self.end>= 0))
+            contains_zero = np.any(np.logical_and(self.begin <= 0,
+                                                  self.end >= 0))
             if contains_zero:
                 raise ValueError('Division by other {!r} not possible:'
                                  'Interval contains 0.'

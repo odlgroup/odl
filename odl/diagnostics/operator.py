@@ -36,7 +36,7 @@ class OperatorTest(object):
     """ Automated tests for :class:`~odl.Operator`'s
 
     This class allows users to automatically test various
-    features of an Operator such as linearity and the 
+    features of an Operator such as linearity and the
     adjoint definition.
     """
 
@@ -70,7 +70,8 @@ class OperatorTest(object):
 
         References
         ----------
-        Wikipedia article on `Operator norm <https://en.wikipedia.org/wiki/Operator_norm>`_.
+        Wikipedia article on `Operator norm
+        <https://en.wikipedia.org/wiki/Operator_norm>`_.
         """
         print('\n== Calculating operator norm ==\n')
 
@@ -104,7 +105,7 @@ class OperatorTest(object):
                 xAty = x.inner(self.operator.adjoint(y))
 
                 denom = self.operator_norm * x_norm * y_norm
-                error = 0 if denom == 0 else abs(Axy-xAty)/denom
+                error = 0 if denom == 0 else abs(Axy - xAty) / denom
 
                 if error > 0.00001:
                     counter.fail('x={:25s} y={:25s} : error={:6.5f}'
@@ -138,17 +139,21 @@ class OperatorTest(object):
                 ATT_result = self.operator.adjoint.adjoint(x)
 
                 denom = self.operator_norm * x.norm()
-                error = 0 if denom == 0 else (A_result-ATT_result).norm()/denom
+                if denom == 0:
+                    error = 0
+                else:
+                    error = (A_result - ATT_result).norm() / denom
                 if error > 0.00001:
                     counter.fail('x={:25s} : error={:6.5f}'
                                  ''.format(n_x, error))
 
     def adjoint(self):
         """Verify that the adjoint works appropriately.
-        
+
         References
         ----------
-        Wikipedia article on `Adjoint <https://en.wikipedia.org/wiki/Adjoint>`_.
+        Wikipedia article on `Adjoint
+        <https://en.wikipedia.org/wiki/Adjoint>`_.
         """
         try:
             self.operator.adjoint
@@ -186,11 +191,11 @@ class OperatorTest(object):
                 deriv = self.operator.derivative(x)
                 opx = self.operator(x)
 
-                exact_step = self.operator(x+dx*step)-opx
-                expected_step = deriv(dx*step)
+                exact_step = self.operator(x + dx * step) - opx
+                expected_step = deriv(dx * step)
                 denom = step * dx.norm() * self.operator_norm
                 error = (0 if denom == 0
-                         else (exact_step-expected_step).norm() / denom)
+                         else (exact_step - expected_step).norm() / denom)
 
                 if error > 0.00001:
                     counter.fail('x={:15s} dx={:15s} c={}: error={:6.5f}'
@@ -198,11 +203,13 @@ class OperatorTest(object):
 
     def derivative(self, step=0.0001):
         """Verify that the derivative works appropriately.
-                
+
         References
         ----------
-        Wikipedia article on `Derivative <https://en.wikipedia.org/wiki/Derivative>`_.
-        Wikipedia article on `Fréchet derivative <https://en.wikipedia.org/wiki/Fr%C3%A9chet_derivative>`_.
+        Wikipedia article on `Derivative
+        <https://en.wikipedia.org/wiki/Derivative>`_.
+        Wikipedia article on `Fréchet derivative
+        <https://en.wikipedia.org/wiki/Fr%C3%A9chet_derivative>`_.
         """
 
         print('\n==Verifying derivative of operator ==')
@@ -236,7 +243,7 @@ class OperatorTest(object):
             for [n_x, x], scale in samples(self.operator.domain,
                                            self.operator.domain.field):
                 opx = self.operator(x)
-                scaled_opx = self.operator(scale*x)
+                scaled_opx = self.operator(scale * x)
 
                 denom = self.operator_norm * scale * x.norm()
                 error = (0 if denom == 0
@@ -256,7 +263,7 @@ class OperatorTest(object):
                                               self.operator.domain):
                 opx = self.operator(x)
                 opy = self.operator(y)
-                opxy = self.operator(x+y)
+                opxy = self.operator(x + y)
 
                 denom = self.operator_norm * (x.norm() + y.norm())
                 error = (0 if denom == 0

@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,20 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility library for ODL, only for internal use."""
+"""Newton type optimization schemes."""
 
-from __future__ import absolute_import
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+
+# External
+
+# Internal
 
 __all__ = ()
 
-from . import testutils
-from .testutils import *
-__all__ += testutils.__all__
 
-from . import utility
-from .utility import *
-__all__ += utility.__all__
-
-from . import phantom
-from .phantom import *
-__all__ += phantom.__all__

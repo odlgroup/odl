@@ -171,7 +171,7 @@ class ProductSpace(LinearSpace):
                                      ''.format(len(spaces), len(weights)))
 
                 def w_norm(x):
-                    return np.linalg.norm(x*weights, ord=order)
+                    return np.linalg.norm(x * weights, ord=order)
 
                 self._prod_norm = w_norm
 

@@ -467,7 +467,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
 
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 -> out = (a+b)*x1
-        _lincomb(a+b, x1, 0, x1, out, dtype)
+        _lincomb(a + b, x1, 0, x1, out, dtype)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
         scal(a+b, out.data, native(out.size))
@@ -507,6 +507,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 if b != 1:
                     scal(b, out.data, native(out.size))
                 axpy(x1.data, out.data, native(out.size), a)
+
 
 
 def _repr_space_funcs(space):

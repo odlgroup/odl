@@ -289,13 +289,7 @@ class FunctionSet(Set):
 
             Returns
             -------
-            None
-
-            Raises
-            ------
-            If ``out`` is not a :attr:`FunctionSet.range` element or a
-             `numpy.ndarray` with ``out[0] in range``, a `TypeError` is
-             raised.
+            `None`
             """
             if not (out in self.range or
                     (isinstance(out, np.ndarray) and

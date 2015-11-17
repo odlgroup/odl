@@ -151,13 +151,13 @@ def test_size():
 
 def test_volume():
     set_ = IntervalProd(1, 2)
-    assert set_.volume == 2-1
+    assert set_.volume == 2 - 1
 
     set_ = IntervalProd(0, np.inf)
     assert set_.volume == np.inf
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert almost_equal(set_.volume, (5-1)*(6-2)*(7-3))
+    assert almost_equal(set_.volume, (5 - 1) * (6 - 2) * (7 - 3))
 
 
 def test_modpoint():
@@ -318,9 +318,9 @@ def test_div():
     interv1 = Interval(1, 2)
     interv2 = Interval(3, 4)
 
-    assert interv1 / 2.0 == Interval(1/2.0, 2/2.0)
-    assert 2.0 / interv1 == Interval(2/2.0, 2/1.0)
-    assert interv1 / interv2 == Interval(1/4.0, 2.0/3.0)
+    assert interv1 / 2.0 == Interval(1 / 2.0, 2 / 2.0)
+    assert 2.0 / interv1 == Interval(2 / 2.0, 2 / 1.0)
+    assert interv1 / interv2 == Interval(1 / 4.0, 2.0 / 3.0)
 
     interv_with_zero = Interval(-1, 1)
     with pytest.raises(ValueError):
@@ -328,8 +328,8 @@ def test_div():
 
     interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
     interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
-    quotient = IntervalProd([1/2., 2/3., 3/4., 4/5., 5/6.],
-                            [2/1., 3/2., 4/3., 5/4., 6/5.])
+    quotient = IntervalProd([1 / 2., 2 / 3., 3 / 4., 4 / 5., 5 / 6.],
+                            [2 / 1., 3 / 2., 4 / 3., 5 / 4., 6 / 5.])
 
     assert (interv1 / interv2).approx_equals(quotient, tol=10**-10)
 
@@ -361,7 +361,7 @@ def test_rectangle_init():
 def test_rectangle_area():
     set_ = Rectangle([1, 2], [3, 4])
     assert set_.area == set_.volume
-    assert set_.area == (3-1)*(4-2)
+    assert set_.area == (3 - 1) * (4 - 2)
 
 
 def test_cuboid_init():

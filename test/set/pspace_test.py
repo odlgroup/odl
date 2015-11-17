@@ -45,6 +45,7 @@ def test_RxR():
     assert all_equal([v1, v2], u)
 
 
+
 def test_lincomb():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, H)
@@ -61,7 +62,7 @@ def test_lincomb():
     a = 3.12
     b = 1.23
 
-    expected = [a*v1 + b*u1, a*v2 + b*u2]
+    expected = [a * v1 + b * u1, a * v2 + b * u2]
     HxH.lincomb(a, v, b, u, out=z)
 
     assert all_almost_equal(z, expected)
@@ -80,7 +81,7 @@ def test_multiply():
     u = HxH.element([u1, u2])
     z = HxH.element()
 
-    expected = [v1*u1, v2*u2]
+    expected = [v1 * u1, v2 * u2]
     HxH.multiply(v, u, out=z)
 
     assert all_almost_equal(z, expected)
@@ -107,7 +108,7 @@ def test_metric():
     w2 = HxH.element([v21, v22])
     assert almost_equal(
         HxH.dist(w1, w2),
-        (H.dist(v11, v21)**2 + H.dist(v12, v22)**2)**(1/2.0))
+        (H.dist(v11, v21)**2 + H.dist(v12, v22)**2)**(1 / 2.0))
 
     # -inf norm
     HxH = odl.ProductSpace(H, H, ord=-float('inf'))
@@ -150,7 +151,7 @@ def test_norm():
     HxH = odl.ProductSpace(H, H, ord=2.0)
     w = HxH.element([v1, v2])
     assert almost_equal(
-        HxH.norm(w), (H.norm(v1)**2 + H.norm(v2)**2)**(1/2.0))
+        HxH.norm(w), (H.norm(v1)**2 + H.norm(v2)**2)**(1 / 2.0))
 
     # -inf norm
     HxH = odl.ProductSpace(H, H, ord=-float('inf'))
@@ -198,6 +199,7 @@ def test_power_RxR():
     assert all_equal([v1, v2], u)
 
 
+
 def test_power_lincomb():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, 2)
@@ -214,7 +216,7 @@ def test_power_lincomb():
     a = 3.12
     b = 1.23
 
-    expected = [a*v1 + b*u1, a*v2 + b*u2]
+    expected = [a * v1 + b * u1, a * v2 + b * u2]
     HxH.lincomb(a, v, b, u, out=z)
 
     assert all_almost_equal(z, expected)

@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,20 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility library for ODL, only for internal use."""
-
 from __future__ import absolute_import
+
 
 __all__ = ()
 
-from . import testutils
-from .testutils import *
-__all__ += testutils.__all__
 
-from . import utility
-from .utility import *
-__all__ += utility.__all__
+from . import iterative
+from .iterative import *
+__all__ += iterative.__all__
 
-from . import phantom
-from .phantom import *
-__all__ += phantom.__all__
+from . import linear
+from .linear import *
+__all__ += linear.__all__
+
+from . import scalar
+from .scalar import *
+__all__ += scalar.__all__
+
+from . import vector
+from .vector import *
+__all__ += vector.__all__
+
+from . import util

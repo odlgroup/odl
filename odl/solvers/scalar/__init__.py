@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,20 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility library for ODL, only for internal use."""
+"""Gradient-based optimization schemes."""
 
 from __future__ import absolute_import
 
 __all__ = ()
 
-from . import testutils
-from .testutils import *
-__all__ += testutils.__all__
+from . import gradient
+from .gradient import *
+__all__ += gradient.__all__
 
-from . import utility
-from .utility import *
-__all__ += utility.__all__
-
-from . import phantom
-from .phantom import *
-__all__ += phantom.__all__
+from . import steplen
+from .steplen import *
+__all__ += steplen.__all__

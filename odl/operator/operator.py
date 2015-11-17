@@ -612,12 +612,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return NotImplemented
 
     def __neg__(self):
-        """``op.__neg__(s) <==> -op``.
-
-        Negate this operator:
-
-        ``-op <==> (x --> -op(x))``
-        """
+        """``op.__neg__(s) <==> -op``."""
         return -1 * self
 
     def __pos__(self):
@@ -1006,7 +1001,7 @@ class OperatorLeftScalarMult(Operator):
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
-        return OperatorLeftScalarMult(self._op.inverse, 1.0/self._scalar)
+        return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1118,7 +1113,7 @@ class OperatorRightScalarMult(Operator):
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
 
-        return OperatorLeftScalarMult(self._op.inverse, 1.0/self._scalar)
+        return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1287,7 +1282,7 @@ class OperatorLeftVectorMult(Operator):
         out *= self._vector
 
     def derivative(self, x):
-        """Return the derivative at 'x'.
+        """Return the derivative at ``x``.
 
         Left scalar multiplication and derivative are commutative:
 
@@ -1344,7 +1339,7 @@ class OperatorRightVectorMult(Operator):
 
         Parameters
         ----------
-        op : _class_`Operator`
+        op : :class:`Operator`
             The domain of ``op`` must be a ``vector.space``.
         vector : :class:`~odl.LinearSpace.Vector` in ``op.domain``
             The vector to multiply by
@@ -1394,6 +1389,7 @@ class OperatorRightVectorMult(Operator):
         ``OperatorLeftVectorMult(op.adjoint, vector)``
 
         ``(A x)^T = x * A^T``
+
         """
 
         if not self.is_linear:

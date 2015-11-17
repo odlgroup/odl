@@ -354,14 +354,14 @@ def test_operators(fn):
         def imul(x):
             x *= scalar
         _test_unary_operator(fn, imul)
-        _test_unary_operator(fn, lambda x: x*scalar)
+        _test_unary_operator(fn, lambda x: x * scalar)
 
     # Scalar division
     for scalar in [-31.2, -1, 1, 2.13]:
         def idiv(x):
             x /= scalar
         _test_unary_operator(fn, idiv)
-        _test_unary_operator(fn, lambda x: x/scalar)
+        _test_unary_operator(fn, lambda x: x / scalar)
 
     # Incremental operations
     def iadd(x, y):
@@ -470,7 +470,7 @@ def test_setitem_index_error(fn):
     x = _element(fn)
 
     with pytest.raises(IndexError):
-        x[-fn.size-1] = 0
+        x[-fn.size - 1] = 0
 
     with pytest.raises(IndexError):
         x[fn.size] = 0
@@ -543,17 +543,17 @@ def test_setslice_index_error(fn):
 
     # Bad slice
     with pytest.raises(ValueError):
-        xd[n:n+3] = [1, 2, 3]
+        xd[n:n + 3] = [1, 2, 3]
 
     # Bad size of rhs
     with pytest.raises(ValueError):
         xd[:] = []
 
     with pytest.raises(ValueError):
-        xd[:] = np.zeros(n-1)
+        xd[:] = np.zeros(n - 1)
 
     with pytest.raises(ValueError):
-        xd[:] = np.zeros(n+1)
+        xd[:] = np.zeros(n + 1)
 
 
 def test_multiply_by_scalar(fn):
@@ -1264,7 +1264,7 @@ def test_constant_equals():
     w_other_const = FnConstWeighting(constant + 1)
     w_other_exp = FnConstWeighting(constant, exponent=1)
 
-    const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
+    const_sparse_mat = sp.sparse.dia_matrix(([constant] * n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
     w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
@@ -1289,7 +1289,7 @@ def test_constant_equiv():
     w_const = FnConstWeighting(constant)
     w_const2 = FnConstWeighting(constant)
 
-    const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
+    const_sparse_mat = sp.sparse.dia_matrix(([constant] * n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
     w_matrix_sp = FnMatrixWeighting(const_sparse_mat)

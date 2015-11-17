@@ -107,22 +107,25 @@ class TensorGrid(Set):
         for i, vec in enumerate(vecs):
 
             if len(vec) == 0:
-                raise ValueError('vector {} has zero length.'.format(i+1))
+                raise ValueError('vector {} has zero length.'
+                                 ''.format(i + 1))
 
             if not np.all(np.isfinite(vec)):
                 raise ValueError('vector {} contains invalid entries.'
-                                 ''.format(i+1))
+                                 ''.format(i + 1))
 
             if vec.ndim != 1:
                 raise ValueError('vector {} has {} dimensions instead of 1.'
-                                 ''.format(i+1, vec.ndim))
+                                 ''.format(i + 1, vec.ndim))
 
             sorted_vec = np.sort(vec)
             if np.any(vec != sorted_vec):
-                raise ValueError('vector {} not sorted.'.format(i+1))
+                raise ValueError('vector {} not sorted.'
+                                 ''.format(i + 1))
 
             if np.any(np.diff(vec) == 0):
-                raise ValueError('vector {} contains duplicates.'.format(i+1))
+                raise ValueError('vector {} contains duplicates.'
+                                 ''.format(i + 1))
 
         self._coord_vectors = vecs
         self._as_midp = bool(kwargs.pop('as_midp', False))
@@ -1022,7 +1025,7 @@ class RegularGrid(TensorGrid):
             if isinstance(slc_list[i], slice):
                 istart, istop, istep = slc_list[i].indices(self.shape[i])
             else:
-                istart, istop, istep = slc_list[i], slc_list[i]+1, 1
+                istart, istop, istep = slc_list[i], slc_list[i] + 1, 1
             new_shape[i] = ceil((istop - istart) / istep)
             new_minpt[i] = self.min_pt[i] + istart * self.stride[i]
             new_maxpt[i] = self.max_pt[i] - ((self.shape[i] - istop) *
@@ -1033,7 +1036,7 @@ class RegularGrid(TensorGrid):
             if isinstance(slc_list[i], slice):
                 istart, istop, istep = slc_list[i].indices(self.shape[i])
             else:
-                istart, istop, istep = slc_list[i], slc_list[i]+1, 1
+                istart, istop, istep = slc_list[i], slc_list[i] + 1, 1
             new_shape[i] = ceil((istop - istart) / istep)
             new_minpt[i] = self.min_pt[i] + istart * self.stride[i]
             new_maxpt[i] = self.max_pt[i] - ((self.shape[i] - istop) *
@@ -1123,8 +1126,8 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
                          'than one node.'.format(tuple(intv_prod._ideg)))
 
     if as_midp:
-        grid_min = intv_prod.begin + intv_prod.size / (2*num_nodes)
-        grid_max = intv_prod.end - intv_prod.size / (2*num_nodes)
+        grid_min = intv_prod.begin + intv_prod.size / (2 * num_nodes)
+        grid_max = intv_prod.end - intv_prod.size / (2 * num_nodes)
         return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
                            _exact_min=intv_prod.begin,
                            _exact_max=intv_prod.end)
