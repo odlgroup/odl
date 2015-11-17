@@ -297,6 +297,10 @@ class Ntuples(NtuplesBase):
         def copy(self):
             """Create an identical (deep) copy of this vector.
 
+            Parameters
+            ----------
+            None
+
             Returns
             -------
             copy : :class:`Ntuples.Vector`
@@ -325,8 +329,7 @@ class Ntuples(NtuplesBase):
 
             Returns
             -------
-            values : :attr:`~odl.NtuplesBase.dtype` element or
-                     :class:`~odl.NtuplesBase.Vector`
+            values : ``dtype`` element or :class:`~odl.NtuplesBase.Vector`
                 The value(s) at the index (indices)
 
 

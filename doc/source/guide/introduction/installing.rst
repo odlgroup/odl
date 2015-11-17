@@ -89,4 +89,8 @@ Run tests
 
 To verify your installation you should run some basic tests. To run these:
 
-	``user$ python run_tests.py``
+	``user$ py.test``
+    
+This requires the module pytest_
+
+.. _pytest : http://pytest.org/latest/
