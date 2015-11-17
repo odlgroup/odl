@@ -49,4 +49,3 @@ __all__ += set.__all__
 from . import space
 from .space import *
 __all__ += space.__all__
-

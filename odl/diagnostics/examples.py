@@ -52,7 +52,7 @@ def scalar_examples(field):
     if field == RealNumbers():
         return [-1.0, 0.5, 0.0, 0.01, 1.0]
     elif field == ComplexNumbers():
-        return [-1.0, 0.5, 0.0+2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0]
+        return [-1.0, 0.5, 0.0 + 2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0]
     else:
         raise NotImplementedError('field not supported')
 
@@ -68,7 +68,7 @@ def vector_examples(space):
     Returns
     -------
     examples : `generator`
-        Yields tuples (`string`, :class:`~odl.LinearSpace.Vector`) 
+        Yields tuples (`string`, :class:`~odl.LinearSpace.Vector`)
         where ``string`` is a short description of the vector
     """
 
@@ -88,8 +88,11 @@ def vector_examples(space):
         points = space.points()
         mins = space.grid.min()
         maxs = space.grid.max()
-        means = (maxs+mins)/2.0
+        means = (maxs + mins) / 2.0
         stds = np.apply_along_axis(np.std, axis=0, arr=points)
+
+        def element(fun):
+            return space.element(uspace.element(fun))
 
         # Indicator function in first dimension
         def _step_fun(*args):
@@ -97,18 +100,18 @@ def vector_examples(space):
             z[:space.grid.shape[0] // 2, ...] = 1
             return z
 
-        yield ('Step', space.element(uspace.element(_step_fun)))
+        yield ('Step', element(_step_fun))
 
         # Indicator function on hypercube
         def _cube_fun(*args):
             inside = np.ones(_arg_shape(*args), dtype=bool)
             for points, mean, std in zip(args, means, stds):
-                inside = np.logical_and(inside, points < mean+std)
-                inside = np.logical_and(inside, mean-std < points)
+                inside = np.logical_and(inside, points < mean + std)
+                inside = np.logical_and(inside, mean - std < points)
 
             return inside.astype(space.dtype)
 
-        yield ('Cube', space.element(uspace.element(_cube_fun)))
+        yield ('Cube', element(_cube_fun))
 
         # Indicator function on hypersphere
         if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate cube
@@ -119,29 +122,29 @@ def vector_examples(space):
                     r += (points - mean)**2 / std**2
                 return (r < 1.0).astype(space.dtype)
 
-            yield ('Sphere', space.element(uspace.element(_sphere_fun)))
+            yield ('Sphere', element(_sphere_fun))
 
         # Gaussian function
         def _gaussian_fun(*args):
             r2 = np.zeros(_arg_shape(*args))
 
             for points, mean, std in zip(args, means, stds):
-                r2 += (points - mean)**2 / ((std/2)**2)
+                r2 += (points - mean)**2 / ((std / 2)**2)
 
             return np.exp(-r2)
 
-        yield ('Gaussian', space.element(uspace.element(_gaussian_fun)))
+        yield ('Gaussian', element(_gaussian_fun))
 
         # Gradient in each dimensions
         for dim in range(space.grid.ndim):
             def _gradient_fun(*args):
                 s = np.zeros(_arg_shape(*args))
-                s += (args[dim]-mins[dim]) / (maxs[dim]-mins[dim])
+                s += (args[dim] - mins[dim]) / (maxs[dim] - mins[dim])
 
                 return s
 
             yield ('grad {}'.format(dim),
-                   space.element(uspace.element(_gradient_fun)))
+                   element(_gradient_fun))
 
         # Gradient in all dimensions
         if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
@@ -149,11 +152,11 @@ def vector_examples(space):
                 s = np.zeros(_arg_shape(*args))
 
                 for points, minv, maxv in zip(args, mins, maxs):
-                    s += (points - minv) / (maxv-minv)
+                    s += (points - minv) / (maxv - minv)
 
                 return s
 
-            yield ('Grad all', space.element(uspace.element(_all_gradient_fun)))
+            yield ('Grad all', element(_all_gradient_fun))
 
     elif isinstance(space, FnBase):
         rand_state = np.random.get_state()

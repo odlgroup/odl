@@ -17,11 +17,11 @@
 
 """Abstract mathematical (linear) operators.
 
-Operators are in the most general sense mappings from one set (:class:`~odl.Set`)
-to another. More common and useful are operators mapping a vector
-space (:class:`~odl.LinearSpace`) into another. Many of those are linear, and
-as such, they have additional properties. See the class documentation
-for further details.
+Operators are in the most general sense mappings from one set
+(:class:`~odl.Set`) to another. More common and useful are operators mapping
+a vector space (:class:`~odl.LinearSpace`) into another. Many of those are
+linear, and as such, they have additional properties. See the class
+documentation for further details.
 In addition, this module defines classes for sums, compositions and
 further combinations of operators of operators.
 """
@@ -111,7 +111,8 @@ class _OperatorMeta(ABCMeta):
 
     If either ``_apply`` or ``_call`` does not exist in the class to be
     created, this metaclass attempts to add a default implmentation.
-    This only works if the :attr:`Operator.range` is a :class:`~odl.LinearSpace`.
+    This only works if the :attr:`Operator.range` is a
+    :class:`~odl.LinearSpace`.
     """
 
     def __new__(mcs, name, bases, attrs):
@@ -160,8 +161,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     It is **highly** recommended to call ``super().__init__(dom, ran)`` in
     the ``__init__()`` method of any subclass, where ``dom`` and ``ran`` are
     the arguments specifying domain and range of the new operator. In
-    that case, the attributes :attr:`Operator.domain` and :attr:`Operator.range` are automatically
-    provided by :class:`Operator`.
+    that case, the attributes :attr:`Operator.domain` and
+    :attr:`Operator.range` are automatically provided by :class:`Operator`.
 
     In addition, **any subclass needs to implement at least one of the
     methods ``_call()`` and ``_apply()``.**
@@ -210,8 +211,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     Notes
     -----
     If not both ``_apply()`` and ``_call()`` are implemented and the
-    :attr:`Operator.range` is a :class:`~odl.LinearSpace`, a default implementation of the
-    respective other is provided.
+    :attr:`Operator.range` is a :class:`~odl.LinearSpace`,
+    a default implementation of the respective other is provided.
     """
 
     def __init__(self, domain, range, linear=False):
@@ -259,7 +260,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def is_linear(self):
         """True if this operator is linear."""
         return self._is_linear
-        
+
     @property
     def is_functional(self):
         """True if the range of this operator is a :class:`~odl.Field`."""
@@ -345,7 +346,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 raise TypeError('`out` parameter cannot be used'
                                 'when range is a field')
 
-
             self._apply(x, out, *args, **kwargs)
             return out
 
@@ -369,7 +369,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __mul__(self, other):
         """``op.__mul__(other) <==> op * other``.
 
-        If ``other`` is an operator, this corresponds to 
+        If ``other`` is an operator, this corresponds to
         operator composition:
 
         ``op1 * op2 <==> (x --> op1(op2(x))``
@@ -389,8 +389,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Parameters
         ----------
         other : :class:`Operator`, :class:`~odl.LinearSpace.Vector` or scalar
-            If ``other`` is an :class:`Operator`, the :attr:`Operator.domain` of ``other``
-            must match :attr:`Operator.range` of ``self``.
+            If ``other`` is an :class:`Operator`, the :attr:`Operator.domain`
+            of ``other`` must match :attr:`Operator.range` of ``self``.
 
             If ``other`` is a scalar and :attr:`Operator.domain` is a
             :class:`~odl.LinearSpace`, ``other`` must be an element of
@@ -402,11 +402,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Returns
         -------
         mul : :class:`Operator`
-            The multiplication operator. 
+            The multiplication operator.
 
-            If ``other`` is an operator, 
+            If ``other`` is an operator,
             mul is a :class:`OperatorComp`.
-            
+
             If ``other`` is a scalar
             mul is a :class:`OperatorRightScalarMult`.
 
@@ -449,7 +449,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __rmul__(self, other):
         """``op.__rmul__(s) <==> s * op``.
 
-        If ``other`` is an :class:`Operator`, this corresponds to 
+        If ``other`` is an :class:`Operator`, this corresponds to
         operator composition:
 
         ``op1 * op2 <==> (x --> op1(op2(x)))``
@@ -469,8 +469,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Parameters
         ----------
         other : :class:`Operator`, :class:`~odl.LinearSpace.Vector` or scalar
-            If ``other`` is an :class:`Operator`, the :attr:`Operator.range` of ``other``
-            must match :attr:`Operator.domain` of ``self``.
+            If ``other`` is an :class:`Operator`, the :attr:`Operator.range`
+            of ``other`` must match :attr:`Operator.domain` of ``self``.
 
             If ``other`` is a scalar and :attr:`Operator.range` is a
             :class:`~odl.LinearSpace`, ``other`` must be an element of
@@ -484,9 +484,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         mul : :class:`Operator`
             The multiplication operator.
 
-            If ``other`` is an operator, 
+            If ``other`` is an operator,
             mul is a :class:`OperatorComp`.
-            
+
             If ``other`` is a scalar
             mul is a :class:`OperatorLeftScalarMult`.
 
@@ -516,7 +516,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return FunctionalLeftVectorMult(self, other.copy())
         else:
             return NotImplemented
-        
+
     def __rmatmul__(self, other):
         """``op.__rmatmul__(other) <==> other @ op``.
 
@@ -605,21 +605,21 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorRightScalarMult(self, 1.0 / other)
         else:
             return NotImplemented
-            
+
     def __neg__(self):
         """``op.__neg__(s) <==> -op``.
-        
+
         Negate this operator
-        
+
         ``-op <==> (x --> -op(x))``
         """
         return -1 * self
-        
+
     def __pos__(self):
         """``op.__pos__(s) <==> op``.
-        
+
         Pos operator, the identity.
-        
+
         ``+op <==> (x --> op(x))``
         """
         return self
@@ -667,10 +667,10 @@ class OperatorSum(Operator):
         Parameters
         ----------
         op1 : :class:`Operator`
-            The first summand. Its :attr:`Operator.range` must be a 
+            The first summand. Its :attr:`Operator.range` must be a
             :class:`~odl.LinearSpace` or :class:`~odl.Field`.
         op2 : :class:`Operator`
-            The second summand. Must have the same :attr:`Operator.domain` 
+            The second summand. Must have the same :attr:`Operator.domain`
             and :attr:`Operator.range` as
             ``op1``.
         tmp_ran : :attr:`Operator.range` element, optional
@@ -962,7 +962,8 @@ class OperatorLeftScalarMult(Operator):
         Parameters
         ----------
         op : :class:`Operator`
-            The range of ``op`` must be a :class:`~odl.LinearSpace` or :class:`~odl.Field`.
+            The range of ``op`` must be a :class:`~odl.LinearSpace` or
+            :class:`~odl.Field`.
         scalar : ``op.range.field`` element
             A real or `complex` number, depending on the field of
             the range.
@@ -1004,7 +1005,7 @@ class OperatorLeftScalarMult(Operator):
         """
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
-        return OperatorLeftScalarMult(self._op.inverse, 1.0/self._scalar)
+        return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1062,7 +1063,8 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         op : :class:`Operator`
-            The domain of ``op`` must be a :class:`~odl.LinearSpace` or :class:`~odl.Field`.
+            The domain of ``op`` must be a :class:`~odl.LinearSpace` or
+            :class:`~odl.Field`.
         scalar : ``op.range.field`` element
             A real or `complex` number, depending on the field of
             the operator domain.
@@ -1114,7 +1116,7 @@ class OperatorRightScalarMult(Operator):
         if self.scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
 
-        return OperatorLeftScalarMult(self._op.inverse, 1.0/self._scalar)
+        return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1158,11 +1160,11 @@ class OperatorRightScalarMult(Operator):
 class FunctionalLeftVectorMult(Operator):
     """Expression type for the functional left vector multiplication.
 
-    A functional is a :class:`Operator` whose :attr:`Operator.range` is 
+    A functional is a :class:`Operator` whose :attr:`Operator.range` is
     a :class:`~odl.Field`.
 
     ``FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)``
-    
+
     """
 
     def __init__(self, op, vector):
@@ -1172,7 +1174,7 @@ class FunctionalLeftVectorMult(Operator):
         ----------
         op : :class:`Operator`
             The range of ``op`` must be a :class:`~odl.Field`.
-        vector : :class:`~odl.LinearSpace.Vector` 
+        vector : :class:`~odl.LinearSpace.Vector`
             with :attr:`~odl.LinearSpace.field` same as ``op.range``
             The vector to multiply by
         """
@@ -1224,7 +1226,7 @@ class FunctionalLeftVectorMult(Operator):
         OperatorComp(op.adjoint, vector.T)``
 
         ``(x * A)^T = A^T * x^T``
-        
+
         """
 
         if not self.is_linear:
@@ -1305,7 +1307,7 @@ class OperatorLeftVectorMult(Operator):
         ``OperatorRightVectorMult(op.adjoint, vector)``
 
         ``(x * A)^T = A^T * x``
-        
+
         """
 
         if not self.is_linear:
@@ -1329,7 +1331,7 @@ class OperatorRightVectorMult(Operator):
 
     ``OperatorRightVectorMult(op, vector)(x) <==> op(vector * x)``
 
-    The scalar multiplication is well-defined only if ``vector in op.domain == True``.
+    The scalar multiplication is well-defined only if ``vector in op.domain``.
     """
 
     def __init__(self, op, vector):
@@ -1387,12 +1389,13 @@ class OperatorRightVectorMult(Operator):
         ``OperatorLeftVectorMult(op.adjoint, vector)``
 
         ``(A x)^T = x * A^T``
+
         """
 
         if not self.is_linear:
             raise NotImplementedError('Nonlinear operators have no adjoint')
 
-        #TODO: handle `complex` vectors
+        # TODO: handle `complex` vectors
         return OperatorLeftVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):

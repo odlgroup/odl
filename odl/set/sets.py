@@ -32,7 +32,7 @@ from numbers import Integral, Real, Complex
 # ODL
 
 
-__all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers', 
+__all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct')
 
 
@@ -46,7 +46,7 @@ class Set(with_metaclass(ABCMeta, object)):
     equal.
 
     ``__contains__(self, other)``
-    
+
     Test if ``other`` is a member of this set. This function provides the
     operator overload for `in`.
 
@@ -61,7 +61,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
 
     ``__eq__(self, other)``
-    
+
     Test if ``other`` is the same set as this set, i.e. both sets are
     of the same type and contain the same elements. This function
     provides the operator overload for ``==``.
@@ -79,7 +79,7 @@ class Set(with_metaclass(ABCMeta, object)):
     ``__ne__(self, other)`` is provided as ``not self.__eq__(other)``.
 
     optional: ``element(inp=None)``
-    
+
     Create an element of this set, either from scratch or from an
     input parameter.
 
@@ -232,11 +232,11 @@ class Strings(Set):
         """``s.__repr__() <==> repr(s)``."""
         return 'Strings({})'.format(self.length)
 
-    
+
 class Field(with_metaclass(ABCMeta, Set)):
     """Any set that satisfies the field axioms
 
-    For example :class:`RealNumbers`, :class:`ComplexNumbers` or 
+    For example :class:`RealNumbers`, :class:`ComplexNumbers` or
     the finite field F2
     """
 
@@ -261,8 +261,8 @@ class ComplexNumbers(Field):
         Returns
         -------
         contained : `bool`
-            True if  other is a :class::class:`ComplexNumbers`, :class:`RealNumbers`
-            or :class:`Integers`, false else.
+            True if  other is a :class::class:`ComplexNumbers`,
+            :class:`RealNumbers` or :class:`Integers`, false else.
 
         Examples
         --------
@@ -272,7 +272,7 @@ class ComplexNumbers(Field):
         """
         if other is self:
             return True
-            
+
         return (isinstance(other, ComplexNumbers) or
                 isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
@@ -281,7 +281,7 @@ class ComplexNumbers(Field):
         """``s.__eq__(other) <==> s == other``."""
         if other is self:
             return True
-            
+
         return isinstance(other, ComplexNumbers)
 
     def element(self, inp=None):
@@ -299,7 +299,7 @@ class ComplexNumbers(Field):
         """``s.__repr__() <==> repr(s)``."""
         return "ComplexNumbers()"
 
-    
+
 class RealNumbers(Field):
     """The set of real numbers."""
 
@@ -324,7 +324,7 @@ class RealNumbers(Field):
         """
         if other is self:
             return True
-        
+
         return (isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
@@ -332,7 +332,7 @@ class RealNumbers(Field):
         """``s.__eq__(other) <==> s == other``."""
         if other is self:
             return True
-            
+
         return isinstance(other, RealNumbers)
 
     def element(self, inp=None):
@@ -356,11 +356,11 @@ class Integers(Set):
     """The set of integers."""
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""        
-        
+        """``s.__eq__(other) <==> s == other``."""
+
         if other is self:
             return True
-            
+
         return isinstance(other, Integers)
 
     def __contains__(self, other):
@@ -383,7 +383,7 @@ class Integers(Set):
         """
         if other is self:
             return True
-            
+
         return isinstance(other, Integers)
 
     def element(self, inp=None):
@@ -461,7 +461,7 @@ class CartesianProduct(Set):
         Parameters
         ----------
         inp : `iterable`, optional
-            Collection of input values for the 
+            Collection of input values for the
             :meth:`~odl.set.space.LinearSpace.element()` methods
             of all sets in the Cartesian product.
         """

@@ -24,8 +24,8 @@ __all__ = ('SpaceTest',)
 
 
 def _apprimately_equal(x, y, eps):
-    #Tests if vectors x and y are approximately equal
-    #eps is an given error
+    # Tests if vectors x and y are approximately equal
+    # eps is an given error
     if x.space != y.space:
         return False
 
@@ -45,7 +45,7 @@ class SpaceTest(object):
     """ Automated tests for :class:`~odl.LinearSpace`'s
 
     This class allows users to automatically test various
-    features of an ``LinearSpace`` such as linearity and the 
+    features of an ``LinearSpace`` such as linearity and the
     various operators.
     """
 
@@ -236,26 +236,26 @@ class SpaceTest(object):
             for [n_x, x], a in samples(self.space,
                                        self.space.field):
                 if a != 0:
-                    ok = _apprimately_equal(x / a, x * (1.0/a), self.eps)
+                    ok = _apprimately_equal(x / a, x * (1.0 / a), self.eps)
                     if not ok:
                         counter.fail('failed with x={:25s}, a={}'
                                      ''.format(n_x, a))
-                     
+
     def _lincomb_aliased(self):
         print('\nAliased input in lincomb')
 
         with FailCounter() as counter:
             for [n_x, x_in], [n_y, y] in samples(self.space,
-                                              self.space):
-                
-                x = x_in.copy()                  
+                                                 self.space):
+
+                x = x_in.copy()
                 x.lincomb(1, x, 1, y)
                 ok = _apprimately_equal(x, x_in + y, self.eps)
                 if not ok:
                     counter.fail('failed with x.lincomb(1, x, 1, y),'
                                  'x={:25s} y={:25s} '
                                  ''.format(n_x, n_y))
-                                 
+
                 x = x_in.copy()
                 x.lincomb(1, x, 1, x)
                 ok = _apprimately_equal(x, x_in + x_in, self.eps)
@@ -282,7 +282,9 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `Vector space <https://en.wikipedia.org/wiki/Vector_space>`_.
+        Wikipedia article on `Vector space`_.
+
+        .. _Vector space: https://en.wikipedia.org/wiki/Vector_space
         """
         print('\n== Verifying linear space properties ==\n')
 
@@ -305,7 +307,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], a in samples(self.space,
                                                  self.space,
                                                  self.space.field):
-                error = abs((a*x).inner(y) - a * x.inner(y))
+                error = abs((a * x).inner(y) - a * x.inner(y))
                 if error > self.eps:
                     counter.fail('x={:25s}, y={:25s}, a={}: error={}'
                                  ''.format(n_x, n_y, a, error))
@@ -328,7 +330,7 @@ class SpaceTest(object):
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                error = abs((x+y).inner(z) - (x.inner(z) + y.inner(z)))
+                error = abs((x + y).inner(z) - (x.inner(z) + y.inner(z)))
                 if error > self.eps:
                     counter.fail('x={:25s}, y={:25s}, z={:25s}: error={}'
                                  ''.format(n_x, n_y, n_z, error))
@@ -369,7 +371,9 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `inner product space <https://en.wikipedia.org/wiki/Inner_product_space>`_.
+        Wikipedia article on `inner product`_.
+
+        .. _inner product: https://en.wikipedia.org/wiki/Inner_product_space
         """
         print('\n== Verifying inner product ==\n')
 
@@ -445,7 +449,7 @@ class SpaceTest(object):
                     counter.fail('x={:25s}: error={}'
                                  ''.format(n_x, error))
 
-    def norm(self):        
+    def norm(self):
         """ Verify norm
 
         The norm satisfies properties
@@ -464,7 +468,9 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `norm <https://en.wikipedia.org/wiki/Norm_(mathematics)>`_.
+        Wikipedia article on norm_.
+
+        .. _norm: https://en.wikipedia.org/wiki/Norm_(mathematics)
         """
         print('\n== Verifying norm ==\n')
 
@@ -536,7 +542,7 @@ class SpaceTest(object):
         with FailCounter('error = |d(x, y) - ||x-y|| |') as counter:
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
-                error = abs(x.dist(y) - (x-y).norm())
+                error = abs(x.dist(y) - (x - y).norm())
 
                 if error > self.eps:
                     counter.fail('x={:25s}, y={:25s}: error={}'
@@ -561,7 +567,9 @@ class SpaceTest(object):
 
         References
         ----------
-        Wikipedia article on `metric <https://en.wikipedia.org/wiki/Metric_(mathematics)>`_.
+        Wikipedia article on metric_
+
+        .. _metric: https://en.wikipedia.org/wiki/Metric_(mathematics)
         """
         print('\n== Verifying dist ==\n')
 

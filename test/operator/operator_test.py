@@ -71,6 +71,7 @@ def test_nonlinear_op():
 
     assert all_almost_equal(Aop(xvec), mult_sq_np(A, x))
 
+
 def test_nonlinear_addition():
     # Test operator addition
     A = np.random.rand(4, 3)
@@ -83,9 +84,9 @@ def test_nonlinear_addition():
 
     # Explicit instantiation
     C = OperatorSum(Aop, Bop)
-    
+
     assert not C.is_linear
-    
+
     assert all_almost_equal(C(xvec),
                             mult_sq_np(A, x) + mult_sq_np(B, x))
 
@@ -100,6 +101,7 @@ def test_nonlinear_addition():
     with pytest.raises(TypeError):
         C = OperatorSum(Aop, Cop)
 
+
 def test_nonlinear_scale():
     A = np.random.rand(4, 3)
     x = np.random.rand(3)
@@ -113,20 +115,20 @@ def test_nonlinear_scale():
     for scale in scalars:
         lscaled = OperatorLeftScalarMult(Aop, scale)
         rscaled = OperatorRightScalarMult(Aop, scale)
-        
+
         assert not lscaled.is_linear
         assert not rscaled.is_linear
 
         assert all_almost_equal(lscaled(xvec),
                                 scale * mult_sq_np(A, x))
         assert all_almost_equal(rscaled(xvec),
-                                mult_sq_np(A, scale*x))
+                                mult_sq_np(A, scale * x))
 
         # Using operator overloading
         assert all_almost_equal((scale * Aop)(xvec),
                                 scale * mult_sq_np(A, x))
         assert all_almost_equal((Aop * scale)(xvec),
-                                mult_sq_np(A, scale*x))
+                                mult_sq_np(A, scale * x))
 
     # Fail when scaling by wrong scalar type (A complex number)
     wrongscalars = [1j, [1, 2], (1, 2)]
@@ -143,6 +145,7 @@ def test_nonlinear_scale():
         with pytest.raises(TypeError):
             print(wrongscalar * Aop)
 
+
 def test_nonlinear_right_vector_mult():
     A = np.random.rand(4, 3)
 
@@ -153,7 +156,7 @@ def test_nonlinear_right_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = OperatorRightVectorMult(Aop, vec)
-        
+
     assert not C.is_linear
 
     assert all_almost_equal(C(x), mult_sq_np(A, vec * x))
@@ -173,7 +176,7 @@ def test_nonlinear_composition():
     xvec = Bop.domain.element(x)
 
     C = OperatorComp(Aop, Bop)
-    
+
     assert not C.is_linear
 
     assert all_almost_equal(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
@@ -189,9 +192,9 @@ class MultiplyOp(Operator):
 
     def __init__(self, matrix, domain=None, range=None):
         domain = (odl.Rn(matrix.shape[1])
-                        if domain is None else domain)
+                  if domain is None else domain)
         range = (odl.Rn(matrix.shape[0])
-                       if range is None else range)
+                 if range is None else range)
         self.matrix = matrix
 
         super().__init__(domain, range, linear=True)
@@ -223,6 +226,7 @@ def test_linear_Op():
     # Using return value
     assert all_almost_equal(Aop(xvec), np.dot(A, x))
 
+
 def test_linear_op_nonsquare():
     # Verify that the multiply op does indeed work as expected
     A = np.random.rand(4, 3)
@@ -241,6 +245,7 @@ def test_linear_op_nonsquare():
     # Using return value
     assert all_almost_equal(Aop(xvec), np.dot(A, x))
 
+
 def test_linear_adjoint():
     A = np.random.rand(4, 3)
     x = np.random.rand(4)
@@ -257,6 +262,7 @@ def test_linear_adjoint():
 
     # Using out of place method
     assert all_almost_equal(Aop.adjoint(xvec), np.dot(A.T, x))
+
 
 def test_linear_addition():
     A = np.random.rand(4, 3)
@@ -280,9 +286,10 @@ def test_linear_addition():
 
     # Using operator overloading
     assert all_almost_equal((Aop + Bop)(xvec),
-                               np.dot(A, x) + np.dot(B, x))
+                            np.dot(A, x) + np.dot(B, x))
     assert all_almost_equal((Aop + Bop).adjoint(yvec),
-                               np.dot(A.T, y) + np.dot(B.T, y))
+                            np.dot(A.T, y) + np.dot(B.T, y))
+
 
 def test_linear_scale():
     A = np.random.rand(4, 3)
@@ -298,7 +305,7 @@ def test_linear_scale():
     scalars = [-1.432, -1, 0, 1, 3.14]
     for scale in scalars:
         C = OperatorRightScalarMult(Aop, scale)
-        
+
         assert C.is_linear
         assert C.adjoint.is_linear
 
@@ -307,13 +314,13 @@ def test_linear_scale():
 
         # Using operator overloading
         assert all_almost_equal((scale * Aop)(xvec),
-                                   scale * np.dot(A, x))
+                                scale * np.dot(A, x))
         assert all_almost_equal((Aop * scale)(xvec),
-                                   np.dot(A, scale * x))
+                                np.dot(A, scale * x))
         assert all_almost_equal((scale * Aop).adjoint(yvec),
-                                   scale * np.dot(A.T, y))
+                                scale * np.dot(A.T, y))
         assert all_almost_equal((Aop * scale).adjoint(yvec),
-                                   np.dot(A.T, scale * y))
+                                np.dot(A.T, scale * y))
 
 
 def test_linear_right_vector_mult():
@@ -327,7 +334,7 @@ def test_linear_right_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = OperatorRightVectorMult(Aop, vec)
-        
+
     assert C.is_linear
     assert C.adjoint.is_linear
 
@@ -340,6 +347,7 @@ def test_linear_right_vector_mult():
                             np.dot(A, vec * x))
     assert all_almost_equal((Aop * vec).adjoint(y),
                             vec * np.dot(A.T, y))
+
 
 def test_linear_composition():
     A = np.random.rand(5, 4)
@@ -359,6 +367,7 @@ def test_linear_composition():
 
     assert all_almost_equal(C(xvec), np.dot(A, np.dot(B, x)))
     assert all_almost_equal(C.adjoint(yvec), np.dot(B.T, np.dot(A.T, y)))
+
 
 def test_type_errors():
     r3 = odl.Rn(3)
@@ -400,7 +409,7 @@ def test_type_errors():
         Aop.adjoint(r4Vec1, r4Vec2)
 
 
-### FUNCTIONAL TEST ###
+# FUNCTIONAL TEST
 class SumFunctional(Operator):
     """ Sum of elements
     """
@@ -414,6 +423,7 @@ class SumFunctional(Operator):
     @property
     def adjoint(self):
         return ConstantVector(self.domain)
+
 
 class ConstantVector(Operator):
     """ Vector times a scalar
@@ -429,6 +439,7 @@ class ConstantVector(Operator):
     def adjoint(self):
         return SumFunctional(self.range)
 
+
 def test_functional():
     r3 = odl.Rn(3)
     x = r3.element([1, 2, 3])
@@ -436,6 +447,7 @@ def test_functional():
     op = SumFunctional(r3)
 
     assert op(x) == 6
+
 
 def test_functional_out():
     r3 = odl.Rn(3)
@@ -447,6 +459,7 @@ def test_functional_out():
     with pytest.raises(TypeError):
         print(op(x, out=out))
 
+
 def test_functional_adjoint():
     r3 = odl.Rn(3)
 
@@ -456,6 +469,7 @@ def test_functional_adjoint():
 
     x = r3.element([1, 2, 3])
     assert op.adjoint.adjoint(x) == op(x)
+
 
 def test_functional_addition():
     r3 = odl.Rn(3)
@@ -473,13 +487,14 @@ def test_functional_addition():
 
     assert C(x) == 2 * np.sum(x)
 
-    #Test adjoint
+    # Test adjoint
     assert all_almost_equal(C.adjoint(y), y * 2 * np.ones(3))
     assert all_almost_equal(C.adjoint.adjoint(x), C(x))
 
     # Using operator overloading
     assert (Aop + Bop)(x) == 2 * np.sum(x)
     assert all_almost_equal((Aop + Bop).adjoint(y), y * 2 * np.ones(3))
+
 
 def test_functional_scale():
     r3 = odl.Rn(3)
@@ -493,7 +508,7 @@ def test_functional_scale():
     scalars = [-1.432, -1, 0, 1, 3.14]
     for scale in scalars:
         C = OperatorRightScalarMult(Aop, scale)
-        
+
         assert C.is_linear
         assert C.adjoint.is_linear
 
@@ -509,6 +524,7 @@ def test_functional_scale():
         assert all_almost_equal((Aop * scale).adjoint(y),
                                 scale * y * np.ones(3))
 
+
 def test_functional_left_vector_mult():
     r3 = odl.Rn(3)
     r4 = odl.Rn(4)
@@ -520,7 +536,7 @@ def test_functional_left_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = FunctionalLeftVectorMult(Aop, y)
-        
+
     assert C.is_linear
     assert C.adjoint.is_linear
 
@@ -534,6 +550,7 @@ def test_functional_left_vector_mult():
     assert all_almost_equal((y * Aop).adjoint(y),
                             y.inner(y) * np.ones(3))
 
+
 def test_functional_right_vector_mult():
     r3 = odl.Rn(3)
 
@@ -545,7 +562,7 @@ def test_functional_right_vector_mult():
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
     C = OperatorRightVectorMult(Aop, vec)
-        
+
     assert C.is_linear
     assert C.adjoint.is_linear
 
@@ -558,6 +575,7 @@ def test_functional_right_vector_mult():
                             np.sum(vec * x))
     assert all_almost_equal((Aop * vec).adjoint(y),
                             vec * y)
+
 
 def test_functional_composition():
     r3 = odl.Rn(3)
@@ -584,6 +602,7 @@ def test_functional_composition():
     assert all_almost_equal((Bop * Aop).adjoint(x),
                             np.sum(x) * np.ones(3))
 
+
 class SumSquaredFunctional(Operator):
     """Sum of the squared elements
     """
@@ -601,7 +620,8 @@ def test_nonlinear_functional():
 
     op = SumSquaredFunctional(r3)
 
-    assert almost_equal(op(x), np.sum(x**2))
+    assert almost_equal(op(x), np.sum(x ** 2))
+
 
 def test_nonlinear_functional_out():
     r3 = odl.Rn(3)
@@ -612,6 +632,7 @@ def test_nonlinear_functional_out():
 
     with pytest.raises(TypeError):
         print(op(x, out=out))
+
 
 def test_nonlinear_functional_operators():
     r3 = odl.Rn(3)
@@ -643,7 +664,7 @@ def test_nonlinear_functional_operators():
 
     assert not C.is_linear
     assert almost_equal(C(x), A(x * 2.0))
-    
+
     # right divide
     C = A / 2.0
 
@@ -651,4 +672,4 @@ def test_nonlinear_functional_operators():
     assert almost_equal(C(x), A(x / 2.0))
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/')) + ' -v')
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')

@@ -67,7 +67,7 @@ def _vectors(fn, n=1):
 
 
 def _sparse_matrix(fn):
-    nnz = np.random.randint(0, int(ceil(fn.size**2/2)))
+    nnz = np.random.randint(0, int(ceil((fn.size ** 2) / 2)))
     coo_r = np.random.randint(0, fn.size, size=nnz)
     coo_c = np.random.randint(0, fn.size, size=nnz)
     values = np.random.rand(nnz)
@@ -100,7 +100,7 @@ def test_init():
     Ntuples(3, float)
     Ntuples(3, complex)
     Ntuples(3, 'S1')
-    
+
     # Fn
     Fn(3, int)
     Fn(3, float)
@@ -148,34 +148,34 @@ def _test_lincomb(fn, a, b):
     # Unaliased arguments
     x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
-    z[:] = a*x + b*y
+    z[:] = a * x + b * y
     fn.lincomb(a, xVec, b, yVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # First argument aliased with output
     x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
-    z[:] = a*z + b*y
+    z[:] = a * z + b * y
     fn.lincomb(a, zVec, b, yVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # Second argument aliased with output
     x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
-    z[:] = a*x + b*z
+    z[:] = a * x + b * z
     fn.lincomb(a, xVec, b, zVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # Both arguments aliased with each other
     x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
 
-    z[:] = a*x + b*x
+    z[:] = a * x + b * x
     fn.lincomb(a, xVec, b, xVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
     # All aliased
     x, y, z, xVec, yVec, zVec = _vectors(fn, 3)
-    z[:] = a*z + b*z
+    z[:] = a * z + b * z
     fn.lincomb(a, zVec, b, zVec, out=zVec)
     assert all_almost_equal([xVec, yVec, zVec], [x, y, z])
 
@@ -242,14 +242,14 @@ def test_operators(fn):
         def imul(x):
             x *= scalar
         _test_unary_operator(fn, imul)
-        _test_unary_operator(fn, lambda x: x*scalar)
+        _test_unary_operator(fn, lambda x: x * scalar)
 
     # Scalar division
     for scalar in [-31.2, -1, 1, 2.13]:
         def idiv(x):
             x /= scalar
         _test_unary_operator(fn, idiv)
-        _test_unary_operator(fn, lambda x: x/scalar)
+        _test_unary_operator(fn, lambda x: x / scalar)
 
     # Incremental operations
     def iadd(x, y):
@@ -330,7 +330,7 @@ def test_setitem_index_error(fn):
     x = _element(fn)
 
     with pytest.raises(IndexError):
-        x[-fn.size-1] = 0
+        x[-fn.size - 1] = 0
 
     with pytest.raises(IndexError):
         x[fn.size] = 0
@@ -403,17 +403,17 @@ def test_setslice_index_error(fn):
 
     # Bad slice
     with pytest.raises(ValueError):
-        xd[n:n+3] = [1, 2, 3]
+        xd[n:n + 3] = [1, 2, 3]
 
     # Bad size of rhs
     with pytest.raises(ValueError):
         xd[:] = []
 
     with pytest.raises(ValueError):
-        xd[:] = np.zeros(n-1)
+        xd[:] = np.zeros(n - 1)
 
     with pytest.raises(ValueError):
-        xd[:] = np.zeros(n+1)
+        xd[:] = np.zeros(n + 1)
 
 
 def test_multiply_by_scalar(fn):
@@ -634,10 +634,10 @@ def test_matrix_dist(fn):
     result_dense = w_dense.dist(x, y)
 
     true_result_sparse = np.sqrt(np.vdot(
-        xarr-yarr,
-        np.asarray(np.dot(sparse_mat_as_dense, xarr-yarr)).squeeze()))
+        xarr - yarr,
+        np.asarray(np.dot(sparse_mat_as_dense, xarr - yarr)).squeeze()))
     true_result_dense = np.sqrt(np.vdot(
-        xarr-yarr, np.asarray(np.dot(dense_mat, xarr-yarr)).squeeze()))
+        xarr - yarr, np.asarray(np.dot(dense_mat, xarr - yarr)).squeeze()))
 
     assert almost_equal(result_sparse, true_result_sparse)
     assert almost_equal(result_dense, true_result_dense)
@@ -652,7 +652,7 @@ def test_matrix_dist_squared(fn):
     result = w.dist(x, y)
 
     true_result = np.sqrt(np.vdot(
-        xarr-yarr, np.asarray(np.dot(mat, xarr-yarr)).squeeze()))
+        xarr - yarr, np.asarray(np.dot(mat, xarr - yarr)).squeeze()))
 
     assert almost_equal(result, true_result)
 
@@ -671,7 +671,7 @@ def test_constant_equals():
     w_const = FnConstWeighting(constant)
     w_const2 = FnConstWeighting(constant)
 
-    const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
+    const_sparse_mat = sp.sparse.dia_matrix(([constant] * n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
     w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
@@ -695,7 +695,7 @@ def test_constant_equiv():
     w_const = FnConstWeighting(constant)
     w_const2 = FnConstWeighting(constant)
 
-    const_sparse_mat = sp.sparse.dia_matrix(([constant]*n, [0]),
+    const_sparse_mat = sp.sparse.dia_matrix(([constant] * n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
     w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
@@ -743,7 +743,7 @@ def test_constant_dist(fn):
     w_const = FnConstWeighting(constant)
 
     result_const = w_const.dist(x, y)
-    true_result_const = np.sqrt(constant * np.vdot(xarr-yarr, xarr-yarr))
+    true_result_const = np.sqrt(constant * np.vdot(xarr - yarr, xarr - yarr))
 
     assert almost_equal(result_const, true_result_const)
 

@@ -84,10 +84,12 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             Data space providing containers for the values of a
             discretized object
         restr : :class:`~odl.Operator`, optional
-            Operator mapping a :attr:`uspace` element to a :attr:`dspace` element.
+            Operator mapping a :attr:`uspace` element to a :attr:`dspace`
+            element.
             Must satisfy ``restr.domain == uspace``, ``restr.range == dspace``.
         ext : :class:`~odl.Operator`, optional
-            Operator mapping a :attr:`dspace` element to a :attr:`uspace` element.
+            Operator mapping a :attr:`dspace` element to a :attr:`uspace`
+            element.
             Must satisfy ``ext.domain == dspace``, ``ext.range == uspace``.
 
             """
@@ -173,8 +175,8 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the :meth:`~odl.set.space.LinearSpace.element` method of 
-            either :attr:`dspace` or :attr:`uspace`.
+            recognizable by the :meth:`~odl.set.space.LinearSpace.element`
+            method of either :attr:`dspace` or :attr:`uspace`.
 
         Returns
         -------
@@ -198,9 +200,9 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         -------
         equals : `bool`
             `True` if ``other`` is a :class:`RawDiscretization` instance and
-            all attributes :attr:`uspace`, :attr:`dspace`, :attr:`restriction` and
-            :attr:`extension` of ``other`` and this discretization are equal,
-            `False` otherwise.
+            all attributes :attr:`uspace`, :attr:`dspace`, :attr:`restriction`
+            and :attr:`extension` of ``other`` and this discretization are
+            equal, `False` otherwise.
         """
         if other is self:
             return True
@@ -334,11 +336,11 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
     """Abstract class for discretizations of linear vector spaces.
 
     This variant of :class:`RawDiscretization` adds linear structure to all
-    its members. The :attr:`RawDiscretization.uspace` is a :class:`~odl.LinearSpace`, 
-    the :attr:`RawDiscretization.dspace`  for the data representation 
-    is an implementation of :math:`F^n`, where ``F`` is some :class:`~odl.Field`, and 
-    both :attr:`RawDiscretization.restriction` and :attr:`RawDiscretization.extension`
-    are linear :class:`~odl.Operator`'s.
+    its members. The :attr:`RawDiscretization.uspace` is a
+    :class:`~odl.LinearSpace`, the :attr:`RawDiscretization.dspace` for the
+    data representation is an implementation of :math:`F^n`, where ``F`` is
+    some :class:`~odl.Field`, and both :attr:`RawDiscretization.restriction`
+    and :attr:`RawDiscretization.extension` are linear :class:`~odl.Operator`.
     """
 
     def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
@@ -353,22 +355,23 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
             The (abstract) space to be discretized
         dspace : :class:`~odl.FnBase`
             Data space providing containers for the values of a
-            discretized object. Its :attr:`~odl.FnBase.field` attribute must be the same
-            as ``uspace.field``.
+            discretized object. Its :attr:`~odl.FnBase.field` attribute must
+            be the same as ``uspace.field``.
         restr : :class:`~odl.Operator`, linear, optional
-            Operator mapping a :attr:`RawDiscretization.uspace` element to a 
-            :attr:`RawDiscretization.dspace` element. 
+            Operator mapping a :attr:`RawDiscretization.uspace` element to a
+            :attr:`RawDiscretization.dspace` element.
             Must satisfy ``restr.domain == uspace``, ``restr.range == dspace``
         ext : :class:`~odl.Operator`, linear, optional
-            Operator mapping a :attr:`RawDiscretization.dspace` element to a 
-            :attr:`RawDiscretization.uspace` element. Must satisfy 
+            Operator mapping a :attr:`RawDiscretization.dspace` element to a
+            :attr:`RawDiscretization.uspace` element. Must satisfy
             ``ext.domain == dspace``, ``ext.range == uspace``.
         """
         super().__init__(uspace, dspace, restr, ext, **kwargs)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
-            raise TypeError('undiscretized space {} not a :class:`~odl.LinearSpace` '
+            raise TypeError('undiscretized space {} not a'
+                            ':class:`~odl.LinearSpace` '
                             'instance.'.format(uspace))
 
         if not isinstance(dspace, FnBase):

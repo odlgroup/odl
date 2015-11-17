@@ -118,8 +118,8 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                                 ''.format(dspace))
 
             if fset.field != dspace.field:
-                raise ValueError('field {} of the function space and field {} of '
-                                 'the data space are not equal.'
+                raise ValueError('field {} of the function space and field'
+                                 '{} of the data space are not equal.'
                                  ''.format(fset.field, dspace.field))
 
     def __eq__(self, other):
@@ -178,7 +178,6 @@ class RawGridCollocation(FunctionSetMapping):
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 
-
     # TODO: Implement _apply()
 
     def _call(self, inp):
@@ -190,7 +189,7 @@ class RawGridCollocation(FunctionSetMapping):
             The function to be evaluated. It must accept point
             coordinates in list form (``f(x, y, z)`` rather than
             ``f(point)``) and return either a NumPy array of the correct
-            type (defined by the :class:`~odl.Ntuples` instance) or a 
+            type (defined by the :class:`~odl.Ntuples` instance) or a
             single value.
 
         Returns
@@ -263,8 +262,8 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
 
     """Function evaluation at grid points.
 
-    This is the linear :class:`~odl.Operator` version of the default 'restriction'
-    used by all core discretization classes.
+    This is the linear :class:`~odl.Operator` version of the default
+    'restriction' used by all core discretization classes.
     """
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
@@ -275,7 +274,7 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an 
+            space. Its :attr:`~odl.Operator.domain` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
@@ -424,7 +423,7 @@ class NearestInterpolation(RawNearestInterpolation,
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an 
+            space. Its :attr:`~odl.Operator.domain` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
@@ -448,8 +447,9 @@ class NearestInterpolation(RawNearestInterpolation,
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> space = L2(rect, field=ComplexNumbers())
 
-        The grid is defined by uniform sampling (:attr:`~odl.TensorGrid.as_midp` 
-        indicates that the points will be cell midpoints instead of corners).
+        The grid is defined by uniform sampling
+        (:attr:`~odl.TensorGrid.as_midp` indicates that the points will
+        be cell midpoints instead of corners).
 
         >>> from odl import uniform_sampling, Cn
         >>> grid = uniform_sampling(rect, [4, 2], as_midp=True)
@@ -477,7 +477,7 @@ class NearestInterpolation(RawNearestInterpolation,
 
 
 class LinearInterpolation(FunctionSetMapping):
-    #TODO: this needs to be tested properly
+    # TODO: this needs to be tested properly
     """Linear interpolation interpolation as a linear :class:`~odl.Operator`."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
@@ -488,7 +488,7 @@ class LinearInterpolation(FunctionSetMapping):
         fspace : :class:`~odl.FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its :attr:`~odl.Operator.domain` must be an 
+            space. Its :attr:`~odl.Operator.domain` must be an
             :class:`~odl.IntervalProd`.
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
@@ -533,11 +533,11 @@ class LinearInterpolation(FunctionSetMapping):
         def func(*x):
             x = np.atleast_1d(x).squeeze()
             values = interpnd(points=self.grid.coord_vectors,
-                             values=inp.data.reshape(self.grid.shape,
-                                                     order=self.order),
-                             method='nearest',
-                             xi=x,
-                             fill_value=None)  # Allow points outside
+                              values=inp.data.reshape(self.grid.shape,
+                                                      order=self.order),
+                              method='nearest',
+                              xi=x,
+                              fill_value=None)  # Allow points outside
             return values[0] if values.shape == (1,) else values
 
         return self.range.element(func)

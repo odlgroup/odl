@@ -115,8 +115,8 @@ class FunctionSet(Set):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`FunctionSet` with same 
-            :attr:`FunctionSet.domain` and :attr:`FunctionSet.range`, 
+            `True` if ``other`` is a :class:`FunctionSet` with same
+            :attr:`FunctionSet.domain` and :attr:`FunctionSet.range`,
             `False` otherwise.
         """
         if other is self:
@@ -132,8 +132,8 @@ class FunctionSet(Set):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`FunctionSet.Vector` 
-            whose :attr:`FunctionSet.Vector.space` attribute 
+            `True` if ``other`` is a :class:`FunctionSet.Vector`
+            whose :attr:`FunctionSet.Vector.space` attribute
             equals this space, `False` otherwise.
         """
         return (isinstance(other, FunctionSet.Vector) and
@@ -190,8 +190,8 @@ class FunctionSet(Set):
             self._space = fset
             self._call = fcall
             self._apply = fapply
-            
-            #Todo: allow users to specify linear
+
+            # Todo: allow users to specify linear
             super().__init__(self.space.domain, self.space.range, linear=False)
 
         @property
@@ -235,8 +235,8 @@ class FunctionSet(Set):
 
             Raises
             ------
-            If ``out`` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
-            with ``out[0] in range``, a `TypeError` is raised.
+            If ``out`` is not a :attr:`FunctionSet.range` element or a
+            `numpy.ndarray` with ``out[0] in range``, a `TypeError` is raised.
             """
             if x in self.domain:
                 # single value list: f(0, 1, 2)
@@ -301,8 +301,8 @@ class FunctionSet(Set):
 
             Raises
             ------
-            If ``out`` is not a :attr:`FunctionSet.range` element or a `numpy.ndarray`
-            with ``out[0] in range``, a `TypeError` is raised.
+            If ``out`` is not a :attr:`FunctionSet.range` element or a
+            `numpy.ndarray` with ``out[0] in range``, a `TypeError` is raised.
             """
             if not (out in self.range or
                     (isinstance(out, np.ndarray) and
@@ -467,7 +467,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Notes
         -----
-        Since :class:`FunctionSpace._lincomb` is slow, 
+        Since :class:`FunctionSpace._lincomb` is slow,
         we implement this function directly.
         """
         def zero_(*_):
@@ -481,8 +481,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`FunctionSpace` with 
-            same :attr:`FunctionSet.domain` and :attr:`FunctionSet.range`, 
+            `True` if ``other`` is a :class:`FunctionSpace` with
+            same :attr:`FunctionSet.domain` and :attr:`FunctionSet.range`,
             `False` otherwise.
         """
         # TODO: equality also for FunctionSet instances?
@@ -541,7 +541,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             be provided.*
             """
             if not isinstance(fspace, FunctionSpace):
-                raise TypeError('function space {} not a :class:`FunctionSpace` '
+                raise TypeError('function space {} not a'
+                                ':class:`FunctionSpace` '
                                 'instance.'.format(fspace))
 
             super().__init__(fspace, fcall, fapply)

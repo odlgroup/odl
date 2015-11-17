@@ -65,7 +65,7 @@ class ForwardDiff2D(odl.Operator):
         super().__init__(space, odl.ProductSpace(space, space), linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_2d(rhs.ntuple.data, 
+        cuda.forward_diff_2d(rhs.ntuple.data,
                              out[0].ntuple.data, out[1].ntuple.data,
                              rhs.shape[0], rhs.shape[1])
 
@@ -82,7 +82,7 @@ class ForwardDiff2DAdjoint(odl.Operator):
         super().__init__(odl.ProductSpace(space, space), space, linear=True)
 
     def _apply(self, rhs, out):
-        cuda.forward_diff_2d_adj(rhs[0].ntuple.data, rhs[1].ntuple.data, 
+        cuda.forward_diff_2d_adj(rhs[0].ntuple.data, rhs[1].ntuple.data,
                                  out.ntuple.data,
                                  out.shape[0], out.shape[1])
 
@@ -108,6 +108,7 @@ def test_fwd_diff():
     assert all_almost_equal(diff.adjoint(fun), [0, -1, -3, 2, 1, 0])
     assert all_almost_equal(diff.adjoint(diff(fun)), [0, -3, 5, -1, 0, 0])
 
+
 @skip_if_no_cuda
 def test_square():
     # Continuous definition of problem
@@ -132,7 +133,7 @@ def test_square():
                              [0, 1, -1, 0, 0],
                              [0, 0, 0, 0, 0],
                              [0, 0, 0, 0, 0]])
-                             
+
     assert all_almost_equal(derivative[1].asarray(),
                             [[0, 0, 0, 0, 0],
                              [0, 0, 1, 0, 0],
@@ -149,6 +150,7 @@ def test_square():
                              [0, 1, -4, 1, 0],
                              [0, 0, 1, 0, 0],
                              [0, 0, 0, 0, 0]])
+
 
 @skip_if_no_cuda
 def test_rectangle():
@@ -197,4 +199,4 @@ def test_rectangle():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\','/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
