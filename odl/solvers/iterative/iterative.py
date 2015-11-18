@@ -110,7 +110,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     Parameters
     ----------
-    op : `Operator`
+    op : linera `Operator`
         Operator in the inverse problem. It must be linear and
         self-adjoint. This implies in particular that its domain and
         range are equal.
@@ -140,14 +140,19 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     Ap = op.domain.element()  # Extra storage for storing A x
 
     sqnorm_r_old = r.norm() ** 2  # Only recalculate norm after update
+    
+    if sqnorm_r_old == 0: # Return if no step forward
+        return
 
     for _ in range(niter):
         op(p, out=Ap)  # Ap = A p
 
-        alpha = sqnorm_r_old / p.inner(Ap)
+        pTAp = p.inner(Ap)
 
-        if alpha == 0.0:  # Return if residual is 0
+        if pTAp == 0.0:  # Return if step is 0
             return
+
+        alpha = sqnorm_r_old / pTAp
 
         x.lincomb(1, x, alpha, p)            # x = x + alpha*p
         r.lincomb(1, r, -alpha, Ap)           # r = r - alpha*p
@@ -158,7 +163,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         sqnorm_r_old = sqnorm_r_new
 
         p.lincomb(1, r, beta, p)                       # p = s + b * p
-
+        
         if partial is not None:
             partial.send(x)
 
