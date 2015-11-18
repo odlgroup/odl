@@ -66,8 +66,8 @@ def adjkernel(x, y):
 
 
 # Continuous definition of problem
-cont_space = odl.L2(odl.Rectangle([-1, -1], [1, 1]))
-kernel_space = odl.L2(cont_space.domain - cont_space.domain)
+cont_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
+kernel_space = odl.FunctionSpace(cont_space.domain - cont_space.domain)
 
 # Complicated functions to check performance
 cont_kernel = kernel_space.element(kernel)
@@ -79,8 +79,8 @@ npoints = np.array([n+1, n+1])
 npoints_kernel = np.array([2*n+1, 2*n+1])
 
 # Discretization spaces
-disc_space = odl.l2_uniform_discretization(cont_space, npoints)
-disc_kernel_space = odl.l2_uniform_discretization(
+disc_space = odl.uniform_discr(cont_space, npoints)
+disc_kernel_space = odl.uniform_discr(
     kernel_space, npoints_kernel)
 
 # Discretize the functions

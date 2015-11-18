@@ -16,7 +16,7 @@ odl.discr.discretization module
     :members:
     :undoc-members:
     :show-inheritance:
-    
+
 odl.discr.grid module
 ---------------------
 
@@ -24,11 +24,11 @@ odl.discr.grid module
     :members:
     :undoc-members:
     :show-inheritance:
-    
-odl.discr.l2_discr module
+
+odl.discr.lp_discr module
 -------------------------
 
-.. automodule:: odl.discr.l2_discr
+.. automodule:: odl.discr.lp_discr
     :members:
     :undoc-members:
     :show-inheritance:

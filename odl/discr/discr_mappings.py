@@ -28,7 +28,7 @@ from odl.util.utility import with_metaclass
 # External imports
 from abc import ABCMeta
 import numpy as np
-from scipy.interpolate import interpnd, RegularGridInterpolator
+from scipy.interpolate import interpnd
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 
 # ODL imports
@@ -61,7 +61,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points.
@@ -160,7 +160,7 @@ class RawGridCollocation(FunctionSetMapping):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
@@ -279,7 +279,7 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -310,7 +310,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
@@ -359,8 +359,9 @@ class RawNearestInterpolation(FunctionSetMapping):
         >>> from odl import FunctionSet
         >>> space = FunctionSet(rect, strings)
 
-        The grid is defined by uniform sampling (:attr:`~odl.TensorGrid.as_midp`
-        indicates that the points will be cell midpoints instead of corners).
+        The grid is defined by uniform sampling
+        (:attr:`~odl.TensorGrid.as_midp` indicates that the points will
+        be cell midpoints instead of corners).
 
         >>> from odl import uniform_sampling, Ntuples
         >>> grid = uniform_sampling(rect, [4, 2], as_midp=True)
@@ -413,7 +414,7 @@ class RawNearestInterpolation(FunctionSetMapping):
 class NearestInterpolation(RawNearestInterpolation,
                            FunctionSetMapping):
 
-    """Nearest neighbor interpolation as a linear :class:`~odl.Operator`."""
+    """Nearest neighbor interpolation as a linear operator."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new :class:`NearestInterpolation` instance.
@@ -428,7 +429,7 @@ class NearestInterpolation(RawNearestInterpolation,
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -440,12 +441,12 @@ class NearestInterpolation(RawNearestInterpolation,
 
         Examples
         --------
-        Let's define the `complex` function space :math:`L^2` on a
+        Let's define the complex function space :math:`L^2` on a
         rectangle:
 
-        >>> from odl import Rectangle, L2, ComplexNumbers
+        >>> from odl import Rectangle, FunctionSpace, ComplexNumbers
         >>> rect = Rectangle([0, 0], [1, 1])
-        >>> space = L2(rect, field=ComplexNumbers())
+        >>> space = FunctionSpace(rect, field=ComplexNumbers())
 
         The grid is defined by uniform sampling
         (:attr:`~odl.TensorGrid.as_midp` indicates that the points will
@@ -478,7 +479,7 @@ class NearestInterpolation(RawNearestInterpolation,
 
 class LinearInterpolation(FunctionSetMapping):
     # TODO: this needs to be tested properly
-    """Linear interpolation interpolation as a linear :class:`~odl.Operator`."""
+    """Linear interpolation interpolation as a linear operator."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new :class:`LinearInterpolation` instance.
@@ -493,7 +494,7 @@ class LinearInterpolation(FunctionSetMapping):
         grid :  :class:`~odl.TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -524,7 +525,7 @@ class LinearInterpolation(FunctionSetMapping):
 
         Examples
         --------
-        Let's define the `complex` function space :math:`L^2` on a
+        Let's define the complex function space :math:`L^2` on a
         rectangle:
 
         TODO: implement an example!

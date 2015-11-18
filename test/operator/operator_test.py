@@ -18,10 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
-from builtins import super
 standard_library.install_aliases()
+from builtins import str, super
 
 # External module imports
 import pytest
@@ -37,7 +36,7 @@ from odl.util.testutils import almost_equal, all_almost_equal
 
 
 class MultiplyAndSquareOp(Operator):
-    """Example of a nonlinear operator, Calculates (A*x)**2."""
+    """Example of a nonlinear operator, x --> (A*x)**2."""
 
     def __init__(self, matrix, domain=None, range=None):
         dom = (odl.Rn(matrix.shape[1])
@@ -186,6 +185,7 @@ def test_nonlinear_composition():
 
 
 class MultiplyOp(Operator):
+
     """Multiply with matrix.
     """
 
@@ -410,6 +410,7 @@ def test_type_errors():
 
 # FUNCTIONAL TEST
 class SumFunctional(Operator):
+
     """ Sum of elements
     """
 
@@ -425,6 +426,7 @@ class SumFunctional(Operator):
 
 
 class ConstantVector(Operator):
+
     """ Vector times a scalar
     """
 
@@ -603,6 +605,7 @@ def test_functional_composition():
 
 
 class SumSquaredFunctional(Operator):
+
     """Sum of the squared elements
     """
 

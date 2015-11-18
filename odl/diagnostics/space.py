@@ -15,10 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+
+# External
+from copy import copy, deepcopy
+
+# Internal
 from odl.set.sets import Set
 from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
-from copy import copy, deepcopy
 
 __all__ = ('SpaceTest',)
 
@@ -42,6 +51,7 @@ def _apprimately_equal(x, y, eps):
 
 
 class SpaceTest(object):
+
     """ Automated tests for :class:`~odl.LinearSpace`'s
 
     This class allows users to automatically test various
@@ -245,9 +255,7 @@ class SpaceTest(object):
         print('\nAliased input in lincomb')
 
         with FailCounter() as counter:
-            for [n_x, x_in], [n_y, y] in samples(self.space,
-                                                 self.space):
-
+            for [n_x, x_in], [n_y, y] in samples(self.space, self.space):
                 x = x_in.copy()
                 x.lincomb(1, x, 1, y)
                 ok = _apprimately_equal(x, x_in + y, self.eps)

@@ -32,6 +32,7 @@ from odl.util.testutils import all_almost_equal
 
 
 class ResidualOp(odl.Operator):
+
     """Calculate op(x) - rhs."""
 
     def __init__(self, op, rhs):
@@ -58,6 +59,7 @@ def rosenbrock_function(x):
 
 
 class RosenbrockDerivOp(odl.Operator):
+
     def __init__(self):
         dom = ran = odl.Rn(2)
         super().__init__(domain=dom, range=ran)
@@ -84,7 +86,7 @@ def test_newton_solver_quadratic():
     n = H.shape[0]
     rn = odl.Rn(n)
     xvec = rn.element(1)
-    c = rn.element([2,4,3])
+    c = rn.element([2, 4, 3])
 
     # Optimal solution, found by solving 0 = gradf(x) = Hx + c
     x_opt = np.linalg.solve(H, -c)

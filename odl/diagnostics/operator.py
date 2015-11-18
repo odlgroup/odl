@@ -15,8 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+
+# External
 import numpy as np
 
+# Internal
 from odl.diagnostics.examples import vector_examples, samples
 from odl.util.testutils import FailCounter
 

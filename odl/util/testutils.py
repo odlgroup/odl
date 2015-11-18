@@ -19,20 +19,17 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object
 from future import standard_library
 standard_library.install_aliases()
+from builtins import int, object, str
 
-# External module imports
+# External
 # pylint: disable=no-name-in-module
+from itertools import zip_longest
+import numpy as np
 from numpy import ravel_multi_index, prod
-try:
-    from itertools import zip_longest
-except ImportError:
-    zip_longest = None
 import sys
 from time import time
-import numpy as np
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
@@ -40,15 +37,8 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
 
 def _places(a, b, default=5):
 
-    try:
-        dtype1 = a.dtype
-    except AttributeError:
-        dtype1 = None
-
-    try:
-        dtype2 = b.dtype
-    except AttributeError:
-        dtype2 = None
+    dtype1 = getattr(a, 'dtype', object)
+    dtype2 = getattr(b, 'dtype', object)
 
     if any(dtype in [np.float32, np.complex64] for dtype in [dtype1, dtype2]):
         return 3
@@ -60,9 +50,14 @@ def almost_equal(a, b, places=None):
     if a is None and b is None:
         return True
 
+    if places is None:
+        places = _places(a, b)
+
+    eps = 10 ** -places
+
     try:
-        a = complex(a)
-        b = complex(b)
+        complex(a)
+        complex(b)
     except TypeError:
         return False
 
@@ -71,11 +66,6 @@ def almost_equal(a, b, places=None):
 
     if np.isinf(a) and np.isinf(b):
         return a == b
-
-    if places is None:
-        places = _places(a, b)
-
-    eps = 10 ** -places
 
     if abs(complex(b)) < eps:
         return abs(complex(a) - complex(b)) < eps
@@ -325,7 +315,7 @@ class ProgressRange(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.current < self.n:
             val = self.current
             self.current += 1

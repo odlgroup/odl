@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range, zip
+
 import warnings
 import numpy as np
 from itertools import product
@@ -23,7 +29,7 @@ from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.set.pspace import ProductSpace
 from odl.space.base_ntuples import FnBase
-from odl.discr.l2_discr import DiscreteL2
+from odl.discr.lp_discr import DiscreteLp
 
 
 __all__ = ('scalar_examples', 'vector_examples', 'samples')
@@ -81,7 +87,7 @@ def vector_examples(space):
             vector = space.element([vec for _, vec in examples])
             yield (name, space.element(vector))
 
-    elif isinstance(space, DiscreteL2):
+    elif isinstance(space, DiscreteLp):
         uspace = space.uspace
 
         # Get the points and calculate some statistics on them

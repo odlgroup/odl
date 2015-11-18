@@ -15,9 +15,12 @@ exclude_lines =
     pragma: no cover
 
     # Don't complain about missing debug-only code:
+    if self\.debug
+
+    # Printing-related functions
     def __str__
     def __repr__
-    if self\.debug
+    def _repr
 
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError

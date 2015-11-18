@@ -200,6 +200,7 @@ class ConstantLineSearch(LineSearch):
 
 
 class BarzilaiBorweinStep(object):
+
     """Barzilai-Borwein method to compute a step length.
 
     Barzilai-Borwein method to compute a step length

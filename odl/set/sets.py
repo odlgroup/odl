@@ -41,18 +41,19 @@ class Set(with_metaclass(ABCMeta, object)):
     """An abstract set.
 
     **Abstract Methods**
-    Each subclass of :class:`Set` must implement two methods: one to check if
-    an object is contained in the set and one to test if two sets are
-    equal.
 
-    ``__contains__(self, other)``
+    Each subclass of :class:`Set` must implement two methods: one to
+    check if an object is contained in the set and one to test if two
+    sets are equal.
 
-    Test if ``other`` is a member of this set. This function provides the
-    operator overload for `in`.
+    **Membership test:** ``__contains__(self, other)``
+
+    Test if ``other`` is a member of this set. This function provides
+    the operator overload for `in`.
 
     **Parameters:**
         other : `object`
-            The object to be tested for membership.
+            The object to be tested for membership
 
     **Returns:**
         contains : `bool`
@@ -60,7 +61,7 @@ class Set(with_metaclass(ABCMeta, object)):
             otherwise.
 
 
-    ``__eq__(self, other)``
+    **Equality test:** ``__eq__(self, other)``
 
     Test if ``other`` is the same set as this set, i.e. both sets are
     of the same type and contain the same elements. This function
@@ -78,18 +79,18 @@ class Set(with_metaclass(ABCMeta, object)):
     A default implementation of the operator overload for ``!=`` via
     ``__ne__(self, other)`` is provided as ``not self.__eq__(other)``.
 
-    optional: ``element(inp=None)``
+    **Element creation (optional)**: ``element(self, inp=None)``
 
     Create an element of this set, either from scratch or from an
     input parameter.
 
     **Parameters:**
         inp : `object`, optional
-            The object from which to create the new element.
+            The object from which to create the new element
 
     **Returns:**
         element : member of this set
-            If ``inp == None``, return an arbitrary element.
+            If ``inp`` is `None`, return an arbitrary element.
             Otherwise, return the element created from ``inp``.
     """
 
@@ -125,7 +126,7 @@ class EmptySet(Set):
     """The empty set.
 
     `None` is considered as "no element", i.e.
-    ``None in EmptySet() is True``
+    ``None in EmptySet()`` is `True`
     """
 
     def __contains__(self, other):
@@ -210,7 +211,10 @@ class Strings(Set):
         return self._length
 
     def __contains__(self, other):
-        """Test if ``other`` is a string of at max :attr:`length` characters."""
+        """``s.__constains__(other) <==> other in s``.
+
+        `True` if ``other`` is a string of at max :attr:`length`
+        characters, `False` otherwise."""
         return isinstance(other, str) and len(other) <= self.length
 
     def __eq__(self, other):
@@ -237,32 +241,31 @@ class Field(with_metaclass(ABCMeta, Set)):
     """Any set that satisfies the field axioms
 
     For example :class:`RealNumbers`, :class:`ComplexNumbers` or
-    the finite field F2
+    the finite field :math:`F_2`.
     """
 
     @property
     def field(self):
-        """ The field of scalars for a field is itself
-        """
+        """The field of scalars for a field is itself."""
         return self
 
 
 class ComplexNumbers(Field):
 
-    """The set of `complex` numbers."""
+    """The set of complex numbers."""
 
     def __contains__(self, other):
-        """Test if ``other`` is a `complex` number."""
+        """Test if ``other`` is a complex number."""
         return isinstance(other, Complex)
 
     def contains_set(self, other):
-        """Test if ``other`` is a subset of the `complex` numbers
+        """Test if ``other`` is a subset of the complex numbers
 
         Returns
         -------
         contained : `bool`
-            True if  other is a :class::class:`ComplexNumbers`,
-            :class:`RealNumbers` or :class:`Integers`, false else.
+            `True` if  other is :class:`ComplexNumbers`,
+            :class:`RealNumbers` or :class:`Integers`, `False` else.
 
         Examples
         --------
@@ -285,7 +288,7 @@ class ComplexNumbers(Field):
         return isinstance(other, ComplexNumbers)
 
     def element(self, inp=None):
-        """Return a `complex` number from ``inp`` or from scratch."""
+        """Return a complex number from ``inp`` or from scratch."""
         if inp is not None:
             return complex(inp)
         else:
@@ -313,8 +316,8 @@ class RealNumbers(Field):
         Returns
         -------
         contained : `bool`
-            `True` if other is a :class:`RealNumbers` or :class:`Integers`
-            `False` else.
+            `True` if other is :class:`RealNumbers` or
+            :class:`Integers` `False` else.
 
         Examples
         --------
@@ -357,7 +360,6 @@ class Integers(Set):
 
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``."""
-
         if other is self:
             return True
 
@@ -447,8 +449,8 @@ class CartesianProduct(Set):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`CartesianProduct` instance, has
-            the same length as this Cartesian product and all sets
+            `True` if ``other`` is a :class:`CartesianProduct` instance,
+            has the same length as this Cartesian product and all sets
             with the same index are equal, `False` otherwise.
         """
         return (isinstance(other, CartesianProduct) and
@@ -462,7 +464,7 @@ class CartesianProduct(Set):
         ----------
         inp : `iterable`, optional
             Collection of input values for the
-            :meth:`~odl.set.space.LinearSpace.element()` methods
+            :meth:`~odl.set.space.LinearSpace.element` methods
             of all sets in the Cartesian product.
         """
         if inp is None:

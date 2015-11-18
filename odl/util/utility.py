@@ -94,18 +94,27 @@ if __name__ == '__main__':
     doctest.testmod()
 
 
+def is_scalar_dtype(dtype):
+    """Whether a datatype is scalar or not."""
+    return np.issubsctype(dtype, np.number)
+
+
 def is_real_dtype(dtype):
-    """Whether a datatype is real or not."""
-    return np.isrealobj(np.empty(0, dtype=dtype))
+    """Whether a datatype is real (including integer) or not."""
+    return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
-def is_complex_dtype(dtype):
-    """Whether a datatype is complex or not."""
-    return np.iscomplexobj(np.empty(0, dtype=dtype))
+def is_real_floating_dtype(dtype):
+    """Whether a NumPy datatype is real complex-floating or not."""
+    return np.issubsctype(dtype, np.floating)
+
+
+def is_complex_floating_dtype(dtype):
+    """Whether a NumPy datatype is complex floating-point or not."""
+    return np.issubsctype(dtype, np.complexfloating)
 
 
 def with_metaclass(meta, *bases):
-
     """
     Function from jinja2/_compat.py. License: BSD.
 
