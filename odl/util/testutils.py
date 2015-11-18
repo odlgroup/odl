@@ -37,15 +37,8 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
 
 def _places(a, b, default=5):
 
-    try:
-        dtype1 = a.dtype
-    except AttributeError:
-        dtype1 = None
-
-    try:
-        dtype2 = b.dtype
-    except AttributeError:
-        dtype2 = None
+    dtype1 = getattr(a, 'dtype', object)
+    dtype2 = getattr(b, 'dtype', object)
 
     if any(dtype in [np.float32, np.complex64] for dtype in [dtype1, dtype2]):
         return 3
@@ -57,9 +50,14 @@ def almost_equal(a, b, places=None):
     if a is None and b is None:
         return True
 
+    if places is None:
+        places = _places(a, b)
+
+    eps = 10 ** -places
+
     try:
-        a = complex(a)
-        b = complex(b)
+        complex(a)
+        complex(b)
     except TypeError:
         return False
 
@@ -68,11 +66,6 @@ def almost_equal(a, b, places=None):
 
     if np.isinf(a) and np.isinf(b):
         return a == b
-
-    if places is None:
-        places = _places(a, b)
-
-    eps = 10 ** -places
 
     if abs(complex(b)) < eps:
         return abs(complex(a) - complex(b)) < eps
