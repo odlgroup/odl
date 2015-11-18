@@ -140,8 +140,8 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     Ap = op.domain.element()  # Extra storage for storing A x
 
     sqnorm_r_old = r.norm() ** 2  # Only recalculate norm after update
-    
-    if sqnorm_r_old == 0: # Return if no step forward
+
+    if sqnorm_r_old == 0:  # Return if no step forward
         return
 
     for _ in range(niter):
@@ -163,7 +163,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         sqnorm_r_old = sqnorm_r_new
 
         p.lincomb(1, r, beta, p)                       # p = s + b * p
-        
+
         if partial is not None:
             partial.send(x)
 
