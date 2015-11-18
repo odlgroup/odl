@@ -50,7 +50,7 @@ This way, a link to your working directory is installed in your Python installat
 After installing, you should check that everything was installed properly by running
 
 ```sh
-user$ python run_tests.py
+user$ py.test
 ```
 
 ##### CUDA

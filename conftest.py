@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -25,4 +25,4 @@ from odl import CUDA_AVAILABLE
 collect_ignore = ['setup.py', 'run_tests.py']
 if not CUDA_AVAILABLE:
     collect_ignore.append('odl/space/cu_ntuples.py')
-    collect_ignore.append('test/space/cu_ntuples_test.py')
+    #collect_ignore.append('test/space/cu_ntuples_test.py')

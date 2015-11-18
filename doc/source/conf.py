@@ -14,7 +14,6 @@
 
 import sys
 import os
-import shlex
 import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
@@ -22,6 +21,8 @@ import sphinx_rtd_theme
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # Mock modules for Read The Docs to enable autodoc
+
+
 def mock_modules(modules):
     if sys.version_info < (3, 3):
         from mock import Mock as MagicMock
@@ -29,6 +30,7 @@ def mock_modules(modules):
         from unittest.mock import MagicMock
 
     class Mock(MagicMock):
+
         @classmethod
         def __getattr__(cls, name):
             return Mock()
@@ -43,7 +45,7 @@ if on_rtd:
                   'scipy.interpolate.interpnd',
                   'odlpp', 'odlpp.odlpp_cuda'])
 
-#add numpydoc folder
+# add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -58,16 +60,18 @@ extensions = [
 ]
 
 if not on_rtd:
-    #TODO: fix this once RTD updates their intersphinx version
+    # TODO: fix this once RTD updates their intersphinx version
     extensions += ['sphinx.ext.intersphinx']
 
-    #Intersphinx to get numpy targets
-    intersphinx_mapping = {'python': ('http://python.readthedocs.org/en/latest/', None),
-                           'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
-                           'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-                           'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
+    # Intersphinx to get numpy targets
+    intersphinx_mapping = {
+        'python': ('http://python.readthedocs.org/en/latest/', None),
+        'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
+        'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+        'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
 
-#Stop autodoc from skipping __init__
+# Stop autodoc from skipping __init__
+
 def skip(app, what, name, obj, skip, options):
     if (name.startswith('__') and name.endswith('__') and
         name not in ['__abstractmethods__',
@@ -85,10 +89,11 @@ def skip(app, what, name, obj, skip, options):
         return False
     return skip
 
+
 def setup(app):
     app.connect("autodoc-skip-member", skip)
 
-#Stops WARNING: toctree contains reference to nonexisting document
+# Stops WARNING: toctree contains reference to nonexisting document
 numpydoc_show_class_members = False
 
 # Set order to mirror source
@@ -142,14 +147,14 @@ todo_include_todos = False
 
 # Warn on dead links
 nitpicky = True
-nitpick_ignore = [('py:class','future.types.newobject.newobject'),
-                  ('py:class','odl.set.space.Vector'),
-                  ('py:class','odl.discr.discretization.Vector'),
-                  ('py:class','odl.discr.lp_discr.Vector'),
-                  ('py:class','odl.space.base_ntuples.Vector'),
-                  ('py:class','odl.space.ntuples.Vector'),
-                  ('py:class','odl.space.cu_ntuples.Vector'),
-                  ('py:class','odl.space.fspace.Vector')]
+nitpick_ignore = [('py:class', 'future.types.newobject.newobject'),
+                  ('py:class', 'odl.set.space.Vector'),
+                  ('py:class', 'odl.discr.discretization.Vector'),
+                  ('py:class', 'odl.discr.l2_discr.Vector'),
+                  ('py:class', 'odl.space.base_ntuples.Vector'),
+                  ('py:class', 'odl.space.ntuples.Vector'),
+                  ('py:class', 'odl.space.cu_ntuples.Vector'),
+                  ('py:class', 'odl.space.fspace.Vector')]
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -165,12 +170,12 @@ html_short_title = 'odl'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+# html_logo = None
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+# html_favicon = None
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'odldoc'
@@ -178,46 +183,46 @@ htmlhelp_basename = 'odldoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 
-# Latex figure (float) alignment
-#'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'odl.tex', u'odl Documentation',
-   u'Jonas Adler, Holger Kohr & Ozan Öktem', 'manual'),
+    (master_doc, 'odl.tex', u'odl Documentation',
+     u'Jonas Adler, Holger Kohr & Ozan Öktem', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-#latex_logo = None
+# latex_logo = None
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
-#latex_use_parts = False
+# latex_use_parts = False
 
 # If true, show page references after internal links.
-#latex_show_pagerefs = False
+# latex_show_pagerefs = False
 
 # If true, show URL addresses after external links.
-#latex_show_urls = False
+# latex_show_urls = False
 
 # Documents to append as an appendix to all manuals.
-#latex_appendices = []
+# latex_appendices = []
 
 # If false, no module index is generated.
-#latex_domain_indices = True
+# latex_domain_indices = True
 
 
 # -- Options for manual page output ---------------------------------------
@@ -230,7 +235,7 @@ man_pages = [
 ]
 
 # If true, show URL addresses after external links.
-#man_show_urls = False
+# man_show_urls = False
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -239,19 +244,19 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'odl', u'odl Documentation',
-   author, 'odl', 'One line description of project.',
-   'Miscellaneous'),
+    (master_doc, 'odl', u'odl Documentation',
+     author, 'odl', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
-#texinfo_appendices = []
+# texinfo_appendices = []
 
 # If false, no module index is generated.
-#texinfo_domain_indices = True
+# texinfo_domain_indices = True
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
-#texinfo_show_urls = 'footnote'
+# texinfo_show_urls = 'footnote'
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
-#texinfo_no_detailmenu = False
+# texinfo_no_detailmenu = False

@@ -1695,6 +1695,7 @@ except (MemoryError, RuntimeError, TypeError) as err:
     print(err)
     print('Your GPU seems to be misconfigured. Skipping '
           'CUDA-dependent modules.')
+    CUDA_AVAILABLE = False
 
 
 if __name__ == '__main__':

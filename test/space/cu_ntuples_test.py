@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -24,10 +24,8 @@ from builtins import range, str
 
 # External module imports
 import pytest
-from math import ceil
 import numpy as np
 from numpy import float64
-import scipy as sp
 
 # ODL imports
 import odl
@@ -77,35 +75,6 @@ def _vectors(fn, n=1):
 def _pos_array(fn):
     """Create an array with positive real entries as weight in `fn`."""
     return np.abs(_array(fn)) + 0.1
-
-
-def _sparse_matrix(fn):
-    """Create a sparse positive definite Hermitian matrix for `fn`."""
-    nnz = np.random.randint(0, int(ceil(fn.size ** 2 / 2)))
-    coo_r = np.random.randint(0, fn.size, size=nnz)
-    coo_c = np.random.randint(0, fn.size, size=nnz)
-    if np.issubdtype(fn.dtype, np.floating):
-        values = np.random.rand(nnz).astype(fn.dtype)
-    elif np.issubdtype(fn.dtype, np.integer):
-        values = np.random.randint(0, 10, nnz).astype(fn.dtype)
-    elif np.issubdtype(fn.dtype, np.complexfloating):
-        values = (np.random.rand(nnz) +
-                  1j * np.random.rand(nnz)).astype(fn.dtype)
-    else:
-        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
-    mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
-                               shape=(fn.size, fn.size),
-                               dtype=fn.dtype)
-    # Make symmetric and positive definite
-    return mat + mat.conj().T + fn.size * sp.sparse.eye(fn.size,
-                                                        dtype=fn.dtype)
-
-
-def _dense_matrix(fn):
-    """Create a dense positive definite Hermitian matrix for `fn`."""
-    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=fn.dtype)
-    # Make symmetric and positive definite
-    return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
 
 
 # Pytest fixtures
@@ -197,7 +166,7 @@ def test_element(fn):
     x = fn.element()
     assert x in fn
 
-    y = fn.element(inp=[0]*fn.size)
+    y = fn.element(inp=[0] * fn.size)
     assert y in fn
 
     z = fn.element(data_ptr=y.data_ptr)
@@ -207,13 +176,16 @@ def test_element(fn):
     z2 = fn.element(z)
     assert z2 in fn
 
+    w = fn.element(inp=np.zeros(fn.size, fn.dtype))
+    assert w in fn
+
     with pytest.raises(ValueError):
-        fn.element(inp=[0]*fn.size, data_ptr=y.data_ptr)
+        fn.element(inp=[0] * fn.size, data_ptr=y.data_ptr)
 
 
 @skip_if_no_cuda
 def test_zero(fn):
-    assert all_almost_equal(fn.zero(), [0]*fn.size)
+    assert all_almost_equal(fn.zero(), [0] * fn.size)
 
 
 @skip_if_no_cuda
@@ -608,6 +580,7 @@ def _test_binary_operator(spc, function):
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 
+@skip_if_no_cuda
 def test_operators(fn):
     # Test of all operator overloads against the corresponding
     # Numpy implementation
@@ -621,14 +594,14 @@ def test_operators(fn):
         def imul(x):
             x *= scalar
         _test_unary_operator(fn, imul)
-        _test_unary_operator(fn, lambda x: x*scalar)
+        _test_unary_operator(fn, lambda x: x * scalar)
 
     # Scalar division
     for scalar in [-31.2, -1, 1, 2.13]:
         def idiv(x):
             x /= scalar
         _test_unary_operator(fn, idiv)
-        _test_unary_operator(fn, lambda x: x/scalar)
+        _test_unary_operator(fn, lambda x: x / scalar)
 
     # Incremental operations
     def iadd(x, y):
@@ -761,7 +734,7 @@ def test_offset_sub_vector():
     r3 = odl.CudaRn(3)
     xd = r6.element([1, 2, 3, 4, 5, 6])
 
-    yd = r3.element(data_ptr=xd.data_ptr+3*xd.space.dtype.itemsize)
+    yd = r3.element(data_ptr=xd.data_ptr + 3 * xd.space.dtype.itemsize)
     yd[:] = [7, 8, 9]
 
     assert all_equal([1, 2, 3, 7, 8, 9], xd)
@@ -788,6 +761,7 @@ def test_dtypes():
         yield _test_dtype, dt
 
 
+@skip_if_no_cuda
 def _test_ufunc(ufunc):
     r3 = odl.CudaRn(5)
     x_host = [-1.0, 0, 0.1, 0.3, 10.0]

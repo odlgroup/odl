@@ -31,10 +31,6 @@ from odl.set.domain import IntervalProd, Interval, Rectangle, Cuboid
 from odl.util.testutils import almost_equal, all_equal
 
 
-# TODO:
-# - Interval arithmetics
-
-
 def random_point(set_):
     if isinstance(set_, IntervalProd):
         return np.random.rand(set_.ndim) * (set_.end - set_.begin) + set_.begin

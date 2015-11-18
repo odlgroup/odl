@@ -288,6 +288,10 @@ class Ntuples(NtuplesBase):
         def copy(self):
             """Create an identical (deep) copy of this vector.
 
+            Parameters
+            ----------
+            None
+
             Returns
             -------
             copy : :class:`Ntuples.Vector`

@@ -31,14 +31,12 @@ import odl
 from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult,
                  FunctionalLeftVectorMult,
-                 OperatorLeftVectorMult, OperatorRightVectorMult)
+                 OperatorRightVectorMult)
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
 class MultiplyAndSquareOp(Operator):
-
-    """ Example of a nonlinear operator, Calculates (A*x)**2
-    """
+    """Example of a nonlinear operator, x --> (A*x)**2."""
 
     def __init__(self, matrix, domain=None, range=None):
         dom = (odl.Rn(matrix.shape[1])
@@ -54,7 +52,7 @@ class MultiplyAndSquareOp(Operator):
         out.data[:] **= 2
 
     def __str__(self):
-        return "MaS: " + str(self.matrix) + "**2"
+        return "MaS: " + str(self.matrix) + " ** 2"
 
 
 def mult_sq_np(A, x):
