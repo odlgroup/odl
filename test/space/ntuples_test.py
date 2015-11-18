@@ -31,7 +31,6 @@ import scipy as sp
 # ODL imports
 from odl import Ntuples, Fn, Rn, Cn
 from odl.operator.operator import Operator
-from odl.set.sets import ComplexNumbers
 from odl.space.ntuples import (
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting, FnNoWeighting,
     FnCustomInnerProduct, FnCustomNorm, FnCustomDist,
@@ -53,9 +52,11 @@ def _array(fn):
         return np.random.rand(fn.size).astype(fn.dtype)
     elif np.issubdtype(fn.dtype, np.integer):
         return np.random.randint(0, 10, fn.size).astype(fn.dtype)
-    else:
+    elif np.issubdtype(fn.dtype, np.complexfloating):
         return (np.random.rand(fn.size) +
                 1j * np.random.rand(fn.size)).astype(fn.dtype)
+    else:
+        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
 
 
 def _element(fn):
@@ -84,9 +85,15 @@ def _sparse_matrix(fn):
     nnz = np.random.randint(0, int(ceil(fn.size ** 2 / 2)))
     coo_r = np.random.randint(0, fn.size, size=nnz)
     coo_c = np.random.randint(0, fn.size, size=nnz)
-    values = np.random.rand(nnz).astype(fn.dtype)
-    if fn.field == ComplexNumbers():
-        values += 1j * np.random.rand(nnz).astype(fn.dtype)
+    if np.issubdtype(fn.dtype, np.floating):
+        values = np.random.rand(nnz).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.integer):
+        values = np.random.randint(0, 10, nnz).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.complexfloating):
+        values = (np.random.rand(nnz) +
+                  1j * np.random.rand(nnz)).astype(fn.dtype)
+    else:
+        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
     mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
                                shape=(fn.size, fn.size),
                                dtype=fn.dtype)

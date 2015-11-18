@@ -31,7 +31,6 @@ import scipy as sp
 
 # ODL imports
 import odl
-from odl import ComplexNumbers
 from odl.space.ntuples import FnConstWeighting
 if odl.CUDA_AVAILABLE:
     from odl.space.cu_ntuples import (
@@ -82,12 +81,18 @@ def _pos_array(fn):
 
 def _sparse_matrix(fn):
     """Create a sparse positive definite Hermitian matrix for `fn`."""
-    nnz = np.random.randint(0, int(ceil(fn.size**2/2)))
+    nnz = np.random.randint(0, int(ceil(fn.size ** 2 / 2)))
     coo_r = np.random.randint(0, fn.size, size=nnz)
     coo_c = np.random.randint(0, fn.size, size=nnz)
-    values = np.random.rand(nnz).astype(fn.dtype)
-    if fn.field == ComplexNumbers():
-        values += 1j * np.random.rand(nnz).astype(fn.dtype)
+    if np.issubdtype(fn.dtype, np.floating):
+        values = np.random.rand(nnz).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.integer):
+        values = np.random.randint(0, 10, nnz).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.complexfloating):
+        values = (np.random.rand(nnz) +
+                  1j * np.random.rand(nnz)).astype(fn.dtype)
+    else:
+        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
     mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
                                shape=(fn.size, fn.size),
                                dtype=fn.dtype)
