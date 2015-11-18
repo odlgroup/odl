@@ -134,7 +134,7 @@ In more detail
 #. Check what the actual changes are with ``git diff`` (`git diff`_).
 #. Add any new files to version control ``git add new_file_name`` (see
    `git add`_).
-#. To commit all modified files into the local copy of your repo,, do
+#. To commit all modified files into the local copy of your repo, do
    ``git commit -am 'A commit message'``.  Note the ``-am`` options to
    ``commit``. The ``m`` flag just signals that you're going to type a
    message on the command line.  The ``a`` flag |emdash| you can just take on
@@ -143,6 +143,30 @@ In more detail
    page might also be useful.
 #. To push the changes up to your forked repo on github, do a ``git
    push`` (see `git push`_).
+
+The commit message
+------------------
+Bear in mind that the commit message will be part of the history of the repository,
+shown by typing ``git log``, so good messages will make the history searchable.
+Don't see the commit message as an annoyance, but rather as an important part of
+your contribution.
+
+We appreciate if you follow the following style:
+
+#. Start your commit with an `acronym`_, e.g., ``BUG``, ``TST`` or ``STY`` to
+   indicate what kind of modification you make.
+#. Write a one-line summary of your modification no longer than 50 characters.
+   If you have a hard time summarizing you changes, maybe you need to split up
+   the commit into parts.
+   
+   Use imperative style, i.e. write ``add super feature`` or ``fix horrific bug``
+   rather than ``added, fixed ...``. This saves two characters for something else.
+
+   Don't use markdown. You can refer to issues by writing ``#12``. You can even
+   close an issue by writing ``closes #12``, but do that only if you are sure.
+#. (optional) Write an extended summary. Describe why these changes are
+   necessary and what the new code does better than the old one. You can use
+   markdown here, i.e. create lists, tables, ...
 
 Ask for your changes to be reviewed or merged
 =============================================
