@@ -84,7 +84,7 @@ def test_newton_solver_quadratic():
     n = H.shape[0]
     rn = odl.Rn(n)
     xvec = rn.element(1)
-    c = rn.element(np.random.rand(n))
+    c = rn.element([2,4,3])
 
     # Optimal solution, found by solving 0 = gradf(x) = Hx + c
     x_opt = np.linalg.solve(H, -c)
