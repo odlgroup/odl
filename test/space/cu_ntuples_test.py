@@ -196,7 +196,7 @@ def test_zero(fn):
 
 @skip_if_no_cuda
 def test_one(fn):
-    assert all_almost_equal(fn.one(), [1]*fn.size)
+    assert all_almost_equal(fn.one(), [1] * fn.size)
 
 
 @skip_if_no_cuda
@@ -809,7 +809,7 @@ def test_const_equals(exponent):
     weighting = CudaFnConstWeighting(constant, exponent=exponent)
     weighting2 = CudaFnConstWeighting(constant, exponent=exponent)
     other_weighting = CudaFnConstWeighting(2.5, exponent=exponent)
-    wrong_exp = FnConstWeighting(constant, exponent=exponent+1)
+    wrong_exp = FnConstWeighting(constant, exponent=exponent + 1)
 
     assert weighting == weighting
     assert weighting == weighting2
@@ -839,7 +839,7 @@ def test_const_norm(exponent):
     constant = 1.5
     weighting = CudaFnConstWeighting(constant, exponent=exponent)
 
-    factor = 1 if exponent == float('inf') else constant**(1/exponent)
+    factor = 1 if exponent == float('inf') else constant ** (1 / exponent)
     true_norm = factor * np.linalg.norm(xarr, ord=exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
@@ -867,8 +867,8 @@ def test_const_dist(exponent):
     constant = 1.5
     weighting = CudaFnConstWeighting(constant, exponent=exponent)
 
-    factor = 1 if exponent == float('inf') else constant**(1/exponent)
-    true_dist = factor * np.linalg.norm(xarr-yarr, ord=exponent)
+    factor = 1 if exponent == float('inf') else constant ** (1 / exponent)
+    true_dist = factor * np.linalg.norm(xarr - yarr, ord=exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
         # Not yet implemented, should raise
@@ -990,7 +990,7 @@ def test_vector_norm(exponent):
     if exponent in (1.0, float('inf')):
         true_norm = np.linalg.norm(weight_vec * xarr, ord=exponent)
     else:
-        true_norm = np.linalg.norm(weight_vec**(1/exponent) * xarr,
+        true_norm = np.linalg.norm(weight_vec ** (1 / exponent) * xarr,
                                    ord=exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
@@ -1030,9 +1030,9 @@ def test_vector_dist(exponent):
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
 
     if exponent in (1.0, float('inf')):
-        true_dist = np.linalg.norm(weight_vec * (xarr-yarr), ord=exponent)
+        true_dist = np.linalg.norm(weight_vec * (xarr - yarr), ord=exponent)
     else:
-        true_dist = np.linalg.norm(weight_vec**(1/exponent) * (xarr-yarr),
+        true_dist = np.linalg.norm(weight_vec ** (1 / exponent) * (xarr - yarr),
                                    ord=exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
@@ -1082,7 +1082,7 @@ def test_custom_inner(fn):
     true_norm = np.linalg.norm(xarr)
     assert almost_equal(w.norm(x), true_norm)
 
-    true_dist = np.linalg.norm(xarr-yarr)
+    true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
     assert almost_equal(w_d.dist(x, y), true_dist)
@@ -1114,7 +1114,7 @@ def test_custom_norm(fn):
     true_norm = np.linalg.norm(xarr)
     assert almost_equal(w.norm(x), true_norm)
 
-    true_dist = np.linalg.norm(xarr-yarr)
+    true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
 
@@ -1126,10 +1126,10 @@ def test_custom_dist(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
     def dist(x, y):
-        return np.linalg.norm(x-y)
+        return np.linalg.norm(x - y)
 
     def other_dist(x, y):
-        return np.linalg.norm(x-y, ord=1)
+        return np.linalg.norm(x - y, ord=1)
 
     w = CudaFnCustomDist(dist)
     w_same = CudaFnCustomDist(dist)
@@ -1145,7 +1145,7 @@ def test_custom_dist(fn):
     with pytest.raises(NotImplementedError):
         w.norm(x)
 
-    true_dist = np.linalg.norm(xarr-yarr)
+    true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
     assert almost_equal(w.dist(x, x), 0)
 
