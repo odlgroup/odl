@@ -143,6 +143,7 @@ def test_init_cudantuples_bad_dtype():
         odl.CudaNtuples(3, dtype=np.matrix)
 
 
+@skip_if_no_cuda
 def test_init_spacefuncs(exponent):
     const = 1.5
     weight_vec = _pos_array(odl.CudaRn(3))
@@ -343,6 +344,7 @@ def test_getslice_index_error():
         xd[10:13]
 
 
+@skip_if_no_cuda
 def _test_setslice(slice):
     # Validate set against python list behaviour
     r6 = odl.CudaRn(6)
@@ -494,6 +496,7 @@ def test_lincomb(fn):
             _test_lincomb(fn, a, b)
 
 
+@skip_if_no_cuda
 def _test_member_lincomb(spc, a):
     # Validates vector member lincomb against the result on host
 
@@ -563,6 +566,7 @@ def test_member_multiply():
     assert all_almost_equal(y_device, y_host)
 
 
+@skip_if_no_cuda
 def _test_unary_operator(spc, function):
     # Verify that the statement y=function(x) gives equivalent
     # results to Numpy.
@@ -574,6 +578,7 @@ def _test_unary_operator(spc, function):
     assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
+@skip_if_no_cuda
 def _test_binary_operator(spc, function):
     # Verify that the statement z=function(x,y) gives equivalent
     # results to Numpy.
@@ -745,6 +750,7 @@ def test_offset_sub_vector():
     assert all_equal([1, 2, 3, 7, 8, 9], xd)
 
 
+@skip_if_no_cuda
 def _test_dtype(dt):
     if dt not in odl.CUDA_DTYPES:
         with pytest.raises(TypeError):
