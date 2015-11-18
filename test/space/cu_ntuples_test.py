@@ -79,10 +79,15 @@ def _pos_array(fn):
 
 # Pytest fixtures
 
-# Simply modify spc_params to modify the fixture
-spc_params = [odl.CudaRn(100)]
+
+if odl.CUDA_AVAILABLE:
+    # Simply modify spc_params to modify the fixture
+    spc_params = [odl.CudaRn(100)]
+else:
+    spc_params = []
 spc_ids = [' {!r} '.format(spc) for spc in spc_params]
-spc_fixture = pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
+spc_fixture = pytest.fixture(scope="module", ids=spc_ids,
+                             params=spc_params)
 
 
 @spc_fixture
