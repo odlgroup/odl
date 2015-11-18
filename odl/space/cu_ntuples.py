@@ -29,10 +29,15 @@ import numpy as np
 # ODL imports
 from odl.space.base_ntuples import NtuplesBase, FnBase, FnWeightingBase
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
-import odlpp.odlpp_cuda as cuda
 
+try:
+    import odlpp.odlpp_cuda as cuda
+    CUDA_AVAILABLE = True
+except ImportError:
+    cuda = None
+    CUDA_AVAILABLE = False
 
-__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CUDA_DTYPES',
+__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CUDA_DTYPES', 'CUDA_AVAILABLE',
            'CudaFnConstWeighting', 'CudaFnVectorWeighting',
            'cu_weighted_inner', 'cu_weighted_norm', 'cu_weighted_dist')
 

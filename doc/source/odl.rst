@@ -12,6 +12,7 @@ Subpackages
     odl.set
     odl.space
     odl.util
+    solvers/solvers
 
 Module contents
 ---------------
