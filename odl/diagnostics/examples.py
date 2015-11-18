@@ -43,7 +43,7 @@ def _arg_shape(*args):
 
 
 def scalar_examples(field):
-    """ Generate example scalars in ``field``
+    """Generate example scalars in ``field``.
 
     Parameters
     ----------
@@ -64,7 +64,7 @@ def scalar_examples(field):
 
 
 def vector_examples(space):
-    """ Generate example vectors in ``space``
+    """Generate example vectors in ``space``.
 
     Parameters
     ----------
@@ -183,7 +183,7 @@ def vector_examples(space):
 
 
 def samples(*sets):
-    """Generates some samples from the given sets.
+    """Generate some samples from the given sets.
 
     Currently supports vectors according to :func:`vector_examples`
     and scalars according to :func:`scalar_examples`.

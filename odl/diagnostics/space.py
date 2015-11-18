@@ -52,7 +52,7 @@ def _apprimately_equal(x, y, eps):
 
 class SpaceTest(object):
 
-    """ Automated tests for :class:`~odl.LinearSpace`'s
+    """Automated tests for :class:`~odl.LinearSpace` instances.
 
     This class allows users to automatically test various
     features of an ``LinearSpace`` such as linearity and the
@@ -363,7 +363,7 @@ class SpaceTest(object):
                                  ''.format(n_x, inner))
 
     def inner(self):
-        """ Verify inner product
+        """Verify inner product.
 
         The inner product satisfies properties such as
 
@@ -458,7 +458,7 @@ class SpaceTest(object):
                                  ''.format(n_x, error))
 
     def norm(self):
-        """ Verify norm
+        """Verify norm.
 
         The norm satisfies properties
 
@@ -557,7 +557,7 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, error))
 
     def dist(self):
-        """ Verify dist
+        """Verify dist.
 
         The dist satisfies properties
 
@@ -657,7 +657,7 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, n_z))
 
     def multiply(self):
-        """Verify the multiplication of vectors
+        """Verify the multiplication of vectors.
 
         Multiplication satisfies
 

@@ -33,7 +33,7 @@ __all__ = ('OperatorTest',)
 
 
 class OperatorTest(object):
-    """ Automated tests for :class:`~odl.Operator`'s
+    """Automated tests for :class:`~odl.Operator` implementations.
 
     This class allows users to automatically test various
     features of an Operator such as linearity and the
@@ -208,7 +208,7 @@ class OperatorTest(object):
         ----------
         Wikipedia article on `Derivative
         <https://en.wikipedia.org/wiki/Derivative>`_.
-        Wikipedia article on `Fréchet derivative
+        Wikipedia article on `Frechet derivative
         <https://en.wikipedia.org/wiki/Fr%C3%A9chet_derivative>`_.
         """
 
