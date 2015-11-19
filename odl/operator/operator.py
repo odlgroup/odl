@@ -1583,26 +1583,36 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
 
     call_has_out, call_out_optional = _dispatch_call_args(object, call)
 
+    attrs = {'inverse': inv, 'derivative': deriv}
+
     if not call_has_out:
         # Out-of-place _call
-        class SimpleOperator(Operator):
 
-            def _call(self, x):
-                return call(x)
+        def _call(self, x):
+            return call(x)
 
+        attrs['_call_in_place'] = _default_call_in_place
+        attrs['_call_out_of_place'] = _call
     elif call_out_optional:
         # Dual-use _call
-        class SimpleOperator(Operator):
 
-            def _call(self, x, out=None):
-                return call(x, out=None)
+        def _call(self, x, out=None):
+            return call(x, out=out)
+
+        attrs['_call_in_place'] = _call
+        attrs['_call_out_of_place'] = _call
     else:
         # In-place only _call
-        class SimpleOperator(Operator):
 
-            def _call(self, x, out):
-                return call(x, out)
+        def _call(self, x, out):
+            return call(x, out)
 
+        attrs['_call_in_place'] = _call
+        attrs['_call_out_of_place'] = _default_call_out_of_place
+
+    attrs['_call'] = _call
+
+    SimpleOperator = ABCMeta('SimpleOperator', (Operator,), attrs)
     return SimpleOperator(dom, ran, linear)
 
 
