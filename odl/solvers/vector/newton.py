@@ -49,14 +49,14 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
         Gradient of the objective function, :math:`x \mapsto grad f(x)`
     x : element in the domain of ``deriv``
         Starting point of the iteration
-    line_search : :class:`~odl_solvers.scalar.steplen.LineSearch`
+    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
         Strategy to choose the step length
     num_iter : `int`, optional
         Number of iterations
     cg_iter : `int`, optional
         Number of iterations in the the conjugate gradient solver, for comuting
         the search direction.
-    partial : :class:`~odl_solvers.util.partial.Partial`, optional
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
     Notes
     ----------

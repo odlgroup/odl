@@ -38,13 +38,13 @@ def steepest_descent(deriv, x, line_search, niter=1, partial=None):
     General implementation of steepest decent (also known as gradient
     decent) for solving
 
-    :math:`min f(x)`
+        :math:`\min f(x)`
 
     The algorithm is intended for unconstrained problems. It needs line
     search in order guarantee convergence. With appropriate line search,
     it can also be used for constrained problems where one wants to
-    minimize over some given set ``C``. This is done by defining
-    :math:`f(x) = \infty` for ``x`` outside ``C``.
+    minimize over some given set :math:`C`. This is done by defining
+    :math:`f(x) = \infty` for :math:`x\\not\\in C`.
 
 
     The algorithm is described in [1]_, section 9.3--9.4
