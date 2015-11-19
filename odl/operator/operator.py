@@ -153,7 +153,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         The set this operator maps to
 
     It is **highly** recommended to call
-    ``super().__init__(doma, ran)`` (Note:
+    ``super().__init__(dom, ran)`` (Note: add
     ``from builtins import super`` in Python 2) in the ``__init__()``
     method of any subclass, where ``dom`` and ``ran`` are the arguments
     specifying domain and range of the new
