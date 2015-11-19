@@ -431,7 +431,10 @@ class ProductSpace(LinearSpace):
 
         def __getitem__(self, indices):
             """``ps.__getitem__(indices) <==> ps[indices]``."""
-            return self.parts[indices]
+            if isinstance(indices, slice):
+                return self.space[indices].element(self.parts[indices])
+            else:
+                return self.parts[indices]
 
         def __setitem__(self, indices, values):
             """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""

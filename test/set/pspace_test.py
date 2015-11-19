@@ -244,7 +244,7 @@ def test_power_inplace_modify():
     assert all_almost_equal(z, [z1, z2])
 
 
-def test_getitem():
+def test_getitem_single():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, 2)
 
@@ -255,6 +255,13 @@ def test_getitem():
     with pytest.raises(IndexError):
         HxH[-3]
         HxH[2]
+
+def test_getitem_slice():
+    H = odl.Rn(2)
+    H5 = odl.ProductSpace(H, 5)
+    H2 = odl.ProductSpace(H, 2)
+
+    assert H5[:2] == H2
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
