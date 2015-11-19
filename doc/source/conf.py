@@ -16,6 +16,14 @@ import sys
 import os
 import sphinx_rtd_theme
 
+try:
+	# verify that we can even import odl properly
+	import odl
+except Exception as e:
+	print('Failed importing odl, exiting')
+	print(e)
+	sys.exit(1)
+
 # -- General configuration ------------------------------------------------
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -39,7 +47,7 @@ def mock_modules(modules):
 
 if on_rtd:
     mock_modules(['future', 'future.utils',
-				  'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
+				  'scipy', 'scipy.linalg', 'scipy.sparse',
 				  'scipy.interpolate', 'scipy.interpolate.interpnd',
                   'numpy', 'numpy.linalg', 'numpy.distutils',
                   'matplotlib.pyplot',
