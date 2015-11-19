@@ -16,14 +16,6 @@ import sys
 import os
 import sphinx_rtd_theme
 
-try:
-	# verify that we can even import odl properly
-	import odl
-except Exception as e:
-	print('Failed importing odl, exiting')
-	print(e)
-	sys.exit(1)
-
 # -- General configuration ------------------------------------------------
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -53,6 +45,14 @@ if on_rtd:
                   'matplotlib.pyplot',
                   'odlpp', 'odlpp.odlpp_cuda'])
 
+try:
+	# verify that we can even import odl properly
+	import odl
+except Exception as e:
+	print('Failed importing odl, exiting')
+	print(e)
+	sys.exit(1)
+				  
 # add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
 
