@@ -36,7 +36,7 @@ be explicitly overridden by any subclass, namely
 As a simple example, you can implement the matrix multiplication
 operator
 
-    :math:`\mathcal{A}: \mathbb{R^m} \\to \mathbb{R^n}, \quad
+    :math:`\mathcal{A}: \mathbb{R}^m \\to \mathbb{R}^n, \quad
     \mathcal{A}(x) = Ax`
 
 for a matrix :math:`A\\in \mathbb{R}^{n\\times m}` as follows::
