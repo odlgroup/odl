@@ -33,95 +33,96 @@ from odl.util.testutils import all_almost_equal
 def test_init():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
-    
+
     op = odl.ProductSpaceOperator([I])
     assert op.domain == odl.ProductSpace(r3)
     assert op.range == odl.ProductSpace(r3)
-    
+
     op = odl.ProductSpaceOperator([I, I])
     assert op.domain == odl.ProductSpace(r3, 2)
     assert op.range == odl.ProductSpace(r3)
-    
+
     op = odl.ProductSpaceOperator([[I],
                                    [I]])
     assert op.domain == odl.ProductSpace(r3)
     assert op.range == odl.ProductSpace(r3, 2)
-                              
-    op = odl.ProductSpaceOperator([[I, 0], 
+
+    op = odl.ProductSpaceOperator([[I, 0],
                                    [0, I]])
     assert op.domain == odl.ProductSpace(r3, 2)
     assert op.range == odl.ProductSpace(r3, 2)
-                              
-    op = odl.ProductSpaceOperator([[I, None], 
+
+    op = odl.ProductSpaceOperator([[I, None],
                                    [None, I]])
     assert op.domain == odl.ProductSpace(r3, 2)
     assert op.range == odl.ProductSpace(r3, 2)
-         
-         
+
+
 def test_sum_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([I, I])
-    
+
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
     z = op.domain.element([x, y])
-    
+
     assert all_almost_equal(op(z)[0], x + y)
-    
-    
+
+
 def test_project_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
-    op = odl.ProductSpaceOperator([[I], 
+    op = odl.ProductSpaceOperator([[I],
                                    [I]])
-    
+
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
     z = op.domain.element([x, y])
-    
+
     assert all_almost_equal(op(z)[0], x)
-    
-    
+
+
 def test_diagonal_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
-    op = odl.ProductSpaceOperator([[I, 0], 
+    op = odl.ProductSpaceOperator([[I, 0],
                                    [0, I]])
-    
+
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
     z = op.domain.element([x, y])
-    
+
     assert all_almost_equal(op(z), z)
-    
-    
+
+
 def test_swap_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
-    op = odl.ProductSpaceOperator([[0, I], 
+    op = odl.ProductSpaceOperator([[0, I],
                                    [I, 0]])
-    
+
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
     z = op.domain.element([x, y])
     result = op.domain.element([y, x])
-    
+
     assert all_almost_equal(op(z), result)
-    
+
+
 def test_projection():
     r3 = odl.Rn(3)
     r3xr3 = odl.ProductSpace(r3, 2)
-    
+
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
     z = r3xr3.element([x, y])
     proj_0 = odl.ComponentProjection(r3xr3, 0)
     assert x == proj_0(z)
-    
+
     proj_1 = odl.ComponentProjection(r3xr3, 1)
     assert y == proj_1(z)
-    
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

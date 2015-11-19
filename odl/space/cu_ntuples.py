@@ -1071,7 +1071,7 @@ def _pnorm_default(x, p):
     # TODO: optimized version in C++ code?
     xp = abs(x)
     xp **= p
-    return sum(xp)**(1/p)
+    return sum(xp)**(1 / p)
 
 
 def _pnorm_diagweight(x, p, w):
@@ -1083,7 +1083,7 @@ def _pnorm_diagweight(x, p, w):
     xp = abs(x)
     xp **= p
     xp *= w
-    return sum(xp)**(1/p)
+    return sum(xp)**(1 / p)
 
 
 def _inner_default(x1, x2):
@@ -1418,7 +1418,7 @@ class CudaFnConstWeighting(FnWeightingBase):
         elif self.exponent == float('inf'):  # Weighting irrelevant
             return self.const * float(_pnorm_default(x, self.exponent))
         else:
-            return (self.const**(1/self.exponent) *
+            return (self.const ** (1 / self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
 
     def dist(self, x1, x2):
@@ -1442,7 +1442,7 @@ class CudaFnConstWeighting(FnWeightingBase):
             return self.const * float(_pnorm_default(x1 - x2, self.exponent))
         else:
             # TODO: optimize!
-            return (self.const**(1/self.exponent) *
+            return (self.const**(1 / self.exponent) *
                     _pnorm_default(x1 - x2, self.exponent))
 
     def __repr__(self):

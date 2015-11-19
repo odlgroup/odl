@@ -40,7 +40,7 @@ class ProductSpaceOperator(Operator):
     def __init__(self, operators, dom=None, ran=None):
         """ TODO
         """
-                   
+
         # Validate input data
         if dom is not None and not isinstance(dom, ProductSpace):
             raise TypeError('space {!r} not a ProductSpace instance.'
@@ -51,18 +51,18 @@ class ProductSpaceOperator(Operator):
 
         # Convert ops to sparse representation
         self.ops = sp.sparse.coo_matrix(operators)
-        
+
         if not all(isinstance(op, Operator) for op in self.ops.data):
             raise TypeError('operators {!r} must be a matrix of operators.'
                             ''.format(operators))
-        
+
         # Set domain and range (or verify if given)
         if dom is None:
-            domains = [None]*self.ops.shape[1]
+            domains = [None] * self.ops.shape[1]
 
         if ran is None:
-            ranges = [None]*self.ops.shape[0]            
-        
+            ranges = [None] * self.ops.shape[0]
+
         for row, col, op in zip(self.ops.row, self.ops.col, self.ops.data):
             if domains[col] is None:
                 domains[col] = op.domain
@@ -77,29 +77,28 @@ class ProductSpaceOperator(Operator):
                 raise ValueError('Row {}, has inconcistient ranges,'
                                  'got {} and {}'
                                  ''.format(row, ranges[row], op.range))
-                                 
-        
-        if dom is None:    
+
+        if dom is None:
             for col in range(len(domains)):
                 if domains[col] is None:
                     raise ValueError('Col {} empty, unable to determine '
                                      'domain, please use dom parameter'
                                      ''.format(col, domains[col]))
-                                       
-            dom = ProductSpace(*domains)                      
-            
+
+            dom = ProductSpace(*domains)
+
         if ran is None:
             for row in range(len(ranges)):
                 if ranges[row] is None:
                     raise ValueError('Row {} empty, unable to determine '
                                      'range, please use ran parameter'
                                      ''.format(row, ranges[row]))
-                                     
+
             ran = ProductSpace(*ranges)
-        
+
         # Set linearity
         linear = all(op.is_linear for op in self.ops.data)
-        
+
         super().__init__(domain=dom, range=ran, linear=linear)
 
     def __getitem__(self, *indices):
@@ -164,18 +163,18 @@ class ProductSpaceOperator(Operator):
         """op.__repr__() <==> repr(op)."""
         return 'ProductSpaceOperator({!r})'.format(self.ops)
 
-    
+
 class ComponentProjection(Operator):
     def __init__(self, space, index):
         self.index = index
         super().__init__(space, space[index], linear=True)
-        
+
     def _apply(self, x, out):
         out.assign(x[self.index])
-            
+
     def _call(self, x):
         return x[self.index].copy()
-            
+
     @property
     def adjoint(self):
         """ The adjoint is given by extending along indices, and setting
