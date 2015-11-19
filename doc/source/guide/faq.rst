@@ -1,6 +1,6 @@
-###########################
-Answers to common questions
-###########################
+##########################
+Frequently asked questions
+##########################
 
 Abbreviations: **Q** uestion -- **P** roblem -- **S** olution
 
@@ -8,7 +8,7 @@ Errors related to Python 2/3
 ----------------------------
 
 #. **Q:** I follow your recommendation to call ``super().__init__(dom, ran)``
-   in the ``__init__()`` method of my ``MyOperator``, but I get the following
+   in the ``__init__()`` method of ``MyOperator``, but I get the following
    error::
    
 	File <...>, line ..., in __init__

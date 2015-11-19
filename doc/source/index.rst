@@ -18,11 +18,6 @@ As a developer
 
 :doc:`dev/dev`
 
-Answers to common questions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-:doc:`guide/faq`
-
 Contents
 ========
 
@@ -32,6 +27,7 @@ Contents
    guide/guide
    dev/dev
    odl
+   guide/faq
 
 
 

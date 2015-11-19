@@ -9,5 +9,6 @@ odl.solvers
    solvers.findroot
    solvers.iterative
    solvers.linear
+   solvers.scalar
    solvers.util
    solvers.vector
