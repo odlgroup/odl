@@ -31,7 +31,7 @@ from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 
 
-__all__ = ('ProductSpaceOperator', )
+__all__ = ('ProductSpaceOperator', 'ComponentProjection')
 
 
 class ProductSpaceOperator(Operator):
@@ -64,6 +64,13 @@ class ProductSpaceOperator(Operator):
             ranges = [None]*self.ops.shape[0]            
         
         for row, col, op in zip(self.ops.row, self.ops.col, self.ops.data):
+            if domains[col] is None:
+                domains[col] = op.domain
+            elif domains[col] != op.domain:
+                raise ValueError('Column {}, has inconcistient domains,'
+                                 'got {} and {}'
+                                 ''.format(col, domains[col], op.domain))
+
             if ranges[row] is None:
                 ranges[row] = op.range
             elif ranges[row] != op.range:
@@ -71,12 +78,6 @@ class ProductSpaceOperator(Operator):
                                  'got {} and {}'
                                  ''.format(row, ranges[row], op.range))
                                  
-            if domains[col] is None:
-                domains[col] = op.domain
-            elif domains[col] != op.domain:
-                raise ValueError('Column {}, has inconcistient domains,'
-                                 'got {} and {}'
-                                 ''.format(col, domains[col], op.domain))
         
         if dom is None:    
             for col in range(len(domains)):
@@ -114,7 +115,7 @@ class ProductSpaceOperator(Operator):
         Returns
         -------
         None
-        
+
         Examples
         --------
         todo
@@ -126,8 +127,10 @@ class ProductSpaceOperator(Operator):
             else:
                 # TODO: optimize
                 out[i] += op(x[j])
-                
-        # TODO: set zero on non-evaluated rows
+
+        for i, evaluated in enumerate(has_evaluated_row):
+            if not evaluated:
+                out[i].set_zero()
 
     def _call(self, x):
         """ TODO
@@ -150,7 +153,6 @@ class ProductSpaceOperator(Operator):
             out[i] += op(x[j])
         return out
 
-
     @property
     def adjoint(self):
         """ The adjoint is given by taking the conjugate of the scalar
@@ -161,6 +163,26 @@ class ProductSpaceOperator(Operator):
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
         return 'ProductSpaceOperator({!r})'.format(self.ops)
+
+    
+class ComponentProjection(Operator):
+    def __init__(self, space, index):
+        self.index = index
+        super().__init__(space, space[index], linear=True)
+        
+    def _apply(self, x, out):
+        out.assign(x[self.index])
+            
+    def _call(self, x):
+        return x[self.index].copy()
+            
+    @property
+    def adjoint(self):
+        """ The adjoint is given by extending along indices, and setting
+        zero along the others
+        """
+        # TODO: implement
+        raise NotImplementedError()
 
 
 if __name__ == '__main__':

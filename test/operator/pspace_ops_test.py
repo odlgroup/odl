@@ -70,6 +70,19 @@ def test_sum_call():
     assert all_almost_equal(op(z)[0], x + y)
     
     
+def test_project_call():
+    r3 = odl.Rn(3)
+    I = odl.IdentityOperator(r3)
+    op = odl.ProductSpaceOperator([[I], 
+                                   [I]])
+    
+    x = r3.element([1, 2, 3])
+    y = r3.element([7, 8, 9])
+    z = op.domain.element([x, y])
+    
+    assert all_almost_equal(op(z)[0], x)
+    
+    
 def test_diagonal_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
@@ -95,6 +108,19 @@ def test_swap_call():
     result = op.domain.element([y, x])
     
     assert all_almost_equal(op(z), result)
+    
+def test_projection():
+    r3 = odl.Rn(3)
+    r3xr3 = odl.ProductSpace(r3, 2)
+    
+    x = r3.element([1, 2, 3])
+    y = r3.element([7, 8, 9])
+    z = r3xr3.element([x, y])
+    proj_0 = odl.ComponentProjection(r3xr3, 0)
+    assert x == proj_0(z)
+    
+    proj_1 = odl.ComponentProjection(r3xr3, 1)
+    assert y == proj_1(z)
     
 
 if __name__ == '__main__':
