@@ -1032,8 +1032,8 @@ def test_vector_dist(exponent):
     if exponent in (1.0, float('inf')):
         true_dist = np.linalg.norm(weight_vec * (xarr - yarr), ord=exponent)
     else:
-        true_dist = np.linalg.norm(weight_vec ** (1 / exponent) * (xarr - yarr),
-                                   ord=exponent)
+        true_dist = np.linalg.norm(
+            weight_vec ** (1 / exponent) * (xarr - yarr), ord=exponent)
 
     if exponent == float('inf') or int(exponent) != exponent:
         # Not yet implemented, should raise
