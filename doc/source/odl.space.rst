@@ -1,6 +1,8 @@
 odl.space package
 =================
 
+.. automodule:: odl.space
+
 odl.space.base_ntuples module
 -----------------------------
 

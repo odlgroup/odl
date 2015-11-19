@@ -1,6 +1,8 @@
 odl.util package
 ================
 
+.. automodule:: odl.util
+
 odl.util.testutils module
 ----------------------------
 

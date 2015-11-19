@@ -1,6 +1,8 @@
 odl.solvers
 ===========
 
+.. automodule:: odl.solvers
+
 .. toctree::
    :maxdepth: 3
     

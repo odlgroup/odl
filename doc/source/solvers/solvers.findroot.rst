@@ -1,10 +1,7 @@
 odl.solvers.findroot package
 ============================
 
-odl.solvers.findroot.newton module
-----------------------------------
-
-.. automodule:: odl.solvers.findroot.newton
+.. automodule:: odl.solvers.findroot
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,6 +1,8 @@
 odl.discr package
 =================
 
+.. automodule:: odl.discr
+
 odl.discr.discr_mappings module
 -------------------------------
 

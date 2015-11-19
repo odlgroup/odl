@@ -1,6 +1,8 @@
 odl.set package
 ===============
 
+.. automodule:: odl.set
+
 odl.set.domain module
 ---------------------
 
