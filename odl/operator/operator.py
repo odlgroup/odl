@@ -25,7 +25,8 @@ from builtins import object, super
 from odl.util.utility import with_metaclass
 
 # External module imports
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
+from functools import partial
 from numbers import Number, Integral
 
 # ODL imports
@@ -39,25 +40,8 @@ __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorPointwiseProduct')
 
 
-def _bound_method(function):
-    """Add a ``self`` argument to a function.
-
-    This way, the decorated function may be used as a bound method.
-    """
-    def method(_, *args, **kwargs):
-        return function(*args, **kwargs)
-
-    # Do the minimum and copy function name and docstring
-    if hasattr(function, '__name__'):
-        method.__name__ = function.__name__
-    if hasattr(function, '__doc__'):
-        method.__doc__ = function.__doc__
-
-    return method
-
-
-def _default_call(self, x, *args, **kwargs):
-    """Default out-of-place evaluation using ``Operator._apply()``.
+def _default_call_out_of_place(op, x, **kwargs):
+    """Default out-of-place evaluation.
 
     Parameters
     ----------
@@ -71,12 +55,13 @@ def _default_call(self, x, *args, **kwargs):
         An object in the operator range. The result of an operator
         evaluation.
     """
-    out = self.range.element()
-    self._apply(x, out, *args, **kwargs)
+    print('use _default_call_out_of_place')
+    out = op.range.element()
+    op._call_in_place(x, out, **kwargs)
     return out
 
 
-def _default_apply(self, x, out, *args, **kwargs):
+def _default_call_in_place(op, x, out, **kwargs):
     """Default in-place evaluation using ``Operator._call()``.
 
     Parameters
@@ -93,48 +78,182 @@ def _default_apply(self, x, out, *args, **kwargs):
     -------
     `None`
     """
-    out.assign(self._call(x, *args, **kwargs))
+    print('use _default_call_in_place')
+    out.assign(op._call_out_of_place(x, **kwargs))
 
 
-class _OperatorMeta(ABCMeta):
+def _dispatch_call_args(cls, unbound_call=None):
+    """Check the arguments of ``_call()`` in ``cls`` for conformity.
 
-    """Metaclass used by :class:`Operator` to ensure correct methods.
+    The ``_call()`` method of :class:`Operator` is allowed to have the
+    following signatures:
 
-    If either ``_apply()`` or ``_call()`` does not exist in the class
-    to be created, this metaclass attempts to add a default
-    implmentation.
-    This only works if the :attr:`Operator.range` is a
-    :class:`~odl.LinearSpace`.
+    Python 2 and 3:
+        - ``_call(self, x)``
+        - ``_call(self, vec, out)``
+        - ``_call(self, x, out=None)``
+
+    Python 3 only:
+        - ``_call(self, x, *, out=None)`` (``out`` as keyword-only
+          argument)
+        - ``_call(self, *, x=0, out=None)`` (both as keyword-only
+          arguments)
+
+    For disambiguation, the instance name (the first argument) **must**
+    be 'self'.
+
+    The name of the ``out`` argument **must** be 'out', the second
+    argument may have any name.
+
+    Additional variable ``**kwargs`` are also allowed.
+
+    Not allowed:
+        - No arguments except instance: ``_call(self)``
+        - 'self' missing, i.e. ``_call(x)`` with ``@staticmethod``
+          or ``_call(cls, x)`` with ``@classmethod``
+        - ``out`` as second argument: ``_call(self, out, x)``
+        - Variable arguments: ``_call(self, *x)``
+        - Positional arguments other than ``x`` and ``out``:
+          ``_call(self, x, y, out=None)``
+        - Other default than `None` for ``out``
+
+    In particular, static or class methods are not allowed.
     """
 
-    def __new__(mcs, name, bases, attrs):
-        """Create a new instance."""
-        if '_call' in attrs and '_apply' in attrs:
-            pass
-        elif '_call' in attrs:
-            attrs['_apply'] = _default_apply
-        elif '_apply' in attrs:
-            attrs['_call'] = _default_call
+    import inspect
+    import sys
 
-        return super().__new__(mcs, name, bases, attrs)
+    py3 = (sys.version_info.major > 2)
 
-    def __call__(cls, *args, **kwargs):
-        """Create a new class ``cls`` from given arguments."""
-        obj = ABCMeta.__call__(cls, *args, **kwargs)
-        if not hasattr(obj, 'domain'):
-            raise NotImplementedError('`Operator` instances must have a '
-                                      '`Operator.domain` attribute.')
-        if not hasattr(obj, 'range'):
-            raise NotImplementedError('`Operator` instances must have a '
-                                      '`Operator.range` attribute.')
-        if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
-            raise NotImplementedError('`Operator` instances must either '
-                                      'have `_call` or `_apply` as '
-                                      'attribute.')
-        return obj
+    py2_specs = ('_call(self, x[, **kwargs])',
+                 '_call(self, x, out[, **kwargs])',
+                 '_call(self, x, out=None[, **kwargs])')
+
+    py3only_specs = ('_call(self, x, *, out=None[, **kwargs])',
+                     '_call(self, *, x=0, out=None[, **kwargs])')
+
+    spec_msg = "\nPossible signatures are ('[, **kwargs]' means optional):\n\n"
+    spec_msg += '\n'.join(py2_specs)
+    if py3:
+        spec_msg += '\n' + '\n'.join(py3only_specs)
+    spec_msg += '\n\nStatic or class methods are not allowed.'
+
+    if unbound_call is None:
+        call = getattr(cls, '_call', None)
+        if call is None:
+            raise ValueError("class {!r} has no '_call' method."
+                             "".format(cls))
+        # Static and class methods are not allowed
+        if isinstance(cls.__dict__['_call'], staticmethod):
+            raise TypeError("'{}._call()' is a static method. " + spec_msg)
+        elif isinstance(cls.__dict__['_call'], classmethod):
+            raise TypeError("'{}._call()' is a class method. " + spec_msg)
+    else:
+        call = unbound_call
+
+    if py3:
+        # support kw-only args and annotations
+        spec = inspect.getfullargspec(call)
+        kw_only = spec.kwonlyargs
+        kw_only_defaults = spec.kwonlydefaults
+    else:
+        spec = inspect.getargspec(call)
+        kw_only = ()
+        kw_only_defaults = {}
+
+    print(spec)
+
+    pos_args = spec.args
+    if unbound_call is not None:
+        # Add 'self' to positional arg list to satisfy the checker
+        pos_args.insert(0, 'self')
+
+    pos_defaults = spec.defaults
+    varargs = spec.varargs
+
+    out_optional = False
+
+    # Variable args are not allowed
+    if varargs is not None:
+        raise ValueError("Variable arguments not allowed in '_call()'." +
+                         spec_msg)
+
+    if len(pos_args) not in (1, 2, 3):
+        raise ValueError("Bad signature of '_call()'. " + spec_msg)
+
+    # 'self' must be the first argument
+    elif pos_args[0] != 'self':
+        raise ValueError("'self' is not the first argument in '_call()'." +
+                         spec_msg)
+
+    true_pos_args = pos_args[1:]
+    if len(true_pos_args) == 0:  # Both args kw-only
+        if len(kw_only) == 1:  # must be 'x', not 'out'
+            if 'out' in kw_only:
+                raise ValueError("'out' cannot be only argument except 'self' "
+                                 " in '_call()'." + spec_msg)
+            else:
+                has_out = False
+        elif len(kw_only) == 2:  # Now 'out' must be one of them
+            if 'out' not in kw_only:
+                raise ValueError("Output parameter must be called 'out'"
+                                 " in '_call()'." + spec_msg)
+            else:
+                has_out = True
+                if kw_only_defaults['out'] is not None:
+                    raise ValueError("'out' can only default to None in "
+                                     "'_call()'. " + spec_msg)
+                else:
+                    out_optional = True
+        else:
+            raise ValueError("Bad signature of '_call()'." + spec_msg)
+
+    elif len(true_pos_args) == 1:  # 'out' kw-only
+        if 'out' in true_pos_args:  # 'out' positional and 'x' kw-only -> no
+            raise ValueError("'out' cannot be only positional argument except "
+                             "'self' in '_call()'." + spec_msg)
+        else:
+            if len(kw_only) == 0:
+                has_out = False
+            elif len(kw_only) == 1:
+                if 'out' not in kw_only:
+                    raise ValueError("Output parameter must be called 'out'"
+                                     " in '_call()'." + spec_msg)
+                else:
+                    has_out = True
+                    if kw_only_defaults['out'] is not None:
+                        raise ValueError("'out' can only default to None in "
+                                         "'_call()'." + spec_msg)
+                    else:
+                        out_optional = True
+            else:
+                raise ValueError("Bad signature of '_call()'." + spec_msg)
+
+    elif len(true_pos_args) == 2:  # Both args positional
+        if true_pos_args[0] == 'out':  # 'out' must come second
+            py3_txt = 'or keyword-only ' if py3 else ''
+            raise ValueError("'out' can only be the second positional "
+                             "argument " + py3_txt + "in '_call()'." +
+                             spec_msg)
+        elif true_pos_args[1] != 'out':  # 'out' must be 'out'
+            raise ValueError("Output parameter must be called 'out'"
+                             " in '_call()'." + spec_msg)
+        else:
+            has_out = True
+            out_optional = bool(pos_defaults)
+            if pos_defaults and pos_defaults[-1] is not None:
+                raise ValueError("'out' can only default to None in "
+                                 "'_call()'." + spec_msg)
+
+    else:  # Too many positional args
+        raise ValueError("Bad signature of '_call()'. " + spec_msg)
+
+    print('has_out: ', has_out)
+    print('out_optional: ', out_optional)
+    return has_out, out_optional
 
 
-class Operator(with_metaclass(_OperatorMeta, object)):
+class Operator(with_metaclass(ABCMeta, object)):
 
     """Abstract operator.
 
@@ -212,6 +331,30 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     implementation of the respective other is provided.
     """
 
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance."""
+        instance = super().__new__(cls, *args, **kwargs)
+
+        call_has_out, call_out_optional = _dispatch_call_args(cls)
+        if not call_has_out:
+            # Out-of-place _call
+            print('in __new__: oop')
+            instance._call_in_place = partial(_default_call_in_place,
+                                              instance)
+            instance._call_out_of_place = instance._call
+        elif call_out_optional:
+            # Dual-use _call
+            print('in __new__: dual')
+            instance._call_in_place = instance._call
+            instance._call_out_of_place = instance._call
+        else:
+            # In-place only _call
+            print('in __new__: ip')
+            instance._call_in_place = instance._call
+            instance._call_out_of_place = partial(_default_call_out_of_place,
+                                                  instance)
+        return instance
+
     def __init__(self, domain, range, linear=False):
         """Initialize a new instance.
 
@@ -242,6 +385,10 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             if not isinstance(range, (LinearSpace, Field)):
                 raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                                 'instance.'.format(range))
+
+    @abstractmethod
+    def _call(self, *args, **kwargs):
+        """Raw evaluation method. Needs to be overridden by subclasses."""
 
     @property
     def domain(self):
@@ -284,7 +431,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                                   '{!r}'.format(self))
 
     # Implicitly defined operators
-    def __call__(self, x, out=None, *args, **kwargs):
+    def __call__(self, x, out=None, **kwargs):
         """``op.__call__(x) <==> op(x)``.
 
         Implementation of the call pattern ``op(x)`` with the private
@@ -300,7 +447,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
-        *args, **kwargs : Further arguments to the function, optional
+        **kwargs : Further arguments to the function, optional
 
         Returns
         -------
@@ -343,11 +490,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 raise TypeError('`out` parameter cannot be used'
                                 'when range is a field')
 
-            self._apply(x, out, *args, **kwargs)
+            print('in op.__call__: in-place')
+            self._call_in_place(x, out, **kwargs)
             return out
 
         else:  # Out-of-place evaluation
-            result = self._call(x, *args, **kwargs)
+            print('in op.__call__: out-of-place')
+            result = self._call_out_of_place(x, **kwargs)
 
             if result not in self.range:
                 raise TypeError('result {!r} not an element of the range {!r} '
@@ -1408,8 +1557,8 @@ class OperatorRightVectorMult(Operator):
         return '{} * {}'.format(self._op, self._vector)
 
 
-def operator(call=None, apply=None, inv=None, deriv=None,
-             dom=None, ran=None, linear=False):
+def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
+                    linear=False):
     """Create a simple operator.
 
     Mostly intended for simple prototyping rather than final use.
@@ -1420,11 +1569,7 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         A function taking one argument and returning the result.
         It will be used for the operator call pattern
         ``out = op(x)``.
-    apply : `callable`
-        A function taking two arguments.
-        It will be used for the operator apply pattern
-        ``op._apply(x, out) <==> out <-- op(x)``. Return value
-        is assumed to be `None` and is ignored.
+        TODO update
     inv : :class:`Operator`, optional
         The operator inverse
     deriv : :class:`Operator`, optional
@@ -1457,25 +1602,35 @@ def operator(call=None, apply=None, inv=None, deriv=None,
     >>> A(5)
     15
     """
-    if call is None and apply is None:
-        raise ValueError('at least one argument `call` or `apply` must be '
-                         'given.')
+    if dom is None:
+        dom = UniversalSpace() if linear else UniversalSet()
 
-    if linear:
-        dom = ran = UniversalSpace()
+    if ran is None:
+        ran = UniversalSpace() if linear else UniversalSet()
+
+    call_has_out, call_out_optional = _dispatch_call_args(object, call)
+
+    if not call_has_out:
+        # Out-of-place _call
+        class SimpleOperator(Operator):
+
+            def _call(self, x):
+                return call(x)
+
+    elif call_out_optional:
+        # Dual-use _call
+        class SimpleOperator(Operator):
+
+            def _call(self, x, out=None):
+                return call(x, out=None)
     else:
-        dom = ran = UniversalSet()
+        # In-place only _call
+        class SimpleOperator(Operator):
 
-    attrs = {'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran}
+            def _call(self, x, out):
+                return call(x, out)
 
-    if call is not None:
-        attrs['_call'] = _bound_method(call)
-
-    if apply is not None:
-        attrs['_apply'] = _bound_method(apply)
-
-    simple_operator = _OperatorMeta('SimpleOperator', (Operator,), attrs)
-    return simple_operator(dom, ran, linear)
+    return SimpleOperator(dom, ran, linear)
 
 
 if __name__ == '__main__':
