@@ -64,7 +64,7 @@ def pywt_coeff_to_array(coeff, nscales):
     a = coeff[0]
     a = a.ravel()
     flat_coeff = a
-    for kk in range(1, nscales+1):
+    for kk in range(1, nscales + 1):
         (dh, dv, dd) = coeff[kk]
         dh = dh.ravel()
         dv = dv.ravel()
@@ -94,36 +94,35 @@ def array_to_pywt_coeff(coef, S, jscale):
     # TODO: give the variables better (more telling) names
     # TODO: check out PEP8 (recommendation: use Spyder and activate the PEP8
     # style checker)
-    (n2,m2) = S[0]
-    old = n2*m2
+    (n2, m2) = S[0]
+    old = n2 * m2
     a = coef[0:old]
-    a = np.reshape(a,(n2,m2))
+    a = np.reshape(a, (n2, m2))
     a = np.asarray(a)
     kk = 1
     W = []
     W.append(a)
 
-
     while kk <= jscale:
-        (n2,m2) = S[kk]
-        maar = n2*m2
-        dh = coef[old:old+maar]
-        dh = np.reshape(dh,(n2,m2))
+        (n2, m2) = S[kk]
+        maar = n2 * m2
+        dh = coef[old:old + maar]
+        dh = np.reshape(dh, (n2, m2))
         dh = np.asarray(dh)
 
-        dv = coef[old+maar:old+2*maar]
-        dv = np.reshape(dv,(n2,m2))
+        dv = coef[old + maar:old + 2 * maar]
+        dv = np.reshape(dv, (n2, m2))
         dv = np.asarray(dv)
 
-        dd = coef[old+2*maar:old + 3*maar]
-        dd = np.reshape(dd,(n2,m2))
+        dd = coef[old + 2 * maar:old + 3 * maar]
+        dd = np.reshape(dd, (n2, m2))
         dd = np.asarray(dd)
 
-        d = (dh,dv,dd)
+        d = (dh, dv, dd)
         W.append(d)
 
         kk = kk + 1
-        old = old + 3*maar
+        old = old + 3 * maar
 
     return W
 

@@ -22,4 +22,3 @@ __all__ = ()
 from . import wavelet
 from .wavelet import *
 __all__ += wavelet.__all__
-
