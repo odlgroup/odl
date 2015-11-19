@@ -96,8 +96,6 @@ def _dispatch_call_args(cls, unbound_call=None):
     Python 3 only:
         - ``_call(self, x, *, out=None)`` (``out`` as keyword-only
           argument)
-        - ``_call(self, *, x=0, out=None)`` (both as keyword-only
-          arguments)
 
     For disambiguation, the instance name (the first argument) **must**
     be 'self'.
@@ -108,14 +106,14 @@ def _dispatch_call_args(cls, unbound_call=None):
     Additional variable ``**kwargs`` are also allowed.
 
     Not allowed:
-        - No arguments except instance: ``_call(self)``
-        - 'self' missing, i.e. ``_call(x)`` with ``@staticmethod``
-          or ``_call(cls, x)`` with ``@classmethod``
-        - ``out`` as second argument: ``_call(self, out, x)``
-        - Variable arguments: ``_call(self, *x)``
-        - Positional arguments other than ``x`` and ``out``:
-          ``_call(self, x, y, out=None)``
-        - Other default than `None` for ``out``
+        - ``_call(self)`` -- No arguments except instance:
+        - ``_call(x)`` -- 'self' missing, i.e. ``@staticmethod``
+        - ``_call(cls, x)``  -- 'self' missing, i.e. ``@classmethod``
+        - ``_call(self, out, x)`` -- ``out`` as second argument
+        - ``_call(self, *x)`` -- Variable arguments
+        - ``_call(self, x, y, out=None)`` -- more positional arguments
+        - ``_call(self, x, out=False)`` -- default other than `None` for
+          ``out``
 
     In particular, static or class methods are not allowed.
     """
@@ -129,8 +127,7 @@ def _dispatch_call_args(cls, unbound_call=None):
                  '_call(self, x, out[, **kwargs])',
                  '_call(self, x, out=None[, **kwargs])')
 
-    py3only_specs = ('_call(self, x, *, out=None[, **kwargs])',
-                     '_call(self, *, x=0, out=None[, **kwargs])')
+    py3only_specs = ('_call(self, x, *, out=None[, **kwargs])',)
 
     spec_msg = "\nPossible signatures are ('[, **kwargs]' means optional):\n\n"
     spec_msg += '\n'.join(py2_specs)
@@ -178,7 +175,7 @@ def _dispatch_call_args(cls, unbound_call=None):
         raise ValueError("Variable arguments not allowed in '_call()'." +
                          spec_msg)
 
-    if len(pos_args) not in (1, 2, 3):
+    if len(pos_args) not in (2, 3):
         raise ValueError("Bad signature of '_call()'. " + spec_msg)
 
     # 'self' must be the first argument
@@ -187,28 +184,7 @@ def _dispatch_call_args(cls, unbound_call=None):
                          spec_msg)
 
     true_pos_args = pos_args[1:]
-    if len(true_pos_args) == 0:  # Both args kw-only
-        if len(kw_only) == 1:  # must be 'x', not 'out'
-            if 'out' in kw_only:
-                raise ValueError("'out' cannot be only argument except 'self' "
-                                 " in '_call()'." + spec_msg)
-            else:
-                has_out = False
-        elif len(kw_only) == 2:  # Now 'out' must be one of them
-            if 'out' not in kw_only:
-                raise ValueError("Output parameter must be called 'out'"
-                                 " in '_call()'." + spec_msg)
-            else:
-                has_out = True
-                if kw_only_defaults['out'] is not None:
-                    raise ValueError("'out' can only default to None in "
-                                     "'_call()'. " + spec_msg)
-                else:
-                    out_optional = True
-        else:
-            raise ValueError("Bad signature of '_call()'." + spec_msg)
-
-    elif len(true_pos_args) == 1:  # 'out' kw-only
+    if len(true_pos_args) == 1:  # 'out' kw-only
         if 'out' in true_pos_args:  # 'out' positional and 'x' kw-only -> no
             raise ValueError("'out' cannot be only positional argument except "
                              "'self' in '_call()'." + spec_msg)
