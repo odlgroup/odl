@@ -39,20 +39,20 @@ def mock_modules(modules):
 
 if on_rtd:
     mock_modules(['future', 'future.utils',
-				  'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
-				  'scipy.interpolate', 'scipy.interpolate.interpnd',
+                  'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
+                  'scipy.interpolate', 'scipy.interpolate.interpnd',
                   'numpy', 'numpy.linalg', 'numpy.distutils',
                   'matplotlib.pyplot',
                   'odlpp', 'odlpp.odlpp_cuda'])
 
 try:
-	# verify that we can even import odl properly
-	import odl
+    # verify that we can even import odl properly
+    import odl
 except Exception as e:
-	print('Failed importing odl, exiting')
-	print(e)
-	sys.exit(1)
-				  
+    print('Failed importing odl, exiting')
+    print(e)
+    sys.exit(1)
+
 # add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
 
@@ -79,6 +79,7 @@ if not on_rtd:
         'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
 
 # Stop autodoc from skipping __init__
+
 
 def skip(app, what, name, obj, skip, options):
     if (name.startswith('__') and name.endswith('__') and
