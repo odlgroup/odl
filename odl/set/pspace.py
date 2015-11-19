@@ -373,7 +373,10 @@ class ProductSpace(LinearSpace):
 
     def __getitem__(self, indices):
         """``ps.__getitem__(indices) <==> ps[indices]``."""
-        return self.spaces[indices]
+        if isinstance(indices, slice):
+            return ProductSpace(*self.spaces[indices])
+        else:
+            return self.spaces[indices]
 
     def __str__(self):
         """``ps.__str__() <==> str(ps)``."""
