@@ -114,14 +114,25 @@ def test_projection():
     r3 = odl.Rn(3)
     r3xr3 = odl.ProductSpace(r3, 2)
 
-    x = r3.element([1, 2, 3])
-    y = r3.element([7, 8, 9])
-    z = r3xr3.element([x, y])
+    x = r3xr3.element([[1, 2, 3],
+                       [4, 5, 6]])
     proj_0 = odl.ComponentProjection(r3xr3, 0)
-    assert x == proj_0(z)
+    assert x[0] == proj_0(x)
 
     proj_1 = odl.ComponentProjection(r3xr3, 1)
-    assert y == proj_1(z)
+    assert x[1] == proj_1(x)
+
+
+def test_projection_slice():
+    r3 = odl.Rn(3)
+    r33 = odl.ProductSpace(r3, 3)
+
+    x = r33.element([[1, 2, 3],
+                     [4, 5, 6],
+                     [7, 8, 9]])
+
+    proj = odl.ComponentProjection(r33, slice(0, 2))
+    assert x[0:2] == proj(x)
 
 
 if __name__ == '__main__':
