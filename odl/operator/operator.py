@@ -309,23 +309,20 @@ class Operator(with_metaclass(ABCMeta, object)):
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance."""
-        instance = super().__new__(cls, *args, **kwargs)
+        instance = super().__new__(cls)
 
         call_has_out, call_out_optional = _dispatch_call_args(cls)
         if not call_has_out:
             # Out-of-place _call
-            print('in __new__: oop')
             instance._call_in_place = partial(_default_call_in_place,
                                               instance)
             instance._call_out_of_place = instance._call
         elif call_out_optional:
             # Dual-use _call
-            print('in __new__: dual')
             instance._call_in_place = instance._call
             instance._call_out_of_place = instance._call
         else:
             # In-place only _call
-            print('in __new__: ip')
             instance._call_in_place = instance._call
             instance._call_out_of_place = partial(_default_call_out_of_place,
                                                   instance)
@@ -467,7 +464,7 @@ class Operator(with_metaclass(ABCMeta, object)):
                                 'when range is a field')
 
             print('in op.__call__: in-place')
-            self._call_in_place(x, out, **kwargs)
+            self._call_in_place(x, out=out, **kwargs)
             return out
 
         else:  # Out-of-place evaluation
