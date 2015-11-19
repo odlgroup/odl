@@ -18,17 +18,16 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 from future import standard_library
 standard_library.install_aliases()
-
+from builtins import str, super
 
 # External module imports
 import pytest
 
 # ODL imports
 import odl
-from odl.util.testutils import almost_equal, all_almost_equal, skip_if_no_cuda
+from odl.util.testutils import all_almost_equal, skip_if_no_cuda
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -94,11 +93,11 @@ class ForwardDiff2DAdjoint(odl.Operator):
 @skip_if_no_cuda
 def test_fwd_diff():
     # Continuous definition of problem
-    space = odl.L2(odl.Interval(0, 1))
+    space = odl.FunctionSpace(odl.Interval(0, 1))
 
     # Discretization
     n = 6
-    d = odl.l2_uniform_discretization(space, n, impl='cuda')
+    d = odl.uniform_discr(space, n, impl='cuda')
     fun = d.element([1, 2, 5, 3, 2, 1])
 
     # Create operator
@@ -112,12 +111,12 @@ def test_fwd_diff():
 @skip_if_no_cuda
 def test_square():
     # Continuous definition of problem
-    space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
 
     # Discretization
     n = 5
     m = 5
-    d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
+    d = odl.uniform_discr(space, (n, m), impl='cuda')
 
     fun = d.element([[0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0],
@@ -155,14 +154,14 @@ def test_square():
 @skip_if_no_cuda
 def test_rectangle():
     # Continuous definition of problem
-    space = odl.L2(odl.Rectangle([0, 0], [1, 1]))
+    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
 
     # Complicated functions to check performance
     n = 5
     m = 7
 
     # Discretization
-    d = odl.l2_uniform_discretization(space, (n, m), impl='cuda')
+    d = odl.uniform_discr(space, (n, m), impl='cuda')
 
     fun = d.element([[0, 0, 0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0, 0, 0],

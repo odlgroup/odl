@@ -18,9 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from builtins import str
 
 # External module imports
 import numpy as np
@@ -28,7 +28,7 @@ import pytest
 
 # ODL imports
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal
+from odl.util.testutils import all_equal, all_almost_equal, almost_equal
 
 
 def test_RxR():
@@ -41,8 +41,8 @@ def test_RxR():
     v = HxH.element([v1, v2])
     u = HxH.element([[1, 2], [3, 4]])
 
-    assert all_almost_equal([v1, v2], v)
-    assert all_almost_equal([v1, v2], u)
+    assert all_equal([v1, v2], v)
+    assert all_equal([v1, v2], u)
 
 
 def test_lincomb():
@@ -194,8 +194,8 @@ def test_power_RxR():
     v = HxH.element([v1, v2])
     u = HxH.element([[1, 2], [3, 4]])
 
-    assert all_almost_equal([v1, v2], v)
-    assert all_almost_equal([v1, v2], u)
+    assert all_equal([v1, v2], v)
+    assert all_equal([v1, v2], u)
 
 
 def test_power_lincomb():

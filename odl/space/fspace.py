@@ -15,17 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Spaces of functions with common domain and range.
-
-TODO: document properly
-"""
+"""Spaces of functions with common domain and range."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import str, super
 
 # External imports
 import numpy as np
@@ -77,7 +73,7 @@ class FunctionSet(Set):
 
         Parameters
         ----------
-        fcall : callable, optional
+        fcall : `callable`, optional
             The actual instruction for out-of-place evaluation.
             It must return an :attr:`range` element or a
             `numpy.ndarray` of such (vectorized call).
@@ -85,7 +81,7 @@ class FunctionSet(Set):
             If fcall is a :class:`FunctionSet.Vector`, it is wrapped
             as a new :class:`FunctionSet.Vector`.
 
-        fapply : callable, optional
+        fapply : `callable`, optional
             The actual instruction for in-place evaluation.
             Its first argument must be the :attr:`range` element
             or the array of such (vectorization) to which the
@@ -158,13 +154,14 @@ class FunctionSet(Set):
             ----------
             fset : :class:`FunctionSet`
                 The set of functions this element lives in
-            fcall : callable, optional
+            fcall : `callable`, optional
                 The actual instruction for out-of-place evaluation.
                 It must return an :attr:`FunctionSet.range` element or a
                 `numpy.ndarray` of such (vectorized call).
-            fapply : callable, optional
+            fapply : `callable`, optional
                 The actual instruction for in-place evaluation.
-                Its first argument must be the :attr:`FunctionSet.range` element
+                Its first argument must be the
+                :attr:`FunctionSet.range` element
                 or the array of such (vectorization) to which the
                 result is written.
 
@@ -232,11 +229,6 @@ class FunctionSet(Set):
             -------
             out : :attr:`FunctionSet.range` element or array of elements
                 Result of the function evaluation.
-
-            Raises
-            ------
-            If ``out`` is not a :attr:`FunctionSet.range` element or a
-            `numpy.ndarray` with ``out[0] in range``, a `TypeError` is raised.
             """
             if x in self.domain:
                 # single value list: f(0, 1, 2)
@@ -297,12 +289,7 @@ class FunctionSet(Set):
 
             Returns
             -------
-            None
-
-            Raises
-            ------
-            If ``out`` is not a :attr:`FunctionSet.range` element or a
-            `numpy.ndarray` with ``out[0] in range``, a `TypeError` is raised.
+            `None`
             """
             if not (out in self.range or
                     (isinstance(out, np.ndarray) and
@@ -337,7 +324,7 @@ class FunctionSet(Set):
 class FunctionSpace(FunctionSet, LinearSpace):
     """A vector space of functions."""
 
-    def __init__(self, dom, field):
+    def __init__(self, dom, field=RealNumbers()):
         """Initialize a new instance.
 
         Parameters
@@ -367,7 +354,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Parameters
         ----------
-        fcall : callable, optional
+        fcall : `callable`, optional
             The actual instruction for out-of-place evaluation.
             It must return an :attr:`FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
@@ -375,7 +362,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             If fcall is a :class:`FunctionSet.Vector`, it is wrapped
             as a new :class:`FunctionSpace.Vector`.
 
-        fapply : callable, optional
+        fapply : `callable`, optional
             The actual instruction for in-place evaluation.
             Its first argument must be the :attr:`FunctionSet.range` element
             or the array of such (vectorization) to which the
@@ -459,15 +446,15 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
                 out += tmp
 
-        z._call = lincomb_call
-        z._apply = lincomb_apply
+        out._call = lincomb_call
+        out._apply = lincomb_apply
 
     def zero(self):
         """The function mapping everything to zero.
 
         Notes
         -----
-        Since :class:`FunctionSpace._lincomb` is slow,
+        Since :meth:`FunctionSpace._lincomb` is slow,
         we implement this function directly.
         """
         def zero_(*_):
@@ -541,8 +528,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             be provided.*
             """
             if not isinstance(fspace, FunctionSpace):
-                raise TypeError('function space {} not a'
-                                ':class:`FunctionSpace` '
+                raise TypeError('function space {} not a `FunctionSpace` '
                                 'instance.'.format(fspace))
 
             super().__init__(fspace, fcall, fapply)

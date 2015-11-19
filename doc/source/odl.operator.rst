@@ -1,6 +1,8 @@
 odl.operator package
 ====================
 
+.. automodule:: odl.operator
+
 odl.operator.default_ops module
 -------------------------------
 

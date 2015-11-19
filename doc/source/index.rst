@@ -8,13 +8,13 @@ The main intent of ODL is to enable mathematicians and applied scientists to use
 Working with ODL
 ----------------
 
-User
-~~~~
+As a user
+~~~~~~~~~
 
 :doc:`guide/guide`
 
-Developer
-~~~~~~~~~
+As a developer
+~~~~~~~~~~~~~~
 
 :doc:`dev/dev`
 
@@ -23,10 +23,11 @@ Contents
 
 .. toctree::
    :maxdepth: 3
-    
+
    guide/guide
    dev/dev
    odl
+   guide/faq
 
 
 

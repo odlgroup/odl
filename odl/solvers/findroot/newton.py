@@ -33,78 +33,100 @@ __all__ = ('bfgs_method', 'broydens_first_method', 'broydens_second_method')
 # TODO: update all docs
 
 
-def bfgs_method(deriv, x, line_search, niter=1, partial=None):
-    """Quasi-Newton BFGS method to minimize an objective function.
+def bfgs_method(grad, x, line_search, niter=1, partial=None):
+    """Quasi-Newton BFGS method to minimize a differentiable function.
 
-    General implementation of the Quasi-Newton method with BFGS update
-    for solving a general optimization problem
+    This is a general and optimized implementation of a quasi-Newton
+    method with BFGS update for solving a general unconstrained
+    optimization problem
 
-    `min f(x)`
+        :math:`\min f(x)`
 
-    The QN method is an approximate newton method, where the Hessian
+    for a differentiable function
+    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`\mathcal{X}`. It does so by finding a zero of the gradient
+
+        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`.
+
+    The QN method is an approximate Newton method, where the Hessian
     is approximated and gradually updated in each step. This
     implementation uses the rank-one BFGS update schema where the
     inverse of the Hessian is recalculated in each iteration.
 
-    The algorithm is described in [1]_, Section 12.3 and in a
-    `Wikipedia article
+    The algorithm is described in [1]_, Section 12.3 and in the
+    `BFGS Wikipedia article
     <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\
 Goldfarb%E2%80%93Shanno_algorithm>`_
 
     Parameters
     ----------
-    deriv : `odl.Operator`
-        Derivative of the objective function
-    x : element in the domain of `grad_f`
+    grad : :class:`~odl.Operator`
+        Gradient mapping of the objective function, i.e. the mapping
+        :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
+    x : element in the domain of `grad`
         Starting point of the iteration
-    line_search : `LineSearch`
+    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
         Strategy to choose the step length
-    niter : int, optional
+    niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    `None`
 
     References
     ----------
     .. [1] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
        and nonlinear optimization. Siam, 2009
     """
-    hess = ident = IdentityOperator(deriv.range)
-    grad = deriv(x)
+    hess = ident = IdentityOperator(grad.range)
+    grad_x = grad(x)
     for _ in range(niter):
-        search_dir = -hess(grad)
-        dir_deriv = search_dir.inner(grad)
+        search_dir = -hess(grad_x)
+        dir_deriv = search_dir.inner(grad_x)
         step = line_search(x, direction=search_dir, dir_derivative=dir_deriv)
 
-        update = step * search_dir
-        x += update
+        x_update = search_dir
+        x_update *= step
+        x += x_update
 
-        grad, grad_old = deriv(x), grad
-        grad_update = grad - grad_old
+        grad_x, grad_diff = grad(x), grad_x
+        # grad_diff = grad(x) - grad(x_old)
+        grad_diff.space.lincomb(-1, grad_diff, 1, grad_x, out=grad_diff)
 
-        ys = grad_update.inner(update)
+        ys = grad_diff.inner(x_update)
+        # TODO: use a small (adjustable) tolerance instead of 0.0
         if ys == 0.0:
             return
 
         # Update Hessian
-        hess = ((ident - update * grad_update.T / ys) *
+        hess = ((ident - x_update * grad_diff.T / ys) *
                 hess *
-                (ident - grad_update * update.T / ys) +
-                update * update.T / ys)
+                (ident - grad_diff * x_update.T / ys) +
+                x_update * x_update.T / ys)
 
         if partial is not None:
             partial.send(x)
 
 
-def broydens_first_method(op, x, line_search, niter=1, partial=None):
-    """General implementation of Broyden's first (or 'good') method.
+def broydens_first_method(grad, x, line_search, niter=1, partial=None):
+    """Broyden's first method, a quasi-Newton scheme.
 
-    It determines a solution to the equation
+    This is a general and optimized implementation of Broyden's first
+    (or 'good') method, a quasi-Newton method for solving a general
+    unconstrained optimization problem
 
-    :math:`A(x) = 0`
+        :math:`\min f(x)`
 
-    for a general (not necessarily differentiable) operator `A`
-    using a quasi-Newton approach with approximate Hessian.
+    for a differentiable function
+    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`\mathcal{X}`. It does so by finding a zero of the gradient
+
+        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`
+
+    using a Newton-type update scheme with approximate Hessian.
 
     The algorithm is described in [1]_ and [2]_, and in a
     `Wikipedia article
@@ -112,18 +134,21 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
 
     Parameters
     ----------
-    op : Operator
-        Operator for which a zero is computed
-    x : element of the domain of `op`
-        Vector to which the result is written. Its initial value is
-        used as starting point of the iteration, and its values are
-        updated in each iteration step.
-    line_search : `LineSearch`
+    grad : :class:`~odl.Operator`
+        Gradient mapping of the objective function, i.e. the mapping
+        :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
+    x : element in the domain of `grad`
+        Starting point of the iteration
+    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
         Strategy to choose the step length
-    niter : int, optional
+    niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    `None`
 
     References
     ----------
@@ -134,42 +159,55 @@ def broydens_first_method(op, x, line_search, niter=1, partial=None):
     .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical
        Mathematics 31.2 (1991): 369-372.
     """
-
-    # TODO: One Hi call can be removed using linearity
-
-    hess = IdentityOperator(op.range)
-    opx = op(x)
+    hess = IdentityOperator(grad.range)
+    grad_x = grad(x)
+    search_dir = hess(grad_x)
 
     for _ in range(niter):
-        p = hess(opx)
-        t = line_search(x, p, opx)
+        step = line_search(x, search_dir, grad_x)
 
-        delta_x = t * p
-        x += delta_x
+        u = search_dir.copy()  # Save old hess(grad f(x))
 
-        opx, opx_old = op(x), opx
-        delta_f = opx - opx_old
+        x_update = search_dir  # Just rename, still writing to search_dir
+        x_update *= step
+        x += x_update  # x_(k+1) = x_k + s * d
 
-        v = hess(delta_x)
-        v_delta_f = v.inner(delta_f)
-        if v_delta_f == 0:
+        grad_x, grad_diff = grad(x), grad_x
+        # grad_diff = grad(x) - grad(x_old)
+        grad_diff.space.lincomb(-1, grad_diff, 1, grad_x, out=grad_diff)
+
+        search_dir = hess(grad_x)  # Calculate new hess(grad f (x))
+
+        v = hess(x_update)  # v = H(s * d)
+        scalprod = v.inner(grad_diff)
+        if scalprod == 0:
             return
-        u = (delta_x + hess(delta_f)) / (v_delta_f)
+
+        u *= (step - 1)
+        u += search_dir
+        u /= scalprod
         hess -= u * v.T
 
         if partial is not None:
             partial.send(x)
 
 
-def broydens_second_method(op, x, line_search, niter=1, partial=None):
-    """General implementation of Broyden's second (or 'bad') method.
+def broydens_second_method(grad, x, line_search, niter=1, partial=None):
+    """Broyden's first method, a quasi-Newton scheme.
 
-    It determines a solution to the equation
+    This is a general and optimized implementation of Broyden's second
+    (or 'bad') method, a quasi-Newton method for solving a general
+    unconstrained optimization problem
 
-    :math:`A(x) = 0`
+        :math:`\min f(x)`
 
-    for a general (not necessarily differentiable) operator `A`
-    using a quasi-Newton approach with approximate Hessian.
+    for a differentiable function
+    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`\mathcal{X}`. It does so by finding a zero of the gradient
+
+        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`
+
+    using a Newton-type update scheme with approximate Hessian.
 
     The algorithm is described in [1]_ and [2]_, and in a
     `Wikipedia article
@@ -177,17 +215,16 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
 
     Parameters
     ----------
-    op : Operator
-        Operator for which a zero is computed
-    x : element of the domain of `op`
-        Vector to which the result is written. Its initial value is
-        used as starting point of the iteration, and its values are
-        updated in each iteration step.
-    line_search : `LineSearch`
+    grad : :class:`~odl.Operator`
+        Gradient mapping of the objective function, i.e. the mapping
+        :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
+    x : element in the domain of `grad`
+        Starting point of the iteration
+    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
         Strategy to choose the step length
-    niter : int, optional
+    niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References
@@ -203,27 +240,30 @@ def broydens_second_method(op, x, line_search, niter=1, partial=None):
     # TODO: potentially make the implementation faster by considering
     # performance optimization according to Kvaalen.
 
-    hess = IdentityOperator(op.range)
-    opx = op(x)
+    hess = IdentityOperator(grad.range)
+    grad_x = grad(x)
 
     for _ in range(niter):
-        p = hess(opx)
-        t = line_search(x, p, opx)
+        search_dir = hess(grad_x)
+        step = line_search(x, search_dir, grad_x)
 
-        delta_x = t * p
-        x += delta_x
+        x_update = search_dir  # Just rename, still writing to search_dir
+        x_update *= step
+        x += x_update
 
-        opx, opx_old = op(x), opx
-        delta_f = opx - opx_old
+        grad_x, grad_diff = grad(x), grad_x
+        # grad_diff = grad(x) - grad(x_old)
+        grad_diff.space.lincomb(-1, grad_diff, 1, grad_x, out=grad_diff)
 
-        delta_f_norm2 = delta_f.norm() ** 2
-        if delta_f_norm2 == 0:
+        grad_diff_norm2 = grad_diff.norm() ** 2
+        if grad_diff_norm2 == 0:
             return
-        u = (delta_x + hess(delta_f)) / (delta_f_norm2)
-        hess -= u * delta_f.T
+        u = (x_update + hess(grad_diff)) / grad_diff_norm2
+        hess -= u * grad_diff.T
 
         if partial is not None:
             partial.send(x)
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

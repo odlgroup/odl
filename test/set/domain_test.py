@@ -18,9 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from builtins import str
 
 # External module imports
 import pytest
@@ -28,11 +28,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.domain import IntervalProd, Interval, Rectangle, Cuboid
-from odl.util.testutils import almost_equal, all_almost_equal
-
-
-# TODO:
-# - Interval arithmetics
+from odl.util.testutils import almost_equal, all_equal
 
 
 def random_point(set_):
@@ -72,7 +68,7 @@ def test_begin():
     assert almost_equal(set_.begin, 1)
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_almost_equal(set_.begin, [1, 2, 3])
+    assert all_equal(set_.begin, [1, 2, 3])
 
 
 def test_end():
@@ -86,7 +82,7 @@ def test_end():
     assert almost_equal(set_.end, 2)
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_almost_equal(set_.end, [5, 6, 7])
+    assert all_equal(set_.end, [5, 6, 7])
 
 
 def test_ndim():
@@ -168,7 +164,7 @@ def test_modpoint():
     assert set_.midpoint == np.inf
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_almost_equal(set_.midpoint, [3, 4, 5])
+    assert all_equal(set_.midpoint, [3, 4, 5])
 
 
 def test_element():

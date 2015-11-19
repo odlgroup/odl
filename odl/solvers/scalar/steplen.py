@@ -49,12 +49,12 @@ class StepLength(with_metaclass(ABCMeta, object)):
             The current point
         direction : :attr:`~odl.Operator.domain` element
             Search direction in which the line search should be computed
-        dir_derivative : float
+        dir_derivative : `float`
             Directional derivative along the ``direction``
 
         Returns
         -------
-        alpha : `float`
+        step : `float`
             The step length
         """
 
@@ -77,7 +77,7 @@ class LineSearch(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        alpha : `float`
+        step : `float`
             The step length
         """
 
@@ -151,7 +151,7 @@ class BacktrackingLineSearch(LineSearch):
 
         Returns
         -------
-        alpha : `float`
+        step : `float`
             The computed step length
         """
         alpha = 1.0
@@ -193,13 +193,14 @@ class ConstantLineSearch(LineSearch):
 
         Returns
         -------
-        alpha : `float`
+        step : `float`
             The constant step length
         """
         return self.constant
 
 
 class BarzilaiBorweinStep(object):
+
     """Barzilai-Borwein method to compute a step length.
 
     Barzilai-Borwein method to compute a step length

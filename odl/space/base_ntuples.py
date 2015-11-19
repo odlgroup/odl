@@ -22,8 +22,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
-from odl.util.utility import with_metaclass
+from builtins import int, super
 
 # External module imports
 from abc import ABCMeta, abstractmethod
@@ -33,8 +32,9 @@ import numpy as np
 # ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.util.utility import array1d_repr, array1d_str, dtype_repr
-from odl.util.utility import is_real_dtype
+from odl.util.utility import (
+    array1d_repr, array1d_str, dtype_repr, with_metaclass,
+    is_scalar_dtype, is_real_dtype)
 
 
 __all__ = ('NtuplesBase', 'FnBase', 'FnWeightingBase')
@@ -51,14 +51,14 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         ----------
         size : non-negative int
             The number of entries per tuple
-        dtype : object
+        dtype : `object`
             The data type for each tuple entry. Can be provided in any
             way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
         self._size = int(size)
-        if self._size < 0:
+        if self.size < 0:
             raise TypeError('size {} is not non-negative.'.format(size))
         self._dtype = np.dtype(dtype)
 
@@ -275,8 +275,8 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
             Parameters
             ----------
-            dtype : `numpy.dtype`, Optional (default: ``self.dtype``)
-                The dtype of the output array
+            dtype : `object`
+                Specifier for the data type of the output array
 
             Returns
             -------
@@ -337,10 +337,10 @@ class FnBase(NtuplesBase, LinearSpace):
             Only scalar data types (numbers) are allowed.
         """
         super().__init__(size, dtype)
-        if not np.issubsctype(self._dtype, np.number):
+        if not is_scalar_dtype(self.dtype):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 
-        if is_real_dtype(self._dtype):
+        if is_real_dtype(self.dtype):
             self._field = RealNumbers()
         else:
             self._field = ComplexNumbers()
@@ -389,36 +389,65 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to :class:`~odl.Operator` but
-    without extra type checks of input parameters, this is done in the callers
-    of the :class:`~odl.LinearSpace` instance where these functions used.
+    The functions are implemented similarly to :class:`~odl.Operator`,
+    but without extra type checks of input parameters - this is done in
+    the callers of the :class:`~odl.LinearSpace` instance where these
+    functions used.
     """
 
-    def __init__(self, dist_using_inner=False):
+    def __init__(self, impl, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
+        impl : `str`
+            Specifier for the implementation backend
+        exponent : positive `float`
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
         dist_using_inner : `bool`, optional
             Calculate :meth:`dist` using the formula
 
-            ``norm(x-y)**2 = norm(x)**2 + norm(y)**2 - 2*inner(x, y).real``
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
+
+            This option can only be used if ``exponent`` is 2.0.
+
+            Default: `False`.
         """
         self._dist_using_inner = bool(dist_using_inner)
+        self._exponent = float(exponent)
+        self._impl = str(impl).lower()
+        if self._exponent <= 0:
+            raise ValueError('only positive exponents or inf supported, '
+                             'got {}.'.format(exponent))
+        elif self._exponent != 2.0 and self._dist_using_inner:
+            raise ValueError('`dist_using_inner` can only be used if the '
+                             'exponent is 2.0.')
 
-    @abstractmethod
+    @property
+    def impl(self):
+        """Implementation backend of this weighting."""
+        return self._impl
+
+    @property
+    def exponent(self):
+        """Exponent of this weighting."""
+        return self._exponent
+
     def __eq__(self, other):
         """``w.__eq__(other) <==> w == other``.
 
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`FnWeightingBase` instance
-            represented by the identical matrix, `False` otherwise.
+            `True` if ``other`` is a the same weighting, `False`
+            otherwise.
 
         Notes
         -----
@@ -426,6 +455,9 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         arrays may be compared element-wise. That is the task of the
         :meth:`equiv` method.
         """
+        return (self.exponent == other.exponent and
+                self._dist_using_inner == other._dist_using_inner and
+                self.impl == other.impl)
 
     def equiv(self, other):
         """Test if ``other`` is an equivalent inner product.
@@ -435,9 +467,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         equivalent : `bool`
             `True` if ``other`` is a :class:`FnWeightingBase` instance which
             yields the same result as this inner product for any
-            input, `False` otherwise. This is checked by entry-wise
-            comparison of this instance's matrix with the matrix of
-            ``other``.
+            input, `False` otherwise.
         """
         raise NotImplementedError
 

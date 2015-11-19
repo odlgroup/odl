@@ -32,15 +32,17 @@ from abc import ABCMeta
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
-from odl.space.ntuples import Ntuples, Rn, Cn
+from odl.space.ntuples import Ntuples, Fn, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
 if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaNtuples, CudaRn
+    from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
     CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
 else:
-    CudaRn = CudaCn = CudaNtuples = type(None)
+    CudaRn = CudaCn = CudaFn = CudaNtuples = type(None)
+from odl.util.utility import (
+    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
 __all__ = ('RawDiscretization', 'Discretization')
@@ -80,23 +82,23 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         ----------
         uspace : :class:`~odl.Set`
             The undiscretized (abstract) set to be discretized
-        dspace : :class:`~odl.NtuplesBase`
+        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object
         restr : :class:`~odl.Operator`, optional
-            Operator mapping a :attr:`uspace` element to a :attr:`dspace`
-            element.
-            Must satisfy ``restr.domain == uspace``, ``restr.range == dspace``.
+            Operator mapping a :attr:`uspace` element to a
+            :attr:`dspace` element.
+            Must satisfy ``restr.domain == uspace``,
+            ``restr.range == dspace``.
         ext : :class:`~odl.Operator`, optional
-            Operator mapping a :attr:`dspace` element to a :attr:`uspace`
-            element.
-            Must satisfy ``ext.domain == dspace``, ``ext.range == uspace``.
-
+            Operator mapping a :attr:`dspace` element to a
+            :attr:`uspace` element.
+            Must satisfy ``ext.domain == dspace``,
+            ``ext.range == uspace``.
             """
         if not isinstance(uspace, Set):
             raise TypeError('undiscretized space {} not a `Set` instance.'
                             ''.format(uspace))
-
         if not isinstance(dspace, NtuplesBase):
             raise TypeError('data space {} not an `NtuplesBase` instance.'
                             ''.format(dspace))
@@ -150,7 +152,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
     @property
     def dspace_type(self):
         """Data space type of this discretization."""
-        return type(self._dspace)
+        return type(self.dspace)
 
     @property
     def restriction(self):
@@ -199,10 +201,10 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`RawDiscretization` instance and
-            all attributes :attr:`uspace`, :attr:`dspace`, :attr:`restriction`
-            and :attr:`extension` of ``other`` and this discretization are
-            equal, `False` otherwise.
+            `True` if ``other`` is a :class:`RawDiscretization`
+            instance and all attributes :attr:`uspace`, :attr:`dspace`,
+            :attr:`restriction` and :attr:`extension` of ``other``
+            and this discretization are equal, `False` otherwise.
         """
         if other is self:
             return True
@@ -220,8 +222,8 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
     @property
     def dtype(self):
-        """The `numpy.dtype` of the representation space."""
-        return self.dspace.dtype
+        """The data type of the representation space."""
+        return self._dtype
 
     class Vector(NtuplesBase.Vector):
 
@@ -266,7 +268,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
             Parameters
             ----------
-            out : `numpy.ndarray`, Optional (default: `None`)
+            out : `numpy.ndarray`, optional
                 Array in which the result should be written in-place.
                 Has to be contiguous and of the correct dtype.
             """
@@ -294,7 +296,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
             Returns
             -------
-            values : :class:`~odl.NtuplesBase.Vector`
+            values : :class:`~odl.space.base_ntuples.NtuplesBase.Vector`
                 The value(s) at the index (indices)
             """
             return self.ntuple.__getitem__(indices)
@@ -306,7 +308,8 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             ----------
             indices : `int` or `slice`
                 The position(s) that should be set
-            values : {scalar, array-like, :class:`~odl.NtuplesBase.Vector`}
+            values : {scalar, array-like,\
+                      :class:`~odl.space.base_ntuples.NtuplesBase.Vector`}
                 The value(s) that are to be assigned.
 
                 If ``index`` is an `int`, ``value`` must be single value.
@@ -330,17 +333,18 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
                                              arraynd_repr(self.asarray()))
 
 
-class Discretization(with_metaclass(ABCMeta, RawDiscretization,
-                                    FnBase)):
+class Discretization(RawDiscretization, FnBase):
 
     """Abstract class for discretizations of linear vector spaces.
 
-    This variant of :class:`RawDiscretization` adds linear structure to all
-    its members. The :attr:`RawDiscretization.uspace` is a
-    :class:`~odl.LinearSpace`, the :attr:`RawDiscretization.dspace` for the
-    data representation is an implementation of :math:`F^n`, where ``F`` is
-    some :class:`~odl.Field`, and both :attr:`RawDiscretization.restriction`
-    and :attr:`RawDiscretization.extension` are linear :class:`~odl.Operator`.
+    This variant of :class:`RawDiscretization` adds linear structure
+    to all its members. The :attr:`RawDiscretization.uspace` is a
+    :class:`~odl.LinearSpace`, the :attr:`RawDiscretization.dspace`
+    for the data representation is an implementation of
+    :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is some
+    :class:`~odl.Field`, and both :attr:`RawDiscretization.restriction`
+    and :attr:`RawDiscretization.extension` are linear
+    :class:`~odl.Operator`'s.
     """
 
     def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
@@ -353,25 +357,25 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
         ----------
         uspace : :class:`~odl.LinearSpace`
             The (abstract) space to be discretized
-        dspace : :class:`~odl.FnBase`
+        dspace : :class:`~odl.space.base_ntuples.FnBase`
             Data space providing containers for the values of a
-            discretized object. Its :attr:`~odl.FnBase.field` attribute must
-            be the same as ``uspace.field``.
+            discretized object. Its
+            :attr:`~odl.space.base_ntuples.FnBase.field` attribute
+            must be the same as ``uspace.field``.
         restr : :class:`~odl.Operator`, linear, optional
-            Operator mapping a :attr:`RawDiscretization.uspace` element to a
-            :attr:`RawDiscretization.dspace` element.
-            Must satisfy ``restr.domain == uspace``, ``restr.range == dspace``
+            Operator mapping a :attr:`RawDiscretization.uspace` element
+            to a :attr:`RawDiscretization.dspace` element. Must satisfy
+            ``restr.domain == uspace``, ``restr.range == dspace``
         ext : :class:`~odl.Operator`, linear, optional
-            Operator mapping a :attr:`RawDiscretization.dspace` element to a
-            :attr:`RawDiscretization.uspace` element. Must satisfy
+            Operator mapping a :attr:`RawDiscretization.dspace` element
+            to a :attr:`RawDiscretization.uspace` element. Must satisfy
             ``ext.domain == dspace``, ``ext.range == uspace``.
         """
         super().__init__(uspace, dspace, restr, ext, **kwargs)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
-            raise TypeError('undiscretized space {} not a'
-                            ':class:`~odl.LinearSpace` '
+            raise TypeError('undiscretized space {} not a `LinearSpace` '
                             'instance.'.format(uspace))
 
         if not isinstance(dspace, FnBase):
@@ -416,20 +420,14 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
 
     def _dist(self, x1, x2):
         """Raw distance between two vectors."""
-        # TODO: implement inner product according to correspondence
-        # principle!
         return self.dspace._dist(x1.ntuple, x2.ntuple)
 
     def _norm(self, x):
         """Raw norm of a vector."""
-        # TODO: implement inner product according to correspondence
-        # principle!
         return self.dspace._norm(x.ntuple)
 
     def _inner(self, x1, x2):
         """Raw inner product of two vectors."""
-        # TODO: implement inner product according to correspondence
-        # principle!
         return self.dspace._inner(x1.ntuple, x2.ntuple)
 
     def _multiply(self, x1, x2, out):
@@ -452,39 +450,80 @@ class Discretization(with_metaclass(ABCMeta, RawDiscretization,
             super().__init__(space, data)
 
 
-def dspace_type(space, impl):
+def dspace_type(space, impl, dtype=None):
     """Select the correct corresponding n-tuples space.
 
     Parameters
     ----------
-    space : :class:`~odl.LinearSpace`
-        The template space
+    space : `object`
+        The template space. If it has a ``field`` attribute,
+        ``dtype`` must be consistent with it
     impl : {'numpy', 'cuda'}
         The backend for the data space
+    dtype : `type`, optional
+        Data type which the space is supposed to use. If `None`, the
+        space type is purely determined from ``space`` and
+        ``impl``. If given, it must be compatible with the
+        field of ``space``. Non-floating types result in basic
+        :class:`Fn`-type spaces.
 
     Returns
     -------
-    dtype : `type`
-        Space type selected after the space's field and the chosen
-        backend
+    stype : `type`
+        Space type selected after the space's field, the backend and
+        the data type
     """
-    if impl not in ('numpy', 'cuda'):
+    impl_ = str(impl).lower()
+    if impl_ not in ('numpy', 'cuda'):
         raise ValueError('implementation type {} not understood.'
                          ''.format(impl))
 
-    if impl == 'cuda' and not CUDA_AVAILABLE:
+    if impl_ == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA implementation not available.')
 
+    basic_map = {'numpy': Fn, 'cuda': CudaFn}
+
     spacetype_map = {
-        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn, None: Ntuples},
-        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None, None: CudaNtuples}
+        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn,
+                  type(None): Ntuples},
+        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None,
+                 type(None): CudaNtuples}
     }
 
-    field_type = None if not hasattr(space, 'field') else type(space.field)
-    stype = spacetype_map[impl][field_type]
+    field_type = type(getattr(space, 'field', None))
+
+    if dtype is None:
+        stype = spacetype_map[impl_][field_type]
+    elif is_real_floating_dtype(dtype):
+        if field_type is None or field_type == ComplexNumbers:
+            raise TypeError('real floating data type {} requires space '
+                            'field to be of type `RealNumbers`, got {}.'
+                            ''.format(dtype, field_type))
+        stype = spacetype_map[impl_][field_type]
+    elif is_complex_floating_dtype(dtype):
+        if field_type is None or field_type == RealNumbers:
+            raise TypeError('complex floating data type {} requires space '
+                            'field to be of type `ComplexNumbers`, got {}.'
+                            ''.format(dtype, field_type))
+        stype = spacetype_map[impl_][field_type]
+    elif is_scalar_dtype(dtype):
+        if field_type == ComplexNumbers:
+            raise TypeError('non-floating data type {} requires space field '
+                            'to be of type `RealNumbers`, got {}.'
+                            .format(dtype, field_type))
+        elif field_type == RealNumbers:
+            stype = basic_map[impl_]
+        else:
+            stype = spacetype_map[impl_][field_type]
+    elif field_type is None:  # Only in this case are arbitrary types allowed
+        stype = spacetype_map[impl_][field_type]
+    else:
+        raise TypeError('non-scalar data type {} cannot be combined with '
+                        'a `LinearSpace`.'.format(dtype))
+
     if stype is None:
-        raise NotImplementedError('no corresponding data space available for '
-                                  'space {!r} and implementation {!r}.'
+        raise NotImplementedError('no corresponding data space available '
+                                  'for space {!r} and implementation {!r}.'
                                   ''.format(space, impl))
     return stype
 

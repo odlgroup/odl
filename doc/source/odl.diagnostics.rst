@@ -1,6 +1,8 @@
 odl.diagnostics package
 =======================
 
+.. automodule:: odl.diagnostics
+
 odl.diagnostics.examples module
 -------------------------------
 

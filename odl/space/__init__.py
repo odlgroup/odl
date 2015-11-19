@@ -15,24 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Concrete vector spaces.
-"""
+"""Concrete vector spaces."""
+
+# TODO: write an introduction
 
 from __future__ import absolute_import
 
 __all__ = ()
 
 from . import base_ntuples
-from .base_ntuples import *
-__all__ += base_ntuples.__all__
 
 from . import ntuples
 from .ntuples import *
 __all__ += ntuples.__all__
-
-from . import default
-from .default import *
-__all__ += default.__all__
 
 from . import fspace
 from .fspace import *

@@ -38,12 +38,20 @@ def mock_modules(modules):
     sys.modules.update((mod_name, Mock()) for mod_name in modules)
 
 if on_rtd:
-    mock_modules(['future', 'future.utils', 'scipy', 'scipy.linalg',
-                  'numpy', 'numpy.linalg',
-                  'numpy.distutils', 'scipy.interpolate',
+    mock_modules(['future', 'future.utils',
+                  'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
+                  'scipy.interpolate', 'scipy.interpolate.interpnd',
+                  'numpy', 'numpy.linalg', 'numpy.distutils',
                   'matplotlib.pyplot',
-                  'scipy.interpolate.interpnd',
                   'odlpp', 'odlpp.odlpp_cuda'])
+
+try:
+    # verify that we can even import odl properly
+    import odl
+except Exception as e:
+    print('Failed importing odl, exiting')
+    print(e)
+    sys.exit(1)
 
 # add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
@@ -183,19 +191,19 @@ htmlhelp_basename = 'odldoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+latex_elements = {}
+# The paper size ('letterpaper' or 'a4paper').
+# 'papersize': 'letterpaper',
 
-    # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+# The font size ('10pt', '11pt' or '12pt').
+# 'pointsize': '10pt',
 
-    # Additional stuff for the LaTeX preamble.
-    #'preamble': '',
+# Additional stuff for the LaTeX preamble.
+# 'preamble': '',
 
-    # Latex figure (float) alignment
-    #'figure_align': 'htbp',
-}
+# Latex figure (float) alignment
+# 'figure_align': 'htbp',
+
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,

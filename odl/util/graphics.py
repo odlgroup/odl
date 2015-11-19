@@ -25,7 +25,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 # ODL
-from odl.util.utility import is_complex_dtype
+from odl.util.utility import is_real_dtype
 
 # External module imports
 import numpy as np
@@ -40,7 +40,7 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
 
     Parameters
     ----------
-    method : string, optional
+    method : `str`, optional
         1d methods:
 
         'plot' : graph plot
@@ -55,7 +55,7 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
 
         'wireframe', 'plot_wireframe' : surface plot
 
-    title : string, optional
+    title : `str`, optional
         Set the title of the figure
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
@@ -77,7 +77,7 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
     arrange_subplots = (121, 122)  # horzontal arrangement
 
     values = dfunc.asarray()
-    dfunc_is_complex = is_complex_dtype(dfunc.space.dspace.dtype)
+    dfunc_is_complex = not is_real_dtype(dfunc.space.dspace.dtype)
 
     figsize = kwargs.pop('figsize', None)
     saveto = kwargs.pop('saveto', None)

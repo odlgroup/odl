@@ -36,45 +36,63 @@ __all__ = ()
 def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     """Optimized implementation of Landweber's method.
 
-    This method solves the inverse problem (of the first kind)
+    This method calculates an approximate least-squares solution of
+    the inverse problem of the first kind
 
-    :math:`A (x) = y`
+        :math:`\mathcal{A} (x) = y`,
 
-    for a (Frechet-) differentiable operator `A` using the iteration
+    for a given :math:`y\\in \mathcal{Y}`, i.e. an approximate
+    solution :math:`x^*` to
 
-    :math:`x <- x - \omega * (A')^* (A(x) - y)`
+        :math:`\min_{x\\in \mathcal{X}}
+        \\lVert \mathcal{A}(x) - y \\rVert_{\mathcal{Y}}^2`
 
-    It uses a minimum amount of memory copies by applying re-usable
-    temporaries and in-place evaluation.
+    for a (Frechet-) differentiable operator
+    :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
+    spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}`. The method
+    starts from an initial guess :math:`x_0` and uses the
+    iteration
 
-    The method is described in a
+    :math:`x_{k+1} = x_k -
+    \omega \ \partial \mathcal{A}(x)^* (\mathcal{A}(x_k) - y)`,
+
+    where :math:`\partial \mathcal{A}(x)` is the Frechet derivativ
+    of :math:`\mathcal{A}` at :math:`x` and :math:`\omega` is a
+    relaxation parameter. For linear problems, a choice
+    :math:`0 < \omega < 2/\\lVert \mathcal{A}\\rVert` guarantees
+    convergence, where :math:`\\lVert\mathcal{A}\\rVert` stands for the
+    operator norm of :math:`\mathcal{A}`.
+
+    This implementation uses a minimum amount of memory copies by
+    applying re-usable temporaries and in-place evaluation.
+
+    The method is also described in a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Landweber_iteration>`_.
 
     Parameters
     ----------
-    op : `Operator`
+    op : :class:`~odl.Operator`
         Operator in the inverse problem. It must have a `derivative`
         property, which returns a new operator which in turn has an
         `adjoint` property, i.e. `op.derivative(x).adjoint` must be
         well-defined for `x` in the operator domain.
-    x : element of the domain of `op`
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : `int`, optional
         Maximum number of iterations
-    omega : positive float
-        Relaxation parameter, must lie between 0 and :math:`2/||A||`,
-        the operator norm of `A`, to guarantee convergence.
-    partial : `Partial`, optional
+    omega : positive `float`
+        Relaxation parameter in the iteration
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
     -------
-    None
+    `None`
     """
     # TODO: add a book reference
 
@@ -110,29 +128,30 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     Parameters
     ----------
-    op : `Operator`
+    op : linear :class:`~odl.Operator`
         Operator in the inverse problem. It must be linear and
         self-adjoint. This implies in particular that its domain and
         range are equal.
-    x : element of the domain of `op`
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : `Partial`, optional
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
     -------
-    None
+    `None`
     """
     # TODO: add a book reference
+    # TODO: update doc
 
-    if op.domain != op.range:
-        raise TypeError('Operator needs to be self adjoint')
+    if op.domain != op.range or not op.is_linear:
+        raise TypeError('Operator needs to be linear and self-adjoint')
 
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
@@ -141,13 +160,18 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     sqnorm_r_old = r.norm() ** 2  # Only recalculate norm after update
 
+    if sqnorm_r_old == 0:  # Return if no step forward
+        return
+
     for _ in range(niter):
         op(p, out=Ap)  # Ap = A p
 
-        alpha = sqnorm_r_old / p.inner(Ap)
+        pTAp = p.inner(Ap)
 
-        if alpha == 0.0:  # Return if residual is 0
+        if pTAp == 0.0:  # Return if step is 0
             return
+
+        alpha = sqnorm_r_old / pTAp
 
         x.lincomb(1, x, alpha, p)            # x = x + alpha*p
         r.lincomb(1, r, -alpha, Ap)           # r = r - alpha*p
@@ -186,25 +210,28 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
     Parameters
     ----------
-    op : `Operator`
-        Operator in the inverse problem. It must be linear and implement
-        the `adjoint` property.
-    x : element of the domain of `op`
+    op : `~odl.Operator`
+        Operator in the inverse problem. If not linear, it must have
+        an implementation of :attr:`~odl.Operator.derivative`, which
+        in turn must implement :attr:`~odl.Operator.adjoint`, i.e.
+        the call ``op.derivative(x).adjoint`` must be valid.
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : `Partial`, optional
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
     -------
-    None
+    `None`
     """
     # TODO: add a book reference
+    # TODO: update doc
 
     d = op(x)
     d.lincomb(1, rhs, -1, d)               # d = rhs - A x
@@ -248,13 +275,13 @@ def exp_zero_seq(base):
 
     Parameters
     ----------
-    base : float
+    base : `float`
         Base of the sequence. Its absolute value must be larger than
         1.
 
     Yields
     ------
-    val : float
+    val : `float`
         The next value in the exponential sequence
     """
     value = 1.0
@@ -284,23 +311,23 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
     Parameters
     ----------
-    op : `odl.Operator`
-        Operator in the inverse problem. It must have a `derivative`
-        property, which returns a new operator which in turn has an
-        `adjoint` property, i.e. `op.derivative(x).adjoint` must be
-        well-defined for `x` in the operator domain.
-    x : element of the domain of `op`
+    op : :class:`~odl.Operator`
+        Operator in the inverse problem. If not linear, it must have
+        an implementation of :attr:`~odl.Operator.derivative`, which
+        in turn must implement :attr:`~odl.Operator.adjoint`, i.e.
+        the call ``op.derivative(x).adjoint`` must be valid.
+    x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of `op`
+    rhs : element of the range of ``op``
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : `int`, optional
         Maximum number of iterations
-    zero_seq : iterable, optional
+    zero_seq : `iterable`, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
-    partial : `Partial`, optional
+    partial : :class:`~odl.solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
