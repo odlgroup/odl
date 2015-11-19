@@ -39,7 +39,7 @@ def mock_modules(modules):
 
 if on_rtd:
     mock_modules(['future', 'future.utils',
-				  'scipy', 'scipy.linalg', 'scipy.sparse',
+				  'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
 				  'scipy.interpolate', 'scipy.interpolate.interpnd',
                   'numpy', 'numpy.linalg', 'numpy.distutils',
                   'matplotlib.pyplot',
