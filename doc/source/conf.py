@@ -38,11 +38,11 @@ def mock_modules(modules):
     sys.modules.update((mod_name, Mock()) for mod_name in modules)
 
 if on_rtd:
-    mock_modules(['future', 'future.utils', 'scipy', 'scipy.linalg',
-                  'numpy', 'numpy.linalg',
-                  'numpy.distutils', 'scipy.interpolate',
+    mock_modules(['future', 'future.utils',
+				  'scipy', 'scipy.linalg', 'scipy.sparse',
+				  'scipy.interpolate', 'scipy.interpolate.interpnd',
+                  'numpy', 'numpy.linalg', 'numpy.distutils',
                   'matplotlib.pyplot',
-                  'scipy.interpolate.interpnd',
                   'odlpp', 'odlpp.odlpp_cuda'])
 
 # add numpydoc folder
