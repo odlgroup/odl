@@ -300,6 +300,35 @@ class ProductSpace(LinearSpace):
         """
         return self.element([space.zero() for space in self.spaces])
 
+    def one(self):
+        """Create the one vector of the product space.
+
+        The i:th component of the product space one vector is the
+        one vector of the i:th space in the product.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        one : ProductSpace.Vector
+            The one vector in the product space
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r2, r3 = Rn(2), Rn(3)
+        >>> one_2, one_3 = r2.one(), r3.one()
+        >>> r2x3 = ProductSpace(r2, r3)
+        >>> one_2x3 = r2x3.one()
+        >>> one_2 == one_2x3[0]
+        True
+        >>> one_3 == one_2x3[1]
+        True
+        """
+        return self.element([space.one() for space in self.spaces])
+
     def _lincomb(self, a, x, b, y, out):
         # pylint: disable=protected-access
         for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts,
