@@ -78,6 +78,13 @@ def vector_examples(space):
         where ``string`` is a short description of the vector
     """
 
+    if isinstance(space, ProductSpace):
+        for examples in product(*[vector_examples(spc) for spc in space]):
+            name = ', '.join(name for name, _ in examples)
+            vector = space.element([vec for _, vec in examples])
+            yield (name, space.element(vector))
+        return
+
     # All spaces should yield the zero element
     yield ('Zero', space.zero())
 
@@ -86,13 +93,7 @@ def vector_examples(space):
     except NotImplementedError:
         pass
 
-    if isinstance(space, ProductSpace):
-        for examples in product(*[vector_examples(spc) for spc in space]):
-            name = ', '.join(name for name, _ in examples)
-            vector = space.element([vec for _, vec in examples])
-            yield (name, space.element(vector))
-
-    elif isinstance(space, DiscreteLp):
+    if isinstance(space, DiscreteLp):
         uspace = space.uspace
 
         # Get the points and calculate some statistics on them
