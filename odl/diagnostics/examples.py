@@ -81,6 +81,11 @@ def vector_examples(space):
     # All spaces should yield the zero element
     yield ('Zero', space.zero())
 
+    try:
+        yield ('One', space.one())
+    except NotImplementedError:
+        pass
+
     if isinstance(space, ProductSpace):
         for examples in product(*[vector_examples(spc) for spc in space]):
             name = ', '.join(name for name, _ in examples)
@@ -169,8 +174,6 @@ def vector_examples(space):
         np.random.seed(1337)
 
         yield ('Linspaced', space.element(np.linspace(0, 1, space.size)))
-
-        yield ('Ones', space.element(np.ones(space.size)))
 
         yield ('Random noise', space.element(np.random.rand(space.size)))
 
