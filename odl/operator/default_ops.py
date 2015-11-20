@@ -55,7 +55,7 @@ class ScalingOperator(Operator):
 
         super().__init__(space, space, linear=True)
         self._space = space
-        self._scal = float(scalar)
+        self._scal = space.field.element(scalar)
 
     def _apply(self, x, out):
         """Scale input and write to output.
