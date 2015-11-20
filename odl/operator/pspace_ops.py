@@ -206,7 +206,6 @@ class ComponentProjectionAdjoint(Operator):
         return ComponentProjection(self.range, self.index)
 
 
-
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

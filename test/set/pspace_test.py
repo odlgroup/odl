@@ -308,7 +308,7 @@ def test_vector_getitem_slice():
     x2 = r2.element([1, 2])
     x3 = r3.element([3, 4, 5])
     x = H.element([x1, x2, x3])
-    
+
     assert x[:2].space == odl.ProductSpace(r1, r2)
     assert x[:2][0] is x1
     assert x[:2][1] is x2

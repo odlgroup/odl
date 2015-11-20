@@ -29,6 +29,7 @@ import pytest
 import odl
 from odl.util.testutils import all_almost_equal
 
+
 def test_pspace_op_init():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
@@ -133,6 +134,7 @@ def test_comp_proj_slice():
     proj = odl.ComponentProjection(r33, slice(0, 2))
     assert x[0:2] == proj(x)
 
+
 def test_comp_proj_indices():
     r3 = odl.Rn(3)
     r33 = odl.ProductSpace(r3, 3)
@@ -150,12 +152,12 @@ def test_comp_proj_adjoint():
     r3xr3 = odl.ProductSpace(r3, 2)
 
     x = r3.element([1, 2, 3])
-    
+
     result_0 = r3xr3.element([[1, 2, 3],
                               [0, 0, 0]])
     proj_0 = odl.ComponentProjection(r3xr3, 0)
     assert result_0 == proj_0.adjoint(x)
-    
+
     result_1 = r3xr3.element([[0, 0, 0],
                               [1, 2, 3]])
     proj_1 = odl.ComponentProjection(r3xr3, 1)
@@ -168,7 +170,7 @@ def test_comp_proj_adjoint_slice():
 
     x = r33[0:2].element([[1, 2, 3],
                           [4, 5, 6]])
-    
+
     result = r33.element([[1, 2, 3],
                           [4, 5, 6],
                           [0, 0, 0]])
