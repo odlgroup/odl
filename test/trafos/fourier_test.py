@@ -29,13 +29,107 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl import RegularGrid
 from odl.trafos.fourier import reciprocal
-from odl.util.testutils import almost_equal
+from odl.util.testutils import all_almost_equal, all_equal
 
 
-def test_reciprocal():
-    pass
+def test_reciprocal_1d_odd():
+
+    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=11, as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+
+    true_recip_stride = 2 * pi / (s * n)
+    rgrid = reciprocal(grid, halfcomplex=False)
+
+    assert all_equal(rgrid.shape, n)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+
+    # Should be symmetric
+    assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
+    assert all_almost_equal(rgrid.center, 0)
+
+
+def test_reciprocal_1d_odd_halfcomplex():
+
+    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=11, as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+
+    true_recip_stride = 2 * pi / (s * n)
+    rgrid = reciprocal(grid, halfcomplex=True)
+
+    assert all_equal(rgrid.shape, (n + 1) / 2)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+
+    # Max should be zero
+    assert all_almost_equal(rgrid.max_pt, 0)
+
+
+def test_reciprocal_1d_even():
+
+    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=10, as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+
+    true_recip_stride = 2 * pi / (s * n)
+
+    # Without shift
+    rgrid = reciprocal(grid, halfcomplex=False, even_shift=False)
+
+    assert all_equal(rgrid.shape, n)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    # No point should be closer to 0 than half a recip stride
+    tol = 0.999 * true_recip_stride / 2
+    assert not rgrid.approx_contains(0, tol=tol)
+
+    # With shift (to the left)
+    rgrid = reciprocal(grid, halfcomplex=False, even_shift=True)
+
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    # Zero should be at index n/2
+    assert all_almost_equal(rgrid[n / 2], 0)
+
+
+def test_reciprocal_1d_even_halfcomplex():
+
+    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=10, as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+
+    true_recip_stride = 2 * pi / (s * n)
+
+    # Without shift
+    rgrid = reciprocal(grid, halfcomplex=True, even_shift=False)
+
+    assert all_equal(rgrid.shape, n / 2 + 1)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    # Max point should be half a positinve recip stride
+    assert all_almost_equal(rgrid.max_pt, true_recip_stride / 2)
+
+    # With shift (to the left)
+    rgrid = reciprocal(grid, halfcomplex=True, even_shift=True)
+
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    # Max point should be zero
+    assert all_almost_equal(rgrid.max_pt, 0)
+
+
+def test_reciprocal_nd():
+
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+
+    true_recip_stride = 2 * pi / (s * n)
+
+    # Without shift
+    rgrid = reciprocal(grid, halfcomplex=False, even_shift=False)
+
+    assert all_equal(rgrid.shape, n)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
 
 
 if __name__ == '__main__':
