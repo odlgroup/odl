@@ -87,7 +87,6 @@ class OperatorTest(object):
         self.operator_norm = operator_norm
         return operator_norm
 
-
     def self_adjoint(self):
         """Verify (Ax, y) = (x, Ay)"""
         print('\nVerifying the identity (Ax, y) = (x, Ay)')
@@ -118,7 +117,6 @@ class OperatorTest(object):
         scale = np.polyfit(Axy_vals, xAty_vals, 1)[0]
         print('\nThe adjoint seems to be scaled according to:')
         print('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
-
 
     def _adjoint_definition(self):
         """Verify (Ax, y) = (x, A^T y)"""
