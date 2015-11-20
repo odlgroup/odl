@@ -211,11 +211,9 @@ try:
 except ImportError:
     skip_if_no_cuda = _pass
     skip_if_no_pywavelets = _pass
+    skip_if_no_pyfftw = _pass
     skip_if_no_largescale = _pass
     skip_if_no_benchmark = _pass
-
-    def skip_if_no_pyfftw(function):
-        return function
 
 
 class FailCounter(object):

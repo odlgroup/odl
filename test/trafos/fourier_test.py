@@ -304,11 +304,9 @@ def test_reciprocal_nd_halfcomplex():
 
 def test_dft_preproc_data():
 
-    cube = odl.Cuboid([0] * 3, [1] * 3)
     shape = (2, 3, 4)
-    space_discr = odl.uniform_discr(
-        odl.FunctionSpace(cube, field=odl.ComplexNumbers()),
-        shape)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
+                                    field=odl.ComplexNumbers())
 
     # With shift
     correct_arr = []
@@ -336,10 +334,9 @@ def test_dft_preproc_data():
 
 def test_dft_postproc_data():
 
-    cube = odl.Cuboid([0] * 3, [1] * 3)
     shape = (2, 3, 4)
-    space_discr = odl.uniform_discr(
-        odl.FunctionSpace(cube, field=odl.ComplexNumbers()), shape)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
+                                    field=odl.ComplexNumbers())
 
     # With shift
     rgrid = reciprocal(space_discr.grid, shift=True)
@@ -392,12 +389,10 @@ def test_dft_range(exponent, dtype):
     # Testing R2C for real dtype, else C2C
 
     # 1D
-    intv = odl.Interval(0, 1)
     field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
-    fspace = odl.FunctionSpace(intv, field=field)
     nsamp = 10
-    space_discr = odl.uniform_discr(fspace, nsamp, exponent=exponent,
-                                    impl='numpy', dtype=dtype)
+    space_discr = odl.uniform_discr(0, 1, nsamp, exponent=exponent,
+                                    impl='numpy', dtype=dtype, field=field)
 
     dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
@@ -408,12 +403,10 @@ def test_dft_range(exponent, dtype):
     assert dft.range.exponent == conj(exponent)
 
     # 3D
-    cube = odl.Cuboid([0] * 3, [1] * 3)
     field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
-    fspace = odl.FunctionSpace(cube, field=field)
     nsamp = (3, 4, 5)
-    space_discr = odl.uniform_discr(fspace, nsamp, exponent=exponent,
-                                    impl='numpy', dtype=dtype)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, nsamp, exponent=exponent,
+                                    impl='numpy', dtype=dtype, field=field)
 
     dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
@@ -435,11 +428,9 @@ def test_dft_call(dtype):
         halfcomplex = False
 
     # 1D
-    intv = odl.Interval(0, 1)
-    fspace = odl.FunctionSpace(intv, field=field)
     nsamp = 10
-    space_discr = odl.uniform_discr(fspace, nsamp, exponent=2.0,
-                                    impl='numpy', dtype=dtype)
+    space_discr = odl.uniform_discr(0, 1, nsamp, exponent=2.0,
+                                    impl='numpy', dtype=dtype, field=field)
 
     dfunc = space_discr.one()
     dft_arr = dft_call(dfunc.asarray(), halfcomplex=halfcomplex)
@@ -452,11 +443,9 @@ def test_dft_call(dtype):
     assert all_almost_equal(dft_arr, true_dft)
 
     # 3D
-    cube = odl.Cuboid([0] * 3, [1] * 3)
-    fspace = odl.FunctionSpace(cube, field=field)
     nsamp = (3, 4, 5)
-    space_discr = odl.uniform_discr(fspace, nsamp, exponent=2.0,
-                                    impl='numpy', dtype=dtype)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, nsamp, exponent=2.0,
+                                    impl='numpy', dtype=dtype, field=field)
 
     dfunc = space_discr.one()
     dft_arr = dft_call(dfunc.asarray(), halfcomplex=halfcomplex)
@@ -478,10 +467,9 @@ def test_dft_call(dtype):
 def test_dft_plan(planning):
 
     # 1D, C2C
-    intv = odl.Interval(0, 1)
-    fspace = odl.FunctionSpace(intv, field=odl.ComplexNumbers())
     nsamp = 10
-    space_discr = odl.uniform_discr(fspace, nsamp, exponent=2.0, impl='numpy')
+    space_discr = odl.uniform_discr(0, 1, nsamp, exponent=2.0, impl='numpy',
+                                    field=odl.ComplexNumbers())
 
     dfunc = space_discr.one()
     dft_arr = dft_call(dfunc.asarray(), planning=planning)

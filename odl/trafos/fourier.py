@@ -26,6 +26,7 @@ from builtins import next, range, super
 # External
 from math import pi
 import numpy as np
+import platform
 try:
     import pyfftw
     PYFFTW_AVAILABLE = True
@@ -39,12 +40,18 @@ from odl.discr.lp_discr import DiscreteLp, dspace_type
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.fspace import FunctionSpace
-from odl.space.ntuples import _TYPE_MAP_R2C
 from odl.util.utility import is_real_dtype
 
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'PYFFTW_AVAILABLE')
+
+
+_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
+                 np.dtype('float64'): np.dtype('complex128')}
+
+if platform.system() == 'Linux':
+    _TYPE_MAP_R2C[np.dtype('float128')] = np.dtype('complex256')
 
 
 # TODO: exclude CUDA vectors somehow elegantly
@@ -552,7 +559,7 @@ class DiscreteFourierTransform(Operator):
         # TODO: handle impl
         ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
                                       dtype=ran_dtype)
-        ran_dspace = ran_dspace_type(recip_grid.ntotal, dtype=ran_dtype,
+        ran_dspace = ran_dspace_type(recip_grid.size, dtype=ran_dtype,
                                      exponent=conj_exp)
         # TODO: check how order is handled
         ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace, exponent=conj_exp)
