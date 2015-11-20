@@ -453,10 +453,12 @@ class InnerProductAdjointOperator(Operator):
 class ConstantOperator(Operator):
 
     """ Operator that always returns the same value
+
+    ``ConstantOperator(vector)(x) <==> vector``
     """
 
     def __init__(self, vector, dom=None):
-        """Initialize a instance.
+        """Initialize an instance.
 
         Parameters
         ----------
@@ -466,6 +468,10 @@ class ConstantOperator(Operator):
         dom : :class:`~odl.LinearSpace`, default : vector.space
             The domain of the operator.
         """
+        if not isinstance(vector, LinearSpace.Vector):
+            raise TypeError('space {!r} not a LinearSpace.Vector instance.'
+                            ''.format(vector))
+
         if dom is None:
             dom = vector.space
 
@@ -510,10 +516,16 @@ class ConstantOperator(Operator):
         out : ``range`` element
             Vector that gets assigned to the constant vector
 
-        See also
+        Examples
         --------
-        ConstantOperator._call
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = ConstantOperator(x)
+        >>> op(x, out=r3.element())
+        Rn(3).element([1.0, 2.0, 3.0])
         """
+        out.assign(self.vector)
 
     def __repr__(self):
         """``op.__repr__() <==> repr(op)``."""
@@ -522,6 +534,112 @@ class ConstantOperator(Operator):
     def __str__(self):
         """``op.__str__() <==> str(op)``."""
         return "{}".format(self.vector)
+
+
+class ResidualOperator(Operator):
+
+    """ Operator that returns the residual of some operator application
+    with a vector
+
+    ``ResidualOperator(op, vector)(x) <==> op(x) - vector``
+    """
+
+    def __init__(self, op, vector):
+        """ Initialize an instance.
+
+        Parameters
+        ----------
+        vector : :class:`~odl.LinearSpace.Vector`
+            The vector constant to be returned
+
+        dom : :class:`~odl.LinearSpace`, default : vector.space
+            The domain of the operator.
+        """
+        if not isinstance(op, Operator):
+            raise TypeError('op {!r} not a Operator instance.'
+                            ''.format(op))
+
+        if not isinstance(vector, LinearSpace.Vector):
+            raise TypeError('space {!r} not a LinearSpace.Vector instance.'
+                            ''.format(vector))
+
+        if vector not in op.range:
+            raise TypeError('space {!r} not in op.range {!r}.'
+                            ''.format(vector, op.range))
+
+        self.op = op
+        self.vector = vector
+        super().__init__(op.domain, vector.space)
+
+    def _call(self, x):
+        """ Returns the constant vector
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            Any element in the domain
+
+        Returns
+        -------
+        vector : :class:`~odl.LinearSpace.Vector`
+            The constant vector
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> vec = r3.element([1, 2, 3])
+        >>> op = IdentityOperator(r3)
+        >>> res = ResidualOperator(op, vec)
+        >>> x = r3.element([4, 5, 6])
+        >>> res(x)
+        Rn(3).element([3.0, 3.0, 3.0])
+        """
+        return self.op(x) - self.vector
+
+    def _apply(self, x, out):
+        """ Assign out to the constant vector
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            Any element in the domain
+        out : ``range`` element
+            Vector that gets assigned to the constant vector
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> vec = r3.element([1, 2, 3])
+        >>> op = IdentityOperator(r3)
+        >>> res = ResidualOperator(op, vec)
+        >>> x = r3.element([4, 5, 6])
+        >>> res(x, out=r3.element())
+        Rn(3).element([3.0, 3.0, 3.0])
+        """
+        self.op(x, out)
+        out -= self.vector
+
+    def derivative(self, point):
+        """ The derivative of a residual is the derivative of the operator
+
+        ``ResidualOperator(op, vec).derivative(x) <==> op.derivative(x)``
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            Any element in the domain where the derivative should be taken
+        """
+        return self.op.derivative(point)
+
+    def __repr__(self):
+        """``op.__repr__() <==> repr(op)``."""
+        return 'ResidualOperator({!r}, {!r})'.format(self.op, self.vector)
+
+    def __str__(self):
+        """``op.__str__() <==> str(op)``."""
+        return "{} - {}".format(self.op, self.vector)
 
 
 if __name__ == '__main__':
