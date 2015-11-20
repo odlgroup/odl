@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Default operators defined on any (reasonable) space."""
+"""Default operators defined on any :class:`odl.PowerSpace`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -55,10 +55,10 @@ class ProductSpaceOperator(Operator):
         Parameters
         ----------
         operators : array-like
-            An array of operators
-        dom : `~odl.ProductSpace`
+            An array of :class:`~odl.Operator`'s
+        dom : :class:`~odl.ProductSpace`
             Domain, default infers from operators
-        ran : `~odl.ProductSpace`
+        ran : :class:`~odl.ProductSpace`
             Range, default infers from operators
 
         Examples
@@ -246,10 +246,10 @@ class ComponentProjection(Operator):
 
         Parameters
         ----------
-        space : `~odl.ProductSpace`
+        space : :class:`~odl.ProductSpace`
             The space to project from
-        index : `int`, `slice`, or `iterable`[int]
-            The to project on
+        index : `int`, `slice`, or `iterable` [int]
+            The indexes to project on
 
         Examples
         --------
@@ -336,6 +336,35 @@ class ComponentProjection(Operator):
 
 class ComponentProjectionAdjoint(Operator):
     def __init__(self, space, index):
+        """ Initialize a Projection
+
+        Parameters
+        ----------
+        space : :class:`~odl.ProductSpace`
+            The space to project to
+        index : `int`, `slice`, or `iterable` [int]
+            The indexes to project from
+
+        Examples
+        --------
+        >>> import odl
+        >>> r1 = odl.Rn(1)
+        >>> r2 = odl.Rn(2)
+        >>> r3 = odl.Rn(3)
+        >>> X = odl.ProductSpace(r1, r2, r3)
+
+        Projection on n:th component
+
+        >>> proj = odl.ComponentProjectionAdjoint(X, 0)
+        >>> proj.domain
+        Rn(1)
+
+        Projection on sub-space
+
+        >>> proj = odl.ComponentProjectionAdjoint(X, [0, 2])
+        >>> proj.domain
+        ProductSpace(Rn(1), Rn(3))
+        """
         self.index = index
         super().__init__(space[index], space, linear=True)
 

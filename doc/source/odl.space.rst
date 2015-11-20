@@ -27,14 +27,6 @@ odl.space.cu_ntuples module
     :undoc-members:
     :show-inheritance:
 
-odl.space.default module
-------------------------
-
-.. automodule:: odl.space.default
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 odl.space.fspace module
 ------------------------
 
