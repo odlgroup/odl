@@ -27,10 +27,6 @@ __all__ = ('fourier', 'wavelet')
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
 
-from . import fourier
-from .fourier import *
-__all__ += fourier.__all__
-
 from . import wavelet
 from .wavelet import *
 __all__ += wavelet.__all__
