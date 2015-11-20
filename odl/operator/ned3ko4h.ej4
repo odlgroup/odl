@@ -31,8 +31,7 @@ from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 
 
-__all__ = ('ProductSpaceOperator',
-           'ComponentProjection', 'ComponentProjectionAdjoint')
+__all__ = ('ProductSpaceOperator', 'ComponentProjection')
 
 
 class ProductSpaceOperator(Operator):
@@ -245,7 +244,7 @@ class ComponentProjection(Operator):
         """ Initialize a Projection
 
         Parameters
-        ----------
+        ---------- 
         space : `~odl.ProductSpace`
             The space to project from
         index : `int`, `slice`, or `iterable`[int]
@@ -375,18 +374,18 @@ class ComponentProjectionAdjoint(Operator):
 
         >>> proj = odl.ComponentProjectionAdjoint(X, 0)
         >>> proj(x[0])
-        ProductSpace(Rn(1), Rn(2), Rn(3)).element([
-            [1.0],
-            [0.0, 0.0],
-            [0.0, 0.0, 0.0]
+        ProductSpace(Rn(1), Rn(3)).element([
+            
+            [0.0],
+            [3.0, 4.0, 5.0]
         ])
 
         Projection on sub-space
 
-        >>> proj = odl.ComponentProjectionAdjoint(X, [0, 2])
-        >>> proj(x[0, 2])
+        >>> proj = odl.ComponentProjection(X, [0, 2])
+        >>> proj(x)
         ProductSpace(Rn(1), Rn(2), Rn(3)).element([
-            [1.0],
+            [1.0]
             [0.0, 0.0],
             [4.0, 5.0, 6.0]
         ])
