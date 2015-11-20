@@ -31,7 +31,8 @@ from odl.set.space import LinearSpace
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator',
-           'InnerProductOperator', 'InnerProductAdjointOperator')
+           'InnerProductOperator', 'InnerProductAdjointOperator',
+           'ConstantOperator')
 
 
 class ScalingOperator(Operator):
@@ -443,6 +444,80 @@ class InnerProductAdjointOperator(Operator):
     def __repr__(self):
         """``op.__repr__() <==> repr(op)``."""
         return 'InnerProductAdjointOperator({!r})'.format(self.vector)
+
+    def __str__(self):
+        """``op.__str__() <==> str(op)``."""
+        return "{}".format(self.vector)
+
+
+class ConstantOperator(Operator):
+
+    """ Operator that always returns the same value
+    """
+
+    def __init__(self, vector, dom=None):
+        """Initialize a instance.
+
+        Parameters
+        ----------
+        vector : :class:`~odl.LinearSpace.Vector`
+            The vector constant to be returned
+
+        dom : :class:`~odl.LinearSpace`, default : vector.space
+            The domain of the operator.
+        """
+        if dom is None:
+            dom = vector.space
+
+        self.vector = vector
+        super().__init__(dom, vector.space)
+
+    def _call(self, x):
+        """ Returns the constant vector
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            Any element in the domain
+
+        Returns
+        -------
+        vector : :class:`~odl.LinearSpace.Vector`
+            The constant vector
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = ConstantOperator(x)
+        >>> op(x)
+        Rn(3).element([1.0, 2.0, 3.0])
+        >>> op(r3.zero())
+        Rn(3).element([1.0, 2.0, 3.0])
+        >>> op(r3.element())
+        Rn(3).element([1.0, 2.0, 3.0])
+        """
+        return self.vector.copy()
+
+    def _apply(self, x, out):
+        """ Assign out to the constant vector
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            Any element in the domain
+        out : ``range`` element
+            Vector that gets assigned to the constant vector
+
+        See also
+        --------
+        ConstantOperator._call
+        """
+
+    def __repr__(self):
+        """``op.__repr__() <==> repr(op)``."""
+        return 'ConstantOperator({!r})'.format(self.vector)
 
     def __str__(self):
         """``op.__str__() <==> str(op)``."""
