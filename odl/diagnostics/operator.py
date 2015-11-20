@@ -87,6 +87,39 @@ class OperatorTest(object):
         self.operator_norm = operator_norm
         return operator_norm
 
+
+    def self_adjoint(self):
+        """Verify (Ax, y) = (x, Ay)"""
+        print('\nVerifying the identity (Ax, y) = (x, Ay)')
+
+        Axy_vals = []
+        xAty_vals = []
+
+        with FailCounter('error = ||(Ax, y) - (x, Ay)|| / '
+                         '||A|| ||x|| ||y||') as counter:
+            for [n_x, x], [n_y, y] in samples(self.operator.domain,
+                                              self.operator.range):
+                x_norm = x.norm()
+                y_norm = y.norm()
+
+                Axy = self.operator(x).inner(y)
+                xAy = x.inner(self.operator(y))
+
+                denom = self.operator_norm * x_norm * y_norm
+                error = 0 if denom == 0 else abs(Axy - xAy) / denom
+
+                if error > 0.00001:
+                    counter.fail('x={:25s} y={:25s} : error={:6.5f}'
+                                 ''.format(n_x, n_y, error))
+
+                Axy_vals.append(Axy)
+                xAty_vals.append(xAy)
+
+        scale = np.polyfit(Axy_vals, xAty_vals, 1)[0]
+        print('\nThe adjoint seems to be scaled according to:')
+        print('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
+
+
     def _adjoint_definition(self):
         """Verify (Ax, y) = (x, A^T y)"""
         print('\nVerifying the identity (Ax, y) = (x, A^T y)')
