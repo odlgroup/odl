@@ -35,7 +35,18 @@ __all__ = ('ProductSpaceOperator', 'ComponentProjection')
 
 
 class ProductSpaceOperator(Operator):
-    """A separable operator on product spaces."""
+    """A separable operator on product spaces.
+
+    This is intended for the case where a operator can be decomposed
+    as a linear combination of "sub" operators. For example:
+
+    ```
+    |A, B, 0| |x|   |Ax + By|
+    |0, C, 0| |y| = |  Cy   |
+    |0, 0, D| |z|   |  Dz   |
+    ```
+
+    """
 
     def __init__(self, operators, dom=None, ran=None):
         """ TODO
@@ -67,14 +78,14 @@ class ProductSpaceOperator(Operator):
             if domains[col] is None:
                 domains[col] = op.domain
             elif domains[col] != op.domain:
-                raise ValueError('Column {}, has inconcistient domains,'
+                raise ValueError('Column {}, has inconsistent domains,'
                                  'got {} and {}'
                                  ''.format(col, domains[col], op.domain))
 
             if ranges[row] is None:
                 ranges[row] = op.range
             elif ranges[row] != op.range:
-                raise ValueError('Row {}, has inconcistient ranges,'
+                raise ValueError('Row {}, has inconsistent ranges,'
                                  'got {} and {}'
                                  ''.format(row, ranges[row], op.range))
 
@@ -82,7 +93,7 @@ class ProductSpaceOperator(Operator):
             for col in range(len(domains)):
                 if domains[col] is None:
                     raise ValueError('Col {} empty, unable to determine '
-                                     'domain, please use dom parameter'
+                                     'domain, please use `dom` parameter'
                                      ''.format(col, domains[col]))
 
             dom = ProductSpace(*domains)
@@ -91,7 +102,7 @@ class ProductSpaceOperator(Operator):
             for row in range(len(ranges)):
                 if ranges[row] is None:
                     raise ValueError('Row {} empty, unable to determine '
-                                     'range, please use ran parameter'
+                                     'range, please use `ran` parameter'
                                      ''.format(row, ranges[row]))
 
             ran = ProductSpace(*ranges)
@@ -100,9 +111,6 @@ class ProductSpaceOperator(Operator):
         linear = all(op.is_linear for op in self.ops.data)
 
         super().__init__(domain=dom, range=ran, linear=linear)
-
-    def __getitem__(self, *indices):
-        return self.ops__getitem__(*indices)
 
     def _apply(self, x, out):
         """ TODO
@@ -126,6 +134,8 @@ class ProductSpaceOperator(Operator):
             else:
                 # TODO: optimize
                 out[i] += op(x[j])
+
+            has_evaluated_row[i] = True
 
         for i, evaluated in enumerate(has_evaluated_row):
             if not evaluated:

@@ -280,6 +280,23 @@ def test_getitem_fancy():
     assert H[[0, 2]][1] is r3
 
 
+def test_vector_equals():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    x = H.element([[0], [1, 2]])
+
+    assert x != 0  # test == not always true
+    assert x == x
+
+    x_2 = H.element([[0], [1, 2]])
+    assert x == x_2
+
+    x_3 = H.element([[3], [1, 2]])
+    assert x != x_3
+
+    x_4 = H.element([[0], [1, 3]])
+    assert x != x_4
+
+
 def test_vector_getitem_single():
     H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
 
