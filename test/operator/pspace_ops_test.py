@@ -29,8 +29,7 @@ import pytest
 import odl
 from odl.util.testutils import all_almost_equal
 
-
-def test_init():
+def test_pspace_op_init():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
 
@@ -58,7 +57,7 @@ def test_init():
     assert op.range == odl.ProductSpace(r3, 2)
 
 
-def test_sum_call():
+def test_pspace_op_sum_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([I, I])
@@ -70,7 +69,7 @@ def test_sum_call():
     assert all_almost_equal(op(z)[0], x + y)
 
 
-def test_project_call():
+def test_pspace_op_project_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[I],
@@ -83,7 +82,7 @@ def test_project_call():
     assert all_almost_equal(op(z)[0], x)
 
 
-def test_diagonal_call():
+def test_pspace_op_diagonal_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[I, 0],
@@ -96,7 +95,7 @@ def test_diagonal_call():
     assert all_almost_equal(op(z), z)
 
 
-def test_swap_call():
+def test_pspace_op_swap_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[0, I],
@@ -110,7 +109,7 @@ def test_swap_call():
     assert all_almost_equal(op(z), result)
 
 
-def test_projection():
+def test_comp_proj():
     r3 = odl.Rn(3)
     r3xr3 = odl.ProductSpace(r3, 2)
 
@@ -123,7 +122,7 @@ def test_projection():
     assert x[1] == proj_1(x)
 
 
-def test_projection_slice():
+def test_comp_proj_slice():
     r3 = odl.Rn(3)
     r33 = odl.ProductSpace(r3, 3)
 
@@ -133,6 +132,48 @@ def test_projection_slice():
 
     proj = odl.ComponentProjection(r33, slice(0, 2))
     assert x[0:2] == proj(x)
+
+def test_comp_proj_indices():
+    r3 = odl.Rn(3)
+    r33 = odl.ProductSpace(r3, 3)
+
+    x = r33.element([[1, 2, 3],
+                     [4, 5, 6],
+                     [7, 8, 9]])
+
+    proj = odl.ComponentProjection(r33, [0, 2])
+    assert x[[0, 2]] == proj(x)
+
+
+def test_comp_proj_adjoint():
+    r3 = odl.Rn(3)
+    r3xr3 = odl.ProductSpace(r3, 2)
+
+    x = r3.element([1, 2, 3])
+    
+    result_0 = r3xr3.element([[1, 2, 3],
+                              [0, 0, 0]])
+    proj_0 = odl.ComponentProjection(r3xr3, 0)
+    assert result_0 == proj_0.adjoint(x)
+    
+    result_1 = r3xr3.element([[0, 0, 0],
+                              [1, 2, 3]])
+    proj_1 = odl.ComponentProjection(r3xr3, 1)
+    assert result_1 == proj_1.adjoint(x)
+
+
+def test_comp_proj_adjoint_slice():
+    r3 = odl.Rn(3)
+    r33 = odl.ProductSpace(r3, 3)
+
+    x = r33[0:2].element([[1, 2, 3],
+                          [4, 5, 6]])
+    
+    result = r33.element([[1, 2, 3],
+                          [4, 5, 6],
+                          [0, 0, 0]])
+    proj = odl.ComponentProjection(r33, slice(0, 2))
+    assert result == proj.adjoint(x)
 
 
 if __name__ == '__main__':

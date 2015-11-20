@@ -180,8 +180,31 @@ class ComponentProjection(Operator):
         """ The adjoint is given by extending along indices, and setting
         zero along the others
         """
-        # TODO: implement
-        raise NotImplementedError()
+        return ComponentProjectionAdjoint(self.domain, self.index)
+
+
+class ComponentProjectionAdjoint(Operator):
+    def __init__(self, space, index):
+        self.index = index
+        super().__init__(space[index], space, linear=True)
+
+    def _apply(self, x, out):
+        out.set_zero()
+        out[self.index] = x
+
+    def _call(self, x):
+        """ Extend x into the superspace
+        """
+        out = self.range.zero()
+        out[self.index] = x
+        return out
+
+    @property
+    def adjoint(self):
+        """ The adjoint is given by the projection onto space[index]
+        """
+        return ComponentProjection(self.range, self.index)
+
 
 
 if __name__ == '__main__':

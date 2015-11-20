@@ -245,23 +245,90 @@ def test_power_inplace_modify():
 
 
 def test_getitem_single():
-    H = odl.Rn(2)
-    HxH = odl.ProductSpace(H, 2)
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    H = odl.ProductSpace(r1, r2)
 
-    assert HxH[-2] == H
-    assert HxH[-1] == H
-    assert HxH[0] == H
-    assert HxH[1] == H
+    assert H[-2] is r1
+    assert H[-1] is r2
+    assert H[0] is r1
+    assert H[1] is r2
     with pytest.raises(IndexError):
-        HxH[-3]
-        HxH[2]
+        H[-3]
+        H[2]
+
 
 def test_getitem_slice():
-    H = odl.Rn(2)
-    H5 = odl.ProductSpace(H, 5)
-    H2 = odl.ProductSpace(H, 2)
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    r3 = odl.Rn(3)
+    H = odl.ProductSpace(r1, r2, r3)
 
-    assert H5[:2] == H2
+    assert H[:2] == odl.ProductSpace(r1, r2)
+    assert H[:2][0] is r1
+    assert H[:2][1] is r2
+
+
+def test_getitem_fancy():
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    r3 = odl.Rn(3)
+    H = odl.ProductSpace(r1, r2, r3)
+
+    assert H[[0, 2]] == odl.ProductSpace(r1, r3)
+    assert H[[0, 2]][0] is r1
+    assert H[[0, 2]][1] is r3
+
+
+def test_vector_getitem_single():
+    r1 = odl.Rn(2)
+    r2 = odl.Rn(2)
+    H = odl.ProductSpace(r1, r2)
+
+    x1 = r1.element([0])
+    x2 = r1.element([1, 2])
+    x = H.element([x1, x2])
+
+    assert x[-2] is x1
+    assert x[-1] is x2
+    assert x[0] is x1
+    assert x[1] is x2
+    with pytest.raises(IndexError):
+        x[-3]
+        x[2]
+
+
+def test_vector_getitem_slice():
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    r3 = odl.Rn(3)
+    H = odl.ProductSpace(r1, r2, r3)
+
+    x1 = r1.element([0])
+    x2 = r2.element([1, 2])
+    x3 = r3.element([3, 4, 5])
+    x = H.element([x1, x2, x3])
+    
+    assert x[:2].space == odl.ProductSpace(r1, r2)
+    assert x[:2][0] is x1
+    assert x[:2][1] is x2
+
+
+def test_vector_getitem_fancy():
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    r3 = odl.Rn(3)
+    H = odl.ProductSpace(r1, r2, r3)
+
+    x1 = r1.element([0])
+    x2 = r2.element([1, 2])
+    x3 = r3.element([3, 4, 5])
+    x = H.element([x1, x2, x3])
+
+    assert x[[0, 2]].space == odl.ProductSpace(r1, r3)
+    assert x[[0, 2]][0] is x1
+    assert x[[0, 2]][1] is x3
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

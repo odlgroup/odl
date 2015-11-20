@@ -373,10 +373,13 @@ class ProductSpace(LinearSpace):
 
     def __getitem__(self, indices):
         """``ps.__getitem__(indices) <==> ps[indices]``."""
-        if isinstance(indices, slice):
+
+        if isinstance(indices, Integral):
+            return self.spaces[indices]
+        elif isinstance(indices, slice):
             return ProductSpace(*self.spaces[indices])
         else:
-            return self.spaces[indices]
+            return ProductSpace(*[self.spaces[i] for i in indices])
 
     def __str__(self):
         """``ps.__str__() <==> str(ps)``."""
@@ -398,7 +401,7 @@ class ProductSpace(LinearSpace):
         def __init__(self, space, parts):
             """"Initialize a new instance."""
             super().__init__(space)
-            self._parts = parts
+            self._parts = list(parts)
 
         @property
         def parts(self):
@@ -431,14 +434,20 @@ class ProductSpace(LinearSpace):
 
         def __getitem__(self, indices):
             """``ps.__getitem__(indices) <==> ps[indices]``."""
-            if isinstance(indices, slice):
+            if isinstance(indices, Integral):
+                return self.parts[indices]
+            elif isinstance(indices, slice):
                 return self.space[indices].element(self.parts[indices])
             else:
-                return self.parts[indices]
+                return self.space[indices].element([self.parts[i] for i in indices])
 
         def __setitem__(self, indices, values):
             """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""
-            self.parts[indices] = values
+            try:
+                self.parts[indices] = values
+            except TypeError:
+                for i, index in enumerate(indices):
+                    self.parts[index] = values[i]
 
         def __str__(self):
             """``ps.__str__() <==> str(ps)``."""
