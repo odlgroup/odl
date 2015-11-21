@@ -99,9 +99,13 @@ class ProductSpaceOperator(Operator):
         # Set domain and range (or verify if given)
         if dom is None:
             domains = [None] * self.ops.shape[1]
+        else:
+            domains = dom
 
         if ran is None:
             ranges = [None] * self.ops.shape[0]
+        else:
+            ranges = ran
 
         for row, col, op in zip(self.ops.row, self.ops.col, self.ops.data):
             if domains[col] is None:
@@ -119,20 +123,20 @@ class ProductSpaceOperator(Operator):
                                  ''.format(row, ranges[row], op.range))
 
         if dom is None:
-            for col in range(len(domains)):
-                if domains[col] is None:
+            for col, sub_domain in enumerate(domains):
+                if sub_domain is None:
                     raise ValueError('Col {} empty, unable to determine '
                                      'domain, please use `dom` parameter'
-                                     ''.format(col, domains[col]))
+                                     ''.format(col, sub_domain))
 
             dom = ProductSpace(*domains)
 
         if ran is None:
-            for row in range(len(ranges)):
-                if ranges[row] is None:
+            for row, sub_range in enumerate(ranges):
+                if sub_range is None:
                     raise ValueError('Row {} empty, unable to determine '
                                      'range, please use `ran` parameter'
-                                     ''.format(row, ranges[row]))
+                                     ''.format(row, sub_range))
 
             ran = ProductSpace(*ranges)
 
@@ -227,10 +231,41 @@ class ProductSpaceOperator(Operator):
 
     @property
     def adjoint(self):
-        """ The adjoint is given by taking the conjugate of the scalar
+        """ The adjoint is given by taking adjoint of the matrix and of
+        each operator
+
+        Returns
+        -------
+        adjoint : :class:`ProductSpaceOperator`
+            The adjoint
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.Rn(3)
+        >>> X = odl.ProductSpace(r3, r3)
+        >>> I = odl.IdentityOperator(r3)
+        >>> x = X.element([[1, 2, 3], [4, 5, 6]])
+
+        Matrix is taken as adjoint
+
+        >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]], dom=X, ran=X)
+        >>> prod_op(x)
+        ProductSpace(Rn(3), 2).element([
+            [4.0, 5.0, 6.0],
+            [0.0, 0.0, 0.0]
+        ])
+        >>> prod_op.adjoint(x)
+        ProductSpace(Rn(3), 2).element([
+            [0.0, 0.0, 0.0],
+            [1.0, 2.0, 3.0]
+        ])
         """
-        # TODO: implement
-        raise NotImplementedError()
+        adjoint_ops = [op.adjoint for op in self.ops.data]
+        indices = [self.ops.col, self.ops.row]  # Swap col/row -> transpose
+        shape = (self.ops.shape[1], self.ops.shape[0])
+        adj_matrix = sp.sparse.coo_matrix((adjoint_ops, indices), shape)
+        return ProductSpaceOperator(adj_matrix, self.range, self.domain)
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
