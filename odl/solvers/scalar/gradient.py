@@ -50,8 +50,8 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
     The algorithm is described in [1]_, section 9.3--9.4
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [2]_, Section 12.2, and a
-    `Wikipedia article
+    [2]_, Section 12.2, and wikipedia
+    `Gradient_descent
     <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
     Parameters

@@ -92,8 +92,8 @@ class BacktrackingLineSearch(LineSearch):
     The line search algorithm is described in [1]_, page 464
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
-    [2]_, pages 378--379. See also the
-    `Wikipedia article
+    [2]_, pages 378--379. See also
+    `Backtracking_line_search
     <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
 
     References

@@ -63,13 +63,13 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     grad : :class:`~odl.Operator`
         Gradient mapping of the objective function, i.e. the mapping
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
-    x : element in the domain of `grad`
+    x : element in the domain of ``grad``
         Starting point of the iteration
-    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
+    line_search : :class:`~odl.solvers.scalar.LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : :class:`~odl.solvers.util.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -137,9 +137,9 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
     grad : :class:`~odl.Operator`
         Gradient mapping of the objective function, i.e. the mapping
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
-    x : element in the domain of `grad`
+    x : element in the domain of ``grad``
         Starting point of the iteration
-    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
+    line_search : :class:`~odl.solvers.scalar.LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
@@ -218,13 +218,13 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
     grad : :class:`~odl.Operator`
         Gradient mapping of the objective function, i.e. the mapping
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
-    x : element in the domain of `grad`
+    x : element in the domain of ``grad``
         Starting point of the iteration
-    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
+    line_search : :class:`~odl.solvers.scalar.LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : :class:`~odl.solvers.util.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References

@@ -78,16 +78,22 @@ def vector_examples(space):
         where ``string`` is a short description of the vector
     """
 
-    # All spaces should yield the zero element
-    yield ('Zero', space.zero())
-
     if isinstance(space, ProductSpace):
         for examples in product(*[vector_examples(spc) for spc in space]):
             name = ', '.join(name for name, _ in examples)
             vector = space.element([vec for _, vec in examples])
             yield (name, space.element(vector))
+        return
 
-    elif isinstance(space, DiscreteLp):
+    # All spaces should yield the zero element
+    yield ('Zero', space.zero())
+
+    try:
+        yield ('One', space.one())
+    except NotImplementedError:
+        pass
+
+    if isinstance(space, DiscreteLp):
         uspace = space.uspace
 
         # Get the points and calculate some statistics on them
@@ -169,8 +175,6 @@ def vector_examples(space):
         np.random.seed(1337)
 
         yield ('Linspaced', space.element(np.linspace(0, 1, space.size)))
-
-        yield ('Ones', space.element(np.ones(space.size)))
 
         yield ('Random noise', space.element(np.random.rand(space.size)))
 

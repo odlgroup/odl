@@ -139,11 +139,11 @@ class DiscreteWaveletTrafo(odl.Operator):
 
         Parameters
         ----------
-        dom : `odl.DiscreteLp`
-            Domain of the wavelet transform. The exponent `p` of the
+        dom : :class:`~odl.DiscreteLp`
+            Domain of the wavelet transform. The exponent ``p`` of the
             discrete :math:`L^p` space must be equal to 2.0.
-        ran : `odl.DiscreteLp`
-            Domain of the wavelet transform. The exponent `p` of the
+        ran : :class:`~odl.DiscreteLp`
+            Domain of the wavelet transform. The exponent ``p`` of the
             discrete :math:`L^p` space must be equal to 2.0.
         """
         super().__init__(dom, ran)

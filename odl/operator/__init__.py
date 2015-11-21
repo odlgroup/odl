@@ -58,7 +58,7 @@ evaluation, *in-place* or *out-of-place*.
 - In-place evaluation means that the operator is evaluated on a
   ``domain`` element, and the result is written to an
   *already existing* ``range`` element. To implement
-  this behavior, create the (private) :meth:`~odl.Operator._apply`
+  this behavior, create the (private) :meth:``~odl.Operator._apply``
   method with the following signature, here given for the above
   example::
 
@@ -74,7 +74,7 @@ evaluation, *in-place* or *out-of-place*.
   operator is evaluated on a ``domain`` element, and
   the result is written to a *newly allocated*
   ``range`` element. To implement this
-  behavior, create the (private) :meth:`~odl.Operator._call` method
+  behavior, create the (private) :meth:``~odl.Operator._call`` method
   with the following signature, here given for the above example::
 
     class MatVecOperator(odl.Operator):
