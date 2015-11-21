@@ -1,8 +1,6 @@
 odl package
 ===========
 
-.. automodule:: odl
-
 Subpackages
 -----------
 
@@ -17,3 +15,9 @@ Subpackages
     odl.util
     solvers/solvers
 
+Module contents
+----------------
+.. automodule:: odl
+   :members:
+   :undoc-members:
+   :show-inheritance:
