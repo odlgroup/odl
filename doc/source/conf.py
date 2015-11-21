@@ -18,32 +18,12 @@ import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
 # Mock modules for Read The Docs to enable autodoc
-
-
-def mock_modules(modules):
-    if sys.version_info < (3, 3):
-        from mock import Mock as MagicMock
-    else:
-        from unittest.mock import MagicMock
-
-    class Mock(MagicMock):
-
-        @classmethod
-        def __getattr__(cls, name):
-            return Mock()
-
-    sys.modules.update((mod_name, Mock()) for mod_name in modules)
-
-if on_rtd:
-    mock_modules(['future', 'future.utils',
-                  'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
-                  'scipy.interpolate', 'scipy.interpolate.interpnd',
-                  'numpy', 'numpy.linalg', 'numpy.distutils',
-                  'matplotlib.pyplot',
-                  'odlpp', 'odlpp.odlpp_cuda'])
+autodoc_mock_imports = ['future', 'future.utils',
+						'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
+					    'scipy.interpolate', 'scipy.interpolate.interpnd',
+					    'numpy', 'numpy.linalg', 'numpy.distutils',
+					    'matplotlib.pyplot']
 
 try:
     # verify that we can even import odl properly
@@ -67,6 +47,7 @@ extensions = [
     'numpydoc'
 ]
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:
     # TODO: fix this once RTD updates their intersphinx version
     extensions += ['sphinx.ext.intersphinx']
