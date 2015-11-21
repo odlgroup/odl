@@ -31,8 +31,10 @@ from abc import ABCMeta
 # ODL
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
-from odl.space.base_ntuples import NtuplesBase, FnBase
-from odl.space.ntuples import Ntuples, Fn, Rn, Cn
+from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector, 
+                                    FnBase, FnBaseVector)
+from odl.space.ntuples import (Ntuples, NtuplesVector, Fn, FnVector, 
+                               Rn, RnVector, Cn, CnVector)
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
@@ -45,7 +47,8 @@ from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
-__all__ = ('RawDiscretization', 'Discretization')
+__all__ = ('RawDiscretization', 'RawDiscretizationVector', 
+           'Discretization', 'DiscretizationVector')
 
 
 class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
@@ -182,18 +185,18 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Returns
         -------
-        element : :class:`RawDiscretization.Vector`
+        element : :class:`RawDiscretizationVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
             ``restriction(uspace.element(inp))``, tried in this order.
         """
         if inp is None:
-            return self.Vector(self, self.dspace.element())
+            return self.element_type(self, self.dspace.element())
         elif inp in self.uspace:
-            return self.Vector(
+            return self.element_type(
                 self, self.restriction(self.uspace.element(inp)))
         else:  # Sequence-type input
-            return self.Vector(self, self.dspace.element(inp))
+            return self.element_type(self, self.dspace.element(inp))
 
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``.
@@ -225,112 +228,117 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         """The data type of the representation space."""
         return self._dtype
 
-    class Vector(NtuplesBase.Vector):
+    @property
+    def element_type(self):
+        """ `RawDiscretizationVector` """
+        return RawDiscretizationVector
 
-        """Representation of a :class:`RawDiscretization` element.
+class RawDiscretizationVector(NtuplesBaseVector):
 
-        Basically only a wrapper class for dspace's vector class."""
+    """Representation of a :class:`RawDiscretization` element.
 
-        def __init__(self, space, ntuple):
-            """Initialize a new instance."""
-            if not isinstance(space, RawDiscretization):
-                raise TypeError('space {!r} not a `RawDiscretization` '
-                                'instance.'.format(space))
+    Basically only a wrapper class for dspace's vector class."""
 
-            if not isinstance(ntuple, space.dspace.Vector):
-                raise TypeError('n-tuple {!r} not an instance of `{}.Vector`.'
-                                ''.format(ntuple,
-                                          space.dspace.__class__.__name__))
-            super().__init__(space)
-            self._ntuple = ntuple
+    def __init__(self, space, ntuple):
+        """Initialize a new instance."""
+        if not isinstance(space, RawDiscretization):
+            raise TypeError('space {!r} not a `RawDiscretization` '
+                            'instance.'.format(space))
 
-        @property
-        def ntuple(self):
-            """Structure for data storage."""
-            return self._ntuple
+        if not isinstance(ntuple, space.dspace.element_type):
+            raise TypeError('n-tuple {!r} not an instance of `{}.element_type`.'
+                            ''.format(ntuple,
+                                        space.dspace.__class__.__name__))
+        super().__init__(space)
+        self._ntuple = ntuple
 
-        @property
-        def dtype(self):
-            """type of data storage."""
-            return self.ntuple.dtype
+    @property
+    def ntuple(self):
+        """Structure for data storage."""
+        return self._ntuple
 
-        @property
-        def size(self):
-            """size of data storage."""
-            return self.ntuple.size
+    @property
+    def dtype(self):
+        """type of data storage."""
+        return self.ntuple.dtype
 
-        def copy(self):
-            """Create an identical (deep) copy of this vector."""
-            return self.space.element(self.ntuple.copy())
+    @property
+    def size(self):
+        """size of data storage."""
+        return self.ntuple.size
 
-        def asarray(self, out=None):
-            """Extract the data of this array as a numpy array.
+    def copy(self):
+        """Create an identical (deep) copy of this vector."""
+        return self.space.element(self.ntuple.copy())
 
-            Parameters
-            ----------
-            out : `numpy.ndarray`, optional
-                Array in which the result should be written in-place.
-                Has to be contiguous and of the correct dtype.
-            """
-            return self.ntuple.asarray(out=out)
+    def asarray(self, out=None):
+        """Extract the data of this array as a numpy array.
 
-        def __eq__(self, other):
-            """``vec.__eq__(other) <==> vec == other``.
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
+        """
+        return self.ntuple.asarray(out=out)
 
-            Returns
-            -------
-            equals : `bool`
-                `True` if all entries of ``other`` are equal to this
-                vector's entries, `False` otherwise.
-            """
-            return (type(other) == type(self) and
-                    self.ntuple == other.ntuple)
+    def __eq__(self, other):
+        """``vec.__eq__(other) <==> vec == other``.
 
-        def __getitem__(self, indices):
-            """Access values of this vector.
+        Returns
+        -------
+        equals : `bool`
+            `True` if all entries of ``other`` are equal to this
+            vector's entries, `False` otherwise.
+        """
+        return (type(other) == type(self) and
+                self.ntuple == other.ntuple)
 
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be accessed
+    def __getitem__(self, indices):
+        """Access values of this vector.
 
-            Returns
-            -------
-            values : :class:`~odl.space.base_ntuples.NtuplesBase.Vector`
-                The value(s) at the index (indices)
-            """
-            return self.ntuple.__getitem__(indices)
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be accessed
 
-        def __setitem__(self, indices, values):
-            """Set values of this vector.
+        Returns
+        -------
+        values : :class:`~odl.space.base_ntuples.NtuplesBaseVector`
+            The value(s) at the index (indices)
+        """
+        return self.ntuple.__getitem__(indices)
 
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be set
-            values : {scalar, array-like,\
-                      :class:`~odl.space.base_ntuples.NtuplesBase.Vector`}
-                The value(s) that are to be assigned.
+    def __setitem__(self, indices, values):
+        """Set values of this vector.
 
-                If ``index`` is an `int`, ``value`` must be single value.
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like,\
+                    :class:`~odl.space.base_ntuples.NtuplesBaseVector`}
+            The value(s) that are to be assigned.
 
-                If ``index`` is a `slice`, ``value`` must be broadcastable
-                to the size of the slice (same size, shape (1,)
-                or single value).
-            """
-            if isinstance(values, RawDiscretization.Vector):
-                self.ntuple.__setitem__(indices, values.ntuple)
-            else:
-                self.ntuple.__setitem__(indices, values)
+            If ``index`` is an `int`, ``value`` must be single value.
 
-        def __str__(self):
-            """``vec.__str__() <==> str(vec)``."""
-            return arraynd_str(self.asarray())
+            If ``index`` is a `slice`, ``value`` must be broadcastable
+            to the size of the slice (same size, shape (1,)
+            or single value).
+        """
+        if isinstance(values, RawDiscretizationVector):
+            self.ntuple.__setitem__(indices, values.ntuple)
+        else:
+            self.ntuple.__setitem__(indices, values)
 
-        def __repr__(self):
-            """``vec.__repr__() <==> repr(vec)``."""
-            return '{!r}.element({})'.format(self.space,
-                                             arraynd_repr(self.asarray()))
+    def __str__(self):
+        """``vec.__str__() <==> str(vec)``."""
+        return arraynd_str(self.asarray())
+
+    def __repr__(self):
+        """``vec.__repr__() <==> repr(vec)``."""
+        return '{!r}.element({})'.format(self.space,
+                                            arraynd_repr(self.asarray()))
 
 
 class Discretization(RawDiscretization, FnBase):
@@ -408,11 +416,11 @@ class Discretization(RawDiscretization, FnBase):
     # Pass-through attributes of the wrapped ``dspace``
     def zero(self):
         """Create a vector of zeros."""
-        return self.Vector(self, self.dspace.zero())
+        return self.element_type(self, self.dspace.zero())
 
     def one(self):
         """Create a vector of ones."""
-        return self.Vector(self, self.dspace.one())
+        return self.element_type(self, self.dspace.one())
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
@@ -438,16 +446,21 @@ class Discretization(RawDiscretization, FnBase):
         """Raw pointwise multiplication of two vectors."""
         self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
 
-    class Vector(RawDiscretization.Vector, FnBase.Vector):
+    @property
+    def element_type(self):
+        """ `DiscretizationVector` """
+        return DiscretizationVector
 
-        """Representation of a :class:`Discretization` element."""
+class DiscretizationVector(RawDiscretizationVector, FnBaseVector):
 
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, Discretization):
-                raise TypeError('space {!r} not a `Discretization` '
-                                'instance.'.format(space))
-            super().__init__(space, data)
+    """Representation of a :class:`Discretization` element."""
+
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        if not isinstance(space, Discretization):
+            raise TypeError('space {!r} not a `Discretization` '
+                            'instance.'.format(space))
+        super().__init__(space, data)
 
 
 def dspace_type(space, impl, dtype=None):

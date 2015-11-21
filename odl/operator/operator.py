@@ -29,7 +29,8 @@ from abc import ABCMeta
 from numbers import Number, Integral
 
 # ODL imports
-from odl.set.space import LinearSpace, UniversalSpace
+from odl.set.space import (LinearSpace, LinearSpaceVector, 
+                           UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
@@ -386,12 +387,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        other : {:class:`Operator`, :class:`~odl.LinearSpace.Vector`, scalar}
+        other : {:class:`Operator`, :class:`~odl.LinearSpaceVector`, scalar}
             :class:`Operator`:
                 The :attr:`Operator.domain` of ``other`` must match this
                 operator's :attr:`Operator.range`.
 
-            :class:`~odl.LinearSpace.Vector`:
+            :class:`~odl.LinearSpaceVector`:
                 ``other`` must be an element of this operator's
                 :attr:`Operator.domain`.
 
@@ -436,7 +437,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 return OperatorLeftScalarMult(self, other)
             else:
                 return OperatorRightScalarMult(self, other)
-        elif isinstance(other, LinearSpace.Vector) and other in self.domain:
+        elif isinstance(other, LinearSpaceVector) and other in self.domain:
             return OperatorRightVectorMult(self, other.copy())
         else:
             return NotImplemented
@@ -471,12 +472,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        other : {:class:`Operator`, :class:`~odl.LinearSpace.Vector`, scalar}
+        other : {:class:`Operator`, :class:`~odl.LinearSpaceVector`, scalar}
             :class:`Operator`:
                 The :attr:`Operator.range` of ``other`` must match this
                 operator's :attr:`Operator.domain`
 
-            :class:`~odl.LinearSpace.Vector`:
+            :class:`~odl.LinearSpaceVector`:
                 ``other`` must be an element of :attr:`Operator.range`.
 
             scalar:
@@ -516,7 +517,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorLeftScalarMult(self, other)
         elif other in self.range:
             return OperatorLeftVectorMult(self, other.copy())
-        elif (isinstance(other, LinearSpace.Vector) and
+        elif (isinstance(other, LinearSpaceVector) and
               other.space.field == self.range):
             return FunctionalLeftVectorMult(self, other.copy())
         else:
@@ -642,7 +643,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     # Give a `Operator` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Operator` if the other operand
     # is a NumPy object (applies also to scalars!).
-    # Set higher than Space.Vector.__array_priority__ to handle mult with
+    # Set higher than LinearSpaceVector.__array_priority__ to handle mult with
     # vector properly
     __array_priority__ = 2000000.0
 
@@ -1172,13 +1173,13 @@ class FunctionalLeftVectorMult(Operator):
         ----------
         op : :class:`Operator`
             The range of ``op`` must be a :class:`~odl.Field`.
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : :class:`~odl.LinearSpaceVector`
             The vector to multiply by. its space's
             :attr:`~odl.LinearSpace.field` must be the same as
             ``op.range``
         """
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('Vector {!r} not is not a LinearSpace.Vector'
+        if not isinstance(vector, LinearSpaceVector):
+            raise TypeError('Vector {!r} not is not a LinearSpaceVector'
                             ''.format(vector))
 
         if op.range != vector.space.field:
@@ -1259,7 +1260,7 @@ class OperatorLeftVectorMult(Operator):
         ----------
         op : :class:`Operator`
             The range of ``op`` must be a :class:`~odl.LinearSpace`.
-        vector : :class:`~odl.LinearSpace.Vector` in ``op.range``
+        vector : :class:`~odl.LinearSpaceVector` in ``op.range``
             The vector to multiply by
         """
         if vector not in op.range:
@@ -1341,7 +1342,7 @@ class OperatorRightVectorMult(Operator):
         ----------
         op : :class:`Operator`
             The domain of ``op`` must be a ``vector.space``.
-        vector : :class:`~odl.LinearSpace.Vector` in ``op.domain``
+        vector : :class:`~odl.LinearSpaceVector` in ``op.domain``
             The vector to multiply by
         """
         if vector not in op.domain:

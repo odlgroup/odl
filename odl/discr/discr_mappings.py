@@ -185,7 +185,7 @@ class RawGridCollocation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : :class:`~odl.FunctionSet.Vector`
+        inp : :class:`~odl.FunctionSetVector`
             The function to be evaluated. It must accept point
             coordinates in list form (``f(x, y, z)`` rather than
             ``f(point)``) and return either a NumPy array of the correct
@@ -194,7 +194,7 @@ class RawGridCollocation(FunctionSetMapping):
 
         Returns
         -------
-        outp : :class:`~odl.Ntuples.Vector`
+        outp : :class:`~odl.NtuplesVector`
             The function values at the grid points.
 
         Notes
@@ -335,12 +335,12 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : :class:`~odl.Ntuples.Vector`
+        inp : :class:`~odl.NtuplesVector`
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : :class:`~odl.FunctionSet.Vector`
+        outp : :class:`~odl.FunctionSetVector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 
@@ -514,12 +514,12 @@ class LinearInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        inp : :class:`~odl.Ntuples.Vector`
+        inp : :class:`~odl.NtuplesVector`
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : :class:`~odl.FunctionSet.Vector`
+        outp : :class:`~odl.FunctionSetVector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 

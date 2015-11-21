@@ -26,7 +26,7 @@ from builtins import super
 # ODL imports
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
-from odl.set.space import LinearSpace
+from odl.set.space import LinearSpace, LinearSpaceVector
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
@@ -330,7 +330,7 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : :class:`~odl.LinearSpaceVector`
             The vector to take the inner product with
         """
         self.vector = vector
@@ -386,7 +386,7 @@ class InnerProductAdjointOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : :class:`~odl.LinearSpaceVector`
             The vector to take the inner product with
         """
         self.vector = vector
@@ -462,14 +462,14 @@ class ConstantOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : :class:`~odl.LinearSpaceVector`
             The vector constant to be returned
 
         dom : :class:`~odl.LinearSpace`, default : vector.space
             The domain of the operator.
         """
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('space {!r} not a LinearSpace.Vector instance.'
+        if not isinstance(vector, LinearSpaceVector):
+            raise TypeError('space {!r} not a LinearSpaceVector instance.'
                             ''.format(vector))
 
         if dom is None:
@@ -488,7 +488,7 @@ class ConstantOperator(Operator):
 
         Returns
         -------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : :class:`~odl.LinearSpaceVector`
             The constant vector
 
         Examples
@@ -549,7 +549,7 @@ class ResidualOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : :class:`~odl.LinearSpaceVector`
             The vector constant to be returned
 
         dom : :class:`~odl.LinearSpace`, default : vector.space
@@ -559,8 +559,8 @@ class ResidualOperator(Operator):
             raise TypeError('op {!r} not a Operator instance.'
                             ''.format(op))
 
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('space {!r} not a LinearSpace.Vector instance.'
+        if not isinstance(vector, LinearSpaceVector):
+            raise TypeError('space {!r} not a LinearSpaceVector instance.'
                             ''.format(vector))
 
         if vector not in op.range:
@@ -581,7 +581,7 @@ class ResidualOperator(Operator):
 
         Returns
         -------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : :class:`~odl.LinearSpaceVector`
             The constant vector
 
         Examples

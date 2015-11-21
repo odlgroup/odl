@@ -74,7 +74,7 @@ def vector_examples(space):
     Returns
     -------
     examples : `generator`
-        Yields tuples (`string`, :class:`~odl.LinearSpace.Vector`)
+        Yields tuples (`string`, :class:`~odl.LinearSpaceVector`)
         where ``string`` is a short description of the vector
     """
 

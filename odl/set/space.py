@@ -40,10 +40,10 @@ In the following, the abstract methods are explained in detail.
 **Element creation:** ``element(inp=None)``
 
 This public method is the factory for the inner
-:class:`LinearSpace.Vector` class. It creates a new element of the space,
+:class:`LinearSpaceVector` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
 simplest possible case, it just delegates the construction to the
-:class:`LinearSpace.Vector` class.
+:class:`LinearSpaceVector` class.
 
 If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
@@ -53,7 +53,7 @@ initialized**, thus it can contain *any* value.
         A container for values for the element initialization
 
 **Returns:**
-    element : :class:`LinearSpace.Vector`
+    element : :class:`LinearSpaceVector`
         The new vector
 
 **Linear combination:** ``_lincomb(a, x1, b, x2, out)``
@@ -68,9 +68,9 @@ functions, see below.
     a, b : scalars, must be members of the space's ``field``
         Multiplicative scalar factors for input vector ``x1`` or ``x2``,
         respectively
-    x1, x2 : :class:`LinearSpace.Vector`
+    x1, x2 : :class:`LinearSpaceVector`
         Input vectors
-    out : :class:`LinearSpace.Vector`
+    out : :class:`LinearSpaceVector`
         Element to which the result of the computation is written
 
 **Returns:** `None`
@@ -112,7 +112,7 @@ between two vectors ``x1`` and ``x2``.
 A space with a distance is called a **metric space**.
 
 **Parameters:**
-    x1,x2 : :class:`LinearSpace.Vector`
+    x1,x2 : :class:`LinearSpaceVector`
         Vectors whose mutual distance to calculate
 
 **Returns:**
@@ -134,7 +134,7 @@ space element ``x``.
 A space with a norm is called a **normed space**.
 
 **Parameters:**
-    x : :class:`LinearSpace.Vector`
+    x : :class:`LinearSpaceVector`
         The vector to measure
 
 **Returns:**
@@ -153,7 +153,7 @@ A raw (not type-checking) private method calculating the inner
 product of two space elements ``x`` and ``y``.
 
 **Parameters:**
-    x,y : :class:`LinearSpace.Vector`
+    x,y : :class:`LinearSpaceVector`
         Vectors whose inner product to calculate
 
 **Returns:**
@@ -174,9 +174,9 @@ A raw (not type-checking) private method multiplying two vectors
 ``x1`` and ``x2`` element-wise and storing the result in ``out``.
 
 **Parameters:**
-    x1, x2 : :class:`LinearSpace.Vector`
+    x1, x2 : :class:`LinearSpaceVector`
         Vectors whose element-wise product to calculate
-    out : :class:`LinearSpace.Vector`
+    out : :class:`LinearSpaceVector`
         Vector to store the result
 
 **Returns:** `None`
@@ -224,14 +224,14 @@ import math as m
 from odl.set.sets import Set, UniversalSet
 
 
-__all__ = ('LinearSpace',)
+__all__ = ('LinearSpace', 'LinearSpaceVector')
 
 
 class LinearSpace(Set):
     """Abstract linear vector space.
 
     Its elements are represented as instances of the inner
-    :class:`LinearSpace.Vector` class.
+    :class:`LinearSpaceVector` class.
     """
 
     @abstractmethod
@@ -248,7 +248,7 @@ class LinearSpace(Set):
 
         Returns
         -------
-        element : :class:`LinearSpace.Vector`
+        element : :class:`LinearSpaceVector`
             A vector in this space
         """
 
@@ -305,7 +305,7 @@ class LinearSpace(Set):
 
         Returns
         -------
-        v : :class:`LinearSpace.Vector`
+        v : :class:`LinearSpaceVector`
             The one vector of this space
         """
         raise NotImplementedError('This space has no one')
@@ -322,7 +322,7 @@ class LinearSpace(Set):
 
         Returns
         -------
-        v : :class:`LinearSpace.Vector`
+        v : :class:`LinearSpaceVector`
             The zero vector of this space
         """
         # Default implementation using lincomb
@@ -336,7 +336,7 @@ class LinearSpace(Set):
         Returns
         -------
         contains : `bool`
-            `True` if ``other`` is a :class:`LinearSpace.Vector` instance and
+            `True` if ``other`` is a :class:`LinearSpaceVector` instance and
             ``other.space`` is equal to this space, `False` otherwise.
 
         Notes
@@ -344,7 +344,7 @@ class LinearSpace(Set):
         This is the strict default where spaces must be equal.
         Subclasses may choose to implement a less strict check.
         """
-        return isinstance(other, LinearSpace.Vector) and other.space == self
+        return isinstance(other, LinearSpaceVector) and other.space == self
 
     # Error checking variant of methods
     def lincomb(self, a, x1, b=None, x2=None, out=None):
@@ -364,18 +364,18 @@ class LinearSpace(Set):
         ----------
         a : Scalar in the field of this space
             Scalar to multiply ``x1`` with.
-        x1 : :class:`LinearSpace.Vector`
+        x1 : :class:`LinearSpaceVector`
             The first of the summands
         b : Scalar, optional
             Scalar to multiply ``x2`` with.
-        x2 : :class:`LinearSpace.Vector`, optional
+        x2 : :class:`LinearSpaceVector`, optional
             The second of the summands
-        out : :class:`LinearSpace.Vector`, optional
+        out : :class:`LinearSpaceVector`, optional
             The Vector that the result should be written to.
 
         Returns
         -------
-        out : :class:`LinearSpace.Vector`
+        out : :class:`LinearSpaceVector`
 
         Notes
         -----
@@ -427,10 +427,10 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x1 : :class:`LinearSpace.Vector`
+        x1 : :class:`LinearSpaceVector`
             The first element
 
-        x2 : :class:`LinearSpace.Vector`
+        x2 : :class:`LinearSpaceVector`
             The second element
 
         Returns
@@ -501,309 +501,314 @@ class LinearSpace(Set):
         self._divide(x1, x2, out)
         return out
 
-    class Vector(with_metaclass(ABCMeta, object)):
-        """Abstract :class:`LinearSpace` element.
+    @property
+    def element_type(self):
+        """ `LinearSpaceVector` """
+        return LinearSpaceVector
 
-        Not intended for creation of vectors, use the space's
-        :meth:`LinearSpace.element` method instead.
+class LinearSpaceVector(with_metaclass(ABCMeta, object)):
+    """Abstract :class:`LinearSpace` element.
+
+    Not intended for creation of vectors, use the space's
+    :meth:`LinearSpace.element` method instead.
+    """
+
+    def __init__(self, space):
+        """Default initializer of vectors.
+
+        All deriving classes must call this method to set space.
         """
+        if not isinstance(space, LinearSpace):
+            raise TypeError('space {!r} is not a `LinearSpace` instance'
+                            ''.format(space))
+        self._space = space
 
-        def __init__(self, space):
-            """Default initializer of vectors.
+    @property
+    def space(self):
+        """Space to which this vector belongs."""
+        return self._space
 
-            All deriving classes must call this method to set space.
-            """
-            if not isinstance(space, LinearSpace):
-                raise TypeError('space {!r} is not a `LinearSpace` instance'
-                                ''.format(space))
-            self._space = space
+    # Convenience functions
+    def assign(self, other):
+        """Assign the values of other to this vector."""
+        return self.space.lincomb(1, other, out=self)
 
-        @property
-        def space(self):
-            """Space to which this vector belongs."""
-            return self._space
+    def copy(self):
+        """Create an identical (deep) copy of this vector."""
+        result = self.space.element()
+        result.assign(self)
+        return result
 
-        # Convenience functions
-        def assign(self, other):
-            """Assign the values of other to this vector."""
-            return self.space.lincomb(1, other, out=self)
+    def lincomb(self, a, x1, b=None, x2=None):
+        """Assign a linear combination to this vector.
 
-        def copy(self):
-            """Create an identical (deep) copy of this vector."""
-            result = self.space.element()
-            result.assign(self)
-            return result
+        Implemented as ``space.lincomb(a, x1, b, x2, out=self)``.
 
-        def lincomb(self, a, x1, b=None, x2=None):
-            """Assign a linear combination to this vector.
+        See also
+        --------
+        LinearSpace.lincomb
+        """
+        return self.space.lincomb(a, x1, b, x2, out=self)
 
-            Implemented as ``space.lincomb(a, x1, b, x2, out=self)``.
+    def set_zero(self):
+        """Set this vector to the zero vector.
 
-            See also
-            --------
-            LinearSpace.lincomb
-            """
-            return self.space.lincomb(a, x1, b, x2, out=self)
+        See also
+        --------
+        LinearSpace.zero
+        """
+        return self.space.lincomb(0, self, 0, self, out=self)
 
-        def set_zero(self):
-            """Set this vector to the zero vector.
+    # Convenience operators
+    def __iadd__(self, other):
+        """Implementation of ``self += other``."""
+        if other in self.space:
+            return self.space.lincomb(1, self, 1, other, out=self)
+        else:
+            return NotImplemented
 
-            See also
-            --------
-            LinearSpace.zero
-            """
-            return self.space.lincomb(0, self, 0, self, out=self)
+    def __add__(self, other):
+        """Implementation of ``self + other``."""
+        # Instead of using __iadd__ we duplicate code here for performance
+        if other in self.space:
+            tmp = self.space.element()
+            return self.space.lincomb(1, self, 1, other, out=tmp)
+        else:
+            return NotImplemented
 
-        # Convenience operators
-        def __iadd__(self, other):
-            """Implementation of ``self += other``."""
-            if other in self.space:
-                return self.space.lincomb(1, self, 1, other, out=self)
-            else:
-                return NotImplemented
+    def __isub__(self, other):
+        """Implementation of ``self -= other``."""
+        if other in self.space:
+            return self.space.lincomb(1, self, -1, other, out=self)
+        else:
+            return NotImplemented
 
-        def __add__(self, other):
-            """Implementation of ``self + other``."""
-            # Instead of using __iadd__ we duplicate code here for performance
-            if other in self.space:
-                tmp = self.space.element()
-                return self.space.lincomb(1, self, 1, other, out=tmp)
-            else:
-                return NotImplemented
+    def __sub__(self, other):
+        """Implementation of ``self - other``."""
+        # Instead of using __isub__ we duplicate code here for performance
+        if other in self.space:
+            tmp = self.space.element()
+            return self.space.lincomb(1, self, -1, other, out=tmp)
+        else:
+            return NotImplemented
 
-        def __isub__(self, other):
-            """Implementation of ``self -= other``."""
-            if other in self.space:
-                return self.space.lincomb(1, self, -1, other, out=self)
-            else:
-                return NotImplemented
+    def __imul__(self, other):
+        """Implementation of ``self *= other``."""
+        if other in self.space.field:
+            return self.space.lincomb(other, self, out=self)
+        elif other in self.space:
+            return self.space.multiply(other, self, out=self)
+        else:
+            return NotImplemented
 
-        def __sub__(self, other):
-            """Implementation of ``self - other``."""
-            # Instead of using __isub__ we duplicate code here for performance
-            if other in self.space:
-                tmp = self.space.element()
-                return self.space.lincomb(1, self, -1, other, out=tmp)
-            else:
-                return NotImplemented
+    def __mul__(self, other):
+        """Implementation of ``self * other``."""
+        # Instead of using __imul__ we duplicate code here for performance
+        if other in self.space.field:
+            tmp = self.space.element()
+            return self.space.lincomb(other, self, out=tmp)
+        elif other in self.space:
+            tmp = self.space.element()
+            return self.space.multiply(other, self, out=tmp)
+        else:
+            return NotImplemented
 
-        def __imul__(self, other):
-            """Implementation of ``self *= other``."""
-            if other in self.space.field:
-                return self.space.lincomb(other, self, out=self)
-            elif other in self.space:
-                return self.space.multiply(other, self, out=self)
-            else:
-                return NotImplemented
+    def __rmul__(self, other):
+        """Implementation of ``other * self``."""
+        return self.__mul__(other)
 
-        def __mul__(self, other):
-            """Implementation of ``self * other``."""
-            # Instead of using __imul__ we duplicate code here for performance
-            if other in self.space.field:
-                tmp = self.space.element()
-                return self.space.lincomb(other, self, out=tmp)
-            elif other in self.space:
-                tmp = self.space.element()
-                return self.space.multiply(other, self, out=tmp)
-            else:
-                return NotImplemented
+    def __itruediv__(self, other):
+        """Implementation of ``self /= other`` (true division)."""
+        if other in self.space.field:
+            return self.space.lincomb(1.0 / other, self, out=self)
+        elif other in self.space:
+            return self.space.divide(self, other, out=self)
+        else:
+            return NotImplemented
 
-        def __rmul__(self, other):
-            """Implementation of ``other * self``."""
-            return self.__mul__(other)
+    __idiv__ = __itruediv__
 
-        def __itruediv__(self, other):
-            """Implementation of ``self /= other`` (true division)."""
-            if other in self.space.field:
-                return self.space.lincomb(1.0 / other, self, out=self)
-            elif other in self.space:
-                return self.space.divide(self, other, out=self)
-            else:
-                return NotImplemented
+    def __truediv__(self, other):
+        """Implementation of ``self / other`` (true division)."""
+        if other in self.space.field:
+            tmp = self.space.element()
+            return self.space.lincomb(1.0 / other, self, out=tmp)
+        elif other in self.space:
+            tmp = self.space.element()
+            return self.space.divide(self, other, out=tmp)
+        else:
+            return NotImplemented
 
-        __idiv__ = __itruediv__
+    __div__ = __truediv__
 
-        def __truediv__(self, other):
-            """Implementation of ``self / other`` (true division)."""
-            if other in self.space.field:
-                tmp = self.space.element()
-                return self.space.lincomb(1.0 / other, self, out=tmp)
-            elif other in self.space:
-                tmp = self.space.element()
-                return self.space.divide(self, other, out=tmp)
-            else:
-                return NotImplemented
+    def __ipow__(self, n):
+        """Take the ``n``-th power of this vector in-place.
 
-        __div__ = __truediv__
-
-        def __ipow__(self, n):
-            """Take the ``n``-th power of this vector in-place.
-
-            This is only defined for integer ``n``."""
-            if n == 1:
-                return self
-            elif n % 2 == 0:
-                self.space.multiply(self, self, out=self)
-                return self.__ipow__(n // 2)
-            else:
-                tmp = self.copy()
-                for i in range(n - 1):
-                    self.space.multiply(tmp, self, out=tmp)
-                return tmp
-
-        def __pow__(self, n):
-            """Return the ``n``-th power of this vector.
-
-            This is only defined for integer ``n``."""
+        This is only defined for integer ``n``."""
+        if n == 1:
+            return self
+        elif n % 2 == 0:
+            self.space.multiply(self, self, out=self)
+            return self.__ipow__(n // 2)
+        else:
             tmp = self.copy()
-            tmp **= n
+            for i in range(n - 1):
+                self.space.multiply(tmp, self, out=tmp)
             return tmp
 
-        def __neg__(self):
-            """Implementation of ``-self``."""
-            return (-1) * self
+    def __pow__(self, n):
+        """Return the ``n``-th power of this vector.
 
-        def __pos__(self):
-            """Implementation of ``+self``."""
-            return self.copy()
+        This is only defined for integer ``n``."""
+        tmp = self.copy()
+        tmp **= n
+        return tmp
 
-        # Metric space method
-        def __eq__(self, other):
-            """``vec.__eq__(other) <==> vec == other``.
+    def __neg__(self):
+        """Implementation of ``-self``."""
+        return (-1) * self
 
-            Two vectors are equal if their distance is 0
+    def __pos__(self):
+        """Implementation of ``+self``."""
+        return self.copy()
 
-            Parameters
-            ----------
-            other : :class:`LinearSpace.Vector`
-                Vector in this space.
+    # Metric space method
+    def __eq__(self, other):
+        """``vec.__eq__(other) <==> vec == other``.
 
-            Returns
-            -------
-            equals : `bool`
-                True if the vectors are equal, else false.
+        Two vectors are equal if their distance is 0
 
-            Notes
-            -----
-            Equality is very sensitive to numerical errors, thus any
-            operations on a vector should be expected to break equality
-            testing.
+        Parameters
+        ----------
+        other : :class:`LinearSpaceVector`
+            Vector in this space.
 
-            Examples
-            --------
-            >>> from odl import Rn
-            >>> import numpy as np
-            >>> rn = Rn(1, norm=np.linalg.norm)
-            >>> x = rn.element([0.1])
-            >>> x == x
-            True
-            >>> y = rn.element([0.1])
-            >>> x == y
-            True
-            >>> z = rn.element([0.3])
-            >>> x+x+x == z
-            False
-            """
-            if (not isinstance(other, LinearSpace.Vector) or
-                    other.space != self.space):
-                # Cannot use (if other not in self.space) since this is not
-                # reflexive.
-                return False
-            elif other is self:
-                # Optimization for the most common case
-                return True
-            else:
-                return self.space.dist(self, other) == 0
+        Returns
+        -------
+        equals : `bool`
+            True if the vectors are equal, else false.
 
-        def __ne__(self, other):
-            return not self.__eq__(other)
+        Notes
+        -----
+        Equality is very sensitive to numerical errors, thus any
+        operations on a vector should be expected to break equality
+        testing.
 
-        def __str__(self):
-            """Implementation of str()."""
-            return str(self.space) + ".Vector"
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> import numpy as np
+        >>> rn = Rn(1, norm=np.linalg.norm)
+        >>> x = rn.element([0.1])
+        >>> x == x
+        True
+        >>> y = rn.element([0.1])
+        >>> x == y
+        True
+        >>> z = rn.element([0.3])
+        >>> x+x+x == z
+        False
+        """
+        if (not isinstance(other, LinearSpaceVector) or
+                other.space != self.space):
+            # Cannot use (if other not in self.space) since this is not
+            # reflexive.
+            return False
+        elif other is self:
+            # Optimization for the most common case
+            return True
+        else:
+            return self.space.dist(self, other) == 0
 
-        def __copy__(self):
-            """Copy of vector
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
-            See also
-            --------
-            LinearSpace.Vector.copy
-            """
-            return self.copy()
+    def __str__(self):
+        """Implementation of str()."""
+        return str(self.space) + "Vector"
 
-        def __deepcopy__(self, memo):
-            """Copy of vector
+    def __copy__(self):
+        """Copy of vector
 
-            See also
-            --------
-            LinearSpace.Vector.copy
-            """
-            return self.copy()
+        See also
+        --------
+        LinearSpaceVector.copy
+        """
+        return self.copy()
 
-        # TODO: DOCUMENT
-        def norm(self):
-            """Norm of vector
+    def __deepcopy__(self, memo):
+        """Copy of vector
 
-            See also
-            --------
-            LinearSpace.norm
-            """
-            return self.space.norm(self)
+        See also
+        --------
+        LinearSpaceVector.copy
+        """
+        return self.copy()
 
-        def dist(self, other):
-            """Norm of vector
+    # TODO: DOCUMENT
+    def norm(self):
+        """Norm of vector
 
-            See also
-            --------
-            LinearSpace.dist
-            """
-            return self.space.dist(self, other)
+        See also
+        --------
+        LinearSpace.norm
+        """
+        return self.space.norm(self)
 
-        def inner(self, other):
-            """Norm of vector
+    def dist(self, other):
+        """Norm of vector
 
-            See also
-            --------
-            LinearSpace.inner
-            """
-            return self.space.inner(self, other)
+        See also
+        --------
+        LinearSpace.dist
+        """
+        return self.space.dist(self, other)
 
-        def multiply(self, x, y):
-            """Norm of vector
+    def inner(self, other):
+        """Norm of vector
 
-            See also
-            --------
-            LinearSpace.multiply
-            """
-            return self.space.multiply(x, y, out=self)
+        See also
+        --------
+        LinearSpace.inner
+        """
+        return self.space.inner(self, other)
 
-        @property
-        def T(self):
-            """The transpose of a vector, the functional given by (. , self)
+    def multiply(self, x, y):
+        """Norm of vector
 
-            Returns
-            -------
-            transpose : :class:`~odl.operator.default_ops.InnerProductOperator`
+        See also
+        --------
+        LinearSpace.multiply
+        """
+        return self.space.multiply(x, y, out=self)
 
-            Notes
-            -----
-            This function is only defined in inner product spaces.
+    @property
+    def T(self):
+        """The transpose of a vector, the functional given by (. , self)
 
-            In a complex space, this takes the conjugate transpose of
-            the vector.
+        Returns
+        -------
+        transpose : :class:`~odl.operator.default_ops.InnerProductOperator`
 
-            Examples
-            --------
-            >>> from odl import Rn
-            >>> import numpy as np
-            >>> rn = Rn(3)
-            >>> x = rn.element([1, 2, 3])
-            >>> y = rn.element([2, 1, 3])
-            >>> x.T(y)
-            13.0
-            """
-            from odl.operator.default_ops import InnerProductOperator
-            return InnerProductOperator(self.copy())
+        Notes
+        -----
+        This function is only defined in inner product spaces.
+
+        In a complex space, this takes the conjugate transpose of
+        the vector.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> import numpy as np
+        >>> rn = Rn(3)
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([2, 1, 3])
+        >>> x.T(y)
+        13.0
+        """
+        from odl.operator.default_ops import InnerProductOperator
+        return InnerProductOperator(self.copy())
 
 
 class UniversalSpace(LinearSpace):
@@ -852,9 +857,9 @@ class UniversalSpace(LinearSpace):
     def __contains__(self, other):
         """``s.__contains__(other) <==> other in s``.
 
-        Dummy membership check, `True` for any :class:`LinearSpace.Vector`.
+        Dummy membership check, `True` for any :class:`LinearSpaceVector`.
         """
-        return isinstance(other, LinearSpace.Vector)
+        return isinstance(other, LinearSpaceVector)
 
 
 if __name__ == '__main__':
