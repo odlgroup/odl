@@ -21,8 +21,6 @@ import sphinx_rtd_theme
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # Mock modules for Read The Docs to enable autodoc
-
-
 def mock_modules(modules):
     if sys.version_info < (3, 3):
         from mock import Mock as MagicMock
@@ -102,8 +100,12 @@ def skip(app, what, name, obj, skip, options):
 def setup(app):
     app.connect("autodoc-skip-member", skip)
 
+# Autosummary
+import glob
+autosummary_generate = glob.glob("odl_interface/*.rst")
+
 # Stops WARNING: toctree contains reference to nonexisting document
-numpydoc_show_class_members = False
+numpydoc_show_class_members = True
 
 # Set order to mirror source
 autodoc_member_order = 'bysource'

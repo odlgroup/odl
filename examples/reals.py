@@ -53,14 +53,14 @@ class Reals(odl.LinearSpace):
     def element(self, value=0):
         return Reals.Vector(self, value)
 
-    class Vector(odl.LinearSpace.Vector):
+    class Vector(odl.LinearSpaceVector):
         """Real vectors are floats
         """
 
         __val__ = None
 
         def __init__(self, space, v):
-            odl.LinearSpace.Vector.__init__(self, space)
+            odl.LinearSpaceVector.__init__(self, space)
             self.__val__ = v
 
         def __float__(self):

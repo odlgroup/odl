@@ -375,12 +375,7 @@ class FnBase(NtuplesBase, LinearSpace):
 
     @property
     def element_type(self):
-        """ Vector type of this space. 
-        
-        See also
-        --------
-        FnBaseVector
-        """
+        """ `FnBaseVector` """
         return FnBaseVector
 
 class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
