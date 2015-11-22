@@ -38,6 +38,8 @@ Classes
 string = """{name} package
 {line}
 
+{docstring}
+
 .. currentmodule:: {name}
 
 {module_string}
@@ -47,8 +49,6 @@ string = """{name} package
 
 
 def make_interface():
-    if not os.path.exists('odl_interface'):
-        os.makedirs('odl_interface')
 
     for importer, modname, ispkg in pkgutil.walk_packages(path=odl.__path__,
                                                           prefix=odl.__name__+'.',
@@ -59,9 +59,12 @@ def make_interface():
 
         module = importlib.import_module(modname)
 
+        docstring = module.__doc__
         submodules = [m[0] for m in inspect.getmembers(module, inspect.ismodule) if m[1].__name__.startswith('odl')]
         functions = [m[0] for m in inspect.getmembers(module, inspect.isfunction) if m[1].__module__ == modname]
         classes = [m[0] for m in inspect.getmembers(module, inspect.isclass) if m[1].__module__ == modname]
+
+        docstring = '' if docstring is None else docstring
 
         if len(submodules) > 0:
             this_mod_string = module_string.format('\n   '.join(submodules))
@@ -78,9 +81,12 @@ def make_interface():
         else:
             this_class_string = ''
 
-        text_file = open('odl_interface/' + modname + '.rst', "w")
+
+
+        text_file = open(modname + '.rst', "w")
         text_file.write(string.format(name=modname,
                                       line=line,
+                                      docstring=docstring,
                                       module_string=this_mod_string,
                                       fun_string=this_fun_string,
                                       class_string=this_class_string))

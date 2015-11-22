@@ -102,7 +102,7 @@ def setup(app):
 
 # Autosummary
 import glob
-autosummary_generate = glob.glob("odl_interface/*.rst")
+autosummary_generate = glob.glob("./*.rst")
 
 # Stops WARNING: toctree contains reference to nonexisting document
 numpydoc_show_class_members = True
@@ -271,3 +271,4 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
