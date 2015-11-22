@@ -36,30 +36,68 @@ __all__ = ('ProductSpaceOperator',
 
 
 class ProductSpaceOperator(Operator):
-    """A separable operator on product spaces.
 
-    This is intended for the case where a operator can be decomposed
-    as a linear combination of "sub" operators. For example:
+    """A "matrix of operators" on product spaces.
 
-    ```
-    |A, B, 0| |x|   |Ax + By|
-    |0, C, 0| |y| = |  Cy   |
-    |0, 0, D| |z|   |  Dz   |
-    ```
+    This is intended for the case where an operator can be decomposed
+    as a linear combination of "sub-operators", e.g.
 
+        :math:`\\left(
+        \\begin{array} \\~
+        A & B & 0 \\\\
+        0 & C & 0 \\\\
+        0 & 0 & D
+        \end{array}\\right)
+        \\left(
+        \\begin{array} \\~
+        x \\\\
+        y \\\\
+        z
+        \end{array}\\right)
+        =
+        \\left(
+        \\begin{array} \\~
+        A(x) + B(y) \\\\
+        C(y) \\\\
+        D(z)
+        \end{array}\\right)`
+
+    Mathematically, a :class:`ProductSpaceOperator` is an operator
+
+        :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}`
+
+    between product spaces
+    :math:`\mathcal{X}=\mathcal{X}_1 \\times\dots\\times \mathcal{X}_m`
+    and
+    :math:`\mathcal{Y}=\mathcal{Y}_1 \\times\dots\\times \mathcal{Y}_n`
+    which can be written in the form
+
+        :math:`\mathcal{A} = (\mathcal{A}_{ij})_{i,j},  \quad
+        i = 1, \dots, n, \\ j = 1, \dots, m`
+
+    with *component operators*
+    :math:`\mathcal{A}_{ij}: \mathcal{X}_j \\to \mathcal{Y}_i`.
+
+    Its action on a vector :math:`x = (x_1, \dots, x_m)` is defined as
+    the matrix multiplication
+
+        :math:`[\mathcal{A}(x)]_i = \sum_{j=1}^m \mathcal{A}_{ij}(x_j)`.
     """
 
     def __init__(self, operators, dom=None, ran=None):
-        """ Initialize a object
-
+        """
         Parameters
         ----------
         operators : array-like
             An array of :class:`~odl.Operator`'s
         dom : :class:`~odl.ProductSpace`
-            Domain, default infers from operators
+            Domain of the operator. If not provided, it is tried to be
+            inferred from the operators. This requires each **column**
+            to contain at least one operator.
         ran : :class:`~odl.ProductSpace`
-            Range, default infers from operators
+            Range of the operator. If not provided, it is tried to be
+            inferred from the operators. This requires each **row**
+            to contain at least one operator.
 
         Examples
         --------
@@ -146,7 +184,7 @@ class ProductSpaceOperator(Operator):
         super().__init__(domain=dom, range=ran, linear=linear)
 
     def _apply(self, x, out):
-        """ Call the ProductSpace operators inplace
+        """Call the ProductSpace operators in-place.
 
         Parameters
         ----------
@@ -157,7 +195,7 @@ class ProductSpaceOperator(Operator):
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -178,17 +216,17 @@ class ProductSpaceOperator(Operator):
                 out[i].set_zero()
 
     def _call(self, x):
-        """ Call the ProductSpace operators
+        """Call the ProductSpace operators.
 
         Parameters
         ----------
         x : domain element
-            input vector to be evaluated
+            Input vector to be evaluated
 
         Returns
         -------
         out : range element
-            The result
+            Result of the evaluation
 
         Examples
         --------
@@ -198,7 +236,7 @@ class ProductSpaceOperator(Operator):
         >>> I = odl.IdentityOperator(r3)
         >>> x = X.element([[1, 2, 3], [4, 5, 6]])
 
-        Sum of elements
+        Sum of elements:
 
         >>> prod_op = ProductSpaceOperator([I, I])
         >>> prod_op(x)
@@ -206,7 +244,8 @@ class ProductSpaceOperator(Operator):
             [5.0, 7.0, 9.0]
         ])
 
-        Diagonal operator, 0 or None means ignore, or the implicit zero op.
+        Diagonal operator -- 0 or `None` means ignore, or the implicit
+        zero operator:
 
         >>> prod_op = ProductSpaceOperator([[I, 0], [0, I]])
         >>> prod_op(x)
@@ -215,7 +254,7 @@ class ProductSpaceOperator(Operator):
             [4.0, 5.0, 6.0]
         ])
 
-        Complicated combinations
+        Complicated combinations:
 
         >>> prod_op = ProductSpaceOperator([[I, I], [I, 0]])
         >>> prod_op(x)
@@ -231,8 +270,12 @@ class ProductSpaceOperator(Operator):
 
     @property
     def adjoint(self):
-        """ The adjoint is given by taking adjoint of the matrix and of
-        each operator
+        """Adjoint of the product space operator.
+
+        The adjoint is given by taking the transpose of the matrix
+        and the adjoint of each component operator.
+
+        TODO: weighting
 
         Returns
         -------
@@ -247,9 +290,10 @@ class ProductSpaceOperator(Operator):
         >>> I = odl.IdentityOperator(r3)
         >>> x = X.element([[1, 2, 3], [4, 5, 6]])
 
-        Matrix is taken as adjoint
+        Matrix is transposed:
 
-        >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]], dom=X, ran=X)
+        >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]],
+        ...                                dom=X, ran=X)
         >>> prod_op(x)
         ProductSpace(Rn(3), 2).element([
             [4.0, 5.0, 6.0],
@@ -273,18 +317,36 @@ class ProductSpaceOperator(Operator):
 
 
 class ComponentProjection(Operator):
-    """ Projection onto a subspace
+
+    """Projection onto the subspace identified by an index.
+
+    For a product space :math:`\mathcal{X} = \mathcal{X}_1 \\times \dots
+    \\times \mathcal{X}_n`, the component projection
+
+        :math:`\mathcal{P}_i: \mathcal{X} \\to \mathcal{X}_i`
+
+    is given by :math:`\mathcal{P}_i(x) = x_i` for an element
+    :math:`x = (x_1, \dots, x_n) \\in \mathcal{X}`.
+
+    More generally, for an index set :math:`I \subset \{1, \dots, n\}`,
+    the projection operator :math:`\mathcal{P}_I` is defined by
+    :math:`\mathcal{P}_I(x) = (x_i)_{i \\in I}`.
+
+    Note that this is a special case of a product space operator where
+    the "operator matrix" has only one row and contains only
+    identity operators.
     """
 
     def __init__(self, space, index):
-        """ Initialize a Projection
-
+        """
         Parameters
         ----------
         space : :class:`~odl.ProductSpace`
             The space to project from
         index : `int`, `slice`, or `iterable` [int]
-            The indexes to project on
+            The indices defining the subspace. If ``index`` is not
+            and `int`, the :attr:`~odl.Operator.range` of this
+            operator is also a :class:`~odl.ProductSpace`.
 
         Examples
         --------
@@ -294,7 +356,7 @@ class ComponentProjection(Operator):
         >>> r3 = odl.Rn(3)
         >>> X = odl.ProductSpace(r1, r2, r3)
 
-        Projection on n:th component
+        Projection on n-th component
 
         >>> proj = odl.ComponentProjection(X, 0)
         >>> proj.range
@@ -310,7 +372,7 @@ class ComponentProjection(Operator):
         super().__init__(space, space[index], linear=True)
 
     def _apply(self, x, out):
-        """ Extend x onto subspace in place
+        """Project x onto subspace in-place.
 
         See also
         --------
@@ -319,7 +381,7 @@ class ComponentProjection(Operator):
         out.assign(x[self.index])
 
     def _call(self, x):
-        """ project x onto subspace
+        """Project x onto subspace out-of-place.
 
         Parameters
         ----------
@@ -340,7 +402,7 @@ class ComponentProjection(Operator):
         >>> X = odl.ProductSpace(r1, r2, r3)
         >>> x = X.element([[1], [2, 3], [4, 5, 6]])
 
-        Projection on n:th component
+        Projection on n-th component
 
         >>> proj = odl.ComponentProjection(X, 0)
         >>> proj(x)
@@ -359,8 +421,10 @@ class ComponentProjection(Operator):
 
     @property
     def adjoint(self):
-        """ The adjoint is given by extending along indices, and setting
-        zero along the others
+        """Return the adjoint operator.
+
+        The adjoint is given by extending along :attr:`index`, and
+        setting zero along the others.
 
         See also
         --------
@@ -370,9 +434,19 @@ class ComponentProjection(Operator):
 
 
 class ComponentProjectionAdjoint(Operator):
-    def __init__(self, space, index):
-        """ Initialize a Projection
 
+    """Adjoint operator to :class:~`ComponentProjection`.
+
+    As a special case of the adjoint of a :class:`ProductSpaceOperator`,
+    this operator is given as a column vector of identity operators
+    and zero operators, with the identities placed in the positions
+    defined by :attr:`index`.
+
+    TODO: weighted spaces
+    """
+
+    def __init__(self, space, index):
+        """
         Parameters
         ----------
         space : :class:`~odl.ProductSpace`
@@ -388,7 +462,7 @@ class ComponentProjectionAdjoint(Operator):
         >>> r3 = odl.Rn(3)
         >>> X = odl.ProductSpace(r1, r2, r3)
 
-        Projection on n:th component
+        Projection on n-th component
 
         >>> proj = odl.ComponentProjectionAdjoint(X, 0)
         >>> proj.domain
@@ -404,7 +478,9 @@ class ComponentProjectionAdjoint(Operator):
         super().__init__(space[index], space, linear=True)
 
     def _apply(self, x, out):
-        """ Extend x into the superspace
+        """Evaluate this operator in-place.
+
+        Extend ``x`` from the subspace related to :attr:`index`.
 
         See also
         --------
@@ -414,17 +490,19 @@ class ComponentProjectionAdjoint(Operator):
         out[self.index] = x
 
     def _call(self, x):
-        """ project x into subspace
+        """Evaluate this operator out-of-place.
+
+        Extend ``x`` from the subspace related to :attr:`index`.
 
         Parameters
         ----------
         x : domain element
-            input vector to be projected
+            Input vector to be projected
 
         Returns
         -------
         out : range element
-            Projection of x into superspace
+            Projection of x to superspace
 
         Examples
         --------
@@ -435,7 +513,7 @@ class ComponentProjectionAdjoint(Operator):
         >>> X = odl.ProductSpace(r1, r2, r3)
         >>> x = X.element([[1], [2, 3], [4, 5, 6]])
 
-        Projection on n:th component
+        Projection on n-th component
 
         >>> proj = odl.ComponentProjectionAdjoint(X, 0)
         >>> proj(x[0])
@@ -461,7 +539,10 @@ class ComponentProjectionAdjoint(Operator):
 
     @property
     def adjoint(self):
-        """ The adjoint is given by the projection onto space[index]
+        """The adjoint operator.
+
+        The adjoint is given by the :class:`ComponentProjection`
+        related to this operator's :attr:`index`.
 
         See also
         --------
