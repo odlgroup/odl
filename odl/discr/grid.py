@@ -768,7 +768,6 @@ class RegularGrid(TensorGrid):
         min_pt = np.atleast_1d(min_pt).astype(np.float64)
         max_pt = np.atleast_1d(max_pt).astype(np.float64)
         shape = np.atleast_1d(shape).astype(np.int64)
-        as_midp = kwargs.get('as_midp', False)
 
         if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
             raise ValueError('input arrays have dimensions {}, {}, {} '
@@ -810,12 +809,8 @@ class RegularGrid(TensorGrid):
         self._center = (self.max_pt + self.min_pt) / 2
         self._stride = np.ones(len(shape), dtype='float64')
         idcs = np.where(shape > 1)
-        if as_midp:
-            self._stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
-                                  shape[idcs])
-        else:
-            self._stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
-                                  (shape[idcs] - 1))
+        self._stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
+                              (shape[idcs] - 1))
 
     @property
     def center(self):
