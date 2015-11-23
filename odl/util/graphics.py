@@ -28,6 +28,7 @@ standard_library.install_aliases()
 from odl.util.utility import is_real_dtype
 
 # External module imports
+from numbers import Integral
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -35,7 +36,8 @@ from matplotlib import pyplot as plt
 __all__ = ('show_discrete_function',)
 
 
-def show_discrete_function(dfunc, method='', title=None, **kwargs):
+def show_discrete_function(dfunc, method='', title=None, indices=None,
+                           **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
@@ -57,6 +59,13 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
 
     title : `str`, optional
         Set the title of the figure
+
+    indices : index expression
+        Display a slice of the array instead of the full array. The
+        index expression is most easily created with the `numpy.s_`
+        constructur, i.e. supply ``np.s_[:, 1, :]`` to display the
+        first slice along the second axis.
+
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
         See the Matplotlib functions for documentation of extra
@@ -76,13 +85,45 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
     sub_kwargs = {}
     arrange_subplots = (121, 122)  # horzontal arrangement
 
-    values = dfunc.asarray()
-    dfunc_is_complex = not is_real_dtype(dfunc.space.dspace.dtype)
+    if isinstance(indices, (Integral, slice)):
+        indices = [indices]
+    elif indices is None or indices == Ellipsis:
+        indices = [np.s_[:]] * dfunc.ndim
+    else:
+        indices = list(indices)
 
+    if Ellipsis in indices:
+        # Replace Ellipsis with the correct number of [:] expressions
+        pos = indices.index(Ellipsis)
+        indices = (indices[:pos] +
+                   [np.s_[:]] * (dfunc.ndim - len(indices) + 1) +
+                   indices[pos + 1:])
+
+    if len(indices) < dfunc.ndim:
+        raise ValueError('too few axes ({} < {}).'.format(len(indices),
+                                                          dfunc.ndim))
+    if len(indices) > dfunc.ndim:
+        raise ValueError('too many axes ({} > {}).'.format(len(indices),
+                                                           dfunc.ndim))
+
+    # Create axis labels which remember their original meaning
+    if dfunc.ndim <= 3:
+        axis_labels = ['x', 'y', 'z']
+    else:
+        axis_labels = ['x{}'.format(axis) for axis in range(dfunc.ndim)]
+    squeezed_axes = [axis for axis in range(dfunc.ndim)
+                     if not isinstance(indices[axis], Integral)]
+    axis_labels = [axis_labels[axis] for axis in squeezed_axes]
+
+    # Squeeze grid and values according to the index expression
+    grid = dfunc.space.grid[indices].squeeze()
+    values = dfunc.asarray()[indices].squeeze()
+
+    dfunc_is_complex = not is_real_dtype(dfunc.space.dspace.dtype)
     figsize = kwargs.pop('figsize', None)
     saveto = kwargs.pop('saveto', None)
 
-    if dfunc.ndim == 1:  # TODO: maybe a plotter class would be better
+    if values.ndim == 1:  # TODO: maybe a plotter class would be better
         if not method:
             if dfunc.space.interp == 'nearest':
                 method = 'step'
@@ -93,13 +134,13 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
                 method = 'plot'
 
         if method == 'plot' or method == 'step':
-            args_re += [dfunc.space.grid.coord_vectors[0], values.real]
-            args_im += [dfunc.space.grid.coord_vectors[0], values.imag]
+            args_re += [grid.coord_vectors[0], values.real]
+            args_im += [grid.coord_vectors[0], values.imag]
         else:
             raise ValueError('display method {!r} not supported.'
                              ''.format(method))
 
-    elif dfunc.ndim == 2:
+    elif values.ndim == 2:
         if not method:
             method = 'imshow'
 
@@ -107,10 +148,8 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
             args_re = [np.rot90(values.real)]
             args_im = [np.rot90(values.imag)] if dfunc_is_complex else []
 
-            extent = [dfunc.space.grid.min()[0],
-                      dfunc.space.grid.max()[0],
-                      dfunc.space.grid.min()[1],
-                      dfunc.space.grid.max()[1]]
+            extent = [grid.min()[0], grid.max()[0],
+                      grid.min()[1], grid.max()[1]]
 
             if dfunc.space.interp == 'nearest':
                 interpolation = 'nearest'
@@ -124,14 +163,14 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
                                'extent': extent,
                                'aspect': 'auto'})
         elif method == 'scatter':
-            pts = dfunc.space.grid.points()
+            pts = grid.points()
             args_re = [pts[:, 0], pts[:, 1], values.ravel().real]
             args_im = ([pts[:, 0], pts[:, 1], values.ravel().imag]
                        if dfunc_is_complex else [])
             sub_kwargs.update({'projection': '3d'})
         elif method in ('wireframe', 'plot_wireframe'):
             method = 'plot_wireframe'
-            xm, ym = dfunc.space.grid.meshgrid()
+            xm, ym = grid.meshgrid()
             args_re = [xm, ym, np.rot90(values.real)]
             args_im = ([xm, ym, np.rot90(values.imag)] if dfunc_is_complex
                        else [])
@@ -141,8 +180,8 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
                              ''.format(method))
 
     else:
-        raise NotImplemented('no method for {}d display implemented.'
-                             ''.format(dfunc.space.ndim))
+        raise NotImplementedError('no method for {}d display implemented.'
+                                  ''.format(dfunc.ndim))
 
     # Additional keyword args are passed on to the display method
     dsp_kwargs.update(**kwargs)
@@ -154,8 +193,11 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
     if dfunc_is_complex:
         sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
         sub_re.set_title('Real part')
-        sub_re.set_xlabel('x')
-        sub_re.set_ylabel('y')
+        sub_re.set_xlabel(axis_labels[0])
+        if dfunc.ndim == 2:
+            sub_re.set_ylabel(axis_labels[1])
+        else:
+            sub_re.set_ylabel('value')
         display_re = getattr(sub_re, method)
         csub_re = display_re(*args_re, **dsp_kwargs)
 
@@ -169,8 +211,11 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
 
         sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
         sub_im.set_title('Imaginary part')
-        sub_im.set_xlabel('x')
-        sub_im.set_ylabel('y')
+        sub_im.set_xlabel(axis_labels[0])
+        if dfunc.ndim == 2:
+            sub_im.set_ylabel(axis_labels[1])
+        else:
+            sub_re.set_ylabel('value')
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
 
@@ -184,8 +229,11 @@ def show_discrete_function(dfunc, method='', title=None, **kwargs):
 
     else:
         sub = plt.subplot(111, **sub_kwargs)
-        sub.set_xlabel('x')
-        sub.set_ylabel('y')
+        sub.set_xlabel(axis_labels[0])
+        if dfunc.ndim == 2:
+            sub.set_ylabel(axis_labels[1])
+        else:
+            sub.set_ylabel('value')
         try:
             # For 3d plots
             sub.set_zlabel('z')

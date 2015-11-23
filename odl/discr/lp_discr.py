@@ -304,7 +304,7 @@ class DiscreteLp(Discretization):
 
                 super().__setitem__(indices, values)
 
-        def show(self, method='', title='', **kwargs):
+        def show(self, method='', title='', indices=None, **kwargs):
             """Create a figure displaying the function in 1d or 2d.
 
             Parameters
@@ -324,6 +324,12 @@ class DiscreteLp(Discretization):
 
                 'wireframe', 'plot_wireframe' : surface plot
 
+            indices : index expression
+                Display a slice of the array instead of the full array.
+                The index expression is most easily created with the
+                `numpy.s_` constructur, i.e. supply ``np.s_[:, 1, :]``
+                to display the first slice along the second axis.
+
             title : `str`, optional
                 Set the title of the figure
             kwargs : {'figsize', 'saveto', ...}
@@ -342,7 +348,7 @@ class DiscreteLp(Discretization):
 
             from odl.util.graphics import show_discrete_function
             show_discrete_function(self, method=method, title=title,
-                                   **kwargs)
+                                   indices=indices, **kwargs)
 
 
 def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
