@@ -420,6 +420,25 @@ class TensorGrid(Set):
                     self.coord_vectors[index:])
         return TensorGrid(*new_vecs)
 
+    def squeeze(self):
+        """Remove the degenerate dimensions.
+
+        Note that no changes are made in-place.
+
+        Returns
+        -------
+        squeezed : :class:`TensorGrid`
+            The squeezed grid
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1], [-1, 0, 2])
+        >>> g.squeeze()
+        TensorGrid([0.0, 1.0], [-1.0, 0.0, 2.0])
+        """
+        coord_vecs = [self.coord_vectors[axis] for axis in self._inondeg]
+        return TensorGrid(*coord_vecs, as_midp=self._as_midp, order=self.order)
+
     def points(self, order=None):
         """All grid points in a single array.
 
@@ -943,6 +962,27 @@ class RegularGrid(TensorGrid):
         new_maxpt = (self.max_pt[:index].tolist() + grid.max_pt.tolist() +
                      self.max_pt[index:].tolist())
         return RegularGrid(new_minpt, new_maxpt, new_shape)
+
+    def squeeze(self):
+        """Remove the degenerate dimensions.
+
+        Note that no changes are made in-place.
+
+        Returns
+        -------
+        squeezed : :class:`RegularGrid`
+            The squeezed grid
+
+        Examples
+        --------
+        >>> g = RegularGrid([0, 0, 0], [1, 0, 1], (5, 1, 5))
+        >>> g.squeeze()
+        RegularGrid([0.0, 0.0], [1.0, 1.0], [5, 5])
+        """
+        sq_minpt = [self.min_pt[axis] for axis in self._inondeg]
+        sq_maxpt = [self.max_pt[axis] for axis in self._inondeg]
+        sq_shape = [self.shape[axis] for axis in self._inondeg]
+        return RegularGrid(sq_minpt, sq_maxpt, sq_shape, as_midp=self._as_midp)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
