@@ -1,5 +1,5 @@
-odl.solvers.iterative.iterative
-===============================
+iterative
+=========
 
 Simple iterative type optimization schemes.
 

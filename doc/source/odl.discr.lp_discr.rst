@@ -1,5 +1,5 @@
-odl.discr.lp_discr
-==================
+lp_discr
+========
 
 :math:`L^p` type discretizations of function spaces.
 

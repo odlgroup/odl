@@ -1,5 +1,5 @@
-odl.space
-=========
+space
+=====
 
 Concrete vector spaces.
 

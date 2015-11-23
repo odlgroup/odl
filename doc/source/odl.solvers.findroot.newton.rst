@@ -1,5 +1,5 @@
-odl.solvers.findroot.newton
-===========================
+newton
+======
 
 (Quasi-)Newton schemes to find zeros of functions (gradients).
 

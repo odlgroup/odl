@@ -1,5 +1,5 @@
-odl.util
-========
+util
+====
 
 Utility library for ODL, only for internal use.
 

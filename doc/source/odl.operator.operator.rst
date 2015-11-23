@@ -1,5 +1,5 @@
-odl.operator.operator
-=====================
+operator
+========
 
 Abstract mathematical (linear) operators.
 

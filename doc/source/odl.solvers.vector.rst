@@ -1,5 +1,5 @@
-odl.solvers.vector
-==================
+vector
+======
 
 
 

@@ -1,5 +1,5 @@
-odl.operator
-============
+operator
+========
 
 Mathematical operators in ODL.
 

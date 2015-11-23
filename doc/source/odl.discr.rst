@@ -1,5 +1,5 @@
-odl.discr
-=========
+discr
+=====
 
 Discretizations in ODL.
 

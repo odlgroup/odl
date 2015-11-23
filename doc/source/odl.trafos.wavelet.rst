@@ -1,5 +1,5 @@
-odl.trafos.wavelet
-==================
+wavelet
+=======
 
 Discrete wavelet transformation on L2 spaces.
 

@@ -1,5 +1,5 @@
-odl.util.phantom
-================
+phantom
+=======
 
 Utilities for internal use.
 

@@ -1,5 +1,5 @@
-odl.set.sets
-============
+sets
+====
 
 Basic abstract and concrete sets.
 

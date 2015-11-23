@@ -1,5 +1,5 @@
-odl.space.cu_ntuples
-====================
+cu_ntuples
+==========
 
 CUDA implementation of n-dimensional Cartesian spaces.
 

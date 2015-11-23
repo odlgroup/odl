@@ -236,7 +236,7 @@ class LinearSpace(Set):
 
     @abstractmethod
     def element(self, inp=None):
-        """Create an element from ``inp`` or from scratch.
+        """Create a `LinearSpaceVector` from ``inp`` or from scratch.
 
         If called without ``inp`` argument, an arbitrary element in the
         space is generated without guarantee of its state.
@@ -310,7 +310,7 @@ class LinearSpace(Set):
         """
         raise NotImplementedError('This space has no one')
 
-    @abstractproperty
+    @property
     def field(self):
         """The field of this vector space."""
 
@@ -448,14 +448,39 @@ class LinearSpace(Set):
         return float(self._dist(x1, x2))
 
     def norm(self, x):
-        """Calculate the norm of a vector."""
+        """Calculate the norm of a vector.
+        
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            The vector
+
+        Returns
+        -------
+        out : `float`
+            Norm of the vector
+        """
         if x not in self:
             raise TypeError('vector {!r} not in space {!r}'.format(x, self))
 
         return float(self._norm(x))
 
     def inner(self, x1, x2):
-        """Calculate the inner product of the vectors x1 and x2."""
+        """Calculate the inner product of ``x1`` and ``x2``.
+        
+        Parameters
+        ----------
+        x1 : `LinearSpaceVector`
+            The first vector
+
+        x2 : `LinearSpaceVector`
+            The second vector
+
+        Returns
+        -------
+        out : `LinearSpace.field` element
+            Product of the vectors, same as ``out`` if given.
+        """
         if x1 not in self:
             raise TypeError('first vector {!r} not in space {!r}'
                             ''.format(x1, self))
@@ -466,7 +491,25 @@ class LinearSpace(Set):
         return self.field.element(self._inner(x1, x2))
 
     def multiply(self, x1, x2, out=None):
-        """Calculate the pointwise product of x1 and x2, and assign to out."""
+        """Calculate the pointwise product of ``x1`` and ``x2``.
+        
+        Parameters
+        ----------
+        x1 : `LinearSpaceVector`
+            The first multiplicand
+
+        x2 : `LinearSpaceVector`
+            The second multiplicand
+
+        out : `LinearSpaceVector`, optional
+            Vector to write the product to. 
+            default: `LinearSpace.element`
+
+        Returns
+        -------
+        out : `LinearSpaceVector`
+            Product of the vectors, same as ``out`` if given.
+        """
         if out is None:
             out = self.element()
         elif out not in self:
@@ -484,7 +527,25 @@ class LinearSpace(Set):
         return out
 
     def divide(self, x1, x2, out=None):
-        """Calculate the pointwise division of x1 and x2, and assign to out."""
+        """Calculate the pointwise division of ``x1`` and ``x2``
+        
+        Parameters
+        ----------
+        x1 : `LinearSpaceVector`
+            The dividend
+
+        x2 : `LinearSpaceVector`
+            The divisor
+
+        out : `LinearSpaceVector`, optional
+            Vector to write the ratio to. 
+            default: `LinearSpace.element`
+
+        Returns
+        -------
+        out : `LinearSpaceVector`
+            Ratio of the vectors, same as ``out`` if given.
+        """
         if out is None:
             out = self.element()
         elif out not in self:
@@ -506,6 +567,7 @@ class LinearSpace(Set):
         """ `LinearSpaceVector` """
         return LinearSpaceVector
 
+
 class LinearSpaceVector(with_metaclass(ABCMeta, object)):
     """Abstract `LinearSpace` element.
 
@@ -525,16 +587,21 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
 
     @property
     def space(self):
-        """Space to which this vector belongs."""
+        """Space to which this vector belongs.
+        
+        See also
+        --------
+        LinearSpace        
+        """
         return self._space
 
     # Convenience functions
     def assign(self, other):
-        """Assign the values of other to this vector."""
+        """Assign the values of ``other`` to self."""
         return self.space.lincomb(1, other, out=self)
 
     def copy(self):
-        """Create an identical (deep) copy of this vector."""
+        """Create an identical (deep) copy of self."""
         result = self.space.element()
         result.assign(self)
         return result
@@ -551,7 +618,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
         return self.space.lincomb(a, x1, b, x2, out=self)
 
     def set_zero(self):
-        """Set this vector to the zero vector.
+        """Set this vector to zero.
 
         See also
         --------
@@ -642,7 +709,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
     __div__ = __truediv__
 
     def __ipow__(self, n):
-        """Take the ``n``-th power of this vector in-place.
+        """``n``-th power in-place.
 
         This is only defined for integer ``n``."""
         if n == 1:
@@ -657,7 +724,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
             return tmp
 
     def __pow__(self, n):
-        """Return the ``n``-th power of this vector.
+        """``n``-th power.
 
         This is only defined for integer ``n``."""
         tmp = self.copy()
@@ -756,7 +823,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
         return self.space.norm(self)
 
     def dist(self, other):
-        """Norm of vector
+        """Distance to ``other``.
 
         See also
         --------
@@ -765,7 +832,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
         return self.space.dist(self, other)
 
     def inner(self, other):
-        """Norm of vector
+        """Inner product with ``other``.
 
         See also
         --------
@@ -774,7 +841,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
         return self.space.inner(self, other)
 
     def multiply(self, x, y):
-        """Norm of vector
+        """Multiply by ``other`` inplace.
 
         See also
         --------
@@ -815,31 +882,51 @@ class UniversalSpace(LinearSpace):
     """A dummy linear space class mostly raising `NotImplementedError`."""
 
     def element(self, inp=None):
-        """Dummy element creation method, raises `NotImplementedError`."""
+        """Dummy element creation method.
+       
+        raises `NotImplementedError`.
+        """
         raise NotImplementedError
 
     def _lincomb(self, a, x1, b, x2, out):
-        """Dummy linear combination, raises `NotImplementedError`."""
+        """Dummy linear combination.
+        
+        raises `NotImplementedError`.
+        """
         raise NotImplementedError
 
     def _dist(self, x1, x2):
-        """Dummy distance method, raises `NotImplementedError`."""
+        """Dummy distance method.
+        
+        raises `NotImplementedError`.
+        """
         raise NotImplementedError
 
     def _norm(self, x):
-        """Dummy norm method, raises `NotImplementedError`."""
+        """Dummy norm method.
+        
+        raises `NotImplementedError`.
+        """
         raise NotImplementedError
 
     def _inner(self, x1, x2):
-        """Dummy inner product method, raises `NotImplementedError`."""
+        """Dummy inner product method.
+       
+        raises `NotImplementedError`.
+        """
         raise NotImplementedError
 
     def _multiply(self, x1, x2, out):
-        """Dummy multiplication method, raises `NotImplementedError`."""
+        """Dummy multiplication method.
+        
+        raises `NotImplementedError`."""
         raise NotImplementedError
 
     def _divide(self, x1, x2, out):
-        """Dummy division method, raises `NotImplementedError`."""
+        """Dummy division method.
+       
+        raises `NotImplementedError`.
+        """
         raise NotImplementedError
 
     @property

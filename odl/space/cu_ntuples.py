@@ -719,9 +719,9 @@ class CudaFn(FnBase, CudaNtuples):
         Parameters
         ----------
 
-        x1, x2 : CudaFnVector
+        x1, x2 : `CudaFnVector`
             Factors in product
-        out : CudaFnVector
+        out : `CudaFnVector`
             Result
 
         Returns
@@ -752,9 +752,9 @@ class CudaFn(FnBase, CudaNtuples):
         Parameters
         ----------
 
-        x1, x2 : CudaFnVector
+        x1, x2 : `CudaFnVector`
             Read from
-        out : CudaFnVector
+        out : `CudaFnVector`
             Write to
 
         Returns
@@ -849,7 +849,7 @@ class CudaFn(FnBase, CudaNtuples):
         return CudaFnVector
 
 
-class CudaFnVector(FnBaseVector, CudaNtuplesVector, LinearSpaceVector):
+class CudaFnVector(FnBaseVector, CudaNtuplesVector):
 
     """Representation of a `CudaFn` element."""
 
@@ -858,7 +858,7 @@ class CudaFnVector(FnBaseVector, CudaNtuplesVector, LinearSpaceVector):
         super().__init__(space, data)
 
 
-class CudaRn(CudaFn):
+class CudaRn(CudaFn, LinearSpace):
 
     """The real space :math:`R^n`, implemented in CUDA.
 

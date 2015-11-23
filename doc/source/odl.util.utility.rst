@@ -1,5 +1,5 @@
-odl.util.utility
-================
+utility
+=======
 
 Utilities for internal use.
 

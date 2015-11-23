@@ -1,5 +1,5 @@
-odl.solvers.scalar.steplen
-==========================
+steplen
+=======
 
 Step length computation for optimization schemes.
 

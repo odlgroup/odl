@@ -1,5 +1,5 @@
-odl.operator.default_ops
-========================
+default_ops
+===========
 
 Default operators defined on any (reasonable) space.
 

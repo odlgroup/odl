@@ -32,7 +32,7 @@ Classes
    {}
 """
 
-string = """{name}
+string = """{shortname}
 {line}
 
 {docstring}
@@ -54,9 +54,10 @@ def make_interface():
     modnames += ['odl']
 
     for modname in modnames:
+        shortmodname = modname.split('.')[-1]
         print(modname)
 
-        line = '=' * len(modname)
+        line = '=' * len(shortmodname)
 
         module = importlib.import_module(modname)
 
@@ -89,7 +90,8 @@ def make_interface():
 
 
         text_file = open(modname + '.rst', "w")
-        text_file.write(string.format(name=modname,
+        text_file.write(string.format(shortname=shortmodname,
+                                      name=modname,
                                       line=line,
                                       docstring=docstring,
                                       module_string=this_mod_string,

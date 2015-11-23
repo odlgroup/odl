@@ -1,5 +1,5 @@
-odl.space.ntuples
-=================
+ntuples
+=======
 
 CPU implementations of ``n``-dimensional Cartesian spaces.
 

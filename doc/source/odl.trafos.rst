@@ -1,5 +1,5 @@
-odl.trafos
-==========
+trafos
+======
 
 Function transformations based on ODL.
 

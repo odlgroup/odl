@@ -1,5 +1,5 @@
-odl.set.pspace
-==============
+pspace
+======
 
 Cartesian products of `LinearSpace` instances.
 

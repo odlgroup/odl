@@ -1,5 +1,5 @@
-odl.space.fspace
-================
+fspace
+======
 
 Spaces of functions with common domain and range.
 

@@ -1,5 +1,5 @@
-odl.diagnostics.operator
-========================
+operator
+========
 
 
 

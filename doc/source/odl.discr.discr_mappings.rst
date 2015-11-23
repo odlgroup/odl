@@ -1,5 +1,5 @@
-odl.discr.discr_mappings
-========================
+discr_mappings
+==============
 
 
 

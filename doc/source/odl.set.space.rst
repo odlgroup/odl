@@ -1,5 +1,5 @@
-odl.set.space
-=============
+space
+=====
 
 Abstract linear vector spaces.
 

@@ -3,8 +3,6 @@
 
 .. currentmodule:: {{ module }}
 
-.. odl.{{ objname }}:
-
 .. autoclass:: {{ objname }}
    :show-inheritance:
 
@@ -16,7 +14,7 @@
       .. autosummary::
          :toctree:
       {% for item in all_methods %}
-         {%- if not item.startswith('_') or item in ['__call__'] %}
+         {%- if not item.startswith('_') or item in ['__call__', '_call', '_apply', '_lincomb', '_multiply', '_divide', '_dist', '_norm', '_inner', '__contains__', '__eq__', '__getitem__', '__setitem__'] %}
          {{ name }}.{{ item }}
          {%- endif -%}
       {%- endfor %}

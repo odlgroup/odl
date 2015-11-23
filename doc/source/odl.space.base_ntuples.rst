@@ -1,5 +1,5 @@
-odl.space.base_ntuples
-======================
+base_ntuples
+============
 
 Base classes for implementation of n-tuples.
 

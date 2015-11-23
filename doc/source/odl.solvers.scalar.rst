@@ -1,5 +1,5 @@
-odl.solvers.scalar
-==================
+scalar
+======
 
 Gradient-based optimization schemes.
 

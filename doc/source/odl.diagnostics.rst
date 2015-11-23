@@ -1,5 +1,5 @@
-odl.diagnostics
-===============
+diagnostics
+===========
 
 Automated tests for ODL.
 

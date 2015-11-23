@@ -1,5 +1,5 @@
-odl.operator.pspace_ops
-=======================
+pspace_ops
+==========
 
 Default operators defined on any `odl.PowerSpace`.
 

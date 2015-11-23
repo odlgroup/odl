@@ -1,5 +1,5 @@
-odl.solvers
-===========
+solvers
+=======
 
 
 
