@@ -58,6 +58,17 @@ def test_pspace_op_init():
     assert op.range == odl.ProductSpace(r3, 2)
 
 
+def test_pspace_op_weighted_init():
+
+    r3 = odl.Rn(3)
+    ran = odl.ProductSpace(r3, 2, weights=[1, 2])
+    I = odl.IdentityOperator(r3)
+
+    with pytest.raises(NotImplementedError):
+        odl.ProductSpaceOperator([[I],
+                                  [0]], ran=ran)
+
+
 def test_pspace_op_sum_call():
     r3 = odl.Rn(3)
     I = odl.IdentityOperator(r3)

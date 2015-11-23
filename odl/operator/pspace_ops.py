@@ -120,12 +120,19 @@ class ProductSpaceOperator(Operator):
         """
 
         # Validate input data
-        if dom is not None and not isinstance(dom, ProductSpace):
-            raise TypeError('space {!r} not a ProductSpace instance.'
-                            ''.format(dom))
-        if ran is not None and not isinstance(ran, ProductSpace):
-            raise TypeError('space {!r} not a ProductSpace instance.'
-                            ''.format(dom))
+        if dom is not None:
+            if not isinstance(dom, ProductSpace):
+                raise TypeError('space {!r} not a ProductSpace instance.'
+                                ''.format(dom))
+            if dom.weights is not None:
+                raise NotImplementedError('weighted spaces not supported.')
+
+        if ran is not None:
+            if not isinstance(ran, ProductSpace):
+                raise TypeError('space {!r} not a ProductSpace instance.'
+                                ''.format(dom))
+            if ran.weights is not None:
+                raise NotImplementedError('weighted spaces not supported.')
 
         # Convert ops to sparse representation
         self.ops = sp.sparse.coo_matrix(operators)
@@ -275,7 +282,8 @@ class ProductSpaceOperator(Operator):
         The adjoint is given by taking the transpose of the matrix
         and the adjoint of each component operator.
 
-        TODO: weighting
+        In weighted product spaces, the adjoint needs to take the
+        weightings into account. This is currently not supported.
 
         Returns
         -------
@@ -442,7 +450,8 @@ class ComponentProjectionAdjoint(Operator):
     and zero operators, with the identities placed in the positions
     defined by :attr:`index`.
 
-    TODO: weighted spaces
+    In weighted product spaces, the adjoint needs to take the
+    weightings into account. This is currently not supported.
     """
 
     def __init__(self, space, index):
