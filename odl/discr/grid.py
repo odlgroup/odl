@@ -29,6 +29,7 @@ standard_library.install_aliases()
 from builtins import range, super, str, zip
 
 # External module imports
+from numbers import Integral
 import numpy as np
 
 # ODL imports
@@ -420,6 +421,25 @@ class TensorGrid(Set):
                     self.coord_vectors[index:])
         return TensorGrid(*new_vecs)
 
+    def squeeze(self):
+        """Remove the degenerate dimensions.
+
+        Note that no changes are made in-place.
+
+        Returns
+        -------
+        squeezed : :class:`TensorGrid`
+            The squeezed grid
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1], [-1, 0, 2])
+        >>> g.squeeze()
+        TensorGrid([0.0, 1.0], [-1.0, 0.0, 2.0])
+        """
+        coord_vecs = [self.coord_vectors[axis] for axis in self._inondeg]
+        return TensorGrid(*coord_vecs, as_midp=self._as_midp, order=self.order)
+
     def points(self, order=None):
         """All grid points in a single array.
 
@@ -789,8 +809,8 @@ class RegularGrid(TensorGrid):
                              ''.format(max_pt))
 
         if not np.all(min_pt <= max_pt):
-            raise ValueError('minimum point {} has not strictly smaller '
-                             'entries than maximum point {}.'
+            raise ValueError('minimum point {} has entries larger than '
+                             'those of maximum point {}.'
                              ''.format(min_pt, max_pt))
 
         if np.any(shape <= 0):
@@ -944,6 +964,27 @@ class RegularGrid(TensorGrid):
                      self.max_pt[index:].tolist())
         return RegularGrid(new_minpt, new_maxpt, new_shape)
 
+    def squeeze(self):
+        """Remove the degenerate dimensions.
+
+        Note that no changes are made in-place.
+
+        Returns
+        -------
+        squeezed : :class:`RegularGrid`
+            The squeezed grid
+
+        Examples
+        --------
+        >>> g = RegularGrid([0, 0, 0], [1, 0, 1], (5, 1, 5))
+        >>> g.squeeze()
+        RegularGrid([0.0, 0.0], [1.0, 1.0], [5, 5])
+        """
+        sq_minpt = [self.min_pt[axis] for axis in self._inondeg]
+        sq_maxpt = [self.max_pt[axis] for axis in self._inondeg]
+        sq_shape = [self.shape[axis] for axis in self._inondeg]
+        return RegularGrid(sq_minpt, sq_maxpt, sq_shape, as_midp=self._as_midp)
+
     def __getitem__(self, slc):
         """self[slc] implementation.
 
@@ -954,7 +995,7 @@ class RegularGrid(TensorGrid):
 
         Examples
         --------
-        >>> g = RegularGrid([-1.5, -3, -1], [-0.5, 7, 3], (2, 3, 6))
+        >>> g = RegularGrid([-1.5, -3, -1], [-0.5, 7, 4], (2, 3, 6))
         >>> g[0, 0, 0]
         array([-1.5, -3. , -1. ])
         >>> g[:, 0, 0]
@@ -963,13 +1004,15 @@ class RegularGrid(TensorGrid):
         Ellipsis can be used, too:
 
         >>> g[..., ::3]
-        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 3, 2])
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], [2, 3, 2])
         """
         from math import ceil
 
         slc_list = list(np.atleast_1d(np.s_[slc]))
         if None in slc_list:
             raise IndexError('Creation of new axes not supported.')
+        if slc_list == [np.s_[:]] or slc_list == [Ellipsis]:
+            slc_list = [np.s_[:]] * self.ndim
 
         try:
             idx = np.array(slc_list, dtype=int)  # All single indices
@@ -981,66 +1024,56 @@ class RegularGrid(TensorGrid):
                                  ''.format(len(idx), self.ndim))
 
             return np.array([v[i] for i, v in zip(idx, self.coord_vectors)])
-
         except TypeError:
             pass
 
         if Ellipsis in slc_list:
             if slc_list.count(Ellipsis) > 1:
                 raise IndexError('Cannot use more than one ellipsis.')
-            if len(slc_list) == self.ndim + 1:  # Ellipsis without effect
-                ellipsis_idx = self.ndim
-                num_after_ellipsis = 0
+            if len(slc_list) == self.ndim + 1:
+                # Ellipsis without effect, just remove from list
+                slc_list.remove(Ellipsis)
             else:
-                ellipsis_idx = slc_list.index(Ellipsis)
-                num_after_ellipsis = len(slc_list) - ellipsis_idx - 1
-            slc_list.remove(Ellipsis)
-
+                # Replace Ellipsis with right number of [:] expressions
+                eidx = slc_list.index(Ellipsis)
+                slc_list = (slc_list[:eidx] +
+                            [np.s_[:]] * (self.ndim - len(slc_list) + 1) +
+                            slc_list[eidx + 1:])
         else:
             if len(slc_list) < self.ndim:
                 raise IndexError('too few axes ({} < {}).'
                                  ''.format(len(slc_list), self.ndim))
-            ellipsis_idx = self.ndim
-            num_after_ellipsis = 0
-
-        if any(s.start == s.stop and s.start is not None
-               for s in slc_list if isinstance(s, slice)):
-            raise IndexError('Slices with empty axes not allowed.')
-
         if len(slc_list) > self.ndim:
             raise IndexError('too many axes ({} > {}).'
                              ''.format(len(slc_list), self.ndim))
 
-        new_shape = np.ones(self.ndim, dtype=int)
-        new_minpt, new_maxpt = -np.ones((2, self.ndim), dtype='float64')
+        new_minpt = []
+        new_maxpt = []
+        new_shape = []
 
-        # Copy axes corresponding to ellipsis
-        ell_idcs = np.arange(ellipsis_idx, self.ndim - num_after_ellipsis)
-        new_shape[ell_idcs] = np.array(self.shape)[ell_idcs]
-        new_minpt[ell_idcs] = self.min_pt[ell_idcs]
-        new_maxpt[ell_idcs] = self.max_pt[ell_idcs]
+        for slc, mi, ma, shp, cvec in zip(slc_list, self.min_pt, self.max_pt,
+                                          self.shape, self.coord_vectors):
+            if slc == np.s_[:]:  # Take all along this axis
+                new_minpt.append(mi)
+                new_maxpt.append(ma)
+                new_shape.append(shp)
+            elif isinstance(slc, Integral):  # Single index
+                new_minpt.append(cvec[slc])
+                new_maxpt.append(cvec[slc])
+                new_shape.append(1)
+            else:  # Slice
+                istart, istop, istep = slc.indices(shp)
 
-        # The other indices
-        for i in range(ellipsis_idx):
-            if isinstance(slc_list[i], slice):
-                istart, istop, istep = slc_list[i].indices(self.shape[i])
-            else:
-                istart, istop, istep = slc_list[i], slc_list[i] + 1, 1
-            new_shape[i] = ceil((istop - istart) / istep)
-            new_minpt[i] = self.min_pt[i] + istart * self.stride[i]
-            new_maxpt[i] = self.max_pt[i] - ((self.shape[i] - istop) *
-                                             self.stride[i])
+                if istart == istop:
+                    num = 1
+                    last = istart
+                else:
+                    num = ceil((istop - istart) / istep)
+                    last = istart + (num - 1) * istep
 
-        for i in range(1, num_after_ellipsis + 1):
-            i = -i
-            if isinstance(slc_list[i], slice):
-                istart, istop, istep = slc_list[i].indices(self.shape[i])
-            else:
-                istart, istop, istep = slc_list[i], slc_list[i] + 1, 1
-            new_shape[i] = ceil((istop - istart) / istep)
-            new_minpt[i] = self.min_pt[i] + istart * self.stride[i]
-            new_maxpt[i] = self.max_pt[i] - ((self.shape[i] - istop) *
-                                             self.stride[i])
+                new_minpt.append(cvec[istart])
+                new_maxpt.append(cvec[last])
+                new_shape.append(num)
 
         return RegularGrid(new_minpt, new_maxpt, new_shape)
 

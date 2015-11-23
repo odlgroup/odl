@@ -860,9 +860,6 @@ def test_regular_getitem():
                      tensor_grid[test_slice].coord_vectors)
 
     with pytest.raises(IndexError):
-        grid[1:1, :, 0, 0]
-
-    with pytest.raises(IndexError):
         grid[1, ..., ..., 0]
 
     with pytest.raises(IndexError):

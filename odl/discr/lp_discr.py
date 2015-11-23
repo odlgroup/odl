@@ -275,8 +275,9 @@ class DiscreteLpVector(DiscretizationVector):
         # override shape
         return self.space.grid.shape
 
-    def __setitem__(self, indices, values):
-        """Set values of this vector.
+
+    def show(self, method='', title='', indices=None, **kwargs):
+        """Create a figure displaying the function in 1d or 2d.
 
         Parameters
         ----------
@@ -318,17 +319,28 @@ class DiscreteLpVector(DiscretizationVector):
         method : `str`, optional
             1d methods:
 
-            'plot' : graph plot
+        'plot' : graph plot
 
-            2d methods:
+        2d methods:
 
-            'imshow' : image plot with coloring according to value,
-            including a colorbar.
+        'imshow' : image plot with coloring according to value,
+        including a colorbar.
 
-            'scatter' : cloud of scattered 3d points
-            (3rd axis <-> value)
+        'scatter' : cloud of scattered 3d points
+        (3rd axis <-> value)
 
-            'wireframe', 'plot_wireframe' : surface plot
+        indices : index expression
+            Display a slice of the array instead of the full array.
+            The index expression is most easily created with the
+            `numpy.s_` constructur, i.e. supply ``np.s_[:, 1, :]``
+            to display the first slice along the second axis.
+
+        title : `str`, optional
+            Set the title of the figure
+        kwargs : {'figsize', 'saveto', ...}
+            Extra keyword arguments passed on to display method
+            See the Matplotlib functions for documentation of extra
+            options.
 
         title : `str`, optional
             Set the title of the figure
@@ -346,9 +358,10 @@ class DiscreteLpVector(DiscretizationVector):
         matplotlib.pyplot.scatter : Show scattered 3d points
         """
 
+
         from odl.util.graphics import show_discrete_function
         show_discrete_function(self, method=method, title=title,
-                                **kwargs)
+                                indices=indices, **kwargs)
 
 
 def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
