@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.operator.utility import matrix_representation
+from odl.discr.utility import matrix_representation
 from odl.util.testutils import almost_equal
 
 
