@@ -430,7 +430,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : `space.base_ntuples.NtuplesBaseVector`
+    x1,...,xN : `NtuplesBaseVector`
         The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
@@ -745,7 +745,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        a, b : `space.base_ntuples.FnBase.field`
+        a, b : `FnBase.field`
             Scalar to multiply x and y with.
         x1, x2 : `FnVector`
             The summands
@@ -952,8 +952,7 @@ class Fn(FnBase, Ntuples):
         equals : `bool`
             `True` if other is an instance of this space's type
             with the same
-            `space.base_ntuples.NtuplesBase.size` and
-            `space.base_ntuples.NtuplesBase.dtype`,
+            `NtuplesBase.size` and `NtuplesBase.dtype`,
             and identical distance function, otherwise `False`.
 
         Examples
@@ -1708,9 +1707,7 @@ class FnMatrixWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if other is an
-            `space.base_ntuples.FnWeightingBase` instance
-            with the same
-            `space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this inner product's matrix with the matrix
@@ -1969,9 +1966,7 @@ class FnVectorWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is an
-            `space.base_ntuples.FnWeightingBase` instance
-            with the same
-            `space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
@@ -2146,9 +2141,7 @@ class FnConstWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if other is an
-            `space.base_ntuples.FnWeightingBase` instance
-            with the same
-            `space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
             if ``other`` is an `FnConstWeighting` instance,

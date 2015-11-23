@@ -589,9 +589,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
     def space(self):
         """Space to which this vector belongs.
         
-        See also
-        --------
-        LinearSpace        
+        `LinearSpace`
         """
         return self._space
 
@@ -611,18 +609,14 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
 
         Implemented as ``space.lincomb(a, x1, b, x2, out=self)``.
 
-        See also
-        --------
-        LinearSpace.lincomb
+        `LinearSpace.lincomb`
         """
         return self.space.lincomb(a, x1, b, x2, out=self)
 
     def set_zero(self):
         """Set this vector to zero.
 
-        See also
-        --------
-        LinearSpace.zero
+        `LinearSpace.zero`
         """
         return self.space.lincomb(0, self, 0, self, out=self)
 
@@ -797,18 +791,14 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
     def __copy__(self):
         """Copy of vector
 
-        See also
-        --------
-        LinearSpaceVector.copy
+        `LinearSpaceVector.copy`
         """
         return self.copy()
 
     def __deepcopy__(self, memo):
         """Copy of vector
 
-        See also
-        --------
-        LinearSpaceVector.copy
+        `LinearSpaceVector.copy`
         """
         return self.copy()
 
@@ -816,36 +806,28 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
     def norm(self):
         """Norm of vector
 
-        See also
-        --------
-        LinearSpace.norm
+        `LinearSpace.norm`
         """
         return self.space.norm(self)
 
     def dist(self, other):
         """Distance to ``other``.
 
-        See also
-        --------
-        LinearSpace.dist
+        `LinearSpace.dist`
         """
         return self.space.dist(self, other)
 
     def inner(self, other):
         """Inner product with ``other``.
 
-        See also
-        --------
-        LinearSpace.inner
+        `LinearSpace.inner`
         """
         return self.space.inner(self, other)
 
     def multiply(self, x, y):
         """Multiply by ``other`` inplace.
 
-        See also
-        --------
-        LinearSpace.multiply
+        `LinearSpace.multiply`
         """
         return self.space.multiply(x, y, out=self)
 

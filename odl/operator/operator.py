@@ -37,7 +37,7 @@ __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
            'FunctionalLeftVectorMult',
            'OperatorLeftVectorMult', 'OperatorRightVectorMult',
-           'OperatorPointwiseProduct')
+           'OperatorPointwiseProduct', 'simple_operator')
 
 
 def _bound_method(function):
@@ -1409,8 +1409,8 @@ class OperatorRightVectorMult(Operator):
         return '{} * {}'.format(self._op, self._vector)
 
 
-def operator(call=None, apply=None, inv=None, deriv=None,
-             dom=None, ran=None, linear=False):
+def simple_operator(call=None, apply=None, inv=None, deriv=None,
+                    dom=None, ran=None, linear=False):
     """Create a simple operator.
 
     Mostly intended for simple prototyping rather than final use.

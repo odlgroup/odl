@@ -66,9 +66,9 @@ class DiscreteLp(Discretization):
         grid : `TensorGrid`
             The sampling grid for the discretization. Must be contained
             in ``fspace.domain``.
-        dspace : `space.base_ntuples.FnBase`
+        dspace : `FnBase`
             Space of elements used for data storage. It must have the
-            same `space.base_ntuples.FnBase.field` as
+            same `FnBase.field` as
             ``fspace``
         exponent : positive `float`, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is

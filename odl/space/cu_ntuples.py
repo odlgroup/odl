@@ -1391,9 +1391,9 @@ class CudaFnConstWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is a
-            `space.base_ntuples.FnWeightingBase` instance
+            `FnWeightingBase` instance
             with the same
-            `space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
             if ``other`` is a `CudaFnConstWeighting` instance,

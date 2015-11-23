@@ -61,7 +61,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `space.base_ntuples.NtuplesBase`
+        dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its dimension must be equal to the
             total number of grid points.
@@ -160,7 +160,7 @@ class RawGridCollocation(FunctionSetMapping):
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `space.base_ntuples.NtuplesBase`
+        dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
