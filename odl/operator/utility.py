@@ -72,6 +72,6 @@ def matrix_representation(op):
     for i in range(m):
         v.set_zero()
         v[i] = 1.0
-        matrix[:,i] = op(v, out=tmp)
+        matrix[:, i] = op(v, out=tmp)
 
     return matrix
