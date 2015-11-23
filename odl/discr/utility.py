@@ -53,7 +53,8 @@ def matrix_representation(op):
               'representation of it.')
         return
 
-    if not isinstance(op.domain, FnBase) or isinstance(op.domain, ProductSpace):
+    if not (isinstance(op.domain, FnBase) or
+            isinstance(op.domain, ProductSpace)):
         print('WARNING: The operator domain is not discreate or produc space;',
               'cannot produce matrix representation of it.')
         return
