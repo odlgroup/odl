@@ -160,29 +160,32 @@ class ProductSpace(LinearSpace):
                 raise ValueError('Cannot use {:.2}-norm due to numerical '
                                  'instability.'.format(order))
 
+            # TODO: handle weights more elegantly
             weights = kwargs.get('weights', None)
             if weights is not None:
-                weights = np.atleast_1d(weights)
-                if not np.all(weights > 0):
+                self._weights = np.atleast_1d(weights)
+                if not np.all(self._weights > 0):
                     raise ValueError('weights must all be positive')
-                if not len(weights) == len(spaces):
+                if not len(self._weights) == len(spaces):
                     raise ValueError('spaces and weights have different '
                                      'lengths ({} != {}).'
                                      ''.format(len(spaces), len(weights)))
 
                 def w_norm(x):
-                    return np.linalg.norm(x * weights, ord=order)
+                    return np.linalg.norm(x * self._weights, ord=order)
 
                 self._prod_norm = w_norm
 
                 if order == 2.0:
                     def w_inner_sum(x):
-                        return np.linalg.dot(x, weights)
+                        return np.linalg.dot(x, self._weights)
 
                     self._prod_inner_sum = w_inner_sum
                 else:
                     self._prod_inner_sum = _prod_inner_sum_not_defined
             else:
+                self._weights = None
+
                 def norm(x):
                     return np.linalg.norm(x, ord=order)
 
@@ -270,6 +273,11 @@ class ProductSpace(LinearSpace):
                      for arg, space in zip(inp, self.spaces)]
 
         return self.Vector(self, parts)
+
+    @property
+    def weights(self):
+        """Weighting vector or scalar of this product space."""
+        return self._weights
 
     def zero(self):
         """Create the zero vector of the product space.
@@ -402,7 +410,13 @@ class ProductSpace(LinearSpace):
 
     def __getitem__(self, indices):
         """``ps.__getitem__(indices) <==> ps[indices]``."""
-        return self.spaces[indices]
+
+        if isinstance(indices, Integral):
+            return self.spaces[indices]
+        elif isinstance(indices, slice):
+            return ProductSpace(*self.spaces[indices])
+        else:
+            return ProductSpace(*[self.spaces[i] for i in indices])
 
     def __str__(self):
         """``ps.__str__() <==> str(ps)``."""
@@ -424,7 +438,7 @@ class ProductSpace(LinearSpace):
         def __init__(self, space, parts):
             """"Initialize a new instance."""
             super().__init__(space)
-            self._parts = parts
+            self._parts = list(parts)
 
         @property
         def parts(self):
@@ -457,11 +471,21 @@ class ProductSpace(LinearSpace):
 
         def __getitem__(self, indices):
             """``ps.__getitem__(indices) <==> ps[indices]``."""
-            return self.parts[indices]
+            if isinstance(indices, Integral):
+                return self.parts[indices]
+            elif isinstance(indices, slice):
+                return self.space[indices].element(self.parts[indices])
+            else:
+                out_parts = [self.parts[i] for i in indices]
+                return self.space[indices].element(out_parts)
 
         def __setitem__(self, indices, values):
             """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""
-            self.parts[indices] = values
+            try:
+                self.parts[indices] = values
+            except TypeError:
+                for i, index in enumerate(indices):
+                    self.parts[index] = values[i]
 
         def __str__(self):
             """``ps.__str__() <==> str(ps)``."""
