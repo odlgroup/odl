@@ -1,5 +1,5 @@
-odl package
-===========
+odl
+===
 
 ODL is a functional analysis library with a focus on discretization.
 
@@ -11,11 +11,8 @@ to be used to write general code and faciliate code reuse.
 .. currentmodule:: odl
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.diagnostics
    odl.discr

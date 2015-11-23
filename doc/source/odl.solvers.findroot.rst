@@ -1,16 +1,13 @@
-odl.solvers.findroot package
-============================
+odl.solvers.findroot
+====================
 
 
 
 .. currentmodule:: odl.solvers.findroot
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.solvers.findroot.newton
 

@@ -1,5 +1,5 @@
-odl.solvers.util.partial package
-================================
+odl.solvers.util.partial
+========================
 
 
 

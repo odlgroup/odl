@@ -80,7 +80,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         Returns
         -------
         contains : `bool`
-            `True` if ``other`` is an :class:`NtuplesBaseVector` instance and
+            `True` if ``other`` is an `NtuplesBaseVector` instance and
             ``other.space`` is equal to this space, `False` otherwise.
 
         Examples
@@ -103,7 +103,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         -------
         equals : `bool`
             `True` if ``other`` is an instance of this space's type
-            with the same :attr:`size` and :attr:`dtype`, otherwise `False`.
+            with the same `size` and `dtype`, otherwise `False`.
 
         Examples
         --------
@@ -255,7 +255,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        values : :attr:`NtuplesBase.dtype` or :class:`NtuplesBaseVector`
+        values : `NtuplesBase.dtype` or `NtuplesBaseVector`
             The value(s) at the index (indices)
         """
 
@@ -267,7 +267,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, :class:`NtuplesBaseVector`}
+        values : {scalar, array-like, `NtuplesBaseVector`}
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be single value.
@@ -304,7 +304,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-            vector : :class:`NtuplesBaseVector`
+            vector : `NtuplesBaseVector`
         """
         if obj.ndim == 0:
             return self.space.field.element(obj)
@@ -395,15 +395,15 @@ class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
 
 class FnWeightingBase(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for weighting of :class:`FnBase` spaces.
+    """Abstract base class for weighting of `FnBase` spaces.
 
     This class and its subclasses serve as a simple means to evaluate
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to :class:`~odl.Operator`,
+    The functions are implemented similarly to `Operator`,
     but without extra type checks of input parameters - this is done in
-    the callers of the :class:`~odl.LinearSpace` instance where these
+    the callers of the `LinearSpace` instance where these
     functions used.
     """
 
@@ -418,7 +418,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate :meth:`dist` using the formula
+            Calculate `dist` using the formula
 
             :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
             \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
@@ -465,7 +465,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         -----
         This operation must be computationally cheap, i.e. no large
         arrays may be compared element-wise. That is the task of the
-        :meth:`equiv` method.
+        `equiv` method.
         """
         return (self.exponent == other.exponent and
                 self._dist_using_inner == other._dist_using_inner and
@@ -477,7 +477,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         Returns
         -------
         equivalent : `bool`
-            `True` if ``other`` is a :class:`FnWeightingBase` instance which
+            `True` if ``other`` is a `FnWeightingBase` instance which
             yields the same result as this inner product for any
             input, `False` otherwise.
         """
@@ -488,7 +488,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnBaseVector`
+        x1, x2 : `FnBaseVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -501,12 +501,12 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def norm(self, x):
         """Calculate the norm of a vector.
 
-        This is the standard implementation using :meth:`inner`.
+        This is the standard implementation using `inner`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1 : :class:`FnBaseVector`
+        x1 : `FnBaseVector`
             Vector whose norm is calculated
 
         Returns
@@ -519,12 +519,12 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
 
-        This is the standard implementation using :meth:`norm`.
+        This is the standard implementation using `norm`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1, x2 : :class:`FnBaseVector`
+        x1, x2 : `FnBaseVector`
             Vectors whose mutual distance is calculated
 
         Returns

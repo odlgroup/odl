@@ -83,19 +83,19 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         Parameters
         ----------
-        uspace : :class:`~odl.Set`
+        uspace : `Set`
             The undiscretized (abstract) set to be discretized
-        dspace : :class:`~odl.space.base_ntuples.NtuplesBase`
+        dspace : `space.base_ntuples.NtuplesBase`
             Data space providing containers for the values of a
             discretized object
-        restr : :class:`~odl.Operator`, optional
-            Operator mapping a :attr:`uspace` element to a
-            :attr:`dspace` element.
+        restr : `Operator`, optional
+            Operator mapping a `uspace` element to a
+            `dspace` element.
             Must satisfy ``restr.domain == uspace``,
             ``restr.range == dspace``.
-        ext : :class:`~odl.Operator`, optional
-            Operator mapping a :attr:`dspace` element to a
-            :attr:`uspace` element.
+        ext : `Operator`, optional
+            Operator mapping a `dspace` element to a
+            `uspace` element.
             Must satisfy ``ext.domain == dspace``,
             ``ext.range == uspace``.
             """
@@ -159,7 +159,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
     @property
     def restriction(self):
-        """The operator mapping a :attr:`uspace` element to an n-tuple."""
+        """The operator mapping a `uspace` element to an n-tuple."""
         if self._restriction is not None:
             return self._restriction
         else:
@@ -167,7 +167,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
     @property
     def extension(self):
-        """The operator mapping an n-tuple to a :attr:`uspace` element."""
+        """The operator mapping an n-tuple to a `uspace` element."""
         if self._extension is not None:
             return self._extension
         else:
@@ -180,12 +180,12 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the :meth:`~odl.set.space.LinearSpace.element`
-            method of either :attr:`dspace` or :attr:`uspace`.
+            recognizable by the `set.space.LinearSpace.element`
+            method of either `dspace` or `uspace`.
 
         Returns
         -------
-        element : :class:`RawDiscretizationVector`
+        element : `RawDiscretizationVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
             ``restriction(uspace.element(inp))``, tried in this order.
@@ -204,9 +204,9 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`RawDiscretization`
-            instance and all attributes :attr:`uspace`, :attr:`dspace`,
-            :attr:`restriction` and :attr:`extension` of ``other``
+            `True` if ``other`` is a `RawDiscretization`
+            instance and all attributes `uspace`, `dspace`,
+            `restriction` and `extension` of ``other``
             and this discretization are equal, `False` otherwise.
         """
         if other is self:
@@ -235,7 +235,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
 class RawDiscretizationVector(NtuplesBaseVector):
 
-    """Representation of a :class:`RawDiscretization` element.
+    """Representation of a `RawDiscretization` element.
 
     Basically only a wrapper class for dspace's vector class."""
 
@@ -304,7 +304,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
         Returns
         -------
-        values : :class:`~odl.space.base_ntuples.NtuplesBaseVector`
+        values : `space.base_ntuples.NtuplesBaseVector`
             The value(s) at the index (indices)
         """
         return self.ntuple.__getitem__(indices)
@@ -317,7 +317,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         indices : `int` or `slice`
             The position(s) that should be set
         values : {scalar, array-like,\
-                    :class:`~odl.space.base_ntuples.NtuplesBaseVector`}
+                    `space.base_ntuples.NtuplesBaseVector`}
             The value(s) that are to be assigned.
 
             If ``index`` is an `int`, ``value`` must be single value.
@@ -345,14 +345,14 @@ class Discretization(RawDiscretization, FnBase):
 
     """Abstract class for discretizations of linear vector spaces.
 
-    This variant of :class:`RawDiscretization` adds linear structure
-    to all its members. The :attr:`RawDiscretization.uspace` is a
-    :class:`~odl.LinearSpace`, the :attr:`RawDiscretization.dspace`
+    This variant of `RawDiscretization` adds linear structure
+    to all its members. The `RawDiscretization.uspace` is a
+    `LinearSpace`, the `RawDiscretization.dspace`
     for the data representation is an implementation of
     :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is some
-    :class:`~odl.Field`, and both :attr:`RawDiscretization.restriction`
-    and :attr:`RawDiscretization.extension` are linear
-    :class:`~odl.Operator`'s.
+    `Field`, and both `RawDiscretization.restriction`
+    and `RawDiscretization.extension` are linear
+    `Operator`'s.
     """
 
     def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
@@ -363,20 +363,20 @@ class Discretization(RawDiscretization, FnBase):
 
         Parameters
         ----------
-        uspace : :class:`~odl.LinearSpace`
+        uspace : `LinearSpace`
             The (abstract) space to be discretized
-        dspace : :class:`~odl.space.base_ntuples.FnBase`
+        dspace : `space.base_ntuples.FnBase`
             Data space providing containers for the values of a
             discretized object. Its
-            :attr:`~odl.space.base_ntuples.FnBase.field` attribute
+            `space.base_ntuples.FnBase.field` attribute
             must be the same as ``uspace.field``.
-        restr : :class:`~odl.Operator`, linear, optional
-            Operator mapping a :attr:`RawDiscretization.uspace` element
-            to a :attr:`RawDiscretization.dspace` element. Must satisfy
+        restr : `Operator`, linear, optional
+            Operator mapping a `RawDiscretization.uspace` element
+            to a `RawDiscretization.dspace` element. Must satisfy
             ``restr.domain == uspace``, ``restr.range == dspace``
-        ext : :class:`~odl.Operator`, linear, optional
-            Operator mapping a :attr:`RawDiscretization.dspace` element
-            to a :attr:`RawDiscretization.uspace` element. Must satisfy
+        ext : `Operator`, linear, optional
+            Operator mapping a `RawDiscretization.dspace` element
+            to a `RawDiscretization.uspace` element. Must satisfy
             ``ext.domain == dspace``, ``ext.range == uspace``.
         """
         super().__init__(uspace, dspace, restr, ext, **kwargs)
@@ -453,7 +453,7 @@ class Discretization(RawDiscretization, FnBase):
 
 class DiscretizationVector(RawDiscretizationVector, FnBaseVector):
 
-    """Representation of a :class:`Discretization` element."""
+    """Representation of a `Discretization` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
@@ -478,7 +478,7 @@ def dspace_type(space, impl, dtype=None):
         space type is purely determined from ``space`` and
         ``impl``. If given, it must be compatible with the
         field of ``space``. Non-floating types result in basic
-        :class:`Fn`-type spaces.
+        `Fn`-type spaces.
 
     Returns
     -------

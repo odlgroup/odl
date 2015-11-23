@@ -1,16 +1,13 @@
-odl.util package
-================
+odl.util
+========
 
 Utility library for ODL, only for internal use.
 
 .. currentmodule:: odl.util
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.util.graphics
    odl.util.phantom

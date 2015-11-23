@@ -1,5 +1,5 @@
-odl.solvers.vector.newton package
-=================================
+odl.solvers.vector.newton
+=========================
 
 Newton type optimization schemes.
 

@@ -1,5 +1,5 @@
-odl.solvers.scalar.gradient package
-===================================
+odl.solvers.scalar.gradient
+===========================
 
 Gradient-based optimization schemes.
 

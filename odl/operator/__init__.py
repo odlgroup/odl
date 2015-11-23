@@ -17,7 +17,7 @@
 
 """Mathematical operators in ODL.
 
-Operators in ODL are represented by the abstract :class:`~odl.Operator`
+Operators in ODL are represented by the abstract `Operator`
 class. As an *abstract class*, it cannot be used directly but must be
 subclassed for concrete implementation. To define your own operator,
 you start by writing::
@@ -25,12 +25,12 @@ you start by writing::
     class MyOperator(odl.Operator):
         ...
 
-:class:`~odl.Operator` has a couple of *abstract methods* which need to
+`Operator` has a couple of *abstract methods* which need to
 be explicitly overridden by any subclass, namely
 
-``domain``: :class:`~odl.Set`
+``domain``: `Set`
     Set of elements to which the operator can be applied
-``range`` :class:`~odl.Set`
+``range`` `Set`
     Set in which the operator takes values
 
 As a simple example, you can implement the matrix multiplication
@@ -52,13 +52,13 @@ for a matrix :math:`A\\in \mathbb{R}^{n\\times m}` as follows::
             ran = odl.Rn(matrix.shape[0])
             super().__init__(dom, ran)
 
-In addition, an :class:`~odl.Operator` needs at least one way of
+In addition, an `Operator` needs at least one way of
 evaluation, *in-place* or *out-of-place*.
 
 - In-place evaluation means that the operator is evaluated on a
   ``domain`` element, and the result is written to an
   *already existing* ``range`` element. To implement
-  this behavior, create the (private) :meth:``~odl.Operator._apply``
+  this behavior, create the (private) ``Operator._apply``
   method with the following signature, here given for the above
   example::
 
@@ -74,7 +74,7 @@ evaluation, *in-place* or *out-of-place*.
   operator is evaluated on a ``domain`` element, and
   the result is written to a *newly allocated*
   ``range`` element. To implement this
-  behavior, create the (private) :meth:``~odl.Operator._call`` method
+  behavior, create the (private) ``Operator._call`` method
   with the following signature, here given for the above example::
 
     class MatVecOperator(odl.Operator):

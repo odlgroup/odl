@@ -1,5 +1,5 @@
-odl.operator.operator package
-=============================
+odl.operator.operator
+=====================
 
 Abstract mathematical (linear) operators.
 

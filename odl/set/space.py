@@ -28,7 +28,7 @@ The concept of linear vector spaces in ODL is largely inspired by
 the `Rice Vector Library
 <http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/>`_ (RVL).
 
-The abstract :class:`LinearSpace` class is intended for quick prototyping.
+The abstract `LinearSpace` class is intended for quick prototyping.
 It has a number of abstract methods which must be overridden by a
 subclass. On the other hand, it provides automatic error checking
 and numerous attributes and methods for convenience.
@@ -40,10 +40,10 @@ In the following, the abstract methods are explained in detail.
 **Element creation:** ``element(inp=None)``
 
 This public method is the factory for the inner
-:class:`LinearSpaceVector` class. It creates a new element of the space,
+`LinearSpaceVector` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
 simplest possible case, it just delegates the construction to the
-:class:`LinearSpaceVector` class.
+`LinearSpaceVector` class.
 
 If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
@@ -53,24 +53,24 @@ initialized**, thus it can contain *any* value.
         A container for values for the element initialization
 
 **Returns:**
-    element : :class:`LinearSpaceVector`
+    element : `LinearSpaceVector`
         The new vector
 
 **Linear combination:** ``_lincomb(a, x1, b, x2, out)``
 
 This private method is the raw implementation (i.e. without error
 checking) of the linear combination ``out = a * x1 + b * x2``.
-:meth:`LinearSpace._lincomb` and its public counterpart
-:meth:`LinearSpace.lincomb` are used to covera range of convenience
+`LinearSpace._lincomb` and its public counterpart
+`LinearSpace.lincomb` are used to covera range of convenience
 functions, see below.
 
 **Parameters:**
     a, b : scalars, must be members of the space's ``field``
         Multiplicative scalar factors for input vector ``x1`` or ``x2``,
         respectively
-    x1, x2 : :class:`LinearSpaceVector`
+    x1, x2 : `LinearSpaceVector`
         Input vectors
-    out : :class:`LinearSpaceVector`
+    out : `LinearSpaceVector`
         Element to which the result of the computation is written
 
 **Returns:** `None`
@@ -84,15 +84,15 @@ functions, see below.
 **Underlying scalar field:** ``field``
 
 The public attribute determining the type of scalars which
-underlie the space. Can be instances of either :class:`~odl.RealNumbers` or
-:class:`~odl.ComplexNumbers` (see :mod:`~odl.set.sets`).
+underlie the space. Can be instances of either `RealNumbers` or
+`ComplexNumbers` (see :mod:`set.sets`).
 
 Should be implemented as a ``@property`` to make it immutable.
 
 **Equality check:** ``__eq__(other)``
 
-:class:`LinearSpace` inherits this abstract method from :class:`~odl.Set`. Its
-purpose is to check two :class:`LinearSpace` instances for equality.
+`LinearSpace` inherits this abstract method from `Set`. Its
+purpose is to check two `LinearSpace` instances for equality.
 
 **Parameters:**
     other : `object`
@@ -100,7 +100,7 @@ purpose is to check two :class:`LinearSpace` instances for equality.
 
 **Returns:**
     equals : `bool`
-        `True` if ``other`` is the same :class:`LinearSpace`, `False`
+        `True` if ``other`` is the same `LinearSpace`, `False`
         otherwise
 
 
@@ -112,7 +112,7 @@ between two vectors ``x1`` and ``x2``.
 A space with a distance is called a **metric space**.
 
 **Parameters:**
-    x1,x2 : :class:`LinearSpaceVector`
+    x1,x2 : `LinearSpaceVector`
         Vectors whose mutual distance to calculate
 
 **Returns:**
@@ -134,7 +134,7 @@ space element ``x``.
 A space with a norm is called a **normed space**.
 
 **Parameters:**
-    x : :class:`LinearSpaceVector`
+    x : `LinearSpaceVector`
         The vector to measure
 
 **Returns:**
@@ -153,13 +153,13 @@ A raw (not type-checking) private method calculating the inner
 product of two space elements ``x`` and ``y``.
 
 **Parameters:**
-    x,y : :class:`LinearSpaceVector`
+    x,y : `LinearSpaceVector`
         Vectors whose inner product to calculate
 
 **Returns:**
     inner : `float` or `complex`
         The inner product of ``x`` and ``y``. If
-        :attr:`LinearSpace.field` is the set of real
+        `LinearSpace.field` is the set of real
         numbers, ``inner`` is a `float`, otherwise `complex`.
 
 **Requirements:**
@@ -174,9 +174,9 @@ A raw (not type-checking) private method multiplying two vectors
 ``x1`` and ``x2`` element-wise and storing the result in ``out``.
 
 **Parameters:**
-    x1, x2 : :class:`LinearSpaceVector`
+    x1, x2 : `LinearSpaceVector`
         Vectors whose element-wise product to calculate
-    out : :class:`LinearSpaceVector`
+    out : `LinearSpaceVector`
         Vector to store the result
 
 **Returns:** `None`
@@ -231,7 +231,7 @@ class LinearSpace(Set):
     """Abstract linear vector space.
 
     Its elements are represented as instances of the inner
-    :class:`LinearSpaceVector` class.
+    `LinearSpaceVector` class.
     """
 
     @abstractmethod
@@ -248,7 +248,7 @@ class LinearSpace(Set):
 
         Returns
         -------
-        element : :class:`LinearSpaceVector`
+        element : `LinearSpaceVector`
             A vector in this space
         """
 
@@ -257,14 +257,14 @@ class LinearSpace(Set):
         """Calculate ``out = a*x1 + b*x2``.
 
         This method is intended to be private, public callers should
-        resort to :meth:`lincomb` which is type-checked.
+        resort to `lincomb` which is type-checked.
         """
 
     def _dist(self, x1, x2):
         """Calculate the distance between x1 and x2.
 
         This method is intended to be private, public callers should
-        resort to :meth:`dist` which is type-checked.
+        resort to `dist` which is type-checked.
         """
         # default implementation
         return self.norm(x1 - x2)
@@ -273,7 +273,7 @@ class LinearSpace(Set):
         """Calculate the norm of x.
 
         This method is intended to be private, public callers should
-        resort to :meth:`norm` which is type-checked.
+        resort to `norm` which is type-checked.
         """
         # default implementation
         return m.sqrt(self.inner(x, x).real)
@@ -282,7 +282,7 @@ class LinearSpace(Set):
         """Calculate the inner product of x1 and x2.
 
         This method is intended to be private, public callers should
-        resort to :meth:`inner` which is type-checked.
+        resort to `inner` which is type-checked.
         """
         # No default implementation possible
         raise NotImplementedError('inner product not implemented in space {!r}'
@@ -292,7 +292,7 @@ class LinearSpace(Set):
         """Calculate the pointwise multiplication out = x1 * x2.
 
         This method is intended to be private, public callers should
-        resort to :meth:`multiply` which is type-checked.
+        resort to `multiply` which is type-checked.
         """
         # No default implementation possible
         raise NotImplementedError('multiplication not implemented in space '
@@ -305,7 +305,7 @@ class LinearSpace(Set):
 
         Returns
         -------
-        v : :class:`LinearSpaceVector`
+        v : `LinearSpaceVector`
             The one vector of this space
         """
         raise NotImplementedError('This space has no one')
@@ -322,7 +322,7 @@ class LinearSpace(Set):
 
         Returns
         -------
-        v : :class:`LinearSpaceVector`
+        v : `LinearSpaceVector`
             The zero vector of this space
         """
         # Default implementation using lincomb
@@ -336,7 +336,7 @@ class LinearSpace(Set):
         Returns
         -------
         contains : `bool`
-            `True` if ``other`` is a :class:`LinearSpaceVector` instance and
+            `True` if ``other`` is a `LinearSpaceVector` instance and
             ``other.space`` is equal to this space, `False` otherwise.
 
         Notes
@@ -364,18 +364,18 @@ class LinearSpace(Set):
         ----------
         a : Scalar in the field of this space
             Scalar to multiply ``x1`` with.
-        x1 : :class:`LinearSpaceVector`
+        x1 : `LinearSpaceVector`
             The first of the summands
         b : Scalar, optional
             Scalar to multiply ``x2`` with.
-        x2 : :class:`LinearSpaceVector`, optional
+        x2 : `LinearSpaceVector`, optional
             The second of the summands
-        out : :class:`LinearSpaceVector`, optional
+        out : `LinearSpaceVector`, optional
             The Vector that the result should be written to.
 
         Returns
         -------
-        out : :class:`LinearSpaceVector`
+        out : `LinearSpaceVector`
 
         Notes
         -----
@@ -427,10 +427,10 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x1 : :class:`LinearSpaceVector`
+        x1 : `LinearSpaceVector`
             The first element
 
-        x2 : :class:`LinearSpaceVector`
+        x2 : `LinearSpaceVector`
             The second element
 
         Returns
@@ -507,10 +507,10 @@ class LinearSpace(Set):
         return LinearSpaceVector
 
 class LinearSpaceVector(with_metaclass(ABCMeta, object)):
-    """Abstract :class:`LinearSpace` element.
+    """Abstract `LinearSpace` element.
 
     Not intended for creation of vectors, use the space's
-    :meth:`LinearSpace.element` method instead.
+    `LinearSpace.element` method instead.
     """
 
     def __init__(self, space):
@@ -680,7 +680,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        other : :class:`LinearSpaceVector`
+        other : `LinearSpaceVector`
             Vector in this space.
 
         Returns
@@ -788,7 +788,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        transpose : :class:`~odl.operator.default_ops.InnerProductOperator`
+        transpose : `operator.default_ops.InnerProductOperator`
 
         Notes
         -----
@@ -850,14 +850,14 @@ class UniversalSpace(LinearSpace):
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``.
 
-        Dummy check, `True` for any :class:`LinearSpace`.
+        Dummy check, `True` for any `LinearSpace`.
         """
         return isinstance(other, LinearSpace)
 
     def __contains__(self, other):
         """``s.__contains__(other) <==> other in s``.
 
-        Dummy membership check, `True` for any :class:`LinearSpaceVector`.
+        Dummy membership check, `True` for any `LinearSpaceVector`.
         """
         return isinstance(other, LinearSpaceVector)
 

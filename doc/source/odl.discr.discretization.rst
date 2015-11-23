@@ -1,5 +1,5 @@
-odl.discr.discretization package
-================================
+odl.discr.discretization
+========================
 
 
 

@@ -1,16 +1,13 @@
-odl.solvers.vector package
-==========================
+odl.solvers.vector
+==================
 
 
 
 .. currentmodule:: odl.solvers.vector
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.solvers.vector.newton
 

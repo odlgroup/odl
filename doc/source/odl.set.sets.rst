@@ -1,5 +1,5 @@
-odl.set.sets package
-====================
+odl.set.sets
+============
 
 Basic abstract and concrete sets.
 

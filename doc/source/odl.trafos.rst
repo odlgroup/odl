@@ -1,16 +1,13 @@
-odl.trafos package
-==================
+odl.trafos
+==========
 
 Function transformations based on ODL.
 
 .. currentmodule:: odl.trafos
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.trafos.wavelet
 

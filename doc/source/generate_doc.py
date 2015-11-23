@@ -6,11 +6,8 @@ import importlib
 
 
 module_string = """
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    {}
 """
@@ -35,7 +32,7 @@ Classes
    {}
 """
 
-string = """{name} package
+string = """{name}
 {line}
 
 {docstring}
@@ -59,7 +56,7 @@ def make_interface():
     for modname in modnames:
         print(modname)
 
-        line = '=' * (len(modname) + 8)
+        line = '=' * len(modname)
 
         module = importlib.import_module(modname)
 

@@ -1,16 +1,13 @@
-odl.solvers.iterative package
-=============================
+odl.solvers.iterative
+=====================
 
 
 
 .. currentmodule:: odl.solvers.iterative
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.solvers.iterative.iterative
 

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Default operators defined on any :class:`odl.PowerSpace`."""
+"""Default operators defined on any `odl.PowerSpace`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -55,10 +55,10 @@ class ProductSpaceOperator(Operator):
         Parameters
         ----------
         operators : array-like
-            An array of :class:`~odl.Operator`'s
-        dom : :class:`~odl.ProductSpace`
+            An array of `Operator`'s
+        dom : `ProductSpace`
             Domain, default infers from operators
-        ran : :class:`~odl.ProductSpace`
+        ran : `ProductSpace`
             Range, default infers from operators
 
         Examples
@@ -161,7 +161,7 @@ class ProductSpaceOperator(Operator):
 
         Examples
         --------
-        See :meth:`_call`
+        See `_call`
         """
         has_evaluated_row = np.zeros(self.range.size, dtype=bool)
         for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
@@ -236,7 +236,7 @@ class ProductSpaceOperator(Operator):
 
         Returns
         -------
-        adjoint : :class:`ProductSpaceOperator`
+        adjoint : `ProductSpaceOperator`
             The adjoint
 
         Examples
@@ -281,7 +281,7 @@ class ComponentProjection(Operator):
 
         Parameters
         ----------
-        space : :class:`~odl.ProductSpace`
+        space : `ProductSpace`
             The space to project from
         index : `int`, `slice`, or `iterable` [int]
             The indexes to project on
@@ -375,7 +375,7 @@ class ComponentProjectionAdjoint(Operator):
 
         Parameters
         ----------
-        space : :class:`~odl.ProductSpace`
+        space : `ProductSpace`
             The space to project to
         index : `int`, `slice`, or `iterable` [int]
             The indexes to project from

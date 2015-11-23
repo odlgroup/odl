@@ -1,7 +1,7 @@
-odl.operator.pspace_ops package
-===============================
+odl.operator.pspace_ops
+=======================
 
-Default operators defined on any :class:`odl.PowerSpace`.
+Default operators defined on any `odl.PowerSpace`.
 
 .. currentmodule:: odl.operator.pspace_ops
 

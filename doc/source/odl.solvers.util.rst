@@ -1,16 +1,13 @@
-odl.solvers.util package
-========================
+odl.solvers.util
+================
 
 
 
 .. currentmodule:: odl.solvers.util
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.solvers.util.partial
 

@@ -1,16 +1,13 @@
-odl.space.cu_ntuples package
-============================
+odl.space.cu_ntuples
+====================
 
 CUDA implementation of n-dimensional Cartesian spaces.
 
 .. currentmodule:: odl.space.cu_ntuples
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.space.cu_ntuples.cuda
 

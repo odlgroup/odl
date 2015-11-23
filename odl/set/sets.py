@@ -42,7 +42,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
     **Abstract Methods**
 
-    Each subclass of :class:`Set` must implement two methods: one to
+    Each subclass of `Set` must implement two methods: one to
     check if an object is contained in the set and one to test if two
     sets are equal.
 
@@ -213,7 +213,7 @@ class Strings(Set):
     def __contains__(self, other):
         """``s.__constains__(other) <==> other in s``.
 
-        `True` if ``other`` is a string of at max :attr:`length`
+        `True` if ``other`` is a string of at max `length`
         characters, `False` otherwise."""
         return isinstance(other, str) and len(other) <= self.length
 
@@ -240,7 +240,7 @@ class Strings(Set):
 class Field(with_metaclass(ABCMeta, Set)):
     """Any set that satisfies the field axioms
 
-    For example :class:`RealNumbers`, :class:`ComplexNumbers` or
+    For example `RealNumbers`, `ComplexNumbers` or
     the finite field :math:`F_2`.
     """
 
@@ -264,8 +264,8 @@ class ComplexNumbers(Field):
         Returns
         -------
         contained : `bool`
-            `True` if  other is :class:`ComplexNumbers`,
-            :class:`RealNumbers` or :class:`Integers`, `False` else.
+            `True` if  other is `ComplexNumbers`,
+            `RealNumbers` or `Integers`, `False` else.
 
         Examples
         --------
@@ -316,8 +316,8 @@ class RealNumbers(Field):
         Returns
         -------
         contained : `bool`
-            `True` if other is :class:`RealNumbers` or
-            :class:`Integers` `False` else.
+            `True` if other is `RealNumbers` or
+            `Integers` `False` else.
 
         Examples
         --------
@@ -375,7 +375,7 @@ class Integers(Set):
         Returns
         -------
         contained : `bool`
-            `True` if  other is :class:`Integers`, `False` otherwise.
+            `True` if  other is `Integers`, `False` otherwise.
 
         Examples
         --------
@@ -449,7 +449,7 @@ class CartesianProduct(Set):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`CartesianProduct` instance,
+            `True` if ``other`` is a `CartesianProduct` instance,
             has the same length as this Cartesian product and all sets
             with the same index are equal, `False` otherwise.
         """
@@ -458,13 +458,13 @@ class CartesianProduct(Set):
                 all(so == ss for so, ss in zip(other.sets, self.sets)))
 
     def element(self, inp=None):
-        """Create a :class:`CartesianProduct` element.
+        """Create a `CartesianProduct` element.
 
         Parameters
         ----------
         inp : `iterable`, optional
             Collection of input values for the
-            :meth:`~odl.set.space.LinearSpace.element` methods
+            `set.space.LinearSpace.element` methods
             of all sets in the Cartesian product.
         """
         if inp is None:

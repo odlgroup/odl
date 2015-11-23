@@ -1,7 +1,7 @@
-odl.set.pspace package
-======================
+odl.set.pspace
+==============
 
-Cartesian products of :class:`~odl.LinearSpace` instances.
+Cartesian products of `LinearSpace` instances.
 
 .. currentmodule:: odl.set.pspace
 

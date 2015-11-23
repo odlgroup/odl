@@ -217,7 +217,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : :class:`~odl.Set`
+        other : `Set`
             The set to be tested. It must implement a ``min()`` and a
             ``max()`` method, otherwise a `TypeError` is raised.
         tol : `float`, optional
@@ -240,7 +240,7 @@ class IntervalProd(Set):
         ----------
         ndim : `int`, optional
               The dimension of the measure to apply.
-              Default: :attr:`true_ndim`
+              Default: `true_ndim`
 
         Examples
         --------
@@ -327,7 +327,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        collapsed : :class:`IntervalProd`
+        collapsed : `IntervalProd`
             The collapsed set
 
         Examples
@@ -381,7 +381,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        squeezed : :class:`IntervalProd`
+        squeezed : `IntervalProd`
             The squeezed set
 
         Examples
@@ -410,18 +410,18 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : :class:`IntervalProd`, `float` or array-like
+        other : `IntervalProd`, `float` or array-like
             The set to be inserted. A `float` or array a is
             treated as an ``IntervalProd(a, a)``.
         index : `int`, optional
             The index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
 
-            Default: :attr:`ndim`
+            Default: `ndim`
 
         Returns
         -------
-        larger_set : :class:`IntervalProd`
+        larger_set : `IntervalProd`
             The enlarged set
 
         Examples

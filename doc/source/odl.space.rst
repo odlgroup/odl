@@ -1,16 +1,13 @@
-odl.space package
-=================
+odl.space
+=========
 
 Concrete vector spaces.
 
 .. currentmodule:: odl.space
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.space.base_ntuples
    odl.space.cu_ntuples

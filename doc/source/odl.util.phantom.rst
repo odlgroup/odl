@@ -1,5 +1,5 @@
-odl.util.phantom package
-========================
+odl.util.phantom
+================
 
 Utilities for internal use.
 

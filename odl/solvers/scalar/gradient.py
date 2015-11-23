@@ -56,16 +56,16 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
 
     Parameters
     ----------
-    grad : :class:`~odl.Operator`
+    grad : `Operator`
         Gradient of the objective function,
         :math:`x \mapsto \\nabla f(x)`
     x : element in the domain of ``deriv``
         Starting point of the iteration
-    line_search : :class:`~odl.solvers.LineSearch`
+    line_search : `solvers.LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : :class:`~odl.solvers.util.Partial`, optional
+    partial : `solvers.util.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References

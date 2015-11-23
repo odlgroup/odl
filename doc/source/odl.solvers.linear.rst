@@ -1,5 +1,5 @@
-odl.solvers.linear package
-==========================
+odl.solvers.linear
+==================
 
 
 

@@ -61,14 +61,14 @@ class DiscreteLp(Discretization):
 
         Parameters
         ----------
-        fspace : :class:`~odl.FunctionSpace`
+        fspace : `FunctionSpace`
             The continuous space to be discretized
-        grid : :class:`~odl.TensorGrid`
+        grid : `TensorGrid`
             The sampling grid for the discretization. Must be contained
             in ``fspace.domain``.
-        dspace : :class:`~odl.space.base_ntuples.FnBase`
+        dspace : `space.base_ntuples.FnBase`
             Space of elements used for data storage. It must have the
-            same :attr:`~odl.space.base_ntuples.FnBase.field` as
+            same `space.base_ntuples.FnBase.field` as
             ``fspace``
         exponent : positive `float`, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
@@ -126,13 +126,13 @@ class DiscreteLp(Discretization):
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the :meth:`~odl.LinearSpace.element` method
-            of either :attr:`~odl.RawDiscretization.dspace` or
-            :attr:`~odl.RawDiscretization.uspace`.
+            recognizable by the `LinearSpace.element` method
+            of either `RawDiscretization.dspace` or
+            `RawDiscretization.uspace`.
 
         Returns
         -------
-        element : :class:`DiscreteLpVector`
+        element : `DiscreteLpVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
             ``restriction(uspace.element(inp))``, tried in this order.
@@ -225,7 +225,7 @@ class DiscreteLp(Discretization):
 
 class DiscreteLpVector(DiscretizationVector):
 
-    """Representation of a :class:`DiscreteLp` element."""
+    """Representation of a `DiscreteLp` element."""
 
     def asarray(self, out=None):
         """Extract the data of this array as a numpy array.
@@ -282,7 +282,7 @@ class DiscreteLpVector(DiscretizationVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, :class:`~odl.NtuplesVector`}
+        values : {scalar, array-like, `NtuplesVector`}
             The value(s) that are to be assigned.
 
             If ``indices`` is an `int`, ``values`` must be a single
@@ -357,9 +357,9 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    fspace : :class:`~odl.FunctionSpace`
+    fspace : `FunctionSpace`
         Continuous function space. Its domain must be an
-        :class:`~odl.IntervalProd` instance.
+        `IntervalProd` instance.
     nsamples : `int` or `tuple` of `int`
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
@@ -392,7 +392,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Returns
     -------
-    discr : :class:`DiscreteLp`
+    discr : `DiscreteLp`
         The uniformly discretized function space
     """
     if not isinstance(fspace, FunctionSpace):

@@ -99,7 +99,7 @@ class Ntuples(NtuplesBase):
 
         Returns
         -------
-        element : :class:`NtuplesVector`
+        element : `NtuplesVector`
             The new element created (from ``inp``).
 
         Notes
@@ -163,7 +163,7 @@ class Ntuples(NtuplesBase):
 
 class NtuplesVector(NtuplesBaseVector):
 
-    """Representation of an :class:`Ntuples` element."""
+    """Representation of an `Ntuples` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
@@ -301,7 +301,7 @@ class NtuplesVector(NtuplesBaseVector):
 
         Returns
         -------
-        copy : :class:`NtuplesVector`
+        copy : `NtuplesVector`
             The deep copy
 
         Examples
@@ -327,7 +327,7 @@ class NtuplesVector(NtuplesBaseVector):
 
         Returns
         -------
-        values : scalar or :class:`NtuplesVector`
+        values : scalar or `NtuplesVector`
             The value(s) at the index (indices)
 
         Examples
@@ -355,7 +355,7 @@ class NtuplesVector(NtuplesBaseVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, :class:`NtuplesVector`}
+        values : {scalar, array-like, `NtuplesVector`}
             The value(s) that are to be assigned.
 
             If ``indices`` is an integer, ``value`` must be scalar.
@@ -430,7 +430,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : :class:`~odl.space.base_ntuples.NtuplesBaseVector`
+    x1,...,xN : `space.base_ntuples.NtuplesBaseVector`
         The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
@@ -555,7 +555,7 @@ class Fn(FnBase, Ntuples):
     :math:`\mathbb{F}`, which can be the real or the complex numbers.
 
     Its elements are represented as instances of the
-    :class:`FnVector` class.
+    `FnVector` class.
     """
 
     def __init__(self, size, dtype, **kwargs):
@@ -606,7 +606,7 @@ class Fn(FnBase, Ntuples):
             'dist' : `callable`, optional
                 The distance function defining a metric on
                 :math:`\mathbb{F}^n`.
-                It must accept two :class:`FnVector` arguments and
+                It must accept two `FnVector` arguments and
                 fulfill the following mathematical conditions for any
                 three vectors :math:`x, y, z`:
 
@@ -625,7 +625,7 @@ class Fn(FnBase, Ntuples):
 
             'norm' : `callable`, optional
                 The norm implementation. It must accept an
-                :class:`FnVector` argument, return a
+                `FnVector` argument, return a
                 `float` and satisfy the following
                 conditions for all vectors :math:`x, y` and scalars
                 :math:`s`:
@@ -645,7 +645,7 @@ class Fn(FnBase, Ntuples):
 
             'inner' : `callable`, optional
                 The inner product implementation. It must accept two
-                :class:`FnVector` arguments, return a element from
+                `FnVector` arguments, return a element from
                 the field of the space (real or complex number) and
                 satisfy the following conditions for all vectors
                 :math:`x, y, z` and scalars :math:`s`:
@@ -745,11 +745,11 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        a, b : :attr:`~odl.space.base_ntuples.FnBase.field`
+        a, b : `space.base_ntuples.FnBase.field`
             Scalar to multiply x and y with.
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             The summands
-        out : :class:`FnVector`
+        out : `FnVector`
             The vector to which the result is written
 
         Returns
@@ -774,7 +774,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -804,7 +804,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x : :class:`FnVector`
+        x : `FnVector`
             The vector whose norm is calculated
 
         Returns
@@ -833,12 +833,12 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             The vectors whose inner product is calculated
 
         Returns
         -------
-        inner : :attr:`field` element
+        inner : `field` element
             Inner product of the vectors
 
         Examples
@@ -869,9 +869,9 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             Factors in the product
-        out : :class:`FnVector`
+        out : `FnVector`
             The result vector
 
         Returns
@@ -896,11 +896,11 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1 : :class:`FnVector`
+        x1 : `FnVector`
             Dividend
-        x1 : :class:`FnVector`
+        x1 : `FnVector`
             Divisior
-        out : :class:`FnVector`
+        out : `FnVector`
             The result vector, quotient
 
         Returns
@@ -952,8 +952,8 @@ class Fn(FnBase, Ntuples):
         equals : `bool`
             `True` if other is an instance of this space's type
             with the same
-            :attr:`~odl.space.base_ntuples.NtuplesBase.size` and
-            :attr:`~odl.space.base_ntuples.NtuplesBase.dtype`,
+            `space.base_ntuples.NtuplesBase.size` and
+            `space.base_ntuples.NtuplesBase.dtype`,
             and identical distance function, otherwise `False`.
 
         Examples
@@ -986,7 +986,7 @@ class Fn(FnBase, Ntuples):
         >>> c3_lambda1 == c3_lambda2
         False
 
-        An :class:`Fn` space with the same data type is considered
+        An `Fn` space with the same data type is considered
         equal:
 
         >>> c3 = Cn(3)
@@ -1013,7 +1013,7 @@ class Fn(FnBase, Ntuples):
 
 class FnVector(FnBaseVector, NtuplesVector):
 
-    """Representation of an :class:`Fn` element."""
+    """Representation of an `Fn` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
@@ -1028,8 +1028,8 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Returns
         -------
-        real : :class:`RnVector` view
-            The real part this vector as a vector in :class:`Rn`
+        real : `RnVector` view
+            The real part this vector as a vector in `Rn`
 
         Examples
         --------
@@ -1038,7 +1038,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x.real
         Rn(3).element([5.0, 3.0, 2.0])
 
-        The :class:`Rn` vector is really a view, so changes affect
+        The `Rn` vector is really a view, so changes affect
         the original array:
 
         >>> x.real *= 2
@@ -1085,9 +1085,9 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Returns
         -------
-        imag : :class:`RnVector`
+        imag : `RnVector`
             The imaginary part this vector as a vector in
-            :class:`Rn`
+            `Rn`
 
         Examples
         --------
@@ -1096,7 +1096,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x.imag
         Rn(3).element([1.0, 0.0, -2.0])
 
-        The :class:`Rn` vector is really a view, so changes affect
+        The `Rn` vector is really a view, so changes affect
         the original array:
 
         >>> x.imag *= 2
@@ -1138,13 +1138,13 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Parameters
         ----------
-        out : :class:`FnVector`, optional
+        out : `FnVector`, optional
             Vector to which the complex conjugate is written.
             Must be an element of this vector's space.
 
         Returns
         -------
-        out : :class:`FnVector`
+        out : `FnVector`
             The complex conjugate vector. If ``out`` was
             provided, it is returned. Otherwise, the complex
             conjugate is returned as a new vector.
@@ -1201,7 +1201,7 @@ class Cn(Fn):
 
             Only complex floating-point data types are allowed.
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See :class:`Fn`
+            See `Fn`
         """
         super().__init__(size, dtype, **kwargs)
 
@@ -1234,7 +1234,7 @@ class Cn(Fn):
 
 class CnVector(FnVector):
 
-    """A vector in a real :class:`Cn` space
+    """A vector in a real `Cn` space
 
     See also
     --------
@@ -1267,7 +1267,7 @@ class Rn(Fn):
 
             Only real floating-point data types are allowed.
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See :class:`Fn`
+            See `Fn`
         """
         super().__init__(size, dtype, **kwargs)
 
@@ -1300,7 +1300,7 @@ class Rn(Fn):
 
 class RnVector(FnVector):
 
-    """A vector in a complex :class:`Fn` space
+    """A vector in a complex `Fn` space
 
     See also
     --------
@@ -1318,10 +1318,10 @@ class MatVecOperator(Operator):
 
         Parameters
         ----------
-        dom : :class:`Fn`
+        dom : `Fn`
             Space on whose elements the matrix acts. Its dtype must be
             castable to the range dtype.
-        ran : :class:`Fn`
+        ran : `Fn`
             Space to which the matrix maps
         matrix : array-like or  ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
@@ -1418,7 +1418,7 @@ def _weighting(weight, exponent, dist_using_inner=False):
 
 
 def weighted_inner(weight):
-    """Weighted inner product on :class:`Fn` spaces as free function.
+    """Weighted inner product on `Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1442,7 +1442,7 @@ def weighted_inner(weight):
 
 
 def weighted_norm(weight, exponent=2.0):
-    """Weighted norm on :class:`Fn` spaces as free function.
+    """Weighted norm on `Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1469,7 +1469,7 @@ def weighted_norm(weight, exponent=2.0):
 
 
 def weighted_dist(weight, exponent=2.0, use_inner=False):
-    """Weighted distance on :class:`Fn` spaces as free function.
+    """Weighted distance on `Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1550,7 +1550,7 @@ def _inner_default(x1, x2):
 
 class FnMatrixWeighting(FnWeightingBase):
 
-    """Matrix weighting for :class:`Fn`.
+    """Matrix weighting for `Fn`.
 
     For exponent 2.0, a new weighted inner product with matrix :math:`W`
     is defined as
@@ -1687,7 +1687,7 @@ class FnMatrixWeighting(FnWeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if other is an :class:`FnMatrixWeighting` instance
+            `True` if other is an `FnMatrixWeighting` instance
             with **identical** matrix, `False` otherwise.
 
         See also
@@ -1708,9 +1708,9 @@ class FnMatrixWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if other is an
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            `space.base_ntuples.FnWeightingBase` instance
             with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `space.base_ntuples.FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this inner product's matrix with the matrix
@@ -1770,7 +1770,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1794,7 +1794,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x : :class:`FnVector`
+        x : `FnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1863,7 +1863,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
 class FnVectorWeighting(FnWeightingBase):
 
-    """Vector weighting for :class:`Fn`.
+    """Vector weighting for `Fn`.
 
     For exponent 2.0, a new weighted inner product with vector :math:`w`
     is defined as
@@ -1948,7 +1948,7 @@ class FnVectorWeighting(FnWeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if other is an :class:`FnVectorWeighting` instance
+            `True` if other is an `FnVectorWeighting` instance
             with **identical** vector, `False` otherwise.
 
         See also
@@ -1969,9 +1969,9 @@ class FnVectorWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is an
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            `space.base_ntuples.FnWeightingBase` instance
             with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `space.base_ntuples.FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
@@ -1995,7 +1995,7 @@ class FnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -2019,7 +2019,7 @@ class FnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x : :class:`FnVector`
+        x : `FnVector`
             Vector whose norm is calculated
 
         Returns
@@ -2057,7 +2057,7 @@ class FnVectorWeighting(FnWeightingBase):
 
 class FnConstWeighting(FnWeightingBase):
 
-    """Weighting of :class:`Fn` by a constant.
+    """Weighting of `Fn` by a constant.
 
     For exponent 2.0, a new weighted inner product with constant
     :math:`c` is defined as
@@ -2128,7 +2128,7 @@ class FnConstWeighting(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnConstWeighting`
+            `True` if other is an `FnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
         if other is self:
@@ -2146,13 +2146,13 @@ class FnConstWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if other is an
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            `space.base_ntuples.FnWeightingBase` instance
             with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `space.base_ntuples.FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
-            if ``other`` is an :class:`FnConstWeighting` instance,
-            otherwise the :meth:`equiv` method of ``other`` is called.
+            if ``other`` is an `FnConstWeighting` instance,
+            otherwise the `equiv` method of ``other`` is called.
         """
         if isinstance(other, FnConstWeighting):
             return self == other
@@ -2166,7 +2166,7 @@ class FnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -2187,7 +2187,7 @@ class FnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1 : :class:`FnVector`
+        x1 : `FnVector`
             Vector whose norm is calculated
 
         Returns
@@ -2208,7 +2208,7 @@ class FnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`FnVector`
+        x1, x2 : `FnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -2252,7 +2252,7 @@ class FnConstWeighting(FnWeightingBase):
 
 class FnNoWeighting(FnConstWeighting):
 
-    """Weighting of :class:`Fn` with constant 1.
+    """Weighting of `Fn` with constant 1.
 
     For exponent 2.0, the unweighted inner product is defined as
 
@@ -2331,7 +2331,7 @@ class FnNoWeighting(FnConstWeighting):
 
 class FnCustomInnerProduct(FnWeightingBase):
 
-    """Custom inner product on :class:`Fn`."""
+    """Custom inner product on `Fn`."""
 
     def __init__(self, inner, dist_using_inner=False):
         """Initialize a new instance.
@@ -2340,7 +2340,7 @@ class FnCustomInnerProduct(FnWeightingBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            :class:`FnVector` arguments, return a element from
+            `FnVector` arguments, return a element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
             :math:`x, y, z` and scalars :math:`s`:
@@ -2382,7 +2382,7 @@ class FnCustomInnerProduct(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnCustomInnerProduct`
+            `True` if other is an `FnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
         # TODO: make symmetric
@@ -2406,7 +2406,7 @@ class FnCustomInnerProduct(FnWeightingBase):
 
 class FnCustomNorm(FnWeightingBase):
 
-    """Custom norm on :class:`Fn`, removes ``inner``."""
+    """Custom norm on `Fn`, removes ``inner``."""
 
     def __init__(self, norm):
         """Initialize a new instance.
@@ -2415,7 +2415,7 @@ class FnCustomNorm(FnWeightingBase):
         ----------
         norm : `callable`
             The norm implementation. It must accept an
-            :class:`FnVector` argument, return a `float` and satisfy
+            `FnVector` argument, return a `float` and satisfy
             the following conditions for all vectors
             :math:`x, y` and scalars :math:`s`:
 
@@ -2448,7 +2448,7 @@ class FnCustomNorm(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnCustomNorm`
+            `True` if other is an `FnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
         # TODO: make symmetric
@@ -2469,7 +2469,7 @@ class FnCustomNorm(FnWeightingBase):
 
 class FnCustomDist(FnWeightingBase):
 
-    """Custom distance on :class:`Fn`, removes ``norm`` and ``inner``."""
+    """Custom distance on `Fn`, removes ``norm`` and ``inner``."""
 
     def __init__(self, dist):
         """Initialize a new instance.
@@ -2479,7 +2479,7 @@ class FnCustomDist(FnWeightingBase):
         dist : `callable`
             The distance function defining a metric on
             :math:`\mathbb{F}^n`.
-            It must accept two :class:`FnVector` arguments and
+            It must accept two `FnVector` arguments and
             fulfill the following mathematical conditions for any
             three vectors :math:`x, y, z`:
 
@@ -2514,7 +2514,7 @@ class FnCustomDist(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnCustomDist`
+            `True` if other is an `FnCustomDist`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, FnCustomDist) and

@@ -1,5 +1,5 @@
-odl.diagnostics.examples package
-================================
+odl.diagnostics.examples
+========================
 
 
 

@@ -1,5 +1,5 @@
-odl.util.testutils package
-==========================
+odl.util.testutils
+==================
 
 Utilities for internal use.
 

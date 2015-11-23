@@ -1,5 +1,5 @@
-odl.discr.grid package
-======================
+odl.discr.grid
+==============
 
 Sparse implementations of n-dimensional sampling grids.
 

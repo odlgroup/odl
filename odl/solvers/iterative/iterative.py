@@ -72,7 +72,7 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
 
     Parameters
     ----------
-    op : :class:`~odl.Operator`
+    op : `Operator`
         Operator in the inverse problem. It must have a `derivative`
         property, which returns a new operator which in turn has an
         `adjoint` property, i.e. `op.derivative(x).adjoint` must be
@@ -87,7 +87,7 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         Maximum number of iterations
     omega : positive `float`
         Relaxation parameter in the iteration
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -128,7 +128,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     Parameters
     ----------
-    op : linear :class:`~odl.Operator`
+    op : linear `Operator`
         Operator in the inverse problem. It must be linear and
         self-adjoint. This implies in particular that its domain and
         range are equal.
@@ -140,7 +140,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -210,10 +210,10 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
     Parameters
     ----------
-    op : `~odl.Operator`
+    op : `Operator`
         Operator in the inverse problem. If not linear, it must have
-        an implementation of :attr:`~odl.Operator.derivative`, which
-        in turn must implement :attr:`~odl.Operator.adjoint`, i.e.
+        an implementation of `Operator.derivative`, which
+        in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
@@ -223,7 +223,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -311,10 +311,10 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
     Parameters
     ----------
-    op : :class:`~odl.Operator`
+    op : `Operator`
         Operator in the inverse problem. If not linear, it must have
-        an implementation of :attr:`~odl.Operator.derivative`, which
-        in turn must implement :attr:`~odl.Operator.adjoint`, i.e.
+        an implementation of `Operator.derivative`, which
+        in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
@@ -327,7 +327,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     zero_seq : `iterable`, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `solvers.util.partial.Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns

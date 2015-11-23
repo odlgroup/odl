@@ -1,16 +1,13 @@
-odl.trafos.wavelet package
-==========================
+odl.trafos.wavelet
+==================
 
 Discrete wavelet transformation on L2 spaces.
 
 .. currentmodule:: odl.trafos.wavelet
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.trafos.wavelet.odl
 

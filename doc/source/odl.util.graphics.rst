@@ -1,5 +1,5 @@
-odl.util.graphics package
-=========================
+odl.util.graphics
+=================
 
 Functions for graphical output.
 

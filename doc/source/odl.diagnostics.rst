@@ -1,16 +1,13 @@
-odl.diagnostics package
-=======================
+odl.diagnostics
+===============
 
 Automated tests for ODL.
 
 .. currentmodule:: odl.diagnostics
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.diagnostics.examples
    odl.diagnostics.operator

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cartesian products of :class:`~odl.LinearSpace` instances."""
+"""Cartesian products of `LinearSpace` instances."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -72,7 +72,7 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        spaces : :class:`~odl.LinearSpace` or `int`
+        spaces : `LinearSpace` or `int`
             Can be specified either as a space and an integer, in which
             case the power space ``space**n`` is created, or
             an arbitrary number of spaces.
@@ -124,7 +124,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        prodspace : :class:`ProductSpace`
+        prodspace : `ProductSpace`
 
         Examples
         --------
@@ -228,7 +228,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        element : :class:`ProductSpaceVector`
+        element : `ProductSpaceVector`
             The new element
 
         Examples
@@ -367,7 +367,7 @@ class ProductSpace(LinearSpace):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`ProductSpace` instance, has
+            `True` if ``other`` is a `ProductSpace` instance, has
             the same length and the same factors. `False` otherwise.
 
         Examples
@@ -432,6 +432,8 @@ class ProductSpace(LinearSpace):
         return ProductSpaceVector
 
 class ProductSpaceVector(LinearSpaceVector):
+    """ Elements in a `ProductSpace` """
+
     def __init__(self, space, parts):
         """"Initialize a new instance."""
         super().__init__(space)
@@ -450,7 +452,7 @@ class ProductSpaceVector(LinearSpaceVector):
     def __eq__(self, other):
         """``ps.__eq__(other) <==> ps == other``.
 
-        Overrides the default :class:`~odl.LinearSpace` method since it is
+        Overrides the default `LinearSpace` method since it is
         implemented with the distance function, which is prone to
         numerical errors. This function checks equality per
         component.

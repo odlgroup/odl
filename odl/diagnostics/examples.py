@@ -47,7 +47,7 @@ def scalar_examples(field):
 
     Parameters
     ----------
-    field : :class:`~odl.Field`
+    field : `Field`
         The field to generate examples from
 
     Returns
@@ -68,13 +68,13 @@ def vector_examples(space):
 
     Parameters
     ----------
-    space : :class:`~odl.LinearSpace`
+    space : `LinearSpace`
         The space to generate examples from
 
     Returns
     -------
     examples : `generator`
-        Yields tuples (`string`, :class:`~odl.LinearSpaceVector`)
+        Yields tuples (`string`, `LinearSpaceVector`)
         where ``string`` is a short description of the vector
     """
 
@@ -194,7 +194,7 @@ def samples(*sets):
 
     Parameters
     ----------
-    *sets : :class:`~odl.Set` instance(s)
+    *sets : `Set` instance(s)
 
     Returns
     -------

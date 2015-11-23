@@ -1,16 +1,13 @@
-odl.solvers.scalar package
-==========================
+odl.solvers.scalar
+==================
 
 Gradient-based optimization schemes.
 
 .. currentmodule:: odl.solvers.scalar
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.solvers.scalar.gradient
    odl.solvers.scalar.steplen

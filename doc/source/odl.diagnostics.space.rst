@@ -1,5 +1,5 @@
-odl.diagnostics.space package
-=============================
+odl.diagnostics.space
+=====================
 
 
 

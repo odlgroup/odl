@@ -1,5 +1,5 @@
-odl.diagnostics.operator package
-================================
+odl.diagnostics.operator
+========================
 
 
 

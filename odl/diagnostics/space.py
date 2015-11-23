@@ -52,7 +52,7 @@ def _apprimately_equal(x, y, eps):
 
 class SpaceTest(object):
 
-    """Automated tests for :class:`~odl.LinearSpace` instances.
+    """Automated tests for `LinearSpace` instances.
 
     This class allows users to automatically test various
     features of an ``LinearSpace`` such as linearity and the
@@ -284,7 +284,7 @@ class SpaceTest(object):
 
         ``x + y = y + x``
 
-        and identity of the :meth:`~odl.LinearSpace.zero` element
+        and identity of the `LinearSpace.zero` element
 
         ``x + 0 = x``
 

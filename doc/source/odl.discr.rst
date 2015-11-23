@@ -1,16 +1,13 @@
-odl.discr package
-=================
+odl.discr
+=========
 
 Discretizations in ODL.
 
 .. currentmodule:: odl.discr
 
 
-Sub-modules
------------
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    odl.discr.discr_mappings
    odl.discr.discretization

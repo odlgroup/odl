@@ -1,5 +1,5 @@
-odl.set.space package
-=====================
+odl.set.space
+=============
 
 Abstract linear vector spaces.
 
@@ -14,7 +14,7 @@ The concept of linear vector spaces in ODL is largely inspired by
 the `Rice Vector Library
 <http://www.trip.caam.rice.edu/software/rvl/rvl/doc/html/>`_ (RVL).
 
-The abstract :class:`LinearSpace` class is intended for quick prototyping.
+The abstract `LinearSpace` class is intended for quick prototyping.
 It has a number of abstract methods which must be overridden by a
 subclass. On the other hand, it provides automatic error checking
 and numerous attributes and methods for convenience.
@@ -26,10 +26,10 @@ In the following, the abstract methods are explained in detail.
 **Element creation:** ``element(inp=None)``
 
 This public method is the factory for the inner
-:class:`LinearSpaceVector` class. It creates a new element of the space,
+`LinearSpaceVector` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
 simplest possible case, it just delegates the construction to the
-:class:`LinearSpaceVector` class.
+`LinearSpaceVector` class.
 
 If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
@@ -39,24 +39,24 @@ initialized**, thus it can contain *any* value.
         A container for values for the element initialization
 
 **Returns:**
-    element : :class:`LinearSpaceVector`
+    element : `LinearSpaceVector`
         The new vector
 
 **Linear combination:** ``_lincomb(a, x1, b, x2, out)``
 
 This private method is the raw implementation (i.e. without error
 checking) of the linear combination ``out = a * x1 + b * x2``.
-:meth:`LinearSpace._lincomb` and its public counterpart
-:meth:`LinearSpace.lincomb` are used to covera range of convenience
+`LinearSpace._lincomb` and its public counterpart
+`LinearSpace.lincomb` are used to covera range of convenience
 functions, see below.
 
 **Parameters:**
     a, b : scalars, must be members of the space's ``field``
         Multiplicative scalar factors for input vector ``x1`` or ``x2``,
         respectively
-    x1, x2 : :class:`LinearSpaceVector`
+    x1, x2 : `LinearSpaceVector`
         Input vectors
-    out : :class:`LinearSpaceVector`
+    out : `LinearSpaceVector`
         Element to which the result of the computation is written
 
 **Returns:** `None`
@@ -70,15 +70,15 @@ functions, see below.
 **Underlying scalar field:** ``field``
 
 The public attribute determining the type of scalars which
-underlie the space. Can be instances of either :class:`~odl.RealNumbers` or
-:class:`~odl.ComplexNumbers` (see :mod:`~odl.set.sets`).
+underlie the space. Can be instances of either `RealNumbers` or
+`ComplexNumbers` (see :mod:`set.sets`).
 
 Should be implemented as a ``@property`` to make it immutable.
 
 **Equality check:** ``__eq__(other)``
 
-:class:`LinearSpace` inherits this abstract method from :class:`~odl.Set`. Its
-purpose is to check two :class:`LinearSpace` instances for equality.
+`LinearSpace` inherits this abstract method from `Set`. Its
+purpose is to check two `LinearSpace` instances for equality.
 
 **Parameters:**
     other : `object`
@@ -86,7 +86,7 @@ purpose is to check two :class:`LinearSpace` instances for equality.
 
 **Returns:**
     equals : `bool`
-        `True` if ``other`` is the same :class:`LinearSpace`, `False`
+        `True` if ``other`` is the same `LinearSpace`, `False`
         otherwise
 
 
@@ -98,7 +98,7 @@ between two vectors ``x1`` and ``x2``.
 A space with a distance is called a **metric space**.
 
 **Parameters:**
-    x1,x2 : :class:`LinearSpaceVector`
+    x1,x2 : `LinearSpaceVector`
         Vectors whose mutual distance to calculate
 
 **Returns:**
@@ -120,7 +120,7 @@ space element ``x``.
 A space with a norm is called a **normed space**.
 
 **Parameters:**
-    x : :class:`LinearSpaceVector`
+    x : `LinearSpaceVector`
         The vector to measure
 
 **Returns:**
@@ -139,13 +139,13 @@ A raw (not type-checking) private method calculating the inner
 product of two space elements ``x`` and ``y``.
 
 **Parameters:**
-    x,y : :class:`LinearSpaceVector`
+    x,y : `LinearSpaceVector`
         Vectors whose inner product to calculate
 
 **Returns:**
     inner : `float` or `complex`
         The inner product of ``x`` and ``y``. If
-        :attr:`LinearSpace.field` is the set of real
+        `LinearSpace.field` is the set of real
         numbers, ``inner`` is a `float`, otherwise `complex`.
 
 **Requirements:**
@@ -160,9 +160,9 @@ A raw (not type-checking) private method multiplying two vectors
 ``x1`` and ``x2`` element-wise and storing the result in ``out``.
 
 **Parameters:**
-    x1, x2 : :class:`LinearSpaceVector`
+    x1, x2 : `LinearSpaceVector`
         Vectors whose element-wise product to calculate
-    out : :class:`LinearSpaceVector`
+    out : `LinearSpaceVector`
         Vector to store the result
 
 **Returns:** `None`

@@ -27,6 +27,7 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
+from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector, 
                                     FnBase, FnBaseVector,
                                     FnWeightingBase)
@@ -83,7 +84,7 @@ _add_if_exists(np.uint64, 'CudaVectorUInt64')
 CUDA_DTYPES = tuple(set(CUDA_DTYPES))  # Remove duplicates
 
 
-class CudaNtuples(NtuplesBase):
+class CudaNtuples(NtuplesBase, LinearSpace):
 
     """The set of ``n``-tuples of arbitrary type, implemented in CUDA."""
 
@@ -137,7 +138,7 @@ class CudaNtuples(NtuplesBase):
 
         Returns
         -------
-        element : :class:`CudaNtuplesVector`
+        element : `CudaNtuplesVector`
             The new element
 
         Notes
@@ -183,9 +184,9 @@ class CudaNtuples(NtuplesBase):
         return CudaNtuplesVector
 
 
-class CudaNtuplesVector(NtuplesBaseVector):
+class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
-    """Representation of a :class:`CudaNtuples` element."""
+    """Representation of a `CudaNtuples` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
@@ -261,7 +262,7 @@ class CudaNtuplesVector(NtuplesBaseVector):
 
         Returns
         -------
-        copy : :class:`CudaNtuplesVector`
+        copy : `CudaNtuplesVector`
             The deep copy
 
         Examples
@@ -335,7 +336,7 @@ class CudaNtuplesVector(NtuplesBaseVector):
 
         Returns
         -------
-        values : scalar or :class:`CudaNtuplesVector`
+        values : scalar or `CudaNtuplesVector`
             The value(s) at the index (indices)
 
 
@@ -376,7 +377,7 @@ class CudaNtuplesVector(NtuplesBaseVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, :class:`CudaNtuplesVector`}
+        values : {scalar, array-like, `CudaNtuplesVector`}
             The value(s) that are to be assigned.
 
             If ``index`` is an `int`, ``value`` must be single value.
@@ -472,7 +473,7 @@ class CudaFn(FnBase, CudaNtuples):
             Only scalar data types are allowed.
 
         kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            'weight' : {array-like, :class:`CudaFnVector`, `float`, `None`}
+            'weight' : {array-like, `CudaFnVector`, `float`, `None`}
                 Use weighted inner product, norm, and dist.
 
                 `None`:
@@ -487,7 +488,7 @@ class CudaFn(FnBase, CudaNtuples):
                     main memory, which results in slower space functions
                     due to a copy during evaluation.
 
-                :class:`CudaFnVector`:
+                `CudaFnVector`:
                     same as 1-dim. array-like, except that copying is
                     avoided if the ``dtype`` of the vector is the
                     same as this space's ``dtype``.
@@ -507,7 +508,7 @@ class CudaFn(FnBase, CudaNtuples):
             'dist' : `callable`, optional
                 The distance function defining a metric on
                 :math:`\mathbb{F}^n`.
-                It must accept two :class:`CudaFnVector` arguments,
+                It must accept two `CudaFnVector` arguments,
                 return a `float` and
                 fulfill the following mathematical conditions for any
                 three vectors :math:`x, y, z`:
@@ -527,7 +528,7 @@ class CudaFn(FnBase, CudaNtuples):
 
             'norm' : `callable`, optional
                 The norm implementation. It must accept an
-                :class:`CudaFnVector` argument, return a
+                `CudaFnVector` argument, return a
                 `float` and satisfy the following
                 conditions for all vectors :math:`x, y` and scalars
                 :math:`s`:
@@ -547,7 +548,7 @@ class CudaFn(FnBase, CudaNtuples):
 
             'inner' : `callable`, optional
                 The inner product implementation. It must accept two
-                :class:`CudaFnVector` arguments, return a element from
+                `CudaFnVector` arguments, return a element from
                 the field of the space (real or complex number) and
                 satisfy the following conditions for all vectors
                 :math:`x, y, z` and scalars :math:`s`:
@@ -614,11 +615,11 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        a, b : :attr:`~odl.LinearSpace.field` element
+        a, b : `LinearSpace.field` element
             Scalar to multiply ``x`` and ``y`` with.
-        x, y : :class:`CudaFnVector`
+        x, y : `CudaFnVector`
             The summands
-        out : :class:`CudaFnVector`
+        out : `CudaFnVector`
             The Vector that the result is written to.
 
         Returns
@@ -643,7 +644,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFnVector`
+        x1, x2 : `CudaFnVector`
 
         Returns
         -------
@@ -666,7 +667,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFnVector`
+        x1, x2 : `CudaFnVector`
             The vectors whose mutual distance is calculated
 
         Returns
@@ -692,7 +693,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x : :class:`CudaFnVector`
+        x : `CudaFnVector`
 
         Returns
         -------
@@ -822,7 +823,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> r3_lambda1 == r3_lambda2
         False
 
-        A :class:`CudaFn` space with the same data type is considered
+        A `CudaFn` space with the same data type is considered
         equal:
 
         >>> r3 = CudaRn(3)
@@ -848,9 +849,9 @@ class CudaFn(FnBase, CudaNtuples):
         return CudaFnVector
 
 
-class CudaFnVector(FnBaseVector, CudaNtuplesVector):
+class CudaFnVector(FnBaseVector, CudaNtuplesVector, LinearSpaceVector):
 
-    """Representation of a :class:`CudaFn` element."""
+    """Representation of a `CudaFn` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
@@ -880,7 +881,7 @@ class CudaRn(CudaFn):
             Only real floating-point data types are allowed.
 
         kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            See :class:`CudaFn`
+            See `CudaFn`
         """
         super().__init__(size, dtype, **kwargs)
 
@@ -905,7 +906,7 @@ class CudaRn(CudaFn):
 
 class CudaRnVector(CudaFnVector):
 
-    """Representation of a :class:`CudaRn` element."""
+    """Representation of a `CudaRn` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
@@ -963,13 +964,13 @@ def _weighting(weight, exponent, dist_using_inner=False):
 
 
 def cu_weighted_inner(weight):
-    """Weighted inner product on :class:`CudaFn` spaces as free function.
+    """Weighted inner product on `CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or :class:`CudaFnVector`
+    weight : scalar, array-like or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a :class:`CudaFnVector`
+        constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
 
     Returns
@@ -987,13 +988,13 @@ def cu_weighted_inner(weight):
 
 
 def cu_weighted_norm(weight, exponent=2.0):
-    """Weighted norm on :class:`CudaFn` spaces as free function.
+    """Weighted norm on `CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or :class:`CudaFnVector`
+    weight : scalar, array-like or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a :class:`CudaFnVector`
+        constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
     exponent : positive `float`
         Exponent of the norm. If ``weight`` is a sparse matrix, only
@@ -1014,13 +1015,13 @@ def cu_weighted_norm(weight, exponent=2.0):
 
 
 def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
-    """Weighted distance on :class:`CudaFn` spaces as free function.
+    """Weighted distance on `CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or :class:`CudaFnVector`
+    weight : scalar, array-like or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a :class:`CudaFnVector`
+        constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
     exponent : positive `float`
         Exponent of the distance
@@ -1121,7 +1122,7 @@ def _inner_default(x1, x2):
 
 class CudaFnVectorWeighting(FnWeightingBase):
 
-    """Vector weighting for :class:`CudaFn`.
+    """Vector weighting for `CudaFn`.
 
     For exponent 2.0, a new weighted inner product with vector :math:`w`
     is defined as
@@ -1212,7 +1213,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`CudaFnVectorWeighting`
+            `True` if ``other`` is a `CudaFnVectorWeighting`
             instance with **identical** vector, `False` otherwise.
 
         See also
@@ -1255,7 +1256,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFnVector`
+        x1, x2 : `CudaFnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1279,7 +1280,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x : :class:`CudaFnVector`
+        x : `CudaFnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1314,7 +1315,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
 
 class CudaFnConstWeighting(FnWeightingBase):
 
-    """Weighting of :class:`CudaFn` by a constant.
+    """Weighting of `CudaFn` by a constant.
 
     For exponent 2.0, a new weighted inner product with constant
     :math:`c` is defined as
@@ -1373,7 +1374,7 @@ class CudaFnConstWeighting(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnConstWeighting`
+            `True` if ``other`` is a `CudaFnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
         if other is self:
@@ -1390,12 +1391,12 @@ class CudaFnConstWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is a
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            `space.base_ntuples.FnWeightingBase` instance
             with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `space.base_ntuples.FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
-            if ``other`` is a :class:`CudaFnConstWeighting` instance,
+            if ``other`` is a `CudaFnConstWeighting` instance,
             otherwise by entry-wise comparison of this inner product's
             constant with the matrix of ``other``.
         """
@@ -1413,7 +1414,7 @@ class CudaFnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFnVector`
+        x1, x2 : `CudaFnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1433,7 +1434,7 @@ class CudaFnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1 : :class:`CudaFnVector`
+        x1 : `CudaFnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1455,7 +1456,7 @@ class CudaFnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFnVector`
+        x1, x2 : `CudaFnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -1493,7 +1494,7 @@ class CudaFnConstWeighting(FnWeightingBase):
 
 class CudaFnNoWeighting(CudaFnConstWeighting):
 
-    """Weighting of :class:`CudaFn` with constant 1.
+    """Weighting of `CudaFn` with constant 1.
 
     For exponent 2.0, the unweighted inner product is defined as
 
@@ -1526,7 +1527,7 @@ class CudaFnNoWeighting(CudaFnConstWeighting):
 
 class CudaFnCustomInnerProduct(FnWeightingBase):
 
-    """Custom inner product on :class:`CudaFn`."""
+    """Custom inner product on `CudaFn`."""
 
     def __init__(self, inner, dist_using_inner=True):
         """Initialize a new instance.
@@ -1535,7 +1536,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            :class:`CudaFnVector` arguments, return a complex number
+            `CudaFnVector` arguments, return a complex number
             and satisfy the following conditions for all vectors
             :math:`x, y, z` and scalars :math:`s`:
 
@@ -1576,7 +1577,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnCustomInnerProduct`
+            `True` if ``other`` is a `CudaFnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomInnerProduct) and
@@ -1600,7 +1601,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
 
 class CudaFnCustomNorm(FnWeightingBase):
 
-    """Custom norm on :class:`CudaFn`, removes ``inner``."""
+    """Custom norm on `CudaFn`, removes ``inner``."""
 
     def __init__(self, norm):
         """Initialize a new instance.
@@ -1609,7 +1610,7 @@ class CudaFnCustomNorm(FnWeightingBase):
         ----------
         norm : `callable`
             The norm implementation. It must accept an
-            :class:`CudaFnVector` argument, return a `float` and
+            `CudaFnVector` argument, return a `float` and
             satisfy the following conditions for all vectors
             :math:`x, y` and scalars :math:`s`:
 
@@ -1642,7 +1643,7 @@ class CudaFnCustomNorm(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnCustomNorm`
+            `True` if ``other`` is a `CudaFnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomNorm) and
@@ -1662,7 +1663,7 @@ class CudaFnCustomNorm(FnWeightingBase):
 
 class CudaFnCustomDist(FnWeightingBase):
 
-    """Custom distance on :class:`CudaFn`, removes ``norm`` and ``inner``."""
+    """Custom distance on `CudaFn`, removes ``norm`` and ``inner``."""
 
     def __init__(self, dist):
         """Initialize a new instance.
@@ -1672,7 +1673,7 @@ class CudaFnCustomDist(FnWeightingBase):
         dist : `callable`
             The distance function defining a metric on
             :math:`\mathbb{F}^n`.
-            It must accept two :class:`CudaFnVector` arguments and
+            It must accept two `CudaFnVector` arguments and
             fulfill the following mathematical conditions for any
             three vectors :math:`x, y, z`:
 
@@ -1707,7 +1708,7 @@ class CudaFnCustomDist(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnCustomDist`
+            `True` if ``other`` is a `CudaFnCustomDist`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomDist) and
