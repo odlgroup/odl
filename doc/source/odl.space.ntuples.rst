@@ -12,45 +12,37 @@ This is a default implementation of :math:`A^n` for an arbitrary set
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   _blas_is_applicable
-   _inner_default
-   _lincomb
-   _norm_default
-   _pnorm_default
-   _pnorm_diagweight
-   _repr_space_funcs
-   _weighting
-   weighted_dist
-   weighted_inner
-   weighted_norm
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   Cn
-   CnVector
-   Fn
-   FnConstWeighting
-   FnCustomDist
-   FnCustomInnerProduct
-   FnCustomNorm
-   FnMatrixWeighting
-   FnNoWeighting
-   FnVector
-   FnVectorWeighting
-   MatVecOperator
-   Ntuples
-   NtuplesVector
-   Rn
-   RnVector
+   ~odl.space.ntuples.Cn
+   ~odl.space.ntuples.CnVector
+   ~odl.space.ntuples.Fn
+   ~odl.space.ntuples.FnConstWeighting
+   ~odl.space.ntuples.FnCustomDist
+   ~odl.space.ntuples.FnCustomInnerProduct
+   ~odl.space.ntuples.FnCustomNorm
+   ~odl.space.ntuples.FnMatrixWeighting
+   ~odl.space.ntuples.FnNoWeighting
+   ~odl.space.ntuples.FnVector
+   ~odl.space.ntuples.FnVectorWeighting
+   ~odl.space.ntuples.MatVecOperator
+   ~odl.space.ntuples.Ntuples
+   ~odl.space.ntuples.NtuplesVector
+   ~odl.space.ntuples.Rn
+   ~odl.space.ntuples.RnVector
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.ntuples.weighted_dist
+   ~odl.space.ntuples.weighted_inner
+   ~odl.space.ntuples.weighted_norm
 

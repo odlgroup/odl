@@ -7,12 +7,12 @@ Newton type optimization schemes.
 
 
 
+
 Functions
 ---------
 
 .. autosummary::
    :toctree: generated/
 
-   newtons_method
-
+   ~odl.solvers.vector.newton.newtons_method
 

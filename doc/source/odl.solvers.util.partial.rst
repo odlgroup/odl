@@ -7,16 +7,16 @@ odl.solvers.util.partial package
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   ForEachPartial
-   Partial
-   PrintIterationPartial
-   PrintStatusPartial
-   StorePartial
+   ~odl.solvers.util.partial.ForEachPartial
+   ~odl.solvers.util.partial.Partial
+   ~odl.solvers.util.partial.PrintIterationPartial
+   ~odl.solvers.util.partial.PrintStatusPartial
+   ~odl.solvers.util.partial.StorePartial
+
 

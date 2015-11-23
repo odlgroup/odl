@@ -9,13 +9,13 @@ Concrete vector spaces.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   base_ntuples
-   cu_ntuples
-   fspace
-   ntuples
+   odl.space.base_ntuples
+   odl.space.cu_ntuples
+   odl.space.fspace
+   odl.space.ntuples
 
 
 

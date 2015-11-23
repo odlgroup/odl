@@ -7,15 +7,15 @@ Spaces of functions with common domain and range.
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   FunctionSet
-   FunctionSetVector
-   FunctionSpace
-   FunctionSpaceVector
+   ~odl.space.fspace.FunctionSet
+   ~odl.space.fspace.FunctionSetVector
+   ~odl.space.fspace.FunctionSpace
+   ~odl.space.fspace.FunctionSpaceVector
+
 

@@ -9,10 +9,10 @@ odl.solvers.util package
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   partial
+   odl.solvers.util.partial
 
 
 

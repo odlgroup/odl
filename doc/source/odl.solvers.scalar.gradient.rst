@@ -7,12 +7,12 @@ Gradient-based optimization schemes.
 
 
 
+
 Functions
 ---------
 
 .. autosummary::
    :toctree: generated/
 
-   steepest_descent
-
+   ~odl.solvers.scalar.gradient.steepest_descent
 

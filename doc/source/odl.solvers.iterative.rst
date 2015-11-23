@@ -9,10 +9,10 @@ odl.solvers.iterative package
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   iterative
+   odl.solvers.iterative.iterative
 
 
 

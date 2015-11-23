@@ -96,12 +96,12 @@ do not need to implement type checks.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   default_ops
-   operator
-   pspace_ops
+   odl.operator.default_ops
+   odl.operator.operator
+   odl.operator.pspace_ops
 
 
 

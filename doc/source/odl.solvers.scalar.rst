@@ -9,11 +9,11 @@ Gradient-based optimization schemes.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   gradient
-   steplen
+   odl.solvers.scalar.gradient
+   odl.solvers.scalar.steplen
 
 
 

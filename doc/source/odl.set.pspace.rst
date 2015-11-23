@@ -7,23 +7,13 @@ Cartesian products of :class:`~odl.LinearSpace` instances.
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   _indent
-   _prod_inner_sum_not_defined
-   _strip_space
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   ProductSpace
-   ProductSpaceVector
+   ~odl.set.pspace.ProductSpace
+   ~odl.set.pspace.ProductSpaceVector
+
 

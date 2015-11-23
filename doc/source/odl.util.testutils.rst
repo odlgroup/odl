@@ -7,28 +7,27 @@ Utilities for internal use.
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   _places
-   all_almost_equal
-   all_equal
-   almost_equal
-   is_subdict
-   timeit
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   FailCounter
-   ProgressBar
-   ProgressRange
-   Timer
+   ~odl.util.testutils.FailCounter
+   ~odl.util.testutils.ProgressBar
+   ~odl.util.testutils.ProgressRange
+   ~odl.util.testutils.Timer
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.util.testutils.all_almost_equal
+   ~odl.util.testutils.all_equal
+   ~odl.util.testutils.almost_equal
+   ~odl.util.testutils.is_subdict
+   ~odl.util.testutils.timeit
 

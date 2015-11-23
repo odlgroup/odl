@@ -9,13 +9,13 @@ Core Spaces and set support.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   domain
-   pspace
-   sets
-   space
+   odl.set.domain
+   odl.set.pspace
+   odl.set.sets
+   odl.set.space
 
 
 

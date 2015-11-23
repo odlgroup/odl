@@ -9,10 +9,10 @@ Function transformations based on ODL.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   wavelet
+   odl.trafos.wavelet
 
 
 

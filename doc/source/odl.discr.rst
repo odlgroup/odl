@@ -9,13 +9,13 @@ Discretizations in ODL.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   discr_mappings
-   discretization
-   grid
-   lp_discr
+   odl.discr.discr_mappings
+   odl.discr.discretization
+   odl.discr.grid
+   odl.discr.lp_discr
 
 
 

@@ -7,15 +7,15 @@ odl.set.domain package
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   Cuboid
-   Interval
-   IntervalProd
-   Rectangle
+   ~odl.set.domain.Cuboid
+   ~odl.set.domain.Interval
+   ~odl.set.domain.IntervalProd
+   ~odl.set.domain.Rectangle
+
 

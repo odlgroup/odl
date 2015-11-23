@@ -9,15 +9,15 @@ odl.solvers package
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   findroot
-   iterative
-   linear
-   scalar
-   util
-   vector
+   odl.solvers.findroot
+   odl.solvers.iterative
+   odl.solvers.linear
+   odl.solvers.scalar
+   odl.solvers.util
+   odl.solvers.vector
 
 
 

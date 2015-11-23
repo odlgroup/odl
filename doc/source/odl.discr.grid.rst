@@ -11,21 +11,21 @@ space with a certain structure which is exploited to minimize storage.
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   uniform_sampling
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   RegularGrid
-   TensorGrid
+   ~odl.discr.grid.RegularGrid
+   ~odl.discr.grid.TensorGrid
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.grid.uniform_sampling
 

@@ -7,16 +7,16 @@ Step length computation for optimization schemes.
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   BacktrackingLineSearch
-   BarzilaiBorweinStep
-   ConstantLineSearch
-   LineSearch
-   StepLength
+   ~odl.solvers.scalar.steplen.BacktrackingLineSearch
+   ~odl.solvers.scalar.steplen.BarzilaiBorweinStep
+   ~odl.solvers.scalar.steplen.ConstantLineSearch
+   ~odl.solvers.scalar.steplen.LineSearch
+   ~odl.solvers.scalar.steplen.StepLength
+
 

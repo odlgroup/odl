@@ -7,14 +7,14 @@ odl.solvers.findroot.newton package
 
 
 
+
 Functions
 ---------
 
 .. autosummary::
    :toctree: generated/
 
-   bfgs_method
-   broydens_first_method
-   broydens_second_method
-
+   ~odl.solvers.findroot.newton.bfgs_method
+   ~odl.solvers.findroot.newton.broydens_first_method
+   ~odl.solvers.findroot.newton.broydens_second_method
 

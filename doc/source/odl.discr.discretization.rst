@@ -7,23 +7,23 @@ odl.discr.discretization package
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   dspace_type
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   Discretization
-   DiscretizationVector
-   RawDiscretization
-   RawDiscretizationVector
+   ~odl.discr.discretization.Discretization
+   ~odl.discr.discretization.DiscretizationVector
+   ~odl.discr.discretization.RawDiscretization
+   ~odl.discr.discretization.RawDiscretizationVector
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.discretization.dspace_type
 

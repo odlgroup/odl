@@ -6,40 +6,13 @@ CUDA implementation of n-dimensional Cartesian spaces.
 .. currentmodule:: odl.space.cu_ntuples
 
 
+Sub-modules
+-----------
 
-Functions
----------
+.. toctree::
+   :maxdepth: 3
 
-.. autosummary::
-   :toctree: generated/
-
-   _add_if_exists
-   _dist_default
-   _get_int_type
-   _inner_default
-   _make_unary_fun
-   _norm_default
-   _pnorm_default
-   _pnorm_diagweight
-   _repr_space_funcs
-   _weighting
-   abs
-   add_scalar
-   arccos
-   arcsin
-   cos
-   cu_weighted_dist
-   cu_weighted_inner
-   cu_weighted_norm
-   divide_vector_vector
-   exp
-   log
-   max_vector_scalar
-   max_vector_vector
-   sign
-   sin
-   sqrt
-   sum
+   odl.space.cu_ntuples.cuda
 
 
 Classes
@@ -48,16 +21,41 @@ Classes
 .. autosummary::
    :toctree: generated/
 
-   CudaFn
-   CudaFnConstWeighting
-   CudaFnCustomDist
-   CudaFnCustomInnerProduct
-   CudaFnCustomNorm
-   CudaFnNoWeighting
-   CudaFnVector
-   CudaFnVectorWeighting
-   CudaNtuples
-   CudaNtuplesVector
-   CudaRn
-   CudaRnVector
+   ~odl.space.cu_ntuples.CudaFn
+   ~odl.space.cu_ntuples.CudaFnConstWeighting
+   ~odl.space.cu_ntuples.CudaFnCustomDist
+   ~odl.space.cu_ntuples.CudaFnCustomInnerProduct
+   ~odl.space.cu_ntuples.CudaFnCustomNorm
+   ~odl.space.cu_ntuples.CudaFnNoWeighting
+   ~odl.space.cu_ntuples.CudaFnVector
+   ~odl.space.cu_ntuples.CudaFnVectorWeighting
+   ~odl.space.cu_ntuples.CudaNtuples
+   ~odl.space.cu_ntuples.CudaNtuplesVector
+   ~odl.space.cu_ntuples.CudaRn
+   ~odl.space.cu_ntuples.CudaRnVector
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.space.cu_ntuples.abs
+   ~odl.space.cu_ntuples.add_scalar
+   ~odl.space.cu_ntuples.arccos
+   ~odl.space.cu_ntuples.arcsin
+   ~odl.space.cu_ntuples.cos
+   ~odl.space.cu_ntuples.cu_weighted_dist
+   ~odl.space.cu_ntuples.cu_weighted_inner
+   ~odl.space.cu_ntuples.cu_weighted_norm
+   ~odl.space.cu_ntuples.divide_vector_vector
+   ~odl.space.cu_ntuples.exp
+   ~odl.space.cu_ntuples.log
+   ~odl.space.cu_ntuples.max_vector_scalar
+   ~odl.space.cu_ntuples.max_vector_vector
+   ~odl.space.cu_ntuples.sign
+   ~odl.space.cu_ntuples.sin
+   ~odl.space.cu_ntuples.sqrt
+   ~odl.space.cu_ntuples.sum
 

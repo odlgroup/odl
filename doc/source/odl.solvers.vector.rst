@@ -9,10 +9,10 @@ odl.solvers.vector package
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   newton
+   odl.solvers.vector.newton
 
 
 

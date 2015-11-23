@@ -7,20 +7,20 @@ Basic abstract and concrete sets.
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   CartesianProduct
-   ComplexNumbers
-   EmptySet
-   Field
-   Integers
-   RealNumbers
-   Set
-   Strings
-   UniversalSet
+   ~odl.set.sets.CartesianProduct
+   ~odl.set.sets.ComplexNumbers
+   ~odl.set.sets.EmptySet
+   ~odl.set.sets.Field
+   ~odl.set.sets.Integers
+   ~odl.set.sets.RealNumbers
+   ~odl.set.sets.Set
+   ~odl.set.sets.Strings
+   ~odl.set.sets.UniversalSet
+
 

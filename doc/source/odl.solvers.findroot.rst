@@ -9,10 +9,10 @@ odl.solvers.findroot package
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   newton
+   odl.solvers.findroot.newton
 
 
 

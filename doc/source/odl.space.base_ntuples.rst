@@ -7,16 +7,16 @@ Base classes for implementation of n-tuples.
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   FnBase
-   FnBaseVector
-   FnWeightingBase
-   NtuplesBase
-   NtuplesBaseVector
+   ~odl.space.base_ntuples.FnBase
+   ~odl.space.base_ntuples.FnBaseVector
+   ~odl.space.base_ntuples.FnWeightingBase
+   ~odl.space.base_ntuples.NtuplesBase
+   ~odl.space.base_ntuples.NtuplesBaseVector
+
 

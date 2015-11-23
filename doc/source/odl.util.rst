@@ -9,13 +9,13 @@ Utility library for ODL, only for internal use.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   graphics
-   phantom
-   testutils
-   utility
+   odl.util.graphics
+   odl.util.phantom
+   odl.util.testutils
+   odl.util.utility
 
 
 

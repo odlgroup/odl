@@ -7,14 +7,14 @@ Default operators defined on any :class:`odl.PowerSpace`.
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   ComponentProjection
-   ComponentProjectionAdjoint
-   ProductSpaceOperator
+   ~odl.operator.pspace_ops.ComponentProjection
+   ~odl.operator.pspace_ops.ComponentProjectionAdjoint
+   ~odl.operator.pspace_ops.ProductSpaceOperator
+
 

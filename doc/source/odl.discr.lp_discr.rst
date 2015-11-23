@@ -7,21 +7,21 @@ odl.discr.lp_discr package
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   uniform_discr
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   DiscreteLp
-   DiscreteLpVector
+   ~odl.discr.lp_discr.DiscreteLp
+   ~odl.discr.lp_discr.DiscreteLpVector
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.discr.lp_discr.uniform_discr
 

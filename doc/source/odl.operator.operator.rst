@@ -7,32 +7,28 @@ Abstract mathematical (linear) operators.
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   _bound_method
-   _default_apply
-   _default_call
-   operator
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   FunctionalLeftVectorMult
-   Operator
-   OperatorComp
-   OperatorLeftScalarMult
-   OperatorLeftVectorMult
-   OperatorPointwiseProduct
-   OperatorRightScalarMult
-   OperatorRightVectorMult
-   OperatorSum
-   _OperatorMeta
+   ~odl.operator.operator.FunctionalLeftVectorMult
+   ~odl.operator.operator.Operator
+   ~odl.operator.operator.OperatorComp
+   ~odl.operator.operator.OperatorLeftScalarMult
+   ~odl.operator.operator.OperatorLeftVectorMult
+   ~odl.operator.operator.OperatorPointwiseProduct
+   ~odl.operator.operator.OperatorRightScalarMult
+   ~odl.operator.operator.OperatorRightVectorMult
+   ~odl.operator.operator.OperatorSum
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.operator.operator.operator
 

@@ -7,13 +7,12 @@ Utilities for internal use.
 
 
 
+
 Functions
 ---------
 
 .. autosummary::
    :toctree: generated/
 
-   _shepp_logan_ellipse
-   shepp_logan
-
+   ~odl.util.phantom.shepp_logan
 

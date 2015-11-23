@@ -7,19 +7,17 @@ odl.discr.discr_mappings package
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   FunctionSetMapping
-   GridCollocation
-   LinearInterpolation
-   NearestInterpolation
-   RawGridCollocation
-   RawNearestInterpolation
-   _NearestMeshgridInterpolator
-   _NearestPointwiseInterpolator
+   ~odl.discr.discr_mappings.FunctionSetMapping
+   ~odl.discr.discr_mappings.GridCollocation
+   ~odl.discr.discr_mappings.LinearInterpolation
+   ~odl.discr.discr_mappings.NearestInterpolation
+   ~odl.discr.discr_mappings.RawGridCollocation
+   ~odl.discr.discr_mappings.RawNearestInterpolation
+
 

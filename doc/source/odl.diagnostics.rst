@@ -9,12 +9,12 @@ Automated tests for ODL.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   examples
-   operator
-   space
+   odl.diagnostics.examples
+   odl.diagnostics.operator
+   odl.diagnostics.space
 
 
 

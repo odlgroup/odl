@@ -7,16 +7,16 @@ Simple iterative type optimization schemes.
 
 
 
+
 Functions
 ---------
 
 .. autosummary::
    :toctree: generated/
 
-   conjugate_gradient
-   conjugate_gradient_normal
-   exp_zero_seq
-   gauss_newton
-   landweber
-
+   ~odl.solvers.iterative.iterative.conjugate_gradient
+   ~odl.solvers.iterative.iterative.conjugate_gradient_normal
+   ~odl.solvers.iterative.iterative.exp_zero_seq
+   ~odl.solvers.iterative.iterative.gauss_newton
+   ~odl.solvers.iterative.iterative.landweber
 

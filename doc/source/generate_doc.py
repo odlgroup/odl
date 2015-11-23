@@ -9,8 +9,8 @@ module_string = """
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
    {}
 """
@@ -43,16 +43,20 @@ string = """{name} package
 .. currentmodule:: {name}
 
 {module_string}
-{fun_string}
 {class_string}
+{fun_string}
 """
 
 
 def make_interface():
 
-    for importer, modname, ispkg in pkgutil.walk_packages(path=odl.__path__,
-                                                          prefix=odl.__name__+'.',
-                                                          onerror=lambda x: None):
+    modnames = [modname for _, modname, _ in pkgutil.walk_packages(path=odl.__path__,
+                                                                   prefix=odl.__name__+'.',
+                                                                   onerror=lambda x: None)]
+                                                                   
+    modnames += ['odl']
+
+    for modname in modnames:
         print(modname)
 
         line = '=' * (len(modname) + 8)
@@ -66,6 +70,10 @@ def make_interface():
 
         docstring = '' if docstring is None else docstring
 
+        submodules = [modname + '.' + mod for mod in submodules]
+        functions = ['~' + modname + '.' + fun for fun in functions if not fun.startswith('_')]
+        classes = ['~' + modname + '.' + cls for cls in classes if not cls.startswith('_')]
+        
         if len(submodules) > 0:
             this_mod_string = module_string.format('\n   '.join(submodules))
         else:

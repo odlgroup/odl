@@ -7,20 +7,12 @@ odl.diagnostics.space package
 
 
 
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   _apprimately_equal
-
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   SpaceTest
+   ~odl.diagnostics.space.SpaceTest
+
 

@@ -7,15 +7,14 @@ odl.diagnostics.examples package
 
 
 
+
 Functions
 ---------
 
 .. autosummary::
    :toctree: generated/
 
-   _arg_shape
-   samples
-   scalar_examples
-   vector_examples
-
+   ~odl.diagnostics.examples.samples
+   ~odl.diagnostics.examples.scalar_examples
+   ~odl.diagnostics.examples.vector_examples
 

@@ -198,14 +198,14 @@ See Wikipedia's mathematical overview articles
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   LinearSpace
-   LinearSpaceVector
-   UniversalSpace
+   ~odl.set.space.LinearSpace
+   ~odl.set.space.LinearSpaceVector
+   ~odl.set.space.UniversalSpace
+
 

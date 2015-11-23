@@ -7,12 +7,12 @@ odl.diagnostics.operator package
 
 
 
-
 Classes
 -------
 
 .. autosummary::
    :toctree: generated/
 
-   OperatorTest
+   ~odl.diagnostics.operator.OperatorTest
+
 

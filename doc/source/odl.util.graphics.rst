@@ -7,12 +7,12 @@ Functions for graphical output.
 
 
 
+
 Functions
 ---------
 
 .. autosummary::
    :toctree: generated/
 
-   show_discrete_function
-
+   ~odl.util.graphics.show_discrete_function
 

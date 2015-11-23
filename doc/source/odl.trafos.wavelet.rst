@@ -9,20 +9,10 @@ Discrete wavelet transformation on L2 spaces.
 Sub-modules
 -----------
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 3
 
-   odl
-
-
-Functions
----------
-
-.. autosummary::
-   :toctree: generated/
-
-   array_to_pywt_coeff
-   pywt_coeff_to_array
+   odl.trafos.wavelet.odl
 
 
 Classes
@@ -31,7 +21,17 @@ Classes
 .. autosummary::
    :toctree: generated/
 
-   DiscreteWaveletTrafo
-   DiscreteWaveletTrafoAdjoint
-   DiscreteWaveletTrafoInverse
+   ~odl.trafos.wavelet.DiscreteWaveletTrafo
+   ~odl.trafos.wavelet.DiscreteWaveletTrafoAdjoint
+   ~odl.trafos.wavelet.DiscreteWaveletTrafoInverse
+
+
+Functions
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.trafos.wavelet.array_to_pywt_coeff
+   ~odl.trafos.wavelet.pywt_coeff_to_array
 
