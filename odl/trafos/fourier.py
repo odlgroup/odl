@@ -37,16 +37,15 @@ except ImportError:
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
-from odl.set.sets import ComplexNumbers
-
+from odl.set.sets import RealNumbers, ComplexNumbers
 
 __all__ = ('DiscreteFourierTrafo', 'DiscreteFourierTrafoInverse')
 
 
-_SUPPORTED_IMPL = ('pyfftw',)
+# TODO: exclude CUDA vectors somehow elegantly
 
 
-def reciprocal(grid, halfcomplex=False, even_shift=False):
+def reciprocal(grid, halfcomplex=False, shift=True):
     """Return the reciprocal of the given regular grid.
 
     This function calculates the reciprocal (Fourier/frequency space)
@@ -69,21 +68,21 @@ def reciprocal(grid, halfcomplex=False, even_shift=False):
 
     1. Make the grid point-symmetric around 0.
 
-    2. Make the grid "almost" point-symmetric around zero but guarantee
-       that 0 is a grid point.
+    2. Make the grid "almost" point-symmetric around zero by shifting
+       it to the left by half a reciprocal stride.
 
-    For an odd number :math:`n` of samples (in one of the dimensions),
-    both options are equivalent, and the minimum frequency is given as
+    In the first case, the minimum frequency (per axis) is given as
 
-        :math:`\\xi_{0, \\text{odd}} = -\pi s + \pi / (sn) =
-        -\pi s + \sigma/2`.
+        :math:`\\xi_{0, \\text{symm}} = -\pi / s + \pi / (sn) =
+        -\pi / s + \sigma/2`.
 
-    For :math:`n` even, the first option results in the same formula as
-    in the odd case, and the second option can be realized by shifting
-    by half a cell size either to the left:
+    For the second case, it is:
 
-        :math:`\\xi_{0, \\text{even, left}} = -\pi s =
-        \\xi_{0, \\text{odd}} - \sigma/2.`
+        :math:`\\xi_{0, \\text{shift}} = -\pi / s.`
+
+    Note that the zero frequency is contained in case 1 for an odd
+    number of points, while for an even size, the second option
+    guarantees that 0 is contained.
 
     Parameters
     ----------
@@ -94,11 +93,11 @@ def reciprocal(grid, halfcomplex=False, even_shift=False):
         less than zero. This is related to the fact that for real-valued
         functions, the other half is the mirrored complex conjugate of
         the given half and therefore needs not be stored.
-    even_shift : `bool` or iterable, optional
-        In dimensions with even number of samples, the point-symmetric
-        reciprocal grid does not contain 0. If `True`, the grid is
-        shifted by half a stride in the negative direction
-        such that 0 falls on a grid point.
+
+        This option can only be used if ``shift=True``.
+    shift : `bool` or iterable, optional
+        If `True`, the grid is shifted by half a stride in the negative
+        direction.
         With a boolean array or iterable, this option is applied
         separately on each axis. At least ``grid.ndim`` values must be
         provided.
@@ -109,12 +108,12 @@ def reciprocal(grid, halfcomplex=False, even_shift=False):
         The reciprocal grid
     """
     try:
-        even_shift = [bool(even_shift[i]) for i in range(grid.ndim)]
+        shift = [bool(shift[i]) for i in range(grid.ndim)]
     except IndexError:
         raise ValueError('boolean shift iterable gives too few entries '
                          '({} < {}).'.format(i, grid.ndim))
     except TypeError:
-        even_shift = [bool(even_shift)] * grid.ndim
+        shift = [bool(shift)] * grid.ndim
 
     rmin = np.empty_like(grid.min_pt)
     rmax = np.empty_like(grid.max_pt)
@@ -123,33 +122,85 @@ def reciprocal(grid, halfcomplex=False, even_shift=False):
     stride = grid.stride
     shape = np.array(grid.shape)
 
-    # Odd axes -> simply make symmetric
-    odd = np.where(shape % 2 == 1)
-    rmin[odd] = (-1.0 + 1.0 / shape[odd]) * pi / stride[odd]
-    rmax[odd] = -rmin[odd]
-
-    # Even shifted axes
-    even_s = np.where(np.logical_and(shape % 2 == 0, even_shift))
-    rmin[even_s] = -pi / stride[even_s]
+    # Shifted axes
+    rmin[shift] = -pi / stride[shift]
     # Length min->max increases by double the shift, so we
     # have to compensate by a full stride
-    rmax[even_s] = (-rmin[even_s] - 2 * pi / (stride[even_s] * shape[even_s]))
+    rmax[shift] = (-rmin[shift] - 2 * pi / (stride[shift] * shape[shift]))
 
-    # Even non-shifted axes
-    even_no_s = np.where(np.logical_and(shape % 2 == 0,
-                                        np.logical_not(even_shift)))
-    rmin[even_no_s] = (-1.0 + 1.0 / shape[even_no_s]) * pi / stride[even_no_s]
-    rmax[even_no_s] = -rmin[even_no_s]
+    # Non-shifted axes
+    no_shift = np.logical_not(shift)
+    rmin[no_shift] = (-1.0 + 1.0 / shape[no_shift]) * pi / stride[no_shift]
+    rmax[no_shift] = -rmin[no_shift]
 
     # Change last axis shape and max if halfcomplex
     if halfcomplex:
         rsamples[-1] = shape[-1] // 2 + 1
-        if shape[-1] % 2 == 1 or even_shift[-1]:
+        if shape[-1] % 2 == 1 or shift[-1]:
             rmax[-1] = 0
         else:
             rmax[-1] = pi / (shape[-1] * stride[-1])
 
     return RegularGrid(rmin, rmax, rsamples, as_midp=False)
+
+
+def dft_preproc_data(dfunc, shift=False):
+    """Preprocess the real-space data before forward FT.
+
+    This function multiplies the given data with the separable
+    discrete function
+
+        :math:`p(x) = e^{-i(x-x_0)^{\mathrm{T}}\\xi_0},`
+
+    where :math:`x_0` :math:`\\xi_0` are the minimum coodinates of
+    the real space and reciprocal grids, respectively. In discretized
+    form, this function becomes for each axis separately an array
+
+        :math:`p_k = e^{-i k (s \odot \\xi_0)}.`
+
+    If the reciprocal grid is symmetric, it is
+    :math:`\\xi_0 =  \pi/s (-1 + 1/N)`, hence
+
+        :math:`p_{k, \\text{symm}} = e^{i \pi k (1-1/N)}.`
+
+    For a shifted grid, we have :math:`\\xi_0 =  -\pi/s`, thus the array
+    is given by
+
+        :math:`p_{k, \\text{shift}} = e^{i \pi k} = (-1)^k.`
+
+    Parameters
+    ----------
+    dfunc : `DiscreteLpVector`
+        Discrete function to be pre-processed. Changes are made in-place
+        for efficiency. For real input data, this is only possible if
+        ``shift=True`` since the factors :math:`p_k` are real only
+        in this case.
+    shift : `bool`
+        Whether the reciprocal grid is shifted
+
+    Returns
+    -------
+    `None`
+    """
+    if dfunc.space.field == RealNumbers() and not shift:
+        raise ValueError('cannot pre-process in-place without shift.')
+
+    nsamples = dfunc.grid.shape
+
+    for axis in range(dfunc.ndim):
+        indices = np.arange(nsamples[axis], dtype=float)
+        if shift:
+            # (-1)^indices
+            onedim_arr = -2 * np.mod(indices, 2) + 1
+        else:
+            onedim_arr = np.exp(1j * indices * (1 - 1.0 / nsamples[axis]))
+
+        # Create empty axes along all other dimensions
+        slc = [None] * dfunc.ndim
+        slc[axis] = np.s_[:]
+
+        # Multiply with broadcasting
+        np.multiply(dfunc, onedim_arr[slc], out=dfunc.asarray())
 
 
 class DiscreteFourierTrafo(Operator):
