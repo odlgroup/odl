@@ -21,7 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, str, super
+from builtins import next, range, str, super
 
 # External
 from math import pi
@@ -45,7 +45,28 @@ __all__ = ('DiscreteFourierTrafo', 'DiscreteFourierTrafoInverse')
 # TODO: exclude CUDA vectors somehow elegantly
 
 
-def reciprocal(grid, halfcomplex=False, shift=True):
+def _shift_list(shift, length):
+    """Turn a single boolean or iterable into a list of given length."""
+    try:
+        shift = iter(shift)
+        shift_list = []
+        try:
+            for i in range(length):
+                shift_list.append(next(shift))
+        except StopIteration:
+            pass
+    except TypeError:  # single boolean
+        shift_list = [bool(shift)] * length
+
+    shift_list = shift_list[:length]
+    if len(shift_list) < length:
+        raise ValueError('boolean shift list or iterable gives too few '
+                         'entries ({} < {}).'.format(len(shift_list), length))
+
+    return shift_list
+
+
+def reciprocal(grid, shift=True, halfcomplex=False):
     """Return the reciprocal of the given regular grid.
 
     This function calculates the reciprocal (Fourier/frequency space)
@@ -88,6 +109,12 @@ def reciprocal(grid, halfcomplex=False, shift=True):
     ----------
     grid : :class:`~odl.RegularGrid`
         Original sampling grid
+    shift : `bool` or iterable, optional
+        If `True`, the grid is shifted by half a stride in the negative
+        direction.
+        With a boolean array or iterable, this option is applied
+        separately on each axis. At least ``grid.ndim`` values must be
+        provided.
     halfcomplex : `bool`, optional
         If `True`, return the half of the grid with last coordinate
         less than zero. This is related to the fact that for real-valued
@@ -95,25 +122,13 @@ def reciprocal(grid, halfcomplex=False, shift=True):
         the given half and therefore needs not be stored.
 
         This option can only be used if ``shift=True``.
-    shift : `bool` or iterable, optional
-        If `True`, the grid is shifted by half a stride in the negative
-        direction.
-        With a boolean array or iterable, this option is applied
-        separately on each axis. At least ``grid.ndim`` values must be
-        provided.
 
     Returns
     -------
     recip : :class:`~odl.RegularGrid`
         The reciprocal grid
     """
-    try:
-        shift = [bool(shift[i]) for i in range(grid.ndim)]
-    except IndexError:
-        raise ValueError('boolean shift iterable gives too few entries '
-                         '({} < {}).'.format(i, grid.ndim))
-    except TypeError:
-        shift = [bool(shift)] * grid.ndim
+    shift_lst = _shift_list(shift, grid.ndim)
 
     rmin = np.empty_like(grid.min_pt)
     rmax = np.empty_like(grid.max_pt)

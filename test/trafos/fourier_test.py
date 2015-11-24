@@ -29,8 +29,57 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.trafos.fourier import reciprocal
+from odl.trafos.fourier import reciprocal, _shift_list
 from odl.util.testutils import all_almost_equal, all_equal
+
+
+def test_shift_list():
+
+    length = 3
+
+    # Test single value
+    shift = True
+    lst = _shift_list(shift, length)
+
+    assert all_equal(lst, [True] * length)
+
+    # Test existing sequence
+    shift = (False,) * length
+    lst = _shift_list(shift, length)
+
+    assert all_equal(lst, [False] * length)
+
+    # Too long sequence, ok
+    shift = (False,) * (length + 1)
+    lst = _shift_list(shift, length)
+
+    assert all_equal(lst, [False] * length)
+
+    # Test iterable
+    def alternating():
+        i = 0
+        while 1:
+            yield bool(i % 2)
+            i += 1
+
+    lst = _shift_list(alternating(), length)
+
+    assert all_equal(lst, [False, True, False])
+
+    # Too short sequence, should raise
+    shift = (False,) * (length - 1)
+    with pytest.raises(ValueError):
+        _shift_list(shift, length)
+
+    # Iterable returning too few entries, should throw
+    def alternating_short():
+        i = 0
+        while i < length - 1:
+            yield bool(i % 2)
+            i += 1
+
+    with pytest.raises(ValueError):
+        _shift_list(alternating_short(), length)
 
 
 def test_reciprocal_1d_odd():
@@ -40,14 +89,28 @@ def test_reciprocal_1d_odd():
     n = np.array(grid.shape)
 
     true_recip_stride = 2 * pi / (s * n)
-    rgrid = reciprocal(grid, halfcomplex=False)
 
+    # Without shift
+    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
+
+    # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
-
     # Should be symmetric
     assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
     assert all_almost_equal(rgrid.center, 0)
+    # Zero should be at index n // 2
+    assert all_almost_equal(rgrid[n // 2], 0)
+
+    # With shift
+    rgrid = reciprocal(grid, shift=True, halfcomplex=False)
+
+    # Independent of shift and halfcomplex, check anyway
+    assert all_equal(rgrid.shape, n)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    # No point should be closer to 0 than half a recip stride
+    tol = 0.999 * true_recip_stride / 2
+    assert not rgrid.approx_contains(0, tol=tol)
 
 
 def test_reciprocal_1d_odd_halfcomplex():
@@ -57,13 +120,24 @@ def test_reciprocal_1d_odd_halfcomplex():
     n = np.array(grid.shape)
 
     true_recip_stride = 2 * pi / (s * n)
-    rgrid = reciprocal(grid, halfcomplex=True)
 
+    # Without shift
+    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
+
+    # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, (n + 1) / 2)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
-
     # Max should be zero
     assert all_almost_equal(rgrid.max_pt, 0)
+
+    # With shift
+    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
+
+    # Independent of shift and halfcomplex, check anyway
+    assert all_equal(rgrid.shape, (n + 1) / 2)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    # Max point should be half a positive recip stride
+    assert all_almost_equal(rgrid.max_pt, -true_recip_stride / 2)
 
 
 def test_reciprocal_1d_even():
@@ -75,20 +149,26 @@ def test_reciprocal_1d_even():
     true_recip_stride = 2 * pi / (s * n)
 
     # Without shift
-    rgrid = reciprocal(grid, halfcomplex=False, even_shift=False)
+    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
 
+    # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
+    # Should be symmetric
+    assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
+    assert all_almost_equal(rgrid.center, 0)
     # No point should be closer to 0 than half a recip stride
     tol = 0.999 * true_recip_stride / 2
     assert not rgrid.approx_contains(0, tol=tol)
 
-    # With shift (to the left)
-    rgrid = reciprocal(grid, halfcomplex=False, even_shift=True)
+    # With shift
+    rgrid = reciprocal(grid, shift=True, halfcomplex=False)
 
+    # Independent of shift and halfcomplex, check anyway
+    assert all_equal(rgrid.shape, n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Zero should be at index n/2
-    assert all_almost_equal(rgrid[n / 2], 0)
+    # Zero should be at index n // 2
+    assert all_almost_equal(rgrid[n // 2], 0)
 
 
 def test_reciprocal_1d_even_halfcomplex():
@@ -100,18 +180,21 @@ def test_reciprocal_1d_even_halfcomplex():
     true_recip_stride = 2 * pi / (s * n)
 
     # Without shift
-    rgrid = reciprocal(grid, halfcomplex=True, even_shift=False)
+    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
 
+    # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n / 2 + 1)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Max point should be half a positinve recip stride
+    # Max point should be half a positive recip stride
     assert all_almost_equal(rgrid.max_pt, true_recip_stride / 2)
 
-    # With shift (to the left)
-    rgrid = reciprocal(grid, halfcomplex=True, even_shift=True)
+    # With shift
+    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
 
+    # Independent of shift and halfcomplex, check anyway
+    assert all_equal(rgrid.shape, n / 2 + 1)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Max point should be zero
+    # Max should be zero
     assert all_almost_equal(rgrid.max_pt, 0)
 
 
@@ -124,12 +207,52 @@ def test_reciprocal_nd():
 
     true_recip_stride = 2 * pi / (s * n)
 
-    # Without shift
-    rgrid = reciprocal(grid, halfcomplex=False, even_shift=False)
+    # Without shift altogether
+    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
 
     assert all_equal(rgrid.shape, n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
+
+
+def test_reciprocal_nd_shift_list():
+
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+    shift = [False, True, False]
+
+    true_recip_stride = 2 * pi / (s * n)
+
+    # Shift only the even dimension, then zero must be contained
+    rgrid = reciprocal(grid, shift=shift, halfcomplex=False)
+    noshift = np.where(np.logical_not(shift))
+
+    assert all_equal(rgrid.shape, n)
+    assert all_almost_equal(rgrid.stride, true_recip_stride)
+    assert all_almost_equal(rgrid.min_pt[noshift], -rgrid.max_pt[noshift])
+    assert all_almost_equal(rgrid[n // 2], [0] * 3)
+
+
+def test_reciprocal_nd_halfcomplex():
+
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+    stride_last = 2 * pi / (s[-1] * n[-1])
+    n[-1] = n[-1] // 2 + 1
+
+    # Without shift
+    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
+    assert all_equal(rgrid.shape, n)
+    assert rgrid.max_pt[-1] == 0  # last dim is odd
+
+    # With shift
+    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
+    assert all_equal(rgrid.shape, n)
+    assert rgrid.max_pt[-1] == -stride_last / 2
 
 
 if __name__ == '__main__':
