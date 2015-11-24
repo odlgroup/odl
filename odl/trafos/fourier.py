@@ -34,7 +34,7 @@ except ImportError:
     PYFFTW_AVAILABLE = False
 
 # Internal
-from odl.discr.grid import RegularGrid
+from odl.discr.grid import RegularGrid, sparse_meshgrid
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
@@ -107,7 +107,7 @@ def reciprocal(grid, shift=True, halfcomplex=False):
 
     Parameters
     ----------
-    grid : :class:`~odl.RegularGrid`
+    grid : `odl.RegularGrid`
         Original sampling grid
     shift : `bool` or iterable, optional
         If `True`, the grid is shifted by half a stride in the negative
@@ -125,7 +125,7 @@ def reciprocal(grid, shift=True, halfcomplex=False):
 
     Returns
     -------
-    recip : :class:`~odl.RegularGrid`
+    recip : `odl.RegularGrid`
         The reciprocal grid
     """
     shift_lst = _shift_list(shift, grid.ndim)
@@ -138,28 +138,43 @@ def reciprocal(grid, shift=True, halfcomplex=False):
     shape = np.array(grid.shape)
 
     # Shifted axes
+    shift = np.where(shift_lst)
     rmin[shift] = -pi / stride[shift]
     # Length min->max increases by double the shift, so we
     # have to compensate by a full stride
     rmax[shift] = (-rmin[shift] - 2 * pi / (stride[shift] * shape[shift]))
 
     # Non-shifted axes
-    no_shift = np.logical_not(shift)
+    no_shift = np.where(np.logical_not(shift_lst))
     rmin[no_shift] = (-1.0 + 1.0 / shape[no_shift]) * pi / stride[no_shift]
     rmax[no_shift] = -rmin[no_shift]
 
     # Change last axis shape and max if halfcomplex
     if halfcomplex:
         rsamples[-1] = shape[-1] // 2 + 1
-        if shape[-1] % 2 == 1 or shift[-1]:
-            rmax[-1] = 0
+
+        # - Odd and not shifted or even and shifted -> 0
+        # - Odd and shifted -> - stride / 2
+        # - Even and not shifted -> + stride / 2
+        odd = shape[-1] % 2 == 1
+        shifted = shift_lst[-1]
+        half_rstride = pi / (shape[-1] * stride[-1])
+
+        if odd:
+            if shifted:
+                rmax[-1] = -half_rstride
+            else:
+                rmax[-1] = 0
         else:
-            rmax[-1] = pi / (shape[-1] * stride[-1])
+            if shifted:
+                rmax[-1] = 0
+            else:
+                rmax[-1] = half_rstride
 
     return RegularGrid(rmin, rmax, rsamples, as_midp=False)
 
 
-def dft_preproc_data(dfunc, shift=False):
+def dft_preproc_data(dfunc, shift=True):
     """Preprocess the real-space data before forward FT.
 
     This function multiplies the given data with the separable
@@ -186,12 +201,16 @@ def dft_preproc_data(dfunc, shift=False):
     Parameters
     ----------
     dfunc : `DiscreteLpVector`
-        Discrete function to be pre-processed. Changes are made in-place
-        for efficiency. For real input data, this is only possible if
+        Discrete function to be pre-processed. Changes are made
+        in place. For real input data, this is only possible if
         ``shift=True`` since the factors :math:`p_k` are real only
         in this case.
-    shift : `bool`
-        Whether the reciprocal grid is shifted
+    shift : `bool` or iterable, optional
+        If `True`, the reciprocal grid is shifted by half a stride in
+        the negative direction.
+        With a boolean array or iterable, this option is applied
+        separately on each axis. At least ``grid.ndim`` values must be
+        provided.
 
     Returns
     -------
@@ -200,22 +219,26 @@ def dft_preproc_data(dfunc, shift=False):
     if dfunc.space.field == RealNumbers() and not shift:
         raise ValueError('cannot pre-process in-place without shift.')
 
-    nsamples = dfunc.grid.shape
+    nsamples = dfunc.space.grid.shape
+    shift_lst = _shift_list(shift, dfunc.ndim)
 
-    for axis in range(dfunc.ndim):
-        indices = np.arange(nsamples[axis], dtype=float)
+    def _onedim_arr(length, shift):
         if shift:
             # (-1)^indices
-            onedim_arr = -2 * np.mod(indices, 2) + 1
+            indices = np.arange(length, dtype='int8')
+            arr = -2 * np.mod(indices, 2) + 1
         else:
-            onedim_arr = np.exp(1j * indices * (1 - 1.0 / nsamples[axis]))
+            indices = np.arange(length, dtype=float)
+            arr = np.exp(1j * pi * indices * (1 - 1.0 / length))
+        return arr
 
-        # Create empty axes along all other dimensions
-        slc = [None] * dfunc.ndim
-        slc[axis] = np.s_[:]
+    onedim_arrs = [_onedim_arr(nsamp, shft)
+                   for nsamp, shft in zip(nsamples, shift_lst)]
+    meshgrid = sparse_meshgrid(*onedim_arrs, order=dfunc.space.order)
 
-        # Multiply with broadcasting
-        np.multiply(dfunc, onedim_arr[slc], out=dfunc.asarray())
+    # Multiply with broadcasting
+    for vec in meshgrid:
+        np.multiply(dfunc, vec, out=dfunc.asarray())
 
 
 class DiscreteFourierTrafo(Operator):
@@ -274,21 +297,21 @@ class DiscreteFourierTrafo(Operator):
         """
         Parameters
         ----------
-        dom : :class:`~odl.DiscreteLp`
+        dom : `odl.DiscreteLp`
             Domain of the wavelet transform. Its
-            :attr:`~odl.DiscreteLp.exponent` must be at least 1.0;
+            :attr:`odl.DiscreteLp.exponent` must be at least 1.0;
             if it is equal to 2.0, this operator has an adjoint which
             is equal to the inverse.
 
-        ran : :class:`~odl.DiscreteLp`, optional
+        ran : `odl.DiscreteLp`, optional
             Domain of the wavelet transform. The exponent :math:`q` of
             the discrete :math:`L^q` space must be equal to
             :math:`p/(p-1)`, where :math:`p` is the exponent of ``dom``.
             Note that for :math:`p=2`, it is :math:`q=2`.
 
-            If ``ran`` is `None`, the :attr:`~odl.DiscreteLp.grid`
-            of ``dom`` must be a :class:`odl.RegularGrid`. In this case,
-            the operator range is created as :class:`~odl.DiscreteLp`
+            If ``ran`` is `None`, the :attr:`odl.DiscreteLp.grid`
+            of ``dom`` must be a `odl.RegularGrid`. In this case,
+            the operator range is created as `odl.DiscreteLp`
             with conjugate exponent :math:`p/(p-1)` and reciprocal grid
             sampling.
 
@@ -320,11 +343,11 @@ class DiscreteFourierTrafo(Operator):
 
         Notes
         -----
-        The :attr:`~odl.Operator.range` of this operator always has the
-        :class:`~odl.ComplexNumbers` as its
-        :attr:`~odl.LinearSpace.field`, i.e. if the field of ``dom``
-        is the :class:`~odl.RealNumbers`, this operator has no
-        :attr:`~odl.Operator.adjoint`.
+        The :attr:`odl.Operator.range` of this operator always has the
+        `odl.ComplexNumbers` as its
+        :attr:`odl.LinearSpace.field`, i.e. if the field of ``dom``
+        is the `odl.RealNumbers`, this operator has no
+        :attr:`odl.Operator.adjoint`.
         """
         if not isinstance(dom, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'

@@ -23,13 +23,14 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External module imports
-import pytest
+from itertools import product
 from math import pi
 import numpy as np
+import pytest
 
 # ODL imports
 import odl
-from odl.trafos.fourier import reciprocal, _shift_list
+from odl.trafos.fourier import reciprocal, _shift_list, dft_preproc_data
 from odl.util.testutils import all_almost_equal, all_equal
 
 
@@ -49,7 +50,7 @@ def test_shift_list():
 
     assert all_equal(lst, [False] * length)
 
-    # Too long sequence, ok
+    # Too long sequence, gets truncated but ok
     shift = (False,) * (length + 1)
     lst = _shift_list(shift, length)
 
@@ -253,6 +254,38 @@ def test_reciprocal_nd_halfcomplex():
     rgrid = reciprocal(grid, shift=True, halfcomplex=True)
     assert all_equal(rgrid.shape, n)
     assert rgrid.max_pt[-1] == -stride_last / 2
+
+
+def test_dft_preproc_data():
+
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    shape = (2, 3, 4)
+    discr = odl.uniform_discr(
+        odl.FunctionSpace(cube, field=odl.ComplexNumbers()),
+        shape)
+
+    # With shift
+    correct_arr = []
+    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
+        correct_arr.append(1 - 2 * ((i + j + k) % 2))
+
+    dfunc = discr.one()
+    dft_preproc_data(dfunc, shift=True)
+
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
+
+    # Without shift
+    correct_arr = []
+    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
+        argsum = sum((idx * (1 - 1 / shp))
+                     for idx, shp in zip((i, j, k), shape))
+
+        correct_arr.append(np.exp(1j * np.pi * argsum))
+
+    dfunc = discr.one()
+    dft_preproc_data(dfunc, shift=False)
+
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
 
 
 if __name__ == '__main__':
