@@ -304,6 +304,7 @@ class ComplexNumbers(Field):
 
 
 class RealNumbers(Field):
+
     """The set of real numbers."""
 
     def __contains__(self, other):
@@ -464,8 +465,13 @@ class CartesianProduct(Set):
         ----------
         inp : `iterable`, optional
             Collection of input values for the
-            `set.space.LinearSpace.element` methods
+            `LinearSpace.element` methods
             of all sets in the Cartesian product.
+
+        Returns
+        -------
+        element : `tuple`
+            A tuple of the given input
         """
         if inp is None:
             tpl = tuple(set_.element() for set_ in self.sets)

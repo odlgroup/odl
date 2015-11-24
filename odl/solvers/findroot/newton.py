@@ -65,11 +65,11 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
     x : element in the domain of ``grad``
         Starting point of the iteration
-    line_search : `solvers.scalar.LineSearch`
+    line_search : `LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `solvers.util.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -139,11 +139,11 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
     x : element in the domain of ``grad``
         Starting point of the iteration
-    line_search : `solvers.scalar.LineSearch`
+    line_search : `LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -220,11 +220,11 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
     x : element in the domain of ``grad``
         Starting point of the iteration
-    line_search : `solvers.scalar.LineSearch`
+    line_search : `LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `solvers.util.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References

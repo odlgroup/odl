@@ -1,7 +1,7 @@
 pspace_ops
 ==========
 
-Default operators defined on any `odl.PowerSpace`.
+Default operators defined on any `ProductSpace`.
 
 .. currentmodule:: odl.operator.pspace_ops
 

@@ -1,4 +1,3 @@
-import os
 import pkgutil
 import odl
 import inspect
@@ -50,7 +49,7 @@ def make_interface():
     modnames = [modname for _, modname, _ in pkgutil.walk_packages(path=odl.__path__,
                                                                    prefix=odl.__name__+'.',
                                                                    onerror=lambda x: None)]
-                                                                   
+
     modnames += ['odl']
 
     for modname in modnames:
@@ -71,7 +70,7 @@ def make_interface():
         submodules = [modname + '.' + mod for mod in submodules]
         functions = ['~' + modname + '.' + fun for fun in functions if not fun.startswith('_')]
         classes = ['~' + modname + '.' + cls for cls in classes if not cls.startswith('_')]
-        
+
         if len(submodules) > 0:
             this_mod_string = module_string.format('\n   '.join(submodules))
         else:

@@ -65,7 +65,8 @@ class LineSearch(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __call__(self, x, direction, dir_derivative):
-        """
+        """ Calculate step length in direction
+
         Parameters
         ----------
         x : `Operator.domain` element

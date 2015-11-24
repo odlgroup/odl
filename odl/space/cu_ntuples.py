@@ -1234,7 +1234,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is a
-            :class_`odl.space.base_ntuples.FnWeightingBase` instance
+            `FnWeightingBase` instance
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner

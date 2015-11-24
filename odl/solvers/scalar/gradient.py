@@ -61,11 +61,11 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
         :math:`x \mapsto \\nabla f(x)`
     x : element in the domain of ``deriv``
         Starting point of the iteration
-    line_search : `solvers.LineSearch`
+    line_search : `LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `solvers.util.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References

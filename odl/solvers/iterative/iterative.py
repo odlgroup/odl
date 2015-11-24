@@ -75,7 +75,7 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     op : `Operator`
         Operator in the inverse problem. It must have a `Operator.derivative`
         property, which returns a new operator which in turn has an
-        `adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
+        `Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
         well-defined for ``x`` in the operator domain.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
@@ -87,7 +87,7 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         Maximum number of iterations
     omega : positive `float`
         Relaxation parameter in the iteration
-    partial : `solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -140,7 +140,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : `solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -223,7 +223,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : `solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -327,7 +327,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     zero_seq : `iterable`, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
-    partial : `solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns

@@ -6,11 +6,6 @@ Discrete wavelet transformation on L2 spaces.
 .. currentmodule:: odl.trafos.wavelet
 
 
-.. toctree::
-   :maxdepth: 2
-
-   odl.trafos.wavelet.odl
-
 
 Classes
 -------

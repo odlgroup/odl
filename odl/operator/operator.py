@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Abstract mathematical (linear) operators."""
+"""Abstract mathematical operators."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import

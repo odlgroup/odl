@@ -85,17 +85,15 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         ----------
         uspace : `Set`
             The undiscretized (abstract) set to be discretized
-        dspace : `space.base_ntuples.NtuplesBase`
+        dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object
         restr : `Operator`, optional
-            Operator mapping a `uspace` element to a
-            `dspace` element.
+            Operator mapping a `uspace` element to a `dspace` element.
             Must satisfy ``restr.domain == uspace``,
             ``restr.range == dspace``.
         ext : `Operator`, optional
-            Operator mapping a `dspace` element to a
-            `uspace` element.
+            Operator mapping a `dspace` element to a `uspace` element.
             Must satisfy ``ext.domain == dspace``,
             ``ext.range == uspace``.
             """
@@ -180,7 +178,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the `set.space.LinearSpace.element`
+            recognizable by the `LinearSpace.element`
             method of either `dspace` or `uspace`.
 
         Returns
@@ -304,7 +302,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
         Returns
         -------
-        values : `space.base_ntuples.NtuplesBaseVector`
+        values : `NtuplesBaseVector`
             The value(s) at the index (indices)
         """
         return self.ntuple.__getitem__(indices)
@@ -316,8 +314,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like,\
-                    `space.base_ntuples.NtuplesBaseVector`}
+        values : {scalar, array-like, `NtuplesBaseVector`}
             The value(s) that are to be assigned.
 
             If ``index`` is an `int`, ``value`` must be single value.
@@ -365,10 +362,9 @@ class Discretization(RawDiscretization, FnBase):
         ----------
         uspace : `LinearSpace`
             The (abstract) space to be discretized
-        dspace : `space.base_ntuples.FnBase`
+        dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its
-            `space.base_ntuples.FnBase.field` attribute
+            discretized object. Its `FnBase.field` attribute
             must be the same as ``uspace.field``.
         restr : `Operator`, linear, optional
             Operator mapping a `RawDiscretization.uspace` element

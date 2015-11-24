@@ -213,7 +213,7 @@ class RawGridCollocation(FunctionSetMapping):
 
         See also
         --------
-        odl.TensorGrid.meshgrid
+        TensorGrid.meshgrid
         numpy.meshgrid
 
         Examples
@@ -279,7 +279,7 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `space.base_ntuples.FnBase`
+        dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -310,7 +310,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `space.base_ntuples.NtuplesBase`
+        dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points.
@@ -429,7 +429,7 @@ class NearestInterpolation(RawNearestInterpolation,
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `space.base_ntuples.FnBase`
+        dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same
@@ -494,7 +494,7 @@ class LinearInterpolation(FunctionSetMapping):
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the common domain of the function set.
-        dspace : `space.base_ntuples.FnBase`
+        dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
             total number of grid points. Its field must be the same

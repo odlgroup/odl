@@ -1,7 +1,7 @@
 operator
 ========
 
-Abstract mathematical (linear) operators.
+Abstract mathematical operators.
 
 .. currentmodule:: odl.operator.operator
 
@@ -30,5 +30,5 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   ~odl.operator.operator.operator
+   ~odl.operator.operator.simple_operator
 

@@ -428,7 +428,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        squeezed : :class:`TensorGrid`
+        squeezed : `TensorGrid`
             The squeezed grid
 
         Examples
@@ -971,7 +971,7 @@ class RegularGrid(TensorGrid):
 
         Returns
         -------
-        squeezed : :class:`RegularGrid`
+        squeezed : `RegularGrid`
             The squeezed grid
 
         Examples

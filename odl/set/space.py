@@ -85,7 +85,7 @@ functions, see below.
 
 The public attribute determining the type of scalars which
 underlie the space. Can be instances of either `RealNumbers` or
-`ComplexNumbers` (see :mod:`set.sets`).
+`ComplexNumbers` (see `sets`).
 
 Should be implemented as a ``@property`` to make it immutable.
 
@@ -837,7 +837,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        transpose : `operator.default_ops.InnerProductOperator`
+        transpose : `InnerProductOperator`
 
         Notes
         -----
