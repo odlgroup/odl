@@ -21,8 +21,6 @@ import sphinx_rtd_theme
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # Mock modules for Read The Docs to enable autodoc
-
-
 def mock_modules(modules):
     if sys.version_info < (3, 3):
         from mock import Mock as MagicMock
@@ -102,8 +100,13 @@ def skip(app, what, name, obj, skip, options):
 def setup(app):
     app.connect("autodoc-skip-member", skip)
 
+# Autosummary
+import glob
+autosummary_generate = glob.glob("./*.rst")
+
 # Stops WARNING: toctree contains reference to nonexisting document
-numpydoc_show_class_members = False
+numpydoc_show_class_members = True
+numpydoc_show_inherited_class_members = True
 
 # Set order to mirror source
 autodoc_member_order = 'bysource'
@@ -142,7 +145,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['*.py', '*.pyc']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -156,14 +159,7 @@ todo_include_todos = False
 
 # Warn on dead links
 nitpicky = True
-nitpick_ignore = [('py:class', 'future.types.newobject.newobject'),
-                  ('py:class', 'odl.set.space.Vector'),
-                  ('py:class', 'odl.discr.discretization.Vector'),
-                  ('py:class', 'odl.discr.l2_discr.Vector'),
-                  ('py:class', 'odl.space.base_ntuples.Vector'),
-                  ('py:class', 'odl.space.ntuples.Vector'),
-                  ('py:class', 'odl.space.cu_ntuples.Vector'),
-                  ('py:class', 'odl.space.fspace.Vector')]
+nitpick_ignore = [('py:class', 'future.types.newobject.newobject')]
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -269,3 +265,4 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+

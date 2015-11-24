@@ -42,13 +42,15 @@ from scipy.sparse.base import isspmatrix
 
 # ODL imports
 from odl.operator.operator import Operator
-from odl.space.base_ntuples import NtuplesBase, FnBase, FnWeightingBase
+from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
+                                    FnBase, FnBaseVector, FnWeightingBase)
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
 
 
-__all__ = ('Ntuples', 'Fn', 'Cn', 'Rn',
+__all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector',
+           'Cn', 'CnVector', 'Rn', 'RnVector',
            'MatVecOperator',
            'FnMatrixWeighting', 'FnVectorWeighting', 'FnConstWeighting',
            'weighted_dist', 'weighted_norm', 'weighted_inner')
@@ -97,7 +99,7 @@ class Ntuples(NtuplesBase):
 
         Returns
         -------
-        element : :class:`Ntuples.Vector`
+        element : `NtuplesVector`
             The new element created (from ``inp``).
 
         Notes
@@ -128,14 +130,14 @@ class Ntuples(NtuplesBase):
         if inp is None:
             if data_ptr is None:
                 arr = np.empty(self.size, dtype=self.dtype)
-                return self.Vector(self, arr)
+                return self.element_type(self, arr)
             else:
                 ctype_array_def = ctypes.c_byte * (self.size *
                                                    self.dtype.itemsize)
                 as_ctype_array = ctype_array_def.from_address(data_ptr)
                 as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
                 arr = as_numpy_array.view(dtype=self.dtype)
-                return self.Vector(self, arr)
+                return self.element_type(self, arr)
         else:
             if data_ptr is None:
                 inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
@@ -150,267 +152,273 @@ class Ntuples(NtuplesBase):
                                      'shape ({},).'.format(inp.shape,
                                                            self.size))
 
-                return self.Vector(self, arr)
+                return self.element_type(self, arr)
             else:
                 raise ValueError('Cannot provide both `inp` and `data_ptr`')
 
-    class Vector(NtuplesBase.Vector):
+    @property
+    def element_type(self):
+        """ `NtuplesVector` """
+        return NtuplesVector
 
-        """Representation of an :class:`Ntuples` element."""
 
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, Ntuples):
-                raise TypeError('{!r} not an `Ntuples` instance.'
-                                ''.format(space))
+class NtuplesVector(NtuplesBaseVector):
 
-            if not isinstance(data, np.ndarray):
-                raise TypeError('data {!r} not a `numpy.ndarray` instance.'
-                                ''.format(data))
+    """Representation of an `Ntuples` element."""
 
-            if data.dtype != space.dtype:
-                raise TypeError('data {!r} not of dtype {!r}.'
-                                ''.format(data, space.dtype))
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        if not isinstance(space, Ntuples):
+            raise TypeError('{!r} not an `Ntuples` instance.'
+                            ''.format(space))
 
-            self._data = data
+        if not isinstance(data, np.ndarray):
+            raise TypeError('data {!r} not a `numpy.ndarray` instance.'
+                            ''.format(data))
 
-            super().__init__(space)
+        if data.dtype != space.dtype:
+            raise TypeError('data {!r} not of dtype {!r}.'
+                            ''.format(data, space.dtype))
 
-        @property
-        def data(self):
-            """The raw `numpy.ndarray` representing the data."""
-            return self._data
+        self._data = data
 
-        def asarray(self, start=None, stop=None, step=None, out=None):
-            """Extract the data of this array as a numpy array.
+        super().__init__(space)
 
-            Parameters
-            ----------
-            start : `int`, optional
-                Start position. None means the first element.
-            start : `int`, optional
-                One element past the last element to be extracted.
-                None means the last element.
-            start : `int`, optional
-                Step length. None means 1.
-            out : `numpy.ndarray`, optional
-                Array in which the result should be written in-place.
-                Has to be contiguous and of the correct dtype.
+    @property
+    def data(self):
+        """The raw `numpy.ndarray` representing the data."""
+        return self._data
 
-            Returns
-            -------
-            asarray : `numpy.ndarray`
-                Numpy array of the same type as the space.
+    def asarray(self, start=None, stop=None, step=None, out=None):
+        """Extract the data of this array as a numpy array.
 
-            Examples
-            --------
-            >>> import ctypes
-            >>> vec = Ntuples(3, 'float').element([1, 2, 3])
-            >>> vec.asarray()
-            array([ 1.,  2.,  3.])
-            >>> vec.asarray(start=1, stop=3)
-            array([ 2.,  3.])
+        Parameters
+        ----------
+        start : `int`, optional
+            Start position. None means the first element.
+        start : `int`, optional
+            One element past the last element to be extracted.
+            None means the last element.
+        start : `int`, optional
+            Step length. None means 1.
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
 
-            Using the out parameter
+        Returns
+        -------
+        asarray : `numpy.ndarray`
+            Numpy array of the same type as the space.
 
-            >>> out = np.empty((3,), dtype='float')
-            >>> result = vec.asarray(out=out)
-            >>> out
-            array([ 1.,  2.,  3.])
-            >>> result is out
-            True
-            """
-            if out is None:
-                return self.data[start:stop:step]
-            else:
-                out[:] = self.data[start:stop:step]
-                return out
+        Examples
+        --------
+        >>> import ctypes
+        >>> vec = Ntuples(3, 'float').element([1, 2, 3])
+        >>> vec.asarray()
+        array([ 1.,  2.,  3.])
+        >>> vec.asarray(start=1, stop=3)
+        array([ 2.,  3.])
 
-        @property
-        def data_ptr(self):
-            """A raw pointer to the data container.
+        Using the out parameter
 
-            Examples
-            --------
-            >>> import ctypes
-            >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
-            >>> arr_type = ctypes.c_int32 * 3
-            >>> buffer = arr_type.from_address(vec.data_ptr)
-            >>> arr = np.frombuffer(buffer, dtype='int32')
-            >>> print(arr)
-            [1 2 3]
+        >>> out = np.empty((3,), dtype='float')
+        >>> result = vec.asarray(out=out)
+        >>> out
+        array([ 1.,  2.,  3.])
+        >>> result is out
+        True
+        """
+        if out is None:
+            return self.data[start:stop:step]
+        else:
+            out[:] = self.data[start:stop:step]
+            return out
 
-            In-place modification via pointer:
+    @property
+    def data_ptr(self):
+        """A raw pointer to the data container.
 
-            >>> arr[0] = 5
-            >>> print(vec)
-            [5, 2, 3]
-            """
-            return self._data.ctypes.data
+        Examples
+        --------
+        >>> import ctypes
+        >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
+        >>> arr_type = ctypes.c_int32 * 3
+        >>> buffer = arr_type.from_address(vec.data_ptr)
+        >>> arr = np.frombuffer(buffer, dtype='int32')
+        >>> print(arr)
+        [1 2 3]
 
-        def __eq__(self, other):
-            """``vec.__eq__(other) <==> vec == other``.
+        In-place modification via pointer:
 
-            Returns
-            -------
-            equals : `bool`
-                `True` if all entries of other are equal to this
-                vector's entries, `False` otherwise.
+        >>> arr[0] = 5
+        >>> print(vec)
+        [5, 2, 3]
+        """
+        return self._data.ctypes.data
 
-            Notes
-            -----
-            Space membership is not checked, hence vectors from
-            different spaces can be equal.
+    def __eq__(self, other):
+        """``vec.__eq__(other) <==> vec == other``.
 
-            Examples
-            --------
-            >>> vec1 = Ntuples(3, int).element([1, 2, 3])
-            >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
-            >>> vec1 == vec2
-            False
-            >>> vec2 = Ntuples(3, int).element([1, 2, 3])
-            >>> vec1 == vec2
-            True
+        Returns
+        -------
+        equals : `bool`
+            `True` if all entries of other are equal to this
+            vector's entries, `False` otherwise.
 
-            Space membership matters:
+        Notes
+        -----
+        Space membership is not checked, hence vectors from
+        different spaces can be equal.
 
-            >>> vec2 = Ntuples(3, float).element([1, 2, 3])
-            >>> vec1 == vec2 or vec2 == vec1
-            False
-            """
-            if other is self:
-                return True
-            elif other not in self.space:
-                return False
-            else:
-                return np.array_equal(self.data, other.data)
+        Examples
+        --------
+        >>> vec1 = Ntuples(3, int).element([1, 2, 3])
+        >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
+        >>> vec1 == vec2
+        False
+        >>> vec2 = Ntuples(3, int).element([1, 2, 3])
+        >>> vec1 == vec2
+        True
 
-        def copy(self):
-            """Create an identical (deep) copy of this vector.
+        Space membership matters:
 
-            Parameters
-            ----------
-            None
+        >>> vec2 = Ntuples(3, float).element([1, 2, 3])
+        >>> vec1 == vec2 or vec2 == vec1
+        False
+        """
+        if other is self:
+            return True
+        elif other not in self.space:
+            return False
+        else:
+            return np.array_equal(self.data, other.data)
 
-            Returns
-            -------
-            copy : :class:`Ntuples.Vector`
-                The deep copy
+    def copy(self):
+        """Create an identical (deep) copy of this vector.
 
-            Examples
-            --------
-            >>> vec1 = Ntuples(3, 'int').element([1, 2, 3])
-            >>> vec2 = vec1.copy()
-            >>> vec2
-            Ntuples(3, 'int').element([1, 2, 3])
-            >>> vec1 == vec2
-            True
-            >>> vec1 is vec2
-            False
-            """
-            return self.space.element(self.data.copy())
+        Parameters
+        ----------
+        None
 
-        def __getitem__(self, indices):
-            """Access values of this vector.
+        Returns
+        -------
+        copy : `NtuplesVector`
+            The deep copy
 
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be accessed
+        Examples
+        --------
+        >>> vec1 = Ntuples(3, 'int').element([1, 2, 3])
+        >>> vec2 = vec1.copy()
+        >>> vec2
+        Ntuples(3, 'int').element([1, 2, 3])
+        >>> vec1 == vec2
+        True
+        >>> vec1 is vec2
+        False
+        """
+        return self.space.element(self.data.copy())
 
-            Returns
-            -------
-            values : scalar or :class:`Ntuples.Vector`
-                The value(s) at the index (indices)
+    def __getitem__(self, indices):
+        """Access values of this vector.
 
-            Examples
-            --------
-            >>> str_3 = Ntuples(3, dtype='U6')  # 6-char unicode
-            >>> x = str_3.element(['a', 'Hello!', '0'])
-            >>> print(x[0])
-            a
-            >>> print(x[1:3])
-            [Hello!, 0]
-            >>> x[1:3].space
-            Ntuples(2, '<U6')
-            """
-            try:
-                return self.data[int(indices)]  # single index
-            except TypeError:
-                arr = self.data[indices]
-                return type(self.space)(
-                    len(arr), dtype=self.dtype).element(arr)
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be accessed
 
-        def __setitem__(self, indices, values):
-            """Set values of this vector.
+        Returns
+        -------
+        values : scalar or `NtuplesVector`
+            The value(s) at the index (indices)
 
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be set
-            values : {scalar, array-like, :class:`Ntuples.Vector`}
-                The value(s) that are to be assigned.
+        Examples
+        --------
+        >>> str_3 = Ntuples(3, dtype='U6')  # 6-char unicode
+        >>> x = str_3.element(['a', 'Hello!', '0'])
+        >>> print(x[0])
+        a
+        >>> print(x[1:3])
+        [Hello!, 0]
+        >>> x[1:3].space
+        Ntuples(2, '<U6')
+        """
+        try:
+            return self.data[int(indices)]  # single index
+        except TypeError:
+            arr = self.data[indices]
+            return type(self.space)(
+                len(arr), dtype=self.dtype).element(arr)
 
-                If ``indices`` is an integer, ``value`` must be scalar.
+    def __setitem__(self, indices, values):
+        """Set values of this vector.
 
-                If ``indices`` is a slice, ``value`` must be
-                broadcastable to the size of the slice (same size,
-                shape ``(1,)`` or single value).
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like, `NtuplesVector`}
+            The value(s) that are to be assigned.
 
-            Returns
-            -------
-            `None`
+            If ``indices`` is an integer, ``value`` must be scalar.
 
-            Examples
-            --------
-            >>> int_3 = Ntuples(3, 'int')
-            >>> x = int_3.element([1, 2, 3])
-            >>> x[0] = 5
-            >>> x
-            Ntuples(3, 'int').element([5, 2, 3])
+            If ``indices`` is a slice, ``value`` must be
+            broadcastable to the size of the slice (same size,
+            shape ``(1,)`` or single value).
 
-            Assignment from array-like structures or another
-            vector:
+        Returns
+        -------
+        `None`
 
-            >>> y = Ntuples(2, 'short').element([-1, 2])
-            >>> x[:2] = y
-            >>> x
-            Ntuples(3, 'int').element([-1, 2, 3])
-            >>> x[1:3] = [7, 8]
-            >>> x
-            Ntuples(3, 'int').element([-1, 7, 8])
-            >>> x[:] = np.array([0, 0, 0])
-            >>> x
-            Ntuples(3, 'int').element([0, 0, 0])
+        Examples
+        --------
+        >>> int_3 = Ntuples(3, 'int')
+        >>> x = int_3.element([1, 2, 3])
+        >>> x[0] = 5
+        >>> x
+        Ntuples(3, 'int').element([5, 2, 3])
 
-            Broadcasting is also supported:
+        Assignment from array-like structures or another
+        vector:
 
-            >>> x[1:3] = -2.
-            >>> x
-            Ntuples(3, 'int').element([0, -2, -2])
+        >>> y = Ntuples(2, 'short').element([-1, 2])
+        >>> x[:2] = y
+        >>> x
+        Ntuples(3, 'int').element([-1, 2, 3])
+        >>> x[1:3] = [7, 8]
+        >>> x
+        Ntuples(3, 'int').element([-1, 7, 8])
+        >>> x[:] = np.array([0, 0, 0])
+        >>> x
+        Ntuples(3, 'int').element([0, 0, 0])
 
-            Array views are preserved:
+        Broadcasting is also supported:
 
-            >>> y = x[::2]  # view into x
-            >>> y[:] = -9
-            >>> print(y)
-            [-9, -9]
-            >>> print(x)
-            [-9, -2, -9]
+        >>> x[1:3] = -2.
+        >>> x
+        Ntuples(3, 'int').element([0, -2, -2])
 
-            Be aware of unsafe casts and over-/underflows, there
-            will be warnings at maximum.
+        Array views are preserved:
 
-            >>> x = Ntuples(2, 'int8').element([0, 0])
-            >>> maxval = 255  # maximum signed 8-bit unsigned int
-            >>> x[0] = maxval + 1
-            >>> x
-            Ntuples(2, 'int8').element([0, 0])
-            """
-            if isinstance(values, Ntuples.Vector):
-                return self.data.__setitem__(indices, values.data)
-            else:
-                return self.data.__setitem__(indices, values)
+        >>> y = x[::2]  # view into x
+        >>> y[:] = -9
+        >>> print(y)
+        [-9, -9]
+        >>> print(x)
+        [-9, -2, -9]
+
+        Be aware of unsafe casts and over-/underflows, there
+        will be warnings at maximum.
+
+        >>> x = Ntuples(2, 'int8').element([0, 0])
+        >>> maxval = 255  # maximum signed 8-bit unsigned int
+        >>> x[0] = maxval + 1
+        >>> x
+        Ntuples(2, 'int8').element([0, 0])
+        """
+        if isinstance(values, NtuplesVector):
+            return self.data.__setitem__(indices, values.data)
+        else:
+            return self.data.__setitem__(indices, values)
 
 
 def _blas_is_applicable(*args):
@@ -423,7 +431,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : :class:`~odl.space.base_ntuples.NtuplesBase.Vector`
+    x1,...,xN : `NtuplesBaseVector`
         The vectors to be tested for BLAS conformity
     """
     if len(args) == 0:
@@ -548,7 +556,7 @@ class Fn(FnBase, Ntuples):
     :math:`\mathbb{F}`, which can be the real or the complex numbers.
 
     Its elements are represented as instances of the
-    :class:`Fn.Vector` class.
+    `FnVector` class.
     """
 
     def __init__(self, size, dtype, **kwargs):
@@ -599,7 +607,7 @@ class Fn(FnBase, Ntuples):
             'dist' : `callable`, optional
                 The distance function defining a metric on
                 :math:`\mathbb{F}^n`.
-                It must accept two :class:`Fn.Vector` arguments and
+                It must accept two `FnVector` arguments and
                 fulfill the following mathematical conditions for any
                 three vectors :math:`x, y, z`:
 
@@ -618,7 +626,7 @@ class Fn(FnBase, Ntuples):
 
             'norm' : `callable`, optional
                 The norm implementation. It must accept an
-                :class:`Fn.Vector` argument, return a
+                `FnVector` argument, return a
                 `float` and satisfy the following
                 conditions for all vectors :math:`x, y` and scalars
                 :math:`s`:
@@ -638,7 +646,7 @@ class Fn(FnBase, Ntuples):
 
             'inner' : `callable`, optional
                 The inner product implementation. It must accept two
-                :class:`Fn.Vector` arguments, return a element from
+                `FnVector` arguments, return a element from
                 the field of the space (real or complex number) and
                 satisfy the following conditions for all vectors
                 :math:`x, y, z` and scalars :math:`s`:
@@ -738,11 +746,11 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        a, b : :attr:`~odl.space.base_ntuples.FnBase.field`
+        a, b : `FnBase.field`
             Scalar to multiply x and y with.
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             The summands
-        out : :class:`Fn.Vector`
+        out : `FnVector`
             The vector to which the result is written
 
         Returns
@@ -767,7 +775,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -797,7 +805,7 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x : :class:`Fn.Vector`
+        x : `FnVector`
             The vector whose norm is calculated
 
         Returns
@@ -826,12 +834,12 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             The vectors whose inner product is calculated
 
         Returns
         -------
-        inner : :attr:`field` element
+        inner : `field` element
             Inner product of the vectors
 
         Examples
@@ -862,9 +870,9 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             Factors in the product
-        out : :class:`Fn.Vector`
+        out : `FnVector`
             The result vector
 
         Returns
@@ -889,11 +897,11 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1 : :class:`Fn.Vector`
+        x1 : `FnVector`
             Dividend
-        x1 : :class:`Fn.Vector`
+        x1 : `FnVector`
             Divisior
-        out : :class:`Fn.Vector`
+        out : `FnVector`
             The result vector, quotient
 
         Returns
@@ -945,8 +953,7 @@ class Fn(FnBase, Ntuples):
         equals : `bool`
             `True` if other is an instance of this space's type
             with the same
-            :attr:`~odl.space.base_ntuples.NtuplesBase.size` and
-            :attr:`~odl.space.base_ntuples.NtuplesBase.dtype`,
+            `NtuplesBase.size` and `NtuplesBase.dtype`,
             and identical distance function, otherwise `False`.
 
         Examples
@@ -979,7 +986,7 @@ class Fn(FnBase, Ntuples):
         >>> c3_lambda1 == c3_lambda2
         False
 
-        An :class:`Fn` space with the same data type is considered
+        An `Fn` space with the same data type is considered
         equal:
 
         >>> c3 = Cn(3)
@@ -999,169 +1006,175 @@ class Fn(FnBase, Ntuples):
         inner_str += _repr_space_funcs(self)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    class Vector(FnBase.Vector, Ntuples.Vector):
+    @property
+    def element_type(self):
+        """ `FnVector` """
+        return FnVector
 
-        """Representation of an :class:`Fn` element."""
 
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, Fn):
-                raise TypeError('{!r} not an `Fn` instance.'
-                                ''.format(space))
-            super().__init__(space, data)
+class FnVector(FnBaseVector, NtuplesVector):
 
-        @property
-        def real(self):
-            """The real part of this vector.
+    """Representation of an `Fn` element."""
 
-            Returns
-            -------
-            real : :class:`Rn.Vector` view
-                The real part this vector as a vector in :class:`Rn`
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        if not isinstance(space, Fn):
+            raise TypeError('{!r} not an `Fn` instance.'
+                            ''.format(space))
+        super().__init__(space, data)
 
-            Examples
-            --------
-            >>> c3 = Cn(3)
-            >>> x = c3.element([5+1j, 3, 2-2j])
-            >>> x.real
-            Rn(3).element([5.0, 3.0, 2.0])
+    @property
+    def real(self):
+        """The real part of this vector.
 
-            The :class:`Rn` vector is really a view, so changes affect
-            the original array:
+        Returns
+        -------
+        real : `RnVector` view
+            The real part this vector as a vector in `Rn`
 
-            >>> x.real *= 2
-            >>> x
-            Cn(3).element([(10+1j), (6+0j), (4-2j)])
-            """
-            rn = Rn(self.space.size, self.space.real_dtype)
-            return rn.element(self.data.real)
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> x.real
+        Rn(3).element([5.0, 3.0, 2.0])
 
-        @real.setter
-        def real(self, newreal):
-            """The setter for the real part.
+        The `Rn` vector is really a view, so changes affect
+        the original array:
 
-            This method is invoked by ``vec.real = other``.
+        >>> x.real *= 2
+        >>> x
+        Cn(3).element([(10+1j), (6+0j), (4-2j)])
+        """
+        rn = Rn(self.space.size, self.space.real_dtype)
+        return rn.element(self.data.real)
 
-            Parameters
-            ----------
-            newreal : array-like or scalar
-                The new real part for this vector.
+    @real.setter
+    def real(self, newreal):
+        """The setter for the real part.
 
-            Examples
-            --------
-            >>> c3 = Cn(3)
-            >>> x = c3.element([5+1j, 3, 2-2j])
-            >>> a = Rn(3).element([0, 0, 0])
-            >>> x.real = a
-            >>> x
-            Cn(3).element([1j, 0j, -2j])
+        This method is invoked by ``vec.real = other``.
 
-            Other array-like types and broadcasting:
+        Parameters
+        ----------
+        newreal : array-like or scalar
+            The new real part for this vector.
 
-            >>> x.real = 1.0
-            >>> x
-            Cn(3).element([(1+1j), (1+0j), (1-2j)])
-            >>> x.real = [0, 2, -1]
-            >>> x
-            Cn(3).element([1j, (2+0j), (-1-2j)])
-            """
-            self.real.data[:] = newreal
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> a = Rn(3).element([0, 0, 0])
+        >>> x.real = a
+        >>> x
+        Cn(3).element([1j, 0j, -2j])
 
-        @property
-        def imag(self):
-            """The imaginary part of this vector.
+        Other array-like types and broadcasting:
 
-            Returns
-            -------
-            imag : :class:`Rn.Vector`
-                The imaginary part this vector as a vector in
-                :class:`Rn`
+        >>> x.real = 1.0
+        >>> x
+        Cn(3).element([(1+1j), (1+0j), (1-2j)])
+        >>> x.real = [0, 2, -1]
+        >>> x
+        Cn(3).element([1j, (2+0j), (-1-2j)])
+        """
+        self.real.data[:] = newreal
 
-            Examples
-            --------
-            >>> c3 = Cn(3)
-            >>> x = c3.element([5+1j, 3, 2-2j])
-            >>> x.imag
-            Rn(3).element([1.0, 0.0, -2.0])
+    @property
+    def imag(self):
+        """The imaginary part of this vector.
 
-            The :class:`Rn` vector is really a view, so changes affect
-            the original array:
+        Returns
+        -------
+        imag : `RnVector`
+            The imaginary part this vector as a vector in
+            `Rn`
 
-            >>> x.imag *= 2
-            >>> x
-            Cn(3).element([(5+2j), (3+0j), (2-4j)])
-            """
-            rn = Rn(self.space.size, self.space.real_dtype)
-            return rn.element(self.data.imag)
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> x.imag
+        Rn(3).element([1.0, 0.0, -2.0])
 
-        @imag.setter
-        def imag(self, newimag):
-            """The setter for the imaginary part.
+        The `Rn` vector is really a view, so changes affect
+        the original array:
 
-            This method is invoked by ``vec.imag = other``.
+        >>> x.imag *= 2
+        >>> x
+        Cn(3).element([(5+2j), (3+0j), (2-4j)])
+        """
+        rn = Rn(self.space.size, self.space.real_dtype)
+        return rn.element(self.data.imag)
 
-            Parameters
-            ----------
-            newreal : array-like or scalar
-                The new imaginary part for this vector.
+    @imag.setter
+    def imag(self, newimag):
+        """The setter for the imaginary part.
 
-            Examples
-            --------
-            >>> x = Cn(3).element([5+1j, 3, 2-2j])
-            >>> a = Rn(3).element([0, 0, 0])
-            >>> x.imag = a; print(x)
-            [(5+0j), (3+0j), (2+0j)]
+        This method is invoked by ``vec.imag = other``.
 
-            Other array-like types and broadcasting:
+        Parameters
+        ----------
+        newreal : array-like or scalar
+            The new imaginary part for this vector.
 
-            >>> x.imag = 1.0; print(x)
-            [(5+1j), (3+1j), (2+1j)]
-            >>> x.imag = [0, 2, -1]; print(x)
-            [(5+0j), (3+2j), (2-1j)]
-            """
-            self.imag.data[:] = newimag
+        Examples
+        --------
+        >>> x = Cn(3).element([5+1j, 3, 2-2j])
+        >>> a = Rn(3).element([0, 0, 0])
+        >>> x.imag = a; print(x)
+        [(5+0j), (3+0j), (2+0j)]
 
-        def conj(self, out=None):
-            """The complex conjugate of this vector.
+        Other array-like types and broadcasting:
 
-            Parameters
-            ----------
-            out : :class:`Fn.Vector`, optional
-                Vector to which the complex conjugate is written.
-                Must be an element of this vector's space.
+        >>> x.imag = 1.0; print(x)
+        [(5+1j), (3+1j), (2+1j)]
+        >>> x.imag = [0, 2, -1]; print(x)
+        [(5+0j), (3+2j), (2-1j)]
+        """
+        self.imag.data[:] = newimag
 
-            Returns
-            -------
-            out : :class:`Fn.Vector`
-                The complex conjugate vector. If ``out`` was
-                provided, it is returned. Otherwise, the complex
-                conjugate is returned as a new vector.
+    def conj(self, out=None):
+        """The complex conjugate of this vector.
 
-            Examples
-            --------
-            >>> x = Cn(3).element([5+1j, 3, 2-2j])
-            >>> y = x.conj(); print(y)
-            [(5-1j), (3-0j), (2+2j)]
+        Parameters
+        ----------
+        out : `FnVector`, optional
+            Vector to which the complex conjugate is written.
+            Must be an element of this vector's space.
 
-            The out parameter allows you to avoid a copy
+        Returns
+        -------
+        out : `FnVector`
+            The complex conjugate vector. If ``out`` was
+            provided, it is returned. Otherwise, the complex
+            conjugate is returned as a new vector.
 
-            >>> z = Cn(3).element()
-            >>> z_out = x.conj(out=z); print(z)
-            [(5-1j), (3-0j), (2+2j)]
-            >>> z_out is z
-            True
+        Examples
+        --------
+        >>> x = Cn(3).element([5+1j, 3, 2-2j])
+        >>> y = x.conj(); print(y)
+        [(5-1j), (3-0j), (2+2j)]
 
-            It can also be used for inplace conj
-            >>> x_out = x.conj(out=x); print(x)
-            [(5-1j), (3-0j), (2+2j)]
-            >>> x_out is x
-            True
-            """
-            if out is None:
-                return self.space.element(self.data.conj())
-            else:
-                self.data.conj(out.data)
-                return out
+        The out parameter allows you to avoid a copy
+
+        >>> z = Cn(3).element()
+        >>> z_out = x.conj(out=z); print(z)
+        [(5-1j), (3-0j), (2+2j)]
+        >>> z_out is z
+        True
+
+        It can also be used for inplace conj
+        >>> x_out = x.conj(out=x); print(x)
+        [(5-1j), (3-0j), (2+2j)]
+        >>> x_out is x
+        True
+        """
+        if out is None:
+            return self.space.element(self.data.conj())
+        else:
+            self.data.conj(out.data)
+            return out
 
 
 class Cn(Fn):
@@ -1189,7 +1202,7 @@ class Cn(Fn):
 
             Only complex floating-point data types are allowed.
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See :class:`Fn`
+            See `Fn`
         """
         super().__init__(size, dtype, **kwargs)
 
@@ -1214,15 +1227,20 @@ class Cn(Fn):
         else:
             return 'Cn({}, {})'.format(self.size, self.dtype)
 
-    class Vector(Fn.Vector):
+    @property
+    def element_type(self):
+        """ `CnVector` """
+        return CnVector
 
-        """A vector in a real :class:`Fn` space
 
-        See also
-        --------
-        Fn.Vector
-        """
-        pass
+class CnVector(FnVector):
+
+    """A vector in a real `Cn` space
+
+    See also
+    --------
+    FnVector
+    """
 
 
 class Rn(Fn):
@@ -1250,7 +1268,7 @@ class Rn(Fn):
 
             Only real floating-point data types are allowed.
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See :class:`Fn`
+            See `Fn`
         """
         super().__init__(size, dtype, **kwargs)
 
@@ -1275,15 +1293,21 @@ class Rn(Fn):
         else:
             return 'Rn({}, {})'.format(self.size, self.dtype)
 
-    class Vector(Fn.Vector):
+    @property
+    def element_type(self):
+        """ `RnVector` """
+        return RnVector
 
-        """A vector in a complex :class:`Fn` space
 
-        See also
-        --------
-        Fn.Vector
-        """
-        pass
+class RnVector(FnVector):
+
+    """A vector in a complex `Fn` space
+
+    See also
+    --------
+    FnVector
+    """
+    pass
 
 
 class MatVecOperator(Operator):
@@ -1295,10 +1319,10 @@ class MatVecOperator(Operator):
 
         Parameters
         ----------
-        dom : :class:`Fn`
+        dom : `Fn`
             Space on whose elements the matrix acts. Its dtype must be
             castable to the range dtype.
-        ran : :class:`Fn`
+        ran : `Fn`
             Space to which the matrix maps
         matrix : array-like or  ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
@@ -1395,7 +1419,7 @@ def _weighting(weight, exponent, dist_using_inner=False):
 
 
 def weighted_inner(weight):
-    """Weighted inner product on :class:`Fn` spaces as free function.
+    """Weighted inner product on `Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1419,7 +1443,7 @@ def weighted_inner(weight):
 
 
 def weighted_norm(weight, exponent=2.0):
-    """Weighted norm on :class:`Fn` spaces as free function.
+    """Weighted norm on `Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1446,7 +1470,7 @@ def weighted_norm(weight, exponent=2.0):
 
 
 def weighted_dist(weight, exponent=2.0, use_inner=False):
-    """Weighted distance on :class:`Fn` spaces as free function.
+    """Weighted distance on `Fn` spaces as free function.
 
     Parameters
     ----------
@@ -1527,7 +1551,7 @@ def _inner_default(x1, x2):
 
 class FnMatrixWeighting(FnWeightingBase):
 
-    """Matrix weighting for :class:`Fn`.
+    """Matrix weighting for `Fn`.
 
     For exponent 2.0, a new weighted inner product with matrix :math:`W`
     is defined as
@@ -1664,7 +1688,7 @@ class FnMatrixWeighting(FnWeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if other is an :class:`FnMatrixWeighting` instance
+            `True` if other is an `FnMatrixWeighting` instance
             with **identical** matrix, `False` otherwise.
 
         See also
@@ -1685,9 +1709,7 @@ class FnMatrixWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if other is an
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
-            with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of this inner product's matrix with the matrix
@@ -1747,7 +1769,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1771,7 +1793,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x : :class:`Fn.Vector`
+        x : `FnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1840,7 +1862,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
 class FnVectorWeighting(FnWeightingBase):
 
-    """Vector weighting for :class:`Fn`.
+    """Vector weighting for `Fn`.
 
     For exponent 2.0, a new weighted inner product with vector :math:`w`
     is defined as
@@ -1899,7 +1921,7 @@ class FnVectorWeighting(FnWeightingBase):
         """
         super().__init__(impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
-        if not isinstance(vector, Fn.Vector):
+        if not isinstance(vector, FnVector):
             self._vector = np.asarray(vector)
         else:
             self._vector = vector
@@ -1925,7 +1947,7 @@ class FnVectorWeighting(FnWeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if other is an :class:`FnVectorWeighting` instance
+            `True` if other is an `FnVectorWeighting` instance
             with **identical** vector, `False` otherwise.
 
         See also
@@ -1946,9 +1968,7 @@ class FnVectorWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is an
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
-            with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
@@ -1972,7 +1992,7 @@ class FnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1996,7 +2016,7 @@ class FnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x : :class:`Fn.Vector`
+        x : `FnVector`
             Vector whose norm is calculated
 
         Returns
@@ -2034,7 +2054,7 @@ class FnVectorWeighting(FnWeightingBase):
 
 class FnConstWeighting(FnWeightingBase):
 
-    """Weighting of :class:`Fn` by a constant.
+    """Weighting of `Fn` by a constant.
 
     For exponent 2.0, a new weighted inner product with constant
     :math:`c` is defined as
@@ -2105,7 +2125,7 @@ class FnConstWeighting(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnConstWeighting`
+            `True` if other is an `FnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
         if other is self:
@@ -2123,13 +2143,11 @@ class FnConstWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if other is an
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
-            with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
-            if ``other`` is an :class:`FnConstWeighting` instance,
-            otherwise the :meth:`equiv` method of ``other`` is called.
+            if ``other`` is an `FnConstWeighting` instance,
+            otherwise the `equiv` method of ``other`` is called.
         """
         if isinstance(other, FnConstWeighting):
             return self == other
@@ -2143,7 +2161,7 @@ class FnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -2164,7 +2182,7 @@ class FnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1 : :class:`Fn.Vector`
+        x1 : `FnVector`
             Vector whose norm is calculated
 
         Returns
@@ -2185,7 +2203,7 @@ class FnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`Fn.Vector`
+        x1, x2 : `FnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -2229,7 +2247,7 @@ class FnConstWeighting(FnWeightingBase):
 
 class FnNoWeighting(FnConstWeighting):
 
-    """Weighting of :class:`Fn` with constant 1.
+    """Weighting of `Fn` with constant 1.
 
     For exponent 2.0, the unweighted inner product is defined as
 
@@ -2308,7 +2326,7 @@ class FnNoWeighting(FnConstWeighting):
 
 class FnCustomInnerProduct(FnWeightingBase):
 
-    """Custom inner product on :class:`Fn`."""
+    """Custom inner product on `Fn`."""
 
     def __init__(self, inner, dist_using_inner=False):
         """Initialize a new instance.
@@ -2317,7 +2335,7 @@ class FnCustomInnerProduct(FnWeightingBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            :class:`Fn.Vector` arguments, return a element from
+            `FnVector` arguments, return a element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
             :math:`x, y, z` and scalars :math:`s`:
@@ -2359,7 +2377,7 @@ class FnCustomInnerProduct(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnCustomInnerProduct`
+            `True` if other is an `FnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
         # TODO: make symmetric
@@ -2383,7 +2401,7 @@ class FnCustomInnerProduct(FnWeightingBase):
 
 class FnCustomNorm(FnWeightingBase):
 
-    """Custom norm on :class:`Fn`, removes ``inner``."""
+    """Custom norm on `Fn`, removes ``inner``."""
 
     def __init__(self, norm):
         """Initialize a new instance.
@@ -2392,7 +2410,7 @@ class FnCustomNorm(FnWeightingBase):
         ----------
         norm : `callable`
             The norm implementation. It must accept an
-            :class:`Fn.Vector` argument, return a `float` and satisfy
+            `FnVector` argument, return a `float` and satisfy
             the following conditions for all vectors
             :math:`x, y` and scalars :math:`s`:
 
@@ -2425,7 +2443,7 @@ class FnCustomNorm(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnCustomNorm`
+            `True` if other is an `FnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
         # TODO: make symmetric
@@ -2446,7 +2464,7 @@ class FnCustomNorm(FnWeightingBase):
 
 class FnCustomDist(FnWeightingBase):
 
-    """Custom distance on :class:`Fn`, removes ``norm`` and ``inner``."""
+    """Custom distance on `Fn`, removes ``norm`` and ``inner``."""
 
     def __init__(self, dist):
         """Initialize a new instance.
@@ -2456,7 +2474,7 @@ class FnCustomDist(FnWeightingBase):
         dist : `callable`
             The distance function defining a metric on
             :math:`\mathbb{F}^n`.
-            It must accept two :class:`Fn.Vector` arguments and
+            It must accept two `FnVector` arguments and
             fulfill the following mathematical conditions for any
             three vectors :math:`x, y, z`:
 
@@ -2491,7 +2509,7 @@ class FnCustomDist(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is an :class:`FnCustomDist`
+            `True` if other is an `FnCustomDist`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, FnCustomDist) and

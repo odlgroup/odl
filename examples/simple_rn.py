@@ -73,7 +73,7 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
                 *args, **kwargs).astype(np.float64, copy=False))
         return self.element(np.empty(self.dim, dtype=np.float64))
 
-    class Vector(odl.space.base_ntuples.FnBase.Vector):
+    class Vector(odl.space.base_ntuples.FnBaseVector):
         def __init__(self, space, data):
             super().__init__(space)
             self.data = data

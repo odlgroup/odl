@@ -1,0 +1,19 @@
+pspace
+======
+
+Cartesian products of `LinearSpace` instances.
+
+.. currentmodule:: odl.set.pspace
+
+
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.set.pspace.ProductSpace
+   ~odl.set.pspace.ProductSpaceVector
+
+

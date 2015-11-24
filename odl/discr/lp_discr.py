@@ -31,7 +31,8 @@ from builtins import super, str
 import numpy as np
 
 # ODL
-from odl.discr.discretization import Discretization, dspace_type
+from odl.discr.discretization import (Discretization, DiscretizationVector,
+                                      dspace_type)
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
 from odl.set.domain import IntervalProd
@@ -43,7 +44,7 @@ if CUDA_AVAILABLE:
 else:
     CudaFn = type(None)
 
-__all__ = ('DiscreteLp', 'uniform_discr')
+__all__ = ('DiscreteLp', 'DiscreteLpVector', 'uniform_discr')
 
 _SUPPORTED_INTERP = ('nearest',)
 
@@ -60,14 +61,14 @@ class DiscreteLp(Discretization):
 
         Parameters
         ----------
-        fspace : :class:`~odl.FunctionSpace`
+        fspace : `FunctionSpace`
             The continuous space to be discretized
-        grid : :class:`~odl.TensorGrid`
+        grid : `TensorGrid`
             The sampling grid for the discretization. Must be contained
             in ``fspace.domain``.
-        dspace : :class:`~odl.space.base_ntuples.FnBase`
+        dspace : `FnBase`
             Space of elements used for data storage. It must have the
-            same :attr:`~odl.space.base_ntuples.FnBase.field` as
+            same `FnBase.field` as
             ``fspace``
         exponent : positive `float`, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
@@ -125,23 +126,23 @@ class DiscreteLp(Discretization):
         ----------
         inp : `object`, optional
             The input data to create an element from. Must be
-            recognizable by the :meth:`~odl.LinearSpace.element` method
-            of either :attr:`~odl.RawDiscretization.dspace` or
-            :attr:`~odl.RawDiscretization.uspace`.
+            recognizable by the `LinearSpace.element` method
+            of either `RawDiscretization.dspace` or
+            `RawDiscretization.uspace`.
 
         Returns
         -------
-        element : :class:`DiscreteLp.Vector`
+        element : `DiscreteLpVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
             ``restriction(uspace.element(inp))``, tried in this order.
         """
         if inp is None:
-            return self.Vector(self, self.dspace.element())
+            return self.element_type(self, self.dspace.element())
         elif inp in self.dspace:
-            return self.Vector(self, inp)
+            return self.element_type(self, inp)
         elif inp in self.uspace:
-            return self.Vector(
+            return self.element_type(
                 self, self.restriction(self.uspace.element(inp)))
         else:  # Sequence-type input
             arr = np.asarray(inp, dtype=self.dtype, order=self.order)
@@ -149,7 +150,7 @@ class DiscreteLp(Discretization):
                 raise ValueError('input shape {} does not match grid shape {}'
                                  ''.format(arr.shape, self.grid.shape))
             arr = arr.flatten(order=self.order)
-            return self.Vector(self, self.dspace.element(arr))
+            return self.element_type(self, self.dspace.element(arr))
 
     @property
     def grid(self):
@@ -217,138 +218,182 @@ class DiscreteLp(Discretization):
         """``lp.__str__() <==> str(lp)``."""
         return self.__repr__()
 
-    class Vector(Discretization.Vector):
+    @property
+    def element_type(self):
+        """ `DiscreteLpVector` """
+        return DiscreteLpVector
 
-        """Representation of a :class:`DiscreteLp` element."""
 
-        def asarray(self, out=None):
-            """Extract the data of this array as a numpy array.
+class DiscreteLpVector(DiscretizationVector):
 
-            Parameters
-            ----------
-            out : `numpy.ndarray`, optional
-                Array in which the result should be written in-place.
-                Has to be contiguous and of the correct dtype and
-                shape.
-            """
-            if out is None:
-                return super().asarray().reshape(self.space.grid.shape,
-                                                 order=self.space.order)
+    """Representation of a `DiscreteLp` element."""
+
+    def asarray(self, out=None):
+        """Extract the data of this array as a numpy array.
+
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype and
+            shape.
+        """
+        if out is None:
+            return super().asarray().reshape(self.space.grid.shape,
+                                             order=self.space.order)
+        else:
+            if out.shape not in (self.space.grid.shape,
+                                 (self.space.grid.ntotal,)):
+                raise ValueError('output array has shape {}, expected '
+                                 '{} or ({},).'
+                                 ''.format(out.shape,
+                                           self.space.grid.shape,
+                                           self.space.grid.ntotal))
+            out_r = out.reshape(self.space.grid.shape,
+                                order=self.space.order)
+            if out_r.flags.c_contiguous:
+                out_order = 'C'
+            elif out_r.flags.f_contiguous:
+                out_order = 'F'
             else:
-                if out.shape not in (self.space.grid.shape,
-                                     (self.space.grid.ntotal,)):
-                    raise ValueError('output array has shape {}, expected '
-                                     '{} or ({},).'
-                                     ''.format(out.shape,
-                                               self.space.grid.shape,
-                                               self.space.grid.ntotal))
-                out_r = out.reshape(self.space.grid.shape,
-                                    order=self.space.order)
-                if out_r.flags.c_contiguous:
-                    out_order = 'C'
-                elif out_r.flags.f_contiguous:
-                    out_order = 'F'
-                else:
-                    raise ValueError('output array not contiguous.')
+                raise ValueError('output array not contiguous.')
 
-                if out_order != self.space.order:
-                    raise ValueError('output array has ordering {!r}, '
-                                     'expected {!r}.'
-                                     .format(self.space.order, out_order))
+            if out_order != self.space.order:
+                raise ValueError('output array has ordering {!r}, '
+                                 'expected {!r}.'
+                                 ''.format(self.space.order, out_order))
 
-                super().asarray(out=out.ravel(order=self.space.order))
-                return out
+            super().asarray(out=out.ravel(order=self.space.order))
+            return out
 
-        @property
-        def ndim(self):
-            """Number of dimensions."""
-            return self.space.grid.ndim
+    @property
+    def ndim(self):
+        """Number of dimensions."""
+        return self.space.grid.ndim
 
-        @property
-        def shape(self):
-            # override shape
-            return self.space.grid.shape
+    @property
+    def shape(self):
+        # override shape
+        return self.space.grid.shape
 
-        def __setitem__(self, indices, values):
-            """Set values of this vector.
+    def __setitem__(self, indices, values):
+        """Set values of this vector.
 
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be set
-            values : {scalar, array-like, :class:`~odl.Ntuples.Vector`}
-                The value(s) that are to be assigned.
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like, `NtuplesVector`}
+            The value(s) that are to be assigned.
+            If ``indices`` is an `int`, ``values`` must be a single
+            value.
+            If ``indices`` is a `slice`, ``values`` must be
+            broadcastable to the size of the slice (same size,
+            shape ``(1,)`` or single value).
+            For ``indices==slice(None, None, None)``, i.e. in the call
+            ``vec[:] = values``, a multi-dimensional array of correct
+            shape is allowed as ``values``.
+        """
+        if values in self.space:
+            self.ntuple.__setitem__(indices, values.ntuple)
+        else:
+            if indices == slice(None, None, None):
+                values = np.atleast_1d(values)
+                if (values.ndim > 1 and
+                        values.shape != self.space.grid.shape):
+                    raise ValueError('shape {} of value array {} not equal'
+                                     ' to sampling grid shape {}.'
+                                     ''.format(values.shape, values,
+                                               self.space.grid.shape))
+                values = values.ravel(order=self.space.order)
 
-                If ``indices`` is an `int`, ``values`` must be a single
-                value.
+            super().__setitem__(indices, values)
 
-                If ``indices`` is a `slice`, ``values`` must be
-                broadcastable to the size of the slice (same size,
-                shape ``(1,)`` or single value).
-                For ``indices==slice(None, None, None)``, i.e. in the call
-                ``vec[:] = values``, a multi-dimensional array of correct
-                shape is allowed as ``values``.
-            """
-            if values in self.space:
-                self.ntuple.__setitem__(indices, values.ntuple)
-            else:
-                if indices == slice(None, None, None):
-                    values = np.atleast_1d(values)
-                    if (values.ndim > 1 and
-                            values.shape != self.space.grid.shape):
-                        raise ValueError('shape {} of value array {} not equal'
-                                         ' to sampling grid shape {}.'
-                                         ''.format(values.shape, values,
-                                                   self.space.grid.shape))
-                    values = values.ravel(order=self.space.order)
+    def show(self, method='', title='', indices=None, **kwargs):
+        """Create a figure displaying the function in 1d or 2d.
 
-                super().__setitem__(indices, values)
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like, `NtuplesVector`}
+            The value(s) that are to be assigned.
 
-        def show(self, method='', title='', indices=None, **kwargs):
-            """Create a figure displaying the function in 1d or 2d.
+            If ``indices`` is an `int`, ``values`` must be a single
+            value.
 
-            Parameters
-            ----------
-            method : `str`, optional
-                1d methods:
+            If ``indices`` is a `slice`, ``values`` must be
+            broadcastable to the size of the slice (same size,
+            shape ``(1,)`` or single value).
+            For ``indices==slice(None, None, None)``, i.e. in the call
+            ``vec[:] = values``, a multi-dimensional array of correct
+            shape is allowed as ``values``.
+        """
+        if values in self.space:
+            self.ntuple.__setitem__(indices, values.ntuple)
+        else:
+            if indices == slice(None, None, None):
+                values = np.atleast_1d(values)
+                if (values.ndim > 1 and
+                        values.shape != self.space.grid.shape):
+                    raise ValueError('shape {} of value array {} not equal'
+                                     ' to sampling grid shape {}.'
+                                     ''.format(values.shape, values,
+                                               self.space.grid.shape))
+                values = values.ravel(order=self.space.order)
 
-                'plot' : graph plot
+            super().__setitem__(indices, values)
 
-                2d methods:
+    def show(self, method='', title='', **kwargs):
+        """Create a figure displaying the function in 1d or 2d.
 
-                'imshow' : image plot with coloring according to value,
-                including a colorbar.
+        Parameters
+        ----------
+        method : `str`, optional
+            1d methods:
 
-                'scatter' : cloud of scattered 3d points
-                (3rd axis <-> value)
+        'plot' : graph plot
 
-                'wireframe', 'plot_wireframe' : surface plot
+        2d methods:
 
-            indices : index expression
-                Display a slice of the array instead of the full array.
-                The index expression is most easily created with the
-                `numpy.s_` constructur, i.e. supply ``np.s_[:, 1, :]``
-                to display the first slice along the second axis.
+        'imshow' : image plot with coloring according to value,
+        including a colorbar.
 
-            title : `str`, optional
-                Set the title of the figure
-            kwargs : {'figsize', 'saveto', ...}
-                Extra keyword arguments passed on to display method
-                See the Matplotlib functions for documentation of extra
-                options.
+        'scatter' : cloud of scattered 3d points
+        (3rd axis <-> value)
 
-            See Also
-            --------
-            matplotlib.pyplot.plot : Show graph plot
+        indices : index expression
+            Display a slice of the array instead of the full array.
+            The index expression is most easily created with the
+            `numpy.s_` constructur, i.e. supply ``np.s_[:, 1, :]``
+            to display the first slice along the second axis.
 
-            matplotlib.pyplot.imshow : Show data as image
+        title : `str`, optional
+            Set the title of the figure
+        kwargs : {'figsize', 'saveto', ...}
+            Extra keyword arguments passed on to display method
+            See the Matplotlib functions for documentation of extra
+            options.
 
-            matplotlib.pyplot.scatter : Show scattered 3d points
-            """
+        title : `str`, optional
+            Set the title of the figure
+        kwargs : {'figsize', 'saveto', ...}
+            Extra keyword arguments passed on to display method
+            See the Matplotlib functions for documentation of extra
+            options.
 
-            from odl.util.graphics import show_discrete_function
-            show_discrete_function(self, method=method, title=title,
-                                   indices=indices, **kwargs)
+        See Also
+        --------
+        matplotlib.pyplot.plot : Show graph plot
+
+        matplotlib.pyplot.imshow : Show data as image
+
+        matplotlib.pyplot.scatter : Show scattered 3d points
+        """
+
+        from odl.util.graphics import show_discrete_function
+        show_discrete_function(self, method=method, title=title,
+                               indices=indices, **kwargs)
 
 
 def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
@@ -357,9 +402,9 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    fspace : :class:`~odl.FunctionSpace`
+    fspace : `FunctionSpace`
         Continuous function space. Its domain must be an
-        :class:`~odl.IntervalProd` instance.
+        `IntervalProd` instance.
     nsamples : `int` or `tuple` of `int`
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
@@ -392,7 +437,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Returns
     -------
-    discr : :class:`DiscreteLp`
+    discr : `DiscreteLp`
         The uniformly discretized function space
     """
     if not isinstance(fspace, FunctionSpace):

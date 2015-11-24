@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Default operators defined on any :class:`odl.PowerSpace`."""
+"""Default operators defined on any `ProductSpace`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -43,26 +43,26 @@ class ProductSpaceOperator(Operator):
     as a linear combination of "sub-operators", e.g.
 
         :math:`\\left(
-        \\begin{array} \\~
+        \\begin{array}{ccc}
         A & B & 0 \\\\
         0 & C & 0 \\\\
         0 & 0 & D
         \end{array}\\right)
         \\left(
-        \\begin{array} \\~
+        \\begin{array}{c}
         x \\\\
         y \\\\
         z
         \end{array}\\right)
         =
         \\left(
-        \\begin{array} \\~
+        \\begin{array}{c}
         A(x) + B(y) \\\\
         C(y) \\\\
         D(z)
         \end{array}\\right)`
 
-    Mathematically, a :class:`ProductSpaceOperator` is an operator
+    Mathematically, a `ProductSpaceOperator` is an operator
 
         :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}`
 
@@ -89,12 +89,12 @@ class ProductSpaceOperator(Operator):
         Parameters
         ----------
         operators : array-like
-            An array of :class:`~odl.Operator`'s
-        dom : :class:`~odl.ProductSpace`
+            An array of `Operator`'s
+        dom : `ProductSpace`
             Domain of the operator. If not provided, it is tried to be
             inferred from the operators. This requires each **column**
             to contain at least one operator.
-        ran : :class:`~odl.ProductSpace`
+        ran : `ProductSpace`
             Range of the operator. If not provided, it is tried to be
             inferred from the operators. This requires each **row**
             to contain at least one operator.
@@ -206,7 +206,7 @@ class ProductSpaceOperator(Operator):
 
         Examples
         --------
-        See :meth:`_call`
+        See `_call`
         """
         has_evaluated_row = np.zeros(self.range.size, dtype=bool)
         for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
@@ -287,7 +287,7 @@ class ProductSpaceOperator(Operator):
 
         Returns
         -------
-        adjoint : :class:`ProductSpaceOperator`
+        adjoint : `ProductSpaceOperator`
             The adjoint
 
         Examples
@@ -349,12 +349,12 @@ class ComponentProjection(Operator):
         """
         Parameters
         ----------
-        space : :class:`~odl.ProductSpace`
+        space : `ProductSpace`
             The space to project from
         index : `int`, `slice`, or `iterable` [int]
             The indices defining the subspace. If ``index`` is not
-            and `int`, the :attr:`~odl.Operator.range` of this
-            operator is also a :class:`~odl.ProductSpace`.
+            and `int`, the `Operator.range` of this
+            operator is also a `ProductSpace`.
 
         Examples
         --------
@@ -376,8 +376,13 @@ class ComponentProjection(Operator):
         >>> proj.range
         ProductSpace(Rn(1), Rn(3))
         """
-        self.index = index
+        self._index = index
         super().__init__(space, space[index], linear=True)
+
+    @property
+    def index(self):
+        """ Index of the subspace. """
+        return self._index
 
     def _apply(self, x, out):
         """Project x onto subspace in-place.
@@ -431,8 +436,8 @@ class ComponentProjection(Operator):
     def adjoint(self):
         """Return the adjoint operator.
 
-        The adjoint is given by extending along :attr:`index`, and
-        setting zero along the others.
+        The adjoint is given by extending along `ComponentProjection.index`,
+        and setting zero along the others.
 
         See also
         --------
@@ -443,12 +448,12 @@ class ComponentProjection(Operator):
 
 class ComponentProjectionAdjoint(Operator):
 
-    """Adjoint operator to :class:~`ComponentProjection`.
+    """Adjoint operator to `ComponentProjection`.
 
-    As a special case of the adjoint of a :class:`ProductSpaceOperator`,
+    As a special case of the adjoint of a `ProductSpaceOperator`,
     this operator is given as a column vector of identity operators
     and zero operators, with the identities placed in the positions
-    defined by :attr:`index`.
+    defined by `ComponentProjectionAdjoint.index`.
 
     In weighted product spaces, the adjoint needs to take the
     weightings into account. This is currently not supported.
@@ -458,7 +463,7 @@ class ComponentProjectionAdjoint(Operator):
         """
         Parameters
         ----------
-        space : :class:`~odl.ProductSpace`
+        space : `ProductSpace`
             The space to project to
         index : `int`, `slice`, or `iterable` [int]
             The indexes to project from
@@ -483,13 +488,18 @@ class ComponentProjectionAdjoint(Operator):
         >>> proj.domain
         ProductSpace(Rn(1), Rn(3))
         """
-        self.index = index
+        self._index = index
         super().__init__(space[index], space, linear=True)
+
+    @property
+    def index(self):
+        """ Index of the subspace. """
+        return self._index
 
     def _apply(self, x, out):
         """Evaluate this operator in-place.
 
-        Extend ``x`` from the subspace related to :attr:`index`.
+        Extend ``x`` from the subspace related to `index`.
 
         See also
         --------
@@ -501,7 +511,7 @@ class ComponentProjectionAdjoint(Operator):
     def _call(self, x):
         """Evaluate this operator out-of-place.
 
-        Extend ``x`` from the subspace related to :attr:`index`.
+        Extend ``x`` from the subspace related to `index`.
 
         Parameters
         ----------
@@ -550,8 +560,8 @@ class ComponentProjectionAdjoint(Operator):
     def adjoint(self):
         """The adjoint operator.
 
-        The adjoint is given by the :class:`ComponentProjection`
-        related to this operator's :attr:`index`.
+        The adjoint is given by the `ComponentProjection`
+        related to this operator's `index`.
 
         See also
         --------

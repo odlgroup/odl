@@ -80,8 +80,8 @@ class TensorGrid(Set):
         kwargs : {'as_midp', 'order'}
             'as_midp' : `bool`, optional  (Default: `False`)
                 Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of :meth:`min`, :meth:`max` and
-                :meth:`cell_sizes`.
+                This influences the behavior of `min`, `max` and
+                `cell_sizes`.
             'order' : {'C', 'F'}, optional
                 Ordering of the grid axes. 'C' means the first axis
                 varies slowest, the last axis fastest; vice versa for
@@ -220,7 +220,7 @@ class TensorGrid(Set):
         """Return vector with minimal cell coordinates per axis.
 
         This is relevant if the grid was initialized with
-        :attr:`as_midp` ``True``, in which case the minimum is half a cell
+        `as_midp` ``True``, in which case the minimum is half a cell
         smaller than the minimum grid point.
 
         Examples
@@ -244,7 +244,7 @@ class TensorGrid(Set):
         """Return vector with maximal cell coordinates per axis.
 
         This is relevant if the grid was initialized with
-        :attr:`as_midp` ``True``, in which case the maximum is half a cell
+        `as_midp` ``True``, in which case the maximum is half a cell
         larger than the maximum grid point.
 
         Examples
@@ -288,7 +288,7 @@ class TensorGrid(Set):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`~odl.TensorGrid` instance with all
+            `True` if ``other`` is a `TensorGrid` instance with all
             coordinate vectors equal (up to the given tolerance), to
             the ones of this grid, otherwise `False`.
 
@@ -356,7 +356,7 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other :  :class:`~odl.TensorGrid`
+        other :  `TensorGrid`
             The other grid which is supposed to contain this grid
         tol : `float`
             Allow deviations up to this number in absolute value
@@ -398,12 +398,12 @@ class TensorGrid(Set):
 
         The given grid (``m`` dimensions) is inserted into the current
         one (``n`` dimensions) before the given index, resulting in a new
-        :class:`~odl.TensorGrid` with ``n + m`` dimensions.
+        `TensorGrid` with ``n + m`` dimensions.
         Note that no changes are made in-place.
 
         Parameters
         ----------
-        other :  :class:`~odl.TensorGrid`, `float` or array-like
+        other :  `TensorGrid`, `float` or array-like
             The grid to be inserted. A `float` or array ``a`` is treated as
             ``TensorGrid(a)``.
         index : `numbers.Integral`
@@ -412,7 +412,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        newgrid : :class:`~odl.TensorGrid`
+        newgrid : `TensorGrid`
             The enlarged grid
 
         Examples
@@ -442,7 +442,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        squeezed : :class:`TensorGrid`
+        squeezed : `TensorGrid`
             The squeezed grid
 
         Examples
@@ -555,7 +555,7 @@ class TensorGrid(Set):
         -------
         csizes : `tuple` of `numpy.ndarray`
             The cell sizes per axis. The length of the vectors will be
-            one less than :attr:`coord_vectors` if :attr:`as_midp` is `False`,
+            one less than `coord_vectors` if `as_midp` is `False`,
             otherwise they will have the same length.
             For axes with 1 grid point, cell size is set to 0.
 
@@ -623,7 +623,7 @@ class TensorGrid(Set):
         return sparse_meshgrid(*self.coord_vectors, order=self.order)
 
     def convex_hull(self):
-        """The "inner" of the grid, an :class:`~odl.IntervalProd`.
+        """The "inner" of the grid, an `IntervalProd`.
 
         The convex hull of a set is the union of all line segments
         between points in the set. For a tensor grid, it is the
@@ -631,9 +631,9 @@ class TensorGrid(Set):
 
         Returns
         -------
-        chull : :class:`~odl.IntervalProd`
+        chull : `IntervalProd`
             Interval product defined by the minimum and maximum of
-            the grid (depends on :attr:`as_midp`)
+            the grid (depends on `as_midp`)
 
         Examples
         --------
@@ -770,8 +770,8 @@ class RegularGrid(TensorGrid):
         kwargs : {'as_midp'}
             'as_midp' : `bool`, optional
                 Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of :meth:`TensorGrid.min`,
-                :meth:`TensorGrid.max` and :meth:`TensorGrid.cell_sizes`.
+                This influences the behavior of `TensorGrid.min`,
+                `TensorGrid.max` and `TensorGrid.cell_sizes`.
 
                 Default: `False`
 
@@ -925,12 +925,12 @@ class RegularGrid(TensorGrid):
 
         The given grid (``m`` dimensions) is inserted into the current
         one (``n`` dimensions) before the given index, resulting in a new
-        :class:`RegularGrid` with ``n + m`` dimensions.
+        `RegularGrid` with ``n + m`` dimensions.
         Note that no changes are made in-place.
 
         Parameters
         ----------
-        grid : :class:`RegularGrid`
+        grid : `RegularGrid`
             The grid to be inserted.
         index : `numbers.Integral`
             The index of the dimension before which 'other' is to
@@ -938,7 +938,7 @@ class RegularGrid(TensorGrid):
 
         Returns
         -------
-        newgrid : :class:`RegularGrid`
+        newgrid : `RegularGrid`
             The enlarged grid
 
         Examples
@@ -971,7 +971,7 @@ class RegularGrid(TensorGrid):
 
         Returns
         -------
-        squeezed : :class:`RegularGrid`
+        squeezed : `RegularGrid`
             The squeezed grid
 
         Examples
@@ -1106,7 +1106,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
 
     Parameters
     ----------
-    intv_prod : :class:`~odl.IntervalProd`
+    intv_prod : `IntervalProd`
         Set to be sampled
     num_nodes : `int` or `tuple` of `int`
         Number of nodes per axis. For dimension >= 2, a `tuple`
@@ -1121,7 +1121,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
 
     Returns
     -------
-    sampling : :class:`RegularGrid`
+    sampling : `RegularGrid`
         Uniform sampling grid for the interval product
 
     Examples

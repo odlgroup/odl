@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Abstract mathematical (linear) operators."""
+"""Abstract mathematical operators."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -29,14 +29,15 @@ from abc import ABCMeta
 from numbers import Number, Integral
 
 # ODL imports
-from odl.set.space import LinearSpace, UniversalSpace
+from odl.set.space import (LinearSpace, LinearSpaceVector,
+                           UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
            'FunctionalLeftVectorMult',
            'OperatorLeftVectorMult', 'OperatorRightVectorMult',
-           'OperatorPointwiseProduct')
+           'OperatorPointwiseProduct', 'simple_operator')
 
 
 def _bound_method(function):
@@ -98,13 +99,13 @@ def _default_apply(self, x, out, *args, **kwargs):
 
 class _OperatorMeta(ABCMeta):
 
-    """Metaclass used by :class:`Operator` to ensure correct methods.
+    """Metaclass used by `Operator` to ensure correct methods.
 
     If either ``_apply()`` or ``_call()`` does not exist in the class
     to be created, this metaclass attempts to add a default
     implmentation.
-    This only works if the :attr:`Operator.range` is a
-    :class:`~odl.LinearSpace`.
+    This only works if the `Operator.range` is a
+    `LinearSpace`.
     """
 
     def __new__(mcs, name, bases, attrs):
@@ -140,16 +141,16 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     **Abstract attributes and methods**
 
-    :class:`Operator` is an **abstract** class, i.e. it can only be
+    `Operator` is an **abstract** class, i.e. it can only be
     subclassed, not used directly.
 
-    Any subclass of :class:`Operator` **must** have the following
+    Any subclass of `Operator` **must** have the following
     attributes:
 
-    ``domain`` : :class:`~odl.Set`
+    ``domain`` : `Set`
         The set of elements this operator can be applied to
 
-    ``range`` : :class:`~odl.Set`
+    ``range`` : `Set`
         The set this operator maps to
 
     It is **highly** recommended to call
@@ -157,9 +158,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     ``from builtins import super`` in Python 2) in the ``__init__()``
     method of any subclass, where ``dom`` and ``ran`` are the arguments
     specifying domain and range of the new
-    operator. In that case, the attributes :attr:`Operator.domain` and
-    :attr:`Operator.range` are automatically provided by
-    :class:`Operator`.
+    operator. In that case, the attributes `Operator.domain` and
+    `Operator.range` are automatically provided by
+    `Operator`.
 
     In addition, any subclass **must** implement **at least one** of the
     methods ``_apply()`` and ``_call()``, which are explained in the
@@ -175,11 +176,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     **Parameters:**
 
-    x : :attr:`Operator.domain` element
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied.
 
-    out : :attr:`Operator.range` element
+    out : `Operator.range` element
         An object in the operator range to which the result of the
         operator evaluation is written.
 
@@ -197,18 +198,18 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     **Parameters:**
 
-    x : :attr:`Operator.domain` element
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied.
 
-    out : :attr:`Operator.range` element
+    out : `Operator.range` element
         An object in the operator range to which the result of the
         operator evaluation is written.
 
     Notes
     -----
     If not both ``_apply()`` and ``_call()`` are implemented and the
-    :attr:`Operator.range` is a :class:`~odl.LinearSpace`, a default
+    `Operator.range` is a `LinearSpace`, a default
     implementation of the respective other is provided.
     """
 
@@ -217,11 +218,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        dom : :class:`~odl.Set`
+        dom : `Set`
             The domain of this operator, i.e., the set of elements to
             which this operator can be applied
 
-        ran : :class:`~odl.Set`
+        ran : `Set`
             The range of this operator, i.e., the set this operator
             maps to
         """
@@ -260,7 +261,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     @property
     def is_functional(self):
-        """`True` if the this operator's range is a :class:`~odl.Field`."""
+        """`True` if the this operator's range is a `Field`."""
         return self._is_functional
 
     @property
@@ -292,11 +293,11 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        x : :attr:`Operator.domain` element
+        x : `Operator.domain` element
             An object in the operator domain to which the operator is
             applied. The object is treated as immutable, hence it is
             not modified during evaluation.
-        out : :attr:`Operator.range` element, optional
+        out : `Operator.range` element, optional
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
@@ -304,7 +305,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Returns
         -------
-        elem : :attr:`Operator.range` element
+        elem : `Operator.range` element
             An object in the operator range, the result of the operator
             evaluation. It is identical to ``out`` if provided.
 
@@ -386,34 +387,34 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        other : {:class:`Operator`, :class:`~odl.LinearSpace.Vector`, scalar}
-            :class:`Operator`:
-                The :attr:`Operator.domain` of ``other`` must match this
-                operator's :attr:`Operator.range`.
+        other : {`Operator`, `LinearSpaceVector`, scalar}
+            `Operator`:
+                The `Operator.domain` of ``other`` must match this
+                operator's `Operator.range`.
 
-            :class:`~odl.LinearSpace.Vector`:
+            `LinearSpaceVector`:
                 ``other`` must be an element of this operator's
-                :attr:`Operator.domain`.
+                `Operator.domain`.
 
             scalar:
-                The :attr:`Operator.domain` of this operator must be a
-                :class:`~odl.LinearSpace` and ``other`` must be an
+                The `Operator.domain` of this operator must be a
+                `LinearSpace` and ``other`` must be an
                 element of the ``field`` of this operator's
-                :attr:`Operator.domain`.
+                `Operator.domain`.
 
         Returns
         -------
-        mul : :class:`Operator`
+        mul : `Operator`
             The multiplication operator.
 
             If ``other`` is an operator, ``mul`` is an
-            :class:`OperatorComp`.
+            `OperatorComp`.
 
             If ``other`` is a scalar, ``mul`` is an
-            :class:`OperatorRightScalarMult`.
+            `OperatorRightScalarMult`.
 
             If ``other`` is a vector, ``mul`` is an
-            :class:`OperatorRightVectorMult`.
+            `OperatorRightVectorMult`.
 
         Examples
         --------
@@ -436,7 +437,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                 return OperatorLeftScalarMult(self, other)
             else:
                 return OperatorRightScalarMult(self, other)
-        elif isinstance(other, LinearSpace.Vector) and other in self.domain:
+        elif isinstance(other, LinearSpaceVector) and other in self.domain:
             return OperatorRightVectorMult(self, other.copy())
         else:
             return NotImplemented
@@ -444,14 +445,14 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __matmul__(self, other):
         """``op.__matmul__(other) <==> op @ other``.
 
-        See :meth:`Operator.__mul__`
+        See `Operator.__mul__`
         """
         return self.__mul__(other)
 
     def __rmul__(self, other):
         """``op.__rmul__(s) <==> s * op``.
 
-        If ``other`` is an :class:`Operator`, this corresponds to
+        If ``other`` is an `Operator`, this corresponds to
         operator composition:
 
         ``op1 * op2 <==> (x --> op1(op2(x)))``
@@ -471,32 +472,32 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Parameters
         ----------
-        other : {:class:`Operator`, :class:`~odl.LinearSpace.Vector`, scalar}
-            :class:`Operator`:
-                The :attr:`Operator.range` of ``other`` must match this
-                operator's :attr:`Operator.domain`
+        other : {`Operator`, `LinearSpaceVector`, scalar}
+            `Operator`:
+                The `Operator.range` of ``other`` must match this
+                operator's `Operator.domain`
 
-            :class:`~odl.LinearSpace.Vector`:
-                ``other`` must be an element of :attr:`Operator.range`.
+            `LinearSpaceVector`:
+                ``other`` must be an element of `Operator.range`.
 
             scalar:
-                :attr:`Operator.range` must be a
-                :class:`~odl.LinearSpace` and ``other`` must be an
+                `Operator.range` must be a
+                `LinearSpace` and ``other`` must be an
                 element of ``self.range.field``.
 
         Returns
         -------
-        mul : :class:`Operator`
+        mul : `Operator`
             The multiplication operator.
 
             If ``other`` is an operator, ``mul`` is an
-            :class:`OperatorComp`.
+            `OperatorComp`.
 
             If ``other`` is a scalar, ``mul`` is an
-            :class:`OperatorLeftScalarMult`.
+            `OperatorLeftScalarMult`.
 
             If ``other`` is a vector, ``mul`` is an
-            :class:`OperatorLeftVectorMult`.
+            `OperatorLeftVectorMult`.
 
         Examples
         --------
@@ -516,7 +517,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return OperatorLeftScalarMult(self, other)
         elif other in self.range:
             return OperatorLeftVectorMult(self, other.copy())
-        elif (isinstance(other, LinearSpace.Vector) and
+        elif (isinstance(other, LinearSpaceVector) and
               other.space.field == self.range):
             return FunctionalLeftVectorMult(self, other.copy())
         else:
@@ -525,7 +526,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     def __rmatmul__(self, other):
         """``op.__rmatmul__(other) <==> other @ op``.
 
-        See :meth:`Operator.__rmul__`
+        See `Operator.__rmul__`
         """
         return self.__rmul__(other)
 
@@ -546,9 +547,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         Returns
         -------
-        pow : :class:`Operator`
+        pow : `Operator`
             The power of this operator. If ``n == 1``, ``pow`` is
-            this operator, for ``n > 1``, a :class:`OperatorComp`
+            this operator, for ``n > 1``, a `OperatorComp`
 
         Examples
         --------
@@ -585,13 +586,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Parameters
         ----------
         other : scalar
-            If :attr:`Operator.range` is a :class:`~odl.LinearSpace`,
+            If `Operator.range` is a `LinearSpace`,
             ``scalar`` must be an element of this operator's
             ``field``.
 
         Returns
         -------
-        rmul : :class:`OperatorRightScalarMult`
+        rmul : `OperatorRightScalarMult`
             The 'divided' operator.
 
         Examples
@@ -642,7 +643,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     # Give a `Operator` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Operator` if the other operand
     # is a NumPy object (applies also to scalars!).
-    # Set higher than Space.Vector.__array_priority__ to handle mult with
+    # Set higher than LinearSpaceVector.__array_priority__ to handle mult with
     # vector properly
     __array_priority__ = 2000000.0
 
@@ -653,8 +654,8 @@ class OperatorSum(Operator):
 
     ``OperatorSum(op1, op2) <==> (x --> op1(x) + op2(x))``
 
-    The sum is only well-defined for :class:`Operator` instances where
-    :attr:`Operator.range` is a :class:`~odl.LinearSpace`.
+    The sum is only well-defined for `Operator` instances where
+    `Operator.range` is a `LinearSpace`.
 
     """
 
@@ -664,17 +665,17 @@ class OperatorSum(Operator):
 
         Parameters
         ----------
-        op1 : :class:`Operator`
-            The first summand. Its :attr:`Operator.range` must be a
-            :class:`~odl.LinearSpace` or :class:`~odl.Field`.
-        op2 : :class:`Operator`
+        op1 : `Operator`
+            The first summand. Its `Operator.range` must be a
+            `LinearSpace` or `Field`.
+        op2 : `Operator`
             The second summand. Must have the same
-            :attr:`Operator.domain` and :attr:`Operator.range` as
+            `Operator.domain` and `Operator.range` as
             ``op1``.
-        tmp_ran : :attr:`Operator.range` element, optional
+        tmp_ran : `Operator.range` element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
-        tmp_dom : :attr:`Operator.domain` element, optional
+        tmp_dom : `Operator.domain` element, optional
             Used to avoid the creation of a temporary when applying the
             operator adjoint.
         """
@@ -790,13 +791,13 @@ class OperatorComp(Operator):
     """
 
     def __init__(self, left, right, tmp=None):
-        """Initialize a new :class:`OperatorComp` instance.
+        """Initialize a new `OperatorComp` instance.
 
         Parameters
         ----------
-        left : :class:`Operator`
+        left : `Operator`
             The left ("outer") operator
-        right : :class:`Operator`
+        right : `Operator`
             The right ("inner") operator. Its range must coincide with the
             domain of ``left``.
         tmp : element of the range of ``right``, optional
@@ -897,9 +898,9 @@ class OperatorPointwiseProduct(Operator):
 
         Parameters
         ----------
-        op1 : :class:`Operator`
+        op1 : `Operator`
             The first factor
-        op2 : :class:`Operator`
+        op2 : `Operator`
             The second factor. Must have the same domain and range as
             ``op1``.
         """
@@ -949,17 +950,17 @@ class OperatorLeftScalarMult(Operator):
     ``OperatorLeftScalarMult(op, scalar) <==> (x --> scalar * op(x))``
 
     The scalar multiplication is well-defined only if ``op.range`` is
-    a :class:`~odl.LinearSpace`.
+    a `LinearSpace`.
     """
 
     def __init__(self, op, scalar):
-        """Initialize a new :class:`OperatorLeftScalarMult` instance.
+        """Initialize a new `OperatorLeftScalarMult` instance.
 
         Parameters
         ----------
-        op : :class:`Operator`
-            The range of ``op`` must be a :class:`~odl.LinearSpace`
-            or :class:`~odl.Field`.
+        op : `Operator`
+            The range of ``op`` must be a `LinearSpace`
+            or `Field`.
         scalar : ``op.range.field`` element
             A real or complex number, depending on the field of
             the range.
@@ -1051,17 +1052,17 @@ class OperatorRightScalarMult(Operator):
     ``OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))``
 
     The scalar multiplication is well-defined only if ``op.domain`` is
-    a :class:`~odl.LinearSpace`.
+    a `LinearSpace`.
     """
 
     def __init__(self, op, scalar, tmp=None):
-        """Initialize a new :class:`OperatorLeftScalarMult` instance.
+        """Initialize a new `OperatorLeftScalarMult` instance.
 
         Parameters
         ----------
-        op : :class:`Operator`
-            The domain of ``op`` must be a :class:`~odl.LinearSpace` or
-            :class:`~odl.Field`.
+        op : `Operator`
+            The domain of ``op`` must be a `LinearSpace` or
+            `Field`.
         scalar : ``op.range.field`` element
             A real or complex number, depending on the field of
             the operator domain.
@@ -1158,27 +1159,27 @@ class FunctionalLeftVectorMult(Operator):
 
     """Expression type for the functional left vector multiplication.
 
-    A functional is a :class:`Operator` whose :attr:`Operator.range` is
-    a :class:`~odl.Field`.
+    A functional is a `Operator` whose `Operator.range` is
+    a `Field`.
 
     ``FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)``
 
     """
 
     def __init__(self, op, vector):
-        """Initialize a new :class:`FunctionalLeftVectorMult` instance.
+        """Initialize a new `FunctionalLeftVectorMult` instance.
 
         Parameters
         ----------
-        op : :class:`Operator`
-            The range of ``op`` must be a :class:`~odl.Field`.
-        vector : :class:`~odl.LinearSpace.Vector`
+        op : `Operator`
+            The range of ``op`` must be a `Field`.
+        vector : `LinearSpaceVector`
             The vector to multiply by. its space's
-            :attr:`~odl.LinearSpace.field` must be the same as
+            `LinearSpace.field` must be the same as
             ``op.range``
         """
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('Vector {!r} not is not a LinearSpace.Vector'
+        if not isinstance(vector, LinearSpaceVector):
+            raise TypeError('Vector {!r} not is not a LinearSpaceVector'
                             ''.format(vector))
 
         if op.range != vector.space.field:
@@ -1253,13 +1254,13 @@ class OperatorLeftVectorMult(Operator):
     """
 
     def __init__(self, op, vector):
-        """Initialize a new :class:`OperatorLeftVectorMult` instance.
+        """Initialize a new `OperatorLeftVectorMult` instance.
 
         Parameters
         ----------
-        op : :class:`Operator`
-            The range of ``op`` must be a :class:`~odl.LinearSpace`.
-        vector : :class:`~odl.LinearSpace.Vector` in ``op.range``
+        op : `Operator`
+            The range of ``op`` must be a `LinearSpace`.
+        vector : `LinearSpaceVector` in ``op.range``
             The vector to multiply by
         """
         if vector not in op.range:
@@ -1335,13 +1336,13 @@ class OperatorRightVectorMult(Operator):
     """
 
     def __init__(self, op, vector):
-        """Initialize a new :class:`OperatorRightVectorMult` instance.
+        """Initialize a new `OperatorRightVectorMult` instance.
 
         Parameters
         ----------
-        op : :class:`Operator`
+        op : `Operator`
             The domain of ``op`` must be a ``vector.space``.
-        vector : :class:`~odl.LinearSpace.Vector` in ``op.domain``
+        vector : `LinearSpaceVector` in ``op.domain``
             The vector to multiply by
         """
         if vector not in op.domain:
@@ -1408,8 +1409,8 @@ class OperatorRightVectorMult(Operator):
         return '{} * {}'.format(self._op, self._vector)
 
 
-def operator(call=None, apply=None, inv=None, deriv=None,
-             dom=None, ran=None, linear=False):
+def simple_operator(call=None, apply=None, inv=None, deriv=None,
+                    dom=None, ran=None, linear=False):
     """Create a simple operator.
 
     Mostly intended for simple prototyping rather than final use.
@@ -1425,14 +1426,14 @@ def operator(call=None, apply=None, inv=None, deriv=None,
         It will be used for the operator apply pattern
         ``op._apply(x, out) <==> out <-- op(x)``. Return value
         is assumed to be `None` and is ignored.
-    inv : :class:`Operator`, optional
+    inv : `Operator`, optional
         The operator inverse
-    deriv : :class:`Operator`, optional
+    deriv : `Operator`, optional
         The operator derivative, linear
-    dom : :class:`~odl.Set`, optional
+    dom : `Set`, optional
         The domain of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
-    ran : :class:`~odl.Set`, optional
+    ran : `Set`, optional
         The range of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
     linear : `bool`, optional
@@ -1441,19 +1442,19 @@ def operator(call=None, apply=None, inv=None, deriv=None,
 
     Returns
     -------
-    op : :class:`Operator`
+    op : `Operator`
         An operator with the provided attributes and methods.
 
     Notes
     -----
     It suffices to supply one of the functions ``call`` and ``apply``.
-    If ``dom`` is a :class:`~odl.LinearSpace`, a default implementation of the
+    If ``dom`` is a `LinearSpace`, a default implementation of the
     respective other method is automatically provided; if not, a
     `NotImplementedError` is raised when the other method is called.
 
     Examples
     --------
-    >>> A = operator(lambda x: 3*x)
+    >>> A = simple_operator(lambda x: 3*x)
     >>> A(5)
     15
     """

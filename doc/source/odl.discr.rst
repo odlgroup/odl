@@ -1,36 +1,18 @@
-odl.discr package
-=================
+discr
+=====
 
-.. automodule:: odl.discr
+Discretizations in ODL.
 
-odl.discr.discr_mappings module
--------------------------------
+.. currentmodule:: odl.discr
 
-.. automodule:: odl.discr.discr_mappings
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.discr.discretization module
--------------------------------
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: odl.discr.discretization
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   odl.discr.discr_mappings
+   odl.discr.discretization
+   odl.discr.grid
+   odl.discr.lp_discr
 
-odl.discr.grid module
----------------------
 
-.. automodule:: odl.discr.grid
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.discr.lp_discr module
--------------------------
-
-.. automodule:: odl.discr.lp_discr
-    :members:
-    :undoc-members:
-    :show-inheritance:

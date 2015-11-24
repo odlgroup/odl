@@ -26,7 +26,7 @@ from builtins import super
 # ODL imports
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
-from odl.set.space import LinearSpace
+from odl.set.space import LinearSpace, LinearSpaceVector
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
@@ -44,7 +44,7 @@ class ScalingOperator(Operator):
 
         Parameters
         ----------
-        space : :class:`~odl.LinearSpace`
+        space : `LinearSpace`
             The space of elements which the operator is acting on
         scalar : field element
             An element in the field of the space that the vectors are
@@ -156,7 +156,7 @@ class ZeroOperator(ScalingOperator):
 
         Parameters
         ----------
-        space : :class:`~odl.LinearSpace`
+        space : `LinearSpace`
             The space of elements which the operator is acting on
         """
         super().__init__(space, 0)
@@ -208,7 +208,7 @@ class LinCombOperator(Operator):
 
         Parameters
         ----------
-        space : :class:`~odl.LinearSpace`
+        space : `LinearSpace`
             The space of elements which the operator is acting on
         a : scalar
             Scalar to multiply x[0] with
@@ -228,7 +228,7 @@ class LinCombOperator(Operator):
         x : ``domain`` element
             An element in the operator domain (2-tuple of space
             elements) whose linear combination is calculated
-        out : :attr:```range`` element
+        out : ```range`` element
             Vector to which the result is written
 
         Examples
@@ -330,7 +330,7 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : `LinearSpaceVector`
             The vector to take the inner product with
         """
         self.vector = vector
@@ -386,7 +386,7 @@ class InnerProductAdjointOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : `LinearSpaceVector`
             The vector to take the inner product with
         """
         self.vector = vector
@@ -462,14 +462,14 @@ class ConstantOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : `LinearSpaceVector`
             The vector constant to be returned
 
-        dom : :class:`~odl.LinearSpace`, default : vector.space
+        dom : `LinearSpace`, default : vector.space
             The domain of the operator.
         """
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('space {!r} not a LinearSpace.Vector instance.'
+        if not isinstance(vector, LinearSpaceVector):
+            raise TypeError('space {!r} not a LinearSpaceVector instance.'
                             ''.format(vector))
 
         if dom is None:
@@ -488,7 +488,7 @@ class ConstantOperator(Operator):
 
         Returns
         -------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : `LinearSpaceVector`
             The constant vector
 
         Examples
@@ -549,18 +549,18 @@ class ResidualOperator(Operator):
 
         Parameters
         ----------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : `LinearSpaceVector`
             The vector constant to be returned
 
-        dom : :class:`~odl.LinearSpace`, default : vector.space
+        dom : `LinearSpace`, default : vector.space
             The domain of the operator.
         """
         if not isinstance(op, Operator):
             raise TypeError('op {!r} not a Operator instance.'
                             ''.format(op))
 
-        if not isinstance(vector, LinearSpace.Vector):
-            raise TypeError('space {!r} not a LinearSpace.Vector instance.'
+        if not isinstance(vector, LinearSpaceVector):
+            raise TypeError('space {!r} not a LinearSpaceVector instance.'
                             ''.format(vector))
 
         if vector not in op.range:
@@ -581,7 +581,7 @@ class ResidualOperator(Operator):
 
         Returns
         -------
-        vector : :class:`~odl.LinearSpace.Vector`
+        vector : `LinearSpaceVector`
             The constant vector
 
         Examples

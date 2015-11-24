@@ -1,36 +1,18 @@
-odl.set package
-===============
+set
+===
 
-.. automodule:: odl.set
+Core Spaces and set support.
 
-odl.set.domain module
----------------------
+.. currentmodule:: odl.set
 
-.. automodule:: odl.set.domain
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.set.pspace module
----------------------
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: odl.set.pspace
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   odl.set.domain
+   odl.set.pspace
+   odl.set.sets
+   odl.set.space
 
-odl.set.sets module
--------------------
 
-.. automodule:: odl.set.sets
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.set.space module
---------------------
-
-.. automodule:: odl.set.space
-    :members:
-    :undoc-members:
-    :show-inheritance:

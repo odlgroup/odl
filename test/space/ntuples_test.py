@@ -29,7 +29,7 @@ import pytest
 import scipy as sp
 
 # ODL imports
-from odl import Ntuples, Fn, Rn, Cn
+from odl import Ntuples, Fn, FnVector, Rn, Cn
 from odl.operator.operator import Operator
 from odl.space.ntuples import (
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting, FnNoWeighting,
@@ -217,20 +217,20 @@ def test_vector_class_init(fn):
     # Test that code runs
     arr = _array(fn)
 
-    fn.Vector(fn, arr)
+    FnVector(fn, arr)
 
     # Space has to be an actual space
     for non_space in [1, complex, np.array([1, 2])]:
         with pytest.raises(TypeError):
-            fn.Vector(non_space, arr)
+            FnVector(non_space, arr)
 
     # Data has to be a numpy array
     with pytest.raises(TypeError):
-        fn.Vector(fn, list(arr))
+        FnVector(fn, list(arr))
 
     # Data has to be a numpy array or correct dtype
     with pytest.raises(TypeError):
-        fn.Vector(fn, arr.astype(int))
+        FnVector(fn, arr.astype(int))
 
 
 def _test_lincomb(fn, a, b):
@@ -1098,7 +1098,7 @@ def test_vector_vector():
     weighting_elem = FnVectorWeighting(weight_elem)
 
     assert isinstance(weighting_vec.vector, np.ndarray)
-    assert isinstance(weighting_elem.vector, Fn.Vector)
+    assert isinstance(weighting_elem.vector, FnVector)
 
 
 def test_vector_isvalid():

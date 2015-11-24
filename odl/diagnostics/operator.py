@@ -33,7 +33,7 @@ __all__ = ('OperatorTest',)
 
 
 class OperatorTest(object):
-    """Automated tests for :class:`~odl.Operator` implementations.
+    """Automated tests for `Operator` implementations.
 
     This class allows users to automatically test various
     features of an Operator such as linearity and the
@@ -45,7 +45,7 @@ class OperatorTest(object):
 
         Parameters
         ----------
-        operator : :class:`~odl.Operator`
+        operator : `Operator`
             The operator to run tests on
         operator_norm : `float`
             The norm of the operator, used for error estimates
@@ -179,7 +179,7 @@ class OperatorTest(object):
                                  ''.format(n_x, error))
 
     def adjoint(self):
-        """Verify that the adjoint works appropriately.
+        """Verify that `Operator.adjoint` works appropriately.
 
         References
         ----------
@@ -233,7 +233,7 @@ class OperatorTest(object):
                                  ''.format(n_x, n_dx, step, error))
 
     def derivative(self, step=0.0001):
-        """Verify that the derivative works appropriately.
+        """Verify that `Operator.derivative` works appropriately.
 
         References
         ----------
@@ -305,7 +305,7 @@ class OperatorTest(object):
                                  ''.format(n_x, n_y, error))
 
     def linear(self):
-        """Verify that the operator is actualy linear."""
+        """Verify that the operator is actually linear."""
         if not self.operator.is_linear:
             print('Operator is not linear')
             return

@@ -32,3 +32,7 @@ __all__ += utility.__all__
 from . import phantom
 from .phantom import *
 __all__ += phantom.__all__
+
+from . import graphics
+from .graphics import *
+__all__ += graphics.__all__

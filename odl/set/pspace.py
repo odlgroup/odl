@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cartesian products of :class:`~odl.LinearSpace` instances."""
+"""Cartesian products of `LinearSpace` instances."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -30,10 +30,10 @@ from numbers import Integral
 import numpy as np
 
 # ODL imports
-from odl.set.space import LinearSpace
+from odl.set.space import LinearSpace, LinearSpaceVector
 
 
-__all__ = ('ProductSpace',)
+__all__ = ('ProductSpace', 'ProductSpaceVector')
 
 
 def _strip_space(x):
@@ -60,7 +60,7 @@ def _prod_inner_sum_not_defined(x):
 
 class ProductSpace(LinearSpace):
 
-    """Cartesian product of linear spaces."""
+    """Cartesian product of `LinearSpace`'s."""
 
     def __init__(self, *spaces, **kwargs):
         """Initialize a new instance.
@@ -72,7 +72,7 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        spaces : :class:`~odl.LinearSpace` or `int`
+        spaces : `LinearSpace` or `int`
             Can be specified either as a space and an integer, in which
             case the power space ``space**n`` is created, or
             an arbitrary number of spaces.
@@ -124,7 +124,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        prodspace : :class:`ProductSpace`
+        prodspace : `ProductSpace`
 
         Examples
         --------
@@ -231,7 +231,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        element : :class:`ProductSpace.Vector`
+        element : `ProductSpaceVector`
             The new element
 
         Examples
@@ -263,7 +263,7 @@ class ProductSpace(LinearSpace):
             inp = [space.element() for space in self.spaces]
 
         # TODO: how does this differ from "if inp in self"?
-        if (all(isinstance(v, LinearSpace.Vector) for v in inp) and
+        if (all(isinstance(v, LinearSpaceVector) for v in inp) and
                 all(part.space == space
                     for part, space in zip(inp, self.spaces))):
             parts = list(inp)
@@ -272,7 +272,7 @@ class ProductSpace(LinearSpace):
             parts = [space.element(arg)
                      for arg, space in zip(inp, self.spaces)]
 
-        return self.Vector(self, parts)
+        return self.element_type(self, parts)
 
     @property
     def weights(self):
@@ -291,7 +291,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        zero : ProductSpace.Vector
+        zero : ProductSpaceVector
             The zero vector in the product space
 
         Examples
@@ -320,7 +320,7 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        one : ProductSpace.Vector
+        one : ProductSpaceVector
             The one vector in the product space
 
         Examples
@@ -375,7 +375,7 @@ class ProductSpace(LinearSpace):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`ProductSpace` instance, has
+            `True` if ``other`` is a `ProductSpace` instance, has
             the same length and the same factors. `False` otherwise.
 
         Examples
@@ -434,116 +434,124 @@ class ProductSpace(LinearSpace):
             inner_str = ', '.join(repr(space) for space in self.spaces)
             return 'ProductSpace({})'.format(inner_str)
 
-    class Vector(LinearSpace.Vector):
-        def __init__(self, space, parts):
-            """"Initialize a new instance."""
-            super().__init__(space)
-            self._parts = list(parts)
+    @property
+    def element_type(self):
+        """ `ProductSpaceVector` """
+        return ProductSpaceVector
 
-        @property
-        def parts(self):
-            """The parts of this vector."""
-            return self._parts
 
-        @property
-        def size(self):
-            """The number of factors of this vector's space."""
-            return self.space.size
+class ProductSpaceVector(LinearSpaceVector):
+    """ Elements in a `ProductSpace` """
 
-        def __eq__(self, other):
-            """``ps.__eq__(other) <==> ps == other``.
+    def __init__(self, space, parts):
+        """"Initialize a new instance."""
+        super().__init__(space)
+        self._parts = list(parts)
 
-            Overrides the default :class:`~odl.LinearSpace` method since it is
-            implemented with the distance function, which is prone to
-            numerical errors. This function checks equality per
-            component.
-            """
-            if other not in self.space:
-                return False
-            elif other is self:
-                return True
-            else:
-                return all(sp == op for sp, op in zip(self.parts, other.parts))
+    @property
+    def parts(self):
+        """The parts of this vector."""
+        return self._parts
 
-        def __len__(self):
-            """``v.__len__() <==> len(v)``."""
-            return len(self.space)
+    @property
+    def size(self):
+        """The number of factors of this vector's space."""
+        return self.space.size
 
-        def __getitem__(self, indices):
-            """``ps.__getitem__(indices) <==> ps[indices]``."""
-            if isinstance(indices, Integral):
-                return self.parts[indices]
-            elif isinstance(indices, slice):
-                return self.space[indices].element(self.parts[indices])
-            else:
-                out_parts = [self.parts[i] for i in indices]
-                return self.space[indices].element(out_parts)
+    def __eq__(self, other):
+        """``ps.__eq__(other) <==> ps == other``.
 
-        def __setitem__(self, indices, values):
-            """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""
-            try:
-                self.parts[indices] = values
-            except TypeError:
-                for i, index in enumerate(indices):
-                    self.parts[index] = values[i]
+        Overrides the default `LinearSpace` method since it is
+        implemented with the distance function, which is prone to
+        numerical errors. This function checks equality per
+        component.
+        """
+        if other not in self.space:
+            return False
+        elif other is self:
+            return True
+        else:
+            return all(sp == op for sp, op in zip(self.parts, other.parts))
 
-        def __str__(self):
-            """``ps.__str__() <==> str(ps)``."""
-            inner_str = ', '.join(str(part) for part in self.parts)
-            return '{{{}}}'.format(inner_str)
+    def __len__(self):
+        """``v.__len__() <==> len(v)``."""
+        return len(self.space)
 
-        def __repr__(self):
-            """``s.__repr__() <==> repr(s)``.
+    def __getitem__(self, indices):
+        """``ps.__getitem__(indices) <==> ps[indices]``."""
+        if isinstance(indices, Integral):
+            return self.parts[indices]
+        elif isinstance(indices, slice):
+            return self.space[indices].element(self.parts[indices])
+        else:
+            out_parts = [self.parts[i] for i in indices]
+            return self.space[indices].element(out_parts)
 
-            Examples
-            --------
-            >>> from odl import Rn
-            >>> r2, r3 = Rn(2), Rn(3)
-            >>> r2x3 = ProductSpace(r2, r3)
-            >>> x = r2x3.element([[1, 2], [3, 4, 5]])
-            >>> eval(repr(x)) == x
-            True
+    def __setitem__(self, indices, values):
+        """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""
+        try:
+            self.parts[indices] = values
+        except TypeError:
+            for i, index in enumerate(indices):
+                self.parts[index] = values[i]
 
-            The result is readable:
+    def __str__(self):
+        """``ps.__str__() <==> str(ps)``."""
+        inner_str = ', '.join(str(part) for part in self.parts)
+        return '{{{}}}'.format(inner_str)
 
-            >>> x
-            ProductSpace(Rn(2), Rn(3)).element([
+    def __repr__(self):
+        """``s.__repr__() <==> repr(s)``.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r2, r3 = Rn(2), Rn(3)
+        >>> r2x3 = ProductSpace(r2, r3)
+        >>> x = r2x3.element([[1, 2], [3, 4, 5]])
+        >>> eval(repr(x)) == x
+        True
+
+        The result is readable:
+
+        >>> x
+        ProductSpace(Rn(2), Rn(3)).element([
+            [1.0, 2.0],
+            [3.0, 4.0, 5.0]
+        ])
+
+        Nestled spaces work as well
+
+        >>> X = ProductSpace(r2x3, r2x3)
+        >>> x = X.element([[[1, 2], [3, 4, 5]],[[1, 2], [3, 4, 5]]])
+        >>> eval(repr(x)) == x
+        True
+        >>> x
+        ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element([
+            [
                 [1.0, 2.0],
                 [3.0, 4.0, 5.0]
-            ])
+            ],
+            [
+                [1.0, 2.0],
+                [3.0, 4.0, 5.0]
+            ]
+        ])
+        """
+        inner_str = '[\n'
+        if len(self) < 5:
+            inner_str += ',\n'.join('{}'.format(
+                _indent(_strip_space(part))) for part in self.parts)
+        else:
+            inner_str += ',\n'.join('{}'.format(
+                _indent(_strip_space(part))) for part in self.parts[:3])
+            inner_str += ',\n    ...\n'
+            inner_str += ',\n'.join('{}'.format(
+                _indent(_strip_space(part))) for part in self.parts[-1:])
 
-            Nestled spaces work as well
+        inner_str += '\n]'
 
-            >>> X = ProductSpace(r2x3, r2x3)
-            >>> x = X.element([[[1, 2], [3, 4, 5]],[[1, 2], [3, 4, 5]]])
-            >>> eval(repr(x)) == x
-            True
-            >>> x
-            ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element([
-                [
-                    [1.0, 2.0],
-                    [3.0, 4.0, 5.0]
-                ],
-                [
-                    [1.0, 2.0],
-                    [3.0, 4.0, 5.0]
-                ]
-            ])
-            """
-            inner_str = '[\n'
-            if len(self) < 5:
-                inner_str += ',\n'.join('{}'.format(
-                    _indent(_strip_space(part))) for part in self.parts)
-            else:
-                inner_str += ',\n'.join('{}'.format(
-                    _indent(_strip_space(part))) for part in self.parts[:3])
-                inner_str += ',\n    ...\n'
-                inner_str += ',\n'.join('{}'.format(
-                    _indent(_strip_space(part))) for part in self.parts[-1:])
-
-            inner_str += '\n]'
-
-            return '{!r}.element({})'.format(self.space, inner_str)
+        return '{!r}.element({})'.format(self.space, inner_str)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

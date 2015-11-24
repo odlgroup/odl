@@ -1,36 +1,18 @@
-odl.space package
-=================
+space
+=====
 
-.. automodule:: odl.space
+Concrete vector spaces.
 
-odl.space.base_ntuples module
------------------------------
+.. currentmodule:: odl.space
 
-.. automodule:: odl.space.base_ntuples
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.space.ntuples module
----------------------------
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: odl.space.ntuples
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    
-odl.space.cu_ntuples module
----------------------------
+   odl.space.base_ntuples
+   odl.space.cu_ntuples
+   odl.space.fspace
+   odl.space.ntuples
 
-.. automodule:: odl.space.cu_ntuples
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.space.fspace module
-------------------------
 
-.. automodule:: odl.space.fspace
-    :members:
-    :undoc-members:
-    :show-inheritance:
