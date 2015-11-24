@@ -41,6 +41,21 @@ from odl.util.utility import array1d_repr, array1d_str
 __all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling')
 
 
+def sparse_meshgrid(*x, **kwargs):
+    """Make a sparse meshgrid with C- or F-contiguous arrays."""
+    n = len(x)
+    order = kwargs.pop('order', 'C')
+    mg = []
+    for ax, xi in enumerate(x):
+        slc = [None] * n
+        slc[ax] = np.s_[:]
+        if order == 'C':
+            mg.append(np.ascontiguousarray(xi[slc]))
+        else:
+            mg.append(np.asfortranarray(xi[slc]))
+    return tuple(mg)
+
+
 class TensorGrid(Set):
 
     """An n-dimensional tensor grid.
@@ -372,8 +387,7 @@ class TensorGrid(Set):
         # than the loop version.
         for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
             # pylint: disable=unbalanced-tuple-unpacking
-            vec_o_mg, vec_s_mg = np.meshgrid(vec_o, vec_s, sparse=True,
-                                             copy=True, indexing='ij')
+            vec_o_mg, vec_s_mg = sparse_meshgrid(vec_o, vec_s)
             if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol, axis=0)):
                 return False
 
@@ -570,19 +584,13 @@ class TensorGrid(Set):
 
         return tuple(csizes)
 
-    def meshgrid(self, sparse=True):
+    def meshgrid(self):
         """A grid suitable for function evaluation.
-
-        Parameters
-        ----------
-        sparse : `bool`, optional
-            If `True`, the grid is not "fleshed out" to save memory.
 
         Returns
         -------
         meshgrid : `tuple` of `numpy.ndarray`
-            Function evaluation grid with size-1 axes if ``sparse=True``,
-            otherwise with "fleshed out" axes
+            Function evaluation grid with :attr:`ndim` axes
 
         See also
         --------
@@ -605,22 +613,14 @@ class TensorGrid(Set):
         array([[-1.,  0., -4.],
                [ 0.,  1., -3.]])
 
-        Alternatively, the grids can be 'fleshed out', using
-        significantly more memory
+        Fortran ordering of the grid is respected:
 
-        >>> x, y = g.meshgrid(sparse=False)
-        >>> x
-        array([[ 0.,  0.,  0.],
-               [ 1.,  1.,  1.]])
-        >>> y
-        array([[-1.,  0.,  2.],
-               [-1.,  0.,  2.]])
-        >>> x**2 - y**2
-        array([[-1.,  0., -4.],
-               [ 0.,  1., -3.]])
+        >>> g = TensorGrid([0, 1], [-1, 0, 2], order='F')
+        >>> x, y = g.meshgrid()
+        >>> x.flags.f_contiguous, y.flags.f_contiguous
+        (True, True)
         """
-        return tuple(np.meshgrid(*self.coord_vectors, indexing='ij',
-                                 sparse=sparse, copy=True))
+        return sparse_meshgrid(*self.coord_vectors, order=self.order)
 
     def convex_hull(self):
         """The "inner" of the grid, an :class:`~odl.IntervalProd`.
