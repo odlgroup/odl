@@ -7,14 +7,26 @@ ODL is documented using sphinx_ and a `modified version of`_ numpydoc_. An examp
    
    class MyClass(object):
    
-       """ Calculates important things 
+       """Calculate important things.
        
-       First line summarizes the class, after that comes a more
-       detailed description
+       The first line summarizes the class, after that comes a blank
+       line followed by a more detailed description (both optional).
+       Confine the docstring to 72 characters per line. In general, try
+       to follow `PEP257`_ in the docstring style.
+
+       Docstrings can have sections with headers, signalized by a
+       single-dash underline, e.g. "References". Check out
+       `Numpydoc`_ for the recognized section labels.
+
+       References
+       ----------
+       .. _PEP257: https://www.python.org/dev/peps/pep-0257/
+       .. _Numpydoc: https://github.com/numpy/numpy/blob/master/doc/\
+          HOWTO_DOCUMENT.rst.txt
        """
      
        def __init__(self, c, parameter=None):
-           """ initializer doc goes here
+           """Initializer doc goes here.
           
            Parameters
            ----------        
@@ -27,7 +39,7 @@ ODL is documented using sphinx_ and a `modified version of`_ numpydoc_. An examp
            self.parameter = parameter
                
        def my_method(self, x, y):
-           """ Calculate ``c * (x + y)``
+           """Calculate ``c * (x + y).``
            
            The first row is a summary, after that goes 
            a more detailed description.
@@ -46,7 +58,8 @@ ODL is documented using sphinx_ and a `modified version of`_ numpydoc_. An examp
                
            Examples
            --------
-           Examples should be working pieces of code
+           Examples should be working pieces of code and are checked with
+           ``doctest`` for consistent output.
            
            >>> obj = MyClass(5)
            >>> obj(3, 5)
@@ -57,30 +70,39 @@ ODL is documented using sphinx_ and a `modified version of`_ numpydoc_. An examp
 
 Some short tips
 
-* Writing withing backticks: ```some_target``` will create a link to the target.
+* Text within backticks: ```some_target``` will create a link to the target.
 * Make sure that the first line is short and descriptive.
 * Examples are often better than long descriptions.
-           
+
+Quick summary of `PEP257`_
+
+* Write docstrings always with triple double quotes ``"""``, even one-liners
+* Class docstrings are separated from the class definition line by a blank line, functions and methods begin directly in the next line.
+* Use imperative style ("Calculate", not "Calculates") in the summary (=first) line and end it with a full stop. Do not add a space after the opening triple quotes.
+* For one-liners: put the closing quotes on the same line. Otherwise: make a new line for the closing quotes.
+* Document at least all *public* methods and attributes.
+
 Advanced
 --------
-This is advanced topics for developers that need to change how the doc works.
+This section covers advanced topics for developers that need to change how the doc works.
 
 Re-generating the doc
 ~~~~~~~~~~~~~~~~~~~~~
 
-Autosummary currently does not support nestled modules, so to handle this we auto-generate rst files for each module. This is done using the ``doc/source/generate_doc.py`` script.
+Autosummary currently does not support nested modules, so to handle this we auto-generate ``.rst`` files for each module. This is done using the ``doc/source/generate_doc.py`` script.
 
 Modifications to numpydoc
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Numpydoc has been modified in the following ways:
 
-* The numpy shpinx domain has been removed.
-* Added more ``extra_public_methods``
-* autoclass summaries now link to full name, this allows subclassing between packages.
+* The numpy sphinx domain has been removed.
+* More ``extra_public_methods`` added.
+* ``:autoclass:`` summaries now link to full name, which allows subclassing between packages.
 
 
 
 .. _sphinx: http://sphinx-doc.org/
 .. _modified version of: https://github.com/odlgroup/numpydoc
 .. _numpydoc: https://github.com/numpy/numpydoc
+.. _PEP257: https://www.python.org/dev/peps/pep-0257/
