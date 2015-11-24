@@ -1,11 +1,9 @@
-###############
-Getting started
-###############
+.. _operators_in_depth:
 
-Welcome to the ODL users guide, this guide is intended to give you a simple introduction to ODL and how to work with it. If you need help on a specific function you should look at its documentation.
-
+#########
 Operators
----------
+#########
+
 Operators in ODL are represented by the abstract `Operator`
 class. As an *abstract class*, it cannot be used directly but must be
 subclassed for concrete implementation. To define your own operator,

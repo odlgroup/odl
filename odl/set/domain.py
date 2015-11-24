@@ -606,7 +606,10 @@ class IntervalProd(Set):
 
 
 class Interval(IntervalProd):
-    """One-dimensional interval product, i.e. just one interval."""
+    """One-dimensional interval product.
+   
+    i.e. just one interval.
+    """
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.ndim != 1:

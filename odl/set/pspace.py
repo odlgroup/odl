@@ -60,7 +60,7 @@ def _prod_inner_sum_not_defined(x):
 
 class ProductSpace(LinearSpace):
 
-    """Cartesian product of linear spaces."""
+    """Cartesian product of `LinearSpace`'s."""
 
     def __init__(self, *spaces, **kwargs):
         """Initialize a new instance.

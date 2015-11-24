@@ -25,7 +25,7 @@ from builtins import object
 from copy import copy, deepcopy
 
 # Internal
-from odl.set.sets import Set
+from odl.set.sets import Field
 from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
 
@@ -60,11 +60,20 @@ class SpaceTest(object):
     """
 
     def __init__(self, space, eps=0.00001):
+        """ Initialize an instance
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            The space that should be tested
+        eps : `float`, optional
+            Precision of the tests.
+        """
         self.space = space
         self.eps = eps
 
     def element(self):
-        """Verifying element method"""
+        """Verify `LinearSpace.element`"""
         print('\n== Verifying element method ==\n')
 
         try:
@@ -79,7 +88,7 @@ class SpaceTest(object):
             print('space.element() OK')
 
     def field(self):
-        """Verifying field property"""
+        """Verify `LinearSpace.field`"""
         print('\n== Verifying field property ==\n')
 
         try:
@@ -88,8 +97,8 @@ class SpaceTest(object):
             print('*** field failed ***')
             return
 
-        if not isinstance(field, Set):
-            print('*** space.element() not in space ***')
+        if not isinstance(field, Field):
+            print('*** space.field not a `Field` ***')
             return
 
         # Zero
@@ -363,7 +372,7 @@ class SpaceTest(object):
                                  ''.format(n_x, inner))
 
     def inner(self):
-        """Verify inner product.
+        """Verify `LinearSpace.inner`.
 
         The inner product satisfies properties such as
 
@@ -458,7 +467,7 @@ class SpaceTest(object):
                                  ''.format(n_x, error))
 
     def norm(self):
-        """Verify norm.
+        """Verify `LinearSpace.norm`.
 
         The norm satisfies properties
 
@@ -557,7 +566,7 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, error))
 
     def dist(self):
-        """Verify dist.
+        """Verify `LinearSpace.dist`.
 
         The dist satisfies properties
 
@@ -657,7 +666,7 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, n_z))
 
     def multiply(self):
-        """Verify the multiplication of vectors.
+        """Verify `LinearSpace.multiply`.
 
         Multiplication satisfies
 
@@ -692,6 +701,8 @@ class SpaceTest(object):
         self._multiply_distributive_vec()
 
     def equals(self):
+        """Verify `LinearSpace.__eq__`."""
+
         print('\n== Verifying __eq__ ==\n')
 
         if not self.space == self.space:
@@ -717,6 +728,8 @@ class SpaceTest(object):
                                  ''.format(obj))
 
     def contains(self):
+        """Verify `LinearSpace.__contains__`."""
+
         print('\n== Verifying __contains__ ==\n')
 
         with FailCounter() as counter:
@@ -738,7 +751,9 @@ class SpaceTest(object):
                     counter.fail('not obj not in space,  with obj={}'
                                  ''.format(obj))
 
-    def _vector_assign(self):
+    def vector_assign(self):
+        """Verify `LinearSpaceVector.assign`."""
+
         print('\nVector.assign()')
 
         with FailCounter() as counter:
@@ -750,7 +765,9 @@ class SpaceTest(object):
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
 
-    def _vector_copy(self):
+    def vector_copy(self):
+        """Verify `LinearSpaceVector.copy`."""
+
         print('\nVector.copy()')
 
         with FailCounter() as counter:
@@ -769,7 +786,9 @@ class SpaceTest(object):
                     counter.fail('modified y, x changed with x={:25s}'
                                  ''.format(n_x))
 
-    def _vector_set_zero(self):
+    def vector_set_zero(self):
+        """Verify `LinearSpaceVector.set_zero`."""
+
         print('\nVector.set_zero()')
 
         zero = self.space.zero()
@@ -781,7 +800,9 @@ class SpaceTest(object):
                     counter.fail('failed with x={:25s}'
                                  ''.format(n_x))
 
-    def _vector_equals(self):
+    def vector_equals(self):
+        """Verify `LinearSpaceVector.__eq__`."""
+
         print('\nVector.__eq__()')
 
         try:
@@ -811,7 +832,9 @@ class SpaceTest(object):
                         counter.fail('failed x != y with x={:25s}, x={:25s}'
                                      ''.format(n_x, n_y))
 
-    def _vector_space(self):
+    def vector_space(self):
+        """Verify `LinearSpaceVector.space`."""
+
         print('\nVector.space')
 
         with FailCounter() as counter:
@@ -820,13 +843,15 @@ class SpaceTest(object):
                     counter.fail('failed with x={:25s}'.format(n_x))
 
     def vector(self):
+        """Verify `LinearSpaceVector`."""
+
         print('\n== Verifying Vector ==\n')
 
-        self._vector_assign()
-        self._vector_copy()
-        self._vector_set_zero()
-        self._vector_equals()
-        self._vector_space()
+        self.vector_assign()
+        self.vector_copy()
+        self.vector_set_zero()
+        self.vector_equals()
+        self.vector_space()
 
     def run_tests(self):
         """Run all tests on this space."""

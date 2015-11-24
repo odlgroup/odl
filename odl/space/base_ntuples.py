@@ -153,7 +153,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
 
 class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
-    """Abstract class for representation of n-tuples.
+    """Abstract class for representation of `NtuplesBase` elements.
 
     Defines abstract attributes and concrete ones which are
     independent of data representation.
@@ -382,7 +382,7 @@ class FnBase(NtuplesBase, LinearSpace):
 
 class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
 
-    """Abstract class for representation of :math:`F^n` vectors.
+    """Abstract class for representation of `FnBase` vectors.
 
     Defines abstract attributes and concrete ones which are
     independent of data representation.
