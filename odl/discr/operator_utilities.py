@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Usefull utility functions on discreate spaces (i.e., either Rn/Cn or
+discretized function spaces), for example obtaining a matrix representation of
+an operator. """
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -53,8 +57,7 @@ def matrix_representation(op):
               'representation of it.')
         return
 
-    if not (isinstance(op.domain, FnBase) or
-            isinstance(op.domain, ProductSpace)):
+    if not isinstance(op.domain, FnBase):
         print('WARNING: The operator domain is not discreate or produc space;',
               'cannot produce matrix representation of it.')
         return
