@@ -314,41 +314,6 @@ class DiscreteLpVector(DiscretizationVector):
 
         Parameters
         ----------
-        indices : `int` or `slice`
-            The position(s) that should be set
-        values : {scalar, array-like, `NtuplesVector`}
-            The value(s) that are to be assigned.
-
-            If ``indices`` is an `int`, ``values`` must be a single
-            value.
-
-            If ``indices`` is a `slice`, ``values`` must be
-            broadcastable to the size of the slice (same size,
-            shape ``(1,)`` or single value).
-            For ``indices==slice(None, None, None)``, i.e. in the call
-            ``vec[:] = values``, a multi-dimensional array of correct
-            shape is allowed as ``values``.
-        """
-        if values in self.space:
-            self.ntuple.__setitem__(indices, values.ntuple)
-        else:
-            if indices == slice(None, None, None):
-                values = np.atleast_1d(values)
-                if (values.ndim > 1 and
-                        values.shape != self.space.grid.shape):
-                    raise ValueError('shape {} of value array {} not equal'
-                                     ' to sampling grid shape {}.'
-                                     ''.format(values.shape, values,
-                                               self.space.grid.shape))
-                values = values.ravel(order=self.space.order)
-
-            super().__setitem__(indices, values)
-
-    def show(self, method='', title='', **kwargs):
-        """Create a figure displaying the function in 1d or 2d.
-
-        Parameters
-        ----------
         method : `str`, optional
             1d methods:
 
