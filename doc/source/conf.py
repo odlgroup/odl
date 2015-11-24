@@ -40,7 +40,7 @@ if on_rtd:
                   'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
                   'scipy.interpolate', 'scipy.interpolate.interpnd',
                   'numpy', 'numpy.linalg', 'numpy.distutils',
-                  'matplotlib.pyplot',
+                  'matplotlib', 'matplotlib.pyplot',
                   'odlpp', 'odlpp.odlpp_cuda'])
 
 try:
