@@ -607,7 +607,7 @@ class IntervalProd(Set):
 
 class Interval(IntervalProd):
     """One-dimensional interval product.
-   
+
     i.e. just one interval.
     """
     def __init__(self, begin, end):
