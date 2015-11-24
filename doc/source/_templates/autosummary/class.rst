@@ -5,10 +5,15 @@
 
 .. autoclass:: {{ objname }}
    :show-inheritance:
-
-   {% block methods %}
+   
+   {% block init %}
+   {%- if '__init__' in all_methods %}
    .. automethod:: __init__
-
+   {%- endif -%}
+   {% endblock %}
+   
+   {% block methods %}   
+   
    .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
       .. autosummary::
          :toctree:
