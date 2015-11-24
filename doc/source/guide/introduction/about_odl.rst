@@ -29,6 +29,7 @@ A `LinearSpace` is a very important subclass of `Set` and is a general implement
 <https://en.wikipedia.org/wiki/Vector_space>`_. In odl there are two "kinds" of spaces that you will face. The first is F^n type spaces such as `Rn` and `Cn`, but also the `CUDA
 <https://en.wikipedia.org/wiki/CUDA>`_ accelerated version `CudaRn`.
 
+See also in depth guide on :ref:`linearspace_in_depth`.
 
 Operator
 ========
@@ -42,3 +43,18 @@ Discretizations
 ===============
 
 Discretizations ...
+
+Diagnostics
+===========
+
+Odl also offers tools to verify the correctness of operators and spaces. Examples include verifying that a `Operator`'s derivative is correct:
+
+>>> op = MyOperator()
+>>> odl.diagnostics.OperatorTest(op).derivative()
+
+or verifying that a `LinearSpace` satisfies all expected properties
+
+>>> r3 = odl.Rn(5)
+>>> odl.diagnostics.SpaceTest(r3).run_tests()
+
+See `SpaceTest` and `OperatorTest` for more details.

@@ -27,5 +27,6 @@ Functions
 .. autosummary::
    :toctree: generated/
 
+   ~odl.discr.grid.sparse_meshgrid
    ~odl.discr.grid.uniform_sampling
 
