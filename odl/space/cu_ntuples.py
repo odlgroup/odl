@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector, 
+from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector,
                                     FnWeightingBase)
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
@@ -84,7 +84,7 @@ _add_if_exists(np.uint64, 'CudaVectorUInt64')
 CUDA_DTYPES = tuple(set(CUDA_DTYPES))  # Remove duplicates
 
 
-class CudaNtuples(NtuplesBase, LinearSpace):
+class CudaNtuples(NtuplesBase):
 
     """The set of ``n``-tuples of arbitrary type, implemented in CUDA."""
 
@@ -169,7 +169,8 @@ class CudaNtuples(NtuplesBase, LinearSpace):
             if data_ptr is None:
                 if isinstance(inp, self._vector_impl):
                     return self.element_type(self, inp)
-                elif isinstance(inp, self.element_type) and inp.dtype == self.dtype:
+                elif (isinstance(inp, self.element_type) and
+                      inp.dtype == self.dtype):
                     return self.element_type(self, inp.data)
                 else:
                     elem = self.element()
@@ -914,6 +915,7 @@ class CudaRnVector(CudaFnVector):
 
 # Methods
 # TODO: move
+
 
 def _make_unary_fun(name):
     def fun(x, out=None):

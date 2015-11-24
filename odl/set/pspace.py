@@ -439,6 +439,7 @@ class ProductSpace(LinearSpace):
         """ `ProductSpaceVector` """
         return ProductSpaceVector
 
+
 class ProductSpaceVector(LinearSpaceVector):
     """ Elements in a `ProductSpace` """
 

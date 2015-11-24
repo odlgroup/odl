@@ -29,7 +29,7 @@ from abc import ABCMeta
 from numbers import Number, Integral
 
 # ODL imports
-from odl.set.space import (LinearSpace, LinearSpaceVector, 
+from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
 
@@ -1454,7 +1454,7 @@ def simple_operator(call=None, apply=None, inv=None, deriv=None,
 
     Examples
     --------
-    >>> A = operator(lambda x: 3*x)
+    >>> A = simple_operator(lambda x: 3*x)
     >>> A(5)
     15
     """

@@ -33,7 +33,7 @@ from odl.set.sets import RealNumbers, ComplexNumbers, Set
 from odl.set.space import LinearSpace, LinearSpaceVector
 
 
-__all__ = ('FunctionSet', 'FunctionSetVector', 
+__all__ = ('FunctionSet', 'FunctionSetVector',
            'FunctionSpace', 'FunctionSpaceVector')
 
 
@@ -149,6 +149,7 @@ class FunctionSet(Set):
         """ `FunctionSetVector` """
         return FunctionSetVector
 
+
 class FunctionSetVector(Operator):
 
     """Representation of a `FunctionSet` element."""
@@ -180,7 +181,7 @@ class FunctionSetVector(Operator):
 
         if fcall is None and fapply is None:
             raise ValueError('call function and apply function cannot '
-                                'both be `None`.')
+                             'both be `None`.')
 
         if fcall is not None and not callable(fcall):
             raise TypeError('call function {} is not callable.'
@@ -270,7 +271,7 @@ class FunctionSetVector(Operator):
             if (min_coords not in self.domain or
                     max_coords not in self.domain):
                 raise ValueError('input contains points outside '
-                                    '`domain` {}.'.format(self.domain))
+                                 '`domain` {}.'.format(self.domain))
 
         out = self._call(*x)
 
@@ -323,8 +324,7 @@ class FunctionSetVector(Operator):
         if self._call is not None:
             return '{!r}.element({!r})'.format(self.space, self._call)
         else:
-            return '{!r}.element({!r})'.format(self.space,
-                                                self._apply_impl)
+            return '{!r}.element({!r})'.format(self.space, self._apply_impl)
 
 
 class FunctionSpace(FunctionSet, LinearSpace):
@@ -514,6 +514,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
     def element_type(self):
         """ `FunctionSpaceVector` """
         return FunctionSpaceVector
+
 
 class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
     """Representation of a `FunctionSpace` element."""

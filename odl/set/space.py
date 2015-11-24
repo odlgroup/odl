@@ -449,7 +449,7 @@ class LinearSpace(Set):
 
     def norm(self, x):
         """Calculate the norm of a vector.
-        
+
         Parameters
         ----------
         x : `LinearSpaceVector`
@@ -467,7 +467,7 @@ class LinearSpace(Set):
 
     def inner(self, x1, x2):
         """Calculate the inner product of ``x1`` and ``x2``.
-        
+
         Parameters
         ----------
         x1 : `LinearSpaceVector`
@@ -492,7 +492,7 @@ class LinearSpace(Set):
 
     def multiply(self, x1, x2, out=None):
         """Calculate the pointwise product of ``x1`` and ``x2``.
-        
+
         Parameters
         ----------
         x1 : `LinearSpaceVector`
@@ -502,7 +502,7 @@ class LinearSpace(Set):
             The second multiplicand
 
         out : `LinearSpaceVector`, optional
-            Vector to write the product to. 
+            Vector to write the product to.
             default: `LinearSpace.element`
 
         Returns
@@ -528,7 +528,7 @@ class LinearSpace(Set):
 
     def divide(self, x1, x2, out=None):
         """Calculate the pointwise division of ``x1`` and ``x2``
-        
+
         Parameters
         ----------
         x1 : `LinearSpaceVector`
@@ -538,7 +538,7 @@ class LinearSpace(Set):
             The divisor
 
         out : `LinearSpaceVector`, optional
-            Vector to write the ratio to. 
+            Vector to write the ratio to.
             default: `LinearSpace.element`
 
         Returns
@@ -588,7 +588,7 @@ class LinearSpaceVector(with_metaclass(ABCMeta, object)):
     @property
     def space(self):
         """Space to which this vector belongs.
-        
+
         `LinearSpace`
         """
         return self._space
@@ -865,48 +865,48 @@ class UniversalSpace(LinearSpace):
 
     def element(self, inp=None):
         """Dummy element creation method.
-       
+
         raises `NotImplementedError`.
         """
         raise NotImplementedError
 
     def _lincomb(self, a, x1, b, x2, out):
         """Dummy linear combination.
-        
+
         raises `NotImplementedError`.
         """
         raise NotImplementedError
 
     def _dist(self, x1, x2):
         """Dummy distance method.
-        
+
         raises `NotImplementedError`.
         """
         raise NotImplementedError
 
     def _norm(self, x):
         """Dummy norm method.
-        
+
         raises `NotImplementedError`.
         """
         raise NotImplementedError
 
     def _inner(self, x1, x2):
         """Dummy inner product method.
-       
+
         raises `NotImplementedError`.
         """
         raise NotImplementedError
 
     def _multiply(self, x1, x2, out):
         """Dummy multiplication method.
-        
+
         raises `NotImplementedError`."""
         raise NotImplementedError
 
     def _divide(self, x1, x2, out):
         """Dummy division method.
-       
+
         raises `NotImplementedError`.
         """
         raise NotImplementedError

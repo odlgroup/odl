@@ -31,9 +31,9 @@ from abc import ABCMeta
 # ODL
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
-from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector, 
+from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space.ntuples import (Ntuples, NtuplesVector, Fn, FnVector, 
+from odl.space.ntuples import (Ntuples, NtuplesVector, Fn, FnVector,
                                Rn, RnVector, Cn, CnVector)
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
@@ -47,7 +47,7 @@ from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
-__all__ = ('RawDiscretization', 'RawDiscretizationVector', 
+__all__ = ('RawDiscretization', 'RawDiscretizationVector',
            'Discretization', 'DiscretizationVector')
 
 
@@ -231,6 +231,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
         """ `RawDiscretizationVector` """
         return RawDiscretizationVector
 
+
 class RawDiscretizationVector(NtuplesBaseVector):
 
     """Representation of a `RawDiscretization` element.
@@ -244,9 +245,9 @@ class RawDiscretizationVector(NtuplesBaseVector):
                             'instance.'.format(space))
 
         if not isinstance(ntuple, space.dspace.element_type):
-            raise TypeError('n-tuple {!r} not an instance of `{}.element_type`.'
+            raise TypeError('n-tuple {!r} not an `{}` vector.'
                             ''.format(ntuple,
-                                        space.dspace.__class__.__name__))
+                                      space.dspace.__class__.__name__))
         super().__init__(space)
         self._ntuple = ntuple
 
@@ -335,7 +336,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
     def __repr__(self):
         """``vec.__repr__() <==> repr(vec)``."""
         return '{!r}.element({})'.format(self.space,
-                                            arraynd_repr(self.asarray()))
+                                         arraynd_repr(self.asarray()))
 
 
 class Discretization(RawDiscretization, FnBase):
@@ -446,6 +447,7 @@ class Discretization(RawDiscretization, FnBase):
     def element_type(self):
         """ `DiscretizationVector` """
         return DiscretizationVector
+
 
 class DiscretizationVector(RawDiscretizationVector, FnBaseVector):
 

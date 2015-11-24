@@ -436,7 +436,7 @@ class ComponentProjection(Operator):
     def adjoint(self):
         """Return the adjoint operator.
 
-        The adjoint is given by extending along `ComponentProjection.index`, 
+        The adjoint is given by extending along `ComponentProjection.index`,
         and setting zero along the others.
 
         See also

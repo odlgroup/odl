@@ -36,4 +36,3 @@ __all__ += phantom.__all__
 from . import graphics
 from .graphics import *
 __all__ += graphics.__all__
-

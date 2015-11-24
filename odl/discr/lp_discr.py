@@ -31,7 +31,7 @@ from builtins import super, str
 import numpy as np
 
 # ODL
-from odl.discr.discretization import (Discretization, DiscretizationVector, 
+from odl.discr.discretization import (Discretization, DiscretizationVector,
                                       dspace_type)
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling
@@ -44,7 +44,7 @@ if CUDA_AVAILABLE:
 else:
     CudaFn = type(None)
 
-__all__ = ('DiscreteLp', 'uniform_discr')
+__all__ = ('DiscreteLp', 'DiscreteLpVector', 'uniform_discr')
 
 _SUPPORTED_INTERP = ('nearest',)
 
@@ -223,6 +223,7 @@ class DiscreteLp(Discretization):
         """ `DiscreteLpVector` """
         return DiscreteLpVector
 
+
 class DiscreteLpVector(DiscretizationVector):
 
     """Representation of a `DiscreteLp` element."""
@@ -239,15 +240,15 @@ class DiscreteLpVector(DiscretizationVector):
         """
         if out is None:
             return super().asarray().reshape(self.space.grid.shape,
-                                                order=self.space.order)
+                                             order=self.space.order)
         else:
             if out.shape not in (self.space.grid.shape,
-                                    (self.space.grid.ntotal,)):
+                                 (self.space.grid.ntotal,)):
                 raise ValueError('output array has shape {}, expected '
-                                    '{} or ({},).'
-                                    ''.format(out.shape,
-                                            self.space.grid.shape,
-                                            self.space.grid.ntotal))
+                                 '{} or ({},).'
+                                 ''.format(out.shape,
+                                           self.space.grid.shape,
+                                           self.space.grid.ntotal))
             out_r = out.reshape(self.space.grid.shape,
                                 order=self.space.order)
             if out_r.flags.c_contiguous:
@@ -259,8 +260,8 @@ class DiscreteLpVector(DiscretizationVector):
 
             if out_order != self.space.order:
                 raise ValueError('output array has ordering {!r}, '
-                                    'expected {!r}.'
-                                    .format(self.space.order, out_order))
+                                 'expected {!r}.'
+                                 ''.format(self.space.order, out_order))
 
             super().asarray(out=out.ravel(order=self.space.order))
             return out
@@ -275,6 +276,38 @@ class DiscreteLpVector(DiscretizationVector):
         # override shape
         return self.space.grid.shape
 
+    def __setitem__(self, indices, values):
+        """Set values of this vector.
+
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like, `NtuplesVector`}
+            The value(s) that are to be assigned.
+            If ``indices`` is an `int`, ``values`` must be a single
+            value.
+            If ``indices`` is a `slice`, ``values`` must be
+            broadcastable to the size of the slice (same size,
+            shape ``(1,)`` or single value).
+            For ``indices==slice(None, None, None)``, i.e. in the call
+            ``vec[:] = values``, a multi-dimensional array of correct
+            shape is allowed as ``values``.
+        """
+        if values in self.space:
+            self.ntuple.__setitem__(indices, values.ntuple)
+        else:
+            if indices == slice(None, None, None):
+                values = np.atleast_1d(values)
+                if (values.ndim > 1 and
+                        values.shape != self.space.grid.shape):
+                    raise ValueError('shape {} of value array {} not equal'
+                                     ' to sampling grid shape {}.'
+                                     ''.format(values.shape, values,
+                                               self.space.grid.shape))
+                values = values.ravel(order=self.space.order)
+
+            super().__setitem__(indices, values)
 
     def show(self, method='', title='', indices=None, **kwargs):
         """Create a figure displaying the function in 1d or 2d.
@@ -304,9 +337,9 @@ class DiscreteLpVector(DiscretizationVector):
                 if (values.ndim > 1 and
                         values.shape != self.space.grid.shape):
                     raise ValueError('shape {} of value array {} not equal'
-                                        ' to sampling grid shape {}.'
-                                        ''.format(values.shape, values,
-                                                self.space.grid.shape))
+                                     ' to sampling grid shape {}.'
+                                     ''.format(values.shape, values,
+                                               self.space.grid.shape))
                 values = values.ravel(order=self.space.order)
 
             super().__setitem__(indices, values)
@@ -358,10 +391,9 @@ class DiscreteLpVector(DiscretizationVector):
         matplotlib.pyplot.scatter : Show scattered 3d points
         """
 
-
         from odl.util.graphics import show_discrete_function
         show_discrete_function(self, method=method, title=title,
-                                indices=indices, **kwargs)
+                               indices=indices, **kwargs)
 
 
 def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',

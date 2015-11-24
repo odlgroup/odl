@@ -906,7 +906,7 @@ def test_vector_vector():
     weighting_elem = CudaFnVectorWeighting(weight_elem)
 
     assert isinstance(weighting_vec.vector, np.ndarray)
-    assert isinstance(weighting_elem.vector, odl.CudaFn.Vector)
+    assert isinstance(weighting_elem.vector, odl.CudaFnVector)
 
 
 @skip_if_no_cuda

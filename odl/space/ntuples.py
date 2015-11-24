@@ -161,6 +161,7 @@ class Ntuples(NtuplesBase):
         """ `NtuplesVector` """
         return NtuplesVector
 
+
 class NtuplesVector(NtuplesBaseVector):
 
     """Representation of an `Ntuples` element."""
@@ -1004,11 +1005,12 @@ class Fn(FnBase, Ntuples):
         inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
         inner_str += _repr_space_funcs(self)
         return '{}({})'.format(self.__class__.__name__, inner_str)
-    
+
     @property
     def element_type(self):
         """ `FnVector` """
         return FnVector
+
 
 class FnVector(FnBaseVector, NtuplesVector):
 
@@ -1290,7 +1292,7 @@ class Rn(Fn):
             return 'Rn({})'.format(self.size)
         else:
             return 'Rn({}, {})'.format(self.size, self.dtype)
-        
+
     @property
     def element_type(self):
         """ `RnVector` """
