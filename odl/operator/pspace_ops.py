@@ -43,20 +43,20 @@ class ProductSpaceOperator(Operator):
     as a linear combination of "sub-operators", e.g.
 
         :math:`\\left(
-        \\begin{array} \\~
+        \\begin{array}{ccc}
         A & B & 0 \\\\
         0 & C & 0 \\\\
         0 & 0 & D
         \end{array}\\right)
         \\left(
-        \\begin{array} \\~
+        \\begin{array}{c}
         x \\\\
         y \\\\
         z
         \end{array}\\right)
         =
         \\left(
-        \\begin{array} \\~
+        \\begin{array}{c}
         A(x) + B(y) \\\\
         C(y) \\\\
         D(z)
