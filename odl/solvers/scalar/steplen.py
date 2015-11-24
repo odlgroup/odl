@@ -42,7 +42,8 @@ class StepLength(with_metaclass(ABCMeta, object)):
     # Barzilai-Borwein
     @abstractmethod
     def __call__(self, x, direction, dir_derivative):
-        """
+        """Calculate the step length at a point.
+
         Parameters
         ----------
         x : `Operator.domain` element
@@ -65,7 +66,7 @@ class LineSearch(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __call__(self, x, direction, dir_derivative):
-        """ Calculate step length in direction
+        """Calculate step length in direction.
 
         Parameters
         ----------
@@ -172,17 +173,18 @@ class ConstantLineSearch(LineSearch):
     """Line search object that returns a constant step length."""
 
     def __init__(self, constant):
-        """
+        """Initialize a new instance.
+
         Parameters
         ----------
         constant : `float`
-            The constant step length that the 'line search' object should
-            return.
+            The constant step length
         """
         self.constant = constant
 
     def __call__(self, x, direction, dir_derivative):
-        """
+        """Calculate the step length at a point.
+
         Parameters
         ----------
         x : `Operator.domain` element
@@ -205,7 +207,7 @@ class BarzilaiBorweinStep(object):
     """Barzilai-Borwein method to compute a step length.
 
     Barzilai-Borwein method to compute a step length
-    for gradient descent methods. It does ...
+    for gradient descent methods.
 
     TODO
 
@@ -224,27 +226,28 @@ class BarzilaiBorweinStep(object):
 
         Parameters
         ----------
-        gradf: `Operator`
+        gradf : `Operator`
             The gradient of the objective function at a point
-        step0: `float`, optional
+        step0 : `float`, optional
             Initial steplength parameter
         """
         self.gradf = gradf
         self.step0 = step0
 
     def __call__(self, x, x0):
-        """
+        """Calculate the step length at a point.
+
         Parameters
         ----------
-        x: `Operator.domain` element
+        x : `Operator.domain` element
             The current point
-        x0: `Operator.domain` element
+        x0 : `Operator.domain` element
             The previous point
 
         Returns
         -------
-        step: `float`
-            The step lenght
+        step : `float`
+            The step length
         """
         if x == x0:
             return self.step0

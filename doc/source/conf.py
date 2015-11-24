@@ -187,7 +187,15 @@ htmlhelp_basename = 'odldoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {}
+latex_elements = {
+    'preamble': '''
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+
+\setlistdepth{9}
+'''
+}
 # The paper size ('letterpaper' or 'a4paper').
 # 'papersize': 'letterpaper',
 
@@ -206,7 +214,7 @@ latex_elements = {}
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'odl.tex', u'odl Documentation',
-     u'Jonas Adler, Holger Kohr & Ozan Öktem', 'manual'),
+     u'Jonas Adler, Holger Kohr, Ozan Öktem', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
