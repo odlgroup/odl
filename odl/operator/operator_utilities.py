@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Usefull utility functions on discreate spaces (i.e., either Rn/Cn or
+"""Usefull utility functions on discrete spaces (i.e., either Rn/Cn or
 discretized function spaces), for example obtaining a matrix representation of
 an operator. """
 
@@ -29,7 +29,6 @@ import numpy as np
 
 # Internal
 from odl.space.base_ntuples import FnBase
-from odl.set.pspace import ProductSpace
 
 
 def matrix_representation(op):
@@ -58,12 +57,12 @@ def matrix_representation(op):
         return
 
     if not isinstance(op.domain, FnBase):
-        print('WARNING: The operator domain is not discreate or produc space;',
+        print('WARNING: The operator domain is not discrete or produc space;',
               'cannot produce matrix representation of it.')
         return
 
     if not isinstance(op.range, FnBase):
-        print('WARNING: The operator range is not discreate; cannot produce',
+        print('WARNING: The operator range is not discrete; cannot produce',
               'matrix representation of it.')
         return
 

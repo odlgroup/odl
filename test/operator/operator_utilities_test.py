@@ -39,7 +39,7 @@ def test_matrix_representation():
     rn = odl.Rn(n)
     A = np.random.rand(n, n)
 
-    Aop = MatVecOperator(rn, rn, A) #MultiplyOp(A)
+    Aop = MatVecOperator(rn, rn, A)
 
     the_matrix = matrix_representation(Aop)
 
