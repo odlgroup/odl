@@ -175,10 +175,10 @@ def reciprocal(grid, shift=True, halfcomplex=False):
 
 
 def dft_preproc_data(dfunc, shift=True):
-    """Preprocess the real-space data before forward FT.
+    """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
-    discrete function
+    function
 
         :math:`p(x) = e^{-i(x-x_0)^{\mathrm{T}}\\xi_0},`
 
@@ -186,7 +186,7 @@ def dft_preproc_data(dfunc, shift=True):
     the real space and reciprocal grids, respectively. In discretized
     form, this function becomes for each axis separately an array
 
-        :math:`p_k = e^{-i k (s \odot \\xi_0)}.`
+        :math:`p_k = e^{-i k (s \\xi_0)}.`
 
     If the reciprocal grid is symmetric, it is
     :math:`\\xi_0 =  \pi/s (-1 + 1/N)`, hence
@@ -234,6 +234,44 @@ def dft_preproc_data(dfunc, shift=True):
 
     onedim_arrs = [_onedim_arr(nsamp, shft)
                    for nsamp, shft in zip(nsamples, shift_lst)]
+    meshgrid = sparse_meshgrid(*onedim_arrs, order=dfunc.space.order)
+
+    # Multiply with broadcasting
+    for vec in meshgrid:
+        np.multiply(dfunc, vec, out=dfunc.asarray())
+
+
+def dft_postproc_data(dfunc, x0):
+    """Post-process the Fourier-space data after DFT.
+
+    This function multiplies the given data with the separable
+    function
+
+        :math:`q(\\xi) = e^{-i x_0^{\mathrm{T}}\\xi},`
+
+    where :math:`x_0` :math:`\\xi_0` are the minimum coodinates of
+    the real space and reciprocal grids, respectively. In discretized
+    form, this function becomes for each axis separately an array
+
+        :math:`q_k = e^{-i x_0
+        \\big(\\xi_0 + \\frac{2\pi k}{s N}\\big)}.`
+
+    Parameters
+    ----------
+    dfunc : `DiscreteLpVector`
+        Discrete function to be post-processed. Its grid is assumed
+        to be the reciprocal grid. Changes are made in place.
+    x0 : array-like
+        Minimal grid point of the spatial grid before transform
+
+    Returns
+    -------
+    `None`
+    """
+    rgrid = dfunc.space.grid
+
+    onedim_arrs = [np.exp(-1j * x * xi)
+                   for x, xi in zip(x0, rgrid.coord_vectors)]
     meshgrid = sparse_meshgrid(*onedim_arrs, order=dfunc.space.order)
 
     # Multiply with broadcasting

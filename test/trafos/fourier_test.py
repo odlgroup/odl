@@ -30,7 +30,8 @@ import pytest
 
 # ODL imports
 import odl
-from odl.trafos.fourier import reciprocal, _shift_list, dft_preproc_data
+from odl.trafos.fourier import (reciprocal, _shift_list, dft_preproc_data,
+                                dft_postproc_data)
 from odl.util.testutils import all_almost_equal, all_equal
 
 
@@ -260,7 +261,7 @@ def test_dft_preproc_data():
 
     cube = odl.Cuboid([0] * 3, [1] * 3)
     shape = (2, 3, 4)
-    discr = odl.uniform_discr(
+    space_discr = odl.uniform_discr(
         odl.FunctionSpace(cube, field=odl.ComplexNumbers()),
         shape)
 
@@ -269,7 +270,7 @@ def test_dft_preproc_data():
     for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(1 - 2 * ((i + j + k) % 2))
 
-    dfunc = discr.one()
+    dfunc = space_discr.one()
     dft_preproc_data(dfunc, shift=True)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
@@ -282,11 +283,54 @@ def test_dft_preproc_data():
 
         correct_arr.append(np.exp(1j * np.pi * argsum))
 
-    dfunc = discr.one()
+    dfunc = space_discr.one()
     dft_preproc_data(dfunc, shift=False)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
+
+def test_dft_postproc_data():
+
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    shape = (2, 3, 4)
+    space_discr = odl.uniform_discr(
+        odl.FunctionSpace(cube, field=odl.ComplexNumbers()), shape)
+
+    # With shift
+    rgrid = reciprocal(space_discr.grid, shift=True)
+    freq_cube = rgrid.convex_hull()
+    recip_space_discr = odl.DiscreteLp(
+        odl.FunctionSpace(freq_cube, field=odl.ComplexNumbers()),
+        rgrid, odl.Cn(np.prod(shape)))
+
+    correct_arr = []
+    x0 = space_discr.grid.min_pt
+    xi_0, rstride, nsamp = rgrid.min_pt, rgrid.stride, rgrid.shape
+    for k in product(range(nsamp[0]), range(nsamp[1]), range(nsamp[2])):
+        correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
+
+    dfunc = recip_space_discr.one()
+    dft_postproc_data(dfunc, x0)
+
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
+
+    # Without shift
+    rgrid = reciprocal(space_discr.grid, shift=False)
+    freq_cube = rgrid.convex_hull()
+    recip_space_discr = odl.DiscreteLp(
+        odl.FunctionSpace(freq_cube, field=odl.ComplexNumbers()),
+        rgrid, odl.Cn(np.prod(shape)))
+
+    correct_arr = []
+    x0 = space_discr.grid.min_pt
+    xi_0, rstride, nsamp = rgrid.min_pt, rgrid.stride, rgrid.shape
+    for k in product(range(nsamp[0]), range(nsamp[1]), range(nsamp[2])):
+        correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
+
+    dfunc = recip_space_discr.one()
+    dft_postproc_data(dfunc, x0)
+
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
