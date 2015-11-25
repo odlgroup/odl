@@ -1362,7 +1362,7 @@ class CudaFnConstWeighting(FnWeightingBase):
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
-        if not np.isfinite(self.const):  # TODO: we actually support this
+        if not np.isfinite(self.const):
             raise ValueError('constant {} is invalid.'.format(constant))
 
     @property
@@ -1444,8 +1444,10 @@ class CudaFnConstWeighting(FnWeightingBase):
         norm : `float`
             The norm of the vector
         """
-        if self.exponent == float('inf'):  # Weighting irrelevant
-            return self.const * float(_pnorm_default(x, self.exponent))
+        if self.exponent == float('inf'):
+            raise NotImplementedError
+            # Example impl
+            # return self.const * float(_pnorm_default(x, self.exponent))
         else:
             return (self.const ** (1 / self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
@@ -1464,7 +1466,9 @@ class CudaFnConstWeighting(FnWeightingBase):
             The distance between the vectors
         """
         if self.exponent == float('inf'):
-            return self.const * float(_pdist_default(x1, x2, self.exponent))
+            raise NotImplementedError
+            # Example impl
+            # return self.const * float(_pdist_default(x1, x2, self.exponent))
         else:
             return (self.const**(1 / self.exponent) *
                     _pdist_default(x1, x2, self.exponent))
