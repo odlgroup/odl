@@ -193,7 +193,7 @@ class DiscreteLp(Discretization):
                 arg_fstr += ', order={order!r}'
 
             arg_str = arg_fstr.format(
-                self.uspace, self.grid.shape, interp=self.interp,
+                self.uspace, list(self.grid.shape), interp=self.interp,
                 impl=impl, order=self.order)
             return 'uniform_discr({})'.format(arg_str)
         else:
