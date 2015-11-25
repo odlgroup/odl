@@ -184,28 +184,6 @@ def test_nonlinear_composition():
         C = OperatorComp(Bop, Aop)
 
 
-#class MultiplyOp(Operator):
-#
-#    """Multiply with matrix.
-#    """
-#
-#    def __init__(self, matrix, domain=None, range=None):
-#        domain = (odl.Rn(matrix.shape[1])
-#                  if domain is None else domain)
-#        range = (odl.Rn(matrix.shape[0])
-#                 if range is None else range)
-#        self.matrix = matrix
-#
-#        super().__init__(domain, range, linear=True)
-#
-#    def _apply(self, rhs, out):
-#        np.dot(self.matrix, rhs.data, out=out.data)
-#
-#    @property
-#    def adjoint(self):
-#        return MultiplyOp(self.matrix.T, self.range, self.domain)
-
-
 def test_linear_Op():
     # Verify that the multiply op does indeed work as expected
 
