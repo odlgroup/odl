@@ -27,7 +27,9 @@ standard_library.install_aliases()
 # Internal
 from odl.operator.default_ops import IdentityOperator
 from odl.operator.operator import OperatorComp, OperatorSum
-__all__ = ()
+
+__all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
+           'gauss_newton')
 
 
 # TODO: update all docs

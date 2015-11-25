@@ -130,7 +130,7 @@ class ProductSpaceOperator(Operator):
         if ran is not None:
             if not isinstance(ran, ProductSpace):
                 raise TypeError('space {!r} not a ProductSpace instance.'
-                                ''.format(dom))
+                                ''.format(ran))
             if ran.weights is not None:
                 raise NotImplementedError('weighted spaces not supported.')
 

@@ -504,11 +504,19 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def __repr__(self):
         """``s.__repr__() <==> repr(s)``."""
-        return 'FunctionSpace({!r}, {!r})'.format(self.domain, self.range)
+        inner_repr = '{!r}'.format(self.domain)
+        if not isinstance(self.range, RealNumbers):
+            inner_repr += ', {!r}'.format(self.range)
+
+        return 'FunctionSpace({})'.format(inner_repr)
 
     def __str__(self):
         """``s.__str__() <==> str(s)``."""
-        return 'FunctionSpace({}, {})'.format(self.domain, self.range)
+        inner_repr = '{}'.format(self.domain)
+        if not isinstance(self.range, RealNumbers):
+            inner_repr += ', {}'.format(self.range)
+
+        return 'FunctionSpace({})'.format(inner_repr)
 
     @property
     def element_type(self):
