@@ -938,20 +938,20 @@ sign = _make_unary_fun('sign')
 sqrt = _make_unary_fun('sqrt')
 
 
-def _weighting(weight, exponent, dist_using_inner=False):
+def _weighting(weight, exponent):
     if np.isscalar(weight):
         weighting = CudaFnConstWeighting(
             weight, exponent)
     elif isinstance(weight, CudaFnVector):
         weighting = CudaFnVectorWeighting(
-            weight, exponent=exponent, dist_using_inner=dist_using_inner)
+            weight, exponent=exponent)
     else:
         weight_ = np.asarray(weight)
         if weight_.dtype == object:
             raise ValueError('bad weight {}'.format(weight))
         if weight_.ndim == 1:
             weighting = CudaFnVectorWeighting(
-                weight_, exponent, dist_using_inner=dist_using_inner)
+                weight_, exponent)
         elif weight_.ndim == 2:
             raise NotImplementedError('matrix weighting not implemented '
                                       'for CUDA spaces.')
@@ -1015,7 +1015,7 @@ def cu_weighted_norm(weight, exponent=2.0):
     return _weighting(weight, exponent=exponent).norm
 
 
-def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
+def cu_weighted_dist(weight, exponent=2.0):
     """Weighted distance on `CudaFn` spaces as free function.
 
     Parameters
@@ -1026,18 +1026,6 @@ def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
         as a weighting vector.
     exponent : positive `float`
         Exponent of the distance
-    use_inner : `bool`, optional
-        Calculate ``dist`` using the formula
-
-        :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-        \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
-
-        This avoids the creation of new arrays and is thus faster
-        for large arrays. On the downside, it will not evaluate to
-        exactly zero for equal (but not identical) :math:`x` and
-        :math:`y`.
-
-        Can only be used if ``exponent`` is 2.0.
 
     Returns
     -------
@@ -1050,8 +1038,7 @@ def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
     --------
     CudaFnConstWeighting, CudaFnVectorWeighting
     """
-    return _weighting(weight, exponent=exponent,
-                      dist_using_inner=use_inner).dist
+    return _weighting(weight, exponent=exponent).dist
 
 
 def add_scalar(x, scal, out=None):
@@ -1100,6 +1087,16 @@ def _dist_default(x1, x2):
     return x1.data.dist(x2.data)
 
 
+def _pdist_default(x1, x2, p):
+    if p == float('inf'):
+        raise NotImplementedError('inf-norm not implemented.')
+    return x1.data.dist_power(x2.data, p)
+
+
+def _pdist_diagweight(x1, x2, p, w):
+    return x1.data.dist_weight(x2.data, p, w.data)
+
+
 def _norm_default(x):
     return x.data.norm()
 
@@ -1107,28 +1104,21 @@ def _norm_default(x):
 def _pnorm_default(x, p):
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
-    elif int(p) != p:
-        raise NotImplementedError('non-integer powers not implemented')
-    # TODO: optimized version in C++ code?
-    xp = abs(x)
-    xp **= p
-    return sum(xp)**(1 / p)
+    return x.data.norm_power(p)
 
 
 def _pnorm_diagweight(x, p, w):
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
-    elif int(p) != p:
-        raise NotImplementedError('non-integer powers not implemented')
-    # TODO: optimized version in C++ code?
-    xp = abs(x)
-    xp **= p
-    xp *= w
-    return sum(xp)**(1 / p)
+    return x.data.norm_weight(p, w.data)
 
 
 def _inner_default(x1, x2):
     return x1.data.inner(x2.data)
+
+
+def _inner_diagweight(x1, x2, w):
+    return x1.data.inner_weight(x2.data, w.data)
 
 
 class CudaFnVectorWeighting(FnWeightingBase):
@@ -1165,7 +1155,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
     during initialization.
     """
 
-    def __init__(self, vector, exponent=2.0, dist_using_inner=False):
+    def __init__(self, vector, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1175,27 +1165,15 @@ class CudaFnVectorWeighting(FnWeightingBase):
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the formula
-
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
-
-            Can only be used if ``exponent`` is 2.0.
         """
-        # TODO: remove dist_using_inner in favor of a native dist
-        # implementation
         super().__init__(impl='cuda', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+                         dist_using_inner=False)
         if not isinstance(vector, CudaFnVector):
-            self._vector = np.asarray(vector)
-        else:
-            self._vector = vector
+            raise TypeError('vector {} must be a CudaFnVector'
+                            ''.format(vector))
+
+        self._vector = vector
+
         if self.vector.dtype == object:
             raise ValueError('invalid vector {}.'.format(vector))
         elif self.vector.ndim != 1:
@@ -1280,11 +1258,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
                                       'exponent != 2 (got {}).'
                                       ''.format(self.exponent))
         else:
-            inner = _inner_default(x1 * self.vector, x2)
-            if is_real_dtype(x1.dtype):
-                return float(inner)
-            else:
-                return complex(inner)
+            return _inner_diagweight(x1, x2, self.vector)
 
     def norm(self, x):
         """Calculate the vector-weighted norm of a vector.
@@ -1299,10 +1273,28 @@ class CudaFnVectorWeighting(FnWeightingBase):
         norm : `float`
             The norm of the provided vector
         """
-        if self.exponent == 2.0:
-            return super().norm(x)
+        if self.exponent == float('inf'):
+            raise NotImplementedError('inf norm not implemented yet.')
         else:
-            return float(_pnorm_diagweight(x, self.exponent, self.vector))
+            return _pnorm_diagweight(x, self.exponent, self.vector)
+
+    def dist(self, x1, x2):
+        """Calculate the vector-weighted distance between two vectors.
+
+        Parameters
+        ----------
+        x1, x2 : `CudaFnVector`
+            Vectors whose mutual distance is calculated
+
+        Returns
+        -------
+        dist : `float`
+            The distance between the vectors
+        """
+        if self.exponent == float('inf'):
+            raise NotImplementedError('inf norm not implemented yet.')
+        else:
+            return _pdist_diagweight(x1, x2, self.exponent, self.vector)
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -1366,12 +1358,11 @@ class CudaFnConstWeighting(FnWeightingBase):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super().__init__(impl='cuda', exponent=exponent,
-                         dist_using_inner=False)
+        super().__init__(impl='cuda', exponent=exponent)
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
-        if not np.isfinite(self.const):
+        if not np.isfinite(self.const):  # TODO: we actually support this
             raise ValueError('constant {} is invalid.'.format(constant))
 
     @property
@@ -1438,7 +1429,7 @@ class CudaFnConstWeighting(FnWeightingBase):
                                       'exponent != 2 (got {}).'
                                       ''.format(self.exponent))
         else:
-            return self.const * float(_inner_default(x1, x2))
+            return self.const * _inner_default(x1, x2)
 
     def norm(self, x):
         """Calculate the constant-weighted norm of a vector.
@@ -1453,10 +1444,7 @@ class CudaFnConstWeighting(FnWeightingBase):
         norm : `float`
             The norm of the vector
         """
-        if self.exponent == 2.0:
-            from math import sqrt
-            return sqrt(self.const) * float(_norm_default(x))
-        elif self.exponent == float('inf'):  # Weighting irrelevant
+        if self.exponent == float('inf'):  # Weighting irrelevant
             return self.const * float(_pnorm_default(x, self.exponent))
         else:
             return (self.const ** (1 / self.exponent) *
@@ -1475,16 +1463,11 @@ class CudaFnConstWeighting(FnWeightingBase):
         dist : `float`
             The distance between the vectors
         """
-        if self.exponent == 2.0:
-            from math import sqrt
-            return sqrt(self.const) * float(_dist_default(x1, x2))
-        elif self.exponent == float('inf'):
-            # TODO: implement and optimize!
-            return self.const * float(_pnorm_default(x1 - x2, self.exponent))
+        if self.exponent == float('inf'):
+            return self.const * float(_pdist_default(x1, x2, self.exponent))
         else:
-            # TODO: optimize!
             return (self.const**(1 / self.exponent) *
-                    _pnorm_default(x1 - x2, self.exponent))
+                    _pdist_default(x1, x2, self.exponent))
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -1739,7 +1722,7 @@ if CUDA_AVAILABLE:
     try:
         CudaRn(1).element()
     except (MemoryError, RuntimeError, TypeError) as err:
-        print(err)
+        print(str(type(err)) + ':\n' + str(err))
         print('Your GPU seems to be misconfigured. Skipping '
               'CUDA-dependent modules.')
         CUDA_AVAILABLE = False
