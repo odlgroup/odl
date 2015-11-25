@@ -22,16 +22,18 @@ from future import standard_library
 
 standard_library.install_aliases()
 
-# External module imports
+# External
 import pytest
 import numpy as np
-# ODL
-from odl import (Interval, IntervalProd, TensorGrid, uniform_sampling)
-# ODLTOMO
-from odltomo.geometry import (LineDetector, Flat2dDetector, Parallel2dGeometry,
-                              Parallel3dGeometry,
-                              FanFlatGeometry, CircularConeFlatGeometry,
-                              HelicalConeFlatGeometry)
+
+# Internal
+from odl.set.domain import Interval, IntervalProd
+from odl.discr.grid import TensorGrid, uniform_sampling
+from odl.tomo.geometry.detector import LineDetector, Flat2dDetector
+from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
+from odl.tomo.geometry.fanbeam import FanFlatGeometry
+from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
+    HelicalConeFlatGeometry)
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
@@ -44,7 +46,7 @@ def test_parallel_2d_geometry():
     agrid = uniform_sampling(angle_intvl, 10)
     dparams = Interval(0, 1)
     dgrid = uniform_sampling(dparams, 10)
-    geom = Parallel2dGeometry(angle_intvl, dparams)
+    Parallel2dGeometry(angle_intvl, dparams)
 
     with pytest.raises(TypeError):
         Parallel2dGeometry([0, 1], dparams)
@@ -79,9 +81,10 @@ def test_parallel_2d_geometry():
     assert almost_equal(np.sum(e2r + e1), 0, places=16)
 
     sp = geom.src_position(0)
-    print('\n source position:', sp)
+    # print('\n source position:', sp)
+
     dts = geom.det_to_src(0, 1)
-    print('\n detector to source:', dts)
+    # print('\n detector to source:', dts)
 
 
 def test_parallel_3d_geometry():
@@ -269,7 +272,6 @@ def test_helical_cone_flat():
 
     geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                    spiral_pitch_factor)
-    geom.
 
     with pytest.raises(TypeError):
         HelicalConeFlatGeometry([0, 1], dparams, src_rad, det_rad,

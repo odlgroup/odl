@@ -24,8 +24,9 @@ standard_library.install_aliases()
 import numpy as np
 
 # Internal
-import odl
-import odltomo
+from odl import (Interval, Rectangle, FunctionSpace, uniform_sampling,
+                 uniform_discr)
+from odl.tomo import (Parallel2dGeometry, DiscreteXrayTransform)
 
 
 def phantom(x, y):
@@ -33,26 +34,25 @@ def phantom(x, y):
 
 
 # Reconstruction domain, continuous and dcontains_set
-reco_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
+reco_space = FunctionSpace(Rectangle([-1, -1], [1, 1]))
 nvoxels = (50, 50)
-discr_reco_space = odl.uniform_discr(reco_space, nvoxels,
-                                                 dtype='float32')
+discr_reco_space = uniform_discr(reco_space, nvoxels, dtype='float32')
 
 # The following is still very inconvenient since you have to use the class
 # constructor of Parallel2dGeometry - convenience functions to come
 
 # Data domain, continuous and sampled
-angle_range = odl.Interval(0, np.pi)
-det_range = odl.Interval(-1.5, 1.5)
-angles = odl.uniform_sampling(angle_range, 20, as_midp=False)
-det_pixels = odl.uniform_sampling(det_range, 50)
+angle_range = Interval(0, np.pi)
+det_range = Interval(-1.5, 1.5)
+angles = uniform_sampling(angle_range, 20, as_midp=False)
+det_pixels = uniform_sampling(det_range, 50)
 
 # Initialize the geometry
-geom = odltomo.Parallel2dGeometry(angle_range, det_range, angles, det_pixels)
+geom = Parallel2dGeometry(angle_range, det_range, angles, det_pixels)
 
 # Initialize the operator
 # xray_trafo = odltomo.DiscreteL2XrayTransform(discr_reco_space, geom, impl='astra')
-xray_trafo = odltomo.DiscreteXrayTransform(discr_reco_space, geom,
+xray_trafo = DiscreteXrayTransform(discr_reco_space, geom,
                                            backend='astra')
 
 # Make a discrete phantom
@@ -61,5 +61,6 @@ discr_phantom = discr_reco_space.element(cont_phantom)
 
 # Create data
 proj_data = xray_trafo(discr_phantom)
+
 print('\n projection data:', proj_data)
 print('\n projection data:', np.min(proj_data), np.max(proj_data))

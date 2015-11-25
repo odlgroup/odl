@@ -35,13 +35,16 @@ standard_library.install_aliases()
 # External
 import astra
 import numpy as np
-import odl
+from math import sin, cos
 
 # Internal
-from odltomo.geometry.geometry import Geometry
-from odltomo.geometry.parallel import (Parallel2dGeometry, Parallel3dGeometry)
-from odltomo.geometry.fanbeam import (FanBeamGeometry, FanFlatGeometry)
-from odltomo.geometry.conebeam import (CircularConeFlatGeometry,
+from odl.space.ntuples import FnVector
+from odl.discr.grid import RegularGrid
+from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
+from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.geometry.parallel import (Parallel2dGeometry, Parallel3dGeometry)
+from odl.tomo.geometry.fanbeam import (FanBeamGeometry, FanFlatGeometry)
+from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                        HelicalConeFlatGeometry)
 
 
@@ -72,11 +75,11 @@ def astra_volume_geometry(discr_reco):
         ASTRA.
     """
     # TODO: allow other discretizations?
-    if not isinstance(discr_reco, odl.DiscreteLp):
+    if not isinstance(discr_reco, DiscreteLp):
         raise TypeError('discretized domain {!r} is not a `DiscreteLp` '
                         'instance.'.format(discr_reco))
 
-    if not isinstance(discr_reco.grid, odl.RegularGrid):
+    if not isinstance(discr_reco.grid, RegularGrid):
         raise TypeError('sampling grid {!r} is not a `RegularGrid` '
                         'instance.'.format(discr_reco.grid))
 
@@ -171,8 +174,8 @@ def astra_geom_to_vec(geometry):
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use det_rotation method instead of
-            vectors[nn, 6] = np.cos(angle) * det_pix_width
-            vectors[nn, 7] = np.sin(angle) * det_pix_width
+            vectors[nn, 6] = cos(angle) * det_pix_width
+            vectors[nn, 7] = sin(angle) * det_pix_width
             # vectors[nn, 8] = 0
 
             # vector from detector pixel (0,0) to (1,0)
@@ -189,8 +192,8 @@ def astra_geom_to_vec(geometry):
             angle = angles[nn][0]
 
             # ray direction
-            vectors[nn, 0] = np.sin(angle)
-            vectors[nn, 1] = np.cos(angle)
+            vectors[nn, 0] = sin(angle)
+            vectors[nn, 1] = cos(angle)
             # vectors[nn, 2] = 0
 
             # center of detector
@@ -198,8 +201,8 @@ def astra_geom_to_vec(geometry):
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use det_rotation method instead of
-            vectors[nn, 6] = np.cos(angle) * det_pix_width
-            vectors[nn, 7] = np.sin(angle) * det_pix_width
+            vectors[nn, 6] = cos(angle) * det_pix_width
+            vectors[nn, 7] = sin(angle) * det_pix_width
             # vectors[nn, 8] = 0
 
             # vector from detector pixel (0,0) to (1,0)
@@ -222,8 +225,8 @@ def astra_geom_to_vec(geometry):
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use det_rotation method instead of
-            vectors[nn, 4] = np.cos(angle) * det_pix_width
-            vectors[nn, 5] = np.sin(angle) * det_pix_width
+            vectors[nn, 4] = cos(angle) * det_pix_width
+            vectors[nn, 5] = sin(angle) * det_pix_width
 
     else:
         raise ValueError('invalid geometry type {!r}.'.format(
@@ -253,7 +256,7 @@ def astra_projection_geometry(geometry):
         raise ValueError('geometry has no detector sampling grid.')
     if not geometry.has_motion_sampling:
         raise ValueError('geometry has no motion sampling grid.')
-    if not isinstance(geometry.det_grid, odl.RegularGrid):
+    if not isinstance(geometry.det_grid, RegularGrid):
         raise TypeError('detector sampling grid {!r} is not a `RegularGrid` '
                         'instance.'.format(geometry.det_grid))
 
@@ -329,7 +332,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         ASTRA internal id for the new data structure
     """
     if data is not None:
-        if not isinstance(data, odl.DiscreteLp.Vector):
+        if not isinstance(data, DiscreteLpVector):
             raise TypeError('data {!r} is not a `DiscreteLp.Vector` instance.'
                             ''.format(data))
         ndim = data.space.grid.ndim
@@ -355,7 +358,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
                          ''.format(ndim))
 
     if data is not None:
-        if not isinstance(data.ntuple, odl.Fn.Vector):
+        if not isinstance(data.ntuple, FnVector):
             # Something else than NumPy data representation
             raise NotImplementedError('ASTRA supports data wrapping only for '
                                       '`numpy.ndarray` instances.')

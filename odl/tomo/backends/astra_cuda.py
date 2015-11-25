@@ -25,11 +25,11 @@ import astra
 if not astra.astra.use_cuda():
     raise ImportError
 
-from odl import DiscreteLp
 # Internal
-from odltomo.backends.astra_setup import (astra_projection_geometry,
+from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
+from odl.tomo.backends.astra_setup import (astra_projection_geometry,
     astra_volume_geometry, astra_data, astra_algorithm, astra_cleanup)
-from odltomo.geometry.geometry import Geometry
+from odl.tomo.geometry.geometry import Geometry
 
 
 __all__ = ('astra_gpu_forward_projector_call',
@@ -56,7 +56,7 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
     projection : proj_space element
         Projection data resulting from the application of the projector
     """
-    if not isinstance(vol_data, DiscreteLp.Vector):
+    if not isinstance(vol_data, DiscreteLpVector):
         raise TypeError('volume data {!r} is not a `DiscreteLp.Vector` '
                         'instance.'.format(vol_data))
     if not isinstance(geometry, Geometry):

@@ -26,8 +26,9 @@ from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 
-# ODL
-from odl import RegularGrid, TensorGrid, IntervalProd
+# Internal
+from odl.set.domain import IntervalProd
+from odl.discr.grid import RegularGrid, TensorGrid
 
 
 __all__ = ('Geometry',)

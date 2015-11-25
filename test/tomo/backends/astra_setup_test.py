@@ -23,22 +23,23 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
-# ODL
-from odl import (RealNumbers, Interval, IntervalProd, TensorGrid,
-                 FunctionSpace, uniform_sampling, uniform_discr)
-from odl.util.testutils import all_equal, is_subdict
-# ODL TOMO
+
 # Internal
-from odltomo import ASTRA_AVAILABLE
-from odltomo.backends.astra_setup import (
+from odl.set.domain import RealNumbers, Interval, IntervalProd
+from odl.discr.grid import TensorGrid, uniform_sampling
+from odl.discr.lp_discr import uniform_discr
+from odl.space.fspace import FunctionSpace
+from odl.util.testutils import all_equal, is_subdict
+from odl.tomo import ASTRA_AVAILABLE
+from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_data,
     astra_projector, astra_algorithm, astra_cleanup, astra_geom_to_vec)
-from odltomo.geometry.parallel import (Parallel2dGeometry,
+from odl.tomo.geometry.parallel import (Parallel2dGeometry,
                                        Parallel3dGeometry)
-from odltomo.geometry.fanbeam import FanFlatGeometry
-from odltomo.geometry.conebeam import (CircularConeFlatGeometry,
+from odl.tomo.geometry.fanbeam import FanFlatGeometry
+from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                        HelicalConeFlatGeometry)
-from odltomo.util.testutils import skip_if_no_astra
+from odl.tomo.util.testutils import skip_if_no_astra
 
 if ASTRA_AVAILABLE:
     import astra

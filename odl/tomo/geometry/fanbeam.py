@@ -25,12 +25,13 @@ from future.utils import with_metaclass
 # External
 from abc import ABCMeta
 import numpy as np
-from odl import IntervalProd, TensorGrid
 
 # Internal
-from odltomo.geometry.detector import LineDetector
-from odltomo.geometry.geometry import Geometry
-from odltomo.util.trafos import euler_matrix
+from odl.set.domain import IntervalProd
+from odl.discr.grid import TensorGrid
+from odl.tomo.geometry.detector import LineDetector
+from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.util.trafos import euler_matrix
 
 
 __all__ = ('FanFlatGeometry',)

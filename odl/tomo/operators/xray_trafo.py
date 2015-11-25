@@ -30,16 +30,16 @@ else:
     CudaNtuples = type(None)
 
 # Internal
-from odltomo.backends import ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE
-from odltomo.geometry.geometry import Geometry
+from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.backends import ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE
 if ASTRA_AVAILABLE:
-    from odltomo.backends.astra_cpu import (
+    from odl.tomo.backends.astra_cpu import (
         astra_cpu_forward_projector_call, astra_cpu_backward_projector_call)
 else:
     astra_cpu_forward_projection_call = None
     astra_cpu_backward_projector_call = None
 if ASTRA_CUDA_AVAILABLE:
-    from odltomo.backends.astra_cuda import (
+    from odl.tomo.backends.astra_cuda import (
         astra_gpu_forward_projector_call, astra_gpu_backward_projector_call)
 else:
     astra_gpu_forward_projector_call = None
