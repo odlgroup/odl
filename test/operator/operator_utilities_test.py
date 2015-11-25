@@ -20,7 +20,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str, super
 
 # External module imports
 import pytest
@@ -28,38 +27,19 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.discr.operator_utilities import matrix_representation
+from odl.operator.operator_utilities import matrix_representation
+from odl.space.ntuples import MatVecOperator
 from odl.util.testutils import almost_equal
-
-
-class MultiplyOp(odl.Operator):
-
-    """Multiply with matrix.
-    """
-
-    def __init__(self, matrix, domain=None, range=None):
-        domain = (odl.Rn(matrix.shape[1])
-                  if domain is None else domain)
-        range = (odl.Rn(matrix.shape[0])
-                 if range is None else range)
-        self.matrix = matrix
-
-        super().__init__(domain, range, linear=True)
-
-    def _apply(self, rhs, out):
-        np.dot(self.matrix, rhs.data, out=out.data)
-
-    @property
-    def adjoint(self):
-        return MultiplyOp(self.matrix.T, self.range, self.domain)
 
 
 def test_matrix_representation():
     # Verify that the matrix representation function returns the correct matrix
 
-    A = np.random.rand(3, 3)
+    n = 3
+    rn = odl.Rn(n)
+    A = np.random.rand(n, n)
 
-    Aop = MultiplyOp(A)
+    Aop = MatVecOperator(rn, rn, A) #MultiplyOp(A)
 
     the_matrix = matrix_representation(Aop)
 
