@@ -1,4 +1,4 @@
-# Copyright 2014-2016 The ODL development group
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,25 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Tomography specific features."""
+# Imports for common Python 2/3 codebase
+from __future__ import (print_function, division, absolute_import,
+                        unicode_literals)
+from future import standard_library
+standard_library.install_aliases()
 
-from __future__ import absolute_import
+# External
+import pytest
 
-__version__ = '0.9b1'
-__all__ = ('backends', 'geometry', 'operators')
-
-
-# Propagate names defined in __all__ of all submodules into the top-level
-# module
-
-from . import backends
-from .backends import *
-__all__ += backends.__all__
-
-from . import geometry
-from .geometry import *
-__all__ += geometry.__all__
-
-from . import operators
-from .operators import *
-__all__ += operators.__all__
+skip_if_no_astra = pytest.mark.skipif("not ASTRA_AVAILABLE",
+                                      reason='ASTRA not available')
