@@ -49,7 +49,7 @@ def test_matrix_representation():
     assert almost_equal(np.sum(np.abs(A - the_matrix)), 1e-6)
 
 
-def test_three_matrix_representation_product_to_lin_space():
+def test_matrix_representation_product_to_lin_space():
     # Verify that the matrix representation function returns the correct matrix
 
     n = 3
@@ -121,7 +121,7 @@ def test_matrix_representation_product_to_product():
     assert almost_equal(np.sum(np.abs(AB_matrix - the_matrix)), 1e-6)
 
 
-def test_five_matrix_representation_product_to_product_two():
+def test_matrix_representation_product_to_product_two():
     # Verify that the matrix representation function returns the correct matrix
 
     n = 3
