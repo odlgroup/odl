@@ -7,6 +7,9 @@ omit =
     */__init__.py
     odl/diagnostics/*
     odl/util/*
+    
+    # Omit untill coveralls supports cuda.
+    odl/space/cu_ntuples.py
 
 [report]
 # Regexes for lines to exclude from consideration
