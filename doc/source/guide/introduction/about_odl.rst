@@ -26,15 +26,45 @@ LinearSpace
 ===========
 
 A `LinearSpace` is a very important subclass of `Set` and is a general implementation of a mathematical `vector space
-<https://en.wikipedia.org/wiki/Vector_space>`_. In odl there are two "kinds" of spaces that you will face. The first is F^n type spaces such as `Rn` and `Cn`, but also the `CUDA
-<https://en.wikipedia.org/wiki/CUDA>`_ accelerated version `CudaRn`.
+<https://en.wikipedia.org/wiki/Vector_space>`_. In odl there are a few kinds of spaces that you will face. 
+
+.. _Function Space: https://en.wikipedia.org/wiki/Function_space
+.. _Lp: https://en.wikipedia.org/wiki/Lp_space
+.. _Linear operators: https://en.wikipedia.org/wiki/Bounded_operator#Properties_of_the_space_of_bounded_linear_operators
+.. _CUDA: https://en.wikipedia.org/wiki/CUDA
+
+* Continuous function spaces such as `FunctionSpace`, intended to represent mathematical `Function space`_ such as the lebesgue space `Lp`_ or the space of `Linear operators`_. These are mostly used to represent abstract concepts, and are seldomly used in actual computation.
+
+* :math:`\mathbb{F}^n` type spaces such as `Rn` and `Cn`, but also the `CUDA`_ accelerated version `CudaRn`.
+
+* Discretizations of continous spaces. This may for example be a discretization of a cube using voxels. All discretizations inherit form `Discretization`, but the most important is `DiscreteLp`.
+
+* In addition to this, there are utility spaces such as `ProductSpace` which allows the composition of several spaces into a larger space.
+
+In addition to the spaces, all elements in the spaces inherit from `LinearSpaceVector`. Using these vectors, most standard mathematical operations can be expressed
+
+>>> r3 = Rn(3)
+>>> x = r3.element([1, 2, 3])
+>>> y = r3.element([4, 5, 6])
+
+Arithmetic such as addition and multiplication by scalars
+
+>>> x + y
+Rn(3).element([5.0, 7.0, 9.0])
+
+Inner product etc are defined
+
+>>> r3.inner(x, y)
+32.0
+
 
 See also in depth guide on :ref:`linearspace_in_depth`.
 
 Operator
 ========
 
-A `Operator` is a mapping from some `Set` to another.
+A operator is a `function
+<https://en.wikipedia.org/wiki/Function_(mathematics)>`_ from some `Set` to another. In odl these inherit from the abstract class `Operator`.
 
 See also in depth guide on :ref:`operators_in_depth`.
 
