@@ -25,13 +25,13 @@ from future.utils import with_metaclass
 # External
 from abc import ABCMeta
 import numpy as np
-from odl import IntervalProd, TensorGrid
 
-# TomODL
-from odltomo.geometry.detector import LineDetector, Flat2dDetector
-from odltomo.geometry.geometry import Geometry
-from odltomo.util.trafos import euler_matrix
-from math import cos, sin, acos, atan2, sqrt
+# Internal
+from odl import IntervalProd, TensorGrid
+from odl.tomo.geometry.detector import LineDetector, Flat2dDetector
+from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.util.trafos import euler_matrix
+from math import cos, sin  # , acos, atan2, sqrt
 
 __all__ = ('Parallel2dGeometry', 'Parallel3dGeometry')
 

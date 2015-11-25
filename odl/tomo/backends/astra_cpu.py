@@ -22,14 +22,13 @@ standard_library.install_aliases()
 
 # External
 import astra
+
 # Internal
-#ODL
-from odl.discr import DiscreteLp
-# ODL TOMO
-from odltomo.backends.astra_setup import (
-    astra_projection_geometry, astra_volume_geometry, astra_data,
-    astra_projector, astra_algorithm, astra_cleanup)
-from odltomo.geometry.geometry import Geometry
+from odl.discr import DiscreteLp, DiscreteLpVector
+from odl.tomo.backends.astra_setup import (astra_projection_geometry,
+    astra_volume_geometry, astra_data, astra_projector, astra_algorithm,
+    astra_cleanup)
+from odl.tomo.geometry.geometry import Geometry
 
 
 __all__ = ('astra_cpu_forward_projector_call',
@@ -55,8 +54,8 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
     projection : proj_space element
         Projection data resulting from the application of the projector
     """
-    if not isinstance(vol_data, DiscreteLp.Vector):
-        raise TypeError('volume data {!r} is not a `DiscreteLp.Vector` '
+    if not isinstance(vol_data, DiscreteLpVector):
+        raise TypeError('volume data {!r} is not a `DiscreteLpVector` '
                         'instance.'.format(vol_data))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a `Geometry` instance.'
@@ -117,9 +116,10 @@ def astra_cpu_forward_projector_apply(vol_data, geometry, proj_data):
         Volume data to which the forward projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
-    proj_data : `odl.DiscreteLp.Vector`
+    proj_data : `odl.DiscreteLpVector`
         Projection space element to which the projection data is written
     """
+
 
 def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
     """Run an ASTRA backward projection on the given data.
@@ -139,8 +139,8 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
         Reconstruction data resulting from the application of the backward
         projector
     """
-    if not isinstance(proj_data, DiscreteLp.Vector):
-        raise TypeError('projection data {!r} is not a `DiscreteLp.Vector` '
+    if not isinstance(proj_data, DiscreteLpVector):
+        raise TypeError('projection data {!r} is not a `DiscreteLpVector` '
                         'instance.'.format(proj_data))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a `Geometry` instance.'
@@ -151,8 +151,8 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
 
     if reco_space.grid.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
-                         'geometry do not match.'.format(
-            reco_space.grid.ndim, geometry.ndim))
+            'geometry do not match.'.format(reco_space.grid.ndim,
+                                            geometry.ndim))
 
     ndim = proj_data.space.grid.ndim
 
@@ -193,4 +193,20 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
 
 
 def astra_cpu_backward_projector_apply(proj_data, geometry, reco_space):
-    pass
+    """Run an ASTRA backward projection on the given data.
+
+        Parameters
+        ----------
+        proj_data : `odl.DiscreteLp` element
+            Projection data to which the backward projector is applied
+        geometry : `Geometry`
+            Geometry defining the tomographic setup
+        reco_space : `odl.DiscreteLp`
+            Space to which the calling operator maps
+
+        Returns
+        -------
+        reconstruction : reco_space element
+            Reconstruction data resulting from the application of the backward
+            projector
+        """

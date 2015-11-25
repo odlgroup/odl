@@ -30,11 +30,11 @@ from odl import (Interval, Rectangle, FunctionSpace,
                  uniform_sampling, uniform_discr)
 from odl.util.testutils import all_equal, is_subdict
 # TomODL
-from odltomo import ASTRA_AVAILABLE
-from odltomo import (Parallel2dGeometry, FanFlatGeometry)
-from odltomo.backends.astra_cpu import (astra_cpu_forward_projector_call,
+from odl.tomo import ASTRA_AVAILABLE
+from odl.tomo import (Parallel2dGeometry, FanFlatGeometry)
+from odl.tomo.backends.astra_cpu import (astra_cpu_forward_projector_call,
                                         astra_cpu_backward_projector_call)
-from odltomo.util.testutils import skip_if_no_astra
+from odl.tomo.util.testutils import skip_if_no_astra
 
 # if ASTRA_AVAILABLE:
 #     import astra
@@ -50,7 +50,9 @@ def test_astra_cpu_projector_call_2d():
     vol_space = FunctionSpace(Rectangle([-1, -1.1], [1, 1.1]))
     nvoxels = (50, 55)
     discr_vol_space = uniform_discr(vol_space, nvoxels, dtype='float32')
-    discr_data = discr_vol_space.element(1)
+    p = np.zeros(nvoxels)
+    p[10:40, 10:40] = 1
+    discr_data = discr_vol_space.element(p)
 
     # motion and detector parameters, and geometry
     angle_offset = 0
@@ -78,7 +80,7 @@ def test_astra_cpu_projector_call_2d():
           np.min(discr_data), np.max(discr_data), np.mean(discr_data),
           discr_vol_space.interp)
 
-    save_dir = '/home/jmoosmann/Documents/astra_odl/'
+    save_dir = '/home/jmoosmann/Documents/astra_odl/swap/'
 
     # PARALLEL 2D: forward
     proj_data = astra_cpu_forward_projector_call(discr_data, geom_p2d,
@@ -86,19 +88,18 @@ def test_astra_cpu_projector_call_2d():
     print(' p2d proj:', proj_data.shape, np.min(proj_data), np.max(
         proj_data), np.mean(proj_data), discr_proj_space.interp)
     proj_data.show('imshow',
-                   saveto=save_dir+'test_swap_paralled_cpu_forward.png',
+                   saveto=save_dir+'parallel2d_cpu_forward.png',
                    title='PARALLEL')
-
-    save_dir = '/home/jmoosmann/Documents/astra_odl/'
 
     # PARALLEL 2D: backward
     # print(' geom ff:', geom_ff)
+    proj_data = discr_proj_space.element(1)
     print('\nBACKWARD:\nproj_data.shape:', proj_data.shape)
     print('discr_vol_space:', discr_vol_space.grid.shape)
     reco_data = astra_cpu_backward_projector_call(proj_data, geom_p2d,
                                                   discr_vol_space)
-    reco_data('imshow', saveto=save_dir +
-                               'test_swap_paralled_cpu_backward.png',
+    reco_data.show('imshow',
+              saveto=save_dir + 'parallel2d_cpu_backward.png',
               title='PARALLEL')
 
     # FANFLAT: forward

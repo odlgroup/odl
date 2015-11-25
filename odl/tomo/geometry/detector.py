@@ -23,12 +23,14 @@ standard_library.install_aliases()
 from future.utils import with_metaclass
 from builtins import object, super
 
-# External module imports
+# External
 from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 
-# ODL imports
-from odl import TensorGrid, IntervalProd
+# Internal
+from odl.set.domain import IntervalProd
+from odl.discr.grid import TensorGrid
+
 
 
 __all__ = ('Detector', 'LineDetector', 'Flat2dDetector',

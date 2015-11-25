@@ -26,11 +26,12 @@ from future.utils import with_metaclass
 from abc import ABCMeta
 import numpy as np
 from math import cos, sin
-from odl import IntervalProd, TensorGrid
 
 # Internal
-from odltomo.geometry.detector import Flat2dDetector
-from odltomo.geometry.geometry import Geometry
+from odl.set.domain import IntervalProd
+from odl.discr.grid import TensorGrid
+from odl.tomo.geometry.detector import Flat2dDetector
+from odl.tomo.geometry.geometry import Geometry
 # from odltomo.util.trafos import euler_matrix
 
 

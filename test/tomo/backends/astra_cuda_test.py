@@ -22,16 +22,18 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
-# ODL
-from odl import (Interval, Rectangle, Cuboid, FunctionSpace,
-                 uniform_sampling, uniform_discr)
-from odl.util.testutils import all_equal, is_subdict
-# TomODL
-from odltomo import ASTRA_AVAILABLE
-from odltomo import (Parallel2dGeometry, FanFlatGeometry,
+
+# Internal
+from odl.set.domain import Interval, Rectangle, Cuboid
+from odl.space.fspace import FunctionSpace
+from odl.discr.lp_discr import uniform_discr
+from odl.discr.grid import uniform_sampling
+# from odl.util.testutils import all_equal, is_subdict
+from odl.tomo import ASTRA_AVAILABLE
+from odl.tomo import (Parallel2dGeometry, FanFlatGeometry,
     Parallel3dGeometry, CircularConeFlatGeometry, HelicalConeFlatGeometry)
-from odltomo.backends.astra_cuda import astra_gpu_forward_projector_call
-from odltomo.util.testutils import skip_if_no_astra
+from odl.tomo.backends.astra_cuda import astra_gpu_forward_projector_call
+from odl.tomo.util.testutils import skip_if_no_astra
 
 # if ASTRA_AVAILABLE:
 #     import astra
