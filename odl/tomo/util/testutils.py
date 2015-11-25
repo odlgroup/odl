@@ -15,35 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Backends for other libraries."""
+# Imports for common Python 2/3 codebase
+from __future__ import (print_function, division, absolute_import,
+                        unicode_literals)
+from future import standard_library
+standard_library.install_aliases()
 
-from __future__ import absolute_import
+# External
+import pytest
 
-__all__ = ()
-
-__all__ += ('stir_bindings',)
-
-from . import stir_bindings
-
-try:
-    from . import astra_cpu
-    from .astra_cpu import *
-    __all__ += astra_cpu.__all__
-    ASTRA_AVAILABLE = True
-except ImportError:
-    ASTRA_AVAILABLE = False
-
-try:
-    from . import astra_cuda
-    from .astra_cuda import *
-    __all__ += astra_cuda.__all__
-    ASTRA_CUDA_AVAILABLE = True
-except ImportError:
-    ASTRA_CUDA_AVAILABLE = False
-
-if ASTRA_AVAILABLE:
-    from . import astra_setup
-    from .astra_setup import *
-    __all__ += astra_setup.__all__
-
-__all__ += ('ASTRA_AVAILABLE', 'ASTRA_CUDA_AVAILABLE')
+skip_if_no_astra = pytest.mark.skipif("not ASTRA_AVAILABLE",
+                                      reason='ASTRA not available')
