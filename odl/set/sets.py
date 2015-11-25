@@ -215,7 +215,7 @@ class Strings(Set):
 
         `True` if ``other`` is a string of at max `length`
         characters, `False` otherwise."""
-        return isinstance(other, str) and len(other) <= self.length
+        return isinstance(other, basestring) and len(other) == self.length
 
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``."""
@@ -224,7 +224,9 @@ class Strings(Set):
     def element(self, inp=None):
         """Return a string from ``inp`` or from scratch."""
         if inp is not None:
-            return str(inp)[:self.length]
+            s = str(inp)[:self.length]
+            s += ' ' * (self.length - len(s))
+            return s
         else:
             return ''
 
