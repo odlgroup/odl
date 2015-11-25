@@ -23,6 +23,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import int, object, str, zip
 from odl.util.utility import with_metaclass
 from future import standard_library
+from past.builtins import basestring
 standard_library.install_aliases()
 
 # External
