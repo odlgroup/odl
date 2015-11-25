@@ -77,6 +77,12 @@ def test_strings():
     S6 = Strings(6)
     Z = Integers()
 
+    with pytest.raises(TypeError):
+        Strings('fail')
+
+    with pytest.raises(ValueError):
+        Strings(-2)
+
     # __contains
     assert 'c' in S1
     assert 'string' not in S1
@@ -94,6 +100,10 @@ def test_strings():
     assert S1 != Z
 
     # element
+    assert S1.element() == ' '
+    assert S6.element() == ' ' * 6
+    assert S1.element('') == ' '
+    assert S6.element('') == ' ' * 6
     assert S1.element('a') == 'a'
     assert S1.element('abcdefg') == 'a'
     assert S6.element('a') == 'a     '

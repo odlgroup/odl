@@ -228,7 +228,7 @@ class Strings(Set):
             s += ' ' * (self.length - len(s))
             return s
         else:
-            return ''
+            return ' ' * self.length
 
     def __str__(self):
         """``s.__str__() <==> str(s)``."""
