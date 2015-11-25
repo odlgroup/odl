@@ -30,8 +30,8 @@ import numpy as np
 import odl
 from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult,
-                 FunctionalLeftVectorMult,
-                 OperatorRightVectorMult)
+                 FunctionalLeftVectorMult, OperatorRightVectorMult,
+                 MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
@@ -184,26 +184,26 @@ def test_nonlinear_composition():
         C = OperatorComp(Bop, Aop)
 
 
-class MultiplyOp(Operator):
-
-    """Multiply with matrix.
-    """
-
-    def __init__(self, matrix, domain=None, range=None):
-        domain = (odl.Rn(matrix.shape[1])
-                  if domain is None else domain)
-        range = (odl.Rn(matrix.shape[0])
-                 if range is None else range)
-        self.matrix = matrix
-
-        super().__init__(domain, range, linear=True)
-
-    def _apply(self, rhs, out):
-        np.dot(self.matrix, rhs.data, out=out.data)
-
-    @property
-    def adjoint(self):
-        return MultiplyOp(self.matrix.T, self.range, self.domain)
+#class MultiplyOp(Operator):
+#
+#    """Multiply with matrix.
+#    """
+#
+#    def __init__(self, matrix, domain=None, range=None):
+#        domain = (odl.Rn(matrix.shape[1])
+#                  if domain is None else domain)
+#        range = (odl.Rn(matrix.shape[0])
+#                 if range is None else range)
+#        self.matrix = matrix
+#
+#        super().__init__(domain, range, linear=True)
+#
+#    def _apply(self, rhs, out):
+#        np.dot(self.matrix, rhs.data, out=out.data)
+#
+#    @property
+#    def adjoint(self):
+#        return MultiplyOp(self.matrix.T, self.range, self.domain)
 
 
 def test_linear_Op():
@@ -213,7 +213,9 @@ def test_linear_Op():
     x = np.random.rand(3)
     out = np.random.rand(3)
 
-    Aop = MultiplyOp(A)
+    r3 = odl.Rn(3)
+
+    Aop = MatVecOperator(r3, r3, A)
     xvec = Aop.domain.element(x)
     outvec = Aop.range.element()
 
@@ -232,7 +234,10 @@ def test_linear_op_nonsquare():
     x = np.random.rand(3)
     out = np.random.rand(4)
 
-    Aop = MultiplyOp(A)
+    r3 = odl.Rn(3)
+    r4 = odl.Rn(4)
+    Aop = MatVecOperator(r3, r4, A)
+
     xvec = Aop.domain.element(x)
     outvec = Aop.range.element()
 
@@ -250,7 +255,9 @@ def test_linear_adjoint():
     x = np.random.rand(4)
     out = np.random.rand(3)
 
-    Aop = MultiplyOp(A)
+    r3 = odl.Rn(3)
+    r4 = odl.Rn(4)
+    Aop = MatVecOperator(r3, r4, A)
     xvec = Aop.range.element(x)
     outvec = Aop.domain.element()
 
@@ -269,8 +276,10 @@ def test_linear_addition():
     x = np.random.rand(3)
     y = np.random.rand(4)
 
-    Aop = MultiplyOp(A)
-    Bop = MultiplyOp(B)
+    r3 = odl.Rn(3)
+    r4 = odl.Rn(4)
+    Aop = MatVecOperator(r3, r4, A)
+    Bop = MatVecOperator(r3, r4, B)
     xvec = Aop.domain.element(x)
     yvec = Aop.range.element(y)
 
@@ -295,7 +304,9 @@ def test_linear_scale():
     x = np.random.rand(3)
     y = np.random.rand(4)
 
-    Aop = MultiplyOp(A)
+    r3 = odl.Rn(3)
+    r4 = odl.Rn(4)
+    Aop = MatVecOperator(r3, r4, A)
     xvec = Aop.domain.element(x)
     yvec = Aop.range.element(y)
 
@@ -325,7 +336,9 @@ def test_linear_scale():
 def test_linear_right_vector_mult():
     A = np.random.rand(4, 3)
 
-    Aop = MultiplyOp(A)
+    r3 = odl.Rn(3)
+    r4 = odl.Rn(4)
+    Aop = MatVecOperator(r3, r4, A)
     vec = Aop.domain.element([1, 2, 3])
     x = Aop.domain.element([4, 5, 6])
     y = Aop.range.element([5, 6, 7, 8])
@@ -354,8 +367,11 @@ def test_linear_composition():
     x = np.random.rand(3)
     y = np.random.rand(5)
 
-    Aop = MultiplyOp(A)
-    Bop = MultiplyOp(B)
+    r3 = odl.Rn(3)
+    r4 = odl.Rn(4)
+    r5 = odl.Rn(5)
+    Aop = MatVecOperator(r4, r5, A)
+    Bop = MatVecOperator(r3, r4, B)
     xvec = Bop.domain.element(x)
     yvec = Aop.range.element(y)
 
@@ -372,7 +388,7 @@ def test_type_errors():
     r3 = odl.Rn(3)
     r4 = odl.Rn(4)
 
-    Aop = MultiplyOp(np.random.rand(3, 3))
+    Aop = MatVecOperator(r3, r3, np.random.rand(3, 3))
     r3Vec1 = r3.zero()
     r3Vec2 = r3.zero()
     r4Vec1 = r4.zero()
