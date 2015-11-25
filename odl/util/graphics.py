@@ -30,7 +30,6 @@ from odl.util.utility import is_real_dtype
 # External module imports
 from numbers import Integral
 import numpy as np
-from matplotlib import pyplot as plt
 
 
 __all__ = ('show_discrete_function',)
@@ -79,6 +78,9 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     matplotlib.pyplot.scatter : Show scattered 3d points
     """
+    # Importing pyplot takes ~2 sec, only import when needed.
+    import matplotlib.pyplot as plt
+
     args_re = []
     args_im = []
     dsp_kwargs = {}
