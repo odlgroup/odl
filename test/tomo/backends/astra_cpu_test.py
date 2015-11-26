@@ -48,19 +48,20 @@ def test_astra_cpu_projector_call_2d():
 
     # DiscreteLp element
     vol_space = FunctionSpace(Rectangle([-1, -1.1], [1, 1.1]))
-    nvoxels = (50, 55)
+    nvoxels = (100, 110)
     discr_vol_space = uniform_discr(vol_space, nvoxels, dtype='float32')
     p = np.zeros(nvoxels)
-    p[10:40, 10:40] = 1
+    p[20:30, 20:30] = 1
     discr_data = discr_vol_space.element(p)
 
     # motion and detector parameters, and geometry
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 36, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
     dparams = Interval(-2, 2)
-    det_grid = uniform_sampling(dparams, 40)
+    det_grid = uniform_sampling(dparams, 200)
     geom_p2d = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
+
     src_rad = 1000
     det_rad = 100
     geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
@@ -87,20 +88,31 @@ def test_astra_cpu_projector_call_2d():
                                          discr_proj_space)
     print(' p2d proj:', proj_data.shape, np.min(proj_data), np.max(
         proj_data), np.mean(proj_data), discr_proj_space.interp)
-    proj_data.show('imshow',
-                   saveto=save_dir+'parallel2d_cpu_forward.png',
-                   title='PARALLEL')
+
+    # import matplotlib
+    # matplotlib.use('qt4agg')
+    import matplotlib.pyplot as plt
+    # print('BACKEND:', plt.get_backend())
+    # plt.switch_backend('qt4agg')
+    # print('BACKEND:', plt.get_backend())
+    im = proj_data.asarray()
+    plt.imshow(im)
+    plt.savefig(save_dir + 'test_sino.png')
 
     # PARALLEL 2D: backward
-    # print(' geom ff:', geom_ff)
+    print(' geom ff:', geom_ff)
     proj_data = discr_proj_space.element(1)
     print('\nBACKWARD:\nproj_data.shape:', proj_data.shape)
     print('discr_vol_space:', discr_vol_space.grid.shape)
     reco_data = astra_cpu_backward_projector_call(proj_data, geom_p2d,
                                                   discr_vol_space)
-    reco_data.show('imshow',
-              saveto=save_dir + 'parallel2d_cpu_backward.png',
-              title='PARALLEL')
+    im = reco_data.asarray()
+    plt.imshow(im)
+    plt.savefig(save_dir + 'test_reco.png')
+
+    # reco_data.show('imshow',
+    #           saveto=save_dir + 'parallel2d_cpu_backward.png',
+    #           title='PARALLEL')
 
     # FANFLAT: forward
     # proj_data = astra_cpu_forward_projector_call(discr_data, geom_ff,
