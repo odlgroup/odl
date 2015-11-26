@@ -97,7 +97,8 @@ class ProductSpaceOperator(Operator):
     """
 
     def __init__(self, operators, dom=None, ran=None):
-        """
+        """Initialize a new instance.
+
         Parameters
         ----------
         operators : array-like
@@ -472,7 +473,8 @@ class ComponentProjectionAdjoint(Operator):
     """
 
     def __init__(self, space, index):
-        """
+        """Initialize a new instance
+
         Parameters
         ----------
         space : `ProductSpace`
