@@ -142,5 +142,58 @@ def test_matrix_representation_product_to_product_two():
 
     assert almost_equal(np.sum(np.abs(AB_matrix - the_matrix)), 1e-6)
 
+
+def test_matrix_representation_not_linear_op():
+    # Verify that the matrix representation function gives correct error
+    class small_nonlin_op(odl.Operator):
+        """Small nonlinear test operator"""
+        def __init__(self):
+            super().__init__(domain=odl.Rn(3), range=odl.Rn(4), linear=False)
+
+        def _apply(self, x, out):
+            return odl.Rn(np.random.rand(4))
+
+    nonlin_op = small_nonlin_op()
+    with pytest.raises(ValueError):
+        matrix_representation(nonlin_op)
+
+
+def test_matrix_representation_wrong_domain():
+    # Verify that the matrix representation function gives correct error
+    class small_op(odl.Operator):
+        """Small nonlinear test operator"""
+        def __init__(self):
+            super().__init__(domain=ProductSpace(odl.Rn(3),
+                                                 ProductSpace(odl.Rn(3),
+                                                              odl.Rn(3))),
+                             range=odl.Rn(4), linear=True)
+
+        def _apply(self, x, out):
+            return odl.Rn(np.random.rand(4))
+
+    nonlin_op = small_op()
+    with pytest.raises(TypeError):
+        matrix_representation(nonlin_op)
+
+
+def test_matrix_representation_wrong_range():
+    # Verify that the matrix representation function gives correct error
+    class small_op(odl.Operator):
+        """Small nonlinear test operator"""
+        def __init__(self):
+            super().__init__(domain=odl.Rn(3),
+                             range=ProductSpace(odl.Rn(3),
+                                                ProductSpace(odl.Rn(3),
+                                                             odl.Rn(3))),
+                             linear=True)
+
+        def _apply(self, x, out):
+            return odl.Rn(np.random.rand(4))
+
+    nonlin_op = small_op()
+    with pytest.raises(TypeError):
+        matrix_representation(nonlin_op)
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
