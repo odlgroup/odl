@@ -11,5 +11,5 @@ ignore-paths:
 ignore-patterns:
     - ^example/doc_.*\.py$
 pylint:
-  disable:
-    - anomalous-backslash-in-string
+    disable:
+        - anomalous-backslash-in-string
