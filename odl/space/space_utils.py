@@ -28,7 +28,7 @@ __all__ = ('vector',)
 import numpy as np
 
 # Internal
-from odl.space import CUDA_AVAILABLE, CUDA_DTYPES
+from odl.space import CUDA_AVAILABLE
 from odl.space.ntuples import Rn, Cn, Fn, Ntuples
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
@@ -87,10 +87,12 @@ def vector(array, dtype=None, impl='numpy'):
     >>> vector([[1, 0], [1, 1]])
     Fn(4, 'int').element([1, 0, 1, 1])
     """
+    # TODO: disallow more than 1d?
     if dtype is None:
-        arr = np.atleast_1d(array).ravel()
+        # Cannot simply pass None since np.array interprets it as float
+        arr = np.array(array, copy=False, ndmin=1).ravel()
     else:
-        arr = np.atleast_1d(array).astype(dtype).ravel()
+        arr = np.array(array, copy=False, dtype=dtype, ndmin=1).ravel()
 
     if str(impl).lower() == 'numpy':
         if is_real_floating_dtype(arr.dtype):
@@ -114,9 +116,6 @@ def vector(array, dtype=None, impl='numpy'):
         elif is_scalar_dtype(arr.dtype):
             space_type = CudaFn
         else:
-            if arr.dtype not in CUDA_DTYPES:
-                raise ValueError("data type '{}' not supported."
-                                 "".format(arr.dtype))
             space_type = CudaNtuples
 
     else:
