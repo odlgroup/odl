@@ -348,6 +348,7 @@ class ProductSpace(LinearSpace):
             (spc._dist(x1p, x2p)
              for spc, x1p, x2p in zip(self.spaces, x1.parts, x2.parts)),
             dtype=np.float64, count=self.size)
+        # pylint: disable=protected-access
         return self._prod_norm(dists)
 
     def _norm(self, x):
@@ -365,9 +366,16 @@ class ProductSpace(LinearSpace):
         return self._prod_inner_sum(inners)
 
     def _multiply(self, x1, x2, out):
+        # pylint: disable=protected-access
         for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
                                      out.parts):
             spc._multiply(xp, yp, outp)
+
+    def _divide(self, x1, x2, out):
+        # pylint: disable=protected-access
+        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
+                                     out.parts):
+            spc._divide(xp, yp, outp)
 
     def __eq__(self, other):
         """``ps.__eq__(other) <==> ps == other``.
@@ -458,6 +466,71 @@ class ProductSpaceVector(LinearSpaceVector):
         """The number of factors of this vector's space."""
         return self.space.size
 
+    @property
+    def total_size(self):
+        """The total number of elements of this space's factors"""
+        # Todo: only calculate once?
+        total = 0
+        for part in self.parts:
+            if isinstance(part, ProductSpaceVector):
+                total += part.total_size
+            else:
+                total += part.size
+        return total
+
+    @property
+    def shape(self):
+        """The shape of this vector, given by (size, )."""
+        return (self.size,)
+
+    @property
+    def ndim(self):
+        """The number of dimensions of this vector, always 1."""
+        return 1
+
+    def __len__(self):
+        """``v.__len__() <==> len(v)``."""
+        return len(self.space)
+
+    @property
+    def dtype(self):
+        """The dtype of the vector elements.
+
+        Uses `numpy.find_common_type` if no common dtype exists.
+
+        See also
+        --------
+        common_dtype
+        """
+        # Todo: only calculate once?
+        return np.find_common_type(self.parts, [])
+
+    def asarray(self, out=None):
+        """Representation as linear numpy array.
+
+        Returns
+        -------
+        asarray : `numpy.ndarray`
+            Array representation
+        """
+        if out is None:
+            out = np.empty(self.total_size, dtype=self.dtype)
+        else:
+            assert isinstance(out, np.ndarray)
+            assert out.size == self.total_size
+            assert np.can_cast(self.dtype, out.dtype)
+
+        index = 0
+        for part in self.parts:
+            if isinstance(part, ProductSpaceVector):
+                out[index:index+part.total_size] = part.asarray()
+                index += part.total_size
+            else:
+                out[index:index+part.size] = part.asarray()
+                index += part.size
+
+        return out
+
     def __eq__(self, other):
         """``ps.__eq__(other) <==> ps == other``.
 
@@ -472,10 +545,6 @@ class ProductSpaceVector(LinearSpaceVector):
             return True
         else:
             return all(sp == op for sp, op in zip(self.parts, other.parts))
-
-    def __len__(self):
-        """``v.__len__() <==> len(v)``."""
-        return len(self.space)
 
     def __getitem__(self, indices):
         """``ps.__getitem__(indices) <==> ps[indices]``."""
