@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.operator.operator_utilities import matrix_representation
+from odl.operator.oputils import matrix_representation
 from odl.set.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
 
