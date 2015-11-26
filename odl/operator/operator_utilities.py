@@ -53,62 +53,64 @@ def matrix_representation(op):
     """
 
     if not op.is_linear:
-        print('WARNING: The operator is not linear; cannot produce matrix',
-              'representation of it.')
-        return
+        raise ValueError('The operator is not linear')
 
     if not (isinstance(op.domain, FnBase) or
-            isinstance(op.domain, ProductSpace)):
-        print('WARNING: The operator domain is not discrete or produc space;',
-              'cannot produce matrix representation of it.')
-        return
+            (isinstance(op.domain, ProductSpace) and
+            all(isinstance(spc, FnBase) for spc in op.domain))):
+        raise TypeError('Operator domain {} is not FnBase, nor ProductSpace'
+                        'with only FnBase components'.format(op.domain))
 
     if not (isinstance(op.range, FnBase) or
-            isinstance(op.range, ProductSpace)):
-        print('WARNING: The operator range is not discrete; cannot produce',
-              'matrix representation of it.')
+            (isinstance(op.range, ProductSpace) and
+            all(isinstance(spc, FnBase) for spc in op.range))):
+        raise TypeError('Operator range {} is not FnBase, nor ProductSpace'
+                        'with only FnBase components'.format(op.range))
 
     # Get the size of the range, and handle ProductSpace
-    op_ran = op.range
-    op_ran_is_prod_space = isinstance(op_ran, ProductSpace)
+    # Store for reuse in loop
+    op_ran_is_prod_space = isinstance(op.range, ProductSpace)
     if op_ran_is_prod_space:
-        num_ran = op_ran.size
-        n = [op_ran[i].size for i in range(num_ran)]
+        num_ran = op.range.size
+        n = [ran.size for ran in op.range]
     else:
         num_ran = 1
-        n = [op_ran.size]
+        n = [op.range.size]
 
     # Get the size of the domain, and handle ProductSpace
-    op_dom = op.domain
-    op_dom_is_prod_space = isinstance(op_dom, ProductSpace)
+    # Store for reuse in loop
+    op_dom_is_prod_space = isinstance(op.domain, ProductSpace)
     if op_dom_is_prod_space:
-        num_dom = op_dom.size
-        m = [op_dom[i].size for i in range(num_dom)]
+        num_dom = op.domain.size
+        m = [dom.size for dom in op.domain]
     else:
         num_dom = 1
-        m = [op_dom.size]
+        m = [op.domain.size]
 
     # Generate the matrix
     matrix = np.zeros([np.sum(n), np.sum(m)])
-    tmp_1 = op_ran.element()
-    v = op_dom.element()
+    tmp_ran = op.range.element()  # Store for reuse in loop
+    tmp_dom = op.domain.element()  # Store for reuse in loop
     index = 0
 
     for i in range(num_dom):
         for j in range(m[i]):
-            v.set_zero()
+            tmp_dom.set_zero()
             if op_dom_is_prod_space:
-                v[i][j] = 1.0
+                tmp_dom[i][j] = 1.0
             else:
-                v[j] = 1.0
-            tmp_2 = op(v, out=tmp_1)
-            tmp_3 = []
+                tmp_dom[j] = 1.0
+            op(tmp_dom, out=tmp_ran)
             if op_ran_is_prod_space:
+                tmp_result = np.empty(np.sum(n))
+                tmp_idx = 0
                 for k in range(num_ran):
-                    tmp_3 = np.concatenate((tmp_3, tmp_2[k].asarray()))
+                    tmp_result[tmp_idx: tmp_idx + op.range[k].size] = \
+                        tmp_ran[k].asarray()
+                    tmp_idx += op.range[k].size
             else:
-                tmp_3 = tmp_2.asarray()
-            matrix[:, index] = tmp_3
+                tmp_result = tmp_ran.asarray()
+            matrix[:, index] = tmp_result
             index += 1
 
     return matrix
