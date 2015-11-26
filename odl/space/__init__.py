@@ -17,22 +17,25 @@
 
 """Concrete vector spaces."""
 
-# TODO: write an introduction
-
 from __future__ import absolute_import
 
 __all__ = ()
 
 from . import base_ntuples
 
-from . import ntuples
-from .ntuples import *
-__all__ += ntuples.__all__
+from . import cu_ntuples
+from .cu_ntuples import *
+__all__ += cu_ntuples.__all__
 
 from . import fspace
 from .fspace import *
 __all__ += fspace.__all__
 
-from . import cu_ntuples
-from .cu_ntuples import *
-__all__ += cu_ntuples.__all__
+from . import ntuples
+from .ntuples import *
+__all__ += ntuples.__all__
+
+from . import space_utils
+from .space_utils import *
+__all__ += space_utils.__all__
+
