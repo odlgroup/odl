@@ -229,6 +229,14 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             Numpy array of the same type as the space.
         """
 
+    def asflatarray(self, *args):
+        """Returns the data as a flat (1d) array.
+
+        For "linear" spaces such as Rn this is equal to asarray. In higher
+        dimensional spaces they may differ.
+        """
+        return self.asarray(*args).ravel()
+
     def __len__(self):
         """``v.__len__() <==> len(v)``.
 

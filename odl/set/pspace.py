@@ -531,6 +531,20 @@ class ProductSpaceVector(LinearSpaceVector):
 
         return out
 
+    def asflatarray(self, *args, **kwargs):
+        """Representation as linear numpy array.
+
+        Returns
+        -------
+        asarray : `numpy.ndarray`
+            Array representation
+
+        See also
+        --------
+        asarray
+        """
+        return self.asarray(*args, **kwargs)
+
     def __eq__(self, other):
         """``ps.__eq__(other) <==> ps == other``.
 

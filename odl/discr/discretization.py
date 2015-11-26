@@ -270,7 +270,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         """Create an identical (deep) copy of this vector."""
         return self.space.element(self.ntuple.copy())
 
-    def asarray(self, out=None):
+    def asarray(self, *args, **kwargs):
         """Extract the data of this array as a numpy array.
 
         Parameters
@@ -279,7 +279,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
             Array in which the result should be written in-place.
             Has to be contiguous and of the correct dtype.
         """
-        return self.ntuple.asarray(out=out)
+        return self.ntuple.asarray(*args, **kwargs)
 
     def __eq__(self, other):
         """``vec.__eq__(other) <==> vec == other``.
