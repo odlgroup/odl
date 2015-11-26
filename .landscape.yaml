@@ -12,4 +12,22 @@ ignore-patterns:
     - ^example/doc_.*\.py$
 pylint:
     disable:
+        - redefined-builtin
+        - too-many-arguments
         - anomalous-backslash-in-string
+    options:
+        include-naming-hint: yes
+        function-rgx: "[a-z_][a-zA-Z0-9_]{2,30}$"
+        function-name-hint: "[a-z_][a-zA-Z0-9_]{2,30}$"
+        variable-rgx: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        variable-name-hint: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        attr-rgx: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        attr-name-hint: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        argument-rgx: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        argument-name-hint: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        method-rgx: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        method-name-hint: "[a-z_][a-zA-Z0-9_]{1,30}$"
+        max-module-lines: 2500
+        max-locals: 15
+        max-attributes: 7
+        min-public-methods: 0
