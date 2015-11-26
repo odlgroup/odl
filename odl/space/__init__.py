@@ -38,4 +38,3 @@ __all__ += ntuples.__all__
 from . import space_utils
 from .space_utils import *
 __all__ += space_utils.__all__
-
