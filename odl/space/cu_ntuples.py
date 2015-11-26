@@ -1578,7 +1578,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
             instance with the same inner product, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomInnerProduct) and
-                self.inner == other.inner and
+                self._inner_impl == other._inner_impl and
                 super().__eq__(other))
 
     def __repr__(self):
@@ -1643,7 +1643,7 @@ class CudaFnCustomNorm(FnWeightingBase):
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomNorm) and
-                self.norm == other.norm and
+                self._norm_impl == other._norm_impl and
                 super().__eq__(other))
 
     def __repr__(self):
@@ -1707,7 +1707,7 @@ class CudaFnCustomDist(FnWeightingBase):
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomDist) and
-                self.dist == other.dist)
+                self._dist_impl == other._dist_impl)
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""

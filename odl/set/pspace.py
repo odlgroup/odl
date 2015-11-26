@@ -523,10 +523,10 @@ class ProductSpaceVector(LinearSpaceVector):
         index = 0
         for part in self.parts:
             if isinstance(part, ProductSpaceVector):
-                out[index:index+part.total_size] = part.asarray()
+                out[index:index + part.total_size] = part.asarray()
                 index += part.total_size
             else:
-                out[index:index+part.size] = part.asarray()
+                out[index:index + part.size] = part.asarray()
                 index += part.size
 
         return out
