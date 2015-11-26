@@ -104,7 +104,8 @@ class CudaNtuples(NtuplesBase):
         """
 
         if dtype not in _TYPE_MAP_NPY2CUDA.keys():
-            raise TypeError('data type {} not supported in CUDA'.format(dtype))
+            raise TypeError('data type {!r} not supported in CUDA'
+                            ''.format(dtype))
 
         super().__init__(size, dtype)
 
@@ -886,7 +887,7 @@ class CudaRn(CudaFn, LinearSpace):
         super().__init__(size, dtype, **kwargs)
 
         if not is_real_floating_dtype(self._dtype):
-            raise TypeError('data type {} not a real floating-point type.'
+            raise TypeError('data type {!r} not a real floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
@@ -1169,7 +1170,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
         super().__init__(impl='cuda', exponent=exponent,
                          dist_using_inner=False)
         if not isinstance(vector, CudaFnVector):
-            raise TypeError('vector {} must be a CudaFnVector'
+            raise TypeError('vector {!r} not a CudaFnVector'
                             ''.format(vector))
 
         self._vector = vector

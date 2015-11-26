@@ -61,7 +61,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         """
         self._size = int(size)
         if self.size < 0:
-            raise TypeError('size {} is not non-negative.'.format(size))
+            raise TypeError('size {!r} is not non-negative.'.format(size))
         self._dtype = np.dtype(dtype)
 
     @property

@@ -76,11 +76,11 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                              ''.format(map_type))
 
         if not isinstance(fset, FunctionSet):
-            raise TypeError('function set {} is not a `FunctionSet` instance.'
-                            ''.format(fset))
+            raise TypeError('function set {!r} is not a `FunctionSet` '
+                            'instance.'.format(fset))
 
         if not isinstance(grid, TensorGrid):
-            raise TypeError('grid {} is not a `TensorGrid` instance.'
+            raise TypeError('grid {!r} is not a `TensorGrid` instance.'
                             ''.format(grid))
 
         if not isinstance(dspace, NtuplesBase):
@@ -110,11 +110,11 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
 
         if self.is_linear:
             if not isinstance(fset, FunctionSpace):
-                raise TypeError('function space {} is not a `FunctionSpace` '
+                raise TypeError('function space {!r} is not a `FunctionSpace` '
                                 'instance.'.format(fset))
 
             if not isinstance(dspace, FnBase):
-                raise TypeError('data space {} is not an `FnBase` instance.'
+                raise TypeError('data space {!r} is not an `FnBase` instance.'
                                 ''.format(dspace))
 
             if fset.field != dspace.field:
@@ -174,7 +174,7 @@ class RawGridCollocation(FunctionSetMapping):
         # TODO: remove this requirement depending on the vectorization
         # solution
         if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError('domain {} of the function set is not an '
+            raise TypeError('domain {!r} of the function set is not an '
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 
@@ -324,7 +324,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         # TODO: remove this requirement depending on the vectorization
         # solution
         if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError('domain {} of the function set is not an '
+            raise TypeError('domain {!r} of the function set is not an '
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 

@@ -423,7 +423,7 @@ class TensorGrid(Set):
         TensorGrid([0.0, 1.0], [1.0], [-6.0, 15.0], [-1.0, 2.0])
         """
         if index not in Integers():
-            raise TypeError('{} is not an integer.'.format(index))
+            raise TypeError('{!r} is not an integer.'.format(index))
         if not 0 <= index <= self.ndim:
             raise IndexError('index {} out of valid range 0 -> {}.'
                              ''.format(index, self.ndim))
@@ -948,20 +948,19 @@ class RegularGrid(TensorGrid):
         >>> rg1.insert(rg2, 1)
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 6, 3])
         """
-        if index not in Integers():
-            raise TypeError('{} is not an integer.'.format(index))
-        if not 0 <= index <= self.ndim:
+        idx = int(index)
+        if not 0 <= idx <= self.ndim:
             raise IndexError('index {} out of valid range 0 -> {}.'
                              ''.format(index, self.ndim))
 
         if not isinstance(grid, RegularGrid):
-            raise TypeError('{} is not a regular grid.'.format(grid))
+            raise TypeError('{!r} is not a regular grid.'.format(grid))
 
-        new_shape = self.shape[:index] + grid.shape + self.shape[index:]
-        new_minpt = (self.min_pt[:index].tolist() + grid.min_pt.tolist() +
-                     self.min_pt[index:].tolist())
-        new_maxpt = (self.max_pt[:index].tolist() + grid.max_pt.tolist() +
-                     self.max_pt[index:].tolist())
+        new_shape = self.shape[:idx] + grid.shape + self.shape[idx:]
+        new_minpt = (self.min_pt[:idx].tolist() + grid.min_pt.tolist() +
+                     self.min_pt[idx:].tolist())
+        new_maxpt = (self.max_pt[:idx].tolist() + grid.max_pt.tolist() +
+                     self.max_pt[idx:].tolist())
         return RegularGrid(new_minpt, new_maxpt, new_shape)
 
     def squeeze(self):

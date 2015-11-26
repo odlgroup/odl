@@ -200,11 +200,10 @@ class Strings(Set):
             The fixed length of the strings in this set. Must be
             positive.
         """
-        if length not in Integers():
-            raise TypeError('`length` {} is not an integer.'.format(length))
-        if length <= 0:
+        le = int(length)
+        if le <= 0:
             raise ValueError('`length` {} is not positive.'.format(length))
-        self._length = length
+        self._length = le
 
     @property
     def length(self):
@@ -421,7 +420,7 @@ class CartesianProduct(Set):
         if not all(isinstance(set_, Set) for set_ in sets):
             wrong = [set_ for set_ in sets
                      if not isinstance(set_, Set)]
-            raise TypeError('{} not Set instance(s)'.format(wrong))
+            raise TypeError('{!r} not Set instance(s)'.format(wrong))
 
         self._sets = tuple(sets)
 

@@ -77,7 +77,7 @@ def test_strings():
     S6 = Strings(6)
     Z = Integers()
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):  # Raises in the conversion to int
         Strings('fail')
 
     with pytest.raises(ValueError):

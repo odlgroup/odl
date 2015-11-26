@@ -87,15 +87,15 @@ class DiscreteLp(Discretization):
                 slowly, 'F' vice versa.
         """
         if not isinstance(fspace, FunctionSpace):
-            raise TypeError('{} is not a `FunctionSpace` instance.'
+            raise TypeError('{!r} is not a `FunctionSpace` instance.'
                             ''.format(fspace))
         if not isinstance(fspace.domain, IntervalProd):
-            raise TypeError('Function space domain {} is not an `IntervalProd`'
-                            ' instance.'.format(fspace.domain))
+            raise TypeError('Function space domain {!r} is not an '
+                            '`IntervalProd` instance.'.format(fspace.domain))
 
         self._interp = str(interp).lower()
         if self.interp not in _SUPPORTED_INTERP:
-            raise TypeError('{} is not among the supported interpolation'
+            raise TypeError('{!r} is not among the supported interpolation'
                             'types {}.'.format(interp, _SUPPORTED_INTERP))
 
         self._order = str(kwargs.pop('order', 'C')).upper()

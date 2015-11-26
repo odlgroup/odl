@@ -176,7 +176,7 @@ class FunctionSetVector(Operator):
         be provided.*
         """
         if not isinstance(fset, FunctionSet):
-            raise TypeError('function set {} not a `FunctionSet` '
+            raise TypeError('function set {!r} not a `FunctionSet` '
                             'instance.'.format(fset))
 
         if fcall is None and fapply is None:
@@ -184,11 +184,11 @@ class FunctionSetVector(Operator):
                              'both be `None`.')
 
         if fcall is not None and not callable(fcall):
-            raise TypeError('call function {} is not callable.'
+            raise TypeError('call function {!r} is not callable.'
                             ''.format(fcall))
 
         if fapply is not None and not callable(fapply):
-            raise TypeError('apply function {} is not callable.'
+            raise TypeError('apply function {!r} is not callable.'
                             ''.format(fapply))
 
         self._space = fset
@@ -264,7 +264,7 @@ class FunctionSetVector(Operator):
 
             else:
                 raise TypeError('input is neither an element of the '
-                                'function domain {} nor an array or '
+                                'function domain {!r} nor an array or '
                                 'meshgrid-type coordinate list.'
                                 ''.format(self.domain))
 
@@ -548,7 +548,7 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
         be provided.*
         """
         if not isinstance(fspace, FunctionSpace):
-            raise TypeError('function space {} not a `FunctionSpace` '
+            raise TypeError('function space {!r} not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
         super().__init__(fspace, fcall, fapply)

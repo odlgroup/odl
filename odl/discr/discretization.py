@@ -98,15 +98,15 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             ``ext.range == uspace``.
             """
         if not isinstance(uspace, Set):
-            raise TypeError('undiscretized space {} not a `Set` instance.'
+            raise TypeError('undiscretized space {!r} not a `Set` instance.'
                             ''.format(uspace))
         if not isinstance(dspace, NtuplesBase):
-            raise TypeError('data space {} not an `NtuplesBase` instance.'
+            raise TypeError('data space {!r} not an `NtuplesBase` instance.'
                             ''.format(dspace))
 
         if restr is not None:
             if not isinstance(restr, Operator):
-                raise TypeError('restriction operator {} not an `Operator` '
+                raise TypeError('restriction operator {!r} not an `Operator` '
                                 'instance.'.format(restr))
 
             if restr.domain != uspace:
@@ -121,7 +121,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
 
         if ext is not None:
             if not isinstance(ext, Operator):
-                raise TypeError('extension operator {} not an `Operator` '
+                raise TypeError('extension operator {!r} not an `Operator` '
                                 'instance.'.format(ext))
 
             if ext.domain != dspace:
@@ -380,11 +380,11 @@ class Discretization(RawDiscretization, FnBase):
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
-            raise TypeError('undiscretized space {} not a `LinearSpace` '
+            raise TypeError('undiscretized space {!r} not a `LinearSpace` '
                             'instance.'.format(uspace))
 
         if not isinstance(dspace, FnBase):
-            raise TypeError('data space {} not an `FnBase` instance.'
+            raise TypeError('data space {!r} not an `FnBase` instance.'
                             ''.format(dspace))
 
         if uspace.field != dspace.field:
@@ -394,20 +394,20 @@ class Discretization(RawDiscretization, FnBase):
 
         if restr is not None:
             if not isinstance(restr, Operator):
-                raise TypeError('restriction operator {} is not a '
+                raise TypeError('restriction operator {!r} is not a '
                                 '`Operator` instance.'.format(restr))
 
             if not restr.is_linear:
-                raise TypeError('restriction operator {} is not '
+                raise TypeError('restriction operator {!r} is not '
                                 'linear'.format(restr))
 
         if ext is not None:
             if not isinstance(ext, Operator):
-                raise TypeError('extension operator {} is not a '
+                raise TypeError('extension operator {!r} is not a '
                                 '`Operator` instance.'.format(ext))
 
             if not ext.is_linear:
-                raise TypeError('extension operator {} is not '
+                raise TypeError('extension operator {!r} is not '
                                 'linear'.format(ext))
 
     # Pass-through attributes of the wrapped ``dspace``
@@ -507,20 +507,20 @@ def dspace_type(space, impl, dtype=None):
         stype = spacetype_map[impl_][field_type]
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
-            raise TypeError('real floating data type {} requires space '
+            raise TypeError('real floating data type {!r} requires space '
                             'field to be of type `RealNumbers`, got {}.'
                             ''.format(dtype, field_type))
         stype = spacetype_map[impl_][field_type]
     elif is_complex_floating_dtype(dtype):
         if field_type is None or field_type == RealNumbers:
-            raise TypeError('complex floating data type {} requires space '
-                            'field to be of type `ComplexNumbers`, got {}.'
+            raise TypeError('complex floating data type {!r} requires space '
+                            'field to be of type `ComplexNumbers`, got {!r}.'
                             ''.format(dtype, field_type))
         stype = spacetype_map[impl_][field_type]
     elif is_scalar_dtype(dtype):
         if field_type == ComplexNumbers:
-            raise TypeError('non-floating data type {} requires space field '
-                            'to be of type `RealNumbers`, got {}.'
+            raise TypeError('non-floating data type {!r} requires space field '
+                            'to be of type `RealNumbers`, got {!r}.'
                             .format(dtype, field_type))
         elif field_type == RealNumbers:
             stype = basic_map[impl_]
@@ -529,7 +529,7 @@ def dspace_type(space, impl, dtype=None):
     elif field_type is None:  # Only in this case are arbitrary types allowed
         stype = spacetype_map[impl_][field_type]
     else:
-        raise TypeError('non-scalar data type {} cannot be combined with '
+        raise TypeError('non-scalar data type {!r} cannot be combined with '
                         'a `LinearSpace`.'.format(dtype))
 
     if stype is None:

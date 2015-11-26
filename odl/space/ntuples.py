@@ -1207,7 +1207,7 @@ class Cn(Fn):
         super().__init__(size, dtype, **kwargs)
 
         if not is_complex_floating_dtype(self._dtype):
-            raise TypeError('data type {} not a complex floating-point type.'
+            raise TypeError('data type {!r} not a complex floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
@@ -1273,7 +1273,7 @@ class Rn(Fn):
         super().__init__(size, dtype, **kwargs)
 
         if not is_real_floating_dtype(self.dtype):
-            raise TypeError('data type {} not a real floating-point type.'
+            raise TypeError('data type {!r} not a real floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
@@ -1365,8 +1365,8 @@ class MatVecOperator(Operator):
 
         # Check compatibility of matrix with domain and range
         if not np.can_cast(dom.dtype, ran.dtype):
-            raise TypeError('domain data type {} cannot be safely cast to '
-                            'range data type {}.'
+            raise TypeError('domain data type {!r} cannot be safely cast to '
+                            'range data type {!r}.'
                             ''.format(dom.dtype, ran.dtype))
 
         if self._matrix.shape != (ran.size, dom.size):
@@ -1376,8 +1376,8 @@ class MatVecOperator(Operator):
                                        (ran.size, dom.size),
                                        dom, ran))
         if not np.can_cast(self._matrix.dtype, ran.dtype):
-            raise TypeError('matrix data type {} cannot be safely cast to '
-                            'range data type {}.'
+            raise TypeError('matrix data type {!r} cannot be safely cast to '
+                            'range data type {!r}.'
                             ''.format(matrix.dtype, ran.dtype))
 
         super().__init__(dom, ran, linear=True)
