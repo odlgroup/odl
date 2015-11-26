@@ -83,6 +83,10 @@ def all_equal(iter1, iter2):
     try:
         i1 = iter(iter1)
         i2 = iter(iter2)
+        # Strings cause infinite recursion since each element is again a
+        # string. Need a shortcut.
+        if str(iter1) == iter1 or str(iter2) == iter2:
+            return iter1 == iter2
     except TypeError:
         return iter1 == iter2
 
