@@ -6,7 +6,10 @@ autodetect: yes
 ignore-paths:
     - doc
     - test
-    - example
+    - examples
     - odlpp
 ignore-patterns:
     - ^example/doc_.*\.py$
+pylint:
+  disable:
+    - anomalous-backslash-in-string
