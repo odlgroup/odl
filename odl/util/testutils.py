@@ -22,6 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import int, object
+from past.builtins import basestring
 
 # External
 # pylint: disable=no-name-in-module
