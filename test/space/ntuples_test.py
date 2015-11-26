@@ -667,40 +667,59 @@ def test_matvec_init(fn):
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
 
-    MatVecOperator(fn, fn, sparse_mat)
-    MatVecOperator(fn, fn, dense_mat)
+    MatVecOperator(sparse_mat, fn, fn)
+    MatVecOperator(dense_mat, fn, fn)
+
+    # Test defaults
+    op_float = MatVecOperator([[1.0, 2],
+                               [-1, 0.5]])
+
+    assert isinstance(op_float.domain, Rn)
+    assert isinstance(op_float.range, Rn)
+
+    op_complex = MatVecOperator([[1.0, 2 + 1j],
+                                 [-1 - 1j, 0.5]])
+
+    assert isinstance(op_complex.domain, Cn)
+    assert isinstance(op_complex.range, Cn)
+
+    op_int = MatVecOperator([[1, 2],
+                             [-1, 0]])
+
+    assert isinstance(op_int.domain, Fn)
+    assert isinstance(op_int.range, Fn)
 
     # Rectangular
     rect_mat = 2 * np.eye(2, 3)
     r2 = Rn(2)
     r3 = Rn(3)
 
-    MatVecOperator(r3, r2, rect_mat)
+    MatVecOperator(rect_mat, r3, r2)
 
     with pytest.raises(ValueError):
-        MatVecOperator(r2, r2, rect_mat)
+        MatVecOperator(rect_mat, r2, r2)
 
     with pytest.raises(ValueError):
-        MatVecOperator(r3, r3, rect_mat)
+        MatVecOperator(rect_mat, r3, r3)
 
     with pytest.raises(ValueError):
-        MatVecOperator(r2, r3, rect_mat)
+        MatVecOperator(rect_mat, r2, r3)
 
     # Rn to Cn okay
-    MatVecOperator(r3, Cn(2), rect_mat)
+    MatVecOperator(rect_mat, r3, Cn(2))
 
     # Cn to Rn not okay (no safe cast)
     with pytest.raises(TypeError):
-        MatVecOperator(Cn(3), r2)
+        MatVecOperator(rect_mat, Cn(3), r2)
 
     # Complex matrix between real spaces not okay
     rect_complex_mat = rect_mat + 1j
     with pytest.raises(TypeError):
-        MatVecOperator(r3, r2, rect_complex_mat)
+        MatVecOperator(rect_complex_mat, r3, r2)
 
     # Init with array-like structure (including numpy.matrix)
-    MatVecOperator(r3, r2, rect_mat.tolist())
-    MatVecOperator(r3, r2, np.asmatrix(rect_mat))
+    MatVecOperator(rect_mat.tolist(), r3, r2)
+    MatVecOperator(np.asmatrix(rect_mat), r3, r2)
 
 
 def test_matvec_simple_properties():
@@ -709,18 +728,18 @@ def test_matvec_simple_properties():
     r2 = Rn(2)
     r3 = Rn(3)
 
-    op = MatVecOperator(r3, r2, rect_mat)
+    op = MatVecOperator(rect_mat, r3, r2)
     assert isinstance(op.matrix, np.ndarray)
 
-    op = MatVecOperator(r3, r2, np.asmatrix(rect_mat))
+    op = MatVecOperator(np.asmatrix(rect_mat), r3, r2)
     assert isinstance(op.matrix, np.ndarray)
 
-    op = MatVecOperator(r3, r2, rect_mat.tolist())
+    op = MatVecOperator(rect_mat.tolist(), r3, r2)
     assert isinstance(op.matrix, np.ndarray)
     assert not op.matrix_issparse
 
     sparse_mat = _sparse_matrix(Rn(5))
-    op = MatVecOperator(Rn(5), Rn(5), sparse_mat)
+    op = MatVecOperator(sparse_mat, Rn(5), Rn(5))
     assert isinstance(op.matrix, sp.sparse.spmatrix)
     assert op.matrix_issparse
 
@@ -730,8 +749,8 @@ def test_matvec_adjoint(fn):
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
 
-    op_sparse = MatVecOperator(fn, fn, sparse_mat)
-    op_dense = MatVecOperator(fn, fn, dense_mat)
+    op_sparse = MatVecOperator(sparse_mat, fn, fn)
+    op_dense = MatVecOperator(dense_mat, fn, fn)
 
     # Just test if it runs, nothing interesting to test here
     op_sparse.adjoint
@@ -742,7 +761,7 @@ def test_matvec_adjoint(fn):
     r2, r3 = Rn(2), Rn(3)
     c2 = Cn(2)
 
-    op = MatVecOperator(r3, r2, rect_mat)
+    op = MatVecOperator(rect_mat, r3, r2)
     op_adj = op.adjoint
     assert op_adj.domain == op.range
     assert op_adj.range == op.domain
@@ -750,7 +769,7 @@ def test_matvec_adjoint(fn):
     assert np.array_equal(op_adj.adjoint.matrix, op.matrix)
 
     # The operator Rn -> Cn has no adjoint
-    op_noadj = MatVecOperator(r3, c2, rect_mat)
+    op_noadj = MatVecOperator(rect_mat, r3, c2)
     with pytest.raises(NotImplementedError):
         op_noadj.adjoint
 
@@ -761,8 +780,8 @@ def test_matvec_call(fn):
     dense_mat = _dense_matrix(fn)
     xarr, x = _vectors(fn)
 
-    op_sparse = MatVecOperator(fn, fn, sparse_mat)
-    op_dense = MatVecOperator(fn, fn, dense_mat)
+    op_sparse = MatVecOperator(sparse_mat, fn, fn)
+    op_dense = MatVecOperator(dense_mat, fn, fn)
 
     yarr_sparse = sparse_mat.dot(xarr)
     yarr_dense = dense_mat.dot(xarr)
@@ -787,7 +806,7 @@ def test_matvec_call(fn):
     rect_mat = 2 * np.eye(2, 3)
     r2, r3 = Rn(2), Rn(3)
 
-    op = MatVecOperator(r3, r2, rect_mat)
+    op = MatVecOperator(rect_mat, r3, r2)
     xarr = np.arange(3, dtype=float)
     x = r3.element(xarr)
 
