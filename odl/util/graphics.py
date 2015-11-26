@@ -59,11 +59,15 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     title : `str`, optional
         Set the title of the figure
 
-    indices : index expression
+    indices : index expression, optional
         Display a slice of the array instead of the full array. The
         index expression is most easily created with the `numpy.s_`
         constructur, i.e. supply ``np.s_[:, 1, :]`` to display the
         first slice along the second axis.
+
+        For data with 3 or more dimensions, the 2d slice in the first
+        two axes at the "middle" along the remaining axes is shown
+        (semantically ``[:, :, shape[2:] // 2]``).
 
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
@@ -86,6 +90,11 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     dsp_kwargs = {}
     sub_kwargs = {}
     arrange_subplots = (121, 122)  # horzontal arrangement
+
+    # Default to showing x-y slice "in the middle"
+    if indices is None and dfunc.ndim >= 3:
+        indices = [np.s_[:]] * 2
+        indices += [n // 2 for n in dfunc.space.grid.shape[2:]]
 
     if isinstance(indices, (Integral, slice)):
         indices = [indices]
@@ -196,7 +205,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
         sub_re.set_title('Real part')
         sub_re.set_xlabel(axis_labels[0])
-        if dfunc.ndim == 2:
+        if values.ndim == 2:
             sub_re.set_ylabel(axis_labels[1])
         else:
             sub_re.set_ylabel('value')
@@ -214,7 +223,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
         sub_im.set_title('Imaginary part')
         sub_im.set_xlabel(axis_labels[0])
-        if dfunc.ndim == 2:
+        if values.ndim == 2:
             sub_im.set_ylabel(axis_labels[1])
         else:
             sub_re.set_ylabel('value')
@@ -232,7 +241,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     else:
         sub = plt.subplot(111, **sub_kwargs)
         sub.set_xlabel(axis_labels[0])
-        if dfunc.ndim == 2:
+        if values.ndim == 2:
             sub.set_ylabel(axis_labels[1])
         else:
             sub.set_ylabel('value')
