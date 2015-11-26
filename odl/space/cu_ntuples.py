@@ -1722,15 +1722,6 @@ class CudaFnCustomDist(FnWeightingBase):
         """``w.__str__() <==> str(w)``."""
         return self.__repr__()  # TODO: prettify?
 
-if CUDA_AVAILABLE:
-    try:
-        CudaRn(1).element()
-    except (MemoryError, RuntimeError, TypeError) as err:
-        print(str(type(err)) + ':\n' + str(err))
-        print('Your GPU seems to be misconfigured. Skipping '
-              'CUDA-dependent modules.')
-        CUDA_AVAILABLE = False
-
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
