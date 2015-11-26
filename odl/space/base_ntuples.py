@@ -208,7 +208,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """Create an identical (deep) copy of this vector."""
 
     @abstractmethod
-    def asarray(self, start=None, stop=None, step=None):
+    def asarray(self, start=None, stop=None, step=None, out=None):
         """Extract the data of this array as a numpy array.
 
         Parameters
@@ -220,6 +220,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             `None` means the last element.
         start : `int`, optional
             Step length. `None` means 1.
+        out : `numpy.ndarray`
+            Array to write result to.
 
         Returns
         -------
@@ -476,6 +478,8 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def equiv(self, other):
         """Test if ``other`` is an equivalent inner product.
 
+        Should be overwritten, default tests for equality.
+
         Returns
         -------
         equivalent : `bool`
@@ -483,7 +487,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
             yields the same result as this inner product for any
             input, `False` otherwise.
         """
-        raise NotImplementedError
+        return self == other
 
     def inner(self, x1, x2):
         """Calculate the inner product of two vectors.

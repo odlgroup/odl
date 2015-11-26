@@ -40,6 +40,7 @@ load-plugins=
 # --disable=W"
 
 # Disable all messages caused solely by 'future' imports and functions
+# and also backslash to enable :math: and not callable since it fails with inherited __call__.
 disable=redefined-builtin,
   super-on-old-class,
   missing-super-argument,
@@ -47,6 +48,7 @@ disable=redefined-builtin,
   no-member,
   too-many-function-args,
   anomalous-backslash-in-string,
+  not-callable,
 
 # redefined-builtin: 'object', 'range', 'str', 'super' are redefined, that's okay
 # super-on-old-class: classes are erroneously interpreted as old-style

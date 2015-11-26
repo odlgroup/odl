@@ -185,7 +185,7 @@ class ProductSpaceOperator(Operator):
                 if sub_domain is None:
                     raise ValueError('Col {} empty, unable to determine '
                                      'domain, please use `dom` parameter'
-                                     ''.format(col, sub_domain))
+                                     ''.format(col))
 
             dom = ProductSpace(*domains)
 
@@ -194,7 +194,7 @@ class ProductSpaceOperator(Operator):
                 if sub_range is None:
                     raise ValueError('Row {} empty, unable to determine '
                                      'range, please use `ran` parameter'
-                                     ''.format(row, sub_range))
+                                     ''.format(row))
 
             ran = ProductSpace(*ranges)
 

@@ -573,8 +573,8 @@ class CudaFn(FnBase, CudaNtuples):
         exponent = kwargs.pop('exponent', 2.0)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        from builtins import sum
-        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
+        from builtins import sum as py_sum
+        if py_sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
@@ -1564,10 +1564,9 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
                             ''.format(inner))
         self._inner_impl = inner
 
-    @property
-    def inner(self):
+    def inner(self, x1, x2):
         """Custom inner product of this instance.."""
-        return self._inner_impl
+        return self._inner_impl(x1, x2)
 
     def __eq__(self, other):
         """``inner.__eq__(other) <==> inner == other``.
@@ -1630,10 +1629,9 @@ class CudaFnCustomNorm(FnWeightingBase):
         """Inner product is not defined for custom distance."""
         raise NotImplementedError
 
-    @property
-    def norm(self):
+    def norm(self, x):
         """Custom norm of this instance.."""
-        return self._norm_impl
+        return self._norm_impl(x)
 
     def __eq__(self, other):
         """``inner.__eq__(other) <==> inner == other``.
@@ -1687,10 +1685,9 @@ class CudaFnCustomDist(FnWeightingBase):
                             ''.format(dist))
         self._dist_impl = dist
 
-    @property
-    def dist(self):
+    def dist(self, x1, x2):
         """Custom distance of this instance.."""
-        return self._dist_impl
+        return self._dist_impl(x1, x2)
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""

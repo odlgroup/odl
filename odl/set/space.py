@@ -57,7 +57,7 @@ class LinearSpace(Set):
     """
 
     @abstractmethod
-    def element(self, inp=None):
+    def element(self, inp=None, **kwargs):
         """Create a `LinearSpaceVector` from ``inp`` or from scratch.
 
         If called without ``inp`` argument, an arbitrary element in the
@@ -67,6 +67,8 @@ class LinearSpace(Set):
         ----------
         inp : `object`, optional
             The input data from which to create the element
+        **args : `dict`, optional
+            Optional further arguments.
 
         Returns
         -------

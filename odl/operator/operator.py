@@ -1475,8 +1475,8 @@ def simple_operator(call=None, apply=None, inv=None, deriv=None,
     if apply is not None:
         attrs['_apply'] = _bound_method(apply)
 
-    simple_operator = _OperatorMeta('SimpleOperator', (Operator,), attrs)
-    return simple_operator(dom, ran, linear)
+    simple_op_cls = _OperatorMeta('SimpleOperator', (Operator,), attrs)
+    return simple_op_cls(dom, ran, linear)
 
 
 if __name__ == '__main__':

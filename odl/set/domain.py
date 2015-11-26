@@ -296,7 +296,7 @@ class IntervalProd(Set):
         if len(point) != self.ndim:
             raise ValueError('length {} of point {} does not match '
                              'the dimension {} of the set {}.'
-                             ''.format(len(point), point, self.ndim))
+                             ''.format(len(point), point, self.ndim, self))
 
         i_larger = np.where(point > self._end)
         i_smaller = np.where(point < self._begin)

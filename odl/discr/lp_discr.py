@@ -429,7 +429,7 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
         weight = np.prod(grid.stride)
     else:  # weighting_ == 'consistent'
         # TODO: implement
-        raise NotImplemented
+        raise NotImplementedError
 
     if dtype is not None:
         dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight,

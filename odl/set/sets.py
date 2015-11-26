@@ -102,9 +102,9 @@ class Set(with_metaclass(ABCMeta, object)):
     def contains_set(self, other):
         """Test if ``other`` is a subset of this set.
 
-        Implementing this method is optional.
+        Implementing this method is optional. Default it tests for equality.
         """
-        raise NotImplementedError("'contains_set' method not implemented.")
+        return self == other
 
     @abstractmethod
     def __eq__(self, other):
