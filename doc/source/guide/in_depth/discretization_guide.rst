@@ -9,5 +9,5 @@ TODO.
 References
 ----------
 See Wikipedia's mathematical overview articles
-`Discretization`
+`Discretization
 <https://en.wikipedia.org/wiki/Discretization`_.

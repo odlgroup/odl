@@ -17,15 +17,16 @@ be explicitly overridden by any subclass, namely
 
 ``domain``: `Set`
     Set of elements to which the operator can be applied
-``range`` `Set`
+``range`` : `Set`
     Set in which the operator takes values
 
 As a simple example, you can implement the matrix multiplication
 operator
 
-    :math:`\mathcal{A}: \mathbb{R}^m \\to \mathbb{R}^n, \quad \mathcal{A}(x) = Ax`
+.. math::
+   \mathcal{A}: \mathbb{R}^m \to \mathbb{R}^n, \quad \mathcal{A}(x) = Ax
 
-for a matrix :math:`A\\in \mathbb{R}^{n\\times m}` as follows::
+for a matrix :math:`A\in \mathbb{R}^{n\times m}` as follows::
 
     from builtins import super
     import numpy as np
@@ -44,8 +45,8 @@ evaluation, *in-place* or *out-of-place*.
 In place evaluation
 -------------------
 In-place evaluation means that the operator is evaluated on a
-``domain`` element, and the result is written to an
-*already existing* ``range`` element. To implement
+`Operator.domain` element, and the result is written to an
+*already existing* `Operator.range` element. To implement
 this behavior, create the (private) ``Operator._apply``
 method with the following signature, here given for the above
 example::
@@ -92,3 +93,64 @@ avoided*.
 
 This public calling interface is type-checked, so the private methods
 do not need to implement type checks.
+
+Operator arithmetic
+-------------------
+It is common in applications to perform arithmetic with operators, for example the addition of matrices
+
+.. math::
+   [A+B]x = Ax + Bx
+
+or multiplication of a functional by a scalar
+
+.. math::
+   [\alpha x^*](x) = \alpha x^* (x)
+
+Another example is matrix multiplication, which corresponds to operator composition
+
+.. math::
+   [AB](x) = A(Bx)
+
+.. _functional: https://en.wikipedia.org/wiki/Functional_(mathematics)
+
+All available operator arithmetic is shown below. `A`, `B` represent arbitrary `Operator`'s, `f` is a `Operator` with `Operator.range` a `Field` (sometimes called a functional_) and `a` is a scalar.
+
++------------------+-----------------+----------------------------+
+| Code             | Meaning         | Class                      |
++==================+=================+============================+
+| ``(A + B)(x)``   | ``A(x) + B(x)`` | `OperatorSum`              |
++------------------+-----------------+----------------------------+
+| ``(A * B)(x)``   | ``A(B(x))``     | `OperatorComp`             |
++------------------+-----------------+----------------------------+
+| ``(a * A)(x)``   | ``a * A(x)``    | `OperatorLeftScalarMult`   |
++------------------+-----------------+----------------------------+
+| ``(A * a)(x)``   | ``A(a * x)``    | `OperatorRightScalarMult`  |
++------------------+-----------------+----------------------------+
+| ``(v * f)(x)``   | ``v * f(x)``    | `FunctionalLeftVectorMult` |
++------------------+-----------------+----------------------------+
+| ``(v * A)(x)``   | ``v * A(x)``    | `OperatorLeftVectorMult`   |
++------------------+-----------------+----------------------------+
+| ``(A * v)(x)``   | ``A(v * x)``    | `OperatorRightVectorMult`  |
++------------------+-----------------+----------------------------+
+| not available    | ``A(x) * B(x)`` | `OperatorPointwiseProduct` |
++------------------+-----------------+----------------------------+
+
+There are also a few derived expressions using the above:
+
++------------------+--------------------------------------+
+| Code             | Meaning                              |
++==================+======================================+
+| ``(+A)(x)``      | ``A(x)``                             |
++------------------+--------------------------------------+
+| ``(-A)(x)``      | ``(-1) * A(x)``                      |
++------------------+--------------------------------------+
+| ``(A - B)(x)``   | ``A(x) + (-1) * B(x)``               |
++------------------+--------------------------------------+
+| ``A**n(x)``      | ``A(A**(n-1)(x))``, ``A^1(x) = A(x)``|
++------------------+--------------------------------------+
+| ``(A / a)(x)``   | ``A((1/a) * x)``                     |
++------------------+--------------------------------------+
+| ``(A @ B)(x)``   | ``(A * B)(x)``                       |
++------------------+--------------------------------------+
+
+Except for composition, operator arithmetic is generally only defined when `Operator.domain` and `Operator.range` is a `LinearSpace` or `Field`.
