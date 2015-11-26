@@ -40,10 +40,9 @@ def test_matrix_representation():
     # Verify that the matrix representation function returns the correct matrix
 
     n = 3
-    rn = odl.Rn(n)
     A = np.random.rand(n, n)
 
-    Aop = MatVecOperator(rn, rn, A)
+    Aop = MatVecOperator(A)
 
     the_matrix = matrix_representation(Aop)
 
@@ -56,12 +55,12 @@ def test_matrix_representation_product_to_lin_space():
     n = 3
     rn = odl.Rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(rn, rn, A)
+    Aop = MatVecOperator(A)
 
     m = 2
     rm = odl.Rn(m)
     B = np.random.rand(n, m)
-    Bop = MatVecOperator(rm, rn, B)
+    Bop = MatVecOperator(B)
 
     dom = ProductSpace(rn, rm)
     ran = ProductSpace(rn, 1)
@@ -80,12 +79,12 @@ def test_matrix_representation_lin_space_to_product():
     n = 3
     rn = odl.Rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(rn, rn, A)
+    Aop = MatVecOperator(A)
 
     m = 2
     rm = odl.Rn(m)
     B = np.random.rand(m, n)
-    Bop = MatVecOperator(rn, rm, B)
+    Bop = MatVecOperator(B)
 
     dom = ProductSpace(rn, 1)
     ran = ProductSpace(rn, rm)
@@ -104,18 +103,19 @@ def test_matrix_representation_product_to_product():
     n = 3
     rn = odl.Rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(rn, rn, A)
+    Aop = MatVecOperator(A)
 
     m = 2
     rm = odl.Rn(m)
     B = np.random.rand(m, m)
-    Bop = MatVecOperator(rm, rm, B)
+    Bop = MatVecOperator(B)
 
     ran_and_dom = ProductSpace(rn, rm)
 
     AB_matrix = np.vstack([np.hstack([A, np.zeros((n, m))]),
                           np.hstack([np.zeros((m, n)), B])])
-    ABop = ProductSpaceOperator([[Aop, None], [None, Bop]],
+    ABop = ProductSpaceOperator([[Aop, 0],
+                                 [0, Bop]],
                                 ran_and_dom, ran_and_dom)
     the_matrix = matrix_representation(ABop)
 
@@ -128,16 +128,17 @@ def test_matrix_representation_product_to_product_two():
     n = 3
     rn = odl.Rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(rn, rn, A)
+    Aop = MatVecOperator(A)
 
     B = np.random.rand(n, n)
-    Bop = MatVecOperator(rn, rn, B)
+    Bop = MatVecOperator(B)
 
     ran_and_dom = ProductSpace(rn, 2)
 
     AB_matrix = np.vstack([np.hstack([A, np.zeros((n, n))]),
                           np.hstack([np.zeros((n, n)), B])])
-    ABop = ProductSpaceOperator([[Aop, None], [None, Bop]],
+    ABop = ProductSpaceOperator([[Aop, 0],
+                                 [0, Bop]],
                                 ran_and_dom, ran_and_dom)
     the_matrix = matrix_representation(ABop)
 
