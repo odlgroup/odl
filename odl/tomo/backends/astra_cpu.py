@@ -184,7 +184,7 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
         get_data = astra.data3d.get_shared
 
     # TODO: check if axes have to be swapped
-    elem = reco_space.element(get_data(vol_id).swapaxes(0, 1))
+    elem = reco_space.element(get_data(vol_id))
 
     # Delete ASTRA objects
     astra_cleanup()

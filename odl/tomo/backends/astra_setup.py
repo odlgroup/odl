@@ -97,9 +97,9 @@ def astra_volume_geometry(discr_reco):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
-        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[0],
-                                         vol_min[0], vol_max[0],
-                                         vol_min[1], vol_max[1])
+        vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
+                                         vol_min[1], vol_max[1],
+                                         vol_min[0], vol_max[0])
     elif discr_reco.grid.ndim == 3:
         # Non-isotropic voxels are not yet supported in 3d ASTRA
         if not np.allclose(discr_reco.grid.stride[1:],
@@ -366,22 +366,17 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         dshape = data.space.grid.shape
         if ndim == 2:
             # Axes 0 and 1 need to be swapped in input (and output)
-            # if datatype == ''
-            if datatype == 'volume':
-                astra_shape = (dshape[1], dshape[0])
-            else:
-                astra_shape = (dshape[0], dshape[1])
+            # DO NOT SWAP AXES FOR INPUT, CHECK SWAPPING FOR OUTPUT
+            astra_shape = (dshape[0], dshape[1])
         else:
             # TODO: check what to do in this case - swapaxes is not an option
             # since it results in a non-contiguous array. Maybe one can
             # compensate afterwards?
-
             astra_shape = (dshape[2], dshape[1], dshape[0])
-        print(' \ndatatype: ', datatype, ', data_shape', data.shape,
-              ', astra_shape:', astra_shape, '\n')
+        # print(' \ndatatype: ', datatype, ', data_shape', data.shape,
+        #       ', astra_shape:', astra_shape, '\n')
         # ASTRA checks if data is c-contiguous and aligned
-        return link(astra_dtype_str, astra_geom,
-                    data.ntuple.data.reshape(astra_shape))
+        return link(astra_dtype_str, astra_geom, data.asarray())
     else:
         return create(astra_dtype_str, astra_geom)
 
@@ -434,7 +429,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     # "I" means probably mathematically inconsistent.
     # Some projectors are not implemented, e.g. CPU 3d projectors in general
     # TODO: ASTRA supports area weights (strip) for parallel and fanflat on CPU
-    type_map_cpu = {'parallel': {'nearest': 'line',
+    type_map_cpu = {'parallel': {'nearest': 'linear',
                                  'linear': 'linear'},  # I
                     'fanflat': {'nearest': 'line_fanflat',
                                 'linear': 'line_fanflat'},  # I
