@@ -82,6 +82,18 @@ class ProductSpaceOperator(Operator):
     the matrix multiplication
 
         :math:`[\mathcal{A}(x)]_i = \sum_{j=1}^m \mathcal{A}_{ij}(x_j)`.
+
+    Notes
+    -----
+    In many cases it is of interest to have an operator from a `ProductSpace`
+    to any `LinearSpace`. It that case this operator can be used with a slight
+    modification, simply run
+
+    ``prod_op = ProductSpaceOperator(prod_space, ProductSpace(linear_space))``
+
+    The same can be done for operators `LinearSpace` -> `ProductSpace`
+
+    ``prod_op = ProductSpaceOperator(ProductSpace(linear_space), prod_space)``
     """
 
     def __init__(self, operators, dom=None, ran=None):
