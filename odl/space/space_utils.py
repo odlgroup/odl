@@ -45,9 +45,8 @@ def vector(array, dtype=None, impl='numpy'):
     Parameters
     ----------
     array : array-like
-        Array from which to create the vector. All input is converted
-        to 1d, i.e. scalars become 1-dim. vectors and multidimensional
-        arrays are flattened (C-ordering).
+        Array from which to create the vector. Scalars become
+        one-dimensional vectors.
     dtype : `object`, optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
@@ -80,19 +79,20 @@ def vector(array, dtype=None, impl='numpy'):
     >>> vector([u'Hello,', u' world!'])
     Ntuples(2, '<U7').element([u'Hello,', u' world!'])
 
-    Output is always a one-dimensional vector:
+    Scalars become a one-element vector:
 
     >>> vector(0.0)
     Rn(1).element([0.0])
-    >>> vector([[1, 0], [1, 1]])
-    Fn(4, 'int').element([1, 0, 1, 1])
     """
-    # TODO: disallow more than 1d?
     if dtype is None:
         # Cannot simply pass None since np.array interprets it as float
-        arr = np.array(array, copy=False, ndmin=1).ravel()
+        arr = np.array(array, copy=False, ndmin=1)
     else:
-        arr = np.array(array, copy=False, dtype=dtype, ndmin=1).ravel()
+        arr = np.array(array, copy=False, dtype=dtype, ndmin=1)
+
+    if arr.ndim > 1:
+        raise ValueError('array has {} dimensions, expected 1.'
+                         ''.format(arr.ndim))
 
     if str(impl).lower() == 'numpy':
         if is_real_floating_dtype(arr.dtype):

@@ -74,6 +74,13 @@ def test_vector_numpy():
     x = vector([1, 2, 'inf'])  # Becomes string type
     assert isinstance(x, odl.NtuplesVector)
 
+    # Input not one-dimensional
+    x = vector(5.0)  # OK
+    assert x.shape == (1,)
+
+    with pytest.raises(ValueError):
+        vector([[1, 0], [0, 1]])
+
 
 @skip_if_no_cuda
 def test_vector_cuda():
@@ -111,6 +118,13 @@ def test_vector_cuda():
     # String types not supported
     with pytest.raises(ValueError):
         vector(inp)
+
+    # Input not one-dimensional
+    x = vector(5.0)  # OK
+    assert x.shape == (1,)
+
+    with pytest.raises(ValueError):
+        vector([[1, 0], [0, 1]])
 
 
 if __name__ == '__main__':
