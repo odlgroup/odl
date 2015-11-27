@@ -80,29 +80,29 @@ def test_astra_gpu_projector_call_2d():
     discr_proj_space = uniform_discr(proj_space, npixels, dtype='float32')
 
     # PARALLEL 2D: forward
-    p2_proj_data = astra_gpu_forward_projector_call(discr_data, geom_p2d,
+    proj_data_p2d = astra_gpu_forward_projector_call(discr_data, geom_p2d,
                                                  discr_proj_space)
-    p2_proj_data.show('imshow', saveto=for_dir + 'parallel2d_gpu.png',
+    proj_data_p2d.show('imshow', saveto=for_dir + 'parallel2d_gpu.png',
                    title='PARALLEL 2D FORWARD GPU')
 
     # FANFLAT: forward
     discr_data = discr_vol_space.element(p)
-    ff_proj_data = astra_gpu_forward_projector_call(discr_data, geom_ff,
+    proj_data_ff = astra_gpu_forward_projector_call(discr_data, geom_ff,
                                                  discr_proj_space)
-    ff_proj_data.show('imshow', saveto=for_dir + 'fanflat_gpu.png',
+    proj_data_ff.show('imshow', saveto=for_dir + 'fanflat_gpu.png',
                    title='FANFLAT 2D FORWARD GPU')
 
     # PARALLEL 2D: backward
-    p2_reco_data = astra_gpu_backward_projector_call(p2_proj_data, geom_p2d,
+    reco_data_p2d = astra_gpu_backward_projector_call(proj_data_p2d, geom_p2d,
                                                   discr_vol_space)
-    p2_reco_data.show('imshow', saveto=back_dir + 'parallel2d_gpu.png',
+    reco_data_p2d.show('imshow', saveto=back_dir + 'parallel2d_gpu.png',
                    title='PARALLEL 2D BACKWARD GPU')
 
     # FANFLAT: backward
-    # ff_reco_data = astra_gpu_backward_projector_call(ff_proj_data, geom_ff,
-    #                                               discr_vol_space)
-    # ff_reco_data.show('imshow', saveto=back_dir + 'fanflat_gpu.png',
-    #                title='FANFLAT 2D BACKWARD GPU')
+    reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom_ff,
+                                                  discr_vol_space)
+    reco_data_ff.show('imshow', saveto=back_dir + 'fanflat_gpu.png',
+                   title='FANFLAT 2D BACKWARD GPU')
 
 
 @skip_if_no_astra

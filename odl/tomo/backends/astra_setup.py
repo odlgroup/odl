@@ -399,8 +399,8 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
 
     Returns
     -------
-    cfg : dict
-        ASTRA dict with initialized 'type' key
+    proj_id : int
+        ASTRA reference ID to the ASTRA dict with initialized 'type' key
     """
     if vol_interp not in ('nearest', 'linear'):
         raise ValueError('volume interpolation type {!r} not understood.'
