@@ -164,9 +164,9 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         if axis is None:
             axis = np.array([0, 0, 1])
         elif isinstance(axis, (int, float)):
-            n = axis
+            ind = axis
             axis = np.zeros(3)
-            axis[n] = 1
+            axis[ind] = 1
         elif len(axis) == 3:
             axis = np.array(axis)
         else:
@@ -341,8 +341,8 @@ class ConeFlatGeometry(ConeBeamGeometry):
 
         # rotate vector
         if not (axis[0] == 0 and axis[1] == 0):
-            vec = -np.array(self.det_rotation(angle + self.angle_offset)[
-                             0]).squeeze()
+            vec = -np.array(
+                self.det_rotation(angle + self.angle_offset)[0]).squeeze()
 
 
 
@@ -469,15 +469,12 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         det_rad : float
             Radius of the detector circle, must be positive
         spiral_pitch_factor : float
-            Spiral pitch factor = (Table feed per rotation (mm))/(Total
-            collimation width). The total collimation width is given by the
-            slice thickness for a single-slice spiral acquisition and by
-            the number of detector rows * slice thickness for multiple
-            slice spiral acquisition.
-            TODO: Check if collimation width is given by the beam width at
-            the detector and thus by the detector height or by the nominal
-            beam width at isocenter and thus by the detector height projected
-            at isocenter.
+            Dimensionless factor given by the ration of (Table feed per
+            rotation (mm)) to (Total collimation width (mm)). The total
+            collimation width is given by the slice thickness for a
+            single-slice spiral acquisition and by the number of detector
+            rows * slice thickness for multiple slice spiral acquisition.
+            The collimation width is taken at isocenter.
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`
         dgrid : 2-dim. `TensorGrid`, optional
@@ -493,6 +490,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
                          dgrid, angle_offset, axis)
         det_height = (dparams.max() - dparams.min())[1]
+        # TODO: correct for magnification ie det_height projected to isocente
         self._table_feed_per_rotation = spiral_pitch_factor * det_height
 
     @property
@@ -523,7 +521,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         return np.array([
             self.det_radius * cos(angle + self.angle_offset),
             self.det_radius * sin(angle + self.angle_offset),
-            self.table_feed_per_rotation * angle / (2*np.pi)])
+            self.table_feed_per_rotation * angle / (2 * np.pi)])
 
     def src_position(self, angle):
         """The source position function.
@@ -549,7 +547,6 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         return np.array([
             -self.src_radius * cos(angle + self.angle_offset),
             -self.src_radius * sin(angle + self.angle_offset),
-            self.table_feed_per_rotation * angle / (
-                2*np.pi)])
+            self.table_feed_per_rotation * angle / (2 * np.pi)])
 
     # TODO: backprojection weighting function?
