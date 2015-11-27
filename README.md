@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://img.shields.io/badge/license-GPLv3-blue.svg)
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](http://opensource.org/licenses/GPL-3.0)
 [![Build Status](https://travis-ci.org/odlgroup/odl.svg?branch=master)](https://travis-ci.org/odlgroup/odl?branch=master)
 [![Coverage Status](https://coveralls.io/repos/odlgroup/odl/badge.svg?branch=master&service=github)](https://coveralls.io/github/odlgroup/odl?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/odl/badge/?version=latest)](http://odl.readthedocs.org/?badge=latest)
