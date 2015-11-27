@@ -92,7 +92,7 @@ def test_astra_cpu_projector_call_2d():
     # import matplotlib
     # matplotlib.use('qt4agg')
     import matplotlib.pyplot as plt
-    # print('BACKEND:', plt.get_backend())
+    print('BACKEND:', plt.get_backend())
     # plt.switch_backend('qt4agg')
     # print('BACKEND:', plt.get_backend())
     im = proj_data.asarray()
@@ -106,6 +106,10 @@ def test_astra_cpu_projector_call_2d():
     print('discr_vol_space:', discr_vol_space.grid.shape)
     reco_data = astra_cpu_backward_projector_call(proj_data, geom_p2d,
                                                   discr_vol_space)
+
+    reco_data.show('imshow', saveto=save_dir + 'reco_data_show.png',
+               title='PARALLEL 2D BACKWARD')
+
     im = reco_data.asarray()
     plt.imshow(im)
     plt.savefig(save_dir + 'test_reco.png')

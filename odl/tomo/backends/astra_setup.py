@@ -108,6 +108,7 @@ def astra_volume_geometry(discr_reco):
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
         # rows (y) first, columns (y) second, slices (z) third
+        # TODO: check
         vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[0], vol_shp[2])
     else:
         raise ValueError('{}-dimensional volume geometries not supported '
@@ -357,6 +358,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         raise ValueError('{}-dimensional data structures not supported.'
                          ''.format(ndim))
 
+
     if data is not None:
         if not isinstance(data.ntuple, FnVector):
             # Something else than NumPy data representation
@@ -376,7 +378,15 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         # print(' \ndatatype: ', datatype, ', data_shape', data.shape,
         #       ', astra_shape:', astra_shape, '\n')
         # ASTRA checks if data is c-contiguous and aligned
-        return link(astra_dtype_str, astra_geom, data.asarray())
+        print(' \n DATA TYPE:', datatype ,'\n')
+        if datatype == 'volume':
+            return link(astra_dtype_str, astra_geom, data.asarray())
+        elif datatype == 'projection':
+            # d = np.reshape(data.ntuple.data, (dshape[0], dshape[1]))
+            d = np.ascontiguousarray(
+                np.reshape(data.ntuple.data, (dshape[1], dshape[0])).T)
+            return link(astra_dtype_str, astra_geom, d)
+
     else:
         return create(astra_dtype_str, astra_geom)
 
@@ -429,6 +439,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     # "I" means probably mathematically inconsistent.
     # Some projectors are not implemented, e.g. CPU 3d projectors in general
     # TODO: ASTRA supports area weights (strip) for parallel and fanflat on CPU
+    # line raises Exception depending on parameters (number of pixels, voxels)
     type_map_cpu = {'parallel': {'nearest': 'linear',
                                  'linear': 'linear'},  # I
                     'fanflat': {'nearest': 'line_fanflat',
