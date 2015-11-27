@@ -29,6 +29,7 @@ from odl.tomo.backends.astra_setup import (astra_projection_geometry,
     astra_volume_geometry, astra_data, astra_projector, astra_algorithm,
     astra_cleanup)
 from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.geometry.fanbeam import FanFlatGeometry
 
 
 __all__ = ('astra_cpu_forward_projector_call',
@@ -38,15 +39,15 @@ __all__ = ('astra_cpu_forward_projector_call',
 
 
 def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
-    """Run an ASTRA forward projection on the given data.
+    """Run an ASTRA forward projection on the given data using the CPU.
 
     Parameters
     ----------
-    vol_data : `odl.DiscreteLp` element
+    vol_data : `DiscreteLpVector`
         Volume data to which the forward projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
-    proj_space : `odl.DiscreteLp`
+    proj_space : `DiscreteLp`
         Space to which the calling operator maps
 
     Returns
@@ -99,7 +100,10 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
         get_data = astra.data3d.get_shared
 
     # TODO: check if axes have to be swapped
-    elem = proj_space.element(get_data(sino_id))
+    if isinstance(geometry, FanFlatGeometry):
+        elem = proj_space.element(get_data(sino_id)[:, ::-1])
+    else:
+        elem = proj_space.element(get_data(sino_id))
 
     # Delete ASTRA objects
     astra_cleanup()
@@ -112,25 +116,25 @@ def astra_cpu_forward_projector_apply(vol_data, geometry, proj_data):
 
     Parameters
     ----------
-    vol_data : `odl.DiscreteLp` element
+    vol_data : `DiscreteLpVector`
         Volume data to which the forward projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
-    proj_data : `odl.DiscreteLpVector`
+    proj_data : `DiscreteLpVector`
         Projection space element to which the projection data is written
     """
 
 
 def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
-    """Run an ASTRA backward projection on the given data.
+    """Run an ASTRA backward projection on the given data using the CPU.
 
     Parameters
     ----------
-    proj_data : `odl.DiscreteLp` element
+    proj_data : `DiscreteLpVector`
         Projection data to which the backward projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
-    reco_space : `odl.DiscreteLp`
+    reco_space : `DiscreteLp`
         Space to which the calling operator maps
 
     Returns
@@ -184,7 +188,10 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
         get_data = astra.data3d.get_shared
 
     # TODO: check if axes have to be swapped
-    elem = reco_space.element(get_data(vol_id))
+    if isinstance(geometry, FanFlatGeometry):
+        elem = reco_space.element(get_data(vol_id)[::-1, ::-1])
+    else:
+        elem = reco_space.element(get_data(vol_id))
 
     # Delete ASTRA objects
     astra_cleanup()
@@ -192,21 +199,15 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
     return elem
 
 
-def astra_cpu_backward_projector_apply(proj_data, geometry, reco_space):
-    """Run an ASTRA backward projection on the given data.
+def astra_cpu_backward_projector_apply(proj_data, geometry, reco_data):
+    """Run an ASTRA backward projection on the given data using the CPU.
 
         Parameters
         ----------
-        proj_data : `odl.DiscreteLp` element
+        proj_data : `DiscreteLpVector`
             Projection data to which the backward projector is applied
         geometry : `Geometry`
             Geometry defining the tomographic setup
-        reco_space : `odl.DiscreteLp`
+        reco_data : `DiscreteLpVector`
             Space to which the calling operator maps
-
-        Returns
-        -------
-        reconstruction : reco_space element
-            Reconstruction data resulting from the application of the backward
-            projector
         """
