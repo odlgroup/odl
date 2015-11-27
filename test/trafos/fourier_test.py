@@ -26,13 +26,46 @@ standard_library.install_aliases()
 from itertools import product
 from math import pi
 import numpy as np
+import platform
 import pytest
 
 # ODL imports
 import odl
-from odl.trafos.fourier import (reciprocal, _shift_list, dft_preproc_data,
-                                dft_postproc_data)
+from odl.trafos.fourier import (
+    reciprocal, _shift_list, dft_preproc_data, dft_postproc_data,
+    DiscreteFourierTransform)
 from odl.util.testutils import all_almost_equal, all_equal
+from odl.util.utility import is_real_dtype
+
+
+# Pytest fixture
+
+
+# Simply modify exp_params to modify the fixture
+exp_params = [2.0, 1.0, float('inf'), 1.5]
+exp_ids = [' p = {} '.format(p) for p in exp_params]
+exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
+
+
+@exp_fixture
+def exponent(request):
+    return request.param
+
+
+# Simply modify exp_params to modify the fixture
+if platform.system() == 'Linux':
+    dtype_params = ['float32', 'float64', 'float128',
+                    'complex64', 'complex128', 'complex256']
+else:
+    dtype_params = ['float32', 'float64', 'complex64', 'complex128']
+dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
+dtype_fixture = pytest.fixture(scope="module", ids=dtype_ids,
+                               params=dtype_params)
+
+
+@dtype_fixture
+def dtype(request):
+    return request.param
 
 
 def test_shift_list():
@@ -331,6 +364,57 @@ def test_dft_postproc_data():
     dft_postproc_data(dfunc, x0)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
+
+
+def test_dft_init(exponent, dtype):
+
+    # 1D, C2C
+    intv = odl.Interval(0, 1)
+    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
+    fspace = odl.FunctionSpace(intv, field=field)
+    nsamp = 10
+    space_discr = odl.uniform_discr(fspace, nsamp, exponent=exponent,
+                                    impl='numpy', dtype=dtype)
+
+    DiscreteFourierTransform(space_discr)
+    DiscreteFourierTransform(space_discr, halfcomplex=False)
+    DiscreteFourierTransform(space_discr, shift=False)
+
+    # TODO: check combinations of halfcomplex and shift
+
+
+def test_dft_range(exponent, dtype):
+
+    def conj(ex):
+        if ex == 1.0:
+            return float('inf')
+        elif ex == float('inf'):
+            return 1.0
+        else:
+            return ex / (ex - 1.0)
+
+    # 1D, C2C
+    intv = odl.Interval(0, 1)
+    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
+    fspace = odl.FunctionSpace(intv, field=field)
+    nsamp = 10
+    space_discr = odl.uniform_discr(fspace, nsamp, exponent=exponent,
+                                    impl='numpy', dtype=dtype)
+
+    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
+    assert dft.range.field == odl.ComplexNumbers()
+    halfcomplex = True if is_real_dtype(dtype) else False
+    assert dft.range.grid == reciprocal(dft.domain.grid,
+                                        halfcomplex=halfcomplex,
+                                        shift=True)
+    assert dft.range.exponent == conj(exponent)
+
+    dft = DiscreteFourierTransform(space_discr, halfcomplex=False, shift=False)
+    assert dft.range.field == odl.ComplexNumbers()
+    assert dft.range.grid == reciprocal(dft.domain.grid, halfcomplex=False,
+                                        shift=False)
+    assert dft.range.exponent == conj(exponent)
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

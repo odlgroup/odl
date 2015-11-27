@@ -21,7 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import next, range, str, super
+from builtins import next, range, super
 
 # External
 from math import pi
@@ -35,11 +35,15 @@ except ImportError:
 
 # Internal
 from odl.discr.grid import RegularGrid, sparse_meshgrid
-from odl.discr.lp_discr import DiscreteLp
+from odl.discr.lp_discr import DiscreteLp, dspace_type
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.space.fspace import FunctionSpace
+from odl.space.ntuples import _TYPE_MAP_R2C
+from odl.util.utility import is_real_dtype
 
-__all__ = ('DiscreteFourierTrafo', 'DiscreteFourierTrafoInverse')
+
+__all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse')
 
 
 # TODO: exclude CUDA vectors somehow elegantly
@@ -209,8 +213,8 @@ def dft_preproc_data(dfunc, shift=True):
         If `True`, the reciprocal grid is shifted by half a stride in
         the negative direction.
         With a boolean array or iterable, this option is applied
-        separately on each axis. At least ``grid.ndim`` values must be
-        provided.
+        separately on each axis. At least ``dfunc.space.grid.ndim``
+        values must be provided.
 
     Returns
     -------
@@ -279,9 +283,9 @@ def dft_postproc_data(dfunc, x0):
         np.multiply(dfunc, vec, out=dfunc.asarray())
 
 
-class DiscreteFourierTrafo(Operator):
+class DiscreteFourierTransform(Operator):
 
-    """Discrete Fourier trafo between discrete Lp spaces.
+    """Discrete Fourier transform between discrete Lp spaces.
 
     The Fourier transform is defined as the linear operator
 
@@ -331,7 +335,7 @@ class DiscreteFourierTrafo(Operator):
 
     """
 
-    def __init__(self, dom, ran=None, **kwargs):
+    def __init__(self, dom, **kwargs):
         """
         Parameters
         ----------
@@ -341,51 +345,37 @@ class DiscreteFourierTrafo(Operator):
             if it is equal to 2.0, this operator has an adjoint which
             is equal to the inverse.
 
-        ran : `odl.DiscreteLp`, optional
-            Domain of the wavelet transform. The exponent :math:`q` of
-            the discrete :math:`L^q` space must be equal to
-            :math:`p/(p-1)`, where :math:`p` is the exponent of ``dom``.
-            Note that for :math:`p=2`, it is :math:`q=2`.
-
-            If ``ran`` is `None`, the :attr:`odl.DiscreteLp.grid`
-            of ``dom`` must be a `odl.RegularGrid`. In this case,
-            the operator range is created as `odl.DiscreteLp`
-            with conjugate exponent :math:`p/(p-1)` and reciprocal grid
-            sampling.
-
         kwargs : {'halfcomplex', 'even_shift'}
 
             'halfcomplex' : `bool`, optional
                 If `True`, calculate only the negative frequency part
-                for real input. If `False`, calculate the full
-                complex FFT.
+                along the last axis for real input. If `False`,
+                calculate the full complex FFT.
+
+                TODO: doc combination with shift
 
                 This option only applies to 'uni-to-uni' transforms.
-                For complex domain, it has no effect.
+                For complex ``dom``, it has no effect.
 
-                Default: `False`
+                Default: `True`
 
-            'even_shift' : {'none', 'left', 'right'}
-                In dimensions with even number of samples, the
-                point-symmetric reciprocal grid does not contain 0.
-                For options ``'left'`` and ``'right'``, the grid is
-                shifted by half a stride in the specified direction
-                such that 0 falls on a grid point.
-
-                Inputs other than ``'left'`` or ``'right'`` are
-                interpreted as ``'none'``.
+            'shift' : `bool` or iterable, optional
+                If `True`, the reciprocal grid is shifted by half a stride in
+                the negative direction.
+                With a boolean array or iterable, this option is applied
+                separately on each axis. At least ``dom.grid.ndim``
+                values must be provided.
 
                 This option only applies to 'uni-to-uni' transforms.
 
-                Default: ``'none'``
+                Default: `True`
 
         Notes
         -----
-        The :attr:`odl.Operator.range` of this operator always has the
-        `odl.ComplexNumbers` as its
-        :attr:`odl.LinearSpace.field`, i.e. if the field of ``dom``
-        is the `odl.RealNumbers`, this operator has no
-        :attr:`odl.Operator.adjoint`.
+        The `Operator.range` of this operator always has the
+        `odl.ComplexNumbers` as its `LinearSpace.field`, i.e. if the
+        field of ``dom`` is the `RealNumbers`, this operator has no
+        `Operator.adjoint`.
         """
         if not isinstance(dom, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
@@ -397,41 +387,41 @@ class DiscreteFourierTrafo(Operator):
                              ''.format(dom.exponent))
         if dom.exponent == 1.0:
             conj_exp = float('inf')
+        elif dom.exponent == float('inf'):
+            conj_exp = 1.0  # This is not strictly correct in math, but anyway
         else:
             conj_exp = dom.exponent / (dom.exponent - 1.0)
 
-        if ran is not None:
-            if not isinstance(ran, DiscreteLp):
-                raise TypeError('range {!r} is not a `DiscreteLp` instance.'
-                                ''.format(dom))
-            if not np.allclose(ran.exponent, conj_exp):
-                raise ValueError('range exponent {} not equal to the '
-                                 'conjugate exponent {}.'
-                                 ''.format(self.range.exponent, conj_exp))
-
-        if not isinstance(dom.grid, RegularGrid):
-            raise NotImplementedError('irregular grids not supported yet.')
-        else:
+        if isinstance(dom.grid, RegularGrid):
             if dom.field == ComplexNumbers():
                 self._halfcomplex = False
             else:
-                self._halfcomplex = bool(kwargs.pop('halfcomplex'), False)
+                self._halfcomplex = bool(kwargs.pop('halfcomplex', True))
 
-            even_shift = str(kwargs.pop('even_shift')).lower()
-            if even_shift not in ('left', 'right'):
-                even_shift = 'none'
+            self._shift = bool(kwargs.pop('shift', True))
+        else:
+            raise NotImplementedError('irregular grids not supported yet.')
 
-            recip_grid = reciprocal(dom.grid, halfcomplex=self._halfcomplex,
-                                    even_shift=even_shift)
+        # Calculate range
+        recip_grid = reciprocal(dom.grid, shift=self._shift,
+                                halfcomplex=self._halfcomplex)
 
-            pass
+        # Always complex space
+        ran_fspace = FunctionSpace(recip_grid.convex_hull(), ComplexNumbers())
+
+        if is_real_dtype(dom.dtype):
+            ran_dtype = _TYPE_MAP_R2C[dom.dtype]
+        else:
+            ran_dtype = dom.dtype
+        # TODO: handle impl
+        ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
+                                      dtype=ran_dtype)
+        ran_dspace = ran_dspace_type(recip_grid.ntotal, dtype=ran_dtype,
+                                     exponent=conj_exp)
+        # TODO: check how order is handled
+        ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace, exponent=conj_exp)
 
         super().__init__(dom, ran, linear=True)
-
-        # TODO: relax this restraint
-        if not np.all(dom.grid.stride == 1):
-            raise NotImplementedError('non-uniform grid cell sizes not yet '
-                                      'supported.')
 
     def _apply(self, x, out):
         """Raw in-place application method."""
@@ -450,10 +440,10 @@ class DiscreteFourierTrafo(Operator):
     def inverse(self):
         """The inverse wavelet transform."""
         # TODO: add appropriate arguments
-        return DiscreteFourierTrafoInverse()
+        return DiscreteFourierTransformInverse()
 
 
-class DiscreteFourierTrafoInverse(Operator):
+class DiscreteFourierTransformInverse(Operator):
     pass
 
 
