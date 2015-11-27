@@ -84,7 +84,7 @@ target/
 # PyCharm project files
 .idea
 
-# IPyhton notebook files
+# IPyhton / Jupyter notebook files
 *.ipynb
 .ipynb_checkpoints
 
