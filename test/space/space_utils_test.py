@@ -24,6 +24,7 @@ standard_library.install_aliases()
 
 # External module imports
 import pytest
+import numpy as np
 
 # ODL imports
 import odl
@@ -38,21 +39,27 @@ def test_vector_numpy():
 
     x = vector(inp)
     assert isinstance(x, odl.RnVector)
+    assert x.dtype == np.dtype('float64')
     assert all_equal(x, inp)
 
     x = vector([1.0, 2.0, float('inf')])
+    assert x.dtype == np.dtype('float64')
     assert isinstance(x, odl.RnVector)
 
     x = vector([1.0, 2.0, float('nan')])
+    assert x.dtype == np.dtype('float64')
     assert isinstance(x, odl.RnVector)
 
     x = vector([1, 2, 3], dtype='float32')
+    assert x.dtype == np.dtype('float32')
+    assert isinstance(x, odl.RnVector)
 
     # Cn
     inp = [1 + 1j, 2, 3 - 2j]
 
     x = vector(inp)
     assert isinstance(x, odl.CnVector)
+    assert x.dtype == np.dtype('complex128')
     assert all_equal(x, inp)
 
     x = vector([1, 2, 3], dtype='complex64')
@@ -63,16 +70,20 @@ def test_vector_numpy():
 
     x = vector(inp)
     assert isinstance(x, odl.FnVector)
+    assert x.dtype == np.dtype('int')
     assert all_equal(x, inp)
 
     # Ntuples
     inp = ['a', 'b', 'c']
     x = vector(inp)
     assert isinstance(x, odl.NtuplesVector)
+    assert np.issubdtype(x.dtype, 'S')
     assert all_equal(x, inp)
 
     x = vector([1, 2, 'inf'])  # Becomes string type
     assert isinstance(x, odl.NtuplesVector)
+    assert np.issubdtype(x.dtype, 'S')
+    assert all_equal(x, ['1', '2', 'inf'])
 
     # Input not one-dimensional
     x = vector(5.0)  # OK
@@ -90,21 +101,29 @@ def test_vector_cuda():
 
     x = vector(inp, impl='cuda')
     assert isinstance(x, odl.CudaRnVector)
+    assert x.dtype == np.dtype('float32')
     assert all_equal(x, inp)
 
     x = vector([1.0, 2.0, float('inf')], impl='cuda')
     assert isinstance(x, odl.CudaRnVector)
+    assert x.dtype == np.dtype('float32')
+    assert all_equal(x, [1.0, 2.0, float('inf')])
 
     x = vector([1.0, 2.0, float('nan')], impl='cuda')
     assert isinstance(x, odl.CudaRnVector)
+    assert x.dtype == np.dtype('float32')
+    assert all_equal(x, [1.0, 2.0, float('nan')])
 
     x = vector([1, 2, 3], dtype='float32', impl='cuda')
+    assert isinstance(x, odl.CudaRnVector)
+    assert all_equal(x, [1.0, 2.0, 3.0])
+    assert x.dtype == np.dtype('float32')
 
     # Cn, not yet supported
     inp = [1 + 1j, 2, 3 - 2j]
 
     with pytest.raises(NotImplementedError):
-        vector(inp)
+        vector(inp, impl='cuda')
 
     # Fn
     inp = [1, 2, 3]
@@ -117,14 +136,14 @@ def test_vector_cuda():
     inp = ['a', 'b', 'c']
     # String types not supported
     with pytest.raises(ValueError):
-        vector(inp)
+        vector(inp, impl='cuda')
 
     # Input not one-dimensional
     x = vector(5.0)  # OK
     assert x.shape == (1,)
 
     with pytest.raises(ValueError):
-        vector([[1, 0], [0, 1]])
+        vector([[1, 0], [0, 1]], impl='cuda')
 
 
 if __name__ == '__main__':
