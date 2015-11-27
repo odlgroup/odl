@@ -61,6 +61,3 @@ discr_phantom = discr_reco_space.element(cont_phantom)
 
 # Create data
 proj_data = xray_trafo(discr_phantom)
-
-print('\n projection data:', proj_data)
-print('\n projection data:', np.min(proj_data), np.max(proj_data))

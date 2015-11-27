@@ -375,18 +375,8 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
             # since it results in a non-contiguous array. Maybe one can
             # compensate afterwards?
             astra_shape = (dshape[2], dshape[1], dshape[0])
-        # print(' \ndatatype: ', datatype, ', data_shape', data.shape,
-        #       ', astra_shape:', astra_shape, '\n')
         # ASTRA checks if data is c-contiguous and aligned
-        print(' \n DATA TYPE:', datatype ,'\n')
-        if datatype == 'volume':
-            return link(astra_dtype_str, astra_geom, data.asarray())
-        elif datatype == 'projection':
-            # d = np.reshape(data.ntuple.data, (dshape[0], dshape[1]))
-            d = np.ascontiguousarray(
-                np.reshape(data.ntuple.data, (dshape[1], dshape[0])).T)
-            return link(astra_dtype_str, astra_geom, d)
-
+        return link(astra_dtype_str, astra_geom, data.asarray())
     else:
         return create(astra_dtype_str, astra_geom)
 
