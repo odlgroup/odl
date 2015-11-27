@@ -18,25 +18,28 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+
 standard_library.install_aliases()
 
 # External
 import astra
-
 # Internal
 from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
-    astra_volume_geometry, astra_data, astra_projector, astra_algorithm,
-    astra_cleanup)
+                                           astra_volume_geometry, astra_data,
+                                           astra_projector, astra_algorithm,
+                                           astra_cleanup)
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
-
 
 __all__ = ('astra_cpu_forward_projector_call',
            'astra_cpu_forward_projector_apply',
            'astra_cpu_backward_projector_call',
            'astra_cpu_backward_projector_apply')
 
+
+# TODO: Fix inconsistent scaling of ASTRA projector with pixel size
+# TODO: Implement apply methods
 
 def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
     """Run an ASTRA forward projection on the given data using the CPU.
@@ -99,7 +102,7 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
     else:  # ndim = 3
         get_data = astra.data3d.get_shared
 
-    # TODO: check if axes have to be swapped
+    # Flip detector pixels for fanflat
     if isinstance(geometry, FanFlatGeometry):
         elem = proj_space.element(get_data(sino_id)[:, ::-1])
     else:
@@ -155,8 +158,8 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
 
     if reco_space.grid.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
-            'geometry do not match.'.format(reco_space.grid.ndim,
-                                            geometry.ndim))
+                         'geometry do not match.'.format(reco_space.grid.ndim,
+                                                         geometry.ndim))
 
     ndim = proj_data.space.grid.ndim
 
@@ -187,7 +190,7 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
     else:  # ndim = 3
         get_data = astra.data3d.get_shared
 
-    # TODO: check if axes have to be swapped
+    # flip both dimensions = rotate 180 degrees
     if isinstance(geometry, FanFlatGeometry):
         elem = reco_space.element(get_data(vol_id)[::-1, ::-1])
     else:
