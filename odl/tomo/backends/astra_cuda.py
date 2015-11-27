@@ -44,11 +44,11 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
 
     Parameters
     ----------
-    vol_data : `odl.DiscreteLp` element
+    vol_data : `DiscreteLpVector`
         Volume data to which the projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
-    proj_space : `odl.DiscreteLp`
+    proj_space : `DiscreteLp`
         Space to which the calling operator maps
 
     Returns
@@ -104,30 +104,97 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
     return elem
 
 
-def astra_gpu_forward_projector_apply(vol_data, geometry, proj_data, direction):
+def astra_gpu_forward_projector_apply(vol_data, geometry, proj_data):
     """Run an ASTRA forward projection on the given data using the GPU.
 
     Parameters
     ----------
-    vol_data : `odl.DiscreteLp` element
+    vol_data : `DiscreteLpVector`
         Volume data to which the projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
-    proj_data : `odl.DiscreteLp.Vector`
+    proj_data : `DiscreteLpVector`
         Projection space element to which the projection data is written
-    direction : {'forward', 'backward'}
-        'forward' : apply forward projection
-
-        'backward' : apply backprojection
-
-    Returns
-    -------
-    None
     """
 
-def astra_gpu_backward_projector_call():
-    pass
+def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
+    """Run an ASTRA backward projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        proj_data : `DiscreteLp` element
+            Projection data to which the backward projector is applied
+        geometry : `Geometry`
+            Geometry defining the tomographic setup
+        reco_space : `DiscreteLp`
+            Space to which the calling operator maps
+
+        Returns
+        -------
+        reconstruction : reco_space element
+            Reconstruction data resulting from the application of the backward
+            projector
+        """
+    if not isinstance(proj_data, DiscreteLpVector):
+        raise TypeError('projection data {!r} is not a `DiscreteLpVector` '
+                        'instance.'.format(proj_data))
+    if not isinstance(geometry, Geometry):
+        raise TypeError('geometry  {!r} is not a `Geometry` instance.'
+                        ''.format(geometry))
+    if not isinstance(reco_space, DiscreteLp):
+        raise TypeError('reconstruction space {!r} is not a `DiscreteLp` '
+                        'instance.'.format(reco_space))
+
+    if reco_space.grid.ndim != geometry.ndim:
+        raise ValueError('dimensions {} of reconstruction space and {} of '
+                         'geometry do not match.'.format(reco_space.grid.ndim,
+                                                         geometry.ndim))
+
+    ndim = proj_data.space.grid.ndim
+
+    # Create astra geometries
+    vol_geom = astra_volume_geometry(reco_space)
+    proj_geom = astra_projection_geometry(geometry)
+
+    # Create ASTRA data structures
+    vol_id = astra_data(vol_geom, datatype='volume', data=None,
+                        ndim=reco_space.grid.ndim)
+    sino_id = astra_data(proj_geom, datatype='projection', data=proj_data)
+
+    # Create projector
+    vol_interp = proj_data.space.interp
+
+    # Create algorithm
+    algo_id = astra_algorithm('backward', ndim, vol_id, sino_id, proj_id=None,
+                              impl='cuda')
+
+    # Run algorithm and delete it
+    astra.algorithm.run(algo_id)
+
+    # Wrap data
+    if ndim == 2:
+        get_data = astra.data2d.get_shared
+    else:  # ndim = 3
+        get_data = astra.data3d.get_shared
+
+    # TODO: check if axes have to be swapped
+    elem = reco_space.element(get_data(vol_id))
+
+    # Delete ASTRA objects
+    astra_cleanup()
+
+    return elem
 
 
-def astra_gpu_backward_projector_apply():
-    pass
+def astra_gpu_backward_projector_apply(proj_data, geometry, reco_data):
+    """Run an ASTRA backward projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        proj_data : `DiscreteLpVector`
+            Projection data to which the backward projector is applied
+        geometry : `Geometry`
+            Geometry defining the tomographic setup
+        reco_data : `DiscreteLpVector`
+            Space to which the calling operator maps
+        """

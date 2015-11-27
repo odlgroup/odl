@@ -273,8 +273,8 @@ def astra_projection_geometry(geometry):
         det_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
         source_origin = geometry.src_radius
-        origin_det = geometry.det_radius  # ! In PyASTRA doc falsely labelled
-        # `source_det`
+        origin_det = geometry.det_radius  # Labelled falsely in PyASTRA doc
+        # as `source_det`
         proj_geom = astra.create_proj_geom('fanflat', det_width, det_count,
                                            angles, source_origin, origin_det)
     elif isinstance(geometry, Parallel3dGeometry):
@@ -502,6 +502,8 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     if ndim is 3 and impl is 'cpu':
         raise NotImplementedError(
             '3d algorithms for cpu is not supported by ASTRA')
+    if proj_id is None and impl is 'cpu':
+        raise ValueError('cpu implementation requires projector ID')
 
     algo_map = {'forward': {2: {'cpu': 'FP', 'cuda': 'FP_CUDA'},
                             3: {'cpu': None, 'cuda': 'FP3D_CUDA'}},

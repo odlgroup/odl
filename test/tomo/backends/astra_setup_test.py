@@ -294,6 +294,9 @@ def test_astra_algorithm():
         astra_algorithm(direction, 0, vol_id, sino_id, proj_id, impl)
     with pytest.raises(ValueError):
         astra_algorithm('none', ndim, vol_id, sino_id, proj_id, 'none')
+    with pytest.raises(ValueError):
+        astra_algorithm('backward', ndim, vol_id, sino_id, proj_id=None,
+                        impl='cpu')
     astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl)
 
     ndim = 2
@@ -303,7 +306,7 @@ def test_astra_algorithm():
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl)
 
     impl = 'cuda'
-    for direction in {'forward'}:
+    for direction in {'forward', 'backward'}:
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
                         impl=impl)
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=None,
@@ -319,7 +322,7 @@ def test_astra_algorithm():
                         impl=impl)
 
     impl = 'cuda'
-    for direction in {'forward'}:
+    for direction in {'forward', 'backward'}:
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
                         impl=impl)
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=None,
