@@ -33,6 +33,7 @@ from future.utils import native
 # External module imports
 # pylint: disable=no-name-in-module
 import ctypes
+from numbers import Integral
 from functools import partial
 from math import sqrt
 import numpy as np
@@ -342,12 +343,11 @@ class NtuplesVector(NtuplesBaseVector):
         >>> x[1:3].space
         Ntuples(2, '<U6')
         """
-        try:
-            return self.data[int(indices)]  # single index
-        except TypeError:
+        if isinstance(indices, Integral):
+            return self.data[indices]  # single index
+        else:
             arr = self.data[indices]
-            return type(self.space)(
-                len(arr), dtype=self.dtype).element(arr)
+            return type(self.space)(len(arr), dtype=self.dtype).element(arr)
 
     def __setitem__(self, indices, values):
         """Set values of this vector.
@@ -2131,8 +2131,8 @@ class FnConstWeighting(FnWeightingBase):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
+                                 dist_using_inner=dist_using_inner)
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
@@ -2327,8 +2327,8 @@ class FnNoWeighting(FnConstWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(constant=1.0, exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        FnConstWeighting.__init__(self, constant=1.0, exponent=exponent,
+                                  dist_using_inner=dist_using_inner)
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""

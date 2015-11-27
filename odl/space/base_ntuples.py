@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int, super
+from builtins import int
 
 # External module imports
 from abc import ABCMeta, abstractmethod
@@ -346,7 +346,7 @@ class FnBase(NtuplesBase, LinearSpace):
             objects or as string.
             Only scalar data types (numbers) are allowed.
         """
-        super().__init__(size, dtype)
+        NtuplesBase.__init__(self, size, dtype)
         if not is_scalar_dtype(self.dtype):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 

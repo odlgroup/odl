@@ -20,7 +20,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, str
+from builtins import range
 
 # External module imports
 from math import ceil
@@ -82,9 +82,10 @@ def _pos_array(fn):
 
 def _sparse_matrix(fn):
     """Create a sparse positive definite Hermitian matrix for `fn`."""
-    nnz = np.random.randint(0, int(ceil(fn.size ** 2 / 2)))
+    nnz = np.random.randint(0, int(ceil(fn.size)))
     coo_r = np.random.randint(0, fn.size, size=nnz)
     coo_c = np.random.randint(0, fn.size, size=nnz)
+
     if np.issubdtype(fn.dtype, np.floating):
         values = np.random.rand(nnz).astype(fn.dtype)
     elif np.issubdtype(fn.dtype, np.integer):
@@ -94,6 +95,7 @@ def _sparse_matrix(fn):
                   1j * np.random.rand(nnz)).astype(fn.dtype)
     else:
         raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
+
     mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
                                shape=(fn.size, fn.size),
                                dtype=fn.dtype)
