@@ -34,7 +34,7 @@ import odl
 from odl.trafos.fourier import (
     reciprocal, _shift_list, dft_preproc_data, dft_postproc_data, dft_call,
     DiscreteFourierTransform)
-from odl.util.testutils import all_almost_equal, all_equal
+from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_pyfftw
 from odl.util.utility import is_real_dtype
 
 
@@ -432,6 +432,7 @@ def test_dft_range(exponent, dtype):
     # TODO: check combinations of halfcomplex and shift
 
 
+@skip_if_no_pyfftw
 def test_dft_call_1d(dtype):
 
     # no halfcomplex
@@ -450,6 +451,7 @@ def test_dft_call_1d(dtype):
                      dfunc.space.grid.ntotal * dfunc.ntuple)
 
 
+@skip_if_no_pyfftw
 def test_dft_plan(planning):
 
     # 1D, no halfcomplex

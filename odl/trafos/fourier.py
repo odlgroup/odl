@@ -43,7 +43,8 @@ from odl.space.ntuples import _TYPE_MAP_R2C
 from odl.util.utility import is_real_dtype
 
 
-__all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse')
+__all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
+           'PYFFTW_AVAILABLE')
 
 
 # TODO: exclude CUDA vectors somehow elegantly

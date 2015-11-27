@@ -194,6 +194,10 @@ try:
         reason='Wavelet not available'
     )
 
+    skip_if_no_pyfftw = pytest.mark.skipif(
+        "not odl.trafos.PYFFTW_AVAILABLE",
+        reason='pyfftw not available')
+
     skip_if_no_largescale = pytest.mark.skipif(
         "not pytest.config.getoption('--largescale')",
         reason='Need --largescale option to run'
@@ -209,6 +213,9 @@ except ImportError:
     skip_if_no_pywavelets = _pass
     skip_if_no_largescale = _pass
     skip_if_no_benchmark = _pass
+
+    def skip_if_no_pyfftw(function):
+        return function
 
 
 class FailCounter(object):
