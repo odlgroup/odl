@@ -125,8 +125,6 @@ def reciprocal(grid, shift=True, halfcomplex=False):
         functions, the other half is the mirrored complex conjugate of
         the given half and therefore needs not be stored.
 
-        This option can only be used if ``shift=True``.
-
     Returns
     -------
     recip : `odl.RegularGrid`
@@ -258,7 +256,7 @@ def dft_postproc_data(dfunc, x0):
     form, this function becomes for each axis separately an array
 
         :math:`q_k = e^{-i x_0
-        \\big(\\xi_0 + \\frac{2\pi k}{s N}\\big)}.`
+        \\big(\\xi_0 + 2\pi k / (s N)\\big)}.`
 
     Parameters
     ----------
@@ -281,6 +279,134 @@ def dft_postproc_data(dfunc, x0):
     # Multiply with broadcasting
     for vec in meshgrid:
         np.multiply(dfunc, vec, out=dfunc.asarray())
+
+
+def dft_call(array_in, halfcomplex=False, **kwargs):
+    """Calculate the DFT out of place.
+
+    The discrete Fourier transform calcuates the sum
+
+        :math:`\widehat{f}_k =
+        \sum_{j \\in I_N} f_j\ e^{-i 2\pi j\odot k / N}`
+
+    for indices :math:`k \\in I_N` or, in the half-complex case,
+    :math:`0 \\leq k_d \\leq \\lfloor N_d / 2 \\rfloor + 1` for the
+    last component.
+
+    Parameters
+    ----------
+    array_in : `numpy.ndarray`
+        Array to be transformed
+    halfcomplex : `bool`, optional
+        If `True`, calculate only the negative frequency part along the
+        last axis for real input. If `False`, calculate the full
+        complex FFT.
+    kwargs :
+        'threads' : `int`, optional
+            Number of threads to use. Default: 1
+        'planning' : {'estimate', 'measure', 'patient', 'exhaustive'}
+            Flag for the amount of effort put into finding an optimal
+            FFTW plan. See the `FFTW doc on planner flags
+            <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
+
+        'planning_timelimit' : `float`, optional
+            Limit planning time to roughly this amount of seconds.
+            Default: `None` (no limit)
+
+        'import_wisdom' : `str`, optional
+            File name to load FFTW wisdom from
+
+        'export_wisdom' : `str`, optional
+            File name to append the accumulated FFTW wisdom to
+
+    Returns
+    -------
+    array_out : `numpy.ndarray`
+        The transformed array. If ``halfcomplex==True``, it holds
+        ``array_out.shape[-1] == array_in.shape[-1] // 2 + 1``, while
+        the rest of the shapes is equal. Otherwise, the shapes are
+        equal also in the last component.
+
+    Notes
+    -----
+    TODO: axes
+    """
+    import pickle
+
+    assert array_in.flags.aligned
+
+    # Create output array, adapt shape according to halfcomplex
+    shape_out = list(array_in.shape)
+    if halfcomplex:  # assuming real dtype
+        shape_out[-1] = array_in.shape[-1] // 2 + 1
+    elif is_real_dtype(array_in.dtype):
+        # real dtype but not halfcomplex -> make input complex
+        array_in = array_in.astype(_TYPE_MAP_R2C[array_in.dtype])
+
+    if is_real_dtype(array_in.dtype):
+        out_dtype = _TYPE_MAP_R2C[array_in.dtype]
+    else:
+        out_dtype = array_in.dtype
+
+    if array_in.flags.c_contiguous:
+        out_order = 'C'
+    elif array_in.flags.c_contiguous:
+        out_order = 'F'
+    else:
+        # TODO: make contiguous?
+        raise ValueError('input is not contiguous.')
+
+    array_out = np.empty(shape_out, dtype=out_dtype, order=out_order)
+
+    # Import wisdom if possible
+    wimport = kwargs.pop('import_wisdom', '')
+    if wimport:
+        try:
+            with open(wimport, 'r') as wfile:
+                wisdom = pickle.load(wfile)
+            if wisdom:
+                pyfftw.import_wisdom(wisdom)
+        except IOError:
+            pass
+
+    # Handle planning flags
+    planning = kwargs.pop('planning', 'estimate')
+    planning_ = str(planning).lower()
+    if planning_ == 'estimate':
+        flags = ('FFTW_ESTIMATE',)
+    elif planning_ == 'measure':
+        flags = ('FFTW_MEASURE',)
+    elif planning_ == 'patient':
+        flags = ('FFTW_PATIENT',)
+    elif planning_ == 'exhaustive':
+        flags = ('FFTW_EXHAUSTIVE',)
+    else:
+        raise ValueError("planning variant '{}' not understood."
+                         "".format(planning))
+
+    planning_timelimit = kwargs.pop('planning_timelimit', None)
+    threads = kwargs.pop('threads', 1)
+
+    # Need to copy input if not using FFTW_ESTIMATE since it's destroyed
+    # during planning
+    if planning != 'estimate':
+        plan_arr_in = np.empty_like(array_in)
+    else:
+        plan_arr_in = array_in
+
+    # TODO: add axes
+    fft_plan = pyfftw.FFTW(plan_arr_in, array_out, direction='FFTW_FORWARD',
+                           flags=flags, planning_timelimit=planning_timelimit,
+                           threads=threads)
+
+    fft_plan(array_in, array_out)
+
+    wexport = kwargs.pop('export_wisdom', '')
+    if wexport:
+        with open(wexport, 'a') as wfile:
+            pickle.dump(pyfftw.export_wisdom(), wfile)
+
+    return array_out
 
 
 class DiscreteFourierTransform(Operator):

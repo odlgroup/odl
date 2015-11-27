@@ -32,7 +32,7 @@ import pytest
 # ODL imports
 import odl
 from odl.trafos.fourier import (
-    reciprocal, _shift_list, dft_preproc_data, dft_postproc_data,
+    reciprocal, _shift_list, dft_preproc_data, dft_postproc_data, dft_call,
     DiscreteFourierTransform)
 from odl.util.testutils import all_almost_equal, all_equal
 from odl.util.utility import is_real_dtype
@@ -65,6 +65,18 @@ dtype_fixture = pytest.fixture(scope="module", ids=dtype_ids,
 
 @dtype_fixture
 def dtype(request):
+    return request.param
+
+
+# Simply modify exp_params to modify the fixture
+plan_params = ['estimate', 'measure', 'patient', 'exhaustive']
+plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
+plan_fixture = pytest.fixture(scope="module", ids=plan_ids,
+                              params=plan_params)
+
+
+@plan_fixture
+def planning(request):
     return request.param
 
 
@@ -380,6 +392,7 @@ def test_dft_init(exponent, dtype):
     DiscreteFourierTransform(space_discr, halfcomplex=False)
     DiscreteFourierTransform(space_discr, shift=False)
 
+    # TODO: nd and R2C
     # TODO: check combinations of halfcomplex and shift
 
 
@@ -415,6 +428,42 @@ def test_dft_range(exponent, dtype):
                                         shift=False)
     assert dft.range.exponent == conj(exponent)
 
+    # TODO: nd and R2C
+    # TODO: check combinations of halfcomplex and shift
+
+
+def test_dft_call_1d(dtype):
+
+    # no halfcomplex
+    intv = odl.Interval(0, 1)
+    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
+    fspace = odl.FunctionSpace(intv, field=field)
+    nsamp = 10
+    space_discr = odl.uniform_discr(fspace, nsamp, exponent=2.0,
+                                    impl='numpy', dtype=dtype)
+
+    dfunc = space_discr.one()
+    dft_arr = dft_call(dfunc.asarray(), halfcomplex=False)
+    twice_dft_arr = dft_call(dft_arr, halfcomplex=False)
+    # Unnormalized DFT, should give the mirrored array
+    assert all_equal(twice_dft_arr[::-1],
+                     dfunc.space.grid.ntotal * dfunc.ntuple)
+
+
+def test_dft_plan(planning):
+
+    # 1D, no halfcomplex
+    intv = odl.Interval(0, 1)
+    fspace = odl.FunctionSpace(intv, field=odl.ComplexNumbers())
+    nsamp = 10
+    space_discr = odl.uniform_discr(fspace, nsamp, exponent=2.0, impl='numpy')
+
+    dfunc = space_discr.one()
+    dft_arr = dft_call(dfunc.asarray(), planning=planning)
+    twice_dft_arr = dft_call(dft_arr)
+    # Unnormalized DFT, should give the mirrored array
+    assert all_equal(twice_dft_arr[::-1],
+                     dfunc.space.grid.ntotal * dfunc.ntuple)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
