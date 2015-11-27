@@ -87,26 +87,26 @@ def test_astra_cpu_projector_call_2d():
     print(' proj space:', discr_proj_space.grid.shape)
 
     # PARALLEL 2D: forward
-    proj_data = astra_cpu_forward_projector_call(discr_data, geom_p2d,
+    p2_proj_data = astra_cpu_forward_projector_call(discr_data, geom_p2d,
                                          discr_proj_space)
-    proj_data.show('imshow', saveto=for_dir + 'parallel2d_cpu.png',
+    p2_proj_data.show('imshow', saveto=for_dir + 'parallel2d_cpu.png',
                    title='PARALLEL 2D FORWARD CPU')
 
     # FANFLAT: forward
     discr_data = discr_vol_space.element(p)
-    proj_data = astra_cpu_forward_projector_call(discr_data, geom_ff,
+    ff_proj_data = astra_cpu_forward_projector_call(discr_data, geom_ff,
                                      discr_proj_space)
-    proj_data.show('imshow', saveto=for_dir + 'fanflat_cpu.png',
+    ff_proj_data.show('imshow', saveto=for_dir + 'fanflat_cpu.png',
                    title='FANFLAT 2D FORWARD CPU')
 
     # PARALLEL 2D: backward
-    reco_data = astra_cpu_backward_projector_call(proj_data, geom_p2d,
+    reco_data = astra_cpu_backward_projector_call(p2_proj_data, geom_p2d,
                                                   discr_vol_space)
     reco_data.show('imshow', saveto=back_dir + 'parallel2d_cpu.png',
                    title='PARALLEL 2D BACKWARD CPU')
 
     # FANFLAT: backward
-    reco_data = astra_cpu_backward_projector_call(proj_data, geom_ff,
+    reco_data = astra_cpu_backward_projector_call(ff_proj_data, geom_ff,
                                                   discr_vol_space)
     reco_data.show('imshow', saveto=back_dir + 'fanflat_cpu.png',
                title='FANFLAT 2D BACKWARD CPU')
