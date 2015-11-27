@@ -182,7 +182,7 @@ class NtuplesVector(NtuplesBaseVector):
 
         self._data = data
 
-        super().__init__(space)
+        NtuplesBaseVector.__init__(self, space)
 
     @property
     def data(self):
@@ -676,7 +676,7 @@ class Fn(FnBase, Ntuples):
 
                 Default: `False`.
         """
-        super().__init__(size, dtype)
+        FnBase.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
@@ -1021,7 +1021,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         if not isinstance(space, Fn):
             raise TypeError('{!r} not an `Fn` instance.'
                             ''.format(space))
-        super().__init__(space, data)
+        NtuplesVector.__init__(self, space, data)
 
     @property
     def real(self):
@@ -1204,7 +1204,7 @@ class Cn(Fn):
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
-        super().__init__(size, dtype, **kwargs)
+        Fn.__init__(self, size, dtype, **kwargs)
 
         if not is_complex_floating_dtype(self._dtype):
             raise TypeError('data type {!r} not a complex floating-point type.'
@@ -1270,7 +1270,7 @@ class Rn(Fn):
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
-        super().__init__(size, dtype, **kwargs)
+        Fn.__init__(self, size, dtype, **kwargs)
 
         if not is_real_floating_dtype(self.dtype):
             raise TypeError('data type {!r} not a real floating-point type.'
