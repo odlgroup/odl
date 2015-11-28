@@ -25,15 +25,19 @@ from builtins import range, str, super
 
 # External
 import numpy as np
-import pywt
 
 # Internal
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 
+try:
+    import pywt
+    WAVELET_AVAILABLE = True
+except ImportError:
+    WAVELET_AVAILABLE = False
 
 __all__ = ('DiscreteWaveletTrafo', 'DiscreteWaveletTrafoAdjoint',
-           'DiscreteWaveletTrafoInverse')
+           'DiscreteWaveletTrafoInverse', 'WAVELET_AVAILABLE')
 
 
 _SUPPORTED_IMPL = ('pywt',)

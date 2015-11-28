@@ -21,8 +21,12 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from odl import CUDA_AVAILABLE
+from odl.space.cu_ntuples import CUDA_AVAILABLE
+from odl.trafos.wavelet import WAVELET_AVAILABLE
+
 collect_ignore = ['setup.py', 'run_tests.py']
+
 if not CUDA_AVAILABLE:
     collect_ignore.append('odl/space/cu_ntuples.py')
-    #collect_ignore.append('test/space/cu_ntuples_test.py')
+if not WAVELET_AVAILABLE:
+    collect_ignore.append('odl/trafos/wavelet.py')
