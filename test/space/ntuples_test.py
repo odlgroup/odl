@@ -82,7 +82,7 @@ def _pos_array(fn):
 
 def _sparse_matrix(fn):
     """Create a sparse positive definite Hermitian matrix for `fn`."""
-    nnz = np.random.randint(0, int(ceil(fn.size)))
+    nnz = np.random.randint(0, int(ceil(fn.size / 2)))
     coo_r = np.random.randint(0, fn.size, size=nnz)
     coo_c = np.random.randint(0, fn.size, size=nnz)
 
