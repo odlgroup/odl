@@ -27,7 +27,8 @@ from builtins import range, str
 import numpy as np
 
 # Internal
-import odl
+from odl.discr.lp_discr import DiscreteLp
+from odl.operator.operator import Operator
 
 
 __all__ = ('DiscreteWaveletTrafo', 'DiscreteWaveletTrafoAdjoint',
@@ -127,7 +128,7 @@ def array_to_pywt_coeff(coef, S, jscale):
     return W
 
 
-class DiscreteWaveletTrafo(odl.Operator):
+class DiscreteWaveletTrafo(Operator):
 
     """Discrete wavelet trafo between discrete L2 spaces."""
 
@@ -148,10 +149,10 @@ class DiscreteWaveletTrafo(odl.Operator):
         """
         super().__init__(dom, ran)
 
-        if not isinstance(dom, odl.DiscreteLp):
+        if not isinstance(dom, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
                             ''.format(dom))
-        if not isinstance(ran, odl.DiscreteLp):
+        if not isinstance(ran, DiscreteLp):
             raise TypeError('range {!r} is not a `DiscreteLp` instance.'
                             ''.format(dom))
 
@@ -184,7 +185,7 @@ class DiscreteWaveletTrafo(odl.Operator):
         # TODO: see is_ortogonal
         return False
 
-    def _apply(self, x, out):
+    def _call(self, x, out):
         """Raw in-place application method."""
         # TODO: put the evaluation code here. Maybe pywt allows in-place
         # evaluation, i.e. writing to an existing array?
@@ -217,9 +218,9 @@ class DiscreteWaveletTrafo(odl.Operator):
         return None
 
 
-class DiscreteWaveletTrafoAdjoint(odl.Operator):
+class DiscreteWaveletTrafoAdjoint(Operator):
     pass
 
 
-class DiscreteWaveletTrafoInverse(odl.Operator):
+class DiscreteWaveletTrafoInverse(Operator):
     pass

@@ -44,7 +44,7 @@ class Convolution(odl.Operator):
         self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
         super().__init__(self.space, self.space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
                          output=out.ntuple.data, mode='wrap')
 

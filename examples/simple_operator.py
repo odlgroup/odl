@@ -32,7 +32,7 @@ class AddOp(odl.Operator):
         super().__init__(odl.Rn(n), odl.Rn(n))
         self.x = x
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         out[:] = rhs.data + self.x
 
 n = 3

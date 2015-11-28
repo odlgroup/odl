@@ -57,7 +57,7 @@ class ScalingOperator(Operator):
         self._space = space
         self._scal = float(scalar)
 
-    def _apply(self, x, out):
+    def _call(self, x, out):
         """Scale input and write to output.
 
         Parameters
@@ -78,36 +78,14 @@ class ScalingOperator(Operator):
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
-        >>> op(vec, out)  # Returns out
+        >>> op(vec, out)  # In place, Returns out
         Rn(3).element([2.0, 4.0, 6.0])
         >>> out
         Rn(3).element([2.0, 4.0, 6.0])
-        """
-        out.lincomb(self._scal, x)
-
-    def _call(self, x):
-        """Return the scaled element.
-
-        Parameters
-        ----------
-        x : domain element
-            input vector to be scaled
-
-        Returns
-        -------
-        scaled : ``range`` element
-            The scaled vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> vec = r3.element([1, 2, 3])
-        >>> op = ScalingOperator(r3, 2.0)
-        >>> op(vec)
+        >>> op(vec)  # Out of place
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        return self._scal * x
+        out.lincomb(self._scal, x)
 
     @property
     def inverse(self):
@@ -219,7 +197,7 @@ class LinCombOperator(Operator):
         self.a = a
         self.b = b
 
-    def _apply(self, x, out):
+    def _call(self, x, out):
         """Linearly combine the input and write to output.
 
         Parameters
@@ -278,7 +256,7 @@ class MultiplyOperator(Operator):
         domain = ProductSpace(space, space)
         super().__init__(domain, space)
 
-    def _apply(self, x, out):
+    def _call(self, x, out):
         """Multiply the input and write to output.
 
         Parameters
@@ -391,26 +369,7 @@ class InnerProductAdjointOperator(Operator):
         self.vector = vector
         super().__init__(vector.space.field, vector.space, linear=True)
 
-    def _call(self, x):
-        """Multiply by the input.
-
-        Parameters
-        ----------
-        x : ``vector.space.field`` element
-            An element in the field of the vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = InnerProductAdjointOperator(x)
-        >>> op(3.0)
-        Rn(3).element([3.0, 6.0, 9.0])
-        """
-        return x * self.vector
-
-    def _apply(self, x, out):
+    def _call(self, x, out):
         """Multiply the input and write to output.
 
         Parameters
@@ -428,11 +387,13 @@ class InnerProductAdjointOperator(Operator):
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductAdjointOperator(x)
         >>> out = r3.element()
-        >>> result = op(3.0, out=out)
+        >>> result = op(3.0, out=out)  # In place, returns out
         >>> result
         Rn(3).element([3.0,  6.0,  9.0])
         >>> result is out
         True
+        >>> op(3.0)  # Out of place
+        Rn(3).element([3.0, 6.0, 9.0])
         """
         out.lincomb(x, self.vector)
 

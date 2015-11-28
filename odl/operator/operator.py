@@ -55,7 +55,6 @@ def _default_call_out_of_place(op, x, **kwargs):
         An object in the operator range. The result of an operator
         evaluation.
     """
-    print('use _default_call_out_of_place')
     out = op.range.element()
     op._call_in_place(x, out, **kwargs)
     return out
@@ -78,7 +77,6 @@ def _default_call_in_place(op, x, out, **kwargs):
     -------
     `None`
     """
-    print('use _default_call_in_place')
     out.assign(op._call_out_of_place(x, **kwargs))
 
 
@@ -160,12 +158,16 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
     spec_msg += '\n\nStatic or class methods are not allowed.'
 
     if unbound_call is None:
-        call = getattr(cls, attr)
+        for parent in cls.mro():
+            call = parent.__dict__.get(attr, None)
+            if call is not None:
+                break
+
         # Static and class methods are not allowed
-        if isinstance(cls.__dict__[attr], staticmethod):
+        if isinstance(call, staticmethod):
             raise TypeError("'{}.{}' is a static method. ".format(attr) +
                             spec_msg)
-        elif isinstance(cls.__dict__[attr], classmethod):
+        elif isinstance(call, classmethod):
             raise TypeError("'{}.{}' is a class method. ".format(attr) +
                             spec_msg)
     else:
@@ -702,12 +704,10 @@ class Operator(with_metaclass(ABCMeta, object)):
                 raise TypeError('`out` parameter cannot be used'
                                 'when range is a field')
 
-            print('in op.__call__: in-place')
             self._call_in_place(x, out=out, **kwargs)
             return out
 
         else:  # Out-of-place evaluation
-            print('in op.__call__: out-of-place')
             result = self._call_out_of_place(x, **kwargs)
 
             if result not in self.range:
@@ -1066,8 +1066,8 @@ class OperatorSum(Operator):
         self._tmp_ran = tmp_ran
         self._tmp_dom = tmp_dom
 
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``.
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``.
 
         Examples
         --------
@@ -1076,33 +1076,18 @@ class OperatorSum(Operator):
         >>> op = IdentityOperator(r3)
         >>> x = r3.element([1, 2, 3])
         >>> out = r3.element()
-        >>> OperatorSum(op, op)(x, out)
+        >>> OperatorSum(op, op)(x, out)  # In place, returns out
         Rn(3).element([2.0, 4.0, 6.0])
         >>> out
         Rn(3).element([2.0, 4.0, 6.0])
-        """
-        # pylint: disable=protected-access
-        tmp = (self._tmp_ran if self._tmp_ran is not None
-               else self.range.element())
-        self._op1._apply(x, out)
-        self._op2._apply(x, tmp)
-        out += tmp
-
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``.
-
-        Examples
-        --------
-        >>> from odl import Rn, ScalingOperator
-        >>> r3 = Rn(3)
-        >>> A = ScalingOperator(r3, 3.0)
-        >>> B = ScalingOperator(r3, -1.0)
-        >>> C = OperatorSum(A, B)
-        >>> C(r3.element([1, 2, 3]))
+        >>> OperatorSum(op, op)(x)  # In place, returns out
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        # pylint: disable=protected-access
-        return self._op1._call(x) + self._op2._call(x)
+        tmp = (self._tmp_ran if self._tmp_ran is not None
+               else self.range.element())
+        self._op1(x, out=out)
+        self._op2(x, out=tmp)
+        out += tmp
 
     def derivative(self, x):
         """Return the operator derivative at ``x``.
@@ -1180,18 +1165,12 @@ class OperatorComp(Operator):
         self._right = right
         self._tmp = tmp
 
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
-        # pylint: disable=protected-access
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``."""
         tmp = (self._tmp if self._tmp is not None
                else self._right.range.element())
-        self._right._apply(x, tmp)
-        self._left._apply(tmp, out)
-
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
-        # pylint: disable=protected-access
-        return self._left._call(self._right._call(x))
+        self._right(x, out=tmp)
+        self._left(tmp, out=out)
 
     @property
     def inverse(self):
@@ -1280,18 +1259,12 @@ class OperatorPointwiseProduct(Operator):
         self._op1 = op1
         self._op2 = op2
 
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
-        # pylint: disable=protected-access
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``."""
         tmp = self._op2.range.element()
-        self._op1._apply(x, out)
-        self._op2._apply(x, tmp)
+        self._op1(x, out=out)
+        self._op2(x, out=tmp)
         out *= tmp
-
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
-        # pylint: disable=protected-access
-        return self._op1._call(x) * self._op2._call(x)
 
     def __repr__(self):
         """``op.__repr__() <==> repr(op)``."""
@@ -1338,15 +1311,9 @@ class OperatorLeftScalarMult(Operator):
         self._op = op
         self._scalar = scalar
 
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
-        # pylint: disable=protected-access
-        return self._scalar * self._op._call(x)
-
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
-        # pylint: disable=protected-access
-        self._op._apply(x, out)
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``."""
+        self._op(x, out=out)
         out *= self._scalar
 
     @property
@@ -1448,17 +1415,11 @@ class OperatorRightScalarMult(Operator):
         self._scalar = scalar
         self._tmp = tmp
 
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
-        # pylint: disable=protected-access
-        return self._op._call(self._scalar * x)
-
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
-        # pylint: disable=protected-access
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``."""
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, x)
-        self._op._apply(tmp, out)
+        self._op(tmp, out=out)
 
     @property
     def inverse(self):
@@ -1550,15 +1511,9 @@ class FunctionalLeftVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
-        # pylint: disable=protected-access
-        return self._vector * self._op._call(x)
-
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
-        # pylint: disable=protected-access
-        scalar = self._op._call(x)
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``."""
+        scalar = self._op(x)
         out.lincomb(scalar, self._vector)
 
     def derivative(self, x):
@@ -1631,15 +1586,9 @@ class OperatorLeftVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
-        # pylint: disable=protected-access
-        return self._vector * self._op._call(x)
-
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
-        # pylint: disable=protected-access
-        self._op._apply(x, out)
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``."""
+        self._op(x, out=out)
         out *= self._vector
 
     def derivative(self, x):
@@ -1713,17 +1662,11 @@ class OperatorRightVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
-        # pylint: disable=protected-access
-        return self._op._call(self._vector * x)
-
-    def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
-        # pylint: disable=protected-access
+    def _call(self, x, out):
+        """``op._call(x, out) <==> out <-- op(x)``."""
         tmp = self.domain.element()
         tmp.multiply(self._vector, x)
-        self._op._apply(tmp, out)
+        self._op(tmp, out=out)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1810,7 +1753,7 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
 
     Examples
     --------
-    >>> A = operator(lambda x: 3*x)
+    >>> A = simple_operator(lambda x: 3*x)
     >>> A(5)
     15
     """

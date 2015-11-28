@@ -81,29 +81,15 @@ class FunctionSet(Set):
             If fcall is a :class:`FunctionSet.Vector`, it is wrapped
             as a new :class:`FunctionSet.Vector`.
 
-        fapply : `callable`, optional
-            The actual instruction for in-place evaluation.
-            Its first argument must be the :attr:`range` element
-            or the array of such (vectorization) to which the
-            result is written.
-
-            If fapply` is a :class:`FunctionSet.Vector`, it is wrapped
-            as a new :class:`FunctionSet.Vector`.
-
-        *At least one of the arguments fcall and fapply must
-        be provided.*
-
         Returns
         -------
         element : :class:`FunctionSet.Vector`
             The new element created
         """
         if isinstance(fcall, self.Vector):  # no double wrapping
-            return self.element(fcall._call, fcall._apply)
-        elif isinstance(fapply, self.Vector):
-            return self.element(fapply._call, fapply._apply)
+            return self.element(fcall._call)
         else:
-            return self.Vector(self, fcall, fapply)
+            return self.Vector(self, fcall)
 
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``.
@@ -147,23 +133,17 @@ class FunctionSet(Set):
 
         """Representation of a :class:`FunctionSet` element."""
 
-        def __init__(self, fset, fcall=None, fapply=None):
+        def __init__(self, fset, fcall):
             """Initialize a new instance.
 
             Parameters
             ----------
             fset : :class:`FunctionSet`
                 The set of functions this element lives in
-            fcall : `callable`, optional
+            fcall : `callable`
                 The actual instruction for out-of-place evaluation.
                 It must return an :attr:`FunctionSet.range` element or a
                 `numpy.ndarray` of such (vectorized call).
-            fapply : `callable`, optional
-                The actual instruction for in-place evaluation.
-                Its first argument must be the
-                :attr:`FunctionSet.range` element
-                or the array of such (vectorization) to which the
-                result is written.
 
             *At least one of the arguments fcall and fapply` must
             be provided.*
@@ -172,21 +152,12 @@ class FunctionSet(Set):
                 raise TypeError('function set {} not a :class:`FunctionSet` '
                                 'instance.'.format(fset))
 
-            if fcall is None and fapply is None:
-                raise ValueError('call function and apply function cannot '
-                                 'both be `None`.')
-
             if fcall is not None and not callable(fcall):
                 raise TypeError('call function {} is not callable.'
                                 ''.format(fcall))
 
-            if fapply is not None and not callable(fapply):
-                raise TypeError('apply function {} is not callable.'
-                                ''.format(fapply))
-
             self._space = fset
-            self._call = fcall
-            self._apply = fapply
+            self._call_impl = fcall
 
             # Todo: allow users to specify linear
             super().__init__(self.space.domain, self.space.range, linear=False)
@@ -195,6 +166,9 @@ class FunctionSet(Set):
         def space(self):
             """Return space attribute."""
             return self._space
+
+        def _call(self, x):
+            return self._call_impl(*x)
 
         def __eq__(self, other):
             """``vec.__eq__(other) <==> vec == other``.
@@ -212,8 +186,7 @@ class FunctionSet(Set):
 
             return (isinstance(other, FunctionSet.Vector) and
                     self.space == other.space and
-                    self._call == other._call and
-                    self._apply == other._apply)
+                    self._call_imp == other._call_impl)
 
         # FIXME: this is a bad hack bypassing the operator default
         # pattern for apply and call
@@ -277,30 +250,6 @@ class FunctionSet(Set):
 
             return out
 
-        def apply(self, out, *x):
-            """Vectorized and multi-argument in-place evaluation.
-
-            Parameters
-            ----------
-            out : :attr:`FunctionSet.range` element or array of elements
-                Element(s) to which the result is written.
-            inp1,...,inpN : `object`
-                Input arguments for the function evaluation.
-
-            Returns
-            -------
-            `None`
-            """
-            if not (out in self.range or
-                    (isinstance(out, np.ndarray) and
-                     out.flat[0] in self.range)):
-                raise TypeError('result {!r} not an element or an array of '
-                                'elements of the function range {}.'
-                                ''.format(out, self.range))
-
-            # TODO: no checks on input so far
-            return self._apply(out, *x)
-
         def __ne__(self, other):
             """``vec.__ne__(other) <==> vec != other``"""
             return not self.__eq__(other)
@@ -349,7 +298,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         """Return the field of this space."""
         return self._field
 
-    def element(self, fcall=None, fapply=None):
+    def element(self, fcall=None):
         """Create a :class:`FunctionSpace` element.
 
         Parameters
@@ -362,24 +311,15 @@ class FunctionSpace(FunctionSet, LinearSpace):
             If fcall is a :class:`FunctionSet.Vector`, it is wrapped
             as a new :class:`FunctionSpace.Vector`.
 
-        fapply : `callable`, optional
-            The actual instruction for in-place evaluation.
-            Its first argument must be the :attr:`FunctionSet.range` element
-            or the array of such (vectorization) to which the
-            result is written.
-
-            If fapply is a :class:`FunctionSet.Vector`, it is wrapped
-            as a new :class:`FunctionSpace.Vector`.
-
         Returns
         -------
         element : :class:`FunctionSpace.Vector`
             The new element.
         """
-        if fcall is None and fapply is None:
+        if fcall is None:
             return self.zero()
         else:
-            return super().element(fcall, fapply)
+            return super().element(fcall)
 
     def _lincomb(self, a, x, b, y, out):
         """Raw linear combination of ``x`` and ``y``.
@@ -391,9 +331,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         """
         # Store to allow aliasing
         x_old_call = x._call
-        x_old_apply = x._apply
         y_old_call = y._call
-        y_old_apply = y._apply
 
         def lincomb_call(*x):
             """Linear combination, call version."""
@@ -447,7 +385,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 out += tmp
 
         out._call = lincomb_call
-        out._apply = lincomb_apply
 
     def zero(self):
         """The function mapping everything to zero.
@@ -507,7 +444,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
     class Vector(FunctionSet.Vector, LinearSpace.Vector):
         """Representation of a :class:`FunctionSpace` element."""
 
-        def __init__(self, fspace, fcall=None, fapply=None):
+        def __init__(self, fspace, fcall=None):
             """Initialize a new instance.
 
             Parameters
@@ -518,11 +455,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 The actual instruction for out-of-place evaluation.
                 It must return an :attr:`FunctionSet.range` element or a
                 `numpy.ndarray` of such (vectorized call).
-            fapply : `callable`, optional
-                The actual instruction for in-place evaluation.
-                Its first argument must be the :attr:`FunctionSet.range`
-                element or the array of such (vectorization) to which the
-                result is written.
 
             *At least one of the arguments ``fcall`` and ``fapply`` must
             be provided.*
@@ -531,7 +463,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 raise TypeError('function space {} not a `FunctionSpace` '
                                 'instance.'.format(fspace))
 
-            super().__init__(fspace, fcall, fapply)
+            super().__init__(fspace, fcall)
 
 
 if __name__ == '__main__':

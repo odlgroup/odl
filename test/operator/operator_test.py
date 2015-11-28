@@ -47,7 +47,7 @@ class MultiplyAndSquareOp(Operator):
         super().__init__(dom, ran)
         self.matrix = matrix
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         np.dot(self.matrix, rhs.data, out=out.data)
         out.data[:] **= 2
 
@@ -186,8 +186,7 @@ def test_nonlinear_composition():
 
 class MultiplyOp(Operator):
 
-    """Multiply with matrix.
-    """
+    """Multiply with matrix."""
 
     def __init__(self, matrix, domain=None, range=None):
         domain = (odl.Rn(matrix.shape[1])
@@ -198,7 +197,7 @@ class MultiplyOp(Operator):
 
         super().__init__(domain, range, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         np.dot(self.matrix, rhs.data, out=out.data)
 
     @property

@@ -42,7 +42,7 @@ class Convolution(odl.Operator):
 
         super().__init__(space, space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         scipy.ndimage.convolve(rhs,
                                self.kernel,
                                output=out.asarray(),

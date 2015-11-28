@@ -1354,18 +1354,17 @@ class MatVecOperator(Operator):
         return MatVecOperator(self.range, self.domain,
                               self.matrix.conj().T)
 
-    def _call(self, x):
-        """Raw call method on input, producing a new output."""
-        return self.range.element(self.matrix.dot(x.data))
-
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """Raw apply method on input, writing to given output."""
-        if self.matrix_issparse:
-            # Unfortunately, there is no native in-place dot product for
-            # sparse matrices
-            out.data[:] = self.matrix.dot(x.data)
+        if out is None:
+            return self.range.element(self.matrix.dot(x.data))
         else:
-            self.matrix.dot(x.data, out=out.data)
+            if self.matrix_issparse:
+                # Unfortunately, there is no native in-place dot product for
+                # sparse matrices
+                out.data[:] = self.matrix.dot(x.data)
+            else:
+                self.matrix.dot(x.data, out=out.data)
 
     # TODO: repr and str
 

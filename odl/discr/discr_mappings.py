@@ -178,8 +178,6 @@ class RawGridCollocation(FunctionSetMapping):
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 
-    # TODO: Implement _apply()
-
     def _call(self, inp):
         """The raw call method for out-of-place evaluation.
 
@@ -247,6 +245,7 @@ class RawGridCollocation(FunctionSetMapping):
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
+        # TODO: Implement in-place evaluation
         try:
             mg_tuple = self.grid.meshgrid()
             values = inp(*mg_tuple).ravel(order=self.order)
@@ -328,8 +327,6 @@ class RawNearestInterpolation(FunctionSetMapping):
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 
-    # TODO: Implement _apply()
-
     def _call(self, inp):
         """The raw `call` method for out-of-place evaluation.
 
@@ -385,6 +382,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         >>> print(val)
         t
         """
+        # TODO: Implement in-place evaluation
         def func(*x):
             """The actual interpolating function."""
             # TODO: adapt when vectorization is settled
@@ -507,8 +505,6 @@ class LinearInterpolation(FunctionSetMapping):
         FunctionSetMapping.__init__(self, 'extension', ip_fspace,
                                     grid, dspace, order, linear=True)
 
-    # TODO: Implement _apply()
-
     def _call(self, inp):
         """The raw call method for out-of-place evaluation.
 
@@ -531,6 +527,7 @@ class LinearInterpolation(FunctionSetMapping):
         TODO: implement an example!
 
         """
+        # TODO: Implement in-place evaluation
         def func(*x):
             x = np.atleast_1d(x).squeeze()
             values = interpnd(points=self.grid.coord_vectors,
