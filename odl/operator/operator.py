@@ -380,7 +380,7 @@ def _sync_call_args(cls, sdict, attr):
     For the ``out`` argument, the string ``', optional'`` is added
     to or removed from the type specification if necessary.
     """
-    has_out, out_is_optional, spec =_dispatch_call_args(cls, attr=attr)
+    has_out, out_is_optional, spec = _dispatch_call_args(cls, attr=attr)
     specarg_names = spec.args.remove('self')
     if spec.keywords is not None:
         specarg_names.append(spec.keywords)
@@ -388,7 +388,7 @@ def _sync_call_args(cls, sdict, attr):
     docarg_dict = _decompose_params(sdict['Parameters']['lines'])
     docarg_names = docarg_dict.keys().remove(0)
 
-    wrong_args = [darg for darg in docarg_names if darg not in specarg_names ]
+    wrong_args = [darg for darg in docarg_names if darg not in specarg_names]
 
     if len(wrong_args) > 1:
         raise ValueError('arguments {} not in function spec of {}. Cannot '
@@ -399,7 +399,10 @@ def _sync_call_args(cls, sdict, attr):
 
     # TODO: continue here
 
+
 def _compile_call_dict(cls):
+
+    # TODO: this is out of date
 
     # From class _call: get doc dict, spec, out and kwargs info
     sdict = _decompose_doc(cls._call)
@@ -463,7 +466,6 @@ def _compile_call_dict(cls):
         if has_kwargs and not doc_has_kwargs:
             # Need to add doc on kwargs
             pass
-
 
 
 class Operator(with_metaclass(ABCMeta, object)):
