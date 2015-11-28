@@ -42,12 +42,13 @@ class StepLength(with_metaclass(ABCMeta, object)):
     # Barzilai-Borwein
     @abstractmethod
     def __call__(self, x, direction, dir_derivative):
-        """
+        """Calculate the step length at a point.
+
         Parameters
         ----------
-        x : :attr:`~odl.Operator.domain` element
+        x : `Operator.domain` element
             The current point
-        direction : :attr:`~odl.Operator.domain` element
+        direction : `Operator.domain` element
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -65,12 +66,13 @@ class LineSearch(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __call__(self, x, direction, dir_derivative):
-        """
+        """Calculate step length in direction.
+
         Parameters
         ----------
-        x : :attr:`~odl.Operator.domain` element
+        x : `Operator.domain` element
             The current point
-        direction : :attr:`~odl.Operator.domain` element
+        direction : `Operator.domain` element
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -92,8 +94,8 @@ class BacktrackingLineSearch(LineSearch):
     The line search algorithm is described in [1]_, page 464
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
-    [2]_, pages 378--379. See also the
-    `Wikipedia article
+    [2]_, pages 378--379. See also
+    `Backtracking_line_search
     <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
 
     References
@@ -142,9 +144,9 @@ class BacktrackingLineSearch(LineSearch):
 
         Parameters
         ----------
-        x : :attr:`~odl.Operator.domain` element
+        x : `Operator.domain` element
             The current point
-        direction : :attr:`~odl.Operator.domain` element
+        direction : `Operator.domain` element
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -171,22 +173,23 @@ class ConstantLineSearch(LineSearch):
     """Line search object that returns a constant step length."""
 
     def __init__(self, constant):
-        """
+        """Initialize a new instance.
+
         Parameters
         ----------
         constant : `float`
-            The constant step length that the 'line search' object should
-            return.
+            The constant step length
         """
         self.constant = constant
 
     def __call__(self, x, direction, dir_derivative):
-        """
+        """Calculate the step length at a point.
+
         Parameters
         ----------
-        x : :attr:`~odl.Operator.domain` element
+        x : `Operator.domain` element
             The current point
-        direction : :attr:`~odl.Operator.domain` element
+        direction : `Operator.domain` element
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -204,7 +207,7 @@ class BarzilaiBorweinStep(object):
     """Barzilai-Borwein method to compute a step length.
 
     Barzilai-Borwein method to compute a step length
-    for gradient descent methods. It does ...
+    for gradient descent methods.
 
     TODO
 
@@ -223,27 +226,28 @@ class BarzilaiBorweinStep(object):
 
         Parameters
         ----------
-        gradf: :class:`~odl.Operator`
+        gradf : `Operator`
             The gradient of the objective function at a point
-        step0: `float`, optional
+        step0 : `float`, optional
             Initial steplength parameter
         """
         self.gradf = gradf
         self.step0 = step0
 
     def __call__(self, x, x0):
-        """
+        """Calculate the step length at a point.
+
         Parameters
         ----------
-        x: :attr:`~odl.Operator.domain` element
+        x : `Operator.domain` element
             The current point
-        x0: :attr:`~odl.Operator.domain` element
+        x0 : `Operator.domain` element
             The previous point
 
         Returns
         -------
-        step: `float`
-            The step lenght
+        step : `float`
+            The step length
         """
         if x == x0:
             return self.step0

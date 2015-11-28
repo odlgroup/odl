@@ -1,20 +1,18 @@
-odl.operator package
-====================
+operator
+========
 
-.. automodule:: odl.operator
+Mathematical operators in ODL.
 
-odl.operator.default_ops module
--------------------------------
 
-.. automodule:: odl.operator.default_ops
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. currentmodule:: odl.operator
 
-odl.operator.operator module
-----------------------------
 
-.. automodule:: odl.operator.operator
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 2
+
+   odl.operator.default_ops
+   odl.operator.operator
+   odl.operator.pspace_ops
+
+
+

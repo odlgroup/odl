@@ -20,7 +20,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
 
 # External module imports
 import pytest
@@ -215,7 +214,7 @@ def test_element_1d(exponent):
     discr = odl.uniform_discr(space, 3, impl='numpy', exponent=exponent)
     dspace = odl.Rn(3, exponent=exponent, weight=discr.grid.cell_volume)
     vec = discr.element()
-    assert isinstance(vec, discr.Vector)
+    assert isinstance(vec, odl.DiscreteLpVector)
     assert vec.ntuple in dspace
 
 
@@ -224,7 +223,7 @@ def test_element_2d(exponent):
     discr = odl.uniform_discr(space, (3, 3), impl='numpy', exponent=exponent)
     dspace = odl.Rn(9, exponent=exponent, weight=discr.grid.cell_volume)
     vec = discr.element()
-    assert isinstance(vec, discr.Vector)
+    assert isinstance(vec, odl.DiscreteLpVector)
     assert vec.ntuple in dspace
 
 
@@ -233,8 +232,8 @@ def test_element_from_array_1d():
     discr = odl.uniform_discr(space, 3, impl='numpy')
     vec = discr.element([1, 2, 3])
 
-    assert isinstance(vec, discr.Vector)
-    assert isinstance(vec.ntuple, odl.Rn.Vector)
+    assert isinstance(vec, odl.DiscreteLpVector)
+    assert isinstance(vec.ntuple, odl.RnVector)
     assert all_equal(vec.ntuple, [1, 2, 3])
 
 
@@ -245,8 +244,8 @@ def test_element_from_array_2d():
     vec = discr.element([[1, 2],
                          [3, 4]])
 
-    assert isinstance(vec, discr.Vector)
-    assert isinstance(vec.ntuple, odl.Rn.Vector)
+    assert isinstance(vec, odl.DiscreteLpVector)
+    assert isinstance(vec.ntuple, odl.RnVector)
 
     # Check ordering
     assert all_equal(vec.ntuple, [1, 2, 3, 4])
@@ -293,8 +292,8 @@ def test_zero():
     discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
     vec = discr.zero()
 
-    assert isinstance(vec, discr.Vector)
-    assert isinstance(vec.ntuple, odl.Rn.Vector)
+    assert isinstance(vec, odl.DiscreteLpVector)
+    assert isinstance(vec.ntuple, odl.RnVector)
     assert all_equal(vec, [0, 0, 0])
 
 
@@ -309,7 +308,7 @@ def test_getslice():
     discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
     vec = discr.element([1, 2, 3])
 
-    assert isinstance(vec[:], odl.Rn.Vector)
+    assert isinstance(vec[:], odl.RnVector)
     assert all_equal(vec[:], [1, 2, 3])
 
     discr = odl.uniform_discr(
@@ -317,7 +316,7 @@ def test_getslice():
         3)
     vec = discr.element([1 + 2j, 2 - 2j, 3])
 
-    assert isinstance(vec[:], odl.Cn.Vector)
+    assert isinstance(vec[:], odl.CnVector)
     assert all_equal(vec[:], [1 + 2j, 2 - 2j, 3])
 
 

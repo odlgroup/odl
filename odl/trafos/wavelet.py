@@ -15,10 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
+"""Discrete wavelet transformation on L2 spaces."""
+
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+
+# External
+
+# Internal
 
 __all__ = ()
-
-from . import wavelet
-from .wavelet import *
-__all__ += wavelet.__all__

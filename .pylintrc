@@ -40,13 +40,15 @@ load-plugins=
 # --disable=W"
 
 # Disable all messages caused solely by 'future' imports and functions
+# and also backslash to enable :math: and not callable since it fails with inherited __call__.
 disable=redefined-builtin,
   super-on-old-class,
   missing-super-argument,
   no-value-for-parameter,
   no-member,
   too-many-function-args,
-  
+  anomalous-backslash-in-string,
+  not-callable,
 
 # redefined-builtin: 'object', 'range', 'str', 'super' are redefined, that's okay
 # super-on-old-class: classes are erroneously interpreted as old-style
@@ -110,7 +112,7 @@ single-line-if-stmt=no
 no-space-check=trailing-comma,dict-separator
 
 # Maximum number of lines in a module
-max-module-lines=1000
+max-module-lines=2500
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
@@ -129,7 +131,7 @@ required-attributes=
 bad-functions=map,filter,apply,input
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_,a,b,x,y,z,xp,yp,zp,s,q,p,I,T,dx,dy
+good-names=i,j,k,ex,Run,_,a,b,x,y,z,xp,yp,zp,s,q,p,I,T,dx,dy,x1,x2
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -316,7 +318,7 @@ max-parents=7
 max-attributes=7
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=1
+min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20

@@ -31,13 +31,15 @@ import numpy as np
 
 # ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace
+from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
     is_scalar_dtype, is_real_dtype)
 
 
-__all__ = ('NtuplesBase', 'FnBase', 'FnWeightingBase')
+__all__ = ('NtuplesBase', 'NtuplesBaseVector',
+           'FnBase', 'FnBaseVector',
+           'FnWeightingBase')
 
 
 class NtuplesBase(with_metaclass(ABCMeta, Set)):
@@ -59,7 +61,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         """
         self._size = int(size)
         if self.size < 0:
-            raise TypeError('size {} is not non-negative.'.format(size))
+            raise TypeError('size {!r} is not non-negative.'.format(size))
         self._dtype = np.dtype(dtype)
 
     @property
@@ -78,7 +80,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         Returns
         -------
         contains : `bool`
-            `True` if ``other`` is an :class:`NtuplesBase.Vector` instance and
+            `True` if ``other`` is an `NtuplesBaseVector` instance and
             ``other.space`` is equal to this space, `False` otherwise.
 
         Examples
@@ -101,7 +103,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         -------
         equals : `bool`
             `True` if ``other`` is an instance of this space's type
-            with the same :attr:`size` and :attr:`dtype`, otherwise `False`.
+            with the same `size` and `dtype`, otherwise `False`.
 
         Examples
         --------
@@ -143,179 +145,187 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
-    class Vector(with_metaclass(ABCMeta, object)):
+    @property
+    def element_type(self):
+        """ `NtuplesBaseVector` """
+        return NtuplesBaseVector
 
-        """Abstract class for representation of n-tuples.
 
-        Defines abstract attributes and concrete ones which are
-        independent of data representation.
+class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
+
+    """Abstract class for representation of `NtuplesBase` elements.
+
+    Defines abstract attributes and concrete ones which are
+    independent of data representation.
+    """
+
+    # Give a `Vector` a higher priority than any NumPy array type. This
+    # forces the usage of `__op__` of `Vector` if the other operand
+    # is a NumPy object (applies also to scalars!).
+    __array_priority__ = 1000000.0
+
+    def __init__(self, space, *args, **kwargs):
+        """Initialize a new instance."""
+        self._space = space
+
+    @property
+    def space(self):
+        """Space to which this vector."""
+        return self._space
+
+    @property
+    def ndim(self):
+        """Number of dimensions, always 1."""
+        return 1
+
+    @property
+    def dtype(self):
+        """Length of this vector, equal to space size."""
+        return self.space.dtype
+
+    @property
+    def size(self):
+        """Length of this vector, equal to space size."""
+        return self.space.size
+
+    @property
+    def shape(self):
+        """Shape of this vector, equals ``(size,)``."""
+        return (self.size,)
+
+    @property
+    def itemsize(self):
+        """The size in bytes on one element of this type."""
+        return self.dtype.itemsize
+
+    @property
+    def nbytes(self):
+        """The number of bytes this vector uses in memory."""
+        return self.size * self.itemsize
+
+    @abstractmethod
+    def copy(self):
+        """Create an identical (deep) copy of this vector."""
+
+    @abstractmethod
+    def asarray(self, start=None, stop=None, step=None, out=None):
+        """Extract the data of this array as a numpy array.
+
+        Parameters
+        ----------
+        start : `int`, optional
+            Start position. `None` means the first element.
+        start : `int`, optional
+            One element past the last element to be extracted.
+            `None` means the last element.
+        start : `int`, optional
+            Step length. `None` means 1.
+        out : `numpy.ndarray`
+            Array to write result to.
+
+        Returns
+        -------
+        asarray : `numpy.ndarray`
+            Numpy array of the same type as the space.
         """
 
-        # Give a `Vector` a higher priority than any NumPy array type. This
-        # forces the usage of `__op__` of `Vector` if the other operand
-        # is a NumPy object (applies also to scalars!).
-        __array_priority__ = 1000000.0
+    def __len__(self):
+        """``v.__len__() <==> len(v)``.
 
-        def __init__(self, space, *args, **kwargs):
-            """Initialize a new instance."""
-            self._space = space
+        Return the number of space dimensions.
+        """
+        return self.space.size
 
-        @property
-        def space(self):
-            """Space to which this vector."""
-            return self._space
+    @abstractmethod
+    def __eq__(self, other):
+        """``vec.__eq__(other) <==> vec == other``.
 
-        @property
-        def ndim(self):
-            """Number of dimensions, always 1."""
-            return 1
+        Returns
+        -------
+        equals : `bool`
+            `True` if all entries of ``other`` are equal to this
+            vector's entries, `False` otherwise.
+        """
 
-        @property
-        def dtype(self):
-            """Length of this vector, equal to space size."""
-            return self.space.dtype
+    @abstractmethod
+    def __getitem__(self, indices):
+        """Access values of this vector.
 
-        @property
-        def size(self):
-            """Length of this vector, equal to space size."""
-            return self.space.size
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be accessed
 
-        @property
-        def shape(self):
-            """Shape of this vector, equals ``(size,)``."""
-            return (self.size,)
+        Returns
+        -------
+        values : `NtuplesBase.dtype` or `NtuplesBaseVector`
+            The value(s) at the index (indices)
+        """
 
-        @property
-        def itemsize(self):
-            """The size in bytes on one element of this type."""
-            return self.dtype.itemsize
+    @abstractmethod
+    def __setitem__(self, indices, values):
+        """Set values of this vector.
 
-        @property
-        def nbytes(self):
-            """The number of bytes this vector uses in memory."""
-            return self.size * self.itemsize
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like, `NtuplesBaseVector`}
+            The value(s) that are to be assigned.
 
-        @abstractmethod
-        def copy(self):
-            """Create an identical (deep) copy of this vector."""
+            If ``index`` is an integer, ``value`` must be single value.
 
-        @abstractmethod
-        def asarray(self, start=None, stop=None, step=None):
-            """Extract the data of this array as a numpy array.
+            If ``index`` is a slice, ``value`` must be broadcastable
+            to the size of the slice (same size, shape (1,)
+            or single value).
+        """
 
-            Parameters
-            ----------
-            start : `int`, optional
-                Start position. `None` means the first element.
-            start : `int`, optional
-                One element past the last element to be extracted.
-                `None` means the last element.
-            start : `int`, optional
-                Step length. `None` means 1.
+    def __array__(self, dtype=None):
+        """Return a numpy array of this ntuple.
 
-            Returns
-            -------
-            asarray : `numpy.ndarray`
-                Numpy array of the same type as the space.
-            """
+        Parameters
+        ----------
+        dtype : `object`
+            Specifier for the data type of the output array
 
-        def __len__(self):
-            """``v.__len__() <==> len(v)``.
+        Returns
+        -------
+        array : `numpy.ndarray`
+        """
+        if dtype is None:
+            return self.asarray()
+        else:
+            return self.asarray().astype(dtype)
 
-            Return the number of space dimensions.
-            """
-            return self.space.size
+    def __array_wrap__(self, obj):
+        """Return a new vector from the data in obj.
 
-        @abstractmethod
-        def __eq__(self, other):
-            """``vec.__eq__(other) <==> vec == other``.
+        Parameters
+        ----------
+        obj : `numpy.ndarray`
+            The array that should be wrapped
 
-            Returns
-            -------
-            equals : `bool`
-                `True` if all entries of ``other`` are equal to this
-                vector's entries, `False` otherwise.
-            """
+        Returns
+        -------
+            vector : `NtuplesBaseVector`
+        """
+        if obj.ndim == 0:
+            return self.space.field.element(obj)
+        else:
+            return self.space.element(obj)
 
-        @abstractmethod
-        def __getitem__(self, indices):
-            """Access values of this vector.
+    def __ne__(self, other):
+        """``vec.__ne__(other) <==> vec != other``."""
+        return not self.__eq__(other)
 
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be accessed
+    def __str__(self):
+        """``vec.__str__() <==> str(vec)``."""
+        return array1d_str(self)
 
-            Returns
-            -------
-            values : :attr:`NtuplesBase.dtype` or :class:`NtuplesBase.Vector`
-                The value(s) at the index (indices)
-            """
-
-        @abstractmethod
-        def __setitem__(self, indices, values):
-            """Set values of this vector.
-
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be set
-            values : {scalar, array-like, :class:`NtuplesBase.Vector`}
-                The value(s) that are to be assigned.
-
-                If ``index`` is an integer, ``value`` must be single value.
-
-                If ``index`` is a slice, ``value`` must be broadcastable
-                to the size of the slice (same size, shape (1,)
-                or single value).
-            """
-
-        def __array__(self, dtype=None):
-            """Return a numpy array of this ntuple.
-
-            Parameters
-            ----------
-            dtype : `object`
-                Specifier for the data type of the output array
-
-            Returns
-            -------
-            array : `numpy.ndarray`
-            """
-            if dtype is None:
-                return self.asarray()
-            else:
-                return self.asarray().astype(dtype)
-
-        def __array_wrap__(self, obj):
-            """Return a new vector from the data in obj.
-
-            Parameters
-            ----------
-            obj : `numpy.ndarray`
-                The array that should be wrapped
-
-            Returns
-            -------
-                vector : :class:`NtuplesBase.Vector`
-            """
-            if obj.ndim == 0:
-                return self.space.field.element(obj)
-            else:
-                return self.space.element(obj)
-
-        def __ne__(self, other):
-            """``vec.__ne__(other) <==> vec != other``."""
-            return not self.__eq__(other)
-
-        def __str__(self):
-            """``vec.__str__() <==> str(vec)``."""
-            return array1d_str(self)
-
-        def __repr__(self):
-            """``vec.__repr__() <==> repr(vec)``."""
-            return '{!r}.element({})'.format(self.space,
-                                             array1d_repr(self))
+    def __repr__(self):
+        """``vec.__repr__() <==> repr(vec)``."""
+        return '{!r}.element({})'.format(self.space,
+                                         array1d_repr(self))
 
 
 class FnBase(NtuplesBase, LinearSpace):
@@ -366,32 +376,38 @@ class FnBase(NtuplesBase, LinearSpace):
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to ``out``."""
 
-    class Vector(NtuplesBase.Vector, LinearSpace.Vector):
+    @property
+    def element_type(self):
+        """ `FnBaseVector` """
+        return FnBaseVector
 
-        """Abstract class for representation of :math:`F^n` vectors.
 
-        Defines abstract attributes and concrete ones which are
-        independent of data representation.
-        """
+class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
 
-        def __eq__(self, other):
-            return LinearSpace.Vector.__eq__(self, other)
+    """Abstract class for representation of `FnBase` vectors.
 
-        def copy(self):
-            return LinearSpace.Vector.copy(self)
+    Defines abstract attributes and concrete ones which are
+    independent of data representation.
+    """
+
+    def __eq__(self, other):
+        return LinearSpaceVector.__eq__(self, other)
+
+    def copy(self):
+        return LinearSpaceVector.copy(self)
 
 
 class FnWeightingBase(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for weighting of :class:`FnBase` spaces.
+    """Abstract base class for weighting of `FnBase` spaces.
 
     This class and its subclasses serve as a simple means to evaluate
     and compare weighted inner products, norms and metrics semantically
     rather than by identity on a pure function level.
 
-    The functions are implemented similarly to :class:`~odl.Operator`,
+    The functions are implemented similarly to `Operator`,
     but without extra type checks of input parameters - this is done in
-    the callers of the :class:`~odl.LinearSpace` instance where these
+    the callers of the `LinearSpace` instance where these
     functions used.
     """
 
@@ -406,7 +422,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate :meth:`dist` using the formula
+            Calculate `dist` using the formula
 
             :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
             \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
@@ -453,7 +469,7 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
         -----
         This operation must be computationally cheap, i.e. no large
         arrays may be compared element-wise. That is the task of the
-        :meth:`equiv` method.
+        `equiv` method.
         """
         return (self.exponent == other.exponent and
                 self._dist_using_inner == other._dist_using_inner and
@@ -462,21 +478,23 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def equiv(self, other):
         """Test if ``other`` is an equivalent inner product.
 
+        Should be overwritten, default tests for equality.
+
         Returns
         -------
         equivalent : `bool`
-            `True` if ``other`` is a :class:`FnWeightingBase` instance which
+            `True` if ``other`` is a `FnWeightingBase` instance which
             yields the same result as this inner product for any
             input, `False` otherwise.
         """
-        raise NotImplementedError
+        return self == other
 
     def inner(self, x1, x2):
         """Calculate the inner product of two vectors.
 
         Parameters
         ----------
-        x1, x2 : :class:`FnBase.Vector`
+        x1, x2 : `FnBaseVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -489,12 +507,12 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def norm(self, x):
         """Calculate the norm of a vector.
 
-        This is the standard implementation using :meth:`inner`.
+        This is the standard implementation using `inner`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1 : :class:`FnBase.Vector`
+        x1 : `FnBaseVector`
             Vector whose norm is calculated
 
         Returns
@@ -507,12 +525,12 @@ class FnWeightingBase(with_metaclass(ABCMeta, object)):
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
 
-        This is the standard implementation using :meth:`norm`.
+        This is the standard implementation using `norm`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1, x2 : :class:`FnBase.Vector`
+        x1, x2 : `FnBaseVector`
             Vectors whose mutual distance is calculated
 
         Returns

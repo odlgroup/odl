@@ -20,7 +20,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str, super
+from builtins import super
 
 # External module imports
 import numpy as np
@@ -71,7 +71,7 @@ class RosenbrockDerivOp(odl.Operator):
     def derivative(self, x):
         matrix = np.array([[2 - 400 * x[1] + 1200 * x[0] ** 2, -400 * x[0]],
                            [-400 * x[0], 200]])
-        return odl.MatVecOperator(self.domain, self.range, matrix)
+        return odl.MatVecOperator(matrix, self.domain, self.range)
 
 
 def test_newton_solver_quadratic():
@@ -92,7 +92,7 @@ def test_newton_solver_quadratic():
     x_opt = np.linalg.solve(H, -c)
 
     # Create derivative operator operator
-    Aop = odl.MatVecOperator(rn, rn, H)
+    Aop = odl.MatVecOperator(H, rn, rn)
     deriv_op = ResidualOp(Aop, -c)
 
     # Create line search object

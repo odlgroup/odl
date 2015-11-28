@@ -47,7 +47,7 @@ def scalar_examples(field):
 
     Parameters
     ----------
-    field : :class:`~odl.Field`
+    field : `Field`
         The field to generate examples from
 
     Returns
@@ -68,26 +68,32 @@ def vector_examples(space):
 
     Parameters
     ----------
-    space : :class:`~odl.LinearSpace`
+    space : `LinearSpace`
         The space to generate examples from
 
     Returns
     -------
     examples : `generator`
-        Yields tuples (`string`, :class:`~odl.LinearSpace.Vector`)
+        Yields tuples (`string`, `LinearSpaceVector`)
         where ``string`` is a short description of the vector
     """
-
-    # All spaces should yield the zero element
-    yield ('Zero', space.zero())
 
     if isinstance(space, ProductSpace):
         for examples in product(*[vector_examples(spc) for spc in space]):
             name = ', '.join(name for name, _ in examples)
             vector = space.element([vec for _, vec in examples])
             yield (name, space.element(vector))
+        return
 
-    elif isinstance(space, DiscreteLp):
+    # All spaces should yield the zero element
+    yield ('Zero', space.zero())
+
+    try:
+        yield ('One', space.one())
+    except NotImplementedError:
+        pass
+
+    if isinstance(space, DiscreteLp):
         uspace = space.uspace
 
         # Get the points and calculate some statistics on them
@@ -170,8 +176,6 @@ def vector_examples(space):
 
         yield ('Linspaced', space.element(np.linspace(0, 1, space.size)))
 
-        yield ('Ones', space.element(np.ones(space.size)))
-
         yield ('Random noise', space.element(np.random.rand(space.size)))
 
         yield ('Normally distributed random noise',
@@ -185,12 +189,12 @@ def vector_examples(space):
 def samples(*sets):
     """Generate some samples from the given sets.
 
-    Currently supports vectors according to :func:`vector_examples`
-    and scalars according to :func:`scalar_examples`.
+    Currently supports vectors according to `vector_examples`
+    and scalars according to `scalar_examples`.
 
     Parameters
     ----------
-    *sets : :class:`~odl.Set` instance(s)
+    *sets : `Set` instance(s)
 
     Returns
     -------

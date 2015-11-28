@@ -33,7 +33,7 @@ __all__ = ('OperatorTest',)
 
 
 class OperatorTest(object):
-    """Automated tests for :class:`~odl.Operator` implementations.
+    """Automated tests for `Operator` implementations.
 
     This class allows users to automatically test various
     features of an Operator such as linearity and the
@@ -45,7 +45,7 @@ class OperatorTest(object):
 
         Parameters
         ----------
-        operator : :class:`~odl.Operator`
+        operator : `Operator`
             The operator to run tests on
         operator_norm : `float`
             The norm of the operator, used for error estimates
@@ -86,6 +86,37 @@ class OperatorTest(object):
         print('Norm is at least: {}'.format(operator_norm))
         self.operator_norm = operator_norm
         return operator_norm
+
+    def self_adjoint(self):
+        """Verify (Ax, y) = (x, Ay)"""
+        print('\nVerifying the identity (Ax, y) = (x, Ay)')
+
+        Axy_vals = []
+        xAty_vals = []
+
+        with FailCounter('error = ||(Ax, y) - (x, Ay)|| / '
+                         '||A|| ||x|| ||y||') as counter:
+            for [n_x, x], [n_y, y] in samples(self.operator.domain,
+                                              self.operator.range):
+                x_norm = x.norm()
+                y_norm = y.norm()
+
+                Axy = self.operator(x).inner(y)
+                xAy = x.inner(self.operator(y))
+
+                denom = self.operator_norm * x_norm * y_norm
+                error = 0 if denom == 0 else abs(Axy - xAy) / denom
+
+                if error > 0.00001:
+                    counter.fail('x={:25s} y={:25s} : error={:6.5f}'
+                                 ''.format(n_x, n_y, error))
+
+                Axy_vals.append(Axy)
+                xAty_vals.append(xAy)
+
+        scale = np.polyfit(Axy_vals, xAty_vals, 1)[0]
+        print('\nThe adjoint seems to be scaled according to:')
+        print('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
 
     def _adjoint_definition(self):
         """Verify (Ax, y) = (x, A^T y)"""
@@ -148,7 +179,7 @@ class OperatorTest(object):
                                  ''.format(n_x, error))
 
     def adjoint(self):
-        """Verify that the adjoint works appropriately.
+        """Verify that `Operator.adjoint` works appropriately.
 
         References
         ----------
@@ -202,7 +233,7 @@ class OperatorTest(object):
                                  ''.format(n_x, n_dx, step, error))
 
     def derivative(self, step=0.0001):
-        """Verify that the derivative works appropriately.
+        """Verify that `Operator.derivative` works appropriately.
 
         References
         ----------
@@ -274,7 +305,7 @@ class OperatorTest(object):
                                  ''.format(n_x, n_y, error))
 
     def linear(self):
-        """Verify that the operator is actualy linear."""
+        """Verify that the operator is actually linear."""
         if not self.operator.is_linear:
             print('Operator is not linear')
             return

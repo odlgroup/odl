@@ -1,20 +1,18 @@
-odl.util package
-================
+util
+====
 
-.. automodule:: odl.util
+Utility library for ODL, only for internal use.
 
-odl.util.testutils module
-----------------------------
+.. currentmodule:: odl.util
 
-.. automodule:: odl.util.testutils
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.util.utility module
---------------------------
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: odl.util.utility
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   odl.util.graphics
+   odl.util.phantom
+   odl.util.testutils
+   odl.util.utility
+
+
+

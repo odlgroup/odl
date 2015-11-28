@@ -27,7 +27,10 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
-from odl.space.base_ntuples import NtuplesBase, FnBase, FnWeightingBase
+from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
+                                    FnBase, FnBaseVector,
+                                    FnWeightingBase)
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
 
 try:
@@ -37,7 +40,9 @@ except ImportError:
     cuda = None
     CUDA_AVAILABLE = False
 
-__all__ = ('CudaNtuples', 'CudaFn', 'CudaRn', 'CUDA_DTYPES', 'CUDA_AVAILABLE',
+__all__ = ('CudaNtuples', 'CudaNtuplesVector',
+           'CudaFn', 'CudaFnVector', 'CudaRn', 'CudaRnVector',
+           'CUDA_DTYPES', 'CUDA_AVAILABLE',
            'CudaFnConstWeighting', 'CudaFnVectorWeighting',
            'cu_weighted_inner', 'cu_weighted_norm', 'cu_weighted_dist')
 
@@ -80,8 +85,7 @@ CUDA_DTYPES = tuple(set(CUDA_DTYPES))  # Remove duplicates
 
 
 class CudaNtuples(NtuplesBase):
-
-    """The set of ``n``-tuples of arbitrary type, implemented in CUDA."""
+    """The space `NtuplesBase`, implemented in CUDA."""
 
     def __init__(self, size, dtype):
         """Initialize a new instance.
@@ -100,7 +104,8 @@ class CudaNtuples(NtuplesBase):
         """
 
         if dtype not in _TYPE_MAP_NPY2CUDA.keys():
-            raise TypeError('data type {} not supported in CUDA'.format(dtype))
+            raise TypeError('data type {!r} not supported in CUDA'
+                            ''.format(dtype))
 
         super().__init__(size, dtype)
 
@@ -133,7 +138,7 @@ class CudaNtuples(NtuplesBase):
 
         Returns
         -------
-        element : :class:`CudaNtuples.Vector`
+        element : `CudaNtuplesVector`
             The new element
 
         Notes
@@ -155,17 +160,18 @@ class CudaNtuples(NtuplesBase):
         """
         if inp is None:
             if data_ptr is None:
-                return self.Vector(self, self._vector_impl(self.size))
+                return self.element_type(self, self._vector_impl(self.size))
             else:  # TODO: handle non-1 length strides
-                return self.Vector(
+                return self.element_type(
                     self, self._vector_impl.from_pointer(data_ptr, self.size,
                                                          1))
         else:
             if data_ptr is None:
                 if isinstance(inp, self._vector_impl):
-                    return self.Vector(self, inp)
-                elif isinstance(inp, self.Vector) and inp.dtype == self.dtype:
-                    return self.Vector(self, inp.data)
+                    return self.element_type(self, inp)
+                elif (isinstance(inp, self.element_type) and
+                      inp.dtype == self.dtype):
+                    return self.element_type(self, inp.data)
                 else:
                     elem = self.element()
                     elem[:] = inp
@@ -173,246 +179,252 @@ class CudaNtuples(NtuplesBase):
             else:
                 raise ValueError('cannot provide both inp and data_ptr.')
 
-    class Vector(NtuplesBase.Vector):
-
-        """Representation of a :class:`CudaNtuples` element."""
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            if not isinstance(space, CudaNtuples):
-                raise TypeError('{!r} not a `CudaNtuples` instance.'
-                                ''.format(space))
-
-            super().__init__(space)
-
-            if not isinstance(data, self._space._vector_impl):
-                raise TypeError('data {!r} not a `{}` instance.'
-                                ''.format(data, self._space._vector_impl))
-            self._data = data
-
-        @property
-        def data(self):
-            """The data of this vector.
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            ptr : CudaFnVectorImpl
-                Underlying cuda data representation
-
-            Examples
-            --------
-            """
-            return self._data
-
-        @property
-        def data_ptr(self):
-            """A raw pointer to the data of this vector."""
-            return self.data.data_ptr()
-
-        def __eq__(self, other):
-            """``vec.__eq__(other) <==> vec == other``.
-
-            Returns
-            -------
-            equals : `bool`
-                `True` if all elements of ``other`` are equal to this
-                vector's elements, `False` otherwise
-
-            Examples
-            --------
-            >>> r3 = CudaNtuples(3, 'float32')
-            >>> x = r3.element([1, 2, 3])
-            >>> x == x
-            True
-            >>> y = r3.element([1, 2, 3])
-            >>> x == y
-            True
-            >>> y = r3.element([0, 0, 0])
-            >>> x == y
-            False
-            >>> r3_2 = CudaNtuples(3, 'uint8')
-            >>> z = r3_2.element([1, 2, 3])
-            >>> x != z
-            True
-            """
-            if other is self:
-                return True
-            elif other not in self.space:
-                return False
-            else:
-                return self.data == other.data
-
-        def copy(self):
-            """Create an identical (deep) copy of this vector.
-
-            Returns
-            -------
-            copy : :class:`CudaNtuples.Vector`
-                The deep copy
-
-            Examples
-            --------
-            >>> vec1 = CudaNtuples(3, 'uint8').element([1, 2, 3])
-            >>> vec2 = vec1.copy()
-            >>> vec2
-            CudaNtuples(3, 'uint8').element([1, 2, 3])
-            >>> vec1 == vec2
-            True
-            >>> vec1 is vec2
-            False
-            """
-            return self.space.Vector(self.space, self.data.copy())
-
-        def asarray(self, start=None, stop=None, step=None, out=None):
-            """Extract the data of this array as a numpy array.
-
-            Parameters
-            ----------
-            start : `int`, optional
-                Start position. None means the first element.
-            start : `int`, optional
-                One element past the last element to be extracted.
-                None means the last element.
-            start : `int`, optional
-                Step length. None means 1.
-            out : `numpy.ndarray`
-                Array in which the result should be written in-place.
-                Has to be contiguous and of the correct dtype.
-
-            Returns
-            -------
-            asarray : `numpy.ndarray`
-                Numpy array of the same type as the space.
-
-            Examples
-            --------
-            >>> uc3 = CudaNtuples(3, 'uint8')
-            >>> y = uc3.element([1, 2, 3])
-            >>> y.asarray()
-            array([1, 2, 3], dtype=uint8)
-            >>> y.asarray(1, 3)
-            array([2, 3], dtype=uint8)
-
-            Using the out parameter
-
-            >>> out = np.empty((3,), dtype='uint8')
-            >>> result = y.asarray(out=out)
-            >>> out
-            array([1, 2, 3], dtype=uint8)
-            >>> result is out
-            True
-            """
-            if out is None:
-                return self.data.get_to_host(slice(start, stop, step))
-            else:
-                self.data.copy_device_to_host(slice(start, stop, step), out)
-                return out
-
-        def __getitem__(self, indices):
-            """Access values of this vector.
-
-            This will cause the values to be copied to CPU
-            which is a slow operation.
-
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be accessed
-
-            Returns
-            -------
-            values : scalar or :class:`CudaNtuples.Vector`
-                The value(s) at the index (indices)
+    @property
+    def element_type(self):
+        """ `CudaNtuplesVector` """
+        return CudaNtuplesVector
 
 
-            Examples
-            --------
-            >>> uc3 = CudaNtuples(3, 'uint8')
-            >>> y = uc3.element([1, 2, 3])
-            >>> y[0]
-            1
-            >>> z = y[1:3]
-            >>> z
-            CudaNtuples(2, 'uint8').element([2, 3])
-            >>> y[::2]
-            CudaNtuples(2, 'uint8').element([1, 3])
-            >>> y[::-1]
-            CudaNtuples(3, 'uint8').element([3, 2, 1])
+class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
-            The returned value is a view, modifications are reflected
-            in the original data:
+    """Representation of a `CudaNtuples` element."""
 
-            >>> z[:] = [4, 5]
-            >>> y
-            CudaNtuples(3, 'uint8').element([1, 4, 5])
-            """
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        if not isinstance(space, CudaNtuples):
+            raise TypeError('{!r} not a `CudaNtuples` instance.'
+                            ''.format(space))
+
+        super().__init__(space)
+
+        if not isinstance(data, self._space._vector_impl):
+            raise TypeError('data {!r} not a `{}` instance.'
+                            ''.format(data, self._space._vector_impl))
+        self._data = data
+
+    @property
+    def data(self):
+        """The data of this vector.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        ptr : CudaFnVectorImpl
+            Underlying cuda data representation
+
+        Examples
+        --------
+        """
+        return self._data
+
+    @property
+    def data_ptr(self):
+        """A raw pointer to the data of this vector."""
+        return self.data.data_ptr()
+
+    def __eq__(self, other):
+        """``vec.__eq__(other) <==> vec == other``.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if all elements of ``other`` are equal to this
+            vector's elements, `False` otherwise
+
+        Examples
+        --------
+        >>> r3 = CudaNtuples(3, 'float32')
+        >>> x = r3.element([1, 2, 3])
+        >>> x == x
+        True
+        >>> y = r3.element([1, 2, 3])
+        >>> x == y
+        True
+        >>> y = r3.element([0, 0, 0])
+        >>> x == y
+        False
+        >>> r3_2 = CudaNtuples(3, 'uint8')
+        >>> z = r3_2.element([1, 2, 3])
+        >>> x != z
+        True
+        """
+        if other is self:
+            return True
+        elif other not in self.space:
+            return False
+        else:
+            return self.data == other.data
+
+    def copy(self):
+        """Create an identical (deep) copy of this vector.
+
+        Returns
+        -------
+        copy : `CudaNtuplesVector`
+            The deep copy
+
+        Examples
+        --------
+        >>> vec1 = CudaNtuples(3, 'uint8').element([1, 2, 3])
+        >>> vec2 = vec1.copy()
+        >>> vec2
+        CudaNtuples(3, 'uint8').element([1, 2, 3])
+        >>> vec1 == vec2
+        True
+        >>> vec1 is vec2
+        False
+        """
+        return self.space.element_type(self.space, self.data.copy())
+
+    def asarray(self, start=None, stop=None, step=None, out=None):
+        """Extract the data of this array as a numpy array.
+
+        Parameters
+        ----------
+        start : `int`, optional
+            Start position. None means the first element.
+        start : `int`, optional
+            One element past the last element to be extracted.
+            None means the last element.
+        start : `int`, optional
+            Step length. None means 1.
+        out : `numpy.ndarray`
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
+
+        Returns
+        -------
+        asarray : `numpy.ndarray`
+            Numpy array of the same type as the space.
+
+        Examples
+        --------
+        >>> uc3 = CudaNtuples(3, 'uint8')
+        >>> y = uc3.element([1, 2, 3])
+        >>> y.asarray()
+        array([1, 2, 3], dtype=uint8)
+        >>> y.asarray(1, 3)
+        array([2, 3], dtype=uint8)
+
+        Using the out parameter
+
+        >>> out = np.empty((3,), dtype='uint8')
+        >>> result = y.asarray(out=out)
+        >>> out
+        array([1, 2, 3], dtype=uint8)
+        >>> result is out
+        True
+        """
+        if out is None:
+            return self.data.get_to_host(slice(start, stop, step))
+        else:
+            self.data.copy_device_to_host(slice(start, stop, step), out)
+            return out
+
+    def __getitem__(self, indices):
+        """Access values of this vector.
+
+        This will cause the values to be copied to CPU
+        which is a slow operation.
+
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be accessed
+
+        Returns
+        -------
+        values : scalar or `CudaNtuplesVector`
+            The value(s) at the index (indices)
+
+
+        Examples
+        --------
+        >>> uc3 = CudaNtuples(3, 'uint8')
+        >>> y = uc3.element([1, 2, 3])
+        >>> y[0]
+        1
+        >>> z = y[1:3]
+        >>> z
+        CudaNtuples(2, 'uint8').element([2, 3])
+        >>> y[::2]
+        CudaNtuples(2, 'uint8').element([1, 3])
+        >>> y[::-1]
+        CudaNtuples(3, 'uint8').element([3, 2, 1])
+
+        The returned value is a view, modifications are reflected
+        in the original data:
+
+        >>> z[:] = [4, 5]
+        >>> y
+        CudaNtuples(3, 'uint8').element([1, 4, 5])
+        """
+        if isinstance(indices, slice):
+            data = self.data.getslice(indices)
+            return type(self.space)(data.size, data.dtype).element(data)
+        else:
+            return self.data.__getitem__(indices)
+
+    def __setitem__(self, indices, values):
+        """Set values of this vector.
+
+        This will cause the values to be copied to CPU
+        which is a slow operation.
+
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like, `CudaNtuplesVector`}
+            The value(s) that are to be assigned.
+
+            If ``index`` is an `int`, ``value`` must be single value.
+
+            If ``index`` is a `slice`, ``value`` must be broadcastable
+            to the size of the slice (same size, shape (1,)
+            or single value).
+
+        Returns
+        -------
+        `None`
+
+        Examples
+        --------
+        >>> uc3 = CudaNtuples(3, 'uint8')
+        >>> y = uc3.element([1, 2, 3])
+        >>> y[0] = 5
+        >>> y
+        CudaNtuples(3, 'uint8').element([5, 2, 3])
+        >>> y[1:3] = [7, 8]
+        >>> y
+        CudaNtuples(3, 'uint8').element([5, 7, 8])
+        >>> y[:] = np.array([0, 0, 0])
+        >>> y
+        CudaNtuples(3, 'uint8').element([0, 0, 0])
+
+        Scalar assignment
+
+        >>> y[:] = 5
+        >>> y
+        CudaNtuples(3, 'uint8').element([5, 5, 5])
+        """
+        if isinstance(values, CudaNtuplesVector):
+            self.assign(values)  # use lincomb magic
+        else:
             if isinstance(indices, slice):
-                data = self.data.getslice(indices)
-                return type(self.space)(data.size, data.dtype).element(data)
-            else:
-                return self.data.__getitem__(indices)
+                # Convert value to the correct type if needed
+                value_array = np.asarray(values, dtype=self.space.dtype)
 
-        def __setitem__(self, indices, values):
-            """Set values of this vector.
-
-            This will cause the values to be copied to CPU
-            which is a slow operation.
-
-            Parameters
-            ----------
-            indices : `int` or `slice`
-                The position(s) that should be set
-            values : {scalar, array-like, :class:`CudaNtuples.Vector`}
-                The value(s) that are to be assigned.
-
-                If ``index`` is an `int`, ``value`` must be single value.
-
-                If ``index`` is a `slice`, ``value`` must be broadcastable
-                to the size of the slice (same size, shape (1,)
-                or single value).
-
-            Returns
-            -------
-            `None`
-
-            Examples
-            --------
-            >>> uc3 = CudaNtuples(3, 'uint8')
-            >>> y = uc3.element([1, 2, 3])
-            >>> y[0] = 5
-            >>> y
-            CudaNtuples(3, 'uint8').element([5, 2, 3])
-            >>> y[1:3] = [7, 8]
-            >>> y
-            CudaNtuples(3, 'uint8').element([5, 7, 8])
-            >>> y[:] = np.array([0, 0, 0])
-            >>> y
-            CudaNtuples(3, 'uint8').element([0, 0, 0])
-
-            Scalar assignment
-
-            >>> y[:] = 5
-            >>> y
-            CudaNtuples(3, 'uint8').element([5, 5, 5])
-            """
-            if isinstance(values, CudaNtuples.Vector):
-                self.assign(values)  # use lincomb magic
-            else:
-                if isinstance(indices, slice):
-                    # Convert value to the correct type if needed
-                    value_array = np.asarray(values, dtype=self.space.dtype)
-
-                    if (value_array.ndim == 0):
-                        self.data.fill(values)
-                    else:
-                        # Size checking is performed in c++
-                        self.data.setslice(indices, value_array)
+                if (value_array.ndim == 0):
+                    self.data.fill(values)
                 else:
-                    self.data.__setitem__(int(indices), values)
+                    # Size checking is performed in c++
+                    self.data.setslice(indices, value_array)
+            else:
+                self.data.__setitem__(int(indices), values)
 
 
 def _repr_space_funcs(space):
@@ -441,7 +453,7 @@ def _repr_space_funcs(space):
 
 class CudaFn(FnBase, CudaNtuples):
 
-    """The space :math:`\mathbb{F}^n`, implemented in CUDA.
+    """The space `FnBase`, implemented in CUDA.
 
     Requires the compiled ODL extension odlpp.
     """
@@ -462,7 +474,7 @@ class CudaFn(FnBase, CudaNtuples):
             Only scalar data types are allowed.
 
         kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            'weight' : {array-like, :class:`CudaFn.Vector`, `float`, `None`}
+            'weight' : {array-like, `CudaFnVector`, `float`, `None`}
                 Use weighted inner product, norm, and dist.
 
                 `None`:
@@ -477,7 +489,7 @@ class CudaFn(FnBase, CudaNtuples):
                     main memory, which results in slower space functions
                     due to a copy during evaluation.
 
-                :class:`CudaFn.Vector`:
+                `CudaFnVector`:
                     same as 1-dim. array-like, except that copying is
                     avoided if the ``dtype`` of the vector is the
                     same as this space's ``dtype``.
@@ -497,7 +509,7 @@ class CudaFn(FnBase, CudaNtuples):
             'dist' : `callable`, optional
                 The distance function defining a metric on
                 :math:`\mathbb{F}^n`.
-                It must accept two :class:`CudaFn.Vector` arguments,
+                It must accept two `CudaFnVector` arguments,
                 return a `float` and
                 fulfill the following mathematical conditions for any
                 three vectors :math:`x, y, z`:
@@ -517,7 +529,7 @@ class CudaFn(FnBase, CudaNtuples):
 
             'norm' : `callable`, optional
                 The norm implementation. It must accept an
-                :class:`CudaFn.Vector` argument, return a
+                `CudaFnVector` argument, return a
                 `float` and satisfy the following
                 conditions for all vectors :math:`x, y` and scalars
                 :math:`s`:
@@ -537,7 +549,7 @@ class CudaFn(FnBase, CudaNtuples):
 
             'inner' : `callable`, optional
                 The inner product implementation. It must accept two
-                :class:`CudaFn.Vector` arguments, return a element from
+                `CudaFnVector` arguments, return a element from
                 the field of the space (real or complex number) and
                 satisfy the following conditions for all vectors
                 :math:`x, y, z` and scalars :math:`s`:
@@ -562,15 +574,15 @@ class CudaFn(FnBase, CudaNtuples):
         exponent = kwargs.pop('exponent', 2.0)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        from builtins import sum
-        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
+        from builtins import sum as py_sum
+        if py_sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
             if np.isscalar(weight):
                 self._space_funcs = CudaFnConstWeighting(
                     weight, exponent=exponent)
-            elif isinstance(weight, CudaFn.Vector):
+            elif isinstance(weight, CudaFnVector):
                 self._space_funcs = CudaFnVectorWeighting(
                     weight, exponent=exponent)
             else:
@@ -604,11 +616,11 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        a, b : :attr:`~odl.LinearSpace.field` element
+        a, b : `LinearSpace.field` element
             Scalar to multiply ``x`` and ``y`` with.
-        x, y : :class:`CudaFn.Vector`
+        x, y : `CudaFnVector`
             The summands
-        out : :class:`CudaFn.Vector`
+        out : `CudaFnVector`
             The Vector that the result is written to.
 
         Returns
@@ -633,7 +645,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFn.Vector`
+        x1, x2 : `CudaFnVector`
 
         Returns
         -------
@@ -656,7 +668,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFn.Vector`
+        x1, x2 : `CudaFnVector`
             The vectors whose mutual distance is calculated
 
         Returns
@@ -682,7 +694,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        x : :class:`CudaFn.Vector`
+        x : `CudaFnVector`
 
         Returns
         -------
@@ -708,9 +720,9 @@ class CudaFn(FnBase, CudaNtuples):
         Parameters
         ----------
 
-        x1, x2 : CudaFn.Vector
+        x1, x2 : `CudaFnVector`
             Factors in product
-        out : CudaFn.Vector
+        out : `CudaFnVector`
             Result
 
         Returns
@@ -741,9 +753,9 @@ class CudaFn(FnBase, CudaNtuples):
         Parameters
         ----------
 
-        x1, x2 : CudaFn.Vector
+        x1, x2 : `CudaFnVector`
             Read from
-        out : CudaFn.Vector
+        out : `CudaFnVector`
             Write to
 
         Returns
@@ -766,11 +778,11 @@ class CudaFn(FnBase, CudaNtuples):
 
     def zero(self):
         """Create a vector of zeros."""
-        return self.Vector(self, self._vector_impl(self.size, 0))
+        return self.element_type(self, self._vector_impl(self.size, 0))
 
     def one(self):
         """Create a vector of ones."""
-        return self.Vector(self, self._vector_impl(self.size, 1))
+        return self.element_type(self, self._vector_impl(self.size, 1))
 
     def __eq__(self, other):
         """s.__eq__(other) <==> s == other.
@@ -812,7 +824,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> r3_lambda1 == r3_lambda2
         False
 
-        A :class:`CudaFn` space with the same data type is considered
+        A `CudaFn` space with the same data type is considered
         equal:
 
         >>> r3 = CudaRn(3)
@@ -832,16 +844,22 @@ class CudaFn(FnBase, CudaNtuples):
         inner_str += _repr_space_funcs(self)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    class Vector(FnBase.Vector, CudaNtuples.Vector):
-
-        """Representation of a :class:`CudaFn` element."""
-
-        def __init__(self, space, data):
-            """Initialize a new instance."""
-            super().__init__(space, data)
+    @property
+    def element_type(self):
+        """ `CudaFnVector` """
+        return CudaFnVector
 
 
-class CudaRn(CudaFn):
+class CudaFnVector(FnBaseVector, CudaNtuplesVector):
+
+    """Representation of a `CudaFn` element."""
+
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        super().__init__(space, data)
+
+
+class CudaRn(CudaFn, LinearSpace):
 
     """The real space :math:`R^n`, implemented in CUDA.
 
@@ -864,12 +882,12 @@ class CudaRn(CudaFn):
             Only real floating-point data types are allowed.
 
         kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            See :class:`CudaFn`
+            See `CudaFn`
         """
         super().__init__(size, dtype, **kwargs)
 
         if not is_real_floating_dtype(self._dtype):
-            raise TypeError('data type {} not a real floating-point type.'
+            raise TypeError('data type {!r} not a real floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
@@ -881,12 +899,23 @@ class CudaRn(CudaFn):
             inner_str += _repr_space_funcs(self)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    class Vector(CudaFn.Vector):
-        pass
+    @property
+    def element_type(self):
+        """ `CudaRnVector` """
+        return CudaRnVector
 
+
+class CudaRnVector(CudaFnVector):
+
+    """Representation of a `CudaRn` element."""
+
+    def __init__(self, space, data):
+        """Initialize a new instance."""
+        super().__init__(space, data)
 
 # Methods
 # TODO: move
+
 
 def _make_unary_fun(name):
     def fun(x, out=None):
@@ -894,6 +923,9 @@ def _make_unary_fun(name):
             out = x.space.element()
         getattr(x.data, name)(out.data)
         return out
+
+    fun.__doc__ = """Calculates {name} using cuda.""".format(name=name)
+
     return fun
 
 sin = _make_unary_fun('sin')
@@ -907,20 +939,20 @@ sign = _make_unary_fun('sign')
 sqrt = _make_unary_fun('sqrt')
 
 
-def _weighting(weight, exponent, dist_using_inner=False):
+def _weighting(weight, exponent):
     if np.isscalar(weight):
         weighting = CudaFnConstWeighting(
             weight, exponent)
-    elif isinstance(weight, CudaFn.Vector):
+    elif isinstance(weight, CudaFnVector):
         weighting = CudaFnVectorWeighting(
-            weight, exponent=exponent, dist_using_inner=dist_using_inner)
+            weight, exponent=exponent)
     else:
         weight_ = np.asarray(weight)
         if weight_.dtype == object:
             raise ValueError('bad weight {}'.format(weight))
         if weight_.ndim == 1:
             weighting = CudaFnVectorWeighting(
-                weight_, exponent, dist_using_inner=dist_using_inner)
+                weight_, exponent)
         elif weight_.ndim == 2:
             raise NotImplementedError('matrix weighting not implemented '
                                       'for CUDA spaces.')
@@ -934,13 +966,13 @@ def _weighting(weight, exponent, dist_using_inner=False):
 
 
 def cu_weighted_inner(weight):
-    """Weighted inner product on :class:`CudaFn` spaces as free function.
+    """Weighted inner product on `CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or :class:`CudaFn.Vector`
+    weight : scalar, array-like or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
+        constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
 
     Returns
@@ -958,13 +990,13 @@ def cu_weighted_inner(weight):
 
 
 def cu_weighted_norm(weight, exponent=2.0):
-    """Weighted norm on :class:`CudaFn` spaces as free function.
+    """Weighted norm on `CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or :class:`CudaFn.Vector`
+    weight : scalar, array-like or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
+        constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
     exponent : positive `float`
         Exponent of the norm. If ``weight`` is a sparse matrix, only
@@ -984,29 +1016,17 @@ def cu_weighted_norm(weight, exponent=2.0):
     return _weighting(weight, exponent=exponent).norm
 
 
-def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
-    """Weighted distance on :class:`CudaFn` spaces as free function.
+def cu_weighted_dist(weight, exponent=2.0):
+    """Weighted distance on `CudaFn` spaces as free function.
 
     Parameters
     ----------
-    weight : scalar, array-like or :class:`CudaFn.Vector`
+    weight : scalar, array-like or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
-        constant weight and a 1-dim. array or a :class:`CudaFn.Vector`
+        constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
     exponent : positive `float`
         Exponent of the distance
-    use_inner : `bool`, optional
-        Calculate ``dist`` using the formula
-
-        :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-        \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
-
-        This avoids the creation of new arrays and is thus faster
-        for large arrays. On the downside, it will not evaluate to
-        exactly zero for equal (but not identical) :math:`x` and
-        :math:`y`.
-
-        Can only be used if ``exponent`` is 2.0.
 
     Returns
     -------
@@ -1019,11 +1039,12 @@ def cu_weighted_dist(weight, exponent=2.0, use_inner=False):
     --------
     CudaFnConstWeighting, CudaFnVectorWeighting
     """
-    return _weighting(weight, exponent=exponent,
-                      dist_using_inner=use_inner).dist
+    return _weighting(weight, exponent=exponent).dist
 
 
 def add_scalar(x, scal, out=None):
+    """Add scalar to `CudaNtuplesVector`.
+    """
     if out is None:
         out = x.space.element()
     cuda.add_scalar(x.data, scal, out.data)
@@ -1031,6 +1052,8 @@ def add_scalar(x, scal, out=None):
 
 
 def max_vector_scalar(x, scal, out=None):
+    """Calculate the elementwise max of `CudaNtuplesVector` and scalar.
+    """
     if out is None:
         out = x.space.element()
     cuda.max_vector_scalar(x.data, scal, out.data)
@@ -1038,6 +1061,8 @@ def max_vector_scalar(x, scal, out=None):
 
 
 def max_vector_vector(x1, x2, out=None):
+    """Calculate the elementwise max of `CudaNtuplesVector`'s
+    """
     if out is None:
         out = x1.space.element()
     cuda.max_vector_vector(x1.data, x2.data, out.data)
@@ -1045,6 +1070,8 @@ def max_vector_vector(x1, x2, out=None):
 
 
 def divide_vector_vector(x1, x2, out=None):
+    """Calculate the quotient of `CudaNtuplesVector`'s
+    """
     if out is None:
         out = x1.space.element()
     cuda.divide_vector_vector(x1.data, x2.data, out.data)
@@ -1052,11 +1079,23 @@ def divide_vector_vector(x1, x2, out=None):
 
 
 def sum(x):
+    """Calculate the sum of a `CudaNtuplesVector`
+    """
     return cuda.sum(x.data)
 
 
 def _dist_default(x1, x2):
     return x1.data.dist(x2.data)
+
+
+def _pdist_default(x1, x2, p):
+    if p == float('inf'):
+        raise NotImplementedError('inf-norm not implemented.')
+    return x1.data.dist_power(x2.data, p)
+
+
+def _pdist_diagweight(x1, x2, p, w):
+    return x1.data.dist_weight(x2.data, p, w.data)
 
 
 def _norm_default(x):
@@ -1066,33 +1105,26 @@ def _norm_default(x):
 def _pnorm_default(x, p):
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
-    elif int(p) != p:
-        raise NotImplementedError('non-integer powers not implemented')
-    # TODO: optimized version in C++ code?
-    xp = abs(x)
-    xp **= p
-    return sum(xp)**(1/p)
+    return x.data.norm_power(p)
 
 
 def _pnorm_diagweight(x, p, w):
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
-    elif int(p) != p:
-        raise NotImplementedError('non-integer powers not implemented')
-    # TODO: optimized version in C++ code?
-    xp = abs(x)
-    xp **= p
-    xp *= w
-    return sum(xp)**(1/p)
+    return x.data.norm_weight(p, w.data)
 
 
 def _inner_default(x1, x2):
     return x1.data.inner(x2.data)
 
 
+def _inner_diagweight(x1, x2, w):
+    return x1.data.inner_weight(x2.data, w.data)
+
+
 class CudaFnVectorWeighting(FnWeightingBase):
 
-    """Vector weighting for :class:`CudaFn`.
+    """Vector weighting for `CudaFn`.
 
     For exponent 2.0, a new weighted inner product with vector :math:`w`
     is defined as
@@ -1124,7 +1156,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
     during initialization.
     """
 
-    def __init__(self, vector, exponent=2.0, dist_using_inner=False):
+    def __init__(self, vector, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1134,27 +1166,15 @@ class CudaFnVectorWeighting(FnWeightingBase):
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the formula
-
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
-
-            Can only be used if ``exponent`` is 2.0.
         """
-        # TODO: remove dist_using_inner in favor of a native dist
-        # implementation
         super().__init__(impl='cuda', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
-        if not isinstance(vector, CudaFn.Vector):
-            self._vector = np.asarray(vector)
-        else:
-            self._vector = vector
+                         dist_using_inner=False)
+        if not isinstance(vector, CudaFnVector):
+            raise TypeError('vector {!r} not a CudaFnVector'
+                            ''.format(vector))
+
+        self._vector = vector
+
         if self.vector.dtype == object:
             raise ValueError('invalid vector {}.'.format(vector))
         elif self.vector.ndim != 1:
@@ -1183,7 +1203,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`CudaFnVectorWeighting`
+            `True` if ``other`` is a `CudaFnVectorWeighting`
             instance with **identical** vector, `False` otherwise.
 
         See also
@@ -1204,7 +1224,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is a
-            :class_`odl.space.base_ntuples.FnWeightingBase` instance
+            `FnWeightingBase` instance
             which yields the same result as this inner product for any
             input, `False` otherwise. This is checked by entry-wise
             comparison of matrices/vectors/constant of this inner
@@ -1226,7 +1246,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFn.Vector`
+        x1, x2 : `CudaFnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1239,18 +1259,14 @@ class CudaFnVectorWeighting(FnWeightingBase):
                                       'exponent != 2 (got {}).'
                                       ''.format(self.exponent))
         else:
-            inner = _inner_default(x1 * self.vector, x2)
-            if is_real_dtype(x1.dtype):
-                return float(inner)
-            else:
-                return complex(inner)
+            return _inner_diagweight(x1, x2, self.vector)
 
     def norm(self, x):
         """Calculate the vector-weighted norm of a vector.
 
         Parameters
         ----------
-        x : :class:`CudaFn.Vector`
+        x : `CudaFnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1258,10 +1274,28 @@ class CudaFnVectorWeighting(FnWeightingBase):
         norm : `float`
             The norm of the provided vector
         """
-        if self.exponent == 2.0:
-            return super().norm(x)
+        if self.exponent == float('inf'):
+            raise NotImplementedError('inf norm not implemented yet.')
         else:
-            return float(_pnorm_diagweight(x, self.exponent, self.vector))
+            return _pnorm_diagweight(x, self.exponent, self.vector)
+
+    def dist(self, x1, x2):
+        """Calculate the vector-weighted distance between two vectors.
+
+        Parameters
+        ----------
+        x1, x2 : `CudaFnVector`
+            Vectors whose mutual distance is calculated
+
+        Returns
+        -------
+        dist : `float`
+            The distance between the vectors
+        """
+        if self.exponent == float('inf'):
+            raise NotImplementedError('inf norm not implemented yet.')
+        else:
+            return _pdist_diagweight(x1, x2, self.exponent, self.vector)
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -1285,7 +1319,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
 
 class CudaFnConstWeighting(FnWeightingBase):
 
-    """Weighting of :class:`CudaFn` by a constant.
+    """Weighting of `CudaFn` by a constant.
 
     For exponent 2.0, a new weighted inner product with constant
     :math:`c` is defined as
@@ -1325,8 +1359,7 @@ class CudaFnConstWeighting(FnWeightingBase):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super().__init__(impl='cuda', exponent=exponent,
-                         dist_using_inner=False)
+        super().__init__(impl='cuda', exponent=exponent)
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
@@ -1344,7 +1377,7 @@ class CudaFnConstWeighting(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnConstWeighting`
+            `True` if ``other`` is a `CudaFnConstWeighting`
             instance with the same constant, `False` otherwise.
         """
         if other is self:
@@ -1361,12 +1394,12 @@ class CudaFnConstWeighting(FnWeightingBase):
         -------
         equivalent : `bool`
             `True` if ``other`` is a
-            :class:`~odl.space.base_ntuples.FnWeightingBase` instance
+            `FnWeightingBase` instance
             with the same
-            :attr:`~odl.space.base_ntuples.FnWeightingBase.impl`,
+            `FnWeightingBase.impl`,
             which yields the same result as this inner product for any
             input, `False` otherwise. This is the same as equality
-            if ``other`` is a :class:`CudaFnConstWeighting` instance,
+            if ``other`` is a `CudaFnConstWeighting` instance,
             otherwise by entry-wise comparison of this inner product's
             constant with the matrix of ``other``.
         """
@@ -1384,7 +1417,7 @@ class CudaFnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFn.Vector`
+        x1, x2 : `CudaFnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1397,14 +1430,14 @@ class CudaFnConstWeighting(FnWeightingBase):
                                       'exponent != 2 (got {}).'
                                       ''.format(self.exponent))
         else:
-            return self.const * float(_inner_default(x1, x2))
+            return self.const * _inner_default(x1, x2)
 
     def norm(self, x):
         """Calculate the constant-weighted norm of a vector.
 
         Parameters
         ----------
-        x1 : :class:`CudaFn.Vector`
+        x1 : `CudaFnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1412,13 +1445,12 @@ class CudaFnConstWeighting(FnWeightingBase):
         norm : `float`
             The norm of the vector
         """
-        if self.exponent == 2.0:
-            from math import sqrt
-            return sqrt(self.const) * float(_norm_default(x))
-        elif self.exponent == float('inf'):  # Weighting irrelevant
-            return self.const * float(_pnorm_default(x, self.exponent))
+        if self.exponent == float('inf'):
+            raise NotImplementedError
+            # Example impl
+            # return self.const * float(_pnorm_default(x, self.exponent))
         else:
-            return (self.const**(1/self.exponent) *
+            return (self.const ** (1 / self.exponent) *
                     float(_pnorm_default(x, self.exponent)))
 
     def dist(self, x1, x2):
@@ -1426,7 +1458,7 @@ class CudaFnConstWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : :class:`CudaFn.Vector`
+        x1, x2 : `CudaFnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -1434,16 +1466,13 @@ class CudaFnConstWeighting(FnWeightingBase):
         dist : `float`
             The distance between the vectors
         """
-        if self.exponent == 2.0:
-            from math import sqrt
-            return sqrt(self.const) * float(_dist_default(x1, x2))
-        elif self.exponent == float('inf'):
-            # TODO: implement and optimize!
-            return self.const * float(_pnorm_default(x1 - x2, self.exponent))
+        if self.exponent == float('inf'):
+            raise NotImplementedError
+            # Example impl
+            # return self.const * float(_pdist_default(x1, x2, self.exponent))
         else:
-            # TODO: optimize!
-            return (self.const**(1/self.exponent) *
-                    _pnorm_default(x1 - x2, self.exponent))
+            return (self.const**(1 / self.exponent) *
+                    _pdist_default(x1, x2, self.exponent))
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -1464,7 +1493,7 @@ class CudaFnConstWeighting(FnWeightingBase):
 
 class CudaFnNoWeighting(CudaFnConstWeighting):
 
-    """Weighting of :class:`CudaFn` with constant 1.
+    """Weighting of `CudaFn` with constant 1.
 
     For exponent 2.0, the unweighted inner product is defined as
 
@@ -1497,7 +1526,7 @@ class CudaFnNoWeighting(CudaFnConstWeighting):
 
 class CudaFnCustomInnerProduct(FnWeightingBase):
 
-    """Custom inner product on :class:`CudaFn`."""
+    """Custom inner product on `CudaFn`."""
 
     def __init__(self, inner, dist_using_inner=True):
         """Initialize a new instance.
@@ -1506,7 +1535,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            :class:`CudaFn.Vector` arguments, return a complex number
+            `CudaFnVector` arguments, return a complex number
             and satisfy the following conditions for all vectors
             :math:`x, y, z` and scalars :math:`s`:
 
@@ -1536,10 +1565,9 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
                             ''.format(inner))
         self._inner_impl = inner
 
-    @property
-    def inner(self):
+    def inner(self, x1, x2):
         """Custom inner product of this instance.."""
-        return self._inner_impl
+        return self._inner_impl(x1, x2)
 
     def __eq__(self, other):
         """``inner.__eq__(other) <==> inner == other``.
@@ -1547,11 +1575,11 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnCustomInnerProduct`
+            `True` if ``other`` is a `CudaFnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomInnerProduct) and
-                self.inner == other.inner and
+                self._inner_impl == other._inner_impl and
                 super().__eq__(other))
 
     def __repr__(self):
@@ -1571,7 +1599,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
 
 class CudaFnCustomNorm(FnWeightingBase):
 
-    """Custom norm on :class:`CudaFn`, removes ``inner``."""
+    """Custom norm on `CudaFn`, removes ``inner``."""
 
     def __init__(self, norm):
         """Initialize a new instance.
@@ -1580,7 +1608,7 @@ class CudaFnCustomNorm(FnWeightingBase):
         ----------
         norm : `callable`
             The norm implementation. It must accept an
-            :class:`CudaFn.Vector` argument, return a `float` and
+            `CudaFnVector` argument, return a `float` and
             satisfy the following conditions for all vectors
             :math:`x, y` and scalars :math:`s`:
 
@@ -1602,10 +1630,9 @@ class CudaFnCustomNorm(FnWeightingBase):
         """Inner product is not defined for custom distance."""
         raise NotImplementedError
 
-    @property
-    def norm(self):
+    def norm(self, x):
         """Custom norm of this instance.."""
-        return self._norm_impl
+        return self._norm_impl(x)
 
     def __eq__(self, other):
         """``inner.__eq__(other) <==> inner == other``.
@@ -1613,11 +1640,11 @@ class CudaFnCustomNorm(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnCustomNorm`
+            `True` if ``other`` is a `CudaFnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomNorm) and
-                self.norm == other.norm and
+                self._norm_impl == other._norm_impl and
                 super().__eq__(other))
 
     def __repr__(self):
@@ -1633,7 +1660,7 @@ class CudaFnCustomNorm(FnWeightingBase):
 
 class CudaFnCustomDist(FnWeightingBase):
 
-    """Custom distance on :class:`CudaFn`, removes ``norm`` and ``inner``."""
+    """Custom distance on `CudaFn`, removes ``norm`` and ``inner``."""
 
     def __init__(self, dist):
         """Initialize a new instance.
@@ -1643,7 +1670,7 @@ class CudaFnCustomDist(FnWeightingBase):
         dist : `callable`
             The distance function defining a metric on
             :math:`\mathbb{F}^n`.
-            It must accept two :class:`CudaFn.Vector` arguments and
+            It must accept two `CudaFnVector` arguments and
             fulfill the following mathematical conditions for any
             three vectors :math:`x, y, z`:
 
@@ -1659,10 +1686,9 @@ class CudaFnCustomDist(FnWeightingBase):
                             ''.format(dist))
         self._dist_impl = dist
 
-    @property
-    def dist(self):
+    def dist(self, x1, x2):
         """Custom distance of this instance.."""
-        return self._dist_impl
+        return self._dist_impl(x1, x2)
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""
@@ -1678,11 +1704,11 @@ class CudaFnCustomDist(FnWeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if ``other`` is a :class:`CudaFnCustomDist`
+            `True` if ``other`` is a `CudaFnCustomDist`
             instance with the same norm, `False` otherwise.
         """
         return (isinstance(other, CudaFnCustomDist) and
-                self.dist == other.dist)
+                self._dist_impl == other._dist_impl)
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
@@ -1693,14 +1719,6 @@ class CudaFnCustomDist(FnWeightingBase):
     def __str__(self):
         """``w.__str__() <==> str(w)``."""
         return self.__repr__()  # TODO: prettify?
-
-try:
-    CudaRn(1).element()
-except (MemoryError, RuntimeError, TypeError) as err:
-    print(err)
-    print('Your GPU seems to be misconfigured. Skipping '
-          'CUDA-dependent modules.')
-    CUDA_AVAILABLE = False
 
 
 if __name__ == '__main__':

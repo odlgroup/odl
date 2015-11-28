@@ -21,7 +21,8 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int, object, str
+from builtins import int, object
+from past.builtins import basestring
 
 # External
 # pylint: disable=no-name-in-module
@@ -83,6 +84,8 @@ def all_equal(iter1, iter2):
     try:
         i1 = iter(iter1)
         i2 = iter(iter2)
+        if isinstance(iter1, basestring) or isinstance(iter2, basestring):
+            return iter1 == iter2
     except TypeError:
         return iter1 == iter2
 

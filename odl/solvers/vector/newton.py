@@ -47,31 +47,35 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
     [2]_,  Section 2.7 for solving nonlinear equations and Section 11.3 for
-    it's use in minimization, and a `Wikipedia article
+    it's use in minimization, and wikipedia on  `Newton's_method
     <https://en.wikipedia.org/wiki/Newton's_method>`_.
 
     Parameters
     ----------
-    deriv : :class:`~odl.Operator`
+    deriv : `Operator`
         Gradient of the objective function, :math:`x \mapsto grad f(x)`
     x : element in the domain of ``deriv``
         Starting point of the iteration
-    line_search : :class:`~odl.solvers.scalar.steplen.LineSearch`
+    line_search : `LineSearch`
         Strategy to choose the step length
     num_iter : `int`, optional
         Number of iterations
     cg_iter : `int`, optional
         Number of iterations in the the conjugate gradient solver,
         for comuting the search direction.
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Notes
     ----------
     The algorithm works by iteratively solving
+
         :math:`\partial f(x_k)p_k = -f(x_k)`
+
     and then updating as
+
         :math:`x_{k+1} = x_k + \\alpha x_k`,
+
     where :math:`\\alpha` is a suitable step length (see the
     references). In this implementation the system of equations are
     solved using the conjugate gradient method.
@@ -80,6 +84,7 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     ----------
     .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
        Cambridge university press, 2004.
+
     .. [2] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
        and nonlinear optimization. Siam, 2009
     """

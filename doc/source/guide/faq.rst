@@ -4,6 +4,30 @@ Frequently asked questions
 
 Abbreviations: **Q** uestion -- **P** roblem -- **S** olution
 
+General errors
+--------------
+
+#. **Q:** When importing ``odl``, the following error is shown::
+
+      File "/path/to/odl/odl/__init__.py", line 36
+
+        from . import diagnostics
+
+        ImportError: cannot import diagnostics
+
+  **P:** When you for the first time import (=execute) a module or execute a
+  script, a `bytecode <https://en.wikipedia.org/wiki/Bytecode>`_ file is created,
+  basically to speed up execution next time. If you installed ``odl`` with
+  ``pip -e`` (``--editable``), these files can interfere with changes to your
+  codebase.
+
+  **S:** Delete the bytecode files. In a standard GNU/Linux shell, you can
+  simply invoke (in your ``odl`` working directory)
+  ::
+
+    find . -name *.pyc | xargs rm
+
+
 Errors related to Python 2/3
 ----------------------------
 

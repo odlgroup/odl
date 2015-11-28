@@ -1,28 +1,17 @@
-odl.diagnostics package
-=======================
+diagnostics
+===========
 
-.. automodule:: odl.diagnostics
+Automated tests for ODL.
 
-odl.diagnostics.examples module
--------------------------------
+.. currentmodule:: odl.diagnostics
 
-.. automodule:: odl.diagnostics.examples
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-odl.diagnostics.operator module
--------------------------------
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: odl.diagnostics.operator
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   odl.diagnostics.examples
+   odl.diagnostics.operator
+   odl.diagnostics.space
 
-odl.diagnostics.space module
-----------------------------
 
-.. automodule:: odl.diagnostics.space
-    :members:
-    :undoc-members:
-    :show-inheritance:
+

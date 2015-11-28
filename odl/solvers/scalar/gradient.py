@@ -50,22 +50,22 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
     The algorithm is described in [1]_, section 9.3--9.4
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [2]_, Section 12.2, and a
-    `Wikipedia article
+    [2]_, Section 12.2, and wikipedia
+    `Gradient_descent
     <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
     Parameters
     ----------
-    grad : :class:`~odl.Operator`
+    grad : `Operator`
         Gradient of the objective function,
         :math:`x \mapsto \\nabla f(x)`
     x : element in the domain of ``deriv``
         Starting point of the iteration
-    line_search : :class:`~odl.solvers.LineSearch`
+    line_search : `LineSearch`
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : :class:`~odl.solvers.util.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     References

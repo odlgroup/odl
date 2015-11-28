@@ -407,30 +407,15 @@ def test_meshgrid():
     assert all_equal(mgy, yy)
     assert all_equal(mgz, zz)
 
-    xx, yy, zz = grid.meshgrid(sparse=True)
+    xx, yy, zz = grid.meshgrid()
     assert all_equal(mgx, xx)
     assert all_equal(mgy, yy)
     assert all_equal(mgz, zz)
 
-    # Dense meshgrid
-    mgx = np.empty((2, 3, 4))
-    for i in range(2):
-        mgx[i, :, :] = vec1[i]
-
-    mgy = np.empty((2, 3, 4))
-    for i in range(3):
-        mgy[:, i, :] = vec2[i]
-
-    mgz = np.empty((2, 3, 4))
-    for i in range(4):
-        mgz[:, :, i] = vec3[i]
-
-    xx, yy, zz = grid.meshgrid(sparse=False)
-    assert all_equal(mgx, xx)
-    assert all_equal(mgy, yy)
-    assert all_equal(mgz, zz)
-
-    assert all_equal(xx.shape, (2, 3, 4))
+    # Fortran ordering
+    grid = TensorGrid(vec1, vec2, vec3, order='F')
+    xx, yy, zz = grid.meshgrid()
+    assert all(arr.flags.f_contiguous for arr in (xx, yy, zz))
 
 
 def test_tensor_getitem():
@@ -858,9 +843,6 @@ def test_regular_getitem():
                      tensor_grid[test_slice].coord_vectors)
     assert all_equal(grid[:, :, 1, :].coord_vectors,
                      tensor_grid[test_slice].coord_vectors)
-
-    with pytest.raises(IndexError):
-        grid[1:1, :, 0, 0]
 
     with pytest.raises(IndexError):
         grid[1, ..., ..., 0]

@@ -27,7 +27,9 @@ standard_library.install_aliases()
 # Internal
 from odl.operator.default_ops import IdentityOperator
 from odl.operator.operator import OperatorComp, OperatorSum
-__all__ = ()
+
+__all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
+           'gauss_newton')
 
 
 # TODO: update all docs
@@ -72,11 +74,11 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
 
     Parameters
     ----------
-    op : :class:`~odl.Operator`
-        Operator in the inverse problem. It must have a `derivative`
+    op : `Operator`
+        Operator in the inverse problem. It must have a `Operator.derivative`
         property, which returns a new operator which in turn has an
-        `adjoint` property, i.e. `op.derivative(x).adjoint` must be
-        well-defined for `x` in the operator domain.
+        `Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
+        well-defined for ``x`` in the operator domain.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
@@ -87,7 +89,7 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         Maximum number of iterations
     omega : positive `float`
         Relaxation parameter in the iteration
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -117,7 +119,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     :math:`A x = y`
 
-    for a linear and self-adjoint operator `A`.
+    for a linear and self-adjoint `Operator` ``A``.
 
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
@@ -128,7 +130,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
     Parameters
     ----------
-    op : linear :class:`~odl.Operator`
+    op : linear `Operator`
         Operator in the inverse problem. It must be linear and
         self-adjoint. This implies in particular that its domain and
         range are equal.
@@ -140,7 +142,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -151,7 +153,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     # TODO: update doc
 
     if op.domain != op.range or not op.is_linear:
-        raise TypeError('Operator needs to be linear and self-adjoint')
+        raise ValueError('Operator needs to be linear and self-adjoint')
 
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
@@ -198,7 +200,7 @@ def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
 
     :math:`A x = y`
 
-    with a linear operator `A`.
+    with a linear `Operator` ``A``.
 
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
@@ -210,10 +212,10 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
     Parameters
     ----------
-    op : `~odl.Operator`
+    op : `Operator`
         Operator in the inverse problem. If not linear, it must have
-        an implementation of :attr:`~odl.Operator.derivative`, which
-        in turn must implement :attr:`~odl.Operator.adjoint`, i.e.
+        an implementation of `Operator.derivative`, which
+        in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
@@ -223,7 +225,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -298,7 +300,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
     :math:`A (x) = y`
 
-    for a (Frechet-) differentiable operator `A` using a
+    for a (Frechet-) differentiable `Operator` ``A`` using a
     Gauss-Newton iteration.
 
     It uses a minimum amount of memory copies by applying re-usable
@@ -311,10 +313,10 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
     Parameters
     ----------
-    op : :class:`~odl.Operator`
+    op : `Operator`
         Operator in the inverse problem. If not linear, it must have
-        an implementation of :attr:`~odl.Operator.derivative`, which
-        in turn must implement :attr:`~odl.Operator.adjoint`, i.e.
+        an implementation of `Operator.derivative`, which
+        in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
@@ -327,7 +329,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     zero_seq : `iterable`, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
-    partial : :class:`~odl.solvers.util.partial.Partial`, optional
+    partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns

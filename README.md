@@ -1,3 +1,4 @@
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](http://opensource.org/licenses/GPL-3.0)
 [![Build Status](https://travis-ci.org/odlgroup/odl.svg?branch=master)](https://travis-ci.org/odlgroup/odl?branch=master)
 [![Coverage Status](https://coveralls.io/repos/odlgroup/odl/badge.svg?branch=master&service=github)](https://coveralls.io/github/odlgroup/odl?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/odl/badge/?version=latest)](http://odl.readthedocs.org/?badge=latest)
@@ -67,14 +68,15 @@ From here follow the instructions in [odlpp](https://github.com/odlgroup/odlpp) 
 Requirements
 ------------
 
-- [numpy](https://github.com/numpy/numpy) >= 1.8
+- [numpy](https://github.com/numpy/numpy) >= 1.9
 - [scipy](https://github.com/scipy/scipy) >= 0.14
-- [python-future](https://pypi.python.org/pypi/future/)
+- [python-future](https://pypi.python.org/pypi/future/) >= 0.14
+- [matplotlib](http://matplotlib.org/) for plotting.
 
 Optional
 --------
 
-- [odlpp](https://github.com/odlgroup/odlpp) for GPU support (optional).
+- [odlpp](https://github.com/odlgroup/odlpp) for GPU support.
 - [pytest](https://pypi.python.org/pypi/pytest) >= 2.7.0 for unit tests
 - [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0 for test coverage report
 

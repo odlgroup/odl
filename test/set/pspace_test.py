@@ -20,7 +20,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
 
 # External module imports
 import numpy as np
@@ -244,17 +243,157 @@ def test_power_inplace_modify():
     assert all_almost_equal(z, [z1, z2])
 
 
-def test_getitem():
-    H = odl.Rn(2)
-    HxH = odl.ProductSpace(H, 2)
+def test_getitem_single():
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    H = odl.ProductSpace(r1, r2)
 
-    assert HxH[-2] == H
-    assert HxH[-1] == H
-    assert HxH[0] == H
-    assert HxH[1] == H
+    assert H[-2] is r1
+    assert H[-1] is r2
+    assert H[0] is r1
+    assert H[1] is r2
     with pytest.raises(IndexError):
-        HxH[-3]
-        HxH[2]
+        H[-3]
+        H[2]
+
+
+def test_getitem_slice():
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    r3 = odl.Rn(3)
+    H = odl.ProductSpace(r1, r2, r3)
+
+    assert H[:2] == odl.ProductSpace(r1, r2)
+    assert H[:2][0] is r1
+    assert H[:2][1] is r2
+
+
+def test_getitem_fancy():
+    r1 = odl.Rn(1)
+    r2 = odl.Rn(2)
+    r3 = odl.Rn(3)
+    H = odl.ProductSpace(r1, r2, r3)
+
+    assert H[[0, 2]] == odl.ProductSpace(r1, r3)
+    assert H[[0, 2]][0] is r1
+    assert H[[0, 2]][1] is r3
+
+
+def test_vector_equals():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    x = H.element([[0], [1, 2]])
+
+    assert x != 0  # test == not always true
+    assert x == x
+
+    x_2 = H.element([[0], [1, 2]])
+    assert x == x_2
+
+    x_3 = H.element([[3], [1, 2]])
+    assert x != x_3
+
+    x_4 = H.element([[0], [1, 3]])
+    assert x != x_4
+
+
+def test_vector_getitem_single():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+
+    x1 = H[0].element([0])
+    x2 = H[1].element([1, 2])
+    x = H.element([x1, x2])
+
+    assert x[-2] is x1
+    assert x[-1] is x2
+    assert x[0] is x1
+    assert x[1] is x2
+    with pytest.raises(IndexError):
+        x[-3]
+        x[2]
+
+
+def test_vector_getitem_slice():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+
+    x1 = H[0].element([0])
+    x2 = H[1].element([1, 2])
+    x3 = H[2].element([3, 4, 5])
+    x = H.element([x1, x2, x3])
+
+    assert x[:2].space == H[:2]
+    assert x[:2][0] is x1
+    assert x[:2][1] is x2
+
+
+def test_vector_getitem_fancy():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+
+    x1 = H[0].element([0])
+    x2 = H[1].element([1, 2])
+    x3 = H[2].element([3, 4, 5])
+    x = H.element([x1, x2, x3])
+
+    assert x[[0, 2]].space == H[[0, 2]]
+    assert x[[0, 2]][0] is x1
+    assert x[[0, 2]][1] is x3
+
+
+def test_vector_setitem_single():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+
+    x1 = H[0].element([0])
+    x2 = H[1].element([1, 2])
+    x = H.element([x1, x2])
+
+    x1_1 = H[0].element([1])
+    x[-2] = x1_1
+    assert x[-2] is x1_1
+
+    x2_1 = H[1].element([3, 4])
+    x[-1] = x2_1
+    assert x[-1] is x2_1
+
+    x1_2 = H[0].element([5])
+    x[0] = x1_2
+
+    x2_2 = H[1].element([3, 4])
+    x[1] = x2_2
+    assert x[1] is x2_2
+
+    with pytest.raises(IndexError):
+        x[-3] = x2
+        x[2] = x1
+
+
+def test_vector_setitem_slice():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+
+    x1 = H[0].element([0])
+    x2 = H[1].element([1, 2])
+    x3 = H[2].element([3, 4, 5])
+    x = H.element([x1, x2, x3])
+
+    x1_new = H[0].element([6])
+    x2_new = H[1].element([7, 8])
+    x[:2] = H[:2].element([x1_new, x2_new])
+    assert x[:2][0] is x1_new
+    assert x[:2][1] is x2_new
+
+
+def test_vector_setitem_fancy():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+
+    x1 = H[0].element([0])
+    x2 = H[1].element([1, 2])
+    x3 = H[2].element([3, 4, 5])
+    x = H.element([x1, x2, x3])
+
+    x1_new = H[0].element([6])
+    x3_new = H[2].element([7, 8, 9])
+    x[[0, 2]] = H[[0, 2]].element([x1_new, x3_new])
+    assert x[[0, 2]][0] is x1_new
+    assert x[[0, 2]][1] is x3_new
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

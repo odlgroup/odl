@@ -217,7 +217,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : :class:`~odl.Set`
+        other : `Set`
             The set to be tested. It must implement a ``min()`` and a
             ``max()`` method, otherwise a `TypeError` is raised.
         tol : `float`, optional
@@ -240,7 +240,7 @@ class IntervalProd(Set):
         ----------
         ndim : `int`, optional
               The dimension of the measure to apply.
-              Default: :attr:`true_ndim`
+              Default: `true_ndim`
 
         Examples
         --------
@@ -296,7 +296,7 @@ class IntervalProd(Set):
         if len(point) != self.ndim:
             raise ValueError('length {} of point {} does not match '
                              'the dimension {} of the set {}.'
-                             ''.format(len(point), point, self.ndim))
+                             ''.format(len(point), point, self.ndim, self))
 
         i_larger = np.where(point > self._end)
         i_smaller = np.where(point < self._begin)
@@ -327,7 +327,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        collapsed : :class:`IntervalProd`
+        collapsed : `IntervalProd`
             The collapsed set
 
         Examples
@@ -381,7 +381,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        squeezed : :class:`IntervalProd`
+        squeezed : `IntervalProd`
             The squeezed set
 
         Examples
@@ -410,18 +410,18 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : :class:`IntervalProd`, `float` or array-like
+        other : `IntervalProd`, `float` or array-like
             The set to be inserted. A `float` or array a is
             treated as an ``IntervalProd(a, a)``.
         index : `int`, optional
             The index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
 
-            Default: :attr:`ndim`
+            Default: `ndim`
 
         Returns
         -------
-        larger_set : :class:`IntervalProd`
+        larger_set : `IntervalProd`
             The enlarged set
 
         Examples
@@ -606,7 +606,10 @@ class IntervalProd(Set):
 
 
 class Interval(IntervalProd):
-    """One-dimensional interval product, i.e. just one interval."""
+    """One-dimensional interval product.
+
+    i.e. just one interval.
+    """
     def __init__(self, begin, end):
         super().__init__(begin, end)
         if self.ndim != 1:

@@ -23,6 +23,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import int, object, str, zip
 from odl.util.utility import with_metaclass
 from future import standard_library
+from past.builtins import basestring
 standard_library.install_aliases()
 
 # External
@@ -42,7 +43,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
     **Abstract Methods**
 
-    Each subclass of :class:`Set` must implement two methods: one to
+    Each subclass of `Set` must implement two methods: one to
     check if an object is contained in the set and one to test if two
     sets are equal.
 
@@ -101,9 +102,9 @@ class Set(with_metaclass(ABCMeta, object)):
     def contains_set(self, other):
         """Test if ``other`` is a subset of this set.
 
-        Implementing this method is optional.
+        Implementing this method is optional. Default it tests for equality.
         """
-        raise NotImplementedError("'contains_set' method not implemented.")
+        return self == other
 
     @abstractmethod
     def __eq__(self, other):
@@ -199,11 +200,10 @@ class Strings(Set):
             The fixed length of the strings in this set. Must be
             positive.
         """
-        if length not in Integers():
-            raise TypeError('`length` {} is not an integer.'.format(length))
-        if length <= 0:
+        le = int(length)
+        if le <= 0:
             raise ValueError('`length` {} is not positive.'.format(length))
-        self._length = length
+        self._length = le
 
     @property
     def length(self):
@@ -213,9 +213,9 @@ class Strings(Set):
     def __contains__(self, other):
         """``s.__constains__(other) <==> other in s``.
 
-        `True` if ``other`` is a string of at max :attr:`length`
+        `True` if ``other`` is a string of at max `length`
         characters, `False` otherwise."""
-        return isinstance(other, str) and len(other) <= self.length
+        return isinstance(other, basestring) and len(other) == self.length
 
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``."""
@@ -224,9 +224,11 @@ class Strings(Set):
     def element(self, inp=None):
         """Return a string from ``inp`` or from scratch."""
         if inp is not None:
-            return str(inp)[:self.length]
+            s = str(inp)[:self.length]
+            s += ' ' * (self.length - len(s))
+            return s
         else:
-            return ''
+            return ' ' * self.length
 
     def __str__(self):
         """``s.__str__() <==> str(s)``."""
@@ -240,7 +242,7 @@ class Strings(Set):
 class Field(with_metaclass(ABCMeta, Set)):
     """Any set that satisfies the field axioms
 
-    For example :class:`RealNumbers`, :class:`ComplexNumbers` or
+    For example `RealNumbers`, `ComplexNumbers` or
     the finite field :math:`F_2`.
     """
 
@@ -264,8 +266,8 @@ class ComplexNumbers(Field):
         Returns
         -------
         contained : `bool`
-            `True` if  other is :class:`ComplexNumbers`,
-            :class:`RealNumbers` or :class:`Integers`, `False` else.
+            `True` if  other is `ComplexNumbers`,
+            `RealNumbers` or `Integers`, `False` else.
 
         Examples
         --------
@@ -304,6 +306,7 @@ class ComplexNumbers(Field):
 
 
 class RealNumbers(Field):
+
     """The set of real numbers."""
 
     def __contains__(self, other):
@@ -316,8 +319,8 @@ class RealNumbers(Field):
         Returns
         -------
         contained : `bool`
-            `True` if other is :class:`RealNumbers` or
-            :class:`Integers` `False` else.
+            `True` if other is `RealNumbers` or
+            `Integers` `False` else.
 
         Examples
         --------
@@ -375,7 +378,7 @@ class Integers(Set):
         Returns
         -------
         contained : `bool`
-            `True` if  other is :class:`Integers`, `False` otherwise.
+            `True` if  other is `Integers`, `False` otherwise.
 
         Examples
         --------
@@ -417,7 +420,7 @@ class CartesianProduct(Set):
         if not all(isinstance(set_, Set) for set_ in sets):
             wrong = [set_ for set_ in sets
                      if not isinstance(set_, Set)]
-            raise TypeError('{} not Set instance(s)'.format(wrong))
+            raise TypeError('{!r} not Set instance(s)'.format(wrong))
 
         self._sets = tuple(sets)
 
@@ -449,7 +452,7 @@ class CartesianProduct(Set):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a :class:`CartesianProduct` instance,
+            `True` if ``other`` is a `CartesianProduct` instance,
             has the same length as this Cartesian product and all sets
             with the same index are equal, `False` otherwise.
         """
@@ -458,14 +461,19 @@ class CartesianProduct(Set):
                 all(so == ss for so, ss in zip(other.sets, self.sets)))
 
     def element(self, inp=None):
-        """Create a :class:`CartesianProduct` element.
+        """Create a `CartesianProduct` element.
 
         Parameters
         ----------
         inp : `iterable`, optional
             Collection of input values for the
-            :meth:`~odl.set.space.LinearSpace.element` methods
+            `LinearSpace.element` methods
             of all sets in the Cartesian product.
+
+        Returns
+        -------
+        element : `tuple`
+            A tuple of the given input
         """
         if inp is None:
             tpl = tuple(set_.element() for set_ in self.sets)
