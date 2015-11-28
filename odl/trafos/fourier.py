@@ -395,10 +395,10 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
     else:
         plan_arr_in = array_in
 
-    # TODO: add axes
+    # TODO: support custom axes
     fft_plan = pyfftw.FFTW(plan_arr_in, array_out, direction='FFTW_FORWARD',
                            flags=flags, planning_timelimit=planning_timelimit,
-                           threads=threads)
+                           threads=threads, axes=np.arange(array_in.ndim))
 
     fft_plan(array_in, array_out)
 

@@ -378,25 +378,8 @@ def test_dft_postproc_data():
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
 
-def test_dft_init(exponent, dtype):
-
-    # 1D, C2C
-    intv = odl.Interval(0, 1)
-    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
-    fspace = odl.FunctionSpace(intv, field=field)
-    nsamp = 10
-    space_discr = odl.uniform_discr(fspace, nsamp, exponent=exponent,
-                                    impl='numpy', dtype=dtype)
-
-    DiscreteFourierTransform(space_discr)
-    DiscreteFourierTransform(space_discr, halfcomplex=False)
-    DiscreteFourierTransform(space_discr, shift=False)
-
-    # TODO: nd and R2C
-    # TODO: check combinations of halfcomplex and shift
-
-
 def test_dft_range(exponent, dtype):
+    # Check if the range is initialized correctly. Encompasses the init test
 
     def conj(ex):
         if ex == 1.0:
@@ -406,7 +389,9 @@ def test_dft_range(exponent, dtype):
         else:
             return ex / (ex - 1.0)
 
-    # 1D, C2C
+    # Testing R2C for real dtype, else C2C
+
+    # 1D
     intv = odl.Interval(0, 1)
     field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
     fspace = odl.FunctionSpace(intv, field=field)
@@ -422,39 +407,77 @@ def test_dft_range(exponent, dtype):
                                         shift=True)
     assert dft.range.exponent == conj(exponent)
 
-    dft = DiscreteFourierTransform(space_discr, halfcomplex=False, shift=False)
-    assert dft.range.field == odl.ComplexNumbers()
-    assert dft.range.grid == reciprocal(dft.domain.grid, halfcomplex=False,
-                                        shift=False)
-    assert dft.range.exponent == conj(exponent)
+    # 3D
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
+    fspace = odl.FunctionSpace(cube, field=field)
+    nsamp = (3, 4, 5)
+    space_discr = odl.uniform_discr(fspace, nsamp, exponent=exponent,
+                                    impl='numpy', dtype=dtype)
 
-    # TODO: nd and R2C
-    # TODO: check combinations of halfcomplex and shift
+    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
+    assert dft.range.field == odl.ComplexNumbers()
+    halfcomplex = True if is_real_dtype(dtype) else False
+    assert dft.range.grid == reciprocal(dft.domain.grid,
+                                        halfcomplex=halfcomplex,
+                                        shift=True)
+    assert dft.range.exponent == conj(exponent)
 
 
 @skip_if_no_pyfftw
-def test_dft_call_1d(dtype):
+def test_dft_call(dtype):
 
-    # no halfcomplex
+    if is_real_dtype(dtype):
+        field = odl.RealNumbers()
+        halfcomplex = True
+    else:
+        field = odl.ComplexNumbers()
+        halfcomplex = False
+
+    # 1D
     intv = odl.Interval(0, 1)
-    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
     fspace = odl.FunctionSpace(intv, field=field)
     nsamp = 10
     space_discr = odl.uniform_discr(fspace, nsamp, exponent=2.0,
                                     impl='numpy', dtype=dtype)
 
     dfunc = space_discr.one()
-    dft_arr = dft_call(dfunc.asarray(), halfcomplex=False)
-    twice_dft_arr = dft_call(dft_arr, halfcomplex=False)
-    # Unnormalized DFT, should give the mirrored array
-    assert all_equal(twice_dft_arr[::-1],
-                     dfunc.space.grid.ntotal * dfunc.ntuple)
+    dft_arr = dft_call(dfunc.asarray(), halfcomplex=halfcomplex)
+    # DFT of an array of ones equals nsamp in the first component and 0 else
+    if halfcomplex:
+        true_dft = [nsamp] + [0] * (nsamp // 2)
+    else:
+        true_dft = [nsamp] + [0] * (nsamp - 1)
+
+    assert all_almost_equal(dft_arr, true_dft)
+
+    # 3D
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    fspace = odl.FunctionSpace(cube, field=field)
+    nsamp = (3, 4, 5)
+    space_discr = odl.uniform_discr(fspace, nsamp, exponent=2.0,
+                                    impl='numpy', dtype=dtype)
+
+    dfunc = space_discr.one()
+    dft_arr = dft_call(dfunc.asarray(), halfcomplex=halfcomplex)
+    # DFT of an array of ones is ntotal in the component (0, 0, 0) and 0 else
+    if halfcomplex:
+        shape = list(nsamp)
+        shape[-1] = nsamp[-1] // 2 + 1
+    else:
+        shape = nsamp
+    true_dft = np.zeros(shape)
+    true_dft[0, 0, 0] = dfunc.space.grid.ntotal
+
+    print('dft: ', dft_arr)
+    print('true: ', true_dft)
+    assert all_almost_equal(dft_arr, true_dft)
 
 
 @skip_if_no_pyfftw
 def test_dft_plan(planning):
 
-    # 1D, no halfcomplex
+    # 1D, C2C
     intv = odl.Interval(0, 1)
     fspace = odl.FunctionSpace(intv, field=odl.ComplexNumbers())
     nsamp = 10
@@ -463,9 +486,9 @@ def test_dft_plan(planning):
     dfunc = space_discr.one()
     dft_arr = dft_call(dfunc.asarray(), planning=planning)
     twice_dft_arr = dft_call(dft_arr)
-    # Unnormalized DFT, should give the mirrored array
-    assert all_equal(twice_dft_arr[::-1],
-                     dfunc.space.grid.ntotal * dfunc.ntuple)
+    # Unnormalized DFT, should give the mirrored array x number of samples
+    assert all_almost_equal(twice_dft_arr[::-1],
+                            dfunc.space.grid.ntotal * dfunc.ntuple)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
