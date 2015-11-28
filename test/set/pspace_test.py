@@ -395,5 +395,87 @@ def test_vector_setitem_fancy():
     assert x[[0, 2]][1] is x3_new
 
 
+def test_vector_size():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element()
+    assert x.size == 3
+
+
+def test_vector_len():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element()
+    assert len(x) == 3
+
+
+def test_vector_total_size():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element()
+    assert x.total_size == 6
+
+
+def test_vector_total_size_nestled():
+    H = odl.ProductSpace(odl.Rn(1),
+                         odl.ProductSpace(odl.Rn(2), odl.Rn(3)))
+    x = H.element()
+    assert x.total_size == 6
+
+
+def test_vector_shape():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element()
+    assert x.shape == (3,)
+
+
+def test_vector_ndim():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element()
+    assert x.ndim == 1
+
+
+def test_vector_dtype():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element()
+    assert x.dtype == float
+
+    H = odl.ProductSpace(odl.Rn(1, dtype='float32'), odl.Rn(2), odl.Rn(3))
+    x = H.element()
+    assert x.dtype == float
+
+
+def test_vector_asarray():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element([[0],
+                   [1, 2],
+                   [3, 4, 5]])
+
+    arr = x.asarray()
+    assert isinstance(arr, np.ndarray)
+    assert arr.dtype == np.dtype(float)
+    assert all_equal(arr, [0, 1, 2, 3, 4, 5])
+
+
+def test_vector_asarray_out():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    x = H.element([[0],
+                   [1, 2],
+                   [3, 4, 5]])
+
+    out = np.empty(6)
+    arr = x.asarray(out=out)
+    assert arr is out
+    assert all_equal(arr, [0, 1, 2, 3, 4, 5])
+
+
+def test_vector_asarray_nestled():
+    H = odl.ProductSpace(odl.Rn(1),
+                         odl.ProductSpace(odl.Rn(2), odl.Rn(3)))
+    x = H.element([[0],
+                   [[1, 2], [3, 4, 5]]])
+
+    arr = x.asarray()
+    assert isinstance(arr, np.ndarray)
+    assert arr.dtype == np.dtype(float)
+    assert all_equal(arr, [0, 1, 2, 3, 4, 5])
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

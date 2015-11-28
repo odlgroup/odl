@@ -149,7 +149,7 @@ class DiscreteLp(Discretization):
             if arr.ndim > 1 and arr.shape != self.grid.shape:
                 raise ValueError('input shape {} does not match grid shape {}'
                                  ''.format(arr.shape, self.grid.shape))
-            arr = arr.flatten(order=self.order)
+            arr = arr.ravel(order=self.order)
             return self.element_type(self, self.dspace.element(arr))
 
     @property
@@ -229,7 +229,7 @@ class DiscreteLpVector(DiscretizationVector):
     """Representation of a `DiscreteLp` element."""
 
     def asarray(self, out=None):
-        """Extract the data of this array as a numpy array.
+        """Extract the data of this vector as a numpy array.
 
         Parameters
         ----------
@@ -237,6 +237,17 @@ class DiscreteLpVector(DiscretizationVector):
             Array in which the result should be written in-place.
             Has to be contiguous and of the correct dtype and
             shape.
+
+        Returns
+        -------
+        out : `numpy.ndarray`
+            This vector as an array, if ``out`` parameter was given, they are
+            equal.
+
+        See also
+        --------
+        asflatarray
+        FnBaseVector.asarray
         """
         if out is None:
             return super().asarray().reshape(self.space.grid.shape,
@@ -266,14 +277,49 @@ class DiscreteLpVector(DiscretizationVector):
             super().asarray(out=out.ravel(order=self.space.order))
             return out
 
+    def asflatarray(self, *args, **kwargs):
+        """Extract the data of this vector as a 1d numpy array.
+
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
+
+        Returns
+        -------
+        out : `numpy.ndarray`
+            This vector as an array, if ``out`` parameter was given, they are
+            equal.
+
+        See also
+        --------
+        asarray
+        FnBaseVector.asflatarray
+        """
+        return super().asarray(*args, **kwargs)
+
     @property
     def ndim(self):
-        """Number of dimensions."""
+        """Number of dimensions.
+
+        See also
+        --------
+        TensorGrid.ndim
+        """
         return self.space.grid.ndim
 
     @property
     def shape(self):
-        # override shape
+        """Size in each dimension
+
+        For example, a 3d space can have size (3, 5, 10), indicating that it
+        is 3 elements big in the "x" direction, 5 in the "y" and "10" in the z.
+
+        See also
+        --------
+        TensorGrid.shape
+        """
         return self.space.grid.shape
 
     def __setitem__(self, indices, values):
