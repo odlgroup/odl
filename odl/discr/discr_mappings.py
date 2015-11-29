@@ -167,7 +167,9 @@ class GridCollocation(FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        super().__init__('restriction', ip_fset, grid, dspace, order)
+        linear = True if isinstance(ip_fset, FunctionSpace) else False
+        super().__init__('restriction', ip_fset, grid, dspace, order,
+                         linear=linear)
 
         # TODO: remove this requirement depending on the vectorization
         # solution
@@ -291,10 +293,7 @@ class NearestInterpolation(FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        if isinstance(ip_fset, FunctionSpace):
-            linear = True
-        else:
-            linear = False
+        linear = True if isinstance(ip_fset, FunctionSpace) else False
         super().__init__('extension', ip_fset, grid, dspace, order,
                          linear=linear)
 

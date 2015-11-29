@@ -140,8 +140,10 @@ class Ntuples(NtuplesBase):
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
-                inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
+                inp = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
 
+                # TODO: this causes `op(1)` to be interpreted as
+                # `op(<array of ones>)`. Do we want that?
                 if inp.shape == (1,):
                     arr = np.empty(self.size, dtype=self.dtype)
                     arr[:] = inp

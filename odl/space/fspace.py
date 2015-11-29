@@ -342,28 +342,6 @@ class FunctionSetVector(Operator):
 
     """Representation of a `FunctionSet` element."""
 
-    def __new__(cls, *args, **kwargs):
-        """Create a new instance."""
-        fcall = args[1]
-        cls._call = fcall
-
-        instance = super().__new__(cls)
-
-        call_has_out, call_out_optional, _ = _dispatch_call_args(
-            None, unbound_method=fcall)
-        if not call_has_out:
-            # Out-of-place _call
-            instance._call_in_place = _in_place_not_impl
-            instance._call_out_of_place = instance._call
-        elif call_out_optional:
-            # Dual-use _call
-            instance._call_in_place = instance._call
-            instance._call_out_of_place = instance._call
-        else:
-            raise ValueError('cannot provide in-place only function.')
-
-        return instance
-
     def __init__(self, fset, fcall, vectorized=True):
         """Initialize a new instance.
 
@@ -381,10 +359,21 @@ class FunctionSetVector(Operator):
         if not isinstance(fset, FunctionSet):
             raise TypeError('function set {!r} not a `FunctionSet` '
                             'instance.'.format(fset))
-
-        if fcall is not None and not callable(fcall):
+        if not callable(fcall):
             raise TypeError('call function {!r} is not callable.'
                             ''.format(fcall))
+
+        call_has_out, call_out_optional, _ = _dispatch_call_args(
+            None, unbound_call=fcall)
+        if not call_has_out:
+            # Out-of-place _call
+            self._call_in_place = _in_place_not_impl
+            self._call_out_of_place = fcall
+        elif call_out_optional:
+            # Dual-use _call
+            self._call_in_place = self._call_out_of_place = fcall
+        else:
+            raise ValueError('cannot provide in-place only function.')
 
         self._vectorized = bool(vectorized)
         self._space = fset
@@ -408,7 +397,14 @@ class FunctionSetVector(Operator):
         """Whether this function supports vectorized evaluation."""
         return self._vectorized
 
-    # TODO: pass kwargs on to function
+    def _call(self, x, out=None, **kwargs):
+        """Raw evaluation method."""
+        if out is None:
+            out = self._call_out_of_place(x, **kwargs)
+        else:
+            self._call_in_place(x, out=out, **kwargs)
+        return out
+
     def __call__(self, x, out=None, **kwargs):
         """Out-of-place evaluation.
 
@@ -521,7 +517,7 @@ class FunctionSetVector(Operator):
                                 '{}.'.format(x, self.domain))
 
         if out is None:
-            out = self._call(x)
+            out = self._call(x, **kwargs)
             if self.vectorized:
                 if out.shape != out_shape:
                     raise ValueError('output shape {} not equal to shape '
@@ -541,7 +537,7 @@ class FunctionSetVector(Operator):
                     raise ValueError('output shape {} not equal to shape '
                                      '{} expected from input.'
                                      ''.format(out.shape, out_shape))
-                self._call(x, out)
+                self._call(x, out=out, **kwargs)
                 if vec_bounds_check:
                     if not self.range.contains_all(out):
                         raise ValueError('output contains points outside '

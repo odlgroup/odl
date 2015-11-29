@@ -22,7 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object, super
-from odl.util.utility import with_metaclass
 
 # External module imports
 from functools import partial
@@ -184,7 +183,7 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
         kw_only = ()
         kw_only_defaults = {}
 
-    print(spec)
+    # print(spec)
 
     pos_args = spec.args
     if unbound_call is not None:
@@ -556,6 +555,11 @@ class Operator(object):
         instance = super().__new__(cls)
 
         call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
+        # print('In {}: '.format(cls.__name__))
+        # print('has out: ', call_has_out)
+        # print('out optional: ', call_out_optional)
+        instance._call_has_out = call_has_out
+        instance._call_out_optional = call_out_optional
         if not call_has_out:
             # Out-of-place _call
             instance._call_in_place = partial(_default_call_in_place,
@@ -570,6 +574,7 @@ class Operator(object):
             instance._call_in_place = instance._call
             instance._call_out_of_place = partial(_default_call_out_of_place,
                                                   instance)
+
         return instance
 
     def __init__(self, domain, range, linear=False):
@@ -599,6 +604,12 @@ class Operator(object):
         self._range = range
         self._is_linear = bool(linear)
         self._is_functional = isinstance(range, Field)
+
+        # Mandatory out makees no sense for functionals
+        if (self._is_functional and self._call_has_out and
+                not self._call_out_optional):
+            raise ValueError('mandatory `out` parameter not allowed for '
+                             'functionals.')
 
         if self.is_linear:
             if not isinstance(domain, (LinearSpace, Field)):
@@ -698,9 +709,11 @@ class Operator(object):
         Rn(3).element([2.0, 4.0, 6.0])
         """
         if x not in self.domain:
-            raise TypeError('input {!r} not an element of the domain {!r} '
-                            'of {!r}.'
-                            ''.format(x, self.domain, self))
+            try:
+                x = self.domain.element(x)
+            except (TypeError, ValueError):
+                raise TypeError('unable to cast {!r} to an element of '
+                                'the domain {}.'.format(x, self.domain))
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
@@ -719,9 +732,11 @@ class Operator(object):
             result = self._call_out_of_place(x, **kwargs)
 
             if result not in self.range:
-                raise TypeError('result {!r} not an element of the range {!r} '
-                                'of {!r}.'
-                                ''.format(result, self.range, self))
+                try:
+                    result = self.range.element(result)
+                except (TypeError, ValueError):
+                    raise TypeError('unable to cast {!r} to an element of '
+                                    'the range {}.'.format(result, self.range))
             return result
 
     def __add__(self, other):
@@ -1071,7 +1086,7 @@ class OperatorSum(Operator):
         self._tmp_ran = tmp_ran
         self._tmp_dom = tmp_dom
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``.
 
         Examples
@@ -1088,11 +1103,14 @@ class OperatorSum(Operator):
         >>> OperatorSum(op, op)(x)  # In place, returns out
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        tmp = (self._tmp_ran if self._tmp_ran is not None
-               else self.range.element())
-        self._op1(x, out=out)
-        self._op2(x, out=tmp)
-        out += tmp
+        if out is None:
+            return self._op1(x) + self._op2(x)
+        else:
+            tmp = (self._tmp_ran if self._tmp_ran is not None
+                   else self.range.element())
+            self._op1(x, out=out)
+            self._op2(x, out=tmp)
+            out += tmp
 
     def derivative(self, x):
         """Return the operator derivative at ``x``.
@@ -1170,12 +1188,15 @@ class OperatorComp(Operator):
         self._right = right
         self._tmp = tmp
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``."""
-        tmp = (self._tmp if self._tmp is not None
-               else self._right.range.element())
-        self._right(x, out=tmp)
-        self._left(tmp, out=out)
+        if out is None:
+            return self._left(self._right(x))
+        else:
+            tmp = (self._tmp if self._tmp is not None
+                   else self._right.range.element())
+            self._right(x, out=tmp)
+            return self._left(tmp, out=out)
 
     @property
     def inverse(self):
@@ -1262,12 +1283,15 @@ class OperatorPointwiseProduct(Operator):
         self._op1 = op1
         self._op2 = op2
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``."""
-        tmp = self._op2.range.element()
-        self._op1(x, out=out)
-        self._op2(x, out=tmp)
-        out *= tmp
+        if out is None:
+            return self._op1(x) * self._op2(x)
+        else:
+            tmp = self._op2.range.element()
+            self._op1(x, out=out)
+            self._op2(x, out=tmp)
+            out *= tmp
 
     def __repr__(self):
         """``op.__repr__() <==> repr(op)``."""
@@ -1314,10 +1338,13 @@ class OperatorLeftScalarMult(Operator):
         self._op = op
         self._scalar = scalar
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``."""
-        self._op(x, out=out)
-        out *= self._scalar
+        if out is None:
+            return self._scalar * self._op(x)
+        else:
+            self._op(x, out=out)
+            out *= self._scalar
 
     @property
     def inverse(self):
@@ -1418,11 +1445,14 @@ class OperatorRightScalarMult(Operator):
         self._scalar = scalar
         self._tmp = tmp
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``."""
-        tmp = self._tmp if self._tmp is not None else self.domain.element()
-        tmp.lincomb(self._scalar, x)
-        self._op(tmp, out=out)
+        if out is None:
+            return self._op(self._scalar * x)
+        else:
+            tmp = self._tmp if self._tmp is not None else self.domain.element()
+            tmp.lincomb(self._scalar, x)
+            self._op(tmp, out=out)
 
     @property
     def inverse(self):
@@ -1488,6 +1518,7 @@ class FunctionalLeftVectorMult(Operator):
 
     ``FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)``
     """
+    # TODO: improve doc, not comprehensible
 
     def __init__(self, op, vector):
         """Initialize a new instance.
@@ -1513,10 +1544,13 @@ class FunctionalLeftVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``."""
-        scalar = self._op(x)
-        out.lincomb(scalar, self._vector)
+        if out is None:
+            return self._op(x) * self._vector
+        else:
+            scalar = self._op(x)
+            out.lincomb(scalar, self._vector)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1588,10 +1622,13 @@ class OperatorLeftVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``."""
-        self._op(x, out=out)
-        out *= self._vector
+        if out is None:
+            return self._op(x) * self._vector
+        else:
+            self._op(x, out=out)
+            out *= self._vector
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1664,11 +1701,14 @@ class OperatorRightVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """``op._call(x, out) <==> out <-- op(x)``."""
-        tmp = self.domain.element()
-        tmp.multiply(self._vector, x)
-        self._op(tmp, out=out)
+        if out is None:
+            return self._op(x * self._vector)
+        else:
+            tmp = self.domain.element()
+            tmp.multiply(self._vector, x)
+            self._op(tmp, out=out)
 
     def derivative(self, x):
         """Return the derivative at ``x``.

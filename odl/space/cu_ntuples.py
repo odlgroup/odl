@@ -174,6 +174,8 @@ class CudaNtuples(NtuplesBase):
                     return self.element_type(self, inp.data)
                 else:
                     elem = self.element()
+                    # TODO: this causes `op(1)` to be interpreted as
+                    # `op(<array of ones>)`. Do we want that?
                     elem[:] = inp
                     return elem
             else:
