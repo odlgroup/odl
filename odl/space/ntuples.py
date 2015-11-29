@@ -169,6 +169,18 @@ class NtuplesVector(NtuplesBaseVector):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
+        if not isinstance(space, Ntuples):
+            raise TypeError('{!r} not an `Ntuples` instance.'
+                            ''.format(space))
+
+        if not isinstance(data, np.ndarray):
+            raise TypeError('data {!r} not a `numpy.ndarray` instance.'
+                            ''.format(data))
+
+        if data.dtype != space.dtype:
+            raise TypeError('data {!r} not of dtype {!r}.'
+                            ''.format(data, space.dtype))
+
         self._data = data
 
         NtuplesBaseVector.__init__(self, space)
@@ -1006,6 +1018,10 @@ class FnVector(FnBaseVector, NtuplesVector):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
+        if not isinstance(space, Fn):
+            raise TypeError('{!r} not an `Fn` instance.'
+                            ''.format(space))
+
         NtuplesVector.__init__(self, space, data)
 
     @property
