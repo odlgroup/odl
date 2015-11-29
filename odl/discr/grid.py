@@ -825,7 +825,7 @@ class RegularGrid(TensorGrid):
 
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
-        super().__init__(*coord_vecs, **kwargs)
+        TensorGrid.__init__(self, *coord_vecs, **kwargs)
         self._center = (self.max_pt + self.min_pt) / 2
         self._stride = np.ones(len(shape), dtype='float64')
         idcs = np.where(shape > 1)

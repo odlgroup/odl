@@ -104,7 +104,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
 
         dom = fset if map_type == 'restriction' else dspace
         ran = dspace if map_type == 'restriction' else fset
-        super().__init__(dom, ran, linear=linear)
+        Operator.__init__(self, dom, ran, linear=linear)
         self._grid = grid
         self._order = order
 
