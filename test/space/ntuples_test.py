@@ -230,68 +230,33 @@ def _test_lincomb(fn, a, b):
 
     # Unaliased arguments
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * xarr + b * yarr
-    zparr[:] = a * xparr + b * yparr
     fn.lincomb(a, x, b, y, out=z)
-    fnp.lincomb(a, xp, b, yp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # First argument aliased with output
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * zarr + b * yarr
-    zparr[:] = a * zparr + b * yparr
     fn.lincomb(a, z, b, y, out=z)
-    fnp.lincomb(a, zp, b, yp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # Second argument aliased with output
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * xarr + b * zarr
-    zparr[:] = a * xparr + b * zparr
     fn.lincomb(a, x, b, z, out=z)
-    fnp.lincomb(a, xp, b, zp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # Both arguments aliased with each other
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * xarr + b * xarr
-    zparr[:] = a * xparr + b * xparr
     fn.lincomb(a, x, b, x, out=z)
-    fnp.lincomb(a, xp, b, xp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # All aliased
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * zarr + b * zarr
-    zparr[:] = a * zparr + b * zparr
     fn.lincomb(a, z, b, z, out=z)
-    fnp.lincomb(a, zp, b, zp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
 
 def test_lincomb(fn):
