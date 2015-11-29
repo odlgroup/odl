@@ -1649,8 +1649,8 @@ class FnMatrixWeighting(FnWeightingBase):
         """
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
+                                 dist_using_inner=dist_using_inner)
 
         if isspmatrix(matrix):
             self._matrix = matrix
@@ -1678,6 +1678,8 @@ class FnMatrixWeighting(FnWeightingBase):
             eigval, eigvec = sp.linalg.eigh(self._matrix)
             eigval **= 1.0 / self._exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
+        else:
+            self._mat_pow = None
 
         self._cache_mat_pow = bool(cache_mat_pow)
 
@@ -1832,7 +1834,7 @@ class FnMatrixWeighting(FnWeightingBase):
                 norm_squared = 0.0  # Compensate for numerical error
             return sqrt(norm_squared)
         else:
-            if not hasattr(self, '_mat_pow'):
+            if self._mat_pow is None:
                 # This case can only be reached if p != 1,2,inf
                 if self.matrix_issparse:
                     raise NotImplementedError('sparse matrix powers not '
@@ -2287,6 +2289,8 @@ class FnNoWeighting(FnConstWeighting):
     _instance = None
 
     def __new__(cls, *args, **kwargs):
+        """ Implement singleton pattern if exp==2.0
+        """
         if len(args) == 0:
             exponent = kwargs.pop('exponent', 2.0)
             dist_using_inner = kwargs.pop('dist_using_inner', False)
@@ -2327,8 +2331,10 @@ class FnNoWeighting(FnConstWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        FnConstWeighting.__init__(self, constant=1.0, exponent=exponent,
-                                  dist_using_inner=dist_using_inner)
+        if not hasattr(self, '_initialized'):
+            FnConstWeighting.__init__(self, constant=1.0, exponent=exponent,
+                                      dist_using_inner=dist_using_inner)
+            self._initialized = True
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""
