@@ -106,7 +106,7 @@ class DiscreteLp(Discretization):
         else:
             raise NotImplementedError
 
-        super().__init__(fspace, dspace, restriction, extension)
+        Discretization.__init__(self, fspace, dspace, restriction, extension)
 
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
