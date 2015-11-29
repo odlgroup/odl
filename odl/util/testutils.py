@@ -78,14 +78,18 @@ def all_equal(iter1, iter2):
     # Sentinel object used to check that both iterators are the same length
     diff_length_sentinel = object()
 
+    try:
+        if iter1 == iter2:
+            return True
+    except ValueError:
+        pass
+
     if iter1 is None and iter2 is None:
         return True
 
     try:
         i1 = iter(iter1)
         i2 = iter(iter2)
-        if isinstance(iter1, basestring) or isinstance(iter2, basestring):
-            return iter1 == iter2
     except TypeError:
         return iter1 == iter2
 
