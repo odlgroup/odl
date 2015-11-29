@@ -122,12 +122,6 @@ class _OperatorMeta(ABCMeta):
     def __call__(cls, *args, **kwargs):
         """Create a new class ``cls`` from given arguments."""
         obj = ABCMeta.__call__(cls, *args, **kwargs)
-        if not hasattr(obj, 'domain'):
-            raise NotImplementedError('`Operator` instances must have a '
-                                      '`Operator.domain` attribute.')
-        if not hasattr(obj, 'range'):
-            raise NotImplementedError('`Operator` instances must have a '
-                                      '`Operator.range` attribute.')
         if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
             raise NotImplementedError('`Operator` instances must either '
                                       'have `_call` or `_apply` as '
