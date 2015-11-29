@@ -105,10 +105,10 @@ def all_equal(iter1, iter2):
 def all_almost_equal(iter1, iter2, places=None):
     # Sentinel object used to check that both iterators are the same length
 
-    if iter1 is None and iter2 is None:
+    if iter1 is iter2 or iter1 == iter2:
         return True
 
-    if iter1 is iter2 or iter1 == iter2:
+    if iter1 is None and iter2 is None:
         return True
 
     if places is None:
