@@ -27,7 +27,9 @@ import numpy as np
 
 # ODL imports
 from odl.set.sets import Set, RealNumbers
-from odl.util.utility import array1d_repr
+from odl.util.utility import (array1d_repr, is_valid_input_array,
+                              is_valid_input_meshgrid, meshgrid_input_order,
+                              vecs_from_meshgrid)
 
 
 __all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')
@@ -196,6 +198,8 @@ class IntervalProd(Set):
         True
         """
         point = np.atleast_1d(point)
+        if point.dtype == object:
+            return False
         if np.any(np.isnan(point)):
             return False
         if point.ndim > 1:
@@ -231,6 +235,35 @@ class IntervalProd(Set):
         except AttributeError:
             raise AttributeError('cannot test {!r} without `min()` and `max()`'
                                  'methods.'.format(other))
+
+    def contains_all(self, other):
+        """Test if all points defined by `other` are contained.
+
+        Parameters
+        ----------
+        other : object
+            Can be a single point, a `(d, N)` array where `d` is the number of
+            dimensions or a lenght-`d` meshgrid sequence
+
+        Returns
+        -------
+        contains : bool
+            `True` if all points are contained, `False` otherwise
+        """
+        if other in self:
+            return True
+        elif is_valid_input_meshgrid(other, self.ndim):
+            order = meshgrid_input_order(other)
+            vecs = vecs_from_meshgrid(other, order)
+            mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
+            maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
+            return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+        elif is_valid_input_array(other, self.ndim):
+            mins = np.min(other, axis=1)
+            maxs = np.max(other, axis=1)
+            return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+        else:
+            return False
 
     # Additional property-like methods
     def measure(self, ndim=None):
@@ -339,11 +372,6 @@ class IntervalProd(Set):
         IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
         IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
-        >>> rbox.collapse([1, 2], [0, 3.5])
-        Traceback (most recent call last):
-            ...
-        ValueError: values [ 0.   3.5] not below the upper interval
-        boundaries [ 1.  3.].
         """
         indices = np.atleast_1d(indices)
         values = np.atleast_1d(values)

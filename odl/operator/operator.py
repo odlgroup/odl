@@ -576,18 +576,23 @@ class Operator(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        dom : `Set`
+        domain : `Set`
             The domain of this operator, i.e., the set of elements to
             which this operator can be applied
-
-        ran : `Set`
+        range : `Set`
             The range of this operator, i.e., the set this operator
             maps to
+        linear : bool
+            If `True`, the operator is considered as linear. In this
+            case, `domain` and `range` have to be instances of
+            `LinearSpace`, `RealNumbers` or `ComplexNumbers`.
         """
         if not isinstance(domain, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
+            raise TypeError('domain {!r} is not a `Set` instance.'
+                            ''.format(domain))
         if not isinstance(range, Set):
-            raise TypeError('range {!r} not a `Set` instance.'.format(range))
+            raise TypeError('range {!r} is not a `Set` instance.'
+                            ''.format(range))
 
         self._domain = domain
         self._range = range
@@ -1044,11 +1049,9 @@ class OperatorSum(Operator):
         if op1.range != op2.range:
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
-
         if not isinstance(op1.range, (LinearSpace, Field)):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
-                            ''.format(op1.range))
-
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` '
+                            'instance.'.format(op1.range))
         if op1.domain != op2.domain:
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
@@ -1056,7 +1059,6 @@ class OperatorSum(Operator):
         if tmp_ran is not None and tmp_ran not in op1.range:
             raise TypeError('tmp_ran {!r} not an element of the operator '
                             'range {!r}.'.format(tmp_ran, op1.range))
-
         if tmp_dom is not None and tmp_dom not in op1.domain:
             raise TypeError('tmp_dom {!r} not an element of the operator '
                             'domain {!r}.'.format(tmp_dom, op1.domain))
@@ -1248,11 +1250,9 @@ class OperatorPointwiseProduct(Operator):
         if op1.range != op2.range:
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
-
         if not isinstance(op1.range, (LinearSpace, Field)):
             raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                             'instance.'.format(op1.range))
-
         if op1.domain != op2.domain:
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
@@ -1486,11 +1486,10 @@ class FunctionalLeftVectorMult(Operator):
     a `Field`.
 
     ``FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)``
-
     """
 
     def __init__(self, op, vector):
-        """Initialize a new `FunctionalLeftVectorMult` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------

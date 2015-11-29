@@ -1,8 +1,10 @@
 # .coveragerc to control coverage.py
 [run]
 branch = False
+
 include =
     odl/*
+
 omit =
     */__init__.py
     odl/diagnostics/*

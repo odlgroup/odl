@@ -32,6 +32,7 @@ from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
+
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
@@ -249,7 +250,7 @@ class ProgressBar(object):
     >>> progress.update(4) #halfway, zero indexing
     \rReading data: [###############               ] 50.0%
 
-    Also supports multiple index, from slowest varying to fastest
+    Multi-indices, from slowest to fastest:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
     \rReading data: [                              ] Starting
@@ -326,3 +327,8 @@ class ProgressRange(object):
             return val
         else:
             raise StopIteration()
+
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

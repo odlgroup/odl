@@ -23,10 +23,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str, zip
-from odl.util.utility import with_metaclass
 
 # External imports
-from abc import ABCMeta
 import numpy as np
 from scipy.interpolate import interpnd
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
@@ -37,14 +35,14 @@ from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.set.domain import IntervalProd
+from odl.util.utility import is_valid_input_meshgrid
 
 
 __all__ = ('FunctionSetMapping',
-           'RawGridCollocation', 'GridCollocation', 'RawNearestInterpolation',
-           'NearestInterpolation', 'LinearInterpolation')
+           'GridCollocation', 'NearestInterpolation', 'LinearInterpolation')
 
 
-class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
+class FunctionSetMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
@@ -69,12 +67,14 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
+        linear : bool
+            Create a linear operator if `True`, otherwise a non-linear
+            operator.
         """
-        map_type = str(map_type)
-        if map_type not in ('restriction', 'extension'):
+        map_type_ = str(map_type).lower()
+        if map_type_ not in ('restriction', 'extension'):
             raise ValueError('mapping type {!r} not understood.'
                              ''.format(map_type))
-
         if not isinstance(fset, FunctionSet):
             raise TypeError('function set {!r} is not a `FunctionSet` '
                             'instance.'.format(fset))
@@ -82,7 +82,6 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         if not isinstance(grid, TensorGrid):
             raise TypeError('grid {!r} is not a `TensorGrid` instance.'
                             ''.format(grid))
-
         if not isinstance(dspace, NtuplesBase):
             raise TypeError('data space {!r} is not an `NtuplesBase` instance.'
                             ''.format(dspace))
@@ -99,31 +98,30 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
                              'to the total number {} of grid points.'
                              ''.format(dspace.size, dspace, grid.ntotal))
 
-        if order not in ('C', 'F'):
+        self._order = str(order).upper()
+        if self._order not in ('C', 'F'):
             raise ValueError('ordering {!r} not understood.'.format(order))
 
-        dom = fset if map_type == 'restriction' else dspace
-        ran = dspace if map_type == 'restriction' else fset
+        dom = fset if map_type_ == 'restriction' else dspace
+        ran = dspace if map_type_ == 'restriction' else fset
         super().__init__(dom, ran, linear=linear)
         self._grid = grid
-        self._order = order
 
         if self.is_linear:
             if not isinstance(fset, FunctionSpace):
                 raise TypeError('function space {!r} is not a `FunctionSpace` '
                                 'instance.'.format(fset))
-
             if not isinstance(dspace, FnBase):
                 raise TypeError('data space {!r} is not an `FnBase` instance.'
                                 ''.format(dspace))
-
             if fset.field != dspace.field:
-                raise ValueError('field {} of the function space and field'
+                raise ValueError('field {} of the function space and field '
                                  '{} of the data space are not equal.'
                                  ''.format(fset.field, dspace.field))
 
     def __eq__(self, other):
-        return (type(self) == type(other) and
+        return (isinstance(other, type(self)) and
+                isinstance(self, type(other)) and
                 self.domain == other.domain and
                 self.range == other.range and
                 self.grid == other.grid and
@@ -140,12 +138,12 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
         return self._order
 
 
-class RawGridCollocation(FunctionSetMapping):
+class GridCollocation(FunctionSetMapping):
 
     """Function evaluation at grid points.
 
-    This is the raw `Operator` version of the default 'restriction'
-    used by all core discretization classes.
+    This is the default 'restriction' used by all core
+    discretization classes.
     """
 
     def __init__(self, ip_fset, grid, dspace, order='C'):
@@ -158,7 +156,7 @@ class RawGridCollocation(FunctionSetMapping):
             discretized. The function domain must be an
             `IntervalProd`.
         grid :  `TensorGrid`
-            The grid on which to evaluate. Must be contained in
+            Grid on which to evaluate. It must be contained in
             the common domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
@@ -178,21 +176,19 @@ class RawGridCollocation(FunctionSetMapping):
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 
-    def _call(self, inp):
+    def _call(self, func):
         """The raw call method for out-of-place evaluation.
 
         Parameters
         ----------
-        inp : `FunctionSetVector`
-            The function to be evaluated. It must accept point
-            coordinates in list form (``f(x, y, z)`` rather than
-            ``f(point)``) and return either a NumPy array of the correct
-            type (defined by the `Ntuples` instance) or a
-            single value.
+        func : `FunctionSetVector`
+            The function to be evaluated.
+
+            TODO: update
 
         Returns
         -------
-        outp : `NtuplesVector`
+        out : `NtuplesVector`
             The function values at the grid points.
 
         Notes
@@ -234,71 +230,48 @@ class RawGridCollocation(FunctionSetMapping):
 
         Finally create the operator:
 
-        >>> coll_op = RawGridCollocation(funcset, grid, rn)
-        >>> func_elem = funcset.element(lambda x, y: x - y)
+        >>> coll_op = GridCollocation(funcset, grid, rn)
+
+        We define an example function with meshgrid vectorization:
+
+        >>> def func(mg_tuple):
+        ...     x1, x2 = mg_tuple  # unwrap the coordinate arrays
+        ...     return x1 - x2
+        >>> func_elem = funcset.element(func)
+        >>> coll_op(func_elem)
+        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+
+        Array vectorization (slower):
+        >>> def func(array):
+        ...     x1, x2 = array[:, 0], array[:, 1]  # views
+        ...     return x1 - x2
+        >>> func_elem = funcset.element(func)
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
         Or, if we want Fortran ordering:
 
-        >>> coll_op = RawGridCollocation(funcset, grid, rn, order='F')
+        >>> coll_op = GridCollocation(funcset, grid, rn, order='F')
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        # TODO: Implement in-place evaluation
-        try:
+        if func.vectorized:
             mg_tuple = self.grid.meshgrid()
-            values = inp(*mg_tuple).ravel(order=self.order)
-        except TypeError:
+            values = func(mg_tuple).ravel(order=self.order)
+        else:
             points = self.grid.points(order=self.order)
-            values = np.empty(points.shape[0], dtype=self.range.dtype)
+            values = np.empty(points.shape[1], dtype=self.range.dtype)
             for i, point in enumerate(points):
-                values[i] = inp(*point)
+                values[i] = func(point)
         return self.range.element(values)
 
 
-class GridCollocation(RawGridCollocation, FunctionSetMapping):
+class NearestInterpolation(FunctionSetMapping):
 
-    """Function evaluation at grid points.
-
-    This is the linear `Operator` version of the default
-    'restriction' used by all core discretization classes.
-    """
-
-    def __init__(self, ip_fspace, grid, dspace, order='C'):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        fspace : `FunctionSpace`
-            The undiscretized (abstract) space of functions to be
-            discretized. Its field must be the same as that of data
-            space. Its `Operator.domain` must be an
-            `IntervalProd`.
-        grid :  `TensorGrid`
-            The grid on which to evaluate. Must be contained in
-            the common domain of the function set.
-        dspace : `FnBase`
-            Data space providing containers for the values of a
-            discretized object. Its size must be equal to the
-            total number of grid points. Its field must be the same
-            as that of the function space.
-        order : {'C', 'F'}, optional
-            Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
-        """
-        RawGridCollocation.__init__(self, ip_fspace, grid, dspace, order)
-        FunctionSetMapping.__init__(self, 'restriction', ip_fspace,
-                                    grid, dspace, order, linear=True)
-
-
-class RawNearestInterpolation(FunctionSetMapping):
-
-    """Nearest neighbor interpolation as a raw `Operator`."""
+    """Nearest neighbor interpolation as an `Operator`."""
 
     def __init__(self, ip_fset, grid, dspace, order='C'):
-        """Initialize a new `RawNearestInterpolation` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -318,28 +291,27 @@ class RawNearestInterpolation(FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        super().__init__('extension', ip_fset, grid, dspace, order)
+        if isinstance(ip_fset, FunctionSpace):
+            linear = True
+        else:
+            linear = False
+        super().__init__('extension', ip_fset, grid, dspace, order,
+                         linear=linear)
 
-        # TODO: remove this requirement depending on the vectorization
-        # solution
-        if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError('domain {!r} of the function set is not an '
-                            '`IntervalProd` instance.'
-                            ''.format(ip_fset.domain))
-
-    def _call(self, inp):
-        """The raw `call` method for out-of-place evaluation.
+    def _call(self, x):
+        """The raw method for out-of-place evaluation.
 
         Parameters
         ----------
-        inp : `NtuplesVector`
+        x : `NtuplesVector`
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : `FunctionSetVector`
+        out : `FunctionSetVector`
             A function (nearest-neighbor) interpolating at a given
-            point or array of points.
+            point or array of points. It is vectorized according to
+            the given parameter.
 
         Examples
         --------
@@ -369,8 +341,8 @@ class RawNearestInterpolation(FunctionSetMapping):
 
         Now initialize the operator:
 
-        >>> interp_op = RawNearestInterpolation(space, grid, dspace,
-        ...                                     order='C')
+        >>> interp_op = NearestInterpolation(space, grid, dspace,
+        ...                                  order='C')
 
         We test some simple values:
 
@@ -378,109 +350,34 @@ class RawNearestInterpolation(FunctionSetMapping):
         >>> val_arr = np.array([c for c in 'mystring'])
         >>> values = dspace.element(val_arr)
         >>> function = interp_op(values)
-        >>> val = function(0.3, 0.6)  # closest to index (1, 1) -> 3
+        >>> val = function([0.3, 0.6])  # closest to index (1, 1) -> 3
         >>> print(val)
         t
         """
         # TODO: Implement in-place evaluation
-        def func(*x):
-            """The actual interpolating function."""
-            # TODO: adapt when vectorization is settled
-            if (len(x) == self.grid.ndim and
-                    hasattr(x[0], 'ndim') and
-                    x[0].ndim == self.grid.ndim):
-                # meshgrid vectors
-                interpolator = _NearestMeshgridInterpolator
-            elif len(x) == 1:
-                # list or array of points
-                x = np.atleast_2d(x[0])
-                interpolator = _NearestPointwiseInterpolator
+        def nearest(arg):
+            """Interpolating function with vectorization."""
+            print(arg)
+            if is_valid_input_meshgrid(arg, self.grid.ndim):
+                # TODO: check if this works for 'F' ordering
+                interp = _NearestMeshgridInterpolator(
+                    self.grid.coord_vectors,
+                    x.data.reshape(self.grid.shape, order=self.order))
             else:
-                # single point as list of coordinates
-                x = np.atleast_2d(x)
-                interpolator = _NearestPointwiseInterpolator
+                interp = _NearestPointwiseInterpolator(
+                    self.grid.coord_vectors,
+                    x.data.reshape(self.grid.shape, order=self.order))
+            return interp(arg)
 
-            interp = interpolator(self.grid.coord_vectors,
-                                  inp.data.reshape(self.grid.shape,
-                                                   order=self.order))
-            values = interp(x).ravel(order=self.order)
-            return values[0] if values.shape == (1,) else values
-
-        return self.range.element(func)
-
-
-class NearestInterpolation(RawNearestInterpolation,
-                           FunctionSetMapping):
-
-    """Nearest neighbor interpolation as a linear operator."""
-
-    def __init__(self, ip_fspace, grid, dspace, order='C'):
-        """Initialize a new `NearestInterpolation` instance.
-
-        Parameters
-        ----------
-        fspace : `FunctionSpace`
-            The undiscretized (abstract) space of functions to be
-            discretized. Its field must be the same as that of data
-            space. Its `Operator.domain` must be an
-            `IntervalProd`.
-        grid :  `TensorGrid`
-            The grid on which to evaluate. Must be contained in
-            the common domain of the function set.
-        dspace : `FnBase`
-            Data space providing containers for the values of a
-            discretized object. Its size must be equal to the
-            total number of grid points. Its field must be the same
-            as that of the function space.
-        order : {'C', 'F'}, optional
-            Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
-
-        Examples
-        --------
-        Let's define the complex function space :math:`L^2` on a
-        rectangle:
-
-        >>> from odl import Rectangle, FunctionSpace, ComplexNumbers
-        >>> rect = Rectangle([0, 0], [1, 1])
-        >>> space = FunctionSpace(rect, field=ComplexNumbers())
-
-        The grid is defined by uniform sampling
-        (`TensorGrid.as_midp` indicates that the points will
-        be cell midpoints instead of corners).
-
-        >>> from odl import uniform_sampling, Cn
-        >>> grid = uniform_sampling(rect, [4, 2], as_midp=True)
-        >>> grid.coord_vectors
-        (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
-        >>> dspace = Cn(grid.ntotal)
-
-        Now initialize the operator:
-
-        >>> interp_op = RawNearestInterpolation(space, grid, dspace,
-        ...                                     order='C')
-
-        We test some simple values:
-
-        >>> import numpy as np
-        >>> val_arr = np.arange(8) + 1j * np.arange(1, 9)
-        >>> values = dspace.element(val_arr)
-        >>> function = interp_op(values)
-        >>> function(0.3, 0.6)  # closest to index (1, 1) -> 3
-        (3+4j)
-        """
-        RawNearestInterpolation.__init__(self, ip_fspace, grid, dspace, order)
-        FunctionSetMapping.__init__(self, 'extension', ip_fspace,
-                                    grid, dspace, order, linear=True)
+        return self.range.element(nearest, vectorized=True)
 
 
 class LinearInterpolation(FunctionSetMapping):
-    # TODO: this needs to be tested properly
-    """Linear interpolation interpolation as a linear operator."""
+
+    """Linear interpolation interpolation as a `LinearOperator`."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
-        """Initialize a new `LinearInterpolation` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -502,43 +399,37 @@ class LinearInterpolation(FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        FunctionSetMapping.__init__(self, 'extension', ip_fspace,
-                                    grid, dspace, order, linear=True)
+        if not isinstance(ip_fspace, FunctionSpace):
+            raise TypeError('function space {!r} is not a `FunctionSpace` '
+                            'instance.'.format(ip_fspace))
+        if not isinstance(ip_fspace.domain, IntervalProd):
+            raise TypeError('function space domain {!r} is not an '
+                            '`IntervalProd` instance.'.format(ip_fspace))
 
-    def _call(self, inp):
-        """The raw call method for out-of-place evaluation.
+        super().__init__(self, 'extension', ip_fspace, grid, dspace,
+                         order, linear=True)
+
+    # TODO: Implement _apply()
+
+    def _call(self, x):
+        """The raw method for out-of-place evaluation.
 
         Parameters
         ----------
-        inp : `NtuplesVector`
+        x : `NtuplesVector`
             The array of numbers to be interpolated
 
         Returns
         -------
-        outp : `FunctionSetVector`
+        out : `FunctionSetVector`
             A function (nearest-neighbor) interpolating at a given
             point or array of points.
 
         Examples
         --------
-        Let's define the complex function space :math:`L^2` on a
-        rectangle:
-
         TODO: implement an example!
-
         """
-        # TODO: Implement in-place evaluation
-        def func(*x):
-            x = np.atleast_1d(x).squeeze()
-            values = interpnd(points=self.grid.coord_vectors,
-                              values=inp.data.reshape(self.grid.shape,
-                                                      order=self.order),
-                              method='nearest',
-                              xi=x,
-                              fill_value=None)  # Allow points outside
-            return values[0] if values.shape == (1,) else values
-
-        return self.range.element(func)
+        raise NotImplementedError
 
 
 class _NearestPointwiseInterpolator(object):
@@ -582,7 +473,7 @@ class _NearestPointwiseInterpolator(object):
         self.grid = tuple([np.asarray(p) for p in coord_vecs])
         self.values = values
 
-    def __call__(self, xi, outp=None):
+    def __call__(self, xi, out=None):
         """Do the interpolation.
 
         Modified for in-place evaluation support and without method
@@ -590,6 +481,7 @@ class _NearestPointwiseInterpolator(object):
         shape (n, dim), where n is the number of points.
         """
         ndim = len(self.grid)
+        print('xi = ', xi)
         if xi.ndim != 2:
             raise ValueError('`xi` has {} axes instead of 2.'.format(xi.ndim))
 
@@ -597,14 +489,14 @@ class _NearestPointwiseInterpolator(object):
             raise ValueError('`xi` has axis 1 with length {} instead '
                              'of the grid dimension {}.'.format(xi.shape[1],
                                                                 ndim))
-        if outp is not None:
-            if not isinstance(outp, np.ndarray):
-                raise TypeError('`outp` {!r} not a `numpy.ndarray` '
-                                'instance.'.format(outp))
-            if outp.shape != (xi.shape[0],):
+        if out is not None:
+            if not isinstance(out, np.ndarray):
+                raise TypeError('`out` {!r} not a `numpy.ndarray` '
+                                'instance.'.format(out))
+            if out.shape != (xi.shape[0],):
                 raise ValueError('Output shape {} not equal to (n,), where '
                                  'n={} is the total number of evaluation '
-                                 'points.'.format(outp.shape, xi.shape[0]))
+                                 'points.'.format(out.shape, xi.shape[0]))
 
         xi = _ndim_coords_from_arrays(xi, ndim=ndim)
         if xi.shape[-1] != ndim:
@@ -613,16 +505,16 @@ class _NearestPointwiseInterpolator(object):
                              'dimension {}.'.format(xi.shape[-1], ndim))
 
         indices, norm_distances = self._find_indices(xi.T)
-        return self._evaluate_nearest(indices, norm_distances, outp)
+        return self._evaluate_nearest(indices, norm_distances, out)
 
-    def _evaluate_nearest(self, indices, norm_distances, outp=None):
+    def _evaluate_nearest(self, indices, norm_distances, out=None):
         """Evaluate nearest interpolation. Modified for in-place."""
         idx_res = []
         for i, yi in zip(indices, norm_distances):
             idx_res.append(np.where(yi <= .5, i, i + 1))
-        if outp is not None:
-            outp[:] = self.values[idx_res]
-            return outp
+        if out is not None:
+            out[:] = self.values[idx_res]
+            return out
         else:
             return self.values[idx_res]
 
@@ -651,7 +543,7 @@ class _NearestMeshgridInterpolator(_NearestPointwiseInterpolator):
     interpolation and in-place evaluation.
     """
 
-    def __call__(self, xi, outp=None):
+    def __call__(self, xi, out=None):
         """Do the interpolation.
 
         Modified for in-place evaluation support and without method
@@ -662,20 +554,24 @@ class _NearestMeshgridInterpolator(_NearestPointwiseInterpolator):
             raise ValueError('number of vectors in `xi` is {} instead of {}, '
                              'the grid dimension.'.format(xi.shape[1],
                                                           len(self.grid)))
-        ntotal = np.prod(np.broadcast_arrays(*xi)[0].shape)
-        if outp is not None:
-            if not isinstance(outp, np.ndarray):
-                raise TypeError('`outp` {!r} not a `numpy.ndarray` '
-                                'instance.'.format(outp))
-            if outp.shape != (ntotal,):
+
+        if len(xi) == 1:
+            ntotal = xi[0].size
+        else:
+            ntotal = np.prod(np.broadcast(*xi).shape)
+        if out is not None:
+            if not isinstance(out, np.ndarray):
+                raise TypeError('`out` {!r} not a `numpy.ndarray` '
+                                'instance.'.format(out))
+            if out.shape != (ntotal,):
                 raise ValueError('Output shape {} not equal to (n,), where '
                                  'n={} is the total number of evaluation '
-                                 'points.'.format(outp.shape, ntotal))
+                                 'points.'.format(out.shape, ntotal))
 
         indices, norm_distances = self._find_indices(xi)
-        return self._evaluate_nearest(indices, norm_distances, outp)
+        return self._evaluate_nearest(indices, norm_distances, out)
 
-    def _evaluate_nearest(self, indices, norm_distances, outp=None):
+    def _evaluate_nearest(self, indices, norm_distances, out=None):
         """Evaluate nearest interpolation.
 
         Modified for in-place evaluation.
@@ -683,9 +579,9 @@ class _NearestMeshgridInterpolator(_NearestPointwiseInterpolator):
         idx_res = []
         for i, yi in zip(indices, norm_distances):
             idx_res.append(np.where(yi <= .5, i, i + 1))
-        if outp is not None:
-            outp[:] = self.values[idx_res]
-            return outp
+        if out is not None:
+            out[:] = self.values[idx_res]
+            return out
         else:
             return self.values[idx_res]
 

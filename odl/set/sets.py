@@ -29,8 +29,10 @@ standard_library.install_aliases()
 # External
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
+import numpy as np
 
 # ODL
+from odl.util.utility import (is_int_dtype, is_real_dtype, is_complex_dtype)
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
@@ -105,6 +107,13 @@ class Set(with_metaclass(ABCMeta, object)):
         Implementing this method is optional. Default it tests for equality.
         """
         return self == other
+
+    def contains_all(self, other, **kwargs):
+        """Test if all points in `other` are contained in this set.
+
+        Implementing this method is optional.
+        """
+        raise NotImplementedError("'contains_all' method not implemented.")
 
     @abstractmethod
     def __eq__(self, other):
@@ -217,6 +226,13 @@ class Strings(Set):
         characters, `False` otherwise."""
         return isinstance(other, basestring) and len(other) == self.length
 
+    def contains_all(self, array):
+        """Test if `array` is an array of strings with correct length."""
+        array = np.asarray(array)  # allow seqence type input
+        dtype_byte = np.dtype('S{}'.format(self.length))
+        dtype_uni = np.dtype('<U{}'.format(self.length))
+        return array.dtype in (dtype_byte, dtype_uni)
+
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``."""
         return isinstance(other, Strings) and other.length == self.length
@@ -282,6 +298,13 @@ class ComplexNumbers(Field):
                 isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
+    def contains_all(self, array):
+        """Test if `array` is an array of real or complex numbers."""
+        array = np.asarray(array)  # allow seqence type input
+        return (is_complex_dtype(array.dtype) or
+                is_real_dtype(array.dtype) or
+                is_int_dtype(array.dtype))
+
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``."""
         if other is self:
@@ -333,6 +356,11 @@ class RealNumbers(Field):
 
         return (isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
+
+    def contains_all(self, array):
+        """Test if `array` is an array of real numbers."""
+        array = np.asarray(array)  # allow seqence type input
+        return is_real_dtype(array.dtype) or is_int_dtype(array.dtype)
 
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``."""
@@ -390,6 +418,11 @@ class Integers(Set):
             return True
 
         return isinstance(other, Integers)
+
+    def contains_all(self, array):
+        """Test if `array` is an array of integers."""
+        array = np.asarray(array)  # allow seqence type input
+        return is_int_dtype(array.dtype)
 
     def element(self, inp=None):
         """Return an integer from ``inp`` or from scratch."""
