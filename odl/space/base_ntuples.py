@@ -42,7 +42,7 @@ __all__ = ('NtuplesBase', 'NtuplesBaseVector',
            'FnWeightingBase')
 
 
-class NtuplesBase(with_metaclass(ABCMeta, Set)):
+class NtuplesBase(Set):
 
     """Base class for sets of n-tuples independent of implementation."""
 
@@ -151,7 +151,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return NtuplesBaseVector
 
 
-class NtuplesBaseVector(object):
+class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     """Abstract class for representation of `NtuplesBase` elements.
 
@@ -167,6 +167,76 @@ class NtuplesBaseVector(object):
     def __init__(self, space, *args, **kwargs):
         """Initialize a new instance."""
         self._space = space
+
+    @abstractmethod
+    def copy(self):
+        """Create an identical (deep) copy of this vector."""
+
+    @abstractmethod
+    def asarray(self, start=None, stop=None, step=None, out=None):
+        """Extract the data of this array as a numpy array.
+
+        Parameters
+        ----------
+        start : `int`, optional
+            Start position. `None` means the first element.
+        start : `int`, optional
+            One element past the last element to be extracted.
+            `None` means the last element.
+        start : `int`, optional
+            Step length. `None` means 1.
+        out : `numpy.ndarray`
+            Array to write result to.
+
+        Returns
+        -------
+        asarray : `numpy.ndarray`
+            Numpy array of the same type as the space.
+        """
+
+    @abstractmethod
+    def __getitem__(self, indices):
+        """Access values of this vector.
+
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be accessed
+
+        Returns
+        -------
+        values : `NtuplesBase.dtype` or `NtuplesBaseVector`
+            The value(s) at the index (indices)
+        """
+
+    @abstractmethod
+    def __setitem__(self, indices, values):
+        """Set values of this vector.
+
+        Parameters
+        ----------
+        indices : `int` or `slice`
+            The position(s) that should be set
+        values : {scalar, array-like, `NtuplesBaseVector`}
+            The value(s) that are to be assigned.
+
+            If ``index`` is an integer, ``value`` must be single value.
+
+            If ``index`` is a slice, ``value`` must be broadcastable
+            to the size of the slice (same size, shape (1,)
+            or single value).
+        """
+
+    @abstractmethod
+    def __eq__(self, other):
+        """``vec.__eq__(other) <==> vec == other``.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if all entries of ``other`` are equal to this
+            vector's entries, `False` otherwise.
+        """
 
     @property
     def space(self):
@@ -203,82 +273,12 @@ class NtuplesBaseVector(object):
         """The number of bytes this vector uses in memory."""
         return self.size * self.itemsize
 
-    @abstractmethod
-    def copy(self):
-        """Create an identical (deep) copy of this vector."""
-
-    @abstractmethod
-    def asarray(self, start=None, stop=None, step=None, out=None):
-        """Extract the data of this array as a numpy array.
-
-        Parameters
-        ----------
-        start : `int`, optional
-            Start position. `None` means the first element.
-        start : `int`, optional
-            One element past the last element to be extracted.
-            `None` means the last element.
-        start : `int`, optional
-            Step length. `None` means 1.
-        out : `numpy.ndarray`
-            Array to write result to.
-
-        Returns
-        -------
-        asarray : `numpy.ndarray`
-            Numpy array of the same type as the space.
-        """
-
     def __len__(self):
         """``v.__len__() <==> len(v)``.
 
         Return the number of space dimensions.
         """
         return self.space.size
-
-    @abstractmethod
-    def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
-
-        Returns
-        -------
-        equals : `bool`
-            `True` if all entries of ``other`` are equal to this
-            vector's entries, `False` otherwise.
-        """
-
-    @abstractmethod
-    def __getitem__(self, indices):
-        """Access values of this vector.
-
-        Parameters
-        ----------
-        indices : `int` or `slice`
-            The position(s) that should be accessed
-
-        Returns
-        -------
-        values : `NtuplesBase.dtype` or `NtuplesBaseVector`
-            The value(s) at the index (indices)
-        """
-
-    @abstractmethod
-    def __setitem__(self, indices, values):
-        """Set values of this vector.
-
-        Parameters
-        ----------
-        indices : `int` or `slice`
-            The position(s) that should be set
-        values : {scalar, array-like, `NtuplesBaseVector`}
-            The value(s) that are to be assigned.
-
-            If ``index`` is an integer, ``value`` must be single value.
-
-            If ``index`` is a slice, ``value`` must be broadcastable
-            to the size of the slice (same size, shape (1,)
-            or single value).
-        """
 
     def __array__(self, dtype=None):
         """Return a numpy array of this ntuple.
@@ -363,11 +363,6 @@ class FnBase(NtuplesBase, LinearSpace):
     def one(self):
         """Create a vector of ones."""
 
-    @property
-    def field(self):
-        """The field of this space."""
-        return self._field
-
     @abstractmethod
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two vectors, assigned to ``out``."""
@@ -375,6 +370,11 @@ class FnBase(NtuplesBase, LinearSpace):
     @abstractmethod
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to ``out``."""
+
+    @property
+    def field(self):
+        """The field of this space."""
+        return self._field
 
     @property
     def element_type(self):
