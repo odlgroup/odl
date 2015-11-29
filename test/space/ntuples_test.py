@@ -80,35 +80,24 @@ def _pos_array(fn):
     return np.abs(_array(fn)) + 0.1
 
 
-def _sparse_matrix(fn):
-    """Create a sparse positive definite Hermitian matrix for `fn`."""
-    nnz = np.random.randint(0, int(ceil(fn.size / 2)))
-    coo_r = np.random.randint(0, fn.size, size=nnz)
-    coo_c = np.random.randint(0, fn.size, size=nnz)
-
-    if np.issubdtype(fn.dtype, np.floating):
-        values = np.random.rand(nnz).astype(fn.dtype)
-    elif np.issubdtype(fn.dtype, np.integer):
-        values = np.random.randint(0, 10, nnz).astype(fn.dtype)
-    elif np.issubdtype(fn.dtype, np.complexfloating):
-        values = (np.random.rand(nnz) +
-                  1j * np.random.rand(nnz)).astype(fn.dtype)
-    else:
-        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
-
-    mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
-                               shape=(fn.size, fn.size),
-                               dtype=fn.dtype)
-    # Make symmetric and positive definite
-    return mat + mat.conj().T + fn.size * sp.sparse.eye(fn.size,
-                                                        dtype=fn.dtype)
-
-
 def _dense_matrix(fn):
     """Create a dense positive definite Hermitian matrix for `fn`."""
-    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=fn.dtype)
+
+    if np.issubdtype(fn.dtype, np.floating):
+        mat = np.random.rand(fn.size, fn.size).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.integer):
+        mat = np.random.randint(0, 10, (fn.size, fn.size)).astype(fn.dtype)
+    elif np.issubdtype(fn.dtype, np.complexfloating):
+        mat = (np.random.rand(fn.size, fn.size) +
+               1j * np.random.rand(fn.size, fn.size)).astype(fn.dtype)
+
     # Make symmetric and positive definite
     return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
+
+
+def _sparse_matrix(fn):
+    """Create a sparse positive definite Hermitian matrix for `fn`."""
+    return sp.sparse.coo_matrix(_dense_matrix(fn))
 
 
 # Pytest fixtures
