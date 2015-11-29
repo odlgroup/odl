@@ -151,7 +151,7 @@ class NtuplesBase(with_metaclass(ABCMeta, Set)):
         return NtuplesBaseVector
 
 
-class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
+class NtuplesBaseVector(object):
 
     """Abstract class for representation of `NtuplesBase` elements.
 
@@ -397,7 +397,7 @@ class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
         return LinearSpaceVector.copy(self)
 
 
-class FnWeightingBase(with_metaclass(ABCMeta, object)):
+class FnWeightingBase(object):
 
     """Abstract base class for weighting of `FnBase` spaces.
 

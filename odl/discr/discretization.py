@@ -23,18 +23,13 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
-from odl.util.utility import with_metaclass
-
-# External
-from abc import ABCMeta
 
 # ODL
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space.ntuples import (Ntuples, NtuplesVector, Fn, FnVector,
-                               Rn, RnVector, Cn, CnVector)
+from odl.space.ntuples import Ntuples, Fn, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
@@ -51,7 +46,7 @@ __all__ = ('RawDiscretization', 'RawDiscretizationVector',
            'Discretization', 'DiscretizationVector')
 
 
-class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
+class RawDiscretization(NtuplesBase):
 
     """Abstract raw discretization class.
 

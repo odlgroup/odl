@@ -25,7 +25,6 @@ from builtins import object, super
 from odl.util.utility import with_metaclass
 
 # External module imports
-from abc import ABCMeta
 from numbers import Number, Integral
 
 # ODL imports
@@ -97,7 +96,7 @@ def _default_apply(self, x, out, *args, **kwargs):
     out.assign(self._call(x, *args, **kwargs))
 
 
-class _OperatorMeta(ABCMeta):
+class _OperatorMeta(type):
 
     """Metaclass used by `Operator` to ensure correct methods.
 
@@ -121,7 +120,7 @@ class _OperatorMeta(ABCMeta):
 
     def __call__(cls, *args, **kwargs):
         """Create a new class ``cls`` from given arguments."""
-        obj = ABCMeta.__call__(cls, *args, **kwargs)
+        obj = type.__call__(cls, *args, **kwargs)
         if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
             raise NotImplementedError('`Operator` instances must either '
                                       'have `_call` or `_apply` as '

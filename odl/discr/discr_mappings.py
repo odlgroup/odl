@@ -23,10 +23,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str, zip
-from odl.util.utility import with_metaclass
 
 # External imports
-from abc import ABCMeta
 import numpy as np
 from scipy.interpolate import interpnd
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
@@ -44,7 +42,7 @@ __all__ = ('FunctionSetMapping',
            'NearestInterpolation', 'LinearInterpolation')
 
 
-class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
+class FunctionSetMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
