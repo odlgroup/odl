@@ -135,6 +135,11 @@ def is_scalar_dtype(dtype):
     return np.issubsctype(dtype, np.number)
 
 
+def is_int_dtype(dtype):
+    """Whether a datatype is integer or not."""
+    return np.issubscdtype(dtype, np.integer)
+
+
 def is_real_dtype(dtype):
     """Whether a datatype is real (including integer) or not."""
     return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)

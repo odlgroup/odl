@@ -29,7 +29,7 @@ from functools import wraps
 from itertools import product
 
 # ODL imports
-from odl.operator.operator import Operator
+from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set.domain import IntervalProd
 from odl.set.sets import RealNumbers, ComplexNumbers, Set, Field
 from odl.set.space import LinearSpace, LinearSpaceVector
@@ -61,6 +61,11 @@ def enforce_defaults_as_kwargs(func):
 
         return func(*args, **kwargs)
     return kwargs_wrapper
+
+
+def _in_place_not_impl(x, out):
+    """Dummy function to be used when apply function is not given."""
+    raise NotImplementedError('no `_apply` method defined.')
 
 
 def vectorize(dtype, outarg='none'):
@@ -340,8 +345,23 @@ class FunctionSetVector(Operator):
     def __new__(cls, *args, **kwargs):
         """Create a new instance."""
         fcall = args[1]
+        cls._call = fcall
+
         instance = super().__new__(cls)
-        instance._call = fcall
+
+        call_has_out, call_out_optional, _ = _dispatch_call_args(
+            None, unbound_method=fcall)
+        if not call_has_out:
+            # Out-of-place _call
+            instance._call_in_place = _in_place_not_impl
+            instance._call_out_of_place = instance._call
+        elif call_out_optional:
+            # Dual-use _call
+            instance._call_in_place = instance._call
+            instance._call_out_of_place = instance._call
+        else:
+            raise ValueError('cannot provide in-place only function.')
+
         return instance
 
     def __init__(self, fset, fcall, vectorized=True):

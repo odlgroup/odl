@@ -393,8 +393,7 @@ def test_type_errors():
 # FUNCTIONAL TEST
 class SumFunctional(Operator):
 
-    """ Sum of elements
-    """
+    """Sum of elements."""
 
     def __init__(self, domain):
         super().__init__(domain, domain.field, linear=True)
@@ -409,8 +408,7 @@ class SumFunctional(Operator):
 
 class ConstantVector(Operator):
 
-    """ Vector times a scalar
-    """
+    """Vector times a scalar."""
 
     def __init__(self, domain):
         super().__init__(domain.field, domain, linear=True)
@@ -588,8 +586,7 @@ def test_functional_composition():
 
 class SumSquaredFunctional(Operator):
 
-    """Sum of the squared elements
-    """
+    """Sum of the squared elements."""
 
     def __init__(self, domain):
         super().__init__(domain, domain.field, linear=False)

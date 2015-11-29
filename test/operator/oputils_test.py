@@ -152,7 +152,7 @@ def test_matrix_representation_not_linear_op():
         def __init__(self):
             super().__init__(domain=odl.Rn(3), range=odl.Rn(4), linear=False)
 
-        def _apply(self, x, out):
+        def _call(self, x, out):
             return odl.Rn(np.random.rand(4))
 
     nonlin_op = small_nonlin_op()
@@ -170,7 +170,7 @@ def test_matrix_representation_wrong_domain():
                                                               odl.Rn(3))),
                              range=odl.Rn(4), linear=True)
 
-        def _apply(self, x, out):
+        def _call(self, x, out):
             return odl.Rn(np.random.rand(4))
 
     nonlin_op = small_op()
@@ -189,7 +189,7 @@ def test_matrix_representation_wrong_range():
                                                              odl.Rn(3))),
                              linear=True)
 
-        def _apply(self, x, out):
+        def _call(self, x, out):
             return odl.Rn(np.random.rand(4))
 
     nonlin_op = small_op()

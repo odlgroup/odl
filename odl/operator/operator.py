@@ -25,7 +25,6 @@ from builtins import object, super
 from odl.util.utility import with_metaclass
 
 # External module imports
-from abc import ABCMeta, abstractmethod
 from functools import partial
 from numbers import Number, Integral
 
@@ -184,6 +183,8 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
         spec = inspect.getargspec(call)
         kw_only = ()
         kw_only_defaults = {}
+
+    print(spec)
 
     pos_args = spec.args
     if unbound_call is not None:
@@ -472,7 +473,7 @@ def _compile_call_dict(cls):
             pass
 
 
-class Operator(with_metaclass(ABCMeta, object)):
+class Operator(object):
 
     """Abstract operator.
 
@@ -607,9 +608,9 @@ class Operator(with_metaclass(ABCMeta, object)):
                 raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                                 'instance.'.format(range))
 
-    @abstractmethod
     def _call(self, *args, **kwargs):
         """Raw evaluation method. Needs to be overridden by subclasses."""
+        raise NotImplementedError
 
     @property
     def domain(self):
@@ -708,7 +709,7 @@ class Operator(with_metaclass(ABCMeta, object)):
                                 ''.format(out, self.range, self))
 
             if self.is_functional:
-                raise TypeError('`out` parameter cannot be used'
+                raise TypeError('`out` parameter cannot be used '
                                 'when range is a field')
 
             self._call_in_place(x, out=out, **kwargs)
@@ -1795,7 +1796,7 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
 
     attrs['_call'] = _call
 
-    SimpleOperator = ABCMeta('SimpleOperator', (Operator,), attrs)
+    SimpleOperator = type('SimpleOperator', (Operator,), attrs)
     return SimpleOperator(dom, ran, linear)
 
 
