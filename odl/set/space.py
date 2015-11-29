@@ -168,7 +168,7 @@ class LinearSpace(Set):
         This is the strict default where spaces must be equal.
         Subclasses may choose to implement a less strict check.
         """
-        return isinstance(other, LinearSpaceVector) and other.space == self
+        return getattr(other, 'space', None) == self
 
     # Error checking variant of methods
     def lincomb(self, a, x1, b=None, x2=None, out=None):
