@@ -300,8 +300,9 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
         Array to be transformed
     halfcomplex : `bool`, optional
         If `True`, calculate only the negative frequency part along the
-        last axis for real input. If `False`, calculate the full
-        complex FFT.
+        last axis. If `False`, calculate the full complex FFT.
+
+        This option can only be used with real input data.
     kwargs :
         'threads' : `int`, optional
             Number of threads to use. Default: 1
@@ -328,8 +329,16 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
         the rest of the shapes is equal. Otherwise, the shapes are
         equal also in the last component.
 
+        If``array_in`` is complex, it may be aligned with ``array_out``,
+        which results in an in-place transform.
+
     Notes
     -----
+    All planning schemes except ``'estimate'`` require an internal copy
+    of the input array and may therefore be substantially slower in the
+    first run. Use these flags only if you calculate multiple transforms
+    of the same size.
+
     TODO: axes
     """
     import pickle
@@ -550,9 +559,17 @@ class DiscreteFourierTransform(Operator):
 
         super().__init__(dom, ran, linear=True)
 
-    def _apply(self, x, out):
-        """Raw in-place application method."""
-        pass
+    def _call(self, x, **kwargs):
+        """Raw out-of-place evaluation method.
+
+        TODO: write doc
+        """
+        x_cpy = x.copy()
+        dft_preproc_data(x_cpy, shift=self._shift)
+        out = self.range.element(
+            dft_call(x_cpy.asarray(), self._halfcomplex, **kwargs))
+        dft_postproc_data(out, self.domain.grid.min_pt)
+        return out
 
     @property
     def adjoint(self):
