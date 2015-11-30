@@ -148,9 +148,12 @@ try:
     import pytest
     skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
                                          reason='CUDA not available')
+    skip_if_no_wavelet = pytest.mark.skipif("not odl.tomo.WAVELET_AVILABLE",
+                                         reason='Wavelet not available')
 except ImportError:
-    def skip_if_no_cuda(function):
+    def do_nothing(function):
         return function
+    skip_if_no_cuda = skip_if_no_wavelet = do_nothing    
 
 
 class FailCounter(object):

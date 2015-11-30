@@ -24,7 +24,11 @@ standard_library.install_aliases()
 # External module imports
 import pytest
 import numpy as np
-import pywt
+from odl.trafos.wavelet import WAVELET_AVAILABLE
+if WAVELET_AVAILABLE:
+    import pywt
+else:
+    pywt = None
 
 # ODL imports
 import odl
@@ -32,9 +36,10 @@ from odl.trafos.wavelet import (list_of_coeff_sizes, pywt_coeff_to_array2d,
                                 array_to_pywt_coeff2d, pywt_coeff_to_array3d,
                                 array_to_pywt_coeff3d, wavelet_decomposition3d,
                                 wavelet_reconstruction3d, DiscreteWaveletTrafo)
-from odl.util.testutils import all_almost_equal, all_equal
+from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_wavelet
 
 
+@skip_if_no_wavelet
 def test_list_of_coeffs_sizes():
     # Verify that the helper function does indeed work as expected
     shape = (64, 64)
@@ -50,6 +55,7 @@ def test_list_of_coeffs_sizes():
     assert all_equal(size_list3d, S3d)
 
 
+@skip_if_no_wavelet
 def test_wavelet_decomposition3d_et_reconstruction3d():
     # Test 3D wavelet decomposition and reconstruction and verify that
     # they perform as expected
@@ -81,6 +87,7 @@ def test_wavelet_decomposition3d_et_reconstruction3d():
     assert all_almost_equal(reconstruction, x)
 
 
+@skip_if_no_wavelet
 def test_pywt_coeff_to_array_et_array_to_pywt_coeff2d():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
@@ -102,6 +109,7 @@ def test_pywt_coeff_to_array_et_array_to_pywt_coeff2d():
     assert all_almost_equal(reconstruction, x)
 
 
+@skip_if_no_wavelet
 def test_pywt_coeff_to_array_et_array_to_pywt_coeff3d():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
@@ -124,6 +132,7 @@ def test_pywt_coeff_to_array_et_array_to_pywt_coeff3d():
     assert all_almost_equal(reconstruction, x)
 
 
+@skip_if_no_wavelet
 def test_DiscreteWaveletTrafo():
     #Verify that the operator works as axpected
     # 2D test
