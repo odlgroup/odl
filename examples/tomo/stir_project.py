@@ -25,7 +25,6 @@ standard_library.install_aliases()
 import matplotlib.pyplot as plt
 import numpy as np
 
-import stir
 import os.path as pth
 import odl
 
@@ -34,15 +33,20 @@ base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
 projection_template = str(pth.join(base, 'small.hs'))
 data_template = str(pth.join(base, 'initial.hv'))
 
-proj = odl.tomo.StirProjectorFromFile(data_template, projection_template)
+recon_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
+                                                          [1, 1, 1])),
+                             [15, 64, 64])
 
-data_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0,0,0],[1,1,1])),
-                            [15, 64, 64])
-vol = data_sp.one()
+data_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
+                                                         [1, 1, 1])),
+                            [37, 28, 56])
+
+proj = odl.tomo.StirProjectorFromFile(recon_sp, data_sp, data_template, projection_template)
+
+vol = recon_sp.one()
 
 result = proj(vol)
-for view_num in range(result.get_min_view_num(),
-                      result.get_max_view_num()+1):
-    arr = stir.stirextra.to_numpy(result.get_viewgram(view_num, 0))
-    plt.figure()
-    plt.imshow(arr)
+result.show()
+
+back_projected = proj.adjoint(result)
+back_projected.show()

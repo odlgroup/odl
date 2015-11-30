@@ -38,7 +38,10 @@ __all__ = ('StirProjectorFromFile', 'STIR_AVAILABLE')
 
 
 class StirProjectorFromFile(Operator):
-    def __init__(self, data_template, projection_template):
+
+    """ A forward projector using STIR input files """
+
+    def __init__(self, dom, ran, data_template, projection_template):
         # Read template of the projection
         proj_data_in = stir.ProjData.read_from_file(projection_template)
         self.proj_data_info = proj_data_in.get_proj_data_info()
@@ -49,30 +52,61 @@ class StirProjectorFromFile(Operator):
         self.volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(data_template)
 
         # Create forward projection by matrix
-        proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
-        proj_matrix.set_up(self.proj_data_info, self.volume)
-        self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
+        self.proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
+        self.proj_matrix.set_up(self.proj_data_info, self.volume)
+        self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(self.proj_matrix)
         self.projector.set_up(self.proj_data_info, self.volume)
 
-        super().__init__(UniversalSet(), UniversalSet())
+        assert dom.shape == self.volume.shape()
+        assert ran.shape == self.proj_data.to_array().shape()
+
+        super().__init__(dom, ran, True)
 
     def _call(self, volume):
         # Set volume data
-        asarr = volume.asarray()
-        shape = self.volume.shape()
-        assert shape == volume.shape
-
-        for x in range(self.volume.get_min_indices()[1],
-                       self.volume.get_max_indices()[1]+1):
-            for y in range(self.volume.get_min_indices()[2],
-                           self.volume.get_max_indices()[2]+1):
-                for z in range(self.volume.get_min_indices()[3],
-                               self.volume.get_max_indices()[3]+1):
-                    self.volume[(x, y, z)] = asarr[x, y, z]
+        self.volume.fill(volume.asarray().flat)
 
         # project
         self.projector.forward_project(self.proj_data, self.volume)
 
-        return self.proj_data
+        # make odl
+        arr = stir.stirextra.to_numpy(self.proj_data)
+        proj = self.range.element(arr)
+
+        return proj
+
+    @property
+    def adjoint(self):
+        """The back-projector associated with this array."""
+        return StirProjectorFromFileAdjoint(self.range, self.domain,
+                                            self.proj_matrix,
+                                            self.volume, self.proj_data)
 
 
+class StirProjectorFromFileAdjoint(Operator):
+
+    """The adjoint of a `StirProjectorFromFile`.
+
+    Use the `StirProjectorFromFile.adjoint` method to create new objects.
+    """
+
+    def __init__(self, dom, ran, proj_matrix, volume, projections):
+        super().__init__(dom, ran, True)
+        self.volume = volume
+        self.proj_data = projections
+
+        self.back_proj = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
+        self.back_proj.set_up(self.proj_data.get_proj_data_info(), self.volume)
+
+    def _call(self, projections):
+        # Set projection data
+        self.proj_data.fill(projections.asarray().flat)
+
+        # back-project
+        self.back_proj.back_project(self.volume, self.proj_data)
+
+        # make odl
+        arr = stir.stirextra.to_numpy(self.volume)
+        vol = self.range.element(arr)
+
+        return vol
