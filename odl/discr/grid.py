@@ -827,7 +827,7 @@ class RegularGrid(TensorGrid):
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
         super().__init__(*coord_vecs, **kwargs)
         self._center = (self.max_pt + self.min_pt) / 2
-        self._stride = np.ones(len(shape), dtype='float64')
+        self._stride = np.zeros(len(shape), dtype='float64')
         idcs = np.where(shape > 1)
         self._stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
                               (shape[idcs] - 1))
@@ -855,11 +855,6 @@ class RegularGrid(TensorGrid):
         array([ 1.,  2.])
         """
         return self._stride
-
-    @property
-    def cell_volume(self):
-        """The volume of a grid cell."""
-        return float(np.prod(self.stride))
 
     def is_subgrid(self, other, tol=0.0):
         """Test if this grid is contained in another grid.
