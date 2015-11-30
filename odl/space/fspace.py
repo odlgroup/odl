@@ -26,6 +26,7 @@ from builtins import super
 # External imports
 import numpy as np
 from functools import wraps
+from inspect import isclass, isfunction
 from itertools import product
 
 # ODL imports
@@ -142,7 +143,6 @@ def vectorize(dtype, outarg='none'):
     """
     def vect_decorator(func):
         def _vect_wrapper(x, out, **kwargs):
-            print('at top: ', x, out)
             if isinstance(x, np.ndarray):  # array
                 if x.ndim == 1:
                     dim = 1
@@ -157,21 +157,17 @@ def vectorize(dtype, outarg='none'):
                 dim = len(x)
                 if dim == 1:
                     x = x[0]
-            print('dim = ', dim)
             if dim == 1:
                 if out is None:
                     out = np.empty(x.size, dtype=dtype)
                 for i, xi in enumerate(x):
-                    print(i, xi)
                     out[i] = func(xi, **kwargs)
                 return out
             else:
                 if is_valid_input_array(x, dim):
-                    print(x.shape)
                     if out is None:
                         out = np.empty(x.shape[1], dtype=dtype)
                     for i, pt in enumerate(x.T):
-                        print(i, pt)
                         out[i] = func(pt, **kwargs)
                     return out
                 elif is_valid_input_meshgrid(x, dim):
@@ -288,9 +284,8 @@ class FunctionSet(Set):
                 raise ValueError('non-vectorized call function {} cannot be '
                                  'combined with `vectorized=True`.'
                                  ''.format(fcall))
-            return self.element(fcall._call, vectorized=vectorized)
-        else:
-            return self.element_type(self, fcall, vectorized=vectorized)
+
+        return self.element_type(self, fcall, vectorized=vectorized)
 
     def __eq__(self, other):
         """``s.__eq__(other) <==> s == other``.
@@ -360,11 +355,25 @@ class FunctionSetVector(Operator):
             raise TypeError('function set {!r} not a `FunctionSet` '
                             'instance.'.format(fset))
         if not callable(fcall):
-            raise TypeError('call function {!r} is not callable.'
-                            ''.format(fcall))
+            raise TypeError('function {!r} is not callable.'.format(fcall))
 
-        call_has_out, call_out_optional, _ = _dispatch_call_args(
-            None, unbound_call=fcall)
+        if isinstance(fcall, FunctionSetVector):
+            call_has_out, call_out_optional, _ = _dispatch_call_args(
+                bound_call=fcall._call)
+        elif isinstance(fcall, np.ufunc):
+            if fcall.nin != 1:
+                raise ValueError('cannot use `ufunc` with more than one '
+                                 'input parameter.')
+            call_has_out = call_out_optional = True
+        elif isfunction(fcall):
+            call_has_out, call_out_optional, _ = _dispatch_call_args(
+                unbound_call=fcall)
+        elif isclass(fcall):
+            call_has_out, call_out_optional, _ = _dispatch_call_args(
+                bound_call=fcall.__call__)
+        else:
+            raise TypeError('callable type {!r} not understood.')
+
         if not call_has_out:
             # Out-of-place _call
             self._call_in_place = _in_place_not_impl
@@ -657,7 +666,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if fcall is None:
             return self.zero(vectorized=vectorized)
         else:
-            return FunctionSet.element(fcall, vectorized=vectorized)
+            return FunctionSet.element(self, fcall, vectorized=vectorized)
 
     def zero(self, vectorized=True):
         """The function mapping everything to zero.
@@ -985,7 +994,7 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
             raise TypeError('function space {!r} not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
-        super().__init__(fspace, fcall, vectorized=vectorized)
+        FunctionSetVector.__init__(self, fspace, fcall, vectorized=vectorized)
 
     # Convenience functions using element() need to be adapted
     def __add__(self, other):

@@ -244,8 +244,9 @@ class GridCollocation(FunctionSetMapping):
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
         Array vectorization (slower):
+
         >>> def func(array):
-        ...     x1, x2 = array[:, 0], array[:, 1]  # views
+        ...     x1, x2 = array  # views
         ...     return x1 - x2
         >>> func_elem = funcset.element(func)
         >>> coll_op(func_elem)

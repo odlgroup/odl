@@ -80,7 +80,63 @@ def _default_call_in_place(op, x, out, **kwargs):
     out.assign(op._call_out_of_place(x, **kwargs))
 
 
-def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
+def _signature_from_spec(func):
+    """Return the signature of a python function as a string.
+
+    Parameters
+    ----------
+    func : `function`
+        Function whose signature to compile
+
+    Returns
+    -------
+    sig : `str`
+        Signature of the function
+    """
+    import sys
+    import inspect
+
+    py3 = (sys.version_info.major > 2)
+    if py3:
+        spec = inspect.getfullargspec(func)
+    else:
+        spec = inspect.getargspec(func)
+
+    posargs = spec.args
+    defaults = spec.defaults
+    kwargs = spec.varkw if py3 else spec.keywords
+    deflen = 0 if defaults is None else len(defaults)
+    nodeflen = 0 if posargs is None else len(posargs) - deflen
+    if nodeflen > 0:
+        argstr = ', '.join(posargs[:nodeflen])
+    else:
+        argstr = ''
+
+    if defaults:
+        if argstr:
+            argstr += ', '
+        argstr += ', '.join(['{}={}'.format(arg, dval)
+                             for arg, dval in zip(posargs[nodeflen:],
+                                                  defaults)])
+    if py3:
+        kw_only = spec.kwonlyargs
+        kw_only_defaults = spec.kwonlydefaults
+        if argstr:
+            argstr += ', '
+        if kw_only:
+            argstr += ', *, ' + sum('{}={}'.format(arg, dval)
+                                    for arg, dval in zip(kw_only,
+                                                         kw_only_defaults))
+    if kwargs:
+        if argstr:
+            argstr += ', '
+        argstr += '**{}'.format(kwargs)
+
+    return '{}({})'.format(func.__name__, argstr)
+
+
+def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
+                        attr='_call'):
     """Check the arguments of ``_call()`` or similar for conformity.
 
     The ``_call()`` method of :class:`Operator` is allowed to have the
@@ -120,6 +176,8 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
     cls : `class`, optional
         The ``_call()`` method of this class is checked. If omitted,
         provide ``unbound_call`` instead to check directly.
+    bound_call: `callable`, optional
+        Check this bound method instead of ``cls``
     unbound_call: `callable`, optional
         Check this unbound function instead of ``cls``
     attr : `string`, optional
@@ -157,7 +215,10 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
         spec_msg += '\n' + '\n'.join(py3only_specs)
     spec_msg += '\n\nStatic or class methods are not allowed.'
 
-    if unbound_call is None:
+    if sum(arg is not None for arg in (cls, bound_call, unbound_call)) != 1:
+        raise ValueError('Exactly one object to check must be given.')
+
+    if cls is not None:
         for parent in cls.mro():
             call = parent.__dict__.get(attr, None)
             if call is not None:
@@ -165,11 +226,14 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
 
         # Static and class methods are not allowed
         if isinstance(call, staticmethod):
-            raise TypeError("'{}.{}' is a static method. ".format(attr) +
-                            spec_msg)
+            raise TypeError("'{}.{}' is a static method. "
+                            "".format(cls.__name__, attr) + spec_msg)
         elif isinstance(call, classmethod):
-            raise TypeError("'{}.{}' is a class method. ".format(attr) +
-                            spec_msg)
+            raise TypeError("'{}.{}' is a class method. "
+                            "".format(cls.__name__, attr) + spec_msg)
+
+    elif bound_call is not None:
+        call = bound_call
     else:
         call = unbound_call
 
@@ -183,7 +247,8 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
         kw_only = ()
         kw_only_defaults = {}
 
-    # print(spec)
+    signature = _signature_from_spec(call)
+#    print(spec)
 
     pos_args = spec.args
     if unbound_call is not None:
@@ -197,58 +262,71 @@ def _dispatch_call_args(cls=object, unbound_call=None, attr='_call'):
 
     # Variable args are not allowed
     if varargs is not None:
-        raise ValueError("Variable arguments not allowed in '{}()'."
-                         "".format(attr) + spec_msg)
+        raise ValueError("Bad signature '{}': variable arguments not allowed."
+                         " ".format(signature) + spec_msg)
 
     if len(pos_args) not in (2, 3):
-        raise ValueError("Bad signature of '{}()'. ".format(attr) + spec_msg)
+        raise ValueError("Bad signature '{}'. ".format(signature) + spec_msg)
 
     # 'self' must be the first argument
     elif pos_args[0] != 'self':
-        raise ValueError("'self' is not the first argument in '{}()'."
-                         "".format(attr) + spec_msg)
+        raise ValueError("Bad signature '{}': `self` is not the first "
+                         "argument. ".format(signature) + spec_msg)
 
     true_pos_args = pos_args[1:]
     if len(true_pos_args) == 1:  # 'out' kw-only
         if 'out' in true_pos_args:  # 'out' positional and 'x' kw-only -> no
-            raise ValueError("'out' cannot be only positional argument except "
-                             "'self' in '{}()'.".format(attr) + spec_msg)
+            raise ValueError("Bad signature '{}': `out` cannot be the only "
+                             "positional argument."
+                             " ".format(signature) + spec_msg)
         else:
             if len(kw_only) == 0:
                 has_out = False
             elif len(kw_only) == 1:
                 if 'out' not in kw_only:
-                    raise ValueError("Output parameter must be called 'out'"
-                                     " in '{}()'.".format(attr) + spec_msg)
+                    raise ValueError(
+                        "Bad signature '{}': output parameter must be called "
+                        "'out', got '{}'."
+                        " ".format(signature, kw_only[0]) +
+                        spec_msg)
                 else:
                     has_out = True
                     if kw_only_defaults['out'] is not None:
-                        raise ValueError("'out' can only default to None in "
-                                         "'{}()'.".format(attr) + spec_msg)
+                        raise ValueError(
+                            "Bad signature '{}': `out` can only default to "
+                            "`None`, got '{}'."
+                            " ".format(signature, kw_only_defaults['out']) +
+                            spec_msg)
                     else:
                         out_optional = True
             else:
-                raise ValueError("Bad signature of '{}()'.".format(attr) +
-                                 spec_msg)
+                raise ValueError("Bad signature '{}': cannot have more than 2 "
+                                 "keyword-only argument."
+                                 " ".format(signature) + spec_msg)
 
     elif len(true_pos_args) == 2:  # Both args positional
-        if true_pos_args[0] == 'out':  # 'out' must come second
-            py3_txt = 'or keyword-only ' if py3 else ''
-            raise ValueError("'out' can only be the second positional "
-                             "argument " + py3_txt + "in '{}()'."
-                             "".format(attr) + spec_msg)
+        if true_pos_args[0] == 'out':  # out must come second
+            py3_txt = ' or keyword-only. ' if py3 else '. '
+            raise ValueError("Bad signature '{}': `out` can only be the "
+                             "second positional argument".format(signature) +
+                             py3_txt + spec_msg)
         elif true_pos_args[1] != 'out':  # 'out' must be 'out'
-            raise ValueError("Output parameter must be called 'out'"
-                             " in '{}()'.".format(attr) + spec_msg)
+            raise ValueError("Bad signature '{}': output parameter must "
+                             "be called 'out', got '{}'."
+                             " ".format(signature, true_pos_args[1]) +
+                             spec_msg)
         else:
             has_out = True
             out_optional = bool(pos_defaults)
             if pos_defaults and pos_defaults[-1] is not None:
-                raise ValueError("'out' can only default to None in "
-                                 "'{}()'.".format(attr) + spec_msg)
+                raise ValueError("Bad signature '{}': `out` can only "
+                                 "default to `None`, got '{}'."
+                                 " ".format(signature, pos_defaults[-1]) +
+                                 spec_msg)
 
     else:  # Too many positional args
-        raise ValueError("Bad signature of '{}()'. ".format(attr) + spec_msg)
+        raise ValueError("Bad signature '{}': too many positional arguments."
+                         " ".format(signature) + spec_msg)
 
     return has_out, out_optional, spec
 
@@ -1805,7 +1883,7 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
     if ran is None:
         ran = UniversalSpace() if linear else UniversalSet()
 
-    call_has_out, call_out_optional, _ = _dispatch_call_args(object, call)
+    call_has_out, call_out_optional, _ = _dispatch_call_args(unbound_call=call)
 
     attrs = {'inverse': inv, 'derivative': deriv}
 
