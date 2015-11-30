@@ -165,7 +165,7 @@ class DiscreteLp(Discretization):
     @property
     def ndim(self):
         """Number of dimensions."""
-        return self.space.ndim
+        return self.grid.ndim
 
     def points(self):
         """All points in the sampling grid."""
