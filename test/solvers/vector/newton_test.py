@@ -85,7 +85,7 @@ def test_newton_solver_quadratic():
     # Vector representation
     n = H.shape[0]
     rn = odl.Rn(n)
-    xvec = rn.element(1)
+    xvec = rn.one()
     c = rn.element([2, 4, 3])
 
     # Optimal solution, found by solving 0 = gradf(x) = Hx + c

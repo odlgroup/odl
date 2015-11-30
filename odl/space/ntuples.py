@@ -83,7 +83,7 @@ class Ntuples(NtuplesBase):
 
         Parameters
         ----------
-        inp : array-like or scalar, optional
+        inp : array-like, optional
             Input to initialize the new element.
 
             If ``inp`` is `None`, an empty element is created with no
@@ -92,10 +92,7 @@ class Ntuples(NtuplesBase):
             If ``inp`` is a `numpy.ndarray` of shape ``(size,)``
             and the same data type as this space, the array is wrapped,
             not copied.
-            Other array-like objects are copied (with broadcasting
-            if necessary).
-
-            If a single value is given, it is copied to all entries.
+            Other array-like objects are copied.
 
         Returns
         -------
@@ -140,14 +137,9 @@ class Ntuples(NtuplesBase):
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
-                inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
+                arr = np.atleast_1d(inp).astype(self.dtype, copy=False)
 
-                if inp.shape == (1,):
-                    arr = np.empty(self.size, dtype=self.dtype)
-                    arr[:] = inp
-                elif inp.shape == (self.size,):
-                    arr = inp
-                else:
+                if arr.shape != (self.size,):
                     raise ValueError('input shape {} not broadcastable to '
                                      'shape ({},).'.format(inp.shape,
                                                            self.size))
