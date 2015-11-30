@@ -130,15 +130,16 @@ def _shepp_logan_3d(space):
 
         # Find the pixels within the ellipse
         scales = [1 / a2, 1 / b2, 1 / c2]
-        mat = [[cpsi*cphi-ctheta*sphi*spsi,
-                cpsi*sphi+ctheta*cphi*spsi,
-                spsi*stheta],
-               [-spsi*cphi-ctheta*sphi*cpsi,
-                -spsi*sphi+ctheta*cphi*cpsi,
-                cpsi*stheta],
-               [stheta*sphi,
-                -stheta*cphi,
+        mat = [[cpsi * cphi - ctheta * sphi * spsi,
+                cpsi * sphi + ctheta * cphi * spsi,
+                spsi * stheta],
+               [-spsi * cphi - ctheta * sphi * cpsi,
+                -spsi * sphi + ctheta * cphi * cpsi,
+                cpsi * stheta],
+               [stheta * sphi,
+                -stheta * cphi,
                 ctheta]]
+
         radius = np.dot(scales, np.dot(mat, offset_points.T) ** 2)
         inside = radius <= 1
 
