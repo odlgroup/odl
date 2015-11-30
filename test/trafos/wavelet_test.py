@@ -79,7 +79,7 @@ def test_wavelet_decomposition3d_et_reconstruction3d():
     wbasis = pywt.Wavelet('db1')
     nscales = 3
     wavelet_coeffs = wavelet_decomposition3d(x, wbasis, mode, nscales)
-    shape_true = (nscales+1, )
+    shape_true = (nscales + 1, )
     assert all_equal(np.shape(wavelet_coeffs), shape_true)
 
     reconstruction = wavelet_reconstruction3d(wavelet_coeffs, wbasis, mode,
@@ -134,7 +134,7 @@ def test_pywt_coeff_to_array_et_array_to_pywt_coeff3d():
 
 @skip_if_no_wavelet
 def test_DiscreteWaveletTrafo():
-    #Verify that the operator works as axpected
+    # Verify that the operator works as axpected
     # 2D test
     n = 16
     x = np.zeros((n, n))
@@ -157,7 +157,7 @@ def test_DiscreteWaveletTrafo():
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
 
-    #Determine the correct range for Wop and verify that coeffs
+    # Determine the correct range for Wop and verify that coeffs
     # is an element of it
     ran_size = np.prod(size_list[0])
     ran_size += sum(3 * np.prod(shape) for shape in size_list[1:-1])
