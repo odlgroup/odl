@@ -17,6 +17,11 @@
 
 
 """Backend for STIR: Software for Tomographic Reconstruction
+
+Back and forward projectors for PET.
+
+See the STIR `webpage
+<http://stir.sourceforge.net/>`_ for more information.
 """
 
 # Imports for common Python 2/3 codebase
@@ -38,17 +43,39 @@ __all__ = ('StirProjectorFromFile', 'STIR_AVAILABLE')
 
 class StirProjectorFromFile(Operator):
 
-    """ A forward projector using STIR input files """
+    """ A forward projector using STIR input files.
 
-    def __init__(self, dom, ran, data_template, projection_template):
+    Uses "ForwardProjectorByBinUsingProjMatrixByBin" as a projector.
+    """
+
+    def __init__(self, dom, ran, volume_file, projection_file):
+        """ Initialize a new projector.
+
+        Parameters
+        ----------
+        dom : `DiscreteLp`
+            Volume of the projection. Needs to have the same shape as given
+            by the ini file ``data_template``.
+        ran : `DiscreteLp`
+            Projection space. Needs to have the same shape as given by the
+            geometry in ``projection_template`` when converted to an array
+            using the projection_data when cast using ``to_array``.
+        volume_file : `str`, STIR input file path
+            An interfile of type '.hv' giving a description of the volume
+            geometry.
+        projection_file : `str`, STIR input file path
+            An interfile of type '.hs' giving a description of the projection
+            (volume) geometry.
+
+        """
         # Read template of the projection
-        proj_data_in = stir.ProjData.read_from_file(projection_template)
+        proj_data_in = stir.ProjData.read_from_file(projection_file)
         self.proj_data_info = proj_data_in.get_proj_data_info()
         self.proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
                                                proj_data_in.get_proj_data_info())
 
         # Read template data for the volume
-        self.volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(data_template)
+        self.volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
 
         # Create forward projection by matrix
         self.proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
@@ -56,30 +83,36 @@ class StirProjectorFromFile(Operator):
         self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(self.proj_matrix)
         self.projector.set_up(self.proj_data_info, self.volume)
 
+        # Check data sizes
         assert dom.shape == self.volume.shape()
         assert ran.shape == self.proj_data.to_array().shape()
 
         super().__init__(dom, ran, True)
 
+        self._adjoint = StirProjectorFromFileAdjoint(self.range, self.domain,
+                                                     self.proj_matrix,
+                                                     self.volume, self.proj_data)
+
     def _call(self, volume):
+        """Forward project a volume."""
         # Set volume data
         self.volume.fill(volume.asarray().flat)
 
         # project
+        old_verbosity = stir.Verbosity.get()
+        stir.Verbosity.set(0)
         self.projector.forward_project(self.proj_data, self.volume)
+        stir.Verbosity.set(old_verbosity)
 
-        # make odl
+        # make odl data
         arr = stir.stirextra.to_numpy(self.proj_data)
-        proj = self.range.element(arr)
 
-        return proj
+        return self.range.element(arr)
 
     @property
     def adjoint(self):
         """The back-projector associated with this array."""
-        return StirProjectorFromFileAdjoint(self.range, self.domain,
-                                            self.proj_matrix,
-                                            self.volume, self.proj_data)
+        return self._adjoint
 
 
 class StirProjectorFromFileAdjoint(Operator):
@@ -90,6 +123,7 @@ class StirProjectorFromFileAdjoint(Operator):
     """
 
     def __init__(self, dom, ran, proj_matrix, volume, projections):
+        """Initialize a new back-projector."""
         super().__init__(dom, ran, True)
         self.volume = volume
         self.proj_data = projections
@@ -98,14 +132,17 @@ class StirProjectorFromFileAdjoint(Operator):
         self.back_proj.set_up(self.proj_data.get_proj_data_info(), self.volume)
 
     def _call(self, projections):
+        """Back project."""
         # Set projection data
         self.proj_data.fill(projections.asarray().flat)
 
         # back-project
+        old_verbosity = stir.Verbosity.get()
+        stir.Verbosity.set(0)
         self.back_proj.back_project(self.volume, self.proj_data)
+        stir.Verbosity.set(old_verbosity)
 
-        # make odl
+        # make odl data
         arr = stir.stirextra.to_numpy(self.volume)
-        vol = self.range.element(arr)
 
-        return vol
+        return self.range.element(arr)

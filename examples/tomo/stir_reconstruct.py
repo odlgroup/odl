@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example projection and back-projection with stir."""
+"""Example reconstruction with stir."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -30,11 +30,11 @@ base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
 volume_file = str(pth.join(base, 'initial.hv'))
 projection_file = str(pth.join(base, 'small.hs'))
 
-recon_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
+recon_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([-1, -1, -1],
                                                           [1, 1, 1])),
                              [15, 64, 64])
 
-data_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
+data_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([-1, -1, -1],
                                                          [1, 1, 1])),
                             [37, 28, 56])
 
@@ -42,10 +42,12 @@ proj = odl.tomo.StirProjectorFromFile(recon_sp, data_sp,
                                       volume_file,
                                       projection_file)
 
-vol = recon_sp.one()
+vol = odl.util.shepp_logan(recon_sp)
 
-result = proj(vol)
-result.show()
+projections = proj(vol)
+op_norm_est_squared = proj.adjoint(projections).norm() / vol.norm()
+omega = 0.5 / op_norm_est_squared
 
-back_projected = proj.adjoint(result)
-back_projected.show()
+recon = recon_sp.zero()
+odl.solvers.landweber(proj, recon, projections, niter=50, omega=omega)
+recon.show()
