@@ -21,6 +21,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
+from past.builtins import basestring
 
 # External module imports
 import pytest
@@ -77,12 +78,12 @@ def test_vector_numpy():
     inp = ['a', 'b', 'c']
     x = vector(inp)
     assert isinstance(x, odl.NtuplesVector)
-    assert np.issubdtype(x.dtype, 'S')
+    assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, inp)
 
     x = vector([1, 2, 'inf'])  # Becomes string type
     assert isinstance(x, odl.NtuplesVector)
-    assert np.issubdtype(x.dtype, 'S')
+    assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, ['1', '2', 'inf'])
 
     # Input not one-dimensional

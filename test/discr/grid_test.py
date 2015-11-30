@@ -20,7 +20,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, str, zip
+from builtins import str, zip
 
 # External module imports
 import pytest
@@ -671,19 +671,10 @@ def test_stride():
     maxpt = (1.25, 0, 1)
     shape = (2, 1, 3)
 
-    stride = (0.5, 1, 3)
+    stride = (0.5, 0, 3)
 
     grid = RegularGrid(minpt, maxpt, shape)
     assert all_equal(grid.stride, stride)
-
-
-def test_cell_volume():
-    minpt = (0.75, 0, -5)
-    maxpt = (1.25, 0, 1)
-    shape = (2, 1, 3)
-
-    grid = RegularGrid(minpt, maxpt, shape)
-    assert grid.cell_volume == 1.5
 
 
 def test_regular_is_subgrid():

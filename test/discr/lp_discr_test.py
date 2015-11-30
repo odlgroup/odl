@@ -212,7 +212,7 @@ def test_factory_nd(exponent):
 def test_element_1d(exponent):
     space = odl.FunctionSpace(odl.Interval(0, 1))
     discr = odl.uniform_discr(space, 3, impl='numpy', exponent=exponent)
-    dspace = odl.Rn(3, exponent=exponent, weight=discr.grid.cell_volume)
+    dspace = odl.Rn(3, exponent=exponent, weight=discr.cell_volume)
     vec = discr.element()
     assert isinstance(vec, odl.DiscreteLpVector)
     assert vec.ntuple in dspace
@@ -221,7 +221,7 @@ def test_element_1d(exponent):
 def test_element_2d(exponent):
     space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
     discr = odl.uniform_discr(space, (3, 3), impl='numpy', exponent=exponent)
-    dspace = odl.Rn(9, exponent=exponent, weight=discr.grid.cell_volume)
+    dspace = odl.Rn(9, exponent=exponent, weight=discr.cell_volume)
     vec = discr.element()
     assert isinstance(vec, odl.DiscreteLpVector)
     assert vec.ntuple in dspace
@@ -458,6 +458,35 @@ def test_transpose():
     assert x.T(y) == x.inner(y)
     assert x.T.T == x
     assert all_equal(x.T.adjoint(1.0), x)
+
+
+def test_cell_size():
+    # Non-degenerated case, should be same as grid stride
+    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.uniform_discr(square_space, (2, 2), order='F')
+
+    assert all_equal(discr.cell_size, [0.5] * 2)
+
+    # Degenerated case, uses interval size in 1-point dimensions
+    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.uniform_discr(square_space, (2, 1), order='F')
+
+    assert all_equal(discr.cell_size, [0.5, 1])
+
+
+def test_cell_volume():
+    # Non-degenerated case
+    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.uniform_discr(square_space, (2, 2), order='F')
+
+    assert discr.cell_volume == 0.25
+
+    # Degenerated case, uses interval size in 1-point dimensions
+    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    discr = odl.uniform_discr(square_space, (2, 1), order='F')
+
+    assert discr.cell_volume == 0.5
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

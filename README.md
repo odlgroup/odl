@@ -68,14 +68,15 @@ From here follow the instructions in [odlpp](https://github.com/odlgroup/odlpp) 
 Requirements
 ------------
 
-- [numpy](https://github.com/numpy/numpy) >= 1.8
+- [numpy](https://github.com/numpy/numpy) >= 1.9
 - [scipy](https://github.com/scipy/scipy) >= 0.14
-- [python-future](https://pypi.python.org/pypi/future/)
+- [python-future](https://pypi.python.org/pypi/future/) >= 0.14
+- [matplotlib](http://matplotlib.org/) for plotting.
 
 Optional
 --------
 
-- [odlpp](https://github.com/odlgroup/odlpp) for GPU support (optional).
+- [odlpp](https://github.com/odlgroup/odlpp) for GPU support.
 - [pytest](https://pypi.python.org/pypi/pytest) >= 2.7.0 for unit tests
 - [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0 for test coverage report
 

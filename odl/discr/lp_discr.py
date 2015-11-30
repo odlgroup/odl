@@ -34,7 +34,7 @@ import numpy as np
 from odl.discr.discretization import (Discretization, DiscretizationVector,
                                       dspace_type)
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
-from odl.discr.grid import uniform_sampling
+from odl.discr.grid import uniform_sampling, RegularGrid
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
@@ -167,6 +167,23 @@ class DiscreteLp(Discretization):
         """Number of dimensions."""
         return self.grid.ndim
 
+    @property
+    def cell_size(self):
+        """Cell size of an underlying regular grid."""
+        if not isinstance(self.grid, RegularGrid):
+            raise NotImplementedError('cell size not defined for non-uniform '
+                                      'grids. Use `grid.cell_sizes()` '
+                                      'instead.')
+        csize = self.grid.stride
+        idcs = np.where(csize == 0)
+        csize[idcs] = self.domain.size[idcs]
+        return csize
+
+    @property
+    def cell_volume(self):
+        """Cell volume of an underlying regular grid."""
+        return float(np.prod(self.cell_size))
+
     def points(self):
         """All points in the sampling grid."""
         return self.grid.points(order=self.order)
@@ -283,8 +300,19 @@ class DiscreteLpVector(DiscretizationVector):
 
     @property
     def shape(self):
-        """Shape of the underlying grid."""
-        return self.space.shape
+        """Multi-dimensional shape of this discrete function."""
+        # override shape
+        return self.space.grid.shape
+
+    @property
+    def cell_size(self):
+        """Cell size of an underlying regular grid."""
+        return self.space.cell_size
+
+    @property
+    def cell_volume(self):
+        """Cell volume of an underlying regular grid."""
+        return self.space.cell_volume
 
     def __setitem__(self, indices, values):
         """Set values of this vector.
@@ -436,7 +464,10 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
         raise ValueError('weighting {!r} not understood.'.format(weighting))
 
     if weighting_ == 'simple':
-        weight = np.prod(grid.stride)
+        csize = grid.stride
+        idcs = np.where(csize == 0)
+        csize[idcs] = fspace.domain.size[idcs]
+        weight = np.prod(csize)
     else:  # weighting_ == 'consistent'
         # TODO: implement
         raise NotImplementedError
