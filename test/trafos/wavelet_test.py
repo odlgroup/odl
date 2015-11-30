@@ -197,7 +197,7 @@ def test_DiscreteWaveletTrafo():
     Wop = DiscreteWaveletTrafo(disc_domain, nscales, wbasis, mode)
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
-    #Determine the correct range for Wop and verify that coeffs
+    # Determine the correct range for Wop and verify that coeffs
     # is an element of it
     ran_size = np.prod(size_list[0])
     ran_size += sum(7 * np.prod(shape) for shape in size_list[1:-1])
