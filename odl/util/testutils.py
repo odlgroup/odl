@@ -149,8 +149,9 @@ try:
     import pytest
     skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
                                          reason='CUDA not available')
-    skip_if_no_wavelet = pytest.mark.skipif("not odl.trafos.wavelet.WAVELET_AVAILABLE",
-                                            reason='Wavelet not available')
+    skip_if_no_wavelet = pytest.mark.skipif(
+        "not odl.trafos.wavelet.WAVELET_AVAILABLE",
+        reason='Wavelet not available')
 except ImportError:
     def do_nothing(function):
         return function
