@@ -25,7 +25,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.set.sets import UniversalSet
 from odl.operator.operator import Operator
 
 try:
