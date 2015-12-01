@@ -239,7 +239,7 @@ class Strings(Set):
         return 'Strings({})'.format(self.length)
 
 
-class Field(with_metaclass(ABCMeta, Set)):
+class Field(Set):
     """Any set that satisfies the field axioms
 
     For example `RealNumbers`, `ComplexNumbers` or

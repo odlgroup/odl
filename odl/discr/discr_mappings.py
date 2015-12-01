@@ -23,10 +23,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super, str, zip
-from odl.util.utility import with_metaclass
 
 # External imports
-from abc import ABCMeta
 import numpy as np
 from scipy.interpolate import interpnd
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
@@ -44,7 +42,7 @@ __all__ = ('FunctionSetMapping',
            'NearestInterpolation', 'LinearInterpolation')
 
 
-class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
+class FunctionSetMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
@@ -104,7 +102,7 @@ class FunctionSetMapping(with_metaclass(ABCMeta, Operator)):
 
         dom = fset if map_type == 'restriction' else dspace
         ran = dspace if map_type == 'restriction' else fset
-        super().__init__(dom, ran, linear=linear)
+        Operator.__init__(self, dom, ran, linear=linear)
         self._grid = grid
         self._order = order
 
@@ -148,7 +146,7 @@ class RawGridCollocation(FunctionSetMapping):
     used by all core discretization classes.
     """
 
-    def __init__(self, ip_fset, grid, dspace, order='C'):
+    def __init__(self, ip_fset, grid, dspace, order='C', linear=False):
         """Initialize a new instance.
 
         Parameters
@@ -169,7 +167,8 @@ class RawGridCollocation(FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        super().__init__('restriction', ip_fset, grid, dspace, order)
+        FunctionSetMapping.__init__(self, 'restriction', ip_fset, grid, dspace,
+                                    order, linear)
 
         # TODO: remove this requirement depending on the vectorization
         # solution
@@ -258,7 +257,7 @@ class RawGridCollocation(FunctionSetMapping):
         return self.range.element(values)
 
 
-class GridCollocation(RawGridCollocation, FunctionSetMapping):
+class GridCollocation(RawGridCollocation):
 
     """Function evaluation at grid points.
 
@@ -289,16 +288,15 @@ class GridCollocation(RawGridCollocation, FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        RawGridCollocation.__init__(self, ip_fspace, grid, dspace, order)
-        FunctionSetMapping.__init__(self, 'restriction', ip_fspace,
-                                    grid, dspace, order, linear=True)
+        RawGridCollocation.__init__(self, ip_fspace, grid, dspace, order,
+                                    linear=True)
 
 
 class RawNearestInterpolation(FunctionSetMapping):
 
     """Nearest neighbor interpolation as a raw `Operator`."""
 
-    def __init__(self, ip_fset, grid, dspace, order='C'):
+    def __init__(self, ip_fset, grid, dspace, order='C', linear=False):
         """Initialize a new `RawNearestInterpolation` instance.
 
         Parameters
@@ -319,7 +317,8 @@ class RawNearestInterpolation(FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        super().__init__('extension', ip_fset, grid, dspace, order)
+        FunctionSetMapping.__init__(self, 'extension', ip_fset, grid, dspace,
+                                    order, linear)
 
         # TODO: remove this requirement depending on the vectorization
         # solution
@@ -411,8 +410,7 @@ class RawNearestInterpolation(FunctionSetMapping):
         return self.range.element(func)
 
 
-class NearestInterpolation(RawNearestInterpolation,
-                           FunctionSetMapping):
+class NearestInterpolation(RawNearestInterpolation):
 
     """Nearest neighbor interpolation as a linear operator."""
 
@@ -472,9 +470,8 @@ class NearestInterpolation(RawNearestInterpolation,
         >>> function(0.3, 0.6)  # closest to index (1, 1) -> 3
         (3+4j)
         """
-        RawNearestInterpolation.__init__(self, ip_fspace, grid, dspace, order)
-        FunctionSetMapping.__init__(self, 'extension', ip_fspace,
-                                    grid, dspace, order, linear=True)
+        RawNearestInterpolation.__init__(self, ip_fspace, grid, dspace, order,
+                                         linear=True)
 
 
 class LinearInterpolation(FunctionSetMapping):

@@ -121,7 +121,7 @@ def vector_examples(space):
                 inside = np.logical_and(inside, points < mean + std)
                 inside = np.logical_and(inside, mean - std < points)
 
-            return inside.astype(space.dtype)
+            return inside.astype(space.dtype, copy=False)
 
         yield ('Cube', element(_cube_fun))
 
@@ -132,7 +132,7 @@ def vector_examples(space):
 
                 for points, mean, std in zip(args, means, stds):
                     r += (points - mean) ** 2 / std ** 2
-                return (r < 1.0).astype(space.dtype)
+                return (r < 1.0).astype(space.dtype, copy=False)
 
             yield ('Sphere', element(_sphere_fun))
 

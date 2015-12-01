@@ -20,7 +20,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, str
+from builtins import range
 
 # External module imports
 import pytest
@@ -47,12 +47,12 @@ pytestmark = pytest.mark.skipif("not odl.CUDA_AVAILABLE")
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.rand(fn.size).astype(fn.dtype)
+        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.integer):
-        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
     else:
         return (np.random.rand(fn.size) +
-                1j * np.random.rand(fn.size)).astype(fn.dtype)
+                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
 
 
 def _element(fn):

@@ -59,8 +59,8 @@ class IntervalProd(Set):
         >>> rbox
         IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
         """
-        self._begin = np.atleast_1d(begin).astype(np.float64)
-        self._end = np.atleast_1d(end).astype(np.float64)
+        self._begin = np.atleast_1d(begin).astype('float64')
+        self._end = np.atleast_1d(end).astype('float64')
 
         if self._begin.ndim > 1:
             raise ValueError('begin {} is {}- instead of 1-dimensional.'

@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int, super
+from builtins import int
 
 # External module imports
 from abc import ABCMeta, abstractmethod
@@ -42,7 +42,7 @@ __all__ = ('NtuplesBase', 'NtuplesBaseVector',
            'FnWeightingBase')
 
 
-class NtuplesBase(with_metaclass(ABCMeta, Set)):
+class NtuplesBase(Set):
 
     """Base class for sets of n-tuples independent of implementation."""
 
@@ -168,41 +168,6 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """Initialize a new instance."""
         self._space = space
 
-    @property
-    def space(self):
-        """Space to which this vector."""
-        return self._space
-
-    @property
-    def ndim(self):
-        """Number of dimensions, always 1."""
-        return 1
-
-    @property
-    def dtype(self):
-        """Length of this vector, equal to space size."""
-        return self.space.dtype
-
-    @property
-    def size(self):
-        """Length of this vector, equal to space size."""
-        return self.space.size
-
-    @property
-    def shape(self):
-        """Shape of this vector, equals ``(size,)``."""
-        return (self.size,)
-
-    @property
-    def itemsize(self):
-        """The size in bytes on one element of this type."""
-        return self.dtype.itemsize
-
-    @property
-    def nbytes(self):
-        """The number of bytes this vector uses in memory."""
-        return self.size * self.itemsize
-
     @abstractmethod
     def copy(self):
         """Create an identical (deep) copy of this vector."""
@@ -227,24 +192,6 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         -------
         asarray : `numpy.ndarray`
             Numpy array of the same type as the space.
-        """
-
-    def __len__(self):
-        """``v.__len__() <==> len(v)``.
-
-        Return the number of space dimensions.
-        """
-        return self.space.size
-
-    @abstractmethod
-    def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
-
-        Returns
-        -------
-        equals : `bool`
-            `True` if all entries of ``other`` are equal to this
-            vector's entries, `False` otherwise.
         """
 
     @abstractmethod
@@ -280,6 +227,59 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             or single value).
         """
 
+    @abstractmethod
+    def __eq__(self, other):
+        """``vec.__eq__(other) <==> vec == other``.
+
+        Returns
+        -------
+        equals : `bool`
+            `True` if all entries of ``other`` are equal to this
+            vector's entries, `False` otherwise.
+        """
+
+    @property
+    def space(self):
+        """Space to which this vector."""
+        return self._space
+
+    @property
+    def ndim(self):
+        """Number of dimensions, always 1."""
+        return 1
+
+    @property
+    def dtype(self):
+        """Length of this vector, equal to space size."""
+        return self.space.dtype
+
+    @property
+    def size(self):
+        """Length of this vector, equal to space size."""
+        return self.space.size
+
+    @property
+    def shape(self):
+        """Shape of this vector, equals ``(size,)``."""
+        return (self.size,)
+
+    @property
+    def itemsize(self):
+        """The size in bytes on one element of this type."""
+        return self.dtype.itemsize
+
+    @property
+    def nbytes(self):
+        """The number of bytes this vector uses in memory."""
+        return self.size * self.itemsize
+
+    def __len__(self):
+        """``v.__len__() <==> len(v)``.
+
+        Return the number of space dimensions.
+        """
+        return self.space.size
+
     def __array__(self, dtype=None):
         """Return a numpy array of this ntuple.
 
@@ -295,7 +295,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         if dtype is None:
             return self.asarray()
         else:
-            return self.asarray().astype(dtype)
+            return self.asarray().astype(dtype, copy=False)
 
     def __array_wrap__(self, obj):
         """Return a new vector from the data in obj.
@@ -346,7 +346,7 @@ class FnBase(NtuplesBase, LinearSpace):
             objects or as string.
             Only scalar data types (numbers) are allowed.
         """
-        super().__init__(size, dtype)
+        NtuplesBase.__init__(self, size, dtype)
         if not is_scalar_dtype(self.dtype):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 
@@ -363,11 +363,6 @@ class FnBase(NtuplesBase, LinearSpace):
     def one(self):
         """Create a vector of ones."""
 
-    @property
-    def field(self):
-        """The field of this space."""
-        return self._field
-
     @abstractmethod
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two vectors, assigned to ``out``."""
@@ -375,6 +370,11 @@ class FnBase(NtuplesBase, LinearSpace):
     @abstractmethod
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to ``out``."""
+
+    @property
+    def field(self):
+        """The field of this space."""
+        return self._field
 
     @property
     def element_type(self):
@@ -397,7 +397,7 @@ class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
         return LinearSpaceVector.copy(self)
 
 
-class FnWeightingBase(with_metaclass(ABCMeta, object)):
+class FnWeightingBase(object):
 
     """Abstract base class for weighting of `FnBase` spaces.
 

@@ -36,10 +36,9 @@ from __future__ import print_function, division, absolute_import
 from builtins import object, range, str
 from future import standard_library
 standard_library.install_aliases()
-from odl.util.utility import with_metaclass
 
 # External module imports
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import abstractmethod
 import math as m
 
 # ODL imports
@@ -168,7 +167,7 @@ class LinearSpace(Set):
         This is the strict default where spaces must be equal.
         Subclasses may choose to implement a less strict check.
         """
-        return isinstance(other, LinearSpaceVector) and other.space == self
+        return getattr(other, 'space', None) == self
 
     # Error checking variant of methods
     def lincomb(self, a, x1, b=None, x2=None, out=None):
@@ -392,7 +391,7 @@ class LinearSpace(Set):
         return LinearSpaceVector
 
 
-class LinearSpaceVector(with_metaclass(ABCMeta, object)):
+class LinearSpaceVector(object):
     """Abstract `LinearSpace` element.
 
     Not intended for creation of vectors, use the space's
