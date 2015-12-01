@@ -52,6 +52,14 @@ def _shepp_logan_2d(space):
 
     # Create the pixel grid
     points = space.points()
+    minp = space.grid.min()
+    maxp = space.grid.max()
+
+    # move points to [0, 1]
+    points = (points - minp) / (maxp - minp)
+
+    # move to [-1, 1]
+    points = points * 2 - 1
 
     for ellip in ellipses:
         I = ellip[0]
@@ -105,6 +113,14 @@ def _shepp_logan_3d(space):
 
     # Create the pixel grid
     points = space.points()
+    minp = space.grid.min()
+    maxp = space.grid.max()
+
+    # move points to [0, 1]
+    points = (points - minp) / (maxp - minp)
+
+    # move to [-1, 1]
+    points = points * 2 - 1
 
     for ellip in ellipses:
         I = ellip[0]
