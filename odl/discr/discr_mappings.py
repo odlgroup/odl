@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super, str, zip
+from builtins import str, zip
 
 # External imports
 import numpy as np
@@ -104,7 +104,7 @@ class FunctionSetMapping(Operator):
 
         dom = fset if map_type_ == 'restriction' else dspace
         ran = dspace if map_type_ == 'restriction' else fset
-        super().__init__(dom, ran, linear=linear)
+        Operator.__init__(self, dom, ran, linear=linear)
         self._grid = grid
 
         if self.is_linear:
@@ -168,11 +168,9 @@ class GridCollocation(FunctionSetMapping):
             slowly, 'F' vice versa.
         """
         linear = True if isinstance(ip_fset, FunctionSpace) else False
-        super().__init__('restriction', ip_fset, grid, dspace, order,
-                         linear=linear)
+        FunctionSetMapping.__init__(self, 'restriction', ip_fset, grid,
+                                    dspace, order, linear=linear)
 
-        # TODO: remove this requirement depending on the vectorization
-        # solution
         if not isinstance(ip_fset.domain, IntervalProd):
             raise TypeError('domain {!r} of the function set is not an '
                             '`IntervalProd` instance.'
@@ -295,8 +293,13 @@ class NearestInterpolation(FunctionSetMapping):
             slowly, 'F' vice versa.
         """
         linear = True if isinstance(ip_fset, FunctionSpace) else False
-        super().__init__('extension', ip_fset, grid, dspace, order,
-                         linear=linear)
+        FunctionSetMapping.__init__(self, 'extension', ip_fset, grid, dspace,
+                                    order, linear=linear)
+
+        if not isinstance(ip_fset.domain, IntervalProd):
+            raise TypeError('domain {!r} of the function set is not an '
+                            '`IntervalProd` instance.'
+                            ''.format(ip_fset.domain))
 
     def _call(self, x):
         """The raw method for out-of-place evaluation.
@@ -406,12 +409,10 @@ class LinearInterpolation(FunctionSetMapping):
             raise TypeError('function space domain {!r} is not an '
                             '`IntervalProd` instance.'.format(ip_fspace))
 
-        super().__init__(self, 'extension', ip_fspace, grid, dspace,
-                         order, linear=True)
+        FunctionSetMapping.__init__(self, 'extension', ip_fspace, grid, dspace,
+                                    order, linear=True)
 
-    # TODO: Implement _apply()
-
-    def _call(self, x):
+    def _call(self, x, out=None):
         """The raw method for out-of-place evaluation.
 
         Parameters
@@ -429,6 +430,7 @@ class LinearInterpolation(FunctionSetMapping):
         --------
         TODO: implement an example!
         """
+        # TODO: implement
         raise NotImplementedError
 
 

@@ -27,12 +27,13 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int, super
+from builtins import super
 from future.utils import native
 
 # External module imports
 # pylint: disable=no-name-in-module
 import ctypes
+from numbers import Integral
 from functools import partial
 from math import sqrt
 import numpy as np
@@ -83,7 +84,7 @@ class Ntuples(NtuplesBase):
 
         Parameters
         ----------
-        inp : array-like or scalar, optional
+        inp : array-like, optional
             Input to initialize the new element.
 
             If ``inp`` is `None`, an empty element is created with no
@@ -92,10 +93,7 @@ class Ntuples(NtuplesBase):
             If ``inp`` is a `numpy.ndarray` of shape ``(size,)``
             and the same data type as this space, the array is wrapped,
             not copied.
-            Other array-like objects are copied (with broadcasting
-            if necessary).
-
-            If a single value is given, it is copied to all entries.
+            Other array-like objects are copied.
 
         Returns
         -------
@@ -141,15 +139,7 @@ class Ntuples(NtuplesBase):
         else:
             if data_ptr is None:
                 inp = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
-
-                # TODO: this causes `op(1)` to be interpreted as
-                # `op(<array of ones>)`. Do we want that?
-                if inp.shape == (1,):
-                    arr = np.empty(self.size, dtype=self.dtype)
-                    arr[:] = inp
-                elif inp.shape == (self.size,):
-                    arr = inp
-                else:
+                if arr.shape != (self.size,):
                     raise ValueError('input shape {} not broadcastable to '
                                      'shape ({},).'.format(inp.shape,
                                                            self.size))
@@ -184,7 +174,7 @@ class NtuplesVector(NtuplesBaseVector):
 
         self._data = data
 
-        super().__init__(space)
+        NtuplesBaseVector.__init__(self, space)
 
     @property
     def data(self):
@@ -344,12 +334,11 @@ class NtuplesVector(NtuplesBaseVector):
         >>> x[1:3].space
         Ntuples(2, '<U6')
         """
-        try:
-            return self.data[int(indices)]  # single index
-        except TypeError:
+        if isinstance(indices, Integral):
+            return self.data[indices]  # single index
+        else:
             arr = self.data[indices]
-            return type(self.space)(
-                len(arr), dtype=self.dtype).element(arr)
+            return type(self.space)(len(arr), dtype=self.dtype).element(arr)
 
     def __setitem__(self, indices, values):
         """Set values of this vector.
@@ -678,7 +667,7 @@ class Fn(FnBase, Ntuples):
 
                 Default: `False`.
         """
-        super().__init__(size, dtype)
+        FnBase.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
@@ -1023,7 +1012,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         if not isinstance(space, Fn):
             raise TypeError('{!r} not an `Fn` instance.'
                             ''.format(space))
-        super().__init__(space, data)
+
+        NtuplesVector.__init__(self, space, data)
 
     @property
     def real(self):
@@ -1206,7 +1196,7 @@ class Cn(Fn):
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
-        super().__init__(size, dtype, **kwargs)
+        Fn.__init__(self, size, dtype, **kwargs)
 
         if not is_complex_floating_dtype(self._dtype):
             raise TypeError('data type {!r} not a complex floating-point type.'
@@ -1272,7 +1262,7 @@ class Rn(Fn):
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
-        super().__init__(size, dtype, **kwargs)
+        Fn.__init__(self, size, dtype, **kwargs)
 
         if not is_real_floating_dtype(self.dtype):
             raise TypeError('data type {!r} not a real floating-point type.'
@@ -1650,8 +1640,8 @@ class FnMatrixWeighting(FnWeightingBase):
         """
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
+                                 dist_using_inner=dist_using_inner)
 
         if isspmatrix(matrix):
             self._matrix = matrix
@@ -1679,6 +1669,8 @@ class FnMatrixWeighting(FnWeightingBase):
             eigval, eigvec = sp.linalg.eigh(self._matrix)
             eigval **= 1.0 / self._exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
+        else:
+            self._mat_pow = None
 
         self._cache_mat_pow = bool(cache_mat_pow)
 
@@ -1833,7 +1825,7 @@ class FnMatrixWeighting(FnWeightingBase):
                 norm_squared = 0.0  # Compensate for numerical error
             return sqrt(norm_squared)
         else:
-            if not hasattr(self, '_mat_pow'):
+            if self._mat_pow is None:
                 # This case can only be reached if p != 1,2,inf
                 if self.matrix_issparse:
                     raise NotImplementedError('sparse matrix powers not '
@@ -2132,8 +2124,8 @@ class FnConstWeighting(FnWeightingBase):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
+                                 dist_using_inner=dist_using_inner)
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
@@ -2288,6 +2280,8 @@ class FnNoWeighting(FnConstWeighting):
     _instance = None
 
     def __new__(cls, *args, **kwargs):
+        """ Implement singleton pattern if exp==2.0
+        """
         if len(args) == 0:
             exponent = kwargs.pop('exponent', 2.0)
             dist_using_inner = kwargs.pop('dist_using_inner', False)
@@ -2328,8 +2322,10 @@ class FnNoWeighting(FnConstWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(constant=1.0, exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        if not hasattr(self, '_initialized'):
+            FnConstWeighting.__init__(self, constant=1.0, exponent=exponent,
+                                      dist_using_inner=dist_using_inner)
+            self._initialized = True
 
     def __repr__(self):
         """``w.__repr__() <==> repr(w)``."""

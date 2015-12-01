@@ -50,3 +50,28 @@ Errors related to Python 2/3
    **S:** We recommend to include ``from builtins import super`` in your
    module to backport the new Py3 ``super()`` function. This way, your code
    will run in both Python 2 and 3.
+   
+   
+Usage
+-----
+
+#. **Q:** I want to write an `Operator` of with two input arguments, for example
+   
+   .. math::
+      f(x, y) \rightarrow x + y
+    
+   But ODL only supports single arguments. How do I do this? 
+
+   **P:** Mathematically, such a operator is defined 
+   
+   .. math::
+      X \times Y \rightarrow Z
+      
+   ODL adhers to the strict definition of this and hence only takes one parameter :math:`x \in X \times Y`. This :math:`x` is then a tuple of elements :math:`x = [x_1, x_2], x_1 \in X, x_2 \in Y`.
+
+   **S:** The solution is to make the domain of the operator a `ProductSpace`, 
+   if :math:`X` and :math:`Y` are `LinearSpace`:s, or a `CartesianProduct` if they are
+   simply `Set`:s. Thus you can do
+   
+   .. math::
+      f([x, y]) \rightarrow x + y

@@ -22,7 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import int, object
-from past.builtins import basestring
 
 # External
 # pylint: disable=no-name-in-module
@@ -32,17 +31,16 @@ from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
-
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
 
 def _places(a, b, default=5):
-
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
+    small_dtypes = [np.float32, np.complex64]
 
-    if any(dtype in [np.float32, np.complex64] for dtype in [dtype1, dtype2]):
+    if dtype1 in small_dtypes or dtype2 in small_dtypes:
         return 3
     else:
         return default
@@ -79,14 +77,18 @@ def all_equal(iter1, iter2):
     # Sentinel object used to check that both iterators are the same length
     diff_length_sentinel = object()
 
+    try:
+        if iter1 == iter2:
+            return True
+    except ValueError:
+        pass
+
     if iter1 is None and iter2 is None:
         return True
 
     try:
         i1 = iter(iter1)
         i2 = iter(iter2)
-        if isinstance(iter1, basestring) or isinstance(iter2, basestring):
-            return iter1 == iter2
     except TypeError:
         return iter1 == iter2
 
@@ -105,13 +107,15 @@ def all_equal(iter1, iter2):
 
 def all_almost_equal(iter1, iter2, places=None):
     # Sentinel object used to check that both iterators are the same length
-    diff_length_sentinel = object()
 
-    if places is None:
-        places = _places(iter1, iter2, None)
+    if iter1 is iter2 or iter1 == iter2:
+        return True
 
     if iter1 is None and iter2 is None:
         return True
+
+    if places is None:
+        places = _places(iter1, iter2, None)
 
     try:
         i1 = iter(iter1)
@@ -119,6 +123,7 @@ def all_almost_equal(iter1, iter2, places=None):
     except TypeError:
         return almost_equal(iter1, iter2, places)
 
+    diff_length_sentinel = object()
     for [ip1, ip2] in zip_longest(i1, i2,
                                   fillvalue=diff_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
