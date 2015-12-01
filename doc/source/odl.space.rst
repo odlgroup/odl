@@ -13,6 +13,7 @@ Concrete vector spaces.
    odl.space.cu_ntuples
    odl.space.fspace
    odl.space.ntuples
+   odl.space.space_utils
 
 
 

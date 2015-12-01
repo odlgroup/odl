@@ -32,7 +32,7 @@ from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
 

@@ -28,15 +28,10 @@ __all__ = ('vector',)
 import numpy as np
 
 # Internal
-from odl.space import CUDA_AVAILABLE
 from odl.space.ntuples import Rn, Cn, Fn, Ntuples
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
-if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaRn, CudaFn, CudaNtuples
-    CudaCn = type(None)  # TODO: add when available
-else:
-    CudaRn = CudaCn = CudaFn = CudaNtuples = type(None)
+from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaRn, CudaFn, CudaNtuples
 
 
 def vector(array, dtype=None, impl='numpy'):
