@@ -295,7 +295,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         if dtype is None:
             return self.asarray()
         else:
-            return self.asarray().astype(dtype)
+            return self.asarray().astype(dtype, copy=False)
 
     def __array_wrap__(self, obj):
         """Return a new vector from the data in obj.

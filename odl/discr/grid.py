@@ -118,7 +118,7 @@ class TensorGrid(Set):
         if not coord_vectors:
             raise ValueError('No coordinate vectors given.')
 
-        vecs = tuple(np.atleast_1d(vec).astype(float)
+        vecs = tuple(np.atleast_1d(vec).astype('float64')
                      for vec in coord_vectors)
         for i, vec in enumerate(vecs):
 
@@ -785,9 +785,9 @@ class RegularGrid(TensorGrid):
         >>> rg.ndim, rg.ntotal
         (2, 6)
         """
-        min_pt = np.atleast_1d(min_pt).astype(np.float64)
-        max_pt = np.atleast_1d(max_pt).astype(np.float64)
-        shape = np.atleast_1d(shape).astype(np.int64)
+        min_pt = np.atleast_1d(min_pt).astype('float64')
+        max_pt = np.atleast_1d(max_pt).astype('float64')
+        shape = np.atleast_1d(shape).astype('int64')
 
         if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
             raise ValueError('input arrays have dimensions {}, {}, {} '
@@ -1134,7 +1134,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
     >>> grid.coord_vectors
     (array([-1.5, -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))
     """
-    num_nodes = np.atleast_1d(num_nodes).astype(np.int64)
+    num_nodes = np.atleast_1d(num_nodes).astype('int64')
 
     if not isinstance(intv_prod, IntervalProd):
         raise TypeError('interval product {!r} not an `IntervalProd` instance.'

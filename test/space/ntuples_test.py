@@ -23,7 +23,6 @@ standard_library.install_aliases()
 from builtins import range
 
 # External module imports
-from math import ceil
 import numpy as np
 import pytest
 import scipy as sp
@@ -49,12 +48,12 @@ from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.rand(fn.size).astype(fn.dtype)
+        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.integer):
-        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.complexfloating):
         return (np.random.rand(fn.size) +
-                1j * np.random.rand(fn.size)).astype(fn.dtype)
+                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
     else:
         raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
 
@@ -84,12 +83,14 @@ def _dense_matrix(fn):
     """Create a dense positive definite Hermitian matrix for `fn`."""
 
     if np.issubdtype(fn.dtype, np.floating):
-        mat = np.random.rand(fn.size, fn.size).astype(fn.dtype)
+        mat = np.random.rand(fn.size, fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.integer):
-        mat = np.random.randint(0, 10, (fn.size, fn.size)).astype(fn.dtype)
+        mat = np.random.randint(0, 10, (fn.size, fn.size)).astype(fn.dtype,
+                                                                  copy=False)
     elif np.issubdtype(fn.dtype, np.complexfloating):
         mat = (np.random.rand(fn.size, fn.size) +
-               1j * np.random.rand(fn.size, fn.size)).astype(fn.dtype)
+               1j * np.random.rand(fn.size, fn.size)).astype(fn.dtype,
+                                                             copy=False)
 
     # Make symmetric and positive definite
     return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)

@@ -48,12 +48,12 @@ from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.rand(fn.size).astype(fn.dtype)
+        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.integer):
-        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
     else:
         return (np.random.rand(fn.size) +
-                1j * np.random.rand(fn.size)).astype(fn.dtype)
+                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
 
 
 def _element(fn):
