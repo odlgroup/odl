@@ -210,7 +210,6 @@ def test_vector_class_init(fn):
     arr = _array(fn)
 
     FnVector(fn, arr)
-"""
     # Space has to be an actual space
     for non_space in [1, complex, np.array([1, 2])]:
         with pytest.raises(TypeError):
@@ -222,7 +221,7 @@ def test_vector_class_init(fn):
 
     # Data has to be a numpy array or correct dtype
     with pytest.raises(TypeError):
-        FnVector(fn, arr.astype(int))"""
+        FnVector(fn, arr.astype(int))
 
 
 def _test_lincomb(fn, a, b):
