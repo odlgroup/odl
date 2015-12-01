@@ -553,6 +553,20 @@ class ProductSpaceVector(LinearSpaceVector):
 
         return '{!r}.element({})'.format(self.space, inner_str)
 
+    def show(self, *args, **kwargs):
+        """ Display the parts of this vector.
+        """
+        title = kwargs.pop('title', 'ProductSpaceVector')
+        if len(self) < 5:
+            show_parts = self.parts
+            indices = range(len(self))
+        else:
+            show_parts = self.parts[:2] + self.parts[-2:]
+            indices = [0, 1, len(self) - 2, len(self) - 1]
+        for i, part in zip(indices, show_parts):
+            part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)
+
+
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)
