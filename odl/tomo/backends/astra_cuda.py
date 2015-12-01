@@ -75,7 +75,8 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
 
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
-    proj_geom = astra_projection_geometry(geometry)
+    proj_geom = astra_projection_geometry(geometry, vol_data.space)
+    # print(proj_geom)
 
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
@@ -89,14 +90,13 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
 
+    # TODO: check if axes have to be swapped
     # Wrap data
     if ndim == 2:
-        get_data = astra.data2d.get_shared
+        elem = proj_space.element(astra.data2d.get_shared(sino_id))
     else:  # ndim = 3
-        get_data = astra.data3d.get_shared
-
-    # TODO: check if axes have to be swapped
-    elem = proj_space.element(get_data(sino_id))
+        elem = proj_space.element(
+            astra.data3d.get_shared(sino_id).swapaxes(0,1))
 
     # Delete ASTRA objects
     astra_cleanup()
@@ -154,7 +154,7 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
 
     # Create astra geometries
     vol_geom = astra_volume_geometry(reco_space)
-    proj_geom = astra_projection_geometry(geometry)
+    proj_geom = astra_projection_geometry(geometry, reco_space)
 
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=None,

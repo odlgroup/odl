@@ -56,9 +56,19 @@ __all__ = ('astra_volume_geometry', 'astra_projection_geometry',
 def astra_volume_geometry(discr_reco):
     """Create an ASTRA volume geometry from the discretized domain.
 
+    From ASTRA documentation:
+
+    In all 3D geometries, the coordinate system is defined around the
+    reconstruction volume. The center of the reconstruction volume is the
+    origin, and the sides of the voxels in the volume have length 1.
+
+    All dimensions in the projection geometries are relative to this unit
+    length.
+
+
     Parameters
     ----------
-    discr_reco : `odl.DiscreteLp`
+    discr_reco : `DiscreteLp`
         Discretization of an L2 space on the reconstruction domain.
         It must be 2- or 3-dimensional and sampled by a regular grid.
 
@@ -107,9 +117,10 @@ def astra_volume_geometry(discr_reco):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
-        # rows (y) first, columns (y) second, slices (z) third
-        # TODO: check
-        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[0], vol_shp[2])
+        # given a vol(x,y,z) ASTRA interprets dimension x,yz as
+        # 'GridColCount': z, 'GridSliceCount': x, 'GridRowCount': y}
+        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[2], vol_shp[0])
+
     else:
         raise ValueError('{}-dimensional volume geometries not supported '
                          'by ASTRA.'.format(discr_reco.ndim))
@@ -151,7 +162,7 @@ def astra_geom_to_vec(geometry):
 
     Returns
     -------
-    vectors : ndarray
+    vectors : `numpy.ndarray`
         Numpy array of shape (number of angles, 12)
     """
 
@@ -236,19 +247,35 @@ def astra_geom_to_vec(geometry):
     return vectors
 
 
-def astra_projection_geometry(geometry):
-    """Create an ASTRA projection geometry from the given geometry.
+def astra_projection_geometry(geometry, vol_data_space=None):
+    """Create an ASTRA projection geometry from a given `odl.tomo` geometry
+    object. For 3D geometries a `DiscreteLp` volume space is required since
+    ASTRA defines all projection geometry-related lengths (detector width,
+    detector height, distances) in terms of the volume voxel size. For 2D
+    the extend of the volume is given as argument when creating a volume
+    geometry.
+
+    From ASTRA documentation:
+
+    In all 3D geometries, the coordinate system is defined around the
+    reconstruction volume. The center of the reconstruction volume is the
+    origin, and the sides of the voxels in the volume have length 1.
+
+    All dimensions in the projection geometries are relative to this unit
+    length.
+
 
     Parameters
     ----------
     geometry : `Geometry`
-        The odl-tomo geometry object from which the ASTRA geometry is
-        created.
+        The `odl.tomo.geometry` object used to create the ASTRA geometry
+    vol_data_space : None or `DiscreteLp`
+        The `odl` space for the volume data required for ASTRA 3D geometries
 
     Returns
     -------
-    astra_geo : dict
-        The ASTRA projection geometry
+    proj_geom : dict
+        Dictionary defining the ASTRA projection geometry
     """
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry {!r} is not a `Geometry` instance.'
@@ -261,25 +288,42 @@ def astra_projection_geometry(geometry):
         raise TypeError('detector sampling grid {!r} is not a `RegularGrid` '
                         'instance.'.format(geometry.det_grid))
 
-    # TODO: fanflat_vec
+    if geometry.ndim == 3 and not vol_data_space is None:
+        if not isinstance(vol_data_space, DiscreteLp):
+            raise TypeError('volume space {} is not a `DiscreteLp` '
+                            'instance'.format(vol_data_space))
+        # TODO:
+        voxel_width = vol_data_space.grid.stride
+        # Non-isotropic voxels are not (yet) supported in 3d ASTRA
+        if not np.allclose(voxel_width[1:], voxel_width[:-1]):
+            raise NotImplementedError('non-isotropic voxels {} not supported by'
+                                      ' ASTRA.'.format(voxel_width))
+        voxel_width = voxel_width[0]
+
+    # TODO: fanflat_vec: fan flat for arbitrary detector / source positions
+    # !!detector width is relative to voxel size!!
     if isinstance(geometry, Parallel2dGeometry):
         det_width = geometry.det_grid.stride[0]
+        # det_width = geometry.det_grid.stride[0] / voxel_width
         det_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
-        proj_geom = astra.create_proj_geom('parallel', det_width, det_count,
-                                           angles)
+        proj_geom = astra.create_proj_geom(
+            'parallel', det_width, det_count, angles)
     elif isinstance(geometry, FanFlatGeometry):
         det_width = geometry.det_grid.stride[0]
+        # det_width = geometry.det_grid.stride[0] / voxel_width
         det_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
         source_origin = geometry.src_radius
         origin_det = geometry.det_radius  # Labelled falsely in PyASTRA doc
         # as `source_det`
-        proj_geom = astra.create_proj_geom('fanflat', det_width, det_count,
-                                           angles, source_origin, origin_det)
+        proj_geom = astra.create_proj_geom(
+            'fanflat', det_width, det_count, angles, source_origin, origin_det)
     elif isinstance(geometry, Parallel3dGeometry):
-        det_width = geometry.det_grid.stride[0]  # ASTRA: x
-        det_height = geometry.det_grid.stride[1]  # ASTRA: y
+        # ASTRA: x ?
+        det_width = geometry.det_grid.stride[0] / voxel_width
+        # ASTRA: y ?
+        det_height = geometry.det_grid.stride[1] / voxel_width
         det_row_count = geometry.det_grid.shape[0]
         det_col_count = geometry.det_grid.shape[1]
         angles = geometry.motion_grid.coord_vectors[0]
@@ -287,23 +331,25 @@ def astra_projection_geometry(geometry):
             'parallel3d', det_width, det_height, det_row_count,
             det_col_count, angles)
     elif isinstance(geometry, CircularConeFlatGeometry):
-        det_width = geometry.det_grid.stride[0]  # ASTRA: x
-        det_height = geometry.det_grid.stride[1]  # ASTRA: y
+        # ASTRA: x ?
+        det_width = geometry.det_grid.stride[0] / voxel_width
+        # ASTRA: y ?
+        det_height = geometry.det_grid.stride[1] / voxel_width
         det_row_count = geometry.det_grid.shape[0]
         det_col_count = geometry.det_grid.shape[1]
         angles = geometry.motion_grid.coord_vectors[0]
-        source_origin = geometry.src_radius
-        origin_det = geometry.det_radius  # ! In PyASTRA doc falsely labelled
-        # `source_det`
+        source_origin = geometry.src_radius / voxel_width
+        # ! In PyASTRA doc falsely labelled `source_det`
+        origin_det = geometry.det_radius / voxel_width
         proj_geom = astra.create_proj_geom(
             'cone', det_width, det_height, det_row_count, det_col_count,
             angles, source_origin, origin_det)
     elif isinstance(geometry, HelicalConeFlatGeometry):
         det_row_count = geometry.det_grid.shape[0]
         det_col_count = geometry.det_grid.shape[1]
-        vec = astra_geom_to_vec(geometry)
-        proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
-                                           det_col_count, vec)
+        vec = astra_geom_to_vec(geometry) / voxel_width
+        proj_geom = astra.create_proj_geom(
+            'cone_vec', det_row_count, det_col_count, vec)
     else:
         raise NotImplementedError('ASTRA geometry creation not supported for '
                                   'geometry type {}.'.format(type(geometry)))
@@ -321,7 +367,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         given data dype
     datatype : {'volume', 'projection'}
         Type of the data container
-    data : `odl.DiscreteLp` element, optional
+    data : `DiscreteLpVector`, optional
         Data for the initialization of the data structure
     ndim : {2, 3}, optional
         Dimension of the data. If `data` is not `None`, this parameter
@@ -366,15 +412,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
                                       '`numpy.ndarray` instances.')
 
         dshape = data.space.grid.shape
-        if ndim == 2:
-            # Axes 0 and 1 need to be swapped in input (and output)
-            # DO NOT SWAP AXES FOR INPUT, CHECK SWAPPING FOR OUTPUT
-            astra_shape = (dshape[0], dshape[1])
-        else:
-            # TODO: check what to do in this case - swapaxes is not an option
-            # since it results in a non-contiguous array. Maybe one can
-            # compensate afterwards?
-            astra_shape = (dshape[2], dshape[1], dshape[0])
+
         # ASTRA checks if data is c-contiguous and aligned
         return link(astra_dtype_str, astra_geom, data.asarray())
     else:

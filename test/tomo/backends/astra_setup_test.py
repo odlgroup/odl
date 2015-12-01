@@ -137,6 +137,7 @@ vol_geom_3d = {
     'option': {}}
 
 
+# TODO: add tests to check scaling
 @skip_if_no_astra
 def test_astra_projection_geometry():
     # Test creation of ASTRA projection geometry objects from `odltomo`

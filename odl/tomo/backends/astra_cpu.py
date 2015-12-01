@@ -77,6 +77,7 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
 
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
+    # proj_geom = astra_projection_geometry(geometry, vol_data.space)
     proj_geom = astra_projection_geometry(geometry)
 
     # Create ASTRA data structures
@@ -165,6 +166,7 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
 
     # Create astra geometries
     vol_geom = astra_volume_geometry(reco_space)
+    # proj_geom = astra_projection_geometry(geometry, reco_space)
     proj_geom = astra_projection_geometry(geometry)
 
     # Create ASTRA data structures
