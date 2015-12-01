@@ -200,7 +200,7 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
 
 
 # TODO: rename to Flat1dDetector to be consitent with Flat2dDetector? or
-# Flat2dDetectorto to AreaDetector
+# Flat2dDetectorto to AreaDetector, or FlatLineDetector and FlatAreaDetctor
 class LineDetector(FlatDetector):
 
     """A 1d line detector aligned with the y-axis."""
