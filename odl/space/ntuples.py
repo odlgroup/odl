@@ -138,7 +138,7 @@ class Ntuples(NtuplesBase):
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
-                inp = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
+                arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                 if arr.shape != (self.size,):
                     raise ValueError('input shape {} not broadcastable to '
                                      'shape ({},).'.format(inp.shape,

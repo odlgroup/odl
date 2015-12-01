@@ -42,28 +42,6 @@ __all__ = ('FunctionSet', 'FunctionSetVector',
            'FunctionSpace', 'FunctionSpaceVector')
 
 
-def enforce_defaults_as_kwargs(func):
-    """Decorator forcing args with defaults to be passed by keyword."""
-    @wraps(func)
-    def kwargs_wrapper(*args, **kwargs):
-        from inspect import getargspec
-
-        argspec = getargspec(func)
-        func_args = argspec.args
-        func_defs = argspec.defaults
-        if len(args) != len(func_args) - len(func_defs):
-            # Expected exactly those positional arguments without defaults
-            raise ValueError('{} takes exactly {} positional argument ({} '
-                             'given). Positional arguments with defaults must '
-                             'be passed by keyword.'
-                             ''.format(func.__name__,
-                                       len(func_args) - len(func_defs),
-                                       len(args)))
-
-        return func(*args, **kwargs)
-    return kwargs_wrapper
-
-
 def _in_place_not_impl(x, out):
     """Dummy function to be used when apply function is not given."""
     raise NotImplementedError('no `_apply` method defined.')
