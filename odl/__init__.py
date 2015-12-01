@@ -33,26 +33,23 @@ __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
 
-from . import diagnostics
-
-from . import discr
-from .discr import *
-__all__ += discr.__all__
+# Import modules in order of dependency
+from . import set
+from .set import *
+__all__ += set.__all__
 
 from . import operator
 from .operator import *
 __all__ += operator.__all__
 
-from . import set
-from .set import *
-__all__ += set.__all__
-
 from . import space
 from .space import *
 __all__ += space.__all__
 
-from . import trafos
-from .trafos import *
-__all__ += trafos.__all__
+from . import discr
+from .discr import *
+__all__ += discr.__all__
 
+from . import trafos
+from . import diagnostics
 from . import solvers
