@@ -36,7 +36,7 @@ def test_CudaRnToRn():
     r3 = odl.Rn(3)
     cur3 = odl.CudaRn(3)
 
-    cast = odl.EmbeddingFnInFn(r3, cur3)
+    cast = odl.EmbeddingFnInFn(cur3, r3)
 
     x = cur3.element([1, 2, 3])
     y = cast(x)
@@ -57,7 +57,7 @@ def test_LpToRn():
 
     r9 = odl.Rn(9)
 
-    cast = odl.EmbeddingFnInFn(r9, discr)
+    cast = odl.EmbeddingFnInFn(discr, r9)
 
     x = discr.element([[1, 2, 3],
                        [4, 5, 6],
@@ -81,7 +81,7 @@ def test_LpToRn_cuda():
 
     r9 = odl.Rn(9)
 
-    cast = odl.EmbeddingFnInFn(r9, discr)
+    cast = odl.EmbeddingFnInFn(discr, r9)
 
     x = discr.element([[1, 2, 3],
                        [4, 5, 6],
@@ -104,7 +104,7 @@ def test_LpToRn_forder():
 
     r9 = odl.Rn(9)
 
-    cast = odl.EmbeddingFnInFn(r9, discr)
+    cast = odl.EmbeddingFnInFn(discr, r9)
 
     x = discr.element([[1, 2, 3],
                        [4, 5, 6],
@@ -133,7 +133,7 @@ def test_PSpaceInFn():
     r3x2 = odl.ProductSpace(odl.Rn(3), 2)
     r6 = odl.Rn(6)
 
-    cast = odl.EmbeddingPowerSpaceInFn(r6, r3x2)
+    cast = odl.EmbeddingPowerSpaceInFn(r3x2, r6)
 
     x = r3x2.element([[1, 2, 3],
                       [4, 5, 6]])
