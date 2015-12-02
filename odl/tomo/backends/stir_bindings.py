@@ -269,9 +269,9 @@ def stir_projector_from_file(volume_file, projection_file):
 
     origin = volume.get_origin()
     grid_spacing = volume.get_grid_spacing()
-    grid_shape = [volume.get_x_size(),
+    grid_shape = [volume.get_z_size(),
                   volume.get_y_size(),
-                  volume.get_z_size()]
+                  volume.get_x_size()]
     min_corner = [origin[1], origin[2], origin[3]]
     max_corner = [origin[1] + grid_spacing[1] * grid_shape[0],
                   origin[2] + grid_spacing[2] * grid_shape[1],
@@ -279,9 +279,8 @@ def stir_projector_from_file(volume_file, projection_file):
 
     # reverse to handle STIR bug? See:
     # https://github.com/UCL/STIR/issues/7
-    recon_sp = uniform_discr(FunctionSpace(Cuboid(min_corner[::-1],
-                                                  max_corner[::-1])),
-                             grid_shape[::-1],
+    recon_sp = uniform_discr(FunctionSpace(Cuboid(min_corner, max_corner)),
+                             grid_shape,
                              dtype='float32')
 
     # TODO: set correct projection space
