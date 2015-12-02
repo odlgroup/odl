@@ -24,5 +24,3 @@ from __future__ import absolute_import
 __all__ = ('stir_bindings',)
 
 from . import stir_bindings
-from .stir_bindings import *
-__all__ += stir_bindings.__all__

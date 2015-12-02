@@ -26,6 +26,7 @@ import os.path as pth
 import stir
 import odl
 
+# Load STIR input files with data
 base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
 
 volume_file = str(pth.join(base, 'initial.hv'))
@@ -36,6 +37,7 @@ proj_data_in = stir.ProjData.read_from_file(projection_file)
 proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
                                   proj_data_in.get_proj_data_info())
 
+# Create ODL spaces
 recon_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
                                                           [1, 1, 1])),
                              [15, 64, 64])
@@ -44,14 +46,19 @@ data_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
                                                          [1, 1, 1])),
                             [37, 28, 56])
 
-proj = odl.tomo.StirProjectorFromFile(recon_sp, data_sp,
-                                      volume,
-                                      proj_data)
+# Make STIR projector
+proj = odl.tomo.stir_bindings.ForwardProjectorByBinWrapper(recon_sp,
+                                                           data_sp,
+                                                           volume,
+                                                           proj_data)
 
-vol = recon_sp.one()
+# Create shepp-logan phantom
+vol = odl.util.shepp_logan(proj.domain)
 
+# Project and show
 result = proj(vol)
 result.show()
 
+# Also show back-projection
 back_projected = proj.adjoint(result)
 back_projected.show()

@@ -38,6 +38,9 @@ standard_library.install_aliases()
 from builtins import super
 
 from odl.operator.operator import Operator
+from odl.discr.lp_discr import uniform_discr
+from odl.space.fspace import FunctionSpace
+from odl.set.domain import Cuboid
 
 try:
     import stir
@@ -47,7 +50,7 @@ except ImportError:
 
 __all__ = ('ForwardProjectorByBinWrapper',
            'BackProjectorByBinWrapper',
-           'projector_from_file',
+           'stir_projector_from_file',
            'STIR_AVAILABLE')
 
 
@@ -60,7 +63,7 @@ class StirVerbosity(object):
         self.old_verbosity = stir.Verbosity.get()
         stir.Verbosity.set(self.verbosity)
 
-    def __exit__(self):
+    def __exit__(self, *_):
         stir.Verbosity.set(self.old_verbosity)
 
 
@@ -93,8 +96,14 @@ class ForwardProjectorByBinWrapper(Operator):
             A pre-initialized adjoint.
         """
         # Check data sizes
-        assert dom.shape == volume.shape()
-        assert ran.shape == proj_data.to_array().shape()
+        if dom.shape != volume.shape():
+            raise ValueError('dom.shape {} does not equal volume shape {}'
+                             ''.format(dom.shape, volume.shape()))
+        # Todo: improve
+        proj_shape = proj_data.to_array().shape()
+        if ran.shape != proj_shape:
+            raise ValueError('ran.shape {} does not equal proj shape {}'
+                             ''.format(ran.shape, proj_shape))
 
         # Set domain, range etc
         super().__init__(dom, ran, True)
@@ -122,7 +131,7 @@ class ForwardProjectorByBinWrapper(Operator):
             self.projector = projector
             back_projector = None
 
-
+        # Pre-create an adjoint to save time
         if adjoint is None:
             self._adjoint = BackProjectorByBinWrapper(self.range, self.domain,
                                                       self.volume, self.proj_data,
@@ -130,7 +139,7 @@ class ForwardProjectorByBinWrapper(Operator):
         else:
             self._adjoint = adjoint
 
-    def _call(self, volume):
+    def _apply(self, volume, out):
         """Forward project a volume."""
         # Set volume data
         self.volume.fill(volume.asarray().flat)
@@ -140,9 +149,7 @@ class ForwardProjectorByBinWrapper(Operator):
             self.projector.forward_project(self.proj_data, self.volume)
 
         # make odl data
-        arr = stir.stirextra.to_numpy(self.proj_data)
-
-        return self.range.element(arr)
+        out[:] = stir.stirextra.to_numpy(self.proj_data)
 
     @property
     def adjoint(self):
@@ -158,7 +165,8 @@ class BackProjectorByBinWrapper(Operator):
     """
 
     def __init__(self, dom, ran, volume, proj_data,
-                 back_projector=None, adjoint=None):
+                 back_projector=None, adjoint=None,
+                 method=None):
         """Initialize a new back-projector.
 
         Parameters
@@ -180,8 +188,14 @@ class BackProjectorByBinWrapper(Operator):
         """
 
         # Check data sizes
-        assert dom.shape == self.volume.shape()
-        assert ran.shape == self.proj_data.to_array().shape()
+        if ran.shape != volume.shape():
+            raise ValueError('ran.shape {} does not equal volume shape {}'
+                             ''.format(ran.shape, volume.shape()))
+        # Todo: improve
+        proj_shape = proj_data.to_array().shape()
+        if dom.shape != proj_shape:
+            raise ValueError('dom.shape {} does not equal proj shape {}'
+                             ''.format(ran.shape, proj_shape))
 
         # Set range domain
         super().__init__(dom, ran, True)
@@ -202,11 +216,12 @@ class BackProjectorByBinWrapper(Operator):
             if adjoint is None:
                 projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
                 projector.set_up(self.proj_data_info, self.volume)
+
         else:
-            self.projector = projector
+            self.back_projector = back_projector
             projector = None
 
-
+        # Pre-create an adjoint to save time
         if adjoint is None:
             self._adjoint = ForwardProjectorByBinWrapper(self.range, self.domain,
                                                          self.volume, self.proj_data,
@@ -214,7 +229,7 @@ class BackProjectorByBinWrapper(Operator):
         else:
             self._adjoint = adjoint
 
-    def _call(self, projections):
+    def _apply(self, projections, out):
         """Back project."""
         # Set projection data
         self.proj_data.fill(projections.asarray().flat)
@@ -224,20 +239,56 @@ class BackProjectorByBinWrapper(Operator):
             self.back_projector.back_project(self.volume, self.proj_data)
 
         # make odl data
-        arr = stir.stirextra.to_numpy(self.volume)
-
-        return self.range.element(arr)
+        out[:] = stir.stirextra.to_numpy(self.volume)
 
 
-def projector_from_file(volume_file, data_file):
-    """ Create a STIR projector from given template files. """
+def stir_projector_from_file(volume_file, projection_file):
+    """ Create a STIR projector from given template files.
+
+    Parameters
+    ----------
+    volume_file : `str`
+        Full file path to the STIR input file containing information on the
+        volume. This is usually a '.hv' file. For STIR reasons,
+        a '.v' file is also needed.
+    projection_file : `str`
+        Full file path to the STIR input file with information on the
+        projection data. This is usually a '.hs' file. For STIR reasons,
+        a '.s' file is also needed.
+
+    Returns
+    -------
+    projector : `ForwardProjectorByBinWrapper`
+        A STIR forward projector.
+    """
     volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
 
-    proj_data_in = stir.ProjData.read_from_file(data_file)
+    proj_data_in = stir.ProjData.read_from_file(projection_file)
     proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
                                       proj_data_in.get_proj_data_info())
 
-    dom = 0
-    ran = 1
+    origin = volume.get_origin()
+    grid_spacing = volume.get_grid_spacing()
+    grid_shape = [volume.get_x_size(),
+                  volume.get_y_size(),
+                  volume.get_z_size()]
+    min_corner = [origin[1], origin[2], origin[3]]
+    max_corner = [origin[1] + grid_spacing[1] * grid_shape[0],
+                  origin[2] + grid_spacing[2] * grid_shape[1],
+                  origin[3] + grid_spacing[3] * grid_shape[2]]
 
-    return ForwardProjectorByBinWrapper(dom, ran, volume, proj_data)
+    # reverse to handle STIR bug? See:
+    # https://github.com/UCL/STIR/issues/7
+    recon_sp = uniform_discr(FunctionSpace(Cuboid(min_corner[::-1],
+                                                  max_corner[::-1])),
+                             grid_shape[::-1],
+                             dtype='float32')
+
+    # TODO: set correct projection space
+    proj_shape = proj_data.to_array().shape()
+
+    data_sp = uniform_discr(FunctionSpace(Cuboid([0, 0, 0], proj_shape)),
+                            proj_shape,
+                            dtype='float32')
+
+    return ForwardProjectorByBinWrapper(recon_sp, data_sp, volume, proj_data)
