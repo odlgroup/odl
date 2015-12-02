@@ -79,36 +79,44 @@ def vector(array, dtype=None, impl='numpy'):
     >>> vector(0.0)
     Rn(1).element([0.0])
     """
-    if dtype is None:
-        # Cannot simply pass None since np.array interprets it as float
-        arr = np.array(array, copy=False, ndmin=1)
-    else:
-        arr = np.array(array, copy=False, dtype=dtype, ndmin=1)
+    # Sanitize input
+    arr = np.array(array, copy=False, ndmin=1)
+    impl = str(impl).lower()
 
+    # Validate input
     if arr.ndim > 1:
         raise ValueError('array has {} dimensions, expected 1.'
                          ''.format(arr.ndim))
 
-    if str(impl).lower() == 'numpy':
-        if is_real_floating_dtype(arr.dtype):
+    # Set dtype
+    if dtype is not None:
+        space_dtype = dtype
+    elif arr.dtype == float and impl == 'cuda':
+        # Special case, default float is float32 on cuda
+        space_dtype = 'float32'
+    else:
+        space_dtype = arr.dtype
+
+    # Select implementation
+    if impl == 'numpy':
+        if is_real_floating_dtype(space_dtype):
             space_type = Rn
-        elif is_complex_floating_dtype(arr.dtype):
+        elif is_complex_floating_dtype(space_dtype):
             space_type = Cn
-        elif is_scalar_dtype(arr.dtype):
+        elif is_scalar_dtype(space_dtype):
             space_type = Fn
         else:
             space_type = Ntuples
 
-    elif str(impl).lower() == 'cuda':
+    elif impl == 'cuda':
         if not CUDA_AVAILABLE:
             raise ValueError('CUDA implementation not available.')
 
-        if is_real_floating_dtype(arr.dtype):
+        if is_real_floating_dtype(space_dtype):
             space_type = CudaRn
-        elif is_complex_floating_dtype(arr.dtype):
-            space_type = CudaCn
+        elif is_complex_floating_dtype(space_dtype):
             raise NotImplementedError('complex spaces in CUDA not supported.')
-        elif is_scalar_dtype(arr.dtype):
+        elif is_scalar_dtype(space_dtype):
             space_type = CudaFn
         else:
             space_type = CudaNtuples
@@ -116,4 +124,4 @@ def vector(array, dtype=None, impl='numpy'):
     else:
         raise ValueError("implementation '{}' not understood.".format(impl))
 
-    return space_type(len(arr), dtype=arr.dtype).element(arr)
+    return space_type(len(arr), dtype=space_dtype).element(arr)
