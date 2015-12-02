@@ -370,7 +370,7 @@ class ProductSpace(LinearSpace):
             spc._multiply(xp, yp, outp)
 
     def __eq__(self, other):
-        """``ps.__eq__(other) <==> ps == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -405,11 +405,11 @@ class ProductSpace(LinearSpace):
                                                other.spaces)))
 
     def __len__(self):
-        """``ps.__len__() <==> len(ps)``."""
+        """Return ``len(self)``."""
         return self._size
 
     def __getitem__(self, indices):
-        """``ps.__getitem__(indices) <==> ps[indices]``."""
+        """Return ``self[indices]``."""
 
         if isinstance(indices, Integral):
             return self.spaces[indices]
@@ -419,14 +419,14 @@ class ProductSpace(LinearSpace):
             return ProductSpace(*[self.spaces[i] for i in indices])
 
     def __str__(self):
-        """``ps.__str__() <==> str(ps)``."""
+        """Return ``str(self)``."""
         if all(self.spaces[0] == space for space in self.spaces):
             return '{' + str(self.spaces[0]) + '}^' + str(self.size)
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
-        """``ps.__repr__() <==> repr(ps)``."""
+        """Return ``repr(self)``."""
         if all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
                                                    self.size)
@@ -459,7 +459,7 @@ class ProductSpaceVector(LinearSpaceVector):
         return self.space.size
 
     def __eq__(self, other):
-        """``ps.__eq__(other) <==> ps == other``.
+        """Return ``self == other``.
 
         Overrides the default `LinearSpace` method since it is
         implemented with the distance function, which is prone to
@@ -474,11 +474,11 @@ class ProductSpaceVector(LinearSpaceVector):
             return all(sp == op for sp, op in zip(self.parts, other.parts))
 
     def __len__(self):
-        """``v.__len__() <==> len(v)``."""
+        """Return ``len(self)``."""
         return len(self.space)
 
     def __getitem__(self, indices):
-        """``ps.__getitem__(indices) <==> ps[indices]``."""
+        """Return ``self[indices]``."""
         if isinstance(indices, Integral):
             return self.parts[indices]
         elif isinstance(indices, slice):
@@ -488,7 +488,7 @@ class ProductSpaceVector(LinearSpaceVector):
             return self.space[indices].element(out_parts)
 
     def __setitem__(self, indices, values):
-        """``ps.__setitem__(indcs, vals) <==> ps[indcs] = vals``."""
+        """Implement ``self[indices] = vals``."""
         try:
             self.parts[indices] = values
         except TypeError:
@@ -496,12 +496,12 @@ class ProductSpaceVector(LinearSpaceVector):
                 self.parts[index] = values[i]
 
     def __str__(self):
-        """``ps.__str__() <==> str(ps)``."""
+        """Return ``str(self)``."""
         inner_str = ', '.join(str(part) for part in self.parts)
         return '{{{}}}'.format(inner_str)
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``.
+        """Return ``repr(self)``.
 
         Examples
         --------

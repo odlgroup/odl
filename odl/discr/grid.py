@@ -313,7 +313,7 @@ class TensorGrid(Set):
                                               other.coord_vectors)))
 
     def __eq__(self, other):
-        """``g.__eq__(other) <==> g == other``."""
+        """Return ``self == other``."""
         return self.approx_equals(other, tol=0.0)
 
     def approx_contains(self, other, tol):
@@ -345,7 +345,7 @@ class TensorGrid(Set):
                     for vector, coord in zip(self.coord_vectors, other)))
 
     def __contains__(self, other):
-        """``g.__contains__(other) <==> other in g``."""
+        """Return ``other in self``."""
         other = np.atleast_1d(other)
         return (other.shape == (self.ndim,) and
                 all(coord in vector

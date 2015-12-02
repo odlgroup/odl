@@ -192,7 +192,7 @@ class RawDiscretization(NtuplesBase):
             return self.element_type(self, self.dspace.element(inp))
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -277,7 +277,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         return self.ntuple.asarray(out=out)
 
     def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
+        """Return ``vec == other``.
 
         Returns
         -------
@@ -325,11 +325,11 @@ class RawDiscretizationVector(NtuplesBaseVector):
             self.ntuple.__setitem__(indices, values)
 
     def __str__(self):
-        """``vec.__str__() <==> str(vec)``."""
+        """Return ``str(self)``."""
         return arraynd_str(self.asarray())
 
     def __repr__(self):
-        """``vec.__repr__() <==> repr(vec)``."""
+        """Return ``repr(self)``."""
         return '{!r}.element({})'.format(self.space,
                                          arraynd_repr(self.asarray()))
 

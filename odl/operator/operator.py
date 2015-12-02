@@ -279,7 +279,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     # Implicitly defined operators
     def __call__(self, x, out=None, *args, **kwargs):
-        """``op.__call__(x) <==> op(x)``.
+        """Return ``op(x)``.
 
         Implementation of the call pattern ``op(x)`` with the private
         ``_call()`` method and added error checking.
@@ -350,15 +350,15 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return result
 
     def __add__(self, other):
-        """``op.__add__(other) <==> op + other``."""
+        """Return ``self + other``."""
         return OperatorSum(self, other)
 
     def __sub__(self, other):
-        """``op.__add__(other) <==> op - other``."""
+        """Return ``self - other``."""
         return OperatorSum(self, -1 * other)
 
     def __mul__(self, other):
-        """``op.__mul__(other) <==> op * other``.
+        """Return ``self * other``.
 
         If ``other`` is an operator, this corresponds to
         operator composition:
@@ -436,14 +436,14 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return NotImplemented
 
     def __matmul__(self, other):
-        """``op.__matmul__(other) <==> op @ other``.
+        """Return ``self @ other``.
 
         See `Operator.__mul__`
         """
         return self.__mul__(other)
 
     def __rmul__(self, other):
-        """``op.__rmul__(s) <==> s * op``.
+        """Return ``other * self``.
 
         If ``other`` is an `Operator`, this corresponds to
         operator composition:
@@ -517,14 +517,14 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return NotImplemented
 
     def __rmatmul__(self, other):
-        """``op.__rmatmul__(other) <==> other @ op``.
+        """Return ``other @ op``.
 
         See `Operator.__rmul__`
         """
         return self.__rmul__(other)
 
     def __pow__(self, n):
-        """``op.__pow__(s) <==> op**s``.
+        """Return ``op**s``.
 
         This corresponds to the power of an operator:
 
@@ -569,7 +569,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return NotImplemented
 
     def __truediv__(self, other):
-        """``op.__truediv__(s) <==> op / other``.
+        """Return ``self / other``.
 
         If ``other`` is a scalar, this corresponds to right
         division of operators with scalars:
@@ -606,18 +606,18 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             return NotImplemented
 
     def __neg__(self):
-        """``op.__neg__(s) <==> -op``."""
+        """Return ``-self``."""
         return -1 * self
 
     def __pos__(self):
-        """``op.__pos__(s) <==> +op``.
+        """Return ``+op``.
 
         The operator itself.
         """
         return self
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``.
+        """Return ``repr(self)``.
 
         The default `repr` implementation. Should be overridden by
         subclasses.
@@ -626,7 +626,7 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                                          self.range)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``.
+        """Return ``str(self)``.
 
         The default `str` implementation. Should be overridden by
         subclasses.
@@ -700,7 +700,7 @@ class OperatorSum(Operator):
         self._tmp_dom = tmp_dom
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``.
+        """Implement ``op(x, out=out)``.
 
         Examples
         --------
@@ -722,7 +722,7 @@ class OperatorSum(Operator):
         out += tmp
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``.
+        """Return ``op(x)``.
 
         Examples
         --------
@@ -764,12 +764,12 @@ class OperatorSum(Operator):
                            self._tmp_dom, self._tmp_ran)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op1, self._op2)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '({} + {})'.format(self._op1, self._op2)
 
 
@@ -814,7 +814,7 @@ class OperatorComp(Operator):
         self._tmp = tmp
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
+        """Implement ``op(x, out=out)``."""
         # pylint: disable=protected-access
         tmp = (self._tmp if self._tmp is not None
                else self._right.range.element())
@@ -822,7 +822,7 @@ class OperatorComp(Operator):
         self._left._apply(tmp, out)
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
+        """Return ``op(x)``."""
         # pylint: disable=protected-access
         return self._left._call(self._right._call(x))
 
@@ -869,12 +869,12 @@ class OperatorComp(Operator):
                             self._tmp)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._left, self._right)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} o {}'.format(self._left, self._right)
 
 
@@ -914,7 +914,7 @@ class OperatorPointwiseProduct(Operator):
         self._op2 = op2
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
+        """Implement ``op(x, out=out)``."""
         # pylint: disable=protected-access
         tmp = self._op2.range.element()
         self._op1._apply(x, out)
@@ -922,17 +922,17 @@ class OperatorPointwiseProduct(Operator):
         out *= tmp
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
+        """Return ``op(x)``."""
         # pylint: disable=protected-access
         return self._op1._call(x) * self._op2._call(x)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op1, self._op2)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._op1, self._op2)
 
 
@@ -972,12 +972,12 @@ class OperatorLeftScalarMult(Operator):
         self._scalar = scalar
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
+        """Return Return ``op(x)``."""
         # pylint: disable=protected-access
         return self._scalar * self._op._call(x)
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
+        """Implement ``op(x, out=out)``."""
         # pylint: disable=protected-access
         self._op._apply(x, out)
         out *= self._scalar
@@ -1029,12 +1029,12 @@ class OperatorLeftScalarMult(Operator):
                                        self._scalar.conjugate())
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._scalar)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._scalar, self._op)
 
 
@@ -1082,12 +1082,12 @@ class OperatorRightScalarMult(Operator):
         self._tmp = tmp
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
+        """Return ``self(x)``."""
         # pylint: disable=protected-access
         return self._op._call(self._scalar * x)
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x, out=out)``."""
         # pylint: disable=protected-access
         tmp = self._tmp if self._tmp is not None else self.domain.element()
         tmp.lincomb(self._scalar, x)
@@ -1139,12 +1139,12 @@ class OperatorRightScalarMult(Operator):
                                        self._scalar.conjugate())
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._scalar)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._op, self._scalar)
 
 
@@ -1184,12 +1184,12 @@ class FunctionalLeftVectorMult(Operator):
         self._vector = vector
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
+        """Return ``op(x)``."""
         # pylint: disable=protected-access
         return self._vector * self._op._call(x)
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
+        """Implement ``op(x, out=out)``."""
         # pylint: disable=protected-access
         scalar = self._op._call(x)
         out.lincomb(scalar, self._vector)
@@ -1228,12 +1228,12 @@ class FunctionalLeftVectorMult(Operator):
         return OperatorComp(self._op.adjoint, self._vector.T)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._vector, self._op)
 
 
@@ -1265,12 +1265,12 @@ class OperatorLeftVectorMult(Operator):
         self._vector = vector
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
+        """Return ``op(x)``."""
         # pylint: disable=protected-access
         return self._vector * self._op._call(x)
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
+        """Implement ``op(x, out=out)``."""
         # pylint: disable=protected-access
         self._op._apply(x, out)
         out *= self._vector
@@ -1309,12 +1309,12 @@ class OperatorLeftVectorMult(Operator):
         return OperatorRightVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._vector, self._op)
 
 
@@ -1347,12 +1347,12 @@ class OperatorRightVectorMult(Operator):
         self._vector = vector
 
     def _call(self, x):
-        """``op.__call__(x) <==> op(x)``."""
+        """Return ``op(x)``."""
         # pylint: disable=protected-access
         return self._op._call(self._vector * x)
 
     def _apply(self, x, out):
-        """``op._apply(x, out) <==> out <-- op(x)``."""
+        """Implement ``op(x, out=out)``."""
         # pylint: disable=protected-access
         tmp = self.domain.element()
         tmp.multiply(self._vector, x)
@@ -1393,12 +1393,12 @@ class OperatorRightVectorMult(Operator):
         return OperatorLeftVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._op, self._vector)
 
 
@@ -1417,7 +1417,7 @@ def simple_operator(call=None, apply=None, inv=None, deriv=None,
     apply : `callable`
         A function taking two arguments.
         It will be used for the operator apply pattern
-        ``op._apply(x, out) <==> out <-- op(x)``. Return value
+        Implement ``op(x, out=out)``. Return value
         is assumed to be `None` and is ignored.
     inv : `Operator`, optional
         The operator inverse

@@ -107,7 +107,7 @@ class FunctionSet(Set):
             return self.element_type(self, fcall, fapply)
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -124,7 +124,7 @@ class FunctionSet(Set):
                 self.range == other.range)
 
     def __contains__(self, other):
-        """``s.__contains__(other) <==> other in s``.
+        """Return ``other in self``.
 
         Returns
         -------
@@ -137,11 +137,11 @@ class FunctionSet(Set):
                 self == other.space)
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return 'FunctionSet({!r}, {!r})'.format(self.domain, self.range)
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return 'FunctionSet({}, {})'.format(self.domain, self.range)
 
     @property
@@ -204,7 +204,7 @@ class FunctionSetVector(Operator):
         return self._space
 
     def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -308,19 +308,15 @@ class FunctionSetVector(Operator):
         # TODO: no checks on input so far
         return self._apply(out, *x)
 
-    def __ne__(self, other):
-        """``vec.__ne__(other) <==> vec != other``"""
-        return not self.__eq__(other)
-
     def __str__(self):
-        """``vec.__str__() <==> str(vec)``"""
+        """Return ``str(self)``"""
         if self._call is not None:
             return str(self._call)
         else:
             return str(self._apply_impl)
 
     def __repr__(self):
-        """``vec.__repr__() <==> repr(vec)``"""
+        """Return ``repr(self)``"""
         if self._call is not None:
             return '{!r}.element({!r})'.format(self.space, self._call)
         else:
@@ -469,7 +465,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return self.element(zero_)
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -503,7 +499,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         y._function = product
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         inner_repr = '{!r}'.format(self.domain)
         if not isinstance(self.range, RealNumbers):
             inner_repr += ', {!r}'.format(self.range)
@@ -511,7 +507,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return 'FunctionSpace({})'.format(inner_repr)
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         inner_repr = '{}'.format(self.domain)
         if not isinstance(self.range, RealNumbers):
             inner_repr += ', {}'.format(self.range)

@@ -189,7 +189,7 @@ class DiscreteLp(Discretization):
         return self._interp
 
     def __repr__(self):
-        """``lp.__repr__() <==> repr(lp).``"""
+        """Return ``repr(self).``"""
         # Check if the factory repr can be used
         if (uniform_sampling(self.uspace.domain, self.grid.shape,
                              as_midp=True) == self.grid):
@@ -232,7 +232,7 @@ class DiscreteLp(Discretization):
             return '{}({})'.format(self.__class__.__name__, arg_str)
 
     def __str__(self):
-        """``lp.__str__() <==> str(lp)``."""
+        """Return ``str(self)``."""
         return self.__repr__()
 
     @property
