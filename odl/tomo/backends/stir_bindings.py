@@ -20,6 +20,13 @@
 
 Back and forward projectors for PET.
 
+`ForwardProjectorByBinWrapper` and `BackProjectorByBinWrapper` are general
+objects of STIR projectors and back-projectors, these can be used to wrap a
+given projector.
+
+`projector_from_file` allows users a easy way to create a
+`ForwardProjectorByBinWrapper` by giving file paths to the required templates.
+
 See the STIR `webpage
 <http://stir.sourceforge.net/>`_ for more information.
 """
@@ -38,60 +45,90 @@ try:
 except ImportError:
     STIR_AVAILABLE = False
 
-__all__ = ('StirProjectorFromFile', 'STIR_AVAILABLE')
+__all__ = ('ForwardProjectorByBinWrapper',
+           'BackProjectorByBinWrapper',
+           'projector_from_file',
+           'STIR_AVAILABLE')
 
 
-class StirProjectorFromFile(Operator):
+class StirVerbosity(object):
+    """ Set STIR verbosity to a fixed level """
+    def __init__(self, verbosity):
+        self.verbosity = verbosity
 
-    """ A forward projector using STIR input files.
+    def __enter__(self):
+        self.old_verbosity = stir.Verbosity.get()
+        stir.Verbosity.set(self.verbosity)
+
+    def __exit__(self):
+        stir.Verbosity.set(self.old_verbosity)
+
+
+class ForwardProjectorByBinWrapper(Operator):
+
+    """ A forward projector using STIR.
 
     Uses "ForwardProjectorByBinUsingProjMatrixByBin" as a projector.
     """
 
-    def __init__(self, dom, ran, volume_file, projection_file):
+    def __init__(self, dom, ran, volume, proj_data,
+                 projector=None, adjoint=None):
         """ Initialize a new projector.
 
         Parameters
         ----------
         dom : `DiscreteLp`
-            Volume of the projection. Needs to have the same shape as given
-            by the ini file ``data_template``.
+            Volume of the projection. Needs to have the same shape as
+            ``volume.shape()``.
         ran : `DiscreteLp`
-            Projection space. Needs to have the same shape as given by the
-            geometry in ``projection_template`` when converted to an array
-            using the projection_data when cast using ``to_array``.
-        volume_file : `str`, STIR input file path
-            An interfile of type '.hv' giving a description of the volume
-            geometry.
-        projection_file : `str`, STIR input file path
-            An interfile of type '.hs' giving a description of the projection
-            (volume) geometry.
-
+            Projection space. Needs to have the same shape as
+            ``proj_data.to_array().shape()``.
+        volume : `stir.FloatVoxelsOnCartesianGrid`
+            The stir volume to use in the forward projection
+        proj_data : `stir.ProjData`
+            The stir description of the projection.
+        projector : ``stir.ForwardProjectorByBin``, optional
+            A pre-initialized projector.
+        adjoint : `BackProjectorByBinWrapper`, optional
+            A pre-initialized adjoint.
         """
-        # Read template of the projection
-        proj_data_in = stir.ProjData.read_from_file(projection_file)
-        self.proj_data_info = proj_data_in.get_proj_data_info()
-        self.proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
-                                               proj_data_in.get_proj_data_info())
-
-        # Read template data for the volume
-        self.volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
-
-        # Create forward projection by matrix
-        self.proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
-        self.proj_matrix.set_up(self.proj_data_info, self.volume)
-        self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(self.proj_matrix)
-        self.projector.set_up(self.proj_data_info, self.volume)
-
         # Check data sizes
-        assert dom.shape == self.volume.shape()
-        assert ran.shape == self.proj_data.to_array().shape()
+        assert dom.shape == volume.shape()
+        assert ran.shape == proj_data.to_array().shape()
 
+        # Set domain, range etc
         super().__init__(dom, ran, True)
 
-        self._adjoint = StirProjectorFromFileAdjoint(self.range, self.domain,
-                                                     self.proj_matrix,
-                                                     self.volume, self.proj_data)
+        # Read template of the projection
+        self.proj_data = proj_data
+        self.proj_data_info = proj_data.get_proj_data_info()
+        self.volume = volume
+
+        # Create forward projection by matrix
+        if projector is None:
+            proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
+            proj_matrix.set_up(self.proj_data_info, self.volume)
+            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
+            self.projector.set_up(self.proj_data_info, self.volume)
+
+            # If no adjoint was given, we initialize a projector here to
+            # save time.
+            if adjoint is None:
+                back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
+                back_projector.set_up(self.proj_data.get_proj_data_info(), self.volume)
+        else:
+            # If user wants to provide both a projector and a back-projector,
+            # he should wrap the back projector in an Operator
+            self.projector = projector
+            back_projector = None
+
+
+        if adjoint is None:
+            self._adjoint = BackProjectorByBinWrapper(self.range, self.domain,
+                                                      self.volume, self.proj_data,
+                                                      back_projector, self)
+        else:
+            self._adjoint = adjoint
 
     def _call(self, volume):
         """Forward project a volume."""
@@ -99,10 +136,8 @@ class StirProjectorFromFile(Operator):
         self.volume.fill(volume.asarray().flat)
 
         # project
-        old_verbosity = stir.Verbosity.get()
-        stir.Verbosity.set(0)
-        self.projector.forward_project(self.proj_data, self.volume)
-        stir.Verbosity.set(old_verbosity)
+        with StirVerbosity(0):
+            self.projector.forward_project(self.proj_data, self.volume)
 
         # make odl data
         arr = stir.stirextra.to_numpy(self.proj_data)
@@ -111,25 +146,73 @@ class StirProjectorFromFile(Operator):
 
     @property
     def adjoint(self):
-        """The back-projector associated with this array."""
+        """The back-projector associated with this operator."""
         return self._adjoint
 
 
-class StirProjectorFromFileAdjoint(Operator):
+class BackProjectorByBinWrapper(Operator):
 
-    """The adjoint of a `StirProjectorFromFile`.
+    """The back projector using STIR.
 
     Use the `StirProjectorFromFile.adjoint` method to create new objects.
     """
 
-    def __init__(self, dom, ran, proj_matrix, volume, projections):
-        """Initialize a new back-projector."""
-        super().__init__(dom, ran, True)
-        self.volume = volume
-        self.proj_data = projections
+    def __init__(self, dom, ran, volume, proj_data,
+                 back_projector=None, adjoint=None):
+        """Initialize a new back-projector.
 
-        self.back_proj = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
-        self.back_proj.set_up(self.proj_data.get_proj_data_info(), self.volume)
+        Parameters
+        ----------
+        dom : `DiscreteLp`
+            Projection space. Needs to have the same shape as
+            ``proj_data.to_array().shape()``.
+        ran : `DiscreteLp`
+            Volume of the projection. Needs to have the same shape as
+            ``volume.shape()``.
+        volume : `stir.FloatVoxelsOnCartesianGrid`
+            The stir volume to use in the forward projection
+        projection_data : `stir.ProjData`
+            The stir description of the projection.
+        back_projector : ``stir.BackProjectorByBin``, optional
+            A pre-initialized back-projector.
+        adjoint : `ForwardProjectorByBinWrapper`, optional
+            A pre-initialized adjoint.
+        """
+
+        # Check data sizes
+        assert dom.shape == self.volume.shape()
+        assert ran.shape == self.proj_data.to_array().shape()
+
+        # Set range domain
+        super().__init__(dom, ran, True)
+
+        # Read template of the projection
+        self.proj_data = proj_data
+        self.proj_data_info = proj_data.get_proj_data_info()
+        self.volume = volume
+
+        # Create forward projection by matrix
+        if back_projector is None:
+            proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
+            proj_matrix.set_up(self.proj_data_info, self.volume)
+
+            self.back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
+            self.back_projector.set_up(self.proj_data.get_proj_data_info(), self.volume)
+
+            if adjoint is None:
+                projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
+                projector.set_up(self.proj_data_info, self.volume)
+        else:
+            self.projector = projector
+            projector = None
+
+
+        if adjoint is None:
+            self._adjoint = ForwardProjectorByBinWrapper(self.range, self.domain,
+                                                         self.volume, self.proj_data,
+                                                         projector, self)
+        else:
+            self._adjoint = adjoint
 
     def _call(self, projections):
         """Back project."""
@@ -137,12 +220,24 @@ class StirProjectorFromFileAdjoint(Operator):
         self.proj_data.fill(projections.asarray().flat)
 
         # back-project
-        old_verbosity = stir.Verbosity.get()
-        stir.Verbosity.set(0)
-        self.back_proj.back_project(self.volume, self.proj_data)
-        stir.Verbosity.set(old_verbosity)
+        with StirVerbosity(0):
+            self.back_projector.back_project(self.volume, self.proj_data)
 
         # make odl data
         arr = stir.stirextra.to_numpy(self.volume)
 
         return self.range.element(arr)
+
+
+def projector_from_file(volume_file, data_file):
+    """ Create a STIR projector from given template files. """
+    volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
+
+    proj_data_in = stir.ProjData.read_from_file(data_file)
+    proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
+                                      proj_data_in.get_proj_data_info())
+
+    dom = 0
+    ran = 1
+
+    return ForwardProjectorByBinWrapper(dom, ran, volume, proj_data)

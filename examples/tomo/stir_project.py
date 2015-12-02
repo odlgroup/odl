@@ -23,12 +23,18 @@ from future import standard_library
 standard_library.install_aliases()
 
 import os.path as pth
+import stir
 import odl
 
 base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
 
 volume_file = str(pth.join(base, 'initial.hv'))
+volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
+
 projection_file = str(pth.join(base, 'small.hs'))
+proj_data_in = stir.ProjData.read_from_file(projection_file)
+proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
+                                  proj_data_in.get_proj_data_info())
 
 recon_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
                                                           [1, 1, 1])),
@@ -39,8 +45,8 @@ data_sp = odl.uniform_discr(odl.FunctionSpace(odl.Cuboid([0, 0, 0],
                             [37, 28, 56])
 
 proj = odl.tomo.StirProjectorFromFile(recon_sp, data_sp,
-                                      volume_file,
-                                      projection_file)
+                                      volume,
+                                      proj_data)
 
 vol = recon_sp.one()
 
