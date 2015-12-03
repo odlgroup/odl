@@ -15,26 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility library for ODL, only for internal use."""
+"""Visualization of the test functions in the diagnostics module."""
 
-from __future__ import absolute_import
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
 
-__all__ = ()
+# External
+import matplotlib.pyplot as plt
 
-from . import testutils
-from .testutils import *
-__all__ += testutils.__all__
+# Internal
+import odl
 
-from . import utility
-from .utility import *
-__all__ += utility.__all__
 
-from . import phantom
-from .phantom import *
-__all__ += phantom.__all__
 
-from . import graphics
-from .graphics import *
-__all__ += graphics.__all__
+spc = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
+disc = odl.uniform_discr(spc, [100, 100])
 
-from . import ufuncs
+(odl.util.shepp_logan(disc)).show()

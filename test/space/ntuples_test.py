@@ -23,7 +23,6 @@ standard_library.install_aliases()
 from builtins import range
 
 # External module imports
-from math import ceil
 import numpy as np
 import pytest
 import scipy as sp
@@ -50,12 +49,12 @@ from odl.util.ufuncs import UFUNCS
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.rand(fn.size).astype(fn.dtype)
+        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.integer):
-        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.complexfloating):
         return (np.random.rand(fn.size) +
-                1j * np.random.rand(fn.size)).astype(fn.dtype)
+                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
     else:
         raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
 
@@ -81,33 +80,26 @@ def _pos_array(fn):
     return np.abs(_array(fn)) + 0.1
 
 
-def _sparse_matrix(fn):
-    """Create a sparse positive definite Hermitian matrix for `fn`."""
-    nnz = np.random.randint(0, int(ceil(fn.size ** 2 / 2)))
-    coo_r = np.random.randint(0, fn.size, size=nnz)
-    coo_c = np.random.randint(0, fn.size, size=nnz)
-    if np.issubdtype(fn.dtype, np.floating):
-        values = np.random.rand(nnz).astype(fn.dtype)
-    elif np.issubdtype(fn.dtype, np.integer):
-        values = np.random.randint(0, 10, nnz).astype(fn.dtype)
-    elif np.issubdtype(fn.dtype, np.complexfloating):
-        values = (np.random.rand(nnz) +
-                  1j * np.random.rand(nnz)).astype(fn.dtype)
-    else:
-        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
-    mat = sp.sparse.coo_matrix((values, (coo_r, coo_c)),
-                               shape=(fn.size, fn.size),
-                               dtype=fn.dtype)
-    # Make symmetric and positive definite
-    return mat + mat.conj().T + fn.size * sp.sparse.eye(fn.size,
-                                                        dtype=fn.dtype)
-
-
 def _dense_matrix(fn):
     """Create a dense positive definite Hermitian matrix for `fn`."""
-    mat = np.asarray(np.random.rand(fn.size, fn.size), dtype=fn.dtype)
+
+    if np.issubdtype(fn.dtype, np.floating):
+        mat = np.random.rand(fn.size, fn.size).astype(fn.dtype, copy=False)
+    elif np.issubdtype(fn.dtype, np.integer):
+        mat = np.random.randint(0, 10, (fn.size, fn.size)).astype(fn.dtype,
+                                                                  copy=False)
+    elif np.issubdtype(fn.dtype, np.complexfloating):
+        mat = (np.random.rand(fn.size, fn.size) +
+               1j * np.random.rand(fn.size, fn.size)).astype(fn.dtype,
+                                                             copy=False)
+
     # Make symmetric and positive definite
     return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
+
+
+def _sparse_matrix(fn):
+    """Create a sparse positive definite Hermitian matrix for `fn`."""
+    return sp.sparse.coo_matrix(_dense_matrix(fn))
 
 
 # Pytest fixtures
@@ -219,7 +211,6 @@ def test_vector_class_init(fn):
     arr = _array(fn)
 
     FnVector(fn, arr)
-
     # Space has to be an actual space
     for non_space in [1, complex, np.array([1, 2])]:
         with pytest.raises(TypeError):
@@ -240,68 +231,33 @@ def _test_lincomb(fn, a, b):
 
     # Unaliased arguments
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * xarr + b * yarr
-    zparr[:] = a * xparr + b * yparr
     fn.lincomb(a, x, b, y, out=z)
-    fnp.lincomb(a, xp, b, yp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # First argument aliased with output
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * zarr + b * yarr
-    zparr[:] = a * zparr + b * yparr
     fn.lincomb(a, z, b, y, out=z)
-    fnp.lincomb(a, zp, b, yp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # Second argument aliased with output
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * xarr + b * zarr
-    zparr[:] = a * xparr + b * zparr
     fn.lincomb(a, x, b, z, out=z)
-    fnp.lincomb(a, xp, b, zp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # Both arguments aliased with each other
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * xarr + b * xarr
-    zparr[:] = a * xparr + b * xparr
     fn.lincomb(a, x, b, x, out=z)
-    fnp.lincomb(a, xp, b, xp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
     # All aliased
     xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
-    xparr, yparr, zparr = xarr[::2], yarr[::2], zarr[::2]
-    xp, yp, zp = x[::2], y[::2], z[::2]
-    fnp = type(fn)(fn.size / 2, fn.dtype)
-
     zarr[:] = a * zarr + b * zarr
-    zparr[:] = a * zparr + b * zparr
     fn.lincomb(a, z, b, z, out=z)
-    fnp.lincomb(a, zp, b, zp, out=zp)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
-    assert all_almost_equal([xp, yp, zp], [xparr, yparr, zparr])
 
 
 def test_lincomb(fn):
@@ -1531,14 +1487,21 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     data = _vectors(fn, n_args + n_out)
     in_arrays = data[:n_args]
     out_arrays = data[n_args:n_args + n_out]
-    in_vectors = data[n_args + n_out:2*n_args + n_out]
-    out_vectors = data[2*n_args + n_out:]
+    in_vectors = data[n_args + n_out:2 * n_args + n_out]
+    out_vectors = data[2 * n_args + n_out:]
 
     # Out of place:
     np_result = ufunc(*in_arrays)
     vec_fun = getattr(in_vectors[0].ufunc, name)
     odl_result = vec_fun(*in_vectors[1:])
     assert all_almost_equal(np_result, odl_result)
+
+    # Test type of output
+    if n_out == 1:
+        assert isinstance(odl_result, fn.element_type)
+    elif n_out > 1:
+        for i in range(n_out):
+            assert isinstance(odl_result[i], fn.element_type)
 
     # In place:
     np_result = ufunc(*(in_arrays + out_arrays))

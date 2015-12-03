@@ -23,18 +23,13 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
-from odl.util.utility import with_metaclass
-
-# External
-from abc import ABCMeta
 
 # ODL
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space.ntuples import (Ntuples, NtuplesVector, Fn, FnVector,
-                               Rn, RnVector, Cn, CnVector)
+from odl.space.ntuples import Ntuples, Fn, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
@@ -51,7 +46,7 @@ __all__ = ('RawDiscretization', 'RawDiscretizationVector',
            'Discretization', 'DiscretizationVector')
 
 
-class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
+class RawDiscretization(NtuplesBase):
 
     """Abstract raw discretization class.
 
@@ -197,7 +192,7 @@ class RawDiscretization(with_metaclass(ABCMeta, NtuplesBase)):
             return self.element_type(self, self.dspace.element(inp))
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -282,7 +277,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         return self.ntuple.asarray(out=out)
 
     def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
+        """Return ``vec == other``.
 
         Returns
         -------
@@ -330,11 +325,11 @@ class RawDiscretizationVector(NtuplesBaseVector):
             self.ntuple.__setitem__(indices, values)
 
     def __str__(self):
-        """``vec.__str__() <==> str(vec)``."""
+        """Return ``str(self)``."""
         return arraynd_str(self.asarray())
 
     def __repr__(self):
-        """``vec.__repr__() <==> repr(vec)``."""
+        """Return ``repr(self)``."""
         return '{!r}.element({})'.format(self.space,
                                          arraynd_repr(self.asarray()))
 

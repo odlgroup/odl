@@ -34,7 +34,7 @@ import numpy as np
 from odl.discr.discretization import (Discretization, DiscretizationVector,
                                       dspace_type)
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
-from odl.discr.grid import uniform_sampling
+from odl.discr.grid import uniform_sampling, RegularGrid
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
@@ -106,7 +106,7 @@ class DiscreteLp(Discretization):
         else:
             raise NotImplementedError
 
-        super().__init__(fspace, dspace, restriction, extension)
+        Discretization.__init__(self, fspace, dspace, restriction, extension)
 
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
@@ -157,6 +157,23 @@ class DiscreteLp(Discretization):
         """Sampling grid of the discretization mappings."""
         return self.restriction.grid
 
+    @property
+    def cell_size(self):
+        """Cell size of an underlying regular grid."""
+        if not isinstance(self.grid, RegularGrid):
+            raise NotImplementedError('cell size not defined for non-uniform '
+                                      'grids. Use `grid.cell_sizes()` '
+                                      'instead.')
+        csize = self.grid.stride
+        idcs = np.where(csize == 0)
+        csize[idcs] = self.domain.size[idcs]
+        return csize
+
+    @property
+    def cell_volume(self):
+        """Cell volume of an underlying regular grid."""
+        return float(np.prod(self.cell_size))
+
     def points(self):
         """All points in the sampling grid."""
         return self.grid.points(order=self.order)
@@ -172,7 +189,7 @@ class DiscreteLp(Discretization):
         return self._interp
 
     def __repr__(self):
-        """``lp.__repr__() <==> repr(lp).``"""
+        """Return ``repr(self).``"""
         # Check if the factory repr can be used
         if (uniform_sampling(self.uspace.domain, self.grid.shape,
                              as_midp=True) == self.grid):
@@ -215,7 +232,7 @@ class DiscreteLp(Discretization):
             return '{}({})'.format(self.__class__.__name__, arg_str)
 
     def __str__(self):
-        """``lp.__str__() <==> str(lp)``."""
+        """Return ``str(self)``."""
         return self.__repr__()
 
     @property
@@ -273,8 +290,19 @@ class DiscreteLpVector(DiscretizationVector):
 
     @property
     def shape(self):
+        """Multi-dimensional shape of this discrete function."""
         # override shape
         return self.space.grid.shape
+
+    @property
+    def cell_size(self):
+        """Cell size of an underlying regular grid."""
+        return self.space.cell_size
+
+    @property
+    def cell_volume(self):
+        """Cell volume of an underlying regular grid."""
+        return self.space.cell_volume
 
     def __setitem__(self, indices, values):
         """Set values of this vector.
@@ -426,7 +454,10 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
         raise ValueError('weighting {!r} not understood.'.format(weighting))
 
     if weighting_ == 'simple':
-        weight = np.prod(grid.stride)
+        csize = grid.stride
+        idcs = np.where(csize == 0)
+        csize[idcs] = fspace.domain.size[idcs]
+        weight = np.prod(csize)
     else:  # weighting_ == 'consistent'
         # TODO: implement
         raise NotImplementedError

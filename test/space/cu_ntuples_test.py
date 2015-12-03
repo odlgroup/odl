@@ -30,14 +30,13 @@ from numpy import float64
 # ODL imports
 import odl
 from odl.space.ntuples import FnConstWeighting
-if odl.CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import (
-        CudaFnNoWeighting, CudaFnConstWeighting, CudaFnVectorWeighting,
-        CudaFnCustomInnerProduct, CudaFnCustomNorm, CudaFnCustomDist)
+from odl.space.cu_ntuples import (
+    CudaFnNoWeighting, CudaFnConstWeighting, CudaFnVectorWeighting,
+    CudaFnCustomInnerProduct, CudaFnCustomNorm, CudaFnCustomDist)
 
-from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-                                skip_if_no_cuda)
+from odl.util.testutils import all_equal, all_almost_equal, almost_equal
 
+pytestmark = pytest.mark.skipif("not odl.CUDA_AVAILABLE")
 
 # TODO:
 # * custom dist/norm/inner
@@ -48,12 +47,12 @@ from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.rand(fn.size).astype(fn.dtype)
+        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
     elif np.issubdtype(fn.dtype, np.integer):
-        return np.random.randint(0, 10, fn.size).astype(fn.dtype)
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
     else:
         return (np.random.rand(fn.size) +
-                1j * np.random.rand(fn.size)).astype(fn.dtype)
+                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
 
 
 def _element(fn):
@@ -122,23 +121,19 @@ dtype_fixture = pytest.fixture(scope="module", ids=dtype_ids,
 def dtype(request):
     return request.param
 
-
 # --- CUDA space tests --- #
 
 
-@skip_if_no_cuda
 def test_init_cudantuples(dtype):
     # verify that the code runs
     odl.CudaNtuples(3, dtype=dtype).element()
     odl.CudaFn(3, dtype=dtype).element()
 
 
-@skip_if_no_cuda
 def test_init_exponent(exponent, dtype):
     odl.CudaFn(3, dtype=dtype, exponent=exponent)
 
 
-@skip_if_no_cuda
 def test_init_cudantuples_bad_dtype():
     with pytest.raises(TypeError):
         odl.CudaNtuples(3, dtype=np.ndarray)
@@ -148,7 +143,6 @@ def test_init_cudantuples_bad_dtype():
         odl.CudaNtuples(3, dtype=np.matrix)
 
 
-@skip_if_no_cuda
 def test_init_spacefuncs(exponent):
     const = 1.5
     weight_vec = _pos_vector(odl.CudaRn(3))
@@ -172,7 +166,6 @@ def test_init_spacefuncs(exponent):
     assert f3_elem._space_funcs == weighting_elem
 
 
-@skip_if_no_cuda
 def test_element(fn):
     x = fn.element()
     assert x in fn
@@ -194,24 +187,20 @@ def test_element(fn):
         fn.element(inp=[0] * fn.size, data_ptr=y.data_ptr)
 
 
-@skip_if_no_cuda
 def test_zero(fn):
     assert all_almost_equal(fn.zero(), [0] * fn.size)
 
 
-@skip_if_no_cuda
 def test_one(fn):
     assert all_almost_equal(fn.one(), [1] * fn.size)
 
 
-@skip_if_no_cuda
 def test_list_init(fn):
     x_list = list(range(fn.size))
     x = fn.element(x_list)
     assert all_almost_equal(x, x_list)
 
 
-@skip_if_no_cuda
 def test_ndarray_init():
     r3 = odl.CudaRn(3)
 
@@ -228,7 +217,6 @@ def test_ndarray_init():
     assert all_equal(x, x0)
 
 
-@skip_if_no_cuda
 def test_getitem():
     r3 = odl.CudaRn(3)
     y = [1, 2, 3]
@@ -238,7 +226,6 @@ def test_getitem():
         assert x[index] == y[index]
 
 
-@skip_if_no_cuda
 def test_iterator():
     r3 = odl.CudaRn(3)
     y = [1, 2, 3]
@@ -247,7 +234,6 @@ def test_iterator():
     assert all_equal([a for a in x], [b for b in y])
 
 
-@skip_if_no_cuda
 def test_getitem_index_error():
     r3 = odl.CudaRn(3)
     x = r3.element([1, 2, 3])
@@ -259,7 +245,6 @@ def test_getitem_index_error():
         x[3]
 
 
-@skip_if_no_cuda
 def test_setitem():
     r3 = odl.CudaRn(3)
     x = r3.element([42, 42, 42])
@@ -269,7 +254,6 @@ def test_setitem():
         assert x[index] == index
 
 
-@skip_if_no_cuda
 def test_setitem_index_error():
     r3 = odl.CudaRn(3)
     x = r3.element([1, 2, 3])
@@ -281,7 +265,6 @@ def test_setitem_index_error():
         x[3] = 0
 
 
-@skip_if_no_cuda
 def _test_getslice(slice):
     # Validate get against python list behaviour
     r6 = odl.CudaRn(6)
@@ -291,7 +274,6 @@ def _test_getslice(slice):
     assert all_equal(x[slice], y[slice])
 
 
-@skip_if_no_cuda
 def test_getslice():
     # Tests getting all combinations of slices
     steps = [None, -2, -1, 1, 2]
@@ -304,7 +286,6 @@ def test_getslice():
                 _test_getslice(slice(start, end, step))
 
 
-@skip_if_no_cuda
 def test_slice_of_slice():
     # Verify that creating slices from slices works as expected
     r10 = odl.CudaRn(10)
@@ -322,7 +303,6 @@ def test_slice_of_slice():
     assert all_equal(zh, zd)
 
 
-@skip_if_no_cuda
 def test_slice_is_view():
     # Verify that modifications of a view modify the original data
     r10 = odl.CudaRn(10)
@@ -339,7 +319,6 @@ def test_slice_is_view():
     assert all_equal(yh, yd)
 
 
-@skip_if_no_cuda
 def test_getslice_index_error():
     r3 = odl.CudaRn(3)
     xd = r3.element([1, 2, 3])
@@ -349,7 +328,6 @@ def test_getslice_index_error():
         xd[10:13]
 
 
-@skip_if_no_cuda
 def _test_setslice(slice):
     # Validate set against python list behaviour
     r6 = odl.CudaRn(6)
@@ -362,7 +340,6 @@ def _test_setslice(slice):
     assert all_equal(x, y)
 
 
-@skip_if_no_cuda
 def test_setslice():
     # Tests a range of combination of slices
     steps = [None, -2, -1, 1, 2]
@@ -375,7 +352,6 @@ def test_setslice():
                 _test_setslice(slice(start, end, step))
 
 
-@skip_if_no_cuda
 def test_setslice_index_error():
     r3 = odl.CudaRn(3)
     xd = r3.element([1, 2, 3])
@@ -395,7 +371,6 @@ def test_setslice_index_error():
         xd[:] = [1, 2, 3, 4]
 
 
-@skip_if_no_cuda
 def test_inner():
     r3 = odl.CudaRn(3)
     x = r3.element([1, 2, 3])
@@ -417,7 +392,6 @@ def test_inner():
         x.inner(y)
 
 
-@skip_if_no_cuda
 def test_norm(exponent):
     r3 = odl.CudaRn(3, exponent=exponent)
     xarr, x = _vectors(r3)
@@ -434,7 +408,6 @@ def test_norm(exponent):
         assert almost_equal(x.norm(), correct_norm)
 
 
-@skip_if_no_cuda
 def test_dist(exponent):
     r3 = odl.CudaRn(3, exponent=exponent)
     xarr, yarr, x, y = _vectors(r3, n=2)
@@ -452,7 +425,6 @@ def test_dist(exponent):
         assert almost_equal(x.dist(y), correct_dist)
 
 
-@skip_if_no_cuda
 def _test_lincomb(fn, a, b):
     # Validates lincomb against the result on host with randomized
     # data and given a,b
@@ -493,7 +465,6 @@ def _test_lincomb(fn, a, b):
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 
-@skip_if_no_cuda
 def test_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
@@ -501,7 +472,6 @@ def test_lincomb(fn):
             _test_lincomb(fn, a, b)
 
 
-@skip_if_no_cuda
 def _test_member_lincomb(spc, a):
     # Validates vector member lincomb against the result on host
 
@@ -518,14 +488,12 @@ def _test_member_lincomb(spc, a):
     assert all_almost_equal(y_device, y_host)
 
 
-@skip_if_no_cuda
 def test_member_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
     for a in scalar_values:
         _test_member_lincomb(fn, a)
 
 
-@skip_if_no_cuda
 def test_multiply():
     # Validates multiply against the result on host with randomized data
     rn = odl.CudaRn(100)
@@ -554,7 +522,6 @@ def test_multiply():
     assert all_almost_equal(z_device, z_host)
 
 
-@skip_if_no_cuda
 def test_member_multiply():
     # Validate vector member multiply against the result on host
     # with randomized data
@@ -571,7 +538,6 @@ def test_member_multiply():
     assert all_almost_equal(y_device, y_host)
 
 
-@skip_if_no_cuda
 def _test_unary_operator(spc, function):
     # Verify that the statement y=function(x) gives equivalent
     # results to Numpy.
@@ -583,7 +549,6 @@ def _test_unary_operator(spc, function):
     assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
-@skip_if_no_cuda
 def _test_binary_operator(spc, function):
     # Verify that the statement z=function(x,y) gives equivalent
     # results to Numpy.
@@ -595,7 +560,6 @@ def _test_binary_operator(spc, function):
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 
-@skip_if_no_cuda
 def test_operators(fn):
     # Test of all operator overloads against the corresponding
     # Numpy implementation
@@ -667,7 +631,6 @@ def test_operators(fn):
     _test_unary_operator(fn, lambda x: x / x)
 
 
-@skip_if_no_cuda
 def test_incompatible_operations():
     r3 = odl.CudaRn(3)
     R3h = odl.Rn(3)
@@ -687,7 +650,6 @@ def test_incompatible_operations():
         xA - xB
 
 
-@skip_if_no_cuda
 def test_copy(fn):
     import copy
 
@@ -703,7 +665,6 @@ def test_copy(fn):
     assert z is not x
 
 
-@skip_if_no_cuda
 def test_transpose(fn):
     x = _element(fn)
     y = _element(fn)
@@ -720,7 +681,6 @@ def test_transpose(fn):
     assert x.T.T == x
 
 
-@skip_if_no_cuda
 def test_modify():
     r3 = odl.CudaRn(3)
     xd = r3.element([1, 2, 3])
@@ -731,7 +691,6 @@ def test_modify():
     assert all_equal(xd, yd)
 
 
-@skip_if_no_cuda
 def test_sub_vector():
     r6 = odl.CudaRn(6)
     r3 = odl.CudaRn(3)
@@ -743,7 +702,6 @@ def test_sub_vector():
     assert all_almost_equal([7, 8, 9, 4, 5, 6], xd)
 
 
-@skip_if_no_cuda
 def test_offset_sub_vector():
     r6 = odl.CudaRn(6)
     r3 = odl.CudaRn(3)
@@ -755,7 +713,6 @@ def test_offset_sub_vector():
     assert all_equal([1, 2, 3, 7, 8, 9], xd)
 
 
-@skip_if_no_cuda
 def _test_dtype(dt):
     if dt not in odl.CUDA_DTYPES:
         with pytest.raises(TypeError):
@@ -768,7 +725,6 @@ def _test_dtype(dt):
         assert all_almost_equal(z, [5, 7, 9])
 
 
-@skip_if_no_cuda
 def test_dtypes():
     for dt in [np.int8, np.int16, np.int32, np.int64, np.int,
                np.uint8, np.uint16, np.uint32, np.uint64, np.uint,
@@ -779,7 +735,7 @@ def test_dtypes():
 # TODO: REMOVE
 
 
-@skip_if_no_cuda
+@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
 def _test_extra_ufunc(ufunc):
     r3 = odl.CudaRn(5)
     x_host = [-1.0, 0, 0.1, 0.3, 10.0]
@@ -791,7 +747,6 @@ def _test_extra_ufunc(ufunc):
     assert all_almost_equal(y_host, y_dev)
 
 
-@skip_if_no_cuda
 def test_extra_ufuncs():
     for ufunc in ['sin', 'cos',
                   'arcsin', 'arccos',
@@ -802,14 +757,11 @@ def test_extra_ufuncs():
 
 # --- Weighting tests --- #
 
-
-@skip_if_no_cuda
 def test_const_init(exponent):
     const = 1.5
     CudaFnConstWeighting(const, exponent=exponent)
 
 
-@skip_if_no_cuda
 def test_const_equals(exponent):
     constant = 1.5
 
@@ -826,7 +778,6 @@ def test_const_equals(exponent):
     assert weighting != wrong_exp
 
 
-@skip_if_no_cuda
 def test_const_inner():
     rn = odl.CudaRn(5)
     xarr, yarr, x, y = _vectors(rn, 2)
@@ -838,7 +789,6 @@ def test_const_inner():
     assert almost_equal(weighting.inner(x, y), true_inner)
 
 
-@skip_if_no_cuda
 def test_const_norm(exponent):
     rn = odl.CudaRn(5)
     xarr, x = _vectors(rn)
@@ -866,7 +816,6 @@ def test_const_norm(exponent):
         assert almost_equal(pnorm(x), true_norm)
 
 
-@skip_if_no_cuda
 def test_const_dist(exponent):
     rn = odl.CudaRn(5)
     xarr, yarr, x, y = _vectors(rn, n=2)
@@ -894,7 +843,6 @@ def test_const_dist(exponent):
         assert almost_equal(pdist(x, y), true_dist)
 
 
-@skip_if_no_cuda
 def test_vector_init():
     rn = odl.CudaRn(5)
     weight_vec = _pos_vector(rn)
@@ -903,7 +851,6 @@ def test_vector_init():
     CudaFnVectorWeighting(rn.element(weight_vec))
 
 
-@skip_if_no_cuda
 def test_vector_isvalid():
     rn = odl.CudaRn(5)
     weight = _pos_vector(rn)
@@ -920,7 +867,6 @@ def test_vector_isvalid():
     assert not weighting.vector_is_valid()
 
 
-@skip_if_no_cuda
 def test_vector_equals():
     rn = odl.CudaRn(5)
     weight = _pos_vector(rn)
@@ -931,7 +877,6 @@ def test_vector_equals():
     assert weighting == weighting2
 
 
-@skip_if_no_cuda
 def test_vector_inner():
     rn = odl.CudaRn(5)
     xarr, yarr, x, y = _vectors(rn, 2)
@@ -954,7 +899,6 @@ def test_vector_inner():
         CudaFnVectorWeighting(weight, exponent=1.0).inner(x, y)
 
 
-@skip_if_no_cuda
 def test_vector_norm(exponent):
     rn = odl.CudaRn(5)
     xarr, x = _vectors(rn)
@@ -987,7 +931,6 @@ def test_vector_norm(exponent):
         assert almost_equal(pnorm(x), true_norm)
 
 
-@skip_if_no_cuda
 def test_vector_dist(exponent):
     rn = odl.CudaRn(5)
     xarr, yarr, x, y = _vectors(rn, n=2)
@@ -1114,7 +1057,7 @@ def test_custom_dist(fn):
         CudaFnCustomDist(1)
 
 
-@skip_if_no_cuda
+@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
 def _impl_test_ufuncs(fn, name, n_args, n_out):
     # Get the ufunc from numpy as reference
     ufunc = getattr(np, name)
@@ -1123,14 +1066,21 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     data = _vectors(fn, n_args + n_out)
     in_arrays = data[:n_args]
     out_arrays = data[n_args:n_args + n_out]
-    in_vectors = data[n_args + n_out:2*n_args + n_out]
-    out_vectors = data[2*n_args + n_out:]
+    in_vectors = data[n_args + n_out:2 * n_args + n_out]
+    out_vectors = data[2 * n_args + n_out:]
 
     # Out of place:
     np_result = ufunc(*in_arrays)
     vec_fun = getattr(in_vectors[0].ufunc, name)
     odl_result = vec_fun(*in_vectors[1:])
     assert all_almost_equal(np_result, odl_result)
+
+    # Test type of output
+    if n_out == 1:
+        assert isinstance(odl_result, fn.element_type)
+    elif n_out > 1:
+        for i in range(n_out):
+            assert isinstance(odl_result[i], fn.element_type)
 
     # In place:
     np_result = ufunc(*(in_arrays + out_arrays))
@@ -1146,7 +1096,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert odl_result[i] is out_vectors[i]
 
 
-@skip_if_no_cuda
+@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
     fn = odl.CudaRn(3)

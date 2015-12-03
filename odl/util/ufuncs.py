@@ -29,7 +29,7 @@ standard_library.install_aliases()
 # External module imports
 import numpy as np
 
-#Ignore arithmetic since we already support that
+# Some are ignored since they dont cooperate with dtypes, needs fix
 # Name, args, optional args, docstring
 UFUNCS = [('add', 2, 1, 'Add arguments element-wise with numpy.'),
           ('subtract', 2, 1, 'Subtract arguments, element-wise with numpy.'),
@@ -94,8 +94,8 @@ UFUNCS = [('add', 2, 1, 'Add arguments element-wise with numpy.'),
           ('minimum', 2, 1, 'Element-wise minimum of array elements.'),
           ('fmax', 2, 1, 'Element-wise maximum of array elements.'),
           ('fmin', 2, 1, 'Element-wise minimum of array elements.'),
-          ('isreal', 1, 0, 'Returns a bool array, where True if input element is real.'),
-          ('iscomplex', 1, 0, 'Returns a bool array, where True if input element is complex.'),
+          # ('isreal', 1, 0, 'Returns a bool array, where True if input element is real.'),
+          # ('iscomplex', 1, 0, 'Returns a bool array, where True if input element is complex.'),
           ('isfinite', 1, 1, 'Test element-wise for finiteness (not infinity or not Not a Number).'),
           ('isinf', 1, 1, 'Test element-wise for positive or negative infinity.'),
           ('isnan', 1, 1, 'Test element-wise for NaN and return result as a boolean array.'),
@@ -103,8 +103,8 @@ UFUNCS = [('add', 2, 1, 'Add arguments element-wise with numpy.'),
           ('copysign', 2, 1, 'Change the sign of x1 to that of x2, element-wise.'),
           ('nextafter', 2, 1, 'Return the next floating-point value after x1 towards x2, element-wise.'),
           ('modf', 1, 2, 'Return the fractional and integral parts of an array, element-wise.'),
-          #('ldexp', 2, 1, 'Returns x1 * 2**x2, element-wise.'),
-          #('frexp', 1, 2, 'Decompose the elements of x into mantissa and twos exponent.'),
+          # ('ldexp', 2, 1, 'Returns x1 * 2**x2, element-wise.'),
+          # ('frexp', 1, 2, 'Decompose the elements of x into mantissa and twos exponent.'),
           ('fmod', 2, 1, 'Return the element-wise remainder of division.'),
           ('floor', 1, 1, 'Return the floor of the input, element-wise.'),
           ('ceil', 1, 1, 'Return the ceiling of the input, element-wise.'),

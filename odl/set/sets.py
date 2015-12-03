@@ -97,7 +97,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __contains__(self, other):
-        """``s.__contains__(other) <==> other in s``."""
+        """Return ``other in self``."""
 
     def contains_set(self, other):
         """Test if ``other`` is a subset of this set.
@@ -108,10 +108,10 @@ class Set(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""
+        """Return ``self == other``."""
 
     def __ne__(self, other):
-        """``s.__ne__(other) <==> s != other``."""
+        """Return ``self != other``."""
         return not self.__eq__(other)
 
     def element(self, inp=None):
@@ -139,7 +139,7 @@ class EmptySet(Set):
         return isinstance(other, EmptySet)
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""
+        """Return ``self == other``."""
         return isinstance(other, EmptySet)
 
     def element(self, inp=None):
@@ -147,11 +147,11 @@ class EmptySet(Set):
         return None
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return "EmptySet"
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return "EmptySet()"
 
 
@@ -171,7 +171,7 @@ class UniversalSet(Set):
         return isinstance(other, Set)
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""
+        """Return ``self == other``."""
         return isinstance(other, UniversalSet)
 
     def element(self, inp=None):
@@ -179,11 +179,11 @@ class UniversalSet(Set):
         return inp
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return "UniversalSet"
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return "UniversalSet()"
 
 
@@ -211,14 +211,14 @@ class Strings(Set):
         return self._length
 
     def __contains__(self, other):
-        """``s.__constains__(other) <==> other in s``.
+        """Return ``other in self``.
 
         `True` if ``other`` is a string of at max `length`
         characters, `False` otherwise."""
         return isinstance(other, basestring) and len(other) == self.length
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""
+        """Return ``self == other``."""
         return isinstance(other, Strings) and other.length == self.length
 
     def element(self, inp=None):
@@ -231,15 +231,15 @@ class Strings(Set):
             return ' ' * self.length
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return 'Strings({})'.format(self.length)
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return 'Strings({})'.format(self.length)
 
 
-class Field(with_metaclass(ABCMeta, Set)):
+class Field(Set):
     """Any set that satisfies the field axioms
 
     For example `RealNumbers`, `ComplexNumbers` or
@@ -283,7 +283,7 @@ class ComplexNumbers(Field):
                 isinstance(other, Integers))
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""
+        """Return ``self == other``."""
         if other is self:
             return True
 
@@ -297,11 +297,11 @@ class ComplexNumbers(Field):
             return complex(0.0, 0.0)
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return "ComplexNumbers"
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return "ComplexNumbers()"
 
 
@@ -335,7 +335,7 @@ class RealNumbers(Field):
                 isinstance(other, Integers))
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""
+        """Return ``self == other``."""
         if other is self:
             return True
 
@@ -349,11 +349,11 @@ class RealNumbers(Field):
             return 0.0
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return "RealNumbers"
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return "RealNumbers()"
 
 
@@ -362,7 +362,7 @@ class Integers(Set):
     """The set of integers."""
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``."""
+        """Return ``self == other``."""
         if other is self:
             return True
 
@@ -399,11 +399,11 @@ class Integers(Set):
             return 0
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return "Integers"
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return "Integers()"
 
 
@@ -447,7 +447,7 @@ class CartesianProduct(Set):
                 all(p in set_ for set_, p in zip(self.sets, other)))
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -488,11 +488,11 @@ class CartesianProduct(Set):
         return tpl
 
     def __len__(self):
-        """``s.__len__() <==> len(s)``."""
+        """Return ``len(self)``."""
         return len(self.sets)
 
     def __getitem__(self, indcs):
-        """``s.__getitem__(indcs) <==> s[indcs]``.
+        """Return ``self[indcs]``.
 
         Examples
         --------
@@ -509,11 +509,11 @@ class CartesianProduct(Set):
             return self.sets[indcs]
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return ' x '.join(str(set_) for set_ in self.sets)
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``.
+        """Return ``repr(self)``.
 
         Examples
         --------

@@ -33,6 +33,7 @@ from future.utils import native
 # External module imports
 # pylint: disable=no-name-in-module
 import ctypes
+from numbers import Integral
 from functools import partial
 from math import sqrt
 import numpy as np
@@ -84,7 +85,7 @@ class Ntuples(NtuplesBase):
 
         Parameters
         ----------
-        inp : array-like or scalar, optional
+        inp : array-like, optional
             Input to initialize the new element.
 
             If ``inp`` is `None`, an empty element is created with no
@@ -93,10 +94,7 @@ class Ntuples(NtuplesBase):
             If ``inp`` is a `numpy.ndarray` of shape ``(size,)``
             and the same data type as this space, the array is wrapped,
             not copied.
-            Other array-like objects are copied (with broadcasting
-            if necessary).
-
-            If a single value is given, it is copied to all entries.
+            Other array-like objects are copied.
 
         Returns
         -------
@@ -141,14 +139,9 @@ class Ntuples(NtuplesBase):
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
-                inp = np.atleast_1d(inp).astype(self.dtype, copy=False)
+                arr = np.atleast_1d(inp).astype(self.dtype, copy=False)
 
-                if inp.shape == (1,):
-                    arr = np.empty(self.size, dtype=self.dtype)
-                    arr[:] = inp
-                elif inp.shape == (self.size,):
-                    arr = inp
-                else:
+                if arr.shape != (self.size,):
                     raise ValueError('input shape {} not broadcastable to '
                                      'shape ({},).'.format(inp.shape,
                                                            self.size))
@@ -183,7 +176,7 @@ class NtuplesVector(NtuplesBaseVector):
 
         self._data = data
 
-        super().__init__(space)
+        NtuplesBaseVector.__init__(self, space)
 
     @property
     def data(self):
@@ -258,7 +251,7 @@ class NtuplesVector(NtuplesBaseVector):
         return self._data.ctypes.data
 
     def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -343,12 +336,11 @@ class NtuplesVector(NtuplesBaseVector):
         >>> x[1:3].space
         Ntuples(2, '<U6')
         """
-        try:
-            return self.data[int(indices)]  # single index
-        except TypeError:
+        if isinstance(indices, Integral):
+            return self.data[indices]  # single index
+        else:
             arr = self.data[indices]
-            return type(self.space)(
-                len(arr), dtype=self.dtype).element(arr)
+            return type(self.space)(len(arr), dtype=self.dtype).element(arr)
 
     def __setitem__(self, indices, values):
         """Set values of this vector.
@@ -428,6 +420,7 @@ class NtuplesVector(NtuplesBaseVector):
         These are optimized for use with ntuples and incur no overhead.
         """
         return NtuplesVectorUFuncs(self)
+
 
 def _blas_is_applicable(*args):
     """Whether BLAS routines can be applied or not.
@@ -684,7 +677,7 @@ class Fn(FnBase, Ntuples):
 
                 Default: `False`.
         """
-        super().__init__(size, dtype)
+        FnBase.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
@@ -954,7 +947,7 @@ class Fn(FnBase, Ntuples):
         return self.element(np.ones(self.size, dtype=self.dtype))
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1029,7 +1022,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         if not isinstance(space, Fn):
             raise TypeError('{!r} not an `Fn` instance.'
                             ''.format(space))
-        super().__init__(space, data)
+
+        NtuplesVector.__init__(self, space, data)
 
     @property
     def real(self):
@@ -1212,14 +1206,14 @@ class Cn(Fn):
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
-        super().__init__(size, dtype, **kwargs)
+        Fn.__init__(self, size, dtype, **kwargs)
 
         if not is_complex_floating_dtype(self._dtype):
             raise TypeError('data type {!r} not a complex floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{}'
         if self.dtype != np.complex128:
             inner_fstr += ', {dtype}'
@@ -1229,7 +1223,7 @@ class Cn(Fn):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``cn.__str__() <==> str(cn)``."""
+        """Return ``str(self)``."""
         if self.dtype == np.complex128:
             return 'Cn({})'.format(self.size)
         else:
@@ -1278,14 +1272,14 @@ class Rn(Fn):
         kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
             See `Fn`
         """
-        super().__init__(size, dtype, **kwargs)
+        Fn.__init__(self, size, dtype, **kwargs)
 
         if not is_real_floating_dtype(self.dtype):
             raise TypeError('data type {!r} not a real floating-point type.'
                             ''.format(dtype))
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{}'
         if self.dtype != 'float64':
             inner_fstr += ', {dtype}'
@@ -1295,7 +1289,7 @@ class Rn(Fn):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``rn.__str__() <==> str(rn)``."""
+        """Return ``str(self)``."""
         if self.dtype == np.float64:
             return 'Rn({})'.format(self.size)
         else:
@@ -1657,8 +1651,8 @@ class FnMatrixWeighting(FnWeightingBase):
         """
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
+                                 dist_using_inner=dist_using_inner)
 
         if isspmatrix(matrix):
             self._matrix = matrix
@@ -1686,6 +1680,8 @@ class FnMatrixWeighting(FnWeightingBase):
             eigval, eigvec = sp.linalg.eigh(self._matrix)
             eigval **= 1.0 / self._exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
+        else:
+            self._mat_pow = None
 
         self._cache_mat_pow = bool(cache_mat_pow)
 
@@ -1716,7 +1712,7 @@ class FnMatrixWeighting(FnWeightingBase):
             return False
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1840,7 +1836,7 @@ class FnMatrixWeighting(FnWeightingBase):
                 norm_squared = 0.0  # Compensate for numerical error
             return sqrt(norm_squared)
         else:
-            if not hasattr(self, '_mat_pow'):
+            if self._mat_pow is None:
                 # This case can only be reached if p != 1,2,inf
                 if self.matrix_issparse:
                     raise NotImplementedError('sparse matrix powers not '
@@ -1858,7 +1854,7 @@ class FnMatrixWeighting(FnWeightingBase):
                                         self.exponent))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         if self.matrix_issparse:
             inner_fstr = ('<{shape} sparse matrix, format {fmt!r}, {nnz} '
                           'stored entries>')
@@ -1885,7 +1881,7 @@ class FnMatrixWeighting(FnWeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         if self.exponent == 2.0:
             return 'Weighting: matrix =\n{}'.format(self.matrix)
         else:
@@ -1975,7 +1971,7 @@ class FnVectorWeighting(FnWeightingBase):
         return np.all(self.vector > 0)
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -2066,7 +2062,7 @@ class FnVectorWeighting(FnWeightingBase):
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{vector!r}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
@@ -2077,7 +2073,7 @@ class FnVectorWeighting(FnWeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w._str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         if self.exponent == 2.0:
             return 'Weighting: vector =\n{}'.format(self.vector)
         else:
@@ -2139,8 +2135,8 @@ class FnConstWeighting(FnWeightingBase):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
+                                 dist_using_inner=dist_using_inner)
         self._const = float(constant)
         if self.const <= 0:
             raise ValueError('constant {} is not positive.'.format(constant))
@@ -2153,7 +2149,7 @@ class FnConstWeighting(FnWeightingBase):
         return self._const
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -2259,7 +2255,7 @@ class FnConstWeighting(FnWeightingBase):
                     float(_pnorm_default(x1 - x2, self.exponent)))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
@@ -2270,7 +2266,7 @@ class FnConstWeighting(FnWeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         if self.exponent == 2.0:
             return 'Weighting: const = {:.4}'.format(self.const)
         else:
@@ -2295,6 +2291,8 @@ class FnNoWeighting(FnConstWeighting):
     _instance = None
 
     def __new__(cls, *args, **kwargs):
+        """ Implement singleton pattern if exp==2.0
+        """
         if len(args) == 0:
             exponent = kwargs.pop('exponent', 2.0)
             dist_using_inner = kwargs.pop('dist_using_inner', False)
@@ -2335,11 +2333,13 @@ class FnNoWeighting(FnConstWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(constant=1.0, exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        if not hasattr(self, '_initialized'):
+            FnConstWeighting.__init__(self, constant=1.0, exponent=exponent,
+                                      dist_using_inner=dist_using_inner)
+            self._initialized = True
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = ''
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
@@ -2350,7 +2350,7 @@ class FnNoWeighting(FnConstWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         if self.exponent == 2.0:
             return 'NoWeighting'
         else:
@@ -2405,7 +2405,7 @@ class FnCustomInnerProduct(FnWeightingBase):
         return self._inner_impl
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -2419,7 +2419,7 @@ class FnCustomInnerProduct(FnWeightingBase):
                 super().__eq__(other))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{!r}'
         if self._dist_using_inner:
             inner_fstr += ', dist_using_inner=True'
@@ -2428,7 +2428,7 @@ class FnCustomInnerProduct(FnWeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         return self.__repr__()  # TODO: prettify?
 
 
@@ -2471,7 +2471,7 @@ class FnCustomNorm(FnWeightingBase):
         return self._norm_impl
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -2485,13 +2485,13 @@ class FnCustomNorm(FnWeightingBase):
                 super().__eq__(other))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{!r}'
         inner_str = inner_fstr.format(self.norm)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         return self.__repr__()  # TODO: prettify?
 
 
@@ -2537,7 +2537,7 @@ class FnCustomDist(FnWeightingBase):
         raise NotImplementedError
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -2550,13 +2550,13 @@ class FnCustomDist(FnWeightingBase):
                 super().__eq__(other))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{!r}'
         inner_str = inner_fstr.format(self.dist)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         return self.__repr__()  # TODO: prettify?
 
 
