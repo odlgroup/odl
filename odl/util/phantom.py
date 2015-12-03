@@ -29,7 +29,7 @@ import numpy as np
 __all__ = ('shepp_logan',)
 
 
-def _shepp_logan_ellipse():
+def _shepp_logan_ellipse_2d():
     # Modified Shepp Logan
     return [[1.00, .6900, .9200, 0, 0, 0],
             [-.80, .6624, .8740, 0, -.0184, 0],
@@ -43,15 +43,23 @@ def _shepp_logan_ellipse():
             [.10, .0230, .0460, .06, -.6050, 0]]
 
 
-def shepp_logan(space):
-    """Create a shepp logan phantom in space."""
-    ellipses = _shepp_logan_ellipse()
+def _shepp_logan_2d(space):
+    """Create a shepp logan phantom in 2d space."""
+    ellipses = _shepp_logan_ellipse_2d()
 
     # Blank image
     p = np.zeros(space.size)
 
     # Create the pixel grid
     points = space.points()
+    minp = space.grid.min()
+    maxp = space.grid.max()
+
+    # move points to [0, 1]
+    points = (points - minp) / (maxp - minp)
+
+    # move to [-1, 1]
+    points = points * 2 - 1
 
     for ellip in ellipses:
         I = ellip[0]
@@ -78,3 +86,89 @@ def shepp_logan(space):
         p[inside] += I
 
     return space.element(p)
+
+
+def _shepp_logan_ellipse_3d():
+    # Modified Shepp Logan
+    # See
+    # http://www.mathworks.com/matlabcentral/fileexchange/9416-3d-shepp-logan-phantom
+    return [[1.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
+            [-.80, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
+            [-.20, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
+            [-.20, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 10],
+            [.100, .2100, .2500, .410, 0.0000, 0.3500, -.15, 0.0, 0, 0],
+            [.100, .0460, .0460, .050, 0.0000, 0.1000, 0.25, 0.0, 0, 0],
+            [.100, .0460, .0460, .050, 0.0000, -.1000, 0.25, 0.0, 0, 0],
+            [.100, .0460, .0230, .050, -.0800, -.6050, 0.00, 0.0, 0, 0],
+            [.100, .0230, .0230, .020, 0.0000, -.6060, 0.00, 0.0, 0, 0],
+            [.100, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
+
+
+def _shepp_logan_3d(space):
+    """Create a shepp logan phantom in 3d space."""
+    ellipses = _shepp_logan_ellipse_3d()
+
+    # Blank image
+    p = np.zeros(space.size)
+
+    # Create the pixel grid
+    points = space.points()
+    minp = space.grid.min()
+    maxp = space.grid.max()
+
+    # move points to [0, 1]
+    points = (points - minp) / (maxp - minp)
+
+    # move to [-1, 1]
+    points = points * 2 - 1
+
+    for ellip in ellipses:
+        I = ellip[0]
+        a2 = ellip[1] ** 2
+        b2 = ellip[2] ** 2
+        c2 = ellip[3] ** 2
+        x0 = ellip[4]
+        y0 = ellip[5]
+        z0 = ellip[6]
+        phi = ellip[7] * np.pi / 180
+        theta = ellip[8] * np.pi / 180
+        psi = ellip[9] * np.pi / 180
+
+        # Create the offset x,y and z values for the grid
+        offset_points = points - [x0, y0, z0]
+
+        cphi = np.cos(phi)
+        sphi = np.sin(phi)
+        ctheta = np.cos(theta)
+        stheta = np.sin(theta)
+        cpsi = np.cos(psi)
+        spsi = np.sin(psi)
+
+        # Find the pixels within the ellipse
+        scales = [1 / a2, 1 / b2, 1 / c2]
+        mat = [[cpsi * cphi - ctheta * sphi * spsi,
+                cpsi * sphi + ctheta * cphi * spsi,
+                spsi * stheta],
+               [-spsi * cphi - ctheta * sphi * cpsi,
+                -spsi * sphi + ctheta * cphi * cpsi,
+                cpsi * stheta],
+               [stheta * sphi,
+                -stheta * cphi,
+                ctheta]]
+
+        radius = np.dot(scales, np.dot(mat, offset_points.T) ** 2)
+        inside = radius <= 1
+
+        # Add the ellipse intensity to those pixels
+        p[inside] += I
+
+    return space.element(p)
+
+
+def shepp_logan(space):
+    if space.ndim == 2:
+        return _shepp_logan_2d(space)
+    elif space.ndim == 3:
+        return _shepp_logan_3d(space)
+    else:
+        raise ValueError("Dimension not 2 or 3, no phantom available")
