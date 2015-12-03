@@ -112,7 +112,7 @@ UFUNCS = [('add', 2, 1, 'Add arguments element-wise with numpy.'),
 
 
 # Wrap all numpy ufuncs
-def wrap_base_method(name, n_args, n_opt, descr):
+def wrap_method_base(name, n_args, n_opt, descr):
     # This unbound method will be pulled from the superclass.
     wrapped = getattr(np, name)
     if n_args == 1:
@@ -167,7 +167,7 @@ class NtuplesBaseVectorUFuncs():
 
 
 for name, n_args, n_opt, descr in UFUNCS:
-    setattr(NtuplesBaseVectorUFuncs, name, wrap_base_method(name,
+    setattr(NtuplesBaseVectorUFuncs, name, wrap_method_base(name,
                                                             n_args,
                                                             n_opt,
                                                             descr))
@@ -176,7 +176,7 @@ for name, n_args, n_opt, descr in UFUNCS:
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using a
 # NtuplesVector
-def wrap_ntuples_method(name, n_args, n_opt, descr):
+def wrap_method_ntuples(name, n_args, n_opt, descr):
     # Get method from numpy
     wrapped = getattr(np, name)
     if n_args == 1:
@@ -229,7 +229,76 @@ class NtuplesVectorUFuncs():
 
 
 for name, n_args, n_opt, descr in UFUNCS:
-        setattr(NtuplesVectorUFuncs, name, wrap_ntuples_method(name,
-                                                               n_args,
-                                                               n_opt,
-                                                               descr))
+    setattr(NtuplesVectorUFuncs, name, wrap_method_ntuples(name,
+                                                           n_args,
+                                                           n_opt,
+                                                           descr))
+
+
+# Optimized implementation of ufuncs since we can use the out parameter
+# as well as the data parameter to avoid one call to asarray() when using a
+# NtuplesVector
+def wrap_method_discretelp(name, n_args, n_opt, descr):
+    # Get method from numpy
+    if n_args == 1:
+        if n_opt == 0:
+            def wrapper(self):
+                method = getattr(self, 'ntuple.ufunc.' + name)
+                result = method()
+                return self.vector.space.element(result)
+
+        elif n_opt == 1:
+            def wrapper(self, out=None):
+                method = getattr(self, 'ntuple.ufunc.' + name)
+                if out is None:
+                    out = self.vector.space.element()
+                    method(out=out.ntuple)
+                    return out
+                else:
+                    return self.vector.space.element(method())
+
+        elif n_opt == 2:
+            def wrapper(self, out1=None, out2=None):
+                method = getattr(self, 'ntuple.ufunc.' + name)
+                if out1 is None:
+                    out1 = self.vector.space.element()
+                if out2 is None:
+                    out2 = self.vector.space.element()
+
+                y1, y2 = method(out1.ntuple, out2.ntuple)
+                return out1, out2
+
+        else:
+            raise NotImplementedError
+
+    elif n_args == 2:
+        if n_opt == 1:
+            def wrapper(self, x2, out=None):
+                method = getattr(self, 'ntuple.ufunc.' + name)
+                if out is None:
+                    out = self.vector.space.element()
+                    method(x2, out.data)
+                    return out
+                else:
+                    return self.vector.space.element(method(x2))
+
+        else:
+            raise NotImplementedError
+    else:
+        raise NotImplementedError
+
+    wrapper.__name__ = name
+    wrapper.__doc__ = descr
+    return wrapper
+
+
+class DiscreteLpVectorUFuncs():
+    def __init__(self, vector):
+        self.vector = vector
+
+
+for name, n_args, n_opt, descr in UFUNCS:
+    setattr(DiscreteLpVectorUFuncs, name, wrap_method_discretelp(name,
+                                                                 n_args,
+                                                                 n_opt,
+                                                                 descr))

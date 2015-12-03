@@ -38,11 +38,8 @@ from odl.discr.grid import uniform_sampling, RegularGrid
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
-from odl.space import CUDA_AVAILABLE
-if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaFn
-else:
-    CudaFn = type(None)
+from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
+from odl.util.ufuncs import DiscreteLpVectorUFuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector', 'uniform_discr')
 
@@ -336,6 +333,15 @@ class DiscreteLpVector(DiscretizationVector):
                 values = values.ravel(order=self.space.order)
 
             super().__setitem__(indices, values)
+
+    @property
+    def ufunc(self):
+        """Access to numpy style ufuncs.
+
+        These are optimized to use the underlying ntuple space and incur no
+        overhead unless these do.
+        """
+        return DiscreteLpVectorUFuncs(self)
 
     def show(self, method='', title='', indices=None, **kwargs):
         """Create a figure displaying the function in 1d or 2d.
