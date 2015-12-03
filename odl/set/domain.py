@@ -259,8 +259,12 @@ class IntervalProd(Set):
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
         elif is_valid_input_array(other, self.ndim):
-            mins = np.min(other, axis=1)
-            maxs = np.max(other, axis=1)
+            if self.ndim == 1:
+                mins = np.min(other)
+                maxs = np.max(other)
+            else:
+                mins = np.min(other, axis=1)
+                maxs = np.max(other, axis=1)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
         else:
             return False
