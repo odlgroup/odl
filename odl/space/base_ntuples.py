@@ -330,7 +330,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @property
     def ufunc(self):
-        """Access to numpy style ufuncs.
+        """`NtuplesBaseVectorUFuncs`, access to numpy style ufuncs.
 
         These are always available, but may or may not be optimized for
         the specific space in use.

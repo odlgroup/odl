@@ -336,7 +336,7 @@ class DiscreteLpVector(DiscretizationVector):
 
     @property
     def ufunc(self):
-        """Access to numpy style ufuncs.
+        """`DiscreteLpVectorUFuncs`, access to numpy style ufuncs.
 
         These are optimized to use the underlying ntuple space and incur no
         overhead unless these do.

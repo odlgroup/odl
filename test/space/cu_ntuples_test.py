@@ -1066,13 +1066,14 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     data = _vectors(fn, n_args + n_out)
     in_arrays = data[:n_args]
     out_arrays = data[n_args:n_args + n_out]
-    in_vectors = data[n_args + n_out:2 * n_args + n_out]
+    data_vector = data[n_args + n_out]
+    in_vectors = data[1 + n_args + n_out:2 * n_args + n_out]
     out_vectors = data[2 * n_args + n_out:]
 
     # Out of place:
     np_result = ufunc(*in_arrays)
-    vec_fun = getattr(in_vectors[0].ufunc, name)
-    odl_result = vec_fun(*in_vectors[1:])
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*in_vectors)
     assert all_almost_equal(np_result, odl_result)
 
     # Test type of output
@@ -1084,8 +1085,8 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 
     # In place:
     np_result = ufunc(*(in_arrays + out_arrays))
-    vec_fun = getattr(in_vectors[0].ufunc, name)
-    odl_result = vec_fun(*(in_vectors[1:] + out_vectors))
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
 
     # Test inplace actually holds:

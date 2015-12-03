@@ -415,7 +415,7 @@ class NtuplesVector(NtuplesBaseVector):
 
     @property
     def ufunc(self):
-        """Access to numpy style ufuncs.
+        """`NtuplesVectorUFuncs`, access to numpy style ufuncs.
 
         These are optimized for use with ntuples and incur no overhead.
         """

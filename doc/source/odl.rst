@@ -14,9 +14,12 @@ to be used to write general code and faciliate code reuse.
 .. toctree::
    :maxdepth: 2
 
+   odl.default_ops
    odl.diagnostics
    odl.discr
    odl.operator
+   odl.oputils
+   odl.pspace_ops
    odl.set
    odl.solvers
    odl.space

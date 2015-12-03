@@ -625,7 +625,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
     square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    fn = odl.uniform_discr(square_space, [2, 2])
+    fn = odl.uniform_discr(square_space, [2, 2], order='F')
 
     for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
         if (np.issubsctype(fn.dtype, np.floating) and
