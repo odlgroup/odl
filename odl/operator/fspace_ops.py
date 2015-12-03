@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 Jonas Adler
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -33,12 +33,12 @@ from odl.set.pspace import ProductSpace
 __all__ = ('DiscreteGradient', 'DiscreteDivergence')
 
 
-def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=2,
+def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=None,
                         zero_padding=False):
     """Calculate the partial derivative of `f` along a given `axis` using
-    first-order discrete differences.
+    Nth-order discrete differences.
 
-    The partial derivative is computed using second order accurate central
+    The partial derivative is computed using second-order accurate central
     differences in the interior and either first differences or second order
     accurate one-sides (forward or backwards) differences at the boundaries.
 
@@ -51,7 +51,7 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=2,
 
     Parameters
     ----------
-    f : `numpy.ndarray`
+    f : array-like
          An N-dimensional array
     axis : `int`, optional
         The axis along which the partial derivative is evaluated. Default: 0
@@ -59,8 +59,9 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=2,
         Scalars specifying the sample distances in each dimension `axis`.
         Default distance: 1.
     edge_order : {1, 2}, optional
-        Partial derivative is calculated using Nth order accurate
-        differences at the boundaries. Default edge order: 2
+        First order accurate differences can be used to calculated the partial
+        derivative at the boundaries if no zero padding is used. Default
+        edge order: 2
     zero_padding : `bool`, optional
         Implicit zero padding. Assumes values outside the domain of f to be
         zero. Default: False
@@ -110,7 +111,10 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=2,
     ...    print(e)
     Axis paramater (2) exceeds number of dimensions (2).
     """
-
+    if zero_padding is True and edge_order == 1:
+        raise ValueError("Zero padding uses second-order accurate "
+                         "differences at boundaries. First order accurate "
+                         "edges can only be triggered withou zero padding.")
     f_data = np.asanyarray(f)
     ndim = f_data.ndim
 
@@ -119,9 +123,11 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=2,
                          "({1}).".format(axis, ndim))
 
     if f_data.shape[axis] < 2:
-            raise ValueError("Shape of array too small to calculate a "
-                             "numerical gradient, at least two elements are "
-                             "required.")
+        raise ValueError("Shape of array too small to calculate a numerical "
+                         "gradient, at least two elements are required.")
+
+    if edge_order is None:
+        edge_order = 2
 
     # create slice objects --- initially all are [:, :, ..., :]
     # current slice
