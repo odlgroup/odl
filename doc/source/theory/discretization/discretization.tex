@@ -1973,13 +1973,11 @@ formulas for the restriction operator $\RnX$. Orthogonality is established with 
 \end{equation*}
 %
 however, the results which make sense in Banach spaces can as be generalized to $L^p$ spaces with $p \neq 2$, where 
-$\INNERIN{L^2}{f}{}$ is a functional for certain $f$. The cases covered here, nearest-neighbor and linear 
-interpolation, 
-can be written as tensor products of one-dimensional interpolation in higher dimensions. Therefore, we cover only the 
-1D 
-case. \\
+$\INNERIN{L^2}{f}{}$ is a bounded functional for certain $f$. The cases covered here, nearest-neighbor and linear 
+interpolation, can be written as tensor products of one-dimensional interpolation in higher dimensions. Therefore, we 
+cover only the 1D case. \\
 %
-Let $x_1 < x_2 < \dots < x_n$ be a set of nodes in $\RR$. We define the help nodes $x_0$ 
+Let $a = x_1 < x_2 < \dots < x_n = b$ be a set of nodes in $\RR$. For convenience, we define the help nodes $x_0$ 
 and $x_{n+1}$ by symmetric continuation, \ie,
 %
 \begin{equation*}
@@ -1998,6 +1996,16 @@ For notational reasons, we further define the forward and central distances
 %
 for $i=0,\dots,n$.
 
+With an interpolation, we denote a \emph{partition of unity} of a given interval using the above defined nodes as 
+centers of the supports of basis functions $\phi_j$, in particular we require
+%
+\begin{equation*}
+ \sum_{i=1}^n \phi_i(x) = 1
+\end{equation*}
+%
+to hold for all points $x$ in the considered interval. The concrete extent of the interval depends on the interpolation 
+type and the desired boundary behavior and will be clarified at the respective places.
+
 \paragraph{Regular grid}
 
 We also give formulas for the special case of a regular grid with spacing $h>0$. For a more convenient notation, we 
@@ -2010,31 +2018,83 @@ center the grid around a value $x^*\in\RR$ by defining
 Note that for even $n$, the indices are half-integers and $x^*$ is not a node. The forward and central distances are 
 obviously constant and equal to $h$ in this case. A further very common specialization is to center the grid around the 
 origin, \ie, $x^*=0$.
-
+\todo{Maybe this definition is superfluous}
 
 
 \subsubsection{Nearest-neighbor interpolation}
 \label{subsubsec:specif:interp:nn}
 
-This type of interpolation is defined by a piecewise constant interpolation basis:
+This type of interpolation is defined by a piecewise constant function basis. We choose the support of a basis function 
+$\phi_j$ to reach ``halfway'' to the next node in both directions. For convenience, we define these halfway nodes as
 %
 \begin{equation*}
- \phi_i(x) \DEFEQ 
+ x_{i+1/2} \DEFEQ x_i + h_i /2 = \frac{x_i + x_{i+1}}{2} \quad \text{and} \quad 
+ x_{i-1/2} \DEFEQ x_i - h_{i-1} /2 = \frac{x_{i-1} + x_i}{2}.
+\end{equation*}
+%
+The behavior of the basis functions at these touching points of the supports can be parametrized as follows: For 
+$0 \leq \tau \leq 1$, we define for $i = 2, \dots, n-1$:
+%
+\begin{equation*}
+ \phi_i^\tau(x) \DEFEQ 
  \begin{cases}
-  1 & \text{if } x - x_i \in \RINTERV[\big]{- \tfrac{h_{i-1}}{2}}{\frac{h_i}{2}}, \\
+  1 & \text{if } x \in \OINTERV{x_{i-1/2}}{x_{i+1/2}}, \\
+  1 - \tau & \text{if } x = x_{i-1/2}, \\
+  \tau & \text{if } x = x_{i+1/2}, \\
   0 & \text{else}.
  \end{cases}
 \end{equation*}
 %
+For $\tau \in \SET{0, 1}$, this formula gives the classical nearest neighbor interpolation scheme where halfway points 
+are fully associated with the left ($\tau = 0$) or right ($\tau = 1$). However, we will consider the general case and 
+indentify also $\tau = 1/2$ as an important special case. Note that for integrating operators, the choice of boundary 
+values does not make a difference.
+
+In addition, the first and last basis functions steer the behavior of the interpolant at the boundary. To make the 
+nearest neigbor case analogous to the other schemes, we differentiate as follows:
+%
+\begin{align*}
+ \phi_1^{\tau, 0}(x) &\DEFEQ
+  \begin{cases}
+  1 & \text{if } x \in \OINTERV{x_{1/2}}{x_{3/2}}, \\
+  0 & \text{if } x = x_{1/2}, \\
+  \tau & \text{if } x = x_{3/2}, \\
+  0 & \text{else}.
+ \end{cases} \quad \text{(zero boundary value)}, \\
+ %
+ \phi_1^{\tau, 1}(x) &\DEFEQ
+  \begin{cases}
+  1 & \text{if } x \in \RINTERV{x_1}{x_{3/2}}, \\
+  \tau & \text{if } x = x_{3/2}, \\
+  0 & \text{else}.
+ \end{cases} \quad \text{(boundary condition)}. \\
+\end{align*}
+%
+The first case favors the picture of the nodes $x_i$ as \emph{centers of bins} -- with the consequence that the union 
+of all bins extends beyond the first node -- while the second case interprets the nodes as \emph{supporting pillars} 
+with the first node naturally defining the end of the function domain and setting the boundary value. Note that the 
+size of the support of $\phi_1^{\tau, 1}(x)$ does not extend beyond $x_1$. The same construction is done for the node 
+$x_n$ with respect to the behavior at the right boundary.
+
 It is clear that $\INNERIN{L^2}{\phi_i}{\phi_j} = 0$ if $i \neq j$ since the supports do not overlap. For 
 the diagonal terms, we calculate
 %
 \begin{equation*}
  \int_\RR \ABS*{\phi_i(x)}^2\, \D x 
- = \int_{x_i - \frac{h_{i-1}}{2}}^{x_i + \frac{h_i}{2}} 1\, \D x
+ = \int_{x_{i-1/2}}^{x_{i+1/2}} 1\, \D x
  = \frac{h_{i-1} + h_i}{2} = \frac{x_{i+1} - x_{i-1}}{2}
- \EQDEF \bar h_i
+ = \bar h_i.
 \end{equation*}
+%
+For the boundary condition functions, we get
+%
+\begin{equation*}
+ \int_\RR \ABS*{\phi_1(x)}^2\, \D x 
+ = \int_{x_1}^{x_{3/2}} 1\, \D x
+ = \frac{h_1}{2}
+\end{equation*}
+%
+and analogously the value $\frac{h_{n-1}}{2}$ at the right end.
 %
 Hence, $\BDG_\Phi = \DIAG\big( \bar h_i \big)_{i=1,\dots,n}$, and the dictionary $\Theta$ with
 %
@@ -2047,7 +2107,7 @@ $\INNERIN{L^2}{}{\theta_i}$ is approximated as
 %
 \begin{align*}
  \INNERIN{L^2}{f}{\theta_i}
- &= \big( \bar h_i \big)^{-1} \int_{x_i - \frac{h_{i-1}}{2}}^{x_i + 
+ &= \big( \bar h_i \big)^{-1} \int_{x_{i-1/2}}^{x_i + 
  \frac{h_i}{2}} f(x)\, \D x \\
  &\approx  \frac{2}{x_{i+1} - x_{i-1}} f\big( x_i \big) \frac{h_{i-1} + h_i}{2} 
  \\
@@ -2089,6 +2149,20 @@ This continuous interpolation type is defined by the piecewise linear functions
  \end{dcases}
 \end{equation*}
 %
+These functions are by definition zero at the ends of their support, hence the zero boundary value functions are 
+defined in the same way (although the partition of unity condition is not fulfilled between $x_0$ and $x_1$, likewise 
+at the other end). The boundary condition first basis function is defined as the ``half hat''
+%
+\begin{equation*}
+ \phi_1(x) \DEFEQ
+ \begin{dcases}
+  \frac{x_2 - x}{x_2 - x_1} & \text{if } x \in \CINTERV{x_1}{x_2}, \\
+  0 & \text{else}.
+ \end{dcases}
+\end{equation*}
+%
+with an apparent definition for $\phi_n$ at the right end of the interval.
+
 To calculate the mutual inner products of the dictionary elements, we observe that 
 $\INNERIN{L^2}{\phi_i}{\phi_j} = 0$ if $\ABS{i-j} > 1$. For $j=i+1$, the overlap of the supports is the 
 interval ${[x_i, x_{i+1}]}$, and thus
@@ -2110,6 +2184,9 @@ For $j=i$, we calculate
  = \frac{2}{3}\, \bar h_i.
 \end{align*}
 %
+The half functions at the boundary evaluate to $\INNERIN{L^2}{\phi_1}{\phi_1} = h_1/3$ and
+$\INNERIN{L^2}{\phi_n}{\phi_n} = h_{n-1}/3$ with the same values for the neighboring inner products.
+
 Hence, $\BDG_\Phi$ is a symmetric real tri-diagonal matrix with
 %
 \begin{equation*}
@@ -2204,7 +2281,9 @@ equal to one. For the Gramian matrix, we get
  \INNERIN{L^2}{\phi_i}{\phi_{i+1}} = \frac{9}{70}\, h_i,
 \end{equation*}
 %
-and the inner products $\INNERIN{L^2}{\phi_i}{\phi_j}$ with $\ABS{i-j} > 1$ are zero.
+and the inner products $\INNERIN{L^2}{\phi_i}{\phi_j}$ with $\ABS{i-j} > 1$ are zero. The boundary nodes in the 
+boundary condition case give the contributions $\INNERIN{L^2}{\phi_1}{\phi_1} = \frac{13}{35}\, h_1$ and
+$\INNERIN{L^2}{\phi_n}{\phi_n} = \frac{13}{35}\, h_{n-1}$, respectively.
 
 \paragraph{Regular grid}
 
@@ -2268,7 +2347,7 @@ sinc function in the identity for the Gramian matrix entries is equal to $a(x_j 
 $\BDG_\Theta$ is diagonal, and the bi-orthogonal dictionary $\Phi$ can immediately be calculated as
 %
 \begin{equation*}
- \phi_j = \SINC( j\pi - a\cdot\phantom{x}\!\!).
+ \phi_j = \SINC( a(x_j - \cdot\phantom{x}\!\!)).
 \end{equation*}
 
 
@@ -2307,8 +2386,8 @@ Let $\Phi$ be the piecewise constant dictionary and $\Psi$ the piecewise linear 
 %
 \begin{equation*}
  \INNERIN{L^2}{\phi_i}{\psi_i} 
- = \int_{x_i - h_{i-1}/2}^{x_i} \frac{x-x_{i-1}}{h_{i-1}}\, \D x +
- \int_{x_i}^{x_i + h_i/2} \frac{x_{i+1} - x}{h_i}\, \D x
+ = \int_{x_{i-1/2}}^{x_i} \frac{x-x_{i-1}}{h_{i-1}}\, \D x +
+ \int_{x_i}^{x_{i+1/2}} \frac{x_{i+1} - x}{h_i}\, \D x
  = \frac{3}{4}\, \bar h_i
 \end{equation*}
 %
@@ -2316,7 +2395,7 @@ and
 %
 \begin{equation*}
  \INNERIN{L^2}{\phi_i}{\psi_{i+1}} 
- = \int_{x_i}^{x_i + h_i/2} \frac{x - x_i}{h_i}\, \D x
+ = \int_{x_i}^{x_{i+1/2}} \frac{x - x_i}{h_i}\, \D x
  = \frac{1}{8}\, h_i
 \end{equation*}
 %
@@ -2335,10 +2414,10 @@ Let now $\Psi$ the piecewise cubic dictionary. We calculate
 %
 \begin{align*}
  \INNERIN{L^2}{\phi_i}{\psi_i} 
- &= \int_{x_i - h_{i-1}/2}^{x_i} 
+ &= \int_{x_{i-1/2}}^{x_i} 
  \left[ -2\left( \frac{x-x_{i-1}}{h_{i-1}} \right)^3 + 3 \left( \frac{x-x_{i-1}}{h_{i-1}} \right)^2 
  \right]\, \D x + \phantom{x} \\
- &\hspace{16pt} \int_{x_i}^{x_i + h_i/2} 
+ &\hspace{16pt} \int_{x_i}^{x_{i+1/2}} 
  \left[ -2\left( \frac{x_{i+1}-x}{h_i} \right)^3 + 3\left( \frac{x_{i+1}-x}{h_i} \right)^2 
  \right]\, \D x \\
  &= \frac{13}{16}\, \bar h_i
@@ -2348,7 +2427,7 @@ and
 %
 \begin{equation*}
  \INNERIN{L^2}{\phi_i}{\psi_{i+1}} 
- = \int_{x_i}^{x_i + h_i/2} 
+ = \int_{x_i}^{x_{i+1/2}} 
  \left[ -2\left( \frac{x-x_i}{h_i} \right)^3 + 3 \left( \frac{x-x_i}{h_i} \right)^2 
  \right]\, \D x 
  = \frac{3}{32}\, h_i
@@ -2418,9 +2497,10 @@ cases, one can write
 Hence, the crucial step is to evaluate the operator in question, $\OPT$, on the dictionary $\Phi$. For the Fourier 
 transform $\FT$, most examples produce a complex exponential factor $e^{-\I x_j \xi}$. Thus, the expression 
 $\sum_{j=1}^n \alpha_j \FT(\phi_j)(\xi)$ takes the form of a discrete Fourier transform if $\RmX$ is the collocation 
-operator at nodes $\xi_j$. 
+operator at nodes $\xi_j$, for example if the Fourier domain is discretized with the Sinc dictionary of sufficiently 
+large bandwidth (corresponds to the interval length in the real space). 
 
-
+\todo{adapt formulas so the Sinc dict is used after shift of midpoint to zero}
 
 \subsubsection{Nearest neighbor interpolation}
 \label{subsubsec:specif:fourier:nn}
@@ -2535,6 +2615,8 @@ We have $\sqrt{2\pi} \FT(\phi_j)(\xi) = 2\pi \chi_{[-a,a]}(\xi)\, e^{\I x_j \xi}
 
 \subsection{Convolution discretization}
 \label{subsec:specif:conv}
+
+\todo{add the boundary case}
 
 There are two ways to define a convolution on a discretized space. The first one is to apply an analytically given 
 kernel to the dictionary, the second is to convolve with a discrete kernel interpreted in the same. For a closed form 
@@ -2680,6 +2762,8 @@ since $\FT(\phi) = \FT^{-1}(\phi) = (2\pi)^{-\nicefrac{1}{2}} \chi_{\CINTERV{-1}
 \subsection{Monomial moment operator discretization}
 \label{subsec:specif:moments}
 
+\todo{Add the boundary case}
+
 We consider the moment operators
 %
 \begin{equation*}
@@ -2781,6 +2865,244 @@ $k=0$, and only then the exchange of integration and differentiation can be just
 
 
 
+\subsection{Differentiation}
+\label{subsec:specif:deriv}
+
+We consider the (densely defined) derivative operator $\OPT = \frac{\D}{\D x}$ and its discretization. As it turns out, 
+the restriction operator $\RnX$ plays an important role for the well-definedness of the discretization in the sense 
+that the grid collocation operator as an approximation is either undefined or yields zero and cannot be applied. Hence, 
+we have to apply the only other case of known restriction functionals, the nearest neigbor interpolation, even if the 
+extension is defined otherwise.
+
+In general, the discretization $\DISCOPT$ of the derivative is
+%
+\begin{align*}
+ [\DISCOPT(\BDalpha)]_j
+ &= \big[(\RnX \circ \OPT \circ \EnX)(\BDalpha)\big]_j = \sum_{i=1}^n \alpha_i \INNERIN{L^2}{\OPT(\phi_i)}{\theta_j} \\
+ &= -\sum_{i=1}^n \alpha_i \INNERIN{L^2}{\phi_i}{\theta_j'},
+\end{align*}
+%
+and for the nearest neighbor bi-orthogonal functions $\theta_i$ we have
+%
+\begin{equation*}
+ \theta_j' = (\bar h_j)^{-1} (\delta_{x_{j-1/2}} - \delta_{x_{j+1/2}})
+\end{equation*}
+%
+and, for the boundary condition case,
+%
+\begin{equation*}
+ \theta_1'(x) =  2h_1^{-1} (\delta_{x_1} - \delta_{x_{3/2}}) \quad \text{and} \quad
+ \theta_n'(x) =  2h_{n-1}^{-1} (\delta_{x_{n-1/2}} - \delta_{x_n}).
+\end{equation*}
+%
+Hence, the discretization formula for the derivative operator reads as
+%
+\begin{equation*}
+ [\DISCOPT(\BDalpha)]_j 
+ = (\bar h_j)^{-1} \sum_{i=1}^n 
+  \alpha_i \INNERIN{L^2}{\phi_i}{\delta_{x_{j+1/2}} - \delta_{x_{j-1/2}}}
+\end{equation*}
+%
+for the full width basis functions and
+%
+\begin{align*}
+ [\DISCOPT(\BDalpha)]_1 
+ &= 2h_1^{-1} \sum_{i=1}^n
+  \alpha_i \INNERIN{L^2}{\phi_i}{\delta_{x_{3/2}} - \delta_{x_1}}, \\
+ [\DISCOPT(\BDalpha)]_n 
+ &= 2h_{n-1}^{-1} \sum_{i=1}^n 
+ \alpha_i \INNERIN{L^2}{\phi_i}{\delta_{x_{n}} - \delta_{x_{n-1/2}}}
+\end{align*}
+%
+for the boundary basis functions, respectively.
+
+
+\subsubsection{Nearest neighbor}
+\label{subsec:specif:deriv:nn}
+
+For the inner nodes, there are three basis functions giving a non-trivial contribution to the sum:
+%
+\begin{align*}
+ \INNERIN{L^2}{\phi^\tau_{j-1}}{\delta_{x_{j+1/2}} - \delta_{x_{j-1/2}}}
+ &= \phi^\tau_{j-1}(x_{j+1/2}) - \phi^\tau_{j-1}(x_{j-1/2}) = 0 - \tau = -\tau, \\
+ \INNERIN{L^2}{\phi^\tau_j}{\delta_{x_{j+1/2}} - \delta_{x_{j-1/2}}}
+ &= \phi^\tau_j(x_{j+1/2}) - \phi^\tau_j(x_{j-1/2}) = \tau - (1 - \tau) = 2\tau - 1, \\
+ \INNERIN{L^2}{\phi^\tau_{j+1}}{\delta_{x_{j+1/2}} - \delta_{x_{j-1/2}}}
+ &= \phi^\tau_{j+1}(x_{j+1/2}) - \phi^\tau_{j+1}(x_{j-1/2}) = (1 - \tau) - 0 = 1 - \tau.
+\end{align*}
+%
+At the boundary, we have the variants
+%
+\begin{align*}
+ \INNERIN{L^2}{\phi^{\tau, 0}_{1}}{\delta_{x_{3/2}} - \delta_{x_{1/2}}}
+ &= \tau - 0 = \tau, &
+ \INNERIN{L^2}{\phi^{\tau, 0}_{n}}{\delta_{x_{n+1/2}} - \delta_{x_{n-1/2}}}
+ &= 0 - (1 - \tau) = \tau - 1, \\
+ \INNERIN{L^2}{\phi^{\tau, 1}_{1}}{\delta_{x_{3/2}} - \delta_{x_1}}
+ &= \tau - 1, &
+ \INNERIN{L^2}{\phi^{\tau, 1}_{n}}{\delta_{x_{n}} - \delta_{x_{n-1/2}}}
+ &= 1 - (1 - \tau) = \tau.
+\end{align*}
+%
+Hence, the discretization of the derivative takes the form
+%
+\begin{align*}
+ [\DISCOPT(\BDalpha)]_j 
+ &= (\bar h_j)^{-1} \sum_{i=1}^n 
+  \alpha_i \big( -\tau \delta_{i,j-1} + (2\tau - 1)\delta_{ij} + (1-\tau)\delta_{i,j+1} \big) \\
+ &= \frac{(1-\tau) \alpha_{j+1}  + (2\tau - 1) \alpha_j - \tau \alpha_{j-1}}{\bar h_j}
+\end{align*}
+%
+for the inner nodes and
+%
+\begin{align*}
+ [\DISCOPT^0(\BDalpha)]_1 
+ &= 2h_1^{-1} \sum_{i=1}^n
+  \alpha_i \big( \tau \delta_{i1} + (1-\tau) \delta_{i2} \big) 
+ = \frac{2\big( (1-\tau)\alpha_2 + \tau \alpha_1\big)}{h_1}, \\
+ [\DISCOPT^1(\BDalpha)]_1 
+ &= 2h_1^{-1} \sum_{i=1}^n
+  \alpha_i \big( (\tau-1) \delta_{i1} + (1-\tau) \delta_{i2} \big) 
+ = \frac{2(1-\tau)(\alpha_2 - \alpha_1)}{h_1}, \\
+ [\DISCOPT^0(\BDalpha)]_n
+ &= 2h_{n-1}^{-1} \sum_{i=1}^n
+  \alpha_i \big( (\tau-1) \delta_{in} -\tau \delta_{i,n-1} \big) 
+ = \frac{2\big( (\tau - 1)\alpha_n - \tau \alpha_{n-1}\big)}{h_{n-1}}, \\
+ [\DISCOPT^1(\BDalpha)]_n
+ &= 2h_{n-1}^{-1} \sum_{i=1}^n
+  \alpha_i \big( \tau \delta_{in} -\tau \delta_{i,n-1} \big) 
+ = \frac{2\tau (\alpha_n - \alpha_{n-1})}{h_{n-1}}
+\end{align*}
+%
+at the boundary. For the special choices of $\tau=0, 1, 1/2$, the formulas simplify as follows
+%
+\begin{enumerate}
+ \item $\tau=0$:
+ \begin{equation*}
+  [\DISCOPT(\BDalpha)]_j = \frac{\alpha_{j+1}  - \alpha_j}{\bar h_j} \quad \text{(forward difference)},
+ \end{equation*}
+ %
+ \begin{align*}
+  [\DISCOPT^0(\BDalpha)]_1 
+  &= \frac{2\alpha_2}{h_1}, &
+  [\DISCOPT^1(\BDalpha)]_1 
+  &= \frac{2(\alpha_2 - \alpha_1)}{h_1}, \\
+  [\DISCOPT^0(\BDalpha)]_n
+  &= \frac{-2\alpha_n}{h_{n-1}}, &
+  [\DISCOPT^1(\BDalpha)]_n
+  &= 0
+ \end{align*}
+
+ \item $\tau=1$:
+ \begin{equation*}
+  [\DISCOPT(\BDalpha)]_j = \frac{\alpha_j - \alpha_{j-1}}{\bar h_j} \quad \text{(backward difference)},
+ \end{equation*}
+ %
+ \begin{align*}
+  [\DISCOPT^0(\BDalpha)]_1 
+  &= \frac{2\alpha_1}{h_1}, &
+  [\DISCOPT^1(\BDalpha)]_1 
+  &= 0, \\
+  [\DISCOPT^0(\BDalpha)]_n
+  &= \frac{-2\alpha_{n-1}}{h_{n-1}}, &
+  [\DISCOPT^1(\BDalpha)]_n
+  &= \frac{2(\alpha_n - \alpha_{n-1})}{h_{n-1}}
+ \end{align*}
+
+ \item $\tau=1/2$:
+ \begin{equation*}
+  [\DISCOPT(\BDalpha)]_j = \frac{\alpha_{j+1} - \alpha_{j-1}}{2\bar h_j} \quad \text{(central difference)},
+ \end{equation*}
+ %
+ \begin{align*}
+  [\DISCOPT^0(\BDalpha)]_1 
+  &= \frac{\alpha_2 + \alpha_1}{h_1}, &
+  [\DISCOPT^1(\BDalpha)]_1 
+  &= \frac{\alpha_2 - \alpha_1}{h_1}, \\
+  [\DISCOPT^0(\BDalpha)]_n
+  &= -\frac{\alpha_n + \alpha_{n-1}}{h_{n-1}}, &
+  [\DISCOPT^1(\BDalpha)]_n
+  &= \frac{\alpha_n - \alpha_{n-1}}{h_{n-1}}
+ \end{align*}
+\end{enumerate}
+%
+This somewhat remarkable behavior at the boundaries indicates that nearest neighbor interpolation may not be a very 
+good choice for gradient approximation.
+
+
+\subsubsection{Linear}
+\label{subsec:specif:deriv:linear}
+
+We evaluate the same inner products with the linear interpolation basis and observe that
+%
+\begin{equation*}
+ \phi_i(x_{i-1/2}) = \phi_i(x_{i+1/2}) = \frac{1}{2}.
+\end{equation*}
+%
+This immediately implies that
+%
+\begin{align*}
+ \INNERIN{L^2}{\phi_{j-1}}{\delta_{x_{j+1/2}} - \delta_{x_{j-1/2}}}
+ &= \phi_{j-1}(x_{j+1/2}) - \phi_{j-1}(x_{j-1/2}) = 0 - \frac{1}{2} = -\frac{1}{2}, \\
+ \INNERIN{L^2}{\phi_j}{\delta_{x_{j+1/2}} - \delta_{x_{j-1/2}}}
+ &= \phi_j(x_{j+1/2}) - \phi_j(x_{j-1/2}) = \frac{1}{2} - \frac{1}{2} = 0, \\
+ \INNERIN{L^2}{\phi_{j+1}}{\delta_{x_{j+1/2}} - \delta_{x_{j-1/2}}}
+ &= \phi_{j+1}(x_{j+1/2}) - \phi_{j+1}(x_{j-1/2}) = \frac{1}{2} - 0 = \frac{1}{2},
+\end{align*}
+%
+and the half basis functions
+%
+\begin{equation*}
+ \phi_1^1(x) \DEFEQ
+ \begin{cases}
+  \frac{x_2 - x}{h_1} & \text{if } x \in \CINTERV{x_1}{x_2}, \\
+  0 & \text{else}
+ \end{cases} \quad \text{and} \quad
+ %
+ \phi_n^1(x) \DEFEQ
+ \begin{cases}
+  \frac{x-x_{n-1}}{h_{n-1}} & \text{if } x \in \CINTERV{x_{n-1}}{x_n}, \\
+  0 & \text{else},
+ \end{cases}
+\end{equation*}
+%
+for the boundary condition case we get 
+%
+\begin{align*}
+ \INNERIN{L^2}{\phi^1_{1}}{\delta_{x_{3/2}} - \delta_{x_1}}
+ = \frac{1}{2} - 1, = -\frac{1}{2}, \quad
+ \INNERIN{L^2}{\phi^{\tau, 1}_{n}}{\delta_{x_{n}} - \delta_{x_{n-1/2}}}
+ &= 1 - \frac{1}{2} = \frac{1}{2}.
+\end{align*}
+%
+Hence, the discretized derivative takes the form
+%
+\begin{align*}
+ [\DISCOPT(\BDalpha)]_j 
+ &= \frac{\alpha_{j+1}  - \alpha_{j-1}}{2\bar h_j}
+\end{align*}
+%
+for the inner nodes and
+%
+\begin{align*}
+ [\DISCOPT^0(\BDalpha)]_1 
+ &= \frac{\alpha_2}{h_1}, &
+ [\DISCOPT^1(\BDalpha)]_1 
+ &= \frac{\alpha_2 - \alpha_1}{h_1}, \\
+ [\DISCOPT^0(\BDalpha)]_n
+ &= -\frac{\alpha_{n-1}}{h_{n-1}}, &
+ [\DISCOPT^1(\BDalpha)]_n
+ &= \frac{\alpha_n - \alpha_{n-1}}{h_{n-1}}
+\end{align*}
+%
+at the boundaries. Apparently, linear interpolation is better suited to handle the boundary values correctly.
+
+
+\subsubsection{Cubic interpolation}
+\label{subsubsec:specif:deriv:cubic}
+
+Since the cubic interpolation basis functions assume the same values at the halfway nodes, they result in the same 
+formulas as linear interpolation.
 
 
 \section{Software implementation}
