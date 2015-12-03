@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -257,7 +257,12 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             minval = np.min(values)
             maxval = np.max(values)
             ticks = [minval, (maxval + minval) / 2., maxval]
-            plt.colorbar(csub, ticks=ticks, format='%.4g')
+            if minval == maxval:
+                decimals = 5
+            else:
+                decimals = max(4, int(1 + abs(np.log10(maxval - minval))))
+            format = '%.{}f'.format(decimals)
+            plt.colorbar(csub, ticks=ticks, format=format)
 
     plt.show()
     if saveto is not None:

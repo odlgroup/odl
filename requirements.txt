@@ -1,5 +1,4 @@
 future >= 0.14
 numpy >= 1.9
 scipy >= 0.14
-matplotlib
 

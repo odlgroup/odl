@@ -75,7 +75,7 @@ class NtuplesBase(Set):
         return self._size
 
     def __contains__(self, other):
-        """``s.__contains__(other) <==> other in s``.
+        """Return ``other in self``.
 
         Returns
         -------
@@ -97,7 +97,7 @@ class NtuplesBase(Set):
         return getattr(other, 'space', None) == self
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -136,12 +136,12 @@ class NtuplesBase(Set):
                 self.dtype == other.dtype)
 
     def __repr__(self):
-        """``s.__repr__() <==> repr(s)``."""
+        """Return ``repr(self)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
     def __str__(self):
-        """``s.__str__() <==> str(s)``."""
+        """Return ``str(self)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
@@ -229,7 +229,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -274,7 +274,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         return self.size * self.itemsize
 
     def __len__(self):
-        """``v.__len__() <==> len(v)``.
+        """Return ``len(self)``.
 
         Return the number of space dimensions.
         """
@@ -315,15 +315,15 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             return self.space.element(obj)
 
     def __ne__(self, other):
-        """``vec.__ne__(other) <==> vec != other``."""
+        """Return ``self != other``."""
         return not self.__eq__(other)
 
     def __str__(self):
-        """``vec.__str__() <==> str(vec)``."""
+        """Return ``str(self)``."""
         return array1d_str(self)
 
     def __repr__(self):
-        """``vec.__repr__() <==> repr(vec)``."""
+        """Return ``repr(self)``."""
         return '{!r}.element({})'.format(self.space,
                                          array1d_repr(self))
 
@@ -457,7 +457,7 @@ class FnWeightingBase(object):
         return self._exponent
 
     def __eq__(self, other):
-        """``w.__eq__(other) <==> w == other``.
+        """Return ``self == other``.
 
         Returns
         -------

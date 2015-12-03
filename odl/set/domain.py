@@ -168,7 +168,7 @@ class IntervalProd(Set):
                 np.allclose(self.end, other.end, atol=tol, rtol=0.0))
 
     def __eq__(self, other):
-        """``g.__eq__(other) <==> g == other``."""
+        """Return ``self == other``."""
         return self.approx_equals(other, tol=0.0)
 
     def approx_contains(self, point, tol):
@@ -213,7 +213,7 @@ class IntervalProd(Set):
         return True
 
     def __contains__(self, other):
-        """``g.__contains__(other) <==> other in g``."""
+        """Return ``other in self``."""
         return self.approx_contains(other, tol=0)
 
     def contains_set(self, other, tol=0.0):
@@ -547,19 +547,19 @@ class IntervalProd(Set):
 
     # Magic methods
     def __len__(self):
-        """``ip.__len__() <==> len(ip)``."""
+        """Return ``len(self)``."""
         return self.ndim
 
     def __pos__(self):
-        """``ip.__pos__(other) <==> +ip``."""
+        """Return ``+self``."""
         return self
 
     def __neg__(self):
-        """``ip.__pos__(other) <==> -ip``."""
+        """Return ``-self``."""
         return type(self)(-self.end, -self.begin)
 
     def __add__(self, other):
-        """``ip.__add__(other) <==> ip + other``."""
+        """Return ``self + other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
                 raise ValueError('Addition not possible for {} and {}: '
@@ -572,11 +572,11 @@ class IntervalProd(Set):
             return NotImplemented
 
     def __sub__(self, other):
-        """``ip.__sub__(other) <==> ip - other``."""
+        """Return ``self - other``."""
         return self + (-other)
 
     def __mul__(self, other):
-        """``ip.__mul__(other) <==> ip * other``."""
+        """Return ``self * other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
                 raise ValueError('Multiplication not possible for {!r} and'
@@ -599,13 +599,13 @@ class IntervalProd(Set):
             return NotImplemented
 
     def __div__(self, other):
-        """``ip.__mul__(other) <==> ip / other``."""
+        """Return ``self / other``."""
         return self * (1.0 / other)
 
     __truediv__ = __div__
 
     def __rdiv__(self, other):
-        """``ip.__rdiv__(other) <==> other / ip``."""
+        """Return ``other / self``."""
         if np.isscalar(other):
             contains_zero = np.any(np.logical_and(self.begin <= 0,
                                                   self.end >= 0))
@@ -623,12 +623,12 @@ class IntervalProd(Set):
     __rtruediv__ = __rdiv__
 
     def __repr__(self):
-        """``ip.__repr__() <==> repr(ip)``."""
+        """Return ``repr(self)``."""
         return ('IntervalProd({}, {})'.format(
             array1d_repr(self.begin), array1d_repr(self._end)))
 
     def __str__(self):
-        """``ip.__str__() <==> str(ip)``."""
+        """Return ``str(self)``."""
         return ' x '.join('[{}, {}]'.format(b, e)
                           for (b, e) in zip(self.begin, self.end))
 

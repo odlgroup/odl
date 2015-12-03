@@ -154,7 +154,7 @@ class LinearSpace(Set):
         return tmp
 
     def __contains__(self, other):
-        """``s.__contains__(other) <==> other in s``.
+        """Return ``other in self``.
 
         Returns
         -------
@@ -439,14 +439,14 @@ class LinearSpaceVector(object):
 
     # Convenience operators
     def __iadd__(self, other):
-        """Implementation of ``self += other``."""
+        """Implement ``self += other``."""
         if other in self.space:
             return self.space.lincomb(1, self, 1, other, out=self)
         else:
             return NotImplemented
 
     def __add__(self, other):
-        """Implementation of ``self + other``."""
+        """Return ``self + other``."""
         # Instead of using __iadd__ we duplicate code here for performance
         if other in self.space:
             tmp = self.space.element()
@@ -455,14 +455,14 @@ class LinearSpaceVector(object):
             return NotImplemented
 
     def __isub__(self, other):
-        """Implementation of ``self -= other``."""
+        """Implement ``self -= other``."""
         if other in self.space:
             return self.space.lincomb(1, self, -1, other, out=self)
         else:
             return NotImplemented
 
     def __sub__(self, other):
-        """Implementation of ``self - other``."""
+        """Return ``self - other``."""
         # Instead of using __isub__ we duplicate code here for performance
         if other in self.space:
             tmp = self.space.element()
@@ -471,7 +471,7 @@ class LinearSpaceVector(object):
             return NotImplemented
 
     def __imul__(self, other):
-        """Implementation of ``self *= other``."""
+        """Implement ``self *= other``."""
         if other in self.space.field:
             return self.space.lincomb(other, self, out=self)
         elif other in self.space:
@@ -480,7 +480,7 @@ class LinearSpaceVector(object):
             return NotImplemented
 
     def __mul__(self, other):
-        """Implementation of ``self * other``."""
+        """Return ``self * other``."""
         # Instead of using __imul__ we duplicate code here for performance
         if other in self.space.field:
             tmp = self.space.element()
@@ -492,11 +492,11 @@ class LinearSpaceVector(object):
             return NotImplemented
 
     def __rmul__(self, other):
-        """Implementation of ``other * self``."""
+        """Return ``other * self``."""
         return self.__mul__(other)
 
     def __itruediv__(self, other):
-        """Implementation of ``self /= other`` (true division)."""
+        """Implement ``self /= other`` (true division)."""
         if other in self.space.field:
             return self.space.lincomb(1.0 / other, self, out=self)
         elif other in self.space:
@@ -507,7 +507,7 @@ class LinearSpaceVector(object):
     __idiv__ = __itruediv__
 
     def __truediv__(self, other):
-        """Implementation of ``self / other`` (true division)."""
+        """Return ``self / other``."""
         if other in self.space.field:
             tmp = self.space.element()
             return self.space.lincomb(1.0 / other, self, out=tmp)
@@ -552,7 +552,7 @@ class LinearSpaceVector(object):
 
     # Metric space method
     def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
+        """Return ``self == other``.
 
         Two vectors are equal if their distance is 0
 
@@ -599,11 +599,22 @@ class LinearSpaceVector(object):
             return self.space.dist(self, other) == 0
 
     def __ne__(self, other):
+        """Return ``self != other``."""
         return not self.__eq__(other)
 
     def __str__(self):
-        """Implementation of str()."""
+        """Return ``str(self)``.
+
+        This is a default implementation, only returning the space.
+        """
         return str(self.space) + "Vector"
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        This is a default implementation, only returning the space.
+        """
+        return repr(self.space) + "Vector"
 
     def __copy__(self):
         """Copy of vector
@@ -734,14 +745,14 @@ class UniversalSpace(LinearSpace):
         return UniversalSet()
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Dummy check, `True` for any `LinearSpace`.
         """
         return isinstance(other, LinearSpace)
 
     def __contains__(self, other):
-        """``s.__contains__(other) <==> other in s``.
+        """Return ``other in self``.
 
         Dummy membership check, `True` for any `LinearSpaceVector`.
         """

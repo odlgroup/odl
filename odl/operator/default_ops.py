@@ -163,11 +163,11 @@ class IdentityOperator(ScalingOperator):
         super().__init__(space, 1)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return 'IdentityOperator({!r})'.format(self._space)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return "I"
 
 
@@ -225,12 +225,12 @@ class LinCombOperator(Operator):
         out.lincomb(self.a, x[0], self.b, x[1])
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return 'LinCombOperator({!r}, {!r}, {!r})'.format(
             self.range, self.a, self.b)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return "{}*x + {}*y".format(self.a, self.b)
 
 
@@ -284,11 +284,11 @@ class MultiplyOperator(Operator):
         out.space.multiply(x[0], x[1], out)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return 'MultiplyOperator({!r})'.format(self.range)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return "x * y"
 
 
@@ -342,11 +342,11 @@ class InnerProductOperator(Operator):
         return self.vector
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return 'InnerProductOperator({!r})'.format(self.vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return "{}.T".format(self.vector)
 
 
@@ -403,11 +403,11 @@ class InnerProductAdjointOperator(Operator):
         return InnerProductOperator(self.vector)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return 'InnerProductAdjointOperator({!r})'.format(self.vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return "{}".format(self.vector)
 
 
@@ -489,11 +489,11 @@ class ConstantOperator(Operator):
         out.assign(self.vector)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return 'ConstantOperator({!r})'.format(self.vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return "{}".format(self.vector)
 
 
@@ -595,11 +595,11 @@ class ResidualOperator(Operator):
         return self.op.derivative(point)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return 'ResidualOperator({!r}, {!r})'.format(self.op, self.vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return "{} - {}".format(self.op, self.vector)
 
 

@@ -741,9 +741,8 @@ class Operator(object):
         raise NotImplementedError('inverse not implemented for operator '
                                   '{!r}'.format(self))
 
-    # Implicitly defined operators
     def __call__(self, x, out=None, **kwargs):
-        """``op.__call__(x) <==> op(x)``.
+        """Return ``self(x)``.
 
         Implementation of the call pattern ``op(x)`` with the private
         ``_call()`` method and added error checking.
@@ -818,15 +817,15 @@ class Operator(object):
             return result
 
     def __add__(self, other):
-        """``op.__add__(other) <==> op + other``."""
+        """Return ``self + other``."""
         return OperatorSum(self, other)
 
     def __sub__(self, other):
-        """``op.__add__(other) <==> op - other``."""
+        """Return ``self - other``."""
         return OperatorSum(self, -1 * other)
 
     def __mul__(self, other):
-        """``op.__mul__(other) <==> op * other``.
+        """Return ``self * other``.
 
         If ``other`` is an operator, this corresponds to
         operator composition:
@@ -904,14 +903,14 @@ class Operator(object):
             return NotImplemented
 
     def __matmul__(self, other):
-        """``op.__matmul__(other) <==> op @ other``.
+        """Return ``self @ other``.
 
         See `Operator.__mul__`
         """
         return self.__mul__(other)
 
     def __rmul__(self, other):
-        """``op.__rmul__(s) <==> s * op``.
+        """Return ``other * self``.
 
         If ``other`` is an `Operator`, this corresponds to
         operator composition:
@@ -985,14 +984,14 @@ class Operator(object):
             return NotImplemented
 
     def __rmatmul__(self, other):
-        """``op.__rmatmul__(other) <==> other @ op``.
+        """Return ``other @ op``.
 
         See `Operator.__rmul__`
         """
         return self.__rmul__(other)
 
     def __pow__(self, n):
-        """``op.__pow__(s) <==> op**s``.
+        """Return ``op**s``.
 
         This corresponds to the power of an operator:
 
@@ -1037,7 +1036,7 @@ class Operator(object):
             return NotImplemented
 
     def __truediv__(self, other):
-        """``op.__truediv__(s) <==> op / other``.
+        """Return ``self / other``.
 
         If ``other`` is a scalar, this corresponds to right
         division of operators with scalars:
@@ -1074,18 +1073,18 @@ class Operator(object):
             return NotImplemented
 
     def __neg__(self):
-        """``op.__neg__(s) <==> -op``."""
+        """Return ``-self``."""
         return -1 * self
 
     def __pos__(self):
-        """``op.__pos__(s) <==> +op``.
+        """Return ``+op``.
 
         The operator itself.
         """
         return self
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``.
+        """Return ``repr(self)``.
 
         The default `repr` implementation. Should be overridden by
         subclasses.
@@ -1094,7 +1093,7 @@ class Operator(object):
                                          self.range)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``.
+        """Return ``str(self)``.
 
         The default `str` implementation. Should be overridden by
         subclasses.
@@ -1165,7 +1164,7 @@ class OperatorSum(Operator):
         self._tmp_dom = tmp_dom
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``.
+        """Implement ``self(x[, out])``.
 
         Examples
         --------
@@ -1217,12 +1216,12 @@ class OperatorSum(Operator):
                            self._tmp_dom, self._tmp_ran)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op1, self._op2)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '({} + {})'.format(self._op1, self._op2)
 
 
@@ -1267,7 +1266,7 @@ class OperatorComp(Operator):
         self._tmp = tmp
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self._left(self._right(x))
         else:
@@ -1319,12 +1318,12 @@ class OperatorComp(Operator):
                             self._tmp)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._left, self._right)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} o {}'.format(self._left, self._right)
 
 
@@ -1362,7 +1361,7 @@ class OperatorPointwiseProduct(Operator):
         self._op2 = op2
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self._op1(x) * self._op2(x)
         else:
@@ -1372,12 +1371,12 @@ class OperatorPointwiseProduct(Operator):
             out *= tmp
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op1, self._op2)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._op1, self._op2)
 
 
@@ -1417,7 +1416,7 @@ class OperatorLeftScalarMult(Operator):
         self._scalar = scalar
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self._scalar * self._op(x)
         else:
@@ -1471,12 +1470,12 @@ class OperatorLeftScalarMult(Operator):
                                        self._scalar.conjugate())
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._scalar)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._scalar, self._op)
 
 
@@ -1524,7 +1523,7 @@ class OperatorRightScalarMult(Operator):
         self._tmp = tmp
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self._op(self._scalar * x)
         else:
@@ -1578,12 +1577,12 @@ class OperatorRightScalarMult(Operator):
                                        self._scalar.conjugate())
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._scalar)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._op, self._scalar)
 
 
@@ -1623,7 +1622,7 @@ class FunctionalLeftVectorMult(Operator):
         self._vector = vector
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self._op(x) * self._vector
         else:
@@ -1664,12 +1663,12 @@ class FunctionalLeftVectorMult(Operator):
         return OperatorComp(self._op.adjoint, self._vector.T)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._vector, self._op)
 
 
@@ -1701,7 +1700,7 @@ class OperatorLeftVectorMult(Operator):
         self._vector = vector
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self._op(x) * self._vector
         else:
@@ -1742,12 +1741,12 @@ class OperatorLeftVectorMult(Operator):
         return OperatorRightVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._vector, self._op)
 
 
@@ -1780,7 +1779,7 @@ class OperatorRightVectorMult(Operator):
         self._vector = vector
 
     def _call(self, x, out=None):
-        """``op._call(x, out) <==> out <-- op(x)``."""
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self._op(x * self._vector)
         else:
@@ -1823,12 +1822,12 @@ class OperatorRightVectorMult(Operator):
         return OperatorLeftVectorMult(self._op.adjoint, self._vector)
 
     def __repr__(self):
-        """``op.__repr__() <==> repr(op)``."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self._op, self._vector)
 
     def __str__(self):
-        """``op.__str__() <==> str(op)``."""
+        """Return ``str(self)``."""
         return '{} * {}'.format(self._op, self._vector)
 
 
@@ -1845,7 +1844,7 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
         It will be used for the operator call pattern
         ``out = op(x)``.
         TODO update
-    inv : :class:`Operator`, optional
+    inv : `Operator`, optional
         The operator inverse
     deriv : `Operator`, optional
         The operator derivative, linear

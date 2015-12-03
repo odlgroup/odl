@@ -228,7 +228,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
         return self.data.data_ptr()
 
     def __eq__(self, other):
-        """``vec.__eq__(other) <==> vec == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1200,7 +1200,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
         return np.all(np.greater(self.vector, 0))
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1300,7 +1300,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
             return _pdist_diagweight(x1, x2, self.exponent, self.vector)
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{vector!r}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
@@ -1311,7 +1311,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         if self.exponent == 2.0:
             return 'Weighting: vector =\n{}'.format(self.vector)
         else:
@@ -1374,7 +1374,7 @@ class CudaFnConstWeighting(FnWeightingBase):
         return self._const
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1477,7 +1477,7 @@ class CudaFnConstWeighting(FnWeightingBase):
                     _pdist_default(x1, x2, self.exponent))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
@@ -1485,7 +1485,7 @@ class CudaFnConstWeighting(FnWeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         if self.exponent == 2.0:
             return 'Weighting: const = {:.4}'.format(self.const)
         else:
@@ -1511,7 +1511,7 @@ class CudaFnNoWeighting(CudaFnConstWeighting):
         super().__init__(1.0, exponent=exponent)
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = ''
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
@@ -1519,7 +1519,7 @@ class CudaFnNoWeighting(CudaFnConstWeighting):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         if self.exponent == 2.0:
             return 'NoWeighting'
         else:
@@ -1572,7 +1572,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         return self._inner_impl(x1, x2)
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1585,7 +1585,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
                 super().__eq__(other))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{!r}'
         if self._dist_using_inner:
             inner_fstr += ',dist_using_inner={dist_u_i}'
@@ -1595,7 +1595,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         return self.__repr__()  # TODO: prettify?
 
 
@@ -1637,7 +1637,7 @@ class CudaFnCustomNorm(FnWeightingBase):
         return self._norm_impl(x)
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1650,13 +1650,13 @@ class CudaFnCustomNorm(FnWeightingBase):
                 super().__eq__(other))
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{!r}'
         inner_str = inner_fstr.format(self.norm)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         return self.__repr__()  # TODO: prettify?
 
 
@@ -1701,7 +1701,7 @@ class CudaFnCustomDist(FnWeightingBase):
         raise NotImplementedError
 
     def __eq__(self, other):
-        """``inner.__eq__(other) <==> inner == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -1713,13 +1713,13 @@ class CudaFnCustomDist(FnWeightingBase):
                 self._dist_impl == other._dist_impl)
 
     def __repr__(self):
-        """``w.__repr__() <==> repr(w)``."""
+        """Return ``repr(self)``."""
         inner_fstr = '{!r}'
         inner_str = inner_fstr.format(self.dist)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """``w.__str__() <==> str(w)``."""
+        """Return ``str(self)``."""
         return self.__repr__()  # TODO: prettify?
 
 

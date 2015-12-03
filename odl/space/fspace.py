@@ -83,41 +83,51 @@ def vectorize(dtype, outarg='none'):
 
     Examples
     --------
-    Vectorize a function summing the x and y coordinates:
+    Vectorize a step function in the first variable:
 
     >>> @vectorize(dtype=float)
-    ... def sum(x):
-    ...     return x[0] + x[1]
+    ... def step(x):
+    ...     return 0 if x[0] <= 0 else 1
 
     This corresponds to (but is much slower than)
 
-    >>> def sum_vec(x):
+    >>> import numpy as np
+    >>> def step_vec(x):
     ...     x0, x1 = x
-    ...     return x0 + x1
+    ...     # np.broadcast is your friend to determine the output shape
+    ...     out = np.zeros(np.broadcast(x0, x1).shape, dtype=x0.dtype)
+    ...     idcs = np.where(x0 > 0)
+    ...     # Need to throw away the indices from the empty dimensions
+    ...     idcs = idcs[0] if len(idcs) > 1 else idcs
+    ...     out[idcs] = 1
+    ...     return out
 
     Both versions work for arrays and meshgrids:
 
-    >>> x = np.arange(10, dtype=float).reshape((2, 5))
-    >>> np.array_equal(sum(x), sum_vec(x))
+    >>> x = np.linspace(-5, 13, 10, dtype=float).reshape((2, 5))
+    >>> x  # array representing 5 points in 2d
+    array([[ -5.,  -3.,  -1.,   1.,   3.],
+           [  5.,   7.,   9.,  11.,  13.]])
+    >>> np.array_equal(step(x), step_vec(x))
     True
 
-    >>> x = y = np.linspace(0, 1, 5)
+    >>> x = y = np.linspace(-1, 2, 5)
     >>> mg_sparse = np.meshgrid(x, y, indexing='ij', sparse=True)
-    >>> np.array_equal(sum(mg_sparse), sum_vec(mg_sparse))
+    >>> np.array_equal(step(mg_sparse), step_vec(mg_sparse))
     True
     >>> mg_dense = np.meshgrid(x, y, indexing='ij', sparse=False)
-    >>> np.array_equal(sum(mg_dense), sum_vec(mg_dense))
+    >>> np.array_equal(step(mg_dense), step_vec(mg_dense))
     True
 
     With output parameter:
 
     >>> @vectorize(dtype=float, outarg='positional')
-    ... def sum(x, r=0):
-    ...     return x[0] + x[1] + r
-    >>> x = np.arange(10, dtype=float).reshape((2, 5))
+    ... def step(x):
+    ...     return 0 if x[0] <= 0 else 1
+    >>> x = np.linspace(-5, 13, 10, dtype=float).reshape((2, 5))
     >>> out = np.empty(5, dtype=float)
-    >>> sum(x, out, r=2)  # returns out
-    array([  7.,   9.,  11.,  13.,  15.])
+    >>> step(x, out)  # returns out
+    array([ 0.,  0.,  0.,  1.,  1.])
     """
     def vect_decorator(func):
         def _vect_wrapper(x, out, **kwargs):
@@ -266,7 +276,7 @@ class FunctionSet(Set):
         return self.element_type(self, fcall, vectorized=vectorized)
 
     def __eq__(self, other):
-        """``s.__eq__(other) <==> s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -283,7 +293,7 @@ class FunctionSet(Set):
                 self.range == other.range)
 
     def __contains__(self, other):
-        """``s.__contains__(other) <==> other in s``.
+        """Return ``other in self``.
 
         Returns
         -------
@@ -296,12 +306,12 @@ class FunctionSet(Set):
                 self == other.space)
 
     def __repr__(self):
-        """`s.__repr__() <==> repr(s)`."""
+        """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
                                        self.domain, self.range)
 
     def __str__(self):
-        """`s.__str__() <==> str(s)`."""
+        """Return ``str(self)``."""
         return '{}({}, {})'.format(self.__class__.__name__,
                                    self.domain, self.range)
 
@@ -572,17 +582,16 @@ class FunctionSetVector(Operator):
 
         return (isinstance(other, FunctionSet.Vector) and
                 self.space == other.space and
-                self._call == other._call and
+                self._call_out_of_place == other._call_out_of_place and
+                self._call_in_place == other._call_in_place and
                 self.vectorized == other.vectorized)
 
-    def __ne__(self, other):
-        """`vec.__ne__(other) <==> vec != other`"""
-        return not self.__eq__(other)
-
     def __str__(self):
+        """Return ``str(self)``"""
         return str(self._call)  # TODO: better solution?
 
     def __repr__(self):
+        """Return ``repr(self)``"""
         inner_fstr = '{!r}'
         if not self.vectorized:
             inner_fstr += ', vectorized=False'
@@ -916,11 +925,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 return x
             elif n % 2 == 0:
                 x *= x
-                return ipow_posint(x, n//2)
+                return ipow_posint(x, n // 2)
             else:
                 tmp = x.copy()
                 x *= x
-                ipow_posint(x, n//2)
+                ipow_posint(x, n // 2)
                 x *= tmp
                 return x
 
@@ -975,6 +984,7 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
         FunctionSetVector.__init__(self, fspace, fcall, vectorized=vectorized)
 
     # Convenience functions using element() need to be adapted
+    # TODO: Check which ones can be removed
     def __add__(self, other):
         """`f.__add__(other) <==> f + other`."""
         out = self.space.element()
