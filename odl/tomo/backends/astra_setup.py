@@ -292,7 +292,6 @@ def astra_projection_geometry(geometry, vol_data_space=None):
         if not isinstance(vol_data_space, DiscreteLp):
             raise TypeError('volume space {} is not a `DiscreteLp` '
                             'instance'.format(vol_data_space))
-        # TODO:
         voxel_width = vol_data_space.grid.stride
         # Non-isotropic voxels are not (yet) supported in 3d ASTRA
         if not np.allclose(voxel_width[1:], voxel_width[:-1]):
@@ -301,7 +300,7 @@ def astra_projection_geometry(geometry, vol_data_space=None):
         voxel_width = voxel_width[0]
 
     # TODO: fanflat_vec: fan flat for arbitrary detector / source positions
-    # !!detector width is relative to voxel size!!
+    # !! for 3D geometries detector width is relative to voxel size!!
     if isinstance(geometry, Parallel2dGeometry):
         det_width = geometry.det_grid.stride[0]
         # det_width = geometry.det_grid.stride[0] / voxel_width
@@ -324,9 +323,12 @@ def astra_projection_geometry(geometry, vol_data_space=None):
         det_width = geometry.det_grid.stride[0] / voxel_width
         # ASTRA: y ?
         det_height = geometry.det_grid.stride[1] / voxel_width
-        det_row_count = geometry.det_grid.shape[0]
-        det_col_count = geometry.det_grid.shape[1]
+        det_row_count = geometry.det_grid.shape[1]
+        det_col_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
+        print('\n p2d', voxel_width, det_width, det_height, det_row_count,
+              det_col_count, angles[0], angles[-1], geometry.det_grid.min(),
+              geometry.det_grid.max())
         proj_geom = astra.create_proj_geom(
             'parallel3d', det_width, det_height, det_row_count,
             det_col_count, angles)

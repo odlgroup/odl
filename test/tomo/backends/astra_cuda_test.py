@@ -118,12 +118,17 @@ def test_astra_gpu_projector_call_2d():
 
 def test_astra_gpu_projector_2d_3d_correspondence():
     """The 3D projector for a single-slice volume should match the 2D
-    projector.
+    projector. Currently, for a grid with a single point the grid stride
+    returns 1 independent of the discretized interval. Thus
     """
     folder = '/home/jmoosmann/Documents/astra_odl/2d3d/'
 
     # 2D phantom
-    vol_space2 = FunctionSpace(Rectangle([-1, -1], [1, 1]))
+    x0 = y0 = -50
+    x1 = y1 = 50
+    z0 = 0
+    z1 = 1
+    vol_space2 = FunctionSpace(Rectangle([x0, y0], [x1, y1]))
     nvoxels2 = (100, 100)
     discr_vol_space2 = uniform_discr(vol_space2, nvoxels2, dtype='float32')
     phan = np.zeros(nvoxels2)
@@ -132,7 +137,7 @@ def test_astra_gpu_projector_2d_3d_correspondence():
     save_slice(discr_data2, folder, 'phantom 2d gpu')
 
     # 3D phantom
-    vol_space3 = FunctionSpace(Cuboid([-1, -1, -0.01], [1, 1, 0.01]))
+    vol_space3 = FunctionSpace(Cuboid([x0, y0, z0], [x1, y1, z1]))
     nvoxels3 = (100, 100, 1)
     discr_vol_space3 = uniform_discr(vol_space3, nvoxels3, dtype='float32')
     phan = np.zeros(nvoxels3)
@@ -145,12 +150,11 @@ def test_astra_gpu_projector_2d_3d_correspondence():
     angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
 
     # 2D detector
-    dparams2 = Interval(-1, 1)
+    dparams2 = Interval(x0, x1)
     det_grid2 = uniform_sampling(dparams2, 100)
-    print('\n geom 2d: det stride:', det_grid2.stride)
 
     # 3d detector
-    dparams3 = Rectangle([-1, -0.01], [1, 0.01])
+    dparams3 = Rectangle([x0, z0], [x1, z1])
     det_grid3 = uniform_sampling(dparams3, (100, 1))
 
     # 2d geometry
@@ -184,7 +188,9 @@ def test_astra_gpu_projector_2d_3d_correspondence():
     # 3D forward
     proj_data3 = astra_gpu_forward_projector_call(discr_data3, geom3,
                                                      discr_proj_space3)
-    # save_slice(proj_data3, folder, 'parallel forward 3d gpu')
+    save_slice(proj_data3, folder, 'parallel forward 3d gpu')
+
+    print('\n', proj_data2.shape, proj_data3.shape)
 
 
 @skip_if_no_astra
