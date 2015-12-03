@@ -433,6 +433,28 @@ def test_asarray_2d():
     # Check order of out array
     assert vec_F.asarray().flags['F_CONTIGUOUS']
 
+    # test out parameter
+    out_F = np.asfortranarray(np.empty([2, 2]))
+    result_F = vec_F.asarray(out=out_F)
+    assert result_F is out_F
+    assert all_equal(out_F, [[1, 2],
+                             [3, 4]])
+
+    # Try discontinuous
+    out_F_wrong = np.asfortranarray(np.empty([2, 2]))[::2, :]
+    with pytest.raises(ValueError):
+        result_F = vec_F.asarray(out=out_F_wrong)
+
+    # Try wrong shape
+    out_F_wrong = np.asfortranarray(np.empty([2, 3]))
+    with pytest.raises(ValueError):
+        result_F = vec_F.asarray(out=out_F_wrong)
+
+    # Try wrong order
+    out_F_wrong = np.empty([2, 2])
+    with pytest.raises(ValueError):
+        vec_F.asarray(out=out_F_wrong)
+
     # Also check with C ordering
     discr_C = odl.uniform_discr(square_space, (2, 2), order='C')
     vec_C = discr_C.element([[1, 2],
@@ -444,6 +466,28 @@ def test_asarray_2d():
 
     # Check order of out array
     assert vec_C.asarray().flags['C_CONTIGUOUS']
+
+    # test out parameter
+    out_C = np.empty([2, 2])
+    result_C = vec_C.asarray(out=out_C)
+    assert result_C is out_C
+    assert all_equal(out_C, [[1, 2],
+                             [3, 4]])
+
+    # Try discontinuous
+    out_C_wrong = np.empty([4, 2])[::2, :]
+    with pytest.raises(ValueError):
+        result_C = vec_C.asarray(out=out_C_wrong)
+
+    # Try wrong shape
+    out_C_wrong = np.empty([2, 3])
+    with pytest.raises(ValueError):
+        result_C = vec_C.asarray(out=out_C_wrong)
+
+    # Try wrong order
+    out_C_wrong = np.asfortranarray(np.empty([2, 2]))
+    with pytest.raises(ValueError):
+        vec_C.asarray(out=out_C_wrong)
 
 
 def test_transpose():
