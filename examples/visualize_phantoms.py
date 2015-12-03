@@ -33,4 +33,4 @@ import odl
 spc = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
 disc = odl.uniform_discr(spc, [100, 100])
 
-(odl.util.shepp_logan(disc)*0.01 + disc.one()).show()
+(odl.util.shepp_logan(disc)).show()

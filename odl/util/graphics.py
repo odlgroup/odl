@@ -260,7 +260,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             if minval == maxval:
                 decimals = 5
             else:
-                decimals = max(4, int(1+abs(np.log10(abs(minval-maxval)))))
+                decimals = max(4, int(1 + abs(np.log10(maxval - minval))))
             format = '%.{}f'.format(decimals)
             plt.colorbar(csub, ticks=ticks, format=format)
 
