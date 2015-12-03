@@ -31,7 +31,7 @@ from odl.set.pspace import ProductSpace
 from odl.discr.lp_discr import DiscreteLp
 
 
-__all__ = ('DiscreteGradient', 'DiscreteDivergence')
+__all__ = ('DiscretePartDeriv', 'DiscreteGradient', 'DiscreteDivergence')
 
 
 def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
@@ -81,59 +81,51 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
     array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
     >>> finite_diff(f)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
+    >>> finite_diff(f, axis=0, dx=1.0, edge_order=2, zero_padding=False)
+    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
     >>> finite_diff(f, dx=0.5)
     array([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.])
-    >>> finite_diff(f, dx=1.0, zero_padding=True)
+    >>> finite_diff(f, zero_padding=True)
     array([ 0.5,  1. ,  1. ,  1. ,  1. ,  1. ,  1. ,  1. ,  1. , -4. ])
-    >>> df1 = finite_diff(np.sin(f/10*np.pi), edge_order=1)
-    >>> df2 = finite_diff(np.sin(f/10*np.pi), edge_order=2)
-    >>> np.array_equal(df1[1:-1], df2[1:-1])
+    >>> finite_diff(f, zero_padding=False, edge_order=1)
+    array([ 0.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  0.])
+    >>> out = finite_diff(f)
+    >>> out is finite_diff(f)
+    False
+    >>> out is finite_diff(f, out)
     True
-    >>> df1[0] == df2[0]
-    False
-    >>> df1[-1] == df2[-1]
-    False
-    >>> n = 5
-    >>> f = np.arange(n, dtype=float)
-    >>> f = f * f.reshape((n,1))
-    >>> finite_diff(f, axis=0)
-    array([[-0.,  1.,  2.,  3.,  4.],
-           [ 0.,  1.,  2.,  3.,  4.],
-           [ 0.,  1.,  2.,  3.,  4.],
-           [ 0.,  1.,  2.,  3.,  4.],
-           [ 0.,  1.,  2.,  3.,  4.]])
-    >>> finite_diff(f, axis=1)
-    array([[-0.,  0.,  0.,  0.,  0.],
-           [ 1.,  1.,  1.,  1.,  1.],
-           [ 2.,  2.,  2.,  2.,  2.],
-           [ 3.,  3.,  3.,  3.,  3.],
-           [ 4.,  4.,  4.,  4.,  4.]])
-    >>> try:
-    ...    finite_diff(f, axis=2)
-    ... except IndexError as e:
-    ...    print(e)
-    Axis paramater (2) exceeds number of dimensions (2).
     """
     # TODO: implement forward/backward differences
     # TODO: implement other boundary conditions
 
     if zero_padding is True and edge_order == 1:
-        raise ValueError("Zero padding uses second-order accurate "
+        raise ValueError("zero padding uses second-order accurate "
                          "differences at boundaries. First order accurate "
                          "edges can only be triggered withou zero padding.")
     f_data = np.asarray(f)
     ndim = f_data.ndim
 
     if not 0 <= axis < ndim:
-        raise IndexError("Axis paramater ({0}) exceeds number of dimensions "
+        raise IndexError("axis paramater ({0}) exceeds number of dimensions "
                          "({1}).".format(axis, ndim))
 
     if f_data.shape[axis] < 2:
-        raise ValueError("Shape of array too small to calculate a numerical "
+        raise ValueError("shape of array too small to calculate a numerical "
                          "gradient, at least two elements are required.")
+    if out is None:
+        out = np.empty_like(f_data)
+    else:
+        if not out.shape == f.shape:
+            raise TypeError("shape of `out` array ({0}) does not match input "
+                            "array `f` ({1})".format(out.shape, f.shape))
+
+    if edge_order not in {1, 2, None}:
+        raise ValueError("edge order ({0}) not valid".format(edge_order))
 
     if edge_order is None:
         edge_order = 2
+
+    dx = float(dx)
 
     # create slice objects --- initially all are [:, :, ..., :]
     # current slice
@@ -142,8 +134,6 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
     slice_node1 = [slice(None)] * ndim
     slice_node2 = [slice(None)] * ndim
     slice_node3 = [slice(None)] * ndim
-
-    out = np.empty_like(f_data)
 
     # Numerical differentiation: 2nd order interior
     slice_out[axis] = slice(1, -1)
@@ -249,7 +239,6 @@ class DiscretePartDeriv(Operator):
         --------
         """
 
-
     @property
     def adjoint(self):
         """Return the adjoint."""
@@ -298,55 +287,38 @@ class DiscreteGradient(Operator):
 
         Examples
         --------
-        >>> from odl import uniform_discr, FunctionSpace, IntervalProd
-        >>> def ndvolume(vol_size, ndim, dtype=None):
-        ...     s = [1]
-        ...     vol = np.arange(vol_size, dtype=dtype)
-        ...     for _ in range(ndim - 1):
-        ...         s.insert(0, vol_size)
-        ...         vol = vol * vol.reshape(s)
-        ...     return vol
-        >>> ndim = 3
-        >>> vsize = 100
-        >>> disc = uniform_discr(FunctionSpace(IntervalProd(
-        ... [0.]*ndim, [vsize]*ndim)), [vsize]*ndim)
-        >>> f = disc.element(ndvolume(vsize, ndim, np.int32))
-        >>> A = DiscreteGradient(disc)
-        >>> Af = A(f)
-        >>> g = A.range.one()
-        >>> Adg = A.adjoint(g)
-        >>> g.inner(Af) - f.inner(Adg)
+        >>> from odl import uniform_discr, FunctionSpace, Rectangle
+        >>> data = np.arange(5, dtype=float) * np.arange(1, 3).reshape(2,1)
+        >>> data
+        array([[ 0.,  1.,  2.,  3.,  4.],
+               [ 0.,  2.,  4.,  6.,  8.]])
+        >>> space = FunctionSpace(Rectangle([0,0], [2,1]))
+        >>> disc = uniform_discr(space, data.shape)
+        >>> f = disc.element(data)
+        >>> grad = DiscreteGradient(disc)
+        >>> grad_f = grad(f)
+        >>> grad_f[0].asarray()
+        array([[ 0. ,  1. ,  2. ,  3. ,  4. ],
+               [-0. , -0.5, -1. , -1.5, -2. ]])
+        >>> grad_f[1].asarray()
+        array([[  2.5,   5. ,   5. ,   5. ,  -7.5],
+               [  5. ,  10. ,  10. ,  10. , -15. ]])
+        >>> g = grad.range.element((data, data ** 2))
+        >>> adj = grad.adjoint
+        >>> adj_g = adj(g)
+        >>> adj_g.asarray()
+        array([[  -2.5,  -11. ,  -22. ,  -33. ,   18.5],
+               [ -10. ,  -39.5,  -79. , -118.5,   92. ]])
+        >>> g.inner(grad_f) - f.inner(adj_g)
         0.0
-        >>> B = DiscreteDivergence(disc)
-        >>> Bg = B(g)
-        >>> Bdf = B.adjoint(f)
-        >>> f.inner(Bg) - g.inner(Bdf)
-        0.0
-        >>> ndim = 3
-        >>> vsize = 9
-        >>> disc = uniform_discr(FunctionSpace(IntervalProd(
-        ... [0.]*ndim, [vsize]*ndim)), [vsize]*ndim)
-        >>> f = disc.element(ndvolume(vsize, ndim, np.int32))
-        >>> A = DiscreteGradient(disc)
-        >>> Af = A(f)
-        >>> g = A.range.one()
-        >>> Adg = A.adjoint(g)
-        >>> g.inner(Af) - f.inner(Adg)
-        0.0
-        >>> B = DiscreteDivergence(disc)
-        >>> Bg = B(g)
-        >>> Bdf = B.adjoint(f)
-        >>> f.inner(Bg) - g.inner(Bdf)
-        0.0
-
         """
         x_data = np.asarray(x)
         ndim = self.domain.grid.ndim
         dx = self.domain.grid.stride
 
         for axis in range(ndim):
-            out[axis][:] = finite_diff(x_data, axis=axis, dx=dx[axis],
-                                       edge_order=2, zero_padding=True)
+            finite_diff(x_data, out=out[axis].asarray(), axis=axis,
+                        dx=dx[axis], edge_order=2, zero_padding=True)
 
     @property
     def adjoint(self):
@@ -356,7 +328,7 @@ class DiscreteGradient(Operator):
         Note that the `space` argument of the `DiscreteDivergence` operator
         is not the range but the  domain of the `DiscreteGradient` operator.
         """
-        return -DiscreteDivergence(self.domain)
+        return - DiscreteDivergence(self.domain)
 
 
 class DiscreteDivergence(Operator):
@@ -402,35 +374,33 @@ class DiscreteDivergence(Operator):
 
         Examples
         --------
-        >>> from odl import uniform_discr, FunctionSpace, IntervalProd
-        >>> def ndvolume(vol_size, ndim, dtype=None):
-        ...     s = [1]
-        ...     vol = np.arange(vol_size, dtype=dtype)
-        ...     for _ in range(ndim - 1):
-        ...         s.insert(0, vol_size)
-        ...         vol = vol * vol.reshape(s)
-        ...     return vol
-        >>> ndim = 4
-        >>> vsize = 6
-        >>> disc = uniform_discr(FunctionSpace(IntervalProd(
-        ... [0.]*ndim, [vsize]*ndim)), [vsize]*ndim)
-        >>> f = disc.element(ndvolume(vsize, ndim, np.int32))
-        >>> B = DiscreteDivergence(disc)
-        >>> g = B.domain.one()
-        >>> Bg = B(g)
-        >>> Bdf = B.adjoint(f)
-        >>> f.inner(Bg) - g.inner(Bdf)
-        0.0
+        >>> from odl import Rectangle, uniform_discr, FunctionSpace
+        >>> data = np.arange(5, dtype=float) * np.arange(1, 3).reshape(2,1)
+        >>> space = FunctionSpace(Rectangle([0,0], [2,1]))
+        >>> disc = uniform_discr(space, data.shape)
+        >>> div = DiscreteDivergence(disc)
+        >>> f = div.domain.element([data, data ** 2])
+        >>> div_f = div(f)
+        >>> div_f.asarray()
+        array([[   2.5,   11. ,   22. ,   33. ,  -18.5],
+               [  10. ,   39.5,   79. ,  118.5,  -92. ]])
+        >>> g = div.range.element(data ** 3)
+        >>> adj = div.adjoint
+        >>> adj_g = adj(g)
+        >>> g.inner(div_f)
+        -3248.4
+        >>> f.inner(adj_g)
+        -3248.4
         """
-        tmp = np.zeros_like(out.asarray())
+
         ndim = self.range.grid.ndim
         dx = self.range.grid.stride
 
+        # TODO: can the following code be optimized?
+        tmp = np.zeros_like(out.asarray())
         for axis in range(ndim):
-            tmp += finite_diff(x[axis].asarray(), axis=axis,
-                               dx=dx[axis],
-                               edge_order=2,
-                               zero_padding=True)
+            tmp += finite_diff(x[axis], axis=axis, dx=dx[axis],
+                               edge_order=2, zero_padding=True)
         out[:] = tmp
 
     @property
@@ -438,7 +408,7 @@ class DiscreteDivergence(Operator):
         """Return the adjoint operator given by the negative of the
         `DiscreteGradient` operator implicitly assuming zero padding.
         """
-        return -DiscreteGradient(self.range)
+        return - DiscreteGradient(self.range)
 
 
 if __name__ == '__main__':
