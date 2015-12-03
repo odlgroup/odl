@@ -95,8 +95,12 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
     if ndim == 2:
         elem = proj_space.element(astra.data2d.get_shared(sino_id))
     else:  # ndim = 3
-        elem = proj_space.element(
-            astra.data3d.get_shared(sino_id).swapaxes(0,1))
+        pshape = proj_space.grid.shape
+        # pshape = pshape[1], pshape[2], pshape[0]
+        elem = proj_space.element(astra.data3d.get_shared(sino_id).reshape(
+            pshape
+        )
+        )
 
     # Delete ASTRA objects
     astra_cleanup()
