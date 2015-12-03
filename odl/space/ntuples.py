@@ -46,7 +46,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector, FnWeightingBase)
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
+    is_complex_floating_dtype, UFUNCS)
 
 
 __all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector',
@@ -419,6 +419,58 @@ class NtuplesVector(NtuplesBaseVector):
             return self.data.__setitem__(indices, values.data)
         else:
             return self.data.__setitem__(indices, values)
+
+
+# Optimized implementation of ufuncs since we can use the out parameter
+def wrap_method(name, n_arg, n_opt, descr):
+    # Get method from numpy
+    wrapped = getattr(np, name)
+    if n_args == 1:
+        if n_opt == 0:
+            def wrapper(self):
+                return self.space.element(wrapped(self.data))
+
+        elif n_opt == 1:
+            def wrapper(self, out=None):
+                if out is None:
+                    out = self.space.element()
+
+                return self.space.element(wrapped(self.data, out.data))
+
+        elif n_opt == 2:
+            def wrapper(self, out1=None, out2=None):
+                if out1 is None:
+                    out1 = self.space.element()
+                if out2 is None:
+                    out2 = self.space.element()
+
+                y1, y2 = wrapped(self.data, out1.data, out2.data)
+                return self.space.element(y1), self.space.element(y2)
+
+        else:
+            raise NotImplementedError
+
+    elif n_args == 2:
+        if n_opt == 1:
+            def wrapper(self, x2, out=None):
+                print("IS THIS CALLED?")
+                if out is None:
+                    out = self.space.element()
+
+                y = wrapped(self.data, x2.data, out.data)
+                return self.space.element(y)
+
+        else:
+            raise NotImplementedError
+    else:
+        raise NotImplementedError
+
+    wrapper.__name__ = name
+    wrapper.__doc__ = descr
+    return wrapper
+
+for name, n_args, n_opt, descr in UFUNCS:
+    setattr(NtuplesVector, name, wrap_method(name, n_args, n_opt, descr))
 
 
 def _blas_is_applicable(*args):

@@ -34,7 +34,7 @@ from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
-    is_scalar_dtype, is_real_dtype, UFUNCS)
+    is_scalar_dtype, is_real_dtype)
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector',
@@ -328,59 +328,18 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
                                          array1d_repr(self))
 
 
-# Wrap all numpy ufuncs
-def wrap_method(name, n_arg, n_opt, descr):
+from odl.util.utility import UFUNCS
+
+def wrap_method(name):
     # This unbound method will be pulled from the superclass.
     wrapped = getattr(np, name)
-    if n_args == 1:
-        if n_opt == 0:
-            def wrapper(self):
-                return self.space.element(wrapped(self.asarray()))
-
-        elif n_opt == 1:
-            def wrapper(self, out=None):
-                if out is None:
-                    out = self.space.element()
-                    return self.space.element(wrapped(self.asarray()))
-                else:
-                    out[:] = wrapped(self.asarray())
-                    return out
-
-        elif n_opt == 2:
-            def wrapper(self, out1=None, out2=None):
-                if out1 is None:
-                    out1 = self.space.element()
-                if out2 is None:
-                    out2 = self.space.element()
-
-                [y1, y2] = wrapped(self.asarray())
-                out1[:] = y1
-                out2[:] = y2
-                return out1, out2
-
-        else:
-            raise NotImplementedError
-
-    elif n_args == 2:
-        if n_opt == 1:
-            def wrapper(self, x2, out=None):
-                if out is None:
-                    return self.space.element(wrapped(self.asarray(),
-                                                      x2.asarray()))
-                else:
-                    out[:] = wrapped(self.asarray(), x2.asarray())
-                    return out
-
-        else:
-            raise NotImplementedError
-    else:
-        raise NotImplementedError
-
-    wrapper.__doc__ = descr
+    @functools.wraps(wrapped)
+    def wrapper(self, *args, **kwargs):
+        return wrapped(self, *args, **kwargs)
     return wrapper
 
-for name, n_args, n_opt, descr in UFUNCS:
-    setattr(NtuplesBaseVector, name, wrap_method(name, n_args, n_opt, descr))
+for name, descr in UFUNCS:
+    setattr(NtuplesBaseVector, name, wrap_method(cls, name))
 
 
 class FnBase(NtuplesBase, LinearSpace):
