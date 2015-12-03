@@ -1096,20 +1096,20 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert odl_result[i] is out_vectors[i]
 
 
-@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
-    fn = odl.CudaRn(3)
-    for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
-        if np.issubsctype(fn.dtype, np.floating) and name in ['bitwise_and',
-                                                              'bitwise_or',
-                                                              'bitwise_xor',
-                                                              'invert',
-                                                              'left_shift',
-                                                              'right_shift']:
-            # Skip integer only methods if floating point type
-            continue
-        yield _impl_test_ufuncs, fn, name, n_args, n_out
+    for fn in spc_params:
+        for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
+            if (np.issubsctype(fn.dtype, np.floating) and
+                    name in ['bitwise_and',
+                             'bitwise_or',
+                             'bitwise_xor',
+                             'invert',
+                             'left_shift',
+                             'right_shift']):
+                # Skip integer only methods if floating point type
+                continue
+            yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
 if __name__ == '__main__':
