@@ -411,10 +411,10 @@ class FunctionSetVector(Operator):
             Input argument for the function evaluation. Conditions
             on `x` depend on vectorization:
 
-            `False` : `x` must be a domain element
+            `False` : ``x`` must be a domain element
 
-            `True` : `x` must be a `numpy.ndarray` with shape
-            `(d, N)`, where `d` is the number of dimensions of
+            `True` : ``x`` must be a `numpy.ndarray` with shape
+            ``(d, N)``, where ``d`` is the number of dimensions of
             the function domain
             OR
             `x` is a sequence of `numpy.ndarray` with length
@@ -488,11 +488,17 @@ class FunctionSetVector(Operator):
                 scalar_out = (out is None)
 
             if is_valid_input_array(x, self.domain.ndim):
-                out_shape = (x.shape[1],)
+                if self.domain.ndim == 1:
+                    if x.ndim == 2:
+                        x = x[0]
+                    out_shape = x.shape
+                else:
+                    out_shape = (x.shape[1],)
             elif is_valid_input_meshgrid(x, self.domain.ndim):
                 # Broadcasting fails for only one vector (ndim == 1)
                 if self.domain.ndim == 1:
-                    out_shape = (x[0].shape[1],)
+                    x = x[0]
+                    out_shape = x.shape
                 else:
                     out_shape = np.broadcast(*x).shape
             else:
@@ -501,8 +507,6 @@ class FunctionSetVector(Operator):
                                 '{dom}, a ({dom.ndim}, n) array '
                                 'or a length-{dom.ndim} meshgrid sequence.'
                                 ''.format(x, dom=self.domain))
-
-            out_shape = np.broadcast(*x).shape
 
             if vec_bounds_check:
                 if not self.domain.contains_all(x):
@@ -515,6 +519,7 @@ class FunctionSetVector(Operator):
 
         if out is None:
             out = self._call(x, **kwargs)
+
             if self.vectorized:
                 if out.shape != out_shape:
                     raise ValueError('output shape {} not equal to shape '
@@ -938,7 +943,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if p == int(p) and p >= 1:
                 return pow_posint(x_call_oop(x), int(p))
             else:
-                return x_call_oop(x)**p
+                return x_call_oop(x) ** p
 
         def power_call_in_place(x, out):
             """The power in-place evaluation function."""
