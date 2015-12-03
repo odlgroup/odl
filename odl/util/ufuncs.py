@@ -103,8 +103,8 @@ UFUNCS = [('add', 2, 1, 'Add arguments element-wise with numpy.'),
           ('copysign', 2, 1, 'Change the sign of x1 to that of x2, element-wise.'),
           ('nextafter', 2, 1, 'Return the next floating-point value after x1 towards x2, element-wise.'),
           ('modf', 1, 2, 'Return the fractional and integral parts of an array, element-wise.'),
-          ('ldexp', 2, 1, 'Returns x1 * 2**x2, element-wise.'),
-          ('frexp', 1, 2, 'Decompose the elements of x into mantissa and twos exponent.'),
+          #('ldexp', 2, 1, 'Returns x1 * 2**x2, element-wise.'),
+          #('frexp', 1, 2, 'Decompose the elements of x into mantissa and twos exponent.'),
           ('fmod', 2, 1, 'Return the element-wise remainder of division.'),
           ('floor', 1, 1, 'Return the floor of the input, element-wise.'),
           ('ceil', 1, 1, 'Return the ceiling of the input, element-wise.'),
@@ -118,16 +118,15 @@ def wrap_base_method(name, n_args, n_opt, descr):
     if n_args == 1:
         if n_opt == 0:
             def wrapper(self):
-                return self.vector.space.element(wrapped(self.vector))
+                return wrapped(self.vector)
 
         elif n_opt == 1:
             def wrapper(self, out=None):
                 if out is None:
                     out = self.vector.space.element()
-                    return self.vector.space.element(wrapped(self.vector))
-                else:
-                    out[:] = wrapped(self.vector)
-                    return out
+
+                out[:] = wrapped(self.vector)
+                return out
 
         elif n_opt == 2:
             def wrapper(self, out1=None, out2=None):
@@ -148,8 +147,7 @@ def wrap_base_method(name, n_args, n_opt, descr):
         if n_opt == 1:
             def wrapper(self, x2, out=None):
                 if out is None:
-                    return self.vector.space.element(wrapped(self.vector,
-                                                      x2))
+                    return wrapped(self.vector, x2)
                 else:
                     out[:] = wrapped(self.vector, x2)
                     return out
@@ -184,14 +182,14 @@ def wrap_ntuples_method(name, n_args, n_opt, descr):
     if n_args == 1:
         if n_opt == 0:
             def wrapper(self):
-                return self.vector.space.element(wrapped(self.vector))
+                return wrapped(self.vector)
 
         elif n_opt == 1:
             def wrapper(self, out=None):
                 if out is None:
                     out = self.vector.space.element()
-
-                return self.vector.space.element(wrapped(self.vector, out.data))
+                wrapped(self.vector, out.data)
+                return out
 
         elif n_opt == 2:
             def wrapper(self, out1=None, out2=None):
@@ -201,7 +199,7 @@ def wrap_ntuples_method(name, n_args, n_opt, descr):
                     out2 = self.vector.space.element()
 
                 y1, y2 = wrapped(self.vector, out1.data, out2.data)
-                return self.vector.space.element(y1), self.vector.space.element(y2)
+                return out1, out2
 
         else:
             raise NotImplementedError
@@ -212,8 +210,8 @@ def wrap_ntuples_method(name, n_args, n_opt, descr):
                 if out is None:
                     out = self.vector.space.element()
 
-                y = wrapped(self.vector, x2, out.data)
-                return self.vector.space.element(y)
+                wrapped(self.vector, x2, out.data)
+                return out
 
         else:
             raise NotImplementedError
