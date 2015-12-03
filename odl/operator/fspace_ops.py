@@ -73,6 +73,8 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=2,
     Examples
     --------
     >>> f = np.arange(10, dtype=float)
+    >>> f
+    array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
     >>> discrete_part_deriv(f)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
     >>> discrete_part_deriv(f, dx=0.5)
@@ -135,56 +137,60 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=2,
     slice_out[axis] = slice(1, -1)
     slice_node1[axis] = slice(2, None)
     slice_node2[axis] = slice(None, -2)
-    # 1D equivalent -- out[1:-1] = (f[2:] - f[:-2])/2.0
-    out[slice_out] = (f_data[slice_node1] - f_data[slice_node2]) / 2.0
+    # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
+    np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
+    out[slice_out] /= 2.0
 
     # central differences
     if zero_padding:
         # Assume zeros for indices outside the domain of `f`
 
-        # 1D equivalent -- out[0] = (f[1] - 0)/2.0
         slice_out[axis] = 0
         slice_node1[axis] = 1
+        # 1D equivalent: out[0] = (f[1] - 0)/2.0
         out[slice_out] = f_data[slice_node1] / 2.0
 
-        # 1D equivalent -- out[-1] = (0 - f[-2])/2.0
         slice_out[axis] = -1
         slice_node2[axis] = -2
+        # 1D equivalent: out[-1] = (0 - f[-2])/2.0
         out[slice_out] = - f_data[slice_node2] / 2.0
 
-    # one-side differences
+    # one-sided differences
     else:
+
         # Numerical differentiation: 1st order edges
         if f_data.shape[axis] == 2 or edge_order == 1:
 
-            # 1D equivalent -- out[0] = (f[1] - f[0])
             slice_out[axis] = 0
             slice_node1[axis] = 1
             slice_node2[axis] = 0
-            out[slice_out] = (f_data[slice_node1] - f_data[slice_node2])
+            # 1D equivalent: out[0] = (f[1] - f[0])
+            np.subtract(f_data[slice_node1], f_data[slice_node2],
+                        out[slice_out])
 
-            # 1D equivalent -- out[-1] = (f[-1] - f[-2])
             slice_out[axis] = -1
             slice_node1[axis] = -1
             slice_node2[axis] = -2
-            out[slice_out] = (f_data[slice_node1] - f_data[slice_node2])
+            # 1D equivalent: out[-1] = (f[-1] - f[-2])
+            np.subtract(f_data[slice_node1], f_data[slice_node2],
+                        out[slice_out])
 
         # Numerical differentiation: 2nd order edges
         else:
 
-            # 1D equivalent -- out[0] = -(3*f[0] - 4*f[1] + f[2]) / 2.0
             slice_out[axis] = 0
             slice_node1[axis] = 0
             slice_node2[axis] = 1
             slice_node3[axis] = 2
+            # 1D equivalent: out[0] = -(3*f[0] - 4*f[1] + f[2]) / 2.0
             out[slice_out] = -(3.0 * f_data[slice_node1] - 4.0 * f_data[
                 slice_node2] + f_data[slice_node3]) / 2.0
 
-            # 1D equivalent -- out[-1] = (3*f[-1] - 4*f[-2] + f[-3]) / 2.0
             slice_out[axis] = -1
             slice_node1[axis] = -1
             slice_node2[axis] = -2
             slice_node3[axis] = -3
+            # 1D equivalent: out[-1] = (3*f[-1] - 4*f[-2] + f[-3]) / 2.0
             out[slice_out] = (3.0 * f_data[slice_node1] - 4.0 * f_data[
                 slice_node2] + f_data[slice_node3]) / 2.0
 
@@ -285,7 +291,7 @@ class DiscreteGradient(Operator):
         0.0
 
         """
-        rhs_data = np.asanyarray(rhs)
+        rhs_data = np.asarray(rhs)
         ndim = rhs_data.ndim
 
         dx = self.voxel_size
