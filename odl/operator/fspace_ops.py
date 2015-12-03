@@ -28,15 +28,16 @@ import numpy as np
 # ODL imports
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
+from odl.discr.lp_discr import DiscreteLp
 
 
 __all__ = ('DiscreteGradient', 'DiscreteDivergence')
 
 
-def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=None,
-                        zero_padding=False):
+def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
+                zero_padding=False):
     """Calculate the partial derivative of `f` along a given `axis` using
-    Nth-order discrete differences.
+    discrete differences.
 
     The partial derivative is computed using second-order accurate central
     differences in the interior and either first differences or second order
@@ -53,11 +54,13 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=None,
     ----------
     f : array-like
          An N-dimensional array
+    out : array-like
+         An N-dimensional array
     axis : `int`, optional
         The axis along which the partial derivative is evaluated. Default: 0
     dx : `float`, optional
         Scalars specifying the sample distances in each dimension `axis`.
-        Default distance: 1.
+        Default distance: 1.0
     edge_order : {1, 2}, optional
         First order accurate differences can be used to calculated the partial
         derivative at the boundaries if no zero padding is used. Default
@@ -76,14 +79,14 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=None,
     >>> f = np.arange(10, dtype=float)
     >>> f
     array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
-    >>> discrete_part_deriv(f)
+    >>> finite_diff(f)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
-    >>> discrete_part_deriv(f, dx=0.5)
+    >>> finite_diff(f, dx=0.5)
     array([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.])
-    >>> discrete_part_deriv(f, dx=1.0, zero_padding=True)
+    >>> finite_diff(f, dx=1.0, zero_padding=True)
     array([ 0.5,  1. ,  1. ,  1. ,  1. ,  1. ,  1. ,  1. ,  1. , -4. ])
-    >>> df1 = discrete_part_deriv(np.sin(f/10*np.pi), edge_order=1)
-    >>> df2 = discrete_part_deriv(np.sin(f/10*np.pi), edge_order=2)
+    >>> df1 = finite_diff(np.sin(f/10*np.pi), edge_order=1)
+    >>> df2 = finite_diff(np.sin(f/10*np.pi), edge_order=2)
     >>> np.array_equal(df1[1:-1], df2[1:-1])
     True
     >>> df1[0] == df2[0]
@@ -93,20 +96,20 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=None,
     >>> n = 5
     >>> f = np.arange(n, dtype=float)
     >>> f = f * f.reshape((n,1))
-    >>> discrete_part_deriv(f, 0)
+    >>> finite_diff(f, axis=0)
     array([[-0.,  1.,  2.,  3.,  4.],
            [ 0.,  1.,  2.,  3.,  4.],
            [ 0.,  1.,  2.,  3.,  4.],
            [ 0.,  1.,  2.,  3.,  4.],
            [ 0.,  1.,  2.,  3.,  4.]])
-    >>> discrete_part_deriv(f, 1)
+    >>> finite_diff(f, axis=1)
     array([[-0.,  0.,  0.,  0.,  0.],
            [ 1.,  1.,  1.,  1.,  1.],
            [ 2.,  2.,  2.,  2.,  2.],
            [ 3.,  3.,  3.,  3.,  3.],
            [ 4.,  4.,  4.,  4.,  4.]])
     >>> try:
-    ...    discrete_part_deriv(f, 2)
+    ...    finite_diff(f, axis=2)
     ... except IndexError as e:
     ...    print(e)
     Axis paramater (2) exceeds number of dimensions (2).
@@ -115,7 +118,7 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=None,
         raise ValueError("Zero padding uses second-order accurate "
                          "differences at boundaries. First order accurate "
                          "edges can only be triggered withou zero padding.")
-    f_data = np.asanyarray(f)
+    f_data = np.asarray(f)
     ndim = f_data.ndim
 
     if not 0 <= axis < ndim:
@@ -206,49 +209,86 @@ def discrete_part_deriv(f, axis=0, dx=1.0, edge_order=None,
     return out
 
 
-class DiscreteGradient(Operator):
-    """Gradient operator for any number of dimensions `n`.
+class DiscretePartDeriv(Operator):
+    """Calculate the discrete partial derivativ along a given `axis`.
 
-    Calls helper function `discrete_part_deriv` to calculate each component
+        Calls helper function `finite_diff` to calculate the finite
+        difference. Preserves the shape of the underlying grid.
+        """
+    # TODO: implement adjoint
+
+    def __init__(self, space):
+        """Initialize an operator instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp`
+            The space of elements which the operator is acting on
+        """
+
+        if not isinstance(space, DiscreteLp):
+            raise TypeError('space {!r} is not a `DiscreteLp` '
+                            'instance.'.format(space))
+
+        super().__init__(domain=space, range=space, linear=True)
+
+    def _apply(self, x, out):
+        """Apply gradient operator to ``x`` and store result in ``out``.
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            Input vector to which the `DiscreteGradient` operator is applied to
+        out : ``range`` element
+            Output vector to which the result is written
+
+        Examples
+        --------
+        """
+
+
+    @property
+    def adjoint(self):
+        """Return the adjoint."""
+        raise NotImplementedError('adjoint not implemented')
+
+
+class DiscreteGradient(Operator):
+    """Gradient operator applicable to `DiscreteLp` spaces of any number of
+    dimensions ``n``.
+
+    Calls helper function `finite_diff` to calculate each component
     of the resulting product space vector. For the adjoint of the `Gradient`
     operator to match the negative `DiscreteDivergence` operator requires
     `zero_padding`.
     """
 
-    def __init__(self, space, voxel_size=(1,), edge_order=2,
-                 zero_padding=True):
+    def __init__(self, space):
         """Initialize a `DiscreteGradient` operator instance.
 
-        Zero padding is required for the negative `DiscreteDivergence`
+        Zero padding is assumed for the negative `DiscreteDivergence`
         operator to match the adjoint of the `DiscreteGradient` operator.
 
         Parameters
         ----------
-        space : `FunctionSpace`
+        space : `DiscreteLp`
             The space of elements which the operator is acting on
-        voxel_size : `n`-tuple of `floats`
-            `n`-tuple of scalars specifying the sample distances in each
-            dimension. Default distance is 1 in each direction
-        edge_order : {1, 2}, optional
-            Partial derivative is calculated using Nth order accurate
-            differences at the boundaries. Default edge order: 2
-        zero_padding : `bool`, optional
-            Implicit zero padding. Assumes values outside of `space` to be
-            zero. Default: True
         """
-        self.voxel_size = voxel_size
-        self.edge_order = edge_order
-        self.zero_padding = zero_padding
+
+        if not isinstance(space, DiscreteLp):
+            raise TypeError('space {!r} is not a `DiscreteLp` '
+                            'instance.'.format(space))
+
         super().__init__(domain=space,
-                         range=ProductSpace(space, len(voxel_size)),
+                         range=ProductSpace(space, space.grid.ndim),
                          linear=True)
 
-    def _apply(self, rhs, out):
-        """Apply gradient operator to `rhs` and store result in `out`.
+    def _apply(self, x, out):
+        """Apply gradient operator to ``x`` and store result in ``out``.
 
         Parameters
         ----------
-        rhs : ``domain`` element
+        x : ``domain`` element
             Input vector to which the `DiscreteGradient` operator is applied to
         out : ``range`` element
             Output vector to which the result is written
@@ -268,13 +308,13 @@ class DiscreteGradient(Operator):
         >>> disc = uniform_discr(FunctionSpace(IntervalProd(
         ... [0.]*ndim, [vsize]*ndim)), [vsize]*ndim)
         >>> f = disc.element(ndvolume(vsize, ndim, np.int32))
-        >>> A = DiscreteGradient(disc, (1.,)*ndim, zero_padding=True)
+        >>> A = DiscreteGradient(disc)
         >>> Af = A(f)
         >>> g = A.range.one()
         >>> Adg = A.adjoint(g)
         >>> g.inner(Af) - f.inner(Adg)
         0.0
-        >>> B = DiscreteDivergence(disc, (1.,)*ndim, zero_padding=True)
+        >>> B = DiscreteDivergence(disc)
         >>> Bg = B(g)
         >>> Bdf = B.adjoint(f)
         >>> f.inner(Bg) - g.inner(Bdf)
@@ -284,90 +324,74 @@ class DiscreteGradient(Operator):
         >>> disc = uniform_discr(FunctionSpace(IntervalProd(
         ... [0.]*ndim, [vsize]*ndim)), [vsize]*ndim)
         >>> f = disc.element(ndvolume(vsize, ndim, np.int32))
-        >>> A = DiscreteGradient(disc, (1.,)*ndim, zero_padding=True)
+        >>> A = DiscreteGradient(disc)
         >>> Af = A(f)
         >>> g = A.range.one()
         >>> Adg = A.adjoint(g)
         >>> g.inner(Af) - f.inner(Adg)
         0.0
-        >>> B = DiscreteDivergence(disc, (1.,)*ndim, zero_padding=True)
+        >>> B = DiscreteDivergence(disc)
         >>> Bg = B(g)
         >>> Bdf = B.adjoint(f)
         >>> f.inner(Bg) - g.inner(Bdf)
         0.0
 
         """
-        rhs_data = np.asarray(rhs)
-        ndim = rhs_data.ndim
-
-        dx = self.voxel_size
-        if np.size(dx) == 1:
-            dx = [dx for _ in range(ndim)]
+        x_data = np.asarray(x)
+        ndim = self.domain.grid.ndim
+        dx = self.domain.grid.stride
 
         for axis in range(ndim):
-            out[axis][:] = discrete_part_deriv(rhs_data, axis, dx[axis],
-                                               self.edge_order,
-                                               self.zero_padding)
+            out[axis][:] = finite_diff(x_data, axis=axis, dx=dx[axis],
+                                       edge_order=2, zero_padding=True)
 
     @property
     def adjoint(self):
-        """Assuming zero padding, this returns the adjoint operator given by
-        the negative of the `DiscreteDivergence` operator.
+        """Return the adjoint operator given by the negative of the
+        `DiscreteDivergence` operator implicitly assuming zero padding.
 
-        Note that the first argument (`space`) of the `DiscreteDivergence`
-        operator is not the range but the  domain of the `DiscreteGradient`
-        operator.
+        Note that the `space` argument of the `DiscreteDivergence` operator
+        is not the range but the  domain of the `DiscreteGradient` operator.
         """
-        return -DiscreteDivergence(self.domain, voxel_size=self.voxel_size,
-                                   edge_order=self.edge_order,
-                                   zero_padding=self.zero_padding)
+        return -DiscreteDivergence(self.domain)
 
 
 class DiscreteDivergence(Operator):
-    """Divergence operator for any number of dimensions.
+    """Divergence operator applicable to `DiscreteLp` spaces of any number of
+    dimensions ``n``.
 
-    Calls helper function `discrete_part_deriv` for each component of the
-    input product space vector vector. For the adjoint of the
-    `DiscreteDivergence` operator to match the negative `DiscreteGradient`
-    operator requires `zero_padding`.
+    Calls helper function `finite_diff` for each component of the input
+    product space vector. For the adjoint of the `DiscreteDivergence`
+    operator to match the negative `DiscreteGradient` operator implicit zero
+    padding is assumed.
     """
 
-    def __init__(self, space, voxel_size=(1,), edge_order=2,
-                 zero_padding=True):
+    def __init__(self, space):
         """Initialize a `DiscreteDivergence` operator instance.
 
-        Zero padding is required for the negative `DiscreteGradient`
+        Zero padding is assumed for the negative `DiscreteGradient`
         operator to match the adjoint of the `DiscreteDivergence` operator.
 
         Parameters
         ----------
-        space : `FunctionSpace`
+        space : `DiscreteLp`
             The space of elements which the operator is acting on
-        voxel_size : n-tuple of `floats`
-            n-tuple of scalars specifying the sample distances in each
-            dimension. Default distance is 1 in each direction
-        edge_order : {1, 2}, optional
-            Partial derivative is calculated using Nth order accurate
-            differences at the boundaries. Default edge order: 2
-        zero_padding : `bool`, optional
-            Implicit zero padding. Assumes values outside of `space` to be
-            zero. Default: True
         """
+        if not isinstance(space, DiscreteLp):
+            raise TypeError('space {!r} is not a `DiscreteLp` '
+                            'instance.'.format(space))
 
         self.space = space
-        self.voxel_size = voxel_size
-        self.edge_order = edge_order
-        self.zero_padding = zero_padding
-        super().__init__(domain=ProductSpace(space, len(voxel_size)),
+        super().__init__(domain=ProductSpace(space, space.grid.ndim),
                          range=space, linear=True)
 
-    def _apply(self, rhs, out):
-        """Apply `DiscreteDivergence` operator to `rhs` and store result in
-        `out`.
+    def _apply(self, x, out):
+        """Apply `DiscreteDivergence` operator to ``x`` and store result in
+        ``out``.
 
         Parameters
         ----------
-        rhs : ``domain`` element
+        x : ``domain`` element
             `ProductSpaceVector` to which the `DiscreteDivergence` operator is
             applied to
         out : ``range`` element
@@ -388,30 +412,30 @@ class DiscreteDivergence(Operator):
         >>> disc = uniform_discr(FunctionSpace(IntervalProd(
         ... [0.]*ndim, [vsize]*ndim)), [vsize]*ndim)
         >>> f = disc.element(ndvolume(vsize, ndim, np.int32))
-        >>> B = DiscreteDivergence(disc, (1.,)*ndim, zero_padding=True)
+        >>> B = DiscreteDivergence(disc)
         >>> g = B.domain.one()
         >>> Bg = B(g)
         >>> Bdf = B.adjoint(f)
         >>> f.inner(Bg) - g.inner(Bdf)
         0.0
         """
+        tmp = np.zeros_like(out.asarray())
+        ndim = self.range.grid.ndim
+        dx = self.range.grid.stride
 
-        tmp = np.zeros_like(rhs[0].asarray())
-        for axis in range(tmp.ndim):
-            tmp += discrete_part_deriv(rhs[axis].asarray(), axis=axis,
-                                       dx=self.voxel_size[axis],
-                                       edge_order=self.edge_order,
-                                       zero_padding=self.zero_padding)
+        for axis in range(ndim):
+            tmp += finite_diff(x[axis].asarray(), axis=axis,
+                               dx=dx[axis],
+                               edge_order=2,
+                               zero_padding=True)
         out[:] = tmp
 
     @property
     def adjoint(self):
-        """Assuming zero padding, this returns the adjoint operator given by
-        the negative of the `DiscreteGradient` operator.
+        """Return the adjoint operator given by the negative of the
+        `DiscreteGradient` operator implicitly assuming zero padding.
         """
-        return -DiscreteGradient(self.range, voxel_size=self.voxel_size,
-                                 edge_order=self.edge_order,
-                                 zero_padding=self.zero_padding)
+        return -DiscreteGradient(self.range)
 
 
 if __name__ == '__main__':
