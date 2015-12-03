@@ -27,11 +27,37 @@ import numpy as np
 
 import odl
 
-from odl.util.testutils import all_equal, skip_if_no_cuda
+from odl.util.testutils import all_equal, all_almost_equal, skip_if_no_cuda
 
 
 # TODO: element from function - waiting for vectorization
+def _array(fn):
+    # Generate numpy vectors, real or complex or int
+    if np.issubdtype(fn.dtype, np.floating):
+        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
+    elif np.issubdtype(fn.dtype, np.integer):
+        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
+    elif np.issubdtype(fn.dtype, np.complexfloating):
+        return (np.random.rand(fn.size) +
+                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
+    else:
+        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
 
+
+def _element(fn):
+    return fn.element(_array(fn))
+
+
+def _vectors(fn, n=1):
+    """Create a list of arrays and vectors in `fn`.
+
+    First arrays, then vectors.
+    """
+    arrs = [_array(fn) for _ in range(n)]
+
+    # Make Fn vectors
+    vecs = [fn.element(arr) for arr in arrs]
+    return arrs + vecs
 
 # Pytest fixture
 
@@ -508,28 +534,110 @@ def test_cell_size():
     # Non-degenerated case, should be same as grid stride
     square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
     discr = odl.uniform_discr(square_space, (2, 2), order='F')
+    vec = discr.element()
 
     assert all_equal(discr.cell_size, [0.5] * 2)
+    assert all_equal(vec.cell_size, [0.5] * 2)
 
     # Degenerated case, uses interval size in 1-point dimensions
     square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
     discr = odl.uniform_discr(square_space, (2, 1), order='F')
+    vec = discr.element()
 
     assert all_equal(discr.cell_size, [0.5, 1])
+    assert all_equal(vec.cell_size, [0.5, 1])
 
 
 def test_cell_volume():
     # Non-degenerated case
     square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
     discr = odl.uniform_discr(square_space, (2, 2), order='F')
+    vec = discr.element()
 
     assert discr.cell_volume == 0.25
+    assert vec.cell_volume == 0.25
 
     # Degenerated case, uses interval size in 1-point dimensions
     square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
     discr = odl.uniform_discr(square_space, (2, 1), order='F')
+    vec = discr.element()
 
     assert discr.cell_volume == 0.5
+    assert vec.cell_volume == 0.5
+
+
+def _impl_test_ufuncs(fn, name, n_args, n_out):
+    # Get the ufunc from numpy as reference
+    ufunc = getattr(np, name)
+
+    # Create some data
+    data = _vectors(fn, n_args + n_out)
+    in_arrays = data[:n_args]
+    out_arrays = data[n_args:n_args + n_out]
+    data_vector = data[n_args + n_out]
+    in_vectors = data[1 + n_args + n_out:2 * n_args + n_out]
+    out_vectors = data[2 * n_args + n_out:]
+
+    # Verify type
+    assert isinstance(data_vector.ufunc,
+                      odl.util.ufuncs.DiscreteLpVectorUFuncs)
+
+    # Out of place:
+    np_result = ufunc(*in_arrays)
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*in_vectors)
+    assert all_almost_equal(np_result, odl_result)
+
+    # Test type of output
+    if n_out == 1:
+        assert isinstance(odl_result, fn.element_type)
+    elif n_out > 1:
+        for i in range(n_out):
+            assert isinstance(odl_result[i], fn.element_type)
+
+    # In place:
+    np_result = ufunc(*(in_arrays + out_arrays))
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*(in_vectors + out_vectors))
+    assert all_almost_equal(np_result, odl_result)
+
+    # Test inplace actually holds:
+    if n_out == 1:
+        assert odl_result is out_vectors[0]
+    elif n_out > 1:
+        for i in range(n_out):
+            assert odl_result[i] is out_vectors[i]
+
+    # Test out of place with np data
+    np_result = ufunc(*in_arrays)
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*in_arrays[1:])
+    assert all_almost_equal(np_result, odl_result)
+
+    # Test type of output
+    if n_out == 1:
+        assert isinstance(odl_result, fn.element_type)
+    elif n_out > 1:
+        for i in range(n_out):
+            assert isinstance(odl_result[i], fn.element_type)
+
+
+def test_ufuncs():
+    # Cannot use fixture due to bug in pytest
+    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    fn = odl.uniform_discr(square_space, [2, 2])
+
+    for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
+        if (np.issubsctype(fn.dtype, np.floating) and
+                name in ['bitwise_and',
+                         'bitwise_or',
+                         'bitwise_xor',
+                         'invert',
+                         'left_shift',
+                         'right_shift']):
+            # Skip integer only methods if floating point type
+            continue
+        yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
 if __name__ == '__main__':

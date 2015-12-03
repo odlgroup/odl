@@ -243,23 +243,21 @@ def wrap_method_discretelp(name, n_args, n_opt, descr):
     if n_args == 1:
         if n_opt == 0:
             def wrapper(self):
-                method = getattr(self, 'ntuple.ufunc.' + name)
-                result = method()
-                return self.vector.space.element(result)
+                method = getattr(self.vector.ntuple.ufunc, name)
+                return self.vector.space.element(method())
 
         elif n_opt == 1:
             def wrapper(self, out=None):
-                method = getattr(self, 'ntuple.ufunc.' + name)
+                method = getattr(self.vector.ntuple.ufunc, name)
                 if out is None:
-                    out = self.vector.space.element()
+                    return self.vector.space.element(method())
+                else:
                     method(out=out.ntuple)
                     return out
-                else:
-                    return self.vector.space.element(method())
 
         elif n_opt == 2:
             def wrapper(self, out1=None, out2=None):
-                method = getattr(self, 'ntuple.ufunc.' + name)
+                method = getattr(self.vector.ntuple.ufunc, name)
                 if out1 is None:
                     out1 = self.vector.space.element()
                 if out2 is None:
@@ -274,13 +272,17 @@ def wrap_method_discretelp(name, n_args, n_opt, descr):
     elif n_args == 2:
         if n_opt == 1:
             def wrapper(self, x2, out=None):
-                method = getattr(self, 'ntuple.ufunc.' + name)
+                try:
+                    x2 = x2.ntuple
+                except AttributeError:
+                    x2 = x2
+
+                method = getattr(self.vector.ntuple.ufunc, name)
                 if out is None:
-                    out = self.vector.space.element()
-                    method(x2, out.data)
-                    return out
-                else:
                     return self.vector.space.element(method(x2))
+                else:
+                    method(x2, out.ntuple)
+                    return out
 
         else:
             raise NotImplementedError

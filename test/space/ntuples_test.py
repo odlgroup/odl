@@ -36,7 +36,7 @@ from odl.space.ntuples import (
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
-from odl.util.ufuncs import UFUNCS
+from odl.util.ufuncs import UFUNCS, NtuplesVectorUFuncs
 
 # TODO: add tests for:
 # * inner, norm, dist as free functions
@@ -1520,6 +1520,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
     fn = Rn(3)
+
     for name, n_args, n_out, _ in UFUNCS:
         if np.issubsctype(fn.dtype, np.floating) and name in ['bitwise_and',
                                                               'bitwise_or',
