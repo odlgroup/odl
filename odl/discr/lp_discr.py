@@ -211,7 +211,7 @@ class DiscreteLp(Discretization):
 
             arg_str = arg_fstr.format(
                 self.uspace, list(self.grid.shape), interp=self.interp,
-                impl=impl, order=self.order)
+                impl=impl, order=self.order, ex=self.exponent)
             return 'uniform_discr({})'.format(arg_str)
         else:
             arg_fstr = '''
