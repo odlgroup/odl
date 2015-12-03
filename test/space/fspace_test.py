@@ -61,22 +61,18 @@ def test_interval(exponent):
         assert almost_equal(discr_sine_p.norm(), 2 ** (1 / exponent), places=2)
 
 
-# TODO: sort out the vectorization issue first
-
-
-@pytest.skip('vectorized evaluation broken')
 def test_rectangle(exponent):
     fspace = FunctionSpace(odl.Rectangle((0, 0), (pi, 2 * pi)))
     n, m = 10, 10
     lpdiscr = odl.uniform_discr(fspace, (n, m), exponent=exponent)
 
     if exponent == float('inf'):
-        sine2 = fspace.element(lambda x, y: np.sin(x) * np.sin(y))
+        sine2 = fspace.element(lambda x: np.sin(x[0]) * np.sin(x[1]))
         discr_sine = lpdiscr.element(sine2)
         assert discr_sine.norm() <= 1
     else:
         sine_p = fspace.element(
-            lambda x, y: (np.sin(x) * np.sin(y)) ** (1 / exponent))
+            lambda x: np.abs(np.sin(x[0]) * np.sin(x[1])) ** (1 / exponent))
         discr_sine_p = lpdiscr.element(sine_p)
         assert almost_equal(discr_sine_p.norm(), 4 ** (1 / exponent), places=2)
 
