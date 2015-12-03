@@ -114,6 +114,9 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
     ...    print(e)
     Axis paramater (2) exceeds number of dimensions (2).
     """
+    # TODO: implement forward/backward differences
+    # TODO: implement other boundary conditions
+
     if zero_padding is True and edge_order == 1:
         raise ValueError("Zero padding uses second-order accurate "
                          "differences at boundaries. First order accurate "
