@@ -110,11 +110,6 @@ def test_vector_cuda():
     assert x.dtype == np.dtype('float32')
     assert all_equal(x, [1.0, 2.0, float('inf')])
 
-    x = vector([1.0, 2.0, float('nan')], impl='cuda')
-    assert isinstance(x, odl.CudaRnVector)
-    assert x.dtype == np.dtype('float32')
-    assert all_equal(x, [1.0, 2.0, float('nan')])
-
     x = vector([1, 2, 3], dtype='float32', impl='cuda')
     assert isinstance(x, odl.CudaRnVector)
     assert all_equal(x, [1.0, 2.0, 3.0])
@@ -136,7 +131,7 @@ def test_vector_cuda():
     # Ntuples
     inp = ['a', 'b', 'c']
     # String types not supported
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         vector(inp, impl='cuda')
 
     # Input not one-dimensional

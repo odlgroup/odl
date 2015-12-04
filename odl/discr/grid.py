@@ -789,7 +789,6 @@ class RegularGrid(TensorGrid):
         max_pt = np.atleast_1d(max_pt).astype('float64')
         shape = np.atleast_1d(shape).astype('int64')
 
-        #raise Exception('{}'.format(min_pt.ndim != 1))
         if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
             raise ValueError('input arrays have dimensions {!r}, {!r}, {!r} '
                              'instead of 1.'
