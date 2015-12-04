@@ -195,7 +195,7 @@ def meshgrid_input_order(x):
     elif all(xi.shape.count(1) >= len(x) - 1 for xi in x):
         # Reversed ordering of dimensions in the meshgrid tuple indicates
         # 'F' ordering intention
-        if all(xi.shape[-1-i] != 1 for i, xi in enumerate(x)):
+        if all(xi.shape[-1 - i] != 1 for i, xi in enumerate(x)):
             return 'F'
         else:
             return 'C'

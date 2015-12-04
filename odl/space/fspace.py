@@ -240,6 +240,7 @@ def vectorize(dtype, outarg='none'):
 
 
 class FunctionSet(Set):
+
     """A general set of functions with common domain and range."""
 
     def __init__(self, domain, range):
@@ -674,6 +675,7 @@ class FunctionSetVector(Operator):
 
 
 class FunctionSpace(FunctionSet, LinearSpace):
+
     """A vector space of functions."""
 
     def __init__(self, domain, field=RealNumbers()):
@@ -1011,7 +1013,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 y = x.copy()
                 return ipow_posint(y, n)
             else:
-                return x**n
+                return x ** n
 
         def ipow_posint(x, n):
             """Recursion to calculate the n-th power in-place."""
@@ -1069,6 +1071,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
 
 class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
+
     """Representation of a `FunctionSpace` element."""
 
     def __init__(self, fspace, fcall=None, vectorized=True):
@@ -1189,7 +1192,7 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
         if other in self.space:
             self.space.divide(self, other, out=out)
         else:
-            self.space.lincomb(1./other, self, out=out)
+            self.space.lincomb(1. / other, self, out=out)
         return out
 
     __div__ = __truediv__
@@ -1209,7 +1212,7 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
         if other in self.space:
             self.space.divide(self, other, out=self)
         else:
-            self.space.lincomb(1./other, self, out=self)
+            self.space.lincomb(1. / other, self, out=self)
         return self
 
     __idiv__ = __itruediv__

@@ -62,7 +62,7 @@ def test_fspace_init():
     FunctionSpace(cube, field=odl.RealNumbers())
     FunctionSpace(cube, field=odl.ComplexNumbers())
 
-    ndbox = odl.IntervalProd([0]*10, np.arange(1, 11))
+    ndbox = odl.IntervalProd([0] * 10, np.arange(1, 11))
     FunctionSpace(ndbox)
     FunctionSpace(ndbox, field=odl.RealNumbers())
     FunctionSpace(ndbox, field=odl.ComplexNumbers())
@@ -613,62 +613,62 @@ def test_fspace_vector_div():
 # 'ip' = in-place, 'oop' = out-of-place, 'dual' = dual-use
 
 def func_1d_oop(x):
-    return x**2
+    return x ** 2
 
 
 def func_1d_ip(x, out):
-    out[:] = x**2
+    out[:] = x ** 2
 
 
 def func_1d_dual(x, out=None):
     if out is None:
-        return x**2
+        return x ** 2
     else:
-        out[:] = x**2
+        out[:] = x ** 2
 
 
 def func_2d_novec(x):
-    return x[0]**2 + x[1]
+    return x[0] ** 2 + x[1]
 
 
 def func_2d_vec_oop(x):
     x0, x1 = x
-    return x0**2 + x1
+    return x0 ** 2 + x1
 
 
 def func_2d_vec_ip(x, out):
     x0, x1 = x
-    out[:] = x0**2 + x1
+    out[:] = x0 ** 2 + x1
 
 
 def func_2d_vec_dual(x, out=None):
     x0, x1 = x
     if out is None:
-        return x0**2 + x1
+        return x0 ** 2 + x1
     else:
-        out[:] = x0**2 + x1
+        out[:] = x0 ** 2 + x1
 
 
 def cfunc_2d_novec(x):
-    return x[0]**2 + 1j*x[1]
+    return x[0] ** 2 + 1j * x[1]
 
 
 def cfunc_2d_vec_oop(x):
     x0, x1 = x
-    return x0**2 + 1j*x1
+    return x0 ** 2 + 1j * x1
 
 
 def cfunc_2d_vec_ip(x, out):
     x0, x1 = x
-    out[:] = x0**2 + 1j*x1
+    out[:] = x0 ** 2 + 1j * x1
 
 
 def cfunc_2d_vec_dual(x, out=None):
     x0, x1 = x
     if out is None:
-        return x0**2 + 1j * x1
+        return x0 ** 2 + 1j * x1
     else:
-        out[:] = x0**2 + 1j * x1
+        out[:] = x0 ** 2 + 1j * x1
 
 
 def other_func_2d_novec(x):
@@ -694,25 +694,25 @@ def other_func_2d_vec_dual(x, out=None):
 
 
 def other_cfunc_2d_novec(x):
-    return 1j*x[0] + abs(x[1])
+    return 1j * x[0] + abs(x[1])
 
 
 def other_cfunc_2d_vec_oop(x):
     x0, x1 = x
-    return 1j*x0 + abs(x1)
+    return 1j * x0 + abs(x1)
 
 
 def other_cfunc_2d_vec_ip(x, out):
     x0, x1 = x
-    out[:] = 1j*x0 + abs(x1)
+    out[:] = 1j * x0 + abs(x1)
 
 
 def other_cfunc_2d_vec_dual(x, out=None):
     x0, x1 = x
     if out is None:
-        return 1j*x0 + abs(x1)
+        return 1j * x0 + abs(x1)
     else:
-        out[:] = 1j*x0 + abs(x1)
+        out[:] = 1j * x0 + abs(x1)
 
 
 if __name__ == '__main__':
