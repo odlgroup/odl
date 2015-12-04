@@ -124,9 +124,10 @@ def _signature_from_spec(func):
         if argstr:
             argstr += ', '
         if kw_only:
-            argstr += ', *, ' + sum('{}={}'.format(arg, dval)
-                                    for arg, dval in zip(kw_only,
-                                                         kw_only_defaults))
+            argstr += ', *, '
+            argstr += ', '.join('{}={}'.format(arg, dval)
+                                for arg, dval in zip(kw_only,
+                                                     kw_only_defaults))
     if kwargs:
         if argstr:
             argstr += ', '
@@ -219,6 +220,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
         raise ValueError('Exactly one object to check must be given.')
 
     if cls is not None:
+        # Get the actual implementation, including ancestors
         for parent in cls.mro():
             call = parent.__dict__.get(attr, None)
             if call is not None:
@@ -234,6 +236,8 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
 
     elif bound_call is not None:
         call = bound_call
+        if not inspect.ismethod(call):
+            raise TypeError('{} is not a bound method.'.format(call))
     else:
         call = unbound_call
 
@@ -248,7 +252,6 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
         kw_only_defaults = {}
 
     signature = _signature_from_spec(call)
-#    print(spec)
 
     pos_args = spec.args
     if unbound_call is not None:
@@ -268,11 +271,6 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     if len(pos_args) not in (2, 3):
         raise ValueError("Bad signature '{}'. ".format(signature) + spec_msg)
 
-    # 'self' must be the first argument
-    elif pos_args[0] != 'self':
-        raise ValueError("Bad signature '{}': `self` is not the first "
-                         "argument. ".format(signature) + spec_msg)
-
     true_pos_args = pos_args[1:]
     if len(true_pos_args) == 1:  # 'out' kw-only
         if 'out' in true_pos_args:  # 'out' positional and 'x' kw-only -> no
@@ -280,29 +278,17 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
                              "positional argument."
                              " ".format(signature) + spec_msg)
         else:
-            if len(kw_only) == 0:
+            if 'out' not in kw_only:
                 has_out = False
-            elif len(kw_only) == 1:
-                if 'out' not in kw_only:
-                    raise ValueError(
-                        "Bad signature '{}': output parameter must be called "
-                        "'out', got '{}'."
-                        " ".format(signature, kw_only[0]) +
-                        spec_msg)
-                else:
-                    has_out = True
-                    if kw_only_defaults['out'] is not None:
-                        raise ValueError(
-                            "Bad signature '{}': `out` can only default to "
-                            "`None`, got '{}'."
-                            " ".format(signature, kw_only_defaults['out']) +
-                            spec_msg)
-                    else:
-                        out_optional = True
+            elif kw_only_defaults['out'] is not None:
+                raise ValueError(
+                    "Bad signature '{}': `out` can only default to "
+                    "`None`, got '{}'."
+                    " ".format(signature, kw_only_defaults['out']) +
+                    spec_msg)
             else:
-                raise ValueError("Bad signature '{}': cannot have more than 2 "
-                                 "keyword-only argument."
-                                 " ".format(signature) + spec_msg)
+                has_out = True
+                out_optional = True
 
     elif len(true_pos_args) == 2:  # Both args positional
         if true_pos_args[0] == 'out':  # out must come second
