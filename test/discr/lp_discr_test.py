@@ -27,10 +27,7 @@ import numpy as np
 
 import odl
 
-from odl.util.testutils import all_equal, skip_if_no_cuda
-
-
-# TODO: element from function - waiting for vectorization
+from odl.util.testutils import all_equal, almost_equal, skip_if_no_cuda
 
 
 # Pytest fixture
@@ -486,6 +483,41 @@ def test_cell_volume():
     discr = odl.uniform_discr(square_space, (2, 1), order='F')
 
     assert discr.cell_volume == 0.5
+
+
+def test_norm_interval(exponent):
+    # Test the function f(x) = x^2 on the interval (0, 1). Its
+    # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf
+    p = exponent
+    fspace = odl.FunctionSpace(odl.Interval(0, 1))
+    lpdiscr = odl.uniform_discr(fspace, 10, exponent=p)
+
+    testfunc = fspace.element(lambda x: x ** 2)
+    discr_testfunc = lpdiscr.element(testfunc)
+
+    if p == float('inf'):
+        assert discr_testfunc.norm() <= 1  # Max at boundary not hit
+    else:
+        true_norm = (1 + 2 * p) ** (-1 / p)
+        assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
+
+
+def test_norm_rectangle(exponent):
+    # Test the function f(x) = x_0^2 * x_1^3 on (0, 1) x (-1, 1). Its
+    # L^p-norm is ((1 + 2*p) * (1 + 3 * p) / 2)^(-1/p) for finite p
+    # and 1 for p=inf
+    p = exponent
+    fspace = odl.FunctionSpace(odl.Rectangle([0, -1], [1, 1]))
+    lpdiscr = odl.uniform_discr(fspace, (20, 30), exponent=p)
+
+    testfunc = fspace.element(lambda x: x[0] ** 2 * x[1] ** 3)
+    discr_testfunc = lpdiscr.element(testfunc)
+
+    if p == float('inf'):
+        assert discr_testfunc.norm() <= 1  # Max at boundary not hit
+    else:
+        true_norm = ((1 + 2 * p) * (1 + 3 * p) / 2) ** (-1 / p)
+        assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
 
 
 if __name__ == '__main__':
