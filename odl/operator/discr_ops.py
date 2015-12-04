@@ -29,6 +29,8 @@ import numpy as np
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 from odl.discr.lp_discr import DiscreteLp
+from odl.space.ntuples import Rn
+from odl.space.cu_ntuples import CudaRn
 
 
 __all__ = ('DiscretePartDeriv', 'DiscreteGradient', 'DiscreteDivergence')
@@ -116,7 +118,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
     else:
         if not out.shape == f.shape:
             raise TypeError("shape of `out` array ({0}) does not match the "
-                            "shape of input array `f` ({1})".format(out.shape,
+                            "shape of input array `f` ({1}).".format(out.shape,
                                                                     f.shape))
 
     if edge_order not in {1, 2, None}:
@@ -125,7 +127,10 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
     if edge_order is None:
         edge_order = 2
 
-    dx = float(dx)
+    if dx == 0:
+        raise ValueError("step length is zero.")
+    else:
+        dx = float(dx)
 
     # create slice objects --- initially all are [:, :, ..., :]
     # current slice
@@ -209,7 +214,6 @@ class DiscretePartDeriv(Operator):
         Preserves the shape of the underlying grid.
     """
     # TODO: implement adjoint
-    # TODO: better name for `dx`
 
     def __init__(self, space, axis=0, dx=1.0, edge_order=None,
                  zero_padding=False):
@@ -267,9 +271,12 @@ class DiscretePartDeriv(Operator):
          [0.0, 1.0, 2.0, 3.0, 4.0]]
         """
 
-        finite_diff(x.asarray(), out.asarray(), axis=self.axis, dx=self.dx,
-                    edge_order=self.edge_order,
-                    zero_padding=self.zero_padding)
+        if isinstance(self.domain.dspace, Rn):
+            finite_diff(x.asarray(), out.asarray(), axis=self.axis,
+                        dx=self.dx, edge_order=self.edge_order,
+                        zero_padding=self.zero_padding)
+        elif isinstance(self.domain.dspace, CudaRn):
+            pass
 
     @property
     def adjoint(self):
