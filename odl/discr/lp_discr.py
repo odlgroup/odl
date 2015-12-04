@@ -35,6 +35,7 @@ from odl.discr.discretization import (Discretization, DiscretizationVector,
                                       dspace_type)
 from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
 from odl.discr.grid import uniform_sampling, RegularGrid
+from odl.set.sets import Field, RealNumbers
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
@@ -209,9 +210,11 @@ class DiscreteLp(Discretization):
                 impl = 'cuda'
             else:  # This should never happen
                 raise RuntimeError('unable to determine data space impl.')
-            arg_fstr = '{!r}, {!r}'
+            arg_fstr = '{!r}, {!r}, {!r}'
             if self.exponent != 2.0:
-                arg_fstr += ', exponent={ex}'
+                arg_fstr += ', exponent={exponent}'
+            if not isinstance(self.field, RealNumbers):
+                arg_fstr += ', field={field!r}'
             if self.interp != 'nearest':
                 arg_fstr += ', interp={interp!r}'
             if impl != 'numpy':
@@ -220,8 +223,13 @@ class DiscreteLp(Discretization):
                 arg_fstr += ', order={order!r}'
 
             arg_str = arg_fstr.format(
-                self.uspace, list(self.shape), interp=self.interp,
-                impl=impl, order=self.order)
+                list(self.uspace.domain.min()), list(self.uspace.domain.max()),
+                list(self.shape),
+                exponent=self.exponent,
+                field=self.field,
+                interp=self.interp,
+                impl=impl,
+                order=self.order)
             return 'uniform_discr({})'.format(arg_str)
         else:
             arg_fstr = '''
@@ -399,8 +407,8 @@ class DiscreteLpVector(DiscretizationVector):
                                indices=indices, **kwargs)
 
 
-def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
-                  impl='numpy', **kwargs):
+def uniform_discr_space(fspace, nsamples, exponent=2.0, interp='nearest',
+                        impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
@@ -442,6 +450,10 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
     -------
     discr : `DiscreteLp`
         The uniformly discretized function space
+
+    See also
+    --------
+    uniform_discr
     """
     if not isinstance(fspace, FunctionSpace):
         raise TypeError('space {!r} is not a `FunctionSpace` instance.'
@@ -482,6 +494,78 @@ def uniform_discr(fspace, nsamples, exponent=2.0, interp='nearest',
 
     return DiscreteLp(fspace, grid, dspace, exponent=exponent, interp=interp,
                       order=order)
+
+
+def uniform_discr(min_corner, max_corner, nsamples,
+                  exponent=2.0, field=RealNumbers(),
+                  interp='nearest', impl='numpy', **kwargs):
+    """Discretize an Lp function space by uniform sampling.
+
+    Parameters
+    ----------
+    min_corner : `float` or `tuple` of `float`
+        Minimum corner of the result.
+    nsamples : `float` or `tuple` of `float`
+        Minimum corner of the result.
+    nsamples : `int` or `tuple` of `int`
+        Number of samples per axis. For dimension >= 2, a tuple is
+        required.
+    exponent : positive `float`, optional
+        The parameter :math:`p` in :math:`L^p`. If the exponent is not
+        equal to the default 2.0, the space has no inner product.
+    field : `Field`, optional
+        The field of the `FunctionSpace`, default `RealNumbers`.
+    interp : `str`, optional
+            Interpolation type to be used for discretization.
+
+            'nearest' : use nearest-neighbor interpolation (default)
+
+            'linear' : use linear interpolation (not implemented)
+    impl : {'numpy', 'cuda'}
+        Implementation of the data storage arrays
+    kwargs : {'order', 'dtype', 'weighting'}
+            'order' : {'C', 'F'}  (Default: 'C')
+                Axis ordering in the data storage
+            'dtype' : dtype
+                Data type for the discretized space
+
+                Default for 'numpy': 'float64' / 'complex128'
+                Default for 'cuda': 'float32' / TODO
+            'weighting' : {'simple', 'consistent'}
+                Weighting of the discretized space functions.
+
+                'simple': weight is a constant (cell volume)
+
+                'consistent': weight is a matrix depending on the
+                interpolation type
+
+    Returns
+    -------
+    discr : `DiscreteLp`
+        The uniformly discretized function space
+
+    Examples
+    --------
+
+    Create real space:
+
+    >>> uniform_discr([0, 0], [1, 1], [10, 10])
+    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10])
+
+    >>> from odl import ComplexNumbers
+    >>> uniform_discr([0, 0], [1, 1], [10, 10], field=ComplexNumbers())
+    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], field=ComplexNumbers())
+
+    See also
+    --------
+    uniform_discr_space
+    """
+    fspace = FunctionSpace(IntervalProd(min_corner, max_corner),
+                           field)
+
+    return uniform_discr_space(fspace, nsamples,
+                               exponent=2.0, field=RealNumbers(),
+                               interp='nearest', impl='numpy', **kwargs)
 
 
 if __name__ == '__main__':
