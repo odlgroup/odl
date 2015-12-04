@@ -439,35 +439,7 @@ class ConstantOperator(Operator):
         self.vector = vector
         super().__init__(dom, vector.space)
 
-    def _call(self, x):
-        """ Returns the constant vector
-
-        Parameters
-        ----------
-        x : ``domain`` element
-            Any element in the domain
-
-        Returns
-        -------
-        vector : `LinearSpaceVector`
-            The constant vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = ConstantOperator(x)
-        >>> op(x)
-        Rn(3).element([1.0, 2.0, 3.0])
-        >>> op(r3.zero())
-        Rn(3).element([1.0, 2.0, 3.0])
-        >>> op(r3.element())
-        Rn(3).element([1.0, 2.0, 3.0])
-        """
-        return self.vector.copy()
-
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """ Assign out to the constant vector
 
         Parameters
@@ -486,7 +458,10 @@ class ConstantOperator(Operator):
         >>> op(x, out=r3.element())
         Rn(3).element([1.0, 2.0, 3.0])
         """
-        out.assign(self.vector)
+        if out is None:
+            return self.vector.copy()
+        else:
+            out.assign(self.vector)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -558,7 +533,7 @@ class ResidualOperator(Operator):
         """
         return self.op(x) - self.vector
 
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """ Assign out to the constant vector
 
         Parameters
@@ -579,8 +554,11 @@ class ResidualOperator(Operator):
         >>> res(x, out=r3.element())
         Rn(3).element([3.0, 3.0, 3.0])
         """
-        self.op(x, out)
-        out -= self.vector
+        if out is None:
+            return self.op(x) - self.vector
+        else:
+            self.op(x, out)
+            out -= self.vector
 
     def derivative(self, point):
         """ The derivative of a residual is the derivative of the operator

@@ -203,50 +203,21 @@ class ProductSpaceOperator(Operator):
 
         super().__init__(domain=dom, range=ran, linear=linear)
 
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """Call the ProductSpace operators in-place.
 
         Parameters
         ----------
         x : domain element
             input vector to be evaluated
-        out : range element
+        out : range element, optional
             output vector to write result to
 
         Returns
         -------
-        `None`
-
-        Examples
-        --------
-        See `_call`
-        """
-        has_evaluated_row = np.zeros(self.range.size, dtype=bool)
-        for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
-            if not has_evaluated_row[i]:
-                op(x[j], out=out[i])
-            else:
-                # TODO: optimize
-                out[i] += op(x[j])
-
-            has_evaluated_row[i] = True
-
-        for i, evaluated in enumerate(has_evaluated_row):
-            if not evaluated:
-                out[i].set_zero()
-
-    def _call(self, x):
-        """Call the ProductSpace operators.
-
-        Parameters
-        ----------
-        x : domain element
-            Input vector to be evaluated
-
-        Returns
-        -------
         out : range element
-            Result of the evaluation
+            Result of the evaluation. If ``out`` was provided, the
+            returned object is identical with it.
 
         Examples
         --------
@@ -283,9 +254,25 @@ class ProductSpaceOperator(Operator):
             [1.0, 2.0, 3.0]
         ])
         """
-        out = self.range.zero()
-        for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
-            out[i] += op(x[j])
+        if out is None:
+            out = self.range.zero()
+            for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
+                out[i] += op(x[j])
+        else:
+            has_evaluated_row = np.zeros(self.range.size, dtype=bool)
+            for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
+                if not has_evaluated_row[i]:
+                    op(x[j], out=out[i])
+                else:
+                    # TODO: optimize
+                    out[i] += op(x[j])
+
+                has_evaluated_row[i] = True
+
+            for i, evaluated in enumerate(has_evaluated_row):
+                if not evaluated:
+                    out[i].set_zero()
+
         return out
 
     @property
@@ -397,27 +384,21 @@ class ComponentProjection(Operator):
         """ Index of the subspace. """
         return self._index
 
-    def _apply(self, x, out):
-        """Project x onto subspace in-place.
-
-        See also
-        --------
-        ComponentProjection._call
-        """
-        out.assign(x[self.index])
-
-    def _call(self, x):
-        """Project x onto subspace out-of-place.
+    def _call(self, x, out=None):
+        """Project x onto subspace.
 
         Parameters
         ----------
         x : domain element
             input vector to be projected
+        out : range element, optional
+            output vector to write result to
 
         Returns
         -------
         out : range element
-            Projection of x onto subspace
+            Projection of x onto subspace. If ``out`` was provided, the
+            returned object is identical with it.
 
         Examples
         --------
@@ -443,7 +424,11 @@ class ComponentProjection(Operator):
             [4.0, 5.0, 6.0]
         ])
         """
-        return x[self.index].copy()
+        if out is None:
+            out = x[self.index].copy()
+        else:
+            out.assign(x[self.index])
+        return out
 
     @property
     def adjoint(self):
@@ -510,32 +495,23 @@ class ComponentProjectionAdjoint(Operator):
         """ Index of the subspace. """
         return self._index
 
-    def _apply(self, x, out):
-        """Evaluate this operator in-place.
-
-        Extend ``x`` from the subspace related to `index`.
-
-        See also
-        --------
-        ComponentProjectionAdjoint._call
-        """
-        out.set_zero()
-        out[self.index] = x
-
-    def _call(self, x):
-        """Evaluate this operator out-of-place.
+    def _call(self, x, out=None):
+        """Evaluate this operator.
 
         Extend ``x`` from the subspace related to `index`.
 
         Parameters
         ----------
         x : domain element
-            Input vector to be projected
+            Input vector to be extended
+        out : range element, optional
+            output vector to write result to
 
         Returns
         -------
         out : range element
-            Projection of x to superspace
+            Extension of x to superspace. If ``out`` was provided, the
+            returned object is identical with it.
 
         Examples
         --------
@@ -566,8 +542,12 @@ class ComponentProjectionAdjoint(Operator):
             [4.0, 5.0, 6.0]
         ])
         """
-        out = self.range.zero()
-        out[self.index] = x
+        if out is None:
+            out = self.range.zero()
+            out[self.index] = x
+        else:
+            out.set_zero()
+            out[self.index] = x
         return out
 
     @property
