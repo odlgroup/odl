@@ -26,14 +26,11 @@ import numpy as np
 import pytest
 
 # ODL imports
-# import odl
 from odl.discr.lp_discr import uniform_discr, FunctionSpace, IntervalProd
 from odl.operator.discr_ops import (finite_diff, DiscretePartDeriv,
                                     DiscreteGradient, DiscreteDivergence)
-from odl.discr.lp_discr import DiscreteLp
 from odl.space.ntuples import Rn
-from odl.set.pspace import ProductSpace
-# from odl.util.testutils import all_almost_equal
+from odl.set.domain import Rectangle
 
 
 def test_finite_diff():
@@ -110,10 +107,40 @@ def test_finite_diff():
 
 
 def test_discr_part_deriv():
-    pass
+    """Discretized partial derivative."""
+
+    discr_space = Rn(10)
+    with pytest.raises(TypeError):
+        DiscretePartDeriv(discr_space)
+
+    # phantom data
+    data = np.arange(5, dtype=float) * np.arange(1, 3).reshape(2, 1)
+
+    # discretized space
+    space = FunctionSpace(Rectangle([0, 0], [2, 1]))
+    discr_space = uniform_discr(space, data.shape)
+
+    # operator
+    par_div = DiscretePartDeriv(discr_space)
+
+    # discretized space vector
+    f = par_div.domain.element(data)
+
+    # partial derivative
+    par_div_f1 = par_div(f)
+
+    # operator
+    par_div = DiscretePartDeriv(discr_space, axis=1, dx=0.2, edge_order=2,
+                                zero_padding=True)
+
+    # partial derivative
+    par_div_f2 = par_div(f)
+
+    assert par_div_f1 is not par_div_f2
 
 
 def ndvolume(vol_size, ndim, dtype=None):
+    """Hypercube."""
     s = [1]
     vol = np.arange(vol_size, dtype=dtype)
     for _ in range(ndim - 1):

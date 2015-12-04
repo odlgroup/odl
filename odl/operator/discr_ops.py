@@ -203,20 +203,35 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
 
 
 class DiscretePartDeriv(Operator):
-    """Calculate the discrete partial derivativ along a given `axis`.
+    """Calculate the discrete partial derivative along a given `axis`.
 
         Calls helper function `finite_diff` to calculate the finite
         difference. Preserves the shape of the underlying grid.
         """
     # TODO: implement adjoint
+    # TODO: better name fo `dx`
 
-    def __init__(self, space):
+    def __init__(self, space, axis=0, dx=1.0, edge_order=None,
+                 zero_padding=False):
         """Initialize an operator instance.
 
         Parameters
         ----------
         space : `DiscreteLp`
             The space of elements which the operator is acting on
+        axis : `int`, optional
+            The axis along which the partial derivative is evaluated.
+            Default: 0
+        dx : `float`, optional
+            Scalars specifying the sampling distances in each dimension `axis`.
+            Default distance: 1.0
+        edge_order : {1, 2}, optional
+            First order accurate differences can be used to calculated the
+            partial derivative at the boundaries if no zero padding is used.
+            Default edge order: 2
+        zero_padding : `bool`, optional
+            Implicit zero padding. Assumes values outside the domain of f to be
+            zero. Default: False
         """
 
         if not isinstance(space, DiscreteLp):
@@ -224,6 +239,10 @@ class DiscretePartDeriv(Operator):
                             'instance.'.format(space))
 
         super().__init__(domain=space, range=space, linear=True)
+        self.axis = axis
+        self.dx = dx
+        self.edge_order = edge_order
+        self.zero_padding = zero_padding
 
     def _apply(self, x, out):
         """Apply gradient operator to ``x`` and store result in ``out``.
@@ -231,13 +250,27 @@ class DiscretePartDeriv(Operator):
         Parameters
         ----------
         x : ``domain`` element
-            Input vector to which the `DiscreteGradient` operator is applied to
+            Input vector to which the operator is applied to
         out : ``range`` element
             Output vector to which the result is written
 
         Examples
         --------
+        >>> from odl import uniform_discr, FunctionSpace, Rectangle
+        >>> data = np.arange(5, dtype=float) * np.arange(1, 3).reshape(2, 1)
+        >>> space = FunctionSpace(Rectangle([0, 0], [2, 1]))
+        >>> disc = uniform_discr(space, data.shape)
+        >>> par_div = DiscretePartDeriv(disc)
+        >>> f = par_div.domain.element(data)
+        >>> par_div_f = par_div(f)
+        >>> print(par_div_f)
+        [[0.0, 1.0, 2.0, 3.0, 4.0],
+         [0.0, 1.0, 2.0, 3.0, 4.0]]
         """
+
+        finite_diff(x.asarray(), out.asarray(), axis=self.axis, dx=self.dx,
+                    edge_order=self.edge_order,
+                    zero_padding=self.zero_padding)
 
     @property
     def adjoint(self):
@@ -297,18 +330,18 @@ class DiscreteGradient(Operator):
         >>> f = disc.element(data)
         >>> grad = DiscreteGradient(disc)
         >>> grad_f = grad(f)
-        >>> grad_f[0].asarray()
-        array([[ 0. ,  1. ,  2. ,  3. ,  4. ],
-               [-0. , -0.5, -1. , -1.5, -2. ]])
-        >>> grad_f[1].asarray()
-        array([[  2.5,   5. ,   5. ,   5. ,  -7.5],
-               [  5. ,  10. ,  10. ,  10. , -15. ]])
+        >>> print(grad_f[0])
+        [[0.0, 1.0, 2.0, 3.0, 4.0],
+         [-0.0, -0.5, -1.0, -1.5, -2.0]]
+        >>> print(grad_f[0])
+        [[0.0, 1.0, 2.0, 3.0, 4.0],
+         [-0.0, -0.5, -1.0, -1.5, -2.0]]
         >>> g = grad.range.element((data, data ** 2))
         >>> adj = grad.adjoint
         >>> adj_g = adj(g)
-        >>> adj_g.asarray()
-        array([[  -2.5,  -11. ,  -22. ,  -33. ,   18.5],
-               [ -10. ,  -39.5,  -79. , -118.5,   92. ]])
+        >>> print(adj_g)
+        [[-2.5, -11.0, -22.0, -33.0, 18.5],
+         [-10.0, -39.5, -79.0, -118.5, 92.0]]
         >>> g.inner(grad_f) - f.inner(adj_g)
         0.0
         """
@@ -381,9 +414,9 @@ class DiscreteDivergence(Operator):
         >>> div = DiscreteDivergence(disc)
         >>> f = div.domain.element([data, data ** 2])
         >>> div_f = div(f)
-        >>> div_f.asarray()
-        array([[   2.5,   11. ,   22. ,   33. ,  -18.5],
-               [  10. ,   39.5,   79. ,  118.5,  -92. ]])
+        >>> print(div_f)
+        [[2.5, 11.0, 22.0, 33.0, -18.5],
+         [10.0, 39.5, 79.0, 118.5, -92.0]]
         >>> g = div.range.element(data ** 3)
         >>> adj = div.adjoint
         >>> adj_g = adj(g)
