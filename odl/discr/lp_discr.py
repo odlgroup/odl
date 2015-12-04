@@ -141,16 +141,18 @@ class DiscreteLp(Discretization):
             return self.element_type(self, self.dspace.element())
         elif inp in self.dspace:
             return self.element_type(self, inp)
-        elif inp in self.uspace:
-            return self.element_type(
-                self, self.restriction(self.uspace.element(inp)))
-        else:  # Sequence-type input
-            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-            if arr.ndim > 1 and arr.shape != self.grid.shape:
-                raise ValueError('input shape {} does not match grid shape {}'
-                                 ''.format(arr.shape, self.grid.shape))
-            arr = arr.flatten(order=self.order)
-            return self.element_type(self, self.dspace.element(arr))
+        try:
+            return self.element_type(self, self.restriction(inp))
+        except TypeError:
+            pass
+
+        # Sequence-type input
+        arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+        if arr.ndim > 1 and arr.shape != self.grid.shape:
+            raise ValueError('input shape {} does not match grid shape {}'
+                             ''.format(arr.shape, self.grid.shape))
+        arr = arr.ravel(order=self.order)
+        return self.element_type(self, self.dspace.element(arr))
 
     @property
     def grid(self):
