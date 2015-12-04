@@ -185,10 +185,10 @@ class RawDiscretization(NtuplesBase):
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
-        elif inp in self.uspace:
-            return self.element_type(
-                self, self.restriction(self.uspace.element(inp)))
-        else:  # Sequence-type input
+        try:
+            return self.element_type(self, self.restriction(inp))
+        except TypeError:
+            # Sequence-type input
             return self.element_type(self, self.dspace.element(inp))
 
     def __eq__(self, other):
