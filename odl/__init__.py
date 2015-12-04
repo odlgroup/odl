@@ -56,3 +56,4 @@ from .trafos import *
 __all__ += trafos.__all__
 
 from . import solvers
+from . import tomo
