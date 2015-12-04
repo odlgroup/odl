@@ -22,7 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import int, object
-from past.builtins import basestring
 
 # External
 # pylint: disable=no-name-in-module
@@ -109,8 +108,11 @@ def all_equal(iter1, iter2):
 def all_almost_equal(iter1, iter2, places=None):
     # Sentinel object used to check that both iterators are the same length
 
-    if iter1 is iter2 or iter1 == iter2:
-        return True
+    try:
+        if iter1 is iter2 or iter1 == iter2:
+            return True
+    except ValueError:
+        pass
 
     if iter1 is None and iter2 is None:
         return True
