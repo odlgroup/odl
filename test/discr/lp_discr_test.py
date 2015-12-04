@@ -84,15 +84,14 @@ def test_init_cuda(exponent):
 
 
 def test_factory(exponent):
-    space = odl.FunctionSpace(odl.Interval(0, 1))
-    discr = odl.uniform_discr(space, 10, impl='numpy', exponent=exponent)
+    discr = odl.uniform_discr(0, 1, 10, impl='numpy', exponent=exponent)
 
     assert isinstance(discr.dspace, odl.Rn)
     assert discr.dspace.exponent == exponent
 
     # Complex
-    space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
-    discr = odl.uniform_discr(space, 10, impl='numpy', exponent=exponent)
+    discr = odl.uniform_discr(0, 1, 10, field=odl.ComplexNumbers(),
+                              impl='numpy', exponent=exponent)
 
     assert isinstance(discr.dspace, odl.Cn)
     assert discr.dspace.exponent == exponent
@@ -100,15 +99,14 @@ def test_factory(exponent):
 
 @skip_if_no_cuda
 def test_factory_cuda(exponent):
-    space = odl.FunctionSpace(odl.Interval(0, 1))
-    discr = odl.uniform_discr(space, 10, impl='cuda', exponent=exponent)
+    discr = odl.uniform_discr(0, 1, 10, impl='cuda', exponent=exponent)
     assert isinstance(discr.dspace, odl.CudaRn)
     assert discr.dspace.exponent == exponent
 
     # Cuda currently does not support complex numbers, check error
-    space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
     with pytest.raises(NotImplementedError):
-        odl.uniform_discr(space, 10, impl='cuda')
+        odl.uniform_discr(0, 1, 10, impl='cuda',
+                          field=odl.ComplexNumbers())
 
 
 def test_factory_dtypes():
@@ -118,35 +116,38 @@ def test_factory_dtypes():
     complex_float_dtypes = [np.complex64, np.complex128]
 
     # Real
-    space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.RealNumbers())
     invalid_dtypes = complex_float_dtypes
 
     for dtype in real_float_dtypes:
-        discr = odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
+                                  field=odl.RealNumbers())
         assert isinstance(discr.dspace, odl.Rn)
         assert discr.dspace.element().space.dtype == dtype
 
     for dtype in nonfloat_dtypes:
-        discr = odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
+                                  field=odl.RealNumbers())
         assert isinstance(discr.dspace, odl.Fn)
         assert discr.dspace.element().space.dtype == dtype
 
     for dtype in invalid_dtypes:
         with pytest.raises(TypeError):
-            odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+            odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
+                              field=odl.RealNumbers())
 
     # Complex
-    space = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
     invalid_dtypes = real_float_dtypes + nonfloat_dtypes
 
     for dtype in complex_float_dtypes:
-        discr = odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
+                                  field=odl.ComplexNumbers())
         assert isinstance(discr.dspace, odl.Cn)
         assert discr.dspace.element().space.dtype == dtype
 
     for dtype in invalid_dtypes:
         with pytest.raises(TypeError):
-            odl.uniform_discr(space, 10, impl='numpy', dtype=dtype)
+            odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
+                              field=odl.ComplexNumbers())
 
 
 @skip_if_no_cuda
@@ -157,61 +158,57 @@ def test_factory_dtypes_cuda():
     complex_float_dtypes = [np.complex64, np.complex128]
 
     # Real
-    space = odl.FunctionSpace(odl.Interval(0, 1), odl.RealNumbers())
     invalid_dtypes = complex_float_dtypes
 
     for dtype in real_float_dtypes:
         if dtype not in odl.CUDA_DTYPES:
             with pytest.raises(TypeError):
-                odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+                odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
         else:
-            discr = odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+            discr = odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
             assert isinstance(discr.dspace, odl.CudaRn)
             assert discr.dspace.element().space.dtype == dtype
 
     for dtype in nonfloat_dtypes:
         if dtype not in odl.CUDA_DTYPES:
             with pytest.raises(TypeError):
-                odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+                odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
         else:
-            discr = odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+            discr = odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
             assert isinstance(discr.dspace, odl.CudaFn)
             assert discr.dspace.element().space.dtype == dtype
 
     for dtype in invalid_dtypes:
         with pytest.raises(TypeError):
-            odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+            odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
 
     # Complex (not implemented)
-    space = odl.FunctionSpace(odl.Interval(0, 1), odl.ComplexNumbers())
     invalid_dtypes = real_float_dtypes + nonfloat_dtypes
 
     for dtype in complex_float_dtypes:
         with pytest.raises(NotImplementedError):
-            odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+            odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype,
+                              field=odl.ComplexNumbers())
 
     for dtype in invalid_dtypes:
         with pytest.raises(TypeError):
-            odl.uniform_discr(space, 10, impl='cuda', dtype=dtype)
+            odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype,
+                              field=odl.ComplexNumbers())
 
 
 def test_factory_nd(exponent):
     # 2d
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    odl.uniform_discr(square_space, (5, 5), exponent=exponent)
+    odl.uniform_discr([0, 0], [1, 1], [5, 5], exponent=exponent)
 
     # 3d
-    cube_space = odl.FunctionSpace(odl.Cuboid([0, 0, 0], [1, 1, 1]))
-    odl.uniform_discr(cube_space, (5, 5, 5), exponent=exponent)
+    odl.uniform_discr([0, 0, 0], [1, 1, 1], [5, 5, 5], exponent=exponent)
 
     # nd
-    cube10_space = odl.FunctionSpace(odl.IntervalProd([0] * 10, [1] * 10))
-    odl.uniform_discr(cube10_space, (5,) * 10, exponent=exponent)
+    odl.uniform_discr([0] * 10, [1] * 10, [5] * 10, exponent=exponent)
 
 
 def test_element_1d(exponent):
-    space = odl.FunctionSpace(odl.Interval(0, 1))
-    discr = odl.uniform_discr(space, 3, impl='numpy', exponent=exponent)
+    discr = odl.uniform_discr(0, 1, 3, impl='numpy', exponent=exponent)
     dspace = odl.Rn(3, exponent=exponent, weight=discr.cell_volume)
     vec = discr.element()
     assert isinstance(vec, odl.DiscreteLpVector)
@@ -219,8 +216,8 @@ def test_element_1d(exponent):
 
 
 def test_element_2d(exponent):
-    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(space, (3, 3), impl='numpy', exponent=exponent)
+    discr = odl.uniform_discr([0, 0], [1, 1], [3, 3],
+                              impl='numpy', exponent=exponent)
     dspace = odl.Rn(9, exponent=exponent, weight=discr.cell_volume)
     vec = discr.element()
     assert isinstance(vec, odl.DiscreteLpVector)
@@ -228,8 +225,7 @@ def test_element_2d(exponent):
 
 
 def test_element_from_array_1d():
-    space = odl.FunctionSpace(odl.Interval(0, 1))
-    discr = odl.uniform_discr(space, 3, impl='numpy')
+    discr = odl.uniform_discr(0, 1, 3, impl='numpy')
     vec = discr.element([1, 2, 3])
 
     assert isinstance(vec, odl.DiscreteLpVector)
@@ -239,8 +235,7 @@ def test_element_from_array_1d():
 
 def test_element_from_array_2d():
     # assert orderings work properly with 2d
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(square_space, (2, 2), impl='numpy', order='C')
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy', order='C')
     vec = discr.element([[1, 2],
                          [3, 4]])
 
@@ -255,7 +250,7 @@ def test_element_from_array_2d():
     assert all_equal(vec.ntuple, [1, 2, 3, 4])
 
     # Fortran order
-    discr = odl.uniform_discr(square_space, (2, 2), impl='numpy', order='F')
+    discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl='numpy', order='F')
     vec = discr.element([[1, 2],
                          [3, 4]])
 
@@ -269,8 +264,7 @@ def test_element_from_array_2d():
 
 def test_element_from_array_2d_shape():
     # Verify that the shape is correctly tested for
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(square_space, (3, 2), impl='numpy', order='C')
+    discr = odl.uniform_discr([0, 0], [1, 1], [3, 2], impl='numpy', order='C')
 
     # Correct order
     discr.element([[1, 2],
@@ -289,7 +283,7 @@ def test_element_from_array_2d_shape():
 
 
 def test_zero():
-    discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
+    discr = odl.uniform_discr(0, 1, 3)
     vec = discr.zero()
 
     assert isinstance(vec, odl.DiscreteLpVector)
@@ -298,22 +292,20 @@ def test_zero():
 
 
 def test_getitem():
-    discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
+    discr = odl.uniform_discr(0, 1, 3)
     vec = discr.element([1, 2, 3])
 
     assert all_equal(vec, [1, 2, 3])
 
 
 def test_getslice():
-    discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
+    discr = odl.uniform_discr(0, 1, 3)
     vec = discr.element([1, 2, 3])
 
     assert isinstance(vec[:], odl.RnVector)
     assert all_equal(vec[:], [1, 2, 3])
 
-    discr = odl.uniform_discr(
-        odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers()),
-        3)
+    discr = odl.uniform_discr(0, 1, 3, field=odl.ComplexNumbers())
     vec = discr.element([1 + 2j, 2 - 2j, 3])
 
     assert isinstance(vec[:], odl.CnVector)
@@ -321,7 +313,7 @@ def test_getslice():
 
 
 def test_setitem():
-    discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
+    discr = odl.uniform_discr(0, 1, 3)
     vec = discr.element([1, 2, 3])
     vec[0] = 4
     vec[1] = 5
@@ -333,7 +325,7 @@ def test_setitem():
 def test_setitem_nd():
 
     # 1D
-    discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
+    discr = odl.uniform_discr(0, 1, 3)
     vec = discr.element([1, 2, 3])
 
     vec[:] = [4, 5, 6]
@@ -355,8 +347,7 @@ def test_setitem_nd():
         vec[:] = [0, 0, 1, 2]  # bad shape
 
     # 2D
-    discr = odl.uniform_discr(
-        odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1])), [3, 2])
+    discr = odl.uniform_discr([0, 0], [1, 1], [3, 2])
 
     vec = discr.element([[1, 2],
                          [3, 4],
@@ -391,9 +382,8 @@ def test_setitem_nd():
         vec[:] = arr.T  # bad shape (2, 3)
 
     # nD
-    cube10_space = odl.FunctionSpace(odl.IntervalProd([0] * 6, [1] * 6))
     shape = (3,) * 3 + (4,) * 3
-    discr = odl.uniform_discr(cube10_space, shape)
+    discr = odl.uniform_discr([0] * 6, [1] * 6, shape)
     ntotal = np.prod(shape)
     vec = discr.element(np.zeros(shape))
 
@@ -414,7 +404,7 @@ def test_setitem_nd():
 
 
 def test_setslice():
-    discr = odl.uniform_discr(odl.FunctionSpace(odl.Interval(0, 1)), 3)
+    discr = odl.uniform_discr(0, 1, 3)
     vec = discr.element([1, 2, 3])
 
     vec[:] = [4, 5, 6]
@@ -422,8 +412,7 @@ def test_setslice():
 
 
 def test_asarray_2d():
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr_F = odl.uniform_discr(square_space, (2, 2), order='F')
+    discr_F = odl.uniform_discr([0, 0], [1, 1], [2, 2], order='F')
     vec_F = discr_F.element([[1, 2],
                              [3, 4]])
 
@@ -434,7 +423,7 @@ def test_asarray_2d():
     assert vec_F.asarray().flags['F_CONTIGUOUS']
 
     # Also check with C ordering
-    discr_C = odl.uniform_discr(square_space, (2, 2), order='C')
+    discr_C = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='C')
     vec_C = discr_C.element([[1, 2],
                              [3, 4]])
 
@@ -447,8 +436,7 @@ def test_asarray_2d():
 
 
 def test_transpose():
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(square_space, (2, 2), order='F')
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], order='F')
     x = discr.element([[1, 2], [3, 4]])
     y = discr.element([[5, 6], [7, 8]])
 
@@ -462,29 +450,21 @@ def test_transpose():
 
 def test_cell_size():
     # Non-degenerated case, should be same as grid stride
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(square_space, (2, 2), order='F')
-
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     assert all_equal(discr.cell_size, [0.5] * 2)
 
     # Degenerated case, uses interval size in 1-point dimensions
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(square_space, (2, 1), order='F')
-
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 1])
     assert all_equal(discr.cell_size, [0.5, 1])
 
 
 def test_cell_volume():
     # Non-degenerated case
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(square_space, (2, 2), order='F')
-
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     assert discr.cell_volume == 0.25
 
     # Degenerated case, uses interval size in 1-point dimensions
-    square_space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    discr = odl.uniform_discr(square_space, (2, 1), order='F')
-
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 1])
     assert discr.cell_volume == 0.5
 
 

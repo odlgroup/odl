@@ -451,6 +451,14 @@ def uniform_discr_space(fspace, nsamples, exponent=2.0, interp='nearest',
     discr : `DiscreteLp`
         The uniformly discretized function space
 
+    Examples
+    --------
+    >>> from odl import Interval, FunctionSpace
+    >>> I = Interval(0, 1)
+    >>> X = FunctionSpace(I)
+    >>> uniform_discr_space(X, 10)
+    uniform_discr([0.0], [1.0], [10])
+
     See also
     --------
     uniform_discr
@@ -560,12 +568,14 @@ def uniform_discr(min_corner, max_corner, nsamples,
     --------
     uniform_discr_space
     """
-    fspace = FunctionSpace(IntervalProd(min_corner, max_corner),
-                           field)
+    if not isinstance(field, Field):
+        raise TypeError('field {} not a Field instance'
+                        ''.format(field))
 
-    return uniform_discr_space(fspace, nsamples,
-                               exponent=2.0, field=RealNumbers(),
-                               interp='nearest', impl='numpy', **kwargs)
+    fspace = FunctionSpace(IntervalProd(min_corner, max_corner), field)
+
+    return uniform_discr_space(fspace, nsamples, exponent, interp, impl,
+                               **kwargs)
 
 
 if __name__ == '__main__':
