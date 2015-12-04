@@ -633,9 +633,6 @@ class Operator(object):
         instance = super().__new__(cls)
 
         call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
-        # print('In {}: '.format(cls.__name__))
-        # print('has out: ', call_has_out)
-        # print('out optional: ', call_out_optional)
         instance._call_has_out = call_has_out
         instance._call_out_optional = call_out_optional
         if not call_has_out:
