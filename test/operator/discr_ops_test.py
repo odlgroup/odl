@@ -17,7 +17,8 @@
 
 
 # Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
+# from __future__ import print_function, division, absolute_import
+from __future__ import division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
@@ -31,7 +32,7 @@ from odl.operator.discr_ops import (finite_diff, DiscretePartDeriv,
                                     DiscreteGradient, DiscreteDivergence)
 from odl.space.ntuples import Rn
 from odl.set.domain import Rectangle
-
+from odl.util.testutils import almost_equal, all_equal
 
 def test_finite_diff():
     """Finite differences test. """
@@ -40,25 +41,27 @@ def test_finite_diff():
     f = np.arange(ndim, dtype=float)
 
     df = finite_diff(f)
-    assert all(df == np.ones(ndim))
+    assert all_equal(df, np.ones(ndim))
 
     dx = 0.5
     df = finite_diff(f, dx=dx)
-    assert all(df == np.ones(ndim) / dx)
+    assert all_equal(df, np.ones(ndim) / dx)
+    print('\n', df)
+    # assert all(df == 1.0 / dx)
 
     # central differences with zero padding at boundaries
     df = finite_diff(f, zero_padding=True)
     df0 = np.ones(ndim)
     df0[0] = f[1] / 2.
     df0[-1] = -f[-2] / 2
-    assert all(df == df0)
+    assert all_equal(df, df0)
 
     # one-sided difference at boundaries without zero padding
     df = finite_diff(f, zero_padding=False, edge_order=1)
     df0 = np.ones(ndim)
     df0[0] = f[1] - f[0]
     df0[-1] = f[-1] - f[-2]
-    assert all(df == df0)
+    assert all_equal(df, df0)
 
     # edge order
     df1 = finite_diff(np.sin(f / 10 * np.pi), edge_order=1)
@@ -74,7 +77,7 @@ def test_finite_diff():
     f = np.arange(ndim, dtype=float)
     f = f * f.reshape((ndim, 1))
     df = finite_diff(f, axis=0)
-    f0 = np.array([[-0., 1., 2., 3., 4.],
+    f0 = np.array([[0., 1., 2., 3., 4.],
                    [0., 1., 2., 3., 4.],
                    [0., 1., 2., 3., 4.],
                    [0., 1., 2., 3., 4.],
@@ -97,12 +100,11 @@ def test_finite_diff():
     ndim = 10
     f = np.arange(ndim, dtype=float)
     out = np.zeros_like(f)
-    assert out is not finite_diff(f)
     assert out is finite_diff(f, out)
     assert all(out == finite_diff(f))
     assert out is not finite_diff(f)
     out = np.zeros(2)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         finite_diff(f, out)
 
 
@@ -136,10 +138,10 @@ def test_discr_part_deriv():
     # partial derivative
     par_div_f2 = par_div(f)
 
-    assert par_div_f1 is not par_div_f2
+    assert not par_div_f1 == par_div_f2
 
 
-def ndvolume(vol_size, ndim, dtype=None):
+def ndvolume(vol_size, ndim, dtype=np.float64):
     """Hypercube."""
     s = [1]
     vol = np.arange(vol_size, dtype=dtype)
@@ -162,7 +164,7 @@ def test_discrete_gradient():
         intvl = IntervalProd([0.] * ndim, [vsize] * ndim)
         space = FunctionSpace(intvl)
         discr_space = uniform_discr(space, [vsize] * ndim)
-        dom_vec = discr_space.element(ndvolume(vsize, ndim, np.float32))
+        dom_vec = discr_space.element(ndvolume(vsize, ndim))
 
         # Gradient
         grad = DiscreteGradient(discr_space)
@@ -174,7 +176,7 @@ def test_discrete_gradient():
     intvl = IntervalProd([0.] * ndim, [vsize] * ndim)
     space = FunctionSpace(intvl)
     discr_space = uniform_discr(space, [vsize] * ndim)
-    dom_vec = discr_space.element(ndvolume(vsize, ndim, np.float32))
+    dom_vec = discr_space.element(ndvolume(vsize, ndim))
 
     # Gradient
     grad = DiscreteGradient(discr_space)
@@ -183,7 +185,7 @@ def test_discrete_gradient():
 
     # Adjoint operator
     ran_vec = grad.range.element(
-        [ndvolume(vsize, ndim, np.float32) ** 2] * ndim)
+        [ndvolume(vsize, ndim) ** 2] * ndim)
     adj = grad.adjoint
     adj_vec = adj(ran_vec)
     lhs = ran_vec.inner(grad_vec)
@@ -210,7 +212,7 @@ def test_discrete_divergence():
         # Divergence
         div = DiscreteDivergence(discr_space)
         dom_vec = div.domain.element(
-            [ndvolume(vsize, ndim, np.float32)] * ndim)
+            [ndvolume(vsize, ndim)] * ndim)
         div(dom_vec)
 
     # DiscreteLp Vector
@@ -220,22 +222,22 @@ def test_discrete_divergence():
     space = FunctionSpace(intvl)
     discr_space = uniform_discr(space, [vsize] * ndim)
     # dom = ProductSpace(discr_space, ndim)
-    # dom_vec0 = dom.element([ndvolume(vsize, ndim, np.float32)] * ndim)
+    # dom_vec0 = dom.element([ndvolume(vsize, ndim)] * ndim)
 
     # Divergence
     div = DiscreteDivergence(discr_space)
-    dom_vec = div.domain.element([ndvolume(vsize, ndim, np.float32)] * ndim)
+    dom_vec = div.domain.element([ndvolume(vsize, ndim)] * ndim)
     div_vec = div(dom_vec)
 
     # Adjoint operator
-    ran_vec = div.range.element(ndvolume(vsize, ndim, np.float32)**2)
+    ran_vec = div.range.element(ndvolume(vsize, ndim)**2)
     adj = div.adjoint
     adj_vec = adj(ran_vec)
     lhs = ran_vec.inner(div_vec)
     rhs = dom_vec.inner(adj_vec)
     assert not lhs == 0
     assert not rhs == 0
-    assert lhs == rhs
+    assert almost_equal(lhs, rhs)
 
 
 if __name__ == '__main__':
