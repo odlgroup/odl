@@ -30,9 +30,8 @@ from scipy import ndimage
 
 # ODL
 import odl
-import odl.operator.solvers as solvers
+import odl.solvers as solvers
 from odl.util.testutils import Timer
-from . import solver_examples
 
 
 class Convolution(odl.Operator):
@@ -64,7 +63,7 @@ cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_phantom = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = odl.uniform_discr(cont_space, 500, impl='numpy')
+discr_space = odl.uniform_discr_space(cont_space, 500, impl='numpy')
 kernel = discr_space.element(cont_kernel)
 phantom = discr_space.element(cont_phantom)
 
@@ -72,11 +71,11 @@ phantom = discr_space.element(cont_phantom)
 conv = Convolution(kernel)
 
 # Dampening parameter for landweber
-iterations = 10
+iterations = 100
 omega = 1/conv.opnorm()**2
 
 # Display partial
-partial = solvers.ForEachPartial(lambda result: plt.plot(conv(result)[:]))
+partial = solvers.util.ForEachPartial(lambda result: plt.plot(conv(result)))
 
 # Test CGN
 plt.figure()
@@ -95,17 +94,9 @@ with Timer("Optimized CG"):
     solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
                                       iterations)
 
-with Timer("Base CG"):
-    solver_examples.conjugate_gradient_base(conv, discr_space.zero(), phantom,
-                                            iterations)
-
 # Landweber timing
 with Timer("Optimized LW"):
     solvers.landweber(conv, discr_space.zero(), phantom,
                       iterations, omega)
-
-with Timer("Basic LW"):
-    solver_examples.landweberBase(conv, discr_space.zero(), phantom,
-                                  iterations, omega)
 
 plt.show()

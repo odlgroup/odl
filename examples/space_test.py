@@ -27,9 +27,7 @@ import odl
 
 print('\n\n TESTING FOR Lp SPACE \n\n')
 
-spc = odl.FunctionSpace(odl.Interval(0, 1))
-discr = odl.uniform_discr(spc, 10)
-
+discr = odl.uniform_discr(0, 1, 10)
 odl.diagnostics.SpaceTest(discr).run_tests()
 
 print('\n\n TESTING FOR Rn SPACE \n\n')

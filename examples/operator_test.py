@@ -38,7 +38,7 @@ class Convolution(odl.Operator):
         self.adjkernel = adjkernel
 
         # Scaling factor needed to account for non-unity cell volume
-        self.scale = disc_kernel.space.grid.cell_volume
+        self.scale = disc_kernel.space.cell_volume
 
         super().__init__(space, space, linear=True)
 
@@ -79,9 +79,8 @@ npoints = np.array([n+1, n+1])
 npoints_kernel = np.array([2*n+1, 2*n+1])
 
 # Discretization spaces
-disc_space = odl.uniform_discr(cont_space, npoints)
-disc_kernel_space = odl.uniform_discr(
-    kernel_space, npoints_kernel)
+disc_space = odl.uniform_discr_space(cont_space, npoints)
+disc_kernel_space = odl.uniform_discr_space(kernel_space, npoints_kernel)
 
 # Discretize the functions
 disc_kernel = disc_kernel_space.element(cont_kernel)

@@ -45,7 +45,8 @@ if CUDA_AVAILABLE:
 else:
     CudaFn = type(None)
 
-__all__ = ('DiscreteLp', 'DiscreteLpVector', 'uniform_discr')
+__all__ = ('DiscreteLp', 'DiscreteLpVector',
+           'uniform_discr', 'uniform_discr_space')
 
 _SUPPORTED_INTERP = ('nearest',)
 
