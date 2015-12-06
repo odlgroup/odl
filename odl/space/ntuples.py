@@ -48,6 +48,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
+from odl.util.ufuncs import NtuplesVectorUFuncs
 
 
 __all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector',
@@ -411,6 +412,14 @@ class NtuplesVector(NtuplesBaseVector):
             return self.data.__setitem__(indices, values.data)
         else:
             return self.data.__setitem__(indices, values)
+
+    @property
+    def ufunc(self):
+        """`NtuplesVectorUFuncs`, access to numpy style ufuncs.
+
+        These are optimized for use with ntuples and incur no overhead.
+        """
+        return NtuplesVectorUFuncs(self)
 
 
 def _blas_is_applicable(*args):

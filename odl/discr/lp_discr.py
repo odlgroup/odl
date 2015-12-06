@@ -39,11 +39,8 @@ from odl.set.sets import Field, RealNumbers
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
-from odl.space import CUDA_AVAILABLE
-if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaFn
-else:
-    CudaFn = type(None)
+from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
+from odl.util.ufuncs import DiscreteLpVectorUFuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr', 'uniform_discr_space')
@@ -143,16 +140,18 @@ class DiscreteLp(Discretization):
             return self.element_type(self, self.dspace.element())
         elif inp in self.dspace:
             return self.element_type(self, inp)
-        elif inp in self.uspace:
-            return self.element_type(
-                self, self.restriction(self.uspace.element(inp)))
-        else:  # Sequence-type input
-            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-            if arr.ndim > 1 and arr.shape != self.shape:
-                raise ValueError('input shape {} does not match grid shape {}'
-                                 ''.format(arr.shape, self.shape))
-            arr = arr.flatten(order=self.order)
-            return self.element_type(self, self.dspace.element(arr))
+        try:
+            return self.element_type(self, self.restriction(inp))
+        except TypeError:
+            pass
+
+        # Sequence-type input
+        arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+        if arr.ndim > 1 and arr.shape != self.shape:
+            raise ValueError('input shape {} does not match grid shape {}'
+                             ''.format(arr.shape, self.shape))
+        arr = arr.ravel(order=self.order)
+        return self.element_type(self, self.dspace.element(arr))
 
     @property
     def grid(self):
@@ -355,6 +354,15 @@ class DiscreteLpVector(DiscretizationVector):
                 values = values.ravel(order=self.space.order)
 
             super().__setitem__(indices, values)
+
+    @property
+    def ufunc(self):
+        """`DiscreteLpVectorUFuncs`, access to numpy style ufuncs.
+
+        These are optimized to use the underlying ntuple space and incur no
+        overhead unless these do.
+        """
+        return DiscreteLpVectorUFuncs(self)
 
     def show(self, method='', title='', indices=None, **kwargs):
         """Create a figure displaying the function in 1d or 2d.
