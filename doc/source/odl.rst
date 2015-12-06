@@ -23,6 +23,7 @@ to be used to write general code and faciliate code reuse.
    odl.set
    odl.solvers
    odl.space
+   odl.tomo
    odl.trafos
    odl.util
 

@@ -138,21 +138,33 @@ class DiscreteLp(Discretization):
             return self.element_type(self, self.dspace.element())
         elif inp in self.dspace:
             return self.element_type(self, inp)
-        elif inp in self.uspace:
-            return self.element_type(
-                self, self.restriction(self.uspace.element(inp)))
-        else:  # Sequence-type input
-            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-            if arr.ndim > 1 and arr.shape != self.grid.shape:
-                raise ValueError('input shape {} does not match grid shape {}'
-                                 ''.format(arr.shape, self.grid.shape))
-            arr = arr.flatten(order=self.order)
-            return self.element_type(self, self.dspace.element(arr))
+        try:
+            return self.element_type(self, self.restriction(inp))
+        except TypeError:
+            pass
+
+        # Sequence-type input
+        arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+        if arr.ndim > 1 and arr.shape != self.shape:
+            raise ValueError('input shape {} does not match grid shape {}'
+                             ''.format(arr.shape, self.shape))
+        arr = arr.ravel(order=self.order)
+        return self.element_type(self, self.dspace.element(arr))
 
     @property
     def grid(self):
         """Sampling grid of the discretization mappings."""
         return self.restriction.grid
+
+    @property
+    def shape(self):
+        """Shape of the underlying grid."""
+        return self.grid.shape
+
+    @property
+    def ndim(self):
+        """Number of dimensions."""
+        return self.grid.ndim
 
     @property
     def cell_size(self):
@@ -188,7 +200,7 @@ class DiscreteLp(Discretization):
     def __repr__(self):
         """Return ``repr(self).``"""
         # Check if the factory repr can be used
-        if (uniform_sampling(self.uspace.domain, self.grid.shape,
+        if (uniform_sampling(self.uspace.domain, self.shape,
                              as_midp=True) == self.grid):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
@@ -207,7 +219,7 @@ class DiscreteLp(Discretization):
                 arg_fstr += ', order={order!r}'
 
             arg_str = arg_fstr.format(
-                self.uspace, list(self.grid.shape), interp=self.interp,
+                self.uspace, list(self.shape), interp=self.interp,
                 impl=impl, order=self.order)
             return 'uniform_discr({})'.format(arg_str)
         else:

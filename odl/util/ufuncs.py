@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -187,7 +187,7 @@ def wrap_method_base(name, n_args, n_opt, descr):
     return wrapper
 
 
-class NtuplesBaseVectorUFuncs():
+class NtuplesBaseVectorUFuncs(object):
     """UFuncs for `NtuplesBaseVector` objects.
 
     Internal object, should not be created except in `NtuplesBaseVector`.
@@ -255,7 +255,7 @@ def wrap_method_ntuples(name, n_args, n_opt, descr):
     return wrapper
 
 
-class NtuplesVectorUFuncs():
+class NtuplesVectorUFuncs(object):
     """UFuncs for `NtuplesVector` objects.
 
     Internal object, should not be created except in `NtuplesVector`.
@@ -269,6 +269,30 @@ class NtuplesVectorUFuncs():
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_method_ntuples(name, n_args, n_opt, descr)
     setattr(NtuplesVectorUFuncs, name, method)
+
+#Optimizations for CUDA
+def _make_unary_fun(name):
+    def fun(x, out=None):
+        if out is None:
+            out = x.space.element()
+        getattr(x.data, name)(out.data)
+        return out
+
+    fun.__doc__ = """Calculates {name} using cuda.""".format(name=name)
+
+    return fun
+
+class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
+    sin = _make_unary_fun('sin')
+    cos = _make_unary_fun('cos')
+    arcsin = _make_unary_fun('arcsin')
+    arccos = _make_unary_fun('arccos')
+    log = _make_unary_fun('log')
+    exp = _make_unary_fun('exp')
+    abs = _make_unary_fun('absolute')
+    sign = _make_unary_fun('sign')
+    sqrt = _make_unary_fun('sqrt')
+
 
 
 # Optimized implementation of ufuncs since we can use the out parameter
@@ -331,7 +355,7 @@ def wrap_method_discretelp(name, n_args, n_opt, descr):
     return wrapper
 
 
-class DiscreteLpVectorUFuncs():
+class DiscreteLpVectorUFuncs(object):
     """UFuncs for `DiscreteLpVector` objects.
 
     Internal object, should not be created except in `DiscreteLpVector`.

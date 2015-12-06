@@ -732,29 +732,6 @@ def test_dtypes():
                np.complex64, np.complex128, np.complex]:
         yield _test_dtype, dt
 
-# TODO: REMOVE
-
-
-@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
-def _test_extra_ufunc(ufunc):
-    r3 = odl.CudaRn(5)
-    x_host = [-1.0, 0, 0.1, 0.3, 10.0]
-    y_host = getattr(np, ufunc)(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = getattr(odl.space.cu_ntuples, ufunc)(x_dev)
-
-    assert all_almost_equal(y_host, y_dev)
-
-
-def test_extra_ufuncs():
-    for ufunc in ['sin', 'cos',
-                  'arcsin', 'arccos',
-                  'log', 'exp',
-                  'abs', 'sign', 'sqrt']:
-        yield _test_extra_ufunc, ufunc
-
-
 # --- Weighting tests --- #
 
 def test_const_init(exponent):

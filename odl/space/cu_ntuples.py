@@ -934,7 +934,7 @@ arcsin = _make_unary_fun('arcsin')
 arccos = _make_unary_fun('arccos')
 log = _make_unary_fun('log')
 exp = _make_unary_fun('exp')
-abs = _make_unary_fun('abs')
+abs = _make_unary_fun('absolute')
 sign = _make_unary_fun('sign')
 sqrt = _make_unary_fun('sqrt')
 
