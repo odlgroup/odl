@@ -732,28 +732,8 @@ def test_dtypes():
                np.complex64, np.complex128, np.complex]:
         yield _test_dtype, dt
 
-
-@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
-def _test_ufunc(ufunc):
-    r3 = odl.CudaRn(5)
-    x_host = [-1.0, 0, 0.1, 0.3, 10.0]
-    y_host = getattr(np, ufunc)(x_host)
-
-    x_dev = r3.element(x_host)
-    y_dev = getattr(odl.space.cu_ntuples, ufunc)(x_dev)
-
-    assert all_almost_equal(y_host, y_dev)
-
-
-def test_ufuncs():
-    for ufunc in ['sin', 'cos',
-                  'arcsin', 'arccos',
-                  'log', 'exp',
-                  'abs', 'sign', 'sqrt']:
-        yield _test_ufunc, ufunc
-
-
 # --- Weighting tests --- #
+
 
 def test_const_init(exponent):
     const = 1.5
@@ -1053,6 +1033,62 @@ def test_custom_dist(fn):
 
     with pytest.raises(TypeError):
         CudaFnCustomDist(1)
+
+
+@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
+def _impl_test_ufuncs(fn, name, n_args, n_out):
+    # Get the ufunc from numpy as reference
+    ufunc = getattr(np, name)
+
+    # Create some data
+    data = _vectors(fn, n_args + n_out)
+    in_arrays = data[:n_args]
+    out_arrays = data[n_args:n_args + n_out]
+    data_vector = data[n_args + n_out]
+    in_vectors = data[1 + n_args + n_out:2 * n_args + n_out]
+    out_vectors = data[2 * n_args + n_out:]
+
+    # Out of place:
+    np_result = ufunc(*in_arrays)
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*in_vectors)
+    assert all_almost_equal(np_result, odl_result)
+
+    # Test type of output
+    if n_out == 1:
+        assert isinstance(odl_result, fn.element_type)
+    elif n_out > 1:
+        for i in range(n_out):
+            assert isinstance(odl_result[i], fn.element_type)
+
+    # In place:
+    np_result = ufunc(*(in_arrays + out_arrays))
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*(in_vectors + out_vectors))
+    assert all_almost_equal(np_result, odl_result)
+
+    # Test inplace actually holds:
+    if n_out == 1:
+        assert odl_result is out_vectors[0]
+    elif n_out > 1:
+        for i in range(n_out):
+            assert odl_result[i] is out_vectors[i]
+
+
+def test_ufuncs():
+    # Cannot use fixture due to bug in pytest
+    for fn in spc_params:
+        for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
+            if (np.issubsctype(fn.dtype, np.floating) and
+                    name in ['bitwise_and',
+                             'bitwise_or',
+                             'bitwise_xor',
+                             'invert',
+                             'left_shift',
+                             'right_shift']):
+                # Skip integer only methods if floating point type
+                continue
+            yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
 if __name__ == '__main__':

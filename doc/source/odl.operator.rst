@@ -12,6 +12,7 @@ Mathematical operators in ODL.
 
    odl.operator.default_ops
    odl.operator.operator
+   odl.operator.oputils
    odl.operator.pspace_ops
 
 

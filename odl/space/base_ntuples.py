@@ -35,6 +35,7 @@ from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
     is_scalar_dtype, is_real_dtype)
+from odl.util.ufuncs import NtuplesBaseVectorUFuncs
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector',
@@ -326,6 +327,15 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """Return ``repr(self)``."""
         return '{!r}.element({})'.format(self.space,
                                          array1d_repr(self))
+
+    @property
+    def ufunc(self):
+        """`NtuplesBaseVectorUFuncs`, access to numpy style ufuncs.
+
+        These are always available, but may or may not be optimized for
+        the specific space in use.
+        """
+        return NtuplesBaseVectorUFuncs(self)
 
 
 class FnBase(NtuplesBase, LinearSpace):
