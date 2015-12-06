@@ -734,6 +734,7 @@ def test_dtypes():
 
 # --- Weighting tests --- #
 
+
 def test_const_init(exponent):
     const = 1.5
     CudaFnConstWeighting(const, exponent=exponent)

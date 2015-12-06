@@ -298,7 +298,6 @@ class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
     sqrt = _make_unary_fun('sqrt')
 
 
-
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using a
 # NtuplesVector

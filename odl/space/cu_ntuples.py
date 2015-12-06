@@ -426,7 +426,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                     self.data.setslice(indices, value_array)
             else:
                 self.data.__setitem__(int(indices), values)
-                   
+
     @property
     def ufunc(self):
         """`CudaNtuplesVectorUFuncs`, access to numpy style ufuncs.
@@ -933,12 +933,6 @@ class CudaRnVector(CudaFnVector):
     def __init__(self, space, data):
         """Initialize a new instance."""
         super().__init__(space, data)
-
-# Methods
-# TODO: move
-
-
-
 
 
 def _weighting(weight, exponent):
