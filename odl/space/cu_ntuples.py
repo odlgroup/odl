@@ -32,6 +32,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector,
                                     FnWeightingBase)
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
+from odl.util.ufuncs import CudaNtuplesVectorUFuncs
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -425,6 +426,26 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                     self.data.setslice(indices, value_array)
             else:
                 self.data.__setitem__(int(indices), values)
+                   
+    @property
+    def ufunc(self):
+        """`CudaNtuplesVectorUFuncs`, access to numpy style ufuncs.
+
+        The following are optimized using cuda:
+
+        sin
+        cos
+        arcsin
+        arccos
+        log
+        exp
+        absolute
+        sign
+        sqrt
+
+        All other fall back onto the numpy implementation.
+        """
+        return CudaNtuplesVectorUFuncs(self)
 
 
 def _repr_space_funcs(space):
@@ -917,26 +938,7 @@ class CudaRnVector(CudaFnVector):
 # TODO: move
 
 
-def _make_unary_fun(name):
-    def fun(x, out=None):
-        if out is None:
-            out = x.space.element()
-        getattr(x.data, name)(out.data)
-        return out
 
-    fun.__doc__ = """Calculates {name} using cuda.""".format(name=name)
-
-    return fun
-
-sin = _make_unary_fun('sin')
-cos = _make_unary_fun('cos')
-arcsin = _make_unary_fun('arcsin')
-arccos = _make_unary_fun('arccos')
-log = _make_unary_fun('log')
-exp = _make_unary_fun('exp')
-abs = _make_unary_fun('absolute')
-sign = _make_unary_fun('sign')
-sqrt = _make_unary_fun('sqrt')
 
 
 def _weighting(weight, exponent):

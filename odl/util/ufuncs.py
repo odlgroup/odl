@@ -270,17 +270,21 @@ for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_method_ntuples(name, n_args, n_opt, descr)
     setattr(NtuplesVectorUFuncs, name, method)
 
-#Optimizations for CUDA
+
+# Optimizations for CUDA
+
+
 def _make_unary_fun(name):
-    def fun(x, out=None):
+    def fun(self, out=None):
         if out is None:
-            out = x.space.element()
-        getattr(x.data, name)(out.data)
+            out = self.vector.space.element()
+        getattr(self.vector.data, name)(out.data)
         return out
 
-    fun.__doc__ = """Calculates {name} using cuda.""".format(name=name)
-
+    fun.__doc__ = getattr(NtuplesBaseVectorUFuncs, name).__doc__
+    fun.__name__ = name
     return fun
+
 
 class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
     sin = _make_unary_fun('sin')
