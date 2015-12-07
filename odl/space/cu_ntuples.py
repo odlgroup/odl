@@ -1464,10 +1464,8 @@ class CudaFnConstWeighting(FnWeightingBase):
         """
         if self.exponent == float('inf'):
             raise NotImplementedError
-            # Example impl
-            # return self.const * float(_pdist_default(x1, x2, self.exponent))
         else:
-            return (self.const**(1 / self.exponent) *
+            return (self.const ** (1 / self.exponent) *
                     _pdist_default(x1, x2, self.exponent))
 
     def __repr__(self):

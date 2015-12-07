@@ -293,7 +293,7 @@ class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
     arccos = _make_unary_fun('arccos')
     log = _make_unary_fun('log')
     exp = _make_unary_fun('exp')
-    abs = _make_unary_fun('absolute')
+    absolute = _make_unary_fun('absolute')
     sign = _make_unary_fun('sign')
     sqrt = _make_unary_fun('sqrt')
 

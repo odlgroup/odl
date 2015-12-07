@@ -23,14 +23,16 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import matplotlib.pyplot as plt
 
 # Internal
 import odl
+import numpy as np
 
 
+disc = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
+odl.util.shepp_logan(disc).show()
 
-spc = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
-disc = odl.uniform_discr(spc, [100, 100])
-
-(odl.util.shepp_logan(disc)).show()
+disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [100, 100, 100])
+shepp_logan_3d = odl.util.shepp_logan(disc)
+for i in [30, 50]:
+    shepp_logan_3d.show(indices=np.s_[:, :, i])

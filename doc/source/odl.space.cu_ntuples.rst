@@ -6,6 +6,11 @@ CUDA implementation of n-dimensional Cartesian spaces.
 .. currentmodule:: odl.space.cu_ntuples
 
 
+.. toctree::
+   :maxdepth: 2
+
+   odl.space.cu_ntuples.cuda
+
 
 Classes
 -------

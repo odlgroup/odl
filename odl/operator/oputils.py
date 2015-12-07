@@ -57,13 +57,13 @@ def matrix_representation(op):
 
     if not (isinstance(op.domain, FnBase) or
             (isinstance(op.domain, ProductSpace) and
-            all(isinstance(spc, FnBase) for spc in op.domain))):
+             all(isinstance(spc, FnBase) for spc in op.domain))):
         raise TypeError('Operator domain {!r} is not FnBase, nor ProductSpace '
                         'with only FnBase components'.format(op.domain))
 
     if not (isinstance(op.range, FnBase) or
             (isinstance(op.range, ProductSpace) and
-            all(isinstance(spc, FnBase) for spc in op.range))):
+             all(isinstance(spc, FnBase) for spc in op.range))):
         raise TypeError('Operator range {!r} is not FnBase, nor ProductSpace '
                         'with only FnBase components'.format(op.range))
 

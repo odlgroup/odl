@@ -16,6 +16,9 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # Imports for common Python 2/3 codebase
+
+""" Typical domains for inverse problems. """
+
 from __future__ import print_function, division, absolute_import
 
 from builtins import super, zip
@@ -54,10 +57,10 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> b, e = [-1, 2.5, 70], [-0.5, 10, 75]
+        >>> b, e = [-1, 2.5, 70, 80], [-0.5, 10, 75, 90]
         >>> rbox = IntervalProd(b, e)
         >>> rbox
-        IntervalProd([-1.0, 2.5, 70.0], [-0.5, 10.0, 75.0])
+        IntervalProd([-1.0, 2.5, 70.0, 80.0], [-0.5, 10.0, 75.0, 90.0])
         """
         self._begin = np.atleast_1d(begin).astype('float64')
         self._end = np.atleast_1d(end).astype('float64')
@@ -114,6 +117,20 @@ class IntervalProd(Set):
     def volume(self):
         """The 'dim'-dimensional volume of this interval product."""
         return self.measure(ndim=self.ndim)
+
+    @property
+    def length(self):
+        """The length of this interval."""
+        if self.ndim != 1:
+            raise NotImplementedError('length not defined if ndim != 1.')
+        return self.volume
+
+    @property
+    def area(self):
+        """The length of this interval."""
+        if self.ndim != 2:
+            raise NotImplementedError('area not defined if ndim != 2.')
+        return self.volume
 
     @property
     def midpoint(self):
@@ -336,9 +353,9 @@ class IntervalProd(Set):
         >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(b, e)
         >>> rbox.collapse(1, 0)
-        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
+        Cuboid([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
-        IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
+        Cuboid([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
         >>> rbox.collapse([1, 2], [0, 3.5])
         Traceback (most recent call last):
             ...
@@ -389,9 +406,9 @@ class IntervalProd(Set):
         >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(b, e)
         >>> rbox.collapse(1, 0).squeeze()
-        IntervalProd([-1.0, 2.0], [-0.5, 3.0])
+        Rectangle([-1.0, 2.0], [-0.5, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
-        IntervalProd([-1.0], [-0.5])
+        Interval(-1.0, -0.5)
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
         IntervalProd([], [])
         """
@@ -596,8 +613,17 @@ class IntervalProd(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return ('IntervalProd({}, {})'.format(
-            array1d_repr(self.begin), array1d_repr(self._end)))
+        if self.ndim == 1:
+            return 'Interval({!r}, {!r})'.format(self.begin[0], self.end[0])
+        elif self.ndim == 2:
+            return 'Rectangle({!r}, {!r})'.format(list(self.begin),
+                                                  list(self.end))
+        elif self.ndim == 3:
+            return 'Cuboid({!r}, {!r})'.format(list(self.begin),
+                                               list(self.end))
+        else:
+            return 'IntervalProd({}, {})'.format(array1d_repr(self.begin),
+                                                 array1d_repr(self._end))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -605,55 +631,57 @@ class IntervalProd(Set):
                           for (b, e) in zip(self.begin, self.end))
 
 
-class Interval(IntervalProd):
+def Interval(begin, end):
     """One-dimensional interval product.
 
-    i.e. just one interval.
+    Parameters
+    ----------
+    begin : array-like or float
+        The lower ends of the intervals in the product
+    end : array-like or float
+        The upper ends of the intervals in the product
+
     """
-    def __init__(self, begin, end):
-        super().__init__(begin, end)
-        if self.ndim != 1:
-            raise ValueError('cannot make an interval from begin {} and '
-                             'end {}.'.format(begin, end))
-
-    @property
-    def length(self):
-        """The length of this interval."""
-        return self.end[0] - self.begin[0]
-
-    def __repr__(self):
-        return 'Interval({}, {})'.format(self.begin[0], self.end[0])
+    interval = IntervalProd(begin, end)
+    if interval.ndim != 1:
+        raise ValueError('cannot make an interval from begin {} and '
+                         'end {}.'.format(begin, end))
+    return interval
 
 
-class Rectangle(IntervalProd):
-    """Two-dimensional interval product."""
-    def __init__(self, begin, end):
-        super().__init__(begin, end)
-        if self.ndim != 2:
-            raise ValueError('cannot make a rectangle from begin {} and '
-                             'end {}.'.format(begin, end))
+def Rectangle(begin, end):
+    """Two-dimensional interval product.
 
-    @property
-    def area(self):
-        """Area measure of this rectangle."""
-        return self.volume
+    Parameters
+    ----------
+    begin : array-like with two elements convertible to float
+        The lower ends of the intervals in the product
+    end : array-like with two elements convertible to float
+        The upper ends of the intervals in the product
+    """
+    rectangle = IntervalProd(begin, end)
+    if rectangle.ndim != 2:
+        raise ValueError('cannot make a rectangle from begin {} and '
+                         'end {}.'.format(begin, end))
+    return rectangle
 
-    def __repr__(self):
-        return ('Rectangle({!r}, {!r})'.format(list(self.begin),
-                                               list(self.end)))
 
+def Cuboid(begin, end):
+    """Three-dimensional interval product.
 
-class Cuboid(IntervalProd):
-    """Three-dimensional interval product."""
-    def __init__(self, begin, end):
-        super().__init__(begin, end)
-        if self.ndim != 3:
-            raise ValueError('cannot make a cuboid from begin {} and '
-                             'end {}.'.format(begin, end))
+    Parameters
+    ----------
+    begin : array-like with three elements convertible to float
+        The lower ends of the intervals in the product
+    end : array-like with three elements convertible to float
+        The upper ends of the intervals in the product
+    """
+    cuboid = IntervalProd(begin, end)
+    if cuboid.ndim != 3:
+        raise ValueError('cannot make a cuboid from begin {} and '
+                         'end {}.'.format(begin, end))
+    return cuboid
 
-    def __repr__(self):
-        return ('Cuboid({!r}, {!r})'.format(list(self.begin),
-                                            list(self.end)))
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
