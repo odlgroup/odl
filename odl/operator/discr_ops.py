@@ -56,7 +56,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     ----------
     f : array-like
          An N-dimensional array
-    out : array-like or None, optional
+    out : array-like or `None`, optional
          An N-dimensional array
     axis : `int`, optional
         The axis along which the partial derivative is evaluated. Default: 0
@@ -95,7 +95,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     True
     """
     # TODO: implement forward/backward differences
-    # TODO: implement other boundary conditions
+    # TODO: implement alternative boundary conditions
 
     if zero_padding is True and edge_order == 1:
         raise ValueError("zero padding uses second-order accurate "
@@ -427,8 +427,8 @@ class DiscreteDivergence(Operator):
         >>> div_f = div(f)
         >>> print(div_f)
         [[1.0, 2.0, 2.5, 3.0, 1.0],
-        [2.0, 2.0, 2.0, 2.0, -1.0],
-        [1.0, 0.0, -0.5, -1.0, -5.0]]
+         [2.0, 2.0, 2.0, 2.0, -1.0],
+         [1.0, 0.0, -0.5, -1.0, -5.0]]
         >>> g = div.range.element(data ** 2)
         >>> adj = div.adjoint
         >>> adj_g = adj(g)
@@ -453,7 +453,7 @@ class DiscreteDivergence(Operator):
                 else:
                     arr += tmp
 
-            out[:] = arr  # self assignment in case `asarray` is a view,
+            out[:] = arr  # self assignment in case asarray is a view,
                           # thus no overhead.
 
         elif isinstance(self.domain.dspace, CudaRn):
