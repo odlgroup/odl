@@ -35,6 +35,7 @@ from odl.space.ntuples import (
     FnCustomInnerProduct, FnCustomNorm, FnCustomDist,
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
+from odl.util.exceptions import LinearSpaceTypeError
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 from odl.util.ufuncs import UFUNCS, NtuplesVectorUFuncs
 
@@ -267,6 +268,29 @@ def test_lincomb(fn):
             _test_lincomb(fn, a, b)
 
 
+def test_lincomb_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x, y, z = fn.zero(), fn.zero(), fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, otherx, 1, y, z)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, y, 1, otherx, z)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, y, 1, z, otherx)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb([], x, 1, y, z)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, x, [], y, z)
+
+
 def test_multiply(fn):
     # space method
     x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
@@ -281,6 +305,23 @@ def test_multiply(fn):
 
     out.multiply(x, y)
     assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
+
+
+def test_multiply_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x, y = fn.zero(), fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.multiply(otherx, x, y)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.multiply(x, otherx, y)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.multiply(x, y, otherx)
 
 
 def _test_unary_operator(fn, function):
@@ -385,6 +426,20 @@ def test_inner(fn):
     assert almost_equal(xd.inner(yd), correct_inner)
 
 
+def test_inner_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x = fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.inner(otherx, x)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.inner(x, otherx)
+
+
 def test_norm(fn):
     xarr, x = _vectors(fn)
 
@@ -392,6 +447,16 @@ def test_norm(fn):
 
     assert almost_equal(fn.norm(x), correct_norm)
     assert almost_equal(x.norm(), correct_norm)
+
+
+def test_norm_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.norm(otherx)
 
 
 def test_pnorm(exponent):
@@ -410,6 +475,20 @@ def test_dist(fn):
 
     assert almost_equal(fn.dist(x, y), correct_dist)
     assert almost_equal(x.dist(y), correct_dist)
+
+
+def test_dist_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x = fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.dist(otherx, x)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.dist(x, otherx)
 
 
 def test_pdist(exponent):
