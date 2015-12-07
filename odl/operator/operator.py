@@ -567,18 +567,17 @@ class Operator(object):
                                 'when range is a field')
 
             self._call_in_place(x, out=out, **kwargs)
-            return out
 
         else:  # Out-of-place evaluation
-            result = self._call_out_of_place(x, **kwargs)
+            out = self._call_out_of_place(x, **kwargs)
 
-            if result not in self.range:
+            if out not in self.range:
                 try:
-                    result = self.range.element(result)
+                    out = self.range.element(out)
                 except (TypeError, ValueError):
                     raise TypeError('unable to cast {!r} to an element of '
-                                    'the range {}.'.format(result, self.range))
-            return result
+                                    'the range {}.'.format(out, self.range))
+        return out
 
     def __add__(self, other):
         """Return ``self + other``."""
