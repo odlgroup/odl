@@ -36,9 +36,9 @@ from odl.space.cu_ntuples import CudaRn
 __all__ = ('DiscretePartDeriv', 'DiscreteGradient', 'DiscreteDivergence')
 
 
-def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
+def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
                 zero_padding=False):
-    """Calculate the partial derivative of `f` along a given `axis` using
+    """Calculate the partial derivative of ``f`` along a given ``axis`` using
     discrete differences.
 
     The partial derivative is computed using second-order accurate central
@@ -47,39 +47,37 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
 
     Assuming (implicit) zero padding central differences are used on the
     interior and on endpoints. Otherwise one-sided differences are used. If
-    `zero_padding` is False first-order accuracy can be triggered on
-    endpoints with parameter `edge_order`.
+    ``zero_padding`` is `False` first-order accuracy can be triggered on
+    endpoints with parameter ``edge_order``.
 
-    The returned array has the same shape as the input array `f`.
+    The returned array has the same shape as the input array ``f``.
 
     Parameters
     ----------
     f : array-like
          An N-dimensional array
-    out : array-like
+    out : array-like or None, optional
          An N-dimensional array
     axis : `int`, optional
         The axis along which the partial derivative is evaluated. Default: 0
     dx : `float`, optional
-        Scalars specifying the sample distances in each dimension `axis`.
+        Scalar specifying the sample distances in each dimension ``axis``.
         Default distance: 1.0
     edge_order : {1, 2}, optional
         First-order accurate differences (1) can be used at the boundaries
         if no zero padding is used. Default edge order: 2
     zero_padding : `bool`, optional
-        Implicit zero padding. Assumes values outside the domain of `f` to be
-        zero. Default: False
+        Implicit zero padding. Assumes values outside the domain of ``f`` to be
+        zero. Default: `False`
 
     Returns
     -------
     out : `numpy.ndarray`
-        Returns an N-dimensional array of the same shape as `f`
+        Returns an N-dimensional array of the same shape as ``f``
 
     Examples
     --------
-    >>> f = np.arange(10, dtype=float)
-    >>> f
-    array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
+    >>> f = np.array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
     >>> finite_diff(f)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
     >>> finite_diff(f, axis=0, dx=1.0, edge_order=2, zero_padding=False)
@@ -89,7 +87,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
     >>> finite_diff(f, zero_padding=True)
     array([ 0.5,  1. ,  1. ,  1. ,  1. ,  1. ,  1. ,  1. ,  1. , -4. ])
     >>> finite_diff(f, zero_padding=False, edge_order=1)
-    array([ 0.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  0.])
+    array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
     >>> out = finite_diff(f)
     >>> out is finite_diff(f)
     False
@@ -117,22 +115,19 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
         out = np.empty_like(f_data)
     else:
         if not out.shape == f.shape:
-            raise TypeError("shape of `out` array ({0}) does not match the "
-                            "shape of input array `f` ({1}).".format(out.shape,
-                                                                    f.shape))
+            raise ValueError(
+                "shape of `out` array ({0}) does not match the shape of "
+                "input array `f` ({1}).".format(out.shape, f.shape))
 
-    if edge_order not in {1, 2, None}:
+    if edge_order not in {1, 2}:
         raise ValueError("edge order ({0}) not valid".format(edge_order))
-
-    if edge_order is None:
-        edge_order = 2
 
     if dx == 0:
         raise ValueError("step length is zero.")
     else:
         dx = float(dx)
 
-    # create slice objects --- initially all are [:, :, ..., :]
+    # create slice objects: initially all are [:, :, ..., :]
     # current slice
     slice_out = [slice(None)] * ndim
     # slices used to calculate finite differences
@@ -172,15 +167,13 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
             slice_node1[axis] = 1
             slice_node2[axis] = 0
             # 1D equivalent: out[0] = (f[1] - f[0])
-            np.subtract(f_data[slice_node1], f_data[slice_node2],
-                        out[slice_out])
+            out[slice_out] = f_data[slice_node1] - f_data[slice_node2]
 
             slice_out[axis] = -1
             slice_node1[axis] = -1
             slice_node2[axis] = -2
             # 1D equivalent: out[-1] = (f[-1] - f[-2])
-            np.subtract(f_data[slice_node1], f_data[slice_node2],
-                        out[slice_out])
+            out[slice_out] = f_data[slice_node1] - f_data[slice_node2]
 
         # Numerical differentiation: 2nd order edges
         else:
@@ -210,12 +203,12 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=None,
 class DiscretePartDeriv(Operator):
     """Calculate the discrete partial derivative along a given axis.
 
-        Calls helper function `finite_diff` to calculate finite difference.
-        Preserves the shape of the underlying grid.
+    Calls helper function `finite_diff` to calculate finite difference.
+    Preserves the shape of the underlying grid.
     """
     # TODO: implement adjoint
 
-    def __init__(self, space, axis=0, dx=1.0, edge_order=None,
+    def __init__(self, space, axis=0, dx=1.0, edge_order=2,
                  zero_padding=False):
         """Initialize an operator instance.
 
@@ -227,14 +220,14 @@ class DiscretePartDeriv(Operator):
             The axis along which the partial derivative is evaluated.
             Default: 0
         dx : `float`, optional
-            Scalars specifying the sampling distances in dimension `axis`.
+            Scalars specifying the sampling distances in dimension ``axis``.
             Default distance: 1.0
         edge_order : {1, 2}, optional
             First-order accurate differences can be used at the boundaries
             if no zero padding is used. Default edge order: 2
         zero_padding : `bool`, optional
-            Implicit zero padding. Assumes values outside the domain of `f`
-            to be zero. Default: False
+            Implicit zero padding. Assumes values outside the domain of ``f``
+            to be zero. Default: `False`
         """
 
         if not isinstance(space, DiscreteLp):
@@ -260,7 +253,8 @@ class DiscretePartDeriv(Operator):
         Examples
         --------
         >>> from odl import uniform_discr, FunctionSpace, Rectangle
-        >>> data = np.arange(5, dtype=float) * np.arange(1, 3).reshape(2, 1)
+        >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
+        ...                  [ 0.,  2.,  4.,  6.,  8.]])
         >>> space = FunctionSpace(Rectangle([0, 0], [2, 1]))
         >>> disc = uniform_discr(space, data.shape)
         >>> par_div = DiscretePartDeriv(disc)
@@ -276,7 +270,11 @@ class DiscretePartDeriv(Operator):
                         dx=self.dx, edge_order=self.edge_order,
                         zero_padding=self.zero_padding)
         elif isinstance(self.domain.dspace, CudaRn):
-            pass
+            raise NotImplementedError('support for `CudaRn` to be '
+                                      'implemented.')
+        else:
+            raise TypeError('invalid data space {}.'.format(
+                self.domain.dspace))
 
     @property
     def adjoint(self):
@@ -285,20 +283,20 @@ class DiscretePartDeriv(Operator):
 
 
 class DiscreteGradient(Operator):
-    """Gradient operator applicable to `DiscreteLp` spaces with number of
-    dimensions ``n``.
+    """Spatial gradient operator for `DiscreteLp` spaces with any number of
+    dimensions `DiscreteLp.ndim`.
 
     Calls helper function `finite_diff` to calculate each component of the
-    resulting product space vector. For the adjoint of the `Gradient`
-    operator to match the negative `DiscreteDivergence` operator
-    `zero_padding` is assumed.
+    resulting product space vector. For the adjoint of the
+    `DiscreteGradient` operator to match the negative `DiscreteDivergence`
+    operator ``zero_padding`` is assumed.
     """
 
     def __init__(self, space):
         """Initialize a `DiscreteGradient` operator instance.
 
-        Zero padding is assumed for the negative `DiscreteDivergence`
-        operator to match the adjoint of the `DiscreteGradient` operator.
+        Zero padding is assumed for the adjoint of the `DiscreteGradient`
+        operator to match  negative `DiscreteDivergence` operator.
 
         Parameters
         ----------
@@ -327,10 +325,8 @@ class DiscreteGradient(Operator):
         Examples
         --------
         >>> from odl import uniform_discr, FunctionSpace, Rectangle
-        >>> data = np.arange(5, dtype=float) * np.arange(1, 3).reshape(2,1)
-        >>> data
-        array([[ 0.,  1.,  2.,  3.,  4.],
-               [ 0.,  2.,  4.,  6.,  8.]])
+        >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
+        ...                  [ 0.,  2.,  4.,  6., 8.]])
         >>> space = FunctionSpace(Rectangle([0,0], [2,1]))
         >>> disc = uniform_discr(space, data.shape)
         >>> f = disc.element(data)
@@ -351,28 +347,37 @@ class DiscreteGradient(Operator):
         >>> g.inner(grad_f) - f.inner(adj_g)
         0.0
         """
-        x_data = np.asarray(x)
+        x_data = x.asarray()
         ndim = self.domain.grid.ndim
         dx = self.domain.grid.stride
 
-        for axis in range(ndim):
-            finite_diff(x_data, out=out[axis].asarray(), axis=axis,
-                        dx=dx[axis], edge_order=2, zero_padding=True)
+        if isinstance(self.domain.dspace, Rn):
+            for axis in range(ndim):
+                finite_diff(x_data, out=out[axis].asarray(), axis=axis,
+                            dx=dx[axis], edge_order=2, zero_padding=True)
+        elif isinstance(self.domain.dspace, CudaRn):
+            raise NotImplementedError('support for `CudaRn` to be '
+                                      'implemented.')
+        else:
+            raise TypeError('invalid data space {}.'.format(
+                self.domain.dspace))
+
 
     @property
     def adjoint(self):
         """Return the adjoint operator given by the negative of the
         `DiscreteDivergence` operator assuming implicit zero padding.
 
-        Note that the `space` argument of the `DiscreteDivergence` operator
-        is not the range but the domain of the `DiscreteGradient` operator.
+        Note that the ``space`` argument of the `DiscreteDivergence`
+        operator is not the range but the domain of the `DiscreteGradient`
+        operator.
         """
         return - DiscreteDivergence(self.domain)
 
 
 class DiscreteDivergence(Operator):
-    """Divergence operator applicable to `DiscreteLp` spaces with number of
-    dimensions ``n``.
+    """Divergence operator for `DiscreteLp` spaces with any number of
+    dimensions `DiscreteLp.ndim`.
 
     Calls helper function `finite_diff` for each component of the input
     product space vector. For the adjoint of the `DiscreteDivergence`
@@ -383,8 +388,8 @@ class DiscreteDivergence(Operator):
     def __init__(self, space):
         """Initialize a `DiscreteDivergence` operator instance.
 
-        Zero padding is assumed for the negative `DiscreteGradient`
-        operator to match the adjoint of the `DiscreteDivergence` operator.
+        Zero padding is assumed for the adjoint of the `DiscreteDivergence`
+        operator to match negative `DiscreteGradient` operator.
 
         Parameters
         ----------
@@ -412,33 +417,52 @@ class DiscreteDivergence(Operator):
         Examples
         --------
         >>> from odl import Rectangle, uniform_discr, FunctionSpace
-        >>> data = np.arange(5, dtype=float) * np.arange(1, 3).reshape(2,1)
-        >>> space = FunctionSpace(Rectangle([0,0], [2,1]))
+        >>> data = np.array([[0., 1., 2., 3., 4.],
+        ...                  [1., 2., 3., 4., 5.],
+        ...                  [2., 3., 4., 5., 6.]])
+        >>> space = FunctionSpace(Rectangle([0, 0], [3, 5]))
         >>> disc = uniform_discr(space, data.shape)
         >>> div = DiscreteDivergence(disc)
-        >>> f = div.domain.element([data, data ** 2])
+        >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
         >>> print(div_f)
-        [[2.5, 11.0, 22.0, 33.0, -18.5],
-         [10.0, 39.5, 79.0, 118.5, -92.0]]
-        >>> g = div.range.element(data ** 3)
+        [[1.0, 2.0, 2.5, 3.0, 1.0],
+        [2.0, 2.0, 2.0, 2.0, -1.0],
+        [1.0, 0.0, -0.5, -1.0, -5.0]]
+        >>> g = div.range.element(data ** 2)
         >>> adj = div.adjoint
         >>> adj_g = adj(g)
         >>> g.inner(div_f)
-        -3248.4
+        -119.0
         >>> f.inner(adj_g)
-        -3248.4
+        -119.0
         """
 
         ndim = self.range.grid.ndim
         dx = self.range.grid.stride
 
-        # TODO: can the following code be optimized?
-        tmp = np.zeros_like(out.asarray())
-        for axis in range(ndim):
-            tmp += finite_diff(x[axis], axis=axis, dx=dx[axis],
-                               edge_order=2, zero_padding=True)
-        out[:] = tmp
+        if isinstance(self.range.dspace, Rn):
+
+            arr = out.asarray()
+            tmp = np.zeros(out.shape, out.dtype, order=out.space.order)
+            for axis in range(ndim):
+                finite_diff(x[axis], out=tmp, axis=axis, dx=dx[axis],
+                            edge_order=2, zero_padding=True)
+                if axis == 0:
+                    arr[:] = tmp
+                else:
+                    arr += tmp
+
+            out[:] = arr  # self assignment in case `asarray` is a view,
+                          # thus no overhead.
+
+        elif isinstance(self.domain.dspace, CudaRn):
+            raise NotImplementedError('support for `CudaRn` to be '
+                                      'implemented.')
+        else:
+            raise TypeError('invalid data space {}.'.format(
+                self.domain.dspace))
+
 
     @property
     def adjoint(self):
