@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -68,7 +68,7 @@ cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = odl.uniform_discr_space(cont_space, 5000, impl='cuda')
+discr_space = odl.uniform_discr_fromspace(cont_space, 5000, impl='cuda')
 kernel = discr_space.element(cont_kernel)
 data = discr_space.element(cont_data)
 

@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -79,8 +79,8 @@ npoints = np.array([n+1, n+1])
 npoints_kernel = np.array([2*n+1, 2*n+1])
 
 # Discretization spaces
-disc_space = odl.uniform_discr_space(cont_space, npoints)
-disc_kernel_space = odl.uniform_discr_space(kernel_space, npoints_kernel)
+disc_space = odl.uniform_discr_fromspace(cont_space, npoints)
+disc_kernel_space = odl.uniform_discr_fromspace(kernel_space, npoints_kernel)
 
 # Discretize the functions
 disc_kernel = disc_kernel_space.element(cont_kernel)

@@ -43,7 +43,7 @@ from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
 from odl.util.ufuncs import DiscreteLpVectorUFuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
-           'uniform_discr', 'uniform_discr_space')
+           'uniform_discr', 'uniform_discr_fromspace')
 
 _SUPPORTED_INTERP = ('nearest',)
 
@@ -416,8 +416,8 @@ class DiscreteLpVector(DiscretizationVector):
                                indices=indices, **kwargs)
 
 
-def uniform_discr_space(fspace, nsamples, exponent=2.0, interp='nearest',
-                        impl='numpy', **kwargs):
+def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
+                            impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
@@ -465,7 +465,7 @@ def uniform_discr_space(fspace, nsamples, exponent=2.0, interp='nearest',
     >>> from odl import Interval, FunctionSpace
     >>> I = Interval(0, 1)
     >>> X = FunctionSpace(I)
-    >>> uniform_discr_space(X, 10)
+    >>> uniform_discr_fromspace(X, 10)
     uniform_discr([0.0], [1.0], [10])
 
     See also
@@ -575,7 +575,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     See also
     --------
-    uniform_discr_space
+    uniform_discr_fromspace
     """
     if not isinstance(field, Field):
         raise TypeError('field {} not a Field instance'
@@ -583,8 +583,8 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     fspace = FunctionSpace(IntervalProd(min_corner, max_corner), field)
 
-    return uniform_discr_space(fspace, nsamples, exponent, interp, impl,
-                               **kwargs)
+    return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
+                                   **kwargs)
 
 
 if __name__ == '__main__':
