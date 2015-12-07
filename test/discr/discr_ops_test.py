@@ -18,7 +18,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+
 from future import standard_library
+
 standard_library.install_aliases()
 
 # External module imports
@@ -27,8 +29,8 @@ import pytest
 
 # ODL imports
 from odl.discr.lp_discr import uniform_discr, FunctionSpace, IntervalProd
-from odl.operator.discr_ops import (finite_diff, DiscretePartDeriv,
-                                    DiscreteGradient, DiscreteDivergence)
+from discr.discr_ops import (finite_diff, DiscretePartDeriv,
+                             DiscreteGradient, DiscreteDivergence)
 from odl.space.ntuples import Rn
 from odl.set.domain import Rectangle
 from odl.util.testutils import almost_equal, all_equal
