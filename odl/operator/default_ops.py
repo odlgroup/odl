@@ -58,14 +58,14 @@ class ScalingOperator(Operator):
         self._space = space
         self._scal = space.field.element(scalar)
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """Scale input and write to output.
 
         Parameters
         ----------
         x : ``domain`` element
             input vector to be scaled
-        out : ``range`` element
+        out : ``range`` element, optional
             Output vector to which the result is written
 
         Returns
@@ -86,7 +86,12 @@ class ScalingOperator(Operator):
         >>> op(vec)  # Out of place
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        out.lincomb(self._scal, x)
+        if out is None:
+            out = x.copy()
+            out *= self._scal
+        else:
+            out.lincomb(self._scal, x)
+        return out
 
     @property
     def inverse(self):
@@ -198,7 +203,7 @@ class LinCombOperator(Operator):
         self.a = a
         self.b = b
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """Linearly combine the input and write to output.
 
         Parameters
@@ -222,7 +227,10 @@ class LinCombOperator(Operator):
         >>> z
         Rn(3).element([2.0, 4.0, 6.0])
         """
+        if out is None:
+            out = self.range.element()
         out.lincomb(self.a, x[0], self.b, x[1])
+        return out
 
     def __repr__(self):
         """Return ``repr(self)``."""
