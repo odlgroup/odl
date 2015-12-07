@@ -378,7 +378,7 @@ class InnerProductAdjointOperator(Operator):
         self.vector = vector
         super().__init__(vector.space.field, vector.space, linear=True)
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """Multiply the input and write to output.
 
         Parameters
@@ -404,7 +404,12 @@ class InnerProductAdjointOperator(Operator):
         >>> op(3.0)  # Out of place
         Rn(3).element([3.0, 6.0, 9.0])
         """
-        out.lincomb(x, self.vector)
+        if out is None:
+            out = self.vector.copy()
+            out *= x
+        else:
+            out.lincomb(x, self.vector)
+        return out
 
     @property
     def adjoint(self):
@@ -515,32 +520,6 @@ class ResidualOperator(Operator):
         self.vector = vector
         super().__init__(op.domain, vector.space)
 
-    def _call(self, x):
-        """ Returns the constant vector
-
-        Parameters
-        ----------
-        x : ``domain`` element
-            Any element in the domain
-
-        Returns
-        -------
-        vector : `LinearSpaceVector`
-            The constant vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> vec = r3.element([1, 2, 3])
-        >>> op = IdentityOperator(r3)
-        >>> res = ResidualOperator(op, vec)
-        >>> x = r3.element([4, 5, 6])
-        >>> res(x)
-        Rn(3).element([3.0, 3.0, 3.0])
-        """
-        return self.op(x) - self.vector
-
     def _call(self, x, out=None):
         """ Assign out to the constant vector
 
@@ -563,10 +542,12 @@ class ResidualOperator(Operator):
         Rn(3).element([3.0, 3.0, 3.0])
         """
         if out is None:
-            return self.op(x) - self.vector
+            out = self.op(x)
+            out -= self.vector
         else:
             self.op(x, out)
             out -= self.vector
+        return out
 
     def derivative(self, point):
         """ The derivative of a residual is the derivative of the operator
