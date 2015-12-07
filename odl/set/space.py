@@ -43,7 +43,7 @@ import math as m
 
 # ODL imports
 from odl.set.sets import Set, UniversalSet
-from odl.util.exceptions import (LinearSpaceTypeError, 
+from odl.util.exceptions import (LinearSpaceTypeError,
                                  LinearSpaceNotImplementedError)
 
 
@@ -703,7 +703,10 @@ class LinearSpaceVector(object):
 
 
 class UniversalSpace(LinearSpace):
-    """A dummy linear space class mostly raising `LinearSpaceNotImplementedError`."""
+    """A dummy linear space class.
+
+    Mostly raising `LinearSpaceNotImplementedError`.
+    """
 
     def element(self, inp=None):
         """Dummy element creation method.

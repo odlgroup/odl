@@ -20,15 +20,15 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
-# External module imports
-import numpy as np
 
-__all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr')
+__all__ = ('OpTypeError', 'OpDomainError', 'OpRangeError',
+           'OperatorNotImplementedError', 'LinearSpaceTypeError',
+           'LinearSpaceNotImplementedError')
+
 
 class OpTypeError(TypeError):
     """Exception for operator type errors.
@@ -64,10 +64,21 @@ class OpRangeError(OpTypeError):
         super().__init__(*args, **kwargs)
 
 
+class OperatorNotImplementedError(NotImplementedError):
+    """Exception for not implemented errors in `LinearSpace`'s.
+
+    These are raised when a method in `LinearSpace` that has not been
+    defined in a specific space is called.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class LinearSpaceTypeError(TypeError):
     """Exception for type errors in `LinearSpace`'s.
 
-    These are raised when the wrong type of element is fed to 
+    These are raised when the wrong type of element is fed to
     `LinearSpace.lincomb` and related functions.
     """
 

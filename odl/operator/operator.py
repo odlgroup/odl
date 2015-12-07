@@ -31,7 +31,8 @@ from numbers import Number, Integral
 from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
-from odl.util.exceptions import OpDomainError, OpRangeError
+from odl.util.exceptions import (OpDomainError, OpRangeError,
+                                 OperatorNotImplementedError)
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
@@ -120,12 +121,18 @@ class _OperatorMeta(type):
         return super().__new__(mcs, name, bases, attrs)
 
     def __call__(cls, *args, **kwargs):
-        """Create a new class ``cls`` from given arguments."""
+        """Create a new class ``cls`` from given arguments.
+
+        Raises
+        ------
+        NotImplementedError
+            If neither ``_call`` or ``_apply`` is implemented.
+        """
         obj = type.__call__(cls, *args, **kwargs)
         if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
-            raise NotImplementedError('`Operator` instances must either '
-                                      'have `_call` or `_apply` as '
-                                      'attribute.')
+            raise NotImplementedError('`Operator` instances must'
+                                      'either have `_call` or `_apply`'
+                                      ' as attribute.')
         return obj
 
 
@@ -260,23 +267,44 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     @property
     def adjoint(self):
-        """The operator adjoint."""
-        raise NotImplementedError('adjoint not implemented for operator {!r}.'
-                                  ''.format(self))
+        """The operator adjoint (abstract).
+
+        Raises
+        ------
+        OperatorNotImplementedError
+            Since the adjoint cannot be default implemented.
+        """
+        raise OperatorNotImplementedError('adjoint not implemented '
+                                          'for operator {!r}.'
+                                          ''.format(self))
 
     def derivative(self, point):
-        """Return the operator derivative at ``point``."""
+        """Return the operator derivative at ``point``.
+
+        Raises
+        ------
+        OperatorNotImplementedError
+            If the operator is not linear, the derivative cannot be
+            default implemented.
+        """
         if self.is_linear:
             return self
         else:
-            raise NotImplementedError('derivative not implemented for operator'
-                                      ' {!r}'.format(self))
+            raise OperatorNotImplementedError('derivative not implemented '
+                                              'for operator {!r}.'
+                                              ''.format(self))
 
     @property
     def inverse(self):
-        """Return the operator inverse."""
-        raise NotImplementedError('inverse not implemented for operator '
-                                  '{!r}'.format(self))
+        """Return the operator inverse.
+
+        Raises
+        ------
+        OperatorNotImplementedError
+            Since the inverse cannot be default implemented.
+        """
+        raise OperatorNotImplementedError('inverse not implemented for '
+                                          'operator {!r}'.format(self))
 
     # Implicitly defined operators
     def __call__(self, x, out=None, *args, **kwargs):
@@ -329,8 +357,9 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
-                raise OpRangeError('output {!r} not an element of the range {!r} '
-                                   'of {!r}.'.format(out, self.range, self))
+                raise OpRangeError('output {!r} not an element of the range'
+                                   '{!r} of {!r}.'
+                                   ''.format(out, self.range, self))
 
             if self.is_functional:
                 raise TypeError('`out` parameter cannot be used'
@@ -755,9 +784,15 @@ class OperatorSum(Operator):
 
         ``OperatorSum(op1, op2).adjoint ==
         OperatorSum(op1.adjoint, op2.adjoint)``
+
+        Raises
+        ------
+        OperatorNotImplementedError
+            If either of the underlying operators are non-linear.
         """
         if not self.is_linear:
-            raise NotImplementedError('Nonlinear operators have no adjoint')
+            raise OperatorNotImplementedError('Nonlinear operators have no '
+                                              'adjoint')
 
         return OperatorSum(self._op1.adjoint, self._op2.adjoint,
                            self._tmp_dom, self._tmp_ran)
@@ -860,9 +895,15 @@ class OperatorComp(Operator):
 
         ``OperatorComp(left, right).adjoint ==
         OperatorComp(right.adjoint, left.adjoint)``
+
+        Raises
+        ------
+        OperatorNotImplementedError
+            If any of the underlying operators are non-linear.
         """
         if not self.is_linear:
-            raise NotImplementedError('Nonlinear operators have no adjoint')
+            raise OperatorNotImplementedError('Nonlinear operators have no '
+                                              'adjoint')
 
         return OperatorComp(self._right.adjoint, self._left.adjoint,
                             self._tmp)
@@ -1019,10 +1060,16 @@ class OperatorLeftScalarMult(Operator):
 
         ``OperatorLeftScalarMult(op, scalar).adjoint ==``
         ``OperatorLeftScalarMult(op.adjoint, scalar)``
+
+        Raises
+        ------
+        OperatorNotImplementedError
+            If the underlying operator is non-linear.
         """
 
         if not self.is_linear:
-            raise NotImplementedError('Nonlinear operators have no adjoint')
+            raise OperatorNotImplementedError('Nonlinear operators have '
+                                              'no adjoint')
 
         return OperatorRightScalarMult(self._op.adjoint,
                                        self._scalar.conjugate())
@@ -1129,10 +1176,16 @@ class OperatorRightScalarMult(Operator):
 
         ``OperatorLeftScalarMult(op, scalar).adjoint ==``
         ``OperatorLeftScalarMult(op.adjoint, scalar)``
+
+        Raises
+        ------
+        OperatorNotImplementedError
+            If the underlying operator is non-linear.
         """
 
         if not self.is_linear:
-            raise NotImplementedError('Nonlinear operators have no adjoint')
+            raise OperatorNotImplementedError('Nonlinear operators '
+                                              'have no adjoint')
 
         return OperatorRightScalarMult(self._op.adjoint,
                                        self._scalar.conjugate())
@@ -1219,10 +1272,15 @@ class FunctionalLeftVectorMult(Operator):
 
         ``(x * A)^T = A^T * x^T``
 
+        Raises
+        ------
+        OperatorNotImplementedError
+            If the underlying operator is non-linear.
         """
 
         if not self.is_linear:
-            raise NotImplementedError('Nonlinear operators have no adjoint')
+            raise OperatorNotImplementedError('Nonlinear operators have '
+                                              'no adjoint')
 
         return OperatorComp(self._op.adjoint, self._vector.T)
 
@@ -1300,10 +1358,15 @@ class OperatorLeftVectorMult(Operator):
 
         ``(x * A)^T = A^T * x``
 
+        Raises
+        ------
+        OperatorNotImplementedError
+            If the underlying operator is non-linear.
         """
 
         if not self.is_linear:
-            raise NotImplementedError('Nonlinear operators have no adjoint')
+            raise OperatorNotImplementedError('Nonlinear operators have '
+                                              'no adjoint')
 
         return OperatorRightVectorMult(self._op.adjoint, self._vector)
 
@@ -1383,10 +1446,15 @@ class OperatorRightVectorMult(Operator):
 
         ``(A x)^T = x * A^T``
 
+        Raises
+        ------
+        OperatorNotImplementedError
+            If the underlying operator is non-linear.
         """
 
         if not self.is_linear:
-            raise NotImplementedError('Nonlinear operators have no adjoint')
+            raise OperatorNotImplementedError('Nonlinear operators have no '
+                                              'adjoint')
 
         # TODO: handle complex vectors
         return OperatorLeftVectorMult(self._op.adjoint, self._vector)
@@ -1442,7 +1510,7 @@ def simple_operator(call=None, apply=None, inv=None, deriv=None,
     It suffices to supply one of the functions ``call`` and ``apply``.
     If ``dom`` is a `LinearSpace`, a default implementation of the
     respective other method is automatically provided; if not, a
-    `NotImplementedError` is raised when the other method is called.
+    `OperatorNotImplementedError` is raised when the other method is called.
 
     Examples
     --------
