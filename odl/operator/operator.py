@@ -31,6 +31,7 @@ from numbers import Number, Integral
 from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
+from odl.util.exceptions import OpDomainError, OpRangeError
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
@@ -323,15 +324,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Rn(3).element([2.0, 4.0, 6.0])
         """
         if x not in self.domain:
-            raise TypeError('input {!r} not an element of the domain {!r} '
-                            'of {!r}.'
-                            ''.format(x, self.domain, self))
+            raise OpDomainError('input {!r} not an element of the domain {!r} '
+                                'of {!r}.'.format(x, self.domain, self))
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
-                raise TypeError('output {!r} not an element of the range {!r} '
-                                'of {!r}.'
-                                ''.format(out, self.range, self))
+                raise OpRangeError('output {!r} not an element of the range {!r} '
+                                   'of {!r}.'.format(out, self.range, self))
 
             if self.is_functional:
                 raise TypeError('`out` parameter cannot be used'
