@@ -45,7 +45,7 @@ import math as m
 from odl.set.sets import Set, UniversalSet
 
 
-__all__ = ('LinearSpace', 'LinearSpaceVector')
+__all__ = ('LinearSpace', 'LinearSpaceVector', 'UniversalSpace')
 
 
 class LinearSpace(Set):
@@ -54,6 +54,19 @@ class LinearSpace(Set):
     Its elements are represented as instances of the inner
     `LinearSpaceVector` class.
     """
+
+    def __init__(self, field):
+        """Initialize a LinearSpace.
+
+        This method should be called by all inheriting methods so that the
+        field property of the space is set properly.
+        """
+        self._field = field
+
+    @property
+    def field(self):
+        """The field of this vector space."""
+        return self._field
 
     @abstractmethod
     def element(self, inp=None, **kwargs):
@@ -132,10 +145,6 @@ class LinearSpace(Set):
             The one vector of this space
         """
         raise NotImplementedError('This space has no one')
-
-    @property
-    def field(self):
-        """The field of this vector space."""
 
     # Default methods
     def zero(self):
@@ -697,6 +706,10 @@ class LinearSpaceVector(object):
 class UniversalSpace(LinearSpace):
     """A dummy linear space class mostly raising `NotImplementedError`."""
 
+    def __init__(self):
+        """Initialize a universal space"""
+        LinearSpace.__init__(self, field=UniversalSet())
+
     def element(self, inp=None):
         """Dummy element creation method.
 
@@ -744,11 +757,6 @@ class UniversalSpace(LinearSpace):
         raises `NotImplementedError`.
         """
         raise NotImplementedError
-
-    @property
-    def field(self):
-        """Dummy field `UniversalSet`."""
-        return UniversalSet()
 
     def __eq__(self, other):
         """Return ``self == other``.
