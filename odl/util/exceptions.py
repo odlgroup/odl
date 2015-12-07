@@ -62,3 +62,25 @@ class OpRangeError(OpTypeError):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class LinearSpaceTypeError(TypeError):
+    """Exception for type errors in `LinearSpace`'s.
+
+    These are raised when the wrong type of element is fed to 
+    `LinearSpace.lincomb` and related functions.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class LinearSpaceNotImplementedError(NotImplementedError):
+    """Exception for not implemented errors in `LinearSpace`'s.
+
+    These are raised when a method in `LinearSpace` that has not been
+    defined in a specific space is called.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
