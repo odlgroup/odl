@@ -60,12 +60,26 @@ class LinearSpace(Set):
 
         This method should be called by all inheriting methods so that the
         field property of the space is set properly.
+
+        Parameters
+        ----------
+        field : `Field`
+            The underlying scalar field of the space
         """
         self._field = field
 
     @property
     def field(self):
-        """The field of this vector space."""
+        """The field of this vector space.
+
+        The field is the set of scalars of the space, that is numbers that
+        the vectors in the space can be multiplied with.
+
+        Returns
+        -------
+        field : `Field`
+            The underlying field.
+        """
         return self._field
 
     @abstractmethod
