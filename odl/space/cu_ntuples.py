@@ -42,7 +42,7 @@ except ImportError:
     CUDA_AVAILABLE = False
 
 __all__ = ('CudaNtuples', 'CudaNtuplesVector',
-           'CudaFn', 'CudaFnVector', 'CudaRn', 'CudaRnVector',
+           'CudaFn', 'CudaFnVector', 'CudaRn',
            'CUDA_DTYPES', 'CUDA_AVAILABLE',
            'CudaFnConstWeighting', 'CudaFnVectorWeighting',
            'cu_weighted_inner', 'cu_weighted_norm', 'cu_weighted_dist')
@@ -650,14 +650,14 @@ class CudaFn(FnBase, CudaNtuples):
 
         Examples
         --------
-        >>> r3 = CudaFn(3, 'float32')
+        >>> r3 = CudaRn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([4, 5, 6])
         >>> out = r3.element()
         >>> r3.lincomb(2, x, 3, y, out)  # out is returned
-        CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
+        CudaRn(3).element([14.0, 19.0, 24.0])
         >>> out
-        CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
+        CudaRn(3).element([14.0, 19.0, 24.0])
         """
         out.data.lincomb(a, x1.data, b, x2.data)
 
@@ -844,14 +844,6 @@ class CudaFn(FnBase, CudaNtuples):
         >>> r3_lambda2 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
         >>> r3_lambda1 == r3_lambda2
         False
-
-        A `CudaFn` space with the same data type is considered
-        equal:
-
-        >>> r3 = CudaRn(3)
-        >>> f3_single = CudaFn(3, dtype='float32')
-        >>> r3 == f3_single
-        True
         """
         if other is self:
             return True
@@ -861,9 +853,19 @@ class CudaFn(FnBase, CudaNtuples):
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
-        inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        if self.is_rn:
+            class_name = 'CudaRn'
+            if self.dtype == np.float32:
+                inner_str = '{}'.format(self.size)
+            else:
+                inner_str = '{}, {}'.format(self.size, self.dtype)
+        elif self.is_cn:
+            raise NotImplementedError
+        else:
+            class_name = 'CudaFn'
+            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+
+        return '{}({})'.format(class_name, inner_str)
 
     @property
     def element_type(self):
@@ -880,59 +882,35 @@ class CudaFnVector(FnBaseVector, CudaNtuplesVector):
         super().__init__(space, data)
 
 
-class CudaRn(CudaFn, LinearSpace):
+def CudaRn(size, dtype=np.float32, **kwargs):
 
     """The real space :math:`R^n`, implemented in CUDA.
 
     Requires the compiled ODL extension odlpp.
+
+    Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Only real floating-point data types are allowed.
+
+    kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
+        See `CudaFn`
     """
 
-    def __init__(self, size, dtype=np.float32, **kwargs):
-        """Initialize a new instance.
+    rn = CudaFn(size, dtype, **kwargs)
 
-        Parameters
-        ----------
-        size : positive `int`
-            The number of dimensions of the space
-        dtype : `object`
-            The data type of the storage array. Can be provided in any
-            way the `numpy.dtype` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
+    if not rn.is_rn:
+        raise TypeError('data type {!r} not a real floating-point type.'
+                        ''.format(dtype))
 
-            Only real floating-point data types are allowed.
-
-        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            See `CudaFn`
-        """
-        super().__init__(size, dtype, **kwargs)
-
-        if not is_real_floating_dtype(self._dtype):
-            raise TypeError('data type {!r} not a real floating-point type.'
-                            ''.format(dtype))
-
-    def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
-        if self.dtype == np.dtype('float32'):
-            inner_str = '{}'.format(self.size)
-        else:
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
-            inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    @property
-    def element_type(self):
-        """ `CudaRnVector` """
-        return CudaRnVector
-
-
-class CudaRnVector(CudaFnVector):
-
-    """Representation of a `CudaRn` element."""
-
-    def __init__(self, space, data):
-        """Initialize a new instance."""
-        super().__init__(space, data)
+    return rn
 
 
 def _weighting(weight, exponent):

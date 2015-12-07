@@ -631,20 +631,26 @@ def test_matvec_init(fn):
     op_float = MatVecOperator([[1.0, 2],
                                [-1, 0.5]])
 
-    assert isinstance(op_float.domain, Rn)
-    assert isinstance(op_float.range, Rn)
+    assert isinstance(op_float.domain, Fn)
+    assert op_float.domain.is_rn
+    assert isinstance(op_float.range, Fn)
+    assert op_float.domain.is_rn
 
     op_complex = MatVecOperator([[1.0, 2 + 1j],
                                  [-1 - 1j, 0.5]])
 
-    assert isinstance(op_complex.domain, Cn)
-    assert isinstance(op_complex.range, Cn)
+    assert isinstance(op_complex.domain, Fn)
+    assert op_complex.domain.is_cn
+    assert isinstance(op_complex.range, Fn)
+    assert op_complex.domain.is_cn
 
     op_int = MatVecOperator([[1, 2],
                              [-1, 0]])
 
     assert isinstance(op_int.domain, Fn)
+    assert op_int.domain.dtype == int
     assert isinstance(op_int.range, Fn)
+    assert op_int.domain.dtype == int
 
     # Rectangular
     rect_mat = 2 * np.eye(2, 3)
