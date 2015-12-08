@@ -199,8 +199,6 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     return out
 
 
-# TODO: CUDA support
-
 class DiscretePartDeriv(Operator):
     """Calculate the discrete partial derivative along a given axis.
 
@@ -265,16 +263,14 @@ class DiscretePartDeriv(Operator):
          [0.0, 1.0, 2.0, 3.0, 4.0]]
         """
 
-        if isinstance(self.domain.dspace, Rn):
-            finite_diff(x.asarray(), out.asarray(), axis=self.axis,
-                        dx=self.dx, edge_order=self.edge_order,
-                        zero_padding=self.zero_padding)
-        elif isinstance(self.domain.dspace, CudaRn):
-            raise NotImplementedError('support for `CudaRn` to be '
-                                      'implemented.')
-        else:
-            raise TypeError('invalid data space {}.'.format(
-                self.domain.dspace))
+        out_arr = out.asarray()
+
+        finite_diff(x.asarray(), out_arr, axis=self.axis, dx=self.dx,
+                    edge_order=self.edge_order,
+                    zero_padding=self.zero_padding)
+
+        # self assignment: no overhead in the case asarray is a view
+        out[:] = out_arr
 
     @property
     def adjoint(self):
@@ -448,7 +444,7 @@ class DiscreteDivergence(Operator):
                 else:
                     arr += tmp
 
-            # self assignment in case asarray is a view, thus no overhead
+            # self assignment: no overhead in the case asarray is a view
             out[:] = arr
 
         elif isinstance(self.domain.dspace, CudaRn):
