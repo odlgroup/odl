@@ -61,7 +61,6 @@ def make_interface():
 
         line = '=' * len(shortmodname)
 
-        print(modname)
         module = importlib.import_module(modname)
 
         docstring = module.__doc__
