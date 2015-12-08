@@ -40,90 +40,90 @@ def test_finite_diff():
     """Finite differences test."""
 
     # phantom data
-    f = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
+    arr = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
 
     # invalid parameter values
     # edge order in {1,2}
     with pytest.raises(ValueError):
-        finite_diff(f, edge_order=0)
+        finite_diff(arr, edge_order=0)
     with pytest.raises(ValueError):
-        finite_diff(f, edge_order=3)
+        finite_diff(arr, edge_order=3)
     # zero padding uses second-order accurate edges
     with pytest.raises(ValueError):
-        finite_diff(f, zero_padding=True, edge_order=1)
+        finite_diff(arr, zero_padding=True, edge_order=1)
     # at least a two-element array is required
     with pytest.raises(ValueError):
         finite_diff(np.array([0.0]))
     # axis
     with pytest.raises(IndexError):
-        finite_diff(f, axis=2)
+        finite_diff(arr, axis=2)
     # in-place argument
-    out = np.zeros(f.size + 1)
+    out = np.zeros(arr.size + 1)
     with pytest.raises(ValueError):
-        finite_diff(f, out)
+        finite_diff(arr, out)
     with pytest.raises(ValueError):
-        finite_diff(f, dx=0)
+        finite_diff(arr, dx=0)
 
-    # finite difference array
-    dfe = np.zeros_like(f)
+    # explicitly calculated finite difference
+    findiff_ex = np.zeros_like(arr)
 
     # interior: second-order accurate differences
-    dfe[1:-1] = (f[2:] - f[:-2]) / 2.0
+    findiff_ex[1:-1] = (arr[2:] - arr[:-2]) / 2.0
 
     # default: out=None, axis=0, dx=1.0, edge_order=2, zero_padding=False
-    df = finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
-                     zero_padding=False)
-    assert all_equal(df, finite_diff(f))
+    findiff_op = finite_diff(arr, out=None, axis=0, dx=1.0, edge_order=2,
+                             zero_padding=False)
+    assert all_equal(findiff_op, finite_diff(arr))
 
     # boundary: second-order accurate forward/backward difference
-    dfe[0] = -(3 * f[0] - 4 * f[1] + f[2]) / 2.0
-    dfe[-1] = (3 * f[-1] - 4 * f[-2] + f[-3]) / 2.0
-    assert all_equal(df, dfe)
+    findiff_ex[0] = -(3 * arr[0] - 4 * arr[1] + arr[2]) / 2.0
+    findiff_ex[-1] = (3 * arr[-1] - 4 * arr[-2] + arr[-3]) / 2.0
+    assert all_equal(findiff_op, findiff_ex)
 
     # non-unit step length
     dx = 0.5
-    df = finite_diff(f, dx=dx)
-    assert all_equal(df, dfe / dx)
+    findiff_op = finite_diff(arr, dx=dx)
+    assert all_equal(findiff_op, findiff_ex / dx)
 
     # boundary: second-order accurate central differences with zero padding
-    df = finite_diff(f, zero_padding=True)
-    dfe[0] = f[1] / 2.0
-    dfe[-1] = -f[-2] / 2.0
-    assert all_equal(df, dfe)
+    findiff_op = finite_diff(arr, zero_padding=True)
+    findiff_ex[0] = arr[1] / 2.0
+    findiff_ex[-1] = -arr[-2] / 2.0
+    assert all_equal(findiff_op, findiff_ex)
 
     # boundary: one-sided first-order forward/backward difference without zero
     # padding
-    df = finite_diff(f, zero_padding=False, edge_order=1)
-    dfe[0] = f[1] - f[0]  # 1st-order accurate forward difference
-    dfe[-1] = f[-1] - f[-2]  # 1st-order accurate backward difference
-    assert all_equal(df, dfe)
+    findiff_op = finite_diff(arr, zero_padding=False, edge_order=1)
+    findiff_ex[0] = arr[1] - arr[0]  # 1st-order accurate forward difference
+    findiff_ex[-1] = arr[-1] - arr[-2]  # 1st-order accurate backward diff.
+    assert all_equal(findiff_op, findiff_ex)
 
     # different edge order really differ
-    df1 = finite_diff(f, edge_order=1)
-    df2 = finite_diff(f, edge_order=2)
-    assert all_equal(df1[1:-1], dfe[1:-1])
-    assert all_equal(df2[1:-1], dfe[1:-1])
+    df1 = finite_diff(arr, edge_order=1)
+    df2 = finite_diff(arr, edge_order=2)
+    assert all_equal(df1[1:-1], findiff_ex[1:-1])
+    assert all_equal(df2[1:-1], findiff_ex[1:-1])
     assert df1[0] != df2[0]
     assert df1[-1] != df2[-1]
 
     # in-place evaluation
-    out = np.zeros_like(f)
-    assert out is finite_diff(f, out)
-    assert all_equal(out, finite_diff(f))
-    assert out is not finite_diff(f)
+    out = np.zeros_like(arr)
+    assert out is finite_diff(arr, out)
+    assert all_equal(out, finite_diff(arr))
+    assert out is not finite_diff(arr)
 
     # axis
-    f = np.array([[0., 1., 2., 3., 4.],
-                  [1., 2., 3., 4., 5.]])
-    df0 = finite_diff(f, axis=0)
-    df1 = finite_diff(f, axis=1)
+    arr = np.array([[0., 1., 2., 3., 4.],
+                    [1., 2., 3., 4., 5.]])
+    df0 = finite_diff(arr, axis=0)
+    df1 = finite_diff(arr, axis=1)
     assert all_equal(df0, df1)
 
     # complex arrays
-    f = np.array([0., 1., 2., 3., 4.]) + 1j * np.array([10., 9., 8., 7., 6.])
-    df = finite_diff(f)
-    assert all(df.real == 1)
-    assert all(df.imag == -1)
+    arr = np.array([0., 1., 2., 3., 4.]) + 1j * np.array([10., 9., 8., 7., 6.])
+    findiff_op = finite_diff(arr)
+    assert all(findiff_op.real == 1)
+    assert all(findiff_op.imag == -1)
 
 
 def test_discr_part_deriv():
@@ -161,27 +161,27 @@ def test_discr_part_deriv():
     discr_space = uniform_discr([0, 0], [2, 1], data.shape)
 
     # operator
-    par_div0 = DiscretePartDeriv(discr_space, axis=0, zero_padding=True)
-    par_div1 = DiscretePartDeriv(discr_space, axis=1, zero_padding=True)
+    partial_0 = DiscretePartDeriv(discr_space, axis=0, zero_padding=True)
+    partial_1 = DiscretePartDeriv(discr_space, axis=1, zero_padding=True)
 
     # discretized space vector
-    f = par_div0.domain.element(data)
+    vec = partial_0.domain.element(data)
 
     # partial derivative
-    par_div_f0 = par_div0(f)
-    par_div_f1 = par_div1(f)
+    partial_vec_0 = partial_0(vec)
+    partial_vec_1 = partial_1(vec)
 
-    assert par_div_f0 != par_div_f1
-    assert all_equal(par_div_f0.asarray(), dfe0)
-    assert all_equal(par_div_f1.asarray(), dfe1)
+    assert partial_vec_0 != partial_vec_1
+    assert all_equal(partial_vec_0.asarray(), dfe0)
+    assert all_equal(partial_vec_1.asarray(), dfe1)
 
     # operator
-    par_div0 = DiscretePartDeriv(discr_space, axis=1, dx=0.2, edge_order=2,
-                                 zero_padding=True)
+    partial_0 = DiscretePartDeriv(discr_space, axis=1, dx=0.2, edge_order=2,
+                                  zero_padding=True)
 
     # adjoint not implemented
     with pytest.raises(NotImplementedError):
-        par_div0.adjoint
+        partial_0.adjoint
 
 
 @skip_if_no_cuda
@@ -203,15 +203,15 @@ def test_discr_part_deriv_cuda():
     discr_space = uniform_discr(0, data.size, data.shape, impl='cuda')
 
     # operator
-    par_div = DiscretePartDeriv(discr_space, zero_padding=True)
+    partial = DiscretePartDeriv(discr_space, zero_padding=True)
 
     # discretized space vector
-    discr_vec = par_div.domain.element(data)
+    discr_vec = partial.domain.element(data)
 
     # apply operator
-    par_div_vec = par_div(discr_vec)
+    partial_vec = partial(discr_vec)
 
-    assert all_equal(par_div_vec.asarray(), dfe)
+    assert all_equal(partial_vec, dfe)
 
 
 def ndvolume(lin_size, ndim, dtype=np.float64):
@@ -227,11 +227,11 @@ def ndvolume(lin_size, ndim, dtype=np.float64):
         The type of the output array
 
     """
-    s = [1]
+    vec = [1]
     vol = np.arange(lin_size, dtype=dtype)
     for _ in range(ndim - 1):
-        s.insert(0, lin_size)
-        vol = vol * vol.reshape(s)
+        vec.insert(0, lin_size)
+        vol = vol * vol.reshape(vec)
     return vol
 
 
@@ -247,6 +247,10 @@ def test_discrete_gradient():
     data = np.array([[0., 1., 2., 3., 4.],
                      [1., 2., 3., 4., 5.],
                      [2., 3., 4., 5., 6.]])
+
+    data = np.array([[0., 1., 2., 3., 4.],
+                     [0., 1., 2., 3., 4.],
+                     [0., 1., 2., 3., 4.]])
 
     # DiscreteLp Vector
     discr_space = uniform_discr([0, 0], [6, 2.5], data.shape)

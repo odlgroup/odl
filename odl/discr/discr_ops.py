@@ -29,8 +29,6 @@ import numpy as np
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 from odl.discr.lp_discr import DiscreteLp
-from odl.space.ntuples import Rn
-from odl.space.cu_ntuples import CudaRn
 
 
 __all__ = ('DiscretePartDeriv', 'DiscreteGradient', 'DiscreteDivergence')
@@ -76,7 +74,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
 
     Examples
     --------
-    >>> f = np.array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
+    >>> f = np.array([ 0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
     >>> finite_diff(f)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
     >>> finite_diff(f, axis=0, dx=1.0, edge_order=2, zero_padding=False)
@@ -108,8 +106,10 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
                          "dimensions ({1}).".format(axis, ndim))
 
     if f_data.shape[axis] < 2:
-        raise ValueError("shape of array too small to calculate a numerical "
-                         "gradient, at least two elements are required.")
+        raise ValueError("shape ({0}) of array too small to calculate a "
+                         "numerical gradient, at least two elements are "
+                         "required.".format(f_data.shape))
+
     if out is None:
         out = np.empty_like(f_data)
     else:
@@ -122,7 +122,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
         raise ValueError("edge order ({0}) not valid".format(edge_order))
 
     if dx <= 0:
-        raise ValueError("step length is zero.")
+        raise ValueError("step length ({0}) not positive.".format(dx))
     else:
         dx = float(dx)
 
@@ -430,7 +430,7 @@ class DiscreteDivergence(Operator):
         dx = self.range.grid.stride
 
         arr = out.asarray()
-        tmp = np.zeros(out.shape, out.dtype, order=out.space.order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
         for axis in range(ndim):
             finite_diff(x[axis], out=tmp, axis=axis, dx=dx[axis],
                         edge_order=2, zero_padding=True)
