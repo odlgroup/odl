@@ -28,14 +28,12 @@ import numpy as np
 import pytest
 
 # ODL imports
+import odl
 from odl.discr.lp_discr import uniform_discr
 from odl.discr.discr_ops import (finite_diff, DiscretePartDeriv,
                                  DiscreteGradient, DiscreteDivergence)
 from odl.space.ntuples import Rn
-from odl.util.testutils import almost_equal, all_equal
-from odl.space.cu_ntuples import CUDA_AVAILABLE
-
-pytestmark = pytest.mark.skipif("not CUDA_AVAILABLE")
+from odl.util.testutils import almost_equal, all_equal, skip_if_no_cuda
 
 
 def test_finite_diff():
@@ -186,6 +184,7 @@ def test_discr_part_deriv():
         par_div0.adjoint
 
 
+@skip_if_no_cuda
 def test_discr_part_deriv_cuda():
     """Discretized partial derivative using CUDA."""
 
@@ -288,6 +287,7 @@ def test_discrete_gradient():
         grad(dom_vec)
 
 
+@skip_if_no_cuda
 def test_discrete_gradient_cuda():
     """Discretized spatial gradient operator using CUDA."""
 
@@ -377,6 +377,7 @@ def test_discrete_divergence():
         div(dom_vec)
 
 
+@skip_if_no_cuda
 def test_discrete_divergence_cuda():
     """Discretized spatial divergence operator using CUDA."""
 
