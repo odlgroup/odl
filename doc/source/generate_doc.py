@@ -54,7 +54,8 @@ def import_submodules(package, recursive=True):
     if isinstance(package, str):
         package = importlib.import_module(package)
     results = {}
-    for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+    for loader, name, is_pkg in pkgutil.walk_packages(package.__path__,
+                                                      onerror=lambda x: None):
         full_name = package.__name__ + '.' + name
         results[full_name] = importlib.import_module(full_name)
         if recursive and is_pkg:
