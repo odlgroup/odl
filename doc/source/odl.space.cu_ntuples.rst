@@ -38,21 +38,12 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-   ~odl.space.cu_ntuples.abs
    ~odl.space.cu_ntuples.add_scalar
-   ~odl.space.cu_ntuples.arccos
-   ~odl.space.cu_ntuples.arcsin
-   ~odl.space.cu_ntuples.cos
    ~odl.space.cu_ntuples.cu_weighted_dist
    ~odl.space.cu_ntuples.cu_weighted_inner
    ~odl.space.cu_ntuples.cu_weighted_norm
    ~odl.space.cu_ntuples.divide_vector_vector
-   ~odl.space.cu_ntuples.exp
-   ~odl.space.cu_ntuples.log
    ~odl.space.cu_ntuples.max_vector_scalar
    ~odl.space.cu_ntuples.max_vector_vector
-   ~odl.space.cu_ntuples.sign
-   ~odl.space.cu_ntuples.sin
-   ~odl.space.cu_ntuples.sqrt
    ~odl.space.cu_ntuples.sum
 

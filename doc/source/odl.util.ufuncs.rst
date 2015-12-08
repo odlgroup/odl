@@ -28,6 +28,7 @@ Classes
 .. autosummary::
    :toctree: generated/
 
+   ~odl.util.ufuncs.CudaNtuplesVectorUFuncs
    ~odl.util.ufuncs.DiscreteLpVectorUFuncs
    ~odl.util.ufuncs.NtuplesBaseVectorUFuncs
    ~odl.util.ufuncs.NtuplesVectorUFuncs

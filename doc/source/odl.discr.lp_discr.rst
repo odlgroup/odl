@@ -24,5 +24,5 @@ Functions
    :toctree: generated/
 
    ~odl.discr.lp_discr.uniform_discr
-   ~odl.discr.lp_discr.uniform_discr_space
+   ~odl.discr.lp_discr.uniform_discr_fromspace
 
