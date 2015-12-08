@@ -43,11 +43,10 @@ import math as m
 
 # ODL imports
 from odl.set.sets import Set, UniversalSet
-from odl.util.exceptions import (LinearSpaceTypeError,
-                                 LinearSpaceNotImplementedError)
 
 
-__all__ = ('LinearSpace', 'LinearSpaceVector')
+__all__ = ('LinearSpace', 'LinearSpaceVector', 'UniversalSpace',
+           'LinearSpaceTypeError', 'LinearSpaceTypeError')
 
 
 class LinearSpace(Set):
@@ -774,6 +773,22 @@ class UniversalSpace(LinearSpace):
         Dummy membership check, `True` for any `LinearSpaceVector`.
         """
         return isinstance(other, LinearSpaceVector)
+
+
+class LinearSpaceTypeError(TypeError):
+    """Exception for type errors in `LinearSpace`'s.
+
+    These are raised when the wrong type of element is fed to
+    `LinearSpace.lincomb` and related functions.
+    """
+
+
+class LinearSpaceNotImplementedError(NotImplementedError):
+    """Exception for not implemented errors in `LinearSpace`'s.
+
+    These are raised when a method in `LinearSpace` that has not been
+    defined in a specific space is called.
+    """
 
 
 if __name__ == '__main__':

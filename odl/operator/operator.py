@@ -31,14 +31,14 @@ from numbers import Number, Integral
 from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
-from odl.util.exceptions import (OpDomainError, OpRangeError,
-                                 OpNotImplementedError)
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
            'FunctionalLeftVectorMult',
            'OperatorLeftVectorMult', 'OperatorRightVectorMult',
-           'OperatorPointwiseProduct', 'simple_operator')
+           'OperatorPointwiseProduct', 'simple_operator',
+           'OpTypeError', 'OpDomainError', 'OpRangeError',
+           'OpNotImplementedError')
 
 
 def _bound_method(function):
@@ -1460,6 +1460,39 @@ class OperatorRightVectorMult(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return '{} * {}'.format(self._op, self._vector)
+
+
+class OpTypeError(TypeError):
+    """Exception for operator type errors.
+
+    Domain errors are raised by `Operator` subclasses when trying to call
+    them with input not in the domain (`Operator.domain`) or with the wrong
+    range (`Operator.range`).
+    """
+
+
+class OpDomainError(OpTypeError):
+    """Exception for domain errors.
+
+    Domain errors are raised by `Operator` subclasses when trying to call
+    them with input not in the domain (`Operator.domain`).
+    """
+
+
+class OpRangeError(OpTypeError):
+    """Exception for domain errors.
+
+    Domain errors are raised by `Operator` subclasses when the returned
+    value does not lie in the range (`Operator.range`).
+    """
+
+
+class OpNotImplementedError(NotImplementedError):
+    """Exception for not implemented errors in `LinearSpace`'s.
+
+    These are raised when a method in `LinearSpace` that has not been
+    defined in a specific space is called.
+    """
 
 
 def simple_operator(call=None, apply=None, inv=None, deriv=None,

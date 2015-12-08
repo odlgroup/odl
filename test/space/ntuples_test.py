@@ -30,14 +30,14 @@ import scipy as sp
 # ODL imports
 from odl import Ntuples, Fn, FnVector, Rn, Cn
 from odl.operator.operator import Operator
+from odl.set.space import LinearSpaceTypeError
 from odl.space.ntuples import (
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting, FnNoWeighting,
     FnCustomInnerProduct, FnCustomNorm, FnCustomDist,
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
-from odl.util.exceptions import LinearSpaceTypeError
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
-from odl.util.ufuncs import UFUNCS, NtuplesVectorUFuncs
+from odl.util.ufuncs import UFUNCS
 
 # TODO: add tests for:
 # * inner, norm, dist as free functions

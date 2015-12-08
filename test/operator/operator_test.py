@@ -31,8 +31,8 @@ import odl
 from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
-                 MatVecOperator)
-from odl.util.exceptions import OpDomainError, OpRangeError
+                 MatVecOperator,
+                 OpDomainError, OpRangeError)
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
