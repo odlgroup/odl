@@ -26,7 +26,7 @@ from builtins import super
 
 
 __all__ = ('OpTypeError', 'OpDomainError', 'OpRangeError',
-           'OperatorNotImplementedError', 'LinearSpaceTypeError',
+           'OpNotImplementedError', 'LinearSpaceTypeError',
            'LinearSpaceNotImplementedError')
 
 
@@ -64,7 +64,7 @@ class OpRangeError(OpTypeError):
         super().__init__(*args, **kwargs)
 
 
-class OperatorNotImplementedError(NotImplementedError):
+class OpNotImplementedError(NotImplementedError):
     """Exception for not implemented errors in `LinearSpace`'s.
 
     These are raised when a method in `LinearSpace` that has not been
