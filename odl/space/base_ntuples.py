@@ -361,9 +361,10 @@ class FnBase(NtuplesBase, LinearSpace):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 
         if is_real_dtype(self.dtype):
-            self._field = RealNumbers()
+            field = RealNumbers()
         else:
-            self._field = ComplexNumbers()
+            field = ComplexNumbers()
+        LinearSpace.__init__(self, field)
 
     @abstractmethod
     def zero(self):
@@ -380,11 +381,6 @@ class FnBase(NtuplesBase, LinearSpace):
     @abstractmethod
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to ``out``."""
-
-    @property
-    def field(self):
-        """The field of this space."""
-        return self._field
 
     @property
     def element_type(self):

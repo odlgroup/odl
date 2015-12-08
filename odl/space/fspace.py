@@ -343,13 +343,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             raise TypeError('field {!r} not a RealNumbers or '
                             'ComplexNumbers instance.'.format(field))
 
-        super().__init__(dom, field)
-        self._field = field
-
-    @property
-    def field(self):
-        """Return the field of this space."""
-        return self._field
+        FunctionSet.__init__(self, dom, field)
+        LinearSpace.__init__(self, field)
 
     def element(self, fcall=None, fapply=None):
         """Create a `FunctionSpace` element.

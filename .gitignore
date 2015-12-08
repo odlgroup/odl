@@ -55,6 +55,7 @@ coverage.xml
 doc/_build/
 doc/source/generated
 doc/source/odl_interface
+doc/source/odl*.rst
 
 # PyBuilder
 target/

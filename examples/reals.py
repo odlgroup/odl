@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -23,6 +23,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 import odl
 
@@ -31,7 +32,7 @@ class Reals(odl.LinearSpace):
     """The real numbers."""
 
     def __init__(self):
-        self._field = odl.RealNumbers()
+        super().__init__(odl.RealNumbers())
 
     def _inner(self, x1, x2):
         return x1.__val__ * x2.__val__
@@ -41,10 +42,6 @@ class Reals(odl.LinearSpace):
 
     def _multiply(self, x1, x2, out):
         out.__val__ = x1.__val__ * x2.__val__
-
-    @property
-    def field(self):
-        return self._field
 
     def __eq__(self, other):
         return isinstance(other, Reals)
