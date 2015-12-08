@@ -38,4 +38,3 @@ from .graphics import *
 __all__ += graphics.__all__
 
 from . import ufuncs
-from . import exceptions
