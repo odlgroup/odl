@@ -2,6 +2,7 @@ import pkgutil
 import odl
 import inspect
 import importlib
+import sys
 
 __all__ = ('make_interface',)
 
