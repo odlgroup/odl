@@ -21,6 +21,7 @@ import sphinx_rtd_theme
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if on_rtd:
+    raise Exception(os.getcwd())
     import shutil
     shutil.rmtree('/generated')
     
