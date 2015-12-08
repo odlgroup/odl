@@ -20,6 +20,11 @@ import sphinx_rtd_theme
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
+if on_rtd:
+    import shutil
+    shutil.rmtree('/generated')
+    
+
 # Mock modules for Read The Docs to enable autodoc
 def mock_modules(modules):
     if sys.version_info < (3, 3):
