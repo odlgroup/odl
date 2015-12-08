@@ -24,7 +24,7 @@ Back and forward projectors for PET.
 objects of STIR projectors and back-projectors, these can be used to wrap a
 given projector.
 
-`projector_from_file` allows users a easy way to create a
+`stir_projector_from_file` allows users a easy way to create a
 `ForwardProjectorByBinWrapper` by giving file paths to the required templates.
 
 See the STIR `webpage
