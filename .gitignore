@@ -81,4 +81,11 @@ target/
 .spyderproject
 .spyderworkspace
 
+# PyCharm project files
+.idea
+
+# IPyhton notebook files
+*.ipynb
+.ipynb_checkpoints
+
 # Documentation build files
