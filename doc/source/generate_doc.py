@@ -2,7 +2,6 @@ import pkgutil
 import odl
 import inspect
 import importlib
-import sys
 
 __all__ = ('make_interface',)
 
@@ -48,16 +47,17 @@ string = """{shortname}
 
 def make_interface():
 
-    sys.path.append(odl.__path__)
-
     modnames = [modname for _, modname, _ in pkgutil.walk_packages(
         path=odl.__path__, prefix=odl.__name__ + '.', onerror=lambda x: None)]
 
     modnames += ['odl']
 
     for modname in modnames:
+        if not modname.startswith('odl'):
+            modname = 'odl.' + modname
+    
         shortmodname = modname.split('.')[-1]
-        print('generated: ' + modname + '.rst')
+        print('{: <16} : generated {}.rst'.format(shortmodname, modname))
 
         line = '=' * len(shortmodname)
 
