@@ -21,9 +21,13 @@ import sphinx_rtd_theme
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if on_rtd:
-    raise Exception(os.getcwd())
     import shutil
-    shutil.rmtree('/generated')
+    shutil.rmtree('generated')
+    
+    cwd = os.getcwd()
+    os.chdir('../')
+    os.system('python generate_doc.py')
+    os.chdir(cwd)
     
 
 # Mock modules for Read The Docs to enable autodoc
