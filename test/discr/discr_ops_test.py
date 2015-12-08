@@ -29,8 +29,8 @@ import pytest
 
 # ODL imports
 from odl.discr.lp_discr import uniform_discr, FunctionSpace, IntervalProd
-from discr.discr_ops import (finite_diff, DiscretePartDeriv,
-                             DiscreteGradient, DiscreteDivergence)
+from odl.discr.discr_ops import (finite_diff, DiscretePartDeriv,
+                                 DiscreteGradient, DiscreteDivergence)
 from odl.space.ntuples import Rn
 from odl.set.domain import Rectangle
 from odl.util.testutils import almost_equal, all_equal

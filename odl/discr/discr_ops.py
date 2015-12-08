@@ -200,6 +200,8 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     return out
 
 
+# TODO: CUDA support
+
 class DiscretePartDeriv(Operator):
     """Calculate the discrete partial derivative along a given axis.
 
@@ -362,7 +364,6 @@ class DiscreteGradient(Operator):
             raise TypeError('invalid data space {}.'.format(
                 self.domain.dspace))
 
-
     @property
     def adjoint(self):
         """Return the adjoint operator given by the negative of the
@@ -453,8 +454,8 @@ class DiscreteDivergence(Operator):
                 else:
                     arr += tmp
 
-            out[:] = arr  # self assignment in case asarray is a view,
-                          # thus no overhead.
+            # self assignment in case asarray is a view, thus no overhead
+            out[:] = arr
 
         elif isinstance(self.domain.dspace, CudaRn):
             raise NotImplementedError('support for `CudaRn` to be '
@@ -462,7 +463,6 @@ class DiscreteDivergence(Operator):
         else:
             raise TypeError('invalid data space {}.'.format(
                 self.domain.dspace))
-
 
     @property
     def adjoint(self):
