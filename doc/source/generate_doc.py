@@ -44,12 +44,9 @@ string = """{shortname}
 {fun_string}
 """
 
+
 def import_submodules(package, recursive=True):
     """ Import all submodules of a module, recursively, including subpackages
-
-    :param package: package (name or actual module)
-    :type package: str | module
-    :rtype: dict[str, types.ModuleType]
     """
     if isinstance(package, str):
         package = importlib.import_module(package)
@@ -61,9 +58,9 @@ def import_submodules(package, recursive=True):
         if recursive and is_pkg:
             results.update(import_submodules(full_name))
     return results
-    
 
-def make_interface():        
+
+def make_interface():
     modnames = [modname for modname in import_submodules(odl)]
 
     modnames += ['odl']
@@ -71,7 +68,7 @@ def make_interface():
     for modname in modnames:
         if not modname.startswith('odl'):
             modname = 'odl.' + modname
-    
+
         shortmodname = modname.split('.')[-1]
         print('{: <16} : generated {}.rst'.format(shortmodname, modname))
 
