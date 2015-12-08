@@ -22,7 +22,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
 
 
 __all__ = ('OpTypeError', 'OpDomainError', 'OpRangeError',
@@ -38,9 +37,6 @@ class OpTypeError(TypeError):
     range (`Operator.range`).
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
 
 class OpDomainError(OpTypeError):
     """Exception for domain errors.
@@ -48,9 +44,6 @@ class OpDomainError(OpTypeError):
     Domain errors are raised by `Operator` subclasses when trying to call
     them with input not in the domain (`Operator.domain`).
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
 class OpRangeError(OpTypeError):
@@ -60,9 +53,6 @@ class OpRangeError(OpTypeError):
     value does not lie in the range (`Operator.range`).
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
 
 class OpNotImplementedError(NotImplementedError):
     """Exception for not implemented errors in `LinearSpace`'s.
@@ -70,9 +60,6 @@ class OpNotImplementedError(NotImplementedError):
     These are raised when a method in `LinearSpace` that has not been
     defined in a specific space is called.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
 class LinearSpaceTypeError(TypeError):
@@ -82,9 +69,6 @@ class LinearSpaceTypeError(TypeError):
     `LinearSpace.lincomb` and related functions.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
 
 class LinearSpaceNotImplementedError(NotImplementedError):
     """Exception for not implemented errors in `LinearSpace`'s.
@@ -92,6 +76,3 @@ class LinearSpaceNotImplementedError(NotImplementedError):
     These are raised when a method in `LinearSpace` that has not been
     defined in a specific space is called.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
