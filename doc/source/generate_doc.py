@@ -87,7 +87,7 @@ def make_interface():
             this_class_string = ''
 
 
-        text_file = open('source/' + modname + '.rst', "w")
+        text_file = open(modname + '.rst', "w")
         text_file.write(string.format(shortname=shortmodname,
                                       name=modname,
                                       line=line,

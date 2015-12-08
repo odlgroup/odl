@@ -62,11 +62,8 @@ if on_rtd:
         shutil.rmtree('generated')
     
     # Generate interface
-    cwd = os.getcwd()
-    os.chdir('../')
     from generate_doc import make_interface
     make_interface()
-    os.chdir(cwd)
     
 # add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
