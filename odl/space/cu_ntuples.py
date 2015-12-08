@@ -82,7 +82,7 @@ _add_if_exists(np.uint8, 'CudaVectorUInt8')
 _add_if_exists(np.uint16, 'CudaVectorUInt16')
 _add_if_exists(np.uint32, 'CudaVectorUInt32')
 _add_if_exists(np.uint64, 'CudaVectorUInt64')
-CUDA_DTYPES = tuple(set(CUDA_DTYPES))  # Remove duplicates
+CUDA_DTYPES = list(set(CUDA_DTYPES))  # Remove duplicates
 
 
 class CudaNtuples(NtuplesBase):
@@ -104,7 +104,7 @@ class CudaNtuples(NtuplesBase):
             Check ``CUDA_DTYPES`` for a list of available data types.
         """
 
-        if dtype not in _TYPE_MAP_NPY2CUDA.keys():
+        if np.dtype(dtype) not in _TYPE_MAP_NPY2CUDA.keys():
             raise TypeError('data type {!r} not supported in CUDA'
                             ''.format(dtype))
 
@@ -1574,7 +1574,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         """
         return (isinstance(other, CudaFnCustomInnerProduct) and
                 self._inner_impl == other._inner_impl and
-                super().__eq__(other))
+                FnWeightingBase.__eq__(self, other))
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1582,7 +1582,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         if self._dist_using_inner:
             inner_fstr += ',dist_using_inner={dist_u_i}'
 
-        inner_str = inner_fstr.format(self.inner,
+        inner_str = inner_fstr.format(self._inner_impl,
                                       dist_u_i=self._dist_using_inner)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
