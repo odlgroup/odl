@@ -47,6 +47,8 @@ string = """{shortname}
 
 def make_interface():
 
+    sys.path.append(odl.__path__)
+
     modnames = [modname for _, modname, _ in pkgutil.walk_packages(
         path=odl.__path__, prefix=odl.__name__ + '.', onerror=lambda x: None)]
 
@@ -58,6 +60,7 @@ def make_interface():
 
         line = '=' * len(shortmodname)
 
+        print(modname)
         module = importlib.import_module(modname)
 
         docstring = module.__doc__
