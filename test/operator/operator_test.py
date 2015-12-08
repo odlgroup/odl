@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -31,7 +31,8 @@ import odl
 from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
-                 MatVecOperator)
+                 MatVecOperator,
+                 OpDomainError, OpRangeError)
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
@@ -362,28 +363,28 @@ def test_type_errors():
     Aop.adjoint(r3Vec1, r3Vec2)
 
     # Test that erroneous usage raises TypeError
-    with pytest.raises(TypeError):
+    with pytest.raises(OpDomainError):
         Aop(r4Vec1)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpDomainError):
         Aop.adjoint(r4Vec1)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpRangeError):
         Aop(r3Vec1, r4Vec1)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpRangeError):
         Aop.adjoint(r3Vec1, r4Vec1)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpDomainError):
         Aop(r4Vec1, r3Vec1)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpDomainError):
         Aop.adjoint(r4Vec1, r3Vec1)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpDomainError):
         Aop(r4Vec1, r4Vec2)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpDomainError):
         Aop.adjoint(r4Vec1, r4Vec2)
 
 
@@ -434,10 +435,11 @@ def test_functional_out():
     x = r3.element([1, 2, 3])
 
     op = SumFunctional(r3)
-    out = op.range.element()
 
+    # No out parameter allowed with functionals
+    out = 0
     with pytest.raises(TypeError):
-        print(op(x, out=out))
+        op(x, out=out)
 
 
 def test_functional_adjoint():

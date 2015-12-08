@@ -45,7 +45,8 @@ import math as m
 from odl.set.sets import Set, UniversalSet
 
 
-__all__ = ('LinearSpace', 'LinearSpaceVector', 'UniversalSpace')
+__all__ = ('LinearSpace', 'LinearSpaceVector', 'UniversalSpace',
+           'LinearSpaceTypeError', 'LinearSpaceTypeError')
 
 
 class LinearSpace(Set):
@@ -135,8 +136,9 @@ class LinearSpace(Set):
         resort to `inner` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError('inner product not implemented in space {!r}'
-                                  ''.format(self))
+        raise LinearSpaceNotImplementedError('inner product not implemented'
+                                             'in space {!r}'
+                                             ''.format(self))
 
     def _multiply(self, x1, x2, out):
         """Calculate the pointwise multiplication out = x1 * x2.
@@ -145,8 +147,9 @@ class LinearSpace(Set):
         resort to `multiply` which is type-checked.
         """
         # No default implementation possible
-        raise NotImplementedError('multiplication not implemented in space '
-                                  '{!r}'.format(self))
+        raise LinearSpaceNotImplementedError('multiplication not implemented'
+                                             'in space '
+                                             '{!r}'.format(self))
 
     def one(self):
         """A one vector in this space.
@@ -158,7 +161,7 @@ class LinearSpace(Set):
         v : `LinearSpaceVector`
             The one vector of this space
         """
-        raise NotImplementedError('This space has no one')
+        raise LinearSpaceNotImplementedError('This space has no one')
 
     # Default methods
     def zero(self):
@@ -236,16 +239,18 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise TypeError('output vector {!r} not in space {!r}.'
-                            ''.format(out, self))
+            raise LinearSpaceTypeError('output vector {!r} not in space {!r}.'
+                                       ''.format(out, self))
 
         if a not in self.field:
-            raise TypeError('first scalar {!r} not in the field {!r} of the '
-                            'space {!r}.'.format(a, self.field, self))
+            raise LinearSpaceTypeError('first scalar {!r} not in the field'
+                                       '{!r} of the space {!r}.'
+                                       ''.format(a, self.field, self))
 
         if x1 not in self:
-            raise TypeError('first input vector {!r} not in space {!r}.'
-                            ''.format(x1, self))
+            raise LinearSpaceTypeError('first input vector {!r}'
+                                       'not in space {!r}.'
+                                       ''.format(x1, self))
 
         if b is None:  # Single argument
             if x2 is not None:
@@ -257,12 +262,13 @@ class LinearSpace(Set):
             return out
         else:  # Two arguments
             if b not in self.field:
-                raise TypeError('second scalar {!r} not in the field {!r} of '
-                                'the space {!r}.'.format(b, self.field, self))
+                raise LinearSpaceTypeError('second scalar {!r} not in the'
+                                           'field {!r} of the space {!r}.'
+                                           ''.format(b, self.field, self))
 
             if x2 not in self:
-                raise TypeError('second input vector {!r} not in space {!r}.'
-                                ''.format(x2, self))
+                raise LinearSpaceTypeError('second input vector {!r} not'
+                                           'in space {!r}.'.format(x2, self))
 
             # Call method
             self._lincomb(a, x1, b, x2, out)
@@ -285,11 +291,11 @@ class LinearSpace(Set):
                Distance between vectors
         """
         if x1 not in self:
-            raise TypeError('first vector {!r} not in space {!r}'
-                            ''.format(x1, self))
+            raise LinearSpaceTypeError('first vector {!r} not in space {!r}'
+                                       ''.format(x1, self))
         if x2 not in self:
-            raise TypeError('second vector {!r} not in space {!r}'
-                            ''.format(x2, self))
+            raise LinearSpaceTypeError('second vector {!r} not in space {!r}'
+                                       ''.format(x2, self))
 
         return float(self._dist(x1, x2))
 
@@ -307,7 +313,8 @@ class LinearSpace(Set):
             Norm of the vector
         """
         if x not in self:
-            raise TypeError('vector {!r} not in space {!r}'.format(x, self))
+            raise LinearSpaceTypeError('vector {!r} not in space {!r}'
+                                       ''.format(x, self))
 
         return float(self._norm(x))
 
@@ -328,11 +335,11 @@ class LinearSpace(Set):
             Product of the vectors, same as ``out`` if given.
         """
         if x1 not in self:
-            raise TypeError('first vector {!r} not in space {!r}'
-                            ''.format(x1, self))
+            raise LinearSpaceTypeError('first vector {!r} not in space {!r}'
+                                       ''.format(x1, self))
         if x2 not in self:
-            raise TypeError('second vector {!r} not in space {!r}'
-                            ''.format(x2, self))
+            raise LinearSpaceTypeError('second vector {!r} not in space {!r}'
+                                       ''.format(x2, self))
 
         return self.field.element(self._inner(x1, x2))
 
@@ -359,15 +366,15 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise TypeError('out {!r} not in space {!r}'
-                            ''.format(out, self))
+            raise LinearSpaceTypeError('out {!r} not in space {!r}'
+                                       ''.format(out, self))
 
         if x1 not in self:
-            raise TypeError('x1 {!r} not in space {!r}'
-                            ''.format(x1, self))
+            raise LinearSpaceTypeError('x1 {!r} not in space {!r}'
+                                       ''.format(x1, self))
         if x2 not in self:
-            raise TypeError('x2 {!r} not in space {!r}'
-                            ''.format(x2, self))
+            raise LinearSpaceTypeError('x2 {!r} not in space {!r}'
+                                       ''.format(x2, self))
 
         self._multiply(x1, x2, out)
         return out
@@ -395,15 +402,15 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise TypeError('out {!r} not in space {!r}'
-                            ''.format(out, self))
+            raise LinearSpaceTypeError('out {!r} not in space {!r}'
+                                       ''.format(out, self))
 
         if x1 not in self:
-            raise TypeError('x1 {!r} not in space {!r}'
-                            ''.format(x1, self))
+            raise LinearSpaceTypeError('x1 {!r} not in space {!r}'
+                                       ''.format(x1, self))
         if x2 not in self:
-            raise TypeError('x2 {!r} not in space {!r}'
-                            ''.format(x2, self))
+            raise LinearSpaceTypeError('x2 {!r} not in space {!r}'
+                                       ''.format(x2, self))
 
         self._divide(x1, x2, out)
         return out
@@ -718,7 +725,10 @@ class LinearSpaceVector(object):
 
 
 class UniversalSpace(LinearSpace):
-    """A dummy linear space class mostly raising `NotImplementedError`."""
+    """A dummy linear space class.
+
+    Mostly raising `LinearSpaceNotImplementedError`.
+    """
 
     def __init__(self):
         """Initialize a universal space"""
@@ -727,50 +737,50 @@ class UniversalSpace(LinearSpace):
     def element(self, inp=None):
         """Dummy element creation method.
 
-        raises `NotImplementedError`.
+        raises `LinearSpaceNotImplementedError`.
         """
-        raise NotImplementedError
+        raise LinearSpaceNotImplementedError
 
     def _lincomb(self, a, x1, b, x2, out):
         """Dummy linear combination.
 
-        raises `NotImplementedError`.
+        raises `LinearSpaceNotImplementedError`.
         """
-        raise NotImplementedError
+        raise LinearSpaceNotImplementedError
 
     def _dist(self, x1, x2):
         """Dummy distance method.
 
-        raises `NotImplementedError`.
+        raises `LinearSpaceNotImplementedError`.
         """
-        raise NotImplementedError
+        raise LinearSpaceNotImplementedError
 
     def _norm(self, x):
         """Dummy norm method.
 
-        raises `NotImplementedError`.
+        raises `LinearSpaceNotImplementedError`.
         """
-        raise NotImplementedError
+        raise LinearSpaceNotImplementedError
 
     def _inner(self, x1, x2):
         """Dummy inner product method.
 
-        raises `NotImplementedError`.
+        raises `LinearSpaceNotImplementedError`.
         """
-        raise NotImplementedError
+        raise LinearSpaceNotImplementedError
 
     def _multiply(self, x1, x2, out):
         """Dummy multiplication method.
 
-        raises `NotImplementedError`."""
-        raise NotImplementedError
+        raises `LinearSpaceNotImplementedError`."""
+        raise LinearSpaceNotImplementedError
 
     def _divide(self, x1, x2, out):
         """Dummy division method.
 
-        raises `NotImplementedError`.
+        raises `LinearSpaceNotImplementedError`.
         """
-        raise NotImplementedError
+        raise LinearSpaceNotImplementedError
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -785,6 +795,22 @@ class UniversalSpace(LinearSpace):
         Dummy membership check, `True` for any `LinearSpaceVector`.
         """
         return isinstance(other, LinearSpaceVector)
+
+
+class LinearSpaceTypeError(TypeError):
+    """Exception for type errors in `LinearSpace`'s.
+
+    These are raised when the wrong type of element is fed to
+    `LinearSpace.lincomb` and related functions.
+    """
+
+
+class LinearSpaceNotImplementedError(NotImplementedError):
+    """Exception for not implemented errors in `LinearSpace`'s.
+
+    These are raised when a method in `LinearSpace` that has not been
+    defined in a specific space is called.
+    """
 
 
 if __name__ == '__main__':
