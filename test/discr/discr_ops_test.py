@@ -28,7 +28,8 @@ import numpy as np
 import pytest
 
 # ODL imports
-from odl.discr.lp_discr import uniform_discr, FunctionSpace, IntervalProd
+from odl.discr.lp_discr import (uniform_discr_fromspace, FunctionSpace,
+                                IntervalProd)
 from odl.discr.discr_ops import (finite_diff, DiscretePartDeriv,
                                  DiscreteGradient, DiscreteDivergence)
 from odl.space.ntuples import Rn
@@ -49,11 +50,11 @@ def test_finite_diff():
     with pytest.raises(ValueError):
         finite_diff(f, edge_order=3)
     # zero padding uses second-order accurate edges
-        with pytest.raises(ValueError):
-            finite_diff(f, zero_padding=True, edge_order=1)
+    with pytest.raises(ValueError):
+        finite_diff(f, zero_padding=True, edge_order=1)
     # at least a two-element array is required
-        with pytest.raises(ValueError):
-            finite_diff(np.array([0.0]))
+    with pytest.raises(ValueError):
+        finite_diff(np.array([0.0]))
     # axis
     with pytest.raises(IndexError):
         finite_diff(f, axis=2)
@@ -103,8 +104,8 @@ def test_finite_diff():
     df2 = finite_diff(f, edge_order=2)
     assert all_equal(df1[1:-1], dfe[1:-1])
     assert all_equal(df2[1:-1], dfe[1:-1])
-    assert not df1[0] == df2[0]
-    assert not df1[-1] == df2[-1]
+    assert df1[0] != df2[0]
+    assert df1[-1] != df2[-1]
 
     # in-place evaluation
     out = np.zeros_like(f)
@@ -139,7 +140,7 @@ def test_discr_part_deriv():
 
     # discretized space
     space = FunctionSpace(Rectangle([0, 0], [2, 1]))
-    discr_space = uniform_discr(space, data.shape)
+    discr_space = uniform_discr_fromspace(space, data.shape)
 
     # operator
     par_div = DiscretePartDeriv(discr_space)
@@ -157,7 +158,7 @@ def test_discr_part_deriv():
     # partial derivative
     par_div_f2 = par_div(f)
 
-    assert not par_div_f1 == par_div_f2
+    assert par_div_f1 != par_div_f2
 
 
 def ndvolume(lin_size, ndim, dtype=np.float64):
@@ -193,7 +194,7 @@ def test_discrete_gradient():
         vsize = 3
         intvl = IntervalProd([0.] * ndim, [vsize] * ndim)
         space = FunctionSpace(intvl)
-        discr_space = uniform_discr(space, [vsize] * ndim)
+        discr_space = uniform_discr_fromspace(space, [vsize] * ndim)
         dom_vec = discr_space.element(ndvolume(vsize, ndim))
 
         # Gradient
@@ -205,13 +206,13 @@ def test_discrete_gradient():
     vsize = 3
     intvl = IntervalProd([0.] * ndim, [vsize] * ndim)
     space = FunctionSpace(intvl)
-    discr_space = uniform_discr(space, [vsize] * ndim)
+    discr_space = uniform_discr_fromspace(space, [vsize] * ndim)
     dom_vec = discr_space.element(ndvolume(vsize, ndim))
 
     # Gradient
     grad = DiscreteGradient(discr_space)
     grad_vec = grad(dom_vec)
-    assert len(grad_vec) is ndim
+    assert len(grad_vec) == ndim
 
     # Adjoint operator
     ran_vec = grad.range.element(
@@ -220,8 +221,8 @@ def test_discrete_gradient():
     adj_vec = adj(ran_vec)
     lhs = ran_vec.inner(grad_vec)
     rhs = dom_vec.inner(adj_vec)
-    assert not lhs == 0
-    assert not rhs == 0
+    assert lhs != 0
+    assert rhs != 0
     assert lhs == rhs
 
 
@@ -240,7 +241,7 @@ def test_discrete_divergence():
 
     # DiscreteLp
     space = FunctionSpace(Rectangle([0, 0], [6, 2.5]))
-    discr_space = uniform_discr(space, data.shape)
+    discr_space = uniform_discr_fromspace(space, data.shape)
 
     # Operator instance
     div = DiscreteDivergence(discr_space)
@@ -264,8 +265,8 @@ def test_discrete_divergence():
     # Adjoint condition
     lhs = ran_vec.inner(div_dom_vec)
     rhs = dom_vec.inner(adj_div_ran_vec)
-    assert not lhs == 0
-    assert not rhs == 0
+    assert lhs != 0
+    assert rhs != 0
     assert almost_equal(lhs, rhs)
 
     # Higher dimensional arrays
@@ -274,7 +275,7 @@ def test_discrete_divergence():
         # DiscreteLp Vector
         lin_size = 3
         space = FunctionSpace(IntervalProd([0.] * ndim, [lin_size] * ndim))
-        discr_space = uniform_discr(space, [lin_size] * ndim)
+        discr_space = uniform_discr_fromspace(space, [lin_size] * ndim)
 
         # Divergence
         div = DiscreteDivergence(discr_space)

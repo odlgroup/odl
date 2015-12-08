@@ -38,8 +38,7 @@ __all__ = ('DiscretePartDeriv', 'DiscreteGradient', 'DiscreteDivergence')
 
 def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
                 zero_padding=False):
-    """Calculate the partial derivative of ``f`` along a given ``axis`` using
-    discrete differences.
+    """Calculate the partial derivative of ``f`` along a given ``axis``.
 
     The partial derivative is computed using second-order accurate central
     differences in the interior and either first- or second-order accurate
@@ -114,15 +113,15 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     if out is None:
         out = np.empty_like(f_data)
     else:
-        if not out.shape == f.shape:
+        if out.shape != f.shape:
             raise ValueError(
                 "shape of `out` array ({0}) does not match the shape of "
                 "input array `f` ({1}).".format(out.shape, f.shape))
 
-    if edge_order not in {1, 2}:
+    if edge_order not in [1, 2]:
         raise ValueError("edge order ({0}) not valid".format(edge_order))
 
-    if dx == 0:
+    if dx <= 0:
         raise ValueError("step length is zero.")
     else:
         dx = float(dx)
@@ -254,12 +253,11 @@ class DiscretePartDeriv(Operator):
 
         Examples
         --------
-        >>> from odl import uniform_discr, FunctionSpace, Rectangle
+        >>> from odl import uniform_discr
         >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
         ...                  [ 0.,  2.,  4.,  6.,  8.]])
-        >>> space = FunctionSpace(Rectangle([0, 0], [2, 1]))
-        >>> disc = uniform_discr(space, data.shape)
-        >>> par_div = DiscretePartDeriv(disc)
+        >>> discr = uniform_discr([0, 0], [2, 1], data.shape)
+        >>> par_div = DiscretePartDeriv(discr)
         >>> f = par_div.domain.element(data)
         >>> par_div_f = par_div(f)
         >>> print(par_div_f)
@@ -280,13 +278,12 @@ class DiscretePartDeriv(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint."""
+        """Return the adjoint operator."""
         raise NotImplementedError('adjoint not implemented')
 
 
 class DiscreteGradient(Operator):
-    """Spatial gradient operator for `DiscreteLp` spaces with any number of
-    dimensions `DiscreteLp.ndim`.
+    """Spatial gradient operator for `DiscreteLp` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
     resulting product space vector. For the adjoint of the
@@ -326,26 +323,24 @@ class DiscreteGradient(Operator):
 
         Examples
         --------
-        >>> from odl import uniform_discr, FunctionSpace, Rectangle
-        >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
-        ...                  [ 0.,  2.,  4.,  6., 8.]])
-        >>> space = FunctionSpace(Rectangle([0,0], [2,1]))
-        >>> disc = uniform_discr(space, data.shape)
-        >>> f = disc.element(data)
-        >>> grad = DiscreteGradient(disc)
+        >>> from odl import uniform_discr
+        >>> data = np.array([[ 0., 1., 2., 3., 4.],
+        ...                  [ 0., 2., 4., 6., 8.]])
+        >>> discr = uniform_discr([0,0], [2,5], data.shape)
+        >>> f = discr.element(data)
+        >>> grad = DiscreteGradient(discr)
         >>> grad_f = grad(f)
         >>> print(grad_f[0])
         [[0.0, 1.0, 2.0, 3.0, 4.0],
          [-0.0, -0.5, -1.0, -1.5, -2.0]]
-        >>> print(grad_f[0])
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [-0.0, -0.5, -1.0, -1.5, -2.0]]
+        >>> print(grad_f[1])
+        [[0.5, 1.0, 1.0, 1.0, -1.5],
+         [1.0, 2.0, 2.0, 2.0, -3.0]]
         >>> g = grad.range.element((data, data ** 2))
-        >>> adj = grad.adjoint
-        >>> adj_g = adj(g)
+        >>> adj_g = grad.adjoint(g)
         >>> print(adj_g)
-        [[-2.5, -11.0, -22.0, -33.0, 18.5],
-         [-10.0, -39.5, -79.0, -118.5, 92.0]]
+        [[-0.5, -3.0, -6.0, -9.0, 0.5],
+         [-2.0, -7.5, -15.0, -22.5, 20.0]]
         >>> g.inner(grad_f) - f.inner(adj_g)
         0.0
         """
@@ -366,8 +361,10 @@ class DiscreteGradient(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint operator given by the negative of the
-        `DiscreteDivergence` operator assuming implicit zero padding.
+        """Return the adjoint operator.
+
+        Assuming implicit zero padding, the adjoint operator is given by the
+        negative of the `DiscreteDivergence` operator
 
         Note that the ``space`` argument of the `DiscreteDivergence`
         operator is not the range but the domain of the `DiscreteGradient`
@@ -377,8 +374,7 @@ class DiscreteGradient(Operator):
 
 
 class DiscreteDivergence(Operator):
-    """Divergence operator for `DiscreteLp` spaces with any number of
-    dimensions `DiscreteLp.ndim`.
+    """Divergence operator for `DiscreteLp` spaces.
 
     Calls helper function `finite_diff` for each component of the input
     product space vector. For the adjoint of the `DiscreteDivergence`
@@ -417,13 +413,12 @@ class DiscreteDivergence(Operator):
 
         Examples
         --------
-        >>> from odl import Rectangle, uniform_discr, FunctionSpace
+        >>> from odl import Rectangle, uniform_discr
         >>> data = np.array([[0., 1., 2., 3., 4.],
         ...                  [1., 2., 3., 4., 5.],
         ...                  [2., 3., 4., 5., 6.]])
-        >>> space = FunctionSpace(Rectangle([0, 0], [3, 5]))
-        >>> disc = uniform_discr(space, data.shape)
-        >>> div = DiscreteDivergence(disc)
+        >>> discr = uniform_discr([0, 0], [3, 5], data.shape)
+        >>> div = DiscreteDivergence(discr)
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
         >>> print(div_f)
@@ -431,8 +426,7 @@ class DiscreteDivergence(Operator):
          [2.0, 2.0, 2.0, 2.0, -1.0],
          [1.0, 0.0, -0.5, -1.0, -5.0]]
         >>> g = div.range.element(data ** 2)
-        >>> adj = div.adjoint
-        >>> adj_g = adj(g)
+        >>> adj_g = div.adjoint(g)
         >>> g.inner(div_f)
         -119.0
         >>> f.inner(adj_g)
@@ -466,8 +460,10 @@ class DiscreteDivergence(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint operator given by the negative of the
-        `DiscreteGradient` operator assuming implicit zero padding.
+        """Return the adjoint operator.
+
+        Assuming implicit zero padding the adjoint operator is given by the
+        negative of the `DiscreteGradient` operator.
         """
         return - DiscreteGradient(self.range)
 
