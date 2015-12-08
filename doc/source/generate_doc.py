@@ -3,6 +3,7 @@ import odl
 import inspect
 import importlib
 
+__all__ = ('make_interface',)
 
 module_string = """
 .. toctree::

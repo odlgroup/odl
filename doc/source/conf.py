@@ -62,6 +62,7 @@ if on_rtd:
         shutil.rmtree('generated')
     
     # Generate interface
+    sys.path.append(os.path.dirname(__file__))
     from generate_doc import make_interface
     make_interface()
     
