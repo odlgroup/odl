@@ -344,16 +344,13 @@ class DiscreteGradient(Operator):
         ndim = self.domain.grid.ndim
         dx = self.domain.grid.stride
 
-        if isinstance(self.domain.dspace, Rn):
-            for axis in range(ndim):
-                finite_diff(x_data, out=out[axis].asarray(), axis=axis,
-                            dx=dx[axis], edge_order=2, zero_padding=True)
-        elif isinstance(self.domain.dspace, CudaRn):
-            raise NotImplementedError('support for `CudaRn` to be '
-                                      'implemented.')
-        else:
-            raise TypeError('invalid data space {}.'.format(
-                self.domain.dspace))
+        for axis in range(ndim):
+            out_arr = out[axis].asarray()
+
+            finite_diff(x_data, out=out_arr, axis=axis,
+                        dx=dx[axis], edge_order=2, zero_padding=True)
+
+            out[axis][:] = out_arr
 
     @property
     def adjoint(self):
@@ -432,27 +429,18 @@ class DiscreteDivergence(Operator):
         ndim = self.range.grid.ndim
         dx = self.range.grid.stride
 
-        if isinstance(self.range.dspace, Rn):
+        arr = out.asarray()
+        tmp = np.zeros(out.shape, out.dtype, order=out.space.order)
+        for axis in range(ndim):
+            finite_diff(x[axis], out=tmp, axis=axis, dx=dx[axis],
+                        edge_order=2, zero_padding=True)
+            if axis == 0:
+                arr[:] = tmp
+            else:
+                arr += tmp
 
-            arr = out.asarray()
-            tmp = np.zeros(out.shape, out.dtype, order=out.space.order)
-            for axis in range(ndim):
-                finite_diff(x[axis], out=tmp, axis=axis, dx=dx[axis],
-                            edge_order=2, zero_padding=True)
-                if axis == 0:
-                    arr[:] = tmp
-                else:
-                    arr += tmp
-
-            # self assignment: no overhead in the case asarray is a view
-            out[:] = arr
-
-        elif isinstance(self.domain.dspace, CudaRn):
-            raise NotImplementedError('support for `CudaRn` to be '
-                                      'implemented.')
-        else:
-            raise TypeError('invalid data space {}.'.format(
-                self.domain.dspace))
+        # self assignment: no overhead in the case asarray is a view
+        out[:] = arr
 
     @property
     def adjoint(self):

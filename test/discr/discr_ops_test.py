@@ -28,20 +28,20 @@ import numpy as np
 import pytest
 
 # ODL imports
-from odl.discr.lp_discr import (uniform_discr_fromspace, uniform_discr,
-                                FunctionSpace, IntervalProd)
+from odl.discr.lp_discr import uniform_discr
 from odl.discr.discr_ops import (finite_diff, DiscretePartDeriv,
                                  DiscreteGradient, DiscreteDivergence)
 from odl.space.ntuples import Rn
-from odl.space.cu_ntuples import CudaRn
-from odl.set.domain import Rectangle
 from odl.util.testutils import almost_equal, all_equal
+from odl.space.cu_ntuples import CUDA_AVAILABLE
+
+pytestmark = pytest.mark.skipif("not CUDA_AVAILABLE")
 
 
 def test_finite_diff():
     """Finite differences test."""
 
-    # some array
+    # phantom data
     f = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
 
     # invalid parameter values
@@ -288,6 +288,41 @@ def test_discrete_gradient():
         grad(dom_vec)
 
 
+def test_discrete_gradient_cuda():
+    """Discretized spatial gradient operator using CUDA."""
+
+    # Check result of operator with explicit summation
+    # phantom data
+    data = np.array([[0., 1., 2., 3., 4.],
+                     [1., 2., 3., 4., 5.],
+                     [2., 3., 4., 5., 6.]])
+
+    # DiscreteLp Vector
+    discr_space = uniform_discr([0, 0], [6, 2.5], data.shape, impl='cuda')
+    dom_vec = discr_space.element(data)
+
+    # computation of gradient components with helper function
+    dx0, dx1 = discr_space.grid.stride
+    df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
+    df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
+
+    # gradient
+    grad = DiscreteGradient(discr_space)
+    grad_vec = grad(dom_vec)
+    assert len(grad_vec) == data.ndim
+    assert all_equal(grad_vec[0].asarray(), df0)
+    assert all_equal(grad_vec[1].asarray(), df1)
+
+    # adjoint operator
+    ran_vec = grad.range.element([data, data ** 2])
+    adj_vec = grad.adjoint(ran_vec)
+    lhs = ran_vec.inner(grad_vec)
+    rhs = dom_vec.inner(adj_vec)
+    assert lhs != 0
+    assert rhs != 0
+    assert lhs == rhs
+
+
 def test_discrete_divergence():
     """Discretized spatial divergence operator."""
 
@@ -340,6 +375,45 @@ def test_discrete_divergence():
         div = DiscreteDivergence(discr_space)
         dom_vec = div.domain.element([ndvolume(lin_size, ndim)] * ndim)
         div(dom_vec)
+
+
+def test_discrete_divergence_cuda():
+    """Discretized spatial divergence operator using CUDA."""
+
+    # Check result of operator with explicit summation
+    # phantom data
+    data = np.array([[0., 1., 2., 3., 4.],
+                     [1., 2., 3., 4., 5.],
+                     [2., 3., 4., 5., 6.]])
+
+    # DiscreteLp
+    discr_space = uniform_discr([0, 0], [1.5, 10], data.shape, impl='cuda')
+
+    # operator instance
+    div = DiscreteDivergence(discr_space)
+
+    # apply operator
+    dom_vec = div.domain.element([data, data])
+    div_dom_vec = div(dom_vec)
+
+    # computation of divergence with helper function
+    dx0, dx1 = discr_space.grid.stride
+    df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
+    df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
+
+    assert all_equal(df0 + df1, div_dom_vec.asarray())
+
+    # Adjoint operator
+    adj_div = div.adjoint
+    ran_vec = div.range.element(data ** 2)
+    adj_div_ran_vec = adj_div(ran_vec)
+
+    # Adjoint condition
+    lhs = ran_vec.inner(div_dom_vec)
+    rhs = dom_vec.inner(adj_div_ran_vec)
+    assert lhs != 0
+    assert rhs != 0
+    assert almost_equal(lhs, rhs)
 
 
 if __name__ == '__main__':
