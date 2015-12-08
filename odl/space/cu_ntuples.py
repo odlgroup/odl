@@ -1574,7 +1574,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         """
         return (isinstance(other, CudaFnCustomInnerProduct) and
                 self._inner_impl == other._inner_impl and
-                super().__eq__(other))
+                FnWeightingBase.__eq__(self, other))
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1582,7 +1582,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         if self._dist_using_inner:
             inner_fstr += ',dist_using_inner={dist_u_i}'
 
-        inner_str = inner_fstr.format(self.inner,
+        inner_str = inner_fstr.format(self._inner_impl,
                                       dist_u_i=self._dist_using_inner)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
