@@ -58,8 +58,8 @@ if on_rtd:
 
     # Remove generated files
     import shutil
-    raise Exception(os.getcwd())
-    shutil.rmtree('generated')
+    if os.path.exists('generated'):
+        shutil.rmtree('generated')
     
     # Generate interface
     cwd = os.getcwd()
