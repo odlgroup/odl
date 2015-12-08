@@ -113,7 +113,7 @@ Another example is matrix multiplication, which corresponds to operator composit
 
 .. _functional: https://en.wikipedia.org/wiki/Functional_(mathematics)
 
-All available operator arithmetic is shown below. `A`, `B` represent arbitrary `Operator`'s, `f` is a `Operator` with `Operator.range` a `Field` (sometimes called a functional_) and `a` is a scalar.
+All available operator arithmetic is shown below. ``A``, ``B`` represent arbitrary `Operator`'s, ``f`` is a `Operator` with `Operator.range` a `Field` (sometimes called a functional_) and ``a`` is a scalar.
 
 +------------------+-----------------+----------------------------+
 | Code             | Meaning         | Class                      |
