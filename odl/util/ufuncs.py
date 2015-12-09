@@ -302,6 +302,13 @@ for name, n_args, n_opt, descr in UFUNCS:
 
 
 # Optimizations for CUDA
+def _make_nullary_fun(name):
+    def fun(self):
+        return getattr(self.vector.data, name)()
+
+    fun.__doc__ = getattr(NtuplesBaseVectorUFuncs, name).__doc__
+    fun.__name__ = name
+    return fun
 
 
 def _make_unary_fun(name):
@@ -317,6 +324,7 @@ def _make_unary_fun(name):
 
 
 class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
+    # Ufuncs
     sin = _make_unary_fun('sin')
     cos = _make_unary_fun('cos')
     arcsin = _make_unary_fun('arcsin')
@@ -326,6 +334,12 @@ class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
     absolute = _make_unary_fun('absolute')
     sign = _make_unary_fun('sign')
     sqrt = _make_unary_fun('sqrt')
+
+    # Reductions
+    sum = _make_nullary_fun('sum')
+    prod = _make_nullary_fun('prod')
+    min = _make_nullary_fun('min')
+    max = _make_nullary_fun('max')
 
 
 # Optimized implementation of ufuncs since we can use the out parameter

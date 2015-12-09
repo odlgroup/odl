@@ -1097,7 +1097,7 @@ def _impl_test_reduction(fn, name):
     # Create some data
     x_arr, x = _vectors(fn, 1)
 
-    assert ufunc(x_arr) == getattr(x.ufunc, name)()
+    assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
 
 
 def test_reductions():
