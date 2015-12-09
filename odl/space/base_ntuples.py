@@ -28,19 +28,34 @@ from builtins import int
 from abc import ABCMeta, abstractmethod
 from math import sqrt
 import numpy as np
+import platform
 
 # ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
-    is_scalar_dtype, is_real_dtype)
+    is_scalar_dtype, is_real_dtype, is_floating_dtype)
 from odl.util.ufuncs import NtuplesBaseVectorUFuncs
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector',
            'FnBase', 'FnBaseVector',
            'FnWeightingBase')
+
+
+_TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
+                 np.dtype('float64'): np.dtype('float64'),
+                 np.dtype('complex64'): np.dtype('float32'),
+                 np.dtype('complex128'): np.dtype('float64')}
+
+_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
+                 np.dtype('float64'): np.dtype('complex128')}
+
+if platform.system() == 'Linux':
+    _TYPE_MAP_C2R.update({np.dtype('float128'): np.dtype('float128'),
+                          np.dtype('complex256'): np.dtype('float128')})
+    _TYPE_MAP_R2C.update({np.dtype('float128'): np.dtype('complex256')})
 
 
 class NtuplesBase(Set):
@@ -362,9 +377,37 @@ class FnBase(NtuplesBase, LinearSpace):
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()
+            self._real_dtype = self.dtype
+            self._is_real = True
         else:
             field = ComplexNumbers()
+            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+            self._is_real = False
+
+        self._is_floating = is_floating_dtype(self.dtype)
+
         LinearSpace.__init__(self, field)
+
+    @property
+    def real_dtype(self):
+        """The corresponding real data type of this space."""
+        return self._real_dtype
+
+    @property
+    def is_rn(self):
+        """If the space represents the set :math:`R^n`.
+
+        Tuples of real numbers.
+        """
+        return self._is_real and self._is_floating
+
+    @property
+    def is_cn(self):
+        """If the space represents the set :math:`C^n`.
+
+        Tuples of complex numbers.
+        """
+        return (not self._is_real) and self._is_floating
 
     @abstractmethod
     def zero(self):
