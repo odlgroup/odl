@@ -102,8 +102,8 @@ def out_shape_from_meshgrid(mg):
         return np.broadcast(*mg).shape
 
 
-def out_shape_from_array(arr, ndim):
-    """Get the output shape from an array for ``ndim`` dimensions."""
+def out_shape_from_array(arr):
+    """Get the output shape from an array."""
     if arr.ndim == 1:
         return arr.shape
     else:

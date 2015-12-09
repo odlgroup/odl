@@ -218,16 +218,16 @@ def vectorize(dtype=None, outarg='none'):
             return _vect_wrapper(x, out, **kwargs)
 
         outarg_ = str(outarg).lower()
-        if outarg_ not in ('none', 'positional', 'optional'):
-            raise ValueError('output arg type {!r} not understood.'
-                             ''.format(outarg))
 
         if outarg_ == 'none':
             return vect_wrapper_no_out
         elif outarg_ == 'positional':
             return vect_wrapper_pos_out
-        else:
+        elif outarg_ == 'optional':
             return vect_wrapper_opt_out
+        else:
+            raise ValueError('output arg type {!r} not understood.'
+                             ''.format(outarg))
     return vect_decorator
 
 
@@ -474,30 +474,6 @@ class FunctionSetVector(Operator):
                                  'domain {}, missing `contains_all()` '
                                  'method.'.format(self.domain))
 
-        # A. Pre-checks and preparations
-        # 1. - x = domain element (1), array (2), meshgrid (3)
-        #    - make x a (d, 1) array; set a flag that output shall be
-        #    scalar; apply case 2a2
-        #    - out_shape = (x.shape[1],)
-        # 1a3. out_shape = (x[0].shape[1],) if ndim == 1 else
-        #      np.broadcast(*x).shape
-        # 2a. (cont.) If vec_bounds_check, check domain.contains_all(x)
-        # 2b. x in domain? -> yes ok, no error; out is None? yes -> ok,
-        #     no -> error
-        #
-        # B. Evaluation and post-checks
-        # 1. out is None? (a/b)
-        # 1a. out = call(x)
-        # 1a1. out.shape == out_shape? -> error if no
-        #      If vec_bounds_check, check range.contains_all(out)
-        # 2b. vectorized? (1/2)
-        # 2b1. out is array and out.shape == out_shape? -> error if no;
-        #     call(x, out=out);
-        #     If vec_bounds_check, check range.contains_all(out)
-        # 2b2. error (out given but not vectorized)
-
-        # Make single input value an element if possible and use the
-        # vectorized array case; if not possible, just go on
         if x not in self.domain:
             try:
                 x = self.domain.element(x)
@@ -506,23 +482,11 @@ class FunctionSetVector(Operator):
             except (TypeError, ValueError):
                 scalar_out = False
 
-        # vectorized 1: array
+        # Check for input type and determine output shape
         if is_valid_input_array(x, self.domain.ndim):
-            if self.domain.ndim == 1:
-                if x.ndim == 2:
-                    x = x[0]
-                out_shape = x.shape
-            else:
-                out_shape = (x.shape[1],)
-
-        # vectorized 2: meshgrid
+            out_shape = out_shape_from_array(x)
         elif is_valid_input_meshgrid(x, self.domain.ndim):
-            # Broadcasting fails for only one vector (ndim == 1)
-            if self.domain.ndim == 1:
-                x = x[0]
-                out_shape = x.shape
-            else:
-                out_shape = np.broadcast(*x).shape
+            out_shape = out_shape_from_meshgrid(x)
         else:
             raise TypeError('argument {!r} not a valid vectorized '
                             'input. Expected an element of the domain '
@@ -530,41 +494,35 @@ class FunctionSetVector(Operator):
                             'or a length-{dom.ndim} meshgrid sequence.'
                             ''.format(x, dom=self.domain))
 
+        # Check bounds if specified
         if vec_bounds_check:
             if not self.domain.contains_all(x):
                 raise ValueError('input contains points outside '
                                  'the domain {}.'.format(self.domain))
 
+        # Call the function and check out shape, before or after
         if out is None:
             out = self._call(x, **kwargs)
+            if out_shape != (1,) and out.shape != out_shape:
+                raise ValueError('output shape {} not equal to shape '
+                                 '{} expected from input.'
+                                 ''.format(out.shape, out_shape))
+        else:
+            if not isinstance(out, np.ndarray):
+                raise TypeError('output {!r} not a `numpy.ndarray` '
+                                'instance.')
+            if out_shape != (1,) and out.shape != out_shape:
+                raise ValueError('output shape {} not equal to shape '
+                                 '{} expected from input.'
+                                 ''.format(out.shape, out_shape))
+            self._call(x, out=out, **kwargs)
 
-        if out_shape != (1,) and out.shape != out_shape:
-            raise ValueError('output shape {} not equal to shape '
-                             '{} expected from input.'
-                             ''.format(out.shape, out_shape))
-                if vec_bounds_check:
-                    if not self.range.contains_all(out):
-                        raise ValueError('output contains points outside '
-                                         'the range {}.'
-                                         ''.format(self.domain))
-        else:  # out is not None
-            if self.vectorized:
-                if not isinstance(out, np.ndarray):
-                    raise TypeError('output {!r} not a `numpy.ndarray` '
-                                    'instance.')
-                if out.shape != out_shape:
-                    raise ValueError('output shape {} not equal to shape '
-                                     '{} expected from input.'
-                                     ''.format(out.shape, out_shape))
-                self._call(x, out=out, **kwargs)
-                if vec_bounds_check:
-                    if not self.range.contains_all(out):
-                        raise ValueError('output contains points outside '
-                                         'the range {}.'
-                                         ''.format(self.domain))
-            else:  # not self.vectorized
-                raise ValueError('output parameter can only be specified '
-                                 'for vectorized functions.')
+        # Check output values
+        if vec_bounds_check:
+            if not self.range.contains_all(out):
+                raise ValueError('output contains points outside '
+                                 'the range {}.'
+                                 ''.format(self.domain))
 
         return out[0] if scalar_out else out
 
@@ -583,7 +541,6 @@ class FunctionSetVector(Operator):
         self._call_out_of_place = other._call_out_of_place
         self._call_has_out = other._call_has_out
         self._call_out_optional = other._call_out_optional
-        self._vectorized = other.vectorized
 
     def copy(self):
         """Create an identical (deep) copy of this vector."""
@@ -618,9 +575,7 @@ class FunctionSetVector(Operator):
         else:
             funcs_equal = self._call_out_of_place == other._call_out_of_place
 
-        return (self.space == other.space and
-                self.vectorized == other.vectorized and
-                funcs_equal)
+        return self.space == other.space and funcs_equal
 
     def __str__(self):
         """Return ``str(self)``"""
@@ -632,18 +587,12 @@ class FunctionSetVector(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``"""
-        inner_fstr = '{!r}'
-        if not self.vectorized:
-            inner_fstr += ', vectorized=False'
-
         if self._call_has_out:
             func = self._call_in_place
         else:
             func = self._call_out_of_place
 
-        inner_str = inner_fstr.format(func)
-
-        return '{!r}.element({})'.format(self.space, inner_str)
+        return '{!r}.element({!r})'.format(self.space, func)
 
 
 class FunctionSpace(FunctionSet, LinearSpace):
@@ -696,24 +645,15 @@ class FunctionSpace(FunctionSet, LinearSpace):
         else:
             return FunctionSet.element(self, fcall, vectorized=vectorized)
 
-    def zero(self, vectorized=True):
+    def zero(self):
         """The function mapping everything to zero.
 
-        Since `lincomb` is slow, we implement this function directly.
         This function is the additive unit in the function space.
 
-        Parameters
-        ----------
-        vectorized : bool
-            Whether or not the function supports vectorized
-            evaluation.
+        Since `lincomb` may be slow, we implement this function
+        directly.
         """
         dtype = complex if self.field == ComplexNumbers() else float
-        vectorized = bool(vectorized)
-
-        def zero_novec(_):
-            """The zero function, non-vectorized."""
-            return dtype(0.0)
 
         def zero_vec(x):
             """The zero function, vectorized."""
@@ -722,29 +662,17 @@ class FunctionSpace(FunctionSet, LinearSpace):
             else:
                 order = 'C'
 
-            bcast = np.broadcast(*x)
-            return np.zeros(bcast.shape, dtype=dtype, order=order)
+            out_shape = out_shape_from_meshgrid(x)
+            return np.zeros(out_shape, dtype=dtype, order=order)
 
-        zero_func = zero_vec if vectorized else zero_novec
-        return self.element(zero_func, vectorized=vectorized)
+        return self.element(zero_vec)
 
-    def one(self, vectorized=True):
+    def one(self):
         """The function mapping everything to one.
 
         This function is the multiplicative unit in the function space.
-
-        Parameters
-        ----------
-        vectorized : bool
-            Whether or not the function supports vectorized
-            evaluation.
         """
         dtype = complex if self.field == ComplexNumbers() else float
-        vectorized = bool(vectorized)
-
-        def one_novec(_):
-            """The one function, non-vectorized."""
-            return dtype(1.0)
 
         def one_vec(x):
             """The one function, vectorized."""
@@ -753,11 +681,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
             else:
                 order = 'C'
 
-            bcast = np.broadcast(*x)
-            return np.ones(bcast.shape, dtype=dtype, order=order)
+            out_shape = out_shape_from_meshgrid(x)
+            return np.ones(out_shape, dtype=dtype, order=order)
 
-        one_func = one_vec if vectorized else one_novec
-        return self.element(one_func, vectorized=vectorized)
+        return self.element(one_vec)
 
     def __eq__(self, other):
         """`s.__eq__(other) <==> s == other`.
@@ -788,16 +715,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
         x1_call_ip = x1._call_in_place
         x2_call_oop = x2._call_out_of_place
         x2_call_ip = x2._call_in_place
-
-        lincomb_vect = x1.vectorized or x2.vectorized
-        dtype = complex if self.field == ComplexNumbers() else float
-        # Manually vectorize if necessary. Use out-of-place for both
-        if lincomb_vect and not x1.vectorized:
-            x1_call_oop = vectorize(dtype, outarg='none')(x1_call_oop)
-            x1_call_ip = vectorize(dtype, outarg='positional')(x1_call_oop)
-        if lincomb_vect and not x2.vectorized:
-            x2_call_oop = vectorize(dtype, outarg='none')(x2_call_oop)
-            x2_call_ip = vectorize(dtype, outarg='positional')(x2_call_oop)
 
         def lincomb_call_out_of_place(x):
             """Linear combination, out-of-place version."""
@@ -855,16 +772,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             else:
                 return lincomb_call_in_place(x, out)
 
-        if lincomb_vect:
-            out._call_out_of_place = out._call_in_place = lincomb_call
-            out._call_has_out = out._call_out_optional = True
-        else:
-            out._call_out_of_place = lincomb_call_out_of_place
-            out._call_in_place = _default_in_place
-            out._call_has_out = out._call_out_optional = False
-
-        out._vectorized = lincomb_vect
-
+        out._call_out_of_place = out._call_in_place = lincomb_call
+        out._call_has_out = out._call_out_optional = True
         return out
 
     def _multiply(self, x1, x2, out):
@@ -873,22 +782,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
         Notes
         -----
         The multiplication is implemented with a simple Python
-        function, so the resulting function object is probably slow.
+        function, so the non-vectorized versions are slow.
         """
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
         x2_call_oop = x2._call_out_of_place
         x2_call_ip = x2._call_in_place
-
-        product_vect = x1.vectorized or x2.vectorized
-        dtype = complex if self.field == ComplexNumbers() else float
-        # Manually vectorize if necessary. Use out-of-place for both
-        if product_vect and not x1.vectorized:
-            x1_call_oop = vectorize(dtype, outarg='none')(x1_call_oop)
-            x1_call_ip = vectorize(dtype, outarg='positional')(x1_call_oop)
-        if product_vect and not x2.vectorized:
-            x2_call_oop = vectorize(dtype, outarg='none')(x2_call_oop)
-            x2_call_ip = vectorize(dtype, outarg='positional')(x2_call_oop)
 
         def product_call_out_of_place(x):
             """The product out-of-place evaluation function."""
@@ -909,16 +808,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             else:
                 return product_call_in_place(x, out)
 
-        if product_vect:
-            out._call_out_of_place = out._call_in_place = product_call
-            out._call_has_out = out._call_out_optional = True
-        else:
-            out._call_out_of_place = product_call_out_of_place
-            out._call_in_place = _default_in_place
-            out._call_has_out = out._call_out_optional = False
-
-        out._vectorized = product_vect
-
+        out._call_out_of_place = out._call_in_place = product_call
+        out._call_has_out = out._call_out_optional = True
         return out
 
     def _divide(self, x1, x2, out):
@@ -927,16 +818,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
         x1_call_ip = x1._call_in_place
         x2_call_oop = x2._call_out_of_place
         x2_call_ip = x2._call_in_place
-
-        quotient_vect = x1.vectorized or x2.vectorized
-        dtype = complex if self.field == ComplexNumbers() else float
-        # Manually vectorize if necessary. Use out-of-place for both
-        if quotient_vect and not x1.vectorized:
-            x1_call_oop = vectorize(dtype, outarg='none')(x1_call_oop)
-            x1_call_ip = vectorize(dtype, outarg='positional')(x1_call_oop)
-        if quotient_vect and not x2.vectorized:
-            x2_call_oop = vectorize(dtype, outarg='none')(x2_call_oop)
-            x2_call_ip = vectorize(dtype, outarg='positional')(x2_call_oop)
 
         def quotient_call_out_of_place(x):
             """The quotient out-of-place evaluation function."""
@@ -957,16 +838,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             else:
                 return quotient_call_in_place(x, out)
 
-        if quotient_vect:
-            out._call_out_of_place = out._call_in_place = quotient_call
-            out._call_has_out = out._call_out_optional = True
-        else:
-            out._call_out_of_place = quotient_call_out_of_place
-            out._call_in_place = _default_in_place
-            out._call_has_out = out._call_out_optional = False
-
-        out._vectorized = quotient_vect
-
+        out._call_out_of_place = out._call_in_place = quotient_call
+        out._call_has_out = out._call_out_optional = True
         return out
 
     def _scalar_power(self, x, p, out):
@@ -1019,16 +892,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             else:
                 return power_call_in_place(x, out)
 
-        if self.vectorized:
-            out._call_out_of_place = out._call_in_place = power_call
-            out._call_has_out = out._call_out_optional = True
-        else:
-            out._call_out_of_place = power_call_out_of_place
-            out._call_in_place = _default_in_place
-            out._call_has_out = out._call_out_optional = False
-
-        out._vectorized = self.vectorized
-
+        out._call_out_of_place = out._call_in_place = power_call
+        out._call_has_out = out._call_out_optional = True
         return out
 
     @property

@@ -30,9 +30,10 @@ import numpy as np
 
 # ODL imports
 from odl.set.sets import Set, RealNumbers
-from odl.util.utility import (array1d_repr, is_valid_input_array,
-                              is_valid_input_meshgrid, meshgrid_input_order,
-                              vecs_from_meshgrid)
+from odl.util.utility import array1d_repr
+from odl.util.vectorization import (
+    is_valid_input_array, is_valid_input_meshgrid, meshgrid_input_order,
+    vecs_from_meshgrid)
 
 
 __all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')

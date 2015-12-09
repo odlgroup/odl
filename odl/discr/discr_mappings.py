@@ -35,7 +35,7 @@ from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.set.domain import IntervalProd
-from odl.util.utility import is_valid_input_meshgrid
+from odl.util.vectorization import is_valid_input_meshgrid
 
 
 __all__ = ('FunctionSetMapping',
@@ -256,14 +256,8 @@ class GridCollocation(FunctionSetMapping):
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        if func.vectorized:
-            mg_tuple = self.grid.meshgrid()
-            values = func(mg_tuple).ravel(order=self.order)
-        else:
-            points = self.grid.points(order=self.order)
-            values = np.empty(points.shape[1], dtype=self.range.dtype)
-            for i, point in enumerate(points):
-                values[i] = func(point)
+        mg_tuple = self.grid.meshgrid()
+        values = func(mg_tuple).ravel(order=self.order)
         return self.range.element(values)
 
 
@@ -313,8 +307,7 @@ class NearestInterpolation(FunctionSetMapping):
         -------
         out : `FunctionSetVector`
             A function (nearest-neighbor) interpolating at a given
-            point or array of points. It is vectorized according to
-            the given parameter.
+            point or array of points.
 
         Examples
         --------
