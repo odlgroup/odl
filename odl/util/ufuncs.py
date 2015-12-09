@@ -411,6 +411,7 @@ def wrap_reduction_discretelp(name, descr):
     wrapper.__doc__ = descr
     return wrapper
 
+
 class DiscreteLpVectorUFuncs(NtuplesBaseVectorUFuncs):
     """UFuncs for `DiscreteLpVector` objects.
 

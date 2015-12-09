@@ -27,7 +27,7 @@ import numpy as np
 
 import odl
 
-from odl.util.testutils import (almost_equal, all_equal, all_almost_equal, 
+from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
                                 skip_if_no_cuda)
 
 
