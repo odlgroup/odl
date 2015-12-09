@@ -6,6 +6,8 @@ import importlib
 __all__ = ('make_interface',)
 
 module_string = """
+.. rubric:: Modules
+
 .. toctree::
    :maxdepth: 2
 
@@ -13,8 +15,7 @@ module_string = """
 """
 
 fun_string = """
-Functions
----------
+.. rubric:: Functions
 
 .. autosummary::
    :toctree: generated/
@@ -23,8 +24,7 @@ Functions
 """
 
 class_string = """
-Classes
--------
+.. rubric:: Classes
 
 .. autosummary::
    :toctree: generated/
