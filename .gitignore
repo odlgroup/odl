@@ -55,6 +55,7 @@ coverage.xml
 doc/_build/
 doc/source/generated
 doc/source/odl_interface
+doc/source/odl*.rst
 
 # PyBuilder
 target/
@@ -79,5 +80,12 @@ target/
 # Spyder project files
 .spyderproject
 .spyderworkspace
+
+# PyCharm project files
+.idea
+
+# IPyhton notebook files
+*.ipynb
+.ipynb_checkpoints
 
 # Documentation build files

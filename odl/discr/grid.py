@@ -26,7 +26,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, super, str, zip
+from builtins import range, str, zip
 
 # External module imports
 from numbers import Integral
@@ -790,12 +790,12 @@ class RegularGrid(TensorGrid):
         shape = np.atleast_1d(shape).astype('int64')
 
         if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
-            raise ValueError('input arrays have dimensions {}, {}, {} '
+            raise ValueError('input arrays have dimensions {!r}, {!r}, {!r} '
                              'instead of 1.'
                              ''.format(min_pt.ndim, max_pt.ndim, shape.ndim))
 
         if not min_pt.shape == max_pt.shape == shape.shape:
-            raise ValueError('input array shapes are {}, {}, {} but '
+            raise ValueError('input array shapes are {!r}, {!r}, {!r} but '
                              'should be equal.'
                              ''.format(min_pt.shape, max_pt.shape,
                                        shape.shape))
@@ -855,6 +855,18 @@ class RegularGrid(TensorGrid):
         array([ 1.,  2.])
         """
         return self._stride
+
+    @property
+    def cell_volume(self):
+        """Cell volume of an underlying regular grid.
+
+        Examples
+        --------
+        >>> rg = RegularGrid([0, 0], [1, 1], (2, 2))
+        >>> rg.cell_volume
+        1.0
+        """
+        return float(np.prod(self.stride))
 
     def is_subgrid(self, other, tol=0.0):
         """Test if this grid is contained in another grid.

@@ -140,8 +140,8 @@ def all_almost_equal(iter1, iter2, places=None):
     return True
 
 
-def is_subdict(subdict, dict_):
-    return all(item in dict_.items() for item in subdict.items())
+def is_subdict(subdict, dictionary):
+    return all(item in dictionary.items() for item in subdict.items())
 
 
 try:

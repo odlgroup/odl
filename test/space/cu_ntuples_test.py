@@ -951,7 +951,7 @@ def test_custom_inner(fn):
     w = CudaFnCustomInnerProduct(inner)
     w_same = CudaFnCustomInnerProduct(inner)
     w_other = CudaFnCustomInnerProduct(np.dot)
-    w_d = CudaFnCustomInnerProduct(inner, dist_using_inner=True)
+    w_d = CudaFnCustomInnerProduct(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same

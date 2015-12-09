@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -30,10 +30,9 @@ import matplotlib.pyplot as plt
 # ODL
 import odl
 from odl.space import cu_ntuples
-import odl.operator.solvers as solvers
+import odl.solvers as solvers
 from odl.util.testutils import Timer
 from odlpp import odlpp_cuda
-import examples.solver_examples as solver_examples
 
 
 class CudaConvolution(odl.Operator):
@@ -69,7 +68,7 @@ cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
 cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
 
 # Discretization
-discr_space = odl.uniform_discr(cont_space, 5000, impl='cuda')
+discr_space = odl.uniform_discr_fromspace(cont_space, 5000, impl='cuda')
 kernel = discr_space.element(cont_kernel)
 data = discr_space.element(cont_data)
 
@@ -77,11 +76,11 @@ data = discr_space.element(cont_data)
 conv = CudaConvolution(kernel)
 
 # Dampening parameter for landweber
-iterations = 10
+iterations = 100
 omega = 1.0/conv.opnorm()**2
 
 # Display partial
-partial = solvers.ForEachPartial(
+partial = solvers.util.ForEachPartial(
     lambda result: plt.plot(conv(result).asarray()))
 
 # Test CGN
@@ -95,21 +94,5 @@ plt.figure()
 plt.plot(data)
 solvers.landweber(conv, discr_space.zero(), data, iterations, omega, partial)
 
-# testTimingCG
-with Timer("Optimized CG"):
-    solvers.conjugate_gradient_normal(conv, discr_space.zero(), data,
-                                      iterations)
-
-with Timer("Base CG"):
-    solver_examples.conjugate_gradient_base(conv, discr_space.zero(), data,
-                                            iterations)
-
-# Landweber timing
-with Timer("Optimized LW"):
-    solvers.landweber(conv, discr_space.zero(), data, iterations, omega)
-
-with Timer("Basic LW"):
-    solver_examples.landweberBase(conv, discr_space.zero(), data, iterations,
-                                  omega)
 
 plt.show()

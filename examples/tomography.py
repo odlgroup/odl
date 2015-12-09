@@ -57,11 +57,9 @@ class BackProjector(odl.Operator):
         return self.range.element(iradon(x.asarray(), self.theta, self.npoint,
                                          filter=None))
 
-square = odl.Rectangle([-1, -1], [1, 1])
-sinogram = odl.Rectangle([0, 0], [1, np.pi])
 
-dom = odl.uniform_discr(odl.FunctionSpace(square), [100, 100])
-ran = odl.uniform_discr(odl.FunctionSpace(sinogram), [142, 100])
+dom = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
+ran = odl.uniform_discr([0, 0], [1, np.pi], [142, 100])
 
 proj_op = ForwardProjector(dom, ran)
 

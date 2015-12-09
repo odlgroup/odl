@@ -90,8 +90,6 @@ def _shepp_logan_2d(space):
 
 def _shepp_logan_ellipse_3d():
     # Modified Shepp Logan
-    # See
-    # http://www.mathworks.com/matlabcentral/fileexchange/9416-3d-shepp-logan-phantom
     return [[1.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
             [-.80, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
             [-.20, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
