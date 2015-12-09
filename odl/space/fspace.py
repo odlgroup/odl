@@ -33,8 +33,10 @@ from itertools import product
 from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set.sets import RealNumbers, ComplexNumbers, Set, Field
 from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.util.utility import (is_valid_input_array, is_valid_input_meshgrid,
-                              meshgrid_input_order, vecs_from_meshgrid)
+from odl.util.vectorization import (
+    is_valid_input_array, is_valid_input_meshgrid,
+    meshgrid_input_order, vecs_from_meshgrid,
+    out_shape_from_array, out_shape_from_meshgrid)
 
 
 __all__ = ('FunctionSet', 'FunctionSetVector',
@@ -55,19 +57,9 @@ def _default_in_place(func, x, out, **kwargs):
 def _default_out_of_place(func, dtype, x, **kwargs):
     """Default in-place evaluation method."""
     if is_valid_input_array(x, func.domain.ndim):
-        if func.domain.ndim == 1:
-            if x.ndim == 2:
-                x = x[0]
-            out_shape = x.shape
-        else:
-            out_shape = (x.shape[1],)
+        out_shape = out_shape_from_array(x)
     elif is_valid_input_meshgrid(x, func.domain.ndim):
-        # Broadcasting fails for only one vector (ndim == 1)
-        if func.domain.ndim == 1:
-            x = x[0]
-            out_shape = x.shape
-        else:
-            out_shape = np.broadcast(*x).shape
+        out_shape = out_shape_from_meshgrid(x)
     else:
         raise TypeError('cannot use in-place method to implement '
                         'out-of-place non-vectorized evaluation.')
@@ -77,7 +69,7 @@ def _default_out_of_place(func, dtype, x, **kwargs):
     return out
 
 
-def vectorize(dtype, outarg='none'):
+def vectorize(dtype=None, outarg='none'):
     """Vectorization decorator for our input parameter pattern.
 
     The wrapped function must be callable with one positional
@@ -87,9 +79,11 @@ def vectorize(dtype, outarg='none'):
 
     Parameters
     ----------
-    dtype : object
+    dtype : `type` or `str`, optional
         Data type of the output array. Needs to be understood by the
-        `numpy.dtype` function.
+        `numpy.dtype` function. If not provided, a "lazy" vectorization
+        is performed, meaning that the results are collected in a
+        list instead of an array.
     outarg : {'none', 'positional', 'optional'}
         Type of the output argument of the decorated function for
         in-place evaluation
@@ -160,53 +154,53 @@ def vectorize(dtype, outarg='none'):
     array([ 0.,  0.,  0.,  1.,  1.])
     """
     def vect_decorator(func):
+
+        def _vect_wrapper_array(x, out, **kwargs):
+            # Assume that x is an ndarray
+            if out is None:
+                out_shape = out_shape_from_array(x)
+                if dtype is None:
+                    out = [0] * out_shape[0]
+                else:
+                    out = np.empty(out_shape, dtype=dtype)
+
+            for i, pt in enumerate(x.T):
+                out[i] = func(pt, **kwargs)
+            return out
+
+        def _vect_wrapper_meshgrid(x, out, **kwargs):
+            if out is None:
+                out_shape = out_shape_from_meshgrid(x)
+                if dtype is None:
+                    out = [0] * out_shape[0]
+                else:
+                    out = np.empty(out_shape, dtype=dtype)
+
+            order = meshgrid_input_order(x)
+            vecs = vecs_from_meshgrid(x, order=order)
+            for i, pt in enumerate(product(*vecs)):
+                out.flat[i] = func(pt, **kwargs)
+            return out
+
         def _vect_wrapper(x, out, **kwargs):
+            # Find out dimension first
             if isinstance(x, np.ndarray):  # array
                 if x.ndim == 1:
                     dim = 1
                 elif x.ndim == 2:
                     dim = len(x)
-                    if dim == 1:
-                        x = x.squeeze()
                 else:
                     raise ValueError('only 1- or 2-dimensional arrays '
                                      'supported.')
             else:  # meshgrid
                 dim = len(x)
-                if dim == 1:
-                    x = x[0]
-            if dim == 1:
-                if out is None:
-                    out = np.empty(x.size, dtype=dtype)
-                for i, xi in enumerate(x):
-                    out[i] = func(xi, **kwargs)
-                return out
-            else:
-                if is_valid_input_array(x, dim):
-                    if out is None:
-                        out = np.empty(x.shape[1], dtype=dtype)
-                    for i, pt in enumerate(x.T):
-                        out[i] = func(pt, **kwargs)
-                    return out
-                elif is_valid_input_meshgrid(x, dim):
-                    order = meshgrid_input_order(x)
-                    if out is None:
-                        out_shape = np.broadcast(*x).shape
-                        out = np.empty(out_shape, dtype=dtype, order=order)
 
-                    # TODO: find a better way to iterate
-                    vecs = vecs_from_meshgrid(x, order=order)
-                    for i, pt in enumerate(product(*vecs)):
-                        out.flat[i] = func(pt, **kwargs)
-                    return out
-                else:
-                    if out is None:
-                        try:
-                            return func(x)
-                        except (TypeError, ValueError, IndexError):
-                            raise TypeError('invalid vectorized input type.')
-                    else:
-                        raise TypeError('invalid vectorized input type.')
+            if is_valid_input_array(x, dim):
+                return _vect_wrapper_array(x, out, **kwargs)
+            elif is_valid_input_meshgrid(x, dim):
+                return _vect_wrapper_meshgrid(x, out, **kwargs)
+            else:
+                raise TypeError('invalid vectorized input type.')
 
         @wraps(func)
         def vect_wrapper_no_out(x, **kwargs):
@@ -217,8 +211,6 @@ def vectorize(dtype, outarg='none'):
 
         @wraps(func)
         def vect_wrapper_pos_out(x, out, **kwargs):
-            if out is None:
-                raise ValueError('output parameter cannot be `None`.')
             return _vect_wrapper(x, out, **kwargs)
 
         @wraps(func)
@@ -298,13 +290,13 @@ class FunctionSet(Set):
         TensorGrid.meshgrid : efficient grids for function
             evaluation
         """
-        if isinstance(fcall, self.element_type):  # no double wrapping
-            if vectorized and not fcall.vectorized:
-                raise ValueError('non-vectorized call function {} cannot be '
-                                 'combined with `vectorized=True`.'
-                                 ''.format(fcall))
+        if not callable(fcall):
+            raise TypeError('function {!r} is not callable.'.format(fcall))
 
-        return self.element_type(self, fcall, vectorized=vectorized)
+        if not vectorized:
+            fcall = vectorize(fcall, outarg='optional')
+
+        return self.element_type(self, fcall)
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -356,7 +348,7 @@ class FunctionSetVector(Operator):
 
     """Representation of a `FunctionSet` element."""
 
-    def __init__(self, fset, fcall, vectorized=True):
+    def __init__(self, fset, fcall):
         """Initialize a new instance.
 
         Parameters
@@ -367,15 +359,7 @@ class FunctionSetVector(Operator):
             The actual instruction for out-of-place evaluation.
             It must return an `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
-        vectorized : bool, optional
-            Whether the function supports vectorized evaluation
         """
-        if not isinstance(fset, FunctionSet):
-            raise TypeError('function set {!r} not a `FunctionSet` '
-                            'instance.'.format(fset))
-        if not callable(fcall):
-            raise TypeError('function {!r} is not callable.'.format(fcall))
-
         self._space = fset
         super().__init__(self._space.domain, self._space.range, linear=False)
 
@@ -420,20 +404,10 @@ class FunctionSetVector(Operator):
             # therefore not out-of-place default applicable
             self._call_out_of_place = _out_of_place_not_impl
 
-        self._vectorized = bool(vectorized)
-        if not self._vectorized and call_has_out:
-            raise ValueError('output parameters make no sense for '
-                             'non-vectorized functions.')
-
     @property
     def space(self):
         """The space or set this function belongs to."""
         return self._space
-
-    @property
-    def vectorized(self):
-        """Whether this function supports vectorized evaluation."""
-        return self._vectorized
 
     def _call(self, x, out=None, **kwargs):
         """Raw evaluation method."""
@@ -494,20 +468,18 @@ class FunctionSetVector(Operator):
         ValueError
             If evaluation points fall outside the valid domain
         """
-        vec_bounds_check = kwargs.pop('vec_bounds_check', self.vectorized)
+        vec_bounds_check = kwargs.pop('vec_bounds_check', True)
         if vec_bounds_check and not hasattr(self.domain, 'contains_all'):
             raise AttributeError('vectorized bounds check not possible for '
                                  'domain {}, missing `contains_all()` '
                                  'method.'.format(self.domain))
-        scalar_out = False
 
         # A. Pre-checks and preparations
-        # 1. vectorized? (a/b)
-        # 2a. x = domain element (1), array (2), meshgrid (3)
-        # 2a1. make x a (d, 1) array; set a flag that output shall be
-        #      scalar; apply case 2a2
-        # 2a2. out_shape = (x.shape[1],)
-        # 2a3. out_shape = (x[0].shape[1],) if ndim == 1 else
+        # 1. - x = domain element (1), array (2), meshgrid (3)
+        #    - make x a (d, 1) array; set a flag that output shall be
+        #    scalar; apply case 2a2
+        #    - out_shape = (x.shape[1],)
+        # 1a3. out_shape = (x[0].shape[1],) if ndim == 1 else
         #      np.broadcast(*x).shape
         # 2a. (cont.) If vec_bounds_check, check domain.contains_all(x)
         # 2b. x in domain? -> yes ok, no error; out is None? yes -> ok,
@@ -516,60 +488,60 @@ class FunctionSetVector(Operator):
         # B. Evaluation and post-checks
         # 1. out is None? (a/b)
         # 1a. out = call(x)
-        #     vectorized? (1/2)
         # 1a1. out.shape == out_shape? -> error if no
         #      If vec_bounds_check, check range.contains_all(out)
-        # 1a2. nothing
         # 2b. vectorized? (1/2)
         # 2b1. out is array and out.shape == out_shape? -> error if no;
         #     call(x, out=out);
         #     If vec_bounds_check, check range.contains_all(out)
         # 2b2. error (out given but not vectorized)
 
-        # TODO: simplify logic in second part
-        if self.vectorized:
-            if x in self.domain:  # Allow also non-vectorized evaluation
+        # Make single input value an element if possible and use the
+        # vectorized array case; if not possible, just go on
+        if x not in self.domain:
+            try:
+                x = self.domain.element(x)
                 x = np.atleast_2d(x).T  # make a (d, 1) array
                 scalar_out = (out is None)
+            except (TypeError, ValueError):
+                scalar_out = False
 
-            if is_valid_input_array(x, self.domain.ndim):
-                if self.domain.ndim == 1:
-                    if x.ndim == 2:
-                        x = x[0]
-                    out_shape = x.shape
-                else:
-                    out_shape = (x.shape[1],)
-            elif is_valid_input_meshgrid(x, self.domain.ndim):
-                # Broadcasting fails for only one vector (ndim == 1)
-                if self.domain.ndim == 1:
+        # vectorized 1: array
+        if is_valid_input_array(x, self.domain.ndim):
+            if self.domain.ndim == 1:
+                if x.ndim == 2:
                     x = x[0]
-                    out_shape = x.shape
-                else:
-                    out_shape = np.broadcast(*x).shape
+                out_shape = x.shape
             else:
-                raise TypeError('argument {!r} not a valid vectorized '
-                                'input. Expected an element of the domain '
-                                '{dom}, a ({dom.ndim}, n) array '
-                                'or a length-{dom.ndim} meshgrid sequence.'
-                                ''.format(x, dom=self.domain))
+                out_shape = (x.shape[1],)
 
-            if vec_bounds_check:
-                if not self.domain.contains_all(x):
-                    raise ValueError('input contains points outside '
-                                     'the domain {}.'.format(self.domain))
-        else:  # not self.vectorized
-            if x not in self.domain:
-                raise TypeError('input {!r} not in domain '
-                                '{}.'.format(x, self.domain))
+        # vectorized 2: meshgrid
+        elif is_valid_input_meshgrid(x, self.domain.ndim):
+            # Broadcasting fails for only one vector (ndim == 1)
+            if self.domain.ndim == 1:
+                x = x[0]
+                out_shape = x.shape
+            else:
+                out_shape = np.broadcast(*x).shape
+        else:
+            raise TypeError('argument {!r} not a valid vectorized '
+                            'input. Expected an element of the domain '
+                            '{dom}, a ({dom.ndim}, n) array '
+                            'or a length-{dom.ndim} meshgrid sequence.'
+                            ''.format(x, dom=self.domain))
+
+        if vec_bounds_check:
+            if not self.domain.contains_all(x):
+                raise ValueError('input contains points outside '
+                                 'the domain {}.'.format(self.domain))
 
         if out is None:
             out = self._call(x, **kwargs)
 
-            if self.vectorized:
-                if out.shape != out_shape:
-                    raise ValueError('output shape {} not equal to shape '
-                                     '{} expected from input.'
-                                     ''.format(out.shape, out_shape))
+        if out_shape != (1,) and out.shape != out_shape:
+            raise ValueError('output shape {} not equal to shape '
+                             '{} expected from input.'
+                             ''.format(out.shape, out_shape))
                 if vec_bounds_check:
                     if not self.range.contains_all(out):
                         raise ValueError('output contains points outside '
@@ -1101,136 +1073,15 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
 
             self._call_out_of_place = oop_wrapper(_default_out_of_place)
 
-    # Convenience functions using element() need to be adapted
-    # TODO: Check which ones can be removed
-    def __add__(self, other):
-        """`f.__add__(other) <==> f + other`."""
-        out = self.space.element()
-        if other in self.space:
-            self.space.lincomb(1, self, 1, other, out=out)
-        else:
-            one = self.space.one(vectorized=self.vectorized)
-            self.space.lincomb(1, self, 1, other * one, out=out)
-        return out
-
-    def __radd__(self, other):
-        """`f.__radd__(other) <==> other + f`."""
-        out = self.space.element(vectorized=self.vectorized)
-        # the `other in self.space` case can never happen!
-        one = self.space.one(vectorized=self.vectorized)
-        self.space.lincomb(1, other * one, 1, self, out=out)
-        return out
-
-    def __iadd__(self, other):
-        """`f.__iadd__(other) <==> f += other`."""
-        if other in self.space:
-            self.space.lincomb(1, self, 1, other, out=self)
-        else:
-            one = self.space.one(vectorized=self.vectorized)
-            self.space.lincomb(1, self, 1, other * one, out=self)
-        return self
-
-    def __sub__(self, other):
-        """Implementation of 'self - other'."""
-        out = self.space.element(vectorized=self.vectorized)
-        if other in self.space:
-            self.space.lincomb(1, self, -1, other, out=out)
-        else:
-            one = self.space.one(vectorized=self.vectorized)
-            self.space.lincomb(1, self, 1, -other * one, out=out)
-        return out
-
-    def __rsub__(self, other):
-        """`f.__rsub__(other) <==> other - f`."""
-        out = self.space.element(vectorized=self.vectorized)
-        # the `other in self.space` case can never happen!
-        one = self.space.one(vectorized=self.vectorized)
-        self.space.lincomb(1, other * one, -1, self, out=out)
-        return out
-
-    def __isub__(self, other):
-        """`f.__isub__(other) <==> f -= other`."""
-        if other in self.space:
-            self.space.lincomb(1, self, -1, other, out=self)
-        else:
-            one = self.space.one(vectorized=self.vectorized)
-            self.space.lincomb(1, self, 1, -other * one, out=self)
-        return self
-
-    def __mul__(self, other):
-        """`f.__mul__(other) <==> f * other`."""
-        out = self.space.element(vectorized=self.vectorized)
-        if other in self.space:
-            self.space.multiply(self, other, out=out)
-        else:
-            self.space.lincomb(other, self, out=out)
-        return out
-
-    def __rmul__(self, other):
-        """`f.__rmul__(other) <==> other * f`."""
-        out = self.space.element(vectorized=self.vectorized)
-        # the `other in self.space` case can never happen!
-        self.space.lincomb(other, self, out=out)
-        return out
-
-    def __imul__(self, other):
-        """`f.__imul__(other) <==> f *= other`."""
-        if other in self.space:
-            self.space.multiply(self, other, out=self)
-        else:
-            self.space.lincomb(other, self, out=self)
-        return self
-
-    def __truediv__(self, other):
-        """`f.__truediv__(other) <==> f / other` (true division)."""
-        out = self.space.element(vectorized=self.vectorized)
-        if other in self.space:
-            self.space.divide(self, other, out=out)
-        else:
-            self.space.lincomb(1. / other, self, out=out)
-        return out
-
-    __div__ = __truediv__
-
-    def __rtruediv__(self, other):
-        """`f.__rtruediv__(other) <==> other / f` (true division)."""
-        out = self.space.element(vectorized=self.vectorized)
-        # the `other in self.space` case can never happen!
-        one = self.space.one(vectorized=self.vectorized)
-        self.space.divide(other * one, self, out=out)
-        return out
-
-    __rdiv__ = __rtruediv__
-
-    def __itruediv__(self, other):
-        """`f.__itruediv__(other) <==> f /= other` (true division)."""
-        if other in self.space:
-            self.space.divide(self, other, out=self)
-        else:
-            self.space.lincomb(1. / other, self, out=self)
-        return self
-
-    __idiv__ = __itruediv__
-
     def __pow__(self, p):
         """`f.__pow__(p) <==> f ** p`."""
-        out = self.space.element(vectorized=self.vectorized)
+        out = self.space.element()
         self.space._scalar_power(self, p, out=out)
         return out
 
     def __ipow__(self, p):
         """`f.__ipow__(p) <==> f **= p`."""
         return self.space._scalar_power(self, p, out=self)
-
-    def __neg__(self):
-        """`f.__neg__() <==> -f`."""
-        out = self.space.element(vectorization=self.vectorization)
-        self.space.lincomb(-1.0, self, out=out)
-        return out
-
-    def __pos__(self):
-        """`f.__pos__() <==> +f`."""
-        return self.copy()
 
 
 if __name__ == '__main__':
