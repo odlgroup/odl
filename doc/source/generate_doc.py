@@ -43,20 +43,30 @@ string = """{shortname}
 {class_string}
 {fun_string}
 """
-
-
-def import_submodules(package, recursive=True):
+import os
+import sys
+sys.setrecursionlimit(100)
+def import_submodules(package, name=None, recursive=True):
     """ Import all submodules of a module, recursively, including subpackages
     """
     if isinstance(package, str):
         package = importlib.import_module(package)
+
+    if name is None:
+        name = package.__name__
+
+    submodules = [m[0] for m in inspect.getmembers(
+        package, inspect.ismodule) if m[1].__name__.startswith('odl')]
+
     results = {}
-    for loader, name, is_pkg in pkgutil.walk_packages(package.__path__,
-                                                      onerror=lambda x: None):
-        full_name = package.__name__ + '.' + name
-        results[full_name] = importlib.import_module(full_name)
-        if recursive and is_pkg:
-            results.update(import_submodules(full_name))
+    for pkgname in submodules:
+        full_name = name + '.' + pkgname
+        try:
+            results[full_name] = importlib.import_module(full_name)
+            if recursive:
+                results.update(import_submodules(full_name, full_name))
+        except ImportError:
+            pass
     return results
 
 
