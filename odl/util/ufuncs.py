@@ -402,6 +402,15 @@ def wrap_ufunc_discretelp(name, n_args, n_opt, descr):
     return wrapper
 
 
+def wrap_reduction_discretelp(name, descr):
+    def wrapper(self):
+        method = getattr(self.vector.ntuple.ufunc, name)
+        return method()
+
+    wrapper.__name__ = name
+    wrapper.__doc__ = descr
+    return wrapper
+
 class DiscreteLpVectorUFuncs(NtuplesBaseVectorUFuncs):
     """UFuncs for `DiscreteLpVector` objects.
 
@@ -412,4 +421,8 @@ class DiscreteLpVectorUFuncs(NtuplesBaseVectorUFuncs):
 # Add ufunc methods to UFunc class
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_ufunc_discretelp(name, n_args, n_opt, descr)
+    setattr(DiscreteLpVectorUFuncs, name, method)
+
+for name, descr in REDUCTIONS:
+    method = wrap_reduction_discretelp(name, descr)
     setattr(DiscreteLpVectorUFuncs, name, method)

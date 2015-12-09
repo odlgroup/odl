@@ -27,7 +27,8 @@ import numpy as np
 
 import odl
 
-from odl.util.testutils import all_equal, all_almost_equal, skip_if_no_cuda
+from odl.util.testutils import (almost_equal, all_equal, all_almost_equal, 
+                                skip_if_no_cuda)
 
 
 # TODO: element from function - waiting for vectorization
@@ -639,7 +640,7 @@ def _impl_test_reduction(fn, name):
     # Create some data
     x_arr, x = _vectors(fn, 1)
 
-    assert ufunc(x_arr) == getattr(x.ufunc, name)()
+    assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
 
 
 def test_reductions():
