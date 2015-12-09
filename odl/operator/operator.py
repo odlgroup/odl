@@ -107,6 +107,7 @@ def _signature_from_spec(func):
 
     posargs = spec.args
     defaults = spec.defaults
+    varargs = spec.varargs
     kwargs = spec.varkw if py3 else spec.keywords
     deflen = 0 if defaults is None else len(defaults)
     nodeflen = 0 if posargs is None else len(posargs) - deflen
@@ -121,16 +122,22 @@ def _signature_from_spec(func):
         argstr += ', '.join(['{}={}'.format(arg, dval)
                              for arg, dval in zip(posargs[nodeflen:],
                                                   defaults)])
+    if varargs:
+        if argstr:
+            argstr += ', '
+        argstr += '*{}'.format(varargs)
+
     if py3:
         kw_only = spec.kwonlyargs
         kw_only_defaults = spec.kwonlydefaults
-        if argstr:
-            argstr += ', '
         if kw_only:
-            argstr += ', *, '
-            argstr += ', '.join('{}={}'.format(arg, dval)
-                                for arg, dval in zip(kw_only,
-                                                     kw_only_defaults))
+            if argstr:
+                argstr += ', '
+            if not varargs:
+                argstr += '*, '
+            argstr += ', '.join('{}={}'.format(arg, kw_only_defaults[arg])
+                                for arg in kw_only)
+
     if kwargs:
         if argstr:
             argstr += ', '

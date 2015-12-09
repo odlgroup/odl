@@ -25,6 +25,7 @@ from builtins import super
 # External module imports
 import pytest
 import numpy as np
+import sys
 
 # ODL imports
 import odl
@@ -33,6 +34,7 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
                  MatVecOperator,
                  OpDomainError, OpRangeError)
+from odl.operator.operator import _signature_from_spec, _dispatch_call_args
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
@@ -653,6 +655,51 @@ def test_nonlinear_functional_operators():
 
     assert not C.is_linear
     assert almost_equal(C(x), A(x / 2.0))
+
+
+def test_signature_from_spec():
+
+    true_sig = '<lambda>(x, y, out=None, param=2, *args, **kwargs)'
+    sig = _signature_from_spec(lambda x, y, out=None, param=2,
+                               *args, **kwargs: None)
+    assert true_sig == sig
+
+    true_sig = '<lambda>(x, out=None, param=2, **kwargs)'
+    sig = _signature_from_spec(lambda x, out=None, param=2, **kwargs: None)
+    assert true_sig == sig
+
+    true_sig = '<lambda>(x, out=None, param=2)'
+    sig = _signature_from_spec(lambda x, out=None, param=2: None)
+    assert true_sig == sig
+
+    true_sig = '<lambda>(out=None, param=2)'
+    sig = _signature_from_spec(lambda out=None, param=2: None)
+    assert true_sig == sig
+
+    true_sig = '<lambda>(x, y)'
+    sig = _signature_from_spec(lambda x, y: None)
+    assert true_sig == sig
+
+    true_sig = '<lambda>(*args)'
+    sig = _signature_from_spec(lambda *args: None)
+    assert true_sig == sig
+
+    true_sig = '<lambda>(**kwargs)'
+    sig = _signature_from_spec(lambda **kwargs: None)
+    assert true_sig == sig
+
+@pytest.mark.skipif('sys.version_info.major <= 2')
+def test_signature_from_spec_py3():
+
+    true_sig = '<lambda>(x, *, out=None, param=2, **kwargs)'
+    func = eval('lambda x, *, out=None, param=2, **kwargs: x')
+    sig = _signature_from_spec(func)
+    assert true_sig == sig
+
+    true_sig = '<lambda>(x, *y, out=None, param=2, **kwargs)'
+    func = eval('lambda x, *y, out=None, param=2, **kwargs: x')
+    sig = _signature_from_spec(func)
+    assert true_sig == sig
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
