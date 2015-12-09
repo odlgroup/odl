@@ -39,32 +39,32 @@ def test_vector_numpy():
     inp = [1.0, 2.0, 3.0]
 
     x = vector(inp)
-    assert isinstance(x, odl.RnVector)
+    assert isinstance(x, odl.FnVector)
     assert x.dtype == np.dtype('float64')
     assert all_equal(x, inp)
 
     x = vector([1.0, 2.0, float('inf')])
     assert x.dtype == np.dtype('float64')
-    assert isinstance(x, odl.RnVector)
+    assert isinstance(x, odl.FnVector)
 
     x = vector([1.0, 2.0, float('nan')])
     assert x.dtype == np.dtype('float64')
-    assert isinstance(x, odl.RnVector)
+    assert isinstance(x, odl.FnVector)
 
     x = vector([1, 2, 3], dtype='float32')
     assert x.dtype == np.dtype('float32')
-    assert isinstance(x, odl.RnVector)
+    assert isinstance(x, odl.FnVector)
 
     # Cn
     inp = [1 + 1j, 2, 3 - 2j]
 
     x = vector(inp)
-    assert isinstance(x, odl.CnVector)
+    assert isinstance(x, odl.FnVector)
     assert x.dtype == np.dtype('complex128')
     assert all_equal(x, inp)
 
     x = vector([1, 2, 3], dtype='complex64')
-    assert isinstance(x, odl.CnVector)
+    assert isinstance(x, odl.FnVector)
 
     # Fn
     inp = [1, 2, 3]
@@ -101,17 +101,17 @@ def test_vector_cuda():
     inp = [1.0, 2.0, 3.0]
 
     x = vector(inp, impl='cuda')
-    assert isinstance(x, odl.CudaRnVector)
+    assert isinstance(x, odl.CudaFnVector)
     assert x.dtype == np.dtype('float32')
     assert all_equal(x, inp)
 
     x = vector([1.0, 2.0, float('inf')], impl='cuda')
-    assert isinstance(x, odl.CudaRnVector)
+    assert isinstance(x, odl.CudaFnVector)
     assert x.dtype == np.dtype('float32')
     assert all_equal(x, [1.0, 2.0, float('inf')])
 
     x = vector([1, 2, 3], dtype='float32', impl='cuda')
-    assert isinstance(x, odl.CudaRnVector)
+    assert isinstance(x, odl.CudaFnVector)
     assert all_equal(x, [1.0, 2.0, 3.0])
     assert x.dtype == np.dtype('float32')
 
