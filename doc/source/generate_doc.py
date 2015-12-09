@@ -1,7 +1,7 @@
-import pkgutil
 import odl
 import inspect
 import importlib
+
 
 __all__ = ('make_interface',)
 
@@ -43,9 +43,8 @@ string = """{shortname}
 {class_string}
 {fun_string}
 """
-import os
-import sys
-sys.setrecursionlimit(100)
+
+
 def import_submodules(package, name=None, recursive=True):
     """ Import all submodules of a module, recursively, including subpackages
     """
