@@ -30,12 +30,14 @@ import scipy as sp
 # ODL imports
 from odl import Ntuples, Fn, FnVector, Rn, Cn
 from odl.operator.operator import Operator
+from odl.set.space import LinearSpaceTypeError
 from odl.space.ntuples import (
     FnConstWeighting, FnVectorWeighting, FnMatrixWeighting, FnNoWeighting,
     FnCustomInnerProduct, FnCustomNorm, FnCustomDist,
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
+from odl.util.ufuncs import UFUNCS
 
 # TODO: add tests for:
 # * inner, norm, dist as free functions
@@ -266,6 +268,29 @@ def test_lincomb(fn):
             _test_lincomb(fn, a, b)
 
 
+def test_lincomb_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x, y, z = fn.zero(), fn.zero(), fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, otherx, 1, y, z)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, y, 1, otherx, z)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, y, 1, z, otherx)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb([], x, 1, y, z)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.lincomb(1, x, [], y, z)
+
+
 def test_multiply(fn):
     # space method
     x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
@@ -280,6 +305,23 @@ def test_multiply(fn):
 
     out.multiply(x, y)
     assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
+
+
+def test_multiply_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x, y = fn.zero(), fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.multiply(otherx, x, y)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.multiply(x, otherx, y)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.multiply(x, y, otherx)
 
 
 def _test_unary_operator(fn, function):
@@ -384,6 +426,20 @@ def test_inner(fn):
     assert almost_equal(xd.inner(yd), correct_inner)
 
 
+def test_inner_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x = fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.inner(otherx, x)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.inner(x, otherx)
+
+
 def test_norm(fn):
     xarr, x = _vectors(fn)
 
@@ -391,6 +447,16 @@ def test_norm(fn):
 
     assert almost_equal(fn.norm(x), correct_norm)
     assert almost_equal(x.norm(), correct_norm)
+
+
+def test_norm_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.norm(otherx)
 
 
 def test_pnorm(exponent):
@@ -409,6 +475,20 @@ def test_dist(fn):
 
     assert almost_equal(fn.dist(x, y), correct_dist)
     assert almost_equal(x.dist(y), correct_dist)
+
+
+def test_dist_exceptions(fn):
+    # Hack to make sure otherfn is different
+    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+
+    otherx = otherfn.zero()
+    x = fn.zero()
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.dist(otherx, x)
+
+    with pytest.raises(LinearSpaceTypeError):
+        fn.dist(x, otherx)
 
 
 def test_pdist(exponent):
@@ -1476,6 +1556,61 @@ def test_custom_dist(fn):
 
     with pytest.raises(TypeError):
         FnCustomDist(1)
+
+
+def _impl_test_ufuncs(fn, name, n_args, n_out):
+    # Get the ufunc from numpy as reference
+    ufunc = getattr(np, name)
+
+    # Create some data
+    data = _vectors(fn, n_args + n_out)
+    in_arrays = data[:n_args]
+    out_arrays = data[n_args:n_args + n_out]
+    data_vector = data[n_args + n_out]
+    in_vectors = data[1 + n_args + n_out:2 * n_args + n_out]
+    out_vectors = data[2 * n_args + n_out:]
+
+    # Out of place:
+    np_result = ufunc(*in_arrays)
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*in_vectors)
+    assert all_almost_equal(np_result, odl_result)
+
+    # Test type of output
+    if n_out == 1:
+        assert isinstance(odl_result, fn.element_type)
+    elif n_out > 1:
+        for i in range(n_out):
+            assert isinstance(odl_result[i], fn.element_type)
+
+    # In place:
+    np_result = ufunc(*(in_arrays + out_arrays))
+    vec_fun = getattr(data_vector.ufunc, name)
+    odl_result = vec_fun(*(in_vectors + out_vectors))
+    assert all_almost_equal(np_result, odl_result)
+
+    # Test inplace actually holds:
+    if n_out == 1:
+        assert odl_result is out_vectors[0]
+    elif n_out > 1:
+        for i in range(n_out):
+            assert odl_result[i] is out_vectors[i]
+
+
+def test_ufuncs():
+    # Cannot use fixture due to bug in pytest
+    fn = Rn(3)
+
+    for name, n_args, n_out, _ in UFUNCS:
+        if np.issubsctype(fn.dtype, np.floating) and name in ['bitwise_and',
+                                                              'bitwise_or',
+                                                              'bitwise_xor',
+                                                              'invert',
+                                                              'left_shift',
+                                                              'right_shift']:
+            # Skip integer only methods if floating point type
+            continue
+        yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
 if __name__ == '__main__':

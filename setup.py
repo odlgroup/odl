@@ -78,5 +78,6 @@ setup(name='odl',
           'testing': test_requires,
           'wavelets': 'Pywavelets',
           'fft': 'pyfftw',
-          'show': 'matplotlib'
+          'show': 'matplotlib',
+          'all': ['Pywavelets', 'pyfftw', 'matplotlib']
       })

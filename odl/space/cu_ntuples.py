@@ -32,6 +32,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector,
                                     FnWeightingBase)
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
+from odl.util.ufuncs import CudaNtuplesVectorUFuncs
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -81,7 +82,7 @@ _add_if_exists(np.uint8, 'CudaVectorUInt8')
 _add_if_exists(np.uint16, 'CudaVectorUInt16')
 _add_if_exists(np.uint32, 'CudaVectorUInt32')
 _add_if_exists(np.uint64, 'CudaVectorUInt64')
-CUDA_DTYPES = tuple(set(CUDA_DTYPES))  # Remove duplicates
+CUDA_DTYPES = list(set(CUDA_DTYPES))  # Remove duplicates
 
 
 class CudaNtuples(NtuplesBase):
@@ -103,7 +104,7 @@ class CudaNtuples(NtuplesBase):
             Check ``CUDA_DTYPES`` for a list of available data types.
         """
 
-        if dtype not in _TYPE_MAP_NPY2CUDA.keys():
+        if np.dtype(dtype) not in _TYPE_MAP_NPY2CUDA.keys():
             raise TypeError('data type {!r} not supported in CUDA'
                             ''.format(dtype))
 
@@ -427,6 +428,26 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                     self.data.setslice(indices, value_array)
             else:
                 self.data.__setitem__(int(indices), values)
+
+    @property
+    def ufunc(self):
+        """`CudaNtuplesVectorUFuncs`, access to numpy style ufuncs.
+
+        The following are optimized using cuda:
+
+        sin
+        cos
+        arcsin
+        arccos
+        log
+        exp
+        absolute
+        sign
+        sqrt
+
+        All other fall back onto the numpy implementation.
+        """
+        return CudaNtuplesVectorUFuncs(self)
 
 
 def _repr_space_funcs(space):
@@ -914,31 +935,6 @@ class CudaRnVector(CudaFnVector):
     def __init__(self, space, data):
         """Initialize a new instance."""
         super().__init__(space, data)
-
-# Methods
-# TODO: move
-
-
-def _make_unary_fun(name):
-    def fun(x, out=None):
-        if out is None:
-            out = x.space.element()
-        getattr(x.data, name)(out.data)
-        return out
-
-    fun.__doc__ = """Calculates {name} using cuda.""".format(name=name)
-
-    return fun
-
-sin = _make_unary_fun('sin')
-cos = _make_unary_fun('cos')
-arcsin = _make_unary_fun('arcsin')
-arccos = _make_unary_fun('arccos')
-log = _make_unary_fun('log')
-exp = _make_unary_fun('exp')
-abs = _make_unary_fun('abs')
-sign = _make_unary_fun('sign')
-sqrt = _make_unary_fun('sqrt')
 
 
 def _weighting(weight, exponent):
@@ -1470,10 +1466,8 @@ class CudaFnConstWeighting(FnWeightingBase):
         """
         if self.exponent == float('inf'):
             raise NotImplementedError
-            # Example impl
-            # return self.const * float(_pdist_default(x1, x2, self.exponent))
         else:
-            return (self.const**(1 / self.exponent) *
+            return (self.const ** (1 / self.exponent) *
                     _pdist_default(x1, x2, self.exponent))
 
     def __repr__(self):
@@ -1582,7 +1576,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         """
         return (isinstance(other, CudaFnCustomInnerProduct) and
                 self._inner_impl == other._inner_impl and
-                super().__eq__(other))
+                FnWeightingBase.__eq__(self, other))
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1590,7 +1584,7 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         if self._dist_using_inner:
             inner_fstr += ',dist_using_inner={dist_u_i}'
 
-        inner_str = inner_fstr.format(self.inner,
+        inner_str = inner_fstr.format(self._inner_impl,
                                       dist_u_i=self._dist_using_inner)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 

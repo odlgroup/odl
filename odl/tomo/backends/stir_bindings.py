@@ -24,11 +24,16 @@ Back and forward projectors for PET.
 objects of STIR projectors and back-projectors, these can be used to wrap a
 given projector.
 
-`projector_from_file` allows users a easy way to create a
+`stir_projector_from_file` allows users a easy way to create a
 `ForwardProjectorByBinWrapper` by giving file paths to the required templates.
 
-See the STIR `webpage
-<http://stir.sourceforge.net/>`_ for more information.
+References
+----------
+See the `STIR webpage`_ for more information and the `STIR doc`_ for info on
+the STIR classes used here.
+
+.. _STIR webpage: http://stir.sourceforge.net
+.. _STIR doc: http://stir.sourceforge.net/documentation/doxy/html/
 """
 
 # Imports for common Python 2/3 codebase
@@ -86,9 +91,9 @@ class ForwardProjectorByBinWrapper(Operator):
         ran : `DiscreteLp`
             Projection space. Needs to have the same shape as
             ``proj_data.to_array().shape()``.
-        volume : `stir.FloatVoxelsOnCartesianGrid`
+        volume : ``stir.FloatVoxelsOnCartesianGrid``
             The stir volume to use in the forward projection
-        proj_data : `stir.ProjData`
+        proj_data : ``stir.ProjData``
             The stir description of the projection.
         projector : ``stir.ForwardProjectorByBin``, optional
             A pre-initialized projector.
@@ -160,8 +165,6 @@ class ForwardProjectorByBinWrapper(Operator):
 class BackProjectorByBinWrapper(Operator):
 
     """The back projector using STIR.
-
-    Use the `StirProjectorFromFile.adjoint` method to create new objects.
     """
 
     def __init__(self, dom, ran, volume, proj_data,
@@ -177,14 +180,20 @@ class BackProjectorByBinWrapper(Operator):
         ran : `DiscreteLp`
             Volume of the projection. Needs to have the same shape as
             ``volume.shape()``.
-        volume : `stir.FloatVoxelsOnCartesianGrid`
+        volume : ``stir.FloatVoxelsOnCartesianGrid``
             The stir volume to use in the forward projection
-        projection_data : `stir.ProjData`
+        projection_data : ``stir.ProjData``
             The stir description of the projection.
         back_projector : ``stir.BackProjectorByBin``, optional
             A pre-initialized back-projector.
         adjoint : `ForwardProjectorByBinWrapper`, optional
             A pre-initialized adjoint.
+
+        References
+        ----------
+        See `STIR doc`_ for info on the STIR classes.
+
+        .. _STIR doc: http://stir.sourceforge.net/documentation/doxy/html/
         """
 
         # Check data sizes

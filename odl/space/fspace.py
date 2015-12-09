@@ -695,13 +695,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             raise TypeError('field {!r} not a `Field` instance.'
                             ''.format(field))
 
-        super().__init__(domain, field)
-        self._field = field
-
-    @property
-    def field(self):
-        """Return the field of this space."""
-        return self._field
+        FunctionSet.__init__(self, domain, field)
+        LinearSpace.__init__(self, field)
 
     def element(self, fcall=None, vectorized=True):
         """Create a `FunctionSpace` element.

@@ -35,6 +35,7 @@ from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
     is_scalar_dtype, is_real_dtype)
+from odl.util.ufuncs import NtuplesBaseVectorUFuncs
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector',
@@ -327,6 +328,15 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         return '{!r}.element({})'.format(self.space,
                                          array1d_repr(self))
 
+    @property
+    def ufunc(self):
+        """`NtuplesBaseVectorUFuncs`, access to numpy style ufuncs.
+
+        These are always available, but may or may not be optimized for
+        the specific space in use.
+        """
+        return NtuplesBaseVectorUFuncs(self)
+
 
 class FnBase(NtuplesBase, LinearSpace):
 
@@ -351,9 +361,10 @@ class FnBase(NtuplesBase, LinearSpace):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 
         if is_real_dtype(self.dtype):
-            self._field = RealNumbers()
+            field = RealNumbers()
         else:
-            self._field = ComplexNumbers()
+            field = ComplexNumbers()
+        LinearSpace.__init__(self, field)
 
     @abstractmethod
     def zero(self):
@@ -370,11 +381,6 @@ class FnBase(NtuplesBase, LinearSpace):
     @abstractmethod
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to ``out``."""
-
-    @property
-    def field(self):
-        """The field of this space."""
-        return self._field
 
     @property
     def element_type(self):

@@ -198,18 +198,12 @@ class ProductSpace(LinearSpace):
 
         self._spaces = tuple(spaces)
         self._size = len(spaces)
-        self._field = spaces[0].field
-        super().__init__()
+        super().__init__(spaces[0].field)
 
     @property
     def size(self):
         """The number of factors."""
         return self._size
-
-    @property
-    def field(self):
-        """The common underlying field of all factors."""
-        return self._field
 
     @property
     def spaces(self):

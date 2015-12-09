@@ -264,7 +264,13 @@ class Field(Set):
 
     @property
     def field(self):
-        """The field of scalars for a field is itself."""
+        """The field of scalars for a field is itself.
+
+        Notes
+        -----
+        This is a hack for this to work with duck-typing
+        with `LinearSpace`'s.
+        """
         return self
 
 

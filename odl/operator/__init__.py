@@ -33,3 +33,5 @@ __all__ += operator.__all__
 from . import pspace_ops
 from .pspace_ops import *
 __all__ += pspace_ops.__all__
+
+from . import oputils
