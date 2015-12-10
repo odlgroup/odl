@@ -301,13 +301,13 @@ if __name__ == '__main__':
     import odl
 
     # 2D
-    disc = odl.uniform_discr([-1, -1], [1, 1], [5, 5])
+    disc = odl.uniform_discr([-1, -1], [1, 1], [200, 200])
 
     shepp_logan(disc).show()
     derenzo_sources(disc).show()
 
     # Shepp-logan 3d
-    disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [100, 100, 100])
+    disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [200, 200, 200])
     shepp_logan_3d = shepp_logan(disc)
-    for i in [30, 50]:
+    for i in [60, 100]:
         shepp_logan_3d.show(indices=np.s_[:, :, i])
