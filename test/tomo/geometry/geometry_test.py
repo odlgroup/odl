@@ -33,8 +33,8 @@ from odl.tomo.geometry.detector import LineDetector, Flat2dDetector
 from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
-    HelicalConeFlatGeometry)
-from odl.util.testutils import almost_equal, all_almost_equal
+                                        HelicalConeFlatGeometry)
+from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 
 
 # TODO: test for axis orientation and scaling factors
@@ -114,7 +114,7 @@ def test_parallel_3d_geometry():
     with pytest.raises(ValueError):
         geom.det_rotation(2 * full_angle)
 
-    # rotation of cartesion basis vectors about each other
+    # rotation of cartesian basis vectors about each other
     a = 32.1
     e1 = np.matrix([a, 0, 0]).transpose()
     e2 = np.matrix([0, a, 0]).transpose()
@@ -124,19 +124,19 @@ def test_parallel_3d_geometry():
 
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=0)
     rot_mat = geom.det_rotation(np.pi / 2)
-    assert all(rot_mat * e1 == e1)
+    assert all_equal(rot_mat * e1, e1)
     assert almost_equal(np.sum(rot_mat * e2 - e3), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e3 - (-e2)), 0, places=places)
 
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=1)
     rot_mat = geom.det_rotation(np.pi / 2)
-    assert all(rot_mat * e2 == e2)
+    assert all_equal(rot_mat * e2, e2)
     assert almost_equal(np.sum(rot_mat * e3 - e1), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e1 - (-e3)), 0, places=places)
 
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=2)
     rot_mat = geom.det_rotation(np.pi / 2)
-    assert all(rot_mat * e3 == e3)
+    assert all_equal(rot_mat * e3, e3)
     assert almost_equal(np.sum(rot_mat * e1 - e2), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e2 - (-e1)), 0, places=places)
     assert all_almost_equal(np.array(rot_mat * e2), np.array(-e1),
@@ -148,17 +148,17 @@ def test_parallel_3d_geometry():
 
     # rotation axis
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=None)
-    assert all(geom.axis == np.array([0, 0, 1]))
+    assert all_equal(geom.axis, np.array([0, 0, 1]))
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=0)
-    assert all(geom.axis == np.array([1, 0, 0]))
+    assert all_equal(geom.axis, np.array([1, 0, 0]))
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=1)
-    assert all(geom.axis == np.array([0, 1, 0]))
+    assert all_equal(geom.axis, np.array([0, 1, 0]))
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=2)
-    assert all(geom.axis == np.array([0, 0, 1]))
+    assert all_equal(geom.axis, np.array([0, 0, 1]))
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2, 3))
-    assert all(geom.axis == np.array([1, 2, 3]))
+    assert all_equal(geom.axis, np.array([1, 2, 3]))
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=np.array((1, 2, 3)))
-    assert all(geom.axis == np.array([1, 2, 3]))
+    assert all_equal(geom.axis, np.array([1, 2, 3]))
 
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=(1,))
     with pytest.raises(ValueError):
@@ -172,6 +172,8 @@ def test_parallel_3d_geometry():
 
 
 def test_fanflat():
+    """2D fan beam geometry with 1D line detector."""
+
     # initialize
     full_angle = np.pi
     angle_intvl = Interval(0, full_angle)
@@ -222,6 +224,8 @@ def test_fanflat():
 
 
 def test_circular_cone_flat():
+    """Circular cone beam acquisition with flat 2d detector."""
+
     # initialize
     full_angle = np.pi
     angle_intvl = Interval(0, full_angle)
@@ -306,7 +310,7 @@ def test_helical_cone_flat():
     assert isinstance(geom.detector, Flat2dDetector)
 
     det_height = dparams.size[1]
-    assert all(dparams.size == (dparams.max() - dparams.min()))
+    assert all_equal(dparams.size, dparams.max() - dparams.min())
     assert geom.table_feed_per_rotation == spiral_pitch_factor * det_height
 
     det_refpoint = geom.det_refpoint(angle_intvl.max())
@@ -331,7 +335,6 @@ def test_helical_cone_flat():
     geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                    spiral_pitch_factor, angle_grid,
                                    det_grid, angle_offset)
-    print('\n angle offset', geom.angle_offset)
 
     angles = geom.angle_grid
     num_angles = geom.angle_grid.ntotal

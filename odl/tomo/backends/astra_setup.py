@@ -107,6 +107,15 @@ def astra_volume_geometry(discr_reco):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
+        # given a array of shape (x,y), a volume geometry is created as
+        #   create_vol_geom(x, y, y_min, y_max, x_min, x_max)
+        # yielding a dictionary with
+        #   'GridColCount': y,
+        #   'GridRowCount': x
+        #   'WindowMaxX': y_max
+        #   'WindowMaxY': x_max
+        #   'WindowMinX': y_min
+        #   'WindowMinY': x_min
         vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0])
