@@ -43,8 +43,23 @@ def _shepp_logan_ellipse_2d():
             [.10, .0230, .0460, .06, -.6050, 0]]
 
 
-def _shepp_logan_2d(space):
-    """Create a shepp logan phantom in 2d space."""
+def _phantom_2d(space, ellipses):
+    """Create a shepp logan phantom in 2d space.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        The space the phantom should be generated in.
+    ellipses : list of lists
+        Each row should contain:
+        'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'
+        The ellipses should be contained the he rectangle [-1, -1] x [1, 1].
+
+    Returns
+    -------
+    phantom : `DisceteLpVector`
+        The phantom
+    """
     ellipses = _shepp_logan_ellipse_2d()
 
     # Blank image
@@ -102,8 +117,26 @@ def _shepp_logan_ellipse_3d():
             [.100, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
 
 
-def _shepp_logan_3d(space):
-    """Create a shepp logan phantom in 3d space."""
+def _phantom_3d(space):
+    """Create a shepp logan phantom in 3d space.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        The space the phantom should be generated in.
+    ellipses : list of lists
+        Each row should contain:
+        'value', 'axis_1', 'axis_2', 'axis_2',
+        'center_x', 'center_y', 'center_z',
+        'rotation_phi', 'rotation_theta', 'rotation_psi'
+        The ellipses should be contained the he rectangle
+        [-1, -1, -1] x [1, 1, 1].
+
+    Returns
+    -------
+    phantom : `DisceteLpVector`
+        The phantom
+    """
     ellipses = _shepp_logan_ellipse_3d()
 
     # Blank image
@@ -165,8 +198,22 @@ def _shepp_logan_3d(space):
 
 def shepp_logan(space):
     if space.ndim == 2:
-        return _shepp_logan_2d(space)
+        return _phantom_2d(space, _shepp_logan_ellipse_2d())
     elif space.ndim == 3:
-        return _shepp_logan_3d(space)
+        return _phantom_3d(space, _shepp_logan_ellipse_3d())
     else:
         raise ValueError("Dimension not 2 or 3, no phantom available")
+
+if __name__ == '__main__':
+    # Show the phantoms
+    import odl
+
+    # Shepp-logan 2d
+    disc = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
+    odl.util.shepp_logan(disc).show()
+
+    # Shepp-logan 3d
+    disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [100, 100, 100])
+    shepp_logan_3d = odl.util.shepp_logan(disc)
+    for i in [30, 50]:
+        shepp_logan_3d.show(indices=np.s_[:, :, i])
