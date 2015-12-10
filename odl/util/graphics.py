@@ -41,6 +41,8 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     Parameters
     ----------
+    dfunc : `DiscreteLpVector`
+        The discretized funciton to visualize.
     method : `str`, optional
         1d methods:
 
