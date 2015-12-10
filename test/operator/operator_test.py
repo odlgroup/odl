@@ -657,49 +657,154 @@ def test_nonlinear_functional_operators():
     assert almost_equal(C(x), A(x / 2.0))
 
 
-def test_signature_from_spec():
+# test functions to dispatch
+def f1(x):
+    """f1(x)
+    False, False
+    good
+    """
 
-    true_sig = '<lambda>(x, y, out=None, param=2, *args, **kwargs)'
-    sig = _signature_from_spec(lambda x, y, out=None, param=2,
-                               *args, **kwargs: None)
-    assert true_sig == sig
 
-    true_sig = '<lambda>(x, out=None, param=2, **kwargs)'
-    sig = _signature_from_spec(lambda x, out=None, param=2, **kwargs: None)
-    assert true_sig == sig
+def f2(x, y):
+    """f2(x, y)
+    False, False
+    bad
+    """
 
-    true_sig = '<lambda>(x, out=None, param=2)'
-    sig = _signature_from_spec(lambda x, out=None, param=2: None)
-    assert true_sig == sig
 
-    true_sig = '<lambda>(out=None, param=2)'
-    sig = _signature_from_spec(lambda out=None, param=2: None)
-    assert true_sig == sig
+def f3(x, y, out):
+    """f3(x, y, out)
+    False, True
+    bad
+    """
 
-    true_sig = '<lambda>(x, y)'
-    sig = _signature_from_spec(lambda x, y: None)
-    assert true_sig == sig
 
-    true_sig = '<lambda>(*args)'
-    sig = _signature_from_spec(lambda *args: None)
-    assert true_sig == sig
+def f4(*args):
+    """f4(*args)
+    False, False
+    bad
+    """
 
-    true_sig = '<lambda>(**kwargs)'
-    sig = _signature_from_spec(lambda **kwargs: None)
-    assert true_sig == sig
 
-@pytest.mark.skipif('sys.version_info.major <= 2')
-def test_signature_from_spec_py3():
+def f5(out):
+    """f5(out)
+    True, False
+    bad
+    """
 
-    true_sig = '<lambda>(x, *, out=None, param=2, **kwargs)'
-    func = eval('lambda x, *, out=None, param=2, **kwargs: x')
+
+def f6(**kwargs):
+    """f6(**kwargs)
+    False, False
+    bad
+    """
+
+
+def f7(*args, **kwargs):
+    """f7(*args, **kwargs)
+    False, False
+    bad
+    """
+
+
+def f8(out=None, param=2):
+    """f8(out=None, param=2)
+    True, True
+    bad
+    """
+
+
+def f9(x, out=None):
+    """f9(x, out=None)
+    True, True
+    good
+    """
+
+
+def f10(x, out=None, param=2):
+    """f10(x, out=None, param=2)
+    True, True
+    bad
+    """
+
+
+def f11(x, out, **kwargs):
+    """f11(x, out, **kwargs)
+    True, False
+    good
+    """
+
+
+def f12(x, y, out=None, param=2, *args, **kwargs):
+    """f12(x, y, out=None, param=2, *args, **kwargs)
+    True, True
+    bad
+    """
+
+
+py3 = sys.version_info.major > 2
+if py3:
+    exec('''
+def f13(x, *, out=None, param=2, **kwargs):
+    """f13(x, *, out=None, param=2, **kwargs)
+    True, True
+    good
+    """
+''')
+
+    exec('''
+def f14(x, *y, out=None, param=2, **kwargs):
+    """f14(x, *y, out=None, param=2, **kwargs)
+    True, True
+    bad
+    """
+''')
+
+
+func_params = [eval('f{}'.format(i)) for i in range(1, 13)]
+if py3:
+    func_params += [eval('f{}'.format(i)) for i in range(13, 15)]
+func_ids = [' f{} '.format(i) for i in range(1, 13)]
+if py3:
+    func_ids += [' f{} '.format(i) for i in range(13, 15)]
+func_fixture = pytest.fixture(scope="module", ids=func_ids, params=func_params)
+
+
+@func_fixture
+def func(request):
+    return request.param
+
+
+def test_signature_from_spec(func):
+
+    true_sig = func.__doc__.splitlines()[0].strip()
     sig = _signature_from_spec(func)
     assert true_sig == sig
 
-    true_sig = '<lambda>(x, *y, out=None, param=2, **kwargs)'
-    func = eval('lambda x, *y, out=None, param=2, **kwargs: x')
-    sig = _signature_from_spec(func)
-    assert true_sig == sig
+
+def test_dispatch_call_args(func):
+    import inspect
+
+    py3 = sys.version_info.major > 2
+    getspec = inspect.getfullargspec if py3 else inspect.getargspec
+
+    # Unbound functions
+    true_has, true_opt = eval(func.__doc__.splitlines()[1].strip())
+    good = True if func.__doc__.splitlines()[2].strip() == 'good' else False
+
+    if good:
+        truespec = getspec(func)
+        truespec.args.insert(0, 'self')
+
+        has, opt, spec = _dispatch_call_args(unbound_call=func)
+
+        assert has == true_has
+        assert opt == true_opt
+        assert spec == truespec
+    else:
+        with pytest.raises(ValueError):
+            _dispatch_call_args(unbound_call=func)
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
