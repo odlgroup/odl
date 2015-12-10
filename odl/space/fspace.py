@@ -111,16 +111,13 @@ class FunctionSet(Set):
             It must return an `range` element or a
             `numpy.ndarray` of such (vectorized call).
 
-            If fcall is a `FunctionSetVector`, it is wrapped
-            as a new `FunctionSetVector`.
-
-        vectorized : bool, optional
-            Whether the function supports vectorized evaluation
+        vectorized : bool
+            Whether ``fcall`` supports vectorized evaluation.
 
         Returns
         -------
         element : `FunctionSetVector`
-            The new element created
+            The new element, always supports vectorization
 
         See also
         --------
@@ -131,7 +128,8 @@ class FunctionSet(Set):
             raise TypeError('function {!r} is not callable.'.format(fcall))
 
         if not vectorized:
-            fcall = vectorize(fcall, outarg='optional')
+            fcall = vectorize(dtype=None, outarg='optional')(fcall)
+            print('after vectorization: type ', type(fcall))
 
         return self.element_type(self, fcall)
 
@@ -210,9 +208,11 @@ class FunctionSetVector(Operator):
                                  'input parameter.')
             call_has_out = call_out_optional = True
         elif isfunction(fcall):
+            print('isfunction: ', isfunction(fcall))
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 unbound_call=fcall)
         elif isclass(fcall):
+            print('class, type ', type(fcall))
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 bound_call=fcall.__call__)
         else:
@@ -249,9 +249,14 @@ class FunctionSetVector(Operator):
     def _call(self, x, out=None, **kwargs):
         """Raw evaluation method."""
         if out is None:
+            print('out None, oop func type:', type(self._call_out_of_place))
             out = self._call_out_of_place(x, **kwargs)
+            print('out None, out type:', type(out))
+            print(type(out))
         else:
+            print('out given, ip func type:', type(self._call_out_of_place))
             self._call_in_place(x, out=out, **kwargs)
+            print('out given, out type:', type(out))
         return out
 
     def __call__(self, x, out=None, **kwargs):
@@ -311,20 +316,19 @@ class FunctionSetVector(Operator):
                                  'domain {}, missing `contains_all()` '
                                  'method.'.format(self.domain))
 
-        if x not in self.domain:
-            try:
-                x = self.domain.element(x)
-                x = np.atleast_2d(x).T  # make a (d, 1) array
-                scalar_out = (out is None)
-            except (TypeError, ValueError):
-                scalar_out = False
-
         # Check for input type and determine output shape
         if is_valid_input_array(x, self.domain.ndim):
             out_shape = out_shape_from_array(x)
+            scalar_out = False
         elif is_valid_input_meshgrid(x, self.domain.ndim):
             out_shape = out_shape_from_meshgrid(x)
+            scalar_out = False
+        elif x in self.domain:
+            x = np.atleast_2d(x).T  # make a (d, 1) array
+            out_shape = (1,)
+            scalar_out = (out is None)
         else:
+            # Unknown input
             raise TypeError('argument {!r} not a valid vectorized '
                             'input. Expected an element of the domain '
                             '{dom}, a ({dom.ndim}, n) array '
@@ -470,17 +474,27 @@ class FunctionSpace(FunctionSet, LinearSpace):
             as a new `FunctionSpaceVector`.
 
         vectorized : bool
-            Whether the function supports vectorized evaluation.
+            Whether ``fcall`` supports vectorized evaluation.
 
         Returns
         -------
         element : `FunctionSpaceVector`
-            The new element.
+            The new element, always supports vectorization
         """
         if fcall is None:
-            return self.zero(vectorized=vectorized)
+            return self.zero()
         else:
-            return FunctionSet.element(self, fcall, vectorized=vectorized)
+            if not callable(fcall):
+                raise TypeError('function {!r} is not callable.'.format(fcall))
+            if not vectorized:
+                if self.field == RealNumbers():
+                    dtype = 'float64'
+                else:
+                    dtype = 'complex128'
+
+                fcall = vectorize(dtype=dtype, outarg='optional')(fcall)
+
+            return self.element_type(self, fcall)
 
     def zero(self):
         """The function mapping everything to zero.
@@ -536,8 +550,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             return True
 
         return (isinstance(other, FunctionSpace) and
-                self.domain == other.domain and
-                self.range == other.range)
+                FunctionSet.__eq__(self. other))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination of `x1` and `x2`.
@@ -590,7 +603,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
             elif b == 0 and a != 0:
                 x1_call_ip(x, out)
                 if a != 1:
+                    print('scaling the array')
+                    print('before: ', out)
                     out *= a
+                    print('after: ', out)
             else:
                 tmp = np.empty_like(out)
                 x1_call_ip(x, out)
@@ -607,7 +623,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if out is None:
                 return lincomb_call_out_of_place(x)
             else:
-                return lincomb_call_in_place(x, out)
+                print('returning ', lincomb_call_in_place(x, out))
+                # return lincomb_call_in_place(x, out)
 
         out._call_out_of_place = out._call_in_place = lincomb_call
         out._call_has_out = out._call_out_optional = True
@@ -658,6 +675,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def quotient_call_out_of_place(x):
             """The quotient out-of-place evaluation function."""
+            print('in quotient: func types ', type(x1_call_oop),
+                  type(x2_call_oop))
+            print('in quotient: result types ', type(x1_call_oop(x)),
+                  type(x2_call_oop(x)))
+            print('result 1: ', x1_call_oop(x))
+            print('result 2: ', x2_call_oop(x))
             return x1_call_oop(x) / x2_call_oop(x)
 
         def quotient_call_in_place(x, out):
@@ -735,34 +758,32 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     @property
     def element_type(self):
-        """ `FunctionSpaceVector` """
+        """`FunctionSpaceVector`"""
         return FunctionSpaceVector
 
 
-class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
+class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
 
     """Representation of a `FunctionSpace` element."""
 
-    def __init__(self, fspace, fcall=None, vectorized=True):
+    def __init__(self, fspace, fcall):
         """Initialize a new instance.
 
         Parameters
         ----------
         fspace : `FunctionSpace`
             The set of functions this element lives in
-        fcall : `callable`, optional
+        fcall : `callable`
             The actual instruction for out-of-place evaluation.
             It must return an `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
-        vectorized : bool
-            Whether the function supports vectorized
-            evaluation.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('function space {!r} not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
-        FunctionSetVector.__init__(self, fspace, fcall, vectorized=vectorized)
+        FunctionSetVector.__init__(self, fspace, fcall)
+        LinearSpaceVector.__init__(self, fspace)
         if self._call_has_out and not self._call_out_optional:
             # Now we can use a default out-of-place implementation
             dtype = float if fspace.field == RealNumbers() else complex
@@ -774,6 +795,97 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
                 return wrapper
 
             self._call_out_of_place = oop_wrapper(_default_out_of_place)
+
+    # Some additional magic methods not defined for arbitrary linear spaces
+    def __add__(self, other):
+        """Return ``self + other``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.lincomb(1, self, 1, tmp, out=tmp)
+        elif other in self.space:
+            return self.space.lincomb(1, self, 1, other)
+        else:
+            return NotImplemented
+
+    def __radd__(self, other):
+        """Return ``other + self``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.lincomb(1, tmp, 1, self, out=tmp)
+        elif other in self.space:
+            return self.space.lincomb(1, other, 1, self)
+        else:
+            return NotImplemented
+
+    def __sub__(self, other):
+        """Return ``self - other``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.lincomb(1, self, -1, tmp, out=tmp)
+        elif other in self.space:
+            return self.space.lincomb(1, self, -1, other)
+        else:
+            return NotImplemented
+
+    def __rsub__(self, other):
+        """Return ``other - self``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.lincomb(1, tmp, -1, self, out=tmp)
+        elif other in self.space:
+            return self.space.lincomb(1, other, -1, self)
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        """Return ``self * other``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.multiply(self, tmp, out=tmp)
+        elif other in self.space:
+            return self.space.multiply(self, other)
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other):
+        """Return ``other * self``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.multiply(tmp, self, out=tmp)
+        elif other in self.space:
+            return self.space.multiply(other, self)
+        else:
+            return NotImplemented
+
+    def __truediv__(self, other):
+        """Return ``self / other``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.divide(self, tmp, out=tmp)
+        elif other in self.space:
+            return self.space.divide(self, other)
+        else:
+            return NotImplemented
+
+    def __rtruediv__(self, other):
+        """Return ``other / self``."""
+        if other in self.space.field:
+            tmp = self.space.one()
+            self.space.lincomb(other, tmp, out=tmp)
+            return self.space.divide(tmp, self, out=tmp)
+        elif other in self.space:
+            return self.space.divide(other, self)
+        else:
+            return NotImplemented
+
+    __rdiv__ = __rtruediv__
 
     def __pow__(self, p):
         """`f.__pow__(p) <==> f ** p`."""
