@@ -31,10 +31,24 @@ __all__ = ('shepp_logan',)
 
 def _shepp_logan_ellipse_2d():
     # Modified Shepp Logan
+    return [[2.00, .6900, .9200, 0, 0, 0],
+            [-.98, .6624, .8740, 0, -.0184, 0],
+            [-.02, .1100, .3100, .22, 0, -18],
+            [-.02, .1600, .4100, -.22, 0, 18],
+            [.01, .2100, .2500, 0, .3500, 0],
+            [.01, .0460, .0460, 0, .1000, 0],
+            [.01, .0460, .0460, 0, -.1000, 0],
+            [.01, .0460, .0230, -.08, -.6050, 0],
+            [.01, .0230, .0230, 0, -.6060, 0],
+            [.01, .0230, .0460, .06, -.6050, 0]]
+
+
+def _modified_shepp_logan_ellipse_2d():
+    # Modified Shepp Logan
     return [[1.00, .6900, .9200, 0, 0, 0],
             [-.80, .6624, .8740, 0, -.0184, 0],
-            [-.20, .1100, .3100, .22, 0, -18 * np.pi / 180],
-            [-.20, .1600, .4100, -.22, 0, 18 * np.pi / 180],
+            [-.20, .1100, .3100, .22, 0, -18],
+            [-.20, .1600, .4100, -.22, 0, 18],
             [.10, .2100, .2500, 0, .3500, 0],
             [.10, .0460, .0460, 0, .1000, 0],
             [.10, .0460, .0460, 0, -.1000, 0],
@@ -167,7 +181,7 @@ def _phantom_2d(space, ellipses):
         b2 = ellip[2] ** 2
         x0 = ellip[3]
         y0 = ellip[4]
-        phi = ellip[5]
+        phi = ellip[5] * np.pi / 180.0
 
         # Create the offset x and y values for the grid
         offset_points = points - [x0, y0]
@@ -189,6 +203,20 @@ def _phantom_2d(space, ellipses):
 
 
 def _shepp_logan_ellipse_3d():
+    # Shepp Logan
+    return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
+            [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
+            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
+            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 10],
+            [.010, .2100, .2500, .410, 0.0000, 0.3500, -.15, 0.0, 0, 0],
+            [.010, .0460, .0460, .050, 0.0000, 0.1000, 0.25, 0.0, 0, 0],
+            [.010, .0460, .0460, .050, 0.0000, -.1000, 0.25, 0.0, 0, 0],
+            [.010, .0460, .0230, .050, -.0800, -.6050, 0.00, 0.0, 0, 0],
+            [.010, .0230, .0230, .020, 0.0000, -.6060, 0.00, 0.0, 0, 0],
+            [.010, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
+
+
+def _modified_shepp_logan_ellipse_3d():
     # Modified Shepp Logan
     return [[1.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
             [-.80, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
@@ -287,11 +315,17 @@ def derenzo_sources(space):
         raise ValueError("Dimension not 2, no phantom available")
 
 
-def shepp_logan(space):
+def shepp_logan(space, modified=True):
     if space.ndim == 2:
-        return _phantom_2d(space, _shepp_logan_ellipse_2d())
+        if modified:
+            return _phantom_2d(space, _modified_shepp_logan_ellipse_2d())
+        else:
+            return _phantom_2d(space, _shepp_logan_ellipse_2d())
     elif space.ndim == 3:
-        return _phantom_3d(space, _shepp_logan_ellipse_3d())
+        if modified:
+            return _phantom_3d(space, _modified_shepp_logan_ellipse_3d())
+        else:
+            return _phantom_3d(space, _shepp_logan_ellipse_3d())
     else:
         raise ValueError("Dimension not 2 or 3, no phantom available")
 
@@ -303,7 +337,7 @@ if __name__ == '__main__':
     # 2D
     disc = odl.uniform_discr([-1, -1], [1, 1], [200, 200])
 
-    shepp_logan(disc).show()
+    shepp_logan(disc, modified=False).show(clim=[0.01, 1.1])
     derenzo_sources(disc).show()
 
     # Shepp-logan 3d
