@@ -27,18 +27,20 @@ import pytest
 # Internal
 from odl.set.domain import RealNumbers, Interval, IntervalProd
 from odl.discr.grid import TensorGrid, uniform_sampling
-from odl.discr.lp_discr import uniform_discr
+from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
 from odl.space.fspace import FunctionSpace
 from odl.util.testutils import all_equal, is_subdict
 from odl.tomo import ASTRA_AVAILABLE
-from odl.tomo.backends.astra_setup import (
-    astra_projection_geometry, astra_volume_geometry, astra_data,
-    astra_projector, astra_algorithm, astra_cleanup, astra_geom_to_vec)
+from odl.tomo.backends.astra_setup import (astra_projection_geometry,
+                                           astra_volume_geometry,
+                                           astra_data, astra_projector,
+                                           astra_algorithm, astra_cleanup,
+                                           astra_geom_to_vec)
 from odl.tomo.geometry.parallel import (Parallel2dGeometry,
-                                       Parallel3dGeometry)
+                                        Parallel3dGeometry)
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
-                                       HelicalConeFlatGeometry)
+                                        HelicalConeFlatGeometry)
 from odl.tomo.util.testutils import skip_if_no_astra
 
 if ASTRA_AVAILABLE:
@@ -53,8 +55,8 @@ def _discrete_domain(ndim, interp):
 
     dom = FunctionSpace(IntervalProd(minpt, maxpt), RealNumbers())
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
-    return uniform_discr(dom, nsamples=nsamples, interp=interp,
-                         dtype='float32')
+    return uniform_discr_fromspace(dom, nsamples=nsamples, interp=interp,
+                                   dtype='float32')
 
 
 def _discrete_domain_anisotropic(ndim, interp):
@@ -62,20 +64,29 @@ def _discrete_domain_anisotropic(ndim, interp):
     maxpt = [1] * ndim
     dom = FunctionSpace(IntervalProd(minpt, maxpt))
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
-    return uniform_discr(dom, nsamples=nsamples, interp=interp,
-                         dtype='float32')
+    return uniform_discr_fromspace(dom, nsamples=nsamples, interp=interp,
+                                   dtype='float32')
 
 
 @skip_if_no_astra
 def test_vol_geom_2d():
+    """Create ASTRA 2D volume geometry."""
+
     discr_dom = _discrete_domain(2, 'nearest')
     vol_geom = astra_volume_geometry(discr_dom)
 
-    # x = columns, y = rows
+    x_pts = 10  # x_pts = Rows
+    y_pts = 20  # y_pts = Columns
+    assert discr_dom.grid.shape == (x_pts, y_pts)
+
     correct_dict = {
-        'GridColCount': 10, 'GridRowCount': 20,
-        'option': {'WindowMinX': -1.0, 'WindowMaxX': 1.0,
-                   'WindowMinY': -2.0, 'WindowMaxY': 2.0}}
+        'GridColCount': y_pts,
+        'GridRowCount': x_pts,
+        'option': {
+            'WindowMinX': -2.0,  # y_min
+            'WindowMaxX': 2.0,  # y_max
+            'WindowMinY': -1.0,  # x_min
+            'WindowMaxY': 1.0}}  # x_amx
 
     assert vol_geom == correct_dict
 
@@ -83,11 +94,6 @@ def test_vol_geom_2d():
     discr_dom = _discrete_domain_anisotropic(2, 'nearest')
     with pytest.raises(NotImplementedError):
         astra_volume_geometry(discr_dom)
-
-# correct_dict = {
-#        'GridColCount': 10, 'GridRowCount': 20,
-#        'option': {'WindowMinX': -1.0, 'WindowMaxX': 1.0,
-#                   'WindowMinY': -1.0, 'WindowMaxY': 1.0}}
 
 
 @skip_if_no_astra
