@@ -107,9 +107,9 @@ def astra_volume_geometry(discr_reco):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
-        # given a array of shape (x,y), a volume geometry is created as
-        #   create_vol_geom(x, y, y_min, y_max, x_min, x_max)
-        # yielding a dictionary with
+        # given a 2D array of shape (x,y), a volume geometry is created as:
+        #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
+        # yielding a dictionary:
         #   'GridColCount': y,
         #   'GridRowCount': x
         #   'WindowMaxX': y_max
@@ -126,10 +126,22 @@ def astra_volume_geometry(discr_reco):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
-        # given a vol(x,y,z) ASTRA interprets dimension x,yz as
-        # 'GridColCount': z, 'GridSliceCount': x, 'GridRowCount': y}
-        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[2], vol_shp[0])
-
+        # given a 3D array of shape (x,y,z), a volume geometry is created as:
+        #    astra.create_vol_geom(y, z, x, )
+        # yielding a dictionary:
+        #   'GridColCount': z
+        #   'GridRowCount': y
+        #   'GridSliceCount': x
+        #   'WindowMinX': z_max
+        #   'WindowMaxX': z_max
+        #   'WindowMinY': y_min
+        #   'WindowMaxY': y_min
+        #   'WindowMinZ': x_min
+        #   'WindowMaxZ': x_min
+        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[2], vol_shp[0],
+                                         vol_min[2], vol_max[2],
+                                         vol_min[1], vol_max[1],
+                                         vol_min[0], vol_max[0])
     else:
         raise ValueError('{}-dimensional volume geometries not supported '
                          'by ASTRA.'.format(discr_reco.ndim))
@@ -307,58 +319,65 @@ def astra_projection_geometry(geometry, vol_data_space=None):
             raise NotImplementedError('non-isotropic voxels {} not supported by'
                                       ' ASTRA.'.format(voxel_width))
         voxel_width = voxel_width[0]
+    else:
+        voxel_width = 1
 
     # TODO: fanflat_vec: fan flat for arbitrary detector / source positions
-    # !! for 3D geometries detector width is relative to voxel size!!
+    # As of ASTRA version 1.7beta the volume width can be specified in the
+    # volume geometry creator also for 3D geometries. For version < 1.7
+    # this was possible only for 2D geometries. Thus, projection geometries do
+    #  not have to be rescaled any more by the (isotropic) voxel size.
     if isinstance(geometry, Parallel2dGeometry):
         det_width = geometry.det_grid.stride[0]
-        # det_width = geometry.det_grid.stride[0] / voxel_width
         det_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
         proj_geom = astra.create_proj_geom(
             'parallel', det_width, det_count, angles)
     elif isinstance(geometry, FanFlatGeometry):
         det_width = geometry.det_grid.stride[0]
-        # det_width = geometry.det_grid.stride[0] / voxel_width
         det_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
         source_origin = geometry.src_radius
-        origin_det = geometry.det_radius  # Labelled falsely in PyASTRA doc
-        # as `source_det`
+        # False label in PyASTRA doc as `source_det`
+        origin_det = geometry.det_radius
         proj_geom = astra.create_proj_geom(
             'fanflat', det_width, det_count, angles, source_origin, origin_det)
     elif isinstance(geometry, Parallel3dGeometry):
         # ASTRA: x ?
-        det_width = geometry.det_grid.stride[0] / voxel_width
+        # det_width = geometry.det_grid.stride[0] / voxel_width
+        det_width = geometry.det_grid.stride[0]
         # ASTRA: y ?
-        det_height = geometry.det_grid.stride[1] / voxel_width
+        # det_height = geometry.det_grid.stride[1] / voxel_width
+        det_height = geometry.det_grid.stride[1]
         det_row_count = geometry.det_grid.shape[1]
         det_col_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
-        print('\n p2d', voxel_width, det_width, det_height, det_row_count,
-              det_col_count, angles[0], angles[-1], geometry.det_grid.min(),
-              geometry.det_grid.max())
         proj_geom = astra.create_proj_geom(
             'parallel3d', det_width, det_height, det_row_count,
             det_col_count, angles)
     elif isinstance(geometry, CircularConeFlatGeometry):
         # ASTRA: x ?
-        det_width = geometry.det_grid.stride[0] / voxel_width
+        # det_width = geometry.det_grid.stride[0] / voxel_width
+        det_width = geometry.det_grid.stride[0]
         # ASTRA: y ?
-        det_height = geometry.det_grid.stride[1] / voxel_width
+        # det_height = geometry.det_grid.stride[1] / voxel_width
+        det_height = geometry.det_grid.stride[1]
         det_row_count = geometry.det_grid.shape[0]
         det_col_count = geometry.det_grid.shape[1]
         angles = geometry.motion_grid.coord_vectors[0]
-        source_origin = geometry.src_radius / voxel_width
+        # source_origin = geometry.src_radius / voxel_width
+        source_origin = geometry.src_radius
         # ! In PyASTRA doc falsely labelled `source_det`
-        origin_det = geometry.det_radius / voxel_width
+        # origin_det = geometry.det_radius / voxel_width
+        origin_det = geometry.det_radius
         proj_geom = astra.create_proj_geom(
             'cone', det_width, det_height, det_row_count, det_col_count,
             angles, source_origin, origin_det)
     elif isinstance(geometry, HelicalConeFlatGeometry):
         det_row_count = geometry.det_grid.shape[0]
         det_col_count = geometry.det_grid.shape[1]
-        vec = astra_geom_to_vec(geometry) / voxel_width
+        # vec = astra_geom_to_vec(geometry) / voxel_width
+        vec = astra_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom(
             'cone_vec', det_row_count, det_col_count, vec)
     else:
