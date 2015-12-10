@@ -150,7 +150,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
                         attr='_call'):
     """Check the arguments of ``_call()`` or similar for conformity.
 
-    The ``_call()`` method of :class:`Operator` is allowed to have the
+    The ``_call()`` method of `Operator` is allowed to have the
     following signatures:
 
     Python 2 and 3:
@@ -168,7 +168,8 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     The name of the ``out`` argument **must** be 'out', the second
     argument may have any name.
 
-    Additional variable ``**kwargs`` are also allowed.
+    Additional variable ``**kwargs`` and keyword-only arguments
+    (Python 3 only) are also allowed.
 
     Not allowed:
         - ``_call(self)`` -- No arguments except instance:
@@ -200,7 +201,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
         Whether the call has an ``out`` argument
     out_is_optional : `bool`
         Whether the ``out`` argument is optional
-    spec : :class:`~inspect.ArgSpec` or :class:`~inspect.FullArgSpec`
+    spec : `inspect.ArgSpec` or `inspect.FullArgSpec`
         Argument specification of the checked call function
 
     Raises
@@ -470,8 +471,57 @@ class Operator(object):
                 raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                                 'instance.'.format(range))
 
-    def _call(self, *args, **kwargs):
-        """Raw evaluation method. Needs to be overridden by subclasses."""
+    def _call(self, x, out=None, **kwargs):
+        """Implementation of the operator evaluation.
+
+        This method is private backend for the evaluation of this
+        operator. It needs to match certain signature conventions,
+        and its implementation type is inferred from its signature.
+
+        The following signatures are allowed:
+
+        Python 2 and 3:
+            - ``_call(self, x)``  -->  out-of-place evaluation
+            - ``_call(self, vec, out)``  -->  in-place evaluation
+            - ``_call(self, x, out=None)``   --> both
+
+        Python 3 only:
+            - ``_call(self, x, *, out=None)`` (``out`` as keyword-only
+              argument)  --> both
+
+        For disambiguation, the instance name (the first argument) **must**
+        be 'self'.
+
+        The name of the ``out`` argument **must** be 'out', the second
+        argument may have any name.
+
+        Additional variable ``**kwargs`` and keyword-only arguments
+        (Python 3 only) are also allowed.
+
+        **General advice:**
+        - We recommend to implement the *in-place*
+          pattern if your code supports it since it avoids the
+          allocation of a new element and a copy compared to the
+          out-of-place one.
+        - If there is a significant performance gain from implementing
+          an out-of-place method separately, use the pattern for both
+          (``out`` optional) and decide according to the given ``out``
+          parameter which one to use.
+        - Use the out-of-place pattern only if your evaluation
+          code does not support in-place calculations.
+
+        See the documentation for more info on in-place vs. out-of-place
+        evaluation.
+
+        TODO: add link
+
+        Notes
+        -----
+        The public call pattern ``op()`` using ``op.__call__`` provides
+        a default implementation of the underlying in-place or
+        out-of-place call even if you choose the respective other
+        pattern.
+        """
         raise NotImplementedError
 
     @property

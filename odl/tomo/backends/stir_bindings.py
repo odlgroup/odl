@@ -144,7 +144,7 @@ class ForwardProjectorByBinWrapper(Operator):
         else:
             self._adjoint = adjoint
 
-    def _apply(self, volume, out):
+    def _call(self, volume, out):
         """Forward project a volume."""
         # Set volume data
         self.volume.fill(volume.asarray().flat)
@@ -238,7 +238,7 @@ class BackProjectorByBinWrapper(Operator):
         else:
             self._adjoint = adjoint
 
-    def _apply(self, projections, out):
+    def _call(self, projections, out):
         """Back project."""
         # Set projection data
         self.proj_data.fill(projections.asarray().flat)

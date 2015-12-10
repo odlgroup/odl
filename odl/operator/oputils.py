@@ -37,7 +37,7 @@ def matrix_representation(op):
 
     Parameters
     ----------
-    op : :class:`~odl.Operator`
+    op : `Operator`
         The linear operator of which one wants a matrix representation.
 
     Returns
