@@ -114,7 +114,7 @@ class DiscreteXrayTransform(Operator):
         # type as the domain.
         # TODO: maybe use a ProductSpace structure
         ran_uspace = FunctionSpace(geometry.params)
-        ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
+        ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,weight=geometry.grid.cell_volume, # CHECKME: Is this the right weight?
                                            dtype=discr_dom.dspace.dtype)
 
         ran_interp = kwargs.pop('range_interpolation', 'nearest')
@@ -126,6 +126,8 @@ class DiscreteXrayTransform(Operator):
             self._backend = 'astra_cuda'
         else:
             self._backend = 'astra_cpu'
+
+        self._adjoint = DiscreteXrayTransform.Adjoint(self)
 
     @property
     def backend(self):
@@ -148,6 +150,35 @@ class DiscreteXrayTransform(Operator):
                 return astra_gpu_forward_projector_call(inp, self.geometry,
                                                         self.range)
             else:
-                raise ValueError('unkown implementation {}.'.format(impl))
+                raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
             raise RuntimeError('backend support information is inconsistent.')
+
+    def _call_adjoint(self, inp):
+        """Call the adjoint transform on an input, producing a new vector."""
+        back, impl = self.backend.split('_')
+        if back == 'astra':
+            if impl == 'cpu':
+                return astra_cpu_backward_projector_call(inp, self.geometry,
+                                                        self.domain)
+            elif impl == 'cuda':
+                return astra_gpu_backward_projector_call(inp, self.geometry,
+                                                        self.domain)
+            else:
+                raise ValueError('unknown implementation {}.'.format(impl))
+        else:  # Should never happen
+            raise RuntimeError('backend support information is inconsistent.')
+
+    @property
+    def adjoint(self):
+        return self._adjoint
+
+    class Adjoint(Operator):
+        def __init__(self, forward):
+            self.forward = forward
+            super().__init__(forward._range, forward._domain, forward._is_linear)
+        def _call(self, inp):
+            return self.forward._call_adjoint(inp)
+        @property
+        def adjoint(self):
+            return self.forward
