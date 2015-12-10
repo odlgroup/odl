@@ -136,9 +136,8 @@ class LinearSpace(Set):
         resort to `inner` which is type-checked.
         """
         # No default implementation possible
-        raise LinearSpaceNotImplementedError('inner product not implemented'
-                                             'in space {!r}'
-                                             ''.format(self))
+        raise LinearSpaceNotImplementedError(
+            'inner product not implemented in space {!r}'.format(self))
 
     def _multiply(self, x1, x2, out):
         """Calculate the pointwise multiplication out = x1 * x2.
@@ -147,9 +146,8 @@ class LinearSpace(Set):
         resort to `multiply` which is type-checked.
         """
         # No default implementation possible
-        raise LinearSpaceNotImplementedError('multiplication not implemented'
-                                             'in space '
-                                             '{!r}'.format(self))
+        raise LinearSpaceNotImplementedError(
+            'multiplication not implemented in space {!r}'.format(self))
 
     def one(self):
         """A one vector in this space.
@@ -161,7 +159,8 @@ class LinearSpace(Set):
         v : `LinearSpaceVector`
             The one vector of this space
         """
-        raise LinearSpaceNotImplementedError('This space has no one')
+        raise LinearSpaceNotImplementedError(
+            '"one" element not implemented in space {!r}.'.format(self))
 
     # Default methods
     def zero(self):
@@ -536,12 +535,15 @@ class LinearSpaceVector(object):
     def __truediv__(self, other):
         """Return ``self / other``."""
         if other in self.space.field:
+            print('field')
             tmp = self.space.element()
             return self.space.lincomb(1.0 / other, self, out=tmp)
         elif other in self.space:
+            print('space')
             tmp = self.space.element()
             return self.space.divide(self, other, out=tmp)
         else:
+            print('something else: ', other)
             return NotImplemented
 
     __div__ = __truediv__

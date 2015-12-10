@@ -513,11 +513,8 @@ def _op(a, op, b):
 
 
 def _test_fspace_vector_op(op_str, pattern):
-    if op_str not in ('+', '-', '*', '/', '+=', '-=', '*=', '/='):
-        raise ValueError('bad operator {!r}.'.format(op_str))
-
-    if pattern not in ('sv', 'vv', 'vs'):
-        raise ValueError('bad pattern {!r}'.format(pattern))
+    assert op_str in ('+', '-', '*', '/', '+=', '-=', '*=', '/=')
+    assert pattern in ('sv', 'vv', 'vs')
 
     # Setup
     rect, points, mg = _standard_setup_2d()
@@ -534,6 +531,7 @@ def _test_fspace_vector_op(op_str, pattern):
     f_vec = fspace.element(func_2d_vec_dual, vectorized=True)
     g_novec = fspace.element(other_func_2d_novec, vectorized=False)
     g_vec = fspace.element(other_func_2d_vec_dual, vectorized=True)
+    print(hasattr(g_vec, '__div__'))
 
     out_novec = fspace.element(vectorized=False)
     out_vec = fspace.element(vectorized=True)
