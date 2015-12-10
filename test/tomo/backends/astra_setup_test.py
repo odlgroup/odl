@@ -50,22 +50,49 @@ else:
 
 
 def _discrete_domain(ndim, interp):
+    """Create `DiscreteLp` space with isotropic grid stride.
+
+    Parameters
+    ----------
+    ndim : `int`
+        Number of space dimensions
+    interp : `str`
+        Interpolation scheme
+
+    Returns
+    -------
+    space : `DiscreteLp`
+        Returns a `DiscreteLp` instance
+    """
     minpt = np.arange(-1, -ndim - 1, -1)  # -1, -2 [, -3]
     maxpt = np.arange(1, ndim + 1, 1)  # 1, 2 [, 3]
-
-    dom = FunctionSpace(IntervalProd(minpt, maxpt), RealNumbers())
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
-    return uniform_discr_fromspace(dom, nsamples=nsamples, interp=interp,
-                                   dtype='float32')
+
+    return uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
+                         dtype='float32')
 
 
 def _discrete_domain_anisotropic(ndim, interp):
+    """Create `DiscreteLp` space with anisotropic grid stride.
+
+    Parameters
+    ----------
+    ndim : `int`
+        Number of space dimensions
+    interp : `str`
+        Interpolation scheme
+
+    Returns
+    -------
+    space : `DiscreteLp`
+        Returns a `DiscreteLp` instance
+    """
     minpt = [-1] * ndim
     maxpt = [1] * ndim
-    dom = FunctionSpace(IntervalProd(minpt, maxpt))
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
-    return uniform_discr_fromspace(dom, nsamples=nsamples, interp=interp,
-                                   dtype='float32')
+
+    return uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
+                         dtype='float32')
 
 
 @skip_if_no_astra
@@ -98,13 +125,28 @@ def test_vol_geom_2d():
 
 @skip_if_no_astra
 def test_vol_geom_3d():
+    """Create ASTRA 2D volume geometry."""
+
     discr_dom = _discrete_domain(3, 'nearest')
     vol_geom = astra_volume_geometry(discr_dom)
 
-    # x = columns, y = rows, z = slices - min/max option not available
+    x_pts = 10  # x_pts =
+    y_pts = 20  # y_pts =
+    z_pts = 30  # z_pts =
+    assert discr_dom.grid.shape == (x_pts, y_pts, z_pts)
+
+    # x = columns, y = rows, z = slices
     correct_dict = {
-        'GridColCount': 10, 'GridRowCount': 20, 'GridSliceCount': 30,
-        'option': {}}
+        'GridColCount': z_pts,
+        'GridRowCount': y_pts,
+        'GridSliceCount': x_pts,
+        'option': {
+            'WindowMinX': -3.0,  # z_min
+            'WindowMaxX': 3.0,  # z_max
+            'WindowMinY': -2.0,  # y_min
+            'WindowMaxY': 2.0,  # y_amx
+            'WindowMinZ': -1.0,  # x_min
+            'WindowMaxZ': 1.0}}  # x_amx
 
     assert vol_geom == correct_dict
 
@@ -116,6 +158,8 @@ def test_vol_geom_3d():
 
 @skip_if_no_astra
 def test_proj_geom_parallel_2d():
+    """Create ASTRA 2D projection geometry."""
+
     angles = Interval(0, 2)
     angle_grid = uniform_sampling(angles, 5, as_midp=False)
     det_params = Interval(-1, 1)
@@ -133,21 +177,10 @@ def test_proj_geom_parallel_2d():
     assert all_equal(proj_geom['ProjectionAngles'], np.linspace(0, 2, 5))
 
 
-vol_geom_2d = {
-    'GridColCount': 10, 'GridRowCount': 20,
-    'option': {'WindowMinX': -1.0, 'WindowMaxX': 1.0,
-               'WindowMinY': -2.0, 'WindowMaxY': 2.0}}
-
-vol_geom_3d = {
-    'GridColCount': 10, 'GridRowCount': 20, 'GridSliceCount': 30,
-    'option': {}}
-
-
-# TODO: add tests to check scaling
+# TODO: check scaling
 @skip_if_no_astra
 def test_astra_projection_geometry():
-    # Test creation of ASTRA projection geometry objects from `odltomo`
-    # geometry objects (consitency of dictionary is not checked).
+    """Create ASTRA projection geometry from `odl.tomo.geometry` objects."""
 
     with pytest.raises(TypeError):
         astra_projection_geometry(None)
@@ -219,33 +252,44 @@ def test_astra_projection_geometry():
     assert ageom['type'] == 'cone_vec'
 
 
+vol_geom_2d = {
+    'GridColCount': 20, 'GridRowCount': 10,
+    'option': {'WindowMinX': -2.0, 'WindowMaxX': 2.0,
+               'WindowMinY': -1.0, 'WindowMaxY': 1.0}}
+
+
 @skip_if_no_astra
 def test_volume_data_2d():
     # From scratch
     data_id = astra_data(vol_geom_2d, 'volume', ndim=2)
-    data_out = astra.data2d.get_shared(data_id).swapaxes(0, -1)
+    data_out = astra.data2d.get_shared(data_id)
     assert data_out.shape == (10, 20)
 
     # From existing
     discr_dom = _discrete_domain(2, 'nearest')
     data_in = discr_dom.element(np.ones(10 * 20, dtype='float32'))
     data_id = astra_data(vol_geom_2d, 'volume', data=data_in)
-    data_out = astra.data2d.get_shared(data_id).swapaxes(0, -1)
+    data_out = astra.data2d.get_shared(data_id)
     assert data_out.shape == (10, 20)
+
+
+vol_geom_3d = {
+    'GridColCount': 30, 'GridRowCount': 20, 'GridSliceCount': 10,
+    'option': {}}
 
 
 @skip_if_no_astra
 def test_volume_data_3d():
     # From scratch
     data_id = astra_data(vol_geom_3d, 'volume', ndim=3)
-    data_out = astra.data3d.get_shared(data_id).swapaxes(0, -1)
+    data_out = astra.data3d.get_shared(data_id)
     assert data_out.shape == (10, 20, 30)
 
     # From existing
     discr_dom = _discrete_domain(3, 'nearest')
     data_in = discr_dom.element(np.ones(10 * 20 * 30, dtype='float32'))
     data_id = astra_data(vol_geom_3d, 'volume', data=data_in)
-    data_out = astra.data3d.get_shared(data_id).swapaxes(0, -1)
+    data_out = astra.data3d.get_shared(data_id)
     assert data_out.shape == (10, 20, 30)
 
 
@@ -263,6 +307,8 @@ proj_geom_3d = {
 
 @skip_if_no_astra
 def test_parallel_2d_projector():
+    """Create ASTRA 2D projectors."""
+
     # We can just test if it runs
     astra_projector('nearest', vol_geom_2d, proj_geom_2d,
                     ndim=2, impl='cpu')
@@ -272,6 +318,8 @@ def test_parallel_2d_projector():
 
 @skip_if_no_astra
 def test_parallel_3d_projector():
+    """Create ASTRA 2D projectors."""
+
     # Run as a real test once ASTRA supports this construction
     with pytest.raises(ValueError):
         astra_projector('nearest', vol_geom_3d, proj_geom_3d,
@@ -284,7 +332,7 @@ def test_parallel_3d_projector():
 
 @skip_if_no_astra
 def test_astra_algorithm():
-    # Creation of ASTRA algorithm object
+    """Create ASTRA algorithm object."""
 
     direction = 'forward'
     ndim = 2
@@ -294,7 +342,7 @@ def test_astra_algorithm():
     proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d,
                               ndim=ndim, impl=impl)
 
-    # Test checks
+    # Checks
     with pytest.raises(ValueError):
         astra_algorithm('none', ndim, vol_id, sino_id, proj_id, impl)
     with pytest.raises(ValueError):
@@ -338,8 +386,8 @@ def test_astra_algorithm():
 
 @skip_if_no_astra
 def test_geom_to_vec():
-    # Convert odltomo geometry object to vectors used in
-    # astra_projection_geometry
+    """Create ASTRA projection geometries vectors from `odl.tomo.geometry`
+    objects."""
 
     angle_intvl = Interval(0, 2 * np.pi)
     angle_grid = uniform_sampling(angle_intvl, 5, as_midp=False)
@@ -377,5 +425,6 @@ def test_geom_to_vec():
     assert vec.shape == (angle_grid.ntotal, 12)
 
 
+@skip_if_no_astra
 def test_astra_cleanup():
     astra_cleanup()
