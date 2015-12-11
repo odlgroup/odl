@@ -31,8 +31,9 @@ from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
-           'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
+           'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
+           'skip_if_no_wavelet')
 
 
 def _places(a, b, default=5):
@@ -148,9 +149,13 @@ try:
     import pytest
     skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
                                          reason='CUDA not available')
+    skip_if_no_wavelet = pytest.mark.skipif(
+        "not odl.trafos.wavelet.WAVELET_AVAILABLE",
+        reason='Wavelet not available')
 except ImportError:
-    def skip_if_no_cuda(function):
+    def do_nothing(function):
         return function
+    skip_if_no_cuda = skip_if_no_wavelet = do_nothing
 
 
 class FailCounter(object):
