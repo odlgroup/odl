@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl import TensorGrid, RegularGrid
+from odl.discr.grid import TensorGrid, RegularGrid, sparse_meshgrid
 from odl.util.testutils import all_equal
 
 
@@ -856,6 +856,32 @@ def test_regular_getitem():
 
     sub_grid = RegularGrid(1, 5, 3)
     assert grid[::2], sub_grid
+
+
+def test_sparse_meshgrid():
+
+    # One array only
+    x = np.zeros(2)
+    true_mg = (x,)
+    assert all_equal(sparse_meshgrid(x), true_mg)
+
+    x = np.zeros((2, 2))
+    true_mg = (x,)
+    assert all_equal(sparse_meshgrid(x), true_mg)
+
+    # Two arrays, 'C' ordering
+    x, y = np.zeros(2), np.zeros(3)
+    true_mg = (x[:, None], y[None, :])
+    mg = sparse_meshgrid(x, y, order='C')
+    assert all_equal(mg, true_mg)
+    assert all(vec.flags.c_contiguous for vec in mg)
+
+    # Two arrays, 'F' ordering
+    x, y = np.zeros(2), np.zeros(3)
+    true_mg = (y[None, :], x[:, None])
+    mg = sparse_meshgrid(x, y, order='F')
+    assert all_equal(mg, true_mg)
+    assert all(vec.flags.f_contiguous for vec in mg)
 
 
 if __name__ == '__main__':

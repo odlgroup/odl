@@ -53,17 +53,21 @@ def sparse_meshgrid(*x, **kwargs):
             mg.append(np.ascontiguousarray(xi[slc]))
         else:
             mg.append(np.asfortranarray(xi[slc]))
-    return tuple(mg)
+    if order == 'C':
+        return tuple(mg)
+    else:
+        return tuple(reversed(mg))
 
 
 class TensorGrid(Set):
 
     """An n-dimensional tensor grid.
 
-    This is a sparse representation of a collection of n-dimensional points
-    defined by the tensor product of n coordinate vectors.
+    This is a sparse representation of a collection of n-dimensional
+    points defined by the tensor product of n coordinate vectors.
 
-    Example: x = (x_1, x_2), y = (y_1, y_2, y_3, y_4), z = (z_1, z_2, z_3).
+    Example:
+    ``x = (x_1, x_2), y = (y_1, y_2, y_3, y_4), z = (z_1, z_2, z_3)``
     The resulting grid consists of all possible combinations
     p = (x_i, y_j, z_k), hence 2 * 4 * 3 = 24 points in total.
     """

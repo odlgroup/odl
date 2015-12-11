@@ -53,7 +53,7 @@ def is_valid_input_meshgrid(x, d):
     if d > 1:
         try:
             np.broadcast(*x)
-        except ValueError:  # cannot be broadcast
+        except (ValueError, TypeError):  # cannot be broadcast
             return False
 
     return (len(x) == d and
@@ -67,21 +67,21 @@ def meshgrid_input_order(x):
     if all(xi.shape == x[0].shape for xi in x):
         # Contiguity check only works for meshgrid created with copy=True.
         # Otherwise, there is no way to find out the intended ordering.
-        if all(xi.flags.f_contiguous for xi in x):
-            return 'F'
-        else:
+        if all(xi.flags.c_contiguous for xi in x):
             return 'C'
+        elif all(xi.flags.f_contiguous for xi in x):
+            return 'F'
     # Case 2: sparse meshgrid, each member's shape has at most one non-one
     # entry (corner case of all ones is included)
     elif all(xi.shape.count(1) >= len(x) - 1 for xi in x):
         # Reversed ordering of dimensions in the meshgrid tuple indicates
         # 'F' ordering intention
-        if all(xi.shape[-1 - i] != 1 for i, xi in enumerate(x)):
-            return 'F'
-        else:
+        if all(xi.shape[i] != 1 for i, xi in enumerate(x)):
             return 'C'
-    else:
-        return 'C'
+        elif all(xi.shape[-1 - i] != 1 for i, xi in enumerate(x)):
+            return 'F'
+
+    raise ValueError('unable to determine ordering.')
 
 
 def vecs_from_meshgrid(mg, order):
@@ -89,11 +89,11 @@ def vecs_from_meshgrid(mg, order):
     vecs = []
     for ax in range(len(mg)):
         select = [0] * len(mg)
+        select[ax] = np.s_[:]
         if str(order).upper() == 'F':
-            select[-ax] = np.s_[:]
+            vecs.append(mg[-ax - 1][select])
         else:
-            select[ax] = np.s_[:]
-        vecs.append(mg[ax][select])
+            vecs.append(mg[ax][select])
     return tuple(vecs)
 
 
