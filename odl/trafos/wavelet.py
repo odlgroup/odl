@@ -36,8 +36,8 @@ try:
 except ImportError:
     WAVELET_AVAILABLE = False
 
-__all__ = ('DiscreteWaveletTrafo', 'DiscreteWaveletTrafoAdjoint',
-           'DiscreteWaveletTrafoInverse', 'WAVELET_AVAILABLE')
+__all__ = ('DiscreteWaveletTrafo', 'DiscreteWaveletTrafoInverse',
+           'WAVELET_AVAILABLE')
 
 
 _SUPPORTED_IMPL = ('pywt',)
@@ -46,10 +46,9 @@ _SUPPORTED_IMPL = ('pywt',)
 def list_of_coeff_sizes(shape, nscale, wbasis, mode):
     """Construct a size list from given wavelet coefficients.
 
-    Construct a list containing the sizes of the wavelet approximation
-    and detail coefficients when wavelet basis, number of scaling levels
-    and the shape of the original image are given.
-    Related to 2D and 3D multidimensional wavelet transform.
+    Related to 2D and 3D multidimensional wavelet transforms that utilize
+    `PyWavelets
+    <http://www.pybytes.com/pywavelets/>`_.
 
     Parameters
     ----------
@@ -57,7 +56,8 @@ def list_of_coeff_sizes(shape, nscale, wbasis, mode):
         Number of pixels/voxels in the image. Its lenght must be 2 or 3.
     nscale : `int`
         Number of scales in the multidimensional wavelet
-        transform
+        transform.  This parameter is checked against the maximum number of
+        scales returned by ``pywt.dwt_max_level``.
     wbasis : ``_pywt.Wavelet``
         Describes properties of a selected wavelet basis
     mode : `str`
@@ -82,10 +82,6 @@ def list_of_coeff_sizes(shape, nscale, wbasis, mode):
         size_list[n] = size of the detailed coefficients at the finest level
         size_list[n+1] = size of original image
         n = number of scaling levels = nscale
-
-    See also
-    --------
-    pywt : http://www.pybytes.com/pywavelets/
     """
     if len(shape) not in (2, 3):
         raise ValueError('shape must have length 2 or 3, got {}.'
@@ -93,7 +89,9 @@ def list_of_coeff_sizes(shape, nscale, wbasis, mode):
     P = np.zeros(shape)
     max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
     if nscale >= max_level:
-        raise ValueError('Too many scaling levels')
+        raise ValueError('Too many scaling levels, got {}, maximum useful'
+                         ' level is {}'
+                         ''.format(nscale, max_level))
 
     if len(shape) == 2:
         W = pywt.wavedec2(P, wbasis, mode, level=nscale)
@@ -113,7 +111,8 @@ def list_of_coeff_sizes(shape, nscale, wbasis, mode):
 
 
 def pywt_coeff_to_array2d(coeff, size_list, nscales):
-    """Convert a pywt coefficient into a flat array.
+    """Convert a `pywt
+    <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
 
     Related to 2D multilevel discrete wavelet transform.
 
@@ -158,17 +157,13 @@ def pywt_coeff_to_array2d(coeff, size_list, nscales):
         be transformed and on the chosen wavelet basis.
         If the size of the input image is 2^n x 2^n, the lenght of the
         wavelet coefficient array is the same.
-
-    See also
-    --------
-    pywt : http://www.pybytes.com/pywavelets/
     """
     # TODO: outsource to an own helper?
     size_flatCoeff = np.prod(size_list[0])
     for kk in range(1, nscales+1):
         size_flatCoeff = size_flatCoeff + 3*np.prod(size_list[kk])
 
-    flat_coeff = np.zeros((size_flatCoeff))
+    flat_coeff = np.zeros(size_flatCoeff)
     aa = coeff[0]
     aa = aa.ravel()
     stop = np.prod(size_list[0])
@@ -189,12 +184,13 @@ def pywt_coeff_to_array2d(coeff, size_list, nscales):
 
 
 def array_to_pywt_coeff2d(coeff, size_list, nscales):
-    """Convert a flat array into a pywt coefficient list.
+    """Convert a flat array into a `pywt
+    <http://www.pybytes.com/pywavelets/>`_ coefficient list.
     For multilevel 2D discrete wavelet transform
 
     Parameters
     ----------
-    coeff :  :class:`DiscreteLp.Vector`
+    coeff : `DiscreteLp.Vector`
         A flat coefficient vector containing the approximation,
         horizontal detail, vertical detail and diagonal detail
         coefficients in the following order,
@@ -228,7 +224,7 @@ def array_to_pywt_coeff2d(coeff, size_list, nscales):
 
     Returns
     -------
-    :attr:`coeff_list` : `list`
+    coeff_list : `list`
         A list of coefficient organized in the following way
         [aaN, (adN, daN, ddN), ... (ad1, da1, dd1)],
 
@@ -243,10 +239,6 @@ def array_to_pywt_coeff2d(coeff, size_list, nscales):
         dd = detail on 1st dim, detail on 2nd dim (diaginal)
 
         N = the level of decomposition/number of scales.
-
-    See also
-    --------
-    pywt : http://www.pybytes.com/pywavelets/
     """
     size1 = np.prod(size_list[0])
     aa_flat = coeff[0:size1]
@@ -277,7 +269,8 @@ def array_to_pywt_coeff2d(coeff, size_list, nscales):
 
 
 def pywt_coeff_to_array3d(coeff, size_list, nscales):
-    """Convert a pywt coefficient into a flat array.
+    """Convert a `pywt
+    <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
 
     Related to 3D multilevel discrete wavelet transform.
 
@@ -331,10 +324,6 @@ def pywt_coeff_to_array3d(coeff, size_list, nscales):
         be transformed and on the chosen wavelet basis.
         If the size of the input image is 2^n x 2^n, the lenght of the
         wavelet coefficient array is the same.
-
-    See also
-    --------
-    pywt : http://www.pybytes.com/pywavelets/
     """
     size_flatCoeff = np.prod(size_list[0])
     for kk in range(1, nscales+1):
@@ -374,13 +363,14 @@ def pywt_coeff_to_array3d(coeff, size_list, nscales):
 
 
 def array_to_pywt_coeff3d(coeff, size_list, nscales):
-    """Convert a flat array into a pywt coefficient list.
+    """Convert a flat array into a `pywt
+    <http://www.pybytes.com/pywavelets/>`_ coefficient list.
 
     For multilevel 3D discrete wavelet transform
 
     Parameters
     ----------
-    coeff :  :class:`DiscreteLp.Vector`
+    coeff : `DiscreteLp.Vector`
         A flat coefficient vector containing the approximation,
         and detail coefficients in the following order
         [aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN, ...
@@ -404,7 +394,7 @@ def array_to_pywt_coeff3d(coeff, size_list, nscales):
 
     Returns
     -------
-    :attr:`coeff_list` : `list`
+    coeff_list : `list`
         A list of coefficient organized in the following way
         [aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)].
@@ -427,10 +417,6 @@ def array_to_pywt_coeff3d(coeff, size_list, nscales):
         ddd = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
         N = the number of scaling levels
-
-    See also
-    --------
-    pywt : http://www.pybytes.com/pywavelets/
     """
 
     size1 = np.prod(size_list[0])
@@ -478,22 +464,26 @@ def wavelet_decomposition3d(x, wbasis, mode, nscales):
 
     Compute the discrete 3D multiresolution wavelet decomposition
     at the given level (nscales) for a given 3D image.
-    Utilizes a PyWavelet function ``pywt.dwtn``.
+    Utilizes a `PyWavelet
+    <http://www.pybytes.com/pywavelets/ref/other-functions.html>`_
+    function ``pywt.dwtn``.
 
     Parameters
     ----------
-        x : `DiscreteLp.Vector`
-        wbasis:  ``_pywt.Wavelet``
+    x : `DiscreteLp.Vector`
+    wbasis:  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basis
-        mode : `str`
-            Signal extention mode. For possible extensions see
-            ``pywt.MODES.modes``
-        nscales : `int`
+    mode : `str`
+            Signal extention mode. For possible extensions see the signal
+            extenstion `modes
+        <http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html>`_
+            of PyWavelets.
+    nscales : `int`
             Number of scales in the coefficient list
 
     Returns
     -------
-        :attr:`coeff_list` : `list`
+    coeff_list : `list`
         A list of coefficient organized in the following way
          [aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
          (aad1, ada1, add1, daa1, dad1, dda1, ddd1)] .
@@ -516,10 +506,6 @@ def wavelet_decomposition3d(x, wbasis, mode, nscales):
          ddd = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
          N = the number of scaling levels
-
-    See also
-    --------
-    pywt : http://www.pybytes.com/pywavelets/
     """
 
     wcoeffs = pywt.dwtn(x, wbasis, mode)
@@ -560,11 +546,13 @@ def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
 
     Compute a discrete 3D multiresolution wavelet reconstruction
     from a given wavelet coefficient list.
-    Utilizes a PyWavelet function ``pywt.dwtn``
+    Utilizes a `PyWavelet
+    <http://www.pybytes.com/pywavelets/ref/other-functions.html>`_
+    function ``pywt.dwtn``
 
     Parameters
     ----------
-        coeff_list: : `list`
+    coeff_list : `list`
             A list of wavelet approximation and detail coefficients
             organized in the following way
             [caaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
@@ -588,17 +576,19 @@ def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
             ddd = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
             N = the number of scaling levels
-        wbasis :  ``_pywt.Wavelet``
-            Describes properties of a selected wavelet basis
-        mode : `str`
-            Signal extention mode. For possible extensions see
-            ``pywt.MODES.modes``
-        nscales : `int`
+    wbasis :  ``_pywt.Wavelet``
+            Describes properties of a selected wavelet basisodl.discr.lp_discr.
+    mode : `str`
+            Signal extention mode. For possible extensions see the signal
+            extenstion `modes
+        <http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html>`_
+            of PyWavelets.
+    nscales : `int`
             Number of scales in the coefficient list
 
     Returns
     -------
-        x : `numpy.ndarray`.
+    x : `numpy.ndarray`.
         A wavalet reconstruction.
 
     See also
@@ -629,7 +619,7 @@ class DiscreteWaveletTrafo(Operator):
 
         Parameters
         ----------
-        dom : :class:`~odl.discr.lp_discr.DiscreteLp`
+        dom : `DiscreteLp`
             Domain of the wavelet transform (the "image domain").
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
@@ -638,8 +628,9 @@ class DiscreteWaveletTrafo(Operator):
         wbasis :  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basis
         mode : `str`
-            Signal extention mode. For possible extensions see
+            Signal extension mode. For possible extensions see
             ``pywt.MODES.modes``
+            http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
 
         See also
         --------
@@ -648,6 +639,17 @@ class DiscreteWaveletTrafo(Operator):
         self.nscales = int(nscales)
         self.wbasis = wbasis
         self.mode = str(mode).lower()
+
+        if not isinstance(dom, DiscreteLp):
+            raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
+                            ''.format(dom))
+
+        if dom.exponent != 2.0:
+            raise ValueError('domain Lp exponent is {} instead of 2.0.'
+                             ''.format(dom.exponent))
+#        if not np.all(dom.grid.stride == 1):
+#            raise NotImplementedError('non-uniform grid cell sizes not yet '
+#                                      'supported.')
 
         max_level = pywt.dwt_max_level(dom.grid.shape[0],
                                        filter_len=self.wbasis.dec_len)
@@ -672,17 +674,6 @@ class DiscreteWaveletTrafo(Operator):
         # TODO: Maybe allow other ranges like Besov spaces (yet to be crated)
         ran = dom.dspace_type(ran_size, dtype=dom.dtype)
         super().__init__(dom, ran)
-
-        if not isinstance(dom, DiscreteLp):
-            raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
-                            ''.format(dom))
-
-        if dom.exponent != 2.0:
-            raise ValueError('domain Lp exponent is {} instead of 2.0.'
-                             ''.format(dom.exponent))
-#        if not np.all(dom.grid.stride == 1):
-#            raise NotImplementedError('non-uniform grid cell sizes not yet '
-#                                      'supported.')
 
     @property
     def is_orthogonal(self):
@@ -739,10 +730,6 @@ class DiscreteWaveletTrafo(Operator):
                                            wbasis=self.wbasis, mode=self.mode)
 
 
-class DiscreteWaveletTrafoAdjoint(Operator):
-    pass
-
-
 class DiscreteWaveletTrafoInverse(Operator):
 
     """Discrete inverse wavelet trafo between discrete L2 spaces."""
@@ -752,7 +739,7 @@ class DiscreteWaveletTrafoInverse(Operator):
 
         Parameters
         ----------
-        ran : `odl.discr.lp_discr.DiscreteLp`
+        ran : `DiscreteLp`
             Domain of the wavelet transform (the "image domain").
             The exponent `p` of the discrete :math:`L^p`
             space must be equal to 2.0.
@@ -761,7 +748,7 @@ class DiscreteWaveletTrafoInverse(Operator):
         wbasis :  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basis
         mode : `str`
-            Signal extention mode. For possible extensions see
+            Signal extension mode. For possible extensions see
             ``pywt.MODES.modes``
         See also
         --------
@@ -770,6 +757,17 @@ class DiscreteWaveletTrafoInverse(Operator):
         self.nscales = int(nscales)
         self.wbasis = wbasis
         self.mode = str(mode).lower()
+
+        if not isinstance(ran, DiscreteLp):
+            raise TypeError('range {!r} is not a `DiscreteLp` instance.'
+                            ''.format(ran))
+
+        if ran.exponent != 2.0:
+            raise ValueError('range Lp exponent is {} instead of 2.0.'
+                             ''.format(ran.exponent))
+#        if not np.all(dom.grid.stride == 1):
+#            raise NotImplementedError('non-uniform grid cell sizes not yet '
+#                                      'supported.')
 
         max_level = pywt.dwt_max_level(ran.grid.shape[0],
                                        filter_len=self.wbasis.dec_len)
@@ -793,17 +791,6 @@ class DiscreteWaveletTrafoInverse(Operator):
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
         dom = ran.dspace_type(dom_size, dtype=ran.dtype)
         super().__init__(dom, ran)
-
-        if not isinstance(ran, DiscreteLp):
-            raise TypeError('range {!r} is not a `DiscreteLp` instance.'
-                            ''.format(dom))
-
-        if ran.exponent != 2.0:
-            raise ValueError('range Lp exponent is {} instead of 2.0.'
-                             ''.format(ran.exponent))
-#        if not np.all(dom.grid.stride == 1):
-#            raise NotImplementedError('non-uniform grid cell sizes not yet '
-#                                      'supported.')
 
     @property
     def is_orthogonal(self):
