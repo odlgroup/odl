@@ -147,7 +147,7 @@ def test_DiscreteWaveletTrafo():
     # Define a discretized domain
     domain = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
     nPoints = np.array([n, n])
-    disc_domain = odl.uniform_discr(domain, nPoints)
+    disc_domain = odl.uniform_discr_fromspace(domain, nPoints)
     disc_phantom = disc_domain.element(x)
 
     # Create the discrete wavelet transform operator.
@@ -190,7 +190,7 @@ def test_DiscreteWaveletTrafo():
     # Define a discretized domain
     domain = odl.FunctionSpace(odl.Cuboid([-1, -1, -1], [1, 1, 1]))
     nPoints = np.array([n, n, n])
-    disc_domain = odl.uniform_discr(domain, nPoints)
+    disc_domain = odl.uniform_discr_fromspace(domain, nPoints)
     disc_phantom = disc_domain.element(x)
 
     # Create the discrete wavelet transform operator related to 3D transform.
