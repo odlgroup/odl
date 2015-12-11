@@ -35,7 +35,7 @@ __all__ = ('DiscretePartDeriv', 'DiscreteGradient', 'DiscreteDivergence')
 
 
 def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
-                zero_padding=False):
+                zero_padding=False, method='central'):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
     The partial derivative is computed using second-order accurate central
@@ -66,6 +66,8 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     zero_padding : `bool`, optional
         Implicit zero padding. Assumes values outside the domain of ``f`` to be
         zero. Default: `False`
+    method : {'central', 'forward', 'backward'}, optional
+        What method that should be used.
 
     Returns
     -------
@@ -91,7 +93,6 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     >>> out is finite_diff(f, out)
     True
     """
-    # TODO: implement forward/backward differences
     # TODO: implement alternative boundary conditions
 
     if zero_padding is True and edge_order == 1:
@@ -126,6 +127,11 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     else:
         dx = float(dx)
 
+    method = str(method).lower()
+    if method not in ('central', 'forward', 'backward'):
+        raise NotImplementedError('method {} has to be '
+                                  'central, forward or backward')
+
     # create slice objects: initially all are [:, :, ..., :]
     # current slice
     slice_out = [slice(None)] * ndim
@@ -134,30 +140,71 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     slice_node2 = [slice(None)] * ndim
     slice_node3 = [slice(None)] * ndim
 
-    # Numerical differentiation: 2nd order interior
-    slice_out[axis] = slice(1, -1)
-    slice_node1[axis] = slice(2, None)
-    slice_node2[axis] = slice(None, -2)
-    # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
-    np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
-    out[slice_out] /= 2.0
+    if method == 'central':
+        # Numerical differentiation: 2nd order interior
+        slice_out[axis] = slice(1, -1)
+        slice_node1[axis] = slice(2, None)
+        slice_node2[axis] = slice(None, -2)
+        # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
+        np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
+        out[slice_out] /= 2.0
+    elif method == 'forward':
+        # Numerical differentiation: 2nd order interior
+        slice_out[axis] = slice(1, -1)
+        slice_node1[axis] = slice(2, None)
+        slice_node2[axis] = slice(1, -1)
+        # 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])
+        np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
+    elif method == 'backward':
+        # Numerical differentiation: 2nd order interior
+        slice_out[axis] = slice(1, -1)
+        slice_node1[axis] = slice(1, -1)
+        slice_node2[axis] = slice(None, -2)
+        # 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])
+        np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
 
     # central differences
     if zero_padding:
         # Assume zeros for indices outside the domain of `f`
 
-        slice_out[axis] = 0
-        slice_node1[axis] = 1
-        # 1D equivalent: out[0] = (f[1] - 0)/2.0
-        out[slice_out] = f_data[slice_node1] / 2.0
+        if method == 'central':
+            slice_out[axis] = 0
+            slice_node1[axis] = 1
+            # 1D equivalent: out[0] = (f[1] - 0)/2.0
+            out[slice_out] = f_data[slice_node1] / 2.0
 
-        slice_out[axis] = -1
-        slice_node2[axis] = -2
-        # 1D equivalent: out[-1] = (0 - f[-2])/2.0
-        out[slice_out] = - f_data[slice_node2] / 2.0
+            slice_out[axis] = -1
+            slice_node2[axis] = -2
+            # 1D equivalent: out[-1] = (0 - f[-2])/2.0
+            out[slice_out] = - f_data[slice_node2] / 2.0
+        elif method == 'forward':
+            slice_out[axis] = 0
+            slice_node1[axis] = 1
+            slice_node2[axis] = 0
+            # 1D equivalent: out[0] = (f[1] - f[0])
+            out[slice_out] = f_data[slice_node1] - f_data[slice_node2]
+
+            slice_out[axis] = -1
+            slice_node2[axis] = -1
+            # 1D equivalent: out[-1] = (0 - f[-1])
+            out[slice_out] = - f_data[slice_node2]
+        elif method == 'backward':
+            slice_out[axis] = 0
+            slice_node1[axis] = 0
+            # 1D equivalent: out[0] = (f[0] - 0)
+            out[slice_out] = f_data[slice_node1]
+
+            slice_out[axis] = -1
+            slice_node1[axis] = -1
+            slice_node2[axis] = -2
+            # 1D equivalent: out[-1] = (f[-1] - f[-2])
+            out[slice_out] = f_data[slice_node1] - f_data[slice_node2]
 
     # one-sided differences
     else:
+        if method != 'central':
+            raise NotImplementedError('Can only use zero padding with non-'
+                                      'central differences')
 
         # Numerical differentiation: 1st order edges
         if f_data.shape[axis] == 2 or edge_order == 1:
@@ -208,7 +255,7 @@ class DiscretePartDeriv(Operator):
     # TODO: implement adjoint
 
     def __init__(self, space, axis=0, dx=1.0, edge_order=2,
-                 zero_padding=False):
+                 zero_padding=False, method='central'):
         """Initialize an operator instance.
 
         Parameters
@@ -227,6 +274,8 @@ class DiscretePartDeriv(Operator):
         zero_padding : `bool`, optional
             Implicit zero padding. Assumes values outside the domain of ``f``
             to be zero. Default: `False`
+        method : {'central', 'forward', 'backward'}, optional
+            What method that should be used.
         """
 
         if not isinstance(space, DiscreteLp):
@@ -238,6 +287,7 @@ class DiscretePartDeriv(Operator):
         self.dx = dx
         self.edge_order = edge_order
         self.zero_padding = zero_padding
+        self.method = method
 
     def _apply(self, x, out):
         """Apply gradient operator to ``x`` and store result in ``out``.
@@ -267,7 +317,8 @@ class DiscretePartDeriv(Operator):
 
         finite_diff(x.asarray(), out_arr, axis=self.axis, dx=self.dx,
                     edge_order=self.edge_order,
-                    zero_padding=self.zero_padding)
+                    zero_padding=self.zero_padding,
+                    method=self.method)
 
         # self assignment: no overhead in the case asarray is a view
         out[:] = out_arr
@@ -287,7 +338,7 @@ class DiscreteGradient(Operator):
     operator ``zero_padding`` is assumed.
     """
 
-    def __init__(self, space):
+    def __init__(self, space, method='central'):
         """Initialize a `DiscreteGradient` operator instance.
 
         Zero padding is assumed for the adjoint of the `DiscreteGradient`
@@ -296,12 +347,16 @@ class DiscreteGradient(Operator):
         Parameters
         ----------
         space : `DiscreteLp`
-            The space of elements which the operator is acting on
+            The space of elements which the operator is acting on.
+        method : {'central', 'forward', 'backward'}, optional
+            What method that should be used.
         """
 
         if not isinstance(space, DiscreteLp):
             raise TypeError('space {!r} is not a `DiscreteLp` '
                             'instance.'.format(space))
+
+        self.method = method
 
         super().__init__(domain=space,
                          range=ProductSpace(space, space.grid.ndim),
@@ -348,7 +403,8 @@ class DiscreteGradient(Operator):
             out_arr = out[axis].asarray()
 
             finite_diff(x_data, out=out_arr, axis=axis,
-                        dx=dx[axis], edge_order=2, zero_padding=True)
+                        dx=dx[axis], edge_order=2, zero_padding=True,
+                        method=self.method)
 
             out[axis][:] = out_arr
 
@@ -363,7 +419,14 @@ class DiscreteGradient(Operator):
         operator is not the range but the domain of the `DiscreteGradient`
         operator.
         """
-        return - DiscreteDivergence(self.domain)
+        if self.method == 'central':
+            return - DiscreteDivergence(self.domain, 'central')
+        elif self.method == 'forward':
+            return - DiscreteDivergence(self.domain, 'backward')
+        elif self.method == 'backward':
+            return - DiscreteDivergence(self.domain, 'forward')
+        else:
+            return super().adjoint
 
 
 class DiscreteDivergence(Operator):
@@ -375,7 +438,7 @@ class DiscreteDivergence(Operator):
     padding is assumed.
     """
 
-    def __init__(self, space):
+    def __init__(self, space, method='central'):
         """Initialize a `DiscreteDivergence` operator instance.
 
         Zero padding is assumed for the adjoint of the `DiscreteDivergence`
@@ -385,12 +448,16 @@ class DiscreteDivergence(Operator):
         ----------
         space : `DiscreteLp`
             The space of elements which the operator is acting on
+        method : {'central', 'forward', 'backward'}, optional
+            What method that should be used.
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('space {!r} is not a `DiscreteLp` '
                             'instance.'.format(space))
 
         self.space = space
+        self.method = method
+
         super().__init__(domain=ProductSpace(space, space.grid.ndim),
                          range=space, linear=True)
 
@@ -433,7 +500,7 @@ class DiscreteDivergence(Operator):
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
         for axis in range(ndim):
             finite_diff(x[axis], out=tmp, axis=axis, dx=dx[axis],
-                        edge_order=2, zero_padding=True)
+                        edge_order=2, zero_padding=True, method=self.method)
             if axis == 0:
                 arr[:] = tmp
             else:
@@ -449,7 +516,14 @@ class DiscreteDivergence(Operator):
         Assuming implicit zero padding the adjoint operator is given by the
         negative of the `DiscreteGradient` operator.
         """
-        return - DiscreteGradient(self.range)
+        if self.method == 'central':
+            return - DiscreteGradient(self.range, 'central')
+        elif self.method == 'forward':
+            return - DiscreteGradient(self.range, 'backward')
+        elif self.method == 'backward':
+            return - DiscreteGradient(self.range, 'forward')
+        else:
+            return super().adjoint
 
 
 if __name__ == '__main__':
