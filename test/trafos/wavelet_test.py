@@ -32,7 +32,7 @@ else:
 
 # ODL imports
 import odl
-from odl.trafos.wavelet import (list_of_coeff_sizes, pywt_coeff_to_array2d,
+from odl.trafos.wavelet import (coeff_size_list, pywt_coeff_to_array2d,
                                 array_to_pywt_coeff2d, pywt_coeff_to_array3d,
                                 array_to_pywt_coeff3d, wavelet_decomposition3d,
                                 wavelet_reconstruction3d, DiscreteWaveletTrafo)
@@ -40,23 +40,23 @@ from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_wavelet
 
 
 @skip_if_no_wavelet
-def test_list_of_coeffs_sizes():
+def test_coeff_size_list():
     # Verify that the helper function does indeed work as expected
     shape = (64, 64)
     nscale = 3
     wbasis = pywt.Wavelet('db2')
     mode = 'per'
-    size_list = list_of_coeff_sizes(shape, nscale, wbasis, mode)
+    size_list = coeff_size_list(shape, nscale, wbasis, mode)
     S2d = [(8, 8), (8, 8), (16, 16), (32, 32), (64, 64)]
     shape = (64, 64, 64)
-    size_list3d = list_of_coeff_sizes(shape, nscale, wbasis, mode)
+    size_list3d = coeff_size_list(shape, nscale, wbasis, mode)
     S3d = [(8, 8, 8), (8, 8, 8), (16, 16, 16), (32, 32, 32), (64, 64, 64)]
     assert all_equal(size_list, S2d)
     assert all_equal(size_list3d, S3d)
 
 
 @skip_if_no_wavelet
-def test_wavelet_decomposition3d_et_reconstruction3d():
+def test_wavelet_decomposition3d_and_reconstruction3d():
     # Test 3D wavelet decomposition and reconstruction and verify that
     # they perform as expected
     x = np.random.rand(16, 16, 16)
@@ -88,13 +88,13 @@ def test_wavelet_decomposition3d_et_reconstruction3d():
 
 
 @skip_if_no_wavelet
-def test_pywt_coeff_to_array_et_array_to_pywt_coeff2d():
+def test_pywt_coeff_to_array_and_array_to_pywt_coeff2d():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
     mode = 'zpd'
     nscales = 2
     n = 16
-    size_list = list_of_coeff_sizes((n, n), nscales, wbasis, mode)
+    size_list = coeff_size_list((n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n)
     coeff_list = pywt.wavedec2(x, wbasis, mode, nscales)
     coeff_arr = pywt_coeff_to_array2d(coeff_list, size_list, nscales)
@@ -110,13 +110,13 @@ def test_pywt_coeff_to_array_et_array_to_pywt_coeff2d():
 
 
 @skip_if_no_wavelet
-def test_pywt_coeff_to_array_et_array_to_pywt_coeff3d():
+def test_pywt_coeff_to_array_and_array_to_pywt_coeff3d():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
     mode = 'ppd'
     nscales = 2
     n = 16
-    size_list = list_of_coeff_sizes((n, n, n), nscales, wbasis, mode)
+    size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n, n)
     coeff_dict = wavelet_decomposition3d(x, wbasis, mode, nscales)
     coeff_arr = pywt_coeff_to_array3d(coeff_dict, size_list, nscales)
@@ -142,7 +142,7 @@ def test_DiscreteWaveletTrafo():
     wbasis = pywt.Wavelet('db1')
     nscales = 2
     mode = 'sym'
-    size_list = list_of_coeff_sizes((n, n), nscales, wbasis, mode)
+    size_list = coeff_size_list((n, n), nscales, wbasis, mode)
 
     # Define a discretized domain
     domain = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
@@ -185,7 +185,7 @@ def test_DiscreteWaveletTrafo():
     wbasis = pywt.Wavelet('db2')
     nscales = 1
     mode = 'per'
-    size_list = list_of_coeff_sizes((n, n, n), nscales, wbasis, mode)
+    size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
 
     # Define a discretized domain
     domain = odl.FunctionSpace(odl.Cuboid([-1, -1, -1], [1, 1, 1]))
