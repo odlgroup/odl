@@ -535,15 +535,12 @@ class LinearSpaceVector(object):
     def __truediv__(self, other):
         """Return ``self / other``."""
         if other in self.space.field:
-            print('field')
             tmp = self.space.element()
             return self.space.lincomb(1.0 / other, self, out=tmp)
         elif other in self.space:
-            print('space')
             tmp = self.space.element()
             return self.space.divide(self, other, out=tmp)
         else:
-            print('something else: ', other)
             return NotImplemented
 
     __div__ = __truediv__

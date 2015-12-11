@@ -630,21 +630,18 @@ def func_2d_novec(x):
 
 
 def func_2d_vec_oop(x):
-    x0, x1 = x
-    return x0 ** 2 + x1
+    return x[0] ** 2 + x[1]
 
 
 def func_2d_vec_ip(x, out):
-    x0, x1 = x
-    out[:] = x0 ** 2 + x1
+    out[:] = x[0] ** 2 + x[1]
 
 
 def func_2d_vec_dual(x, out=None):
-    x0, x1 = x
     if out is None:
-        return x0 ** 2 + x1
+        return x[0] ** 2 + x[1]
     else:
-        out[:] = x0 ** 2 + x1
+        out[:] = x[0] ** 2 + x[1]
 
 
 def cfunc_2d_novec(x):
@@ -652,21 +649,18 @@ def cfunc_2d_novec(x):
 
 
 def cfunc_2d_vec_oop(x):
-    x0, x1 = x
-    return x0 ** 2 + 1j * x1
+    return x[0] ** 2 + 1j * x[1]
 
 
 def cfunc_2d_vec_ip(x, out):
-    x0, x1 = x
-    out[:] = x0 ** 2 + 1j * x1
+    out[:] = x[0] ** 2 + 1j * x[1]
 
 
 def cfunc_2d_vec_dual(x, out=None):
-    x0, x1 = x
     if out is None:
-        return x0 ** 2 + 1j * x1
+        return x[0] ** 2 + 1j * x[1]
     else:
-        out[:] = x0 ** 2 + 1j * x1
+        out[:] = x[0] ** 2 + 1j * x[1]
 
 
 def other_func_2d_novec(x):
@@ -674,21 +668,18 @@ def other_func_2d_novec(x):
 
 
 def other_func_2d_vec_oop(x):
-    x0, x1 = x
-    return x0 + abs(x1)
+    return x[0] + abs(x[1])
 
 
 def other_func_2d_vec_ip(x, out):
-    x0, x1 = x
-    out[:] = x0 + abs(x1)
+    out[:] = x[0] + abs(x[1])
 
 
 def other_func_2d_vec_dual(x, out=None):
-    x0, x1 = x
     if out is None:
-        return x0 + abs(x1)
+        return x[0] + abs(x[1])
     else:
-        out[:] = x0 + abs(x1)
+        out[:] = x[0] + abs(x[1])
 
 
 def other_cfunc_2d_novec(x):
@@ -696,21 +687,18 @@ def other_cfunc_2d_novec(x):
 
 
 def other_cfunc_2d_vec_oop(x):
-    x0, x1 = x
-    return 1j * x0 + abs(x1)
+    return 1j * x[0] + abs(x[1])
 
 
 def other_cfunc_2d_vec_ip(x, out):
-    x0, x1 = x
-    out[:] = 1j * x0 + abs(x1)
+    out[:] = 1j * x[0] + abs(x[1])
 
 
 def other_cfunc_2d_vec_dual(x, out=None):
-    x0, x1 = x
     if out is None:
-        return 1j * x0 + abs(x1)
+        return 1j * x[0] + abs(x[1])
     else:
-        out[:] = 1j * x0 + abs(x1)
+        out[:] = 1j * x[0] + abs(x[1])
 
 
 if __name__ == '__main__':

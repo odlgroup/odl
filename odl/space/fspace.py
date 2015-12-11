@@ -129,7 +129,6 @@ class FunctionSet(Set):
 
         if not vectorized:
             fcall = vectorize(dtype=None, outarg='optional')(fcall)
-            print('after vectorization: type ', type(fcall))
 
         return self.element_type(self, fcall)
 
@@ -208,11 +207,9 @@ class FunctionSetVector(Operator):
                                  'input parameter.')
             call_has_out = call_out_optional = True
         elif isfunction(fcall):
-            print('isfunction: ', isfunction(fcall))
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 unbound_call=fcall)
         elif isclass(fcall):
-            print('class, type ', type(fcall))
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 bound_call=fcall.__call__)
         else:
@@ -249,14 +246,12 @@ class FunctionSetVector(Operator):
     def _call(self, x, out=None, **kwargs):
         """Raw evaluation method."""
         if out is None:
-            print('out None, oop func type:', type(self._call_out_of_place))
             out = self._call_out_of_place(x, **kwargs)
-            print('out None, out type:', type(out))
-            print(type(out))
+            print('in _call (out=None): ', out)
         else:
-            print('out given, ip func type:', type(self._call_out_of_place))
+            print('in _call (out given): before: ', out)
             self._call_in_place(x, out=out, **kwargs)
-            print('out given, out type:', type(out))
+            print('in _call (out given): after: ', out)
         return out
 
     def __call__(self, x, out=None, **kwargs):
@@ -675,12 +670,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def quotient_call_out_of_place(x):
             """The quotient out-of-place evaluation function."""
-            print('in quotient: func types ', type(x1_call_oop),
-                  type(x2_call_oop))
-            print('in quotient: result types ', type(x1_call_oop(x)),
-                  type(x2_call_oop(x)))
-            print('result 1: ', x1_call_oop(x))
-            print('result 2: ', x2_call_oop(x))
+            print('in quotient_call_out_of_place: result 1: ', x1_call_oop(x))
+            print('in quotient_call_out_of_place: result 2: ', x2_call_oop(x))
             return x1_call_oop(x) / x2_call_oop(x)
 
         def quotient_call_in_place(x, out):
@@ -694,6 +685,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def quotient_call(x, out=None):
             """Quotient, dual-use version for final use."""
             if out is None:
+                print('in quotient_call: returning ',
+                      quotient_call_out_of_place(x))
                 return quotient_call_out_of_place(x)
             else:
                 return quotient_call_in_place(x, out)
