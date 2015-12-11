@@ -395,5 +395,41 @@ def test_vector_setitem_fancy():
     assert x[[0, 2]][1] is x3_new
 
 
+def test_ufuncs():
+    # Cannot use fixture due to bug in pytest
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+
+    # one arg
+    x = H.element([[-1], [-2, -3]])
+
+    z = x.ufunc.absolute()
+    assert all_almost_equal(z, [[1], [2, 3]])
+
+    # one arg with out
+    x = H.element([[-1], [-2, -3]])
+    y = H.element()
+
+    z = x.ufunc.absolute(y)
+    assert y is z
+    assert all_almost_equal(z, [[1], [2, 3]])
+
+    # Two args
+    x = H.element([[1], [2, 3]])
+    y = H.element([[4], [5, 6]])
+    w = H.element()
+
+    z = x.ufunc.add(y)
+    assert all_almost_equal(z, [[5], [7, 9]])
+
+    # Two args with out
+    x = H.element([[1], [2, 3]])
+    y = H.element([[4], [5, 6]])
+    w = H.element()
+
+    z = x.ufunc.add(y, w)
+    assert w is z
+    assert all_almost_equal(z, [[5], [7, 9]])
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

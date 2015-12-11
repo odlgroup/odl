@@ -372,3 +372,84 @@ class DiscreteLpVectorUFuncs(object):
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_method_discretelp(name, n_args, n_opt, descr)
     setattr(DiscreteLpVectorUFuncs, name, method)
+
+
+# Ufuncs for productspace vectors
+def wrap_method_productspace(name, n_args, n_opt, descr):
+    """Add ufunc methods to `ProductSpaceVector`."""
+
+    if n_args == 1:
+        if n_opt == 0:
+            def wrapper(self):
+                result = [getattr(x.ufunc, name)() for x in self.vector]
+                return self.vector.space.element(result)
+
+        elif n_opt == 1:
+            def wrapper(self, out=None):
+                if out is None:
+                    result = [getattr(x.ufunc, name)() for x in self.vector]
+                    return self.vector.space.element(result)
+                else:
+                    for x, out_x in zip(self.vector, out):
+                        getattr(x.ufunc, name)(out=out_x)
+                    return out
+
+        elif n_opt == 2:
+            def wrapper(self, out1=None, out2=None):
+                if out1 is None:
+                    out1 = self.vector.space.element()
+                if out2 is None:
+                    out2 = self.vector.space.element()
+                for x, out1_x, out2_x in zip(self.vector, out1, out2):
+                    getattr(x.ufunc, name)(out1=out1_x, out2=out2_x)
+                return out1, out2
+
+        else:
+            raise NotImplementedError
+
+    elif n_args == 2:
+        if n_opt == 1:
+            def wrapper(self, x2, out=None):
+                if x2 in self.vector.space:
+                    if out is None:
+                        result = [getattr(x.ufunc, name)(x2p)
+                                  for x, x2p in zip(self.vector, x2)]
+                        return self.vector.space.element(result)
+                    else:
+                        for x, x2p, outp in zip(self.vector, x2, out):
+                            getattr(x.ufunc, name)(x2p, out=outp)
+                        return out
+                else:
+                    if out is None:
+                        result = [getattr(x.ufunc, name)(x2)
+                                  for x in self.vector]
+                        return self.vector.space.element(result)
+                    else:
+                        for x, outp in zip(self.vector, out):
+                            getattr(x.ufunc, name)(x2, out=outp)
+                        return out
+
+        else:
+            raise NotImplementedError
+    else:
+        raise NotImplementedError
+
+    wrapper.__name__ = name
+    wrapper.__doc__ = descr
+    return wrapper
+
+
+class ProductSpaceVectorUFuncs(object):
+    """UFuncs for `ProductSpaceVector` objects.
+
+    Internal object, should not be created except in `ProductSpaceVector`.
+    """
+    def __init__(self, vector):
+        """Create ufunc wrapper for vector."""
+        self.vector = vector
+
+
+# Add ufunc methods to UFunc class
+for name, n_args, n_opt, descr in UFUNCS:
+    method = wrap_method_productspace(name, n_args, n_opt, descr)
+    setattr(ProductSpaceVectorUFuncs, name, method)

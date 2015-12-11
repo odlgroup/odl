@@ -31,6 +31,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.util.ufuncs import ProductSpaceVectorUFuncs
 
 
 __all__ = ('ProductSpace', 'ProductSpaceVector')
@@ -488,6 +489,15 @@ class ProductSpaceVector(LinearSpaceVector):
         except TypeError:
             for i, index in enumerate(indices):
                 self.parts[index] = values[i]
+
+    @property
+    def ufunc(self):
+        """`ProductSpaceVectorUFuncs`, access to numpy style ufuncs.
+
+        These are always available, but may or may not be optimized for
+        the specific space in use.
+        """
+        return ProductSpaceVectorUFuncs(self)
 
     def __str__(self):
         """Return ``str(self)``."""
