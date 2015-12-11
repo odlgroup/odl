@@ -43,7 +43,7 @@ __all__ = ('DiscreteWaveletTrafo', 'DiscreteWaveletTrafoInverse',
 _SUPPORTED_IMPL = ('pywt',)
 
 
-def list_of_coeff_sizes(shape, nscale, wbasis, mode):
+def coeff_size_list(shape, nscale, wbasis, mode):
     """Construct a size list from given wavelet coefficients.
 
     Related to 2D and 3D multidimensional wavelet transforms that utilize
@@ -614,7 +614,7 @@ class DiscreteWaveletTrafo(Operator):
             raise ValueError('Cannot use more than {} scaling levels, '
                              'got {}.'.format(max_level, self.nscales))
 
-        self.size_list = list_of_coeff_sizes(dom.grid.shape, self.nscales,
+        self.size_list = coeff_size_list(dom.grid.shape, self.nscales,
                                              self.wbasis, self.mode)
 
         ran_size = np.prod(self.size_list[0])
@@ -736,7 +736,7 @@ class DiscreteWaveletTrafoInverse(Operator):
             raise ValueError('Cannot use more than {} scaling levels, '
                              'got {}.'.format(max_level, self.nscales))
 
-        self.size_list = list_of_coeff_sizes(ran.grid.shape, self.nscales,
+        self.size_list = coeff_size_list(ran.grid.shape, self.nscales,
                                              self.wbasis, self.mode)
 
         dom_size = np.prod(self.size_list[0])
