@@ -470,7 +470,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     proj_id : int
         ASTRA reference ID to the ASTRA dict with initialized 'type' key
     """
-    if vol_interp not in ('nearest', 'linear'):
+    if vol_interp not in ('nearest', 'linear', 'cuda'):
         raise ValueError('volume interpolation type {!r} not understood.'
                          ''.format(vol_interp))
     impl = str(impl).lower()
@@ -483,11 +483,6 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
                          ''.format(astra_proj_geom))
 
     ndim = int(ndim)
-    if ndim != 2 or impl == 'cuda':
-        # Remove this as soon as ASTRA supports 3d/CUDA projectors
-        raise ValueError('projector initialization in ASTRA is only supported '
-                         'for 2d and CPU. GPU algorithms do not need a '
-                         'projector.')
 
     proj_type = astra_proj_geom['type']
     if proj_type not in ('parallel', 'fanflat'):
@@ -510,8 +505,8 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     type_map_cpu['parallel3d_vec'] = type_map_cpu['parallel3d']
     type_map_cpu['cone_vec'] = type_map_cpu['cone']
 
-    # GPU algorithms do not requiure a projector. This is just for
-    # completeness.
+    # GPU algorithms not necessarily require a projector, but will in future
+    # releases making the interfrace more coherent regarding CPU and GPU
     type_map_cuda = {'parallel': 'cuda',  # I
                      'parallel3d': 'cuda3d'}  # I
     type_map_cuda['fanflat'] = type_map_cuda['parallel']
@@ -520,12 +515,12 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     type_map_cuda['parallel3d_vec'] = type_map_cuda['parallel3d']
     type_map_cuda['cone_vec'] = type_map_cuda['cone']
 
+    # create config dict
     proj_cfg = {}
     if impl == 'cpu':
         proj_cfg['type'] = type_map_cpu[proj_type][vol_interp]
     else:  # impl == 'cuda'
         proj_cfg['type'] = type_map_cuda[proj_type]
-
     proj_cfg['VolumeGeometry'] = astra_vol_geom
     proj_cfg['ProjectionGeometry'] = astra_proj_geom
 
@@ -545,18 +540,18 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
         backprojection
     ndim : {2, 3}
         Number of dimensions of the projector
-    vol_id : int
+    vol_id : `int`
         ASTRA ID of the volume data object
-    sino_id : int
+    sino_id : `int`
         ASTRA ID of the projection data object
-    proj_id : int or None
-        ASTRA ID of the `cpu` projector. None for `cuda`
+    proj_id : `int`
+        ASTRA ID of the projector
     impl : {'cpu', 'cuda'}
         Implementation of the projector
 
     Returns
     -------
-    id : int
+    id : `int`
         ASTRA internal id for the new algorithm structure
     """
     if direction not in ('forward', 'backward'):
@@ -579,8 +574,7 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
                              3: {'cpu': None, 'cuda': 'BP3D_CUDA'}}}
 
     algo_cfg = {'type': algo_map[direction][ndim][impl]}
-    if impl is 'cpu':
-        algo_cfg['ProjectorId'] = proj_id
+    algo_cfg['ProjectorId'] = proj_id
     algo_cfg['ProjectionDataId'] = sino_id
     if direction is 'forward':
         algo_cfg['VolumeDataId'] = vol_id

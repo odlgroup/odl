@@ -25,6 +25,8 @@ __all__ += ('stir_bindings',)
 
 from . import stir_bindings
 
+__all__ += ('ASTRA_AVAILABLE', 'ASTRA_CUDA_AVAILABLE')
+
 try:
     from . import astra_cpu
     from .astra_cpu import *
@@ -46,4 +48,4 @@ if ASTRA_AVAILABLE:
     from .astra_setup import *
     __all__ += astra_setup.__all__
 
-__all__ += ('ASTRA_AVAILABLE', 'ASTRA_CUDA_AVAILABLE')
+

@@ -338,6 +338,7 @@ def test_astra_algorithm():
     ndim = 2
     impl = 'cpu'
     vol_id = astra_data(vol_geom_2d, 'volume', ndim=ndim)
+    rec_id = astra_data(vol_geom_2d, 'volume', ndim=ndim)
     sino_id = astra_data(proj_geom_2d, 'projection', ndim=ndim)
     proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d,
                               ndim=ndim, impl=impl)
@@ -352,36 +353,44 @@ def test_astra_algorithm():
     with pytest.raises(ValueError):
         astra_algorithm('backward', ndim, vol_id, sino_id, proj_id=None,
                         impl='cpu')
-    astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl)
+    alg_id = astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl)
+    astra.algorithm.delete(alg_id)
 
     ndim = 2
 
+    # CPU
     impl = 'cpu'
     for direction in {'forward', 'backward'}:
-        astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl)
+        alg_id = astra_algorithm(direction, ndim, vol_id, sino_id, proj_id,
+                                 impl)
+        astra.algorithm.delete(alg_id)
 
-    impl = 'cuda'
-    for direction in {'forward', 'backward'}:
-        astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
-                        impl=impl)
-        astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=None,
-                        impl=impl)
+    # CUDA
+    proj_id = astra_projector('cuda', vol_geom_2d, proj_geom_2d, ndim=ndim,
+                              impl='cuda')
+
+    # FP
+    alg_id = astra_algorithm('forward', ndim, vol_id, sino_id,
+                             proj_id=proj_id, impl='cuda')
+    astra.algorithm.delete(alg_id)
+
+    # BP
+    alg_id = astra_algorithm('backward', ndim, rec_id, sino_id,
+                             proj_id=proj_id, impl='cuda')
+    astra.algorithm.delete(alg_id)
+
 
     ndim = 3
     vol_id = astra_data(vol_geom_3d, 'volume', ndim=ndim)
     sino_id = astra_data(proj_geom_3d, 'projection', ndim=ndim)
 
-    impl = 'cpu'
     with pytest.raises(NotImplementedError):
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
-                        impl=impl)
+                        impl='cpu')
 
-    impl = 'cuda'
     for direction in {'forward', 'backward'}:
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
-                        impl=impl)
-        astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=None,
-                        impl=impl)
+                        impl='cuda')
 
 
 @skip_if_no_astra
@@ -428,3 +437,7 @@ def test_geom_to_vec():
 @skip_if_no_astra
 def test_astra_cleanup():
     astra_cleanup()
+
+
+if __name__ == '__main__':
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
