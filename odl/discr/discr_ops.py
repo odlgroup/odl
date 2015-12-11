@@ -129,8 +129,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
 
     method = str(method).lower()
     if method not in ('central', 'forward', 'backward'):
-        raise NotImplementedError('method {} has to be '
-                                  'central, forward or backward')
+        raise ValueError('method {} has to be central, forward or backward')
 
     # create slice objects: initially all are [:, :, ..., :]
     # current slice

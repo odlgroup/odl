@@ -63,6 +63,9 @@ def test_finite_diff():
         finite_diff(arr, out)
     with pytest.raises(ValueError):
         finite_diff(arr, dx=0)
+    # wribg method
+    with pytest.raises(ValueError):
+        finite_diff(arr, method='non-method')
 
     # explicitly calculated finite difference
     findiff_ex = np.zeros_like(arr)
@@ -124,6 +127,20 @@ def test_finite_diff():
     findiff_op = finite_diff(arr)
     assert all(findiff_op.real == 1)
     assert all(findiff_op.imag == -1)
+
+
+def test_forward_diff():
+    arr = np.array([0., 3., 5., 6.])
+
+    findiff_op = finite_diff(arr, zero_padding=True, method='forward')
+    assert all_equal(findiff_op, [3., 2., 1., -6.])
+
+
+def test_backward_diff():
+    arr = np.array([0., 3., 5., 6.])
+
+    findiff_op = finite_diff(arr, zero_padding=True, method='backward')
+    assert all_equal(findiff_op, [0., 3., 2., 1.])
 
 
 def test_discr_part_deriv():
