@@ -92,26 +92,22 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     if len(shape) not in (2, 3):
         raise ValueError('shape must have length 2 or 3, got {}.'
                          ''.format(len(shape)))
-    P = np.zeros(shape)
+    arr = np.zeros(shape)
     max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
     if nscale >= max_level:
         raise ValueError('Too many scaling levels, got {}, maximum useful'
                          ' level is {}'
                          ''.format(nscale, max_level))
 
+    # TODO: do we really need to calculate a wavelet trafor just to get
+    # the sizes?
     if len(shape) == 2:
-        W = pywt.wavedec2(P, wbasis, mode, level=nscale)
+        coeff = pywt.wavedec2(arr, wbasis, mode, level=nscale)
     if len(shape) == 3:
-        W = wavelet_decomposition3d(P, wbasis, mode, nscale)
+        coeff = wavelet_decomposition3d(arr, wbasis, mode, nscale)
 
-    size_list = []
-    a = np.shape(W[0])
-    size_list.append(a)
-    for kk in range(1, nscale+1):
-        a = np.shape(W[kk])
-        a = a[1:]
-        size_list.append(a)
-
+    size_list = [np.shape(c)[1:] for c in coeff[1:nscale + 1]]
+    size_list.insert(0, np.shape(coeff[0]))
     size_list.append(shape)
     return size_list
 
@@ -166,8 +162,8 @@ def pywt_coeff_to_array2d(coeff, size_list, nscales):
     """
     # TODO: outsource to an own helper?
     size_flatCoeff = np.prod(size_list[0])
-    for kk in range(1, nscales+1):
-        size_flatCoeff += 3*np.prod(size_list[kk])
+    for kk in range(1, nscales + 1):
+        size_flatCoeff += 3 * np.prod(size_list[kk])
 
     flat_coeff = np.empty(size_flatCoeff)
     aa = coeff[0]
@@ -175,7 +171,7 @@ def pywt_coeff_to_array2d(coeff, size_list, nscales):
     stop = np.prod(size_list[0])
     flat_coeff[start:stop] = aa.ravel()
 
-    for kk in range(1, nscales+1):
+    for kk in range(1, nscales + 1):
         for subarray in coeff[kk]:
             start, stop = stop, stop + np.prod(size_list[kk])
             flat_coeff[start:stop] = subarray.ravel()
@@ -251,12 +247,12 @@ def array_to_pywt_coeff2d(coeff, size_list, nscales):
         size2 = np.prod(size_list[kk])
         details = []
         for ii in range(1, 4):
-            detail_flat = coeff[size1+(ii-1)*size2:size1+ii*size2]
+            detail_flat = coeff[size1 + (ii - 1) * size2:size1 + ii * size2]
             details += [np.asarray(detail_flat).reshape(detail_shape)]
         coeff_list.append(tuple(details))
 
         kk = kk + 1
-        size1 = size1 + 3*size2
+        size1 = size1 + 3 * size2
 
     return coeff_list
 
@@ -319,8 +315,8 @@ def pywt_coeff_to_array3d(coeff, size_list, nscales):
         wavelet coefficient array is the same.
     """
     size_flatCoeff = np.prod(size_list[0])
-    for kk in range(1, nscales+1):
-        size_flatCoeff += 7*np.prod(size_list[kk])
+    for kk in range(1, nscales + 1):
+        size_flatCoeff += 7 * np.prod(size_list[kk])
 
     flat_coeff = np.empty(size_flatCoeff)
     approx = coeff[0]
@@ -328,7 +324,7 @@ def pywt_coeff_to_array3d(coeff, size_list, nscales):
     stop = np.prod(size_list[0])
     flat_coeff[start:stop] = approx.ravel()
 
-    for kk in range(1, nscales+1):
+    for kk in range(1, nscales + 1):
         for subarray in coeff[kk]:
             start, stop = stop, stop + np.prod(size_list[kk])
             flat_coeff[start:stop] = subarray.ravel()
@@ -405,12 +401,12 @@ def array_to_pywt_coeff3d(coeff, size_list, nscales):
         size2 = np.prod(size_list[kk])
         details = []
         for ii in range(1, 8):
-            flat = coeff[size1+(ii-1)*size2:size1 + ii*size2]
+            flat = coeff[size1 + (ii - 1) * size2:size1 + ii * size2]
             details += [np.asarray(flat).reshape(detail_shape)]
 
         coeff_list.append(tuple(details))
         kk = kk + 1
-        size1 = size1 + 7*size2
+        size1 = size1 + 7 * size2
 
     return coeff_list
 
@@ -558,7 +554,7 @@ signal-extension-modes.html>`_
     (aad, ada, add, daa, dad, dda, ddd) = coeff_list[k]
     coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
                   'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
-    for k in range(2, nscales+1):
+    for k in range(2, nscales + 1):
         aaa = pywt.idwtn(coeff_dict, wbasis, mode)
         (aad, ada, add, daa, dad, dda, ddd) = coeff_list[k]
         coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
@@ -615,7 +611,7 @@ class DiscreteWaveletTrafo(Operator):
                              'got {}.'.format(max_level, self.nscales))
 
         self.size_list = coeff_size_list(dom.grid.shape, self.nscales,
-                                             self.wbasis, self.mode)
+                                         self.wbasis, self.mode)
 
         ran_size = np.prod(self.size_list[0])
 
@@ -737,7 +733,7 @@ class DiscreteWaveletTrafoInverse(Operator):
                              'got {}.'.format(max_level, self.nscales))
 
         self.size_list = coeff_size_list(ran.grid.shape, self.nscales,
-                                             self.wbasis, self.mode)
+                                         self.wbasis, self.mode)
 
         dom_size = np.prod(self.size_list[0])
         if len(ran.grid.shape) == 2:
