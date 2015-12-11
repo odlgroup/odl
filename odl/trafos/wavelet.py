@@ -57,7 +57,13 @@ def list_of_coeff_sizes(shape, nscale, wbasis, mode):
     nscale : `int`
         Number of scales in the multidimensional wavelet
         transform.  This parameter is checked against the maximum number of
-        scales returned by ``pywt.dwt_max_level``.
+        scales returned by ``pywt.dwt_max_level``. For more information
+        see the corresponding `documentation
+        <http://www.pybytes.com/pywavelets/ref/\
+dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
+-dwt-max-level>`_
+        of PyWavelets.
+
     wbasis : ``_pywt.Wavelet``
         Describes properties of a selected wavelet basis
     mode : `str`
@@ -161,25 +167,19 @@ def pywt_coeff_to_array2d(coeff, size_list, nscales):
     # TODO: outsource to an own helper?
     size_flatCoeff = np.prod(size_list[0])
     for kk in range(1, nscales+1):
-        size_flatCoeff = size_flatCoeff + 3*np.prod(size_list[kk])
+        size_flatCoeff += 3*np.prod(size_list[kk])
 
-    flat_coeff = np.zeros(size_flatCoeff)
+    flat_coeff = np.empty(size_flatCoeff)
     aa = coeff[0]
-    aa = aa.ravel()
+    start = 0
     stop = np.prod(size_list[0])
-    flat_coeff[0:stop] = aa
-    start = stop
+    flat_coeff[start:stop] = aa.ravel()
+
     for kk in range(1, nscales+1):
-        (ad, da, dd) = coeff[kk]
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = ad.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = da.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = dd.ravel()
-        start = stop
+        for subarray in coeff[kk]:
+            start, stop = stop, stop + np.prod(size_list[kk])
+            flat_coeff[start:stop] = subarray.ravel()
+
     return flat_coeff
 
 
@@ -244,23 +244,16 @@ def array_to_pywt_coeff2d(coeff, size_list, nscales):
     aa_flat = coeff[0:size1]
     aa = np.asarray(aa_flat).reshape(size_list[0])
     kk = 1
-    coeff_list = []
-    coeff_list.append(aa)
+    coeff_list = [aa]
 
     while kk <= nscales:
         detail_shape = size_list[kk]
         size2 = np.prod(size_list[kk])
-        ad_flat = coeff[size1:size1+size2]
-        ad = np.asarray(ad_flat).reshape(detail_shape)
-
-        da_flat = coeff[size1+size2:size1+2*size2]
-        da = np.asarray(da_flat).reshape(detail_shape)
-
-        dd_flat = coeff[size1+2*size2:size1 + 3*size1]
-        dd = np.asarray(dd_flat).reshape(detail_shape)
-
-        details = (ad, da, dd)
-        coeff_list.append(details)
+        details = []
+        for ii in range(1, 4):
+            detail_flat = coeff[size1+(ii-1)*size2:size1+ii*size2]
+            details += [np.asarray(detail_flat).reshape(detail_shape)]
+        coeff_list.append(tuple(details))
 
         kk = kk + 1
         size1 = size1 + 3*size2
@@ -327,37 +320,18 @@ def pywt_coeff_to_array3d(coeff, size_list, nscales):
     """
     size_flatCoeff = np.prod(size_list[0])
     for kk in range(1, nscales+1):
-        size_flatCoeff = size_flatCoeff + 7*np.prod(size_list[kk])
+        size_flatCoeff += 7*np.prod(size_list[kk])
 
-    flat_coeff = np.zeros((size_flatCoeff))
+    flat_coeff = np.empty(size_flatCoeff)
     approx = coeff[0]
-    approx = approx.ravel()
+    start = 0
     stop = np.prod(size_list[0])
-    flat_coeff[0:stop] = approx
-    start = stop
+    flat_coeff[start:stop] = approx.ravel()
+
     for kk in range(1, nscales+1):
-        (aad, ada, add, daa, dad, dda, ddd) = coeff[kk]
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = aad.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = ada.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = add.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = daa.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = dad.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = dda.ravel()
-        start = stop
-        stop = start + np.prod(size_list[kk])
-        flat_coeff[start:stop] = ddd.ravel()
-        start = stop
+        for subarray in coeff[kk]:
+            start, stop = stop, stop + np.prod(size_list[kk])
+            flat_coeff[start:stop] = subarray.ravel()
 
     return flat_coeff
 
@@ -381,7 +355,7 @@ def array_to_pywt_coeff3d(coeff, size_list, nscales):
 
        size_list[0] = size of approximation coefficients at the coarsest level,
 
-       size_list[1] = size of the detailed coefficients at the coarsest level,
+       size_list[1] = size of the detailedetails at the coarsest level,
 
        size_list[N] = size of the detailed coefficients at the finest level,
 
@@ -429,30 +403,12 @@ def array_to_pywt_coeff3d(coeff, size_list, nscales):
     while kk <= nscales:
         detail_shape = size_list[kk]
         size2 = np.prod(size_list[kk])
-        aad_flat = coeff[size1:size1+size2]
-        aad = np.asarray(aad_flat).reshape(detail_shape)
+        details = []
+        for ii in range(1, 8):
+            flat = coeff[size1+(ii-1)*size2:size1 + ii*size2]
+            details += [np.asarray(flat).reshape(detail_shape)]
 
-        ada_flat = coeff[size1+size2:size1+2*size2]
-        ada = np.asarray(ada_flat).reshape(detail_shape)
-
-        add_flat = coeff[size1+2*size2:size1 + 3*size1]
-        add = np.asarray(add_flat).reshape(detail_shape)
-
-        daa_flat = coeff[size1+3*size2:size1 + 4*size1]
-        daa = np.asarray(daa_flat).reshape(detail_shape)
-
-        dad_flat = coeff[size1+4*size2:size1 + 5*size1]
-        dad = np.asarray(dad_flat).reshape(detail_shape)
-
-        dda_flat = coeff[size1+5*size2:size1 + 6*size1]
-        dda = np.asarray(dda_flat).reshape(detail_shape)
-
-        ddd_flat = coeff[size1+6*size2:size1 + 7*size1]
-        ddd = np.asarray(ddd_flat).reshape(detail_shape)
-
-        details = (aad, ada, add, daa, dad, dda, ddd)
-        coeff_list.append(details)
-
+        coeff_list.append(tuple(details))
         kk = kk + 1
         size1 = size1 + 7*size2
 
@@ -464,7 +420,7 @@ def wavelet_decomposition3d(x, wbasis, mode, nscales):
 
     Compute the discrete 3D multiresolution wavelet decomposition
     at the given level (nscales) for a given 3D image.
-    Utilizes a `PyWavelet
+    Utilizes a `n-dimensional PyWavelet
     <http://www.pybytes.com/pywavelets/ref/other-functions.html>`_
     function ``pywt.dwtn``.
 
@@ -474,9 +430,10 @@ def wavelet_decomposition3d(x, wbasis, mode, nscales):
     wbasis:  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basis
     mode : `str`
-            Signal extention mode. For possible extensions see the signal
-            extenstion `modes
-        <http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html>`_
+            Signal extention mode. For possible extensions see the
+            `signal extenstion modes
+            <http://www.pybytes.com/pywavelets/ref/\
+signal-extension-modes.html>`_
             of PyWavelets.
     nscales : `int`
             Number of scales in the coefficient list
@@ -579,9 +536,10 @@ def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
     wbasis :  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basisodl.discr.lp_discr.
     mode : `str`
-            Signal extention mode. For possible extensions see the signal
-            extenstion `modes
-        <http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html>`_
+            Signal extention mode. For possible extensions see the
+            `signal extenstion modes
+            <http://www.pybytes.com/pywavelets/ref/\
+signal-extension-modes.html>`_
             of PyWavelets.
     nscales : `int`
             Number of scales in the coefficient list
@@ -647,9 +605,6 @@ class DiscreteWaveletTrafo(Operator):
         if dom.exponent != 2.0:
             raise ValueError('domain Lp exponent is {} instead of 2.0.'
                              ''.format(dom.exponent))
-#        if not np.all(dom.grid.stride == 1):
-#            raise NotImplementedError('non-uniform grid cell sizes not yet '
-#                                      'supported.')
 
         max_level = pywt.dwt_max_level(dom.grid.shape[0],
                                        filter_len=self.wbasis.dec_len)
@@ -667,9 +622,12 @@ class DiscreteWaveletTrafo(Operator):
         if len(dom.grid.shape) == 2:
             ran_size += sum(3 * np.prod(shape) for shape in
                             self.size_list[1:-1])
-        if len(dom.grid.shape) == 3:
+        elif len(dom.grid.shape) == 3:
             ran_size += sum(7 * np.prod(shape) for shape in
                             self.size_list[1:-1])
+        else:
+            raise NotImplementedError('ndim {} not 2 or 3'
+                                      ''.format(len(dom.grid.shape)))
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be crated)
         ran = dom.dspace_type(ran_size, dtype=dom.dtype)
@@ -719,7 +677,7 @@ class DiscreteWaveletTrafo(Operator):
             return self.inverse
         else:
             # TODO: put adjoint here
-            return None
+            return super().adjoint
 
     @property
     def inverse(self):
@@ -727,7 +685,8 @@ class DiscreteWaveletTrafo(Operator):
 
         return DiscreteWaveletTrafoInverse(ran=self.domain,
                                            nscales=self.nscales,
-                                           wbasis=self.wbasis, mode=self.mode)
+                                           wbasis=self.wbasis,
+                                           mode=self.mode)
 
 
 class DiscreteWaveletTrafoInverse(Operator):
@@ -784,9 +743,12 @@ class DiscreteWaveletTrafoInverse(Operator):
         if len(ran.grid.shape) == 2:
             dom_size += sum(3 * np.prod(shape) for shape in
                             self.size_list[1:-1])
-        if len(ran.grid.shape) == 3:
+        elif len(ran.grid.shape) == 3:
             dom_size += sum(7 * np.prod(shape) for shape in
                             self.size_list[1:-1])
+        else:
+            raise NotImplementedError('ndim {} not 2 or 3'
+                                      ''.format(len(ran.grid.shape)))
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
         dom = ran.dspace_type(dom_size, dtype=ran.dtype)
@@ -820,7 +782,7 @@ class DiscreteWaveletTrafoInverse(Operator):
                                                self.nscales)
             x = pywt.waverec2(coeff_list, self.wbasis, self.mode)
             return self.range.element(x)
-        if len(self.range.grid.shape) == 3:
+        elif len(self.range.grid.shape) == 3:
             coeff_dict = array_to_pywt_coeff3d(coeff, self.size_list,
                                                self.nscales)
             x = wavelet_reconstruction3d(coeff_dict, self.wbasis, self.mode,
@@ -834,7 +796,7 @@ class DiscreteWaveletTrafoInverse(Operator):
             return self.inverse
         else:
             # TODO: put adjoint here
-            return None
+            return super().adjoint
 
     @property
     def inverse(self):
