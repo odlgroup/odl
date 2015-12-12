@@ -132,7 +132,8 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     size_list.append(size_list[-1])
 
     # We created the list in reversed order compared to what pywt expects
-    return size_list.reverse()
+    size_list.reverse()
+    return size_list
 
 
 def pywt_coeff_to_array2d(coeff, size_list):
