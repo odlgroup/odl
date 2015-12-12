@@ -24,22 +24,21 @@ standard_library.install_aliases()
 # External module imports
 import pytest
 import numpy as np
-from odl.trafos.wavelet import WAVELET_AVAILABLE
-if WAVELET_AVAILABLE:
+from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
+if PYWAVELETS_AVAILABLE:
     import pywt
-else:
-    pywt = None
 
 # ODL imports
 import odl
-from odl.trafos.wavelet import (coeff_size_list, pywt_coeff_to_array2d,
-                                array_to_pywt_coeff2d, pywt_coeff_to_array3d,
-                                array_to_pywt_coeff3d, wavelet_decomposition3d,
-                                wavelet_reconstruction3d, DiscreteWaveletTrafo)
-from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_wavelet
+from odl.trafos.wavelet import (
+    coeff_size_list, pywt_coeff_to_array2d, array_to_pywt_coeff2d,
+    pywt_coeff_to_array3d, array_to_pywt_coeff3d, wavelet_decomposition3d,
+    wavelet_reconstruction3d, DiscreteWaveletTransform)
+from odl.util.testutils import (all_almost_equal, all_equal,
+                                skip_if_no_pywavelets)
 
 
-@skip_if_no_wavelet
+@skip_if_no_pywavelets
 def test_coeff_size_list():
     # Verify that the helper function does indeed work as expected
     shape = (64, 64)
@@ -55,7 +54,7 @@ def test_coeff_size_list():
     assert all_equal(size_list3d, S3d)
 
 
-@skip_if_no_wavelet
+@skip_if_no_pywavelets
 def test_wavelet_decomposition3d_and_reconstruction3d():
     # Test 3D wavelet decomposition and reconstruction and verify that
     # they perform as expected
@@ -87,7 +86,7 @@ def test_wavelet_decomposition3d_and_reconstruction3d():
     assert all_almost_equal(reconstruction, x)
 
 
-@skip_if_no_wavelet
+@skip_if_no_pywavelets
 def test_pywt_coeff_to_array_and_array_to_pywt_coeff2d():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
@@ -97,19 +96,19 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff2d():
     size_list = coeff_size_list((n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n)
     coeff_list = pywt.wavedec2(x, wbasis, mode, nscales)
-    coeff_arr = pywt_coeff_to_array2d(coeff_list, size_list, nscales)
+    coeff_arr = pywt_coeff_to_array2d(coeff_list, size_list)
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(3 * np.prod(shape) for shape in size_list[1:-1])
     assert all_equal(len(coeff_arr), length_of_array)
 
-    coeff_list2 = array_to_pywt_coeff2d(coeff_arr, size_list, nscales)
+    coeff_list2 = array_to_pywt_coeff2d(coeff_arr, size_list)
     assert all_equal(coeff_list, coeff_list2)
     reconstruction = pywt.waverec2(coeff_list2, wbasis, mode)
     assert all_almost_equal(reconstruction, x)
 
 
-@skip_if_no_wavelet
+@skip_if_no_pywavelets
 def test_pywt_coeff_to_array_and_array_to_pywt_coeff3d():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
@@ -123,7 +122,7 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff3d():
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(7 * np.prod(shape) for shape in size_list[1:-1])
-    assert all_equal(len(coeff_arr), length_of_array)
+    assert len(coeff_arr) == length_of_array
 
     coeff_dict2 = array_to_pywt_coeff3d(coeff_arr, size_list, nscales)
     reconstruction = wavelet_reconstruction3d(coeff_dict2, wbasis, mode,
@@ -132,8 +131,8 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff3d():
     assert all_almost_equal(reconstruction, x)
 
 
-@skip_if_no_wavelet
-def test_DiscreteWaveletTrafo():
+@skip_if_no_pywavelets
+def test_dwt():
     # Verify that the operator works as axpected
     # 2D test
     n = 16
@@ -152,7 +151,7 @@ def test_DiscreteWaveletTrafo():
 
     # Create the discrete wavelet transform operator.
     # Only the domain of the operator needs to be defined
-    Wop = DiscreteWaveletTrafo(disc_domain, nscales, wbasis, mode)
+    Wop = DiscreteWaveletTransform(disc_domain, nscales, wbasis, mode)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
@@ -194,7 +193,7 @@ def test_DiscreteWaveletTrafo():
     disc_phantom = disc_domain.element(x)
 
     # Create the discrete wavelet transform operator related to 3D transform.
-    Wop = DiscreteWaveletTrafo(disc_domain, nscales, wbasis, mode)
+    Wop = DiscreteWaveletTransform(disc_domain, nscales, wbasis, mode)
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
     # Determine the correct range for Wop and verify that coeffs

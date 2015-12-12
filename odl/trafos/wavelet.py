@@ -32,18 +32,18 @@ from odl.operator.operator import Operator
 
 try:
     import pywt
-    WAVELET_AVAILABLE = True
+    PYWAVELETS_AVAILABLE = True
 except ImportError:
-    WAVELET_AVAILABLE = False
+    PYWAVELETS_AVAILABLE = False
 
-__all__ = ('DiscreteWaveletTrafo', 'DiscreteWaveletTrafoInverse',
-           'WAVELET_AVAILABLE')
+__all__ = ('DiscreteWaveletTransform', 'DiscreteWaveletTransformInverse',
+           'PYWAVELETS_AVAILABLE')
 
 
 _SUPPORTED_IMPL = ('pywt',)
 
 
-def coeff_size_list(shape, nscale, wbasis, mode):
+def coeff_size_list(shape, nscales, wbasis, mode):
     """Construct a size list from given wavelet coefficients.
 
     Related to 2D and 3D multidimensional wavelet transforms that utilize
@@ -53,8 +53,8 @@ def coeff_size_list(shape, nscale, wbasis, mode):
     Parameters
     ----------
     shape : `tuple`
-        Number of pixels/voxels in the image. Its lenght must be 2 or 3.
-    nscale : `int`
+        Number of pixels/voxels in the image. Its length must be 2 or 3.
+    nscales : `int`
         Number of scales in the multidimensional wavelet
         transform.  This parameter is checked against the maximum number of
         scales returned by ``pywt.dwt_max_level``. For more information
@@ -64,55 +64,78 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 -dwt-max-level>`_
         of PyWavelets.
 
-    wbasis : ``_pywt.Wavelet``
-        Describes properties of a selected wavelet basis
+    wbasis : ``pywt.Wavelet``
+        Selected wavelet basis
+
     mode : `str`
         Signal extention mode. Possible extension modes are
-        'zpd' - zero-padding: signal is extended by adding zero samples
-        'cpd' - constant padding: border values are replicated
-        'sym' - symmetric padding: signal extension by mirroring samples
-        'ppd' - periodic padding: signal is trated as a periodic one
-        'sp1' - smooth padding: signal is extended according to the
+
+        'zpd': zero-padding -- signal is extended by adding zero samples
+
+        'cpd': constant padding -- border values are replicated
+
+        'sym': symmetric padding -- signal extension by mirroring samples
+
+        'ppd': periodic padding -- signal is trated as a periodic one
+
+        'sp1': smooth padding -- signal is extended according to the
         first derivatives calculated on the edges (straight line)
-        'per' - periodization: like periodic-padding but gives the
+
+        'per': periodization -- like periodic-padding but gives the
         smallest possible number of decomposition coefficients.
 
     Returns
     -------
     size_list : `list`
         A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels
-        size_list[0] = size of approximation coefficients at the coarsest level
-        size_list[1] = size of the detailed coefficients at the coarsest level
+        and detail) coefficients at different scaling levels:
+
+        ``size_list[0]`` = size of approximation coefficients at
+        the coarsest level
+
+        ``size_list[1]`` = size of the detail coefficients at the
+        coarsest level
+
         ...
-        size_list[n] = size of the detailed coefficients at the finest level
-        size_list[n+1] = size of original image
-        n = number of scaling levels = nscale
+
+        ``size_list[N]`` = size of the detail coefficients at the
+        finest level
+
+        ``size_list[N+1]`` = size of the original image
+
+        ``N`` = number of scaling levels = nscales
     """
     if len(shape) not in (2, 3):
         raise ValueError('shape must have length 2 or 3, got {}.'
                          ''.format(len(shape)))
-    arr = np.zeros(shape)
+
     max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
-    if nscale >= max_level:
+    if nscales >= max_level:
         raise ValueError('Too many scaling levels, got {}, maximum useful'
                          ' level is {}'
-                         ''.format(nscale, max_level))
+                         ''.format(nscales, max_level))
 
-    # TODO: do we really need to calculate a wavelet trafor just to get
-    # the sizes?
-    if len(shape) == 2:
-        coeff = pywt.wavedec2(arr, wbasis, mode, level=nscale)
-    if len(shape) == 3:
-        coeff = wavelet_decomposition3d(arr, wbasis, mode, nscale)
+    # dwt_coeff_len calculates the number of coefficients at the next
+    # scaling level given the input size, the length of the filter and
+    # the applied mode.
+    # We use this in the following way (per dimension):
+    # - length[0] = original data length
+    # - length[n+1] = dwt_coeff_len(length[n], ...)
+    # - until n = nscales
+    size_list = [shape]
+    for scale in range(nscales):
+        shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len, mode=mode)
+                    for n in size_list[scale])
+        size_list.append(shp)
 
-    size_list = [np.shape(c)[1:] for c in coeff[1:nscale + 1]]
-    size_list.insert(0, np.shape(coeff[0]))
-    size_list.append(shape)
-    return size_list
+    # Add a duplicate of the last entry for the approximation coefficients
+    size_list.append(size_list[-1])
+
+    # We created the list in reversed order compared to what pywt expects
+    return size_list.reverse()
 
 
-def pywt_coeff_to_array2d(coeff, size_list, nscales):
+def pywt_coeff_to_array2d(coeff, size_list):
     """Convert a `pywt
     <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
 
@@ -120,66 +143,71 @@ def pywt_coeff_to_array2d(coeff, size_list, nscales):
 
     Parameters
     ----------
-    coeff : `list`
-        Coefficient are organized in the list in the following way
-        [aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]
-        The appreviations refer to,
+    coeff : ordered `list`
+        Coefficient are organized in the list in the following way:
 
-        aa = approx. on 1st dim, approx. on 2nd dim (approximation),
+        ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
 
-        ad = approx. on 1st dim, detail on 2nd dim (horizontal),
+        The abbreviations refer to
 
-        da = detail on 1st dim, approx. on 2nd dim (vertical),
+        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
 
-        dd = detail on 1st dim, detail on 2nd dim (diaginal),
+        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
 
-        N = the level of decomposition i.e. number of scales.
+        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
+
+        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
+
+        where ``N`` is the number of scales.
 
     size_list : `list`
         A list containing the sizes of the wavelet (approximation
         and detail) coefficients at different scaling levels,
 
-        size_list[0] = size of approximation coefficients at
+        ``size_list[0]`` = size of approximation coefficients at
             the coarsest level, i.e. size of aaN,
-        size_list[1] = size of the detailed coefficients at
-            the coarsest level, i.e.  size of adN/daN/ddN,
-        size_list[N] = size of the detailed coefficients at
-            the finest level, i.e. size of ad1/da1/dd1,
-        size_list[N+1] = size of original image,
-        N = nscales
 
-    nscales : `int`
-        Number of scales in the coefficient list
+        ``size_list[1]`` = size of the detailed coefficients at
+            the coarsest level, i.e.  size of adN/daN/ddN,
+
+        ``size_list[N]`` = size of the detailed coefficients at
+            the finest level, i.e. size of ad1/da1/dd1,
+
+        ``size_list[N+1]`` = size of original image,
+
+        where ``N`` is the number of scales.
 
     Returns
     -------
     arr : `numpy.ndarray`
-        Flattened and concatenated coefficient array
+        Flattened and concatenated coefficient array.
         The length of the array depends on the size of input image to
         be transformed and on the chosen wavelet basis.
-        If the size of the input image is 2^n x 2^n, the lenght of the
-        wavelet coefficient array is the same.
+        If the size of the input image is :math:`2^n \\times 2^n`,
+        the length of the wavelet coefficient array is the same.
     """
-    # TODO: outsource to an own helper?
-    size_flatCoeff = np.prod(size_list[0])
-    for kk in range(1, nscales + 1):
-        size_flatCoeff += 3 * np.prod(size_list[kk])
+    # Last entry not used since it does not correspond to a coefficient size
+    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
 
-    flat_coeff = np.empty(size_flatCoeff)
-    aa = coeff[0]
+    # Approx. coefficients appear once, while there are 3 types of detail
+    # coefficients per level
+    flat_total_size = flat_sizes[0] + 3 * sum(flat_sizes[1:])
+    flat_coeff = np.empty(flat_total_size)
+
+    # Special case at index 0 since the entry is a single array, not a tuple
     start = 0
-    stop = np.prod(size_list[0])
-    flat_coeff[start:stop] = aa.ravel()
+    stop = flat_sizes[0]
+    flat_coeff[:flat_sizes[0]] = coeff[0].ravel()
 
-    for kk in range(1, nscales + 1):
-        for subarray in coeff[kk]:
-            start, stop = stop, stop + np.prod(size_list[kk])
-            flat_coeff[start:stop] = subarray.ravel()
+    for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
+        for dc in detail_coeffs:
+            start, stop = stop, stop + fsize
+            flat_coeff[start:stop] = dc.ravel()
 
     return flat_coeff
 
 
-def array_to_pywt_coeff2d(coeff, size_list, nscales):
+def array_to_pywt_coeff2d(coeff, size_list):
     """Convert a flat array into a `pywt
     <http://www.pybytes.com/pywavelets/>`_ coefficient list.
     For multilevel 2D discrete wavelet transform
@@ -189,70 +217,74 @@ def array_to_pywt_coeff2d(coeff, size_list, nscales):
     coeff : `DiscreteLp.Vector`
         A flat coefficient vector containing the approximation,
         horizontal detail, vertical detail and diagonal detail
-        coefficients in the following order,
-        [aaN, adN, daN, ddN, ... ad1, da1, dd1],
+        coefficients in the following order:
 
-        The appreviations refer to,
+        ``[aaN, adN, daN, ddN, ... ad1, da1, dd1]``
 
-        aa = approx. on 1st dim, approx. on 2nd dim (approximation)
+        The abbreviations refer to
 
-        ad = approx. on 1st dim, detail on 2nd dim (horizontal)
+        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
 
-        da = detail on 1st dim, approx. on 2nd dim (vertical)
+        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
 
-        dd = detail on 1st dim, detail on 2nd dim (diagonal)
+        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
+
+        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
+
+        where ``N`` is the number of scales.
 
     size_list : `list`
-       A list of coefficient sizes such that,
+        A list containing the sizes of the wavelet (approximation
+        and detail) coefficients at different scaling levels,
 
-       size_list[0] = size of approximation coefficients at the coarsest level,
+        ``size_list[0]`` = size of approximation coefficients at
+            the coarsest level, i.e. size of aaN,
 
-       size_list[1] = size of the detailed coefficients at the coarsest level,
+        ``size_list[1]`` = size of the detail coefficients at
+            the coarsest level, i.e.  size of adN/daN/ddN,
 
-       size_list[N] = size of the detailed coefficients at the finest level,
+        ``size_list[N]`` = size of the detail coefficients at
+            the finest level, i.e. size of ad1/da1/dd1,
 
-       size_list[N+1] = size of original image,
+        ``size_list[N+1]`` = size of original image,
 
-       N = nscales
-
-    nscales : `int`
-        Number of scales in the coefficient list
+        where ``N`` is the number of scales.
 
     Returns
     -------
-    coeff_list : `list`
-        A list of coefficient organized in the following way
-        [aaN, (adN, daN, ddN), ... (ad1, da1, dd1)],
+    coeff : ordered `list`
+        Coefficient are organized in the list in the following way:
 
-        The appreviations refer to
+        ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
 
-        aa = approx. on 1st dim, approx. on 2nd dim
+        The abbreviations refer to
 
-        ad = approx. on 1st dim, detail on 2nd dim (horizontal)
+        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
 
-        da = detail on 1st dim, approx. on 2nd dim (vertical)
+        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
 
-        dd = detail on 1st dim, detail on 2nd dim (diaginal)
+        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
 
-        N = the level of decomposition/number of scales.
+        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
+
+        where ``N`` is the number of scales.
     """
-    size1 = np.prod(size_list[0])
-    aa_flat = coeff[0:size1]
-    aa = np.asarray(aa_flat).reshape(size_list[0])
-    kk = 1
-    coeff_list = [aa]
+    # Last entry not used since it does not correspond to a coefficient size
+    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
 
-    while kk <= nscales:
-        detail_shape = size_list[kk]
-        size2 = np.prod(size_list[kk])
-        details = []
-        for ii in range(1, 4):
-            detail_flat = coeff[size1 + (ii - 1) * size2:size1 + ii * size2]
-            details += [np.asarray(detail_flat).reshape(detail_shape)]
-        coeff_list.append(tuple(details))
+    # Special case at index 0 since the entry is a single array, not a tuple
+    start = 0
+    stop = flat_sizes[0]
+    coeff_list = [np.asarray(coeff)[start:stop].reshape(size_list[0])]
 
-        kk = kk + 1
-        size1 = size1 + 3 * size2
+    for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
+        start, stop = stop, stop + 3 * fsize
+        # Split section of the flat array into 3 parts, each corresponding
+        # to a detail coefficient. Reshape according to shape in size_list.
+        detail_coeffs = tuple(c.reshape(shape)
+                              for c in np.split(np.asarray(coeff)[start:stop],
+                                                3))
+        coeff_list.append(detail_coeffs)
 
     return coeff_list
 
@@ -311,7 +343,7 @@ def pywt_coeff_to_array3d(coeff, size_list, nscales):
         Flattened and concatenated coefficient array
         The length of the array depends on the size of input image to
         be transformed and on the chosen wavelet basis.
-        If the size of the input image is 2^n x 2^n, the lenght of the
+        If the size of the input image is 2^n x 2^n, the length of the
         wavelet coefficient array is the same.
     """
     size_flatCoeff = np.prod(size_list[0])
@@ -564,7 +596,7 @@ signal-extension-modes.html>`_
     return x
 
 
-class DiscreteWaveletTrafo(Operator):
+class DiscreteWaveletTransform(Operator):
 
     """Discrete wavelet trafo between discrete L2 spaces."""
 
@@ -654,8 +686,7 @@ class DiscreteWaveletTrafo(Operator):
         """
         if len(x.shape) == 2:
             coeff_list = pywt.wavedec2(x, self.wbasis, self.mode, self.nscales)
-            coeff_arr = pywt_coeff_to_array2d(coeff_list, self.size_list,
-                                              self.nscales)
+            coeff_arr = pywt_coeff_to_array2d(coeff_list, self.size_list)
             return self.range.element(coeff_arr)
 
         if len(x.shape) == 3:
@@ -679,13 +710,12 @@ class DiscreteWaveletTrafo(Operator):
     def inverse(self):
         """The inverse wavelet transform."""
 
-        return DiscreteWaveletTrafoInverse(ran=self.domain,
-                                           nscales=self.nscales,
-                                           wbasis=self.wbasis,
-                                           mode=self.mode)
+        return DiscreteWaveletTransformInverse(
+            ran=self.domain, nscales=self.nscales, wbasis=self.wbasis,
+            mode=self.mode)
 
 
-class DiscreteWaveletTrafoInverse(Operator):
+class DiscreteWaveletTransformInverse(Operator):
 
     """Discrete inverse wavelet trafo between discrete L2 spaces."""
 
@@ -761,12 +791,11 @@ class DiscreteWaveletTrafoInverse(Operator):
         return self.wbasis.biorthogonal
 
     def _call(self, coeff):
-        """Compute the discrete 2D and 3D inverse
-        multiresolution wavelet transform
+        """Compute the discrete 2D or 3D inverse wavelet transform.
 
         Parameters
         ----------
-        coeff : class:`DiscreteLp.Vector`
+        coeff : `DiscreteLp.Vector`
 
         Returns
         -------
@@ -774,8 +803,7 @@ class DiscreteWaveletTrafoInverse(Operator):
 
         """
         if len(self.range.grid.shape) == 2:
-            coeff_list = array_to_pywt_coeff2d(coeff, self.size_list,
-                                               self.nscales)
+            coeff_list = array_to_pywt_coeff2d(coeff, self.size_list)
             x = pywt.waverec2(coeff_list, self.wbasis, self.mode)
             return self.range.element(x)
         elif len(self.range.grid.shape) == 3:
@@ -797,5 +825,5 @@ class DiscreteWaveletTrafoInverse(Operator):
     @property
     def inverse(self):
         """The inverse wavelet transform."""
-        return DiscreteWaveletTrafo(dom=self.range, nscales=self.nscales,
-                                    wbasis=self.wbasis, mode=self.mode)
+        return DiscreteWaveletTransform(dom=self.range, nscales=self.nscales,
+                                        wbasis=self.wbasis, mode=self.mode)

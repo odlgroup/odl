@@ -22,11 +22,11 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.space.cu_ntuples import CUDA_AVAILABLE
-from odl.trafos.wavelet import WAVELET_AVAILABLE
+from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
 
 collect_ignore = ['setup.py', 'run_tests.py']
 
 if not CUDA_AVAILABLE:
     collect_ignore.append('odl/space/cu_ntuples.py')
-if not WAVELET_AVAILABLE:
+if not PYWAVELETS_AVAILABLE:
     collect_ignore.append('odl/trafos/wavelet.py')
