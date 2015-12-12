@@ -204,5 +204,54 @@ def test_vecs_from_meshgrid():
     assert all_equal(z, vz)
 
 
+def test_out_shape_from_array():
+
+    # 1d
+    arr = np.zeros((1, 1))
+    assert out_shape_from_array(arr) == (1,)
+    arr = np.zeros((1, 2))
+    assert out_shape_from_array(arr) == (2,)
+    arr = np.zeros((1,))
+    assert out_shape_from_array(arr) == (1,)
+    arr = np.zeros((20,))
+    assert out_shape_from_array(arr) == (20,)
+
+    # 3d
+    arr = np.zeros((3, 1))
+    assert out_shape_from_array(arr) == (1,)
+    arr = np.zeros((3, 2))
+    assert out_shape_from_array(arr) == (2,)
+    arr = np.zeros((3, 20))
+    assert out_shape_from_array(arr) == (20,)
+
+
+def test_out_shape_from_meshgrid():
+
+    # 1d
+    x = np.zeros(2)
+    mg = sparse_meshgrid(x, order='C')
+    assert out_shape_from_meshgrid(mg) == (2,)
+
+    mg = sparse_meshgrid(x, order='F')
+    assert out_shape_from_meshgrid(mg) == (2,)
+
+    # 3d
+    x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
+    mg = sparse_meshgrid(x, y, z, order='C')
+    assert out_shape_from_meshgrid(mg) == (2, 3, 4)
+
+    mg = sparse_meshgrid(x, y, z, order='F')
+    assert out_shape_from_meshgrid(mg) == (2, 3, 4)
+
+    # 3d, fleshed out meshgrids
+    x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
+    mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
+    assert out_shape_from_meshgrid(mg) == (2, 3, 4)
+
+    mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
+    mg = tuple(reversed([np.asfortranarray(arr) for arr in mg]))
+    assert out_shape_from_meshgrid(mg) == (2, 3, 4)
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
