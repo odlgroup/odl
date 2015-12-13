@@ -658,10 +658,10 @@ class Operator(object):
                 try:
                     out = self.range.element(out)
                 except (TypeError, ValueError) as exc:
-                    raise_from(TypeError(
-                        'unable to cast {!r} to an element of '
-                        'the range {}.'.format(out, self.range)),
-                               exc)
+                    raise_from(
+                        TypeError('unable to cast {!r} to an element of '
+                                  'the range {}.'.format(out, self.range)),
+                        exc)
         return out
 
     def __add__(self, other):
