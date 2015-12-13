@@ -469,6 +469,25 @@ def test_fspace_lincomb():
 
 # NOTE: multiply and divide are tested via magic methods
 
+op_params = ['+', '+=', '-', '-=', '*', '*=', '/', '/=']
+op_ids = [' op = {} '.format(op) for op in op_params]
+op_fixture = pytest.fixture(scope="module", ids=op_ids, params=op_params)
+
+
+@op_fixture
+def op(request):
+    return request.param
+
+
+var_params = ['vv', 'vs', 'sv']
+var_ids = [' vec <op> vec ', ' vec <op> scal ', ' scal <op> vec ']
+var_fixture = pytest.fixture(scope="module", ids=var_ids, params=var_params)
+
+
+@var_fixture
+def variant(request):
+    return request.param
+
 
 def _op(a, op, b):
     if op == '+':
@@ -493,9 +512,12 @@ def _op(a, op, b):
         return a
 
 
-def _test_fspace_vector_op(op_str, pattern):
-    assert op_str in ('+', '-', '*', '/', '+=', '-=', '*=', '/=')
-    assert pattern in ('sv', 'vv', 'vs')
+def test_fspace_vector_arithmetic(variant, op):
+    assert op in ('+', '-', '*', '/', '+=', '-=', '*=', '/=')
+    assert variant in ('sv', 'vv', 'vs')
+
+    if variant == 'sv' and '=' in op:  # makes no sense, quit
+        return
 
     # Setup
     rect, points, mg = _standard_setup_2d()
@@ -516,7 +538,7 @@ def _test_fspace_vector_op(op_str, pattern):
     out_novec = fspace.element(vectorized=False)
     out_vec = fspace.element(vectorized=True)
 
-    if pattern[0] == 'v':
+    if variant[0] == 'v':
         true_l_novec = func_2d_novec(point)
         true_l_arr = func_2d_vec_oop(points)
         true_l_mg = func_2d_vec_oop(mg)
@@ -527,7 +549,7 @@ def _test_fspace_vector_op(op_str, pattern):
         true_l_novec = true_l_arr = true_l_mg = a
         test_l_novec = test_l_vec = a
 
-    if pattern[1] == 'v':
+    if variant[1] == 'v':
         true_r_novec = other_func_2d_novec(point)
         true_r_arr = other_func_2d_vec_oop(points)
         true_r_mg = other_func_2d_vec_oop(mg)
@@ -538,12 +560,12 @@ def _test_fspace_vector_op(op_str, pattern):
         true_r_novec = true_r_arr = true_r_mg = b
         test_r_novec = test_r_vec = b
 
-    true_novec = _op(true_l_novec, op_str, true_r_novec)
-    true_arr = _op(true_l_arr, op_str, true_r_arr)
-    true_mg = _op(true_l_mg, op_str, true_r_mg)
+    true_novec = _op(true_l_novec, op, true_r_novec)
+    true_arr = _op(true_l_arr, op, true_r_arr)
+    true_mg = _op(true_l_mg, op, true_r_mg)
 
-    out_novec = _op(test_l_novec, op_str, test_r_novec)
-    out_vec = _op(test_l_vec, op_str, test_r_vec)
+    out_novec = _op(test_l_novec, op, test_r_novec)
+    out_vec = _op(test_l_vec, op, test_r_vec)
 
     assert out_novec(point) == true_novec
     assert all_equal(out_vec(points), true_arr)
@@ -552,38 +574,6 @@ def _test_fspace_vector_op(op_str, pattern):
     assert all_equal(out_vec(mg), true_mg)
     out_vec(mg, out=mg_out)
     assert all_equal(mg_out, true_mg)
-
-
-def test_fspace_vector_add():
-    _test_fspace_vector_op('+', 'vv')  # vec + vec
-    _test_fspace_vector_op('+', 'vs')  # vec + scal
-    _test_fspace_vector_op('+', 'sv')  # scal + vec
-    _test_fspace_vector_op('+=', 'vv')  # vec += vec
-    _test_fspace_vector_op('+=', 'vs')  # vec += scal
-
-
-def test_fspace_vector_sub():
-    _test_fspace_vector_op('-', 'vv')  # vec - vec
-    _test_fspace_vector_op('-', 'vs')  # vec - scal
-    _test_fspace_vector_op('-', 'sv')  # scal - vec
-    _test_fspace_vector_op('-=', 'vv')  # vec -= vec
-    _test_fspace_vector_op('-=', 'vs')  # vec -= scal
-
-
-def test_fspace_vector_mul():
-    _test_fspace_vector_op('*', 'vv')  # vec * vec
-    _test_fspace_vector_op('*', 'vs')  # vec * scal
-    _test_fspace_vector_op('*', 'sv')  # scal * vec
-    _test_fspace_vector_op('*=', 'vv')  # vec *= vec
-    _test_fspace_vector_op('*=', 'vs')  # vec *= scal
-
-
-def test_fspace_vector_div():
-    _test_fspace_vector_op('/', 'vv')  # vec / vec
-    _test_fspace_vector_op('/', 'vs')  # vec / scal
-    _test_fspace_vector_op('/', 'sv')  # scal / vec
-    _test_fspace_vector_op('/=', 'vv')  # vec /= vec
-    _test_fspace_vector_op('/=', 'vs')  # vec /= scal
 
 
 # ---- Test function definitions ----

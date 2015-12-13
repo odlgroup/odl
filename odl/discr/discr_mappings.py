@@ -266,7 +266,7 @@ class NearestInterpolation(FunctionSetMapping):
             `IntervalProd`.
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
-            the common domain of the function set.
+            the domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
@@ -373,7 +373,7 @@ class LinearInterpolation(FunctionSetMapping):
             `IntervalProd`.
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
-            the common domain of the function set.
+            the domain of the function set.
         dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
