@@ -28,6 +28,7 @@ import pytest
 # Internal
 from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import all_equal
+from odl.util.utility import is_int_dtype
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
     meshgrid_input_order, vecs_from_meshgrid,
@@ -101,6 +102,7 @@ def test_is_valid_input_meshgrid():
     # Other input
     invalid_input = [1, [1, 2], ([1, 2], [3, 4]), (5,), np.zeros((2, 2))]
     for inp in invalid_input:
+        assert not is_valid_input_meshgrid(inp, d=1)
         assert not is_valid_input_meshgrid(inp, d=2)
 
 
@@ -251,6 +253,175 @@ def test_out_shape_from_meshgrid():
     mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
     mg = tuple(reversed([np.asfortranarray(arr) for arr in mg]))
     assert out_shape_from_meshgrid(mg) == (2, 3, 4)
+
+
+def test_vectorize_1d_dtype():
+
+    # Test vectorization in 1d with given data type for output
+    arr = (np.arange(5) - 2)[None, :]
+    mg = sparse_meshgrid(np.arange(5) - 3)
+    val_1 = -1
+    val_2 = 2
+    bogus = [None, object, Exception]
+
+    @vectorize(dtype='int')
+    def simple_func(x):
+        return 0 if x < 0 else 1
+
+    true_result_arr = [0, 0, 1, 1, 1]
+    true_result_mg = [0, 0, 0, 1, 1]
+
+    # Out-of-place
+    out = simple_func(arr)
+    assert isinstance(out, np.ndarray)
+    assert out.dtype == np.dtype('int')
+    assert out.shape == (5,)
+    assert all_equal(out, true_result_arr)
+
+    out = simple_func(mg)
+    assert isinstance(out, np.ndarray)
+    assert out.shape == (5,)
+    assert out.dtype == np.dtype('int')
+    assert all_equal(out, true_result_mg)
+
+    assert simple_func(val_1) == 0
+    assert simple_func(val_2) == 1
+    for b in bogus:
+        with pytest.raises(TypeError):
+            simple_func(b)
+
+    # In-place
+    out = np.empty(5, dtype='int')
+    simple_func(arr, out=out)
+    assert all_equal(out, true_result_arr)
+
+    out = np.empty(5, dtype='int')
+    simple_func(mg, out=out)
+    assert all_equal(out, true_result_mg)
+
+
+def test_vectorize_1d_lazy():
+
+    # Test vectorization in 1d without data type --> lazy vectorization
+    arr = (np.arange(5) - 2)[None, :]
+    mg = sparse_meshgrid(np.arange(5) - 3)
+    val_1 = -1
+    val_2 = 2
+
+    @vectorize()
+    def simple_func(x):
+        return 0 if x < 0 else 1
+
+    true_result_arr = [0, 0, 1, 1, 1]
+    true_result_mg = [0, 0, 0, 1, 1]
+
+    # Out-of-place
+    out = simple_func(arr)
+    assert isinstance(out, np.ndarray)
+    assert is_int_dtype(out.dtype)
+    assert out.shape == (5,)
+    assert all_equal(out, true_result_arr)
+
+    out = simple_func(mg)
+    assert isinstance(out, np.ndarray)
+    assert out.shape == (5,)
+    assert is_int_dtype(out.dtype)
+    assert all_equal(out, true_result_mg)
+
+    assert simple_func(val_1) == 0
+    assert simple_func(val_2) == 1
+
+
+def test_vectorize_2d_dtype():
+
+    # Test vectorization in 2d with given data type for output
+    arr = np.empty((2, 5), dtype='int')
+    arr[0] = ([-3, -2, -1, 0, 1])
+    arr[1] = ([-1, 0, 1, 2, 3])
+    mg = sparse_meshgrid([-3, -2, -1, 0, 1], [-1, 0, 1, 2, 3])
+    val_1 = (-1, 1)
+    val_2 = (2, 1)
+    bogus = [None, object, Exception]
+
+    @vectorize(dtype='int')
+    def simple_func(x):
+        return 0 if x[0] < 0 and x[1] > 0 else 1
+
+    true_result_arr = [1, 1, 0, 1, 1]
+
+    true_result_mg = [[1, 1, 0, 0, 0],
+                      [1, 1, 0, 0, 0],
+                      [1, 1, 0, 0, 0],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1]]
+
+    # Out of place
+    out = simple_func(arr)
+    assert isinstance(out, np.ndarray)
+    assert out.dtype == np.dtype('int')
+    assert out.shape == (5,)
+    assert all_equal(out, true_result_arr)
+
+    out = simple_func(mg)
+    assert isinstance(out, np.ndarray)
+    assert out.dtype == np.dtype('int')
+    assert out.shape == (5, 5)
+    print(out)
+    assert all_equal(out, true_result_mg)
+
+    assert simple_func(val_1) == 0
+    assert simple_func(val_2) == 1
+    for b in bogus:
+        with pytest.raises(TypeError):
+            simple_func(b)
+
+    # In-place
+    out = np.empty(5, dtype='int')
+    simple_func(arr, out=out)
+    assert all_equal(out, true_result_arr)
+
+    out = np.empty((5, 5), dtype='int')
+    simple_func(mg, out=out)
+    assert all_equal(out, true_result_mg)
+
+
+def test_vectorize_2d_lazy():
+
+    # Test vectorization in 1d without data type --> lazy vectorization
+    arr = np.empty((2, 5), dtype='int')
+    arr[0] = ([-3, -2, -1, 0, 1])
+    arr[1] = ([-1, 0, 1, 2, 3])
+    mg = sparse_meshgrid([-3, -2, -1, 0, 1], [-1, 0, 1, 2, 3])
+    val_1 = (-1, 1)
+    val_2 = (2, 1)
+
+    @vectorize()
+    def simple_func(x):
+        return 0 if x[0] < 0 and x[1] > 0 else 1
+
+    true_result_arr = [1, 1, 0, 1, 1]
+
+    true_result_mg = [[1, 1, 0, 0, 0],
+                      [1, 1, 0, 0, 0],
+                      [1, 1, 0, 0, 0],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1]]
+
+    # Out of place
+    out = simple_func(arr)
+    assert isinstance(out, np.ndarray)
+    assert is_int_dtype(out.dtype)
+    assert out.shape == (5,)
+    assert all_equal(out, true_result_arr)
+
+    out = simple_func(mg)
+    assert isinstance(out, np.ndarray)
+    assert is_int_dtype(out.dtype)
+    assert out.shape == (5, 5)
+    assert all_equal(out, true_result_mg)
+
+    assert simple_func(val_1) == 0
+    assert simple_func(val_2) == 1
 
 
 if __name__ == '__main__':

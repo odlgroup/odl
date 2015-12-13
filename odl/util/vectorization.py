@@ -20,9 +20,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
+from future.utils import raise_from
 
 # External module imports
 from functools import wraps
@@ -48,6 +48,11 @@ def is_valid_input_array(x, d):
 
 def is_valid_input_meshgrid(x, d):
     """Test whether `x` is a meshgrid sequence for points in R^d."""
+    try:
+        iter(x)
+    except TypeError:
+        return False
+
     if isinstance(x, np.ndarray):
         return False
     if d > 1:
@@ -113,13 +118,25 @@ def out_shape_from_array(arr):
         return (arr.shape[1],)
 
 
-def vectorize(dtype=None, outarg='none'):
+def vectorize(dtype=None):
     """Vectorization decorator for our input parameter pattern.
 
     The wrapped function must be callable with one positional
     parameter. Keyword arguments are passed through, hence positional
     arguments with defaults can either be left out or passed by keyword,
     but not by position.
+
+    The decorated function has the call signature
+
+    ``func(x, out=None, **kwargs)``,
+
+    where the optional ``out`` argument is an array of adequate size
+    to which the result is written.
+
+    **Important**: It is not possible to give array-like input to
+    a manually vectorized function since there is no reliable way
+    to distinguish between arrays or meshgrids with equally long
+    vectors in that case.
 
     Parameters
     ----------
@@ -128,26 +145,11 @@ def vectorize(dtype=None, outarg='none'):
         `numpy.dtype` function. If not provided, a "lazy" vectorization
         is performed, meaning that the results are collected in a
         list instead of an array.
-    outarg : {'none', 'positional', 'optional'}
-        Type of the output argument of the decorated function for
-        in-place evaluation
-
-        'none': No output parameter. This is the default.
-        Resulting argspec: ``func(x, **kwargs)``
-        Returns: the new array
-
-        'positional': Required argument ``out`` at second position.
-        Resulting argspec: ``func(x, out=None, **kwargs)``
-        Returns: ``out``
-
-        'optional': optional argument ``out`` with default `None`.
-        Resulting argspec: ``func(x, out=None, **kwargs)``
-        Returns: ``out`` if it is not `None` otherwise a new array
 
     Note
     ----
-    For ``outarg`` not equal to 'none', the decorated function returns
-    the array given as ``out`` argument if it is not `None`.
+    The decorated function returns the array given as ``out`` argument
+    if it is not `None`.
 
     Examples
     --------
@@ -204,74 +206,85 @@ def vectorize(dtype=None, outarg='none'):
             if out is None:
                 out_shape = out_shape_from_array(x)
                 if dtype is None:
-                    out = [0] * out_shape[0]
+                    out = [0] * out_shape[0]  # lazy vectorization
                 else:
                     out = np.empty(out_shape, dtype=dtype)
 
             for i, pt in enumerate(x.T):
                 out[i] = func(pt, **kwargs)
-            return out
+            return np.asarray(out)
 
-        def _vect_wrapper_meshgrid(x, out, **kwargs):
+        def _vect_wrapper_meshgrid(x, out, ndim, **kwargs):
             if out is None:
+                out = []
                 out_shape = out_shape_from_meshgrid(x)
+
                 if dtype is None:
-                    out = [0] * out_shape[0]
+
+                    # Small helper to initialize a nested list
+                    def _fill_nested(lst, shape):
+                        if len(shape) == 1:
+                            for _ in range(shape[0]):
+                                lst.append(float('nan'))
+                        else:
+                            for _ in range(shape[0]):
+                                lst.append([])
+                            for sublst in lst:
+                                _fill_nested(sublst, shape[1:])
+
+                    _fill_nested(out, out_shape)
+
                 else:
                     out = np.empty(out_shape, dtype=dtype)
 
             order = meshgrid_input_order(x)
             vecs = vecs_from_meshgrid(x, order=order)
-            for i, pt in enumerate(product(*vecs)):
-                out.flat[i] = func(pt, **kwargs)
-            return out
+            if ndim == 1:
+                for i, pt in enumerate(vecs[0]):
+                    out[i] = func(pt, **kwargs)
+            elif dtype is None:
+                for i, pt in enumerate(product(*vecs)):
+                    # Worst multi-index implementation ever, but still good
+                    # enough for slow code
+                    index = np.unravel_index(i, out_shape)
+                    sub = out
+                    for j in index[:-1]:
+                        sub = sub[j]
+                    sub[index[-1]] = func(pt, **kwargs)
+            else:
+                for i, pt in enumerate(product(*vecs)):
+                    out.flat[i] = func(pt, **kwargs)
+            return np.asarray(out)
 
-        def _vect_wrapper(x, out, **kwargs):
+        @wraps(func)
+        def vect_wrapper(x, out=None, **kwargs):
             # Find out dimension first
             if isinstance(x, np.ndarray):  # array
                 if x.ndim == 1:
-                    dim = 1
+                    ndim = 1
                 elif x.ndim == 2:
-                    dim = len(x)
+                    ndim = len(x)
                 else:
                     raise ValueError('only 1- or 2-dimensional arrays '
                                      'supported.')
-            else:  # meshgrid
-                dim = len(x)
+            else:  # meshgrid or single value
+                try:
+                    ndim = len(x)
+                except TypeError:
+                    ndim = 1
 
-            if is_valid_input_array(x, dim):
+            if is_valid_input_meshgrid(x, ndim):
+                return _vect_wrapper_meshgrid(x, out, ndim, **kwargs)
+            elif is_valid_input_array(x, ndim):
                 return _vect_wrapper_array(x, out, **kwargs)
-            elif is_valid_input_meshgrid(x, dim):
-                return _vect_wrapper_meshgrid(x, out, **kwargs)
             else:
-                raise TypeError('invalid vectorized input type.')
+                try:
+                    return func(x)
+                except Exception as exc:
+                    raise_from(TypeError('invalid vectorized input type.'),
+                               exc)
 
-        @wraps(func)
-        def vect_wrapper_no_out(x, **kwargs):
-            if 'out' in kwargs:
-                raise TypeError("{}() got an unexpected keyword 'out'."
-                                "".format(func.__name__))
-            return _vect_wrapper(x, None, **kwargs)
-
-        @wraps(func)
-        def vect_wrapper_pos_out(x, out, **kwargs):
-            return _vect_wrapper(x, out, **kwargs)
-
-        @wraps(func)
-        def vect_wrapper_opt_out(x, out=None, **kwargs):
-            return _vect_wrapper(x, out, **kwargs)
-
-        outarg_ = str(outarg).lower()
-
-        if outarg_ == 'none':
-            return vect_wrapper_no_out
-        elif outarg_ == 'positional':
-            return vect_wrapper_pos_out
-        elif outarg_ == 'optional':
-            return vect_wrapper_opt_out
-        else:
-            raise ValueError('output arg type {!r} not understood.'
-                             ''.format(outarg))
+        return vect_wrapper
     return vect_decorator
 
 
