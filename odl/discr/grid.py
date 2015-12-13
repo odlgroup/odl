@@ -237,7 +237,7 @@ class TensorGrid(Set):
         >>> g.min()
         array([ 0.5 , -3.75])
         """
-        if not self._as_midp:
+        if not self.as_midp:
             return self.min_pt
         elif self._exact_min is not None:
             return self._exact_min
@@ -261,7 +261,7 @@ class TensorGrid(Set):
         >>> g.max()
         array([ 6.5 ,  2.25])
         """
-        if not self._as_midp:
+        if not self.as_midp:
             return self.max_pt
         elif self._exact_max is not None:
             return self._exact_max
@@ -457,7 +457,7 @@ class TensorGrid(Set):
         TensorGrid([0.0, 1.0], [-1.0, 0.0, 2.0])
         """
         coord_vecs = [self.coord_vectors[axis] for axis in self._inondeg]
-        return TensorGrid(*coord_vecs, as_midp=self._as_midp, order=self.order)
+        return TensorGrid(*coord_vecs, as_midp=self.as_midp, order=self.order)
 
     def points(self, order=None):
         """All grid points in a single array.
@@ -578,7 +578,7 @@ class TensorGrid(Set):
             if len(vec) == 1:
                 csizes.append(np.array([0.0]))
             else:
-                if self._as_midp:
+                if self.as_midp:
                     csize = np.empty_like(vec)
                     csize[1:-1] = (vec[2:] - vec[:-2]) / 2.0
                     csize[0] = vec[1] - vec[0]
@@ -729,7 +729,7 @@ class TensorGrid(Set):
     def __repr__(self):
         """g.__repr__() <==> repr(g)."""
         vec_str = ', '.join(array1d_repr(vec) for vec in self.coord_vectors)
-        if self._as_midp:
+        if self.as_midp:
             return 'TensorGrid({}, as_midp=True)'.format(vec_str)
         else:
             return 'TensorGrid({})'.format(vec_str)
@@ -737,7 +737,7 @@ class TensorGrid(Set):
     def __str__(self):
         """g.__str__() <==> str(g)."""
         grid_str = ' x '.join(array1d_str(vec) for vec in self.coord_vectors)
-        if self._as_midp:
+        if self.as_midp:
             return 'midp grid {}'.format(grid_str)
         else:
             return 'grid {}'.format(grid_str)
@@ -1090,7 +1090,7 @@ class RegularGrid(TensorGrid):
 
     def __repr__(self):
         """g.__repr__() <==> repr(g)."""
-        if self._as_midp:
+        if self.as_midp:
             return 'RegularGrid({}, {}, {}, as_midp=True)'.format(
                 list(self.min_pt), list(self.max_pt), list(self.shape))
         else:
@@ -1106,7 +1106,7 @@ class RegularGrid(TensorGrid):
             else:
                 str_lst.append('[{}, {}, ..., {}]'.format(vec[0], vec[1],
                                                           vec[-1]))
-        if self._as_midp:
+        if self.as_midp:
             return 'midp regular grid ' + ' x '.join(str_lst)
         else:
             return 'regular grid ' + ' x '.join(str_lst)

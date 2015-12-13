@@ -142,7 +142,7 @@ class Ntuples(NtuplesBase):
                 arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                 if arr.shape != (self.size,):
                     raise ValueError('input shape {} not broadcastable to '
-                                     'shape ({},).'.format(inp.shape,
+                                     'shape ({},).'.format(arr.shape,
                                                            self.size))
 
                 return self.element_type(self, arr)
@@ -1207,7 +1207,7 @@ class Cn(Fn):
         """
         Fn.__init__(self, size, dtype, **kwargs)
 
-        if not is_complex_floating_dtype(self._dtype):
+        if not is_complex_floating_dtype(self.dtype):
             raise TypeError('data type {!r} not a complex floating-point type.'
                             ''.format(dtype))
 
@@ -1340,26 +1340,26 @@ class MatVecOperator(Operator):
         else:
             self._matrix = np.asarray(matrix)
 
-        if self._matrix.ndim != 2:
+        if self.matrix.ndim != 2:
             raise ValueError('matrix {} has {} axes instead of 2.'
-                             ''.format(matrix, self._matrix.ndim))
+                             ''.format(matrix, self.matrix.ndim))
 
         # Infer domain and range from matrix if necessary
-        if is_real_floating_dtype(self._matrix):
+        if is_real_floating_dtype(self.matrix):
             spc_type = Rn
-        elif is_complex_floating_dtype(self._matrix):
+        elif is_complex_floating_dtype(self.matrix):
             spc_type = Cn
         else:
             spc_type = Fn
 
         if dom is None:
-            dom = spc_type(self._matrix.shape[1], dtype=self._matrix.dtype)
+            dom = spc_type(self.matrix.shape[1], dtype=self.matrix.dtype)
         elif not isinstance(dom, Fn):
             raise TypeError('domain {!r} is not an `Fn` instance.'
                             ''.format(dom))
 
         if ran is None:
-            ran = spc_type(self._matrix.shape[0], dtype=self._matrix.dtype)
+            ran = spc_type(self.matrix.shape[0], dtype=self.matrix.dtype)
         elif not isinstance(ran, Fn):
             raise TypeError('range {!r} is not an `Fn` instance.'
                             ''.format(ran))
@@ -1370,13 +1370,13 @@ class MatVecOperator(Operator):
                             'range data type {!r}.'
                             ''.format(dom.dtype, ran.dtype))
 
-        if self._matrix.shape != (ran.size, dom.size):
+        if self.matrix.shape != (ran.size, dom.size):
             raise ValueError('matrix shape {} does not match the required '
                              'shape {} of a matrix {} --> {}.'
-                             ''.format(self._matrix.shape,
+                             ''.format(self.matrix.shape,
                                        (ran.size, dom.size),
                                        dom, ran))
-        if not np.can_cast(self._matrix.dtype, ran.dtype):
+        if not np.can_cast(self.matrix.dtype, ran.dtype):
             raise TypeError('matrix data type {!r} cannot be safely cast to '
                             'range data type {!r}.'
                             ''.format(matrix.dtype, ran.dtype))
@@ -1668,15 +1668,15 @@ class FnMatrixWeighting(FnWeightingBase):
                              ''.format(self._matrix.shape))
 
         if (self.matrix_issparse and
-                self._exponent not in (1.0, 2.0, float('inf'))):
+                self.exponent not in (1.0, 2.0, float('inf'))):
             raise NotImplementedError('sparse matrices only supported for '
                                       'exponent 1.0, 2.0 or `inf`.')
 
-        if self._exponent in (1.0, float('inf')):
-            self._mat_pow = self._matrix
-        elif precomp_mat_pow and self._exponent != 2.0:
-            eigval, eigvec = sp.linalg.eigh(self._matrix)
-            eigval **= 1.0 / self._exponent
+        if self.exponent in (1.0, float('inf')):
+            self._mat_pow = self.matrix
+        elif precomp_mat_pow and self.exponent != 2.0:
+            eigval, eigvec = sp.linalg.eigh(self.matrix)
+            eigval **= 1.0 / self.exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
         else:
             self._mat_pow = None

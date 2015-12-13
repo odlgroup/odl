@@ -27,7 +27,8 @@ import numpy as np
 
 import odl
 
-from odl.util.testutils import all_almost_equal, almost_equal, skip_if_no_cuda
+from odl.util.testutils import (all_almost_equal, all_equal, almost_equal,
+                                skip_if_no_cuda)
 
 
 # TODO: element from function - waiting for vectorization
@@ -628,7 +629,7 @@ def test_norm_interval(exponent):
     # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf
     p = exponent
     fspace = odl.FunctionSpace(odl.Interval(0, 1))
-    lpdiscr = odl.uniform_discr(fspace, 10, exponent=p)
+    lpdiscr = odl.uniform_discr_fromspace(fspace, 10, exponent=p)
 
     testfunc = fspace.element(lambda x: x ** 2)
     discr_testfunc = lpdiscr.element(testfunc)
@@ -646,7 +647,7 @@ def test_norm_rectangle(exponent):
     # and 1 for p=inf
     p = exponent
     fspace = odl.FunctionSpace(odl.Rectangle([0, -1], [1, 1]))
-    lpdiscr = odl.uniform_discr(fspace, (20, 30), exponent=p)
+    lpdiscr = odl.uniform_discr_fromspace(fspace, (20, 30), exponent=p)
 
     testfunc = fspace.element(lambda x: x[0] ** 2 * x[1] ** 3)
     discr_testfunc = lpdiscr.element(testfunc)

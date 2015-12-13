@@ -111,9 +111,10 @@ class Set(with_metaclass(ABCMeta, object)):
     def contains_all(self, other, **kwargs):
         """Test if all points in `other` are contained in this set.
 
-        Implementing this method is optional.
+        This is a default implementation and should be overridden by
+        subclasses.
         """
-        raise NotImplementedError("'contains_all' method not implemented.")
+        return all(x in self for x in other)
 
     @abstractmethod
     def __eq__(self, other):

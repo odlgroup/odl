@@ -170,13 +170,23 @@ class CudaNtuples(NtuplesBase):
             if data_ptr is None:
                 if isinstance(inp, self._vector_impl):
                     return self.element_type(self, inp)
-                elif (isinstance(inp, self.element_type) and
-                      inp.dtype == self.dtype):
-                    return self.element_type(self, inp.data)
+                elif isinstance(inp, self.element_type):
+                    if inp.dtype == self.dtype:
+                        # Simply rewrap for matching dtypes
+                        return self.element_type(self, inp.data)
+                    else:
+                        # Bulk-copy for non-matching dtypes
+                        elem = self.element()
+                        elem[:] = inp
+                        return elem
                 else:
+                    # Array-like input. Need to go through a NumPy array
+                    arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
+                    if arr.shape != (self.size,):
+                        raise ValueError('input shape {} not broadcastable to '
+                                         'shape ({},).'.format(arr.shape,
+                                                               self.size))
                     elem = self.element()
-                    # TODO: this causes `op(1)` to be interpreted as
-                    # `op(<array of ones>)`. Do we want that?
                     elem[:] = inp
                     return elem
             else:

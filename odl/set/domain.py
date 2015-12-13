@@ -68,26 +68,26 @@ class IntervalProd(Set):
         self._begin = np.atleast_1d(begin).astype('float64')
         self._end = np.atleast_1d(end).astype('float64')
 
-        if self._begin.ndim > 1:
+        if self.begin.ndim > 1:
             raise ValueError('begin {} is {}- instead of 1-dimensional.'
-                             ''.format(begin, self._begin.ndim))
-        if self._end.ndim > 1:
+                             ''.format(begin, self.begin.ndim))
+        if self.end.ndim > 1:
             raise ValueError('end {} is {}- instead of 1-dimensional.'
-                             ''.format(end, self._end.ndim))
-        if len(self._begin) != len(self._end):
+                             ''.format(end, self.end.ndim))
+        if len(self.begin) != len(self.end):
             raise ValueError('begin {} and end {} have different '
                              'lengths ({} != {}).'
                              ''.format(begin, end,
-                                       len(self._begin), len(self._end)))
-        if not np.all(self._begin <= self._end):
-            i_wrong = np.where(self._begin > self._end)
+                                       len(self.begin), len(self.end)))
+        if not np.all(self.begin <= self.end):
+            i_wrong = np.where(self.begin > self.end)
             raise ValueError('entries at indices {} of begin exceed '
                              'those of end ({} > {}).'
-                             ''.format(i_wrong, list(self._begin[i_wrong]),
-                                       list(self._end[i_wrong])))
+                             ''.format(i_wrong, list(self.begin[i_wrong]),
+                                       list(self.end[i_wrong])))
 
-        self._ideg = np.where(self._begin == self._end)[0]
-        self._inondeg = np.where(self._begin != self._end)[0]
+        self._ideg = np.where(self.begin == self.end)[0]
+        self._inondeg = np.where(self.begin != self.end)[0]
         super().__init__()
 
     # Basic properties
@@ -323,7 +323,7 @@ class IntervalProd(Set):
         elif ndim > self.true_ndim:
             return 0.0
         else:
-            return np.prod((self._end - self._begin)[self._inondeg])
+            return np.prod((self.end - self.begin)[self._inondeg])
 
     def dist(self, point, ord=2.0):
         """Calculate the distance to a point.
@@ -353,16 +353,16 @@ class IntervalProd(Set):
                              'the dimension {} of the set {}.'
                              ''.format(len(point), point, self.ndim, self))
 
-        i_larger = np.where(point > self._end)
-        i_smaller = np.where(point < self._begin)
+        i_larger = np.where(point > self.end)
+        i_smaller = np.where(point < self.begin)
 
         # Access [0] since np.where returns tuple.
         if len(i_larger[0]) == 0 and len(i_smaller[0]) == 0:
             return 0.0
         else:
             proj = np.concatenate((point[i_larger], point[i_smaller]))
-            border = np.concatenate((self._end[i_larger],
-                                     self._begin[i_smaller]))
+            border = np.concatenate((self.end[i_larger],
+                                     self.begin[i_smaller]))
             return np.linalg.norm(proj - border, ord=ord)
 
     # Manipulation
@@ -422,9 +422,9 @@ class IntervalProd(Set):
                              'boundaries {}.'
                              ''.format(values, self.end[indices]))
 
-        b_new = self._begin.copy()
+        b_new = self.begin.copy()
         b_new[indices] = values
-        e_new = self._end.copy()
+        e_new = self.end.copy()
         e_new[indices] = values
 
         return IntervalProd(b_new, e_new)
@@ -450,8 +450,8 @@ class IntervalProd(Set):
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
         IntervalProd([], [])
         """
-        b_new = self._begin[self._inondeg]
-        e_new = self._end[self._inondeg]
+        b_new = self.begin[self._inondeg]
+        e_new = self.end[self._inondeg]
         return IntervalProd(b_new, e_new)
 
     def insert(self, other, index=None):
@@ -511,13 +511,13 @@ class IntervalProd(Set):
         new_beg = np.empty(self.ndim + other.ndim)
         new_end = np.empty(self.ndim + other.ndim)
 
-        new_beg[: index] = self._begin[: index]
-        new_end[: index] = self._end[: index]
+        new_beg[: index] = self.begin[: index]
+        new_end[: index] = self.end[: index]
         new_beg[index: index + other.ndim] = other.begin
         new_end[index: index + other.ndim] = other.end
         if index < self.ndim:  # Avoid IndexError
-            new_beg[index + other.ndim:] = self._begin[index:]
-            new_end[index + other.ndim:] = self._end[index:]
+            new_beg[index + other.ndim:] = self.begin[index:]
+            new_end[index + other.ndim:] = self.end[index:]
 
         return IntervalProd(new_beg, new_end)
 
@@ -565,9 +565,9 @@ class IntervalProd(Set):
 
         minmax_vecs = [0] * self.ndim
         for axis in self._ideg:
-            minmax_vecs[axis] = self._begin[axis]
+            minmax_vecs[axis] = self.begin[axis]
         for axis in self._inondeg:
-            minmax_vecs[axis] = (self._begin[axis], self._end[axis])
+            minmax_vecs[axis] = (self.begin[axis], self.end[axis])
 
         minmax_grid = TensorGrid(*minmax_vecs)
         return minmax_grid.points(order=order)
@@ -661,7 +661,7 @@ class IntervalProd(Set):
                                                list(self.end))
         else:
             return 'IntervalProd({}, {})'.format(array1d_repr(self.begin),
-                                                 array1d_repr(self._end))
+                                                 array1d_repr(self.end))
 
     def __str__(self):
         """Return ``str(self)``."""

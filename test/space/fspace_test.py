@@ -178,10 +178,6 @@ def test_fspace_vector_eval_real():
     assert all_equal(out_arr, true_arr)
     assert all_equal(out_mg, true_mg)
 
-    with pytest.raises(TypeError):
-        f_novec(points)
-    with pytest.raises(TypeError):
-        f_novec(mg)
     with pytest.raises(TypeError):  # ValueError: invalid vectorized input
         f_vec_oop(points[0])
 
@@ -240,10 +236,6 @@ def test_fspace_vector_eval_complex():
     assert all_equal(out_arr, true_arr)
     assert all_equal(out_mg, true_mg)
 
-    with pytest.raises(TypeError):
-        f_novec(points)
-    with pytest.raises(TypeError):
-        f_novec(mg)
     with pytest.raises(TypeError):  # ValueError: invalid vectorized input
         f_vec_oop(points[0])
 
@@ -293,7 +285,6 @@ def test_fspace_vector_equality():
     fspace = FunctionSpace(rect)
 
     f_novec = fspace.element(func_2d_novec, vectorized=False)
-    f_novec_2 = fspace.element(func_2d_novec, vectorized=False)
 
     f_vec_oop = fspace.element(func_2d_vec_oop, vectorized=True)
     f_vec_oop_2 = fspace.element(func_2d_vec_oop, vectorized=True)
@@ -305,7 +296,6 @@ def test_fspace_vector_equality():
     f_vec_dual_2 = fspace.element(func_2d_vec_dual, vectorized=True)
 
     assert f_novec == f_novec
-    assert f_novec == f_novec_2
     assert f_novec != f_vec_oop
     assert f_novec != f_vec_ip
     assert f_novec != f_vec_dual
@@ -365,21 +355,17 @@ def test_fspace_zero():
 
     # real
     fspace = FunctionSpace(rect)
+    zero_vec = fspace.zero()
 
-    zero_novec = fspace.zero(vectorized=False)
-    zero_vec = fspace.zero(vectorized=True)
-
-    assert zero_novec([0.5, 1.5]) == 0.0
+    assert zero_vec([0.5, 1.5]) == 0.0
     assert all_equal(zero_vec(points), np.zeros(5, dtype=float))
     assert all_equal(zero_vec(mg), np.zeros((2, 3), dtype=float))
 
     # complex
     fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
-
-    zero_novec = fspace.zero(vectorized=False)
     zero_vec = fspace.zero()
 
-    assert zero_novec([0.5, 1.5]) == 0.0 + 1j * 0.0
+    assert zero_vec([0.5, 1.5]) == 0.0 + 1j * 0.0
     assert all_equal(zero_vec(points), np.zeros(5, dtype=complex))
     assert all_equal(zero_vec(mg), np.zeros((2, 3), dtype=complex))
 
@@ -389,21 +375,17 @@ def test_fspace_one():
 
     # real
     fspace = FunctionSpace(rect)
+    one_vec = fspace.one()
 
-    one_novec = fspace.one(vectorized=False)
-    one_vec = fspace.one(vectorized=True)
-
-    assert one_novec([0.5, 1.5]) == 1.0
+    assert one_vec([0.5, 1.5]) == 1.0
     assert all_equal(one_vec(points), np.ones(5, dtype=float))
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=float))
 
     # complex
     fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
-
-    one_novec = fspace.one(vectorized=False)
     one_vec = fspace.one()
 
-    assert one_novec([0.5, 1.5]) == 1.0 + 1j * 0.0
+    assert one_vec([0.5, 1.5]) == 1.0 + 1j * 0.0
     assert all_equal(one_vec(points), np.ones(5, dtype=complex))
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
 
@@ -481,7 +463,6 @@ def test_fspace_lincomb():
 
     # Mix of vectorized and non-vectorized -> manual vectorization
     fspace.lincomb(a, f_vec_dual, b, g_novec, out_vec)
-    assert out_vec.vectorized
     assert all_equal(out_vec(points), true_arr)
     assert all_equal(out_vec(mg), true_mg)
 
@@ -531,7 +512,6 @@ def _test_fspace_vector_op(op_str, pattern):
     f_vec = fspace.element(func_2d_vec_dual, vectorized=True)
     g_novec = fspace.element(other_func_2d_novec, vectorized=False)
     g_vec = fspace.element(other_func_2d_vec_dual, vectorized=True)
-    print(hasattr(g_vec, '__div__'))
 
     out_novec = fspace.element(vectorized=False)
     out_vec = fspace.element(vectorized=True)

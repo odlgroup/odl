@@ -109,9 +109,9 @@ class DiscreteLp(Discretization):
 
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
-                self._exponent != dspace.exponent):
+                self.exponent != dspace.exponent):
             raise ValueError('exponent {} not equal to data space exponent '
-                             '{}.'.format(self._exponent, dspace.exponent))
+                             '{}.'.format(self.exponent, dspace.exponent))
 
     @property
     def exponent(self):
@@ -141,7 +141,8 @@ class DiscreteLp(Discretization):
         elif inp in self.dspace:
             return self.element_type(self, inp)
         try:
-            return self.element_type(self, self.restriction(inp))
+            inp_elem = self.uspace.element(inp)
+            return self.element_type(self, self.restriction(inp_elem))
         except TypeError:
             pass
 

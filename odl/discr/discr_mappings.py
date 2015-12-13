@@ -99,7 +99,7 @@ class FunctionSetMapping(Operator):
                              ''.format(dspace.size, dspace, grid.ntotal))
 
         self._order = str(order).upper()
-        if self._order not in ('C', 'F'):
+        if self.order not in ('C', 'F'):
             raise ValueError('ordering {!r} not understood.'.format(order))
 
         dom = fset if map_type_ == 'restriction' else dspace
@@ -232,20 +232,10 @@ class GridCollocation(FunctionSetMapping):
 
         >>> coll_op = GridCollocation(funcset, grid, rn)
 
-        We define an example function with meshgrid vectorization:
+        We define an example function with vectorization:
 
-        >>> def func(mg_tuple):
-        ...     x1, x2 = mg_tuple  # unwrap the coordinate arrays
-        ...     return x1 - x2
-        >>> func_elem = funcset.element(func)
-        >>> coll_op(func_elem)
-        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-
-        Array vectorization (slower):
-
-        >>> def func(array):
-        ...     x1, x2 = array  # views
-        ...     return x1 - x2
+        >>> def func(x):
+        ...     return x[0] - x[1]
         >>> func_elem = funcset.element(func)
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])

@@ -25,13 +25,13 @@ from builtins import object, super
 from future.utils import raise_from
 
 # External module imports
-from functools import partial
 from numbers import Number, Integral
 
 # ODL imports
 from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
+from odl.util.utility import preload_call_with
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
@@ -414,8 +414,8 @@ class Operator(object):
         instance._call_out_optional = call_out_optional
         if not call_has_out:
             # Out-of-place _call
-            instance._call_in_place = partial(_default_call_in_place,
-                                              instance)
+            instance._call_in_place = preload_call_with(instance, 'ip')(
+                _default_call_in_place)
             instance._call_out_of_place = instance._call
         elif call_out_optional:
             # Dual-use _call
@@ -424,8 +424,8 @@ class Operator(object):
         else:
             # In-place only _call
             instance._call_in_place = instance._call
-            instance._call_out_of_place = partial(_default_call_out_of_place,
-                                                  instance)
+            instance._call_out_of_place = preload_call_with(instance, 'oop')(
+                _default_call_out_of_place)
 
         return instance
 
@@ -457,8 +457,10 @@ class Operator(object):
         self._is_linear = bool(linear)
         self._is_functional = isinstance(range, Field)
 
-        # Mandatory out makees no sense for functionals
-        if (self._is_functional and self._call_has_out and
+        # Mandatory out makes no sense for functionals.
+        # However, we need to allow optional out to support vectorized
+        # functions (which are functionals in the duck-typing sense).
+        if (self.is_functional and self._call_has_out and
                 not self._call_out_optional):
             raise ValueError('mandatory `out` parameter not allowed for '
                              'functionals.')
@@ -655,9 +657,11 @@ class Operator(object):
             if out not in self.range:
                 try:
                     out = self.range.element(out)
-                except (TypeError, ValueError):
-                    raise TypeError('unable to cast {!r} to an element of '
-                                    'the range {}.'.format(out, self.range))
+                except (TypeError, ValueError) as exc:
+                    raise_from(TypeError(
+                        'unable to cast {!r} to an element of '
+                        'the range {}.'.format(out, self.range)),
+                               exc)
         return out
 
     def __add__(self, other):

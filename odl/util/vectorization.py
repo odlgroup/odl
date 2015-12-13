@@ -191,7 +191,7 @@ def vectorize(dtype=None):
 
     With output parameter:
 
-    >>> @vectorize(dtype=float, outarg='positional')
+    >>> @vectorize(dtype=float)
     ... def step(x):
     ...     return 0 if x[0] <= 0 else 1
     >>> x = np.linspace(-5, 13, 10, dtype=float).reshape((2, 5))
