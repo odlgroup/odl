@@ -47,6 +47,7 @@ def sparse_meshgrid(*x, **kwargs):
     order = kwargs.pop('order', 'C')
     mg = []
     for ax, xi in enumerate(x):
+        xi = np.asarray(xi)
         slc = [None] * n
         slc[ax] = np.s_[:]
         if order == 'C':

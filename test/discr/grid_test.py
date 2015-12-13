@@ -883,6 +883,13 @@ def test_sparse_meshgrid():
     assert all_equal(mg, true_mg)
     assert all(vec.flags.f_contiguous for vec in mg)
 
+    # Array-like input
+    x, y = [1, 2, 3], [4, 5, 6]
+    true_mg = (np.array(x)[:, None], np.array(y)[None, :])
+    mg = sparse_meshgrid(x, y, order='C')
+    assert all_equal(mg, true_mg)
+    assert all(vec.flags.c_contiguous for vec in mg)
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
