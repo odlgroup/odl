@@ -74,24 +74,35 @@ def almost_equal(a, b, places=None):
 
 
 def all_equal(iter1, iter2):
-    # Sentinel object used to check that both iterators are the same length
-    diff_length_sentinel = object()
-
+    # Direct comparison for scalars, tuples or lists
     try:
-        if iter1 == iter2:
+        if iter1 == iter2:  # Raised by NumPy when comparing arrays
             return True
     except ValueError:
         pass
 
+    # Special case for None
     if iter1 is None and iter2 is None:
         return True
 
+    # If one nested iterator is exhausted, go to direct comparison
     try:
         i1 = iter(iter1)
         i2 = iter(iter2)
     except TypeError:
-        return iter1 == iter2
+        try:
+            if iter1 == iter2:
+                return True
+            else:
+                return False
+        except ValueError:  # Raised by NumPy when comparing arrays
+            return False
 
+    # Sentinel object used to check that both iterators are the same length
+    diff_length_sentinel = object()
+
+    # Compare element by element and return False if the sequences have
+    # different lengths
     for [ip1, ip2] in zip_longest(i1, i2,
                                   fillvalue=diff_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
