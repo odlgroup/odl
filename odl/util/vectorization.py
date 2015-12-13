@@ -216,7 +216,6 @@ def vectorize(dtype=None):
 
         def _vect_wrapper_meshgrid(x, out, ndim, **kwargs):
             if out is None:
-                out = []
                 out_shape = out_shape_from_meshgrid(x)
 
                 if dtype is None:
@@ -232,6 +231,7 @@ def vectorize(dtype=None):
                             for sublst in lst:
                                 _fill_nested(sublst, shape[1:])
 
+                    out = []
                     _fill_nested(out, out_shape)
 
                 else:

@@ -634,7 +634,7 @@ class Operator(object):
         if x not in self.domain:
             try:
                 x = self.domain.element(x)
-            except (TypeError, ValueError) as exc:
+            except Exception as exc:
                 raise_from(OpDomainError(
                     'unable to cast {!r} to an element of '
                     'the domain {}.'.format(x, self.domain)), exc)
@@ -657,10 +657,10 @@ class Operator(object):
             if out not in self.range:
                 try:
                     out = self.range.element(out)
-                except (TypeError, ValueError) as exc:
+                except Exception as exc:
                     raise_from(
-                        TypeError('unable to cast {!r} to an element of '
-                                  'the range {}.'.format(out, self.range)),
+                        OpRangeError('unable to cast {!r} to an element of '
+                                     'the range {}.'.format(out, self.range)),
                         exc)
         return out
 
