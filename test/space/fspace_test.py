@@ -29,7 +29,7 @@ import numpy as np
 # ODL imports
 import odl
 from odl import FunctionSpace
-from odl.util.testutils import all_almost_equal, all_equal
+from odl.util.testutils import all_almost_equal, all_equal, almost_equal
 
 
 # Pytest fixture
@@ -390,9 +390,16 @@ def test_fspace_one():
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
 
 
-b_params = [2.0, 0.0]
-b_ids = [' b = {} '.format(b) for b in b_params]
-b_fixture = pytest.fixture(scope="module", ids=b_ids, params=b_params)
+scal_params = [2.0, 0.0, -1.0]
+a_ids = [' a = {} '.format(s) for s in scal_params]
+a_fixture = pytest.fixture(scope="module", ids=a_ids, params=scal_params)
+b_ids = [' b = {} '.format(s) for s in scal_params]
+b_fixture = pytest.fixture(scope="module", ids=b_ids, params=scal_params)
+
+
+@a_fixture
+def a(request):
+    return request.param
 
 
 @b_fixture
@@ -400,13 +407,11 @@ def b(request):
     return request.param
 
 
-def test_fspace_lincomb(b):
+def test_fspace_lincomb(a, b):
     rect, points, mg = _standard_setup_2d()
     point = points.T[0]
 
     fspace = FunctionSpace(rect)
-    a = -1.5
-    # b supplied via fixture
 
     # Note: Special cases and alignment are tested later in the magic methods
 
@@ -480,59 +485,57 @@ def test_fspace_lincomb(b):
 # NOTE: multiply and divide are tested via magic methods
 
 
-def test_fspace_power():
+pow_params = [3, 1.0, 0.5, 6.0]
+pow_ids = [' pow = {} '.format(p) for p in pow_params]
+pow_fixture = pytest.fixture(scope="module", ids=pow_ids, params=pow_params)
+
+
+@pow_fixture
+def power(request):
+    return request.param
+
+
+def test_fspace_power(power):
     rect, points, mg = _standard_setup_2d()
     point = points.T[0]
-    pow1 = 3.0
-    pow2 = 0.5
+    out_arr = np.empty(5)
+    out_mg = np.empty((2, 3))
 
     fspace = FunctionSpace(rect)
 
     # Not vectorized
-    true_novec1 = func_2d_novec(point) ** pow1
-    true_novec2 = func_2d_novec(point) ** pow2
+    true_novec = func_2d_novec(point) ** power
 
     f_novec = fspace.element(func_2d_novec, vectorized=False)
+    pow_novec = f_novec ** power
+    assert almost_equal(pow_novec(point), true_novec)
 
-    pow1_novec = f_novec ** pow1
-    pow2_novec = f_novec ** pow2
+    pow_novec = f_novec.copy()
+    pow_novec **= power
 
-    assert pow1_novec(point) == true_novec1
-    assert pow2_novec(point) == true_novec2
-
-    pow1_novec = f_novec.copy()
-    pow1_novec **= pow1
-    pow2_novec = f_novec.copy()
-    pow2_novec **= pow2
-
-    assert pow1_novec(point) == true_novec1
-    assert pow2_novec(point) == true_novec2
+    assert almost_equal(pow_novec(point), true_novec)
 
     # Vectorized
-    true_arr1 = func_2d_vec_oop(points) ** pow1
-    true_arr2 = func_2d_vec_oop(points) ** pow2
-    true_mg1 = func_2d_vec_oop(mg) ** pow1
-    true_mg2 = func_2d_vec_oop(mg) ** pow2
+    true_arr = func_2d_vec_oop(points) ** power
+    true_mg = func_2d_vec_oop(mg) ** power
 
     f_vec = fspace.element(func_2d_vec_dual, vectorized=True)
+    pow_vec = f_vec ** power
 
-    pow1_vec = f_vec ** pow1
-    pow2_vec = f_vec ** pow2
+    assert all_almost_equal(pow_vec(points), true_arr)
+    assert all_almost_equal(pow_vec(mg), true_mg)
 
-    assert all_almost_equal(pow1_vec(points), true_arr1)
-    assert all_almost_equal(pow2_vec(points), true_arr2)
-    assert all_almost_equal(pow1_vec(mg), true_mg1)
-    assert all_almost_equal(pow2_vec(mg), true_mg2)
+    pow_vec = f_vec.copy()
+    pow_vec **= power
 
-    pow1_vec = f_vec.copy()
-    pow1_vec **= pow1
-    pow2_vec = f_vec.copy()
-    pow2_vec **= pow2
+    assert all_almost_equal(pow_vec(points), true_arr)
+    assert all_almost_equal(pow_vec(mg), true_mg)
 
-    assert all_almost_equal(pow1_vec(points), true_arr1)
-    assert all_almost_equal(pow2_vec(points), true_arr2)
-    assert all_almost_equal(pow1_vec(mg), true_mg1)
-    assert all_almost_equal(pow2_vec(mg), true_mg2)
+    pow_vec(points, out=out_arr)
+    pow_vec(mg, out=out_mg)
+
+    assert all_almost_equal(out_arr, true_arr)
+    assert all_almost_equal(out_mg, true_mg)
 
 
 op_params = ['+', '+=', '-', '-=', '*', '*=', '/', '/=']
