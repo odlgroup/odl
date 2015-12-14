@@ -292,8 +292,7 @@ class IntervalProd(Set):
         ...                 [-0.75, 0, 3]])
         >>> rbox.contains_all(arr.T)
         True
-        ...
-        ... # Implicit meshgrids defined by coordinate vectors
+        >>> # Implicit meshgrids defined by coordinate vectors
         >>> vec1 = (-1, -0.9, -0.7)
         >>> vec2 = (0, 0, 0)
         >>> vec3 = (2.5, 2.75, 3)

@@ -696,7 +696,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluate nearest interpolation. Modified for in-place."""
         # slice for broadcasting over trailing dimensions in self.values
-        vslice = (slice(None),) + (None,)*(self.values.ndim - len(indices))
+        vslice = (slice(None),) + (None,) * (self.values.ndim - len(indices))
 
         # find relevant values
         # each i and i+1 represents a edge
