@@ -67,7 +67,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
         Implicit zero padding. Assumes values outside the domain of ``f`` to be
         zero. Default: `False`
     method : {'central', 'forward', 'backward'}, optional
-        What method that should be used.
+        The method that should be used.
 
     Returns
     -------
@@ -127,9 +127,10 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     else:
         dx = float(dx)
 
-    method = str(method).lower()
+    method, method_in = str(method).lower(), method
     if method not in ('central', 'forward', 'backward'):
-        raise ValueError('method {} has to be central, forward or backward')
+        raise ValueError("method '{}' has to be central, forward or backward"
+                         ''.format(method_in))
 
     # create slice objects: initially all are [:, :, ..., :]
     # current slice
@@ -148,21 +149,20 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
         np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
         out[slice_out] /= 2.0
     elif method == 'forward':
-        # Numerical differentiation: 2nd order interior
+        # Numerical differentiation: 1nd order interior
         slice_out[axis] = slice(1, -1)
         slice_node1[axis] = slice(2, None)
         slice_node2[axis] = slice(1, -1)
         # 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])
         np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
     elif method == 'backward':
-        # Numerical differentiation: 2nd order interior
+        # Numerical differentiation: 1nd order interior
         slice_out[axis] = slice(1, -1)
         slice_node1[axis] = slice(1, -1)
         slice_node2[axis] = slice(None, -2)
         # 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])
         np.subtract(f_data[slice_node1], f_data[slice_node2], out[slice_out])
 
-    # central differences
     if zero_padding:
         # Assume zeros for indices outside the domain of `f`
 
@@ -207,7 +207,6 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
 
         # Numerical differentiation: 1st order edges
         if f_data.shape[axis] == 2 or edge_order == 1:
-
             slice_out[axis] = 0
             slice_node1[axis] = 1
             slice_node2[axis] = 0
@@ -222,7 +221,6 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
 
         # Numerical differentiation: 2nd order edges
         else:
-
             slice_out[axis] = 0
             slice_node1[axis] = 0
             slice_node2[axis] = 1

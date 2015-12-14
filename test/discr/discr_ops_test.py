@@ -63,7 +63,7 @@ def test_finite_diff():
         finite_diff(arr, out)
     with pytest.raises(ValueError):
         finite_diff(arr, dx=0)
-    # wribg method
+    # wrong method
     with pytest.raises(ValueError):
         finite_diff(arr, method='non-method')
 
