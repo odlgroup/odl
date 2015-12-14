@@ -136,14 +136,15 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     return size_list
 
 
-def pywt_coeff_to_array1d(coeff, size_list):
+def pywt_coeff_to_array(coeff, size_list):
     """Convert a `pywt
     <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
 
-    Related to 1D multilevel discrete wavelet transform.
+    Related to 2D and 3D multilevel discrete wavelet transform.
 
     Parameters
     ----------
+    1D:
     coeff : ordered `list`
         Coefficient are organized in the list in the following way:
 
@@ -153,54 +154,7 @@ def pywt_coeff_to_array1d(coeff, size_list):
 
         ``a`` = approximation,
 
-        ``d`` = detail,
-
-     size_list : `list`
-        A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels,
-
-        ``size_list[0]`` = size of approximation coefficients at
-            the coarsest level, i.e. size of aN,
-
-        ``size_list[1]`` = size of the detailed coefficients at
-            the coarsest level, i.e.  size of dN,
-
-        ``size_list[N]`` = size of the detailed coefficients at
-            the finest level, i.e. size of d1,
-
-        ``size_list[N+1]`` = size of original image,
-
-        ``N`` is the number of scales.
-
-    Returns
-    -------
-    arr : `numpy.ndarray`
-        Flattened and concatenated coefficient array.
-        The length of the array depends on the size of input image to
-        be transformed and on the chosen wavelet basis.
-    """
-    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-    flat_total_size = sum(flat_sizes[0:])
-    flat_coeff = np.empty(flat_total_size)
-
-    start = 0
-    stop = flat_sizes[0]
-    flat_coeff[start:stop] = coeff[0]
-    for kk in range(1, len(flat_sizes)):
-        start, stop = stop, stop + flat_sizes[kk]
-        flat_coeff[start:stop] = coeff[kk]
-
-    return flat_coeff
-
-
-def pywt_coeff_to_array(coeff, size_list):
-    """Convert a `pywt
-    <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
-
-    Related to 2D and 3D multilevel discrete wavelet transform.
-
-    Parameters
-    ----------
+        ``d`` = detail
     In 2D:
     coeff : ordered `list`
         Coefficient are organized in the list in the following way:
@@ -265,7 +219,8 @@ def pywt_coeff_to_array(coeff, size_list):
         be transformed and on the chosen wavelet basis.
       """
     flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-
+    if np.size(size_list[0]) == 1:
+        const = 1
     if np.size(size_list[0]) == 2:
         const = 3
     elif np.size(size_list[0]) == 3:
@@ -279,9 +234,13 @@ def pywt_coeff_to_array(coeff, size_list):
     flat_coeff[start:stop] = coeff[0].ravel()
 
     for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
-        for dc in detail_coeffs:
+        if const == 1:
             start, stop = stop, stop + fsize
-            flat_coeff[start:stop] = dc.ravel()
+            flat_coeff[start:stop] = detail_coeffs.ravel()
+        else:
+            for dc in detail_coeffs:
+                start, stop = stop, stop + fsize
+                flat_coeff[start:stop] = dc.ravel()
 
     return flat_coeff
 
@@ -643,7 +602,7 @@ class DiscreteWaveletTransform(Operator):
         """
         if len(x.shape) == 1:
             coeff_list = pywt.wavedec(x, self.wbasis, self.mode, self.nscales)
-            coeff_arr = pywt_coeff_to_array1d(coeff_list, self.size_list)
+            coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
             return self.range.element(coeff_arr)
 
         if len(x.shape) == 2:

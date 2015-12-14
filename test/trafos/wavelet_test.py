@@ -31,7 +31,7 @@ if PYWAVELETS_AVAILABLE:
 # ODL imports
 import odl
 from odl.trafos.wavelet import (
-    coeff_size_list, pywt_coeff_to_array1d, pywt_coeff_to_array,
+    coeff_size_list, pywt_coeff_to_array,
     array_to_pywt_coeff, wavelet_decomposition3d,
     wavelet_reconstruction3d, DiscreteWaveletTransform)
 from odl.util.testutils import (all_almost_equal, all_equal,
@@ -101,7 +101,7 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff():
     size_list = coeff_size_list((n,), nscales, wbasis, mode)
     x = np.random.rand(n)
     coeff_list = pywt.wavedec(x, wbasis, mode, nscales)
-    coeff_arr = pywt_coeff_to_array1d(coeff_list, size_list)
+    coeff_arr = pywt_coeff_to_array(coeff_list, size_list)
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(np.prod(shape) for shape in size_list[1:-1])
