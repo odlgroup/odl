@@ -99,7 +99,7 @@ def _signature_from_spec(func):
     import sys
     import inspect
 
-    # pylint: disable=deprecated-method,redefined-variable-type
+    # pylint: disable=deprecated-method,redefined-variable-type,no-member
     py3 = (sys.version_info.major > 2)
     if py3:
         spec = inspect.getfullargspec(func)
@@ -1296,7 +1296,7 @@ class OperatorLeftScalarMult(Operator):
         ``OperatorLeftScalarMult(op, scalar).inverse <==>``
         ``OperatorRightScalarMult(op.inverse, 1.0/scalar)``
         """
-        if self.scalar == 0.0:
+        if self._scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
         return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
 
@@ -1409,7 +1409,7 @@ class OperatorRightScalarMult(Operator):
         ``OperatorRightScalarMult(op, scalar).inverse <==>``
         ``OperatorLeftScalarMult(op.inverse, 1.0/scalar)``
         """
-        if self.scalar == 0.0:
+        if self._scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
 
         return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
@@ -1835,5 +1835,6 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
 
 
 if __name__ == '__main__':
+    # pylint: disable=wrong-import-order,wrong-import-position
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)
