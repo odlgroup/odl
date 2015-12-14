@@ -32,7 +32,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector,
                                     FnWeightingBase)
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
-from odl.util.ufuncs import CudaNtuplesVectorUFuncs
+from odl.util.ufuncs import CudaNtuplesUFuncs
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -429,23 +429,51 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
     @property
     def ufunc(self):
-        """`CudaNtuplesVectorUFuncs`, access to numpy style ufuncs.
+        """`CudaNtuplesUFuncs`, access to numpy style ufuncs.
 
-        The following are optimized using cuda:
+        Examples
+        --------
+        >>> r2 = CudaRn(2)
+        >>> x = r2.element([1, -2])
+        >>> x.ufunc.absolute()
+        CudaRn(2).element([1.0, 2.0])
 
-        sin
-        cos
-        arcsin
-        arccos
-        log
-        exp
-        absolute
-        sign
-        sqrt
+        These functions can also be used with broadcasting
 
-        All other fall back onto the numpy implementation.
+        >>> x.ufunc.add(3)
+        CudaRn(2).element([4.0, 1.0])
+
+        and non-space elements
+
+        >>> x.ufunc.subtract([3, 3])
+        CudaRn(2).element([-2.0, -5.0])
+
+        There is also support for various reductions (sum, prod, min, max)
+
+        >>> x.ufunc.sum()
+        -1.0
+
+        Also supports out parameter
+
+        >>> y = r2.element([3, 4])
+        >>> out = r2.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        CudaRn(2).element([4.0, 2.0])
+        >>> result is out
+        True
+
+        Notes
+        -----
+        Not all ufuncs are currently optimized, some use the default numpy
+        implementation. This can be improved in the future.
+
+        See also
+        --------
+        NtuplesBaseUFuncs
+            Base class for ufuncs in `NtuplesBase` spaces.
         """
-        return CudaNtuplesVectorUFuncs(self)
+        return CudaNtuplesUFuncs(self)
 
 
 def _repr_space_funcs(space):

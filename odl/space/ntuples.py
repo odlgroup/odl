@@ -47,7 +47,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
-from odl.util.ufuncs import NtuplesVectorUFuncs
+from odl.util.ufuncs import NtuplesUFuncs
 
 
 __all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector', 'Cn', 'Rn',
@@ -399,11 +399,45 @@ class NtuplesVector(NtuplesBaseVector):
 
     @property
     def ufunc(self):
-        """`NtuplesVectorUFuncs`, access to numpy style ufuncs.
+        """`NtuplesUFuncs`, access to numpy style ufuncs.
 
+        Examples
+        --------
+        >>> r2 = Rn(2)
+        >>> x = r2.element([1, -2])
+        >>> x.ufunc.absolute()
+        Rn(2).element([1.0, 2.0])
+
+        These functions can also be used with broadcasting
+
+        >>> x.ufunc.add(3)
+        Rn(2).element([4.0, 1.0])
+
+        and non-space elements
+
+        >>> x.ufunc.subtract([3, 3])
+        Rn(2).element([-2.0, -5.0])
+
+        There is also support for various reductions (sum, prod, min, max)
+
+        >>> x.ufunc.sum()
+        -1.0
+
+        They also support an out parameter
+
+        >>> y = r2.element([3, 4])
+        >>> out = r2.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        Rn(2).element([4.0, 2.0])
+        >>> result is out
+        True
+
+        Notes
+        -----
         These are optimized for use with ntuples and incur no overhead.
         """
-        return NtuplesVectorUFuncs(self)
+        return NtuplesUFuncs(self)
 
 
 def _blas_is_applicable(*args):
