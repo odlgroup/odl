@@ -20,9 +20,9 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import object, super
-from future.utils import raise_from
 
 # External module imports
 from numbers import Number, Integral
@@ -99,6 +99,7 @@ def _signature_from_spec(func):
     import sys
     import inspect
 
+    # pylint: disable=deprecated-method,redefined-variable-type
     py3 = (sys.version_info.major > 2)
     if py3:
         spec = inspect.getfullargspec(func)
@@ -251,6 +252,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     else:
         call = unbound_call
 
+    # pylint: disable=deprecated-method,redefined-variable-type
     if py3:
         # support kw-only args and annotations
         spec = inspect.getfullargspec(call)
@@ -409,6 +411,7 @@ class Operator(object):
         """Create a new instance."""
         instance = super().__new__(cls)
 
+        # pylint: disable=protected-access,redefined-variable-type
         call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
         instance._call_has_out = call_has_out
         instance._call_out_optional = call_out_optional
@@ -634,7 +637,7 @@ class Operator(object):
         if x not in self.domain:
             try:
                 x = self.domain.element(x)
-            except Exception as exc:
+            except (TypeError, ValueError) as exc:
                 raise_from(OpDomainError(
                     'unable to cast {!r} to an element of '
                     'the domain {}.'.format(x, self.domain)), exc)
@@ -657,11 +660,11 @@ class Operator(object):
             if out not in self.range:
                 try:
                     out = self.range.element(out)
-                except Exception as exc:
-                    raise_from(
-                        OpRangeError('unable to cast {!r} to an element of '
-                                     'the range {}.'.format(out, self.range)),
-                        exc)
+                except (TypeError, ValueError) as exc:
+                    new_exc = OpRangeError(
+                        'unable to cast {!r} to an element of '
+                        'the range {}.'.format(out, self.range))
+                    raise_from(new_exc, exc)
         return out
 
     def __add__(self, other):
@@ -874,6 +877,7 @@ class Operator(object):
         >>> squared(x)
         Rn(3).element([27.0, 54.0, 81.0])
         """
+        # pylint: disable=redefined-variable-type
         if isinstance(n, Integral) and n > 0:
             op = self
             while n > 1:
