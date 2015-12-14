@@ -431,19 +431,44 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
     def ufunc(self):
         """`CudaNtuplesVectorUFuncs`, access to numpy style ufuncs.
 
-        The following are optimized using cuda:
+        Examples
+        --------
+        >>> r2 = CudaRn(2)
+        >>> x = r2.element([1, -2])
+        >>> x.ufunc.absolute()
+        CudaRn(2).element([1.0, 2.0])
 
-        sin
-        cos
-        arcsin
-        arccos
-        log
-        exp
-        absolute
-        sign
-        sqrt
+        These functions can also be used with broadcasting
 
-        All other fall back onto the numpy implementation.
+        >>> x = r2.element([1, 2])
+        >>> x.ufunc.add(3)
+        CudaRn(2).element([4.0, 5.0])
+
+        and non-space elements
+
+        >>> x.ufunc.add([3, 3])
+        CudaRn(2).element([4.0, 5.0])
+
+        Also supports out parameter
+
+        >>> x = r2.element([1, 2])
+        >>> y = r2.element([3, 4])
+        >>> out = r2.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        CudaRn(2).element([4.0, 6.0])
+        >>> result is out
+        True
+
+        Notes
+        -----
+        Not all ufuncs are currently optimized, some use the default numpy
+        implementation. This can be improved in the future.
+
+        See also
+        --------
+        NtuplesBaseVectorUFuncs
+            Base class for ufuncs in `NtuplesBase` spaces.
         """
         return CudaNtuplesVectorUFuncs(self)
 

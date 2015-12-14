@@ -494,8 +494,57 @@ class ProductSpaceVector(LinearSpaceVector):
     def ufunc(self):
         """`ProductSpaceVectorUFuncs`, access to numpy style ufuncs.
 
-        These are always available, but may or may not be optimized for
-        the specific space in use.
+        These are always available if the underlying spaces are `NtuplesBase`.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r22 = ProductSpace(Rn(2), 2)
+        >>> x = r22.element([[1, -2], [-3, 4]])
+        >>> x.ufunc.absolute()
+        ProductSpace(Rn(2), 2).element([
+            [1.0, 2.0],
+            [3.0, 4.0]
+        ])
+
+        These functions can also be used with non-vector arguments and support
+        broadcasting, both by element
+
+        >>> x = r22.element([[1, 2], [3, 4]])
+        >>> x.ufunc.add([1, 1])
+        ProductSpace(Rn(2), 2).element([
+            [2.0, 3.0],
+            [4.0, 5.0]
+        ])
+
+        and also recursively
+
+        >>> x.ufunc.add(1)
+        ProductSpace(Rn(2), 2).element([
+            [2.0, 3.0],
+            [4.0, 5.0]
+        ])
+
+        Also supports out parameter
+
+        >>> x = r22.element([[1, -2], [-3, 4]])
+        >>> y = r22.element()
+        >>> result = x.ufunc.absolute(out=y)
+        >>> result
+        ProductSpace(Rn(2), 2).element([
+            [1.0, 2.0],
+            [3.0, 4.0]
+        ])
+        >>> result is y
+        True
+
+        See also
+        --------
+        NtuplesBaseVectorUFuncs
+            Base class for ufuncs in `NtuplesBase` spaces, sub spaces may
+            override this for greater efficiency.
+        ProductSpaceVectorUFuncs
+            For a list of available ufuncs.
         """
         return ProductSpaceVectorUFuncs(self)
 
