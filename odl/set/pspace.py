@@ -518,12 +518,19 @@ class ProductSpaceVector(LinearSpaceVector):
         ])
 
         and also recursively
-
+        
+        >>> x = r22.element([[1, 2], [3, 4]])
         >>> x.ufunc.add(1)
         ProductSpace(Rn(2), 2).element([
             [2.0, 3.0],
             [4.0, 5.0]
         ])
+
+        There is also support for various reductions (sum, prod, min, max)
+        
+        >>> x = r22.element([[1, 2], [3, 4]])
+        >>> x.ufunc.sum()
+        10.0
 
         Also supports out parameter
 
