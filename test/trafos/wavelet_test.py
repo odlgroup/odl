@@ -31,9 +31,8 @@ if PYWAVELETS_AVAILABLE:
 # ODL imports
 import odl
 from odl.trafos.wavelet import (
-    coeff_size_list, pywt_coeff_to_array1d, array_to_pywt_coeff1d,
-    pywt_coeff_to_array2d, array_to_pywt_coeff2d,
-    pywt_coeff_to_array3d, array_to_pywt_coeff3d, wavelet_decomposition3d,
+    coeff_size_list, pywt_coeff_to_array1d, pywt_coeff_to_array,
+    array_to_pywt_coeff, wavelet_decomposition3d,
     wavelet_reconstruction3d, DiscreteWaveletTransform)
 from odl.util.testutils import (all_almost_equal, all_equal,
                                 skip_if_no_pywavelets)
@@ -92,12 +91,13 @@ def test_wavelet_decomposition3d_and_reconstruction3d():
 
 
 @skip_if_no_pywavelets
-def test_pywt_coeff_to_array_and_array_to_pywt_coeff1d():
+def test_pywt_coeff_to_array_and_array_to_pywt_coeff():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
     mode = 'zpd'
     nscales = 2
     n = 16
+    #1D test
     size_list = coeff_size_list((n,), nscales, wbasis, mode)
     x = np.random.rand(n)
     coeff_list = pywt.wavedec(x, wbasis, mode, nscales)
@@ -107,51 +107,37 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff1d():
     length_of_array += sum(np.prod(shape) for shape in size_list[1:-1])
     assert all_equal(len(coeff_arr), length_of_array)
 
-    coeff_list2 = array_to_pywt_coeff1d(coeff_arr, size_list)
+    coeff_list2 = array_to_pywt_coeff(coeff_arr, size_list)
     assert all_equal(coeff_list, coeff_list2)
     reconstruction = pywt.waverec(coeff_list2, wbasis, mode)
     assert all_almost_equal(reconstruction, x)
 
-
-@skip_if_no_pywavelets
-def test_pywt_coeff_to_array_and_array_to_pywt_coeff2d():
-    # Verify that the helper function does indeed work as expected
-    wbasis = pywt.Wavelet('db1')
-    mode = 'zpd'
-    nscales = 2
-    n = 16
+    #2D test
     size_list = coeff_size_list((n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n)
     coeff_list = pywt.wavedec2(x, wbasis, mode, nscales)
-    coeff_arr = pywt_coeff_to_array2d(coeff_list, size_list)
+    coeff_arr = pywt_coeff_to_array(coeff_list, size_list)
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(3 * np.prod(shape) for shape in size_list[1:-1])
     assert all_equal(len(coeff_arr), length_of_array)
 
-    coeff_list2 = array_to_pywt_coeff2d(coeff_arr, size_list)
+    coeff_list2 = array_to_pywt_coeff(coeff_arr, size_list)
     assert all_equal(coeff_list, coeff_list2)
     reconstruction = pywt.waverec2(coeff_list2, wbasis, mode)
     assert all_almost_equal(reconstruction, x)
 
-
-@skip_if_no_pywavelets
-def test_pywt_coeff_to_array_and_array_to_pywt_coeff3d():
-    # Verify that the helper function does indeed work as expected
-    wbasis = pywt.Wavelet('db1')
-    mode = 'ppd'
-    nscales = 2
-    n = 16
+    #3D test
     size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n, n)
     coeff_dict = wavelet_decomposition3d(x, wbasis, mode, nscales)
-    coeff_arr = pywt_coeff_to_array3d(coeff_dict, size_list)
+    coeff_arr = pywt_coeff_to_array(coeff_dict, size_list)
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(7 * np.prod(shape) for shape in size_list[1:-1])
     assert len(coeff_arr) == length_of_array
 
-    coeff_dict2 = array_to_pywt_coeff3d(coeff_arr, size_list)
+    coeff_dict2 = array_to_pywt_coeff(coeff_arr, size_list)
     reconstruction = wavelet_reconstruction3d(coeff_dict2, wbasis, mode,
                                               nscales)
     assert all_equal(coeff_dict, coeff_dict)
