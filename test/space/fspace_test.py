@@ -390,13 +390,23 @@ def test_fspace_one():
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
 
 
-def test_fspace_lincomb():
+b_params = [2.0, 0.0]
+b_ids = [' b = {} '.format(b) for b in b_params]
+b_fixture = pytest.fixture(scope="module", ids=b_ids, params=b_params)
+
+
+@b_fixture
+def b(request):
+    return request.param
+
+
+def test_fspace_lincomb(b):
     rect, points, mg = _standard_setup_2d()
     point = points.T[0]
 
     fspace = FunctionSpace(rect)
     a = -1.5
-    b = 2.0
+    # b supplied via fixture
 
     # Note: Special cases and alignment are tested later in the magic methods
 
@@ -468,6 +478,62 @@ def test_fspace_lincomb():
 
 
 # NOTE: multiply and divide are tested via magic methods
+
+
+def test_fspace_power():
+    rect, points, mg = _standard_setup_2d()
+    point = points.T[0]
+    pow1 = 3.0
+    pow2 = 0.5
+
+    fspace = FunctionSpace(rect)
+
+    # Not vectorized
+    true_novec1 = func_2d_novec(point) ** pow1
+    true_novec2 = func_2d_novec(point) ** pow2
+
+    f_novec = fspace.element(func_2d_novec, vectorized=False)
+
+    pow1_novec = f_novec ** pow1
+    pow2_novec = f_novec ** pow2
+
+    assert pow1_novec(point) == true_novec1
+    assert pow2_novec(point) == true_novec2
+
+    pow1_novec = f_novec.copy()
+    pow1_novec **= pow1
+    pow2_novec = f_novec.copy()
+    pow2_novec **= pow2
+
+    assert pow1_novec(point) == true_novec1
+    assert pow2_novec(point) == true_novec2
+
+    # Vectorized
+    true_arr1 = func_2d_vec_oop(points) ** pow1
+    true_arr2 = func_2d_vec_oop(points) ** pow2
+    true_mg1 = func_2d_vec_oop(mg) ** pow1
+    true_mg2 = func_2d_vec_oop(mg) ** pow2
+
+    f_vec = fspace.element(func_2d_vec_dual, vectorized=True)
+
+    pow1_vec = f_vec ** pow1
+    pow2_vec = f_vec ** pow2
+
+    assert all_equal(pow1_vec(points), true_arr1)
+    assert all_equal(pow2_vec(points), true_arr2)
+    assert all_equal(pow1_vec(mg), true_mg1)
+    assert all_equal(pow2_vec(mg), true_mg2)
+
+    pow1_vec = f_vec.copy()
+    pow1_vec **= pow1
+    pow2_vec = f_vec.copy()
+    pow2_vec **= pow2
+
+    assert all_equal(pow1_vec(points), true_arr1)
+    assert all_equal(pow2_vec(points), true_arr2)
+    assert all_equal(pow1_vec(mg), true_mg1)
+    assert all_equal(pow2_vec(mg), true_mg2)
+
 
 op_params = ['+', '+=', '-', '-=', '*', '*=', '/', '/=']
 op_ids = [' op = {} '.format(op) for op in op_params]
