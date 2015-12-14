@@ -381,8 +381,8 @@ class DiscreteLpVector(DiscretizationVector):
 
         and non-space elements
         
-        >>> x.ufunc.add([3, 3])
-        uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
+        >>> x.ufunc.subtract([3, 3])
+        uniform_discr(0.0, 1.0, 2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
         

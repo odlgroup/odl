@@ -410,30 +410,26 @@ class NtuplesVector(NtuplesBaseVector):
 
         These functions can also be used with broadcasting
 
-        >>> x = r2.element([1, 2])
         >>> x.ufunc.add(3)
-        Rn(2).element([4.0, 5.0])
+        Rn(2).element([4.0, 1.0])
 
         and non-space elements
         
-        >>> x = r2.element([1, 2])
-        >>> x.ufunc.add([3, 3])
-        Rn(2).element([4.0, 5.0])
+        >>> x.ufunc.subtract([3, 3])
+        Rn(2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
         
-        >>> x = r2.element([1, 2])
         >>> x.ufunc.sum()
-        3.0
+        -1.0
 
         They also support an out parameter
 
-        >>> x = r2.element([1, 2])
         >>> y = r2.element([3, 4])
         >>> out = r2.element()
         >>> result = x.ufunc.add(y, out=out)
         >>> result
-        Rn(2).element([4.0, 6.0])
+        Rn(2).element([4.0, 2.0])
         >>> result is out
         True
 
