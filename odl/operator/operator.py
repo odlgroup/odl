@@ -331,14 +331,28 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
 
 class Operator(object):
 
-    """Abstract operator.
+    """Abstract mathematical operator.
+
+    An operator is a mapping
+
+        :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}`
+
+    between sets :math:`\mathcal{X}` (domain) and :math:`\mathcal{Y}`
+    (range). The evaluation of :math:`\mathcal{A}` at an element
+    :math:`x \\in \mathcal{X}` is denoted by :math:`\mathcal{A}(x)`
+    and produces an element in :math:`\mathcal{Y}`:
+
+        :math:`y = \mathcal{A}(x) \\in \mathcal{Y}`.
+
+    Programmatically, these properties are reflected in the `Operator`
+    class described in the following.
 
     **Abstract attributes and methods**
 
     `Operator` is an **abstract** class, i.e. it can only be
     subclassed, not used directly.
 
-    Any subclass of `Operator` **must** have the following
+    Any subclass of `Operator` must have the following
     attributes:
 
     ``domain`` : `Set`
@@ -351,28 +365,27 @@ class Operator(object):
     ``super().__init__(dom, ran)`` (Note: add
     ``from builtins import super`` in Python 2) in the ``__init__()``
     method of any subclass, where ``dom`` and ``ran`` are the arguments
-    specifying domain and range of the new
-    operator. In that case, the attributes `Operator.domain` and
-    `Operator.range` are automatically provided by
-    `Operator`.
+    specifying domain and range of the new operator. In that case, the
+    attributes `Operator.domain` and `Operator.range` are automatically
+    provided by the parent class `Operator`.
 
-    In addition, any subclass **must** implement **at least one** of the
-    methods ``_apply()`` and ``_call()``, which are explained in the
-    following.
+    In addition, any subclass **must** implement the private method
+    ``_call()``. It signature determines how it is interpreted:
 
-    **In-place evaluation:** ``_apply()``
+
+    **In-place-only evaluation:** ``_call(self, x, out[, **kwargs])``
 
     In-place evaluation means that the operator is applied, and the
-    result is written to an existing element provided as an additional
-    argument. In this case, a subclass has to implement the method
+    result is written to an existing element ``out`` provided,
+    i.e.
 
-        ``_apply(self, x, out)  <==>  out <-- operator(x)``
+        ``_call(self, x, out)  <==>  out <-- operator(x)``
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` element-like
         An object in the operator domain to which the operator is
-        applied.
+        applied
 
     out : `Operator.range` element
         An object in the operator range to which the result of the
@@ -380,9 +393,10 @@ class Operator(object):
 
     **Returns:**
 
-    `None`
+    `None` (return value is ignored)
 
-    **Out-of-place evaluation:** ``_call()``
+
+    **Out-of-place-only evaluation:** ``_call(self, x[, **kwargs])``
 
     Out-of-place evaluation means that the operator is applied,
     and the result is written to a **new** element which is returned.
@@ -392,19 +406,47 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` element-like
         An object in the operator domain to which the operator is
-        applied.
+        applied
 
-    out : `Operator.range` element
+    **Returns:**
+
+    out : `Operator.range` element-like
+        An object in the operator range holding the result of the
+        operator evaluation
+
+
+    **Dual-use evaluation:** ``_call(self, x, out=None[, **kwargs])``
+
+    Evaluate in place if ``out`` is given, otherwise out of place.
+
+    **Parameters:**
+
+    x : `Operator.domain` element-like
+        An object in the operator domain to which the operator is
+        applied
+
+    out : `Operator.range` element, optional
         An object in the operator range to which the result of the
-        operator evaluation is written.
+        operator evaluation is written
+
+    **Returns:**
+
+    `None` (return value is ignored)
+
 
     Notes
     -----
-    If not both ``_apply()`` and ``_call()`` are implemented and the
-    `Operator.range` is a `LinearSpace`, a default
-    implementation of the respective other is provided.
+    - If `Operator._call` is implemented in-place-only or
+      out-of-place-only and the `Operator.range` is a `LinearSpace`,
+      a default implementation of the respective other is provided.
+
+    - `Operator._call` is allowed to have keyword-only arguments (Python
+      3 only).
+
+    - The term "element-like" means that an object must be castable to
+      an element by the ``domain.element()`` method.
     """
 
     def __new__(cls, *args, **kwargs):
@@ -446,7 +488,7 @@ class Operator(object):
         linear : bool
             If `True`, the operator is considered as linear. In this
             case, `domain` and `range` have to be instances of
-            `LinearSpace`, `RealNumbers` or `ComplexNumbers`.
+            `LinearSpace`, or `Field`.
         """
         if not isinstance(domain, Set):
             raise TypeError('domain {!r} is not a `Set` instance.'
@@ -519,6 +561,21 @@ class Operator(object):
         evaluation.
 
         TODO: add link
+
+        Parameters
+        ----------
+        x : `Operator.domain`-like element
+            Element to which the operator is applied
+        out : `Operator.range` element, optional
+            Element to which the result is written
+        kwargs :
+            Extra arguments
+
+        Returns
+        -------
+        out : `Operator.range`-like element
+            Result of the evaluation. Identical to input ``out`` if
+            provided.
 
         Notes
         -----
@@ -1029,7 +1086,7 @@ class OperatorSum(Operator):
         Rn(3).element([2.0, 4.0, 6.0])
         >>> out
         Rn(3).element([2.0, 4.0, 6.0])
-        >>> OperatorSum(op, op)(x)  # In place, returns out
+        >>> OperatorSum(op, op)(x)
         Rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
@@ -1757,10 +1814,7 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
     Parameters
     ----------
     call : `callable`
-        A function taking one argument and returning the result.
-        It will be used for the operator call pattern
-        ``out = op(x)``.
-        TODO update
+        Function with valid call signature, see `Operator`
     inv : `Operator`, optional
         The operator inverse
     deriv : `Operator`, optional

@@ -204,7 +204,7 @@ class ProductSpaceOperator(Operator):
         super().__init__(domain=dom, range=ran, linear=linear)
 
     def _call(self, x, out=None):
-        """Call the ProductSpace operators in-place.
+        """Call the ProductSpace operators.
 
         Parameters
         ----------
@@ -496,9 +496,7 @@ class ComponentProjectionAdjoint(Operator):
         return self._index
 
     def _call(self, x, out=None):
-        """Evaluate this operator.
-
-        Extend ``x`` from the subspace related to `index`.
+        """Extend ``x`` from the subspace.
 
         Parameters
         ----------
