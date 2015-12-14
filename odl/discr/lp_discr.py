@@ -359,6 +359,40 @@ class DiscreteLpVector(DiscretizationVector):
     def ufunc(self):
         """`DiscreteLpUFuncs`, access to numpy style ufuncs.
 
+        Examples
+        --------
+        >>> X = uniform_discr(0, 1, 2)
+        >>> x = X.element([1, -2])
+        >>> x.ufunc.absolute()
+        uniform_discr(0, 1, 2).element([1.0, 2.0])
+
+        These functions can also be used with broadcasting
+
+        >>> x.ufunc.add(3)
+        uniform_discr(0, 1, 2).element([4.0, 5.0])
+
+        and non-space elements
+        
+        >>> x.ufunc.add([3, 3])
+        uniform_discr(0, 1, 2).element([4.0, 5.0])
+
+        There is also support for various reductions (sum, prod, min, max)
+        
+        >>> x.ufunc.sum()
+        3.0
+
+        Also supports out parameter
+
+        >>> y = r2.element([3, 4])
+        >>> out = r2.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        CudaRn(2).element([4.0, 2.0])
+        >>> result is out
+        True
+
+        Notes
+        -----
         These are optimized to use the underlying ntuple space and incur no
         overhead unless these do.
         """
