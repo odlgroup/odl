@@ -1016,48 +1016,6 @@ def cu_weighted_dist(weight, exponent=2.0):
     return _weighting(weight, exponent=exponent).dist
 
 
-def add_scalar(x, scal, out=None):
-    """Add scalar to `CudaNtuplesVector`.
-    """
-    if out is None:
-        out = x.space.element()
-    cuda.add_scalar(x.data, scal, out.data)
-    return out
-
-
-def max_vector_scalar(x, scal, out=None):
-    """Calculate the elementwise max of `CudaNtuplesVector` and scalar.
-    """
-    if out is None:
-        out = x.space.element()
-    cuda.max_vector_scalar(x.data, scal, out.data)
-    return out
-
-
-def max_vector_vector(x1, x2, out=None):
-    """Calculate the elementwise max of `CudaNtuplesVector`'s
-    """
-    if out is None:
-        out = x1.space.element()
-    cuda.max_vector_vector(x1.data, x2.data, out.data)
-    return out
-
-
-def divide_vector_vector(x1, x2, out=None):
-    """Calculate the quotient of `CudaNtuplesVector`'s
-    """
-    if out is None:
-        out = x1.space.element()
-    cuda.divide_vector_vector(x1.data, x2.data, out.data)
-    return out
-
-
-def sum(x):
-    """Calculate the sum of a `CudaNtuplesVector`
-    """
-    return cuda.sum(x.data)
-
-
 def _dist_default(x1, x2):
     return x1.data.dist(x2.data)
 
