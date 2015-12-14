@@ -169,7 +169,7 @@ class SpaceTest(object):
 
         try:
             zero = self.space.zero()
-        except:
+        except (AttributeError, NotImplementedError):
             print('*** SPACE HAS NO ZERO VECTOR ***')
 
         with FailCounter() as counter:
