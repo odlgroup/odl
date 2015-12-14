@@ -155,9 +155,7 @@ def pywt_coeff_to_array1d(coeff, size_list):
 
         ``d`` = detail,
 
-        where ``N`` is the number of scales.
-
-    size_list : `list`
+     size_list : `list`
         A list containing the sizes of the wavelet (approximation
         and detail) coefficients at different scaling levels,
 
@@ -172,7 +170,7 @@ def pywt_coeff_to_array1d(coeff, size_list):
 
         ``size_list[N+1]`` = size of original image,
 
-        where ``N`` is the number of scales.
+        ``N`` is the number of scales.
 
     Returns
     -------
@@ -195,82 +193,15 @@ def pywt_coeff_to_array1d(coeff, size_list):
     return flat_coeff
 
 
-def array_to_pywt_coeff1d(coeff, size_list):
-    """Convert a flat array into a `pywt
-    <http://www.pybytes.com/pywavelets/>`_ coefficient list.
-    For multilevel 1D discrete wavelet transform
-
-    Parameters
-    ----------
-    coeff : `DiscreteLp.Vector`
-        A flat coefficient vector containing the approximation,
-        and detail coefficients in the following order:
-
-        ``[aN, dN, ... d1]``
-
-        The abbreviations refer to
-
-        ``a`` = approximation,
-
-        ``d`` = detail,
-
-        where ``N`` is the number of scales.
-
-    size_list : `list`
-        A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels,
-
-        ``size_list[0]`` = size of approximation coefficients at
-            the coarsest level, i.e. size of aN,
-
-        ``size_list[1]`` = size of the detail coefficients at
-            the coarsest level, i.e.  size of dN,
-
-        ``size_list[N]`` = size of the detail coefficients at
-            the finest level, i.e. size of d1,
-
-        ``size_list[N+1]`` = size of original image,
-
-        where ``N`` is the number of scales.
-
-    Returns
-    -------
-    coeff : ordered `list`
-        Coefficient are organized in the list in the following way:
-
-        ``[aN, (dN), ... (d1)]``
-
-        The abbreviations refer to
-
-        ``a`` = approximation,
-
-        ``d`` = detail,
-
-        where ``N`` is the number of scales.
-    """
-    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-
-    start = 0
-    stop = flat_sizes[0]
-    coeff_list = [np.asarray(coeff)[start:stop].reshape(size_list[0])]
-
-    for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
-        start, stop = stop, stop + fsize
-        detail_coeffs = np.asarray(coeff)[start:stop]
-
-        coeff_list.append(detail_coeffs)
-
-    return coeff_list
-
-
-def pywt_coeff_to_array2d(coeff, size_list):
+def pywt_coeff_to_array(coeff, size_list):
     """Convert a `pywt
     <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
 
-    Related to 2D multilevel discrete wavelet transform.
+    Related to 2D and 3D multilevel discrete wavelet transform.
 
     Parameters
     ----------
+    In 2D:
     coeff : ordered `list`
         Coefficient are organized in the list in the following way:
 
@@ -286,179 +217,45 @@ def pywt_coeff_to_array2d(coeff, size_list):
 
         ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
 
-        where ``N`` is the number of scales.
-
-    size_list : `list`
-        A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels,
-
-        ``size_list[0]`` = size of approximation coefficients at
-            the coarsest level, i.e. size of aaN,
-
-        ``size_list[1]`` = size of the detailed coefficients at
-            the coarsest level, i.e.  size of adN/daN/ddN,
-
-        ``size_list[N]`` = size of the detailed coefficients at
-            the finest level, i.e. size of ad1/da1/dd1,
-
-        ``size_list[N+1]`` = size of original image,
-
-        where ``N`` is the number of scales.
-
-    Returns
-    -------
-    arr : `numpy.ndarray`
-        Flattened and concatenated coefficient array.
-        The length of the array depends on the size of input image to
-        be transformed and on the chosen wavelet basis.
-        If the size of the input image is :math:`2^n \\times 2^n`,
-        the length of the wavelet coefficient array is the same.
-    """
-    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-
-    # Approx. coefficients appear once, while there are 3 types of detail
-    # coefficients per level
-    flat_total_size = flat_sizes[0] + 3 * sum(flat_sizes[1:])
-    flat_coeff = np.empty(flat_total_size)
-
-    # Special case at index 0 since the entry is a single array, not a tuple
-    start = 0
-    stop = flat_sizes[0]
-    flat_coeff[:flat_sizes[0]] = coeff[0].ravel()
-
-    for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
-        for dc in detail_coeffs:
-            start, stop = stop, stop + fsize
-            flat_coeff[start:stop] = dc.ravel()
-
-    return flat_coeff
-
-
-def array_to_pywt_coeff2d(coeff, size_list):
-    """Convert a flat array into a `pywt
-    <http://www.pybytes.com/pywavelets/>`_ coefficient list.
-    For multilevel 2D discrete wavelet transform
-
-    Parameters
-    ----------
-    coeff : `DiscreteLp.Vector`
-        A flat coefficient vector containing the approximation,
-        horizontal detail, vertical detail and diagonal detail
-        coefficients in the following order:
-
-        ``[aaN, adN, daN, ddN, ... ad1, da1, dd1]``
-
-        The abbreviations refer to
-
-        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
-
-        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
-
-        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
-
-        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
-
-        where ``N`` is the number of scales.
-
-    size_list : `list`
-        A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels,
-
-        ``size_list[0]`` = size of approximation coefficients at
-            the coarsest level, i.e. size of aaN,
-
-        ``size_list[1]`` = size of the detail coefficients at
-            the coarsest level, i.e.  size of adN/daN/ddN,
-
-        ``size_list[N]`` = size of the detail coefficients at
-            the finest level, i.e. size of ad1/da1/dd1,
-
-        ``size_list[N+1]`` = size of original image,
-
-        where ``N`` is the number of scales.
-
-    Returns
-    -------
+    In 3D:
     coeff : ordered `list`
         Coefficient are organized in the list in the following way:
 
-        ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
+        ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
+        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
 
-        The abbreviations refer to
-
-        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
-
-        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
-
-        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
-
-        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
-
-        where ``N`` is the number of scales.
-    """
-    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-
-    # Special case at index 0 since the entry is a single array, not a tuple
-    start = 0
-    stop = flat_sizes[0]
-    coeff_list = [np.asarray(coeff)[start:stop].reshape(size_list[0])]
-
-    for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
-        start, stop = stop, stop + 3 * fsize
-        # Split section of the flat array into 3 parts, each corresponding
-        # to a detail coefficient. Reshape according to shape in size_list.
-        detail_coeffs = tuple(c.reshape(shape)
-                              for c in np.split(np.asarray(coeff)[start:stop],
-                                                3))
-        coeff_list.append(detail_coeffs)
-
-    return coeff_list
-
-
-def pywt_coeff_to_array3d(coeff, size_list):
-    """Convert a `pywt
-    <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
-
-    Related to 3D multilevel discrete wavelet transform.
-
-    Parameters
-    ----------
-    coeff : `list`
-        Coefficient are organized in the list in the following way
-        [aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)].
         The appreviations refer to
 
-        aaa = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-        aad = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-        ada = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
+        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
 
-        add = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
+        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
 
-        daa = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-        dad = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-        dda = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
+        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
 
-        ddd = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
+        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
-        N =  the number of scaling levels
+        ``N`` =  the number of scaling levels
 
     size_list : `list`
         A list containing the sizes of the wavelet (approximation
         and detail) coefficients at different scaling levels
 
-        size_list[0] = size of approximation coefficients at
+        ``size_list[0]`` = size of approximation coefficients at
             the coarsest level,
-        size_list[1] = size of the detailed coefficients at
+        ``size_list[1]`` = size of the detailed coefficients at
             the coarsest level,
-        size_list[N] = size of the detailed coefficients at
+        ``size_list[N]`` = size of the detailed coefficients at
             the finest level,
-        size_list[N+1] = size of original image,
-        N = number of scales
+        ``size_list[N+1]`` = size of original image,
+        ``N`` = number of scales
 
     Returns
     -------
@@ -466,11 +263,15 @@ def pywt_coeff_to_array3d(coeff, size_list):
         Flattened and concatenated coefficient array
         The length of the array depends on the size of input image to
         be transformed and on the chosen wavelet basis.
-        If the size of the input image is 2^n x 2^n, the length of the
-        wavelet coefficient array is the same.
-    """
+      """
     flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-    flat_total_size = flat_sizes[0] + 7 * sum(flat_sizes[1:])
+
+    if np.size(size_list[0]) == 2:
+        const = 3
+    elif np.size(size_list[0]) == 3:
+        const = 7
+
+    flat_total_size = flat_sizes[0] + const * sum(flat_sizes[1:])
     flat_coeff = np.empty(flat_total_size)
 
     start = 0
@@ -485,15 +286,15 @@ def pywt_coeff_to_array3d(coeff, size_list):
     return flat_coeff
 
 
-def array_to_pywt_coeff3d(coeff, size_list):
+def array_to_pywt_coeff(coeff, size_list):
     """Convert a flat array into a `pywt
     <http://www.pybytes.com/pywavelets/>`_ coefficient list.
 
-    For multilevel 3D discrete wavelet transform
+    For multilevel 1D, 2D and 3D discrete wavelet transform
 
     Parameters
     ----------
-    coeff : `DiscreteLp.Vector`
+    coeff : `DiscreteLp Vector`
         A flat coefficient vector containing the approximation,
         and detail coefficients in the following order
         [aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN, ...
@@ -502,54 +303,95 @@ def array_to_pywt_coeff3d(coeff, size_list):
     size_list : list
        A list of coefficient sizes such that,
 
-       size_list[0] = size of approximation coefficients at the coarsest level,
+       ``size_list[0]`` = size of approximation coefficients at the coarsest
+                          level,
 
-       size_list[1] = size of the detailedetails at the coarsest level,
+       ``size_list[1]`` = size of the detailedetails at the coarsest level,
 
-       size_list[N] = size of the detailed coefficients at the finest level,
+       ``size_list[N]`` = size of the detailed coefficients at the finest
+                          level,
 
-       size_list[N+1] = size of original image,
+       ``size_list[N+1]`` = size of original image,
 
-       N = nscales
+       ``N`` = nscales
 
     Returns
     -------
-    coeff_list : `list`
-        A list of coefficient organized in the following way
-        [aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)].
+    In 1D:
+    coeff : ordered `list`
+        Coefficient are organized in the list in the following way:
+
+        ``[aN, (dN), ... (d1)]``
+
+        The abbreviations refer to
+
+        ``a`` = approximation,
+
+        ``d`` = detail,
+    In 2D:
+    coeff : ordered `list`
+        Coefficient are organized in the list in the following way:
+
+        ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
+
+        The abbreviations refer to
+
+        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
+
+        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
+
+        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
+
+        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
+
+    In 3D:
+    coeff_list : ordered `list`
+        A list of coefficient organized in the following way:
+
+        ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
+        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
+
         The appreviations refer to,
 
-        aaa = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-        aad = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-        ada = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
+        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
 
-        add = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
+        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
 
-        daa = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-        dad = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-        dda = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
+        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
 
-        ddd = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
+        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
-        N = the number of scaling levels
+        ``N`` = the number of scaling levels
+
     """
     flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
     start = 0
     stop = flat_sizes[0]
     coeff_list = [np.asarray(coeff)[start:stop].reshape(size_list[0])]
 
+    if np.size(size_list[0]) == 1:
+        const = 1
+    elif np.size(size_list[0]) == 2:
+        const = 3
+    elif np.size(size_list[0]) == 3:
+        const = 7
+
     for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
-        start, stop = stop, stop + 7 * fsize
-        # Split section of the flat array into 7 parts, each corresponding
-        # to a detail coefficient. Reshape according to shape in size_list.
-        detail_coeffs = tuple(c.reshape(shape)
-                              for c in np.split(np.asarray(coeff)[start:stop],
-                                                7))
+        start, stop = stop, stop + const * fsize
+        if const == 1:
+            detail_coeffs = np.asarray(coeff)[start:stop]
+        else:
+            detail_coeffs = tuple(c.reshape(shape) for c in
+                                  np.split(np.asarray(coeff)[start:stop],
+                                           const))
         coeff_list.append(detail_coeffs)
 
     return coeff_list
@@ -586,23 +428,23 @@ signal-extension-modes.html>`_
          (aad1, ada1, add1, daa1, dad1, dda1, ddd1)] .
          The appreviations refer to,
 
-         aaa = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+         ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-         aad = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+         ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-         ada = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
+         ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
 
-         add = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
+         ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
 
-         daa = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+         ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-         dad = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+         ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-         dda = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
+         ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
 
-         ddd = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
+         ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
-         N = the number of scaling levels
+         ``N`` = the number of scaling levels
     """
 
     wcoeffs = pywt.dwtn(x, wbasis, mode)
@@ -656,23 +498,27 @@ def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
             (aad1, ada1, add1, daa1, dad1, dda1, ddd1)].
             The appreviations refer to,
 
-            aaa = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+            ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx.
+                      on 3rd dim,
 
-            aad = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+            ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on
+                      3rd dim,
 
-            ada = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
+            ``ada`` = approx. on 1st dim, detail on 3nd dim, approx.
+                      on 3rd dim,
 
-            add = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
+            ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
 
-            daa = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
+            ``daa`` = detail on 1st dim, approx. on 2nd dim, approx.
+                      on 3rd dim,
 
-            dad = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+            ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-            dda = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
+            ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
 
-            ddd = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
+            ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
-            N = the number of scaling levels
+            ``N`` = the number of scaling levels
     wbasis :  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basisodl.discr.lp_discr.
     mode : `str`
@@ -688,10 +534,6 @@ signal-extension-modes.html>`_
     -------
     x : `numpy.ndarray`.
         A wavalet reconstruction.
-
-    See also
-    --------
-    pywt : http://www.pybytes.com/pywavelets/
     """
     aaa = coeff_list[0]
     k = 1
@@ -806,13 +648,13 @@ class DiscreteWaveletTransform(Operator):
 
         if len(x.shape) == 2:
             coeff_list = pywt.wavedec2(x, self.wbasis, self.mode, self.nscales)
-            coeff_arr = pywt_coeff_to_array2d(coeff_list, self.size_list)
+            coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
             return self.range.element(coeff_arr)
 
         if len(x.shape) == 3:
             coeff_dict = wavelet_decomposition3d(x, self.wbasis, self.mode,
                                                  self.nscales)
-            coeff_arr = pywt_coeff_to_array3d(coeff_dict, self.size_list)
+            coeff_arr = pywt_coeff_to_array(coeff_dict, self.size_list)
 
             return self.range.element(coeff_arr)
 
@@ -922,15 +764,15 @@ class DiscreteWaveletTransformInverse(Operator):
 
         """
         if len(self.range.grid.shape) == 1:
-            coeff_list = array_to_pywt_coeff1d(coeff, self.size_list)
+            coeff_list = array_to_pywt_coeff(coeff, self.size_list)
             x = pywt.waverec(coeff_list, self.wbasis, self.mode)
             return self.range.element(x)
         elif len(self.range.grid.shape) == 2:
-            coeff_list = array_to_pywt_coeff2d(coeff, self.size_list)
+            coeff_list = array_to_pywt_coeff(coeff, self.size_list)
             x = pywt.waverec2(coeff_list, self.wbasis, self.mode)
             return self.range.element(x)
         elif len(self.range.grid.shape) == 3:
-            coeff_dict = array_to_pywt_coeff3d(coeff, self.size_list)
+            coeff_dict = array_to_pywt_coeff(coeff, self.size_list)
             x = wavelet_reconstruction3d(coeff_dict, self.wbasis, self.mode,
                                          self.nscales)
             return self.range.element(x)
