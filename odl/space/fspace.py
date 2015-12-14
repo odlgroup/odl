@@ -802,9 +802,8 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
             tmp = self.space.one()
             self.space.lincomb(other, tmp, out=tmp)
             return self.space.lincomb(1, tmp, 1, self, out=tmp)
-        elif other in self.space:
-            return self.space.lincomb(1, other, 1, self)
         else:
+            # Case `other in self.space` handled by `other`
             return NotImplemented
 
     def __sub__(self, other):
@@ -826,9 +825,8 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
             tmp = self.space.one()
             self.space.lincomb(other, tmp, out=tmp)
             return self.space.lincomb(1, tmp, -1, self, out=tmp)
-        elif other in self.space:
-            return self.space.lincomb(1, other, -1, self)
         else:
+            # Case `other in self.space` handled by `other`
             return NotImplemented
 
     def __mul__(self, other):
@@ -850,9 +848,8 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
             tmp = self.space.one()
             self.space.lincomb(other, tmp, out=tmp)
             return self.space.multiply(tmp, self, out=tmp)
-        elif other in self.space:
-            return self.space.multiply(other, self)
         else:
+            # Case `other in self.space` handled by `other`
             return NotImplemented
 
     def __truediv__(self, other):
@@ -874,9 +871,8 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
             tmp = self.space.one()
             self.space.lincomb(other, tmp, out=tmp)
             return self.space.divide(tmp, self, out=tmp)
-        elif other in self.space:
-            return self.space.divide(other, self)
         else:
+            # Case `other in self.space` handled by `other`
             return NotImplemented
 
     __rdiv__ = __rtruediv__
