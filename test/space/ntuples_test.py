@@ -37,7 +37,7 @@ from odl.space.ntuples import (
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
-from odl.util.ufuncs import UFUNCS
+from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
 # TODO: add tests for:
 # * inner, norm, dist as free functions
@@ -1617,6 +1617,22 @@ def test_ufuncs():
             # Skip integer only methods if floating point type
             continue
         yield _impl_test_ufuncs, fn, name, n_args, n_out
+
+
+def _impl_test_reduction(fn, name):
+    ufunc = getattr(np, name)
+
+    # Create some data
+    x_arr, x = _vectors(fn, 1)
+
+    assert ufunc(x_arr) == getattr(x.ufunc, name)()
+
+
+def test_reductions():
+    fn = Rn(3)
+
+    for name, _ in REDUCTIONS:
+        yield _impl_test_reduction, fn, name
 
 
 if __name__ == '__main__':
