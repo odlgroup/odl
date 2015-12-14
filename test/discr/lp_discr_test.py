@@ -27,7 +27,8 @@ import numpy as np
 
 import odl
 
-from odl.util.testutils import all_equal, all_almost_equal, skip_if_no_cuda
+from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
+                                skip_if_no_cuda)
 
 
 # TODO: element from function - waiting for vectorization
@@ -614,19 +615,43 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
-    fn = odl.uniform_discr([0, 0], [1, 1], [2, 2])
+    spaces = [odl.uniform_discr([0, 0], [1, 1], [2, 2])]
 
-    for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
-        if (np.issubsctype(fn.dtype, np.floating) and
-                name in ['bitwise_and',
-                         'bitwise_or',
-                         'bitwise_xor',
-                         'invert',
-                         'left_shift',
-                         'right_shift']):
-            # Skip integer only methods if floating point type
-            continue
-        yield _impl_test_ufuncs, fn, name, n_args, n_out
+    if odl.CUDA_AVAILABLE:
+        spaces += [odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda')]
+
+    for fn in spaces:
+        for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
+            if (np.issubsctype(fn.dtype, np.floating) and
+                    name in ['bitwise_and',
+                             'bitwise_or',
+                             'bitwise_xor',
+                             'invert',
+                             'left_shift',
+                             'right_shift']):
+                # Skip integer only methods if floating point type
+                continue
+            yield _impl_test_ufuncs, fn, name, n_args, n_out
+
+
+def _impl_test_reduction(fn, name):
+    ufunc = getattr(np, name)
+
+    # Create some data
+    x_arr, x = _vectors(fn, 1)
+
+    assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
+
+
+def test_reductions():
+    spaces = [odl.uniform_discr([0, 0], [1, 1], [2, 2])]
+
+    if odl.CUDA_AVAILABLE:
+        spaces += [odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda')]
+
+    for fn in spaces:
+        for name, _ in odl.util.ufuncs.REDUCTIONS:
+            yield _impl_test_reduction, fn, name
 
 
 if __name__ == '__main__':
