@@ -148,6 +148,16 @@ class EmptySet(Set):
         """Return `True` for the empty set, otherwise `False`."""
         return isinstance(other, EmptySet)
 
+    def contains_all(self, other):
+        """Return `True` for an empty sequence, `False` else."""
+        try:
+            other = list(other)
+            return len(other) == 0
+        except TypeError:
+            pass
+
+        return False
+
     def __eq__(self, other):
         """Return ``self == other``."""
         return isinstance(other, EmptySet)
@@ -229,10 +239,12 @@ class Strings(Set):
 
     def contains_all(self, array):
         """Test if `array` is an array of strings with correct length."""
-        array = np.asarray(array)  # allow seqence type input
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
         dtype_byte = np.dtype('S{}'.format(self.length))
         dtype_uni = np.dtype('<U{}'.format(self.length))
-        return array.dtype in (dtype_byte, dtype_uni)
+        return dtype in (dtype_byte, dtype_uni)
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -307,8 +319,10 @@ class ComplexNumbers(Field):
 
     def contains_all(self, array):
         """Test if `array` is an array of real or complex numbers."""
-        array = np.asarray(array)  # allow seqence type input
-        return is_scalar_dtype(array.dtype)
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
+        return is_scalar_dtype(dtype)
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -364,8 +378,10 @@ class RealNumbers(Field):
 
     def contains_all(self, array):
         """Test if `array` is an array of real numbers."""
-        array = np.asarray(array)  # allow seqence type input
-        return is_real_dtype(array.dtype)
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
+        return is_real_dtype(dtype)
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -426,8 +442,10 @@ class Integers(Set):
 
     def contains_all(self, array):
         """Test if `array` is an array of integers."""
-        array = np.asarray(array)  # allow seqence type input
-        return is_int_dtype(array.dtype)
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
+        return is_int_dtype(dtype)
 
     def element(self, inp=None):
         """Return an integer from ``inp`` or from scratch."""
