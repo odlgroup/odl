@@ -29,7 +29,7 @@ import numpy as np
 # ODL imports
 import odl
 from odl import FunctionSpace
-from odl.util.testutils import all_equal
+from odl.util.testutils import all_almost_equal, all_equal
 
 
 # Pytest fixture
@@ -519,20 +519,20 @@ def test_fspace_power():
     pow1_vec = f_vec ** pow1
     pow2_vec = f_vec ** pow2
 
-    assert all_equal(pow1_vec(points), true_arr1)
-    assert all_equal(pow2_vec(points), true_arr2)
-    assert all_equal(pow1_vec(mg), true_mg1)
-    assert all_equal(pow2_vec(mg), true_mg2)
+    assert all_almost_equal(pow1_vec(points), true_arr1)
+    assert all_almost_equal(pow2_vec(points), true_arr2)
+    assert all_almost_equal(pow1_vec(mg), true_mg1)
+    assert all_almost_equal(pow2_vec(mg), true_mg2)
 
     pow1_vec = f_vec.copy()
     pow1_vec **= pow1
     pow2_vec = f_vec.copy()
     pow2_vec **= pow2
 
-    assert all_equal(pow1_vec(points), true_arr1)
-    assert all_equal(pow2_vec(points), true_arr2)
-    assert all_equal(pow1_vec(mg), true_mg1)
-    assert all_equal(pow2_vec(mg), true_mg2)
+    assert all_almost_equal(pow1_vec(points), true_arr1)
+    assert all_almost_equal(pow2_vec(points), true_arr2)
+    assert all_almost_equal(pow1_vec(mg), true_mg1)
+    assert all_almost_equal(pow2_vec(mg), true_mg2)
 
 
 op_params = ['+', '+=', '-', '-=', '*', '*=', '/', '/=']
