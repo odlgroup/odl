@@ -26,7 +26,6 @@ from builtins import str, zip
 
 # External imports
 import numpy as np
-from scipy.interpolate import interpnd
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 
 # ODL imports
@@ -171,25 +170,27 @@ class GridCollocation(FunctionSetMapping):
         FunctionSetMapping.__init__(self, 'restriction', ip_fset, grid,
                                     dspace, order, linear=linear)
 
+        # TODO: relax? One needs contains_set() and contains_all()
         if not isinstance(ip_fset.domain, IntervalProd):
             raise TypeError('domain {!r} of the function set is not an '
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 
-    def _call(self, func):
+    def _call(self, func, out=None):
         """The raw call method for out-of-place evaluation.
 
         Parameters
         ----------
         func : `FunctionSetVector`
-            The function to be evaluated.
-
-            TODO: update
+            The function to be evaluated
+        out : `numpy.ndarray`, optional
+            Array to which the values are written
 
         Returns
         -------
-        out : `NtuplesVector`
-            The function values at the grid points.
+        out : `numpy.ndarray`
+            The function values at the grid points. If ``out`` was
+            given as argument, it is returned.
 
         Notes
         -----
@@ -212,14 +213,9 @@ class GridCollocation(FunctionSetMapping):
 
         Examples
         --------
-        Define the grid:
-
-        >>> from odl import TensorGrid
+        >>> from odl import TensorGrid, Rn
         >>> grid = TensorGrid([1, 2], [3, 4, 5], as_midp=True)
-
-        The ``dspace`` backend is `Rn`:
-
-        >>> from odl import Rn
+        ...
         >>> rn = Rn(grid.ntotal)
 
         Define a set of functions from the convex hull of the grid
@@ -228,27 +224,36 @@ class GridCollocation(FunctionSetMapping):
         >>> from odl import FunctionSet, RealNumbers
         >>> funcset = FunctionSet(grid.convex_hull(), RealNumbers())
 
-        Finally create the operator:
+        Finally create the operator and test it on a function:
 
         >>> coll_op = GridCollocation(funcset, grid, rn)
-
-        We define an example function with vectorization:
-
+        ...
         >>> def func(x):
-        ...     return x[0] - x[1]
+        ...     return x[0] - x[1]  # properly vectorized
+        ...
         >>> func_elem = funcset.element(func)
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        >>> coll_op(func)  # Works directly
+        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        >>> out = Rn(6).element()
+        >>> coll_op(func, out=out)  # In-place
+        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
-        Or, if we want Fortran ordering:
+        Fortran ordering:
 
         >>> coll_op = GridCollocation(funcset, grid, rn, order='F')
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        mg_tuple = self.grid.meshgrid()
-        values = func(mg_tuple).ravel(order=self.order)
-        return self.range.element(values)
+        mg = self.grid.meshgrid()
+        if out is None:
+            out = func(mg).ravel(order=self.order)
+        else:
+            func(mg, out=out.asarray().reshape(self.grid.shape,
+                                               order=self.order))
+
+        return out
 
 
 class NearestInterpolation(FunctionSetMapping):
