@@ -210,7 +210,7 @@ class DiscreteLp(Discretization):
                 impl = 'cuda'
             else:  # This should never happen
                 raise RuntimeError('unable to determine data space impl.')
-            arg_fstr = '{!r}, {!r}, {!r}'
+            arg_fstr = '{}, {}, {}'
             if self.exponent != 2.0:
                 arg_fstr += ', exponent={exponent}'
             if not isinstance(self.field, RealNumbers):
@@ -222,9 +222,17 @@ class DiscreteLp(Discretization):
             if self.order != 'C':
                 arg_fstr += ', order={order!r}'
 
+            if self.ndim == 1:
+                min_str = '{!r}'.format(self.uspace.domain.min()[0])
+                max_str = '{!r}'.format(self.uspace.domain.max()[0])
+                shape_str = '{!r}'.format(self.shape[0])
+            else:
+                min_str = '{!r}'.format(list(self.uspace.domain.min()))
+                max_str = '{!r}'.format(list(self.uspace.domain.max()))
+                shape_str = '{!r}'.format(list(self.shape))
+
             arg_str = arg_fstr.format(
-                list(self.uspace.domain.min()), list(self.uspace.domain.max()),
-                list(self.shape),
+                min_str, max_str, shape_str,
                 exponent=self.exponent,
                 field=self.field,
                 interp=self.interp,
@@ -364,30 +372,30 @@ class DiscreteLpVector(DiscretizationVector):
         >>> X = uniform_discr(0, 1, 2)
         >>> x = X.element([1, -2])
         >>> x.ufunc.absolute()
-        uniform_discr(0, 1, 2).element([1.0, 2.0])
+        uniform_discr(0.0, 1.0, 2).element([1.0, 2.0])
 
         These functions can also be used with broadcasting
 
         >>> x.ufunc.add(3)
-        uniform_discr(0, 1, 2).element([4.0, 5.0])
+        uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
 
         and non-space elements
         
         >>> x.ufunc.add([3, 3])
-        uniform_discr(0, 1, 2).element([4.0, 5.0])
+        uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
 
         There is also support for various reductions (sum, prod, min, max)
         
         >>> x.ufunc.sum()
-        3.0
+        -1.0
 
         Also supports out parameter
 
-        >>> y = r2.element([3, 4])
-        >>> out = r2.element()
+        >>> y = X.element([3, 4])
+        >>> out = X.element()
         >>> result = x.ufunc.add(y, out=out)
         >>> result
-        CudaRn(2).element([4.0, 2.0])
+        uniform_discr(0.0, 1.0, 2).element([4.0, 2.0])
         >>> result is out
         True
 
@@ -500,7 +508,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     >>> I = Interval(0, 1)
     >>> X = FunctionSpace(I)
     >>> uniform_discr_fromspace(X, 10)
-    uniform_discr([0.0], [1.0], [10])
+    uniform_discr(0.0, 1.0, 10)
 
     See also
     --------
