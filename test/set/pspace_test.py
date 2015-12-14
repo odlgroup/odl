@@ -409,7 +409,7 @@ def test_ufuncs():
     x = H.element([[-1], [-2, -3]])
     y = H.element()
 
-    z = x.ufunc.absolute(y)
+    z = x.ufunc.absolute(out=y)
     assert y is z
     assert all_almost_equal(z, [[1], [2, 3]])
 
@@ -426,7 +426,7 @@ def test_ufuncs():
     y = H.element([[4], [5, 6]])
     w = H.element()
 
-    z = x.ufunc.add(y, w)
+    z = x.ufunc.add(y, out=w)
     assert w is z
     assert all_almost_equal(z, [[5], [7, 9]])
 
