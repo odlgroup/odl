@@ -31,7 +31,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.util.ufuncs import ProductSpaceVectorUFuncs
+from odl.util.ufuncs import ProductSpaceUFuncs
 
 
 __all__ = ('ProductSpace', 'ProductSpaceVector')
@@ -492,7 +492,7 @@ class ProductSpaceVector(LinearSpaceVector):
 
     @property
     def ufunc(self):
-        """`ProductSpaceVectorUFuncs`, access to numpy style ufuncs.
+        """`ProductSpaceUFuncs`, access to numpy style ufuncs.
 
         These are always available if the underlying spaces are `NtuplesBase`.
 
@@ -540,13 +540,13 @@ class ProductSpaceVector(LinearSpaceVector):
 
         See also
         --------
-        NtuplesBaseVectorUFuncs
+        NtuplesBaseUFuncs
             Base class for ufuncs in `NtuplesBase` spaces, sub spaces may
             override this for greater efficiency.
-        ProductSpaceVectorUFuncs
+        ProductSpaceUFuncs
             For a list of available ufuncs.
         """
-        return ProductSpaceVectorUFuncs(self)
+        return ProductSpaceUFuncs(self)
 
     def __str__(self):
         """Return ``str(self)``."""

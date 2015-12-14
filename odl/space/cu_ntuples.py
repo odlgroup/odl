@@ -32,7 +32,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector,
                                     FnWeightingBase)
 from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
-from odl.util.ufuncs import CudaNtuplesVectorUFuncs
+from odl.util.ufuncs import CudaNtuplesUFuncs
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -429,7 +429,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
     @property
     def ufunc(self):
-        """`CudaNtuplesVectorUFuncs`, access to numpy style ufuncs.
+        """`CudaNtuplesUFuncs`, access to numpy style ufuncs.
 
         Examples
         --------
@@ -467,10 +467,10 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
         See also
         --------
-        NtuplesBaseVectorUFuncs
+        NtuplesBaseUFuncs
             Base class for ufuncs in `NtuplesBase` spaces.
         """
-        return CudaNtuplesVectorUFuncs(self)
+        return CudaNtuplesUFuncs(self)
 
 
 def _repr_space_funcs(space):

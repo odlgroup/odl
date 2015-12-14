@@ -138,7 +138,7 @@ numpy.{}
 
 # Wrap all numpy ufuncs
 def wrap_method_base(name, n_args, n_opt, descr):
-    """Add ufunc methods to `NtuplesBaseVectorUFuncs`."""
+    """Add ufunc methods to `NtuplesBaseUFuncs`."""
     wrapped = getattr(np, name)
     if n_args == 1:
         if n_opt == 0:
@@ -187,7 +187,7 @@ def wrap_method_base(name, n_args, n_opt, descr):
     return wrapper
 
 
-class NtuplesBaseVectorUFuncs(object):
+class NtuplesBaseUFuncs(object):
     """UFuncs for `NtuplesBaseVector` objects.
 
     Internal object, should not be created except in `NtuplesBaseVector`.
@@ -200,14 +200,14 @@ class NtuplesBaseVectorUFuncs(object):
 # Add ufunc methods to UFunc class
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_method_base(name, n_args, n_opt, descr)
-    setattr(NtuplesBaseVectorUFuncs, name, method)
+    setattr(NtuplesBaseUFuncs, name, method)
 
 
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using a
 # NtuplesVector
 def wrap_method_ntuples(name, n_args, n_opt, descr):
-    """Add ufunc methods to `NtuplesVectorUFuncs`."""
+    """Add ufunc methods to `NtuplesUFuncs`."""
 
     # Get method from numpy
     wrapped = getattr(np, name)
@@ -255,7 +255,7 @@ def wrap_method_ntuples(name, n_args, n_opt, descr):
     return wrapper
 
 
-class NtuplesVectorUFuncs(object):
+class NtuplesUFuncs(object):
     """UFuncs for `NtuplesVector` objects.
 
     Internal object, should not be created except in `NtuplesVector`.
@@ -268,7 +268,7 @@ class NtuplesVectorUFuncs(object):
 # Add ufunc methods to UFunc class
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_method_ntuples(name, n_args, n_opt, descr)
-    setattr(NtuplesVectorUFuncs, name, method)
+    setattr(NtuplesUFuncs, name, method)
 
 
 # Optimizations for CUDA
@@ -281,12 +281,12 @@ def _make_unary_fun(name):
         getattr(self.vector.data, name)(out.data)
         return out
 
-    fun.__doc__ = getattr(NtuplesBaseVectorUFuncs, name).__doc__
+    fun.__doc__ = getattr(NtuplesBaseUFuncs, name).__doc__
     fun.__name__ = name
     return fun
 
 
-class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
+class CudaNtuplesUFuncs(NtuplesBaseUFuncs):
     sin = _make_unary_fun('sin')
     cos = _make_unary_fun('cos')
     arcsin = _make_unary_fun('arcsin')
@@ -302,7 +302,7 @@ class CudaNtuplesVectorUFuncs(NtuplesBaseVectorUFuncs):
 # as well as the data parameter to avoid one call to asarray() when using a
 # NtuplesVector
 def wrap_method_discretelp(name, n_args, n_opt, descr):
-    """Add ufunc methods to `DiscreteLpVectorUFuncs`."""
+    """Add ufunc methods to `DiscreteLpUFuncs`."""
 
     if n_args == 1:
         if n_opt == 0:
@@ -358,7 +358,7 @@ def wrap_method_discretelp(name, n_args, n_opt, descr):
     return wrapper
 
 
-class DiscreteLpVectorUFuncs(object):
+class DiscreteLpUFuncs(object):
     """UFuncs for `DiscreteLpVector` objects.
 
     Internal object, should not be created except in `DiscreteLpVector`.
@@ -371,7 +371,7 @@ class DiscreteLpVectorUFuncs(object):
 # Add ufunc methods to UFunc class
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_method_discretelp(name, n_args, n_opt, descr)
-    setattr(DiscreteLpVectorUFuncs, name, method)
+    setattr(DiscreteLpUFuncs, name, method)
 
 
 # Ufuncs for productspace vectors
@@ -439,7 +439,7 @@ def wrap_method_productspace(name, n_args, n_opt, descr):
     return wrapper
 
 
-class ProductSpaceVectorUFuncs(object):
+class ProductSpaceUFuncs(object):
     """UFuncs for `ProductSpaceVector` objects.
 
     Internal object, should not be created except in `ProductSpaceVector`.
@@ -452,4 +452,4 @@ class ProductSpaceVectorUFuncs(object):
 # Add ufunc methods to UFunc class
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_method_productspace(name, n_args, n_opt, descr)
-    setattr(ProductSpaceVectorUFuncs, name, method)
+    setattr(ProductSpaceUFuncs, name, method)

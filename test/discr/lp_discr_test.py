@@ -570,7 +570,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 
     # Verify type
     assert isinstance(data_vector.ufunc,
-                      odl.util.ufuncs.DiscreteLpVectorUFuncs)
+                      odl.util.ufuncs.DiscreteLpUFuncs)
 
     # Out of place:
     np_result = ufunc(*in_arrays)

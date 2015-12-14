@@ -40,7 +40,7 @@ from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
 from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
-from odl.util.ufuncs import DiscreteLpVectorUFuncs
+from odl.util.ufuncs import DiscreteLpUFuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr', 'uniform_discr_fromspace')
@@ -357,12 +357,12 @@ class DiscreteLpVector(DiscretizationVector):
 
     @property
     def ufunc(self):
-        """`DiscreteLpVectorUFuncs`, access to numpy style ufuncs.
+        """`DiscreteLpUFuncs`, access to numpy style ufuncs.
 
         These are optimized to use the underlying ntuple space and incur no
         overhead unless these do.
         """
-        return DiscreteLpVectorUFuncs(self)
+        return DiscreteLpUFuncs(self)
 
     def show(self, method='', title='', indices=None, **kwargs):
         """Create a figure displaying the function in 1d or 2d.
