@@ -23,6 +23,7 @@ from __future__ import print_function, division, absolute_import
 
 from builtins import super, zip
 from future import standard_library
+from future.utils import raise_from
 standard_library.install_aliases()
 
 # External imports
@@ -205,7 +206,6 @@ class IntervalProd(Set):
 
         Examples
         --------
-
         >>> from math import sqrt
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
@@ -246,13 +246,25 @@ class IntervalProd(Set):
             The maximum allowed distance in 'inf'-norm between the
             other set and this interval product.
             Default: 0.0
+
+        Examples
+        --------
+        >>> b1, e1 = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox1 = IntervalProd(b1, e1)
+        >>> b2, e2 = [-0.6, 0, 2.1], [-0.5, 0, 2.5]
+        >>> rbox2 = IntervalProd(b2, e2)
+        >>> rbox1.contains_set(rbox2)
+        True
+        >>> rbox2.contains_set(rbox1)
+        False
         """
         try:
             return (self.approx_contains(other.min(), tol) and
                     self.approx_contains(other.max(), tol))
-        except AttributeError:
-            raise AttributeError('cannot test {!r} without `min()` and `max()`'
-                                 'methods.'.format(other))
+        except AttributeError as exc:
+            raise_from(
+                AttributeError('cannot test {!r} without `min()` and `max()`'
+                               'methods.'.format(other)), exc)
 
     def contains_all(self, other):
         """Test if all points defined by `other` are contained.
@@ -260,13 +272,35 @@ class IntervalProd(Set):
         Parameters
         ----------
         other : object
-            Can be a single point, a `(d, N)` array where `d` is the number of
-            dimensions or a lenght-`d` meshgrid sequence
+            Can be a single point, a ``(d, N)`` array where ``d`` is the
+            number of dimensions or a length-`d` meshgrid sequence
 
         Returns
         -------
         contains : bool
             `True` if all points are contained, `False` otherwise
+
+        Examples
+        --------
+        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox = IntervalProd(b, e)
+        ...
+        ... # Arrays are expected in (ndim, npoints) shape
+        >>> arr = np.array([[-1, 0, 2],   # defining one point at a time
+        ...                 [-0.5, 0, 2],
+        ...                 [-0.5, 0, 2.8],
+        ...                 [-0.75, 0, 3]])
+        >>> rbox.contains_all(arr.T)
+        True
+        ...
+        ... # Implicit meshgrids defined by coordinate vectors
+        >>> vec1 = (-1, -0.9, -0.7)
+        >>> vec2 = (0, 0, 0)
+        >>> vec3 = (2.5, 2.75, 3)
+        >>> mg = np.meshgrid(vec1, vec2, vec3,
+        ...                  sparse=True, indexing='ij')
+        >>> rbox.contains_all(mg)
+        True
         """
         if other in self:
             return True
@@ -377,7 +411,7 @@ class IntervalProd(Set):
             The indices of the dimensions along which to collapse
         values : `float` or array-like
             The values to which to collapse. Must have the same
-            lenght as 'indcs'. Values must lie within the interval
+            length as ``indices``. Values must lie within the interval
             boundaries.
 
         Returns
