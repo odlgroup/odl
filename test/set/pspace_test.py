@@ -430,7 +430,7 @@ def test_ufuncs():
     assert w is z
     assert all_almost_equal(z, [[5], [7, 9]])
 
-    
+
 def test_reductions():
     H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
     x = H.element([[1], [2, 3]])

@@ -510,31 +510,27 @@ class ProductSpaceVector(LinearSpaceVector):
         These functions can also be used with non-vector arguments and support
         broadcasting, both by element
 
-        >>> x = r22.element([[1, 2], [3, 4]])
         >>> x.ufunc.add([1, 1])
         ProductSpace(Rn(2), 2).element([
-            [2.0, 3.0],
-            [4.0, 5.0]
+            [2.0, -1.0],
+            [-2.0, 5.0]
         ])
 
         and also recursively
-        
-        >>> x = r22.element([[1, 2], [3, 4]])
-        >>> x.ufunc.add(1)
+
+        >>> x.ufunc.subtract(1)
         ProductSpace(Rn(2), 2).element([
-            [2.0, 3.0],
-            [4.0, 5.0]
+            [0.0, -3.0],
+            [-4.0, 3.0]
         ])
 
         There is also support for various reductions (sum, prod, min, max)
-        
-        >>> x = r22.element([[1, 2], [3, 4]])
+
         >>> x.ufunc.sum()
-        10.0
+        0.0
 
         Also supports out parameter
 
-        >>> x = r22.element([[1, -2], [-3, 4]])
         >>> y = r22.element()
         >>> result = x.ufunc.absolute(out=y)
         >>> result

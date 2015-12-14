@@ -449,7 +449,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
         CudaRn(2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
-        
+
         >>> x.ufunc.sum()
         -1.0
 

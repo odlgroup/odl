@@ -414,12 +414,12 @@ class NtuplesVector(NtuplesBaseVector):
         Rn(2).element([4.0, 1.0])
 
         and non-space elements
-        
+
         >>> x.ufunc.subtract([3, 3])
         Rn(2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
-        
+
         >>> x.ufunc.sum()
         -1.0
 
