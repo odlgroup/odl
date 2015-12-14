@@ -97,7 +97,7 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff():
     mode = 'zpd'
     nscales = 2
     n = 16
-    #1D test
+    # 1D test
     size_list = coeff_size_list((n,), nscales, wbasis, mode)
     x = np.random.rand(n)
     coeff_list = pywt.wavedec(x, wbasis, mode, nscales)
@@ -112,7 +112,7 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff():
     reconstruction = pywt.waverec(coeff_list2, wbasis, mode)
     assert all_almost_equal(reconstruction, x)
 
-    #2D test
+    # 2D test
     size_list = coeff_size_list((n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n)
     coeff_list = pywt.wavedec2(x, wbasis, mode, nscales)
@@ -127,7 +127,7 @@ def test_pywt_coeff_to_array_and_array_to_pywt_coeff():
     reconstruction = pywt.waverec2(coeff_list2, wbasis, mode)
     assert all_almost_equal(reconstruction, x)
 
-    #3D test
+    # 3D test
     size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n, n)
     coeff_dict = wavelet_decomposition3d(x, wbasis, mode, nscales)
