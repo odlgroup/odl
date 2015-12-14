@@ -495,6 +495,16 @@ def wrap_ufunc_productspace(name, n_args, n_opt, descr):
     return wrapper
 
 
+def wrap_reduction_productspace(name, descr):
+    def wrapper(self):
+        results = [getattr(x.ufunc, name)() for x in self.vector]
+        return getattr(np, name)(results)
+
+    wrapper.__name__ = name
+    wrapper.__doc__ = descr
+    return wrapper
+
+
 class ProductSpaceUFuncs(object):
     """UFuncs for `ProductSpaceVector` objects.
 
@@ -508,4 +518,10 @@ class ProductSpaceUFuncs(object):
 # Add ufunc methods to UFunc class
 for name, n_args, n_opt, descr in UFUNCS:
     method = wrap_ufunc_productspace(name, n_args, n_opt, descr)
+    setattr(ProductSpaceUFuncs, name, method)
+
+
+# Add reduction methods to UFunc class
+for name, descr in REDUCTIONS:
+    method = wrap_reduction_productspace(name, descr)
     setattr(ProductSpaceUFuncs, name, method)

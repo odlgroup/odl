@@ -430,6 +430,15 @@ def test_ufuncs():
     assert w is z
     assert all_almost_equal(z, [[5], [7, 9]])
 
+    
+def test_reductions():
+    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    x = H.element([[1], [2, 3]])
+    assert x.ufunc.sum() == 6.0
+    assert x.ufunc.prod() == 6.0
+    assert x.ufunc.min() == 1.0
+    assert x.ufunc.max() == 3.0
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
