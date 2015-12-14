@@ -201,9 +201,6 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
 
     # one-sided differences
     else:
-        if method != 'central':
-            raise NotImplementedError('Can only use zero padding with non-'
-                                      'central differences')
 
         # Numerical differentiation: 1st order edges
         if f_data.shape[axis] == 2 or edge_order == 1:
