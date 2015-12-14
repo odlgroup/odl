@@ -141,6 +141,19 @@ class GridCollocation(FunctionSetMapping):
 
     """Function evaluation at grid points.
 
+    Given points :math:`x_1, \dots, x_n \\in \Omega \subset \mathbb{R}^d`,
+    the grid collocation operator is defined by
+
+        :math:`\mathcal{C}: \mathcal{X} \\to \mathbb{F}^n`,
+
+        :math:`\mathcal{C}(f) := \\big(f(x_1), \dots, f(x_n)\\big)`,
+
+    where :math:`\mathcal{X}` is any (reasonable) space of functions on
+    :math:`\Omega` over the field :math:`\mathbb{F}`.
+
+    The generalization to functions on higher-dimensional sets is
+    straightforward.
+
     This is the default 'restriction' used by all core
     discretization classes.
     """
@@ -177,7 +190,7 @@ class GridCollocation(FunctionSetMapping):
                             ''.format(ip_fset.domain))
 
     def _call(self, func, out=None):
-        """The raw call method for out-of-place evaluation.
+        """Evaluate ``func`` at the grid of this operator..
 
         Parameters
         ----------
@@ -202,9 +215,6 @@ class GridCollocation(FunctionSetMapping):
         Write your function such that every variable occurs -
         otherwise, the values will not be broadcasted to the correct
         size (see example below).
-
-        Avoid using the `numpy.vectorize` function - it is merely a
-        convenience function and will not give any speed benefit.
 
         See also
         --------
@@ -252,13 +262,36 @@ class GridCollocation(FunctionSetMapping):
         else:
             func(mg, out=out.asarray().reshape(self.grid.shape,
                                                order=self.order))
-
         return out
 
 
 class NearestInterpolation(FunctionSetMapping):
 
-    """Nearest neighbor interpolation as an `Operator`."""
+    """Nearest neighbor interpolation as an `Operator`.
+
+    Given points :math:`x_1, \dots, x_n \\in \mathbb{R}` and values
+    :math:`f_1, \dots, f_n \\in \mathbb{F}`, the nearest neighbor
+    interpolation at an arbitrary point :math:`x \\in \mathbb{R}`
+    is defined by
+
+        :math:`I_{\\bar f}(x) := x_j, \\text{ where } j
+        \\text{ is such that } x \\in [x_j, x_{j+1})`
+
+    for :math:`\\bar f := (f_1, \dots, f_n) \\in \mathbb{F}^n`.
+
+    The corresponding nearest neighbor interpolation operator
+    is then defined as
+
+        :math:`\mathcal{N}: \mathbb{R}^n \\to \mathcal{X}`,
+
+        :math:`\mathcal{N}(\\bar f) := I_{\\bar f}`,
+
+    where :math:`\mathcal{X}` is any (reasonable) space over the field
+    :math:`\mathbb{F}`, of functions on a subset of :math:`\mathbb{R}`.
+
+    The higher-dimensional analog of this operator is simply given
+    per component by the above definition.
+    """
 
     def __init__(self, ip_fset, grid, dspace, order='C'):
         """Initialize a new instance.
@@ -285,13 +318,14 @@ class NearestInterpolation(FunctionSetMapping):
         FunctionSetMapping.__init__(self, 'extension', ip_fset, grid, dspace,
                                     order, linear=linear)
 
+        # TODO: relax? One needs contains_set() and contains_all()
         if not isinstance(ip_fset.domain, IntervalProd):
             raise TypeError('domain {!r} of the function set is not an '
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
 
-    def _call(self, x):
-        """The raw method for out-of-place evaluation.
+    def _call(self, x, out=None):
+        """Create an interpolator from grid values ``x``.
 
         Parameters
         ----------
@@ -300,15 +334,18 @@ class NearestInterpolation(FunctionSetMapping):
 
         Returns
         -------
-        out : `FunctionSetVector`
-            A function (nearest-neighbor) interpolating at a given
-            point or array of points.
+        out : `function`
+            Nearest-neighbor interpolator for the grid of this
+            operator.
+
+        Notes
+        -----
+        Nearest neighbor interpolation is the only scheme which works
+        with arbitrary data since it does not involve any arithmetic
+        operations on the values.
 
         Examples
         --------
-        Let's define a set of functions from the unit rectangle to
-        one-character strings:
-
         >>> from __future__ import unicode_literals, print_function
         >>> from odl import Rectangle, Strings
         >>> rect = Rectangle([0, 0], [1, 1])
